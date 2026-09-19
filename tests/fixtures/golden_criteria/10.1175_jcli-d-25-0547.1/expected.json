@@ -10,12 +10,47 @@
     "code_availability": false
   },
   "counts": {
-    "sections": 3,
+    "sections": 1,
     "abstract_sections": 0,
-    "body_sections": 2,
+    "body_sections": 1,
     "figures": 0,
     "tables": 0,
     "references": 0
   },
-  "expected_content_kind": "fulltext"
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.1175_jcli-d-25-0547.1",
+    "provider": "ams",
+    "doi": "10.1175/jcli-d-25-0547.1",
+    "original": "tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/original.pdf",
+    "sha256": "69c5d3d12992b2abda2456e290bae01c2818b7188c4f4bab496c33897eb387e4",
+    "format": "pdf",
+    "review_method": "original PDF identity and role validation; complete readable file; real converter return value compared unchanged through provider assembly",
+    "dimensions": {
+      "pdf": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_pdf_identity_and_converter_passthrough",
+        "source_count": 1,
+        "scope": "target identity; readable complete PDF; provider assembly; exact converter payload retained"
+      }
+    },
+    "limitations": [
+      "PDF conversion layout, references, formulas, tables and OCR are excluded.",
+      "The existing converter is invoked and its returned text is treated as opaque; comparisons do not rate pymupdf4llm conversion quality.",
+      "Unknown historical HTTP status/final URL remain unknown in acquisition/provenance.json.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "pdf": {
+      "pages": 3,
+      "encrypted": false,
+      "repaired": false,
+      "role": "main_article",
+      "role_evidence": "canonical pdf_fallback target identity and complete document; preview/supplementary rejection is covered separately"
+    },
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ]
+  }
 }

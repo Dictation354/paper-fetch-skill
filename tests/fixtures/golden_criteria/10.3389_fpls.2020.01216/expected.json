@@ -1,0 +1,1418 @@
+{
+  "has": {
+    "title": true,
+    "authors": true,
+    "abstract": true,
+    "body": true,
+    "figures": true,
+    "references": true,
+    "data_availability": true,
+    "code_availability": false
+  },
+  "counts": {
+    "sections": 25,
+    "abstract_sections": 1,
+    "body_sections": 21,
+    "figures": 5,
+    "tables": 3,
+    "references": 56
+  },
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.3389_fpls.2020.01216",
+    "provider": "frontiers",
+    "doi": "10.3389/fpls.2020.01216",
+    "original": "tests/fixtures/golden_criteria/10.3389_fpls.2020.01216/original.xml",
+    "sha256": "3687624b65cfe4ad9889d04d037cfb3275b363fdfb9caa27996b9d7e69615196",
+    "format": "xml",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 4,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 56,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 60,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 5,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 289,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 4,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 20,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 74,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence."
+    ],
+    "author_source": "article-meta contrib-group contrib[contrib-type=\"author\"]",
+    "provenance": "tests/fixtures/golden_criteria/10.3389_fpls.2020.01216/acquisition/provenance.json",
+    "captured_image_files": [
+      {
+        "path": "tests/fixtures/golden_criteria/10.3389_fpls.2020.01216/acquisition/regression-2026-09-16/fpls-11-01216-g001.webp",
+        "sha256": "5979e0cc4e5d16312d6e71b2fc14379e7506c338d8700622636c9ddaa727ba1f",
+        "bytes": 164730
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.3389_fpls.2020.01216/acquisition/regression-2026-09-16/fpls-11-01216-g002.webp",
+        "sha256": "af9372f949ca90c928000c35aec2002af08661775069c40f7d842e652687f247",
+        "bytes": 144756
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.3389_fpls.2020.01216/acquisition/regression-2026-09-16/fpls-11-01216-g003.webp",
+        "sha256": "f13ceb132faa8c8dc3a2f8c6c59c23b2dcfc0cc4d5048ef801d8aec6a44fdf58",
+        "bytes": 144036
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.3389_fpls.2020.01216/acquisition/regression-2026-09-16/fpls-11-01216-g004.webp",
+        "sha256": "92a02942fe1543e55b9c7b53de19571c433f05be6ea62decef32821fa18f9fa3",
+        "bytes": 63110
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.3389_fpls.2020.01216/acquisition/regression-2026-09-16/fpls-11-01216-g005.webp",
+        "sha256": "00a045bf8506f5d48a2a79371781ccd6932141a18d17751528101885e88dec69",
+        "bytes": 59296
+      }
+    ],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 20,
+      "tex_checked": 0,
+      "mathml_checked": 20,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.3389_fpls.2020.01216/original.xml",
+      "sha256": "3687624b65cfe4ad9889d04d037cfb3275b363fdfb9caa27996b9d7e69615196",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "bbb18f7cfc863357ff36e6534c578780b2ed3410259fde3ddba21288aecf04db",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            ],
+            [
+              1,
+              [
+                11,
+                12,
+                13,
+                13,
+                14,
+                14,
+                15,
+                15,
+                16,
+                17,
+                18
+              ]
+            ],
+            [
+              2,
+              [
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29
+              ]
+            ],
+            [
+              3,
+              [
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40
+              ]
+            ],
+            [
+              4,
+              [
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51
+              ]
+            ],
+            [
+              5,
+              [
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62
+              ]
+            ],
+            [
+              6,
+              [
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                73
+              ]
+            ],
+            [
+              7,
+              [
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83,
+                84
+              ]
+            ],
+            [
+              8,
+              [
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95
+              ]
+            ],
+            [
+              9,
+              [
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106
+              ]
+            ],
+            [
+              10,
+              [
+                107,
+                108,
+                109,
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117
+              ]
+            ],
+            [
+              11,
+              [
+                118,
+                119,
+                120,
+                121,
+                122,
+                123,
+                124,
+                125,
+                126,
+                127,
+                128
+              ]
+            ],
+            [
+              12,
+              [
+                129,
+                130,
+                131,
+                132,
+                133,
+                134,
+                135,
+                136,
+                137,
+                138,
+                139
+              ]
+            ],
+            [
+              13,
+              [
+                140,
+                141,
+                142,
+                143,
+                144,
+                145,
+                146,
+                147,
+                148,
+                149,
+                150
+              ]
+            ]
+          ],
+          "cells": [
+            "Species",
+            "Temperature",
+            "A _{ini}",
+            "A _{f}",
+            "g _{sw,ini}",
+            "g _{sw,f}",
+            "C _{i,ini}",
+            "C _{i,f}",
+            "IT _{f50%}",
+            "\\frac{\n d \n A \n}{\n d \n t \n} \n_{\n max \n}",
+            "\\frac{\n d \n g \n}{\n d \n t \n} \n_{\n max \n}",
+            "Abbreviation",
+            "Condition",
+            "(μmol m ^{-2} s ^{-1} )",
+            "(mmol m ^{-2} s ^{-1} )",
+            "(μmol mol ^{-1} )",
+            "(s)",
+            "(μmol m ^{-2} s ^{-2} )",
+            "(mmol m ^{-2} s ^{-2} )",
+            "C. argyratus",
+            "T _{30}",
+            "1.99 ± 0.03a",
+            "5.09 ± 0.60a",
+            "32.0 ± 1.9a",
+            "73.1 ± 4.0a",
+            "288 ± 4",
+            "267 ± 9",
+            "80.0 ± 13.9a",
+            "0.035 ± 0.002a",
+            "0.560 ± 0.259a",
+            "",
+            "T _{dyn}",
+            "2.18 ± 0.08a",
+            "3.63 ± 0.38b",
+            "28.7 ± 3.7ab",
+            "45.5 ± 4.9b",
+            "271 ± 13",
+            "241 ± 13",
+            "24.9 ± 14.4b",
+            "0.046 ± 0.005a",
+            "0.281 ± 0.026ab",
+            "",
+            "T _{40}",
+            "1.40 ± 0.12b",
+            "3.50 ± 0.44b",
+            "21.0 ± 4.1b",
+            "42.7 ± 5.5b",
+            "268 ± 12",
+            "241 ± 11",
+            "91.9 ± 17.6a",
+            "0.017 ± 0.005b",
+            "0.195 ± 0.034b",
+            "S. leprosula",
+            "T _{30}",
+            "2.20 ± 0.07a",
+            "8.51 ± 0.57a",
+            "58.6 ± 8.9a",
+            "146.0 ± 14.0a",
+            "323 ± 10a",
+            "279 ± 8a",
+            "130.5 ± 22.3a",
+            "0.065 ± 0.004a",
+            "0.270 ± 0.036",
+            "",
+            "T _{dyn}",
+            "2.16 ± 0.17a",
+            "5.45 ± 0.56b",
+            "55.4 ± 8.6a",
+            "72.2 ± 16.8b",
+            "323 ± 12a",
+            "237 ± 14b",
+            "29.7 ± 5.3b",
+            "0.074 ± 0.008a",
+            "0.189 ± 0.037",
+            "",
+            "T _{40}",
+            "1.27 ± 0.20b",
+            "5.35 ± 0.53b",
+            "23.2 ± 4.5b",
+            "65.1 ± 11.3b",
+            "288 ± 6b",
+            "234 ± 13b",
+            "233.1 ± 15.7c",
+            "0.023 ± 0.004b",
+            "0.275 ± 0.135",
+            "N. heimii",
+            "T _{30}",
+            "1.70 ± 0.14a",
+            "3.90 ± 0.45a",
+            "23.7 ± 3.0",
+            "49.9 ± 5.0a",
+            "274 ± 10",
+            "257 ± 5a",
+            "203.3 ± 65.2ab ^{†}",
+            "0.032 ± 0.007a",
+            "0.158 ± 0.053",
+            "",
+            "T _{dyn}",
+            "1.96 ± 0.10a",
+            "2.91 ± 0.30ab",
+            "23.5 ± 4.6",
+            "31.0 ± 2.7b",
+            "257 ± 18",
+            "226 ± 7b",
+            "33.8 ± 27.2a ^{†}",
+            "0.060 ± 0.007b",
+            "0.516 ± 0.401",
+            "",
+            "T _{40}",
+            "1.18 ± 0.13b",
+            "2.74 ± 0.27b",
+            "16.7 ± 2.0",
+            "28.0 ± 3.0b",
+            "264 ± 16",
+            "219 ± 5b",
+            "174.1 ± 20.3b ^{†}",
+            "0.022 ± 0.009a",
+            "0.078 ± 0.024",
+            "L. senegalensis",
+            "T _{30}",
+            "1.90 ± 0.06a",
+            "4.83 ± 0.43",
+            "34.7 ± 7.9",
+            "63.9 ± 8.8",
+            "284 ± 17",
+            "255 ± 9",
+            "106.3 ± 20.3a ^{†}",
+            "0.046 ± 0.005a",
+            "0.120 ± 0.029",
+            "",
+            "T _{dyn}",
+            "2.07 ± 0.08a",
+            "3.91 ± 0.48",
+            "38.2 ± 9.3",
+            "45.8 ± 9.1",
+            "290 ± 16",
+            "227 ± 11",
+            "15.0 ± 2.7b ^{†}",
+            "0.069 ± 0.008b",
+            "0.096 ± 0.021",
+            "",
+            "T _{40}",
+            "1.42 ± 0.10b",
+            "3.78 ± 0.40",
+            "20.5 ± 3.7",
+            "46.6 ± 8.9",
+            "264 ± 10",
+            "235 ± 11",
+            "137.7 ± 3.0a ^{†}",
+            "0.022 ± 0.004c",
+            "0.114 ± 0.017"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "3de1cf87095f8c6165e53e9d775b6ec1a8e3bf8d6ac13456a0b70e62812678be",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ]
+            ],
+            [
+              1,
+              [
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+              ]
+            ],
+            [
+              2,
+              [
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              3,
+              [
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              4,
+              [
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              5,
+              [
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              6,
+              [
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48
+              ]
+            ],
+            [
+              7,
+              [
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55
+              ]
+            ],
+            [
+              8,
+              [
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62
+              ]
+            ],
+            [
+              9,
+              [
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69
+              ]
+            ],
+            [
+              10,
+              [
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76
+              ]
+            ],
+            [
+              11,
+              [
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83
+              ]
+            ],
+            [
+              12,
+              [
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90
+              ]
+            ]
+          ],
+          "cells": [
+            "Species abbreviation",
+            "Temperature condition",
+            "ETR _{f} (μmol m ^{-2} s ^{-1} )",
+            "ETR _{m} (μmol m ^{-2} s ^{-1} )",
+            "V _{c} , _{f} (μmol m ^{-2} s ^{-1} )",
+            "ETR _{50%} (s)",
+            "τ _{Rubisco} (s)",
+            "C. argyratus",
+            "T _{30}",
+            "38.5 ± 3.1",
+            "39.8 ± 3.3",
+            "34.3 ± 3.0a",
+            "78.2 ± 9.4",
+            "73.2 ± 7.2",
+            "",
+            "T _{dyn}",
+            "36.9 ± 3.6",
+            "40.7 ± 3.8",
+            "45.0 ± 3.3b",
+            "64.7 ± 2.4",
+            "87.8 ± 9.7",
+            "",
+            "T _{40}",
+            "32.1 ± 2.3",
+            "36.6 ± 2.7",
+            "43.5 ± 2.1b",
+            "75.5 ± 10.5",
+            "114.4 ± 21.1",
+            "S. leprosula",
+            "T _{30}",
+            "72.4 ± 7.1",
+            "72.7 ± 7.1",
+            "51.8 ± 4.4",
+            "92.6 ± 16.9 ^{†}",
+            "139.6 ± 20.6ab",
+            "",
+            "T _{dyn}",
+            "61.9 ± 8.4",
+            "69.7 ± 7.9",
+            "57.2 ± 9.0",
+            "72.9 ± 5.2 ^{†}",
+            "117.9 ± 13.5a",
+            "",
+            "T _{40}",
+            "53.1 ± 8.9",
+            "54.5 ± 8.7",
+            "57.2 ± 9.3",
+            "78.8 ± 32.4 ^{†}",
+            "253.1 ± 68.2b",
+            "N. heimii",
+            "T _{30}",
+            "46.6 ± 6.5",
+            "47.4 ± 6.4",
+            "37.2 ± 4.5",
+            "107.5 ± 17.9a",
+            "248.9 ± 48.9",
+            "",
+            "T _{dyn}",
+            "39.4 ± 3.9",
+            "43.5 ± 4.0",
+            "44.2 ± 5.5",
+            "60.1 ± 4.1b",
+            "170.6 ± 10.3",
+            "",
+            "T _{40}",
+            "34.2 ± 4.4",
+            "35.9 ± 4.5",
+            "37.6 ± 4.8",
+            "43.3 ± 9.0b",
+            "232.1 ± 30.4",
+            "L. senegalensis",
+            "T _{30}",
+            "48.6 ± 6.9",
+            "49.6 ± 7.0",
+            "45.8 ± 5.2",
+            "120.9 ± 11.0a",
+            "150.2 ± 25.7ab ^{†}",
+            "",
+            "T _{dyn}",
+            "48.4 ± 7.5",
+            "49.0 ± 7.5",
+            "63.7 ± 8.4",
+            "80.6 ± 2.0b",
+            "111.6 ± 3.2a ^{†}",
+            "",
+            "T _{40}",
+            "47.0 ± 4.3",
+            "47.7 ± 4.5",
+            "61.3 ± 4.5",
+            "123.7 ± 8.9a",
+            "214.0 ± 18.3b ^{†}"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "d990f6a807e9e1b3d77690a98dbcf8cb92bac63c326a155455927d7ced825ce9",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              1,
+              [
+                2,
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                7,
+                8,
+                9
+              ]
+            ],
+            [
+              3,
+              [
+                10,
+                11,
+                12,
+                13
+              ]
+            ],
+            [
+              4,
+              [
+                14,
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              5,
+              [
+                18,
+                19,
+                20,
+                21
+              ]
+            ],
+            [
+              6,
+              [
+                22,
+                23,
+                24,
+                25
+              ]
+            ],
+            [
+              7,
+              [
+                26,
+                27,
+                28,
+                29
+              ]
+            ],
+            [
+              8,
+              [
+                30,
+                31,
+                32,
+                33
+              ]
+            ],
+            [
+              9,
+              [
+                34,
+                35,
+                36,
+                37
+              ]
+            ],
+            [
+              10,
+              [
+                38,
+                39,
+                40,
+                41
+              ]
+            ]
+          ],
+          "cells": [
+            "",
+            "Factors",
+            "",
+            "Species-specific shade tolerance ( S )",
+            "Average daily light integral (DLI)",
+            "S × DLI",
+            "IT _{f50%}",
+            "1.399",
+            "1.600",
+            "2.664",
+            "\\frac{\n d \n A \n}{\n d \n t \n} \n_{\n max \n}",
+            "5.731LITERALASTERISK",
+            "0.073",
+            "0.334",
+            "ETR _{50%}",
+            "4.032",
+            "3.698",
+            "4.812LITERALASTERISK",
+            "τ _{Rubisco}",
+            "0.054",
+            "0.012",
+            "0.533",
+            "ICG _{1min}",
+            "5.455LITERALASTERISK",
+            "0.444",
+            "0.006",
+            "A _{f}",
+            "1.799",
+            "0.484",
+            "1.311",
+            "g _{sw,f}",
+            "1.217",
+            "0.804",
+            "1.044",
+            "ETR _{f}",
+            "0.141",
+            "14.052LITERALASTERISKLITERALASTERISK",
+            "0.329",
+            "ICG _{30min}",
+            "0.922",
+            "0.041",
+            "0.241"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": "im1",
+          "node_sha256": "3cf6fcb70cffc62da90d0ab5055199aad0bad83a5d7227c2cd6a00762fc8d436",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "d",
+            "A",
+            "d",
+            "t",
+            "max"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 1,
+          "id": "M1",
+          "node_sha256": "6ecd83ad597db5fe3d90f2d5caa5808e2868a51502cd250b1bc9f78ec4fffa38",
+          "numbers": "12102",
+          "minimum": {
+            "_": 5,
+            "^": 1,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "t",
+            "a",
+            "a",
+            "e",
+            "t",
+            "t",
+            "Δ",
+            "t",
+            "A",
+            "a"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "+",
+            "-",
+            "+"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": "im3",
+          "node_sha256": "87773586cb472c46f684fd54bc2dd530422e8037c786cbc02946f825a407a204",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "g",
+            "s",
+            "w",
+            "d",
+            "g",
+            "d",
+            "t",
+            "max"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 3,
+          "id": "M2",
+          "node_sha256": "15067257fbda06834a9ddb420978c6311956361d83bbda5d01582a6f6491bbf9",
+          "numbers": "0",
+          "minimum": {
+            "_": 2,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "t",
+            "t",
+            "A",
+            "t",
+            "d",
+            "t",
+            "t",
+            "A"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 4,
+          "id": "M3",
+          "node_sha256": "82959d743655d432abf17eefc7186a8ef5f1905614be66cd969153137454fb11",
+          "numbers": "8100010004",
+          "minimum": {
+            "_": 6,
+            "^": 1,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "Γ",
+            "V",
+            "K",
+            "m",
+            "J",
+            "J",
+            "V"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 5,
+          "id": "M4",
+          "node_sha256": "0c9170e932947d09e0e631b2c2398e9286740b2b54d354ba56e4f599fc49202e",
+          "numbers": "",
+          "minimum": {
+            "_": 4,
+            "^": 3,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "t",
+            "A",
+            "f",
+            "A",
+            "f",
+            "A",
+            "i",
+            "exp",
+            "t",
+            "τ"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 6,
+          "id": "im4",
+          "node_sha256": "2fecc8c27e6ab37c5782d46cd507743491c938d8d7589feb641927a37a288eeb",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "f"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 7,
+          "id": "M5",
+          "node_sha256": "613a48f1a7983e8c845952385a8b09f08acae2afe1744606a607c7e5ed5b857f",
+          "numbers": "48",
+          "minimum": {
+            "_": 4,
+            "^": 2,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "j",
+            "t",
+            "t",
+            "C",
+            "i",
+            "t",
+            "Γ",
+            "T",
+            "C",
+            "i",
+            "t",
+            "Γ",
+            "T",
+            "R",
+            "L",
+            "T"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 8,
+          "id": "M6",
+          "node_sha256": "b50b63cbe8817083aec2bd5c4ec0deacb85c744931c3e3a7d3f82a90aaeb4126",
+          "numbers": "",
+          "minimum": {
+            "_": 6,
+            "^": 1,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "c",
+            "t",
+            "V",
+            "c",
+            "t",
+            "C",
+            "i",
+            "t",
+            "Γ",
+            "T",
+            "C",
+            "i",
+            "t",
+            "K",
+            "m",
+            "T",
+            "R",
+            "L",
+            "T"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 9,
+          "id": "M7",
+          "node_sha256": "1ef2f7e6021428993073c1142338b2eb00e90ab129acd50883f1d2fe73165c46",
+          "numbers": "25103298.15298.15",
+          "minimum": {
+            "_": 1,
+            "^": 3,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Γ",
+            "T",
+            "Γ",
+            "exp",
+            "E",
+            "a",
+            "T",
+            "R",
+            "T"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 10,
+          "id": "M8",
+          "node_sha256": "d37a54b0e4af88b54bcc6bc9f6ad454181efff1f33d40f5b9c4bbacafb8c2d3a",
+          "numbers": "",
+          "minimum": {
+            "_": 5,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "V",
+            "c",
+            "t",
+            "V",
+            "V",
+            "V",
+            "exp",
+            "t",
+            "τ"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 11,
+          "id": "im9",
+          "node_sha256": "1a19eedf94ef370240686b821f16f81805aa06f4e608f295379039230029f3ad",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "d",
+            "A",
+            "d",
+            "t",
+            "max"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 12,
+          "id": "im5",
+          "node_sha256": "d45b5d4e45e751c0e802099288eda8b75910f7b2bdc0aefa5093feb875ab0b39",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "A",
+            "d",
+            "t",
+            "max"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 13,
+          "id": "im6",
+          "node_sha256": "33bb6d2f9c03ce497fd3976e918cd7177d7fd05ec9144b0167dcbd8402e6fa51",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "g",
+            "d",
+            "t",
+            "max"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 14,
+          "id": "im7",
+          "node_sha256": "64a1dc1364f169057b1198fa27682e915e9dd4287d280171694d21e37ae53f72",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "A",
+            "d",
+            "t",
+            "max"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 15,
+          "id": "im8",
+          "node_sha256": "66e3b85b0404bcf9600c7a25714552ba143532c130b3f3dc4e7d665e21412cd6",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "g",
+            "d",
+            "t",
+            "max"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 16,
+          "id": "im10",
+          "node_sha256": "91b609e1f64819ef5453b0a1c1f9289f2e1421f8a72212bde674c9aaa4a119b1",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "A",
+            "d",
+            "t",
+            "max"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 17,
+          "id": "im11",
+          "node_sha256": "c7558def651eba7ef40d6b67dd29d1a81069348542db6a0865bacdbc80eef105",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "A",
+            "d",
+            "t",
+            "max"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 18,
+          "id": "im12",
+          "node_sha256": "a2fd0ed540cb30e730299fc543df60a484ccda2ad0541b35fa5356f492b8b209",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "A",
+            "d",
+            "t",
+            "max"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 19,
+          "id": "im13",
+          "node_sha256": "39fdc52d85931d9b9d2b25534cb985b93959af406afaf4875291e72ab252a375",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "A",
+            "d",
+            "t",
+            "max"
+          ],
+          "operators": []
+        }
+      ]
+    }
+  ]
+}

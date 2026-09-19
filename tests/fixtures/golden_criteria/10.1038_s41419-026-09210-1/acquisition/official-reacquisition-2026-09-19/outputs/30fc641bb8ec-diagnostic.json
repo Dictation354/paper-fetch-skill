@@ -1,0 +1,94 @@
+{
+  "schema_version": 2,
+  "provider": "springer",
+  "route": "html",
+  "failure_code": "abstract_only",
+  "stage": "availability",
+  "backend": "http_cookie_opener",
+  "attempt": 1,
+  "target": {
+    "url": "https://www.nature.com/articles/s41419-026-09210-1",
+    "host": "www.nature.com",
+    "path": "/articles/s41419-026-09210-1",
+    "url_sha256": "6d18dc7c9d50a4ee6d214b7ad36962bc0ae6db1cbb9c140083078694cd6d06fb"
+  },
+  "final": {
+    "url": "https://www.nature.com/articles/s41419-026-09210-1",
+    "host": "www.nature.com",
+    "path": "/articles/s41419-026-09210-1",
+    "url_sha256": "6d18dc7c9d50a4ee6d214b7ad36962bc0ae6db1cbb9c140083078694cd6d06fb"
+  },
+  "response_status": 200,
+  "title_summary": "PTTG1-driven self-amplifying loop with SP1 and ENO1 promotes IRF4-mediated myeloma progression and bone destruction",
+  "page_summary": "PTTG1-driven self-amplifying loop with SP1 and ENO1 promotes IRF4-mediated myeloma progression and bone destruction | Cell Death & Disease Skip to main content Thank you for visiting nature.com. You are using a browser version with limited support for CSS. To obtain\n            the best experience, we recommend you use a more up to date browser (or turn off compatibility mode in\n            Internet Explorer). In the meantime, to ensure continued support, we are displaying the site without styles\n            and JavaScript. Advertisement View all journals Saved research Search Log in Content Explore content About the journal Publish with us Sign up for alerts RSS feed nature cell death & disease articles article PTTG1-driven self-amplifying loop with SP1 and ENO1 promotes IRF4-mediated myeloma progression and bone destruction Download PDF Download PDF Article Open access Published: 07 September 2026 PTTG1-driven self-amplifying loop with SP1 and ENO1 promotes IRF4-mediated myeloma prog",
+  "page": {
+    "availability_diagnostics": {
+      "accepted": false,
+      "reason": "abstract_only",
+      "content_kind": "abstract_only",
+      "blocking_fallback_signals": [],
+      "hard_negative_signals": [],
+      "strong_positive_signals": [
+        "explicit_body_container",
+        "selected_container_has_body_text"
+      ],
+      "soft_positive_signals": [
+        "selected_article_container",
+        "article_tag_present"
+      ],
+      "body_metrics": {
+        "text": "",
+        "char_count": 0,
+        "word_count": 0,
+        "cjk_chars": 0,
+        "cjk_ratio": 0.0,
+        "has_doi": true,
+        "body_block_count": 0,
+        "body_heading_count": 0,
+        "abstract_text": "Multiple myeloma (MM) is a neoplastic disorder of plasma cells within the hematopoietic system and is characterized by osteolytic lesions. Despite significant advances, the molecular underpinnings of myeloma and its associated bone pathologies remain elusive, and there is an unmet need for effective targeted therapies. Our research uncovers upregulation of pituitary tumor-transforming gene 1 (PTTG1) in myeloma cells, which synergizes with transcription factor specificity protein 1 (SP1) to enhance its nuclear accumulation and consequently elevate the expression of glycolytic enzyme enolase-1 (ENO1). Intriguingly, ENO1, in a non-catalytic role, complexes with PTTG1/SP1, thereby amplifying the transcriptional activity of interferon regulatory factor 4 (IRF4). This cascade accelerates myeloma progression and exacerbates osteolytic lesions. Notably, IRF4 binds to the PTTG1 promoter, establishing a positive feedback loop that amplifies PTTG1 expression. Our study introduces a novel mechanistic insight into the pathogenesis of myeloma and bone deterioration and identifies disruption of the ENO1–PTTG1 interaction as a potential dual-targeting therapeutic strategy. The use of blocking peptides to interfere with this interaction demonstrates significant efficacy in curbing myeloma progression and osteolytic lesions, offering a promising avenue for clinical intervention.",
+        "abstract_word_count": 188,
+        "abstract_char_count": 1383,
+        "has_abstract": true,
+        "body_to_abstract_ratio": 0.0,
+        "body_run_paragraph_count": 0,
+        "body_run_char_count": 0,
+        "body_paragraph_count": 0,
+        "body_marker_present": true,
+        "substantive_article_container": true,
+        "explicit_body_container": true,
+        "substantive_body_container": true,
+        "post_abstract_body_run": false,
+        "narrative_article_type": false,
+        "container_scope": "article",
+        "container_scope_trusted": true,
+        "container_selector": "body.article-page",
+        "container_synthetic": false
+      },
+      "figure_count": 0,
+      "title": "PTTG1-driven self-amplifying loop with SP1 and ENO1 promotes IRF4-mediated myeloma progression and bone destruction",
+      "container_tag": "body",
+      "container_text_length": 6683,
+      "confirmed_article_paywall": {}
+    },
+    "html_shape": {
+      "byte_count": 217207,
+      "has_html": true,
+      "has_head": true,
+      "has_body": true,
+      "body_text_length": 8858,
+      "body_element_count": 911,
+      "article_container_count": 2
+    }
+  },
+  "raw_html": {
+    "byte_count": 217207,
+    "sha256": "8173ad6ea05d6e0d3d5f3f5777e6fa812708154b726a8c7ce26557150a9119a7"
+  },
+  "sanitized_html": {
+    "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/springer/10.1038_s41419-026-09210-1/html-1/page-sanitized.html",
+    "byte_count": 59403,
+    "sha256": "de688408d87dd6a9a749042347f0da0a068d4296e6af5ac1f59c17226438925d",
+    "truncated": false
+  },
+  "diagnostic_path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/springer/10.1038_s41419-026-09210-1/html-1/diagnostic.json"
+}

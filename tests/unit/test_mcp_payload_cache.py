@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import asyncio
 import json
 import tempfile
@@ -7,7 +6,6 @@ import unittest
 from dataclasses import asdict, replace
 from pathlib import Path
 from unittest import mock
-
 from paper_fetch.mcp import fetch_tool as mcp_fetch_tool
 from paper_fetch.mcp._deps import default_mcp_deps
 from paper_fetch.mcp.cache_index import (
@@ -49,8 +47,7 @@ from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy
 from paper_fetch.tracing import TraceContext, trace_event
 from tests.golden_criteria import golden_criteria_scenario_asset
-
-from ._mcp_support import (
+from tests.support._mcp_support import (
     create_cached_downloads,
     create_cached_fetch_envelope,
     mcp_test_deps,
@@ -1000,6 +997,51 @@ class McpPayloadCacheTests(unittest.TestCase):
             QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION, payload["quality"]["flags"]
         )
         mocked_fetch.assert_called_once()
+
+    def test_upgrade_from_6_2_4_refetches_html_and_xml(self) -> None:
+        # Fixed historical revision: this must still fail if a release forgets
+        # to invalidate 6.2.4 results, rather than deriving the old version.
+        for source in ("springer_html", "elsevier_xml"):
+            with self.subTest(source=source), tempfile.TemporaryDirectory() as tmpdir:
+                download_dir = Path(tmpdir)
+                doi = "10.1000/example"
+                create_cached_fetch_envelope(download_dir, doi, extraction_revision=5)
+                path = fetch_envelope_cache_path(download_dir, doi)
+                cached = json.loads(path.read_text())
+                cached["payload"]["source"] = source
+                cached["payload"]["article"]["source"] = source
+                cached["payload"]["quality"]["extraction_revision"] = 5
+                cached["payload"]["article"]["quality"]["extraction_revision"] = 5
+                path.write_text(json.dumps(cached))
+                inspection = FetchCache(download_dir)._inspect_fetch_envelope_sidecar(
+                    doi, FetchPaperRequest(query=doi, modes=["article", "markdown"])
+                )
+                self.assertEqual(
+                    inspection.summary["reason_code"],
+                    "cache_sidecar_extraction_revision_mismatch",
+                )
+                fresh = mock.Mock(
+                    return_value=sample_envelope(modes={"article", "markdown"})
+                )
+                payload = fetch_paper_payload(
+                    query=doi,
+                    modes=["article", "markdown"],
+                    prefer_cache=True,
+                    download_dir=download_dir,
+                    deps=mcp_test_deps(
+                        build_runtime_env=lambda _env=None: {},
+                        service_resolve_paper=lambda *_args, **_kwargs: (
+                            sample_resolved_query("10.1000/example")
+                        ),
+                        service_fetch_paper=fresh,
+                    ),
+                )
+                fresh.assert_called_once()
+                self.assertNotIn(
+                    QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
+                    payload["quality"]["flags"],
+                )
+                self.assertGreater(payload["quality"]["extraction_revision"], 5)
 
     def test_fetch_cache_write_refreshes_index_with_scoped_entries(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

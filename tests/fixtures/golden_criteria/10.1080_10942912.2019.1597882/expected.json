@@ -17,5 +17,481 @@
     "figures": false,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1080_10942912.2019.1597882",
+    "provider": "tandf",
+    "doi": "10.1080/10942912.2019.1597882",
+    "original": "tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html",
+    "sha256": "2ed800df40eaf89b7344b1472ff132ea76b1db3e1d211e2a0cc9d0f4e756ea49",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 1,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 67,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 23,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 2,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 111,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "No structured formula in the selected original; bitmap/externally loaded formulas have only captured index/link evidence.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"dc.Creator\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 0,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1080_10942912.2019.1597882/original.html",
+      "sha256": "2ed800df40eaf89b7344b1472ff132ea76b1db3e1d211e2a0cc9d0f4e756ea49",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "2a05c77640223e717cd7d397e34f3fc19bf1c1efac83085c2a3999b3e4b294f6",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2
+              ]
+            ],
+            [
+              1,
+              [
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                7,
+                8
+              ]
+            ],
+            [
+              3,
+              [
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              4,
+              [
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              5,
+              [
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              6,
+              [
+                18,
+                19,
+                20
+              ]
+            ]
+          ],
+          "cells": [
+            "Materials used",
+            "Sample tube (µL)",
+            "Control tube (µL)",
+            "p-NPG",
+            "50",
+            "50",
+            "Buffer",
+            "200",
+            "200",
+            "Water",
+            "680",
+            "730",
+            "α-Glycosidase",
+            "20",
+            "20",
+            "Isoeugenol",
+            "50",
+            "-",
+            "Total volume",
+            "1000",
+            "1000"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "2434556c7aae7f60cf7c179177be2aba8ba8746ef48a2b257523298742ffcc62",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2
+              ]
+            ],
+            [
+              1,
+              [
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                7,
+                8
+              ]
+            ],
+            [
+              3,
+              [
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              4,
+              [
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              5,
+              [
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              6,
+              [
+                18,
+                19,
+                20
+              ]
+            ]
+          ],
+          "cells": [
+            "Materials used",
+            "Sample tube (µL)",
+            "Control tube (µL)",
+            "Starch",
+            "500",
+            "500",
+            "Buffer",
+            "300",
+            "300",
+            "Water",
+            "-",
+            "100",
+            "α-Amylase",
+            "100",
+            "100",
+            "Isoeugenol",
+            "100",
+            "-",
+            "Total volume",
+            "1000",
+            "1000"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "36e5b208c9fece5a8048512a735253382fd27f68002d4431d3add55c91548eab",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2
+              ]
+            ],
+            [
+              1,
+              [
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                7,
+                8
+              ]
+            ],
+            [
+              3,
+              [
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              4,
+              [
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              5,
+              [
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              6,
+              [
+                18,
+                18,
+                18
+              ]
+            ],
+            [
+              7,
+              [
+                19,
+                20,
+                21
+              ]
+            ]
+          ],
+          "cells": [
+            "Materials used",
+            "Control tube (µL)",
+            "Sample tube (µL)",
+            "Tris-HCl",
+            "100",
+            "100",
+            "Pure water",
+            "790",
+            "780",
+            "Sample",
+            "-",
+            "10",
+            "DTNB",
+            "50",
+            "50",
+            "Enzyme solution",
+            "10",
+            "10",
+            "Incubated at 30ºC for 5 minutes",
+            "Acetylcholine thioiodide",
+            "50",
+            "50"
+          ]
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "a1b8d99932b040f03f88527c1f897c89b40b0adcc406c7e45cd126aae82be107",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                3,
+                3,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                0,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              2,
+              [
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              3,
+              [
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29
+              ]
+            ],
+            [
+              4,
+              [
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38
+              ]
+            ]
+          ],
+          "cells": [
+            "Compounds",
+            "AChE",
+            "α-Amylase ^{a}",
+            "α-Glycosidase",
+            "IC _{50} (nM)",
+            "r ^{2}",
+            "K _{i}",
+            "IC _{50} (nM)",
+            "r ^{2}",
+            "IC _{50} (nM)",
+            "r ^{2}",
+            "K _{i} (nM)",
+            "Isoeugenol",
+            "77.00",
+            "0.9592",
+            "16 ± 3",
+            "411.50",
+            "0.9531",
+            "19.25",
+            "0.9381",
+            "21 ± 9",
+            "Acarbose ^{b}",
+            "-",
+            "-",
+            "-",
+            "10000",
+            "-",
+            "22800",
+            "-",
+            "12600",
+            "Tacrine ^{c}",
+            "20.38",
+            "0.9552",
+            "9 ± 2",
+            "-",
+            "-",
+            "-",
+            "-",
+            "-"
+          ]
+        }
+      ],
+      "mathml": []
+    }
+  ]
 }

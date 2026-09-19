@@ -1,0 +1,30 @@
+{
+  "doi": "10.1126/sciadv.abf8021",
+  "attempt": 2,
+  "change_from_previous_attempt": "PAPER_FETCH_BROWSER_HEADLESS=false; standard CLI fetch, unchanged timeout and existing access state",
+  "effective_headless": false,
+  "observed_browser_processes": [
+    {
+      "pid": 48889,
+      "headless_flag_present": false
+    }
+  ],
+  "human_assistance": {
+    "occurred": true,
+    "action": "User manually completed the human verification challenge in the headed browser.",
+    "evidence_basis": "User statement after successful fetch: 这次成功是因为我点了人机验证",
+    "scope": "Success depended on user interaction; this is not evidence of unattended headed-mode success or automatic challenge completion."
+  },
+  "result": {
+    "overall": "complete",
+    "content": "fulltext",
+    "acquisition": {
+      "provider": "science",
+      "route": "browser_html",
+      "representation": "html",
+      "transport": "browser",
+      "fallback_used": false
+    },
+    "run_id": "c8ce6973-51d7-4b2f-90fd-daae9674d494"
+  }
+}

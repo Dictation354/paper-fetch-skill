@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import contextlib
 import io
 import json
@@ -13,15 +12,13 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
-
 from paper_fetch import cli as paper_fetch_cli
 from paper_fetch.config import DOWNLOAD_DIR_ENV_VAR
 from paper_fetch.logging_utils import emit_structured_log
 from paper_fetch import service as paper_fetch
 from paper_fetch.models import ArticleModel, Asset, Metadata, RenderOptions
 from paper_fetch.providers.base import ProviderFailure
-
-from ._paper_fetch_support import build_envelope, sample_article
+from tests.support._paper_fetch_support import build_envelope, sample_article
 
 
 class CliTests(unittest.TestCase):

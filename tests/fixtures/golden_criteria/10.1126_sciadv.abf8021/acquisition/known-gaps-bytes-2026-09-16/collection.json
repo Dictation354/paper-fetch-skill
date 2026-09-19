@@ -1,0 +1,25 @@
+{
+  "doi": "10.1126/sciadv.abf8021",
+  "provider": "science",
+  "source_url": "https://www.science.org/doi/pdf/10.1126/sciadv.abf8021",
+  "attempt": 2,
+  "change_from_previous": "Use provider popup URL discovery; capture PDF response MIME regardless of request resource type",
+  "transport": "Camoufox with configured provider state",
+  "capture_started_utc": "2026-09-16T06:29:12.083702+00:00",
+  "historical_records_unchanged": true,
+  "responses": [
+    {
+      "url": "https://www.science.org/doi/pdf/10.1126/sciadv.abf8021",
+      "status_code": 403,
+      "record": "acquisition/known-gaps-bytes-2026-09-16/001-http_response_entity.bin"
+    }
+  ],
+  "dom_file": "acquisition/known-gaps-bytes-2026-09-16/000-browser_rendered_dom.html",
+  "final_url": "https://www.science.org/doi/pdf/10.1126/sciadv.abf8021",
+  "title": "Just a moment...",
+  "observed_doi": null,
+  "confirmed_paywall": false,
+  "paywall_diagnostics": {},
+  "challenge": true,
+  "stop_reason": "browser_challenge_requires_manual_verification"
+}

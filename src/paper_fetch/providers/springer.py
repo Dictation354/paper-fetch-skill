@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from ..quality.access_boundary import propagate_paywall, raise_for_paywall
+
+from dataclasses import dataclass, replace
 import math
 import re
 import urllib.parse
@@ -49,10 +51,12 @@ from ..publisher_identity import normalize_doi
 from ..provider_catalog import PdfSourcePathTemplate, ProviderRouteSpec, ProviderSpec
 from ..runtime import RuntimeContext
 from ..tracing import (
+    TraceContext,
     download_marker,
     fulltext_marker,
     merge_trace,
     trace_from_markers,
+    trace_event,
 )
 from ..utils import (
     choose_public_landing_page_url,
@@ -682,6 +686,7 @@ class SpringerClient(ProviderClient):
             ),
         )
         details: dict[str, Any] = {
+            "failure_code": failure_code,
             "availability_diagnostics": availability,
             "page_diagnostic": page,
         }
@@ -725,6 +730,9 @@ class SpringerClient(ProviderClient):
                     retry_on_transient=True,
                 )
             except RequestFailure as exc:
+                raise_for_paywall(
+                    exc.body, source_url=str(exc.url or landing_url), provider=self.name
+                )
                 raise map_request_failure(exc) from exc
         try:
             last_result: LandingHtmlFetchResult | None = None
@@ -760,6 +768,11 @@ class SpringerClient(ProviderClient):
                     decoder=_springer_dom.decode_html,
                     metadata_parser=_springer_dom.parse_html_metadata,
                 )
+                raise_for_paywall(
+                    last_result.html_text,
+                    source_url=last_result.final_url,
+                    provider=self.name,
+                )
                 query = urllib.parse.parse_qs(
                     urllib.parse.urlsplit(last_result.final_url).query
                 )
@@ -775,6 +788,9 @@ class SpringerClient(ProviderClient):
                 "Springer direct HTML retrieval exhausted the request deadline.",
             ) from exc
         except RequestFailure as exc:
+            raise_for_paywall(
+                exc.body, source_url=str(exc.url or landing_url), provider=self.name
+            )
             raise map_request_failure(exc) from exc
 
     def _fetch_html_response(
@@ -805,6 +821,7 @@ class SpringerClient(ProviderClient):
                 context=context,
             )
         except ProviderFailure as exc:
+            propagate_paywall(exc)
             reason = f"Springer inline table supplement for {fallback_label} could not be fetched ({exc.code}: {exc.message})."
             if allow_degraded_placeholder:
                 return (
@@ -917,10 +934,31 @@ class SpringerClient(ProviderClient):
                 for section in [*supplementary_sections, *source_data_sections]
             )
             if supplementary and asset_profile != "all":
-                # Keep the textual mention without presenting an excluded table
-                # node to subsequent asset/table extraction.
+                # Preserve the caption and official entry without downloading
+                # excluded supplementary content. Nature may place it outside
+                # main-content, so mark it for the provider renderer as well.
                 mention = soup.new_tag("p")
-                mention.string = _springer_short_text(node)
+                mention["data-paper-fetch-table-mention"] = "true"
+                caption = next(
+                    (
+                        node.select_one(selector)
+                        for selector in SPRINGER_TABLE_CAPTION_SELECTORS
+                        if node.select_one(selector) is not None
+                    ),
+                    None,
+                )
+                mention.string = _springer_short_text(caption or node)
+                for selector in SPRINGER_TABLE_LINK_SELECTORS:
+                    link = node.select_one(selector)
+                    if isinstance(link, Tag) and link.get("href"):
+                        entry = soup.new_tag(
+                            "a",
+                            href=urllib.parse.urljoin(source_url, str(link["href"])),
+                        )
+                        entry.string = mention.get_text()
+                        mention.clear()
+                        mention.append(entry)
+                        break
                 node.replace_with(mention)
                 continue
             caption = _springer_table_caption(node, label)
@@ -1028,6 +1066,12 @@ class SpringerClient(ProviderClient):
         html_text = _springer_dom.decode_html(
             response["body"],
             content_type=_springer_response_content_type(response),
+        )
+        raise_for_paywall(
+            html_text,
+            metadata={**metadata, "doi": normalized_doi},
+            source_url=response_url,
+            provider=self.name,
         )
         html_metadata = _springer_dom.parse_html_metadata(html_text, response_url)
         merged_metadata = _springer_dom.merge_html_metadata(metadata, html_metadata)
@@ -1364,6 +1408,7 @@ class SpringerClient(ProviderClient):
                     context=runtime_context,
                 )
             except PdfFetchFailure as exc:
+                propagate_paywall(exc)
                 raise ProviderFailure(
                     NO_RESULT,
                     _springer_fulltext_failure_message(
@@ -1564,7 +1609,40 @@ class SpringerClient(ProviderClient):
             )
             return PreparedFetchResultPayload(raw_payload=raw_payload)
         except ProviderFailure as exc:
+            propagate_paywall(exc)
             html_failure = exc
+
+        details = html_failure.details
+        html_failure_event = trace_event(
+            "fulltext",
+            "springer_html",
+            "fail",
+            code=details.get("failure_code") or html_failure.code,
+            message=html_failure.message,
+            context=TraceContext(
+                provider="springer",
+                route="html",
+                http_status=html_failure.http_status,
+                target=details.get("diagnostic_path"),
+            ),
+        )
+        html_failure.trace = [
+            replace(
+                event,
+                code=html_failure_event.code,
+                message=html_failure_event.message,
+                http_status=html_failure_event.http_status,
+                target=html_failure_event.target,
+            )
+            if event.marker() == html_failure_event.marker()
+            else event
+            for event in html_failure.trace
+        ]
+        if not any(
+            event.marker() == html_failure_event.marker()
+            for event in html_failure.trace
+        ):
+            html_failure.trace.append(html_failure_event)
 
         fallback_attempt = _springer_fallback_attempt(
             normalized_doi=normalized_doi,
@@ -1580,6 +1658,8 @@ class SpringerClient(ProviderClient):
         html_text = fallback_attempt.html_text
         merged_metadata = dict(fallback_attempt.merged_metadata)
         provisional_payload = attempt_context.get("provisional_payload")
+        if isinstance(provisional_payload, RawFulltextPayload):
+            provisional_payload.trace = list(html_failure.trace)
         return PreparedFetchResultPayload(
             raw_payload=provisional_payload
             or RawFulltextPayload(
@@ -1593,9 +1673,7 @@ class SpringerClient(ProviderClient):
                     merged_metadata=dict(merged_metadata),
                     reason="Springer HTML route was not usable.",
                 ),
-                trace=trace_from_markers(
-                    [fulltext_marker("springer", "fail", route="html")]
-                ),
+                trace=list(html_failure.trace),
             ),
             provisional_article=attempt_context.get("provisional_article"),
             context={
@@ -1634,12 +1712,22 @@ class SpringerClient(ProviderClient):
                     context=context,
                 )
             except PdfFetchFailure as exc:
+                propagate_paywall(exc)
                 raise ProviderFailure(
                     NO_RESULT,
                     _springer_fulltext_failure_message(
                         html_message=html_failure.message,
                         pdf_message=exc.message,
                     ),
+                    trace=[
+                        trace_event(
+                            "fulltext",
+                            "springer_pdf_transport",
+                            "fail",
+                            code=exc.kind,
+                            message=exc.message,
+                        )
+                    ],
                 ) from exc
 
         def final_pdf_failure(state: ProviderWaterfallState) -> ProviderFailure:
@@ -1684,6 +1772,7 @@ class SpringerClient(ProviderClient):
                 final_failure_factory=final_pdf_failure,
             )
         except ProviderFailure as exc:
+            propagate_paywall(exc)
             warnings = list(exc.warnings or warnings)
             extend_unique(warnings, [exc.message])
             if prepared.provisional_article is not None:
@@ -1707,6 +1796,7 @@ class SpringerClient(ProviderClient):
                     result_warnings=list(provisional_article.quality.warnings),
                     result_trace=merge_trace(
                         prepared.raw_payload.trace,
+                        exc.trace,
                         trace_from_markers(
                             [fulltext_marker("springer", ABSTRACT_ONLY)]
                         ),
@@ -1716,6 +1806,18 @@ class SpringerClient(ProviderClient):
                 [("html", html_failure), ("pdf", exc)]
             ) from exc
 
+        recovered_payload.trace = merge_trace(
+            html_failure.trace,
+            [
+                event
+                for event in recovered_payload.trace
+                if event.marker() not in {item.marker() for item in html_failure.trace}
+            ],
+        )
+        if recovered_payload.content is not None:
+            recovered_payload.content.diagnostics["html_failure"] = dict(
+                html_failure.details
+            )
         return PreparedFetchResultPayload(raw_payload=recovered_payload)
 
     def should_download_related_assets_for_result(
@@ -1757,7 +1859,7 @@ class SpringerClient(ProviderClient):
         doi = normalize_doi(article_metadata.get("doi") or metadata.get("doi"))
         markdown_text = str(
             (content.markdown_text if content is not None else "") or ""
-        ).strip()
+        )
         route = normalize_text(
             content.route_kind if content is not None else ""
         ).lower()
@@ -1997,6 +2099,7 @@ PROVIDER_BUNDLE = ProviderBundle(
         ),
         heading=ProviderHeadingRules(normalizations={"online methods": "Methods"}),
         availability=AvailabilityPolicy(
+            paywall_gate_selectors=".c-article-paywall, .c-article-access-provider",
             name="springer_nature",
             overrides=SPRINGER_AVAILABILITY_OVERRIDES,
         ),

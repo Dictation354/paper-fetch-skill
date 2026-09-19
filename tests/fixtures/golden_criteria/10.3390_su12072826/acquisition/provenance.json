@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "doi": "10.3390/su12072826",
+      "provider": "mdpi",
+      "requested_url": "https://api.crossref.org/works/10.3390%2Fsu12072826",
+      "final_url": "https://api.crossref.org/works/10.3390%2Fsu12072826",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:26:03 GMT",
+        "content-type": "application/json",
+        "content-length": "6485"
+      },
+      "captured_at_utc": "2026-09-18T02:26:02.701930+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 21243,
+      "sha256": "c3d87d081b5964c55c67be6c7d71c81991d7b402495a67dd88aae2aae91b71c9",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.3390/su12072826",
+      "provider": "mdpi",
+      "requested_url": "https://www.mdpi.com/2071-1050/12/7/2826",
+      "final_url": "https://www.mdpi.com/2071-1050/12/7/2826",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "date": "Fri, 18 Sep 2026 02:26:06 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:26:10.246645+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 1060902,
+      "sha256": "15b74511f80ba36d71b24e4f8704930a50f386ca4be13479d837e439ac2d288d",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

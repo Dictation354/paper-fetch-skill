@@ -1,0 +1,182 @@
+{
+  "provider": "iop",
+  "doi": "10.1088/1748-9326/ab7d02",
+  "sample_id": "10.1088_1748-9326_ab7d02",
+  "source_url": "https://iopscience.iop.org/article/10.1088/1748-9326/ab7d02",
+  "source_input": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/original.html",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "e638a78a7fd2471ea3a6124f7dd1d25c3f8b5263390dad64a7a5d125171f1d60",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 1. Short-term (2019-2034) trend in surface temperature. Shown for the max",
+        "caption": "Figure 1. Short-term (2019-2034) trend in surface temperature. Shown for the maximum (top row) and minimum (second row) global mean surface temperature trend, and the mean trend (bottom row). All trends are shown as a mean of the six SMILEs (left) and CMIP5 mean (right). All panels use the RCP8.5 scenario. Download figure: Standard image High-resolution image",
+        "url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f1_lr.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f1_lr.jpg",
+        "full_size_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f1_hr.jpg"
+      },
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f1_hr.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ee28e5d600b0577c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ee28e5d600b0577c-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1725,
+        "height": 1712,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "erlab7d02f1_hr.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 2. Percentage role of internal variability (top row), model uncertainty (",
+        "caption": "Figure 2. Percentage role of internal variability (top row), model uncertainty (middle row) and scenario uncertainty (bottom row). Shown for the short-term (left; 2019-2034) and mid-term (right; 2019-2049) trends. Internal variability is calculated as the standard deviation of a single SMILE, then averaged across SMILEs. Model uncertainty is calculated as the standard deviation across the six SMILE means. Scenario uncertainty is calculated as the standard deviation across the MPI-GE means from the three scenarios. Download figure: Standard image High-resolution image",
+        "url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f2_lr.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f2_lr.jpg",
+        "full_size_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f2_hr.jpg"
+      },
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f2_hr.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/b253e577953551ca-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/b253e577953551ca-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1725,
+        "height": 1640,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "erlab7d02f2_hr.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 3. Percentage role of minimum and maximum possible internal variability (",
+        "caption": "Figure 3. Percentage role of minimum and maximum possible internal variability (top row), model uncertainty (middle row) and scenario uncertainty (bottom row) for the short-term (2019-2034; left two panels) and mid-term (2019-2049; right two panels) trends. Internal variability is calculated as the minimum or maximum standard deviation from the SMILEs. Model uncertainty is calculated as the standard deviation across the six SMILE means. Scenario uncertainty is calculated as the standard deviation across the MPI-GE means from the three scenarios. Download figure: Standard image High-resolution image",
+        "url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f3_lr.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f3_lr.jpg",
+        "full_size_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f3_hr.jpg"
+      },
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f3_hr.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/7b1509fa1dd1d6eb-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/7b1509fa1dd1d6eb-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1725,
+        "height": 822,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "erlab7d02f3_hr.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 4. Point-wise maximum (top row) and minimum (middle row) short-term (2019",
+        "caption": "Figure 4. Point-wise maximum (top row) and minimum (middle row) short-term (2019-2034) trend in surface temperature, and percentage of ensemble members with an increasing surface temperature trend (bottom row). Shown for MPI-GE, RCP2.6 scenario (left) and RCP8.5 scenario (middle), and CESM-LE, RCP8.5 scenario (right). Note that these trends are very unlikely to occur at the same time across the globe. Download figure: Standard image High-resolution image",
+        "url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f4_lr.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f4_lr.jpg",
+        "full_size_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f4_hr.jpg"
+      },
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f4_hr.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/a9404274d7afe86c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/a9404274d7afe86c-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1725,
+        "height": 1495,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "erlab7d02f4_hr.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 5. Mean mid-term (2019-2049) surface temperature trend (top row). Point-w",
+        "caption": "Figure 5. Mean mid-term (2019-2049) surface temperature trend (top row). Point-wise maximum (second row) and minimum (third row) mid-term trend in surface temperature, and percentage of ensemble members with a increasing surface temperature trend (bottom row). Shown for MPI-GE, RCP2.6 scenario (left) and RCP8.5 scenario (middle), and CESM-LE, RCP8.5 scenario (right). Note that these trends are very unlikely to occur at the same time across the globe. Download figure: Standard image High-resolution image",
+        "url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f5_lr.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f5_lr.jpg",
+        "full_size_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f5_hr.jpg"
+      },
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f5_hr.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/b1f179c9252b7909-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/b1f179c9252b7909-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1725,
+        "height": 2076,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "erlab7d02f5_hr.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 5,
+    "replayed_files": 5,
+    "complete_received_files": 5,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 5,
+    "replayed_files": 5,
+    "complete_received_files": 5
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

@@ -32,6 +32,7 @@ def fetch_seeded_browser_pdf_payload(
     browser_context_seed: Mapping[str, Any] | None,
     html_failure_reason: str | None,
     html_failure_message: str | None,
+    expected_title: str | None = None,
     html_failure_diagnostics: Mapping[str, Any] | None = None,
     warnings: list[str] | None = None,
     success_source_trail: list[str] | None = None,
@@ -82,7 +83,12 @@ def fetch_seeded_browser_pdf_payload(
         seed_urls=seed_urls,
         allow_pdf_only=True,
         request=PdfRequestContext(
-            expected_identity={"doi": doi} if doi else None,
+            expected_identity={
+                **({"doi": doi} if doi else {}),
+                **({"title": expected_title} if expected_title else {}),
+            }
+            if doi or expected_title
+            else None,
             runtime=context,
         ),
     )

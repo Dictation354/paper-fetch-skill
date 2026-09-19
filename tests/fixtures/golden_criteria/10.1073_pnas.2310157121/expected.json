@@ -17,5 +17,806 @@
     "tables": 0,
     "references": 88
   },
-  "expected_content_kind": "fulltext"
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.1073_pnas.2310157121",
+    "provider": "pnas",
+    "doi": "10.1073/pnas.2310157121",
+    "original": "tests/fixtures/golden_criteria/10.1073_pnas.2310157121/original.html",
+    "sha256": "22a57f28e4bb8bbc5538b657bff62e83384595938ba633b4ed4f8229eb42a51f",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 12,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 88,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 49,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 3,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 0,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 32,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 32,
+      "tex_checked": 0,
+      "mathml_checked": 32,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1073_pnas.2310157121/original.html",
+      "sha256": "22a57f28e4bb8bbc5538b657bff62e83384595938ba633b4ed4f8229eb42a51f",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "18ab880768564062b186b47173d892a3cd208fce657b0973bd3c7ef41d0edd47",
+          "numbers": "0.541.76",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ACD",
+            "TCH",
+            "TCH"
+          ],
+          "operators": [
+            "=",
+            "×"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "9fa38d66122af69c86dda4f9c44963fad9c2cce42b784de2b067c1cfa4f04235",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ACD"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "398bc17ecb2ce8b12705195373b3f39b435e08eb228030d12b14f564b6630522",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "TCH"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "98868a9fc1408ef7df330452e42d6492ab6c0e4095af667d061fbeadc4506e9a",
+          "numbers": "21365",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Δ",
+            "A",
+            "G",
+            "C",
+            "cell",
+            "AGC",
+            "t",
+            "AGC",
+            "t",
+            "Δ",
+            "t"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "×"
+          ]
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "eaf0f109988fb373c1f79024ea4abf7ca201626bb693963607574cecfb6dafd5",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Δ",
+            "A",
+            "G",
+            "C",
+            "cell"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "b0c5882d5bc0c2cb82a4b439c587368a477c113df5b6565cbd5833a1ff08f453",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "AGC",
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 6,
+          "id": null,
+          "node_sha256": "c93233bfc59f624c30dba1eec5a657d013a0930248083f63d37c39210b380416",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "AGC",
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 7,
+          "id": null,
+          "node_sha256": "4cad84c549c2290a7d0c9f3c7e09df5eebf7942680075e4dae03d9405bfde0ef",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Δ",
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 8,
+          "id": null,
+          "node_sha256": "2ec67aa9e13ae358aed9e3ef89782cc621b498f1ef1296643b552b06ecdcb05b",
+          "numbers": "",
+          "minimum": {
+            "_": 8,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Δ",
+            "AGC",
+            "annual",
+            "Δ",
+            "C",
+            "Clearing",
+            "Δ",
+            "C",
+            "Fire",
+            "Δ",
+            "C",
+            "Logging",
+            "Δ",
+            "C",
+            "Windthrow",
+            "Δ",
+            "C",
+            "Other",
+            "Δ",
+            "C",
+            "Nochange",
+            "Δ",
+            "C",
+            "Growth"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+",
+            "+",
+            "+",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 9,
+          "id": null,
+          "node_sha256": "fb70bfe7fc8979a95b690e70e32d0369470e15e86eaf35215f347d7406c15692",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Δ",
+            "AGC",
+            "annual"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 10,
+          "id": null,
+          "node_sha256": "b995897102a43f74a010cf7172f159a9a295d0d3f40be4a3aa5acc7b2d679d7c",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Δ",
+            "C",
+            "class"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 11,
+          "id": null,
+          "node_sha256": "a52287fbf3db8d4123b01f5864b54b8593691ccbc2330d7901fbe6994a50a463",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "Cell"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 12,
+          "id": null,
+          "node_sha256": "b3e0753317d6262fa396311eb7c390f62864ed0d24d18e67e99f43dc1b5738d1",
+          "numbers": "2222",
+          "minimum": {
+            "_": 4,
+            "^": 4,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "Cell",
+            "σ",
+            "CellPU",
+            "σ",
+            "CellRV",
+            "σ",
+            "CellCU"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 13,
+          "id": null,
+          "node_sha256": "17c27406f2515fb6f4b10bda7bfe10db0a76ce57d855980eeeef3424a794c806",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "CellPU"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 14,
+          "id": null,
+          "node_sha256": "224a6b887cb25ae880ab2c5b5fa61715152fbf49366693c4d9fec9e12e2339ac",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "CellRV"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 15,
+          "id": null,
+          "node_sha256": "e6cc9a57afa173819f946e117c0a3012e41bbfc6826229037f7b197850d6fc83",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "CellCU"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 16,
+          "id": null,
+          "node_sha256": "125f6adbb02789fe508394d58ef03619195f63399c16f81bf969608894ded5ef",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "C",
+            "e",
+            "l",
+            "l",
+            "_",
+            "C",
+            "h",
+            "a",
+            "n",
+            "g",
+            "e"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 17,
+          "id": null,
+          "node_sha256": "d2eefb42eeffc38a3a94d66f97ab25b79ff8179cd5960b94dab47b16341ad7b7",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "C",
+            "e",
+            "l",
+            "l",
+            "_",
+            "I",
+            "n",
+            "i",
+            "t",
+            "i",
+            "a",
+            "l"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 18,
+          "id": null,
+          "node_sha256": "b7d0b3a68612c7995e9c38d0a05cfb779c0cb60f734038fc19db94d1eb7f197a",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "C",
+            "e",
+            "l",
+            "l",
+            "_",
+            "F",
+            "i",
+            "n",
+            "a",
+            "l"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 19,
+          "id": null,
+          "node_sha256": "16e30024966beea5e96c624a77be6bdec33b0833264b1071d38525f45011baf9",
+          "numbers": "222",
+          "minimum": {
+            "_": 3,
+            "^": 3,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "C",
+            "e",
+            "l",
+            "l",
+            "_",
+            "C",
+            "h",
+            "a",
+            "n",
+            "g",
+            "e",
+            "σ",
+            "C",
+            "e",
+            "l",
+            "l",
+            "_",
+            "I",
+            "n",
+            "i",
+            "t",
+            "i",
+            "a",
+            "l",
+            "σ",
+            "C",
+            "e",
+            "l",
+            "l",
+            "_",
+            "F",
+            "i",
+            "n",
+            "a",
+            "l"
+          ],
+          "operators": [
+            "=",
+            "+"
+          ]
+        },
+        {
+          "object_index": 20,
+          "id": null,
+          "node_sha256": "116c8d3a1b4ce8d7b802610f746cadeeafaafd421fa7d580c749dfdafce2d84d",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "Class"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 21,
+          "id": null,
+          "node_sha256": "db39cedc8ed16747f74dcb716d9b5523ae06f940d9b2b4f176f05adecdf94f5f",
+          "numbers": "2222",
+          "minimum": {
+            "_": 4,
+            "^": 4,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "Class",
+            "σ",
+            "ClassSU",
+            "σ",
+            "ClassCV",
+            "σ",
+            "ClassCU"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 22,
+          "id": null,
+          "node_sha256": "3e86f189d1cdc93e914c5ea72cc7a1ec6b435b64ea06a0e561cc9ae9f41bfd84",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "ClassSU"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 23,
+          "id": null,
+          "node_sha256": "163ae25eb150667f8915ee7269014921ce10be54ed1e37b0e135ce6ee266072c",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "ClassCV"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 24,
+          "id": null,
+          "node_sha256": "d09164d33d4ac92d08a7c2fe1393ed6f0117d5cf43d014242a56a717f49d45bd",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "ClassCU"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 25,
+          "id": null,
+          "node_sha256": "ccfc0e9f814be97fae3f98db9eef811a4b92f985e8d9b585cec62d6c61a7b188",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "Combined"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 26,
+          "id": null,
+          "node_sha256": "70a4eda461bd0f0281fc1f9a7314dc22c9c583c16a2baf34daa6c29f47746d13",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "ClassH"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 27,
+          "id": null,
+          "node_sha256": "0a95d7650704559b4be01f29f7646f189bed62ea7aa895ea4a06251995742218",
+          "numbers": "212222",
+          "minimum": {
+            "_": 4,
+            "^": 4,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "Combined",
+            "σ",
+            "C",
+            "l",
+            "a",
+            "s",
+            "s",
+            "σ",
+            "C",
+            "l",
+            "a",
+            "s",
+            "s",
+            "σ",
+            "ClassH"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 28,
+          "id": null,
+          "node_sha256": "94f2e031cc9b058b9b32941b6b13d9f75448ae6d34fbde0c61985b9af350405e",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "Str"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 29,
+          "id": null,
+          "node_sha256": "3fedd32a6b5da73aaae5cb290fb3e75bd276d71af38d5fc14b1b7803a4cbeac7",
+          "numbers": "2122",
+          "minimum": {
+            "_": 4,
+            "^": 3,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "Str",
+            "h",
+            "H",
+            "w",
+            "h",
+            "σ",
+            "Class",
+            "h"
+          ],
+          "operators": [
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 30,
+          "id": null,
+          "node_sha256": "819982b084f3e7a75e9b757214cf73bcb4654608f2082f11324e58e551965390",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "w",
+            "h"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 31,
+          "id": null,
+          "node_sha256": "9a83999191034296a1a7c6e48f01c0160e6c846bbfdf36fb14ff6515d5e4a6e5",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "Class",
+            "h"
+          ],
+          "operators": []
+        }
+      ]
+    }
+  ]
 }

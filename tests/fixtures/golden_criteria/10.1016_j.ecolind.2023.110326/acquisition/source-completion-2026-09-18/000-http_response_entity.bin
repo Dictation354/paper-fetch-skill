@@ -1,0 +1,201 @@
+{"abstracts-retrieval-response": {
+    "affiliation": [
+        {
+            "affiliation-city": "Wuhan",
+            "@id": "60029306",
+            "affilname": "Wuhan University",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306",
+            "affiliation-country": "China"
+        },
+        {
+            "affiliation-city": "Fayetteville",
+            "@id": "60004862",
+            "affilname": "University of Arkansas",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60004862",
+            "affiliation-country": "United States"
+        }
+    ],
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-85158064965",
+        "dc:description": "The climate change is expected to trigger changes in vegetation phenology, temperature, and soil moisture (SM), altering the productivity of ecosystems. Despite numerous existing efforts, however, their contradicting conclusions suggest that how vegetation productivity is impacted by these factors still remains unclear in the Northern Hemisphere ecosystems (≥25°N). This study used the optimal fingerprint (OFP) method and redundancy analysis (RDA) to attribute the importance of key drivers of vegetation productivity from 2001 to 2019 based on long-term remote sensing and FLUXNET observation data. The results showed that solar-induced chlorophyll fluorescence (SIF), gross primary productivity (GPP), and net primary productivity (NPP) were increased in 72.01% to 88.04% of the vegetation areas. We observed that the correlation between vegetation productivity and spring phenology, autumn phenology, growing season length (GSL), SM, temperature reached 99% significance level, where early spring phenology, delayed autumn phenology, extended GSL, increased SM, and elevated temperature all enhanced ecosystem productivity, with GSL being the most important factor driving vegetation productivity. In addition, the pixel-wise attribution analysis indicated that GSL, as the dominant driver, accounted for 30.24% of the vegetation productivity, followed by temperature (23.79%), spring phenology (19.56%), autumn phenology (14.09%), and SM (12.31%), all of which were dominated by positive effects (54.19% to 73.14%). The results from this study serve as important references that benefit our understanding of driving mechanisms of temperature-phenology-SM interactions on ecosystem productivity.",
+        "prism:coverDate": "2023-07-01",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/85158064965",
+        "subtypeDescription": "Article",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Chaoya",
+            "preferred-name": {
+                "ce:given-name": "Chaoya",
+                "ce:initials": "C.",
+                "ce:surname": "Dang",
+                "ce:indexed-name": "Dang C."
+            },
+            "@seq": "1",
+            "ce:initials": "C.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Dang",
+            "@auid": "57219449657",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57219449657",
+            "ce:indexed-name": "Dang C."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/85158064965"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85158064965&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=85158064965&origin=inward"
+            }
+        ],
+        "prism:publicationName": "Ecological Indicators",
+        "source-id": "20292",
+        "pii": "S1470160X23004685",
+        "citedby-count": "55",
+        "prism:volume": "151",
+        "subtype": "ar",
+        "dc:title": "Climate warming-induced phenology changes dominate vegetation productivity in Northern Hemisphere ecosystems",
+        "openaccess": "1",
+        "openaccessFlag": "true",
+        "prism:doi": "10.1016/j.ecolind.2023.110326",
+        "prism:issn": "1470160X",
+        "publishercopyright": "© 2023",
+        "article-number": "110326",
+        "dc:identifier": "SCOPUS_ID:85158064965",
+        "dc:publisher": "Elsevier B.V."
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "Chaoya",
+            "preferred-name": {
+                "ce:given-name": "Chaoya",
+                "ce:initials": "C.",
+                "ce:surname": "Dang",
+                "ce:indexed-name": "Dang C."
+            },
+            "@seq": "1",
+            "ce:initials": "C.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Dang",
+            "@auid": "57219449657",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57219449657",
+            "ce:indexed-name": "Dang C."
+        },
+        {
+            "ce:given-name": "Zhenfeng",
+            "preferred-name": {
+                "ce:given-name": "Zhenfeng",
+                "ce:initials": "Z.",
+                "ce:surname": "Shao",
+                "ce:indexed-name": "Shao Z."
+            },
+            "@seq": "2",
+            "ce:initials": "Z.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Shao",
+            "@auid": "7202244409",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7202244409",
+            "ce:indexed-name": "Shao Z."
+        },
+        {
+            "ce:given-name": "Xiao",
+            "preferred-name": {
+                "ce:given-name": "Xiao",
+                "ce:initials": "X.",
+                "ce:surname": "Huang",
+                "ce:indexed-name": "Huang X."
+            },
+            "@seq": "3",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60004862",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60004862"
+            },
+            "ce:surname": "Huang",
+            "@auid": "57201292422",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57201292422",
+            "ce:indexed-name": "Huang X."
+        },
+        {
+            "ce:given-name": "Qingwei",
+            "preferred-name": {
+                "ce:given-name": "Qingwei",
+                "ce:initials": "Q.",
+                "ce:surname": "Zhuang",
+                "ce:indexed-name": "Zhuang Q."
+            },
+            "@seq": "4",
+            "ce:initials": "Q.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Zhuang",
+            "@auid": "57212874323",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57212874323",
+            "ce:indexed-name": "Zhuang Q."
+        },
+        {
+            "ce:given-name": "Gui",
+            "preferred-name": {
+                "ce:given-name": "Gui",
+                "ce:initials": "G.",
+                "ce:surname": "Cheng",
+                "ce:indexed-name": "Cheng G."
+            },
+            "@seq": "5",
+            "ce:initials": "G.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Cheng",
+            "@auid": "57223166105",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57223166105",
+            "ce:indexed-name": "Cheng G."
+        },
+        {
+            "ce:given-name": "Jiaxin",
+            "preferred-name": {
+                "ce:given-name": "Jiaxin",
+                "ce:initials": "J.",
+                "ce:surname": "Qian",
+                "ce:indexed-name": "Qian J."
+            },
+            "@seq": "6",
+            "ce:initials": "J.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Qian",
+            "@auid": "57215721324",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57215721324",
+            "ce:indexed-name": "Qian J."
+        }
+    ]}
+}}

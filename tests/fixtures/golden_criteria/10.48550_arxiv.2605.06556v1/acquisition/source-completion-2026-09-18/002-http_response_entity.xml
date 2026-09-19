@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/xAA9OuOlSI5R7GIwl8vhsY3ZwB8</id>
+  <title>arXiv Query: search_query=&amp;id_list=2605.06556v1&amp;start=0&amp;max_results=1</title>
+  <updated>2026-09-18T02:20:41Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=1&amp;id_list=2605.06556v1" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>1</opensearch:itemsPerPage>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2605.06556v1</id>
+    <title>Probability of Quota Violations in Divisor Apportionment Methods with Nonzero Allocations</title>
+    <updated>2026-05-07T16:49:50Z</updated>
+    <link href="https://arxiv.org/abs/2605.06556v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.06556v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Apportionment assigns indivisible items among groups. By the Balinski-Young theorem, no method can satisfy both house monotonicity and the quota rule. This paper investigates quota violations caused by nonzero allocation constraints, and derives exact probability formulas for their frequency. Such violations occur in systems like the U.S. House of Representatives, where each state is guaranteed at least one seat. We analyze the three-state case, introduce the $τ$ statistic to parametrize population distributions, and prove an Asymptotic Quota Stabilization theorem: for fixed $τ$, quota behavior stabilizes as populations grow, yielding probability results for quota violations determined by the set of ultimately violatory $τ$ values.
+  Applying this framework to the five classical divisor methods, we derive exact probability formulas. Additionally, we show that as the number of seats $M \to \infty$, these probabilities converge to method-specific constants. These results provide a precise, quantitative foundation for evaluating the fairness and frequency of quota violations in constrained apportionment systems.</summary>
+    <category term="math.PR" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-07T16:49:50Z</published>
+    <arxiv:primary_category term="math.PR"/>
+    <author>
+      <name>Tyler C. Wunder</name>
+    </author>
+    <author>
+      <name>Joseph Cutrone</name>
+    </author>
+  </entry>
+</feed>

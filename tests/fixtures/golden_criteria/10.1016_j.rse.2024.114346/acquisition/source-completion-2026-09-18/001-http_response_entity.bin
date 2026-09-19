@@ -1,0 +1,112 @@
+{"abstracts-retrieval-response": {
+    "affiliation": {
+        "affiliation-city": "Shenzhen",
+        "@id": "60105683",
+        "affilname": "Southern University of Science and Technology",
+        "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60105683",
+        "affiliation-country": "China"
+    },
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-85201008883",
+        "dc:description": "River ice plays a crucial role in hydrology, ecosystems, and socio-economic systems in mid-to-high latitude regions. However, there is a notable gap in the analysis of patterns and trends in river ice phenologies and their influence factors at the river level. In this study, we developed a practical method to identify river ice phenologies by leveraging Landsat observations from 2000 to 2021, and established a comprehensive dataset encompassing 7970 river segments across the entire Northern Hemisphere. Our results revealed that the mean freeze-up date, break-up date, and ice duration for these river segments were October 24, May 4, and 192.1 days, respectively. Notably, 56% of the river segments exhibited a warming trend, with the average freeze-up date delayed by 2.7 days per decade, break-up date advanced by 2.5 days per decade, and ice duration shortened by 5.5 days per decade\u2014nearly five times the documented decrease rate over the past 150 years. Furthermore, high-latitude polar regions and the Qinghai-Tibet Plateau demonstrated the most pronounced decreases in ice duration, exceeding 7.0 days per decade on average. We observed a substantial relative contribution, reaching up to 70%, of surface air temperature (SAT) in middle and low latitude regions characterized by relatively high winter temperatures. However, as winter temperatures decrease, the relative influence of SAT diminishes, while the contributions of precipitation, solar radiation, and residuals increase. Our dataset provided essential baseline for further understanding the fundamental physical processes within river systems, offering crucial insights for river management, hydrological disaster risk control, climate change research, and ecosystem conservation efforts.",
+        "prism:coverDate": "2024-11-01",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/85201008883",
+        "subtypeDescription": "Article",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Xinchi",
+            "preferred-name": {
+                "ce:given-name": "Xinchi",
+                "ce:initials": "X.",
+                "ce:surname": "Wang",
+                "ce:indexed-name": "Wang X."
+            },
+            "@seq": "1",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60105683",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60105683"
+            },
+            "ce:surname": "Wang",
+            "@auid": "57204735916",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57204735916",
+            "ce:indexed-name": "Wang X."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/85201008883"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85201008883&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=85201008883&origin=inward"
+            }
+        ],
+        "prism:publicationName": "Remote Sensing of Environment",
+        "source-id": "12503",
+        "pii": "S003442572400364X",
+        "citedby-count": "9",
+        "prism:volume": "313",
+        "subtype": "ar",
+        "dc:title": "Patterns and Trends in Northern Hemisphere River Ice Phenology from 2000 to 2021",
+        "openaccess": "0",
+        "openaccessFlag": "false",
+        "prism:doi": "10.1016/j.rse.2024.114346",
+        "prism:issn": "00344257",
+        "publishercopyright": "© 2024 Elsevier Inc.",
+        "article-number": "114346",
+        "dc:identifier": "SCOPUS_ID:85201008883",
+        "dc:publisher": "Elsevier Inc."
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "Xinchi",
+            "preferred-name": {
+                "ce:given-name": "Xinchi",
+                "ce:initials": "X.",
+                "ce:surname": "Wang",
+                "ce:indexed-name": "Wang X."
+            },
+            "@seq": "1",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60105683",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60105683"
+            },
+            "ce:surname": "Wang",
+            "@auid": "57204735916",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57204735916",
+            "ce:indexed-name": "Wang X."
+        },
+        {
+            "ce:given-name": "Lian",
+            "preferred-name": {
+                "ce:given-name": "Lian",
+                "ce:initials": "L.",
+                "ce:surname": "Feng",
+                "ce:indexed-name": "Feng L."
+            },
+            "@seq": "2",
+            "ce:initials": "L.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60105683",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60105683"
+            },
+            "ce:surname": "Feng",
+            "@auid": "36459641300",
+            "author-url": "https://api.elsevier.com/content/author/author_id/36459641300",
+            "ce:indexed-name": "Feng L."
+        }
+    ]}
+}}

@@ -178,6 +178,10 @@ PROVIDER_BUNDLE = ProviderBundle(
             post_content_break_tokens=AMS_POST_CONTENT_BREAK_TOKENS,
         ),
         availability=AvailabilityPolicy(
+            paywall_gate_selectors="button[data-popover-anchor]",
+            paywall_gate_pattern=r"purchase article",
+            paywall_gate_text="Purchase article",
+            paywall_body_selector="#articleBody",
             name="ams",
             site_rule_overrides=AMS_SITE_RULE_OVERRIDES,
             text_marker_signal_set=AMS_TEXT_MARKER_SIGNAL_SET,

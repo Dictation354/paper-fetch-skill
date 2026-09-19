@@ -1,0 +1,384 @@
+{
+  "doi": "10.1111/gcb.16758",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Huang_et_al_2023_Spring_phenology_rather_than_climate_dominates_the_trends_in_peak_of_growing_season_in_the_Northern_Hemisphere.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/outputs/ac3f08861728-Huang_et_al_2023_Spring_phenology_rather_than_climate_dominates_the_trends_in_peak_of_growing_season_in_the_Northern_Hemisphere.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "ac3f0886172800e2a35aab6da6c133ab69eb9fb91c6a41501a820893d6f71bde",
+      "size": 145838
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Huang_et_al_2023_Spring_phenology_rather_than_climate_dominates_the_trends_in_peak_of_growing_season_in_the_Northern_Hemisphere.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/outputs/d66876e2dc15-Huang_et_al_2023_Spring_phenology_rather_than_climate_dominates_the_trends_in_peak_of_growing_season_in_the_Northern_Hemisphere.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "d66876e2dc15598bbe7bd945a07733c257ec0d83cb9e5c10b49a9b9171681c04",
+      "size": 59906
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-fig-0001-m.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/1420b52e55d3-gcb16758-fig-0001-m.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "1420b52e55d30408cad8d31f0dec70cd6dd794c20596ed254b9e7329da0e532d",
+      "size": 640148
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-fig-0002-m.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/c1975bf6b06d-gcb16758-fig-0002-m.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "c1975bf6b06d703fd4fbe2f825c3dd922d543c41f925708cdaf98a3fcf53efee",
+      "size": 1521912
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-fig-0003-m.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/5e29ce9895fc-gcb16758-fig-0003-m.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "5e29ce9895fccfb9a20c048a7f6bfe492a41b7cdeda80696740dec22db21a77a",
+      "size": 484975
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-fig-0004-m.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/951685d10264-gcb16758-fig-0004-m.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "951685d10264f7e70a5a3531249fb98a61e8e0dd63bd7810f378df7ed295a53b",
+      "size": 1545749
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-fig-0005-m.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/fff73eddeabc-gcb16758-fig-0005-m.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "fff73eddeabc0b6940113c80381a43ca6962366906ed10f480937df7d07aea70",
+      "size": 465569
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0001.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/e660a1938ee5-gcb16758-math-0001.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "e660a1938ee59c15c410df0d7d4fcb20c95a789d4f78d8f3d52d0aa0251d1401",
+      "size": 2444
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0002.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/e957cfc2ca69-gcb16758-math-0002.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "e957cfc2ca6999fc96b4a02a4ec86ae4e38d8515306aae2465facd98f57acc30",
+      "size": 2278
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0003.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/ee14c02b28e8-gcb16758-math-0003.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "ee14c02b28e8b76b9a1e5dbee3c0307a3f8529379b20ced6d20a067ab7fdf3d6",
+      "size": 1468
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0004.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/13b8afe7a54e-gcb16758-math-0004.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "13b8afe7a54ebfd934cb11da4eca01ac3c2722b06468792625707a79d52ed95f",
+      "size": 2627
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0005.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/0c36916d53c0-gcb16758-math-0005.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "0c36916d53c08827657498724c979f9b209627220d010834cf1c67c1df0c15e0",
+      "size": 2126
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0006.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/91bbdda25f8c-gcb16758-math-0006.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "91bbdda25f8c5e7200f4da00fe143a0e2acb3cdb76260d43d4208b5bfe5790e4",
+      "size": 442
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0007.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/0455057f8850-gcb16758-math-0007.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "0455057f8850b1ce1b537e8336998812bc454119c150456123af95722e549811",
+      "size": 9988
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0008.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/e46e3616b381-gcb16758-math-0008.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "e46e3616b38106a54113a74943f2310da797f98446dc7fbf0f8ab43d97c06614",
+      "size": 595
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0009.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/038294991cfe-gcb16758-math-0009.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "038294991cfedce3e66e5bbac16b68ec6499bf255047c9c227bc71e5c6893218",
+      "size": 722
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0010.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/c006d0beebc0-gcb16758-math-0010.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "c006d0beebc0f89a558d7f694a982f5c63ef95bf9ff18db5f9d0c75c5d57d9f7",
+      "size": 541
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0011.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/e46e3616b381-gcb16758-math-0011.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "e46e3616b38106a54113a74943f2310da797f98446dc7fbf0f8ab43d97c06614",
+      "size": 595
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0012.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/cbcb00412ed4-gcb16758-math-0012.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "cbcb00412ed448aa80946d19a28d34566ab6a408b8d24d755672046c8e7854c7",
+      "size": 609
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0013.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/8573a6195d74-gcb16758-math-0013.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "8573a6195d749c9edd2bfbe2d98f9b6ba4b508c97f2e72c8d562ff8422bffa6b",
+      "size": 584
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0014.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/2df90654d905-gcb16758-math-0014.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "2df90654d9056498add714d79478f5f93440de3a020b2b887cd70d53bc0fd033",
+      "size": 586
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0015.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/038294991cfe-gcb16758-math-0015.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "038294991cfedce3e66e5bbac16b68ec6499bf255047c9c227bc71e5c6893218",
+      "size": 722
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0016.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/bca0635a3ded-gcb16758-math-0016.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "bca0635a3deda87baf8273e265198f0d265a2041b371ac4228608fa695ce2e5b",
+      "size": 629
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0017.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/820ac701d4e6-gcb16758-math-0017.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "820ac701d4e6345978140d8abb78addf34ff7d9d4186f2533bc309d3c9b92e9e",
+      "size": 575
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0018.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/b5c473563b0d-gcb16758-math-0018.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "b5c473563b0ddcc57b948b5cf44f2caceb959d72c285b755bb4b93f4663460da",
+      "size": 570
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0019.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/6d4c66bb4433-gcb16758-math-0019.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "6d4c66bb44330d5da2742fbc572b12da8b9ca64c97bf3154b31109f04115bee0",
+      "size": 568
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0020.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/764985a9995c-gcb16758-math-0020.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "764985a9995c2a258c9071d28579dac3515bc94789b477d3276e380cdedcc164",
+      "size": 597
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0021.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/482e72471201-gcb16758-math-0021.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "482e72471201fcce21e0ba09416b5b2eac84fc41b451d6bf5d58ce3c00257fef",
+      "size": 464
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0022.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/02f4a62adaa6-gcb16758-math-0022.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "02f4a62adaa6540555966cf9feae74c90c5251a419d39cdd967c80e437b07fa6",
+      "size": 467
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0023.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/5928f11aaa96-gcb16758-math-0023.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "5928f11aaa967d9069cde67d4e654cd954150f7a836fc7c30b65ff27786372ea",
+      "size": 439
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0024.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/3c3a7038b697-gcb16758-math-0024.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "3c3a7038b697ddfbfbcabeed9ee79f571831dd4a3058adf3d1d40e2c263678d8",
+      "size": 469
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0025.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/fe996259c99d-gcb16758-math-0025.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "fe996259c99df2f799010c839f70550a018530b2a423c20d04766ce3a170a92d",
+      "size": 4073
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16758_assets/gcb16758-math-0026.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/f28bfd7dff75-gcb16758-math-0026.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "f28bfd7dff7558f16aefc41e3b3195b4b5190776a7cee8d907b9a20762b8f35d",
+      "size": 1180
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "complete",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1111/gcb.16758",
+      "expected_doi": "10.1111/gcb.16758",
+      "title": "Spring phenology rather than climate dominates the trends in peak of growing season in the Northern Hemisphere",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 9980,
+      "confidence": "high",
+      "flags": [],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 31,
+      "attempted": 31,
+      "total": 31,
+      "local": 31,
+      "full_size": 5,
+      "preview": 26,
+      "accepted_preview": 26,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 31,
+      "remote_only_count": 0,
+      "body_discovered": 31,
+      "body_attempted": 31,
+      "body_local": 31,
+      "body_full_size": 5,
+      "body_preview": 26,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": false,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "complete",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "wiley_browser",
+      "acquisition": {
+        "provider": "wiley",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "trace_event_count": 16,
+      "fallback_codes": [],
+      "warning_codes": [],
+      "failure_codes": [],
+      "unstructured_warning_count": 1,
+      "acceptance_policy": "provider_html_body",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

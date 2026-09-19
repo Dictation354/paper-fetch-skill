@@ -1,0 +1,172 @@
+{
+  "doi": "10.1080/01972243.1995.9960198",
+  "source": "crossref_meta",
+  "metadata": {
+    "title": "Controversies about electronic journals and scholarly communication: An introduction",
+    "authors": [
+      "Rob Kling"
+    ],
+    "abstract": null,
+    "journal": "The Information Society",
+    "article_type": null,
+    "published": "1995-10",
+    "keywords": [],
+    "license_urls": [],
+    "landing_page_url": "http://www.tandfonline.com/doi/abs/10.1080/01972243.1995.9960198"
+  },
+  "sections": [],
+  "references": [],
+  "assets": [],
+  "quality": {
+    "has_fulltext": false,
+    "token_estimate": 0,
+    "content_kind": "metadata_only",
+    "has_abstract": false,
+    "warnings": [
+      "tandf HTML route was not usable (publisher_access_denied); attempting PDF fallback.",
+      "pdf: tandf full text could not be retrieved via HTML or PDF fallback. HTML failure: block_detection: Publisher denied access to the full-text page. PDF failure: PDF fallback request deadline was exhausted.",
+      "Full text was not available; returning metadata and abstract only.",
+      "--save-markdown was set but full text was not available; nothing written to disk."
+    ],
+    "source_trail": [
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_tandf",
+      "route:signal_publisher_tandf",
+      "route:signal_doi_tandf",
+      "route:probe_tandf_unknown",
+      "route:provider_selected_tandf",
+      "route:provider_candidate_tandf_metadata_selected_rank_1",
+      "route:provider_candidate_tandf_identity_strong",
+      "fulltext:tandf_attempt",
+      "fulltext:tandf_html_fail",
+      "fulltext:tandf_fail",
+      "route:provider_candidate_tandf_rejected",
+      "route:provider_candidate_tandf_access_boundary_stop",
+      "fallback:tandf_html_managed_by_provider",
+      "fallback:metadata_only",
+      "fulltext:tandf_pdf_transport_fail",
+      "fulltext:tandf_pdf_fail",
+      "download:markdown_skipped_no_fulltext"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 0,
+      "body": 0,
+      "refs": 0
+    },
+    "confidence": "low",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 0,
+      "word_count": 0,
+      "body_block_count": 0,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 0.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": false,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "crossref",
+    "route": "metadata",
+    "representation": "metadata",
+    "transport": "api",
+    "fallback_used": true
+  }
+}

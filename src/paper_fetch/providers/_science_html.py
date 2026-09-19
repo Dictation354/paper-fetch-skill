@@ -3,8 +3,14 @@
 from __future__ import annotations
 
 import re
+import time
 from typing import Any
 from collections.abc import Mapping, Sequence
+
+from bs4 import BeautifulSoup, Tag
+from ..extraction.html.parsing import choose_parser
+
+from ._html_section_markdown import render_retained_text_from_html
 
 from ..quality.html_signals import (
     AAAS_DATALAYER_PATTERN,
@@ -23,6 +29,7 @@ from ._html_authors import (
     normalized_author_tokens,
 )
 from ._html_references import extract_numbered_references_from_html
+from ._retained_object_links import resolve_retained_object_links
 from ._script_json import extract_assignment_json
 
 SCIENCE_AUTHOR_COUNT_PATTERN = ATYPON_AUTHOR_COUNT_PATTERN
@@ -44,6 +51,62 @@ SCIENCE_CITATION_ITALIC_PATTERNS = (
         rf"\*(?P<left>{SCIENCE_CITATION_TOKEN_PATTERN})\*(?P<sep>\s*[\u2013,;]\s*)\*(?P<right>{SCIENCE_CITATION_TOKEN_PATTERN})\*"
     ),
 )
+
+
+def _reference_coverage(soup: BeautifulSoup) -> tuple[set[str], set[str]]:
+    available = {
+        str(node["id"]) for node in soup.select("#bibliography .citations[id]")
+    }
+    cited = {
+        str(node.get("data-xml-rid") or str(node.get("href") or "").split("#")[-1])
+        for node in soup.select("a[role='doc-biblioref'], a[data-xml-rid]")
+    }
+    return available, {value for value in cited if re.fullmatch(r"R\d+", value)}
+
+
+def prepare_browser_page(page: Any, *, timeout_ms: int) -> Mapping[str, Any]:
+    """Expand Science's bibliography through its own visible controls."""
+    deadline = time.monotonic() + min(timeout_ms, 10000) / 1000
+    before, cited = _reference_coverage(BeautifulSoup(page.content(), choose_parser()))
+    available = before
+    bibliography = page.locator("#bibliography")
+    if bibliography.count():
+        scrolled = False
+        while time.monotonic() < deadline:
+            controls = bibliography.locator("button, a").filter(
+                has_text=re.compile(
+                    r"^(?:show|view|load)\s+(?:all|more|remaining)(?:\s+references)?(?:\s*\(\d+\))?$",
+                    re.I,
+                )
+            )
+            control = next(
+                (
+                    controls.nth(i)
+                    for i in range(controls.count())
+                    if controls.nth(i).is_visible() and controls.nth(i).is_enabled()
+                ),
+                None,
+            )
+            if control is None and not cited - available:
+                break
+            if not scrolled:
+                bibliography.scroll_into_view_if_needed(
+                    timeout=max(1, min(timeout_ms, 2000))
+                )
+                scrolled = True
+            if control is not None:
+                control.click(timeout=max(1, int((deadline - time.monotonic()) * 1000)))
+            page.wait_for_timeout(
+                min(200, max(1, int((deadline - time.monotonic()) * 1000)))
+            )
+            available, cited = _reference_coverage(
+                BeautifulSoup(page.content(), choose_parser())
+            )
+    return {
+        "references_before": len(before),
+        "references_after": len(available),
+        "missing_reference_targets": sorted(cited - available),
+    }
 
 
 def _load_aaas_datalayer(html_text: str) -> Mapping[str, Any] | None:
@@ -233,6 +296,136 @@ def _drop_science_front_matter_teaser_figures(container: Any) -> None:
 
 def science_before_block_normalization(container: Any) -> None:
     _drop_science_front_matter_teaser_figures(container)
+    if not isinstance(container, Tag):
+        return
+    _promote_science_availability(container)
+    from ._html_section_markdown import render_heading_text_from_html
+
+    for heading in container.select("h2, h3, h4, h5, h6"):
+        if heading.find(["sup", "sub"]) is not None:
+            text = render_heading_text_from_html(heading)
+            heading.clear()
+            heading.append(text)
+    # AAAS adm9732 ends its last three-row model group with rowspan=4.
+    # A span cannot extend beyond its row group; otherwise the table renderer
+    # falls back to a list and assigns continuation cells to the first header.
+    for group in container.select("table > thead, table > tbody, table > tfoot"):
+        rows = group.find_all("tr", recursive=False)
+        for index, row in enumerate(rows):
+            for cell in row.find_all(["th", "td"], recursive=False):
+                span = str(cell.get("rowspan", "1"))
+                if span.isdecimal() and int(span) > len(rows) - index:
+                    cell["rowspan"] = str(len(rows) - index)
+
+
+def render_table_with_missing_trailing_cells(
+    node: Tag, *, label: str, caption: str
+) -> str | None:
+    """Preserve browser column positions for unspanned, short source rows."""
+    import copy
+    from ..extraction.html.tables import render_table_markdown
+
+    table = node if node.name == "table" else node.find("table")
+    if not isinstance(table, Tag) or table.find("table") is not None:
+        return None
+    rows = table.find_all("tr")
+    if not rows or table.find("tfoot") is not None:
+        return None
+    thead = table.find("thead")
+    if isinstance(thead, Tag) and len(thead.find_all("tr")) != 1:
+        return None
+    cells = [row.find_all(["th", "td"], recursive=False) for row in rows]
+    if not cells[0] or not all(cell.name == "th" for cell in cells[0]):
+        return None
+    width = len(cells[0])
+    if any(
+        str(cell.get(attr, "1")) != "1"
+        for row in cells
+        for cell in row
+        for attr in ("rowspan", "colspan")
+    ) or any(not row or len(row) > width for row in cells[1:]):
+        return None
+    missing = [
+        (index, len(row)) for index, row in enumerate(cells[1:], 1) if len(row) < width
+    ]
+    if not missing:
+        return None
+    clone = copy.deepcopy(node)
+    cloned_table = clone if clone.name == "table" else clone.find("table")
+    cloned_rows = cloned_table.find_all("tr")
+    for index, count in missing:
+        for _ in range(width - count):
+            cloned_rows[index].append(Tag(name="td"))
+    rendered = render_table_markdown(clone, label=label, caption=caption)
+    notes = [
+        f"Source table note: data row {index} supplies {count} of {width} cells; missing trailing cells are left blank."
+        for index, count in missing
+    ]
+    return rendered + "\n\n" + "\n".join(notes)
+
+
+def science_classify_heading(heading: str, title: str | None = None) -> str | None:
+    """AAAS labels include materials and combined data/code statements."""
+    del title
+    label = _normalize_science_heading(heading)
+    if label in {
+        "data availability",
+        "data availability statement",
+        "data and materials availability",
+        "data and code availability",
+        "data, code, and materials availability",
+    }:
+        return "data_availability"
+    if label in {
+        "code availability",
+        "code availability statement",
+        "software availability",
+    }:
+        return "code_availability"
+    return None
+
+
+def _promote_science_availability(container: Tag) -> None:
+    """Move only standalone, explicitly labelled acknowledgment paragraphs."""
+    factory = BeautifulSoup("", "html.parser")
+    for acknowledgments in container.select(
+        "section#acknowledgments, section#acknowledgements"
+    ):
+        tail = acknowledgments
+        for paragraph in list(acknowledgments.select('p, div[role="paragraph"]')):
+            children = [node for node in paragraph.contents if str(node).strip()]
+            label = children[0] if children else None
+            if not isinstance(label, Tag) or label.name not in {"b", "strong"}:
+                continue
+            if any(
+                node.has_attr("hidden")
+                or node.get("aria-hidden") == "true"
+                or re.search(
+                    r"(?:display\s*:\s*none|visibility\s*:\s*hidden)",
+                    str(node.get("style", "")),
+                    re.I,
+                )
+                for node in [label, *label.parents]
+                if isinstance(node, Tag)
+            ):
+                continue
+            heading = label.get_text(" ", strip=True).rstrip(":").strip()
+            kind = science_classify_heading(heading)
+            if kind is None:
+                continue
+            section = factory.new_tag(
+                "section", attrs={"class": kind.replace("_", "-")}
+            )
+            heading_node = factory.new_tag("h2")
+            heading_node.string = heading
+            section.append(heading_node)
+            label.decompose()
+            retained = render_retained_text_from_html(paragraph)
+            paragraph.clear()
+            paragraph.append(retained)
+            section.append(paragraph.extract())
+            tail.insert_after(section)
+            tail = section
 
 
 def science_asset_body_container(container: Any) -> None:
@@ -307,7 +500,7 @@ def finalize_extraction(
     *,
     metadata: Mapping[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any]]:
-    del source_url, metadata
+    del metadata
     needs_frontmatter_flatten = _has_frontmatter_abstract_split(extraction)
     finalized = _finalize_science_abstracts(extraction)
     extracted_authors = extract_authors(html_text)
@@ -318,6 +511,29 @@ def finalize_extraction(
         finalized["references"] = extracted_references
     if needs_frontmatter_flatten:
         markdown_text = _flatten_structured_abstract_markdown(markdown_text)
+    soup = BeautifulSoup(html_text, choose_parser())
+    available, cited = _reference_coverage(soup)
+    missing = sorted(
+        (cited - available)
+        | {target for target in cited if int(target[1:]) > len(extracted_references)}
+    )
+    if missing:
+        finalized["quality_flags"] = [
+            *finalized.get("quality_flags", []),
+            "reference_targets_missing",
+        ]
+        finalized["warnings"] = [
+            *finalized.get("warnings", []),
+            "Science bibliography is incomplete; missing cited targets: "
+            + ", ".join(missing),
+        ]
+        finalized["missing_reference_targets"] = missing
+    reference_targets = {
+        str(node["id"]): str(node["id"]) for node in soup.select(".citations[id]")
+    }
+    markdown_text = resolve_retained_object_links(
+        markdown_text, source_url, reference_targets
+    )
     return markdown_text, finalized
 
 

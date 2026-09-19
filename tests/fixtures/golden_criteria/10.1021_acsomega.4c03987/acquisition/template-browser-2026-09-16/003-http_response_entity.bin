@@ -1,0 +1,428 @@
+
+
+
+
+<!DOCTYPE html>
+
+<html lang="en" class="no-js">
+
+<head>
+    <!-- charset must appear in the first 1024 bytes of the document -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Figure 1. Benzimidazole-based drug... | ACS Publications</title>
+        
+        
+
+
+
+<script src="https://cmp.osano.com/16BPzAUFV1UoQ26HU/10002854-e376-4b5a-919a-0dd3ef22c9ed/osano.js"></script>
+        
+
+
+
+
+
+<script type="text/javascript" src="https://pubsbc.acs.org/script.js" async></script>
+
+
+    <script src="//acs.silverchair-cdn.com/Themes/Silver/app/js/jquery.3.4.1.min.js" type="text/javascript"></script>
+<script>window.jQuery || document.write('<script src="//acs.silverchair-cdn.com/Themes/Silver/app/js/jquery.3.4.1.min.js" type="text/javascript">\x3C/script>')</script>
+<script src="//acs.silverchair-cdn.com/Themes/Silver/app/vendor/v-639223368734145355/jquery-migrate-3.1.0.min.js" type="text/javascript"></script>
+
+    <script type='text/javascript' src='https://platform-api.sharethis.com/js/sharethis.js#property=68c9635c082c40fa02feea94&amp;product=sop' async='async' ></script>
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=10" />
+
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <!-- Turn off telephone number detection. -->
+    <meta name="format-detection" content="telephone=no" />
+    
+<!-- Bookmark Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="//acs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223361590723903/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="//acs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223361590823802/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" href="//acs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223361591234751/favicon.ico" sizes="32x32">
+  <link rel="icon" type="image/svg+xml" href="//acs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223361591284747/favicon.svg">
+  <link rel="manifest" href="//acs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223361591708997/site.webmanifest">
+  <meta name="apple-mobile-web-app-title" content="ACS">
+  <meta name="theme-color" content="#002f65">
+
+
+    
+
+
+  <link rel="stylesheet" type="text/css" href="//acs.silverchair-cdn.com/Themes/Client/app/css/v-639237259186283848/site.min.css" />
+  <link rel="stylesheet" type="text/css" href="//acs.silverchair-cdn.com/Themes/Silver/app/icons/v-639223368479395161/style.css" />
+  <link rel="stylesheet" type="text/css" href="//acs.silverchair-cdn.com/Themes/Client/app/css/v-639223361584294469/bg_img.css" />
+      <link rel="stylesheet" type="text/css" href="//acs.silverchair-cdn.com/Themes/Client/app/css/icons-custom/v-639223361586803694/style.css" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Libertinus+Math&family=Libertinus+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap" rel="stylesheet">
+
+
+
+
+            <link href="//acs.silverchair-cdn.com/data/SiteBuilderAssets/Live/CSS/umbrella/v-639108457547767330/site.css" rel="stylesheet" type="text/css" />
+
+            <script>
+                (function (w, d, s, l, i) {
+                    w[l] = w[l] || []; w[l].push({
+                        'gtm.start':
+                            new Date().getTime(), event: 'gtm.js'
+                    }); var f = d.getElementsByTagName(s)[0],
+                        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+                        j.setAttribute('type', 'text/javascript');
+                        j.async = true; j.src =
+                        'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+                })(window, document, 'script', 'dataLayer', 'GTM-5DJPTSH7');
+            </script>
+
+    
+
+        <script type="text/javascript">
+            var App = App || {};
+            App.LoginUserInfo = {
+                isInstLoggedIn: 1,
+                isIndividualLoggedIn: 0
+            };
+
+            App.CurrentSubdomain = '';
+            App.SiteURL = 'pubs.acs.org';
+            App.EnableAdobeAnalytics = false;
+        </script>
+    
+    <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW" />
+
+
+    
+    
+
+            <script src="https://widgets.figshare.com/static/figshare.js" defer></script>
+
+    
+
+
+
+    <script type="text/javascript">
+        adroll_adv_id = "3LBZJ4KXKBF2PJ46QCMT3X";
+        adroll_pix_id = "6EITYRDI4FFGJPSZQ62UJJ";
+        adroll_version = "2.0";
+
+        (function(w, d, e, o, a) {
+            w.adroll_tag_source = w.adroll_tag_source || "manual";
+            w.__adroll_loaded = true;
+            w.adroll = w.adroll || [];
+            w.adroll.f = [ 'setProperties', 'identify', 'track', 'identify_email', 'get_cookie' ];
+            var roundtripUrl = "https://s.adroll.com/j/" + adroll_adv_id
+                    + "/roundtrip.js";
+            for (a = 0; a < w.adroll.f.length; a++) {
+                w.adroll[w.adroll.f[a]] = w.adroll[w.adroll.f[a]] || (function(n) {
+                    return function() {
+                        w.adroll.push([ n, arguments ])
+                    }
+                })(w.adroll.f[a])
+            }
+            e = d.createElement('script');
+            o = d.getElementsByTagName('script')[0];
+            e.async = 1;
+            e.src = roundtripUrl;
+            o.parentNode.insertBefore(e, o);
+        })(window, document);
+        adroll.track("pageView");
+    </script>
+    <script type="text/javascript" async src="https://s.adroll.com/j/sendrolling.js"></script>
+    <script type="text/javascript">
+        var _elqQ = _elqQ || [];
+        _elqQ.push(['elqSetSiteId', '1913652004']);
+        _elqQ.push(['elqUseFirstPartyCookie', 'pubstr.acs.org']);
+        _elqQ.push(['elqTrackPageView', window.location.href]);
+        (function () {
+            function async_load() {
+                var s = document.createElement('script');
+                s.type = 'text/javascript';
+                s.async = true;
+                s.src = '//img.en25.com/i/elqCfg.min.js';
+                var x = document.getElementsByTagName('script')[0];
+                x.parentNode.insertBefore(s, x);
+            }
+            if (window.addEventListener) window.addEventListener('DOMContentLoaded', async_load, false);
+            else if (window.attachEvent) window.attachEvent('onload', async_load);
+        })();
+    </script>
+    <script type="text/javascript" async src="https://tag.demandbase.com/b01e0bcf02a2a19f.min.js"></script>
+    <script type="text/javascript" async src="https://snippet.maze.co/maze-universal-loader.js?apiKey=324f1949-7e39-430a-964b-caafd31cacfd"></script>
+    <script type="text/javascript">
+        (function (c, l, a, r, i, t, y) {
+            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+            t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "wjbwha4hzw");
+    </script>
+
+    <!--BEGIN QUALTRICS WEBSITE FEEDBACK SNIPPET-->
+    <script type='text/javascript'>
+
+        (function () {
+            var g = function (g) {
+
+                this.go = function () { var a = document.createElement("script"); a.type = "text/javascript"; a.src = g; document.body && document.body.appendChild(a) };
+
+                this.start = function () { var t = this; "complete" !== document.readyState ? window.addEventListener ? window.addEventListener("load", function () { t.go() }, !1) : window.attachEvent && window.attachEvent("onload", function () { t.go() }) : t.go() };
+            };
+
+            try { (new g("https://znq5gbi98oz0lbamd-americanchemical.siteintercept.qualtrics.com/SIE/?Q_ZID=ZN_Q5gBI98OZ0LBamd")).start() } catch (i) { }
+        })();
+
+    </script><div id='ZN_Q5gBI98OZ0LBamd'><!--DO NOT REMOVE-CONTENTS PLACED HERE--></div>
+    <!--END WEBSITE FEEDBACK SNIPPET-->
+
+
+</head>
+
+<body data-sitename="acspublications" class="off-canvas pg_ViewLarge pg_viewlarge   " theme-umbrella data-sitestyletemplate="Journal" >
+            <noscript>
+                <iframe  src="https://www.googletagmanager.com/ns.html?id=GTM-5DJPTSH7"
+                        height="0" width="0" style="display:none;visibility:hidden"></iframe>
+            </noscript>
+<input id="hdnSiteID" name="hdnSiteID" type="hidden" value="1" /><input id="hdnAdDelaySeconds" name="hdnAdDelaySeconds" type="hidden" value="3000" /><input id="hdnAdConfigurationTop" name="hdnAdConfigurationTop" type="hidden" value="basic" /><input id="hdnAdConfigurationRightRail" name="hdnAdConfigurationRightRail" type="hidden" value="basic" />
+    <div class="ad-banner js-ad-revealer ad-banner-revealer" role="region" aria-label="Advertisement" aria-hidden="true">
+    <div class="widget-AdBlock widget-instance-HeaderRevealerAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="HeaderRevealerAd">
+            <input type="hidden"
+           class="hfAdBlockInfo"
+           data-divid="dfp-journal-hp-revealer"
+           data-slotname="/8868/journal/{journal}/homepage"
+           data-targetname=""
+           data-sizes="[[1,1]]"
+           data-enabled-on-mobile="True"
+           data-adprovider-typeid="1"
+           data-accountid=""
+           data-outofpagead="False"
+           data-sticky-time="5"
+           data-lazyloaded="False"
+           data-position-keyword="Journals_HR"
+           data-position-targeting-key="pos"
+           data-skip-size-mapping="True"
+           data-native-placement-id=""
+           data-wps-adsize-number="0"
+           data-wps-network-id="0"
+           data-wps-site-id="0"
+           data-wps-zone-ids=""
+           data-wps-brandlock-keyword=""
+           data-tapnative-aid=""
+           data-tapnative-div-id=""
+           data-suppress-display="false"
+           data-fallback-divid="dfp-acs-header-leaderboard"/>
+    <div class="adblock-wrap js-adblock-wrap ">
+
+<div id="dfp-journal-hp-revealer" adslot="/8868/journal/{journal}/homepage" class="adblock-slot-placeholder js-adblock"></div>
+
+            <button type="button" class="close-footer-ad js-close-footer-ad"><span class="screenreader-text">close advertisement</span><i class="icon-general-close" aria-hidden="true"></i></button>
+
+    </div>
+
+ 
+    </div>
+
+    </div>
+    
+
+
+<div class="js-main">
+    <div class="widget-FigureViewLarge widget-instance-FigureViewLarge" 
+         data-widget-name="FigureViewLarge" 
+         data-widget-instance="FigureViewLarge">
+            <div class="figure-wrapper">
+        <div data-id="fig1" class="fig fig-section"><div class="graphic-wrap"><a class="fig-link" href="https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/ao4c03987_0001.png?Expires=1792575031&amp;Signature=juA9oOBSnxHIHUlIY8Xqt3~72lRbpoKuxxTsnmOzrpGRA3pCkUzN69nj22CVVuaeGpDKLRRAeCKT-jXLLlNmNBCpjyTuyEWSgiD9Zio4BcrVyC6Zp68hwzg3thY3tvlVlQx-rbjf75QWodThMscSsOkUL-fERyZhZjq3FH0O8UrzIiyhVRW55xuqEcff8KmHVv7nZ9oUrnhxy5hKBfmDaLp3bc1~ZPaXNJG8bveBdgH-m4zy6JsHrVV05BMrSQ3mBktqFacUDvwVBRhhVf0XgzX-G9GtPSrbkoQHoFzlmDpb2q3cim0MqmkDgpgq0PLSuJlMA48SxektBBkH-gZdIA__&amp;Key-Pair-Id=APKAIE5G5CRDK6RD3PGA"><img class="content-image js-graphic-position-float" src="https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/ao4c03987_0001.png?Expires=1792575031&amp;Signature=juA9oOBSnxHIHUlIY8Xqt3~72lRbpoKuxxTsnmOzrpGRA3pCkUzN69nj22CVVuaeGpDKLRRAeCKT-jXLLlNmNBCpjyTuyEWSgiD9Zio4BcrVyC6Zp68hwzg3thY3tvlVlQx-rbjf75QWodThMscSsOkUL-fERyZhZjq3FH0O8UrzIiyhVRW55xuqEcff8KmHVv7nZ9oUrnhxy5hKBfmDaLp3bc1~ZPaXNJG8bveBdgH-m4zy6JsHrVV05BMrSQ3mBktqFacUDvwVBRhhVf0XgzX-G9GtPSrbkoQHoFzlmDpb2q3cim0MqmkDgpgq0PLSuJlMA48SxektBBkH-gZdIA__&amp;Key-Pair-Id=APKAIE5G5CRDK6RD3PGA" data-src="https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/ao4c03987_0001.png?Expires=1792575031&amp;Signature=juA9oOBSnxHIHUlIY8Xqt3~72lRbpoKuxxTsnmOzrpGRA3pCkUzN69nj22CVVuaeGpDKLRRAeCKT-jXLLlNmNBCpjyTuyEWSgiD9Zio4BcrVyC6Zp68hwzg3thY3tvlVlQx-rbjf75QWodThMscSsOkUL-fERyZhZjq3FH0O8UrzIiyhVRW55xuqEcff8KmHVv7nZ9oUrnhxy5hKBfmDaLp3bc1~ZPaXNJG8bveBdgH-m4zy6JsHrVV05BMrSQ3mBktqFacUDvwVBRhhVf0XgzX-G9GtPSrbkoQHoFzlmDpb2q3cim0MqmkDgpgq0PLSuJlMA48SxektBBkH-gZdIA__&amp;Key-Pair-Id=APKAIE5G5CRDK6RD3PGA" alt="Figure 1. Refer to the image caption for details." path-from-xml="ao4c03987_0001.tif" /></a></div><div class="graphic-bottom"><div class="label fig-label">Figure 1.</div><div class="caption fig-caption"><p>Benzimidazole-based drug molecules.</p></div></div></div>
+    </div>
+ 
+    </div>
+</div>
+
+    
+
+    <div class="widget-SiteWideModals widget-instance-SiteWideModals" 
+         data-widget-name="SiteWideModals" 
+         data-widget-instance="SiteWideModals">
+        <div id="revealModal" class="reveal-modal" data-reveal aria-hidden="true" aria-live="assertive" tabindex="-1">
+    <div id="revealContent"></div>
+    
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close dialog</span></a>
+</div>
+
+<div id="globalModalContainer" class="modal-global-container"
+     role="dialog"
+     aria-hidden="true"
+     aria-live="assertive"
+     tabindex="-1">
+    <div id="globalModalContent">
+        <div class="js-globalModalPlaceholder"></div>
+    </div>
+    
+    <a href="javascript:;" class="close-modal js-close-modal" role="button">
+        <i class="icon-general-close" aria-hidden="true"></i>
+        <span class="screenreader-text">Close dialog</span>
+    </a>
+</div>
+<div id="globalModalOverlay" class="modal-overlay js-modal-overlay"></div>
+
+    <div id="NeedSubscription" class="reveal-modal small" data-reveal>
+            <div class="subscription-needed">
+                <div class="modal-heading">This Feature Is Available To Subscribers Only</div>
+                <p><a class="btn modal-sign_in-btn" href="/sign-in?returnUrl=%2fview-large%2ffigure%2f165496527%2fao4c03987_0001.tif">Sign In</a> or <a class="modal-register-link" href="/my-account/register?siteId=1&amp;returnUrl=%2fview-large%2ffigure%2f165496527%2fao4c03987_0001.tif">Create an Account</a></p>
+            </div>
+
+
+        <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close subscription notice</span></a>
+    </div>
+
+
+<div id="noAccessReveal" class="reveal-modal tiny" data-reveal>
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close access options</span></a>
+    <div id="noAccessForm">
+        <div class="spinner"></div>
+    </div>
+</div>
+
+
+<div id="cookieShareModal" class="cookie-share-modal-content" hidden>
+    <h2 id="cookieShareModalTitle" class="js-modal-label">Sharing Unavailable</h2>
+    <p>Sharing content requires targeting cookies to be enabled. Please update your cookie preferences to use this feature.</p>
+    <div class="cookie-share-modal__actions">
+        <button type="button" class="btn btn-primary js-share-cookie-prefs-btn">Update Cookie Preferences</button>
+        <button type="button" class="btn js-close-modal">Cancel</button>
+    </div>
+</div> 
+    </div>
+
+    
+
+
+
+
+
+
+<script type="text/javascript">
+    MathJax = {
+        tex: {
+            inlineMath: [['|$', '$|'], ['\\(', '\\)']]
+        },
+options: {
+            menuOptions: {
+                settings: {
+                    zoom: 'Click'
+                }
+            }
+        },        startup: {
+            pageReady: function () {
+                try {
+                    SCM.ACS.MathJaxAccentFix.init();
+                } catch (e) {
+                    console.warn('MathJax pre-processing error:', e);
+                }
+                return MathJax.startup.defaultPageReady().then(function () {
+                    try {
+                        SCM.ACS.MathJaxAccentFix.postRender();
+                    } catch (e) {
+                        console.warn('MathJax post-processing error:', e);
+                    }
+                });
+            }
+        }
+    };
+</script>
+<script id="MathJax-script" async src="//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+    <!-- CookiePro Default Categories -->
+    <!-- When the Cookie Compliance code loads, if cookies for the associated group have consent...
+         it will dynamically change the tag to: script type=text/JavaScript...
+         the code inside the tags will then be recognized and run as normal. -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script type="text/javascript" src="//acs.silverchair-cdn.com/Themes/Client/app/jsdist/v-639237259313375349/site.min.js"></script>
+
+
+    
+
+    
+
+        <script type="text/javascript">
+        $(document).ready(function () {
+            App.SearchAutoComplete.init(["AllAuthors","Keywords"]);
+        });
+        </script>
+    
+
+
+
+    <div class="ad-banner js-ad-riser ad-banner-riser" role="region" aria-label="Advertisement">
+    <div class="widget-AdBlock widget-instance-RiserAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="RiserAd">
+        
+ 
+    </div>
+
+    </div>
+
+
+
+        
+
+
+<script type="text/javascript">
+    _linkedin_partner_id = "4207601";
+    window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
+    window._linkedin_data_partner_ids.push(_linkedin_partner_id);
+</script>
+<script type="text/javascript">
+    (function (l) {
+        if (!l) {
+            window.lintrk = function (a, b) {
+                window.lintrk.q.push([a, b])
+            }; window.lintrk.q = []
+        }
+        var s = document.getElementsByTagName("script")[0];
+        var b = document.createElement("script");
+        b.type = "text/javascript";
+        b.async = true;
+        b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js";
+        s.parentNode.insertBefore(b, s);
+    })(window.lintrk);
+</script> 
+<noscript><img height="1" width="1" style="display:none;" alt="" src="https://px.ads.linkedin.com/collect/?pid=4207601&fmt=gif" /></noscript>
+            <script src="https://d2g123z4nw1cg1.cloudfront.net/index.js"></script>
+
+    <div class="end-of-page-js"></div>
+</body>
+</html>
+

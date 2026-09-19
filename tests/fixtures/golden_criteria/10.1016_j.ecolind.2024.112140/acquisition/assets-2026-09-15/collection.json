@@ -1,0 +1,386 @@
+{
+  "provider": "elsevier",
+  "doi": "10.1016/j.ecolind.2024.112140",
+  "sample_id": "10.1016_j.ecolind.2024.112140",
+  "source_url": "/content/article/doi/10.1016%2Fj.ecolind.2024.112140?view=FULL",
+  "source_input": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml",
+  "include_supplementary": true,
+  "include_body": true,
+  "source_sha256": "a59871f1deee860d4a50b8ae9f29961fd5b687dc0bd5c3050ed1dc0572dff2e4",
+  "targets": [
+    {
+      "asset": {
+        "asset_type": "image",
+        "source_kind": "object",
+        "source_ref": "gr3",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr3_lrg.jpg?httpAccept=%2A%2F%2A",
+        "content_type": "image/jpeg",
+        "filename_hint": "1-s2.0-S1470160X24005971-gr3_lrg.jpg",
+        "object_type": "IMAGE-HIGH-RES",
+        "category": "high",
+        "kind": "figure",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr3_lrg.jpg?httpAccept=%2A%2F%2A",
+        "section": "body"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr3_lrg.jpg?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/5b9231d7aa7328ca-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/5b9231d7aa7328ca-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2756,
+        "height": 1482,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S1470160X24005971-gr3_lrg.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "asset_type": "image",
+        "source_kind": "object",
+        "source_ref": "gr4",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr4_lrg.jpg?httpAccept=%2A%2F%2A",
+        "content_type": "image/jpeg",
+        "filename_hint": "1-s2.0-S1470160X24005971-gr4_lrg.jpg",
+        "object_type": "IMAGE-HIGH-RES",
+        "category": "high",
+        "kind": "figure",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr4_lrg.jpg?httpAccept=%2A%2F%2A",
+        "section": "body"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr4_lrg.jpg?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/304b3daf53d44e86-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/304b3daf53d44e86-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2362,
+        "height": 1651,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S1470160X24005971-gr4_lrg.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "asset_type": "image",
+        "source_kind": "object",
+        "source_ref": "gr1",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr1_lrg.jpg?httpAccept=%2A%2F%2A",
+        "content_type": "image/jpeg",
+        "filename_hint": "1-s2.0-S1470160X24005971-gr1_lrg.jpg",
+        "object_type": "IMAGE-HIGH-RES",
+        "category": "high",
+        "kind": "figure",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr1_lrg.jpg?httpAccept=%2A%2F%2A",
+        "section": "body"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr1_lrg.jpg?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/9813b0d86fd53b5c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/9813b0d86fd53b5c-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2362,
+        "height": 1267,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S1470160X24005971-gr1_lrg.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "asset_type": "image",
+        "source_kind": "object",
+        "source_ref": "gr2",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr2_lrg.jpg?httpAccept=%2A%2F%2A",
+        "content_type": "image/jpeg",
+        "filename_hint": "1-s2.0-S1470160X24005971-gr2_lrg.jpg",
+        "object_type": "IMAGE-HIGH-RES",
+        "category": "high",
+        "kind": "figure",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr2_lrg.jpg?httpAccept=%2A%2F%2A",
+        "section": "body"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr2_lrg.jpg?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/9565a86df0a43020-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/9565a86df0a43020-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2474,
+        "height": 1602,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S1470160X24005971-gr2_lrg.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "asset_type": "image",
+        "source_kind": "object",
+        "source_ref": "gr7",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr7_lrg.jpg?httpAccept=%2A%2F%2A",
+        "content_type": "image/jpeg",
+        "filename_hint": "1-s2.0-S1470160X24005971-gr7_lrg.jpg",
+        "object_type": "IMAGE-HIGH-RES",
+        "category": "high",
+        "kind": "figure",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr7_lrg.jpg?httpAccept=%2A%2F%2A",
+        "section": "body"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr7_lrg.jpg?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/7e3d0168540b1c68-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/7e3d0168540b1c68-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2756,
+        "height": 2698,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S1470160X24005971-gr7_lrg.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "asset_type": "image",
+        "source_kind": "object",
+        "source_ref": "gr8",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr8_lrg.jpg?httpAccept=%2A%2F%2A",
+        "content_type": "image/jpeg",
+        "filename_hint": "1-s2.0-S1470160X24005971-gr8_lrg.jpg",
+        "object_type": "IMAGE-HIGH-RES",
+        "category": "high",
+        "kind": "figure",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr8_lrg.jpg?httpAccept=%2A%2F%2A",
+        "section": "body"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr8_lrg.jpg?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/688e29b5a1dfca91-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/688e29b5a1dfca91-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2756,
+        "height": 2703,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S1470160X24005971-gr8_lrg.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "asset_type": "image",
+        "source_kind": "object",
+        "source_ref": "gr5",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr5_lrg.jpg?httpAccept=%2A%2F%2A",
+        "content_type": "image/jpeg",
+        "filename_hint": "1-s2.0-S1470160X24005971-gr5_lrg.jpg",
+        "object_type": "IMAGE-HIGH-RES",
+        "category": "high",
+        "kind": "figure",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr5_lrg.jpg?httpAccept=%2A%2F%2A",
+        "section": "body"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr5_lrg.jpg?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/987de4056dae91e4-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/987de4056dae91e4-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2756,
+        "height": 2784,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S1470160X24005971-gr5_lrg.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "asset_type": "image",
+        "source_kind": "object",
+        "source_ref": "gr6",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr6_lrg.jpg?httpAccept=%2A%2F%2A",
+        "content_type": "image/jpeg",
+        "filename_hint": "1-s2.0-S1470160X24005971-gr6_lrg.jpg",
+        "object_type": "IMAGE-HIGH-RES",
+        "category": "high",
+        "kind": "figure",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr6_lrg.jpg?httpAccept=%2A%2F%2A",
+        "section": "body"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr6_lrg.jpg?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/5ec4d0d13dc7b0b8-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/5ec4d0d13dc7b0b8-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2368,
+        "height": 2971,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S1470160X24005971-gr6_lrg.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "asset_type": "supplementary",
+        "source_kind": "object",
+        "source_ref": "mmc1",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-mmc1.docx?httpAccept=%2A%2F%2A",
+        "content_type": "application/word",
+        "filename_hint": "1-s2.0-S1470160X24005971-mmc1.docx",
+        "object_type": "APPLICATION",
+        "category": "standard",
+        "kind": "supplementary",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-mmc1.docx?httpAccept=%2A%2F%2A",
+        "section": "supplementary"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-mmc1.docx?httpAccept=%2A%2F%2A",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "[Content_Types].xml",
+            "_rels/.rels",
+            "word/document.xml",
+            "word/_rels/document.xml.rels",
+            "word/footnotes.xml",
+            "word/endnotes.xml",
+            "word/media/image1.png",
+            "word/media/image2.tiff",
+            "word/media/image3.png",
+            "word/theme/theme1.xml",
+            "word/settings.xml",
+            "word/styles.xml",
+            "word/webSettings.xml",
+            "word/fontTable.xml",
+            "docProps/core.xml",
+            "docProps/app.xml",
+            "word/media/image4.png",
+            "word/media/image5.png"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "1-s2.0-S1470160X24005971-mmc1.docx",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/3b07440b1580f356-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "asset_type": "supplementary",
+        "source_kind": "object",
+        "source_ref": "am",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-am.pdf?httpAccept=%2A%2F%2A",
+        "content_type": "application/pdf",
+        "filename_hint": "1-s2.0-S1470160X24005971-am.pdf",
+        "object_type": "AAM-PDF",
+        "category": "standard",
+        "kind": "supplementary",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-am.pdf?httpAccept=%2A%2F%2A",
+        "section": "supplementary"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-am.pdf?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/f9b0f115ce60b291-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/f9b0f115ce60b291-http-1.bin",
+      "validation": {
+        "format": "pdf",
+        "pages": 38,
+        "first_page_excerpt": "The Variability in Sensitivity of Vegetation Greenness to Climate change across \n1 \nEurasia \n2 \nZhipeng Wang1, Jianshuang Wu2, *, Meng Li3, Yanan Cao4, Minyahel Tilahun2, 5, Ben \n3 \nChen2 \n4 \n1 Hebei Key Laboratory of Intelligent Water Conservancy, School of Water \n5 \nConservancy and Hydropower, Hebei University of Engineering, Handan 056038, \n6 \nChina \n7 \n2 Institute of Environment and Sustainable Development in Agriculture, Chinese \n8 \nAcademy of Agricultural Sciences, Beijing, 100081, China \n9 \n3 School of Geographic Sciences, Nantong University, Nantong, 226019, China \n10 \n4 School of Eart",
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "accepted_manuscript_object",
+      "identity_evidence": "Explicit same-paper supplementary index link; PDF opens without repair; no text conversion quality claim",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S1470160X24005971-am.pdf",
+      "download_tier": "supplementary_file",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 10,
+    "unique_files": 10,
+    "verified_files": 9,
+    "replayed_files": 9,
+    "complete_received_files": 9,
+    "index_only_files": 1
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 10,
+    "unique_files": 10,
+    "verified_files": 10,
+    "replayed_files": 10,
+    "complete_received_files": 10
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

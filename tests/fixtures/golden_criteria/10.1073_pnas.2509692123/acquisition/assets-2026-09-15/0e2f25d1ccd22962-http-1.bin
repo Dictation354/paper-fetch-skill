@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+	
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	
+	<meta name="ahrefs-site-verification" content="a4d19d13d080685e48094a2591188be35d7b5db05918a5eb84828500a14f3c5e">
+	
+	<title>404 Page not found</title>
+	
+	
+
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" 
+		  rel="stylesheet" 
+		  integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" 
+		  crossorigin="anonymous">
+	<script 
+		  src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" 
+		  integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" 
+	      crossorigin="anonymous">
+	</script>
+
+	<script src="/js/jquery-3.6.1.min.js"></script>
+	
+	
+	<link rel="stylesheet" href="/css/fontawesome-free-6.7.2-web/css/fontawesome.min.css">
+	<link rel="stylesheet" href="/css/fontawesome-free-6.7.2-web/css/solid.min.css">
+	<link rel="stylesheet" href="/css/fontawesome-free-6.7.2-web/css/brands.min.css">
+	
+
+
+	
+		
+		
+			
+				
+					<link rel="stylesheet" href="/css/style.da46f5c0a75190665f6ea00bbd3af2f75e8ac8b48951528e0e8d5c04c13944fd.css?v=sha256-2kb1wKdRkGZfbqALvTry916KyLSJUVKODo1cBME5RP0%3d" integrity="sha256-2kb1wKdRkGZfbqALvTry916KyLSJUVKODo1cBME5RP0=" crossorigin="anonymous">
+				
+			
+		
+	
+
+
+	
+
+	<link rel="icon" sizes="48x48" href="/images/favicons/favicon.ico">
+	<link rel="icon" sizes="32x32" href="/images/favicons/favicon-32x32.png">
+	<link rel="icon" sizes="16x16" href="/images/favicons/favicon-16x16.png">
+	<link rel="apple-touch-icon-precomposed" href="/images/favicons/apple-touch-icon.png">
+	<link rel="apple-touch-icon-precomposed" sizes="192x192" href="/images/favicons/android-chrome-192x192.png">
+	<link rel="apple-touch-icon-precomposed" sizes="512x512" href="/images/favicons/android-chrome-512x512.png">
+    
+</head>
+<body>
+	<header>
+	
+
+	<div class="row">
+		<div class="col logo">			
+			<a href="https://www.doi.org/"><img class="header-logo" src="/images/logos/
+header_logo_cropped_registered.svg" /></a>			
+		</div>
+	</div>
+	
+	<div class="navigation-container">
+		<div class="nav">
+			<nav>
+				<input type="checkbox" name="" id="">
+				<div class="hamburger-lines">
+					<span class="line line1"></span>
+					<span class="line line2"></span>
+					<span class="line line3"></span>
+				</div>
+				<ul class="menu-items">
+					
+										
+
+							<li>
+								
+								<span class='nolink'>The Foundation</span>
+								<i class="fa-solid fa-fw fa-angle-down"></i>
+								
+    							
+									<ul class="submenu">
+										
+											<li><a href="/the-foundation/about-us/">About Us</a>
+										
+											<li><a href="/the-foundation/board-and-governance/">Board &amp; Governance</a>
+										
+											<li><a href="/the-foundation/sustainability/">Sustainability</a>
+										
+									</ul>
+								
+							</li>
+										
+
+							<li>
+								
+								<span class='nolink'>The Community</span>
+								<i class="fa-solid fa-fw fa-angle-down"></i>
+								
+    							
+									<ul class="submenu">
+										
+											<li><a href="/the-community/what-are-registration-agencies/">What are Registration Agencies?</a>
+										
+											<li><a href="/the-community/existing-registration-agencies/">Existing Registration Agencies</a>
+										
+											<li><a href="/the-community/who-are-the-members-and-users/">Who Are The Members and Users?</a>
+										
+									</ul>
+								
+							</li>
+										
+
+							<li>
+								
+								<span class='nolink'>The Identifier</span>
+								<i class="fa-solid fa-fw fa-angle-down"></i>
+								
+    							
+									<ul class="submenu">
+										
+											<li><a href="/the-identifier/what-is-a-doi/">What is a DOI?</a>
+										
+											<li><a href="/the-identifier/resources/handbook/">DOI Handbook</a>
+										
+											<li><a href="/the-identifier/resources/">Resources</a>
+										
+									</ul>
+								
+							</li>
+						
+					
+				</ul>
+
+				
+			</nav>
+		</div>
+	</div>
+</header>
+
+		
+	<main aria-role="main">
+		<header class="single-header">
+		</header>
+			<section class="single-top">
+    <div class="row">
+        <div class="col left" style="background-image:url()">
+            <div class="circle-wrapper">
+                <div class="circle"></div>
+                <div class="texts">
+                    <h1>Error 404</h1>
+                    <h2>Not Found</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col right">
+            
+            <div>
+            
+                <div class="maintext">Sorry, we couldn&rsquo;t find the page you&rsquo;re looking for.</div>
+                <div class="subtext"></div>
+                
+                <div class='link'>
+                    <a href="/">head home</a>
+                    <i class="fa-solid fa-fw fa-arrow-right-long"></i>           
+                </div>
+                
+            
+            </div>
+            
+        </div>        
+
+    </div>
+</section>
+		<div class="page-content">
+			<article>
+				<div>
+					<p>Our site has recently been reorganized. We've tried to make things easier to find, but if you can't find what you're looking for you can <a href="mailto:info@doi.org" title="Email us">email us</a>.</p>
+					<p>
+				</div>
+				
+			</article>
+		</div>
+        <div class="sticky-socials">
+    <ul class="socials-side">
+        				
+            <li><a href="https://www.linkedin.com/company/doi-foundation-inc/"><i class='fa-brands fa-fw fa-linkedin'></i></a></li>
+        				
+            <li><a href="mailto:info@doi.org"><i class='fa-solid fa-fw fa-envelope'></i></a></li>
+        
+    </ul>
+</div>
+	</main>
+
+	
+
+<footer>
+	<div class="row">
+		<div class="col">
+			<a href="https://www.doi.org/"><img class='footer-logo' src="/images/logos/
+footer_logo_cropped_registered.svg" /></a>
+		</div>
+		<div class="col">
+			<ul>
+			
+				<li><a href="/the-identifier/resources/">Resources</a></li>
+			
+				<li><a href="/the-foundation/board-and-governance/">Governing Board</a></li>
+			
+				<li><a href="https://doi.statuspage.io/">Status page</a></li>
+			
+				<li><a href="mailto:info@doi.org">Email us</a></li>
+			
+			</ul>
+		</div>
+		<div class="col">
+			<ul>
+							
+				<li><a href="/the-identifier/resources/handbook">The DOI Handbook</a></li>
+							
+				<li><a href="https://www.iso.org/standard/81599.html">ISO 26324</a></li>
+							
+				<li><a href="/privacy-policy/">Privacy Policy</a></li>
+							
+				<li><a href="/resources/130718-trademark-policy.pdf">Trademarks (PDF)</a></li>
+			
+			</ul>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col copyright">
+			
+				<p>Copyright © 2026 DOI Foundation. <i class='fa-brands fa-fw fa-creative-commons'></i><i class='fa-brands fa-fw fa-creative-commons-by'></i> The content of this site is licensed under a <a href='https://creativecommons.org/licenses/by/4.0/' title='Creative Commons' target='_blank'>Creative Commons Attribution 4.0 International License</a>.</p><p>DOI&reg;, DOI.ORG&reg;, and shortDOI&reg; are trademarks of the DOI Foundation.</p>
+			  
+		</div>
+		<div class="col socials">
+			<ul class="socials-footer">
+    				
+        <li><a href="https://www.linkedin.com/company/doi-foundation-inc/"><i class='fa-brands fa-fw fa-linkedin'></i></a></li>
+    				
+        <li><a href="mailto:info@doi.org"><i class='fa-solid fa-fw fa-envelope'></i></a></li>
+    
+</ul>
+		</div>
+	</div>
+</footer>
+
+<script src="/js/script.js"></script>
+
+</body>
+</html>

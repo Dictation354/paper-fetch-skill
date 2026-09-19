@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "doi": "10.1146/annurev-environ-102511-084654",
+      "provider": "annualreviews",
+      "requested_url": "https://api.crossref.org/works/10.1146%2Fannurev-environ-102511-084654",
+      "final_url": "https://api.crossref.org/works/10.1146%2Fannurev-environ-102511-084654",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:28:19 GMT",
+        "content-type": "application/json",
+        "content-length": "4551"
+      },
+      "captured_at_utc": "2026-09-18T02:28:18.485794+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 18038,
+      "sha256": "63daff21e425666f9b3873e4bbc28963ad889575e429bcf7e810b3dd8eb93452",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1146/annurev-environ-102511-084654",
+      "provider": "annualreviews",
+      "requested_url": "https://www.annualreviews.org/doi/10.1146/annurev-environ-102511-084654",
+      "final_url": "https://www.annualreviews.org/content/journals/10.1146/annurev-environ-102511-084654",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:28:23 GMT",
+        "content-type": "text/html;charset=UTF-8"
+      },
+      "captured_at_utc": "2026-09-18T02:28:27.720075+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 1057434,
+      "sha256": "86953449d1d6af2f960a99fb032dbce1137327d9180a345c4d69dd1badf57c7f",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

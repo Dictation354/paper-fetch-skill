@@ -328,6 +328,17 @@ def _clean_official_html_latexml_noise(article: Any) -> dict[str, int]:
             del image["alt"]
             removed_alt_placeholders += 1
 
+    # LaTeXML frontmatter may contain a table holding only a zero-width rule.
+    # Remove only empty frontmatter layout tables, never a semantic body table.
+    for table in list(article.select("table.ltx_tabular")):
+        if table.find_parent(["section", "figure"]) is not None:
+            continue
+        if (
+            not table.get_text(strip=True)
+            and table.find(["img", "object", "svg", "math"]) is None
+        ):
+            table.decompose()
+
     math_nodes_normalized = _normalize_official_html_latexml_math_nodes(article)
     footnote_nodes_normalized = _normalize_official_html_latexml_notes(article)
 
@@ -379,7 +390,7 @@ def _sanitize_arxiv_math_annotation_latex(value: str) -> str:
     latex = normalize_latex(latex)
     if not latex or _ARXIV_UNESCAPED_DOLLAR_PATTERN.search(latex):
         return ""
-    if r"\[" in latex or r"\]" in latex:
+    if re.search(r"(?<!\\)\\[\[\]]", latex):
         return ""
     if not _latex_braces_are_balanced(latex):
         return ""

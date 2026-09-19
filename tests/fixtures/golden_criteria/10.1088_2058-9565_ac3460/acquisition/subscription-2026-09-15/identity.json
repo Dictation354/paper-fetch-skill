@@ -1,0 +1,16 @@
+{
+  "query": "10.1088/2058-9565/ac3460",
+  "query_kind": "doi",
+  "doi": "10.1088/2058-9565/ac3460",
+  "landing_url": null,
+  "provider_hint": "iop",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 25,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "iop"
+}

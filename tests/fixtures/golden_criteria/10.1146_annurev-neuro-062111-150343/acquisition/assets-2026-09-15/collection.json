@@ -1,0 +1,200 @@
+{
+  "provider": "annualreviews",
+  "doi": "10.1146/annurev-neuro-062111-150343",
+  "sample_id": "10.1146_annurev-neuro-062111-150343",
+  "source_url": "https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343",
+  "source_input": "tests/fixtures/golden_criteria/10.1146_annurev-neuro-062111-150343/original.html",
+  "include_supplementary": true,
+  "include_body": false,
+  "source_sha256": "4b7f71f629c516494d342c260c982e3182a4bd8bc27f2fc4856d915436342df4",
+  "targets": [
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Supplemental Material",
+        "caption": "Download all Supplemental Material as one PDF. Includes links to Supplemental Videos 1-4 (videos embedded below), Supplemental Figures 1-6, and a Supplemental Discussion.",
+        "section": "supplementary",
+        "url": "https://www.annualreviews.org/deliver/fulltext/neuro/36/1/ne36_schiller_supmat.pdf?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1"
+      },
+      "download_url": "https://www.annualreviews.org/deliver/fulltext/neuro/36/1/ne36_schiller_supmat.pdf?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "identity_evidence": "Explicit same-paper supplementary index link; PDF opens without repair; no text conversion quality claim",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "pdf",
+          "pages": 9,
+          "first_page_excerpt": "Downloaded from www.annualreviews.org.  Peking University (ar-387953) IP:  162.105.199.139 On: Tue, 15 Sept 2026 07:54:04\nSupplemental Material: Annu. Rev. Neurosci. 2013. 36:1-24 \ndoi: 10.1146/annurev-neuro-062111-150343 \nActive Properties of Neocortical Pyramidal Neuron Dendrites \nMajor, Larkum, and Schiller \n \n \nSupplemental Videos of Model in Figure 3 and Supplemental Figure 4 \n \nMovies show time evolution of I-V curves and membrane potential (Vm) of models, following a brief pulse of \nglutamate, with AMPAR conductances yielding just subthreshold and just-suprathreshold responses.  Pale \no",
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "ne36_schiller_supmat.pdf",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/e8e94110e312a0b8-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Supplemental Video 1",
+        "caption": "Supplemental Video 1 : g max AMPA = 2.1 × leak (subthreshold). Download video file (MPG)",
+        "section": "supplementary",
+        "url": "https://www.annualreviews.org/deliver/fulltext/neuro/36/1/schiller_video1.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1"
+      },
+      "download_url": "https://www.annualreviews.org/deliver/fulltext/neuro/36/1/schiller_video1.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/3afcccbde837d11e-http-1.bin"
+      ],
+      "file_role": "supplementary",
+      "reason": "HTTP 403; not an expected readable binary",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "historical_capture": {
+        "state": "unavailable",
+        "validation": {
+          "valid": false,
+          "reason": "not an expected readable binary"
+        },
+        "replay_verified": false,
+        "outcome": "blocked",
+        "former_record": "acquisition/assets-2026-09-15/3afcccbde837d11e-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Supplemental Video 2",
+        "caption": "Supplemental Video 2 : g max AMPA = 2.2 × leak (suprathreshold). Download video file (MPG)",
+        "section": "supplementary",
+        "url": "https://www.annualreviews.org/deliver/fulltext/neuro/36/1/schiller_video2.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1"
+      },
+      "download_url": "https://www.annualreviews.org/deliver/fulltext/neuro/36/1/schiller_video2.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/8ad42d5d781222db-http-1.bin"
+      ],
+      "file_role": "supplementary",
+      "reason": "HTTP 403; not an expected readable binary",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "historical_capture": {
+        "state": "unavailable",
+        "validation": {
+          "valid": false,
+          "reason": "not an expected readable binary"
+        },
+        "replay_verified": false,
+        "outcome": "blocked",
+        "former_record": "acquisition/assets-2026-09-15/8ad42d5d781222db-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Supplemental Video 3",
+        "caption": "Supplemental Video 3 : g max AMPA = 1.37 × leak (subthreshold). Download video file (MPG)",
+        "section": "supplementary",
+        "url": "https://www.annualreviews.org/deliver/fulltext/neuro/36/1/schiller_video3.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1"
+      },
+      "download_url": "https://www.annualreviews.org/deliver/fulltext/neuro/36/1/schiller_video3.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/95e1e22f082e2440-http-1.bin"
+      ],
+      "file_role": "supplementary",
+      "reason": "HTTP 403; not an expected readable binary",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "historical_capture": {
+        "state": "unavailable",
+        "validation": {
+          "valid": false,
+          "reason": "not an expected readable binary"
+        },
+        "replay_verified": false,
+        "outcome": "blocked",
+        "former_record": "acquisition/assets-2026-09-15/95e1e22f082e2440-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Supplemental Video 4",
+        "caption": "Supplemental Video 4 : g max AMPA = 1.38 × leak (suprathreshold). Download video file (MPG)",
+        "section": "supplementary",
+        "url": "https://www.annualreviews.org/deliver/fulltext/neuro/36/1/schiller_video4.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1"
+      },
+      "download_url": "https://www.annualreviews.org/deliver/fulltext/neuro/36/1/schiller_video4.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/6cc52afd61c4e842-http-1.bin"
+      ],
+      "file_role": "supplementary",
+      "reason": "HTTP 403; not an expected readable binary",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "historical_capture": {
+        "state": "unavailable",
+        "validation": {
+          "valid": false,
+          "reason": "not an expected readable binary"
+        },
+        "replay_verified": false,
+        "outcome": "blocked",
+        "former_record": "acquisition/assets-2026-09-15/6cc52afd61c4e842-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    }
+  ],
+  "counts": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 0,
+    "replayed_files": 0,
+    "complete_received_files": 0,
+    "index_only_files": 5
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1146_annurev-neuro-062111-150343/acquisition/assets-2026-09-15/collection.json",
+  "outcome": "index_only",
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 1,
+    "replayed_files": 1,
+    "complete_received_files": 1
+  },
+  "historical_outcome_before_supplementary_removal": "partial",
+  "historical_blocking_evidence": [
+    "acquisition/assets-2026-09-15/3afcccbde837d11e-http-1.bin",
+    "acquisition/assets-2026-09-15/8ad42d5d781222db-http-1.bin",
+    "acquisition/assets-2026-09-15/95e1e22f082e2440-http-1.bin",
+    "acquisition/assets-2026-09-15/6cc52afd61c4e842-http-1.bin",
+    "acquisition/assets-2026-09-15/annualreviews-headless-001-browser_dom.html",
+    "acquisition/assets-2026-09-15/annualreviews-headed-all-001-browser_dom.html"
+  ],
+  "former_replay_receipt": "tests/fixtures/golden_criteria/10.1146_annurev-neuro-062111-150343/acquisition/assets-2026-09-15/replay-receipt.json"
+}

@@ -279,6 +279,13 @@ def _parse_markdown_image_at(text: str, start: int) -> MarkdownImageMatch | None
     )
 
 
+def replace_markdown_image_url(image: MarkdownImageMatch, url: str) -> str:
+    """Replace only the destination, retaining verbatim alt/title/attributes."""
+    destination_start = len(image.alt) + 4  # ![alt](
+    start = image.text.index(image.url, destination_start)
+    return image.text[:start] + url + image.text[start + len(image.url) :]
+
+
 def iter_markdown_images(markdown_text: str) -> Iterator[MarkdownImageMatch]:
     text = str(markdown_text or "")
     index = 0
@@ -365,6 +372,10 @@ def _is_standalone_markdown_image_line(line: str) -> bool:
 
 
 def _split_markdown_image_adjacency_line(line: str) -> list[str]:
+    # Images inside pipe table cells are inline content; splitting them into
+    # blocks destroys both the row and its panel/column coordinates.
+    if line.strip().startswith("|") and line.strip().endswith("|"):
+        return [line]
     matches = list(iter_markdown_images(line))
     if not matches:
         return [line]

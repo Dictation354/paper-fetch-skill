@@ -1,0 +1,16 @@
+{
+  "query": "10.1021/jacs.6c10062",
+  "query_kind": "doi",
+  "doi": "10.1021/jacs.6c10062",
+  "landing_url": null,
+  "provider_hint": "acs",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 6,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "acs"
+}

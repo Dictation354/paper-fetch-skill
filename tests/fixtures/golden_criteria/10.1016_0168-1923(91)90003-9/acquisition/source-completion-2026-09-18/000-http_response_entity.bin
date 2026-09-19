@@ -1,0 +1,91 @@
+{"abstracts-retrieval-response": {
+    "affiliation": {
+        "affiliation-city": "Canberra",
+        "@id": "60029470",
+        "affilname": "Commonwealth Scientific and Industrial Research Organisation",
+        "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029470",
+        "affiliation-country": "Australia"
+    },
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-44949277650",
+        "dc:description": "This paper reviews the development of portable porometers for the measurement of stomatal conductance in the field. Precautions in the use of such porometers are highlighted. The response of stomata to environmental variables such as quantum flux density, leaf-to-air water vapour concentration difference (relative humidity), temperature, carbon dioxide concentration and soil water status are reviewed, but the responses to atmospheric pollutants are only referred to in passing. The effects of plant factors such as leaf development and ageing, leaf water status and phytohormones on stomatal conductance are discussed. Finally, the implications of environmental and plant factors on the measured values of stomatal conductance, and the use of these values in calculating canopy transpiration, are discussed. © 1991.",
+        "prism:coverDate": "1991-01-01",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/44949277650",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Neil C.",
+            "preferred-name": {
+                "ce:given-name": "Neil C.",
+                "ce:initials": "N.C.",
+                "ce:surname": "Turner",
+                "ce:indexed-name": "Turner N."
+            },
+            "@seq": "1",
+            "ce:initials": "N.C.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029470",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029470"
+            },
+            "ce:surname": "Turner",
+            "@auid": "57203230538",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57203230538",
+            "ce:indexed-name": "Turner N.C."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/44949277650"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=44949277650&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=44949277650&origin=inward"
+            }
+        ],
+        "source-id": "12067",
+        "pii": "0168-1923(91)90003-9",
+        "citedby-count": "97",
+        "prism:volume": "54",
+        "subtype": "ar",
+        "dc:title": "Measurement and influence of environmental and plant factors on stomatal conductance in the field",
+        "openaccess": "0",
+        "prism:issn": "01681923",
+        "prism:issueIdentifier": "2-4",
+        "subtypeDescription": "Article",
+        "prism:publicationName": "Agricultural and Forest Meteorology",
+        "prism:pageRange": "137-154",
+        "prism:endingPage": "154",
+        "openaccessFlag": "false",
+        "prism:doi": "10.1016/0168-1923(91)90003-9",
+        "prism:startingPage": "137",
+        "dc:identifier": "SCOPUS_ID:44949277650"
+    },
+    "authors": {"author": [{
+        "ce:given-name": "Neil C.",
+        "preferred-name": {
+            "ce:given-name": "Neil C.",
+            "ce:initials": "N.C.",
+            "ce:surname": "Turner",
+            "ce:indexed-name": "Turner N."
+        },
+        "@seq": "1",
+        "ce:initials": "N.C.",
+        "@_fa": "true",
+        "affiliation": {
+            "@id": "60029470",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029470"
+        },
+        "ce:surname": "Turner",
+        "@auid": "57203230538",
+        "author-url": "https://api.elsevier.com/content/author/author_id/57203230538",
+        "ce:indexed-name": "Turner N.C."
+    }]}
+}}

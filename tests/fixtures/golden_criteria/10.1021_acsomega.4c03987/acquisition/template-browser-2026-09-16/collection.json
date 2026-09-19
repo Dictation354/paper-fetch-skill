@@ -1,0 +1,29 @@
+{
+  "doi": "10.1021/acsomega.4c03987",
+  "provider": "acs",
+  "source_url": "https://pubs.acs.org/doi/10.1021/acsomega.4c03987",
+  "attempt": 1,
+  "transport": "native Camoufox configured provider context",
+  "responses": [
+    {
+      "body_error_type": "Error"
+    },
+    {
+      "record": "acquisition/template-browser-2026-09-16/002-http_response_entity.bin",
+      "status": 200
+    },
+    {
+      "record": "acquisition/template-browser-2026-09-16/003-http_response_entity.bin",
+      "status": 200
+    }
+  ],
+  "no_fault_injection": true,
+  "title": "Functionalized Metal-Free Carbon Nanosphere Catalyst for the Selective C–N Bond Formation under Open-Air Conditions | ACS Omega | ACS Publications",
+  "observed_doi": "10.1021/acsomega.4c03987",
+  "final_url": "https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere",
+  "challenge": false,
+  "paywall_diagnostics": {},
+  "stop_reason": "single_observation_complete",
+  "viewer_count": 32,
+  "viewer_title": "Figure 1. Benzimidazole-based drug... | ACS Publications"
+}

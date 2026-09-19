@@ -1,0 +1,94 @@
+{
+  "schema_version": 2,
+  "provider": "springer",
+  "route": "html",
+  "failure_code": "abstract_only",
+  "stage": "availability",
+  "backend": "http_cookie_opener",
+  "attempt": 1,
+  "target": {
+    "url": "https://link.springer.com/10.1186/s40359-026-04991-8",
+    "host": "link.springer.com",
+    "path": "/10.1186/s40359-026-04991-8",
+    "url_sha256": "90bd171a356d1013153962ce7b167124df5cf0c06bc81e8c4d4f13b17a4e4d3f"
+  },
+  "final": {
+    "url": "https://link.springer.com/article/10.1186/s40359-026-04991-8",
+    "host": "link.springer.com",
+    "path": "/article/10.1186/s40359-026-04991-8",
+    "url_sha256": "d52cb7924603c6d1f2768eb42ed5447c08532892a9ff8c4510e2b01b7137a348"
+  },
+  "response_status": 200,
+  "title_summary": "Phubbing in pregnancy as a predictor of postpartum depressive symptoms: preliminary results",
+  "page_summary": "Phubbing in pregnancy as a predictor of postpartum depressive symptoms: preliminary results | BMC Psychology | Springer Nature Link Skip to main content Advertisement BMC journals have moved to Springer Nature Link. Learn more about website changes. Log in Menu Find a journal Publish with us Track your research Search Saved research Cart Home BMC Psychology Article Phubbing in pregnancy as a predictor of postpartum depressive symptoms: preliminary results Research Open access Published: 07 July 2026 Cite this article You have full access to this open access article Download PDF Save article View saved research BMC Psychology Aims and scope Submit manuscript Phubbing in pregnancy as a predictor of postpartum depressive symptoms: preliminary results Download PDF Małgorzata Sobol ORCID: orcid.org/0000-0003-0634-9134 1 , Elisa Mancinelli 2 , Alessandra Schiavo 3 , Nicola Cellini 2 , Giovanna Mioni 2 , Agata Błachnio 4 & … Silvia Salcuni 2 Show authors 101 Accesses Explore all metrics We’re",
+  "page": {
+    "availability_diagnostics": {
+      "accepted": false,
+      "reason": "abstract_only",
+      "content_kind": "abstract_only",
+      "blocking_fallback_signals": [],
+      "hard_negative_signals": [],
+      "strong_positive_signals": [
+        "explicit_body_container",
+        "selected_container_has_body_text"
+      ],
+      "soft_positive_signals": [
+        "selected_article_container",
+        "article_tag_present"
+      ],
+      "body_metrics": {
+        "text": "",
+        "char_count": 0,
+        "word_count": 0,
+        "cjk_chars": 0,
+        "cjk_ratio": 0.0,
+        "has_doi": true,
+        "body_block_count": 0,
+        "body_heading_count": 0,
+        "abstract_text": "Abstract Partner behavior toward pregnant women plays a significant role in maternal mental health. One of the common behaviors that negatively affects the quality of communication is phubbing. Phubbing is defined as ignoring a partner during face to face interaction in favor of a mobile phone. The present study examined the association between partner phubbing during pregnancy and postpartum depression. Thirty expectant couples were recruited from a gynecological outpatient clinic in Italy and assessed longitudinally during the first trimester, third trimester, and within three months postpartum. Women completed the Edinburgh Postnatal Depression Scale (EPDS) and seven-day web-based observational diaries assessing perceived partner phubbing at each time point, while male partners completed the Phubbing Scale. Results indicated that women’s perceived experiences of partner phubbing during the third trimester statistically predicted the severity of postpartum depressive symptoms. In contrast, partners’ self-reported phubbing frequency was not associated with women’s postpartum depression. These findings underscore the importance of psychoeducation for couples during pregnancy regarding phubbing and its potential negative consequences, and identify the third trimester as a particularly sensitive period for partner behaviors related to attention and respect.",
+        "abstract_word_count": 189,
+        "abstract_char_count": 1377,
+        "has_abstract": true,
+        "body_to_abstract_ratio": 0.0,
+        "body_run_paragraph_count": 0,
+        "body_run_char_count": 0,
+        "body_paragraph_count": 0,
+        "body_marker_present": true,
+        "substantive_article_container": true,
+        "explicit_body_container": true,
+        "substantive_body_container": true,
+        "post_abstract_body_run": false,
+        "narrative_article_type": false,
+        "container_scope": "page",
+        "container_scope_trusted": true,
+        "container_selector": "body",
+        "container_synthetic": false
+      },
+      "figure_count": 0,
+      "title": "Phubbing in pregnancy as a predictor of postpartum depressive symptoms: preliminary results",
+      "container_tag": "body",
+      "container_text_length": 6882,
+      "confirmed_article_paywall": {}
+    },
+    "html_shape": {
+      "byte_count": 261700,
+      "has_html": true,
+      "has_head": true,
+      "has_body": true,
+      "body_text_length": 9543,
+      "body_element_count": 1018,
+      "article_container_count": 9
+    }
+  },
+  "raw_html": {
+    "byte_count": 261700,
+    "sha256": "9bdb310f1259a49b4e3195c754df3c8317bc82cfbd15b113a9cf912d55f086c0"
+  },
+  "sanitized_html": {
+    "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/springer/10.1186_s40359-026-04991-8/html-1/page-sanitized.html",
+    "byte_count": 63521,
+    "sha256": "1cc4ddcaba9dd6babd9b2032c26d7f78e1f7b9a0523389b77858dc311089e010",
+    "truncated": false
+  },
+  "diagnostic_path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/springer/10.1186_s40359-026-04991-8/html-1/diagnostic.json"
+}

@@ -1,0 +1,54 @@
+[
+  {
+    "check": "lint",
+    "command": "uv run ruff check .",
+    "exit_code": 0,
+    "log": "lint.log"
+  },
+  {
+    "check": "format",
+    "command": "uv run ruff format --check .",
+    "exit_code": 1,
+    "log": "format.log"
+  },
+  {
+    "check": "format-scope",
+    "command": "uv run ruff format --check tests src/paper_fetch/providers/_ieee_metadata.py src/paper_fetch/quality/access_boundary.py",
+    "exit_code": 0,
+    "log": "format-scope.log"
+  },
+  {
+    "check": "version",
+    "command": "uv run python scripts/sync_version.py --check",
+    "exit_code": 0,
+    "log": "version.log"
+  },
+  {
+    "check": "macos-static",
+    "command": "uv run python scripts/validate_macos_adaptation.py",
+    "exit_code": 0,
+    "log": "macos-static.log"
+  },
+  {
+    "check": "mypy",
+    "command": "PYTHONPATH=src uv run mypy src/paper_fetch",
+    "exit_code": 1,
+    "log": "mypy.log"
+  },
+  {
+    "check": "macos-portable",
+    "command": "bash scripts/test-macos-contract.sh --python .venv/bin/python",
+    "exit_code": 0,
+    "log": "macos-portable.log"
+  },
+  {
+    "check": "shell-syntax",
+    "command": "bash -n scripts/dev-preflight.sh",
+    "exit_code": 0
+  },
+  {
+    "check": "diff-whitespace",
+    "command": "git diff --check",
+    "exit_code": 0
+  }
+]

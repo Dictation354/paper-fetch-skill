@@ -1,0 +1,200 @@
+{
+  "doi": "10.1073/pnas.2607267123",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/acquisition/official-reacquisition-2026-09-19/outputs/681e1ea14625-Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "681e1ea146254dc47316dfdb2da01459fa139ce291483d4b0960c93fc05730d1",
+      "size": 23014
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/acquisition/official-reacquisition-2026-09-19/outputs/798586d537b6-Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "798586d537b6348f35a3fa1a6956cf92ed91cbec83f0403a997a788a5cc0d7cb",
+      "size": 12495
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/pnas/10.1073_pnas.2607267123/browser_html-1/diagnostic.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/acquisition/official-reacquisition-2026-09-19/outputs/ab249ea5381a-diagnostic.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "ab249ea5381ad8cf553e5e53a635a9dd3c6d189bc01ef0ab2955f56f05c18bf9",
+      "size": 22671
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/pnas/10.1073_pnas.2607267123/browser_html-1/page-sanitized.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/acquisition/official-reacquisition-2026-09-19/outputs/82325bb5c150-page-sanitized.html",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "82325bb5c150500e73c46c4881256b49259cb751ec2009594b4b91e8917bd5fc",
+      "size": 88190
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/pnas/10.1073_pnas.2607267123/html-1/diagnostic.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/acquisition/official-reacquisition-2026-09-19/outputs/6aab8f22534c-diagnostic.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "6aab8f22534c4a174494ad75b91f7da189beb324f3cadd1c595ddf021e573bd9",
+      "size": 25974
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/pnas/10.1073_pnas.2607267123/html-1/page-sanitized.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/acquisition/official-reacquisition-2026-09-19/outputs/fd0a19c69734-page-sanitized.html",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "fd0a19c6973494301506406a7ec49381081b77aaeca3d154e2c0c99861f216c1",
+      "size": 534
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1073_pnas.2607267123_assets/liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/acquisition/official-reacquisition-2026-09-19/assets/5a1398bfe0db-liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "5a1398bfe0db47647e5d83086283719ede23d427f471d960630c5dbbca1bf425",
+      "size": 2814
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1073_pnas.2607267123_assets/liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-12.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/acquisition/official-reacquisition-2026-09-19/assets/efa57ce98e84-liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-12.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "efa57ce98e847024586833b96e841647ee88b3d1bab270eebf4337985dfbdfe4",
+      "size": 525318
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.pdf",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/acquisition/official-reacquisition-2026-09-19/raw_sources/1d6eacec9635-Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.pdf",
+      "category": "raw_sources",
+      "origin_kind": "real_replay",
+      "sha256": "1d6eacec96351d38322c7c27170f500efaa5880959b0621354b2e3d100ea87a4",
+      "size": 576858
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "degraded",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1073/pnas.2607267123",
+      "expected_doi": "10.1073/pnas.2607267123",
+      "title": "Reconfigurable hydrogel interfaces for soft brain electrodes",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": false,
+      "token_estimate": 2783,
+      "confidence": "medium",
+      "flags": [
+        "weak_body_structure"
+      ],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 2,
+      "attempted": 2,
+      "total": 2,
+      "local": 2,
+      "full_size": 2,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 2,
+      "remote_only_count": 0,
+      "body_discovered": 2,
+      "body_attempted": 2,
+      "body_local": 2,
+      "body_full_size": 2,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "complete",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "pnas",
+      "acquisition": {
+        "provider": "pnas",
+        "route": "browser_pdf",
+        "representation": "pdf",
+        "transport": "browser",
+        "fallback_used": true
+      },
+      "trace_event_count": 17,
+      "fallback_codes": [
+        "empty_article_shell"
+      ],
+      "warning_codes": [
+        "weak_body_structure"
+      ],
+      "failure_codes": [
+        "empty_article_shell"
+      ],
+      "unstructured_warning_count": 4,
+      "acceptance_policy": "validated_pdf",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

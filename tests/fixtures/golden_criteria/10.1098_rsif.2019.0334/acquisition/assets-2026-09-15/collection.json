@@ -1,0 +1,230 @@
+{
+  "provider": "royalsocietypublishing",
+  "doi": "10.1098/rsif.2019.0334",
+  "sample_id": "10.1098_rsif.2019.0334",
+  "source_url": "https://royalsocietypublishing.org/rsif/article/16/158/20190334/87174/Hepatitis-C-virus-modelled-as-an-indirectly",
+  "source_input": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/acquisition/assets-2026-09-15/1e9a0baf2b8c5afe-http-1.bin",
+  "include_supplementary": true,
+  "include_body": true,
+  "source_sha256": "f3cfdbd9d07c602e3adb414bb2e618ef58fe6d5e7ab6edfa97946b18c77cdf2a",
+  "targets": [
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "sp1",
+        "caption": "",
+        "section": "supplementary",
+        "url": "https://royalsocietypublishing.org/rsif/article-supplement/87174/pdf/rsif20190334supp1/"
+      },
+      "download_url": "https://royalsocietypublishing.org/rsif/article-supplement/87174/pdf/rsif20190334supp1/",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "identity_evidence": "Explicit same-paper supplementary index link; PDF opens without repair; no text conversion quality claim",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "pdf",
+          "pages": 7,
+          "first_page_excerpt": "1\nSupplemental Appendix\nHepatitis C virus modeled as an indirectly-transmitted infection\nhighlights the centrality of injection drug equipment in disease dynamics\n•\nTHE HEPATITIS C VIRUS WAIT MODEL\nAdditional notes on the structure of the model\nHere we provide justiﬁcation for two terms in the model that would beneﬁt from elaboration: (a) the rate of new infection\nof susceptible individuals, βS\nNi\nNi+Nu , and (b) the rate of new infection of clean needles, α(IE + IL)\nNu\nNi+Nu ; other terms in\nthe model are fairly generic.\nFor (a), let us call the per capita injection rate γ, and the probabilit",
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "rsif20190334supp1.pdf",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/bfbd60e5f40e65da-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 1",
+        "caption": "Adapted SIR compartmental diagram. This depicts a standard SIR style compartmental model with the added compartments (shaded) corresponding to the W.A.I.T. environment. Note the dynamical properties of the Wi and Wu compartments. (Online version in colour.)",
+        "section": "body",
+        "render_state": "inline",
+        "url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f01.png?Expires=1791475132&Signature=nw7ngijm2eaL4PUQ9-ll8oLLWKSXM-f5jfj8LqLv3Y-zUCWEz8Uu5j86MPBHRaxw9rxyJ-CplPLxv78NReWm5-qOh0om1XyoBCgGJ478XWMhsVJoaq4hazK~Sd8ZiQ3-X2rCAppxeM9D~V8HBB6m1FGshob603ABmkD8JVXDCgRcXWjnWpclMppXDwPDfpTkpI2Avp0V~l5Voe6KdbISKMTtebihTBnlajOvvmaYvxqjctvi18LqbTKdompUp3UPRxXSluQl7wmCsHaRMQ1TPDEQCYATf00gzrVVyNWNpXjWWgM7-bqTcUO6Zu9Q3NynaXignH4ijFoNaxuSXRGcdg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f01.png?Expires=1791475132&Signature=nw7ngijm2eaL4PUQ9-ll8oLLWKSXM-f5jfj8LqLv3Y-zUCWEz8Uu5j86MPBHRaxw9rxyJ-CplPLxv78NReWm5-qOh0om1XyoBCgGJ478XWMhsVJoaq4hazK~Sd8ZiQ3-X2rCAppxeM9D~V8HBB6m1FGshob603ABmkD8JVXDCgRcXWjnWpclMppXDwPDfpTkpI2Avp0V~l5Voe6KdbISKMTtebihTBnlajOvvmaYvxqjctvi18LqbTKdompUp3UPRxXSluQl7wmCsHaRMQ1TPDEQCYATf00gzrVVyNWNpXjWWgM7-bqTcUO6Zu9Q3NynaXignH4ijFoNaxuSXRGcdg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://royalsocietypublishing.org/view-large/figure/19033674/rsif20190334f01.tif",
+        "preview_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/m_rsif20190334f01.png?Expires=1791475132&Signature=SHy-o1xJ~Ake4BP1qbNWYPu8aLqyMzpXWmP6QAcpyV07A7vESdpA4XiNEJTHhniFhZJONqsrAFcLuCR6nZDgXGpnRrqznNRADih88s3uJudIdc8~iLy9xW~CJtX~jnAqJsEn~ieMwDpcfWGMScC8016-2q~MtBEc4l9d39nwq1yvzidlCehLNyCPit8AcIKcdc0dUnXsQ47a409eesRKUyAnj6nUiPHyN-kGxYuLKOXCT0AVd4X-Qbe9ZHba4~BUjhWoY6SJsgvf5F4Fi9cVGbromDNuSpZt2-m29Xrzn-iqKcjpwXFUrj1U7P4vw0~EjxfLKWNZkHSf1ag1RJ0y9Q__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "dom_id": "RSIF20190334F1",
+        "asset_order": "0"
+      },
+      "download_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f01.png?Expires=1791475132&Signature=nw7ngijm2eaL4PUQ9-ll8oLLWKSXM-f5jfj8LqLv3Y-zUCWEz8Uu5j86MPBHRaxw9rxyJ-CplPLxv78NReWm5-qOh0om1XyoBCgGJ478XWMhsVJoaq4hazK~Sd8ZiQ3-X2rCAppxeM9D~V8HBB6m1FGshob603ABmkD8JVXDCgRcXWjnWpclMppXDwPDfpTkpI2Avp0V~l5Voe6KdbISKMTtebihTBnlajOvvmaYvxqjctvi18LqbTKdompUp3UPRxXSluQl7wmCsHaRMQ1TPDEQCYATf00gzrVVyNWNpXjWWgM7-bqTcUO6Zu9Q3NynaXignH4ijFoNaxuSXRGcdg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/e0ff69efcc044524-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/e0ff69efcc044524-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 1651,
+        "height": 659,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "rsif20190334f01.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 2",
+        "caption": "HCV compartmental diagram. Red arrows highlight flow of disease through the system, and where there is a colour/transparency gradient there is a flow of infection away from an infected compartment towards an uninfected one. (Online version in colour.)",
+        "section": "body",
+        "render_state": "inline",
+        "url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f02.png?Expires=1791475132&Signature=eDg60bVOHk9h40VYpyvDavJUAoBGTbS7N97RqWqi7FEP1Vy4GnXFMMb2SCtXKJomE0y2xa-nh1T8BQrlh8nEqP9e1XRHz3l7Uo-39SSW-t8OLGDsvmSQZEnGltUhEYj4f51C44bhGL~aYa4X8mQQPsQvOOVv1iBAO11JohKb5ooqsQLEU0gwj5NcevnEkxyuCiC01SLJIy5sk0pFFky4oDAu0ymQF0H4xQ6ttn8M9US5xUNgqV5y6HQ54GhqM6TR2Yu0SDDvySbI-ocwjKWhod8gJ2CSSpqEKd8Jwf~6uLhXyoM5HfCQO1cyAxX8N~Wb9SN1QjDGP9EFSnryZuAB~w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f02.png?Expires=1791475132&Signature=eDg60bVOHk9h40VYpyvDavJUAoBGTbS7N97RqWqi7FEP1Vy4GnXFMMb2SCtXKJomE0y2xa-nh1T8BQrlh8nEqP9e1XRHz3l7Uo-39SSW-t8OLGDsvmSQZEnGltUhEYj4f51C44bhGL~aYa4X8mQQPsQvOOVv1iBAO11JohKb5ooqsQLEU0gwj5NcevnEkxyuCiC01SLJIy5sk0pFFky4oDAu0ymQF0H4xQ6ttn8M9US5xUNgqV5y6HQ54GhqM6TR2Yu0SDDvySbI-ocwjKWhod8gJ2CSSpqEKd8Jwf~6uLhXyoM5HfCQO1cyAxX8N~Wb9SN1QjDGP9EFSnryZuAB~w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://royalsocietypublishing.org/view-large/figure/19033694/rsif20190334f02.tif",
+        "preview_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/m_rsif20190334f02.png?Expires=1791475132&Signature=HfSTkxxgBG8hdmkBypyAG7hBoOXeO~iW3E4oo8IWYKnvyYVFOeNYDWNiQVzgChwi8J6M80tpcW9ZBQH2NdqDWbzvoiC0RpXTUNXeY8uOBwJCv5bar8Iw35IrDvPiQQlBwnS8sYExIENjr0Ac6787wCDbhux5zFRY-7EyqkGijIh5thuh7I35YO3gUOtzRVL0pgSk-k3fWmdWgmm~ebOiUFAyu4HDmhtjBMEGN2KdDPhiYGqz3bvT~IerkmWV1npLw6QbtI~w6DOw06shK8FhTwgfy5bB-g7~t-0s00113EaqkQ8khAdyIPaHcxHtFF6cSYtWBjoIBI7NRK1xb7X7Pw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "dom_id": "RSIF20190334F2",
+        "asset_order": "0"
+      },
+      "download_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f02.png?Expires=1791475132&Signature=eDg60bVOHk9h40VYpyvDavJUAoBGTbS7N97RqWqi7FEP1Vy4GnXFMMb2SCtXKJomE0y2xa-nh1T8BQrlh8nEqP9e1XRHz3l7Uo-39SSW-t8OLGDsvmSQZEnGltUhEYj4f51C44bhGL~aYa4X8mQQPsQvOOVv1iBAO11JohKb5ooqsQLEU0gwj5NcevnEkxyuCiC01SLJIy5sk0pFFky4oDAu0ymQF0H4xQ6ttn8M9US5xUNgqV5y6HQ54GhqM6TR2Yu0SDDvySbI-ocwjKWhod8gJ2CSSpqEKd8Jwf~6uLhXyoM5HfCQO1cyAxX8N~Wb9SN1QjDGP9EFSnryZuAB~w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/4df63ae261872efa-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/4df63ae261872efa-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 1653,
+        "height": 771,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "rsif20190334f02.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 3",
+        "caption": "R0 sensitivity in HCV: the partial rank correlation coefficient (PRCC). A PRCC calculation was performed for R0 using Latin hypercube sampling. Parameters were sampled from uniform distributions with widths specified by the ranges given in table 1. The PRCC calculation was repeated for 50 independent iterations. The averages of these iterations are shown here, with the standard deviations for each parameter shown as the error bars. (Online version in colour.)",
+        "section": "body",
+        "render_state": "inline",
+        "url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f03.png?Expires=1791475132&Signature=waf1a1dTic~Rw5CyzJr4RdW~~TaTBEU-wFJZf6Asfqh72xcOYAtxqFo8OYUZJ6T5nVhnDEI7pZcMrmcvotrmysp0~e0jh1ugO~Ss7kU8BO1MHkcX6aEy0uDBWL2iOwcyn9kEuS4SqjTPIJRnykUPJzNXpa25oXWsYN797sGraORVQoZGWJVsOeoPuAohBSMxGIZjpZfYUDtlCx-MpO7rJNwDlL5HO4POvawFFMfEFVKDfkwF~86mI~cAndEkMs2kHqJOetz22gP-3G3sMTU2AazPiFyTvreHfi94PJk1-rp5kS0uo7zionOjgrICXlIMfIeQ3kKqT-GfWpoWWPCZ6w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f03.png?Expires=1791475132&Signature=waf1a1dTic~Rw5CyzJr4RdW~~TaTBEU-wFJZf6Asfqh72xcOYAtxqFo8OYUZJ6T5nVhnDEI7pZcMrmcvotrmysp0~e0jh1ugO~Ss7kU8BO1MHkcX6aEy0uDBWL2iOwcyn9kEuS4SqjTPIJRnykUPJzNXpa25oXWsYN797sGraORVQoZGWJVsOeoPuAohBSMxGIZjpZfYUDtlCx-MpO7rJNwDlL5HO4POvawFFMfEFVKDfkwF~86mI~cAndEkMs2kHqJOetz22gP-3G3sMTU2AazPiFyTvreHfi94PJk1-rp5kS0uo7zionOjgrICXlIMfIeQ3kKqT-GfWpoWWPCZ6w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://royalsocietypublishing.org/view-large/figure/19033702/rsif20190334f03.tif",
+        "preview_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/m_rsif20190334f03.png?Expires=1791475132&Signature=QPbmY2Zt9HabrPg52A30YObwtDKcXfX2msUKgr2wEq0L9ikK~Mtyx8QnRYLDM8REAImi6OaJ~JU91yUyKAqtcYrwWVeYthqrx71cXa5nvO8jhLwLuiVrG0SgiMEc~JfFKS39pCfUPo-ivN8AykeVH3jCahymC9TMO~l7fGUrJgADPyqJj~iBpnIMGalVGbFSabpV5vvWfF8FflJHk0GnWfcDzEeEgkB1HnHN24wfsUnFd9gBXaS3kbV-RFg2-8vhRMgzqLHliaii~AaE~fpCbkBLYTjbpxTSnuWN~GlUFPH5qoyZ~DMwt8P2d0bodPHJHgVPm4V4khQl6gcA5VeGxw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "dom_id": "RSIF20190334F3",
+        "asset_order": "0"
+      },
+      "download_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f03.png?Expires=1791475132&Signature=waf1a1dTic~Rw5CyzJr4RdW~~TaTBEU-wFJZf6Asfqh72xcOYAtxqFo8OYUZJ6T5nVhnDEI7pZcMrmcvotrmysp0~e0jh1ugO~Ss7kU8BO1MHkcX6aEy0uDBWL2iOwcyn9kEuS4SqjTPIJRnykUPJzNXpa25oXWsYN797sGraORVQoZGWJVsOeoPuAohBSMxGIZjpZfYUDtlCx-MpO7rJNwDlL5HO4POvawFFMfEFVKDfkwF~86mI~cAndEkMs2kHqJOetz22gP-3G3sMTU2AazPiFyTvreHfi94PJk1-rp5kS0uo7zionOjgrICXlIMfIeQ3kKqT-GfWpoWWPCZ6w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/7deed6a233a2faef-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/7deed6a233a2faef-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 943,
+        "height": 534,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "rsif20190334f03.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 4",
+        "caption": "HCV R0 as a function of various model features. (a) The relationship between the rate of acquisition of clean needles πN and the discard rate of infected needles ki with respect to various values of R0. The curves are contours of R0 and are labelled by the associated R0 value. The vertical and horizontal dashed lines indicate the chosen values for their respective parameters (we fix ku to the value specified in table 1). (b) The relationship between the infected and uninfected needle discard rate, with respect to R0. The diagonal line represents where ku = ki. The ‘x’ indicates the value chosen for ku and ki in the model (we set ku = ki in the model). Notice that moving upwards along this diagonal increases R0. (Online version in colour.)",
+        "section": "body",
+        "render_state": "inline",
+        "url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f04.png?Expires=1791475132&Signature=Ao5MCvQiAUxDNEhCqATC2HmLrQ-dcRq~mOPzynK6Jmr0F9pky-ThzasRDoXW9syvS8IF80haxnP0eKxBrRo7y1WlJo7py6Px4Ln-omwLGQiFtsJIxda9Yo6AyrE39x-iSUD-oAr0lOJCimgj58~6Y80MOAKEqU6GUHNydxBS-tm5ooeNxlyBhuViaaK1pbTiCapxWXgD2w~P0ql0dc2hZYj9Ovf5DmdZmwABZB1c5gXHI~AF7HG7OkXhy0zhcDbbWhhyRdKDcMGzoV9hiGAV15yOG--TmQp08Ra-hJzDmUN50E4KbYX0dqyPFlE5sVxp~Y8vhNP-auc5s78CIeBA1g__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f04.png?Expires=1791475132&Signature=Ao5MCvQiAUxDNEhCqATC2HmLrQ-dcRq~mOPzynK6Jmr0F9pky-ThzasRDoXW9syvS8IF80haxnP0eKxBrRo7y1WlJo7py6Px4Ln-omwLGQiFtsJIxda9Yo6AyrE39x-iSUD-oAr0lOJCimgj58~6Y80MOAKEqU6GUHNydxBS-tm5ooeNxlyBhuViaaK1pbTiCapxWXgD2w~P0ql0dc2hZYj9Ovf5DmdZmwABZB1c5gXHI~AF7HG7OkXhy0zhcDbbWhhyRdKDcMGzoV9hiGAV15yOG--TmQp08Ra-hJzDmUN50E4KbYX0dqyPFlE5sVxp~Y8vhNP-auc5s78CIeBA1g__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://royalsocietypublishing.org/view-large/figure/19033705/rsif20190334f04.tif",
+        "preview_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/m_rsif20190334f04.png?Expires=1791475132&Signature=ykNZBQfSFj9Rgx-BHNp53o~PY1xx5Hjz2VsHezFE-DtePkHxFZdmWqQ22jL3LKEaqICyx61VJ0aw-WrNP9Bat7VIGVsPMKTxHTtzJNCbC79idPi251EbZ0mckrIZGw2tzICnUxHUQ-8M49Uw1-pjRBCupu8aVx7nct-mYiv6b2e4UQmPdJGJXKMZjtpa6uch9OXWfjUJTLhmrbbcuq58oNSBe5Ou3TUGV-fx7xm7yzOb9MFJqHQkk1jicP17fyDFFdapB4iQ~FLW29-unguNkEFyVoidAFcTCE4C6oJIvmaDfH4ymNEwB8Ez-6WWal-H0T7z3a8TD6i7t9nVyTpA0Q__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "dom_id": "RSIF20190334F4",
+        "asset_order": "0"
+      },
+      "download_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f04.png?Expires=1791475132&Signature=Ao5MCvQiAUxDNEhCqATC2HmLrQ-dcRq~mOPzynK6Jmr0F9pky-ThzasRDoXW9syvS8IF80haxnP0eKxBrRo7y1WlJo7py6Px4Ln-omwLGQiFtsJIxda9Yo6AyrE39x-iSUD-oAr0lOJCimgj58~6Y80MOAKEqU6GUHNydxBS-tm5ooeNxlyBhuViaaK1pbTiCapxWXgD2w~P0ql0dc2hZYj9Ovf5DmdZmwABZB1c5gXHI~AF7HG7OkXhy0zhcDbbWhhyRdKDcMGzoV9hiGAV15yOG--TmQp08Ra-hJzDmUN50E4KbYX0dqyPFlE5sVxp~Y8vhNP-auc5s78CIeBA1g__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/73dafbdc162bc563-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/73dafbdc162bc563-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 1760,
+        "height": 874,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "rsif20190334f04.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 5",
+        "caption": "The dynamics of susceptible (blue), early-infected (orange) and late-infected (green) populations in two parameter regimes: high and low $\\epsilon$, the conversion rate of needles from infected to uninfected. The solid lines represent the dynamics for $\\epsilon = 2\\,{day}^{- 1}$ (high $\\epsilon$), and dashed lines are the dynamics for $\\epsilon = 0.33\\, d^{- 1}$ (low $\\epsilon$). In the high-$\\epsilon$ regime, we find that the susceptible population at equilibrium is ≈4 times that of the low-ε regime, and the infected populations are each $\\approx \\mkern180mu 89\\text{\\%}$ of their low-$\\epsilon$ counterparts at equilibrium (note the log scale on the y-axis). (Online version in colour.)",
+        "section": "body",
+        "render_state": "inline",
+        "url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f05.png?Expires=1791475132&Signature=tdjdKJNy1g7j6YGeqSt6Xfumks3zZhfZwy2E9mZuwakGuj-WzlapxDApvRUG2xT6~lwDicXSrbtX6yGUMWqqrQSg1s5hsxNBSf7-UZH193qqCkev~1mJX-v43p9WV6DdiwXuFomW0b4muqlmGl2dRJUVeGcYXOVMG9ueyxcSAag0jaS1WVLbPO61p8uxBUvTUuIkVor56F~qrUxKLTkX4ueBzYTkd91AeZ~RWgfq7X-PkXq51HAZbtiFZ9K3LybS0Etv44jyWaiGGQmxJhgLLlZh-YL~cQX9jY4L5uK2a2q8GbEEbGdcqlikc1gIm7aO5-3qGPmRS99uOzYanTYOOw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f05.png?Expires=1791475132&Signature=tdjdKJNy1g7j6YGeqSt6Xfumks3zZhfZwy2E9mZuwakGuj-WzlapxDApvRUG2xT6~lwDicXSrbtX6yGUMWqqrQSg1s5hsxNBSf7-UZH193qqCkev~1mJX-v43p9WV6DdiwXuFomW0b4muqlmGl2dRJUVeGcYXOVMG9ueyxcSAag0jaS1WVLbPO61p8uxBUvTUuIkVor56F~qrUxKLTkX4ueBzYTkd91AeZ~RWgfq7X-PkXq51HAZbtiFZ9K3LybS0Etv44jyWaiGGQmxJhgLLlZh-YL~cQX9jY4L5uK2a2q8GbEEbGdcqlikc1gIm7aO5-3qGPmRS99uOzYanTYOOw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://royalsocietypublishing.org/view-large/figure/19033708/rsif20190334f05.tif",
+        "preview_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/m_rsif20190334f05.png?Expires=1791475132&Signature=u40CuWNxWBBuuEccFCqeOr9mH-COyf-70SuvDyf1w0g6fWxQfCM~8pwRHgbpVYmpRwmotv-FluI~~~6ZzjgaK98atUAO4WDC6ZHzkcaXPWuZmAj9Kq7oaCy6FgEWePL5zHjglJa7ZyD4PfCjLAAaT3HTIEH~SneitK8bEQipRIGOgHdaXNamWIsEa0~yWrUykZwjUhwMWja12ig5~s3Mp0yAQg-qGgMpcyp5-BPdYmF8gFky6koG0JKlqWMLKQABBnoe56s2vCS9epCSK2xLZM0PbxvubIC7VEdDrXeCPmyiDe-5snxS~X4MpmWnX3RBaEJL8ExeNHKUk0-O4~YEsg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "dom_id": "RSIF20190334F5",
+        "asset_order": "0"
+      },
+      "download_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f05.png?Expires=1791475132&Signature=tdjdKJNy1g7j6YGeqSt6Xfumks3zZhfZwy2E9mZuwakGuj-WzlapxDApvRUG2xT6~lwDicXSrbtX6yGUMWqqrQSg1s5hsxNBSf7-UZH193qqCkev~1mJX-v43p9WV6DdiwXuFomW0b4muqlmGl2dRJUVeGcYXOVMG9ueyxcSAag0jaS1WVLbPO61p8uxBUvTUuIkVor56F~qrUxKLTkX4ueBzYTkd91AeZ~RWgfq7X-PkXq51HAZbtiFZ9K3LybS0Etv44jyWaiGGQmxJhgLLlZh-YL~cQX9jY4L5uK2a2q8GbEEbGdcqlikc1gIm7aO5-3qGPmRS99uOzYanTYOOw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/5c65456e47794e8c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/5c65456e47794e8c-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 926,
+        "height": 792,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "rsif20190334f05.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 6,
+    "unique_files": 6,
+    "verified_files": 5,
+    "replayed_files": 5,
+    "complete_received_files": 5,
+    "index_only_files": 1
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 6,
+    "unique_files": 6,
+    "verified_files": 6,
+    "replayed_files": 6,
+    "complete_received_files": 6
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

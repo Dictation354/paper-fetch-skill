@@ -1,0 +1,16 @@
+{
+  "query": "10.1109/PGEC.1967.264619",
+  "query_kind": "doi",
+  "doi": "10.1109/pgec.1967.264619",
+  "landing_url": null,
+  "provider_hint": "ieee",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 11,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "ieee"
+}

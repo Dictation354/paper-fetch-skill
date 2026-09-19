@@ -1,0 +1,18 @@
+[
+  {
+    "doi": "10.1073/pnas.2317456120",
+    "provider": "pnas",
+    "requested_url": "https://www.pnas.org/doi/full/10.1073/pnas.2317456120",
+    "final_url": "https://www.pnas.org/doi/full/10.1073/pnas.2317456120",
+    "status_code": 403,
+    "response_headers": {},
+    "capture_kind": "browser_rendered_dom",
+    "captured_at_utc": "2026-09-17T11:56:53.577332+00:00",
+    "body_file": "commentary.html",
+    "size": 99248,
+    "sha256": "d1ed43c300d1159c1e170e2c5be29bdc3ba8cf0fee451ab08a1df86d4760d47e",
+    "transport": "paper_fetch.providers.browser_runtime.fetch_html_with_browser (Camoufox); raw DOM recorded at project diagnostic boundary",
+    "runtime_failure_code": "publisher_access_denied",
+    "access_conditions": "Already delivered publisher DOM; no auth, challenge bypass, response rewriting or changed access classification; actual HTTP status retained"
+  }
+]

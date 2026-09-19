@@ -1,0 +1,97 @@
+{
+  "doi": "10.1126/sciadv.abf8021",
+  "source_input": "tests/fixtures/golden_criteria/10.1126_sciadv.abf8021/original.html",
+  "source_sha256": "e70ab760024ed28e43c82376ddf058b5d7dc164be9841d517042f259433cf052",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "28b8103e137f3f235167c4fb65f3f19d3df8e9cce89e2c9bc54e37c3d0fa136f",
+  "files": [
+    {
+      "filename": "sciadv.abf8021-f1.jpg",
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/5b2418fe-7c25-4e60-9a6d-bcaa5149fe1e/assets/images/large/sciadv.abf8021-f1.jpg",
+      "source_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/5b2418fe-7c25-4e60-9a6d-bcaa5149fe1e/assets/images/large/sciadv.abf8021-f1.jpg",
+      "sha256": "d797e1aa4fd12024255b716c1dc1f41253f9dccda82697d5782b95073ea4df89",
+      "size": 334168,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 3600,
+      "height": 1078,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "sciadv.abf8021-f2.jpg",
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/c12f66bd-072e-462a-be86-e75cf3e61a12/assets/images/large/sciadv.abf8021-f2.jpg",
+      "source_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/c12f66bd-072e-462a-be86-e75cf3e61a12/assets/images/large/sciadv.abf8021-f2.jpg",
+      "sha256": "113d96fb2d64e02d70f256b18b255010209fdb4f90be4f96ef4025c9e0ec733b",
+      "size": 1425851,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 3000,
+      "height": 2758,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "sciadv.abf8021-f3.jpg",
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/e794b482-0de9-419c-b396-1789207d0725/assets/images/large/sciadv.abf8021-f3.jpg",
+      "source_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/e794b482-0de9-419c-b396-1789207d0725/assets/images/large/sciadv.abf8021-f3.jpg",
+      "sha256": "7536286ef2064c484d98373ab8e512ab26704336c3bea92af03ed910447b88fb",
+      "size": 1749185,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 3000,
+      "height": 2772,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "sciadv.abf8021-f4.jpg",
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/9db602cf-887f-4e9b-be09-93bcbb595f52/assets/images/large/sciadv.abf8021-f4.jpg",
+      "source_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/9db602cf-887f-4e9b-be09-93bcbb595f52/assets/images/large/sciadv.abf8021-f4.jpg",
+      "sha256": "ba76192d2fa7b3b88f718cffea669df243ed8b73c6691e7e212f809cb2c64eeb",
+      "size": 3151059,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 3000,
+      "height": 2763,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "sciadv.abf8021-f5.jpg",
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/d4198cc5-da14-4ae3-8ed6-7c8c555e22a1/assets/images/large/sciadv.abf8021-f5.jpg",
+      "source_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/d4198cc5-da14-4ae3-8ed6-7c8c555e22a1/assets/images/large/sciadv.abf8021-f5.jpg",
+      "sha256": "adb690d6eafa41a5f22ca14e759db5f6ad4f1ceed4ee3782e58a6bcee0d78a9c",
+      "size": 1031817,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1800,
+      "height": 2483,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "sciadv.abf8021-f6.jpg",
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/dbde22e8-13d8-421c-88db-03320ad6a4a2/assets/images/large/sciadv.abf8021-f6.jpg",
+      "source_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/dbde22e8-13d8-421c-88db-03320ad6a4a2/assets/images/large/sciadv.abf8021-f6.jpg",
+      "sha256": "c825870228172c1a9f2d85298f5960ff8695212dd2354393602556938b246bf8",
+      "size": 2772267,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 3000,
+      "height": 3325,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "sciadv.abf8021-f7.jpg",
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/cdc0f8a8-8884-47fa-95d9-68803b380324/assets/images/large/sciadv.abf8021-f7.jpg",
+      "source_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/cdc0f8a8-8884-47fa-95d9-68803b380324/assets/images/large/sciadv.abf8021-f7.jpg",
+      "sha256": "560106b71a71602277de0791c5fc38dc429f40ea80acb01e138d6b26d356a4f1",
+      "size": 755480,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2100,
+      "height": 2108,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.942032+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 0
+}

@@ -17,5 +17,664 @@
     "figures": false,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1111_cas.16395",
+    "provider": "wiley",
+    "doi": "10.1111/cas.16395",
+    "original": "tests/fixtures/golden_criteria/10.1111_cas.16395/original.html",
+    "sha256": "05518cee5ea1e17415baa26637de4ebedcb8042abea601fe1d315e95fb0ea2b3",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 14,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 87,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 32,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 4,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 175,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "No structured formula in the selected original; bitmap/externally loaded formulas have only captured index/link evidence.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 0,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1111_cas.16395/original.html",
+      "sha256": "05518cee5ea1e17415baa26637de4ebedcb8042abea601fe1d315e95fb0ea2b3",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "15bfb6723bb7614af3a0cdb680039b3637e16cbca1bc95fc357861d859756b36",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1
+              ]
+            ],
+            [
+              1,
+              [
+                2,
+                3
+              ]
+            ],
+            [
+              2,
+              [
+                4,
+                5
+              ]
+            ],
+            [
+              3,
+              [
+                6,
+                7
+              ]
+            ],
+            [
+              4,
+              [
+                8,
+                9
+              ]
+            ],
+            [
+              5,
+              [
+                10,
+                11
+              ]
+            ],
+            [
+              6,
+              [
+                12,
+                13
+              ]
+            ],
+            [
+              7,
+              [
+                14,
+                15
+              ]
+            ],
+            [
+              8,
+              [
+                16,
+                17
+              ]
+            ],
+            [
+              9,
+              [
+                18,
+                19
+              ]
+            ],
+            [
+              10,
+              [
+                20,
+                21
+              ]
+            ],
+            [
+              11,
+              [
+                22,
+                23
+              ]
+            ],
+            [
+              12,
+              [
+                24,
+                25
+              ]
+            ],
+            [
+              13,
+              [
+                26,
+                27
+              ]
+            ],
+            [
+              14,
+              [
+                28,
+                29
+              ]
+            ],
+            [
+              15,
+              [
+                30,
+                31
+              ]
+            ],
+            [
+              16,
+              [
+                32,
+                33
+              ]
+            ],
+            [
+              17,
+              [
+                34,
+                35
+              ]
+            ],
+            [
+              18,
+              [
+                36,
+                37
+              ]
+            ],
+            [
+              19,
+              [
+                38,
+                39
+              ]
+            ],
+            [
+              20,
+              [
+                40,
+                41
+              ]
+            ]
+          ],
+          "cells": [
+            "AI",
+            "artificial intelligence",
+            "CAD",
+            "computer-aided diagnosis",
+            "CNN",
+            "convolutional neural network",
+            "EAU",
+            "European association of urology",
+            "FDA",
+            "food and drug administration",
+            "GAN",
+            "generative adversarial networks",
+            "GPT",
+            "generative pre-trained transformer",
+            "GPU",
+            "graphics processing unit",
+            "HN",
+            "head and neck",
+            "IDATEN",
+            "improvement design within approval for timely evaluation and notice",
+            "ILSVRC",
+            "ImageNet large-scale visual recognition challenge",
+            "LLM",
+            "large language model",
+            "LMM",
+            "large multimodal model",
+            "MTB",
+            "Molecular Tumor Board",
+            "NLP",
+            "natural language processing",
+            "POC",
+            "proof of concept",
+            "SaMD",
+            "software as a medical device",
+            "SPECT",
+            "single-photon emission computed tomography",
+            "SVM",
+            "support vector machine",
+            "USMLE",
+            "US medical licensing examination",
+            "XAI",
+            "explainable AI"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "3d11c818e18b3eeefa072eabb2e51e16c4e1af7dd5b31bc902711f4f72258adb",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ]
+            ],
+            [
+              1,
+              [
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+              ]
+            ],
+            [
+              2,
+              [
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              3,
+              [
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              4,
+              [
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              5,
+              [
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              6,
+              [
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48
+              ]
+            ],
+            [
+              7,
+              [
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55
+              ]
+            ],
+            [
+              8,
+              [
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62
+              ]
+            ],
+            [
+              9,
+              [
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69
+              ]
+            ],
+            [
+              10,
+              [
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76
+              ]
+            ],
+            [
+              11,
+              [
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83
+              ]
+            ],
+            [
+              12,
+              [
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90
+              ]
+            ],
+            [
+              13,
+              [
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97
+              ]
+            ],
+            [
+              14,
+              [
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104
+              ]
+            ],
+            [
+              15,
+              [
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111
+              ]
+            ],
+            [
+              16,
+              [
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118
+              ]
+            ],
+            [
+              17,
+              [
+                119,
+                120,
+                121,
+                122,
+                123,
+                124,
+                125
+              ]
+            ],
+            [
+              18,
+              [
+                126,
+                127,
+                128,
+                129,
+                130,
+                131,
+                132
+              ]
+            ]
+          ],
+          "cells": [
+            "Research area",
+            "Approval number",
+            "Product",
+            "Manufacturer",
+            "Target inspection method",
+            "Class",
+            "Year of approval",
+            "Gastrointestinal endoscope",
+            "23000BZX00372000",
+            "Endoscopy Diagnostic Imaging Support Software EndoBRAIN",
+            "Cybernet Systems, Inc.",
+            "Colonoscopy",
+            "III",
+            "2018",
+            "",
+            "30200BZX00136000",
+            "Endoscopy Diagnostic Imaging Support Software EndoBRAIN-UC",
+            "Cybernet Systems, Inc.",
+            "Colonoscopy",
+            "III",
+            "2020",
+            "",
+            "30200BZX00208000",
+            "Endoscopic Imaging Support Program EndoBRAIN-EYE",
+            "Cybernet Systems, Inc.",
+            "Colonoscopy",
+            "II",
+            "2020",
+            "",
+            "30200BZX00288000",
+            "Endoscopy Support Program EW10-EC02",
+            "Fujifilm Corporation",
+            "Colonoscopy",
+            "III",
+            "2020",
+            "",
+            "30200BZX00235000",
+            "Endoscopy Diagnostic Imaging Support Software EndoBRAIN-Plus",
+            "Cybernet Systems, Inc.",
+            "Colonoscopy",
+            "III",
+            "2020",
+            "",
+            "30200BZX00382000",
+            "WISE VISION Endoscope Image Analysis AI",
+            "NEC Corporation",
+            "Colonoscopy",
+            "II",
+            "2020",
+            "",
+            "30400BZX00217000",
+            "Endoscopy Support Program EW10-EG01",
+            "Fujifilm Corporation",
+            "Upper gastrointestinal endoscopy",
+            "II",
+            "2022",
+            "",
+            "30400BZX00259000",
+            "Medical Image Analysis Software EIRL Colon Polyp",
+            "LPIXEL",
+            "Colonoscopy",
+            "II",
+            "2022",
+            "",
+            "30500BZX00297000",
+            "Endoscopic Imaging Support Software gastroAI-model G",
+            "AI Medical Service Co.",
+            "Upper gastrointestinal endoscopy",
+            "II",
+            "2023",
+            "Radiation medicine",
+            "30100BZX00263000",
+            "Similar Image Case Retrieval Software Model FS-CM687",
+            "Fujifilm Corporation",
+            "Diagnostic imaging (lung nodules, liver masses, diffuse lung disease) support",
+            "II",
+            "2019",
+            "",
+            "30200BZX00150000",
+            "Pulmonary nodule detection program FS-AI688",
+            "Fujifilm Corporation",
+            "CT scan of the chest",
+            "II",
+            "2020",
+            "",
+            "30200BZX00202000",
+            "AI-Rad Companion",
+            "Siemens Healthcare",
+            "CT scan of the chest",
+            "II",
+            "2020",
+            "",
+            "30200BZX00269000",
+            "Medical Image Analysis Software EIRL X-ray Lung nodule",
+            "LPIXEL",
+            "Chest X-ray",
+            "II",
+            "2020",
+            "",
+            "30300BZX00188000",
+            "Chest X-ray image lesion detection (CAD) program LU-AI689",
+            "Fujifilm Corporation",
+            "Chest X-ray",
+            "II",
+            "2021",
+            "",
+            "30300BZX00271000",
+            "Diagnostic Imaging Support Software KDSS-CXR-AI-101",
+            "Konica Minolta, Inc.",
+            "Chest X-ray",
+            "II",
+            "2021",
+            "",
+            "30500BZX00161000",
+            "Radiation Therapy Planning Support Program Ai-Seg",
+            "Excel Creates Inc.",
+            "CT scan",
+            "III",
+            "2023",
+            "Medical ultrasound",
+            "30200BZX00379000",
+            "Breast Cancer Diagnosis Support Program RN-Decarte",
+            "CES Descartes Co., Ltd.",
+            "Breast ultrasound",
+            "II",
+            "2023",
+            "",
+            "30600BZX00086000",
+            "Breast Cancer Ultrasound AI Diagnosis Support Software Smart Opinion METIS Eye",
+            "Smart Opinion Inc.",
+            "Breast ultrasound",
+            "II",
+            "2024"
+          ]
+        }
+      ],
+      "mathml": []
+    }
+  ]
 }

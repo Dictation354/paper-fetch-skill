@@ -130,6 +130,11 @@ def _annotate_ieee_inline_media_blocks(article: Tag, source_url: str) -> None:
         asset = _ieee_asset_from_figure_full_block(block, source_url)
         if asset is None:
             continue
+        # Xplore uses div.figcaption (with a nested JATS fig), while the
+        # shared figure renderer consumes semantic HTML figcaption nodes.
+        # Normalize this provider DOM before removing the preview image.
+        for caption in block.select("div.figcaption"):
+            caption.name = "figcaption"
         inline_url = normalize_text(
             str(
                 asset.get("url")
@@ -385,7 +390,17 @@ def _extract_ieee_html(
     )
     lines: list[str] = []
     render_container_markdown(article, lines, level=2)
+    # Numbered Xplore figure captions can describe login forms in the research
+    # itself. Keep these source-owned captions out of short access-UI cleanup.
+    captions: dict[str, str] = {}
+    for index, line in enumerate(lines):
+        if re.match(r"^\*\*Figure \d+\.\*\*", line):
+            marker = f"PAPERFETCHIEEEFIGURECAPTION{len(captions)}END"
+            captions[marker] = line
+            lines[index] = marker
     markdown_text = clean_rendered_markdown("\n".join(lines), noise_profile="ieee")
+    for marker, caption in captions.items():
+        markdown_text = markdown_text.replace(marker, caption)
     if not normalize_text(markdown_text):
         raise ProviderFailure(
             NO_RESULT, "IEEE dynamic HTML endpoint did not produce usable Markdown."

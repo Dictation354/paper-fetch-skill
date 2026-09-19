@@ -1,10 +1,7 @@
 from __future__ import annotations
-
 from tests.golden_corpus import (
-    GOLDEN_CORPUS_SHARD_COUNT,
     golden_corpus_replay_inventory,
     iter_golden_corpus_fixtures,
-    plan_golden_corpus_shards,
 )
 from tests.golden_corpus_adapters import adapter_provider_names, golden_corpus_adapter
 
@@ -26,7 +23,22 @@ def test_golden_corpus_adapters_declare_contracts_for_all_fixture_routes() -> No
 def test_golden_corpus_inventory_separates_non_replay_evidence() -> None:
     inventory = golden_corpus_replay_inventory()
 
-    assert inventory.count("unit_only") == 0
+    assert {
+        record.sample_id
+        for record in inventory.records
+        if record.category == "unit_only"
+    } == {
+        f"10.48550_arxiv.{arxiv_id}_{page}-excerpt"
+        for arxiv_id in ("0811.2625v2", "0905.2326v2", "2606.00587v2")
+        for page in ("abstract", "ancillary")
+    }
+    complete_ancillary_pages = next(
+        record
+        for record in inventory.records
+        if record.sample_id == "10.48550_arxiv.0811.2625v2_ancillary-pages"
+    )
+    assert complete_ancillary_pages.category == "manifest_only"
+    assert complete_ancillary_pages.fixture is None
     assert inventory.count("unexecutable") == 0
     assert inventory.count("real_replay") == len(iter_golden_corpus_fixtures())
     assert all(
@@ -39,19 +51,3 @@ def test_golden_corpus_inventory_separates_non_replay_evidence() -> None:
         for record in inventory.records
         if record.category != "real_replay"
     )
-
-
-def test_exact_fixture_shards_cover_every_fixture_once_without_splitting_provider() -> (
-    None
-):
-    fixtures = iter_golden_corpus_fixtures()
-    shards = plan_golden_corpus_shards(fixtures)
-
-    assert len(shards) == GOLDEN_CORPUS_SHARD_COUNT
-    flattened = [fixture.sample_id for shard in shards for fixture in shard]
-    assert len(flattened) == len(set(flattened)) == len(fixtures)
-    provider_to_shards: dict[str, set[int]] = {}
-    for shard_index, shard in enumerate(shards):
-        for fixture in shard:
-            provider_to_shards.setdefault(fixture.provider, set()).add(shard_index)
-    assert all(len(indices) == 1 for indices in provider_to_shards.values())

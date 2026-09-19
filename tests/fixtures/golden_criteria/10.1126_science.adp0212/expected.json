@@ -4,7 +4,7 @@
     "body_sections": 6,
     "figures": 0,
     "references": 61,
-    "sections": 7,
+    "sections": 8,
     "tables": 0
   },
   "expected_content_kind": "fulltext",
@@ -13,9 +13,181 @@
     "authors": true,
     "body": true,
     "code_availability": false,
-    "data_availability": false,
+    "data_availability": true,
     "figures": false,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1126_science.adp0212",
+    "provider": "science",
+    "doi": "10.1126/science.adp0212",
+    "original": "tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html",
+    "sha256": "23e0e4e6713cdbe52f00056f29dc23014836d50e580a80463173979d36d9a788",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 3,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 61,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 31,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 4,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 0,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 1,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 4,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": ".contributors [property=\"author\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 4,
+      "tex_checked": 0,
+      "mathml_checked": 4,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1126_science.adp0212/original.html",
+      "sha256": "23e0e4e6713cdbe52f00056f29dc23014836d50e580a80463173979d36d9a788",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "e60bd39792200d7bc82c7d2d672b362695bcecbaffd9c3c770d520e735ebbffc",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "ω",
+            "q",
+            "g"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "10d7ef2e345feba7bdcbc6a5cc551f0cd6f687b4e672936b5847feebcbdb364d",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "P",
+            "σ",
+            "ω",
+            "q",
+            "g"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "b0eccf6469f1200793920aa4f1598835c057bd832c17c0ea5f78517f5e2a3fe4",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "δ",
+            "q"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "9b07c66ed94afa73f34c988a08fa186fea1c09d9e7282ffeab0a7ac6aee0a3dc",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "ω",
+            "q",
+            "g"
+          ],
+          "operators": [
+            "-"
+          ]
+        }
+      ]
+    }
+  ]
 }

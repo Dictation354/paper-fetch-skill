@@ -1,0 +1,47 @@
+{
+  "doi": "10.1109/PGEC.1967.264619",
+  "provider": "ieee",
+  "source_url": "https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=4038993",
+  "attempt": 3,
+  "change_from_previous": "PDF link discovered in current official DOM; prior REST is HTTP200 empty without entitlement denial",
+  "transport": "Camoufox with configured provider state",
+  "capture_started_utc": "2026-09-16T06:32:08.659822+00:00",
+  "historical_records_unchanged": true,
+  "responses": [
+    {
+      "url": "https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=4038993",
+      "status_code": 302,
+      "body_error_type": "Error"
+    },
+    {
+      "url": "https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=4038993&tag=1",
+      "status_code": 200,
+      "record": "acquisition/known-gaps-pdf-2026-09-16/001-http_response_entity.bin"
+    },
+    {
+      "url": "https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?tp=&arnumber=4038993&ref=",
+      "status_code": 200,
+      "record": "acquisition/known-gaps-pdf-2026-09-16/002-http_response_entity.pdf"
+    }
+  ],
+  "dom_file": "acquisition/known-gaps-pdf-2026-09-16/000-browser_rendered_dom.html",
+  "final_url": "https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=4038993&tag=1",
+  "title": "IEEE Xplore Full-Text PDF:",
+  "observed_doi": null,
+  "confirmed_paywall": false,
+  "paywall_diagnostics": {},
+  "challenge": false,
+  "stop_reason": "single_observation_completed",
+  "pdf_validation": {
+    "body_file": "acquisition/known-gaps-pdf-2026-09-16/002-http_response_entity.pdf",
+    "pages": 4,
+    "is_repaired": false,
+    "encrypted": 0,
+    "valid_eof": true,
+    "identity": {
+      "doi": "10.1109/pgec.1967.264619",
+      "title": "A Note on State Minimization of Asynchronous Sequential Functions"
+    },
+    "scope": "File completeness and paper identity only; no PDF conversion-quality review."
+  }
+}

@@ -28,7 +28,7 @@
 ```bash
 PYTHONPATH=src uv run python -m pytest tests/unit/test_<provider>_provider.py -q
 PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_bundle_registration.py tests/unit/test_provider_catalog.py -q
-PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src uv run python -m pytest tests/integration/test_golden_corpus.py -q
+PYTHONPATH=src uv run python -m pytest tests/golden -q
 ```
 
 只有能力、配置或限制发生用户可见变化时才更新 [`providers.md`](providers.md)。不需要 scaffold、capture 状态机、provider manifest、review/signoff、sync-back、drift report 或 fixture 反向索引。

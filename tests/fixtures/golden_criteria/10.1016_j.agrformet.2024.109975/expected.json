@@ -17,5 +17,625 @@
     "figures": true,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1016_j.agrformet.2024.109975",
+    "provider": "elsevier",
+    "doi": "10.1016/j.agrformet.2024.109975",
+    "original": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml",
+    "sha256": "c37ca8cc94f18bf076c7862107ecdff69259609604c92c32ed27506fb5383087",
+    "format": "xml",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 6,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 45,
+        "scope": "all structured author/title/journal/year/page/e-locator/edition/publisher/comment/web-link/suffix fields and independently decoded DOI in original reference order; plain text references checked in full"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 45,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 5,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 130,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 4,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 77,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence."
+    ],
+    "author_source": "author-group author",
+    "provenance": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/provenance.json",
+    "captured_image_files": [
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/assets-2026-09-15/0cc9332b8c03884d-http-1.bin",
+        "sha256": "958d0e6f63f841aa3f97ce87575ebe9cbf9bd7d8c21f9ac41d1e497117bed091",
+        "bytes": 832881
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/assets-2026-09-15/f72354eb979daeb2-http-1.bin",
+        "sha256": "cd2c5224a2c0caf00d5716cad99361ee4dc4a9a2106861253d544172f5c84a65",
+        "bytes": 2565833
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/assets-2026-09-15/aeef750be9e769a7-http-1.bin",
+        "sha256": "19f1a76fd6305cfe8aa4e523e4362a9b12250c754a9612ab18aec129c424579d",
+        "bytes": 1439115
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/assets-2026-09-15/f3d22e171f82db08-http-1.bin",
+        "sha256": "4a2892e11adfc5f237191127a4494ac92a1ad4e0cfedcd80e57a994efd601503",
+        "bytes": 1643785
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/assets-2026-09-15/b367644c442f922f-http-1.bin",
+        "sha256": "913f9d348f0abc6e6108dbe0bfe2ff891ba14162c017a268746d2c34fee2f935",
+        "bytes": 1550846
+      }
+    ],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 4,
+      "tex_checked": 0,
+      "mathml_checked": 4,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml",
+      "sha256": "c37ca8cc94f18bf076c7862107ecdff69259609604c92c32ed27506fb5383087",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": "tbl0001",
+          "node_sha256": "df8a119d78d5ad1dce5578bd98c5149f6871f5a90c7f13549ec4cf7233e07550",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                1,
+                2,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                4,
+                5,
+                6,
+                7,
+                8
+              ]
+            ],
+            [
+              2,
+              [
+                4,
+                9,
+                10,
+                7,
+                8
+              ]
+            ],
+            [
+              3,
+              [
+                4,
+                11,
+                12,
+                7,
+                8
+              ]
+            ],
+            [
+              4,
+              [
+                13,
+                14,
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              5,
+              [
+                13,
+                18,
+                19,
+                16,
+                17
+              ]
+            ],
+            [
+              6,
+              [
+                13,
+                20,
+                21,
+                16,
+                17
+              ]
+            ],
+            [
+              7,
+              [
+                13,
+                22,
+                23,
+                16,
+                17
+              ]
+            ],
+            [
+              8,
+              [
+                13,
+                24,
+                25,
+                16,
+                17
+              ]
+            ],
+            [
+              9,
+              [
+                13,
+                26,
+                27,
+                16,
+                17
+              ]
+            ],
+            [
+              10,
+              [
+                28,
+                29,
+                30,
+                31,
+                32
+              ]
+            ],
+            [
+              11,
+              [
+                28,
+                33,
+                34,
+                31,
+                32
+              ]
+            ],
+            [
+              12,
+              [
+                28,
+                35,
+                36,
+                31,
+                32
+              ]
+            ],
+            [
+              13,
+              [
+                28,
+                37,
+                38,
+                31,
+                32
+              ]
+            ],
+            [
+              14,
+              [
+                39,
+                40,
+                41,
+                42,
+                43
+              ]
+            ],
+            [
+              15,
+              [
+                39,
+                44,
+                45,
+                42,
+                43
+              ]
+            ],
+            [
+              16,
+              [
+                39,
+                46,
+                47,
+                42,
+                43
+              ]
+            ],
+            [
+              17,
+              [
+                39,
+                48,
+                49,
+                42,
+                43
+              ]
+            ],
+            [
+              18,
+              [
+                50,
+                51,
+                52,
+                53,
+                54
+              ]
+            ],
+            [
+              19,
+              [
+                50,
+                55,
+                56,
+                53,
+                54
+              ]
+            ],
+            [
+              20,
+              [
+                50,
+                57,
+                58,
+                53,
+                54
+              ]
+            ],
+            [
+              21,
+              [
+                50,
+                59,
+                60,
+                53,
+                54
+              ]
+            ],
+            [
+              22,
+              [
+                50,
+                61,
+                62,
+                53,
+                54
+              ]
+            ],
+            [
+              23,
+              [
+                50,
+                63,
+                64,
+                53,
+                54
+              ]
+            ],
+            [
+              24,
+              [
+                50,
+                65,
+                66,
+                53,
+                54
+              ]
+            ],
+            [
+              25,
+              [
+                50,
+                67,
+                68,
+                53,
+                54
+              ]
+            ]
+          ],
+          "cells": [
+            "Models",
+            "Functions",
+            "Description",
+            "Refs.",
+            "Thermal Time model",
+            "R_{f} \n \n = \n { \n \n \n \n \n \n 0 \n , \n  \n T \n ≤ \n T_{d} \n \n \n \n \n \n \n \\frac{A_{f}}{\n 1 \n + \n \n e \n^{\n α \n ( \n \n T \n + \n β \n \n ) \n} \n} \n , \n  \n T \n > \n T_{d}",
+            "Eq. (1)",
+            "One-phase",
+            "Cannell and Smith (1983)",
+            "S_{f} \n = \n ∑_{\n t_{0} \n}^{t} \n R_{f}",
+            "Eq. (2)",
+            "S \n O \n S \n = \n t \n , \n  \n w \n h \n e \n n \n  \n S_{f} \n > \n F_{\n c \n r \n i \n t \n}",
+            "Eq. (3)",
+            "Sequential model",
+            "R_{c} \n \n = \n { \n \n \n \n \n \n 0 \n , \n  \n T \n ≤ \n T_{a} \n  \n o \n r \n  \n T \n ≥ \n T_{c} \n \n \n \n \n \n \n \\frac{\n T \n − \n T_{a} \n}{\n T_{b} \n − \n T_{a} \n} \n , \n  \n T_{a} \n < \n T \n < \n T_{b} \n \n \n \n \n \n \n \\frac{\n T \n − \n T_{c} \n}{\n T_{b} \n − \n T_{c} \n} \n , \n  \n T_{b} \n < \n T \n < \n T_{c}",
+            "Eq. (4)",
+            "Two-phase First phase: Eqs. (4), (5). Second phase: Eqs. (6)–(9).",
+            "Hänninen (1990)",
+            "S_{c} \n = \n ∑_{\n t_{1} \n}^{t} \n R_{c}",
+            "Eq. (5)",
+            "K \n = \n { \n \n \n \n \n 0 \n , \n  \n S_{c} \n < \n C_{\n c \n r \n i \n t \n} \n \n \n \n \n \n \n 1 \n , \n  \n S_{c} \n ≥ \n C_{\n c \n r \n i \n t \n}",
+            "Eq. (6)",
+            "R_{f} \n \n = \n { \n \n \n \n \n \n 0 \n , \n  \n T \n ≤ \n T_{d} \n \n \n \n \n \n \n K \n · \n \\frac{A_{f}}{\n 1 \n + \n \n e \n^{\n α \n ( \n \n T \n + \n β \n \n ) \n} \n} \n , \n  \n T \n > \n T_{d}",
+            "Eq. (7)",
+            "S_{f} \n = \n ∑_{\n t_{1} \n}^{t} \n R_{f}",
+            "Eq. (8)",
+            "S \n O \n S \n = \n t \n , \n  \n w \n h \n e \n n \n  \n S_{f} \n > \n F_{\n c \n r \n i \n t \n}",
+            "Eq. (9)",
+            "Parallel model",
+            "K \n = \n { \n \n \n \n \n K_{\n m \n i \n n \n} \n + \n \\frac{\n 1 \n − \n K_{\n m \n i \n n \n} \n}{C_{\n c \n r \n i \n t \n}} \n · \n S_{c} \n , \n  \n S_{c} \n < \n C_{\n c \n r \n i \n t \n} \n \n \n \n \n \n \n 1 \n , \n  \n S_{c} \n ≥ \n C_{\n c \n r \n i \n t \n}",
+            "Eq. (10)",
+            "Two-phase First phase is the same as the Sequential model. Second phase: Eq. (10)–(13).",
+            "Landsberg (1974) , Kramer (1994)",
+            "S_{f} \n = \n ∑_{\n t_{1} \n}^{t} \n R_{f}",
+            "Eq. (11)",
+            "S \n O \n S \n = \n t \n , \n  \n w \n h \n e \n n \n  \n S_{f} \n > \n F_{\n c \n r \n i \n t \n}",
+            "Eq. (12)",
+            "S_{c} \n = \n ∑_{\n t_{1} \n}^{t} \n R_{c} \n = \n ∑_{\n t_{1} \n}^{t} \n \\frac{1}{\n 1 \n + \n \n e \n^{\n T_{a} \n \n \n ( \n \n T \n − \n T_{c} \n \n ) \n \n^{2} \n + \n T_{\n b \n ( \n} \n T \n − \n T_{c} \n \n ) \n \n} \n}",
+            "Eq. (13)",
+            "Unichill model",
+            "R_{f} \n \n = \n { \n \n \n \n \n \n 0 \n , \n  \n  \n S_{c} \n < \n C_{\n c \n r \n i \n t \n} \n \n \n \n \n \n \n \\frac{A_{f}}{\n 1 \n + \n \n e \n^{\n α \n ( \n \n T \n + \n β \n \n ) \n} \n} \n , \n  \n S_{c} \n ≥ \n C_{\n c \n r \n i \n t \n}",
+            "Eq. (14)",
+            "Two-phase First phase: Eq. (14). Second phase: Eq. (15)–(17).",
+            "Chuine (2000)",
+            "S_{f} \n = \n ∑_{\n t_{1} \n}^{t} \n R_{f}",
+            "Eq. (15)",
+            "S \n O \n S \n = \n t \n , \n  \n w \n h \n e \n n \n  \n S_{f} \n > \n F_{\n c \n r \n i \n t \n}",
+            "Eq. (16)",
+            "S_{D} \n = \n ∑_{\n t_{1} \n}^{t} \n R_{T} \n · \n R_{P} \n = \n ∑_{\n t_{1} \n}^{t} \n \\frac{1}{\n 1 \n + \n \n e \n^{\n T_{f} \n \n ( \n \n T \n − \n T_{g} \n \n ) \n \n} \n} \n · \n \\frac{1}{\n 1 \n + \n \n e \n^{\n 10 \n ·_{(} \n D \n L \n − \n D \n L_{a} \n \n ) \n \n} \n}",
+            "Eq. (17)",
+            "DORMPHOT model",
+            "R_{c} \n \n = \n { \n \n \n \n \n \n 0 \n , \n  \n  \n S_{D} \n < \n D_{\n c \n r \n i \n t \n} \n \n \n \n \n \n \n \\frac{1}{\n 1 \n + \n \n e \n^{\n T_{a} \n \n \n ( \n \n T \n − \n T_{b} \n \n ) \n \n^{2} \n + \n \n ( \n \n T \n − \n T_{b} \n \n ) \n \n} \n} \n , \n  \n S_{D} \n ≥ \n D_{\n c \n r \n i \n t \n}",
+            "Eq. (18)",
+            "Multi-phase First phase: Eq. (18). Second phase: Eq. (19), (20). Third phase: Eq. (21)–(25).",
+            "Caffarra et al. (2011)",
+            "S_{c} \n = \n ∑_{\n t_{1} \n}^{t} \n R_{c}",
+            "Eq. (19)",
+            "R_{f} \n \n = \n { \n \n \n \n \n \n 0 \n , \n  \n S_{D} \n < \n D_{\n c \n r \n i \n t \n} \n \n \n \n \n \n \n \\frac{A_{f}}{\n 1 \n + \n \n e \n^{\n h \n ·_{(} \n T \n − \n T_{50} \n \n ) \n \n} \n} \n , \n  \n S_{D} \n ≥ \n D_{\n c \n r \n i \n t \n}",
+            "Eq. (20)",
+            "T_{50} \n = \n \\frac{60}{\n 1 \n + \n \n e \n^{\n g \n ·_{(} \n D \n L \n − \n D \n L_{50} \n \n ) \n \n} \n}",
+            "Eq. (21)",
+            "D \n L_{50} \n = \n \\frac{24}{\n 1 \n + \n \n e \n^{\n k \n ·_{(} \n S_{c} \n − \n C_{\n c \n r \n i \n t \n} \n \n ) \n \n} \n}",
+            "Eq. (22)",
+            "S_{f} \n = \n ∑_{\n t_{1} \n}^{t} \n R_{f}",
+            "Eq. (23)",
+            "S_{f} \n = \n ∑_{\n t_{1} \n}^{t} \n R_{f}",
+            "Eq. (24)",
+            "S \n O \n S \n = \n t \n , \n  \n w \n h \n e \n n \n  \n S_{f} \n > \n F_{\n c \n r \n i \n t \n}",
+            "Eq. (25)"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "c75e157149e3e049e6cf3b7d002d38420b408b060fed75f110055f536d0af209",
+          "numbers": "0",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "F",
+            "c",
+            "r",
+            "i",
+            "t",
+            "t",
+            "p",
+            "S",
+            "O",
+            "S",
+            "y",
+            "R",
+            "f"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "0b3a32b0b5f67643248c8f6cfdbfffc6f426429bb671e99e79541b4bb3c5daa0",
+          "numbers": "",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 2,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "G",
+            "P",
+            "d",
+            "t",
+            "k",
+            "N",
+            "t",
+            "R",
+            "f",
+            "t",
+            "A",
+            "f",
+            "F",
+            "t",
+            "M",
+            "G"
+          ],
+          "operators": [
+            "=",
+            "×",
+            "×",
+            "×"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "6c2e9220c2e0d327ee35a199e37b738cffd571115681d5c52b95bd878bac2a1d",
+          "numbers": "012241",
+          "minimum": {
+            "_": 10,
+            "^": 0,
+            "\\frac": 3,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "F",
+            "t",
+            "S",
+            "f",
+            "t",
+            "F",
+            "c",
+            "r",
+            "i",
+            "t",
+            "o",
+            "r",
+            "S",
+            "f",
+            "t",
+            "E",
+            "c",
+            "r",
+            "i",
+            "t",
+            "sin",
+            "π",
+            "E",
+            "c",
+            "r",
+            "i",
+            "t",
+            "S",
+            "f",
+            "t",
+            "E",
+            "c",
+            "r",
+            "i",
+            "t",
+            "F",
+            "c",
+            "r",
+            "i",
+            "t",
+            "S",
+            "f",
+            "t",
+            "E",
+            "c",
+            "r",
+            "i",
+            "t"
+          ],
+          "operators": [
+            "=",
+            "×",
+            "-",
+            "+",
+            "≤",
+            "≤"
+          ]
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "7ef61ecd4763989b69efaf7d25302e2281fccb48ce54399df447b9b30b05261b",
+          "numbers": "",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "E",
+            "c",
+            "r",
+            "i",
+            "t",
+            "t",
+            "p",
+            "E",
+            "O",
+            "S",
+            "R",
+            "f"
+          ],
+          "operators": [
+            "="
+          ]
+        }
+      ]
+    }
+  ]
 }

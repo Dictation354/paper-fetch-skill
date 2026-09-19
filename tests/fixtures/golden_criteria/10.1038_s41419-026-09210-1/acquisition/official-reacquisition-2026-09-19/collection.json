@@ -1,0 +1,250 @@
+{
+  "doi": "10.1038/s41419-026-09210-1",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/outputs/c7d10d59a728-Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "c7d10d59a7284518a82a6b1d5e301045a2618b581cc39aef7339b9bc8a1a311a",
+      "size": 132759
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/outputs/176b3e833f52-Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "176b3e833f529ce7f6714c9a06e52cb2f821f01c4926da8830cd2ab828d23eed",
+      "size": 107361
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/springer/10.1038_s41419-026-09210-1/html-1/diagnostic.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/outputs/30fc641bb8ec-diagnostic.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "30fc641bb8ec758e77f6b9bda5c0bec9b6bde9dbe040579721652f20fb76ee47",
+      "size": 5789
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/springer/10.1038_s41419-026-09210-1/html-1/page-sanitized.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/outputs/de688408d87d-page-sanitized.html",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "de688408d87dd6a9a749042347f0da0a068d4296e6af5ac1f59c17226438925d",
+      "size": 59403
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0001-10.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/assets/f5ac2e494f4f-s41419-026-09210-1_reference-d5147c6ef5.pdf-0001-10.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "f5ac2e494f4fbf3b57e2c5e7e5153d88543d2967928a909bf48dae9b1529fc78",
+      "size": 2265
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0001-11.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/assets/158c9d16ad99-s41419-026-09210-1_reference-d5147c6ef5.pdf-0001-11.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "158c9d16ad99ad8703298ef4a90cb476a01700c71bf4745e39980b3d5fe9a8a9",
+      "size": 4505
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0003-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/assets/bbb5dfcfd850-s41419-026-09210-1_reference-d5147c6ef5.pdf-0003-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "bbb5dfcfd8501411fa590266fa5b677d461b793298a2484a8da646ceafb212e7",
+      "size": 637212
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0004-04.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/assets/6db25194a194-s41419-026-09210-1_reference-d5147c6ef5.pdf-0004-04.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "6db25194a1949194fc990fb2263bfb40d833351dba39ae832aa58ad9838bec37",
+      "size": 604787
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0006-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/assets/9efc2c3f2c88-s41419-026-09210-1_reference-d5147c6ef5.pdf-0006-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "9efc2c3f2c883f808d54dafa895bcdc61d5a7bd73f700e27be145a1115e56866",
+      "size": 715921
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0008-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/assets/73a416cd1243-s41419-026-09210-1_reference-d5147c6ef5.pdf-0008-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "73a416cd12430ded840d633246deeaa20f87d1cf2a67e744bf3d73e579940286",
+      "size": 378922
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0010-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/assets/a91998753bb4-s41419-026-09210-1_reference-d5147c6ef5.pdf-0010-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "a91998753bb4741a3d74c97168d62492c5e43fca2db62f047edc9fbd9d9c413e",
+      "size": 654594
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0012-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/assets/4e3ac446bbd6-s41419-026-09210-1_reference-d5147c6ef5.pdf-0012-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "4e3ac446bbd61b94fb220898eee7889ac25ec888bad103217a115b501452e074",
+      "size": 638774
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0014-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/assets/d82d7b9ed7fd-s41419-026-09210-1_reference-d5147c6ef5.pdf-0014-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "d82d7b9ed7fdbcd706de24ba9b36b39fa8b57d9cc0d4d871a60f046dfdbf6b5b",
+      "size": 344559
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0016-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/assets/0a6a1207c76b-s41419-026-09210-1_reference-d5147c6ef5.pdf-0016-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "0a6a1207c76b4887ced41591ed52ce0542aee8ebcddc216f4bad9fa133966cd4",
+      "size": 422880
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.pdf",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/raw_sources/b48e5ce1ed78-Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.pdf",
+      "category": "raw_sources",
+      "origin_kind": "real_replay",
+      "sha256": "b48e5ce1ed788857d555dcb9fdf3c9020c779b8a6a15b1cd2341d5044406a0a7",
+      "size": 12572547
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "degraded",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1038/s41419-026-09210-1",
+      "expected_doi": "10.1038/s41419-026-09210-1",
+      "title": "PTTG1-driven self-amplifying loop with SP1 and ENO1 promotes IRF4-mediated myeloma progression and bone destruction",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 25994,
+      "confidence": "low",
+      "flags": [
+        "access_gate_detected",
+        "weak_body_structure"
+      ],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 10,
+      "attempted": 10,
+      "total": 10,
+      "local": 10,
+      "full_size": 10,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 10,
+      "remote_only_count": 0,
+      "body_discovered": 10,
+      "body_attempted": 10,
+      "body_local": 10,
+      "body_full_size": 10,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "complete",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "springer_pdf",
+      "acquisition": {
+        "provider": "springer",
+        "route": "direct_pdf",
+        "representation": "pdf",
+        "transport": "http",
+        "fallback_used": true
+      },
+      "trace_event_count": 18,
+      "fallback_codes": [
+        "fulltext:springer_html:fail"
+      ],
+      "warning_codes": [
+        "access_gate_detected",
+        "weak_body_structure"
+      ],
+      "failure_codes": [
+        "fulltext:springer_html:fail"
+      ],
+      "unstructured_warning_count": 4,
+      "acceptance_policy": "validated_pdf",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

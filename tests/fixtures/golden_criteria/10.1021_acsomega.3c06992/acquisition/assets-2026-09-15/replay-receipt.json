@@ -1,0 +1,109 @@
+{
+  "doi": "10.1021/acsomega.3c06992",
+  "source_input": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/acquisition/assets-2026-09-15/39300ebb5abb6d6d-http-1.bin",
+  "source_sha256": "4ea1b15ff21dbbedb329108f1f8ea19da02b36beadcfb0adfacfb42fc730a221",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "42ad359ea625d895f36f2bbc4bb3578a0679f1082776695246290393e5791832",
+  "files": [
+    {
+      "filename": "ao3c06992_0001.svg",
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0001.svg?Expires=1791347250&Signature=1stF6ilP0avMZoPpOydrLHq467pIpidHs-vZG~BcTeHc~JiFuI7ESAXBjFs4UCJqT~hYX8UkLyWorJ~~ddqT9EY-EakfFjzNokl1myBSphvWL5oRWY-HqxfcyXAumzFKUerAJpIXQYBUwuytx-nt0lJ6xTZD0KCgGEgdt~pT1LEdw94CEqyOpxWGOOUg5ChRbBMRWftD1YvYkyq~rGrnFZ7OaTGtANW~1QvAATp-OyHGIIVjmC8O6IAizHSKzUjsSsUdxX7WwCygfPr81k3al3Jz7a8cN9fgswd7-zGPLHub-GY5dUh4CHrgRPLTWnnSG1d2IO9rJlW70iqvWjGiyA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0001.svg?Expires=1791347250&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "88fde79f33ab3028b36f8b29dbc398e1c882d4168be9d29ab28cf792bd186177",
+      "size": 374929,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 401,
+      "height": 118,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "ao3c06992_0002.svg",
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0002.svg?Expires=1791347250&Signature=XMtLdn2CcRm7Fh3YnxYGVOkIPqC8DSwJt3fjMCEOTtlhoXhCwXRh0Vo8Nq-q~SCkRygFnbHGLZmUMiBUjv2sqVCUHQ~c6tPqEMx-2~x30DJPNTJU-1KRYn4ZiIPgbmXBXBFf-ne1BZ699ewdj5adI8APvNQZw1JnJN0svZueNiHYCZF6uFvmJauRgaEkAtbAvPy5S6141Z6CRBi2Yl~qfV0bB-rjoHkKsa7ZZ3xw3xfVjAXHkHKOXmjLx~-PNYRebhV56YTRp4dFHg0ubVK0Tp5P9a6mLqS73LPswKKWQvG26siNaZimkDy1tUzGKXdQtZcewjVhrO4hD0kU5Lvm7Q__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0002.svg?Expires=1791347250&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "86b399942ac9be140d235f586759a6136ce8fa45b1566367859fa431643db08f",
+      "size": 77188,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 480,
+      "height": 59,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "ao3c06992_0003.svg",
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0003.svg?Expires=1791347250&Signature=WpZiA4k6HVTclXvNkJMUNS8iFORTzx0dpZ2~4rB5kKODw8QoqFO9sFB-fWsYsUVkYT4R~jdpXQcFiSHRwFjnKheobiYnuUvc1aA8~VcLiMggKmXPGiJCuo232wL4F0~ToVNpoW~LUuIvN52lKB4UAZTOTBP3MKNmKqvg3ym8fuigx1u67iM5RuQmwtHn0aub6ovIdlvFVcj-LpPy1Q5E7cfJTY~WmifI5cX3O1YUCcQzuYAKPSUkp97C~krnJ4A5QfsVFSEXi-X49H7HhOBs3n~EO~twhRVkzm-pZj2FiTdSxmVp2BvLLxTyJ-31cwV0FiV8gN1opqMGQWAcMJUNCw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0003.svg?Expires=1791347250&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "e572701273ba292b0cb86ec5b90820131c1e151313b9dbf19018997f69b61d78",
+      "size": 69615,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 402,
+      "height": 229,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "ao3c06992_0004.svg",
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0004.svg?Expires=1791347250&Signature=uR0~dm6cdTMkcoRSTB2nPIT1gpAEg-fWadhjo-W8T8ITS2NRjdDMb1l4vqYYYPnRNyIttZLWnKOKfpaQFIz4Sbyw~rKO6Nyr4wP5rptiDcENxAWiapsNYIJjzWtNyviZEIOSjHKMTNADSAkxUw~5vlApJyKgRvtFcxmlVJFTsrqbmz~zT9T8YCy4wn3IgdnI1gVvmkn5Vr16KzJU2b9eNGcDHl1HWQzKRNCCi5PkkvSoIJLA9of~f2Ou8wr7MNH0tdwdhzUhH3JyLzz309RXzHnODKqZ5uKMBlP2blBwuiPhUFYxSDc4B9lZjl1g7xE8Ree8qcDG1GOd~l099RVloQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0004.svg?Expires=1791347250&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "ff87665c2757a393aaa1b2130677d79105591150af6baefe8b235e8ea3b1e639",
+      "size": 92228,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 401,
+      "height": 224,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "ao3c06992_0005.svg",
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0005.svg?Expires=1791347250&Signature=1kz48C0ojOewuscqh4wKegK8CyM683OQBl7KyGmTVmg7SabplHIvZUHRtXYCKpWHTwES9FZznJBKvbF5BtPFpoGr0dedzy6fJRNC2emuppJtSnpNjOw3Pun6a2Amy9Uxph63M-iycjrpkwyoPgsldeKziwiyksbYSFtvTOdtsSWX0e5-4SYa9WNrNq6eCcfpZY1EE1hAZr9j4aBDKMVmkRDfjVNlTPl8xBccvR32wySXLL6qQ--q7mU5Cs9-hfGngGk9Xy74dW~cWBRmQygCNnlBjBytTVuYdIjX4FzEKeuNOKlMMd6YJ6zcXimQHg~RkviKY5RkaF53Ef624Cemuw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0005.svg?Expires=1791347250&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "79370077d95f278b1651b049ba016e9449d54c245d9c04dc96f3250702029daa",
+      "size": 70862,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 401,
+      "height": 231,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "ao3c06992_0006.svg",
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0006.svg?Expires=1791347250&Signature=idpshbm-7J~tRzF5aiEzk-QY4r6EzNK1b2oeCYR4ctPAOgLX~EymiZLsVCT9jLYkyQoiUeDegdxeyg6Z5ZjJNxpuPfv4j67shPorjfkeLKaqlizpfBWV6LSsCsoYLv3dlszghXPvpREokjw1uqkAXWlgCFwtEeAqyfYacsxGjdoXJhHekORCK8P-mtiBzt5wxQZmkqAEp4~bW8juC7X6LAeKFU6mX0nmpYgPve8AyO73N5PgfH46X3vAoWY3EYDqZLh2KQf~28~HdDBEOmI9BEg~3NdzpV7ado5WuPY1niFg8wA7s-kBfbsCynwMxepAnbn5bCMYbWmj31U1vPsyjw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0006.svg?Expires=1791347250&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "df65e84327ff5331476f77264ddbbe763b63ed8a1ef4a647d802ea75ec695331",
+      "size": 101403,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 401,
+      "height": 235,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "ao3c06992_0007.svg",
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0007.svg?Expires=1791347250&Signature=wTx0sx5H7A1Z6-pBMkmEZesuA0T~rDMoUPKOydJ81EQ7LlgZ8HsL1tgyas3Va0w6zx1AoCLd9ZxbBYaUFCoOkKxOq8X92o6RCsaGqVO-Qcz-IxiuX37mf0OhSLXp93The2O9I~nqkIemt9LOT6eal0XK-uxzZuwm6vNll8ZZt-uHk4x6rTdFKSn7MdBKmoQUc7KPXBNkfXYVV3lXdGVewz0BnPB1OVqMM~39EOZ6a9wKo7wLVYjpwo6DlEYZ9XSG79KfH037sQGRcPJJYYBK~EckKVR2VOmrEXNIus7CjQsSDPJT2fEwd8ffDp5XA1X1zMMTh3DvhZgy-WWZPL6Rog__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0007.svg?Expires=1791347250&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "56f5762e1c1f3716ae52ddc97fe37ccedeeb129fb0819222981a2eb218762a99",
+      "size": 158461,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 401,
+      "height": 230,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "ao3c06992_0008.svg",
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0008.svg?Expires=1791347250&Signature=fh-xzQhyTSlP1gGL6hmLJ322KLcnFoBDZ~J4oKKMcmKBsV1BHUM~-HFrJgMrOmL6GRkpiOU25jxNoU0PmWETGlxH4B9RHU8Tao0Lh6k0kLzDZ87SiNh7QFSNLX05ZWA4BvG7qd3WbmoXPrW7ye6nH4JKGb1lNn3jlaXsCxfi7aDVX2C8fgLaPzNGe5DllenWLIb1ouuoKTvorMqnEiP12ILBGDP9xyimwsGE~s5nhnXnP6OKno~gHmQu~lOrtpbkUPRJCK2rtOygEDJz4M~7vMb4mtuwDgloC995OVnRCVlL2kI~HYGnrDWYDT9BKInDFU~dDhBMadbDB~KsTtyurQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0008.svg?Expires=1791347250&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "c8bdeb7f4636d2b8369bae34e043a8addadf3f60f637f8377ff0ca69493c6f2f",
+      "size": 67490,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 401,
+      "height": 236,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.493390+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 0
+}

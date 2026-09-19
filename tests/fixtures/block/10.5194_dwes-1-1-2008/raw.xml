@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN" "https://jats.nlm.nih.gov/nlm-dtd/publishing/3.0/journalpublishing3.dtd">
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" article-type="research-article" dtd-version="3.0" xml:lang="en">
+<front>
+<journal-meta>
+<journal-id journal-id-type="publisher">DWES</journal-id>
+<journal-title-group>
+<journal-title>Drinking Water Engineering and Science</journal-title>
+<abbrev-journal-title abbrev-type="publisher">DWES</abbrev-journal-title>
+<abbrev-journal-title abbrev-type="nlm-ta">Drink. Water Eng. Sci.</abbrev-journal-title>
+</journal-title-group>
+<issn pub-type="epub">1996-9465</issn>
+<publisher><publisher-name>Copernicus Publications</publisher-name>
+<publisher-loc>Göttingen, Germany</publisher-loc>
+</publisher>
+</journal-meta>
+<article-meta>
+<article-id pub-id-type="doi">10.5194/dwes-1-1-2008</article-id>
+<title-group>
+<article-title>Correlations between total cell concentration, total adenosine tri-phosphate concentration and heterotrophic plate counts during microbial monitoring of drinking water</article-title>
+</title-group>
+<contrib-group><contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Siebel</surname>
+<given-names>E.</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+</contrib>
+<contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Wang</surname>
+<given-names>Y.</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+<xref ref-type="aff" rid="aff2">
+<sup>2</sup>
+</xref>
+</contrib>
+<contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Egli</surname>
+<given-names>T.</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+<xref ref-type="aff" rid="aff2">
+<sup>2</sup>
+</xref>
+</contrib>
+<contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Hammes</surname>
+<given-names>F.</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+</contrib>
+</contrib-group><aff id="aff1">
+<label>1</label>
+<addr-line>Swiss Federal Inst. of Aquatic Sci. and Technol. (Eawag), Überlandstr. 133, 8600 Dübendorf, Switzerland</addr-line>
+</aff>
+<aff id="aff2">
+<label>2</label>
+<addr-line>Institute of Biogeochemistry and Pollutant Dynamics, ETH Zürich, 8092 Zürich, Switzerland</addr-line>
+</aff>
+<pub-date pub-type="epub">
+<day>02</day>
+<month>06</month>
+<year>2008</year>
+</pub-date>
+<volume>1</volume>
+<issue>1</issue>
+<fpage>1</fpage>
+<lpage>6</lpage>
+<permissions>
+<copyright-statement>Copyright: &#x000a9; 2008 E. Siebel et al.</copyright-statement>
+<copyright-year>2008</copyright-year>
+<license license-type="open-access">
+<license-p>This work is licensed under the Creative Commons Attribution 3.0 Unported License. To view a copy of this licence, visit <ext-link ext-link-type="uri"  xlink:href="https://creativecommons.org/licenses/by/3.0/">https://creativecommons.org/licenses/by/3.0/</ext-link></license-p>
+</license>
+</permissions>
+<self-uri xlink:href="https://dwes.copernicus.org/articles/1/1/2008/dwes-1-1-2008.html">This article is available from https://dwes.copernicus.org/articles/1/1/2008/dwes-1-1-2008.html</self-uri>
+<self-uri xlink:href="https://dwes.copernicus.org/articles/1/1/2008/dwes-1-1-2008.pdf">The full text article is available as a PDF file from https://dwes.copernicus.org/articles/1/1/2008/dwes-1-1-2008.pdf</self-uri>
+<abstract>
+<p>The general microbial quality of drinking water is normally monitored by
+heterotrophic plate counts (HPC). This method has been used for more than
+100 years and is recommended in drinking water guidelines. However, the HPC
+method is handicapped because it is time-consuming and restricted to
+culturable bacteria. Recently, rapid and accurate detection methods have
+emerged, such as adenosine tri-phosphate (ATP) measurements to assess
+microbial activity in drinking water, and flow cytometry (FCM) to determine
+the total cell concentration (TCC). It is necessary and important for
+drinking water quality control to understand the relationships among the
+conventional and new methods. In the current study, all three methods were
+applied to 200 drinking water samples obtained from two local buildings
+connected to the same distribution system. Samples were taken both on normal
+working days and weekends, and the correlations between the different
+microbiological parameters were determined. TCC in the samples ranged from
+0.37&amp;ndash;5.61&amp;times;10&lt;sup&gt;5&lt;/sup&gt; cells/ml, and two clusters, the so-called
+high (HNA) and low (LNA) nucleic acid bacterial groups, were clearly
+distinguished. The results showed that the rapid determination methods
+(i.e., FCM and ATP) correlated well (&lt;i&gt;R&lt;/i&gt;&lt;sup&gt;2&lt;/sup&gt;=0.69), but only a weak
+correlation (&lt;i&gt;R&lt;/i&gt;&lt;sup&gt;2&lt;/sup&gt;=0.31) was observed between the rapid methods and
+conventional HPC data. With respect to drinking water monitoring, both FCM
+and ATP measurements were confirmed to be useful and complimentary
+parameters for rapid assessing of drinking water microbial quality.</p>
+</abstract>
+<counts><page-count count="6"/></counts>
+</article-meta>
+</front>
+<body/>
+<back>
+<ref-list>
+<title>References</title>
+<ref id="ref1">
+<label>1</label><mixed-citation publication-type="other" xlink:type="simple"> Allen, M. J., Edberg, S. C., and Reasoner, D. J.: Heterotrophic plate count bacteria - what is their significance in drinking water?, Int. J. Food Microbiol., 92(3), 265&amp;ndash;274, 2004. </mixed-citation>
+</ref>
+<ref id="ref2">
+<label>2</label><mixed-citation publication-type="other" xlink:type="simple"> Berney, M., Weilenmann, H. U., and Egli, T.: Flow-cytometric study of vital cellular functions in \textitEscherichia coli during solar disinfection (SODIS), Microbiol.-SGM, 152, 1719&amp;ndash;1729, 2006. </mixed-citation>
+</ref>
+<ref id="ref3">
+<label>3</label><mixed-citation publication-type="other" xlink:type="simple"> Deininger, R. A. and Lee, J.: Rapid determination of bacteria in drinking water using an ATP assay, Field Anal. Chem. Tech., 5(4), 185&amp;ndash;189, 2001. </mixed-citation>
+</ref>
+<ref id="ref4">
+<label>4</label><mixed-citation publication-type="other" xlink:type="simple"> Delahaye, E., Welte, B., Levi, Y., Leblon, G., and Montiel, A.: An ATP-based method for monitoring the microbiological drinking water quality in a distribution network, Water Res., 37(15), 3689&amp;ndash;3696, 2003. </mixed-citation>
+</ref>
+<ref id="ref5">
+<label>5</label><mixed-citation publication-type="other" xlink:type="simple"> Felip, M., Andreatta, S., Sommaruga, R., Straskrábová, V., and Catalan, J.: Suitability of flow cytometry for estimating bacterial biovolume in natural plankton samples: comparison with microscopy data, Appl. Environ. Microbiol., 73, 4508&amp;ndash;4514, 2007. </mixed-citation>
+</ref>
+<ref id="ref6">
+<label>6</label><mixed-citation publication-type="other" xlink:type="simple"> Frundzhyan, V. and Ugarova, N.: Bioluminescent assay for total bacterial contamination of drinking water, Luminescence, 22, 241&amp;ndash;244, 2007. </mixed-citation>
+</ref>
+<ref id="ref7">
+<label>7</label><mixed-citation publication-type="other" xlink:type="simple"> Gasol, J. M., Zweifel, U. L., Peters, F., Fuhrman, J. A., and Hagstrom, A.: Significance of size and nucleic acid content heterogeneity as measured by flow cytometry in natural planktonic bacteria, Appl. Environ. Microb., 65(10), 4475&amp;ndash;4483, 1999. </mixed-citation>
+</ref>
+<ref id="ref8">
+<label>8</label><mixed-citation publication-type="other" xlink:type="simple"> Hammes, F., Berney, M., Wang, Y., Vital, M., Köster, O., and Egli, T.: Flow-cytometric total bacterial cell counts as a descriptive microbiological parameter for drinking water treatment processes, Water Res., 42(1&amp;ndash;2), 269&amp;ndash;277, 2008. </mixed-citation>
+</ref>
+<ref id="ref9">
+<label>9</label><mixed-citation publication-type="other" xlink:type="simple"> Hammes, F. A. and Egli, T.: New method for assimilable organic carbon determination using flow-cytometric enumeration and a natural microbial consortium as inoculum, Environ. Sci. Technol., 39(9), 3289&amp;ndash;3294, 2005. </mixed-citation>
+</ref>
+<ref id="ref10">
+<label>10</label><mixed-citation publication-type="other" xlink:type="simple"> Hoefel, D., Grooby, W. L., Monis, P. T., Andrews, S., and Saint, C. P.: Enumeration of water-borne bacteria using viability assays and flow cytometry: a comparison to culture-based techniques, J. Microbiol. Meth., 55, 585&amp;ndash;597, 2003. </mixed-citation>
+</ref>
+<ref id="ref11">
+<label>11</label><mixed-citation publication-type="other" xlink:type="simple"> HyV: Hygieneverordnung (Hygiene regulation) des EDI (Eidgenössische Departement des Innern), Anhang 2, 2005. </mixed-citation>
+</ref>
+<ref id="ref12">
+<label>12</label><mixed-citation publication-type="other" xlink:type="simple"> Lebaron, P., Servais, P., Agogue, H., Courties, C., and Joux, F.: Does the high nucleic acid content of individual bacterial cells allow us to discriminate between active cells and inactive cells in aquatic systems?, Appl. Environ. Microb., 67(4), 1775&amp;ndash;1782, 2001. </mixed-citation>
+</ref>
+<ref id="ref13">
+<label>13</label><mixed-citation publication-type="other" xlink:type="simple"> Pepper, I. L., Rusin, P., Quintanar, D. R., Haney, C., Josephson, K. L., and Gerba, C. P.: Tracking the concentration of heterotrophic plate count bacteria from the source to the consumer&apos;s tap, Int. J. Food Microbiol., 92(3), 289&amp;ndash;295, 2004. </mixed-citation>
+</ref>
+<ref id="ref14">
+<label>14</label><mixed-citation publication-type="other" xlink:type="simple"> Reasoner, D. J. and Geldreich, E. E.: A new medium for the enumeration and subculture of bacteria from potable water, Appl. Environ. Microb., 49(1), 1&amp;ndash;7, 1985. </mixed-citation>
+</ref>
+<ref id="ref15">
+<label>15</label><mixed-citation publication-type="other" xlink:type="simple"> Rinta-Kanto, J. M., Lehtola, M. J., Vartiainen, T., and Martikainen, P. J.: Rapid enumeration of virus-like particles in drinking water samples using SYBR green I-staining, Water Res., 38, 2614&amp;ndash;2618, 2004. </mixed-citation>
+</ref>
+<ref id="ref16">
+<label>16</label><mixed-citation publication-type="other" xlink:type="simple"> Sartory, D. P.: Heterotrophic plate count monitoring of treated drinking water in the UK: a useful operational tool, Int. J. Food Microbiol., 92, 297&amp;ndash;306, 2004. </mixed-citation>
+</ref>
+<ref id="ref17">
+<label>17</label><mixed-citation publication-type="other" xlink:type="simple"> SLMB: Schweizer Lebensmittelbuch (Swiss book of food regulation), 56, E.1., 2000. </mixed-citation>
+</ref>
+<ref id="ref18">
+<label>18</label><mixed-citation publication-type="other" xlink:type="simple"> van der Kooij, D.: Managing regrowth in drinking-water distribution systems, in: Heterotrophic plate counts and drinking-water safety, edited by: Bartram, J., Cotruvo, J., Exner, M., Fricker, C., and Glasmacher, M., London, UK, World Health Organization (WHO) by IWA Publishing, 199&amp;ndash;232, 2003. </mixed-citation>
+</ref>
+<ref id="ref19">
+<label>19</label><mixed-citation publication-type="other" xlink:type="simple"> Velten, S., Hammes, F., Boller, M., and Egli, T.: Rapid and direct estimation of active biomass on granular activated carbon through adenosine tri-phosphate (ATP) determination, Water Res., 41, 1973&amp;ndash;1983, 2007. </mixed-citation>
+</ref>
+<ref id="ref20">
+<label>20</label><mixed-citation publication-type="other" xlink:type="simple"> WHO: World Health Organization, Guidelines for Drinking-water Quality (electronic resource): incorporating first addendum, Vol 1, Recommendations, 3$^rd$ Ed., 2006. </mixed-citation>
+</ref>
+</ref-list>
+</back>
+</article>

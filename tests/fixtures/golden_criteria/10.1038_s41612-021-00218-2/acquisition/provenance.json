@@ -1,0 +1,59 @@
+{
+  "records": [
+    {
+      "doi": "10.1038/s41612-021-00218-2",
+      "provider": "springer",
+      "requested_url": "https://api.crossref.org/works/10.1038%2Fs41612-021-00218-2",
+      "final_url": "https://api.crossref.org/works/10.1038%2Fs41612-021-00218-2",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:22:48 GMT",
+        "content-type": "application/json",
+        "content-length": "8396"
+      },
+      "captured_at_utc": "2026-09-18T02:22:48.583144+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 28415,
+      "sha256": "6f7088f95965f160c44a88fb6e9b7a3408472def2b2977833a4434bd6d9c8f93",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1038/s41612-021-00218-2",
+      "provider": "springer",
+      "requested_url": "https://www.nature.com/articles/s41612-021-00218-2",
+      "final_url": "https://www.nature.com/articles/s41612-021-00218-2",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html; charset=utf-8",
+        "date": "Fri, 18 Sep 2026 02:22:53 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:22:53.938791+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "size": 452386,
+      "sha256": "04312f83b96b60f16d8032a42a153af73d5e9c9a692402659555924b42fe5c68",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1038/s41612-021-00218-2",
+      "provider": "springer",
+      "requested_url": "https://www.nature.com/articles/s41612-021-00218-2/tables/1",
+      "final_url": "https://www.nature.com/articles/s41612-021-00218-2/tables/1",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html; charset=utf-8",
+        "date": "Fri, 18 Sep 2026 02:22:58 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:22:59.206114+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.html",
+      "size": 171019,
+      "sha256": "e2e634f970576d12e2ea1a13df2d1b8e4d09aa6600e32d6587a191235d9ec0cd",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

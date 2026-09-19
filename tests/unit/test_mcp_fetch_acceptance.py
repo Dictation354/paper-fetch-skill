@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 import pytest
-
 from paper_fetch.mcp.fetch_tool import build_fetch_tool_result
 from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.mcp.server import build_server
@@ -15,7 +13,7 @@ from paper_fetch.models import (
     SemanticLosses,
 )
 from paper_fetch.tracing import TraceContext, source_trail_from_trace, trace_event
-from tests.unit._mcp_support import assert_mcp_tool_omits_output_schema
+from tests.support._mcp_support import assert_mcp_tool_omits_output_schema
 
 
 def _successful_trace():

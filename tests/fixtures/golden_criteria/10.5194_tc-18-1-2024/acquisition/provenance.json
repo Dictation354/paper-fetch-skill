@@ -1,0 +1,63 @@
+{
+  "records": [
+    {
+      "doi": "10.5194/tc-18-1-2024",
+      "provider": "copernicus",
+      "requested_url": "https://api.crossref.org/works/10.5194%2Ftc-18-1-2024",
+      "final_url": "https://api.crossref.org/works/10.5194%2Ftc-18-1-2024",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:13 GMT",
+        "content-type": "application/json",
+        "content-length": "11305"
+      },
+      "captured_at_utc": "2026-09-18T02:21:12.861121+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 34924,
+      "sha256": "1cedce2292caf10caf4fecff784cff2d4acf1d23f21684fdabeb2bf7414fd445",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.5194/tc-18-1-2024",
+      "provider": "copernicus",
+      "requested_url": "https://tc.copernicus.org/articles/18/1/2024/",
+      "final_url": "https://tc.copernicus.org/articles/18/1/2024/",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:14 GMT",
+        "content-type": "text/html"
+      },
+      "captured_at_utc": "2026-09-18T02:21:14.524313+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "size": 290518,
+      "sha256": "19b62d620e7a89b59247526f8b2d2f07f94e0b9c8dfa035433fa0de696dc792e",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.5194/tc-18-1-2024",
+      "provider": "copernicus",
+      "requested_url": "https://tc.copernicus.org/articles/18/1/2024/tc-18-1-2024.xml",
+      "final_url": "https://tc.copernicus.org/articles/18/1/2024/tc-18-1-2024.xml",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:15 GMT",
+        "last-modified": "Wed, 18 Sep 2024 15:12:17 GMT",
+        "etag": "\"31542-622663b4d9c88-gzip\"",
+        "content-length": "42019",
+        "content-type": "application/xml"
+      },
+      "captured_at_utc": "2026-09-18T02:21:14.919007+00:00",
+      "body_file": "original.xml",
+      "size": 202050,
+      "sha256": "c48c07113579b59933049af95f80cdb2635a6690b947124fdbd95528aaedc125",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes",
+      "original_body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.xml"
+    }
+  ]
+}

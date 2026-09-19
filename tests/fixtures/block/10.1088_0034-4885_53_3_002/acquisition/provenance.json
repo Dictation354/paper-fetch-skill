@@ -1,0 +1,46 @@
+{
+  "records": [
+    {
+      "requested_url": "https://iopscience.iop.org/article/10.1088/0034-4885/53/3/002",
+      "final_url": "https://iopscience.iop.org/article/10.1088/0034-4885/53/3/002",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Tue, 15 Sep 2026 06:25:57 GMT",
+        "permissions-policy": "usb=(), payment=(), geolocation=(), microphone=(), camera=()",
+        "referrer-policy": "origin-when-cross-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "access-control-allow-origin": "https://iopscience.iop.org",
+        "x-frame-options": "DENY",
+        "iop_primary_institution_identity_id": "guest",
+        "iop_session_id": "6d29a14c-2e9c-402f-a2cf-ce2a87187839",
+        "iop_associated_identity_ids": "guest, ",
+        "iop_session_map": "iop_session_id=6d29a14c-2e9c-402f-a2cf-ce2a87187839&identity_ids=guest%2C&ics_session_id=8b65294e-06be-4896-97f6-1027449e3c33&request_id=7643f48e-a18c-440e-82ed-74ab8250a66c&identity_id_primary=guest&",
+        "cache-control": "private, max-age=0, no-cache, s-max-age=0, must-revalidate, proxy-revalidate",
+        "pragma": "no-cache",
+        "iop_page_type": "FULLTEXT_ARTICLE",
+        "tdm-reservation": "1",
+        "tdm-policy": "https://iopscience.iop.org/tdmrep.json",
+        "iop_is_vor": "yes",
+        "iop_cachedhtml": "false",
+        "vary": "accept-encoding",
+        "content-language": "en-US",
+        "strict-transport-security": "max-age=31536000",
+        "content-encoding": "gzip",
+        "x-firefox-spdy": "h2"
+      },
+      "capture_kind": "http_response_entity",
+      "transport": "Headed Camoufox requestfinished response.body()",
+      "body_file": "raw.html",
+      "size": 315724,
+      "sha256": "66fa9a772cdd18defc7a99172141f9ac6a259a61197465a28cb542e80238c13a",
+      "captured_at_utc": "2026-09-15T06:25:56.599490+00:00",
+      "headless": false,
+      "network_context": "User reports current network has no subscription access; not independently verified. Existing configured API credentials and provider storage state retained.",
+      "capture_scope": "Real HTTP200 subscription HTML. The same DOI live CLI also requested /pdf and received subscription HTML; current terminal result is recorded separately in associated_live_capture.",
+      "doi": "10.1088/0034-4885/53/3/002",
+      "provider": "iop",
+      "associated_live_capture": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/subscription-2026-09-15/capture.json"
+    }
+  ]
+}

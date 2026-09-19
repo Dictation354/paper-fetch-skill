@@ -1,16 +1,14 @@
 from __future__ import annotations
-
+from unittest import mock
 import tempfile
 import unittest
 from pathlib import Path
-
 from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.providers.copernicus import CopernicusClient
 from paper_fetch.providers._article_markdown_copernicus import parse_copernicus_xml
 from paper_fetch.providers._article_markdown_jats import parse_jats_xml
-
-from tests.unit._paper_fetch_support import (
+from tests.support._paper_fetch_support import (
     RecordingTransport,
     fulltext_pdf_bytes,
     http_response,
@@ -274,6 +272,10 @@ class CopernicusProviderTests(unittest.TestCase):
             [(call["method"], call["url"]) for call in transport.calls],
         )
 
+    @mock.patch(
+        "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
+        new=lambda *a, **k: "Mock converter output. " * 120,
+    )
     def test_xml_failure_skips_landing_html_and_falls_back_to_pdf(self) -> None:
         html_body = (
             "<article><h1>Copernicus XML Test Article</h1>"
@@ -281,7 +283,7 @@ class CopernicusProviderTests(unittest.TestCase):
             "<h2>Introduction</h2><p>" + _article_body_text() + "</p>"
             "<h2>Results</h2><p>" + _article_body_text() + "</p></article>"
         )
-        pdf_bytes = fulltext_pdf_bytes()
+        pdf_bytes = fulltext_pdf_bytes(doi=DOI)
         transport = RecordingTransport(
             {
                 ("GET", LANDING_URL): http_response(
@@ -307,8 +309,12 @@ class CopernicusProviderTests(unittest.TestCase):
             "fulltext:copernicus_pdf_fallback_ok", article.quality.source_trail
         )
 
+    @mock.patch(
+        "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
+        new=lambda *a, **k: "Mock converter output. " * 120,
+    )
     def test_abstract_only_short_body_xml_falls_back_to_pdf(self) -> None:
-        pdf_bytes = fulltext_pdf_bytes()
+        pdf_bytes = fulltext_pdf_bytes(doi=DOI)
         transport = RecordingTransport(
             {
                 ("GET", LANDING_URL): http_response(
@@ -342,8 +348,12 @@ class CopernicusProviderTests(unittest.TestCase):
             [(call["method"], call["url"]) for call in transport.calls],
         )
 
+    @mock.patch(
+        "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
+        new=lambda *a, **k: "Mock converter output. " * 120,
+    )
     def test_xml_without_body_paragraphs_falls_back_to_pdf(self) -> None:
-        pdf_bytes = fulltext_pdf_bytes()
+        pdf_bytes = fulltext_pdf_bytes(doi=DOI)
         transport = RecordingTransport(
             {
                 ("GET", LANDING_URL): http_response(
@@ -373,8 +383,12 @@ class CopernicusProviderTests(unittest.TestCase):
             )
         )
 
+    @mock.patch(
+        "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
+        new=lambda *a, **k: "Mock converter output. " * 120,
+    )
     def test_empty_body_xml_falls_back_to_pdf(self) -> None:
-        pdf_bytes = fulltext_pdf_bytes()
+        pdf_bytes = fulltext_pdf_bytes(doi=DOI)
         transport = RecordingTransport(
             {
                 ("GET", LANDING_URL): http_response(
@@ -432,8 +446,12 @@ class CopernicusProviderTests(unittest.TestCase):
             [(call["method"], call["url"]) for call in transport.calls],
         )
 
+    @mock.patch(
+        "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
+        new=lambda *a, **k: "Mock converter output. " * 120,
+    )
     def test_landing_failure_continues_with_doi_derived_pdf_candidate(self) -> None:
-        pdf_bytes = fulltext_pdf_bytes()
+        pdf_bytes = fulltext_pdf_bytes(doi=DOI)
         transport = RecordingTransport(
             {
                 ("GET", LANDING_URL): RequestFailure(
@@ -491,8 +509,12 @@ class CopernicusProviderTests(unittest.TestCase):
         self.assertIn("fulltext:copernicus_xml_fail", raised.exception.source_trail)
         self.assertIn("fulltext:copernicus_pdf_fail", raised.exception.source_trail)
 
+    @mock.patch(
+        "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
+        new=lambda *a, **k: "Mock converter output. " * 120,
+    )
     def test_pdf_fallback_is_text_only_artifact_path(self) -> None:
-        pdf_bytes = fulltext_pdf_bytes()
+        pdf_bytes = fulltext_pdf_bytes(doi=DOI)
         transport = RecordingTransport(
             {
                 ("GET", LANDING_URL): http_response(
@@ -521,10 +543,14 @@ class CopernicusProviderTests(unittest.TestCase):
             [event.marker() for event in result.artifacts.skip_trace],
         )
 
+    @mock.patch(
+        "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
+        new=lambda *a, **k: "Mock converter output. " * 120,
+    )
     def test_pdf_fallback_uses_doi_derived_candidate_when_landing_omits_pdf_meta(
         self,
     ) -> None:
-        pdf_bytes = fulltext_pdf_bytes()
+        pdf_bytes = fulltext_pdf_bytes(doi=DOI)
         transport = RecordingTransport(
             {
                 ("GET", LANDING_URL): http_response(

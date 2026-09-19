@@ -237,8 +237,8 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
         self.assertEqual(
             build_html_candidates("pnas", PNAS_SAMPLE.doi)[:2],
             [
-                f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
                 f"https://www.pnas.org/doi/full/{PNAS_SAMPLE.doi}",
+                f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
             ],
         )
         self.assertEqual(
@@ -341,8 +341,8 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
                 expected_html_candidates = build_html_candidates(provider, doi)
                 if provider == "pnas":
                     expected_html_candidates = [
-                        f"https://www.pnas.org/doi/{doi}",
                         f"https://www.pnas.org/doi/full/{doi}",
+                        f"https://www.pnas.org/doi/{doi}",
                         f"https://doi.org/{doi}",
                     ]
                 self.assertEqual(
@@ -655,8 +655,8 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
         self.assertEqual(
             candidates[:2],
             [
-                f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
                 f"https://www.pnas.org/doi/full/{PNAS_SAMPLE.doi}",
+                f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
             ],
         )
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from collections import defaultdict, deque
 import re
 from typing import Any
 from collections.abc import Mapping
@@ -23,7 +24,9 @@ from ..publisher_identity import normalize_doi
 from ..utils import extend_unique, normalize_text
 from ._html_section_markdown import (
     render_clean_text_from_html,
+    render_retained_text_from_html,
     render_container_markdown,
+    render_heading_text_from_html,
 )
 from ._html_references import extract_numbered_references_from_html
 from ._pdf_candidates import (
@@ -132,6 +135,17 @@ class OxfordAcademicExtraction:
     abstract_sections: list[Any]
     section_hints: list[Any]
     extracted_assets: list[dict[str, Any]]
+    source_mathml_error_count: int = 0
+
+
+def source_mathml_warnings(count: int) -> list[str]:
+    return (
+        [
+            f"Source MathML contains {count} merror node(s); readable children were preserved, not corrected."
+        ]
+        if count
+        else []
+    )
 
 
 def is_oxfordacademic_url(value: str | None) -> bool:
@@ -292,6 +306,12 @@ def merge_metadata_with_html(
         html_text
     ) or citation_reference_metadata(merged)
     if references:
+        # Some OUP Crossref widgets link the journal's ISSN DOI, not the
+        # cited article (e.g. btaa161's Youden reference). Keep the visible
+        # citation, but do not report this journal identifier as its DOI.
+        for reference in references:
+            if "(issn)" in str(reference.get("doi") or "").casefold():
+                reference["doi"] = None
         merged_payload: dict[str, Any] = dict(merged)
         merged_payload["references"] = references
         return merged_payload
@@ -416,6 +436,7 @@ def extract_markdown(
         _supplementary_assets(soup, source_url) if asset_profile == "all" else []
     )
     body = _article_body(soup)
+    source_mathml_error_count = len(body.select("math merror"))
     _normalize_oxford_body_for_rendering(body)
     for selector in OXFORDACADEMIC_EXTRACTION_CLEANUP_SELECTORS:
         class_name = _selector_class_name(selector)
@@ -439,9 +460,25 @@ def extract_markdown(
             _first_with_class(wrapper, "caption"),
             collapse_prose_line_breaks=True,
         )
+        from ..extraction.markdown_render.formulas import render_html_mathml_node
+
+        for math_node in list(table.find_all("math")):
+            formula = render_html_mathml_node(math_node)
+            if formula:
+                math_node.replace_with(formula)
         rendered_table = render_table_markdown(table, label=label, caption=caption)
         if not normalize_text(rendered_table):
             continue
+        for foot in _nodes_with_class(wrapper, "table-wrap-foot"):
+            for anchor in foot.select("a[href]"):
+                if (
+                    normalize_text(anchor.get_text())
+                    in OXFORDACADEMIC_MARKDOWN_PROMO_TOKENS
+                ):
+                    anchor.decompose()
+            notes = render_retained_text_from_html(foot, source_url=source_url)
+            if notes:
+                rendered_table += "\n\n" + notes
         marker = f"PAPER_FETCH_OXFORDACADEMIC_TABLE_{index:04d}"
         table_replacements[marker] = rendered_table
         marker_node = soup.new_tag("p")
@@ -449,10 +486,50 @@ def extract_markdown(
         wrapper.replace_with(marker_node)
 
     section_hints = collect_html_section_hints(body, title=title)
-    abstract_sections = collect_html_abstract_blocks(body)
+    # The model's body kind is the existing retained-back-matter rendering
+    # category; the default reference classifier would hide these paragraphs.
+    for hint in section_hints:
+        if str(hint.get("heading") or "").casefold() in {
+            "acknowledgements",
+            "acknowledgments",
+            "funding",
+        }:
+            hint["kind"] = "body"
+    abstract_sections = [
+        block
+        for block in collect_html_abstract_blocks(body)
+        if normalize_text(str(block.get("text") or "")).casefold() != "abstract"
+        and "ajax-articleAbstract-exclude-regex"
+        not in str(block.get("source_selector") or "")
+    ]
+    if (
+        normalize_text(str(merged_metadata.get("abstract") or "")).casefold()
+        == "abstract"
+    ):
+        merged_metadata["abstract"] = None
     lines: list[str] = []
     render_container_markdown(body, lines, level=2)
     markdown = clean_rendered_markdown("\n".join(lines))
+    # Silverchair uses sibling h2/h3/h4 nodes rather than nested sections.
+    # The shared container renderer emits its supplied level for each sibling;
+    # restore the DOM levels before assembly so empty parent headings survive.
+    heading_levels: dict[str, deque[int]] = defaultdict(deque)
+    for node in body.find_all(re.compile(r"^h[2-6]$")):
+        heading_levels[normalize_text(render_heading_text_from_html(node))].append(
+            int(node.name[1])
+        )
+
+    def restore_heading_level(match: re.Match[str]) -> str:
+        levels = heading_levels.get(normalize_text(match[1]))
+        if not levels:
+            return match[0]
+        return "#" * levels.popleft() + " " + match[1]
+
+    markdown = re.sub(
+        r"(?m)^#{2,6} (.+)$",
+        restore_heading_level,
+        markdown,
+    )
     for marker, rendered_table in table_replacements.items():
         markdown = markdown.replace(marker, rendered_table)
     markdown = clean_rendered_markdown(markdown)
@@ -479,6 +556,7 @@ def extract_markdown(
             supplementary_html_text="",
         )
         + supplementary_assets,
+        source_mathml_error_count=source_mathml_error_count,
     )
 
 

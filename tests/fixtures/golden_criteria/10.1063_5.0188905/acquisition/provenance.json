@@ -1,0 +1,167 @@
+{
+  "records": [
+    {
+      "doi": "10.1063/5.0188905",
+      "provider": "aip",
+      "requested_url": "https://api.crossref.org/works/10.1063%2F5.0188905",
+      "final_url": "https://api.crossref.org/works/10.1063%2F5.0188905",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:29:57 GMT",
+        "content-type": "application/json",
+        "content-length": "8342"
+      },
+      "captured_at_utc": "2026-09-18T02:29:57.092842+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 35041,
+      "sha256": "78cf4ac82dab00815ead9ea5dece25b27fb0e5196cf714c092237f5242c3f525",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1063/5.0188905",
+      "provider": "aip",
+      "requested_url": "https://pubs.aip.org/jap/article/135/8/085105/3266915/Machine-learned-atomic-cluster-expansion",
+      "final_url": "https://pubs.aip.org/aip/jap/article/135/8/085105/3266915/Machine-learned-atomic-cluster-expansion",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:30:12 GMT",
+        "content-type": "text/html; charset=utf-8"
+      },
+      "captured_at_utc": "2026-09-18T02:31:06.365711+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 1507271,
+      "sha256": "26a0dc1992fa401f64bb659f5f0e4dec5b9ed9223a8770688bf1375340b4fc62",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1063/5.0188905",
+      "provider": "aip",
+      "requested_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jap/135/8/10.1063_5.0188905/2/m_085105_1_5.0188905.figures.online.f1.jpeg?Expires=1792609781&Signature=EsfT0-Ec61A481YzCnxBqmOu9alTBJrn8Lr4ovenDpX3rcoP9sA~PWmG5ulIP-8zgR6505P0rJEMej5E1dB-eqnFHtVsveqVSgAxUQogiibb342knyW3zlTGt-ksWMsUJWxlSwmPumeJZj9m4reY5tpu0-lnsiMWAaDBo989t6xXrEDazw73QmdoXkIMk5nUTWkCMiWdIMAIvORaOScKTIBQWHzmq4-ImexTlXm1EzM7FePRmTBTr2WvnFUVKqqt8m0rQvxWIqIzMEhvAVoz2FiVe9sMaV5Ks1Buy1ufClCHbEDj847xrcDTZHU5qZIomMo3SNm-QfhOBBd7Rb1Ekw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jap/135/8/10.1063_5.0188905/2/m_085105_1_5.0188905.figures.online.f1.jpeg?Expires=1792609781&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg",
+        "content-length": "32904",
+        "date": "Thu, 17 Sep 2026 09:58:04 GMT",
+        "last-modified": "Thu, 14 Mar 2024 14:31:28 GMT",
+        "etag": "\"5ad28179e9b34b648805e48f701c4818\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:03.094963+00:00",
+      "size": 32904,
+      "sha256": "7f5b2d78c622c43644516c61fe8c3f5c135af7680bd9e644bf3e55389229e4f9",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/96fe0217be77d0fc00.jpeg"
+    },
+    {
+      "doi": "10.1063/5.0188905",
+      "provider": "aip",
+      "requested_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jap/135/8/10.1063_5.0188905/2/m_085105_1_5.0188905.figures.online.f2.jpeg?Expires=1792609781&Signature=N9lOZZjEw3Hb8Nps6Axa3Rx2XCDn5Cd3nRFmHNmb69-kNfIImMVIIQMiBDDk3JzaeqFDbC-KcftBKt4ruXysEpE29XxFnP6I-9a-0PxktljxWK4Wl9rcJ0QMTQNpGaVp0vkFN5Jk-EtD-4-O3KELt02qrDOJ00ZV5tTOIGY2llo7ySJx3VW-q67aH2icAMTj~FKkt7tiuCF355zRwW-Q0gWT7AWldU~Rxg1ziRJDzGIqP7aA4iGdDb-MFgPUwwkqReUQgEa6EwECobV~ZxKRf7R6zseyEYD5I~x48Jcz83rb5znkx1akHxOnHpZxcIZRt7~ivCZNQBRXdUfJG2mxZw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jap/135/8/10.1063_5.0188905/2/m_085105_1_5.0188905.figures.online.f2.jpeg?Expires=1792609781&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg",
+        "content-length": "31254",
+        "last-modified": "Thu, 14 Mar 2024 14:31:28 GMT",
+        "date": "Fri, 18 Sep 2026 08:40:06 GMT",
+        "etag": "\"be89ee314df88a021d599888c48cba11\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:03.986884+00:00",
+      "size": 31254,
+      "sha256": "11cb5a8a6fc1c8ff8cc31c5ec903d2d21e261ca5c75b5f73aed6c622b438e848",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/42efa7908c56789c9b.jpeg"
+    },
+    {
+      "doi": "10.1063/5.0188905",
+      "provider": "aip",
+      "requested_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jap/135/8/10.1063_5.0188905/2/m_085105_1_5.0188905.figures.online.f3.jpeg?Expires=1792609781&Signature=bzB2OkfaEamiW1KPoouMntQLfVuZgeC3dXSithcQ7R2VguLxUE2k3zb7D5-JBY6Vt8b8MKMWKuWOWZVZRaWN~2YcOqqY8fF8sh93FaNtdCJODiu-a5FJTCkbQZ54a9LgxuTtLWhJDu3svKY9c5Tg3JxOQFsrptTPCWmwWVseX6T9vKmiboZDo9nkqdv0-u0NHUS0~ALgB3A7OOKJHWa1kUGYsP6n~7Gql6Lf5vHghveQAIErsu5XCNhs~THJv3l1~DRvXkSLIw53SLVeMAcNjofXU5qGkPh5L3U85T5Pi6uFF60X-0wACpJRg1D9dQA7Zes~UWVlKEphF~uha~zf0A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jap/135/8/10.1063_5.0188905/2/m_085105_1_5.0188905.figures.online.f3.jpeg?Expires=1792609781&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg",
+        "content-length": "52994",
+        "date": "Thu, 17 Sep 2026 09:58:04 GMT",
+        "last-modified": "Thu, 14 Mar 2024 14:31:28 GMT",
+        "etag": "\"88f426b23dc2a608f0308ddfc407ab2a\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:04.841875+00:00",
+      "size": 52994,
+      "sha256": "3aa7228e7b104951d9b9a383be4802257699c223fde2d39993f6579b6b57716e",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/b8146d10747f73adf9.jpeg"
+    },
+    {
+      "doi": "10.1063/5.0188905",
+      "provider": "aip",
+      "requested_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jap/135/8/10.1063_5.0188905/2/m_085105_1_5.0188905.figures.online.f4.jpeg?Expires=1792609781&Signature=Hc-mgMdk3oIodScgIAtq8yzevAmj1348qRTNFFSkpFW7aKC9R9wHNzA~ufwjwrSDwiBtSfqf-X7iAFN47ZEzkfTgCib6QTFue20pSRZKSpRv56cZkKz8-lhBgaEzBM7KgrDEE4e7I1hEp8SR0sLkg6eXOVjydmCWy0S1kUXXNGKEgnQ~ZfTyaKNXD2T~VOZiicuL7Y1EJ6Bcmmr4o9NF5YnXxQVc3tqcbGs7cn1ciC6-N2ENVcUn4cAjVAIwk7IMbeoS7ot8kIOYMuamlBsEHXXLDdj9mw2EXysyzOhXk-PdjRfMU1opDVCXj6wPjyraws~NaBzhEfHioyCQi4Pg7A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jap/135/8/10.1063_5.0188905/2/m_085105_1_5.0188905.figures.online.f4.jpeg?Expires=1792609781&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg",
+        "content-length": "52603",
+        "date": "Fri, 18 Sep 2026 08:40:07 GMT",
+        "last-modified": "Thu, 14 Mar 2024 14:31:28 GMT",
+        "etag": "\"0fb070268c1662aa97f413baa795276c\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:05.185661+00:00",
+      "size": 52603,
+      "sha256": "a5702a85da734d4d9273a8933e1f690567da935b0e8911f09141d3fa3ae69d0d",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/775e9f38a83845e9de.jpeg"
+    },
+    {
+      "doi": "10.1063/5.0188905",
+      "provider": "aip",
+      "requested_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jap/135/8/10.1063_5.0188905/2/m_085105_1_5.0188905.figures.online.f5.jpeg?Expires=1792609781&Signature=VjTQ7~1gsK4WS5X6v-7ZOQeDvlDcxnUyKCr0vvx~Rh7IXf2cGyqwEKmfKeJsCwnsjajKO4pBwJxrWoAnzGzA3n0h1FL-qkdGH5z1613Y-8qg8RMHRP5dtipKOnhrvnZE-f5~tzWMqSNKbEUhxcYsSu-0I1qsTDcAnan6XjIPk4xzvNc86jbCGwnNi97n3EYtHIp7Uv1TGa8eto58TCHaj4g-zjLZDrryVm~~jBz5cuSLTnLzhlzFFX44Pios~HKSmhqmWVh-7Af7302aX6-62rryydtGzZWYp72PH8nzx5LZIwheRK1d-l9V4HeEXkPlctjFnrPonQs-Wl-gQsvBmw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jap/135/8/10.1063_5.0188905/2/m_085105_1_5.0188905.figures.online.f5.jpeg?Expires=1792609781&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg",
+        "content-length": "31089",
+        "last-modified": "Thu, 14 Mar 2024 14:31:28 GMT",
+        "date": "Fri, 18 Sep 2026 08:40:07 GMT",
+        "etag": "\"ab0e11a2e0230908a4a4c8cb31c39f85\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:06.157888+00:00",
+      "size": 31089,
+      "sha256": "4000f3495a35a3d140b217f61f9b7bd821f2b8a0fd1aadf33991852b19755a19",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/54c6fdbaf752e53c9f.jpeg"
+    },
+    {
+      "doi": "10.1063/5.0188905",
+      "provider": "aip",
+      "requested_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jap/135/8/10.1063_5.0188905/2/m_085105_1_5.0188905.figures.online.f6.jpeg?Expires=1792609781&Signature=1jqJ3M12JXvwQrjhQ5MGTrOzg6QqbDBQHLTWkqsUUFTyuwlnv8KVFoxyAKb-DFNag6REoooTAGZrTxC9RvofUNIsrE9CuSWt9cGQkbEPpdTwKM2RdmXG4uQDcqjcDincC3OXTaw04XrGB3b9emmvtfXq1mrzsccxV1x3C8F9ZISYlNpxsBEm4yob6nmWFqcW4V5R9TdVMXlV7dm8B85B3N1fx4p4CuVnP5rBIovbkQj36K1CJPICaP8w~sEWtLfNtCRcA1S7fXiWxlvLtJKdYwa-33SHVbj5D0ANnaEOfKnjj9gK7s-46n-0muXd7HI7xU~jTFC5-QeWsRCaPjQTTQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jap/135/8/10.1063_5.0188905/2/m_085105_1_5.0188905.figures.online.f6.jpeg?Expires=1792609781&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg",
+        "content-length": "42457",
+        "date": "Thu, 17 Sep 2026 09:58:04 GMT",
+        "last-modified": "Thu, 14 Mar 2024 14:31:29 GMT",
+        "etag": "\"06af0036f9dcf4580a8cd0a43c28c31f\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:06.474608+00:00",
+      "size": 42457,
+      "sha256": "fb7c6b4a5b079360a5943b6b188eb325f4a6bdf42d916414fa7fccd92ef4f380",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/190504293290dede2b.jpeg"
+    }
+  ]
+}

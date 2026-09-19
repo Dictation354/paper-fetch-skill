@@ -1,0 +1,22 @@
+{
+  "records": [
+    {
+      "body_file": "raw.html",
+      "requested_url": "https://academic.oup.com/bioinformatics/article/37/4/497/5909988",
+      "final_url": "https://academic.oup.com/bioinformatics/article/37/4/497/5909988",
+      "captured_at_utc": "2026-09-14T10:58:33.696102+00:00",
+      "timestamp_basis": "filesystem mtime immediately after page.content() was saved",
+      "size": 28460,
+      "sha256": "fc3f625219561170562ddda080a667aeaa086881a607d410cfacf14d9a179d0b",
+      "transport": "camoufox",
+      "capture_kind": "browser_rendered_dom",
+      "status_code": null,
+      "response_headers": {},
+      "title": "Just a moment...",
+      "observed_reason": "cloudflare_challenge",
+      "scope": "Unmodified page.content() after DOMContentLoaded and 12-second observation. Not raw HTTP response bytes or complete provider readiness/fallback evidence; HTTP envelope unavailable.",
+      "derived_from": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/acquisition/browser-observed.dom.html",
+      "replay_scope": "Original September 14 DOM promoted only after current provider rejection, PDF candidate selection and service degradation replay. Browser/bootstrap and PDF failures are injected; this is not a new live rejection."
+    }
+  ]
+}

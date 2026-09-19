@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..models.markdown import replace_markdown_image_url
+
 import os
 import re
 import urllib.parse
@@ -11,7 +13,7 @@ from collections.abc import Callable, Mapping
 
 from ..artifacts import ArtifactStore
 from ..extraction.html.asset_fields import MARKDOWN_ASSET_REFERENCE_FIELDS
-from ..markdown.images import render_markdown_image
+from ..markdown.images import render_markdown_image, short_image_alt
 from ..models import ArticleModel, FetchEnvelope, OutputMode, RenderOptions
 from ..models.markdown import (
     image_reference_basename,
@@ -203,7 +205,7 @@ def _render_asset_markdown_image(
     title: str = "",
 ) -> str:
     kind = _asset_field(asset, "kind") or ""
-    heading = _asset_field(asset, "heading") or fallback_alt
+    heading = short_image_alt(kind, fallback_alt, _asset_field(asset, "heading"))
     destination = f'{relative_path} "{title}"' if title else relative_path
     return render_markdown_image(kind, heading, destination)
 
@@ -215,9 +217,13 @@ def rewrite_markdown_asset_links(
     target_path: Path,
     render: RenderOptions,
 ) -> str:
-    if not markdown or envelope.article is None:
+    article = envelope.article
+    if not markdown or article is None:
         return markdown
 
+    from ..acquisition import is_pdf_article
+
+    preserve_pdf = is_pdf_article(envelope.article)
     local_assets_by_basename = _local_asset_lookup_by_basename(
         envelope.article, target_path=target_path
     )
@@ -254,6 +260,8 @@ def rewrite_markdown_asset_links(
                 if match_value is not None:
                     relative_path = match_value[0]
         if relative_path is None:
+            if preserve_pdf:
+                return match.group(0)
             remote_path = _publisher_root_relative_asset_link(
                 destination,
                 article=envelope.article,
@@ -265,6 +273,29 @@ def rewrite_markdown_asset_links(
 
     def rewrite_image(image: Any) -> str:
         destination = normalize_text(image.url).strip("<>")
+        if article.source == "plos_xml" and is_http_url(destination):
+            # PLOS object identity lives in the query (e001, e002, ...).
+            # A single downloaded /article/file must not claim other objects
+            # through the shared path or basename fallback below.
+            matches = {}
+            for asset in article.assets:
+                if not any(
+                    _asset_field(asset, field) == destination
+                    for field in MARKDOWN_ASSET_REFERENCE_FIELDS
+                ):
+                    continue
+                local_path = relative_asset_link(asset.path, target_path=target_path)
+                if local_path is not None:
+                    matches[local_path] = asset
+            if len(matches) != 1:
+                return image.text
+            local_path, asset = next(iter(matches.items()))
+            return _render_asset_markdown_image(
+                asset,
+                fallback_alt=image.alt,
+                relative_path=local_path,
+                title=image.title,
+            )
         destination_candidates = image_reference_candidates(destination)
         relative_path: str | None = None
         matched_asset: Any | None = None
@@ -290,15 +321,17 @@ def rewrite_markdown_asset_links(
         if relative_path is None:
             relative_path = relative_asset_link(destination, target_path=target_path)
         if relative_path is None:
+            if preserve_pdf:
+                return image.text
             remote_path = _publisher_root_relative_asset_link(
                 destination,
                 article=envelope.article,
             )
             if remote_path is not None:
-                return image.text.replace(destination, remote_path, 1)
+                return replace_markdown_image_url(image, remote_path)
             return image.text
-        if matched_asset is None:
-            return image.text.replace(destination, relative_path, 1)
+        if matched_asset is None or preserve_pdf:
+            return replace_markdown_image_url(image, relative_path)
         return _render_asset_markdown_image(
             matched_asset,
             fallback_alt=image.alt,

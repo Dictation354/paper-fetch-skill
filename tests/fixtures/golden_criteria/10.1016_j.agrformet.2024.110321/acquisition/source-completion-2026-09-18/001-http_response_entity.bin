@@ -1,0 +1,459 @@
+{"abstracts-retrieval-response": {
+    "affiliation": [
+        {
+            "affiliation-city": "Beijing",
+            "@id": "60013551",
+            "affilname": "China Agricultural University",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551",
+            "affiliation-country": "China"
+        },
+        {
+            "affiliation-city": "Denton",
+            "@id": "60024438",
+            "affilname": "University of North Texas",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60024438",
+            "affiliation-country": "United States"
+        },
+        {
+            "affiliation-city": "Beijing",
+            "@id": "60046504",
+            "affilname": "China Meteorological Administration",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504",
+            "affiliation-country": "China"
+        },
+        {
+            "affiliation-city": "Beijing",
+            "@id": "131958748",
+            "affilname": "Haidian District Meteorological Bureau",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/131958748",
+            "affiliation-country": "China"
+        }
+    ],
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-85209713693",
+        "dc:description": "In the summer of 2022, a record-breaking heatwave and drought event occurred in the Yangtze River (YR) Basin of China, causing great damage to the society and ecosystem. However, the role of land-atmosphere (LA) interactions in driving and reinforcing this event has not been fully studied. In this study, using air temperature, soil moisture (SM), surface sensible heat fluxes, surface latent heat fluxes and radiation fluxes data from ERA5, we analyze the process of this event and reveal the contribution of the LA feedbacks. The results indicate that during the 2022 YR Basin heatwave and drought event, the regional average maximum air temperature and SM reached unprecedented levels of 2.7 standard deviations (SDs) and −3.5 SDs, respectively, compared to the climatology from 1980 to 2021. In August 2022, SM rapidly declined, pushing the region into a rare \"dry\" state. The dry soil increased the sensitivity of daily maximum air temperature to SM, intensifying the occurrence of heatwaves in the area. Simultaneously, increased downward solar radiation reached surface and most of that converted to sensible heat fluxes due to low soil moisture limitations leading to elevated air temperatures. While similar events have been reported multiple times in regions like Europe and western North America, their occurrence in the \"moist\" region of the YR Basin of China is exceptionally rare, which suggests an increasing likelihood of such extreme events in this region. Land-atmosphere interactions play an increasingly crucial role in exacerbating extreme conditions, and therefore, more studies such as this are needed for improving predictability of extreme events on a sub-seasonal time scale.",
+        "prism:coverDate": "2025-02-15",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/85209713693",
+        "subtypeDescription": "Article",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Xiao",
+            "preferred-name": {
+                "ce:given-name": "Xiao",
+                "ce:initials": "X.",
+                "ce:surname": "Chen",
+                "ce:indexed-name": "Chen X."
+            },
+            "@seq": "1",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Chen",
+            "@auid": "56979648300",
+            "author-url": "https://api.elsevier.com/content/author/author_id/56979648300",
+            "ce:indexed-name": "Chen X."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/85209713693"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85209713693&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=85209713693&origin=inward"
+            }
+        ],
+        "prism:publicationName": "Agricultural and Forest Meteorology",
+        "source-id": "12067",
+        "pii": "S0168192324004349",
+        "citedby-count": "38",
+        "prism:volume": "361",
+        "subtype": "ar",
+        "dc:title": "Land-atmosphere feedback exacerbated the mega heatwave and drought over the Yangtze River Basin of China during summer 2022",
+        "openaccess": "0",
+        "openaccessFlag": "false",
+        "prism:doi": "10.1016/j.agrformet.2024.110321",
+        "prism:issn": "01681923",
+        "publishercopyright": "© 2024 Elsevier B.V.",
+        "article-number": "110321",
+        "dc:identifier": "SCOPUS_ID:85209713693",
+        "dc:publisher": "Elsevier B.V."
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "Xiao",
+            "preferred-name": {
+                "ce:given-name": "Xiao",
+                "ce:initials": "X.",
+                "ce:surname": "Chen",
+                "ce:indexed-name": "Chen X."
+            },
+            "@seq": "1",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Chen",
+            "@auid": "56979648300",
+            "author-url": "https://api.elsevier.com/content/author/author_id/56979648300",
+            "ce:indexed-name": "Chen X."
+        },
+        {
+            "ce:given-name": "Jialin",
+            "preferred-name": {
+                "ce:given-name": "Jialin",
+                "ce:initials": "J.",
+                "ce:surname": "Wang",
+                "ce:indexed-name": "Wang J."
+            },
+            "@seq": "2",
+            "ce:initials": "J.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                },
+                {
+                    "@id": "131958748",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/131958748"
+                }
+            ],
+            "ce:surname": "Wang",
+            "@auid": "14635224900",
+            "author-url": "https://api.elsevier.com/content/author/author_id/14635224900",
+            "ce:indexed-name": "Wang J."
+        },
+        {
+            "ce:given-name": "Feifei",
+            "preferred-name": {
+                "ce:given-name": "Feifei",
+                "ce:initials": "F.",
+                "ce:surname": "Pan",
+                "ce:indexed-name": "Pan F."
+            },
+            "@seq": "3",
+            "ce:initials": "F.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60024438",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60024438"
+            },
+            "ce:surname": "Pan",
+            "@auid": "7201487195",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7201487195",
+            "ce:indexed-name": "Pan F."
+        },
+        {
+            "ce:given-name": "Yu",
+            "preferred-name": {
+                "ce:given-name": "Yu",
+                "ce:initials": "Y.",
+                "ce:surname": "Song",
+                "ce:indexed-name": "Song Y."
+            },
+            "@seq": "4",
+            "ce:initials": "Y.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Song",
+            "@auid": "57217728656",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57217728656",
+            "ce:indexed-name": "Song Y."
+        },
+        {
+            "ce:given-name": "Ju",
+            "preferred-name": {
+                "ce:given-name": "Ju",
+                "ce:initials": "J.",
+                "ce:surname": "Liang",
+                "ce:indexed-name": "Liang J."
+            },
+            "@seq": "5",
+            "ce:initials": "J.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Liang",
+            "@auid": "57194266072",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57194266072",
+            "ce:indexed-name": "Liang J."
+        },
+        {
+            "ce:given-name": "Na",
+            "preferred-name": {
+                "ce:given-name": "Na",
+                "ce:initials": "N.",
+                "ce:surname": "Huang",
+                "ce:indexed-name": "Huang N."
+            },
+            "@seq": "6",
+            "ce:initials": "N.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Huang",
+            "@auid": "57211789855",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57211789855",
+            "ce:indexed-name": "Huang N."
+        },
+        {
+            "ce:given-name": "Kang",
+            "preferred-name": {
+                "ce:given-name": "Kang",
+                "ce:initials": "K.",
+                "ce:surname": "Jiang",
+                "ce:indexed-name": "Jiang K."
+            },
+            "@seq": "7",
+            "ce:initials": "K.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Jiang",
+            "@auid": "57213995930",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57213995930",
+            "ce:indexed-name": "Jiang K."
+        },
+        {
+            "ce:given-name": "Riping",
+            "preferred-name": {
+                "ce:given-name": "Riping",
+                "ce:initials": "R.",
+                "ce:surname": "Gao",
+                "ce:indexed-name": "Gao R."
+            },
+            "@seq": "8",
+            "ce:initials": "R.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Gao",
+            "@auid": "57909402900",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57909402900",
+            "ce:indexed-name": "Gao R."
+        },
+        {
+            "ce:given-name": "Jingyu",
+            "preferred-name": {
+                "ce:given-name": "Jingyu",
+                "ce:initials": "J.",
+                "ce:surname": "Men",
+                "ce:indexed-name": "Men J."
+            },
+            "@seq": "9",
+            "ce:initials": "J.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Men",
+            "@auid": "57694882800",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57694882800",
+            "ce:indexed-name": "Men J."
+        },
+        {
+            "ce:given-name": "Pengshuai",
+            "preferred-name": {
+                "ce:given-name": "Pengshuai",
+                "ce:initials": "P.",
+                "ce:surname": "Bi",
+                "ce:indexed-name": "Bi P."
+            },
+            "@seq": "10",
+            "ce:initials": "P.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Bi",
+            "@auid": "57282850200",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57282850200",
+            "ce:indexed-name": "Bi P."
+        },
+        {
+            "ce:given-name": "Fangxiao",
+            "preferred-name": {
+                "ce:given-name": "Fangxiao",
+                "ce:initials": "F.",
+                "ce:surname": "Zhang",
+                "ce:indexed-name": "Zhang F."
+            },
+            "@seq": "11",
+            "ce:initials": "F.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Zhang",
+            "@auid": "59418575100",
+            "author-url": "https://api.elsevier.com/content/author/author_id/59418575100",
+            "ce:indexed-name": "Zhang F."
+        },
+        {
+            "ce:given-name": "Zhanrui",
+            "preferred-name": {
+                "ce:given-name": "Zhanrui",
+                "ce:initials": "Z.",
+                "ce:surname": "Huang",
+                "ce:indexed-name": "Huang Z."
+            },
+            "@seq": "12",
+            "ce:initials": "Z.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Huang",
+            "@auid": "59417932800",
+            "author-url": "https://api.elsevier.com/content/author/author_id/59417932800",
+            "ce:indexed-name": "Huang Z."
+        },
+        {
+            "ce:given-name": "Binxiang",
+            "preferred-name": {
+                "ce:given-name": "Binxiang",
+                "ce:initials": "B.",
+                "ce:surname": "Huang",
+                "ce:indexed-name": "Huang B."
+            },
+            "@seq": "13",
+            "ce:initials": "B.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Huang",
+            "@auid": "7403682121",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7403682121",
+            "ce:indexed-name": "Huang B."
+        },
+        {
+            "ce:given-name": "Zhihua",
+            "preferred-name": {
+                "ce:given-name": "Zhihua",
+                "ce:initials": "Z.",
+                "ce:surname": "Pan",
+                "ce:indexed-name": "Pan Z."
+            },
+            "@seq": "14",
+            "ce:initials": "Z.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60013551",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60013551"
+                },
+                {
+                    "@id": "60046504",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60046504"
+                }
+            ],
+            "ce:surname": "Pan",
+            "@auid": "8251952200",
+            "author-url": "https://api.elsevier.com/content/author/author_id/8251952200",
+            "ce:indexed-name": "Pan Z."
+        }
+    ]}
+}}

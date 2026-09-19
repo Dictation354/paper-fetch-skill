@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall
+
 import contextlib
 import time
 from typing import Any
@@ -340,6 +342,7 @@ def fetch_ieee_browser_html_payload(
             ),
         )
     except BrowserRuntimeFailure as exc:
+        propagate_paywall(exc)
         raise _browser_failure_as_provider_failure(
             exc, provider_name=provider_name
         ) from exc

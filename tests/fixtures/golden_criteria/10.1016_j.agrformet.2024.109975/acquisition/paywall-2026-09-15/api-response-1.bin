@@ -1,0 +1,247 @@
+{"abstracts-retrieval-response": {
+    "affiliation": [
+        {
+            "affiliation-city": "Beijing",
+            "@id": "60019499",
+            "affilname": "Chinese Academy of Sciences",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60019499",
+            "affiliation-country": "China"
+        },
+        {
+            "affiliation-city": "Charlottesville",
+            "@id": "60021918",
+            "affilname": "University of Virginia",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60021918",
+            "affiliation-country": "United States"
+        },
+        {
+            "affiliation-city": "Beijing",
+            "@id": "60023237",
+            "affilname": "Beijing Normal University",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60023237",
+            "affiliation-country": "China"
+        },
+        {
+            "affiliation-city": "Logan",
+            "@id": "60031706",
+            "affilname": "Utah State University",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60031706",
+            "affiliation-country": "United States"
+        },
+        {
+            "affiliation-city": "Shijiazhuang",
+            "@id": "60002786",
+            "affilname": "Hebei Normal University",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60002786",
+            "affiliation-country": "China"
+        },
+        {
+            "affiliation-city": "Wuhan",
+            "@id": "60006940",
+            "affilname": "Wuhan Botanical Garden",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60006940",
+            "affiliation-country": "China"
+        }
+    ],
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-85188548998",
+        "dc:description": "Accurate simulation of the onset of spring is crucial for predicting the photosynthetic productivity of forest ecosystems. Nonetheless, the potential of phenology simulations on predictions of forest gross primary productivity (GPP) remains poorly understood, with previous studies generally focused on predicting phenology dates themselves or on limited scales. Here, we constructed a framework through the critical process of leaf growth to couple a terrestrial biosphere model\u2014FORCCHN2 with five widely used phenology models, including one-phase (involving heat forcing), two-phase (considering chilling demand), and multi-phase models (integrating photoperiod effects) through the critical process of leaf growth. We evaluated the GPP performance from the multiple forest biomes in 74 eddy covariance (EC) sites and compared the total trends to satellite observations across the northern hemisphere forests. The predictions of the five models could reproduce 62.41\u201367.24 % variations of the GPP observations in all EC sites. In the deciduous broadleaf forest sites, we found the two-phase and multi-phase coupled models performed better than the one-phase coupled model. Chilling may play an essential role in controlling photosynthetic activity in deciduous broadleaf forests. Moreover, the multi-phase coupled model integrated photoperiod effects performed best at capturing GPP changes of the whole northern hemisphere forests. The predictions also showed the GPP in the northern hemisphere ranged from 21.68 to 26.06 Pg C year−1, and the total GPP showed an increasing trend. This study provides local and regional available evidence for the impact of phenology on photosynthesis with climate warming. The results highlight the necessity for enhancing understanding of the phenology factors on GPP and integrating the appropriate phenology representation to improve predictions of photosynthetic productivity for forests, especially in prediction to large scales and long-term trends.",
+        "prism:coverDate": "2024-05-01",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/85188548998",
+        "subtypeDescription": "Article",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Jing",
+            "preferred-name": {
+                "ce:given-name": "Jing",
+                "ce:initials": "J.",
+                "ce:surname": "Fang",
+                "ce:indexed-name": "Fang J."
+            },
+            "@seq": "1",
+            "ce:initials": "J.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60006940",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60006940"
+                },
+                {
+                    "@id": "60019499",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60019499"
+                }
+            ],
+            "ce:surname": "Fang",
+            "@auid": "57199463999",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57199463999",
+            "ce:indexed-name": "Fang J."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/85188548998"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85188548998&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=85188548998&origin=inward"
+            }
+        ],
+        "prism:publicationName": "Agricultural and Forest Meteorology",
+        "source-id": "12067",
+        "pii": "S016819232400090X",
+        "citedby-count": "10",
+        "prism:volume": "350",
+        "subtype": "ar",
+        "dc:title": "Optimal representation of spring phenology on photosynthetic productivity across the northern hemisphere forests",
+        "openaccess": "0",
+        "openaccessFlag": "false",
+        "prism:doi": "10.1016/j.agrformet.2024.109975",
+        "prism:issn": "01681923",
+        "publishercopyright": "© 2024 Elsevier B.V.",
+        "article-number": "109975",
+        "dc:identifier": "SCOPUS_ID:85188548998",
+        "dc:publisher": "Elsevier B.V."
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "Jing",
+            "preferred-name": {
+                "ce:given-name": "Jing",
+                "ce:initials": "J.",
+                "ce:surname": "Fang",
+                "ce:indexed-name": "Fang J."
+            },
+            "@seq": "1",
+            "ce:initials": "J.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60006940",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60006940"
+                },
+                {
+                    "@id": "60019499",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60019499"
+                }
+            ],
+            "ce:surname": "Fang",
+            "@auid": "57199463999",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57199463999",
+            "ce:indexed-name": "Fang J."
+        },
+        {
+            "ce:given-name": "Herman H.",
+            "preferred-name": {
+                "ce:given-name": "Herman H.",
+                "ce:initials": "H.H.",
+                "ce:surname": "Shugart",
+                "ce:indexed-name": "Shugart H.H."
+            },
+            "@seq": "2",
+            "ce:initials": "H.H.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60021918",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60021918"
+            },
+            "ce:surname": "Shugart",
+            "@auid": "7006015880",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7006015880",
+            "ce:indexed-name": "Shugart H.H."
+        },
+        {
+            "ce:given-name": "Leibin",
+            "preferred-name": {
+                "ce:given-name": "Leibin",
+                "ce:initials": "L.",
+                "ce:surname": "Wang",
+                "ce:indexed-name": "Wang L."
+            },
+            "@seq": "3",
+            "ce:initials": "L.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60002786",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60002786"
+            },
+            "ce:surname": "Wang",
+            "@auid": "57194338979",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57194338979",
+            "ce:indexed-name": "Wang L."
+        },
+        {
+            "ce:given-name": "James A.",
+            "preferred-name": {
+                "ce:given-name": "James A.",
+                "ce:initials": "J.A.",
+                "ce:surname": "Lutz",
+                "ce:indexed-name": "Lutz J.A."
+            },
+            "@seq": "4",
+            "ce:initials": "J.A.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60031706",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60031706"
+            },
+            "ce:surname": "Lutz",
+            "@auid": "57220930167",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57220930167",
+            "ce:indexed-name": "Lutz J.A."
+        },
+        {
+            "ce:given-name": "Xiaodong",
+            "preferred-name": {
+                "ce:given-name": "Xiaodong",
+                "ce:initials": "X.",
+                "ce:surname": "Yan",
+                "ce:indexed-name": "Yan X."
+            },
+            "@seq": "5",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60023237",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60023237"
+            },
+            "ce:surname": "Yan",
+            "@auid": "7403595848",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7403595848",
+            "ce:indexed-name": "Yan X."
+        },
+        {
+            "ce:given-name": "Feng",
+            "preferred-name": {
+                "ce:given-name": "Feng",
+                "ce:initials": "F.",
+                "ce:surname": "Liu",
+                "ce:indexed-name": "Liu F."
+            },
+            "@seq": "6",
+            "ce:initials": "F.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60006940",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60006940"
+                },
+                {
+                    "@id": "60019499",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60019499"
+                }
+            ],
+            "ce:surname": "Liu",
+            "@auid": "57199430776",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57199430776",
+            "ce:indexed-name": "Liu F."
+        }
+    ]}
+}}

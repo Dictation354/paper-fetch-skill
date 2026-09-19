@@ -1,21 +1,3413 @@
 {
-  "counts": {
-    "abstract_sections": 1,
-    "body_sections": 33,
-    "figures": 0,
-    "references": 121,
-    "sections": 34,
-    "tables": 0
-  },
-  "expected_content_kind": "fulltext",
   "has": {
-    "abstract": true,
+    "title": true,
     "authors": true,
+    "abstract": true,
     "body": true,
-    "code_availability": false,
-    "data_availability": false,
     "figures": false,
     "references": true,
-    "title": true
-  }
+    "data_availability": true,
+    "code_availability": false
+  },
+  "counts": {
+    "sections": 36,
+    "abstract_sections": 1,
+    "body_sections": 34,
+    "figures": 0,
+    "tables": 0,
+    "references": 121
+  },
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.3390_s23010001",
+    "provider": "mdpi",
+    "doi": "10.3390/s23010001",
+    "original": "tests/fixtures/golden_criteria/10.3390_s23010001/original.html",
+    "sha256": "a58d4c22ec97d2d787854222b47770bca33ae442cbe6cadd04ee9b1c233deadd",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 4,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 121,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 190,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 9,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 973,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 1,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 6,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 454,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": "tests/fixtures/golden_criteria/10.3390_s23010001/acquisition/provenance.json",
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 6,
+      "tex_checked": 0,
+      "mathml_checked": 6,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.3390_s23010001/original.html",
+      "sha256": "a58d4c22ec97d2d787854222b47770bca33ae442cbe6cadd04ee9b1c233deadd",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "68e17fe62a491bab27f9bd31addf7bcfcb0cc58100ad388a797318c156ae89ed",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1
+              ]
+            ],
+            [
+              1,
+              [
+                2,
+                3
+              ]
+            ],
+            [
+              2,
+              [
+                4,
+                5
+              ]
+            ],
+            [
+              3,
+              [
+                6,
+                7
+              ]
+            ],
+            [
+              4,
+              [
+                8,
+                9
+              ]
+            ],
+            [
+              5,
+              [
+                10,
+                11
+              ]
+            ],
+            [
+              6,
+              [
+                12,
+                13
+              ]
+            ],
+            [
+              7,
+              [
+                14,
+                15
+              ]
+            ],
+            [
+              8,
+              [
+                16,
+                17
+              ]
+            ],
+            [
+              9,
+              [
+                18,
+                19
+              ]
+            ],
+            [
+              10,
+              [
+                20,
+                21
+              ]
+            ],
+            [
+              11,
+              [
+                22,
+                23
+              ]
+            ],
+            [
+              12,
+              [
+                24,
+                25
+              ]
+            ],
+            [
+              13,
+              [
+                26,
+                27
+              ]
+            ],
+            [
+              14,
+              [
+                28,
+                29
+              ]
+            ],
+            [
+              15,
+              [
+                30,
+                31
+              ]
+            ],
+            [
+              16,
+              [
+                32,
+                33
+              ]
+            ],
+            [
+              17,
+              [
+                34,
+                35
+              ]
+            ],
+            [
+              18,
+              [
+                36,
+                37
+              ]
+            ],
+            [
+              19,
+              [
+                38,
+                39
+              ]
+            ],
+            [
+              20,
+              [
+                40,
+                41
+              ]
+            ],
+            [
+              21,
+              [
+                42,
+                43
+              ]
+            ],
+            [
+              22,
+              [
+                44,
+                45
+              ]
+            ],
+            [
+              23,
+              [
+                46,
+                47
+              ]
+            ],
+            [
+              24,
+              [
+                48,
+                49
+              ]
+            ],
+            [
+              25,
+              [
+                50,
+                51
+              ]
+            ],
+            [
+              26,
+              [
+                52,
+                53
+              ]
+            ],
+            [
+              27,
+              [
+                54,
+                55
+              ]
+            ],
+            [
+              28,
+              [
+                56,
+                57
+              ]
+            ],
+            [
+              29,
+              [
+                58,
+                59
+              ]
+            ],
+            [
+              30,
+              [
+                60,
+                61
+              ]
+            ],
+            [
+              31,
+              [
+                62,
+                63
+              ]
+            ],
+            [
+              32,
+              [
+                64,
+                65
+              ]
+            ],
+            [
+              33,
+              [
+                66,
+                67
+              ]
+            ],
+            [
+              34,
+              [
+                68,
+                69
+              ]
+            ],
+            [
+              35,
+              [
+                70,
+                71
+              ]
+            ],
+            [
+              36,
+              [
+                72,
+                73
+              ]
+            ],
+            [
+              37,
+              [
+                74,
+                75
+              ]
+            ],
+            [
+              38,
+              [
+                76,
+                77
+              ]
+            ],
+            [
+              39,
+              [
+                78,
+                79
+              ]
+            ],
+            [
+              40,
+              [
+                80,
+                81
+              ]
+            ],
+            [
+              41,
+              [
+                82,
+                83
+              ]
+            ],
+            [
+              42,
+              [
+                84,
+                85
+              ]
+            ],
+            [
+              43,
+              [
+                86,
+                87
+              ]
+            ],
+            [
+              44,
+              [
+                88,
+                89
+              ]
+            ],
+            [
+              45,
+              [
+                90,
+                91
+              ]
+            ],
+            [
+              46,
+              [
+                92,
+                93
+              ]
+            ],
+            [
+              47,
+              [
+                94,
+                95
+              ]
+            ],
+            [
+              48,
+              [
+                96,
+                97
+              ]
+            ],
+            [
+              49,
+              [
+                98,
+                99
+              ]
+            ],
+            [
+              50,
+              [
+                100,
+                101
+              ]
+            ],
+            [
+              51,
+              [
+                102,
+                103
+              ]
+            ],
+            [
+              52,
+              [
+                104,
+                105
+              ]
+            ],
+            [
+              53,
+              [
+                106,
+                107
+              ]
+            ],
+            [
+              54,
+              [
+                108,
+                109
+              ]
+            ],
+            [
+              55,
+              [
+                110,
+                111
+              ]
+            ],
+            [
+              56,
+              [
+                112,
+                113
+              ]
+            ],
+            [
+              57,
+              [
+                114,
+                115
+              ]
+            ],
+            [
+              58,
+              [
+                116,
+                117
+              ]
+            ],
+            [
+              59,
+              [
+                118,
+                119
+              ]
+            ],
+            [
+              60,
+              [
+                120,
+                121
+              ]
+            ],
+            [
+              61,
+              [
+                122,
+                123
+              ]
+            ],
+            [
+              62,
+              [
+                124,
+                125
+              ]
+            ],
+            [
+              63,
+              [
+                126,
+                127
+              ]
+            ],
+            [
+              64,
+              [
+                128,
+                129
+              ]
+            ],
+            [
+              65,
+              [
+                130,
+                131
+              ]
+            ],
+            [
+              66,
+              [
+                132,
+                133
+              ]
+            ],
+            [
+              67,
+              [
+                134,
+                135
+              ]
+            ],
+            [
+              68,
+              [
+                136,
+                137
+              ]
+            ],
+            [
+              69,
+              [
+                138,
+                139
+              ]
+            ],
+            [
+              70,
+              [
+                140,
+                141
+              ]
+            ],
+            [
+              71,
+              [
+                142,
+                143
+              ]
+            ],
+            [
+              72,
+              [
+                144,
+                145
+              ]
+            ],
+            [
+              73,
+              [
+                146,
+                147
+              ]
+            ],
+            [
+              74,
+              [
+                148,
+                149
+              ]
+            ],
+            [
+              75,
+              [
+                150,
+                151
+              ]
+            ],
+            [
+              76,
+              [
+                152,
+                153
+              ]
+            ],
+            [
+              77,
+              [
+                154,
+                155
+              ]
+            ],
+            [
+              78,
+              [
+                156,
+                157
+              ]
+            ],
+            [
+              79,
+              [
+                158,
+                159
+              ]
+            ]
+          ],
+          "cells": [
+            "AC",
+            "Air Conditioning Systems",
+            "ACODAT",
+            "Autonomous Cycle of Data Analysis",
+            "AHU",
+            "Air Handling Units",
+            "ANN",
+            "Artificial Neural Network",
+            "ARM",
+            "Association Rule Mining",
+            "ARX",
+            "autoregressive",
+            "ASHRAE",
+            "American Society of Heating, Refrigerating and Air-Conditioning Engineers",
+            "BEMS",
+            "Building Energy Management System",
+            "BPNN",
+            "Back Propagation Neural Network",
+            "BRT",
+            "Boosted Regression Tree",
+            "BT",
+            "Binary Tree",
+            "CART",
+            "Classification and Regression Tree",
+            "CC-RF",
+            "Classifier Chains-Random Forest",
+            "CF",
+            "Cascade Forest",
+            "CNN",
+            "Convolutional Neural Network",
+            "CPA",
+            "Change Point Analysis",
+            "CWGAN",
+            "Conditional Wasserstein Generative Adversarial Network",
+            "DAG",
+            "Directed Acyclic Graph",
+            "DANN",
+            "Domain Adversarial Neural Network",
+            "DBN",
+            "Diagnostic Bayesian Network",
+            "DL",
+            "Deep Learning",
+            "DMG",
+            "Diagnostic Multi-Query Graph",
+            "DRNN",
+            "Deep Recurrent Neural Networks",
+            "DT",
+            "Decision Tree",
+            "DTO-DRNN",
+            "Deep Transition Output-Deep Recurrent Neural Networks",
+            "FCU",
+            "Fan Coil Units",
+            "FDD",
+            "Fault Detection and Diagnosis",
+            "FP",
+            "Frequent Pattern",
+            "GAN",
+            "Generative Adversarial Network",
+            "GMM",
+            "Gaussian Mixture Model",
+            "GPR",
+            "Gaussian Process Regression",
+            "Grad-CAM",
+            "Gradient-weighted Class Activation Mapping",
+            "HMM",
+            "Hidden Markov Model",
+            "HRF",
+            "Hybrid Random Forest",
+            "HVAC",
+            "Heating, Ventilation, and Air Conditioning",
+            "IEA",
+            "International Energy Agency",
+            "IF",
+            "Isolation Forest",
+            "Isomap",
+            "Isometric Feature Mapping",
+            "KNN",
+            "K-Nearest Neighbors",
+            "KPCA",
+            "Kernel Principal Component Analysis",
+            "LLE",
+            "Locally Linear Embedding",
+            "LMC-SVM",
+            "Linear Linear Multiclass Support Vector Machine",
+            "LR",
+            "Logistic Regression",
+            "LSM",
+            "Least-Squares Method",
+            "LSTM-SVDD",
+            "Long Short-Term Memory",
+            "MCNN",
+            "Multiscale Convolutional Neural Networks",
+            "MC-SVM",
+            "Multiclass Support Vector Machine",
+            "ML",
+            "Machine Learning",
+            "MLP",
+            "Multi-Layer Perceptron",
+            "MOC-RCE",
+            "Multi-Objective Clustering-Rapid Centroid Estimation",
+            "MOPSO",
+            "Multiobjective Particle Swarm Optimization",
+            "MPC",
+            "Model Predictive Control",
+            "MSIPCA",
+            "Multiscale Interval Principal Component Analysis",
+            "MSPCA",
+            "Multiscale PCA",
+            "OAA",
+            "One-Against-All",
+            "OAO",
+            "One-Against-One",
+            "OC-SVM",
+            "One-class Support Vector Machine",
+            "PCA",
+            "Principal Component Analysis",
+            "RACNN",
+            "Rule and Convolutional Neural Networks",
+            "RACNN",
+            "Rule-based method and Convolutional Neural Network",
+            "RCM",
+            "Reliability-Centered Maintenance",
+            "RCU",
+            "Refrigeration Compressor Rack Unit",
+            "RF",
+            "Random Forests",
+            "RNN",
+            "Recurrent Neural Networks",
+            "RTU",
+            "Rooftop Units",
+            "SAE",
+            "Supervised Auto-Encoder",
+            "SFA",
+            "Slow Feature Analysis",
+            "SLR",
+            "Systematic Literature Review",
+            "SPE",
+            "Square Prediction Error Statistics",
+            "SSIM",
+            "Structural Similarity Index Measure",
+            "SVDD",
+            "Support Vector Data Description",
+            "SVM",
+            "Support Vector Machine",
+            "SVR",
+            "Support Vector Regression",
+            "TARM",
+            "Temporal Association Rules Mining",
+            "TBKSFA",
+            "Three-way Data Based Kernel Slow Feature Analysis",
+            "TCN",
+            "Temporal Convolutional Network",
+            "t-SNE",
+            "t-distributed Stochastic Neighbor Embedding",
+            "VRF/VRV",
+            "Variable Refrigerant Flow / Volume Systems",
+            "WGAN",
+            "Wasserstein Generative Adversarial Network",
+            "XGBoost",
+            "Extreme Gradient Boosting"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "73427206be92e88ec3d8a5e22018b7b75d87261850fda2289a218bbc70472e34",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            [
+              2,
+              [
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              3,
+              [
+                12,
+                13,
+                14,
+                15
+              ]
+            ],
+            [
+              4,
+              [
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              5,
+              [
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              6,
+              [
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              7,
+              [
+                28,
+                29,
+                30,
+                31
+              ]
+            ]
+          ],
+          "cells": [
+            "Target (sub)System",
+            "Software",
+            "Year",
+            "Ref.",
+            "Heat pumps and chillers",
+            "EnergyPlus",
+            "2022",
+            "[ 30 ]",
+            "AHU",
+            "TRNSYS",
+            "2020",
+            "[ 25 ]",
+            "AHU",
+            "SIMBAD",
+            "2020",
+            "[ 29 ]",
+            "AC systems",
+            "EnergyPlus, MATLAB, OpenStudio",
+            "2020",
+            "[ 28 ]",
+            "AHU",
+            "EnergyPlus, OpenModelica",
+            "2019",
+            "[ 26 ]",
+            "FCU",
+            "MATLAB",
+            "2019",
+            "[ 27 ]",
+            "Central water system",
+            "N/A",
+            "2018",
+            "[ 31 ]"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "db678a956237e9d504d16068a1e3f1de0b03a464822532b47a87c7e92199256a",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            [
+              2,
+              [
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              3,
+              [
+                12,
+                13,
+                14,
+                15
+              ]
+            ],
+            [
+              4,
+              [
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              5,
+              [
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              6,
+              [
+                24,
+                25,
+                26,
+                27
+              ]
+            ]
+          ],
+          "cells": [
+            "Target (sub)System",
+            "Technique",
+            "Year",
+            "Ref.",
+            "AC systems",
+            "rule based",
+            "2021",
+            "[ 35 ]",
+            "AHU",
+            "rule based",
+            "2021",
+            "[ 33 ]",
+            "AHU",
+            "rule based",
+            "2021",
+            "[ 32 ]",
+            "AC systems",
+            "rule based",
+            "2021",
+            "[ 37 ]",
+            "AHU",
+            "rule based",
+            "2020",
+            "[ 34 ]",
+            "AHU",
+            "rule based",
+            "2018",
+            "[ 36 ]"
+          ]
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "32e4c44d35d88b83f4be60c8d7d579d738cb472ba6961e96aa255b842cc97a10",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            [
+              2,
+              [
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              3,
+              [
+                12,
+                13,
+                14,
+                15
+              ]
+            ],
+            [
+              4,
+              [
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              5,
+              [
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              6,
+              [
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              7,
+              [
+                28,
+                29,
+                30,
+                31
+              ]
+            ],
+            [
+              8,
+              [
+                32,
+                33,
+                34,
+                35
+              ]
+            ],
+            [
+              9,
+              [
+                36,
+                37,
+                38,
+                39
+              ]
+            ],
+            [
+              10,
+              [
+                40,
+                41,
+                42,
+                43
+              ]
+            ],
+            [
+              11,
+              [
+                44,
+                45,
+                46,
+                47
+              ]
+            ],
+            [
+              12,
+              [
+                48,
+                49,
+                50,
+                51
+              ]
+            ],
+            [
+              13,
+              [
+                52,
+                53,
+                54,
+                55
+              ]
+            ],
+            [
+              14,
+              [
+                56,
+                57,
+                58,
+                59
+              ]
+            ],
+            [
+              15,
+              [
+                60,
+                61,
+                62,
+                63
+              ]
+            ],
+            [
+              16,
+              [
+                64,
+                65,
+                66,
+                67
+              ]
+            ],
+            [
+              17,
+              [
+                68,
+                69,
+                70,
+                71
+              ]
+            ],
+            [
+              18,
+              [
+                72,
+                73,
+                74,
+                75
+              ]
+            ],
+            [
+              19,
+              [
+                76,
+                77,
+                78,
+                79
+              ]
+            ],
+            [
+              20,
+              [
+                80,
+                81,
+                82,
+                83
+              ]
+            ],
+            [
+              21,
+              [
+                84,
+                85,
+                86,
+                87
+              ]
+            ],
+            [
+              22,
+              [
+                88,
+                89,
+                90,
+                91
+              ]
+            ],
+            [
+              23,
+              [
+                92,
+                93,
+                94,
+                95
+              ]
+            ],
+            [
+              24,
+              [
+                96,
+                97,
+                98,
+                99
+              ]
+            ],
+            [
+              25,
+              [
+                100,
+                101,
+                102,
+                103
+              ]
+            ],
+            [
+              26,
+              [
+                104,
+                105,
+                106,
+                107
+              ]
+            ],
+            [
+              27,
+              [
+                108,
+                109,
+                110,
+                111
+              ]
+            ],
+            [
+              28,
+              [
+                112,
+                113,
+                114,
+                115
+              ]
+            ],
+            [
+              29,
+              [
+                116,
+                117,
+                118,
+                119
+              ]
+            ],
+            [
+              30,
+              [
+                120,
+                121,
+                122,
+                123
+              ]
+            ],
+            [
+              31,
+              [
+                124,
+                125,
+                126,
+                127
+              ]
+            ],
+            [
+              32,
+              [
+                128,
+                129,
+                130,
+                131
+              ]
+            ],
+            [
+              33,
+              [
+                132,
+                133,
+                134,
+                135
+              ]
+            ],
+            [
+              34,
+              [
+                136,
+                137,
+                138,
+                139
+              ]
+            ],
+            [
+              35,
+              [
+                140,
+                141,
+                142,
+                143
+              ]
+            ],
+            [
+              36,
+              [
+                144,
+                145,
+                146,
+                147
+              ]
+            ]
+          ],
+          "cells": [
+            "Target (sub)System",
+            "Technique",
+            "Year",
+            "Ref.",
+            "Central water system",
+            "Autoencoder, LSTM",
+            "2021",
+            "[ 42 ]",
+            "AHU",
+            "self-MLP",
+            "2021",
+            "[ 43 ]",
+            "Heat pumps and chillers",
+            "KPCA",
+            "2021",
+            "[ 44 ]",
+            "AHU",
+            "Clustering",
+            "2021",
+            "[ 45 ]",
+            "Heat pumps and chillers",
+            "XGBoost model",
+            "2021",
+            "[ 46 ]",
+            "AHU",
+            "MCNN",
+            "2021",
+            "[ 47 ]",
+            "AHU",
+            "unfold-PCA",
+            "2021",
+            "[ 48 ]",
+            "AHU",
+            "MLP",
+            "2021",
+            "[ 49 ]",
+            "Heat pumps and chillers",
+            "TCN",
+            "2021",
+            "[ 50 ]",
+            "Heat pumps and chillers",
+            "DANN",
+            "2021",
+            "[ 51 ]",
+            "AHU",
+            "TBKSFA",
+            "2021",
+            "[ 52 ]",
+            "AHU",
+            "SAE",
+            "2021",
+            "[ 53 ]",
+            "AC systems",
+            "Modified GAN, self-MLP",
+            "2021",
+            "[ 54 ]",
+            "Central water system",
+            "CART",
+            "2021",
+            "[ 55 ]",
+            "Heat pumps and chillers",
+            "LR, RF, SVM; MLP, MPC; MOPSO",
+            "2021",
+            "[ 56 ]",
+            "AHU",
+            "DTO-DRNN",
+            "2021",
+            "[ 57 ]",
+            "AHU",
+            "CC-RF",
+            "2021",
+            "[ 58 ]",
+            "AHU",
+            "HRF–SVM",
+            "2021",
+            "[ 59 ]",
+            "Heat pumps and chillers",
+            "CNN with Grad-CAM",
+            "2021",
+            "[ 60 ]",
+            "Heat pumps and chillers",
+            "MLP, CART",
+            "2020",
+            "[ 61 ]",
+            "AC systems",
+            "IF, CF",
+            "2020",
+            "[ 62 ]",
+            "Heat pumps and chillers",
+            "CWGAN, SVM, MLP",
+            "2020",
+            "[ 63 ]",
+            "Heat pumps and chillers",
+            "Ensemble (KNN-SVM-RF)",
+            "2020",
+            "[ 64 ]",
+            "AHU",
+            "Clustering",
+            "2020",
+            "[ 65 ]",
+            "AHU",
+            "OC-SVM",
+            "2020",
+            "[ 66 ]",
+            "AHU",
+            "CWGAN, ensemble (SVM-RD-DT)",
+            "2020",
+            "[ 67 ]",
+            "AHU",
+            "RT",
+            "2020",
+            "[ 68 ]",
+            "AHU",
+            "DT, Episode-based association",
+            "2020",
+            "[ 69 ]",
+            "FCU",
+            "Clustering",
+            "2020",
+            "[ 70 ]",
+            "HVAC",
+            "CPA",
+            "2020",
+            "[ 71 ]",
+            "Heat pumps and chillers",
+            "CNN",
+            "2019",
+            "[ 72 ]",
+            "AHU",
+            "Ensemble (WGAN-SVM)",
+            "2019",
+            "[ 73 ]",
+            "AHU",
+            "HMM",
+            "2019",
+            "[ 74 ]",
+            "AHU",
+            "DMG",
+            "2019",
+            "[ 75 ]",
+            "FCU",
+            "LMCSVM",
+            "2018",
+            "[ 76 ]",
+            "FCU",
+            "MC-SVM",
+            "2018",
+            "[ 77 ]"
+          ]
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "c4cfeaac5fd36c3e192026e64df381bb099ac29ee0ac7da4be435f2455cda609",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ]
+            ],
+            [
+              1,
+              [
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+              ]
+            ],
+            [
+              2,
+              [
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              3,
+              [
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              4,
+              [
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              5,
+              [
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              6,
+              [
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48
+              ]
+            ],
+            [
+              7,
+              [
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55
+              ]
+            ],
+            [
+              8,
+              [
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62
+              ]
+            ],
+            [
+              9,
+              [
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69
+              ]
+            ],
+            [
+              10,
+              [
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76
+              ]
+            ],
+            [
+              11,
+              [
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83
+              ]
+            ],
+            [
+              12,
+              [
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90
+              ]
+            ],
+            [
+              13,
+              [
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97
+              ]
+            ],
+            [
+              14,
+              [
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104
+              ]
+            ],
+            [
+              15,
+              [
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111
+              ]
+            ],
+            [
+              16,
+              [
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118
+              ]
+            ],
+            [
+              17,
+              [
+                119,
+                120,
+                121,
+                122,
+                123,
+                124,
+                125
+              ]
+            ],
+            [
+              18,
+              [
+                126,
+                127,
+                128,
+                129,
+                130,
+                131,
+                132
+              ]
+            ],
+            [
+              19,
+              [
+                133,
+                134,
+                135,
+                136,
+                137,
+                138,
+                139
+              ]
+            ],
+            [
+              20,
+              [
+                140,
+                141,
+                142,
+                143,
+                144,
+                145,
+                146
+              ]
+            ],
+            [
+              21,
+              [
+                147,
+                148,
+                149,
+                150,
+                151,
+                152,
+                153
+              ]
+            ],
+            [
+              22,
+              [
+                154,
+                155,
+                156,
+                157,
+                158,
+                159,
+                160
+              ]
+            ],
+            [
+              23,
+              [
+                161,
+                162,
+                163,
+                164,
+                165,
+                166,
+                167
+              ]
+            ],
+            [
+              24,
+              [
+                168,
+                169,
+                170,
+                171,
+                172,
+                173,
+                174
+              ]
+            ],
+            [
+              25,
+              [
+                175,
+                176,
+                177,
+                178,
+                179,
+                180,
+                181
+              ]
+            ],
+            [
+              26,
+              [
+                182,
+                183,
+                184,
+                185,
+                186,
+                187,
+                188
+              ]
+            ],
+            [
+              27,
+              [
+                189,
+                190,
+                191,
+                192,
+                193,
+                194,
+                195
+              ]
+            ],
+            [
+              28,
+              [
+                196,
+                197,
+                198,
+                199,
+                200,
+                201,
+                202
+              ]
+            ],
+            [
+              29,
+              [
+                203,
+                204,
+                205,
+                206,
+                207,
+                208,
+                209
+              ]
+            ],
+            [
+              30,
+              [
+                210,
+                211,
+                212,
+                213,
+                214,
+                215,
+                216
+              ]
+            ],
+            [
+              31,
+              [
+                217,
+                218,
+                219,
+                220,
+                221,
+                222,
+                223
+              ]
+            ],
+            [
+              32,
+              [
+                224,
+                225,
+                226,
+                227,
+                228,
+                229,
+                230
+              ]
+            ],
+            [
+              33,
+              [
+                231,
+                232,
+                233,
+                234,
+                235,
+                236,
+                237
+              ]
+            ],
+            [
+              34,
+              [
+                238,
+                239,
+                240,
+                241,
+                242,
+                243,
+                244
+              ]
+            ],
+            [
+              35,
+              [
+                245,
+                246,
+                247,
+                248,
+                249,
+                250,
+                251
+              ]
+            ]
+          ],
+          "cells": [
+            "Target (sub)System",
+            "Algorithm",
+            "Synthetic Data",
+            "Sample",
+            "Software",
+            "Year",
+            "Ref.",
+            "HVAC in transport",
+            "BRT",
+            "Y",
+            "",
+            "MATLAB",
+            "2021",
+            "[ 80 ]",
+            "HVAC in transport",
+            "GPR, SVM, RF",
+            "Y",
+            "",
+            "MATLAB",
+            "2021",
+            "[ 81 ]",
+            "AHU",
+            "HRF–SVM",
+            "ASHRAE 1312-RP",
+            "1 m",
+            "",
+            "2021",
+            "[ 59 ]",
+            "Heat pumps and chillers",
+            "CNN with Grad-CAM",
+            "ASHRAE 1043-RP",
+            "1 m",
+            "",
+            "2021",
+            "[ 60 ]",
+            "Heat pumps and chillers",
+            "XGBoost model",
+            "",
+            "",
+            "",
+            "2021",
+            "[ 46 ]",
+            "AHU",
+            "MCNN",
+            "Y",
+            "",
+            "TRNSYS",
+            "2021",
+            "[ 47 ]",
+            "AHU",
+            "2-D CNN",
+            "ASHRAE 1043-RP",
+            "",
+            "",
+            "2021",
+            "[ 82 ]",
+            "Heat pumps and chillers",
+            "TCN",
+            "",
+            "",
+            "",
+            "2021",
+            "[ 50 ]",
+            "Heat pumps and chillers",
+            "DANN",
+            "ASHRAE 1312-RP",
+            "",
+            "TRNSYS",
+            "2021",
+            "[ 51 ]",
+            "AHU",
+            "MLP",
+            "ASHRAE 1312-RP",
+            "1 m",
+            "",
+            "2021",
+            "[ 83 ]",
+            "AHU",
+            "SAE",
+            "Y",
+            "",
+            "EnergyPlus",
+            "2021",
+            "[ 53 ]",
+            "Central water system",
+            "CART",
+            "",
+            "",
+            "",
+            "2021",
+            "[ 55 ]",
+            "Heat pumps and chillers",
+            "LR, RF, SVM; MLP; MOPSO",
+            "",
+            "",
+            "",
+            "2021",
+            "[ 56 ]",
+            "AHU",
+            "RACNN",
+            "",
+            "35 s",
+            "",
+            "2021",
+            "[ 84 ]",
+            "AHU",
+            "Bayesian inference",
+            "",
+            "",
+            "",
+            "2021",
+            "[ 85 ]",
+            "AHU",
+            "DTO-DRNN",
+            "",
+            "1 m",
+            "",
+            "2021",
+            "[ 57 ]",
+            "AHU",
+            "CC-RF",
+            "",
+            "35 s",
+            "",
+            "2021",
+            "[ 58 ]",
+            "AHU",
+            "DBN",
+            "",
+            "",
+            "",
+            "2020",
+            "[ 86 ]",
+            "AHU",
+            "ARX, RF",
+            "",
+            "",
+            "IDA ICE",
+            "2020",
+            "[ 87 ]",
+            "Heat pumps and chillers",
+            "MLP, CART",
+            "",
+            "",
+            "",
+            "2020",
+            "[ 61 ]",
+            "Heat pumps and chillers",
+            "Ensemble (KNN-SVM-RF)",
+            "ASHRAE 1043-RP",
+            "1 m",
+            "",
+            "2020",
+            "[ 64 ]",
+            "FCU",
+            "DT",
+            "",
+            "180 s",
+            "OpenModelica",
+            "2020",
+            "[ 88 ]",
+            "AHU",
+            "RT",
+            "Y",
+            "",
+            "IDA ICE",
+            "2020",
+            "[ 68 ]",
+            "AHU",
+            "DT, Episode-based association",
+            "",
+            "",
+            "",
+            "2020",
+            "[ 69 ]",
+            "Central water system",
+            "Bayesian method",
+            "Y",
+            "10 m",
+            "",
+            "2020",
+            "[ 89 ]",
+            "AHU",
+            "Naive Bayes classifier",
+            "",
+            "",
+            "EnergyPlus",
+            "2020",
+            "[ 90 ]",
+            "AC systems",
+            "MSPCA-SVM",
+            "Y",
+            "",
+            "TRNSYS",
+            "2020",
+            "[ 91 ]",
+            "AC systems",
+            "Bayesian classifier",
+            "",
+            "",
+            "",
+            "2020",
+            "[ 92 ]",
+            "Heat pumps and chillers",
+            "CNN",
+            "",
+            "",
+            "",
+            "2019",
+            "[ 72 ]",
+            "AC systems",
+            "XGBoost",
+            "ASHRAE 1312-RP",
+            "",
+            "EnergyPlus",
+            "2019",
+            "[ 93 ]",
+            "Heat pumps and chillers",
+            "DBN",
+            "",
+            "",
+            "",
+            "2019",
+            "[ 94 ]",
+            "AHU",
+            "Ensemble (WGAN-SVM)",
+            "ASHRAE 1312-RP",
+            "1 m",
+            "",
+            "2019",
+            "[ 73 ]",
+            "AHU",
+            "HMM",
+            "ASHRAE",
+            "",
+            "",
+            "2019",
+            "[ 74 ]",
+            "AHU",
+            "DMG",
+            "",
+            "",
+            "",
+            "2019",
+            "[ 75 ]",
+            "FCU",
+            "MC-SVM",
+            "ASHRAE",
+            "",
+            "",
+            "2018",
+            "[ 77 ]"
+          ]
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "d258ab276a76674a7e88087d3a395ebe5c524d365344103ddb009ae724353ee2",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ]
+            ],
+            [
+              1,
+              [
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+              ]
+            ],
+            [
+              2,
+              [
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              3,
+              [
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              4,
+              [
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              5,
+              [
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              6,
+              [
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48
+              ]
+            ],
+            [
+              7,
+              [
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55
+              ]
+            ],
+            [
+              8,
+              [
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62
+              ]
+            ],
+            [
+              9,
+              [
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69
+              ]
+            ],
+            [
+              10,
+              [
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76
+              ]
+            ],
+            [
+              11,
+              [
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83
+              ]
+            ],
+            [
+              12,
+              [
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90
+              ]
+            ],
+            [
+              13,
+              [
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97
+              ]
+            ],
+            [
+              14,
+              [
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104
+              ]
+            ]
+          ],
+          "cells": [
+            "Target (sub)System",
+            "Algorithm",
+            "Synthetic Data",
+            "Sample",
+            "Software",
+            "Year",
+            "Ref.",
+            "Central water system",
+            "Autoencoder, LSTM",
+            "",
+            "",
+            "",
+            "2021",
+            "[ 42 ]",
+            "AHU",
+            "Clustering",
+            "",
+            "",
+            "",
+            "2021",
+            "[ 45 ]",
+            "AHU",
+            "unfold-PCA",
+            "",
+            "15 m",
+            "",
+            "2021",
+            "[ 48 ]",
+            "HVAC in transport",
+            "Fuzzy-Based RCM",
+            "",
+            "",
+            "",
+            "2021",
+            "[ 99 ]",
+            "Heat pumps and chillers",
+            "hierarchy fuzzy post mining",
+            "",
+            "10 m",
+            "",
+            "2021",
+            "[ 96 ]",
+            "AHU",
+            "TBKSFA",
+            "ASHRAE 1312-RP",
+            "1 m",
+            "",
+            "2021",
+            "[ 52 ]",
+            "AHU",
+            "Clustering",
+            "",
+            "1 h",
+            "",
+            "2020",
+            "[ 65 ]",
+            "AC systems",
+            "IF, CF",
+            "",
+            "",
+            "",
+            "2020",
+            "[ 62 ]",
+            "AHU",
+            "CWGAN, ensemble (SVM-RD-DT)",
+            "ASHRAE 1312-RP",
+            "1 m",
+            "",
+            "2020",
+            "[ 67 ]",
+            "AHU",
+            "SSIM",
+            "Y",
+            "",
+            "",
+            "2020",
+            "[ 100 ]",
+            "AHU",
+            "PCA",
+            "Y",
+            "",
+            "HVACISM+",
+            "2020",
+            "[ 101 ]",
+            "FCU",
+            "Clustering",
+            "",
+            "",
+            "",
+            "2020",
+            "[ 70 ]",
+            "HVAC",
+            "CPA",
+            "",
+            "",
+            "",
+            "2020",
+            "[ 71 ]",
+            "Heat pumps and chillers",
+            "ARM FP-growth",
+            "",
+            "",
+            "",
+            "2019",
+            "[ 97 ]"
+          ]
+        },
+        {
+          "object_index": 6,
+          "id": null,
+          "node_sha256": "83177715c024b0c22a195d59816fddcac0460b397208a194217eedbc3a94addd",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ]
+            ],
+            [
+              1,
+              [
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+              ]
+            ],
+            [
+              2,
+              [
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              3,
+              [
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              4,
+              [
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              5,
+              [
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              6,
+              [
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48
+              ]
+            ],
+            [
+              7,
+              [
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55
+              ]
+            ],
+            [
+              8,
+              [
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62
+              ]
+            ],
+            [
+              9,
+              [
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69
+              ]
+            ],
+            [
+              10,
+              [
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76
+              ]
+            ],
+            [
+              11,
+              [
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83
+              ]
+            ]
+          ],
+          "cells": [
+            "Target Sub(System)",
+            "Algorithm",
+            "Synthetic Data",
+            "Sample",
+            "Software",
+            "Year",
+            "Ref.",
+            "AHU",
+            "LSTM-SVDD",
+            "Y",
+            "",
+            "OpenModelica",
+            "2022",
+            "[ 103 ]",
+            "AHU",
+            "self-MLP",
+            "",
+            "",
+            "",
+            "2021",
+            "[ 43 ]",
+            "Heat pumps and chillers",
+            "KPCA",
+            "ASHRAE 1043-RP",
+            "",
+            "",
+            "2021",
+            "[ 44 ]",
+            "AHU",
+            "MLP",
+            "ASHRAE 1312-RP",
+            "",
+            "",
+            "2021",
+            "[ 49 ]",
+            "AC systems",
+            "Modified GAN, self-MLP",
+            "ASHRAE 1043-RP",
+            "",
+            "",
+            "2021",
+            "[ 54 ]",
+            "Heat pumps and chillers",
+            "Clustering, ARM, DT",
+            "ASHRAE 1312-RP",
+            "",
+            "",
+            "2021",
+            "[ 95 ]",
+            "Heat pumps and chillers",
+            "CWGAN, SVM, MLP",
+            "ASHRAE 1043-RP",
+            "",
+            "",
+            "2020",
+            "[ 63 ]",
+            "AHU",
+            "TARM, CART",
+            "",
+            "",
+            "",
+            "2020",
+            "[ 98 ]",
+            "AHU",
+            "OC-SVM",
+            "",
+            "",
+            "",
+            "2020",
+            "[ 66 ]",
+            "HVAC",
+            "MSIPCA-SVM",
+            "Y",
+            "1 h",
+            "TRNSYS",
+            "2020",
+            "[ 102 ]",
+            "FCU",
+            "LMCSVM",
+            "",
+            "15 m",
+            "",
+            "2018",
+            "[ 76 ]"
+          ]
+        },
+        {
+          "object_index": 7,
+          "id": null,
+          "node_sha256": "3c1357843f4c4c208fdbcf26ac1a5261ef856bc800d071359a0c3cfff87b700a",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4
+              ]
+            ],
+            [
+              1,
+              [
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            ],
+            [
+              2,
+              [
+                10,
+                11,
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              3,
+              [
+                15,
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              4,
+              [
+                20,
+                21,
+                22,
+                23,
+                24
+              ]
+            ],
+            [
+              5,
+              [
+                25,
+                26,
+                27,
+                28,
+                29
+              ]
+            ],
+            [
+              6,
+              [
+                30,
+                31,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              7,
+              [
+                35,
+                36,
+                37,
+                38,
+                39
+              ]
+            ],
+            [
+              8,
+              [
+                40,
+                41,
+                42,
+                43,
+                44
+              ]
+            ],
+            [
+              9,
+              [
+                45,
+                46,
+                47,
+                48,
+                49
+              ]
+            ],
+            [
+              10,
+              [
+                50,
+                51,
+                52,
+                53,
+                54
+              ]
+            ],
+            [
+              11,
+              [
+                55,
+                56,
+                57,
+                58,
+                59
+              ]
+            ],
+            [
+              12,
+              [
+                60,
+                61,
+                62,
+                63,
+                64
+              ]
+            ],
+            [
+              13,
+              [
+                65,
+                66,
+                67,
+                68,
+                69
+              ]
+            ],
+            [
+              14,
+              [
+                70,
+                71,
+                72,
+                73,
+                74
+              ]
+            ],
+            [
+              15,
+              [
+                75,
+                76,
+                77,
+                78,
+                79
+              ]
+            ],
+            [
+              16,
+              [
+                80,
+                81,
+                82,
+                83,
+                84
+              ]
+            ],
+            [
+              17,
+              [
+                85,
+                86,
+                87,
+                88,
+                89
+              ]
+            ],
+            [
+              18,
+              [
+                90,
+                91,
+                92,
+                93,
+                94
+              ]
+            ],
+            [
+              19,
+              [
+                95,
+                96,
+                97,
+                98,
+                99
+              ]
+            ],
+            [
+              20,
+              [
+                100,
+                101,
+                102,
+                103,
+                104
+              ]
+            ],
+            [
+              21,
+              [
+                105,
+                106,
+                107,
+                108,
+                109
+              ]
+            ],
+            [
+              22,
+              [
+                110,
+                111,
+                112,
+                113,
+                114
+              ]
+            ],
+            [
+              23,
+              [
+                115,
+                116,
+                117,
+                118,
+                119
+              ]
+            ],
+            [
+              24,
+              [
+                120,
+                121,
+                122,
+                123,
+                124
+              ]
+            ],
+            [
+              25,
+              [
+                125,
+                126,
+                127,
+                128,
+                129
+              ]
+            ],
+            [
+              26,
+              [
+                130,
+                131,
+                132,
+                133,
+                134
+              ]
+            ],
+            [
+              27,
+              [
+                135,
+                136,
+                137,
+                138,
+                139
+              ]
+            ]
+          ],
+          "cells": [
+            "Target (sub)System",
+            "Technique",
+            "Software",
+            "Year",
+            "Ref.",
+            "AHU",
+            "LSTM-SVDD",
+            "OpenModelica",
+            "2022",
+            "[ 103 ]",
+            "HVAC in transport",
+            "BRT",
+            "MATLAB",
+            "2021",
+            "[ 80 ]",
+            "HVAC in transport",
+            "GPR, SVM, RF",
+            "MATLAB",
+            "2021",
+            "[ 81 ]",
+            "AHU",
+            "2-D CNN",
+            "TRNSYS",
+            "2021",
+            "[ 82 ]",
+            "AHU",
+            "MLP",
+            "TRNSYS",
+            "2021",
+            "[ 83 ]",
+            "AHU",
+            "RACNN",
+            "N/A",
+            "2021",
+            "[ 84 ]",
+            "AC systems",
+            "Kalman filter",
+            "EnergyPlus",
+            "2021",
+            "[ 104 ]",
+            "AHU",
+            "Bayesian inference",
+            "N/A",
+            "2021",
+            "[ 85 ]",
+            "Heat pumps and chillers",
+            "Clustering, ARM, DT",
+            "N/A",
+            "2021",
+            "[ 95 ]",
+            "Heat pumps and chillers",
+            "ARM FP-growth",
+            "N/A",
+            "2019",
+            "[ 96 ]",
+            "HVAC in transport",
+            "Fuzzy-Based RCM",
+            "N/A",
+            "2021",
+            "[ 99 ]",
+            "AHU",
+            "LSM",
+            "N/A",
+            "2020",
+            "[ 106 ]",
+            "HVAC",
+            "MSIPCA",
+            "TRNSYS",
+            "2020",
+            "[ 102 ]",
+            "AC systems",
+            "MSPCA, SVM",
+            "TRNSYS",
+            "2020",
+            "[ 91 ]",
+            "AC systems",
+            "Bayesian classifier",
+            "N/A",
+            "2020",
+            "[ 92 ]",
+            "AHU",
+            "Naive Bayes classifier",
+            "EnergyPlus",
+            "2020",
+            "[ 90 ]",
+            "AHU",
+            "PCA",
+            "HVACSIM+",
+            "2020",
+            "[ 101 ]",
+            "Heat pumps and chillers",
+            "Multi agent system",
+            "N/A",
+            "2020",
+            "[ 105 ]",
+            "AHU",
+            "ARX, RF",
+            "IDA ICE",
+            "2020",
+            "[ 87 ]",
+            "FCU",
+            "DT",
+            "OpenModelica",
+            "2020",
+            "[ 88 ]",
+            "AHU",
+            "SSIM",
+            "N/A",
+            "2020",
+            "[ 100 ]",
+            "AHU",
+            "TARM, CART",
+            "N/A",
+            "2020",
+            "[ 98 ]",
+            "AHU",
+            "DBN",
+            "N/A",
+            "2020",
+            "[ 86 ]",
+            "Central water system",
+            "Bayesian method",
+            "N/A",
+            "2020",
+            "[ 89 ]",
+            "AC systems",
+            "XGBoost",
+            "EnergyPlus",
+            "2019",
+            "[ 93 ]",
+            "Heat pumps and chillers",
+            "DBN",
+            "N/A",
+            "2019",
+            "[ 94 ]",
+            "Heat pumps and chillers",
+            "hierarchy fuzzy post mining",
+            "N/A",
+            "2021",
+            "[ 97 ]"
+          ]
+        },
+        {
+          "object_index": 8,
+          "id": null,
+          "node_sha256": "5c2f3814cc0e84b03fd235d4c118cd3979d96dda36747779df5268aff900b491",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2
+              ]
+            ],
+            [
+              1,
+              [
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                7,
+                8
+              ]
+            ],
+            [
+              3,
+              [
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              4,
+              [
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              5,
+              [
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              6,
+              [
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              7,
+              [
+                21,
+                22,
+                23
+              ]
+            ]
+          ],
+          "cells": [
+            "Model",
+            "Advantages",
+            "Disadvantages",
+            "SVM",
+            "– Ability to seamlessly expand the feature space through the use of kernels. – Modeling (non-linear) distributions with relatively high accuracy. – Overall good performance due to maximum-margin separation.",
+            "– Requires longer training times for learning from larger datasets. – Low interpretability.",
+            "ANN",
+            "– Capable of learning complex spatially- and/or temporally-dependent fault nature. – Capable of simultaneously learning both feature extraction and the objective in an end-to-end optimization process (i.e., deep learning). – Ability to diagnose multiple faults simultaneously. – Model learning can be parallelized.",
+            "– Performance highly dependent on network architecture, which is influenced by numerous hyperparameters that need to be tuned manually. – Deep architectures usually take longer to train. – Low interpretability.",
+            "DT",
+            "– Ability to model highly complex representations, through input space partitioning. – Can achieve excellent performance. – Highly interpretable.",
+            "– Model performance may not be guaranteed in complex multi-class faults. – Susceptible to overfitting.",
+            "RF",
+            "– The best trade-off between model complexity and generalization ability. – Usually is more accurate than DTs. – Robust to outliers. – Model learning can be parallelized.",
+            "– High computational complexity due to ensembling. – Low interpretability.",
+            "XGBoost",
+            "– Efficient with large datasets. – Insensitive to distribution skewness.",
+            "– Difficult to tune. – Performs poorly on sparse and unstructured data. – Low interpretability.",
+            "Clustering",
+            "– Ability to discover patterns among the data points. – Can extract useful information from intra-cluster relationships.",
+            "– More sensitive to data quality. – Similarities can be difficult to find in practice, especially when classifying multiple faults. – New faults that are not recognized as a member of created groups cannot be diagnosed properly. – Low interpretability.",
+            "ARM",
+            "– Ability to identify strong rules in the data. – Tool for finding inherent regularities in the data. – Highly interpretable. – Rule learning can be parallelized.",
+            "– Usually requires categorical variables as input. – The results often consist of a large amount of redundancy, which requires post-mining steps. – The complex connections between multiple features can be challenging to interpret in comparison to supervised methods."
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "84f5f76dbfef98eb2d4d44251e48800741d70038544530cbd7b7bdf580dbe6e8",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "05ef6c3524452671ff6a77ac6d0537ef54329fdbd2af9aaa5ca78ae4020e9745",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "H",
+            "U"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "5f5f1e29a8a0ba6fd90f49bcf8865ed591364d5e75c5772fc8056fefc4e58ea8",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "F",
+            "D",
+            "E"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "587a2163506331be632752f9e1efb0a3981a575d776af475221073dc0cd96465",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "F",
+            "D",
+            "I"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "d1b6cca5b5ab123c90cb8891b90565c28a507d354080f3b5114eaae215742cd2",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "F",
+            "D",
+            "D",
+            "M"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "51350ed09bf367fa8549cd570ed0c772a5f57db80e7d9c20ecdb1c22add65f6b",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "H",
+            "A",
+            "H",
+            "U",
+            "F",
+            "D",
+            "E",
+            "F",
+            "D",
+            "I",
+            "F",
+            "D",
+            "D",
+            "M"
+          ],
+          "operators": [
+            "="
+          ]
+        }
+      ]
+    }
+  ]
 }

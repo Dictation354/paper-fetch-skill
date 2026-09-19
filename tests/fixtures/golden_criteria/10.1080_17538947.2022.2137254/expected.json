@@ -17,5 +17,1877 @@
     "figures": false,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1080_17538947.2022.2137254",
+    "provider": "tandf",
+    "doi": "10.1080/17538947.2022.2137254",
+    "original": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/original.html",
+    "sha256": "a55f8af5a905d806bbb34e6b7a6fb29c7132ac70b19acb819c84ed9509b0addd",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 6,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 64,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 65,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 12,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 158,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 1,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 57,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence."
+    ],
+    "author_source": "meta[name=\"dc.Creator\"]",
+    "provenance": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/provenance.json",
+    "captured_image_files": [
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0001_oc.jpg",
+        "sha256": "d17ea41739278ee96dfb97ed06bd68464b5e9d70122601fe806495b2d964b9f9",
+        "bytes": 159108
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0002_oc.jpg",
+        "sha256": "aef58a62f2204bda4bd6fcc8dfed204e45247e4590606bdcb9a385e92431b1d6",
+        "bytes": 328327
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0003_oc.jpg",
+        "sha256": "a0b5d58d736929e33e8b0bb3cfe77d4b8f34eb3b83dd24ef9c3c7586c1d34d25",
+        "bytes": 334026
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0004_oc.jpg",
+        "sha256": "95262f30f8c8473fd52ba9eb2fb0b0dbe8c9008aa130ba6fac8852e38e03f767",
+        "bytes": 303713
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0005_oc.jpg",
+        "sha256": "e44776507f831f81a1f4d56a154eb7c73e1094741b5e81fda8bb351c7cff8e61",
+        "bytes": 627679
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0006_oc.jpg",
+        "sha256": "ac1c40dad6bb76ed40571097de9fcf7e30dc624ce82784580fe8e3c3914e1a70",
+        "bytes": 361469
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0007_oc.jpg",
+        "sha256": "cf72b9a552a3aac134eeb56aadca365127cb13b5cda303effe043c66c7507c05",
+        "bytes": 71359
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0008_oc.jpg",
+        "sha256": "7942fcd3516076d48229d8fb1b81c1e40d9b7ea74343a60239a41a14538d99d9",
+        "bytes": 519543
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0009_oc.jpg",
+        "sha256": "112138e2bb6afa1f1481f075e8aecd7abcb951691b2b0c8e255b3bebeaa5a24e",
+        "bytes": 514380
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0010_oc.jpg",
+        "sha256": "30f3d802f321bde4fc6a2ea4c508a80518d74338740c1acb068aa98f8b2ee597",
+        "bytes": 262792
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0011_oc.jpg",
+        "sha256": "4a6ca801468240de5fb8b729bbeb6635195418159e26c70b2daf5d88e055620c",
+        "bytes": 384930
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0012_oc.jpg",
+        "sha256": "7f39435bd0c2991cb9bcfb8e90825338929ec37c1b5246fbcf455cf10e04c8dc",
+        "bytes": 73556
+      }
+    ],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 57,
+      "tex_checked": 0,
+      "mathml_checked": 57,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/original.html",
+      "sha256": "a55f8af5a905d806bbb34e6b7a6fb29c7132ac70b19acb819c84ed9509b0addd",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "31e487aa1791f3e9bd13e07baa5bc39b50431f7d6456c3cebe43011174984440",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4
+              ]
+            ],
+            [
+              1,
+              [
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            ],
+            [
+              2,
+              [
+                10,
+                11,
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              3,
+              [
+                15,
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              4,
+              [
+                20,
+                21,
+                22,
+                23,
+                24
+              ]
+            ]
+          ],
+          "cells": [
+            "Data type",
+            "Satellite/ Sensor",
+            "Spatial resolution",
+            "Date of satellite imagery acquisition",
+            "Source",
+            "Satellite images (day)",
+            "Landsat 8 (OLI/TIRS)",
+            "30 m",
+            "24/05/2014, 25/06/2014, 27/07/2014 and 12/08/2014",
+            "http://www.usgs.gov",
+            "Water vapor (MOD07)",
+            "MODIS",
+            "5000 m",
+            "Same of Landsat satellite overpass time",
+            "https://ladsweb.nascom.nasa.gov",
+            "Global Digital Elevation Model (GDEM)",
+            "ASTER",
+            "30 m",
+            "2011",
+            "https://www.earthdata.nasa.gov/",
+            "Soil temperature",
+            "Ground device",
+            "——",
+            "Same of Landsat satellite overpass time",
+            "–"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "9f424b91f7dd9057e963409db21f60d645b5ac6e97f5551bec7873408426804e",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            ]
+          ],
+          "cells": [
+            "a)",
+            "Vegetation"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "455c658cb8d88302d6d31236c2213d40c46570cacec3abc80e9554c0ffadf157",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            ]
+          ],
+          "cells": [
+            "b)",
+            "Wetness"
+          ]
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "9ca50291e01e2e05c2d6fc126747c4085b29b467c3dff942d30b790e673dcae4",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                1,
+                2,
+                2
+              ]
+            ],
+            [
+              1,
+              [
+                0,
+                3,
+                4,
+                5,
+                6
+              ]
+            ],
+            [
+              2,
+              [
+                7,
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              3,
+              [
+                12,
+                13,
+                14,
+                15,
+                16
+              ]
+            ],
+            [
+              4,
+              [
+                17,
+                18,
+                19,
+                20,
+                21
+              ]
+            ],
+            [
+              5,
+              [
+                22,
+                23,
+                24,
+                25,
+                26
+              ]
+            ]
+          ],
+          "cells": [
+            "Date",
+            "PLSR",
+            "RFR",
+            "Global strategy",
+            "Local strategy",
+            "Global strategy",
+            "Local strategy",
+            "2014/05/24",
+            "2.09 (0.82)",
+            "0.96 (0.96)",
+            "0.96 (0.96)",
+            "0.88 (0.98)",
+            "2014/06/25",
+            "1.95 (0.83)",
+            "0.94 (0.96)",
+            "0.94 (0.96)",
+            "0.82 (0.97)",
+            "2014/07/27",
+            "2.54 (0.77)",
+            "0.84 (0.97)",
+            "0.84 (0.97)+",
+            "0.91 (0.98)",
+            "2014/08/12",
+            "2.23 (0.86)",
+            "1.00 (0.97)",
+            "1.00 (0.97)",
+            "0.73 (0.99)"
+          ]
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "a8d37b56dc7899d4120888f6484232e4797daaf9cc59b23be0fb15c53d845071",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ]
+            ],
+            [
+              1,
+              [
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+              ]
+            ],
+            [
+              2,
+              [
+                7,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              3,
+              [
+                7,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25
+              ]
+            ],
+            [
+              4,
+              [
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32
+              ]
+            ],
+            [
+              5,
+              [
+                26,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38
+              ]
+            ],
+            [
+              6,
+              [
+                26,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44
+              ]
+            ],
+            [
+              7,
+              [
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51
+              ]
+            ],
+            [
+              8,
+              [
+                45,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57
+              ]
+            ],
+            [
+              9,
+              [
+                45,
+                58,
+                59,
+                60,
+                61,
+                62,
+                63
+              ]
+            ],
+            [
+              10,
+              [
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70
+              ]
+            ],
+            [
+              11,
+              [
+                64,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76
+              ]
+            ],
+            [
+              12,
+              [
+                64,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82
+              ]
+            ]
+          ],
+          "cells": [
+            "",
+            "",
+            "Effective cumulative solar irradiance",
+            "Albedo",
+            "Elevation",
+            "NDVI",
+            "Wetness",
+            "2014/05/24",
+            "Satellite image-derived LST",
+            "0.8187",
+            "0.1466",
+            "−0.1483",
+            "−0.4187",
+            "−0.2443",
+            "NLSTGPLSR (GRFR)",
+            "−0.023 (−0.005)",
+            "−0.0531 (0.003)",
+            "0.0945 (−0.008)",
+            "−0.0172 (0.007)",
+            "0.0141 (0.004)",
+            "NLSTLPLSR (LRFR)",
+            "0.0148 (0.004)",
+            "−0.0020 (−0.001)",
+            "0.0051 (−0.005)",
+            "−0.0081 (−0.007)",
+            "0.0023 (−0.002)",
+            "2014/06/25",
+            "Satellite image-derived LST",
+            "0.8203",
+            "0.2078",
+            "0.1953",
+            "−0.4102",
+            "−0.2312",
+            "NLSTGPLSR (GRFR)",
+            "−0.0259 (0.006)",
+            "−0.0330 (0.005)",
+            "0.0678 (−0.003)",
+            "−0.0170 (−0.002)",
+            "0.0085 (−0.007)",
+            "NLSTLPLSR (LRFR)",
+            "0.0206 (−0.003)",
+            "0.0075 (−0.004)",
+            "−0.0100 (−0.001)",
+            "−0.0081 (−0.002)",
+            "−0.0066 (−0.004)",
+            "2014/07/27",
+            "Satellite image-derived LST",
+            "0.7754",
+            "0.2870",
+            "−0.3839",
+            "−0.2523",
+            "−0.2857",
+            "NLSTGPLSR (GRFR)",
+            "−0.0125 (0.007)",
+            "−0.0678 (−0.009)",
+            "0.1683 (0.011)",
+            "−0.0337 (−0.008)",
+            "0.0655 (−0.006)",
+            "NLSTLPLSR (LRFR)",
+            "0.0074 (0.004)",
+            "0.0213 (−0.006)",
+            "−0.0181 (0.004)",
+            "−0.0246 (−0.006)",
+            "−0.0214 (−0.005)",
+            "2014/08/12",
+            "Satellite image-derived LST",
+            "0.8493",
+            "0.2352",
+            "−0.4825",
+            "−0.1730",
+            "−0.2125",
+            "NLSTGPLSR (GRFR)",
+            "−0.0246 (0.005)",
+            "−0.0390 (−0.012)",
+            "0.0694 (−0.008)",
+            "−0.0278 (−0.006)",
+            "−0.0390 (−0.007)",
+            "NLSTLPLSR (LRFR)",
+            "0.0102 (−0.002)",
+            "0.0138 (0.006)",
+            "−0.0243 (−0.005)",
+            "−0.0054 (−0.003)",
+            "−0.0148 (−0.004)"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "1b8aa3ca74bb7c79703ed8271b8f463a1a5d75e5b76b4ff6b4d1707362899ada",
+          "numbers": "0",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Rg",
+            "S",
+            "t",
+            "M",
+            "α",
+            "t",
+            "cos",
+            "θ",
+            "t",
+            "D",
+            "t",
+            "Δ",
+            "t"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "da1260dc1ab3dce88ffd6cc8bfbfd6abada3b68fa5ad61948a97aa44381ebf48",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Rg"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "78c6cf24b3584d42d7e8a2c4ee3f39dbe75288959e5414023cfbe111cee3ef67",
+          "numbers": "0",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "S"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "feab12b24ac3ac240efd48d2f973d9933de3e311d3da066800f29a3e590c5c20",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "M",
+            "α",
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "6bb2a79b8487aa7770a37c0ba546cca93234ad39ae271760879d7502389a391e",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "α",
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "974caac2c3a346d646952013eb40c4a50de68045f9012638ecf7e88ed32af41f",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "θ",
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 6,
+          "id": null,
+          "node_sha256": "52292b2507c597e2a683a85875a29dadb4e28be91d349c1ecb11aa720339b9cf",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "D",
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 7,
+          "id": null,
+          "node_sha256": "1d3ea9230d2d669ed53a826d95e9dd919c11fbf66016a3f742053a4fbffac98d",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Δ",
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 8,
+          "id": null,
+          "node_sha256": "aa646af318bef79f1daa7f00eb1afc6cfc72c54d89101a6ab6920fe39c825721",
+          "numbers": "012",
+          "minimum": {
+            "_": 8,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "CRg",
+            "S",
+            "t",
+            "t",
+            "G",
+            "B",
+            "t",
+            "G",
+            "D",
+            "t",
+            "G",
+            "G",
+            "t",
+            "t",
+            "D",
+            "t",
+            "d",
+            "t"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 9,
+          "id": null,
+          "node_sha256": "0a16d7ef83dbf5d35271e2913afddb8fd81b18c37680923e098ab48da7251d7a",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 10,
+          "id": null,
+          "node_sha256": "0a70126e3d36d8205356d3cfdd9434f39215071c4265596ba7ce66cf4861bb45",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 11,
+          "id": null,
+          "node_sha256": "588e1817d702fe75e7819b5619440fb6f2e8bd9babdab4f7fabd262cdc068379",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "G",
+            "B",
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 12,
+          "id": null,
+          "node_sha256": "bd344db0507c977246f8a590239bf1a38532b59bc5d573a835786b0ff6b077b6",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "G",
+            "D",
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 13,
+          "id": null,
+          "node_sha256": "40f8d4c200d3894e26e805e3c4c3bf2c04c2aeeb7c6fc4b341612d8894c671fe",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "G",
+            "G",
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 14,
+          "id": null,
+          "node_sha256": "aafd737d6b1aacb2e0a29850b84428b7ac4449f7c0a8acbac7517b66b5fa5936",
+          "numbers": "5454",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "NDVI",
+            "Re",
+            "f",
+            "Re",
+            "f",
+            "Re",
+            "f",
+            "Re",
+            "f"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "+"
+          ]
+        },
+        {
+          "object_index": 15,
+          "id": null,
+          "node_sha256": "2059bd18bf057b8ac32f905cfbb06d02b52694f387406034a550e01cae68e08f",
+          "numbers": "5",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Re",
+            "f"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 16,
+          "id": null,
+          "node_sha256": "da38db37a4b9e6fd17ae64c9777824746c57fc4e8ec238ad024c60bc1c8e303a",
+          "numbers": "4",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Re",
+            "f"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 17,
+          "id": null,
+          "node_sha256": "da6db760b630abc172889ab04b8192da2f6eb71146cfd7230487c1f1dc2c5b99",
+          "numbers": "0.111520.197330.328340.340750.711760.45597",
+          "minimum": {
+            "_": 6,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Wetness",
+            "Re",
+            "f",
+            "Re",
+            "f",
+            "Re",
+            "f",
+            "Re",
+            "f",
+            "Re",
+            "f",
+            "Re",
+            "f"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+",
+            "+",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 18,
+          "id": null,
+          "node_sha256": "6d13bc06652de0adda63db2f0ce6131f3b9a7861c3e9a7bd8b9003f820c12bb6",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Re",
+            "f"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 19,
+          "id": null,
+          "node_sha256": "2217aba9af3273f899d7000ff6158b95f23cec1ba03594f1d9f485fbff9d883e",
+          "numbers": "3",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Re",
+            "f"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 20,
+          "id": null,
+          "node_sha256": "8928d7c478ef68a01972c773ba69b119f447893a83df54cef1dd1d2b25c3fbd0",
+          "numbers": "6",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Re",
+            "f"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 21,
+          "id": null,
+          "node_sha256": "20bafed18582f559c914a7f90c4cce5af22e7cadb14c6fcd0b745e32b338c997",
+          "numbers": "7",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Re",
+            "f"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 22,
+          "id": null,
+          "node_sha256": "a310424773ae51ed0a37f8f21b6f9fa6eda09b4d6c3dddad4dc11cf00ebda348",
+          "numbers": "0.35620.13030.37340.08550.07260.07270.0018",
+          "minimum": {
+            "_": 6,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Albedo",
+            "Re",
+            "f",
+            "Re",
+            "f",
+            "Re",
+            "f",
+            "Re",
+            "f",
+            "Re",
+            "f",
+            "Re",
+            "f"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+",
+            "+",
+            "+",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 23,
+          "id": null,
+          "node_sha256": "1ec4ddf94d8e5848d96b55fb4a5894b96a44399bb804a494fa3f3c74c5bb949a",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 24,
+          "id": null,
+          "node_sha256": "8e6d1748f92e5dfb21156e6f3657cbc96d0ae0ff3a0d1ab0223772b835c6d28b",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "NLS",
+            "T",
+            "GPLS",
+            "i",
+            "j",
+            "LST",
+            "i",
+            "j",
+            "LS",
+            "T",
+            "modelGPLS",
+            "i",
+            "j"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 25,
+          "id": null,
+          "node_sha256": "17053bb8d063a96c02b4b328ea2e2d6eb04a07b62005ea30ea6bef4fe329e347",
+          "numbers": "11234",
+          "minimum": {
+            "_": 5,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "LS",
+            "T",
+            "modelGPLS",
+            "i",
+            "j",
+            "a",
+            "Albedo",
+            "i",
+            "j",
+            "CRg",
+            "i",
+            "j",
+            "a",
+            "DEM",
+            "i",
+            "j",
+            "a",
+            "NDVI",
+            "i",
+            "j",
+            "a",
+            "Wetness",
+            "i",
+            "j"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "×",
+            "+",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 26,
+          "id": null,
+          "node_sha256": "7c52ca614a7d91e1e15e702f575e5ad9dc5cd97788fe10d6f53dc5550b6fc590",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "NLS",
+            "T",
+            "LPLS",
+            "i",
+            "j",
+            "LST",
+            "i",
+            "j",
+            "LS",
+            "T",
+            "modelLPLS",
+            "i",
+            "j"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 27,
+          "id": null,
+          "node_sha256": "b095ed456e93e397911446b61d8739ea27e7b72efc4f76b321230305d1591d0f",
+          "numbers": "11234",
+          "minimum": {
+            "_": 5,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "LS",
+            "T",
+            "modelLPLS",
+            "i",
+            "j",
+            "a",
+            "i",
+            "j",
+            "Albedo",
+            "i",
+            "j",
+            "CRg",
+            "i",
+            "j",
+            "a",
+            "i",
+            "j",
+            "DEM",
+            "i",
+            "j",
+            "a",
+            "i",
+            "j",
+            "NDVI",
+            "i",
+            "j",
+            "a",
+            "i",
+            "j",
+            "Wetness",
+            "i",
+            "j"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "×",
+            "+",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 28,
+          "id": null,
+          "node_sha256": "c313e8c585e3174256926c5dd624f5a0428ca91a6bc26ea4f582654dd26bbff4",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "LS",
+            "T",
+            "modelGPLS",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 29,
+          "id": null,
+          "node_sha256": "b5fb0df712b6a99708a16bbd6f6c9f4d35ae66c1b984c2218416dcca41171b0e",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "LS",
+            "T",
+            "modelLPLS",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 30,
+          "id": null,
+          "node_sha256": "e8a9f7a521e98469456e0a82fbd9f39be2df989ec4fd2c81d855c9bcd5d4d66b",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "NLS",
+            "T",
+            "GPLS",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 31,
+          "id": null,
+          "node_sha256": "b91464c863a971c57f49121d1a7996503f57119f00126b526307fdc50274719d",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "NLS",
+            "T",
+            "LPLS",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 32,
+          "id": null,
+          "node_sha256": "ab08a39f67fdba3ad62ecb897a8766b9f92579dff2556f95a1825277448cbbad",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "LST",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 33,
+          "id": null,
+          "node_sha256": "10a4a1917c04268f31094912986b28842759000962af50af7be3c5a2c805ef1e",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "CRg"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 34,
+          "id": null,
+          "node_sha256": "0eb0ccf73bdaadfd0f58800429eda1ec205c85190946003a969718f36534e96e",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Albedo",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 35,
+          "id": null,
+          "node_sha256": "69e62cd79d95ee333694763b0b36a57c0ba8de710afc84eb436938ebaa992deb",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "DEM",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 36,
+          "id": null,
+          "node_sha256": "30f26770a4df4bcb4a7213306eda4164426d99473df35cfb87b39ffa008cb41d",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "NDVI",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 37,
+          "id": null,
+          "node_sha256": "63ea6611ad89ad8baacce0fe344d3a47fc00a6b82ea3041857ec37011a16eb30",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Wetness",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 38,
+          "id": null,
+          "node_sha256": "b0402ab052d36c2d9156cfe99107ac23edb7aa0fca3381aee59eb7a899261964",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 39,
+          "id": null,
+          "node_sha256": "ae20ce9f62c1a962e0be0d11c63a783f82d731816e902c9e9a1fbb96d7d1f673",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 40,
+          "id": null,
+          "node_sha256": "a87dd8d7a2c32dc005080581622f66e7ddcd1cf43be8bb34929eb31b3fdaaae0",
+          "numbers": "3",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 41,
+          "id": null,
+          "node_sha256": "9e99998ac93ff31d26e24d9a69bb9d97edb714a83737a5828b82b783d3733771",
+          "numbers": "4",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 42,
+          "id": null,
+          "node_sha256": "b55e5f84cbd852534945e6bea540cc8ef3a2fbce62412eedf04589bb280c7aad",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 43,
+          "id": null,
+          "node_sha256": "8d28541c4df748402309bdf2237af69c0e1cb3dbae7066a1e30bd40b905c7fe1",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 44,
+          "id": null,
+          "node_sha256": "cfd47c747e19819d9850894e04093fc87a4ca026ca53d775cb886544c4eaf432",
+          "numbers": "3",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 45,
+          "id": null,
+          "node_sha256": "014b251967a223ae7a15fa22dea0336b8877558f4c4a165a09afaec2cebe62a5",
+          "numbers": "4",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 46,
+          "id": null,
+          "node_sha256": "dfc6a3d9fe0062ce582e0ff3a6905577e014b0be28c38057fd221102cd627e1a",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "NLS",
+            "T",
+            "GRFR",
+            "i",
+            "j",
+            "LST",
+            "i",
+            "j",
+            "LS",
+            "T",
+            "modelGRFR",
+            "i",
+            "j"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 47,
+          "id": null,
+          "node_sha256": "48df50e92953c0101e1a63e5da505b209ea9260004e0b5c113ae3a4b0cf83487",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "LS",
+            "T",
+            "modelGRFR",
+            "i",
+            "j",
+            "f",
+            "Albedo",
+            "i",
+            "j",
+            "CRg",
+            "i",
+            "j",
+            "DEM",
+            "i",
+            "j",
+            "NDVI",
+            "i",
+            "j",
+            "Wetness",
+            "i",
+            "j"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "×"
+          ]
+        },
+        {
+          "object_index": 48,
+          "id": null,
+          "node_sha256": "4acec40ce07e2be26cf28c5fac64497d5cebbf61353c5d9a80d21602a9ce2bdb",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "NLS",
+            "T",
+            "LRFR",
+            "i",
+            "j",
+            "LST",
+            "i",
+            "j",
+            "LS",
+            "T",
+            "modelLPLS",
+            "i",
+            "j"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 49,
+          "id": null,
+          "node_sha256": "cfbcff765b5e81b635b00b1d4ae4d9bc128e0e6fa24fa9a01549ff8187268efc",
+          "numbers": "1",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "LS",
+            "T",
+            "modelLRFR",
+            "i",
+            "j",
+            "f",
+            "i",
+            "j",
+            "Albedo",
+            "i",
+            "j",
+            "CRg",
+            "i",
+            "j",
+            "DEM",
+            "i",
+            "j",
+            "NDVI",
+            "i",
+            "j",
+            "Wetness",
+            "i",
+            "j"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "×"
+          ]
+        },
+        {
+          "object_index": 50,
+          "id": null,
+          "node_sha256": "34e6a7d254f066473741630501c1ebacfff2101c86cfdacdc51bd489508f03d0",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "LS",
+            "T",
+            "modelGRFR",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 51,
+          "id": null,
+          "node_sha256": "d7ba20ff454bf724f64f541d0c90677b4c1c10487d4123224b5727efbbb5ac20",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "LS",
+            "T",
+            "modelLRFR",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 52,
+          "id": null,
+          "node_sha256": "8573cb781197ff2afc4af3e722ee6cc18fb9dd035524e1c0c7f2aff0ab7b1e90",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "NLS",
+            "T",
+            "GRFR",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 53,
+          "id": null,
+          "node_sha256": "b4cab175ae071df346cd805efa1e469b7bd2afb5e50f9c0652a355b83cd806ae",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "NLS",
+            "T",
+            "LRFR",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 54,
+          "id": null,
+          "node_sha256": "88558b8ec1cfce6affc8397746ecf91bad7ffde525a0051a43b1c1cf2846e6c9",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 55,
+          "id": null,
+          "node_sha256": "ebb5f4051ed7ec2df6bbf57995980ac18e7f997f2e6e5fbcd61fe322b8edf88b",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "f"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 56,
+          "id": null,
+          "node_sha256": "2baf5ddde01a9ac4a219d66ae62b0a6b71787edab8d3c93e2ffc8eb5f7bea2b9",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "f",
+            "i",
+            "j"
+          ],
+          "operators": []
+        }
+      ]
+    }
+  ]
 }

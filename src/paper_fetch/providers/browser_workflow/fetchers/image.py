@@ -206,8 +206,13 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
                     ),
                     require_target_match=bool(
                         self._browser_config is not None
-                        and self._browser_config.provider == "wiley"
-                        and _asset.get("kind") == "figure"
+                        and (
+                            self._browser_config.provider == "pnas"
+                            or (
+                                self._browser_config.provider == "wiley"
+                                and _asset.get("kind") == "figure"
+                            )
+                        )
                     ),
                 )
                 if result is not None:

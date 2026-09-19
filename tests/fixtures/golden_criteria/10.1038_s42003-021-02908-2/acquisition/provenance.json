@@ -1,0 +1,42 @@
+{
+  "records": [
+    {
+      "doi": "10.1038/s42003-021-02908-2",
+      "provider": "springer",
+      "requested_url": "https://www.nature.com/articles/s42003-021-02908-2",
+      "final_url": "https://www.nature.com/articles/s42003-021-02908-2?error=cookies_not_supported&code=22a0789a-2002-4b6e-870d-2c203264c91f",
+      "status_code": 200,
+      "response_headers": {
+        "server": "Oscar Platform 0.2421.0",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Wed, 16 Sep 2026 09:23:21 GMT"
+      },
+      "captured_at_utc": "2026-09-16T09:23:14.867181+00:00",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "body_file": "acquisition/template-gaps-2026-09-16/article-response.html",
+      "size": 391612,
+      "sha256": "c806f8caed3d04288a77477b95f68d117181b06ecddc58cfee0a0a8e5f0df205",
+      "error": null
+    },
+    {
+      "doi": "10.1038/s42003-021-02908-2",
+      "provider": "springer",
+      "requested_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs42003-021-02908-2/MediaObjects/42003_2021_2908_Figa_HTML.png",
+      "final_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs42003-021-02908-2/MediaObjects/42003_2021_2908_Figa_HTML.png",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "server": "Spindoctor/b6ed3c5",
+        "date": "Wed, 16 Sep 2026 09:35:42 GMT"
+      },
+      "captured_at_utc": "2026-09-16T09:35:38.481748+00:00",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "body_file": "acquisition/template-gaps-2026-09-16/box1-image-response.bin",
+      "size": 163313,
+      "sha256": "a8123478980ace12e331206d4ea4eb05753dbc83e6899ac0be5cb621ff88cecc",
+      "error": null
+    }
+  ]
+}

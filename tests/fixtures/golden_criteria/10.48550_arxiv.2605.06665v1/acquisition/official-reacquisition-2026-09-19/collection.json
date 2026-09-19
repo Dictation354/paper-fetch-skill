@@ -1,0 +1,216 @@
+{
+  "doi": "10.48550/arxiv.2605.06665v1",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Huang_et_al_2026_UniPool_A_Globally_Shared_Expert_Pool_for_Mixture-of-Experts.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/outputs/d3d3464494c0-Huang_et_al_2026_UniPool_A_Globally_Shared_Expert_Pool_for_Mixture-of-Experts.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "d3d3464494c02b487f548e9a04bcdb9e85a48c5d6e300b2379d18df0676e589a",
+      "size": 128581
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Huang_et_al_2026_UniPool_A_Globally_Shared_Expert_Pool_for_Mixture-of-Experts.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/outputs/79c81ab80c4e-Huang_et_al_2026_UniPool_A_Globally_Shared_Expert_Pool_for_Mixture-of-Experts.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "79c81ab80c4e364937d53f9290ee215fa0f1b289f95e8930272996bf101e7e25",
+      "size": 74212
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06665v1_assets/fig1_unipool_v1.drawio.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/assets/b8fe494bdd17-fig1_unipool_v1.drawio.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "b8fe494bdd1757a9b325b3b0ac4004224181175f9679ecc40e6c3a9645a22331",
+      "size": 276475
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06665v1_assets/fig2_param_efficiency_scatter.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/assets/868aec4e0079-fig2_param_efficiency_scatter.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "868aec4e0079dcdf57c4878cceec73e2f46fcf53a405e577777b00f8abff2b83",
+      "size": 102469
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06665v1_assets/fig3_granularity_sweep.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/assets/08050e755f7a-fig3_granularity_sweep.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "08050e755f7a06459f3c75c6fb1cca160a33c27e83bada8f353dc6cc49e20516",
+      "size": 72262
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06665v1_assets/val_loss_compara_182m_v2_every2000.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/assets/8e5dbd6a4b65-val_loss_compara_182m_v2_every2000.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "8e5dbd6a4b652d83ca0b882e6f27538147fa0fe4bbfbf1677c084a093e0c1030",
+      "size": 84998
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06665v1_assets/val_loss_compara_469m_v2_every2000.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/assets/c3c425c60025-val_loss_compara_469m_v2_every2000.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "c3c425c6002574537b53260f65098a21bbde6cc854d524c79f678a815c8286a5",
+      "size": 88258
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06665v1_assets/val_loss_compara_650m_v2_every2000.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/assets/50a625566082-val_loss_compara_650m_v2_every2000.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "50a625566082fc50dca47572b65db2f059d0a85414439c7647f526abafb40352",
+      "size": 88288
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06665v1_assets/val_loss_group_size_compare_v2_every2000.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/assets/fe95fdc84549-val_loss_group_size_compare_v2_every2000.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "fe95fdc84549fe9419978f1de75aa6ca0d6521dd9e95aa4e522da026d471878e",
+      "size": 160340
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06665v1_assets/moe-182m-baseline_sftmx_per_layer_aux.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/assets/0452e306065f-moe-182m-baseline_sftmx_per_layer_aux.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "0452e306065f4a03ba8c705126e88dab052494d67937910bcd0f394a5a283130",
+      "size": 35418
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06665v1_assets/moe-182m-norm-pool-aux.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/assets/73adeb123222-moe-182m-norm-pool-aux.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "73adeb123222d880285b1d4ac2415122326956309eef2f34cef7c4bd22b16803",
+      "size": 39367
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/unknown_unknown_10.48550_arxiv.2605.06665v1_original.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "category": "raw_sources",
+      "origin_kind": "real_replay",
+      "sha256": "d313bca95f25d49de8ba149036242bf1ca12eddbf7f84e8b2a810e7493a448a0",
+      "size": 364376
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "complete",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.48550/arxiv.2605.06665v1",
+      "expected_doi": "10.48550/arxiv.2605.06665v1",
+      "title": "UniPool: A Globally Shared Expert Pool for Mixture-of-Experts",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 14521,
+      "confidence": "high",
+      "flags": [],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 9,
+      "attempted": 9,
+      "total": 9,
+      "local": 9,
+      "full_size": 9,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 9,
+      "remote_only_count": 0,
+      "body_discovered": 9,
+      "body_attempted": 9,
+      "body_local": 9,
+      "body_full_size": 9,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "complete",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "arxiv_html",
+      "acquisition": {
+        "provider": "arxiv",
+        "route": "official_html",
+        "representation": "html",
+        "transport": "http",
+        "fallback_used": false
+      },
+      "trace_event_count": 17,
+      "fallback_codes": [],
+      "warning_codes": [],
+      "failure_codes": [],
+      "unstructured_warning_count": 1,
+      "acceptance_policy": "provider_html_body",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

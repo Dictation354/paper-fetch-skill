@@ -1,0 +1,44 @@
+{
+  "records": [
+    {
+      "doi": "10.1080/17538947.2022.2137254",
+      "provider": "tandf",
+      "requested_url": "https://www.tandfonline.com/doi/full/10.1080/17538947.2022.2137254",
+      "final_url": "https://www.tandfonline.com/doi/full/10.1080/17538947.2022.2137254",
+      "status_code": 403,
+      "response_headers": {
+        "date": "Tue, 15 Sep 2026 03:03:44 GMT",
+        "content-type": "text/html; charset=UTF-8",
+        "transfer-encoding": "chunked",
+        "connection": "close",
+        "accept-ch": "Sec-CH-UA-Bitness, Sec-CH-UA-Arch, Sec-CH-UA-Full-Version, Sec-CH-UA-Mobile, Sec-CH-UA-Model, Sec-CH-UA-Platform-Version, Sec-CH-UA-Full-Version-List, Sec-CH-UA-Platform, Sec-CH-UA, UA-Bitness, UA-Arch, UA-Full-Version, UA-Mobile, UA-Model, UA-Platform-Version, UA-Platform, UA",
+        "cf-mitigated": "challenge",
+        "content-security-policy": "default-src 'none'; script-src 'nonce-Sn7oHVAT0qQ9dcMJ1o6ujK' 'unsafe-eval' https://challenges.cloudflare.com; script-src-attr 'none'; style-src 'unsafe-inline'; img-src 'self' https://challenges.cloudflare.com; connect-src 'self' https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com blob:; child-src 'self' https://challenges.cloudflare.com blob:; worker-src blob:; form-action http: https:; base-uri 'self'",
+        "server": "cloudflare",
+        "critical-ch": "Sec-CH-UA-Bitness, Sec-CH-UA-Arch, Sec-CH-UA-Full-Version, Sec-CH-UA-Mobile, Sec-CH-UA-Model, Sec-CH-UA-Platform-Version, Sec-CH-UA-Full-Version-List, Sec-CH-UA-Platform, Sec-CH-UA, UA-Bitness, UA-Arch, UA-Full-Version, UA-Mobile, UA-Model, UA-Platform-Version, UA-Platform, UA",
+        "cross-origin-embedder-policy": "require-corp",
+        "cross-origin-opener-policy": "same-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "origin-agent-cluster": "?1",
+        "permissions-policy": "accelerometer=(),camera=(),clipboard-read=(),clipboard-write=(),geolocation=(),gyroscope=(),hid=(),magnetometer=(),microphone=(),payment=(),publickey-credentials-get=(),screen-wake-lock=(),serial=(),sync-xhr=(),usb=(),xr-spatial-tracking=*",
+        "referrer-policy": "same-origin",
+        "server-timing": "chlray;desc=\"a3b466669b339a44\"",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "SAMEORIGIN",
+        "strict-transport-security": "max-age=2592000",
+        "vary": "accept-encoding",
+        "content-encoding": "gzip",
+        "cf-ray": "a3b466669b339a44-HKG",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      },
+      "captured_at_utc": "2026-09-15T03:03:42.701920+00:00",
+      "size": 5609,
+      "sha256": "1fcf29accca393dd79d64977d2a84ae1d010dc58e180d8a6be96d318c473be04",
+      "error": "HTTP 403 for https://www.tandfonline.com/doi/full/10.1080/17538947.2022.2137254",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "attempt": 1,
+      "body_file": "raw.html"
+    }
+  ]
+}

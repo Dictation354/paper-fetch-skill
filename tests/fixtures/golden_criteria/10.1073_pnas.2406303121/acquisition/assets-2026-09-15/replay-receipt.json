@@ -1,0 +1,61 @@
+{
+  "doi": "10.1073/pnas.2406303121",
+  "source_input": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/original.html",
+  "source_sha256": "ec485f2e53f05724c1a3a6f199a4c0c75bc5a609c1bd0ec5164204315bb00302",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "ef0d1deff83b6aef240caaf785fe95f507def8a905bf6d55cf9ad224629964e2",
+  "files": [
+    {
+      "filename": "pnas.2406303121fig01.jpg",
+      "download_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/34644f03-1696-4e48-bd29-7cbd5f1b907b/assets/images/large/pnas.2406303121fig01.jpg",
+      "source_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/34644f03-1696-4e48-bd29-7cbd5f1b907b/assets/images/large/pnas.2406303121fig01.jpg",
+      "sha256": "0ac966a55247935e57d40e6ec3798e601956ccf049250f2067dd1fd5415d2dfb",
+      "size": 655571,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2067,
+      "height": 1512,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "pnas.2406303121fig02.jpg",
+      "download_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/3f267b33-1526-4bcf-afd5-4154b6524f15/assets/images/large/pnas.2406303121fig02.jpg",
+      "source_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/3f267b33-1526-4bcf-afd5-4154b6524f15/assets/images/large/pnas.2406303121fig02.jpg",
+      "sha256": "61ef34251ec68188e990d7c6cb44d9b59accd358164208f644bccc5a92409e19",
+      "size": 459191,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 3045,
+      "height": 2029,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "pnas.2406303121fig03.jpg",
+      "download_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/a24ce606-ff17-43cc-aa5c-134d14eb92b7/assets/images/large/pnas.2406303121fig03.jpg",
+      "source_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/a24ce606-ff17-43cc-aa5c-134d14eb92b7/assets/images/large/pnas.2406303121fig03.jpg",
+      "sha256": "aff65c264d2de7fcf2838a1a222dac4707e8e67c5e3a2110ff648e4055acc240",
+      "size": 367496,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1929,
+      "height": 1647,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "pnas.2406303121fig04.jpg",
+      "download_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/00262115-8681-4cdc-81f2-896b309a946e/assets/images/large/pnas.2406303121fig04.jpg",
+      "source_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/00262115-8681-4cdc-81f2-896b309a946e/assets/images/large/pnas.2406303121fig04.jpg",
+      "sha256": "70f2e7dea2bab741bc28846ab0da07c15117f141a8b201af31fce68fcf93df63",
+      "size": 632324,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2067,
+      "height": 1504,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.940513+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 0
+}

@@ -1,21 +1,362 @@
 {
-  "counts": {
-    "abstract_sections": 1,
-    "body_sections": 29,
-    "figures": 0,
-    "references": 103,
-    "sections": 31,
-    "tables": 0
-  },
-  "expected_content_kind": "fulltext",
   "has": {
-    "abstract": true,
+    "title": true,
     "authors": true,
+    "abstract": true,
     "body": true,
-    "code_availability": false,
-    "data_availability": true,
     "figures": false,
     "references": true,
-    "title": true
-  }
+    "data_availability": true,
+    "code_availability": false
+  },
+  "counts": {
+    "sections": 32,
+    "abstract_sections": 2,
+    "body_sections": 29,
+    "figures": 0,
+    "tables": 0,
+    "references": 103
+  },
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.1080_15481603.2026.2667034",
+    "provider": "tandf",
+    "doi": "10.1080/15481603.2026.2667034",
+    "original": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html",
+    "sha256": "94d3d5902be4edc8071d9bf9755a77fb86a04bef5251cc36c4ca78d6b9855a10",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 12,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 103,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 84,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 9,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 66,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 1,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "No structured formula in the selected original; bitmap/externally loaded formulas have only captured index/link evidence.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence."
+    ],
+    "author_source": "meta[name=\"dc.Creator\"]",
+    "provenance": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/provenance.json",
+    "captured_image_files": [
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/browser-retry-2026-09-16/65c061ea8def-9d528df0f41d-browser-export.bin",
+        "sha256": "9d528df0f41d3361c637f49be2c9d48cd7289fa604b674e781e46f8b7db6eb92",
+        "bytes": 2141480
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/browser-retry-2026-09-16/16b9cd760aa7-b66b672c2566-browser-export.bin",
+        "sha256": "b66b672c2566f75ca8b03a7eeea8f9c48ccbd6a65df9305553918a4f4c4c3a62",
+        "bytes": 1224474
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/browser-retry-2026-09-16/ad04e9d49a98-3af9cc7690a3-browser-export.bin",
+        "sha256": "3af9cc7690a32b1910ee0321aa1f26025e3881ef3958043468a9bc549e7043e0",
+        "bytes": 1463058
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/browser-retry-2026-09-16/ec0aaa00e9f5-2bc51a2dd089-browser-export.bin",
+        "sha256": "2bc51a2dd0894f75d5faa3d81d5f2c085e843e3a3cc4d4dbe494dcb458909d1c",
+        "bytes": 540718
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/browser-retry-2026-09-16/b5bde1b253b9-7a528463c745-browser-export.bin",
+        "sha256": "7a528463c7450290372827d45e6181d96b94cec0ebd3426da348908ed38bbff7",
+        "bytes": 868907
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/browser-retry-2026-09-16/93f2b139f886-a68e51761ea3-browser-export.bin",
+        "sha256": "a68e51761ea3321bf38b25519b1e6ab58a52eabd5bd46424cab74987f22cd728",
+        "bytes": 840731
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/browser-retry-2026-09-16/8845de2bb74d-4da33f405f70-browser-export.bin",
+        "sha256": "4da33f405f7028b89478171ff7494bf5362f46ed2bb232bbab60c9fba1d10224",
+        "bytes": 743830
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/browser-retry-2026-09-16/6b116ad5aa02-7798714903cc-browser-export.bin",
+        "sha256": "7798714903cc113c28acba845c2512abd6e964242db6b58041e3732347cafcbe",
+        "bytes": 1877742
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/known-gaps-jpeg-2026-09-16/002-http_response_entity.bin",
+        "sha256": "6019b672e4c23ab50b8926aec2ecaef2c2d32556d5ab02eb32599e78ce6f4afd",
+        "bytes": 247894
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/known-gaps-jpeg-2026-09-16/003-http_response_entity.bin",
+        "sha256": "f5a969937e26ce4d511821102a70e85929255017f65056a8ab85e054c338aceb",
+        "bytes": 601561
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/known-gaps-jpeg-2026-09-16/004-http_response_entity.bin",
+        "sha256": "8633e535e233d957b8d83b63a85c4a4eae77a4bf0717efcafe088528697b341f",
+        "bytes": 394525
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/known-gaps-jpeg-2026-09-16/005-http_response_entity.bin",
+        "sha256": "210b88e72c4725af8dc2c012e92460d6d843ae2501e6e1ccef23645cccefdff4",
+        "bytes": 449389
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/known-gaps-jpeg-2026-09-16/006-http_response_entity.bin",
+        "sha256": "4ad504418af0d28df5fcaf21f968d9f96b4471b27d66598328417a3aa640dd50",
+        "bytes": 250936
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/known-gaps-jpeg-2026-09-16/007-http_response_entity.bin",
+        "sha256": "9c5f4875643571369841519ff7c7e8b2ef0de53b19087104190149ae926b9e12",
+        "bytes": 212500
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/known-gaps-jpeg-2026-09-16/008-http_response_entity.bin",
+        "sha256": "10ed6fddf25a406d20b5ce9a38931096d26d616522b8a107c5edea06313d962d",
+        "bytes": 223875
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/known-gaps-jpeg-2026-09-16/009-http_response_entity.bin",
+        "sha256": "71aac76868ef8f282edae2baefb3cb3e8e3e7cf6ca5606cbae131964cfdc0c16",
+        "bytes": 371888
+      }
+    ],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 0,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html",
+      "sha256": "94d3d5902be4edc8071d9bf9755a77fb86a04bef5251cc36c4ca78d6b9855a10",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "e2b9baa382d7a7aa947eb244bd1cfa9209df6cc6d6beed001d33c3eb73d550d3",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              1,
+              [
+                2,
+                3,
+                3,
+                3,
+                3,
+                3
+              ]
+            ],
+            [
+              2,
+              [
+                4,
+                5,
+                5,
+                5,
+                5,
+                5
+              ]
+            ],
+            [
+              3,
+              [
+                6,
+                7,
+                7,
+                7,
+                7,
+                7
+              ]
+            ],
+            [
+              4,
+              [
+                8,
+                9,
+                9,
+                9,
+                9,
+                9
+              ]
+            ]
+          ],
+          "cells": [
+            "•",
+            "Cumulative-effect models (R ^{2} = 0.679) beat single-week models by 75% R ^{2} boost.",
+            "•",
+            "The model still performs well in independently validated cities (R ^{2} = 0.584).",
+            "•",
+            "Cumulative heat effects impact heat-related mortality for an average of four weeks.",
+            "•",
+            "Previous week's temperatures contribute up to 70% to current heat-related mortality.",
+            "•",
+            "Cumulative heat effects last five weeks in Northern Europe, while under three weeks in Southern."
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "29ce4c1459fcc2ca00e4a9a0c26d3e9482a3233af18ce53b630aee34cb39338a",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              1,
+              [
+                2,
+                3,
+                3,
+                3,
+                3,
+                3
+              ]
+            ],
+            [
+              2,
+              [
+                4,
+                5,
+                5,
+                5,
+                5,
+                5
+              ]
+            ],
+            [
+              3,
+              [
+                6,
+                7,
+                7,
+                7,
+                7,
+                7
+              ]
+            ]
+          ],
+          "cells": [
+            "1)",
+            "When considering only the current week's temperature, D_LST is input.",
+            "2)",
+            "When considering the cumulative temperature of the current week and the previous week, D_LST and X LITERALASTERISKD_LST_AT1 are input.",
+            "3)",
+            "When considering the cumulative temperature of the current week and the previous two weeks, D_LST, X LITERALASTERISKD_LST_AT1, and X ^{2} LITERALASTERISKD_LST_AT2 are used as inputs.",
+            "4)",
+            "When considering the cumulative temperature of the current week and the previous three weeks, D_LST, X LITERALASTERISKD_LST_AT1, X ^{2} LITERALASTERISKD_LST_AT2, and X ^{3} LITERALASTERISKD_LST_AT3 are used as inputs. Finally, we also included the diurnal temperature range and average temperature as input factors for the machine learning model, resulting in a total of 10 temperature input variables."
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "b536ba47c0923272f4abf127163944ba166da52cbd8017590993d746737b401f",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              1,
+              [
+                2,
+                3,
+                3,
+                3,
+                3,
+                3
+              ]
+            ]
+          ],
+          "cells": [
+            "(1)",
+            "Nighttime high temperatures significantly increase mortality risk more than daytime temperatures. When temperatures exceed the MMT (22 °C), the mortality risk increases steeply, with the effect being 1.4 times stronger than that of daytime temperatures at the same increase. Significant population heterogeneity was observed, with women experiencing higher mortality (205 deaths per million, 95% CI = 160–250) compared to men (145 deaths per million, 95% CI = 95–195). Heat-related mortality also increases with age, particularly for individuals over 80 years old, where mortality reaches 26,932 deaths per million (95% CI = 17,774–36,090).",
+            "(2)",
+            "Across Europe, the average duration of cumulative heat effects was about three weeks (up to five in Southern and Northern regions), with model performance peaking when the prior accumulated temperature (PAT = 70%) was considered (R ^{2} = 0.679, rRMSE = 11.21%). Incorporating cumulative temperature variables improved predictive accuracy by up to 75% compared with models using only current-week temperatures. Critically, detrending analysis confirmed that these cumulative heat effects remained significant after controlling for multiweek mortality trends and seasonality, indicating that the observed associations are robust and not driven by coincidental temporal patterns. Notably, nighttime accumulated temperatures had a much higher weight in the model than daytime temperatures, and predictions using ERA5-Land temperature data were consistent with those from MODIS satellite data (R ^{2} = 0.623). Spatially, the cumulative heat effects persist longer in the economically more developed northern regions and the hotter southern climates, while the relative risk in most northern cities is higher than in southern under identical temperature conditions. Model validation using 90 additional cities (R ^{2} = 0.584) confirmed the robustness and generalizability of these results."
+          ]
+        }
+      ],
+      "mathml": []
+    }
+  ]
 }

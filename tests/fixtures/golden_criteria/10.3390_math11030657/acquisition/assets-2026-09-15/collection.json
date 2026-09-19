@@ -1,0 +1,187 @@
+{
+  "provider": "mdpi",
+  "doi": "10.3390/math11030657",
+  "sample_id": "10.3390_math11030657",
+  "source_url": "https://www.mdpi.com/2227-7390/11/3/657",
+  "source_input": "tests/fixtures/golden_criteria/10.3390_math11030657/original.html",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "c6ac7ce61266c0a16fa597f1e1f78f143b0d5d167f89dcdbf50fbb5cf9a83478",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 1. Trends of technical efficiency change of enterprises under all kinds o",
+        "caption": "Figure 1. Trends of technical efficiency change of enterprises under all kinds of ownership in 2007–2020.",
+        "url": "https://www.mdpi.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g001.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "mathematics-11-00657-f001",
+        "full_size_url": "https://www.mdpi.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g001.png",
+        "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g001.png?1675768951"
+      },
+      "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g001.png?1675768951",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/figure-1.png"
+      ],
+      "record": "acquisition/figure-1.png",
+      "validation": {
+        "format": "image/png",
+        "width": 2878,
+        "height": 1694,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "mathematics-11-00657-g001.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 2. Change chart of TFP growth rates by ownership enterprises.",
+        "caption": "Figure 2. Change chart of TFP growth rates by ownership enterprises.",
+        "url": "https://www.mdpi.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g002.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "mathematics-11-00657-f002",
+        "full_size_url": "https://www.mdpi.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g002.png",
+        "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g002.png?1675768948"
+      },
+      "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g002.png?1675768948",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2d93cf239447b24d-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/2d93cf239447b24d-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 2961,
+        "height": 1684,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "mathematics-11-00657-g002.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 3. TFP decomposition by ownership enterprises.",
+        "caption": "Figure 3. TFP decomposition by ownership enterprises.",
+        "url": "https://www.mdpi.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g003.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "mathematics-11-00657-f003",
+        "full_size_url": "https://www.mdpi.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g003.png",
+        "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g003.png?1675768951"
+      },
+      "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g003.png?1675768951",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/d60c019a13f44473-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/d60c019a13f44473-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 2486,
+        "height": 1488,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "mathematics-11-00657-g003.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 4. Bar chart of SFA decomposition results with regard to ownership enterp",
+        "caption": "Figure 4. Bar chart of SFA decomposition results with regard to ownership enterprises of different industries.",
+        "url": "https://www.mdpi.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g004.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "mathematics-11-00657-f004",
+        "full_size_url": "https://www.mdpi.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g004.png",
+        "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g004.png?1675768949"
+      },
+      "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g004.png?1675768949",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/dea2fca7dce2ada7-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/dea2fca7dce2ada7-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 3040,
+        "height": 1667,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "mathematics-11-00657-g004.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 5. Decomposition diagram of TFP of listed companies by region.",
+        "caption": "Figure 5. Decomposition diagram of TFP of listed companies by region.",
+        "url": "https://www.mdpi.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g005.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "mathematics-11-00657-f005",
+        "full_size_url": "https://www.mdpi.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g005.png",
+        "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g005.png?1675768950"
+      },
+      "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g005.png?1675768950",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/b0d2bce31d830fb7-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/b0d2bce31d830fb7-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 3305,
+        "height": 1763,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "mathematics-11-00657-g005.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 5,
+    "replayed_files": 5,
+    "complete_received_files": 5,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.3390_math11030657/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.3390_math11030657/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 5,
+    "replayed_files": 5,
+    "complete_received_files": 5
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

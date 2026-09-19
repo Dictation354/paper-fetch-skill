@@ -1,0 +1,67 @@
+[
+  {
+    "run": "unit-1",
+    "layer": "unit",
+    "command": "PYTHONPATH=src uv run python -m pytest tests/unit -q --durations=30",
+    "started_unix": 1789529531.5921328,
+    "wall_seconds": 68.885,
+    "exit_code": 0,
+    "python": "3.14.7",
+    "platform": "Linux-6.18.40.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "cpu_count": 24,
+    "process_cpu_count": 24,
+    "log": "unit-1.log"
+  },
+  {
+    "run": "unit-2",
+    "layer": "unit",
+    "command": "PYTHONPATH=src uv run python -m pytest tests/unit -q --durations=30",
+    "started_unix": 1789529600.4797344,
+    "wall_seconds": 68.863,
+    "exit_code": 0,
+    "python": "3.14.7",
+    "platform": "Linux-6.18.40.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "cpu_count": 24,
+    "process_cpu_count": 24,
+    "log": "unit-2.log"
+  },
+  {
+    "run": "unit-3",
+    "layer": "unit",
+    "command": "PYTHONPATH=src uv run python -m pytest tests/unit -q --durations=30",
+    "started_unix": 1789529669.3425872,
+    "wall_seconds": 68.682,
+    "exit_code": 0,
+    "python": "3.14.7",
+    "platform": "Linux-6.18.40.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "cpu_count": 24,
+    "process_cpu_count": 24,
+    "log": "unit-3.log"
+  },
+  {
+    "run": "integration",
+    "layer": "integration",
+    "command": "PYTHONPATH=src uv run python -m pytest tests/integration -q --durations=30",
+    "started_unix": 1789529738.0244331,
+    "wall_seconds": 43.09,
+    "exit_code": 0,
+    "python": "3.14.7",
+    "platform": "Linux-6.18.40.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "cpu_count": 24,
+    "process_cpu_count": 24,
+    "log": "integration.log"
+  },
+  {
+    "run": "golden",
+    "layer": "golden",
+    "command": "PYTHONPATH=src uv run python -m pytest tests/golden -q --durations=30",
+    "started_unix": 1789529781.1146564,
+    "wall_seconds": 429.124,
+    "exit_code": 0,
+    "python": "3.14.7",
+    "platform": "Linux-6.18.40.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "cpu_count": 24,
+    "process_cpu_count": 24,
+    "log": "golden.log"
+  }
+]

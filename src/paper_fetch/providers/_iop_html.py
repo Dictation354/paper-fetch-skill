@@ -339,7 +339,15 @@ def _extract_references_from_soup(soup: BeautifulSoup) -> list[dict[str, str | N
     if parsed:
         return parsed
 
-    return []
+    # Generic HTML metadata drops empty values. Keep publisher slots here so
+    # an empty citation_reference does not shift subsequent numbered callouts.
+    values = [
+        str(node.get("content") or "")
+        for node in soup.select("meta[name='citation_reference']")
+    ]
+    return _extract_references_from_metadata(
+        {"raw_meta": {"citation_reference": values}}
+    )
 
 
 def _extract_references_from_metadata(
@@ -352,13 +360,13 @@ def _extract_references_from_metadata(
     if isinstance(raw_meta, Mapping):
         raw_values = raw_meta.get("citation_reference") or []
         values = raw_values if isinstance(raw_values, list) else [raw_values]
-    for value in values:
+    for index, value in enumerate(values, 1):
         reference = _parse_citation_reference_meta(value)
         raw = normalize_text(reference.get("raw"))
         if not raw or raw in seen:
             continue
         seen.add(raw)
-        reference["label"] = f"{len(parsed) + 1}."
+        reference["label"] = f"{index}."
         parsed.append(reference)
     return parsed
 
@@ -377,6 +385,7 @@ def _parse_citation_reference_meta(value: Any) -> dict[str, str | None]:
     authors = fields.get("citation_author") or []
     title = normalize_text((fields.get("citation_title") or [""])[0])
     journal = normalize_text((fields.get("citation_journal_title") or [""])[0])
+    publisher = normalize_text((fields.get("citation_publisher") or [""])[0])
     year = normalize_text((fields.get("citation_publication_date") or [""])[0])
     volume = normalize_text((fields.get("citation_volume") or [""])[0])
     first_page = normalize_text((fields.get("citation_firstpage") or [""])[0])
@@ -388,6 +397,7 @@ def _parse_citation_reference_meta(value: Any) -> dict[str, str | None]:
         year,
         title,
         journal,
+        publisher,
         volume,
         pages,
         f"doi:{doi}" if doi else "",

@@ -1,0 +1,30 @@
+{
+  "doi": "10.1098/rsta.2019.0558",
+  "provider": "royalsocietypublishing",
+  "source_url": "https://royalsocietypublishing.org/doi/10.1098/rsta.2019.0558",
+  "attempt": 1,
+  "transport": "native Camoufox configured provider context",
+  "responses": [
+    {
+      "body_error_type": "Error"
+    },
+    {
+      "record": "acquisition/template-browser-2026-09-16/002-http_response_entity.bin",
+      "status": 200
+    },
+    {
+      "record": "acquisition/template-browser-2026-09-16/003-http_response_entity.bin",
+      "status": 200
+    }
+  ],
+  "no_fault_injection": true,
+  "navigation_error_type": "TimeoutError",
+  "title": "Creation and application of virtual patient cohorts of heart models | Philosophical Transactions of the Royal Society A | The Royal Society",
+  "observed_doi": "10.1098/rsta.2019.0558",
+  "final_url": "https://royalsocietypublishing.org/rsta/article/378/2173/20190558/41050/Creation-and-application-of-virtual-patient",
+  "challenge": false,
+  "paywall_diagnostics": {},
+  "stop_reason": "single_observation_complete",
+  "viewer_count": 8,
+  "viewer_title": "Figure 1 Schematic of the strategies for... | The Royal Society"
+}

@@ -1,0 +1,94 @@
+{
+  "provider": "iop",
+  "doi": "10.1088/2058-9565/ac3460",
+  "sample_id": "10.1088_2058-9565_ac3460",
+  "source_url": "https://iopscience.iop.org/article/10.1088/2058-9565/ac3460",
+  "source_input": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/original.html",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "b4d33737095af6dde7748f723f48c6d4030b421ac2f0c4ab4978d84ecb6b9597",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 1. Core optical circuit for QT made up of three beam splitters and the in",
+        "caption": "Figure 1. Core optical circuit for QT made up of three beam splitters and the initial state . Download figure: Standard image High-resolution image",
+        "url": "https://content.cld.iop.org/journals/2058-9565/7/1/015010/revision3/qstac3460f1_online.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://content.cld.iop.org/journals/2058-9565/7/1/015010/revision3/qstac3460f1_online.jpg",
+        "full_size_url": "https://content.cld.iop.org/journals/2058-9565/7/1/015010/revision3/qstac3460f1_hr.jpg",
+        "preview_accepted": true
+      },
+      "download_url": "https://content.cld.iop.org/journals/2058-9565/7/1/015010/revision3/qstac3460f1_hr.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/00752904ff3f2951-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/00752904ff3f2951-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 834,
+        "height": 422,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "qstac3460f1_hr.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 2. Core optical circuit for QT made up of three beam splitters and the in",
+        "caption": "Figure 2. Core optical circuit for QT made up of three beam splitters and the initial input state. Download figure: Standard image High-resolution image",
+        "url": "https://content.cld.iop.org/journals/2058-9565/7/1/015010/revision3/qstac3460f2_online.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://content.cld.iop.org/journals/2058-9565/7/1/015010/revision3/qstac3460f2_online.jpg",
+        "full_size_url": "https://content.cld.iop.org/journals/2058-9565/7/1/015010/revision3/qstac3460f2_hr.jpg",
+        "preview_accepted": true
+      },
+      "download_url": "https://content.cld.iop.org/journals/2058-9565/7/1/015010/revision3/qstac3460f2_hr.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/e8b81c932c39ff03-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/e8b81c932c39ff03-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 833,
+        "height": 403,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "qstac3460f2_hr.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 2,
+    "unique_files": 2,
+    "verified_files": 2,
+    "replayed_files": 2,
+    "complete_received_files": 2,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 2,
+    "unique_files": 2,
+    "verified_files": 2,
+    "replayed_files": 2,
+    "complete_received_files": 2
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

@@ -1,6 +1,4 @@
-# ruff: noqa: F403,F405
 from __future__ import annotations
-
 from paper_fetch.providers import _ieee_asset_identity
 from paper_fetch.providers import _ieee_asset_recovery
 from paper_fetch.providers import _ieee_supplementary
@@ -9,10 +7,10 @@ from paper_fetch.providers.browser_workflow.asset_download import (
     BrowserAssetRecoveryContext,
     run_browser_asset_download_attempt,
 )
-from tests.unit._atypon_browser_workflow_provider_support import png_header
-from tests.unit._browser_workflow_deps import browser_workflow_deps
-
-from ._ieee_provider_support import *
+from tests.support._atypon_browser_workflow_provider_support import png_header
+from tests.support._browser_workflow_deps import browser_workflow_deps
+from tests.support._ieee_provider_support import *
+# ruff: noqa: F403,F405
 
 
 class IeeeProviderAssetDownloadTests(unittest.TestCase):
@@ -682,8 +680,13 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             all(asset.download_tier == "full_size" for asset in body_article_assets)
         )
 
+    @mock.patch(
+        "paper_fetch.providers._playwright_browser.open_browser_context",
+        side_effect=RuntimeError("Mock browser unavailable"),
+    )
     def test_ieee_supplementary_download_failure_does_not_discard_body_assets(
         self,
+        _browser,
     ) -> None:
         doi = "10.1109/ACCESS.2024.3352924"
         article_number = "10388355"

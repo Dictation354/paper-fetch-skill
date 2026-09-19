@@ -1,0 +1,249 @@
+{
+  "provider": "science",
+  "doi": "10.1126/sciadv.abf8021",
+  "sample_id": "10.1126_sciadv.abf8021",
+  "source_url": "https://www.science.org/doi/10.1126/sciadv.abf8021",
+  "source_input": "tests/fixtures/golden_criteria/10.1126_sciadv.abf8021/original.html",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "e70ab760024ed28e43c82376ddf058b5d7dc164be9841d517042f259433cf052",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 1 . Typical regimes of changes in precipitation distribution. ( A ) Pentad ",
+        "caption": "Fig. 1 . Typical regimes of changes in precipitation distribution. ( A ) Pentad mean precipitation distribution in the Indian monsoon region (wetter and more variable), ( B ) seasonal mean precipitation distribution in southwestern Europe (drier but more variable), and ( C ) monthly mean precipitation distribution in Amazonia (drier and less variable) in the baseline 1900–1959 (blue) and 2040–2099 (pink for raw data and red for detrended data to exclude the influence of long-term trends in distribution). Precipitation distributions are calculated over the year and on model grid points before aggregating over the regions with an area weighting. Vertical lines denote climatological mean precipitation. The ensemble medians are shown. Definitions of the regions are shown as magenta boxes in Fig. 5B .",
+        "url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/5b2418fe-7c25-4e60-9a6d-bcaa5149fe1e/assets/images/large/sciadv.abf8021-f1.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F1",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/5b2418fe-7c25-4e60-9a6d-bcaa5149fe1e/assets/images/large/sciadv.abf8021-f1.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/5b2418fe-7c25-4e60-9a6d-bcaa5149fe1e/assets/images/large/sciadv.abf8021-f1.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/5b2418fe-7c25-4e60-9a6d-bcaa5149fe1e/assets/images/large/sciadv.abf8021-f1.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/c5017d681affb55f-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/c5017d681affb55f-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 3600,
+        "height": 1078,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.abf8021-f1.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 2 . Climatological precipitation variability and the relative importance of",
+        "caption": "Fig. 2 . Climatological precipitation variability and the relative importance of different time scales. ( A ) Total precipitation variability in the baseline 1900–1959 (mm/day). ( B ) Global area–weighted average precipitation variability, including total variability and variability on different time scales (mm/day). Blue and red curves represent model variants and the ensemble median, respectively. Note the logarithmic y axis. ( C to F ) Synoptic (C), monthly (D), intraseasonal (E), and interannual (F) precipitation variability as a percentage of total variability (%). The PPE ensemble medians are shown on the maps along with the zonal means.",
+        "url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/c12f66bd-072e-462a-be86-e75cf3e61a12/assets/images/large/sciadv.abf8021-f2.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F2",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/c12f66bd-072e-462a-be86-e75cf3e61a12/assets/images/large/sciadv.abf8021-f2.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/c12f66bd-072e-462a-be86-e75cf3e61a12/assets/images/large/sciadv.abf8021-f2.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/c12f66bd-072e-462a-be86-e75cf3e61a12/assets/images/large/sciadv.abf8021-f2.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/55a33a04bbb29aa4-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/55a33a04bbb29aa4-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 3000,
+        "height": 2758,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.abf8021-f2.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 3 . Changes in precipitation variability and the relative importance of dif",
+        "caption": "Fig. 3 . Changes in precipitation variability and the relative importance of different time scales. ( A ) Projected changes in total precipitation variability (2040–2099 relative to 1900–1959) scaled with global mean temperature change (mm day −1 K −1 ). Stippling (hatching) indicates regions where 80% (100%) of the model variants agree on the sign of change. ( B ) Global area–weighted average changes in precipitation variability, including total variability and variability on different time scales (mm day −1 K −1 ). Blue and red curves represent model variants and the ensemble median, respectively. Note the logarithmic y axis. ( C to F ) Changes in synoptic (C), monthly (D), intraseasonal (E), and interannual (F) precipitation variability as a percentage of the total variability change (%). The ensemble medians are shown on the maps along with the zonal means (red for variability changes and black for climatological variability). Note that climatological zonal mean precipitation variability [i.e., the black curve in (A); in mm/day] is scaled by 1 / 10 for clear display. Blue contours on (C) to (F) refer to where the total precipitation variability change equals zero.",
+        "url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/e794b482-0de9-419c-b396-1789207d0725/assets/images/large/sciadv.abf8021-f3.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F3",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/e794b482-0de9-419c-b396-1789207d0725/assets/images/large/sciadv.abf8021-f3.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/e794b482-0de9-419c-b396-1789207d0725/assets/images/large/sciadv.abf8021-f3.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/e794b482-0de9-419c-b396-1789207d0725/assets/images/large/sciadv.abf8021-f3.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/85422d3099ac64fc-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/85422d3099ac64fc-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 3000,
+        "height": 2772,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.abf8021-f3.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 4 . Projected changes in precipitation variability. ( A to D ) Projected ch",
+        "caption": "Fig. 4 . Projected changes in precipitation variability. ( A to D ) Projected changes in precipitation variability at the synoptic (A), monthly (B), intraseasonal (C), and interannual (D) time scales. ( E ) Projected changes in mean precipitation. Changes are calculated for 2040–2099 relative to the baseline 1900–1959 under per degree of global warming (%/K). The ensemble medians are shown. Stippling (hatching) indicates regions where 80% (100%) of the model variants agree on the sign of change. The red contours indicate precipitation climatology exceeding 50% of the global average (i.e., 1.6 mm/day for the PPE), as a division of climatologically wet and dry regions. ( F ) Ensemble median zonal-mean changes in precipitation variability across time scales and mean precipitation (%/K). Bars show the global mean changes (ensemble median and 10th to 90th percentile spread).",
+        "url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/9db602cf-887f-4e9b-be09-93bcbb595f52/assets/images/large/sciadv.abf8021-f4.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F4",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/9db602cf-887f-4e9b-be09-93bcbb595f52/assets/images/large/sciadv.abf8021-f4.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/9db602cf-887f-4e9b-be09-93bcbb595f52/assets/images/large/sciadv.abf8021-f4.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/9db602cf-887f-4e9b-be09-93bcbb595f52/assets/images/large/sciadv.abf8021-f4.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/d15306eb2e20871f-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/d15306eb2e20871f-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 3000,
+        "height": 2763,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.abf8021-f4.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 5 . Changes in precipitation variability versus mean precipitation. ( A ) C",
+        "caption": "Fig. 5 . Changes in precipitation variability versus mean precipitation. ( A ) Changes in the synoptic variability (red, left axis) and mean state (gray, right axis) of precipitation over the globe ranked from the driest to the wettest ( x axis) according to baseline precipitation climatology. Changes are calculated for 2040–2099 relative to the baseline 1900–1959 under per degree of global warming (mm day −1 K −1 ). The probabilistic distributions of the changes are derived by aggregating neighboring grids, with thick lines and shadings denoting the 50th and 10th to 90th percentile changes, respectively (see Materials and Methods). ( B ) Ratio of synoptic precipitation variability change to mean precipitation change, for the ensemble median. Stippling (hatching) indicates that at least 80% (100%) of the model variants agree on the classification. Magenta boxes (each at 10° × 10°) denote typical regimes of precipitation distribution change used for illustration in Fig. 1 . The results are qualitatively consistent across time scales, and only those for synoptic variability are shown.",
+        "url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/d4198cc5-da14-4ae3-8ed6-7c8c555e22a1/assets/images/large/sciadv.abf8021-f5.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F5",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/d4198cc5-da14-4ae3-8ed6-7c8c555e22a1/assets/images/large/sciadv.abf8021-f5.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/d4198cc5-da14-4ae3-8ed6-7c8c555e22a1/assets/images/large/sciadv.abf8021-f5.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/d4198cc5-da14-4ae3-8ed6-7c8c555e22a1/assets/images/large/sciadv.abf8021-f5.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/663fb411eb3c646a-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/663fb411eb3c646a-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1800,
+        "height": 2483,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.abf8021-f5.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 6 . Moisture processes driving changes in precipitation variability. ( A to",
+        "caption": "Fig. 6 . Moisture processes driving changes in precipitation variability. ( A to F ) Changes in the variability of vertical moisture advection ( ω − ω m q l g ) (A) at the synoptic time scale, and its thermodynamic (TH) (B and C), dynamic (DY) (D and E), and nonlinear components (NL) (F). Each term is normalized by climatological precipitation variability and expressed in %/K. (C) and (E) show the theoretical estimates of TH and DY contributions, respectively, by neglecting variations in specific humidity ( Eqs. 13 and 14 in Materials and Methods). The ensemble medians are shown. Stippling (hatching) indicates regions where 80% (100%) of the model variants agree on the sign of change. ( G ) Zonal and ( H ) global mean changes in the variability of precipitation (P), the vertical moisture advection, its TH, DY, and NL components, and the residual (Res) (%/K). TH(t) and DY(t) denote the theoretical estimates of thermodynamics and dynamics [i.e., corresponding to subplots (C) and (E)], respectively. Error bars in (H) denote the 10th to 90th percentile ensemble spread. Only the climatologically wet regions where the moisture budget approximation applies reasonably are included in the zonal and global means [outlined by red contours in (A); see Materials and Methods]. The results of moisture budget analysis are consistent across time scales; only those for synoptic variability are shown here (see figs. S8 and S9 for other time scales).",
+        "url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/dbde22e8-13d8-421c-88db-03320ad6a4a2/assets/images/large/sciadv.abf8021-f6.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F6",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/dbde22e8-13d8-421c-88db-03320ad6a4a2/assets/images/large/sciadv.abf8021-f6.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/dbde22e8-13d8-421c-88db-03320ad6a4a2/assets/images/large/sciadv.abf8021-f6.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/dbde22e8-13d8-421c-88db-03320ad6a4a2/assets/images/large/sciadv.abf8021-f6.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/20fb1a59d7e34063-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/20fb1a59d7e34063-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 3000,
+        "height": 3325,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.abf8021-f6.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 7 . Intermodel variant uncertainty in projected precipitation variability c",
+        "caption": "Fig. 7 . Intermodel variant uncertainty in projected precipitation variability changes. ( A ) Intermodel variant standard deviation of precipitation variability changes (2040–2099 relative to 1900–1959; mm day −1 K −1 ). ( B ) Scatterplot of global mean precipitation variability changes versus climatological precipitation variability. ( C ) Scatterplot of global mean climatological precipitation variability versus climatological ω500 variability. Dots denote individual model variants. Blue lines denote linear fits. The intermodel variant correlation is shown at the bottom, with asterisks indicating significance at the 0.05 level. The results are qualitatively consistent across time scales, and only those for synoptic variability are shown.",
+        "url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/cdc0f8a8-8884-47fa-95d9-68803b380324/assets/images/large/sciadv.abf8021-f7.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F7",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/cdc0f8a8-8884-47fa-95d9-68803b380324/assets/images/large/sciadv.abf8021-f7.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/cdc0f8a8-8884-47fa-95d9-68803b380324/assets/images/large/sciadv.abf8021-f7.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.abf8021/asset/cdc0f8a8-8884-47fa-95d9-68803b380324/assets/images/large/sciadv.abf8021-f7.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/4760ab57ecd57a41-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/4760ab57ecd57a41-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2100,
+        "height": 2108,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.abf8021-f7.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 7,
+    "unique_files": 7,
+    "verified_files": 7,
+    "replayed_files": 7,
+    "complete_received_files": 7,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1126_sciadv.abf8021/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1126_sciadv.abf8021/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 7,
+    "unique_files": 7,
+    "verified_files": 7,
+    "replayed_files": 7,
+    "complete_received_files": 7
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

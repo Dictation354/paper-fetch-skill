@@ -1,0 +1,796 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article
+  PUBLIC "-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN" "http://dtd.nlm.nih.gov/publishing/3.0/journalpublishing3.dtd">
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" article-type="research-article" dtd-version="3.0" xml:lang="EN">
+  <front>
+    <journal-meta><journal-id journal-id-type="nlm-ta">PLoS ONE</journal-id><journal-id journal-id-type="publisher-id">plos</journal-id><journal-id journal-id-type="pmc">plosone</journal-id><!--===== Grouping journal title elements =====--><journal-title-group><journal-title>PLoS ONE</journal-title></journal-title-group><issn pub-type="epub">1932-6203</issn><publisher>
+        <publisher-name>Public Library of Science</publisher-name>
+        <publisher-loc>San Francisco, USA</publisher-loc>
+      </publisher></journal-meta>
+    <article-meta><article-id pub-id-type="publisher-id">PONE-D-10-03511</article-id><article-id pub-id-type="doi">10.1371/journal.pone.0015338</article-id><article-categories>
+        <subj-group subj-group-type="heading">
+          <subject>Research Article</subject>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v2">
+          <subject>Computer science</subject>
+          <subj-group>
+            <subject>Natural language processing</subject>
+          </subj-group>
+          <subj-group>
+            <subject>Text mining</subject>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline-v2">
+          <subject>Engineering</subject>
+          <subj-group>
+            <subject>Signal processing</subject>
+            <subj-group>
+              <subject>Data mining</subject>
+              <subject>Image processing</subject>
+              <subject>Video processing</subject>
+            </subj-group>
+          </subj-group>
+        </subj-group>
+        <subj-group subj-group-type="Discipline">
+          <subject>Computer Science</subject>
+        </subj-group>
+      </article-categories><title-group><article-title>Figure Text Extraction in Biomedical Literature</article-title><alt-title alt-title-type="running-head">FigTExT: Figure Text Extraction Tool</alt-title></title-group><contrib-group>
+        <contrib contrib-type="author" xlink:type="simple">
+          <name name-style="western">
+            <surname>Kim</surname>
+            <given-names>Daehyun</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff1"/>
+          <xref ref-type="corresp" rid="cor1">
+            <sup>*</sup>
+          </xref>
+        </contrib>
+        <contrib contrib-type="author" xlink:type="simple">
+          <name name-style="western">
+            <surname>Yu</surname>
+            <given-names>Hong</given-names>
+          </name>
+          <xref ref-type="aff" rid="aff1"/>
+        </contrib>
+      </contrib-group><aff id="aff1">          <addr-line>Department of Health Science, University of Wisconsin-Milwaukee, Milwaukee, Wisconsin, United States of America</addr-line>       </aff><contrib-group>
+        <contrib contrib-type="editor" xlink:type="simple">
+          <name name-style="western">
+            <surname>Uversky</surname>
+            <given-names>Vladimir N.</given-names>
+          </name>
+          <role>Editor</role>
+          <xref ref-type="aff" rid="edit1"/>
+        </contrib>
+      </contrib-group><aff id="edit1">University of South Florida College of Medicine, United States of America </aff><author-notes>
+        <corresp id="cor1">* E-mail: <email xlink:type="simple">kim48@uwm.edu</email></corresp>
+        <fn fn-type="con">
+          <p>Conceived and designed the experiments: DK HY. Performed the experiments: DK. Analyzed the data: DK HY. Contributed reagents/materials/analysis tools: DK. Wrote the paper: DK HY.</p>
+        </fn>
+      <fn fn-type="conflict">
+        <p>The authors have declared that no competing interests exist.</p>
+      </fn></author-notes><pub-date pub-type="collection">
+        <year>2011</year>
+      </pub-date><pub-date pub-type="epub">
+        <day>13</day>
+        <month>1</month>
+        <year>2011</year>
+      </pub-date><volume>6</volume><issue>1</issue><elocation-id>e15338</elocation-id><history>
+        <date date-type="received">
+          <day>14</day>
+          <month>10</month>
+          <year>2010</year>
+        </date>
+        <date date-type="accepted">
+          <day>8</day>
+          <month>11</month>
+          <year>2010</year>
+        </date>
+      </history><!--===== Grouping copyright info into permissions =====--><permissions><copyright-year>2011</copyright-year><copyright-holder>Kim, Yu</copyright-holder><license><license-p>This is an open-access article distributed under the terms of the Creative Commons Attribution License, which permits unrestricted use, distribution, and reproduction in any medium, provided the original author and source are credited.</license-p></license></permissions><abstract>
+        <sec>
+          <title>Background</title>
+          <p>Figures are ubiquitous in biomedical full-text articles, and they represent important biomedical knowledge. However, the sheer volume of biomedical publications has made it necessary to develop computational approaches for accessing figures. Therefore, we are developing the Biomedical Figure Search engine (<ext-link ext-link-type="uri" xlink:href="http://figuresearch.askHERMES.org" xlink:type="simple">http://figuresearch.askHERMES.org</ext-link>) to allow bioscientists to access figures efficiently. Since text frequently appears in figures, automatically extracting such text may assist the task of mining information from figures. Little research, however, has been conducted exploring text extraction from biomedical figures.</p>
+        </sec>
+        <sec>
+          <title>Methodology</title>
+          <p>We first evaluated an off-the-shelf Optical Character Recognition (OCR) tool on its ability to extract text from figures appearing in biomedical full-text articles. We then developed a Figure Text Extraction Tool (FigTExT) to improve the performance of the OCR tool for figure text extraction through the use of three innovative components: <italic>image preprocessing</italic>, <italic>character recognition</italic>, and <italic>text correction</italic>. We first developed <italic>image preprocessing</italic> to enhance image quality and to improve text localization. Then we adapted the off-the-shelf OCR tool on the improved text localization for <italic>character recognition</italic>. Finally, we developed and evaluated a novel <italic>text correction</italic> framework by taking advantage of figure-specific lexicons.</p>
+        </sec>
+        <sec>
+          <title>Results/Conclusions</title>
+          <p>The evaluation on 382 <xref ref-type="fig" rid="pone-0015338-g009">figures (9</xref>,643 figure texts in total) randomly selected from PubMed Central full-text articles shows that FigTExT performed with 84% precision, 98% recall, and 90% F1-score for text localization and with 62.5% precision, 51.0% recall and 56.2% F1-score for figure text extraction. When limiting figure texts to those judged by domain experts to be important content, FigTExT performed with 87.3% precision, 68.8% recall, and 77% F1-score. FigTExT significantly improved the performance of the off-the-shelf OCR tool we used, which on its own performed with 36.6% precision, 19.3% recall, and 25.3% F1-score for text extraction. In addition, our results show that FigTExT can extract texts that do not appear in figure captions or other associated text, further suggesting the potential utility of FigTExT for improving figure search.</p>
+        </sec>
+      </abstract><funding-group><funding-statement>The authors acknowledge that this work was supported in part by National Institutes of Health 1R21RR024933 and the Research Growth Initiative grant by University of Wisconsin-Milwaukee. Any opinions, findings, or recommendations are those of the authors and do not necessarily reflect the views of the NIH. The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.</funding-statement></funding-group><counts>
+        <page-count count="11"/>
+      </counts></article-meta>
+  </front>
+  <body>
+    <sec id="s1">
+      <title>Introduction</title>
+      <p>Biomedical full-text articles incorporate a significant number of figures with such figures typically reporting experimental results, presenting research models, and providing examples of biomedical objects (e.g., cells, tissue, and organs). Figures represent important biomedical knowledge, and consequently figure mining has drawn much attention in the biomedical research community <xref ref-type="bibr" rid="pone.0015338-Shatkay1">[1]</xref>–<xref ref-type="bibr" rid="pone.0015338-Ahmed1">[8]</xref>.</p>
+      <p>Most approaches to figure mining focus on extracting localization features from figures (e.g., <xref ref-type="bibr" rid="pone.0015338-Murphy1">[9]</xref>), figure classification (<xref ref-type="bibr" rid="pone.0015338-Shatkay1">[1]</xref>, <xref ref-type="bibr" rid="pone.0015338-Rafkind1">[2]</xref>) and text-figure association <xref ref-type="bibr" rid="pone.0015338-Yu1">[3]</xref>, <xref ref-type="bibr" rid="pone.0015338-Yu2">[10]</xref>–<xref ref-type="bibr" rid="pone.0015338-Yu4">[13]</xref>. For example, the Subcellular Location Image Finder (SLIF) system <xref ref-type="bibr" rid="pone.0015338-Murphy1">[9]</xref> extracts information from fluorescence microscopy images and aligns image panels to their corresponding sub-legend. Shatkay et al. <xref ref-type="bibr" rid="pone.0015338-Shatkay2">[14]</xref> integrated image features with text to enhance document classification. BioText <xref ref-type="bibr" rid="pone.0015338-Hearst1">[4]</xref> and Yale Image Finder <xref ref-type="bibr" rid="pone.0015338-Xu1">[7]</xref> index figure legends and return figure+legend in response to a text query. We have also developed approaches for figure classification <xref ref-type="bibr" rid="pone.0015338-Rafkind1">[2]</xref>, <xref ref-type="bibr" rid="pone.0015338-Kim1">[15]</xref>, as well as natural language processing approaches for associating figure with text <xref ref-type="bibr" rid="pone.0015338-Yu1">[3]</xref>, figure summarization <xref ref-type="bibr" rid="pone.0015338-Agarwal1">[11]</xref>, <xref ref-type="bibr" rid="pone.0015338-Agarwal2">[16]</xref> and figure ranking <xref ref-type="bibr" rid="pone.0015338-Yu4">[13]</xref>.</p>
+      <p>Biomedical figure text, that is, text appearing in biomedical figures is important for understanding the meaning of figures. However, few approaches have been developed for extracting text from figures. <xref ref-type="fig" rid="pone-0015338-g001">Figure 1</xref> shows representative examples of biomedical figure text, including biomedical named entities (e.g., tissue, species, chemical, and gene or protein names) and function descriptions (e.g., “DNA binding domain”). Such examples show the potential value that figure text has for biomedical figure mining but also suggest some of the challenges of such work, which will be discussed below.</p>
+      <fig id="pone-0015338-g001" position="float">
+        <object-id pub-id-type="doi">10.1371/journal.pone.0015338.g001</object-id>
+        <label>Figure 1</label>
+        <caption>
+          <title>Examples of figure text in figures.</title>
+          <p>Biomedical figures generally include biomedical named entities (e.g., tissue, species, chemical, and gene or protein names) and functional description (e.g., “DNA binding domain”). Biomedical figure text (i.e., text appearing in a biomedical figure) is important for understanding the meaning of a figure.</p>
+        </caption>
+        <graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.g001" xlink:type="simple"/>
+      </fig>
+      <p>Existing work on text extraction from images has mainly focused on the open-domain of natural scene images <xref ref-type="bibr" rid="pone.0015338-Liu1">[17]</xref>, <xref ref-type="bibr" rid="pone.0015338-Chen1">[18]</xref>, <xref ref-type="bibr" rid="pone.0015338-Gatos1">[19]</xref> and videos <xref ref-type="bibr" rid="pone.0015338-Chen2">[20]</xref>–<xref ref-type="bibr" rid="pone.0015338-Shivakumara1">[23]</xref> rather than biomedical figure text extraction. Previous research has applied off-the-shelf Optical Character Recognition (OCR) tools to figure retrieval <xref ref-type="bibr" rid="pone.0015338-Xu1">[7]</xref> and figure panel detection <xref ref-type="bibr" rid="pone.0015338-Kou1">[24]</xref>. Our own research has found that off-the-shelf OCR tools generally produce many recognition errors on biomedical figures; however, there is no published work on evaluating existing OCR tools for biomedical figures or improving the performance of such tools for biomedical work. Thus, this study is the first attempt for both tasks.</p>
+      <p>Figures are images. In the open domain, image text extraction is a relatively mature field and typically incorporates the following three steps: <italic>text localization</italic>, <italic>character recognition</italic>, and <italic>text correction</italic>. Open-domain off-the-shelf OCR tools can perform well <xref ref-type="bibr" rid="pone.0015338-Liu1">[17]</xref>, <xref ref-type="bibr" rid="pone.0015338-Chen1">[18]</xref> under two conditions – that images are of high quality and that text is typically presented with a simple background. Unfortunately, both of these conditions are seldom met by biomedical figures; rather, we have observed that biomedical figures are frequently of low image quality and that the background of images tends to be complex. Furthermore, biomedical figures have domain-specific characteristics that include unexpected word boundaries (e.g., hyphens and other punctuation), domain-specific terms (e.g., gene and protein names), and symbols that do not appear in open-domain images. Therefore, we speculate that off-the-shelf OCR tools may not perform well on biomedical figures.</p>
+      <p>In this study, we first evaluated the performance of an off-the-shelf OCR tool. We then developed and evaluated a novel and domain-specific biomedical Figure Text Extraction Tool (FigTExT) for extracting text from biomedical figures. Thus, our study is an important step towards biomedical full-text mining.</p>
+    </sec>
+    <sec id="s2" sec-type="methods">
+      <title>Methods</title>
+      <p>As shown in <xref ref-type="fig" rid="pone-0015338-g002">Figure 2</xref>, FigTExT has three components: <italic>image preprocessing</italic>, <italic>character recognition</italic>, and <italic>text correction</italic>. <italic>Image preprocessing</italic> enhances not only text region detection by improving image contrast and determining the gray level of figure texts, but also image quality by up-sampling. FigTExT adapts an off-the-shelf OCR tool on the improved text localization for <italic>character recognition</italic>. For <italic>text correction</italic>, FigTExT first corrects misrecognized characters using a figure-specific lexicon and then refines the corrected result to filter out some spurious corrections.</p>
+      <fig id="pone-0015338-g002" position="float">
+        <object-id pub-id-type="doi">10.1371/journal.pone.0015338.g002</object-id>
+        <label>Figure 2</label>
+        <caption>
+          <title>FigTExT (Figure Text Extraction Tool).</title>
+          <p>FigTExT has three components: image preprocessing, character recognition, and text correction. Image preprocessing enhances not only text region detection by improving image contrast and determining the gray-level of figure text, but also image quality by up-sampling. FigTExT incorporates an off-the-shelf OCR tool for character recognition. For text correction, FigTExT first corrects misrecognized characters with a figure-specific lexicon and then refines the corrected result to filter out some spurious corrections.</p>
+        </caption>
+        <graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.g002" xlink:type="simple"/>
+      </fig>
+      <sec id="s2a">
+        <title>Image Preprocessing</title>
+        <sec id="s2a1">
+          <title>A. Text Localization</title>
+          <p>Text localization detects text regions in images. In this study, we adapted Gatos et al.'s approach <xref ref-type="bibr" rid="pone.0015338-Gatos1">[19]</xref> to separate text regions from non-text regions because this approach has shown to perform well on high contrast text regions. However, the approach has to be repeated twice for both the given image and its inverted image because of the unknown gray-level of the figure texts. Therefore, for optimal text localization performance, we preprocessed figure images (i.e., using contrast enhancement and gray-level decision of figure texts) prior to separating text regions from the images.</p>
+          <p>We developed the contrast stretching transformation <xref ref-type="bibr" rid="pone.0015338-Gonzalez1">[25]</xref> as shown in <xref ref-type="fig" rid="pone-0015338-g003">Figure 3(a)</xref> to enhance the contrast of figure texts. However, the transformation can enhance the contrast of both non-text regions and text regions, and as a result, may lead to false localizations. For this work, our strategy was to enhance only the contrast of text regions and ignore non-text regions. Since we found that the gray-level of black text in our figure data (256 gray-level images) was usually lower than 10, and that of the white text was higher than 230, we modified the contrast-stretching transformation by setting a<sub>1</sub> = 10 and a<sub>2</sub> = 230 to lower and raise the gray-level of black text and white text, respectively, while preserving the contrast of non-text regions, as shown in <xref ref-type="fig" rid="pone-0015338-g003">Figure 3(b)</xref>.</p>
+          <fig id="pone-0015338-g003" position="float">
+            <object-id pub-id-type="doi">10.1371/journal.pone.0015338.g003</object-id>
+            <label>Figure 3</label>
+            <caption>
+              <title>Contrast enhancement using modified contrast stretching transformation.</title>
+              <p>(A) Conventional contrast stretching transformation may be able to enhance the contrast of non-text regions as well as text regions; therefore, false localization can be anticipated. (B) We focused on only enhancing the contrast of text regions, not non-text regions. Our figure data presented that the gray-level of black text is usually lower than 10, and that of white text is higher than 230 in the 256 gray-level image. Therefore, we modified the contrast-stretching transformation by setting a<sub>1</sub> = 10 and a<sub>2</sub> = 230 to lower and raise the gray-level of black text and white text, respectively, while preserving the contrast of non-text regions.</p>
+            </caption>
+            <graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.g003" xlink:type="simple"/>
+          </fig>
+          <p>To determine the gray-level of figure texts, we computed the average gray-level (<italic>M</italic>) of an input image (<italic>I<sub>O</sub></italic>), as in Eq. (1). If <italic>M</italic> was higher than a certain threshold (<italic>δ</italic>), we considered the background image to be bright and the figure text dark, and we used the input image; otherwise, we inverted the input image before detecting text regions, as in Eq. (2). Implementing this approach enabled us to eliminate the redundancy of Gatos et al.'s approach.<disp-formula><graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.e001" xlink:type="simple"/><label>(1)</label></disp-formula><disp-formula><graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.e002" xlink:type="simple"/><label>(2)</label></disp-formula></p>
+          <p>Once the contrast was enhanced and the gray-level of the figure texts was determined, we adapted Gatos et al.'s approach to first obtain the binary image (<xref ref-type="fig" rid="pone-0015338-g004">Figure 4(b)</xref>) of the input image (<xref ref-type="fig" rid="pone-0015338-g004">Figure 4(a)</xref>) and then extract foreground objects (<xref ref-type="fig" rid="pone-0015338-g004">Figure 4(c)</xref>) according to the gray-level of the figure texts. Rather than identifying regions of foreground objects as others have done <xref ref-type="bibr" rid="pone.0015338-Liu1">[17]</xref>, <xref ref-type="bibr" rid="pone.0015338-Gatos1">[19]</xref>, we extracted strong edges of foreground objects and then identified a set of connected components. This approach is motivated by the fact that figure text usually has a high contrast with its background due to the contrast stretching transformation in <xref ref-type="fig" rid="pone-0015338-g003">Figure 3(b)</xref>. To detect character regions, we first applied geometrical constraints (e.g., size and aspect ratio of a character) to remove non-text regions. We then merged adjacent characters into the same text region with a morphological technique (<xref ref-type="fig" rid="pone-0015338-g004">Figure 4(d)</xref>). We first evaluated the performance of the text localization prior to applying it for FigTExT. To this end, we manually extracted 2,856 original text regions from 73 figure images randomly selected from the open-access articles deposited in PubMed Central. We then counted the number of correctly detected text regions (<italic>N<sub>c</sub></italic>), the number of incorrectly detected text regions (<italic>N<sub>f</sub></italic>), and the number of missed text regions (<italic>N<sub>m</sub></italic>). Recall is computed as <italic>N<sub>c</sub></italic>/(<italic>N<sub>c</sub></italic>+<italic>N<sub>m</sub></italic>); precision as <italic>N<sub>c</sub></italic>/(<italic>N<sub>c</sub></italic>+<italic>N<sub>f</sub></italic>) and F1-score as the harmonic mean of recall and precision. Our evaluation results showed that our figure text localization attained approximately 84% precision, 98% recall, and 90% F1-score.</p>
+          <fig id="pone-0015338-g004" position="float">
+            <object-id pub-id-type="doi">10.1371/journal.pone.0015338.g004</object-id>
+            <label>Figure 4</label>
+            <caption>
+              <title>Figure text localization.</title>
+              <p>(A) Input image. (B) Binary image. (C) Foreground objects. (D) Figure text regions.</p>
+            </caption>
+            <graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.g004" xlink:type="simple"/>
+          </fig>
+        </sec>
+        <sec id="s2a2">
+          <title>B. Image Up-sampling</title>
+          <p>As described earlier, off-the-shelf OCR tools generally perform well with high-quality images. In order to increase the quality of an image, we applied an up-sampling method called the bi-cubic interpolation method, which has shown to outperform other interpolation methods (e.g., nearest neighborhood and bilinear interpolation) <xref ref-type="bibr" rid="pone.0015338-Hsieh1">[26]</xref>.</p>
+        </sec>
+      </sec>
+      <sec id="s2b">
+        <title>Character Recognition</title>
+        <p>After localizing figure text regions, we then applied the off-the-shelf OCR tool. In this study, we chose a widely used OCR tool, SimpleOCR API <xref ref-type="bibr" rid="pone.0015338-httpwwwScanStorecomSoftware1">[27]</xref>, for recognizing characters in the localized text regions. SimpleOCR used an English dictionary (77,537 words) for text correction. Prior to applying it for FigTExT, we first evaluated the performance of SimpleOCR API on high-quality document images which consist of 31,479 characters (including letters, numbers, and symbols). Our evaluation results showed that SimpleOCR API attained 97% in overall accuracy and that most errors were due to the misinterpretation of lowercase letters (e.g., ‘e’ and ‘m’) and symbols.</p>
+      </sec>
+      <sec id="s2c">
+        <title>Text Correction</title>
+        <p>Text correction is a well-studied field in the open domain. Dictionary-based approaches <xref ref-type="bibr" rid="pone.0015338-Chen3">[28]</xref>, <xref ref-type="bibr" rid="pone.0015338-Chen4">[29]</xref>, <xref ref-type="bibr" rid="pone.0015338-Weinman1">[30]</xref> correct typographic mistakes such as insertions, deletions, substitutions and transpositions of letters by replacing an error word token with its correct formation, typically a word in a lexicon. Similarity and frequency information have been used to rank candidate words using several approaches, including edit distance <xref ref-type="bibr" rid="pone.0015338-Damerau1">[31]</xref>, <xref ref-type="bibr" rid="pone.0015338-Wagner1">[32]</xref>, <italic>n</italic>-grams <xref ref-type="bibr" rid="pone.0015338-Riseman1">[33]</xref>, <xref ref-type="bibr" rid="pone.0015338-Zamora1">[34]</xref>, probabilistic model <xref ref-type="bibr" rid="pone.0015338-Kashyap1">[35]</xref>, and neural nets <xref ref-type="bibr" rid="pone.0015338-Hodge1">[36]</xref>. One challenge of dictionary-based methods is the computational time needed to examine candidate words in a large lexicon. To solve this problem, Lucas et al. <xref ref-type="bibr" rid="pone.0015338-Lucas1">[37]</xref> suggested reusing computation in a trie-formatted lexicon, and Schambach <xref ref-type="bibr" rid="pone.0015338-Schambach1">[38]</xref> eliminated words from consideration based on the low probability of their constituent characters.</p>
+        <p>In addition to dictionary-based approaches, context-based approaches have also been developed for text correction. Context-based approaches detect and correct words errors with contextual-similarity-based methods <xref ref-type="bibr" rid="pone.0015338-Ruch1">[39]</xref>, <xref ref-type="bibr" rid="pone.0015338-Li1">[40]</xref>, web knowledge-based methods <xref ref-type="bibr" rid="pone.0015338-Ringlstetter1">[41]</xref>, <xref ref-type="bibr" rid="pone.0015338-Donoser1">[42]</xref>, probabilistic models <xref ref-type="bibr" rid="pone.0015338-Tong1">[43]</xref>, <xref ref-type="bibr" rid="pone.0015338-Thillou1">[44]</xref>, <xref ref-type="bibr" rid="pone.0015338-Stehouwer1">[45]</xref>, and latent semantic analysis <xref ref-type="bibr" rid="pone.0015338-Jones1">[46]</xref>. One advantage of using context-based approaches is that the computation time is lower (although the training is costly). However, such context-based approaches depend on proper contexts, which are not always available <xref ref-type="bibr" rid="pone.0015338-Martins1">[47]</xref>.</p>
+        <p>Nearly all off-the-shelf OCR tools have a built-in spelling correction component using an open-domain dictionary for text correction. However, such an open-domain dictionary does not include domain-specific terms that are likely to be encountered in biomedical figure text, such as gene or protein names and cell or tissue types. We therefore developed an approach to post-correct characters wrongly recognized by the OCR tool with a figure-specific lexicon, to be described below.</p>
+        <sec id="s2c1">
+          <title>A. Lexicon Construction</title>
+          <p>We developed different figure-specific lexicons and evaluated them for figure text recognition. Since figures are a part of full-text articles and the content of figures – including their important biomedical findings and methodologies – are usually described in the associated text (e.g., title, abstract, caption, or the full-text of the article in which a figure appears) <xref ref-type="bibr" rid="pone.0015338-Yu1">[3]</xref>, it is therefore reasonable to assume that figure text also appears in its surrounding context.</p>
+          <p>To test this hypothesis, we manually examined our figure collection (a collection of 382 figures, see “Data and Gold Standard” in the <xref ref-type="sec" rid="s2">Methods</xref> section) and found that 26.8% of figure text appears in figure captions, 26.8% in figure-associated text, 34.4% in figure caption + associated text, and 42.2% in the full-text of the articles they accompany. We found that it is nearly impossible to build a lexicon that can recover 100% of figure text (for details, see Error Analysis). Accordingly, we built four figure-specific lexicons (caption, associated text, caption+associated text, full-text) and evaluated their performance for post-OCR text correction.</p>
+        </sec>
+        <sec id="s2c2">
+          <title>B. Text Correction</title>
+          <p>Biomedical figure text rarely takes the form of complete sentences; rather, such text generally consists of abbreviations, individual words, word fragments or phrases, as well as these in combination. Therefore, we speculated that context-based post-text correction methods <xref ref-type="bibr" rid="pone.0015338-Damerau1">[31]</xref>, <xref ref-type="bibr" rid="pone.0015338-Wagner1">[32]</xref> would not work well for post-OCR text correlation and explored lexicon-based approaches.</p>
+          <p>Lexicon-based approaches require the identification of a specific lexicon (or word) as a text correction candidate. Such approaches match each recognized word (<italic>w</italic>) with each word (<italic>c<sub>i</sub></italic>) in the lexicons and calculate the similarity between the two words. We explored three state-of-the-art word-similarity metrics for this work: edit distance (ED) <xref ref-type="bibr" rid="pone.0015338-Levenshtein1">[48]</xref>, longest common sequence (LCS) <xref ref-type="bibr" rid="pone.0015338-Paterson1">[49]</xref>, and multiple sequence alignment (MSA) <xref ref-type="bibr" rid="pone.0015338-Thompson1">[50]</xref>.</p>
+          <p>ED measures the minimum number of edit operations (i.e., insertion, deletion, or substitution of a single character) required to transform one word into another word: the lower an ED, the higher the similarity between two words. <xref ref-type="fig" rid="pone-0015338-g005">Figure 5</xref> shows an example in which we applied ED to compute the number of edit operations between the recognized word, <italic>w</italic>="antlsnze”, and its candidates, <italic>c<sub>i</sub></italic>="antisense” and <italic>c<sub>j</sub></italic>="antiserum.” Three edit operations (i.e., two substitutions and one insertion) are required to transform “antlsnze” to “antisense,” while five edit operations (i.e., four substitutions and one insertion) are required to transform “antlsnze” to “antiserum.” Therefore, according to ED, “antisense” has a higher similarity than “antiserum” to the recognized form “antlsnze” and is thus more likely to be the original form.</p>
+          <fig id="pone-0015338-g005" position="float">
+            <object-id pub-id-type="doi">10.1371/journal.pone.0015338.g005</object-id>
+            <label>Figure 5</label>
+            <caption>
+              <title>Example of edit distance (i.e., <italic>Levenshtein</italic> distance).</title>
+              <p>Three edit operations (i.e., two substitutions and one insertion) are required to transform “antlsnze” to “antisense”, while five edit operations (i.e., four substitutions and one insertion) are required to transform “antlsnze” to “antiserum”. Therefore, according to ED, “antisense” has a higher similarity than “antiserum” to the recognized form “antlsnze”.</p>
+            </caption>
+            <graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.g005" xlink:type="simple"/>
+          </fig>
+          <p>LCS identifies the longest subsequence common to a set of words. A subsequence is a sequence that appears in the same relative order in all instances but not necessarily contiguously. For example, the LCS of the two words (<italic>w</italic> and <italic>c<sub>i</sub></italic>) in <xref ref-type="fig" rid="pone-0015338-g005">Figure 5</xref> is “antsne,” and the similarity of the two words is measured by the number of the letters in their LCS, which is 6, while the LCS of the two words (<italic>w</italic> and <italic>c<sub>j</sub></italic>) is “ants”, and its similarity is 4. Therefore, LCS suggests that “antisense” is more likely than “antiserum” to have been the word incorrectly recognized as “antlsnze.”</p>
+          <p>Similar to LCS, MSA also identifies regions of similarity between a word and a set of words. In contrast to LCS, however, it provides a gap penalty as well as match and mismatch scores to contribute to the overall score of alignments with a higher MSA score indicating a greater degree of similarity between the words. In this study, we assigned a positive match score (2), a negative mismatch score (−1), and a negative gap penalty (−2). <xref ref-type="fig" rid="pone-0015338-g006">Figure 6</xref> shows an example in which MSA was used to compute the similarity of <italic>w</italic> with respect to <italic>c<sub>i</sub></italic> and <italic>c<sub>j</sub></italic> in <xref ref-type="fig" rid="pone-0015338-g005">Figure 5</xref>. As shown in <xref ref-type="fig" rid="pone-0015338-g006">Figure 6</xref>, there were 6 matching characters, 2 mismatched characters, and 1 gap between <italic>w</italic> and <italic>c<sub>i</sub></italic>; thus, MSA provides a value of 8. On the other hand, there were 4 matching characters, 4 mismatched characters, and 1 gap between <italic>w</italic> and <italic>c<sub>j</sub></italic>; thus, MSA provides a value of only 2. Therefore, similar to ED and LCS, MSA selects “antisense” as the original form misrecognized by OCR as “antlsnze.”</p>
+          <fig id="pone-0015338-g006" position="float">
+            <object-id pub-id-type="doi">10.1371/journal.pone.0015338.g006</object-id>
+            <label>Figure 6</label>
+            <caption>
+              <title>Example of multiple sequence alignment.</title>
+              <p>The LCS of the two words (<italic>w</italic> and <italic>c<sub>i</sub></italic>) is “antsne”, and its similarity is 6, i.e., the length of its LCS (“antsne”), while the LCS of the two words (<italic>w</italic> and <italic>c<sub>j</sub></italic>) is “ants”, and its similarity is 4. Therefore, LCS suggests that “antisense” rather than “antiserum” is the correct form of “antlsnze.”</p>
+            </caption>
+            <graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.g006" xlink:type="simple"/>
+          </fig>
+          <p>Although in this illustration, the three similarity metrics produce similar results for text correction, the three algorithms differ in many other cases. In this study, we evaluate all three algorithms for biomedical figure text correction.</p>
+        </sec>
+        <sec id="s2c3">
+          <title>C. Refinement of Text Correction</title>
+          <p>As described earlier, only 42.2% of figure texts appear in their associated full-text articles. Therefore, with our lexicon-based approach, 57.8% of figure texts that do not appear in the full-text article may be falsely 'corrected', even though some of them are correctly recognized by the off-the-shelf OCR tool. To overcome this problem, we developed an additional process to refine the result of text correction.</p>
+          <p>We assumed that if the recognized word (<italic>w</italic>) is misspelled, but its original word (w<italic><sub>c</sub></italic>) exists in the lexicon, there is a certain degree of overlap between two words. As a measure of this, we first parsed words into letter <italic>n</italic>-grams. During the parsing process, we included the “beginning” and “end” spaces surrounding the word <xref ref-type="bibr" rid="pone.0015338-Tong1">[43]</xref>. We then estimated the number of matched <italic>n</italic>-grams between words (<italic>ω<sub>TF</sub></italic>). Finally, the overlap (<italic>T<sub>overlap</sub></italic>) between two words can be computed as<disp-formula><graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.e003" xlink:type="simple"/><label>(3)</label></disp-formula>where <italic>N<sub>n-</sub></italic><sub>gram</sub> is the total number of letter <italic>n</italic>-grams of a recognized word. If <italic>T<sub>overlap</sub></italic> is higher than a certain threshold (<italic>γ</italic>), the corrected word (w<italic><sub>c</sub></italic>) is acceptable, as in Eq. (4). Otherwise, the recognized word (<italic>w</italic>) is acceptable since it is considered as a wrong text correction.<disp-formula><graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.e004" xlink:type="simple"/><label>(4)</label></disp-formula>where w<italic><sub>o</sub></italic> is the final result of FigTExT.</p>
+        </sec>
+      </sec>
+      <sec id="s2d">
+        <title>Data and Gold Standard</title>
+        <p>The gold standard we used for developing and testing comprises 382 figures appearing in 70 full-text articles randomly selected from PubMed Central. We then manually transcribed 9,643 figure texts from the figure collection; this was done by both the first author of this paper and one University of Wisconsin college student. The two transcribers showed an agreement of 96% and a Cohen's kappa value of 0.95 with 95% confidence. After redundant figure texts were removed, there were 3,853 unique figure texts used for evaluation. We used 30% of our figure collection for developing and the remaining 70% for testing.</p>
+      </sec>
+      <sec id="s2e">
+        <title>Important Figure Texts</title>
+        <p>Not all figure texts are semantically rich. Some figure characters (e.g., panel labels) may be important for certain data-mining tasks (e.g., panel detection <xref ref-type="bibr" rid="pone.0015338-Kou1">[24]</xref>), but those texts may not represent the semantics of the figures. On the other hand, certain figure texts (e.g., gene and protein names) may play an important role for representing the semantics of figures, and we evaluated FigTExT for identifying those semantically important figure texts.</p>
+        <p>First, we evaluated whether semantically important figure texts could be reliably annotated by domain experts. To this end, we randomly selected 60 figures in our figure collection and asked three domain experts (PhDs in the bioscience domain) to independently identify important figure texts. We calculated inter-rater agreement. We also evaluated FigTExT using the extracted important figure texts as a gold standard.</p>
+      </sec>
+      <sec id="s2f">
+        <title>Figure Texts that Do Not Appear in Lexicons</title>
+        <p>As stated earlier, 57.8% figure texts do not appear in the full-text. A system that can uncover those “lost” texts has the potential to improve figure search. We therefore evaluated the performance of FigTExT on those figure texts that do not appear in lexicons.</p>
+      </sec>
+      <sec id="s2g">
+        <title>Evaluation Methods</title>
+        <p>Figure text incorporates both word characters and other symbols. To simplify the evaluation, we ignored numbers and special symbols (e.g., +, −, @, #, %, etc.) and evaluated word characters only. Our evaluation was strict: a recognized text was considered as correct if every character and its character sequence completely matched the gold standard text. We then counted the number of recognized words (<italic>N<sub>R</sub></italic>), the number of correctly recognized words (<italic>N<sub>C</sub></italic>) of the recognized words, the number of transcribed figure texts in figures (<italic>N<sub>F</sub></italic>), and the number of correctly retrieved words (<italic>N<sub>T</sub></italic>) of transcribed figure texts. We adopted precision, recall, and F1-score as the evaluation metric. Precision is computed as <italic>N<sub>C</sub></italic>/<italic>N<sub>R</sub></italic>; recall as <italic>N<sub>T</sub></italic>/<italic>N<sub>F</sub></italic>; and F1-score as the harmonic mean of recall and precision.</p>
+      </sec>
+    </sec>
+    <sec id="s3">
+      <title>Results</title>
+      <sec id="s3a">
+        <title>Image Preprocessing</title>
+        <p>As shown in <xref ref-type="table" rid="pone-0015338-t001">Table 1</xref>, using the OCR tool alone attained only 36.6% precision, 19.3% recall, and 25.3% F1-score for figure text extraction. When text localization was applied prior to the application of the OCR tool, the performance was only slightly improved; this may be due to the fact that figure texts in the localized text regions were still of too poor a quality to be correctly recognized by the OCR tool. In contrast, when image up-sampling was applied prior to the application of the OCR tool, the performance improved, attaining 37.3% precision, 31.1% recall, and 33.9% F1-score, which was, respectively, 0.7%, 11.8%, and 8.6% (absolute value) higher than the performance of the OCR tool alone. Interestingly, when we integrated both text localization and image up-sampling – we applied text localization first and then added image up-sampling – both recall and F1-score values further increased by 24.8% and 10.8%, respectively (absolute value), attaining the final scores of 37.2% precision, 55.9% recall, and 44.7% F1-score, which is, respectively, 0.6%, 36.6%, and 19.4% (absolute value) higher than the results of applying the OCR tool alone.</p>
+        <table-wrap id="pone-0015338-t001" position="float"><object-id pub-id-type="doi">10.1371/journal.pone.0015338.t001</object-id><label>Table 1</label><caption>
+            <title>Results of text localization and up-sampling prior to the application of the OCR tool.</title>
+          </caption><!--===== Grouping alternate versions of objects =====--><alternatives><graphic id="pone-0015338-t001-1" mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.t001" xlink:type="simple"/><table>
+            <colgroup span="1">
+              <col align="left" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+            </colgroup>
+            <thead>
+              <tr>
+                <td align="left" colspan="1" rowspan="1"/>
+                <td align="left" colspan="1" rowspan="1">Precision (%)</td>
+                <td align="left" colspan="1" rowspan="1">Recall (%)</td>
+                <td align="left" colspan="1" rowspan="1">F1-score (%)</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">Off-the-shelf OCR tool</td>
+                <td align="left" colspan="1" rowspan="1">36.6</td>
+                <td align="left" colspan="1" rowspan="1">19.3</td>
+                <td align="left" colspan="1" rowspan="1">25.3</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">Applying text localization prior to OCR tool</td>
+                <td align="left" colspan="1" rowspan="1">36.6</td>
+                <td align="left" colspan="1" rowspan="1">19.5</td>
+                <td align="left" colspan="1" rowspan="1">25.4</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">Applying image up-sampling prior to OCR tool</td>
+                <td align="left" colspan="1" rowspan="1">37.3</td>
+                <td align="left" colspan="1" rowspan="1">31.1</td>
+                <td align="left" colspan="1" rowspan="1">33.9</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">Applying text localization and image up-sampling prior to the OCR tool (baseline system)</td>
+                <td align="left" colspan="1" rowspan="1">37.2</td>
+                <td align="left" colspan="1" rowspan="1">55.9</td>
+                <td align="left" colspan="1" rowspan="1">44.7</td>
+              </tr>
+            </tbody>
+          </table></alternatives></table-wrap>
+      </sec>
+      <sec id="s3b">
+        <title>Text Correction</title>
+        <p>We evaluated text correction on three similarity metrics: ED, LCS and MSA, as well as on four figure-specific lexicons: figure caption, associated text, caption+associated text, and full-text. The average numbers of word tokens were 99, 410, 509, and 6,156, respectively, corresponding to the four lexicons. We found that text correction methods performed poorly without image preprocessing. As a result, our text correction methods were built upon the improved OCR tool, which integrates both the processes of text localization and image up-sampling described in the previous paragraph (Image Preprocessing).</p>
+        <p>As shown in <xref ref-type="table" rid="pone-0015338-t002">Table 2</xref>, of all four figure-specific lexicons, ED outperformed both LCS and MSA, and MSA outperformed LCS. With figure captions, for example, the performances of ED, LCS, and MSA were 48.2%, 27.4%, and 38.1% F1-score, respectively.</p>
+        <table-wrap id="pone-0015338-t002" position="float"><object-id pub-id-type="doi">10.1371/journal.pone.0015338.t002</object-id><label>Table 2</label><caption>
+            <title>Performance of FigTExT for four figure-specific lexicons.</title>
+          </caption><!--===== Grouping alternate versions of objects =====--><alternatives><graphic id="pone-0015338-t002-2" mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.t002" xlink:type="simple"/><table>
+            <colgroup span="1">
+              <col align="left" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+            </colgroup>
+            <thead>
+              <tr>
+                <td align="left" colspan="1" rowspan="1"/>
+                <td align="left" colspan="1" rowspan="1">Figure caption</td>
+                <td align="left" colspan="1" rowspan="1">Associated text</td>
+                <td align="left" colspan="1" rowspan="1">Caption+Associated text</td>
+                <td align="left" colspan="1" rowspan="1">Full-text article</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1"/>
+                <td align="left" colspan="1" rowspan="1">F1-score (%) (Recall, Precision)</td>
+                <td align="left" colspan="1" rowspan="1">F1-score (%) (Recall, Precision)</td>
+                <td align="left" colspan="1" rowspan="1">F1-score (%) (Recall, Precision)</td>
+                <td align="left" colspan="1" rowspan="1">F1-score (%) (Recall, Precision)</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">ED</td>
+                <td align="left" colspan="1" rowspan="1">48.2 (40.6, 59.4)</td>
+                <td align="left" colspan="1" rowspan="1">47.0 (41.8, 53.7)</td>
+                <td align="left" colspan="1" rowspan="1">56.2 (51.0, 62.5)</td>
+                <td align="left" colspan="1" rowspan="1">51.6 (56.1, 47.8)</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">LCS</td>
+                <td align="left" colspan="1" rowspan="1">27.4 (28.5, 26.4)</td>
+                <td align="left" colspan="1" rowspan="1">24.3 (26.4, 22.4)</td>
+                <td align="left" colspan="1" rowspan="1">30.8 (34.2, 28.0)</td>
+                <td align="left" colspan="1" rowspan="1">18.7 (24.4, 15.1)</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">MSA</td>
+                <td align="left" colspan="1" rowspan="1">38.1 (37.2, 38.6)</td>
+                <td align="left" colspan="1" rowspan="1">36.1 (37.7, 34.6)</td>
+                <td align="left" colspan="1" rowspan="1">42.9 (46.7, 39.6)</td>
+                <td align="left" colspan="1" rowspan="1">32.1 (41.3, 26.3)</td>
+              </tr>
+            </tbody>
+          </table></alternatives></table-wrap>
+        <p>Of the four types of lexicons, caption+associated text outperformed all three other lexicons in all three similarity metrics (ED, LCS and MSA), attaining the best F1-score of 56.2% in the ED method, followed by F1-scores of 30.8% and 42.9% F1-scores using the LCS and MSA methods, respectively. In contrast, the results of using figure caption, associated text, and full-text article as lexicons are mixed. For example, using full-text articles as the lexicon, the ED method led the performance of 51.6% F1-score, outperforming figure caption and associated text. On the other hand, using full-text as the lexicon did not lead to good performance for LCS and MSA, results in F1-scores of 18.7% and 32.1%, respectively. Figure caption outperformed both associated text and full-text when LCS and MSA were applied, attaining an F1-score of 27.4% and 38.1%, respectively.</p>
+        <p>As described earlier, we developed methods in text correction refinement to prevent inaccurate out-of-lexicon text correction. As shown in <xref ref-type="table" rid="pone-0015338-t003">Table 3</xref>, the refinement approaches increased the performance of LCS and MSA. On the other hand, the performance of ED decreased, although it still outperformed LCS and MSA. Similar to the results shown in <xref ref-type="table" rid="pone-0015338-t002">Table 2</xref>, caption+associated text remained as the best performing lexicon.</p>
+        <table-wrap id="pone-0015338-t003" position="float"><object-id pub-id-type="doi">10.1371/journal.pone.0015338.t003</object-id><label>Table 3</label><caption>
+            <title>Performance of FigTExT for four figure-specific lexicons with refinement.</title>
+          </caption><!--===== Grouping alternate versions of objects =====--><alternatives><graphic id="pone-0015338-t003-3" mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.t003" xlink:type="simple"/><table>
+            <colgroup span="1">
+              <col align="left" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+            </colgroup>
+            <thead>
+              <tr>
+                <td align="left" colspan="1" rowspan="1"/>
+                <td align="left" colspan="1" rowspan="1">Figure caption</td>
+                <td align="left" colspan="1" rowspan="1">Associated text</td>
+                <td align="left" colspan="1" rowspan="1">Caption+Associated text</td>
+                <td align="left" colspan="1" rowspan="1">Full-text article</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1"/>
+                <td align="left" colspan="1" rowspan="1">F1-score (%) (Recall, Precision)</td>
+                <td align="left" colspan="1" rowspan="1">F1-score (%) (Recall, Precision)</td>
+                <td align="left" colspan="1" rowspan="1">F1-score (%) (Recall, Precision)</td>
+                <td align="left" colspan="1" rowspan="1">F1-score (%) (Recall, Precision)</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">ED</td>
+                <td align="left" colspan="1" rowspan="1">47.2 (58.2, 39.8)</td>
+                <td align="left" colspan="1" rowspan="1">47.7 (58.5, 40.3)</td>
+                <td align="left" colspan="1" rowspan="1">49.1 (60.6, 41.3)</td>
+                <td align="left" colspan="1" rowspan="1">49.4 (61.4, 41.3)</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">LCS</td>
+                <td align="left" colspan="1" rowspan="1">45.8 (56.2, 38.6)</td>
+                <td align="left" colspan="1" rowspan="1">45.2 (55.2, 38.3)</td>
+                <td align="left" colspan="1" rowspan="1">46.4 (56.9, 39.1)</td>
+                <td align="left" colspan="1" rowspan="1">44.1 (54.1, 37.2)</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">MSA</td>
+                <td align="left" colspan="1" rowspan="1">46.6 (57.5, 39.2)</td>
+                <td align="left" colspan="1" rowspan="1">46.7 (57.6, 39.3)</td>
+                <td align="left" colspan="1" rowspan="1">47.9 (59.3, 40.2)</td>
+                <td align="left" colspan="1" rowspan="1">46.8 (58.1, 39.1)</td>
+              </tr>
+            </tbody>
+          </table></alternatives></table-wrap>
+      </sec>
+      <sec id="s3c">
+        <title>Performance in Terms of Character and Term Accuracies</title>
+        <p>We evaluated whether the performance of FigTExT related to word length. <xref ref-type="fig" rid="pone-0015338-g007">Figure 7(a)</xref> plots character accuracy as a function of word length. The plot is based on the best system (ED+caption+associated text) in <xref ref-type="table" rid="pone-0015338-t003">Table 3</xref> because it has the highest recall. As shown in <xref ref-type="fig" rid="pone-0015338-g007">Figure 7(a)</xref>, the overall character accuracy of the baseline system (i.e., No correction in <xref ref-type="fig" rid="pone-0015338-g007">Figure 7(a)</xref>) was 79.2% and its variance 0.9%. The results show that FigTeXT's performance does not depend on word length. ED attained 81.7% overall character accuracy, which is 2.5% higher than the baseline system. In contrast to ED, LCS and MSA attained 75.5% and 78.8% overall character accuracies, which is 3.7% and 0.4% lower, respectively, than the baseline system.</p>
+        <fig id="pone-0015338-g007" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pone.0015338.g007</object-id>
+          <label>Figure 7</label>
+          <caption>
+            <title>Performance of FigTExT in terms of character and term accuracies.</title>
+            <p>(A) Overall character accuracy of the baseline system (i.e., No correction) is 79.2% and its variance 0.9%. Our character recognition performed equally well regardless of word length. ED attained 81.7% overall character accuracy, which is 2.5% higher than the baseline system. In contrast to ED, LCS and MSA attained 75.5% and 78.8% overall character accuracies, which is 3.7% and 0.4% lower, respectively, than the baseline system. (B) Term accuracy decreases when the number of characters in a figure text is increased. ED still outperformed both LCS and MSA, and MSA outperformed LCS in all word lengths.</p>
+          </caption>
+          <graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.g007" xlink:type="simple"/>
+        </fig>
+        <p><xref ref-type="fig" rid="pone-0015338-g007">Figure 7(b)</xref> shows the word accuracy (in contrast to character accuracy) of FigTExT. As expected, word accuracy decreases when the number of characters in a figure text is increased. ED still outperformed both LCS and MSA, and MSA outperformed LCS in all word length.</p>
+      </sec>
+      <sec id="s3d">
+        <title>FigTExT on Important Figure Texts</title>
+        <p><xref ref-type="table" rid="pone-0015338-t004">Table 4</xref> shows the results of inter-rater agreement on identifying important figure texts. The pairwise agreement of the three annotators A, B, and C showed a kappa value of 0.911, 0.936 and 0.563 for <italic>A</italic> and <italic>B</italic>, <italic>B</italic> and <italic>C,</italic> and <italic>A</italic> and <italic>C,</italic> respectively. The lower agreement between <italic>A</italic> and <italic>C</italic> was due to <italic>C</italic> selecting much more important figure texts.</p>
+        <table-wrap id="pone-0015338-t004" position="float"><object-id pub-id-type="doi">10.1371/journal.pone.0015338.t004</object-id><label>Table 4</label><caption>
+            <title>Inter-rater agreement and its kappa value on important figure text (95% confidence).</title>
+          </caption><!--===== Grouping alternate versions of objects =====--><alternatives><graphic id="pone-0015338-t004-4" mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.t004" xlink:type="simple"/><table>
+            <colgroup span="1">
+              <col align="left" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+            </colgroup>
+            <thead>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">Pair of annotators</td>
+                <td align="left" colspan="1" rowspan="1">Agreement</td>
+                <td align="left" colspan="1" rowspan="1">Cohen's kappa value</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td align="left" colspan="1" rowspan="1"><italic>A</italic> − <italic>B</italic></td>
+                <td align="left" colspan="1" rowspan="1">96.5%</td>
+                <td align="left" colspan="1" rowspan="1">0.911</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1"><italic>B</italic> − <italic>C</italic></td>
+                <td align="left" colspan="1" rowspan="1">98.0%</td>
+                <td align="left" colspan="1" rowspan="1">0.936</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1"><italic>A</italic> − <italic>C</italic></td>
+                <td align="left" colspan="1" rowspan="1">80.8%</td>
+                <td align="left" colspan="1" rowspan="1">0.563</td>
+              </tr>
+            </tbody>
+          </table></alternatives></table-wrap>
+        <p>With the best FigTExT system (ED+caption+associated text) as shown in <xref ref-type="table" rid="pone-0015338-t002">Table 2</xref>, we evaluated the system on important figure texts. As shown in <xref ref-type="table" rid="pone-0015338-t005">Table 5</xref>, the joint <italic>A</italic> and <italic>B</italic> data led to the highest number of figure texts comparing to other pairs. However, its precision, recall, and F1-score presented the lowest values. In contrast, the joint <italic>A</italic> and <italic>C</italic> text sets resulted in the lowest number of figure texts and resulted in the best performance: an F1-score of 77%. The three domain experts annotated a combined set of 757 important figure texts, for which FigTExT performed with 73.0% precision, 62.0% recall and 67.1% F1-score. We found that 69.2% of the 757 important figure texts appeared in the lexicon (caption+associated text), the percentage of which is significantly higher than the 34.8% of all figure texts that appear in the lexicon.</p>
+        <table-wrap id="pone-0015338-t005" position="float"><object-id pub-id-type="doi">10.1371/journal.pone.0015338.t005</object-id><label>Table 5</label><caption>
+            <title>Performance of FigTExT on the important figure texts identified by annotators.</title>
+          </caption><!--===== Grouping alternate versions of objects =====--><alternatives><graphic id="pone-0015338-t005-5" mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.t005" xlink:type="simple"/><table>
+            <colgroup span="1">
+              <col align="left" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+              <col align="center" span="1"/>
+            </colgroup>
+            <thead>
+              <tr>
+                <td align="left" colspan="1" rowspan="1"/>
+                <td align="left" colspan="1" rowspan="1"><italic>A</italic>∩<italic>B</italic></td>
+                <td align="left" colspan="1" rowspan="1"><italic>B</italic>∩<italic>C</italic></td>
+                <td align="left" colspan="1" rowspan="1"><italic>A</italic>∩<italic>C</italic></td>
+                <td align="left" colspan="1" rowspan="1"><italic>A</italic>∪<italic>B</italic>∪<italic>C</italic></td>
+                <td align="left" colspan="1" rowspan="1">All figure texts</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">No. of figure texts</td>
+                <td align="left" colspan="1" rowspan="1">78</td>
+                <td align="left" colspan="1" rowspan="1">65</td>
+                <td align="left" colspan="1" rowspan="1">47</td>
+                <td align="left" colspan="1" rowspan="1">757</td>
+                <td align="left" colspan="1" rowspan="1">3,853</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">Precision (%)</td>
+                <td align="left" colspan="1" rowspan="1">37.2</td>
+                <td align="left" colspan="1" rowspan="1">74.3</td>
+                <td align="left" colspan="1" rowspan="1">87.3</td>
+                <td align="left" colspan="1" rowspan="1">73.0</td>
+                <td align="left" colspan="1" rowspan="1">62.5</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">Recall (%)</td>
+                <td align="left" colspan="1" rowspan="1">44.7</td>
+                <td align="left" colspan="1" rowspan="1">52.6</td>
+                <td align="left" colspan="1" rowspan="1">68.8</td>
+                <td align="left" colspan="1" rowspan="1">62.0</td>
+                <td align="left" colspan="1" rowspan="1">51.0</td>
+              </tr>
+              <tr>
+                <td align="left" colspan="1" rowspan="1">F1-score (%)</td>
+                <td align="left" colspan="1" rowspan="1">40.6</td>
+                <td align="left" colspan="1" rowspan="1">61.6</td>
+                <td align="left" colspan="1" rowspan="1">77.0</td>
+                <td align="left" colspan="1" rowspan="1">67.1</td>
+                <td align="left" colspan="1" rowspan="1">56.2</td>
+              </tr>
+            </tbody>
+          </table></alternatives></table-wrap>
+        <p>For the remaining 30.8% of important figure texts not appeared in the lexicon, FigTExT did not extract any original texts since they were corrected with word tokens in the lexicon. However, after we applied the text correction refinement, FigTExT recovered 38.1% figure texts that do not appear in the lexicons, although the overall FigTExT's precision was reduced from 40.1% to 24.3%.</p>
+      </sec>
+      <sec id="s3e">
+        <title>Error Analysis</title>
+        <p>Our results show that only 42.2% of figure texts appear in the corresponding full-text articles, the result of which explained the low recall of FigTExT. We manually analyzed why figure texts do not appear in the full-text.</p>
+        <list list-type="order">
+          <list-item>
+            <p><bold>Abbreviations. </bold>Biomedical researchers tend to maximize the usage of image space and using abbreviations is one strategy. We found that abbreviations frequently appear in figures. For example, as shown in <xref ref-type="fig" rid="pone-0015338-g008">Figure 8(a)</xref>, “transcr.” is the abbreviation of “transcription” and “ab” is that of “antibodies”. However, many abbreviations that appear in figures do not appear in the full-text article, and this constitutes a challenge.</p>
+          </list-item>
+          <list-item>
+            <p><bold>Linked Terms.</bold> Biomedical researchers are creative in their use of limited image space. We found that two or more different terms were connected by symbols such as ‘–’, ‘+’, and ‘/’. For example, as shown in <xref ref-type="fig" rid="pone-0015338-g008">Figure 8(a)</xref>, “TBP-TFB-RNAP” is shown in the full-text as “the association of RNAP to the TBP–TFB complex” and “TBP-TFB-LrpA” stands for “the binding sites of LrpA and TBP/TFB”.</p>
+          </list-item>
+          <list-item>
+            <p><bold>Gene Sequence.</bold> We found that figures frequently incorporate gene sequences, many of which do not appear in the full-text article. For instance, as shown in <xref ref-type="fig" rid="pone-0015338-g008">Figure 8(b)</xref>, of the three sequences, “GGCA” is the only one that appears in the full-text.</p>
+          </list-item>
+        </list>
+        <p>We analyzed sources of errors when figure texts appeared in the full-text. Using the best system (ED+caption+associated text in <xref ref-type="table" rid="pone-0015338-t002">Table 2</xref>) as FigTExT, our results show that 62.4% of figure texts were correctly identified. None of the figure texts not appearing in the lexicon were extracted since they were corrected with word tokens in the lexicon. Our manual analyses of the remaining 37.6% of wrongly identified figure texts revealed the following five additional causes of errors: complexity, thick stroke, contrast, font size, and font type.</p>
+        <list list-type="simple">
+          <list-item>
+            <p><bold>4) High Image Complexity.</bold>Biomedical figures are complex. Text and image content are frequently intertwined (an example is shown in <xref ref-type="fig" rid="pone-0015338-g009">Figure 9(a)</xref>), and as a consequence, text localization frequently detects non-text regions by mistake and decreased both the recall and precision.</p>
+          </list-item>
+          <list-item>
+            <p><bold>5) Thick Stroke.</bold> Thick strokes not only close the loops in letters such as “a” and “e”, completely or partially, but they also often touch neighboring characters, as shown in <xref ref-type="fig" rid="pone-0015338-g009">Figure 9(b)</xref>. This sometimes makes it difficult even for human to correctly identify such figure texts. As a result, character recognition and text correction can produce errors even when text localization correctly detects text regions.</p>
+          </list-item>
+          <list-item>
+            <p><bold>6) Low Image Contrast. </bold>Image contrast is as important as image quality for text recognition. Color text shown in <xref ref-type="fig" rid="pone-0015338-g009">Figure 9(c)</xref> usually presents visually high contrast with background. However, its gray-level difference is much lower than that of black text. This low contrast prevents FigTExT from localizing text regions and consequently from recognizing text correctly.</p>
+          </list-item>
+          <list-item>
+            <p><bold>7) Small Font Size. </bold>In general, figures have limited space for incorporating figure text. Hence, authors often use a small font size when inserting text. Small font size, however, often lowers both image quality and contrast, as in <xref ref-type="fig" rid="pone-0015338-g009">Figure 9(d)</xref>, serving as another error source despite enlarging it using bicubic interpolation.</p>
+          </list-item>
+          <list-item>
+            <p><bold>8) Non-Standard Font Type. </bold>Typically, the off-the-shelf OCR tool that we used in this study can recognize such standard font types as Arial, Century, and Times New Roman. However, we found that authors often use non-standard font type (e.g., outlined) to emphasize their results (e.g. <xref ref-type="fig" rid="pone-0015338-g009">Figure 9(e)</xref>). Although text localization can detect these non-standard font-type character regions, the OCR tool cannot always deal with them properly.</p>
+          </list-item>
+        </list>
+        <fig id="pone-0015338-g008" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pone.0015338.g008</object-id>
+          <label>Figure 8</label>
+          <caption>
+            <title>Reasons that figure text do not appear in the lexicons.</title>
+            <p>(A) Abbreviations and linked terms. (B) Gene sequences.</p>
+          </caption>
+          <graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.g008" xlink:type="simple"/>
+        </fig>
+        <fig id="pone-0015338-g009" position="float">
+          <object-id pub-id-type="doi">10.1371/journal.pone.0015338.g009</object-id>
+          <label>Figure 9</label>
+          <caption>
+            <title>Additional reasons for OCR errors.</title>
+            <p>(A) High image complexity. (B) Thick stroke. (C) Low image contrast. (D) Small font size. (E) Non-standard font type.</p>
+          </caption>
+          <graphic mimetype="image" position="float" xlink:href="info:doi/10.1371/journal.pone.0015338.g009" xlink:type="simple"/>
+        </fig>
+      </sec>
+    </sec>
+    <sec id="s4">
+      <title>Discussion</title>
+      <p>Although the off-the-shelf OCR tool attained 97% accuracy in character recognition for high-quality document images, our results (as shown in <xref ref-type="table" rid="pone-0015338-t001">Table 1</xref>) show that it performed poorly (25.3% F1-score) on biomedical figures. Therefore, it is important to develop a recognition tool specifically for biomedical figure text. Our FigTExT was built by implementing components for image preprocessing, character recognition, and text correction. Below, we will discuss each component.</p>
+      <sec id="s4a">
+        <title>Image Preprocessing</title>
+        <p>We explored figure text localization and image up-sampling techniques for image preprocessing. Our results show that figure text localization did not affect the performance of the OCR tool in spite of its high performance (90% F1-score). Meanwhile, image up-sampling improved the performance of the OCR tool to attain a 33.7% F1-score. Accordingly, image up-sampling is more effective than figure text localization for biomedical figures. We speculate that poor image quality was accountable for the performance difference between the two approaches. Our integrated approach takes advantage of figure text localization for removing nontext regions and image up-sampling for improving the quality of localized figure texts. As a result, the performance of the integrated approach significantly improved, attaining a 44.7% F1-score, as shown in <xref ref-type="table" rid="pone-0015338-t001">Table 1</xref>.</p>
+      </sec>
+      <sec id="s4b">
+        <title>Text Correction Methods</title>
+        <p>We explored three different similarity metrics – edit distance (ED), longest common subsequence (LCS), and multiple sequence alignment (MSA) – and the results show that ED performed the best (as shown in <xref ref-type="table" rid="pone-0015338-t002">Tables 2</xref> and <xref ref-type="table" rid="pone-0015338-t003">3</xref>). In contrast to ED, both MSA and LCS are approximation matching algorithms that did not work well in figure text correction. For example, the off-the-shelf OCR tool misrecognized a protein “Rad52p” as “Radsap”. ED corrected it as “Rad52p”, while LCS corrected it as “paraformaldehyde/saponin” because all characters in “Radsap” appeared in “pa<bold>ra</bold>formal<bold>d</bold>ehyde/<bold>sap</bold>onin”. Since MSA added a penalty (negative) to the overall score in mismatch and therefore it performed better than LCS.</p>
+        <p>We also explored text correction refinement based on letter <italic>n</italic>-gram term frequency, and our results show that the approach did not work well in biomedical figures. On the other hand, although the overall F1-scores did not improve, the best recall increased from 51% to 60.6%, indicating that the refinement approaches may still be useful if a user prefers a high recall.</p>
+      </sec>
+      <sec id="s4c">
+        <title>Figure-Specific Lexicons</title>
+        <p>One significant challenge for biomedical figure text extraction is that figure texts are domain-specific and include specialized terms (e.g., gene or protein names), unexpected word boundaries (e.g., hyphens and other punctuation), abbreviations, etc. For instance, an ordinary dictionary includes “DNA” and “RNA”, but it does not include “rDNA” and “rRNA” since they are specific types of “DNA” and “RNA”. As a result, off-the-shelf OCR tools do not perform well on biomedical text, and we therefore constructed domain-specific lexicons.</p>
+        <p>We show that domain-specific lexicons improve the performance of FigTExT. We evaluated four domain-specific lexicons: figure caption, figure associated text, figure caption+associated text, and full-text. Our results show that without domain-specific lexicons, FigTExT attained a 44.7% F1-score. Adding captions and associated text improved F1-scores to 48.2% and 47%, respectively. The addition of caption+associated text further improved the F1-score to 56.2%. Interestingly, when the full-text article was used as the lexicon, the performance decreased.</p>
+        <p>A full-text article typically has over 6,000 word tokens and therefore may introduce “noise.” For example, we found that our character recognition system misrecognized the figure text “serum” as “seeqmz.” Our text correction system matched “seeqmz” with the lexicon. When the full-text was used as the lexicon, the word “seems” was selected because it had a lower ED (one deletion and one substitution) than “serum” which requires two substitutions and one deletion. In contrast, the error did not occur when the lexicon was caption+associated text. These results show that bigger does not necessarily mean better.</p>
+        <p>Our domain-specific lexicons have limitations. As shown in the error analysis, only 42.2% of our figure texts appeared in the corresponding full-text articles, which significantly reduced the recall of the overall FigTExT system. In contrast, 69.2% of important figure texts appeared in the lexicon – a significant increase of 34.8% (absolute value) – and it is not surprising that FigTExT attained 73% precision, 62% recall, and 67.1% F1-score, which is 10.5%, 11%, and 10.9% (absolute value), respectively, for detecting important figure texts. The performance was significantly better than the performance of FigTExT on all figure texts (<xref ref-type="table" rid="pone-0015338-t002">Table 2</xref>). This result suggests a positive correlation between the coverage of a lexicon and FigTExT's performance.</p>
+      </sec>
+      <sec id="s4d">
+        <title>Conclusion and Future Work</title>
+        <p>In this study, we reported the development of FigTExT (Figure Text Extraction Tool), a domain-specific image-natural language processing system that automatically extracts text from biomedical figures. As a part of the development of FigTExT, we explored figure text localization and image up-sampling, which improved the performance of an off-the-shelf OCR tool. In addition, we developed approaches for text correction in which we explored different domain specific lexicons and similarity metrics. In addition, we explored domain-specific text-correction refinement.</p>
+        <p>Our study is an important step towards biomedical full-text mining. Since we found that FigTExT's performance is mostly positively correlated with the coverage of figure texts in domain-specific lexicons, in future work we will explore approaches to increase the coverage of lexicons. We may do so by adding words that appear in related articles to the lexicon.</p>
+        <p>However, our results also show that lexicon coverage was not always positively correlated with FigTExT's performance. The best FigTExT system incorporated caption+associated text as the lexicon, outperforming the system that incorporated the larger full-text as the lexicon. Lexicon quality is also important. Therefore, we will explore natural language processing approaches to improve the quality of lexicons. For example, as a part of these approaches, we will find ways to limit lexicons to domain-specific named entities including gene, protein, small molecules, tissue names, etc. We will also explore approaches by which abbreviations can be mapped to full-forms and then added to lexicons.</p>
+        <p>Another research direction we intend to pursue is that of image quality assessment. Since biomedical figures tend to be of low quality, an alternative is to extract from high quality images and figure texts only. We will also explore techniques implementing super-resolution <xref ref-type="bibr" rid="pone.0015338-Glasner1">[51]</xref>, <xref ref-type="bibr" rid="pone.0015338-Fattal1">[52]</xref> to improve image quality.</p>
+      </sec>
+    </sec>
+  </body>
+  <back>
+    <ack>
+      <p>We thank Feifan Liu for comments, Shashank Agarwal and Zuofeng Li for annotating important figure texts, and Alexander Kruse for generating a part of the figure text gold standard.</p>
+    </ack>
+    <ref-list>
+      <title>References</title>
+      <ref id="pone.0015338-Shatkay1">
+        <label>1</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Shatkay</surname><given-names>H</given-names></name><name name-style="western"><surname>Chen</surname><given-names>N</given-names></name><name name-style="western"><surname>Blostein</surname><given-names>D</given-names></name></person-group>             <year>2006</year>             <article-title>Integrating image data into biomedical text categorization.</article-title>             <source>Bioinformatics</source>             <volume>22</volume>             <issue>14</issue>             <fpage>446</fpage>             <lpage>453</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Rafkind1">
+        <label>2</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Rafkind</surname><given-names>B</given-names></name><name name-style="western"><surname>Lee</surname><given-names>M</given-names></name><name name-style="western"><surname>Chang</surname><given-names>SF</given-names></name><name name-style="western"><surname>Yu</surname><given-names>H</given-names></name></person-group>             <year>2006</year>             <article-title>Exploring text and image features to classify images in bioscience literature.</article-title>             <source>Proc. of the BioNLP workshop on Linking Natural Language Processing and Biology</source>             <fpage>73</fpage>             <lpage>80</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Yu1">
+        <label>3</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Yu</surname><given-names>H</given-names></name><name name-style="western"><surname>Lee</surname><given-names>M</given-names></name></person-group>             <year>2006</year>             <article-title>Accessing bioscience images from abstract sentences.</article-title>             <source>Bioinformatics</source>             <volume>22</volume>             <issue>14</issue>             <fpage>547</fpage>             <lpage>556</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Hearst1">
+        <label>4</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Hearst</surname><given-names>MA</given-names></name><name name-style="western"><surname>Divoli</surname><given-names>A</given-names></name><name name-style="western"><surname>Guturu</surname><given-names>H</given-names></name><name name-style="western"><surname>Ksikes</surname><given-names>A</given-names></name><name name-style="western"><surname>Nakov</surname><given-names>P</given-names></name><etal/></person-group>             <year>2007</year>             <article-title>BioText Search Engine: beyond abstract search.</article-title>             <source>Bioinformatics</source>             <volume>23</volume>             <issue>16</issue>             <fpage>2196</fpage>             <lpage>2197</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Kahn1">
+        <label>5</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Kahn</surname><given-names>CE</given-names></name><name name-style="western"><surname>Thao</surname><given-names>C</given-names></name></person-group>             <year>2007</year>             <article-title>GoldMiner: a radiology image search engine.</article-title>             <source>American Journal of Roentgenology</source>             <volume>188</volume>             <fpage>1475</fpage>             <lpage>1478</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Qian1">
+        <label>6</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Qian</surname><given-names>Y</given-names></name><name name-style="western"><surname>Murphy</surname><given-names>RF</given-names></name></person-group>             <year>2008</year>             <article-title>Improved recognition of figures containing fluorescence microscope images in online journal articles using graphical models.</article-title>             <source>Bioinformatics</source>             <volume>23</volume>             <issue>4</issue>             <fpage>569</fpage>             <lpage>576</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Xu1">
+        <label>7</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Xu</surname><given-names>S</given-names></name><name name-style="western"><surname>McCusker</surname><given-names>J</given-names></name><name name-style="western"><surname>Krauthammer</surname><given-names>M</given-names></name></person-group>             <year>2008</year>             <article-title>Yale Image Finder (YIF): a new search engine for retrieving biomedical images.</article-title>             <source>Bioinformatics</source>             <volume>24</volume>             <issue>17</issue>             <fpage>1968</fpage>             <lpage>1970</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Ahmed1">
+        <label>8</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Ahmed</surname><given-names>A</given-names></name><name name-style="western"><surname>Xing</surname><given-names>EP</given-names></name><name name-style="western"><surname>Cohen</surname><given-names>WW</given-names></name><name name-style="western"><surname>Murphy</surname><given-names>RF</given-names></name></person-group>             <year>2009</year>             <article-title>Structured correspondence topic models for mining captioned figures in biological literature.</article-title>             <source>International Conference on Knowledge Discovery and Data Mining</source>             <fpage>39</fpage>             <lpage>47</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Murphy1">
+        <label>9</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Murphy</surname><given-names>RF</given-names></name><name name-style="western"><surname>Velliste</surname><given-names>M</given-names></name><name name-style="western"><surname>Yao</surname><given-names>J</given-names></name><name name-style="western"><surname>Porreca</surname><given-names>G</given-names></name></person-group>             <year>2001</year>             <article-title>Searching online journals for fluorescence microscope images depicting protein subcellular location patterns.</article-title>             <source>IEEE International Symposium on Bio-Informatics and Biomedical Engineering (BIBE)</source>             <fpage>119</fpage>             <lpage>128</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Yu2">
+        <label>10</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Yu</surname><given-names>H</given-names></name><name name-style="western"><surname>Lee</surname><given-names>M</given-names></name></person-group>             <year>2006</year>             <article-title>BioEx: a novel user-interface that accesses images from abstract sentences.</article-title>             <publisher-loc>New York, USA</publisher-loc>             <publisher-name>HLT-NAACL</publisher-name>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Agarwal1">
+        <label>11</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Agarwal</surname><given-names>S</given-names></name><name name-style="western"><surname>Yu</surname><given-names>H</given-names></name></person-group>             <year>2009</year>             <article-title>FigSum: automatically generating structured text summaries for figures in biomedical literature.</article-title>             <source>AMIA Annual Symposium</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Yu3">
+        <label>12</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Yu</surname><given-names>H</given-names></name><name name-style="western"><surname>Agarwal</surname><given-names>S</given-names></name><name name-style="western"><surname>Johnston</surname><given-names>M</given-names></name><name name-style="western"><surname>Cohen</surname><given-names>A</given-names></name></person-group>             <year>2009</year>             <article-title>Are figure legends sufficient? Evaluating the contribution of associated text to biomedical figure comprehension.</article-title>             <source>Journal of Biomedical Discovery and Collaboration</source>             <volume>4</volume>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Yu4">
+        <label>13</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Yu</surname><given-names>H</given-names></name><name name-style="western"><surname>Liu</surname><given-names>F</given-names></name><name name-style="western"><surname>Ramesh</surname><given-names>BP</given-names></name></person-group>             <year>2010</year>             <article-title>Automatic figure ranking and user interfacing for intelligent biomedical figure search.</article-title>             <source>PLoS ONE (in press)</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Shatkay2">
+        <label>14</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Shatkay</surname><given-names>H</given-names></name><name name-style="western"><surname>Pan</surname><given-names>F</given-names></name><name name-style="western"><surname>Rzhetsky</surname><given-names>A</given-names></name><name name-style="western"><surname>Wilbur</surname><given-names>WJ</given-names></name></person-group>             <year>2008</year>             <article-title>Multi-dimensional classification of biomedical text: toward automated, practical provision of high-utility text to diverse users.</article-title>             <source>Bioinformatics</source>             <volume>24</volume>             <fpage>2086</fpage>             <lpage>2093</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Kim1">
+        <label>15</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Kim</surname><given-names>D</given-names></name><name name-style="western"><surname>Yu</surname><given-names>H</given-names></name></person-group>             <year>2009</year>             <article-title>Hierarchical image classification in the bioscience literature.</article-title>             <source>AMIA Annual Symposium</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Agarwal2">
+        <label>16</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Agarwal</surname><given-names>S</given-names></name><name name-style="western"><surname>Yu</surname><given-names>H</given-names></name></person-group>             <year>2009</year>             <article-title>Automatically classifying sentences in full-text biomedical articles into introduction, methods, results and discussion.</article-title>             <source>Bioinformatics</source>             <volume>25</volume>             <issue>23</issue>             <fpage>3174</fpage>             <lpage>3180</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Liu1">
+        <label>17</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Liu</surname><given-names>Z</given-names></name><name name-style="western"><surname>Sarkar</surname><given-names>S</given-names></name></person-group>             <year>2008</year>             <article-title>Robust outdoor text detection using text intensity and shape features.</article-title>             <source>International Conference on Pattern Recognition</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Chen1">
+        <label>18</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Chen</surname><given-names>D</given-names></name><name name-style="western"><surname>Odobez</surname><given-names>J</given-names></name><name name-style="western"><surname>Thiran</surname><given-names>J</given-names></name></person-group>             <year>2004</year>             <article-title>A localization/verification scheme for finding text in images and videos based on contrast independent features and machine learning methods.</article-title>             <source>Image Communication</source>             <volume>19</volume>             <issue>3</issue>             <fpage>205</fpage>             <lpage>217</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Gatos1">
+        <label>19</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Gatos</surname><given-names>B</given-names></name><name name-style="western"><surname>Pratikakis</surname><given-names>I</given-names></name><name name-style="western"><surname>Perantonis</surname><given-names>SJ</given-names></name></person-group>             <year>2005</year>             <article-title>Text detection in indoor/outdoor scene images.</article-title>             <source>International Workshop on Camera-based Document Analysis and Recognition</source>             <fpage>127</fpage>             <lpage>132</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Chen2">
+        <label>20</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Chen</surname><given-names>D</given-names></name><name name-style="western"><surname>Odobez</surname><given-names>J</given-names></name><name name-style="western"><surname>Bourlard</surname><given-names>H</given-names></name></person-group>             <year>2004</year>             <article-title>Text detection and recognition in images video frames.</article-title>             <source>Pattern Recognition</source>             <volume>37</volume>             <fpage>595</fpage>             <lpage>608</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Anthimopoulos1">
+        <label>21</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Anthimopoulos</surname><given-names>M</given-names></name><name name-style="western"><surname>Gatos</surname><given-names>B</given-names></name><name name-style="western"><surname>Pratikakis</surname><given-names>I</given-names></name></person-group>             <year>2008</year>             <article-title>A hybrid system for text detection in video frames.</article-title>             <source>IAPR Workshop on Document Analysis System</source>             <fpage>286</fpage>             <lpage>292</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Kim2">
+        <label>22</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Kim</surname><given-names>DH</given-names></name><name name-style="western"><surname>Sohn</surname><given-names>K</given-names></name></person-group>             <year>2008</year>             <article-title>Static text region detection in video sequences using color and orientation consistencies.</article-title>             <source>International Conference on Pattern Recognition</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Shivakumara1">
+        <label>23</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Shivakumara</surname><given-names>P</given-names></name><name name-style="western"><surname>Huang</surname><given-names>W</given-names></name><name name-style="western"><surname>Tan</surname><given-names>CL</given-names></name></person-group>             <year>2008</year>             <article-title>Efficient video text detection using edge features.</article-title>             <source>International Conference on Pattern Recognition</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Kou1">
+        <label>24</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Kou</surname><given-names>Z</given-names></name><name name-style="western"><surname>Cohen</surname><given-names>WW</given-names></name><name name-style="western"><surname>Murphy</surname><given-names>RF</given-names></name></person-group>             <year>2003</year>             <article-title>Extracting information from text and images for location proteomics.</article-title>             <source>ACM SIGKDD Workshop on Data Mining in Bioinformatics</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Gonzalez1">
+        <label>25</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Gonzalez</surname><given-names>R</given-names></name><name name-style="western"><surname>Woods</surname><given-names>R</given-names></name></person-group>             <year>2002</year>             <article-title>Digital image processing.</article-title>             <publisher-loc>Upper Saddle River, NJ</publisher-loc>             <publisher-name>Prentice Hall, 2nd edition</publisher-name>             <fpage>75</fpage>             <lpage>146</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Hsieh1">
+        <label>26</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Hsieh</surname><given-names>H</given-names></name><name name-style="western"><surname>Andrew</surname><given-names>H</given-names></name></person-group>             <year>1978</year>             <article-title>Cubic splines for image interpolation and digital filtering.</article-title>             <source>IEEE Trans. on Acoustics Speech Signal Process</source>             <volume>26</volume>             <issue>6</issue>             <fpage>508</fpage>             <lpage>517</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-httpwwwScanStorecomSoftware1">
+        <label>27</label>
+        <element-citation publication-type="other" xlink:type="simple">             <comment><ext-link ext-link-type="uri" xlink:href="http://www.ScanStore.com/Software/" xlink:type="simple">http://www.ScanStore.com/Software/</ext-link></comment>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Chen3">
+        <label>28</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Chen</surname><given-names>X</given-names></name><name name-style="western"><surname>Yang</surname><given-names>J</given-names></name><name name-style="western"><surname>Zhang</surname><given-names>J</given-names></name><name name-style="western"><surname>Waibel</surname><given-names>A</given-names></name></person-group>             <year>2004</year>             <article-title>Automatic detection and recognition of signs from natural scenes.</article-title>             <source>IEEE Transactions on Image Processing</source>             <volume>13</volume>             <fpage>87</fpage>             <lpage>99</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Chen4">
+        <label>29</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Chen</surname><given-names>X</given-names></name><name name-style="western"><surname>Yuille</surname><given-names>AL</given-names></name></person-group>             <year>2004</year>             <article-title>Detecting and reading text in natural scenes.</article-title>             <source>International Conference on Computer Vision and Pattern Recognition (CVPR)</source>             <fpage>366</fpage>             <lpage>373</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Weinman1">
+        <label>30</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Weinman</surname><given-names>JJ</given-names></name><name name-style="western"><surname>Learned-Miller</surname><given-names>E</given-names></name><name name-style="western"><surname>Hanson</surname><given-names>A</given-names></name></person-group>             <year>2007</year>             <article-title>Fast lexicon-based scene text recognition with sparse belief propagation.</article-title>             <source>International Conference on Document Analysis and Recognition</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Damerau1">
+        <label>31</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Damerau</surname><given-names>FJ</given-names></name></person-group>             <year>1964</year>             <article-title>A technique for computer detection and correction of spelling errors.</article-title>             <source>Commun ACM</source>             <volume>7</volume>             <issue>3</issue>             <fpage>171</fpage>             <lpage>176</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Wagner1">
+        <label>32</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Wagner</surname><given-names>RA</given-names></name><name name-style="western"><surname>Michael</surname><given-names>JF</given-names></name></person-group>             <year>1974</year>             <article-title>The string-to-string correction problem.</article-title>             <source>J ACM</source>             <volume>21</volume>             <issue>1</issue>             <fpage>168</fpage>             <lpage>173</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Riseman1">
+        <label>33</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Riseman</surname><given-names>EM</given-names></name><name name-style="western"><surname>Hanson</surname><given-names>AR</given-names></name></person-group>             <year>1974</year>             <article-title>A contextual postprocessing system for error correction using binary <italic>n</italic>-grams.</article-title>             <source>IEEE Trans Comput.</source>             <volume>23</volume>             <issue>5</issue>             <fpage>480</fpage>             <lpage>493</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Zamora1">
+        <label>34</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Zamora</surname><given-names>EM</given-names></name></person-group>             <year>1981</year>             <article-title>The use of trigram analysis for spelling error detection.</article-title>             <source>Information Processing and Management</source>             <volume>17</volume>             <issue>6</issue>             <fpage>305</fpage>             <lpage>16</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Kashyap1">
+        <label>35</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Kashyap</surname><given-names>RL</given-names></name><name name-style="western"><surname>Oommen</surname><given-names>J</given-names></name></person-group>             <year>1984</year>             <article-title>Spelling correction using probabilistic methods.</article-title>             <source>Pattern Recognition Letters</source>             <volume>2</volume>             <fpage>147</fpage>             <lpage>154</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Hodge1">
+        <label>36</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Hodge</surname><given-names>V</given-names></name><name name-style="western"><surname>Jim</surname><given-names>A</given-names></name></person-group>             <year>2001</year>             <article-title>A novel binary spell checker. In Artificial Neural Networks.</article-title>             <source>ICANN</source>             <fpage>1199</fpage>             <lpage>1204</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Lucas1">
+        <label>37</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Lucas</surname><given-names>SM</given-names></name><name name-style="western"><surname>Patoulas</surname><given-names>G</given-names></name><name name-style="western"><surname>Downton</surname><given-names>AC</given-names></name></person-group>             <year>2003</year>             <article-title>Fast lexicon-based word recognition in noisy index card images.</article-title>             <source>International Conference on Document Analysis and Recognition</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Schambach1">
+        <label>38</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Schambach</surname><given-names>MP</given-names></name></person-group>             <year>2005</year>             <article-title>Fast script word recognition with very large vocabulary.</article-title>             <source>International Conference on Document Analysis and Recognition</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Ruch1">
+        <label>39</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Ruch</surname><given-names>P</given-names></name></person-group>             <year>2002</year>             <article-title>Using contextual spelling correction to improve retrieval effectiveness in degraded text collections.</article-title>             <source>In Proceedings of the 19th international conference on Computational linguistics</source>             <volume>1</volume>             <fpage>1</fpage>             <lpage>7</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Li1">
+        <label>40</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Li</surname><given-names>M</given-names></name><name name-style="western"><surname>Yang</surname><given-names>Z</given-names></name><name name-style="western"><surname>Muhua</surname><given-names>Z</given-names></name><name name-style="western"><surname>Ming</surname><given-names>Z</given-names></name></person-group>             <year>2006</year>             <article-title>Exploring distributional similarity based models for query spelling correction.</article-title>             <source>In Proceedings of the 21st International Conference on Computational Linguistics and the 44th annual meeting of the Association for Computational Linguistics</source>             <fpage>1025</fpage>             <lpage>1032</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Ringlstetter1">
+        <label>41</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Ringlstetter</surname><given-names>C</given-names></name><name name-style="western"><surname>K</surname><given-names>US</given-names></name><name name-style="western"><surname>Stoyan</surname><given-names>M</given-names></name></person-group>             <year>2007</year>             <article-title>Adaptive text correction with Web-crawled domain-dependent dictionaries.</article-title>             <source>ACM Trans. Speech Lang Process</source>             <volume>4</volume>             <issue>4</issue>             <fpage>9</fpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Donoser1">
+        <label>42</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Donoser</surname><given-names>M</given-names></name><name name-style="western"><surname>Bischof</surname><given-names>H</given-names></name><name name-style="western"><surname>Wagner</surname><given-names>S</given-names></name></person-group>             <year>2009</year>             <article-title>Using web search engines to improve text recognition.</article-title>             <source>International Conference on Pattern Recognition</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Tong1">
+        <label>43</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Tong</surname><given-names>X</given-names></name><name name-style="western"><surname>Evans</surname><given-names>DA</given-names></name></person-group>             <year>1996</year>             <article-title>A statistical approach to automatic OCR error correction in context.</article-title>             <source>Proc. of the 4<sup>th</sup> Workshop on Very Large Corpora</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Thillou1">
+        <label>44</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Thillou</surname><given-names>C</given-names></name><name name-style="western"><surname>Ferreira</surname><given-names>S</given-names></name><name name-style="western"><surname>Gosselin</surname><given-names>B</given-names></name></person-group>             <year>2005</year>             <article-title>An embedded application for degraded text recognition.</article-title>             <source>EURASIP Journal on Applied Signal Processing</source>             <volume>13</volume>             <fpage>2127</fpage>             <lpage>2135</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Stehouwer1">
+        <label>45</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Stehouwer</surname><given-names>H</given-names></name><name name-style="western"><surname>Zaanen</surname><given-names>M</given-names></name></person-group>             <year>2009</year>             <article-title>Language models for contextual error detection and correction.</article-title>             <source>Proc. of the EACL Workshop on Computational Linguistic Aspects of Grammatical Inference</source>             <fpage>41</fpage>             <lpage>48</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Jones1">
+        <label>46</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Jones</surname><given-names>MP</given-names></name><name name-style="western"><surname>James</surname><given-names>HM</given-names></name></person-group>             <year>1997</year>             <article-title>Contextual spelling correction using latent semantic analysis.</article-title>             <source>In Proceedings of the 5th conference on applied natural language processing</source>             <fpage>166</fpage>             <lpage>173</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Martins1">
+        <label>47</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Martins</surname><given-names>B</given-names></name><name name-style="western"><surname>Mário</surname><given-names>JS</given-names></name></person-group>             <year>2004</year>             <article-title>Spelling correction for search engine queries.</article-title>             <source>In Advances in Natural Language Processing</source>             <fpage>372</fpage>             <lpage>383</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Levenshtein1">
+        <label>48</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Levenshtein</surname><given-names>VI</given-names></name></person-group>             <year>1966</year>             <article-title>Binary codes capable of correcting deletions, insertions, and reversals.</article-title>             <source>Soviet Physics Doklady</source>             <volume>10</volume>             <fpage>707</fpage>             <lpage>10</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Paterson1">
+        <label>49</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Paterson</surname><given-names>M</given-names></name><name name-style="western"><surname>Dancik</surname><given-names>V</given-names></name></person-group>             <year>1994</year>             <article-title>Longest common subsequences.</article-title>             <source>International Symposium on Mathematical Foundations of Computer Science</source>             <volume>841</volume>             <fpage>127</fpage>             <lpage>142</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Thompson1">
+        <label>50</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Thompson</surname><given-names>JD</given-names></name><name name-style="western"><surname>Higgins</surname><given-names>DG</given-names></name><name name-style="western"><surname>Gibson</surname><given-names>TJ</given-names></name></person-group>             <year>1994</year>             <article-title>CLUSTAL W: improving the sensitivity of progressive multiple sequence alignment through sequence weighting, position-specific gap penalties and weight matrix choice.</article-title>             <source>Nucleic Acids Research</source>             <volume>22</volume>             <fpage>4673</fpage>             <lpage>4680</lpage>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Glasner1">
+        <label>51</label>
+        <element-citation publication-type="other" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Glasner</surname><given-names>D</given-names></name><name name-style="western"><surname>Bagon</surname><given-names>S</given-names></name><name name-style="western"><surname>Irani</surname><given-names>M</given-names></name></person-group>             <year>2009</year>             <article-title>Super-resolution from a single image.</article-title>             <source>International Conference on Computer Vision (ICCV2009)</source>          </element-citation>
+      </ref>
+      <ref id="pone.0015338-Fattal1">
+        <label>52</label>
+        <element-citation publication-type="journal" xlink:type="simple">             <person-group person-group-type="author"><name name-style="western"><surname>Fattal</surname><given-names>R</given-names></name></person-group>             <year>2007</year>             <article-title>Image upsampling via imposed edge statistics.</article-title>             <source>ACM Trans. Graphics (Proc. SIGGRAPH 2007)</source>             <volume>26</volume>             <issue>3</issue>             <fpage>95</fpage>             <lpage>102</lpage>          </element-citation>
+      </ref>
+    </ref-list>
+    
+  </back>
+</article>

@@ -1,19 +1,10 @@
 # 部署指南
 
-这份文档解决：
-
-- 如何安装 `paper-fetch-skill`
-- 如何准备配置文件
-- 如何注册 MCP server
-- 如何做最小化验证和更新
-
-这份文档不解决：
-
-- provider 差异、路由规则和限速语义
-- Wiley / Science / PNAS / AMS / Annual Reviews / Royal Society Publishing / ACS / IOP / AIP / MDPI / Taylor & Francis Online 的浏览器运行时细节
-- 架构实现细节
-
-provider 运行时细节见 [`providers.md`](providers.md)，架构说明见 [`architecture/overview.md`](architecture/overview.md)。安装 skill 内部的自包含环境/离线 wrapper 说明见 [`environment.md`](../skills/paper-fetch-skill/references/environment.md)，正常 CLI 主路径见 [`cli-workflow.md`](../skills/paper-fetch-skill/references/cli-workflow.md)；这些 reference 不依赖安装包外的仓库 `docs/`。macOS 支持与跨平台证据边界另见 [`macos-adaptation-audit.md`](macos-adaptation-audit.md)。
+安装、配置、MCP 注册和升级见下文；7.0 行为变化见 [迁移说明](migration-v7.md)。
+provider 差异见 [providers.md](providers.md)，浏览器准备见 [browser-backends.md](browser-backends.md)，
+原生 macOS 证据边界见 [适配说明](macos-adaptation-audit.md)。已安装 skill 的独立说明位于
+[environment.md](../skills/paper-fetch-skill/references/environment.md) 和
+[cli-workflow.md](../skills/paper-fetch-skill/references/cli-workflow.md)。
 
 ## 1. 安装 Python 包
 
@@ -68,16 +59,9 @@ paper-fetch-skill-offline-macos-arm64-cp314.tar.gz
 paper-fetch-skill-windows-x86_64-setup.exe
 ```
 
-CI 自动发布规则：
-
-- 普通 `push` / `pull_request` 运行完整 unit、integration、全部可执行 exact replay
-  的四个 provider shard、完整包 mypy、Ruff、版本与锁文件检查、锁定依赖漏洞审计、
-  Python 3.11/3.14 的 core/full wheel smoke、Python distributions 验证，以及原生
-  macOS 15 / CPython 3.14 gate。普通 CI 不运行 devtools 或 coverage 门禁。
-- `offline.yml` 是可复用且可手动运行的 full 离线构建 workflow；Linux 使用 CPython 3.11–3.14，macOS 在固定 `macos-15` arm64 runner 使用 CPython 3.11–3.14，Windows 使用 CPython 3.13。
-- 推送与 `pyproject.toml` 版本一致的 `v*` tag 时，`release.yml` 把 tag peel 到完整 commit SHA，并以该 SHA 并行构建 wheel/sdist 和九目标冻结依赖；随后在构建期验证 Python archive trust boundary、merged dependency manifest、每目标 staged dependency manifest/CycloneDX SBOM、target evidence 与 attestation 输入。Release 不运行或等待普通 CI，发布操作者须在创建正式标签前本地运行完整并行 unit。发布前从构建清单与 release asset owner 读取 exact set，拒绝 missing/extra/basename collision；稳定版只把九个安装包和含九条记录的 `SHA256SUMS` 复制到公开目录。wheel、sdist、merged manifest、SBOM 与 target evidence 不进入公开下载接口。稳定版只截取 `CHANGELOG_CN.md` 中与项目版本匹配的章节作为中文 Release Notes，不使用 GitHub 自动生成说明。
-- `offline.yml` 会在固定 `macos-15` 上使用 CPython 3.11、3.12、3.13、3.14 矩阵构建 arm64 macOS tarball；四个包都先运行原生 verifier，再上传逐 Python 版本 artifact，缺少产物会直接令 job 失败。
-- 所有第三方 GitHub Actions 固定到完整 commit SHA；发布 job 才单独提升 `contents`、`id-token` 与 `attestations` 权限。
+构建和发布流程统一见 [CI / GitHub Actions](#ci--github-actions) 与
+[发布前检查](#release-checklist)。离线包按对应原生平台构建和验证，Linux/WSL 不能
+替代 macOS 或 Windows 安装证据。
 
 #### 锁定依赖与更新
 
@@ -89,7 +73,7 @@ CI 自动发布规则：
 - `src/paper_fetch/version.py` 从项目元数据读取版本；`DEFAULT_USER_AGENT` 和 CLI `--version` 由它派生。
 - `skills/paper-fetch-skill/references/environment.md` 不写死版本号，只指向运行时 `paper_fetch.config.DEFAULT_USER_AGENT`。
 - `scripts/sync_version.py --write` 生成 Inno `AppVersion` 默认值；`--check` 验证安装器和中英文 changelog。
-- `tests/unit/test_offline_install.py` 中用于离线安装测试的 runtime fixture 需要与 Linux / macOS 安装脚本的布局保持同步。
+- `tests/integration/test_offline_install.py` 中用于离线安装测试的 runtime fixture 需要与 Linux / macOS 安装脚本的布局保持同步。
 - `CHANGELOG.md` / `CHANGELOG_CN.md` 仍人工维护版本章节；发布前的同步检查会拒绝缺失章节。
 
 Linux 目标机直接运行与 Python ABI 匹配的 `.sh`。默认安装到 `~/.local/share/paper-fetch-skill`：
@@ -252,7 +236,8 @@ Windows 构建在 PowerShell 中执行：
 
 **Evidence 所有权。** GitHub Actions 中 POSIX builder 使用 `.venv/bin/python`，Windows builder 使用 `.venv/Scripts/python.exe`，使 evidence generator 复用已锁定并安装 CycloneDX CLI 的开发环境；该控制解释器不进入目标 runtime。三个平台都从最终 staging 生成 `dependency-manifest.json`、经 CycloneDX 工具校验的 `paper-fetch-sbom.cdx.json` 和目标唯一的 `dist/paper-fetch-evidence-<target>.*` sidecar，盘点实际安装的 Python distribution、Node/Playwright、Camoufox、公式/图像/native 文件及 Windows embedded runtime digest。
 
-**Release 终验。** 稳定发布手动重跑已有不可变标签时，先把 lightweight 或 annotated tag peel 到完整 commit SHA。`package.yml` 从该 SHA 构建并独立安装验证 wheel/sdist，九目标 frozen dependency resolver 与它并行运行；依赖合并后，`offline.yml` 为 Linux cp311–314、macOS arm64 cp311–314、Windows cp313 构建并验证安装包，publish 只等待 tag、Python distributions、merged manifest 与 offline build。Release 不运行或等待完整 unit/普通 CI；创建新正式版本和标签前，发布操作者必须先在本地运行 `PYTHONPATH=src uv run python -m pytest tests/unit -q`。构建、sidecar、attestation、最终 checkout 和 `gh release --target` 使用同一 source SHA，发布前再次确认远端 tag 仍 peel 到该 SHA；manifest 的 `git_revision` 记录这一 provenance。
+**Release 终验。** 操作顺序见 [发布前检查](#release-checklist)。构建、安装、证据与发布
+必须对应同一不可变 source SHA，平台和验证器限制如下。
 
 安装器共享配置集中在 `installer/manifest.json`：`skill.name`、`mcp.name`、`mcp.env_keys`、managed block marker 和离线包命名都从这里读取。shell 与 activate 环境变量沿用 `mcp.env_keys`，offline.env 使用其中除 `PAPER_FETCH_ENV_FILE` 外的键；技能展示 metadata 以实际复制的 `skills/paper-fetch-skill/agents/openai.yaml` 为准。Linux / macOS / Windows 离线安装脚本、Windows Inno helper 和离线包构建脚本都使用该 manifest，新增运行时环境变量或调整 managed block 文案时应优先改这里。
 
@@ -405,29 +390,49 @@ offline manifest schema 3 保留 `version`、`git_revision`、`built_at_utc`、`
 
 ### CI / GitHub Actions
 
-普通 push/PR 的 `ci.yml` 通过仓库 `uv.lock` 和共享 setup action 安装冻结依赖，并运行：
+| 入口 | 验证与产物 |
+| --- | --- |
+| `ci.yml` → `verify.yml` | 锁文件新鲜度、全 extras 漏洞审计、Ruff/mypy/版本、完整 unit/integration、Python 3.11/3.14 的 core/full 安装、原生 macOS 15 / CPython 3.14 gate |
+| `package.yml` | 同一不可变 SHA 的 wheel/sdist exact archive 检查，以及各自在独立环境中的 CLI/MCP/import/resource/skill smoke |
+| `offline.yml` | Linux x86_64 和 macOS arm64 的 CPython 3.11–3.14、Windows x86_64 CPython 3.13；原生 build/install/upgrade/uninstall 验证 |
+| `release.yml` | 与项目版本一致的 `v*` tag 或明确手动发布；冻结九目标依赖、构建并核验 staging manifest/SBOM/evidence，再发布九个安装包和九条记录的 `SHA256SUMS` |
 
-- Ruff format/lint、完整生产包 mypy、版本同步与锁定依赖漏洞审计。
-- 完整并行 unit suite。
-- 完整 integration。
-- Python 3.11 / 3.14 的 boundary controller 安装完整测试依赖契约，随后在独立 venv 中分别执行 core 与 full wheel 安装 smoke；core 产物本身不会因测试控制环境而获得可选依赖。
-- reusable `package.yml` 从同一不可变 SHA 构建 wheel/sdist；完整 archive 必须与结构化预期一一对应：wheel 只允许源码 `paper_fetch`、唯一规范化 `dist-info` 的必需 metadata/`RECORD` 和声明的 static data-files；sdist 只允许唯一规范化 root、明确顶层构建/许可/README/PKG-INFO、源码、`egg-info` 和 skill。任何未知 top-level、`.data`、package/source/metadata member 都失败；两者分别安装到独立 venv，执行 CLI/import/MCP/resource/skill smoke。普通 CI 的 `verify.yml` 调用该 workflow 生成 Python distributions。
-- 固定 `macos-15` arm64、CPython 3.14 的原生 cache-alias test + build + verifier gate；Windows / WSL 本地静态结果不能替代该 gate。
+Release 不运行或等待普通 CI。wheel、sdist、merged dependency manifest、SBOM 和
+sidecar evidence 只用于构建期验证，不进入稳定版公开下载集合；资产集合由 workflow、
+installer manifest 和 `prepare_release_assets.py` 维护，拒绝缺失、多余和 basename collision。
+中文 Release Notes 只取 `CHANGELOG_CN.md` 对应版本章节。
 
-Dependabot 是兼容依赖更新的单一 owner，每周为 pip、npm 和 GitHub Actions 更新创建 PR；普通 PR 的 `verify.yml` 继续执行锁文件新鲜度检查与全 extras 漏洞审计。稳定发布的临时解析工具使用 `pip>=26.1.2,<27`、`packaging>=26.2,<27`，允许兼容更新而不把工作流绑死在单个补丁版本。
+普通 CI 使用 `uv.lock` 和共享 setup action；Dependabot 是兼容依赖更新入口。
+发布解析工具范围为 `pip>=26.1.2,<27`、`packaging>=26.2,<27`。第三方 actions 固定
+完整 SHA；artifact 上传和 attestation/publication 前必须通过各步骤指定凭据的
+`scan_artifacts_for_secrets.py` 扫描，覆盖 raw/URL-encoded 值，只报告变量名和路径。
+原生 Camoufox 准备可向上游 CLI 传只读 `GITHUB_TOKEN`，不写入 cache/artifact。
 
-MCP 调用结果继续校验 structured_content，tools/list 不发布 outputSchema；图片回归使用包含必需 IHDR 字段的 PNG fixture。Live publisher/MCP 与完整 golden corpus 不配置 GitHub Actions workflow、schedule 或 dispatch，只保留下文记录的本地显式入口；依赖共享外部状态的 live 测试按设计使用 `-n 0` 串行运行，完整 golden corpus 复用项目并行配置。
+Live publisher/MCP 和完整 golden 仅在本地显式执行。普通 unit/integration/golden
+沿用 pytest 并行配置；只有 live 或依赖共享外部状态的检查按其契约串行。
+Linux/WSL 先用项目 Python 执行 `scripts/validate_macos_adaptation.py`，再执行
+`scripts/test-macos-contract.sh`；Windows 对应 `.ps1`。`/mnt/*` 仅可作静态验证，
+Mach-O、Zsh、xattr、Gatekeeper 与原生安装须由相应平台提供证据。
 
-常规 CI 的原生 macOS Camoufox 准备把 workflow 自带的只读 `github.token` 作为上游 CLI 支持的 `GITHUB_TOKEN` 传入，避免 GitHub Releases 匿名 API 限额阻断 pinned runtime discovery；token 不写入 cache、artifact 或命令参数。`ci.yml` 只调用 reusable `verify.yml`；普通 CI 与稳定发布分别通过它或直接调用 reusable `package.yml`。`offline.yml` 独立构建 Linux、macOS、Windows full 离线包，macOS 四个 ABI 固定在 `macos-15` 构建并运行原生 tar verifier。`release.yml` 只在稳定版本标签或显式手动发布时运行，在同一 run 并行构建 tagged SHA 的 Python distributions 与冻结九目标依赖，随后消费每目标实际 staging SBOM；它不调用或等待普通 CI。
+<a id="release-checklist"></a>
+### 发布前检查
 
-`prepare_release_assets.py` 对构建输入执行 exact-set/collision 检查；稳定发布只公开九个安装包与 `SHA256SUMS`，wheel、sdist、merged dependency manifest、SBOM 与 target evidence 仅在构建期验证。所有 artifact upload 和稳定 release 的 attestation/publication 都以 `scan_artifacts_for_secrets.py` 成功为前置条件；扫描覆盖 raw 与 URL-encoded sentinel，只报告变量名和路径。每个 workflow 扫描步骤通过 `--env-var` 精确列出自身注入的凭据，不会把 `PGPASSWORD` 等无关 hosted-runner 默认环境值纳入 artifact 匹配。所有第三方 actions 固定到完整 commit SHA，作为供应链身份锚点而不是包版本声明。
+1. 在 `pyproject.toml` 定稿版本，补齐中英文 changelog 与适用迁移说明。运行
+   `uv lock`、`uv run python scripts/sync_version.py --write` 和 `--check`；提取语义变化时
+   更新现有 extraction revision，并验证旧缓存升级，不改写历史 fixture。
+2. 对候选运行 `scripts/dev-preflight.sh --with-golden`，覆盖完整并行 unit、integration、
+   golden、格式、lint、mypy 和版本同步；另执行 `uv lock --check` 与锁定依赖审计。
+3. `uv build` 后用 `scripts/verify_python_distribution.py --wheel ... --sdist ...`
+   检查归档；分别安装 wheel/sdist，验证 core/full、CLI 版本、MCP server、资源和 skill。
+4. 把已验证内容固定到一个提交。候选分支可手动运行现有 `ci.yml`、`offline.yml`，
+   完成上表原生门禁；这两个 workflow 不发布稳定 Release。候选准备提交使用 `[skip ci]`，
+   需要这些远端验证时显式执行 workflow。修复后必须以新的同一 SHA 重新验证受影响产物。
+5. 仅在发布操作已获授权、前置验证通过后创建 `v<version>`。`release.yml` 将 lightweight
+   或 annotated tag peel 到完整 SHA，构建/attestation/最终 checkout/发布全部使用该 SHA，
+   发布前再次确认远端 tag 未移动。候选验证成功本身不等于已公开发布。
 
-在 Windows / WSL 修改 Mac 相关范围时，先运行
-`uv run python scripts/validate_macos_adaptation.py`，再运行
-`scripts/test-macos-contract.ps1` 或 `scripts/test-macos-contract.sh`。
-`/mnt/*` 下的 WSL checkout 只提供 validator-only 证据；Mach-O、原生 Zsh、
-`xattr` 和 Gatekeeper 只能由原生 Mac gate 验证。证据边界见
-[`macos-adaptation-audit.md`](macos-adaptation-audit.md)。
+平台安装验证的具体安全边界见 [离线包](#离线包)；Windows 必须验证最终 EXE 的
+覆盖升级、用户内容保留及卸载残留树，macOS 必须验证四个 ABI 的原生 tarball。
 
 本地清理构建、测试缓存和 rollout 日志时可以用：
 
@@ -440,58 +445,13 @@ scripts/clean-local-artifacts.sh --days 7
 
 ## 4. Provider 接入入口与本地运行时
 
-`elsevier` 不依赖本地浏览器链路；它只需要官方 API 凭据，并走 `官方 DOI XML/API -> PII XML/API fallback -> 官方 API PDF fallback -> metadata-only`。
+provider 路由、付费墙终态、browser readiness、PDF 恢复与环境变量统一见
+[providers.md](providers.md)。静态 `ready` 仅证明本地能力，不能代替真实获取验收。
+浏览器 runtime、显式准备和人工认证命令见 [browser-backends.md](browser-backends.md)。
 
-`ieee` 不需要 IEEE API key；它走 `direct landing -> selected-browser landing recovery -> direct REST HTML -> selected-browser HTML -> direct HTTP PDF -> selected-browser PDF`。preflight、browser landing、正式 HTML 和资产 seed 都允许页面在最长 15 秒内从初始 HTTP 202/shell 转成文章页，且只有包含当前文章号的 `#article` 才算 ready；单独观察到 REST resource 或其它文章 DOM 不会提前放行。正文 figure/table/formula、multimedia discovery 和 supplementary file 同样 direct-first，只在 `401/403`、HTML challenge 或网络失败时使用所选浏览器；`404/410/429` 不启动浏览器。资产 browser recovery 会让图片和附件 fetcher 串行复用同一篇已就绪论文页的 context/page、最新 cookies 和论文页 Referer，并保持共享 page 不跳转到资产 URL。首次 large 图片恢复会先在同页加载一次对应 preview，再立即请求 large；后续资产复用该预热页，large 最终失败时才把缓存 preview 作为 fallback。公开资产可通过 `browser_backend`、`final_fetcher` 和 `recovery_attempts` 审计 direct/browser/preview 恢复过程。持续存在的 AWS WAF 页报告 `reason_code=aws_waf_challenge`、`status=challenge` 和 provider/legacy 兼容诊断；该链路不自动登录、不处理验证码，也不绕过访问权限。
-
-`wiley`、`science`、`pnas`、`ams`、`annualreviews`、`royalsocietypublishing`、`acs`、`iop`、`aip`、`mdpi`、`tandf` 进入 provider-owned Camoufox browser workflow。完整配置与 headed 预检见 [`browser-backends.md`](browser-backends.md)。是否能拿到全文仍取决于 publisher 访问权限、paywall/challenge 与远端站点行为。
-
-自动过盾失败时，可打开对应 provider 的 headed browser 手动登录/验证：
-
-```bash
-paper-fetch auth <provider>
-paper-fetch auth wiley --url "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
-```
-
-`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip` / `tandf`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开具体失败文章页。命令强制 headed 模式，打印所选后端的 profile 和 storage-state 路径，终端按 Enter 后保存过滤后的本地 storage-state 并退出，不写 `.env`。AMS 无状态抓取仍会启动浏览器；只有静默 AWS WAF 验证失败时，才需要 `paper-fetch auth ams` 保存人工验证状态。
-
-这些浏览器 HTML route 会在 challenge/paywall 判定前先等待正文 DOM 稳定；如果正文已经可抽取，页面残留的 Cloudflare/challenge 文案不会提前中断 HTML route，最终全文/摘要/降级结论仍由 Markdown 抽取后的 availability 判定负责。
-
-Wiley 的主文档 401/403 需要结合 `browser_runtime_trace.candidates[*].http_access_status_review`
-排查。`accepted=true` 只会出现在正文连续稳定、页面 DOI 精确匹配、无 challenge/no-access/
-datalayer 阻断并且后续 Markdown/availability 已通过之后；`response_status` 和候选
-`status` 仍为真实 401/403。`body_not_ready`、`doi_evidence_missing`、`doi_mismatch`、
-`blocking_signal` 或全文抽取失败都会保持 fail closed，并继续下一个 Wiley URL。该
-diagnostic 只含脱敏枚举、布尔值和状态，不含 Cookie、Authorization、storage-state 或
-原始失败 HTML；无状态复现可显式将 profile/user-data/storage-state 设为空并关闭
-`persist_storage_state`，此时 `storage_state_load.used=false` 且不得产生 capability use。
-
-browser workflow 的通用配置：
-
-```bash
-export PAPER_FETCH_BROWSER_TIMEOUT_MS="120000"
-export PAPER_FETCH_BROWSER_HEADLESS="true"
-export PAPER_FETCH_BROWSER_PROFILE_DIR="$HOME/.cache/paper-fetch/browser-profile"
-# 必须显式联网准备官方 managed runtime
-python -m camoufox fetch
-```
-
-未显式设置目录时，Camoufox 使用 `publisher-browser-profiles/<provider>-camoufox/storage-state.json`。手动 auth 后再次抓取同一 provider 会复用对应 storage-state；未配置持久凭证不阻止抓取。完整配置与指纹约束见 [`browser-backends.md`](browser-backends.md)。
-
-macOS 官方 cache 应保持 `PAPER_FETCH_BROWSER_BINARY_PATH` 未设置，由 Camoufox
-自行解析完整 app bundle。不要把 `Contents/MacOS/camoufox` 当作该变量的值；
-它缺少 custom-path 语义所要求的相邻 metadata。该变量只保留给明确支持 Camoufox
-custom executable 布局的自行维护 runtime。
-
-补充：
-
-- `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip` / `tandf` 需要本地 Camoufox runtime，并参与 `paper-fetch auth` / `browser-preflight`
-- `paper-fetch auth <provider>` 是自动过盾失败后的人工 headed fallback；storage-state 只保存本机辅助状态，不绕过权限，也不作为正常抓取的必要条件
-- `elsevier` 只需要 `ELSEVIER_API_KEY`
-- `ieee` 不需要额外 env；普通 fetch 在无授权或 REST/browser/PDF route 返回非全文时会降级到 provider abstract-only / metadata-only；配置了 `download_dir` 且 artifact mode 为 `all` 时 PDF fallback 的最后一个非 PDF HTML 会保存在 `ieee_pdf_fallback/pdf.failure.html`
-- `arxiv` 不需要额外 env；路径细节见 [`providers.md` 的 arXiv 小节](providers.md#arxiv)。
-- 如果只想启用 `wiley` 的官方 TDM API PDF lane，可以只配置 `WILEY_TDM_CLIENT_TOKEN`；这不会启用 HTML 资产下载或 seeded-browser PDF/ePDF fallback
-- `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip` / `tandf` 的 browser workflow 顺序见 [`providers.md`](providers.md#wiley-science-pnas-browser-workflow)。
+安装器和离线包不会内置 Camoufox 浏览器 binary；首次 browser launch 保留 managed
+runtime 自动准备机制。进入受限网络前需显式预置并验证。Ghostscript/libvips 的原生
+依赖和 macOS 验证范围见 [macOS 适配说明](macos-adaptation-audit.md)。
 
 ## 5. 部署到 Codex
 
@@ -572,7 +532,7 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 python3 -m pip install --upgrade .
 ```
 
-本次 MCP SDK 主版本升级后，源码开发环境应重新执行 `uv sync --frozen`；在线
+使用 MCP SDK 2.x 的源码环境，源码开发环境应重新执行 `uv sync --frozen`；在线
 安装应使用上面的 `--upgrade` 命令。安装完成后可用
 `python3 -c "from importlib.metadata import version; print(version('mcp'))"`
 确认主版本为 2，并重启所有已经运行的 MCP host。
@@ -610,23 +570,25 @@ PYTHONPATH=src uv run python -m pytest tests/unit/test_cli.py tests/unit/test_se
 PYTHONPATH=src uv run python -m pytest
 ```
 
-`scripts/dev-preflight.sh` 是显式本地完整门禁入口：优先使用 repo-local `.venv/bin/python`，不存在时退回 `python3`，也可显式设置 `PYTHON_BIN=/path/to/python`。脚本依次运行 `ruff format --check`、`ruff check`、完整生产包 `mypy`、版本一致性、`tests/unit --durations=30` 和 `tests/integration --durations=30`；如果缺少 ruff / mypy / pytest，会提示先运行 `scripts/dev-bootstrap.sh` 或指定已安装依赖的解释器。快速迭代可用 `--fast`，需要单独排除 integration 或 type check 时使用 `--skip-integration` / `--skip-typecheck`。
+`scripts/dev-preflight.sh` 是显式本地完整门禁入口：优先使用 repo-local `.venv/bin/python`，不存在时退回 `python3`，也可显式设置 `PYTHON_BIN=/path/to/python`。脚本依次运行 `ruff format --check`、`ruff check`、完整生产包 `mypy`、版本一致性、`tests/unit --durations=30` 和 `tests/integration --durations=30`；`--with-golden` 追加完整 `tests/golden`，与 `--fast`、`--skip-integration` 冲突时立即报错；如果缺少 ruff / mypy / pytest，会提示先运行 `scripts/dev-bootstrap.sh` 或指定已安装依赖的解释器。快速迭代可用 `--fast`，需要单独排除 integration 或 type check 时使用 `--skip-integration` / `--skip-typecheck`。
 
 验证分层如下：
 
-- 本地完整门：`scripts/dev-preflight.sh`，包含完整并行 unit、integration、Ruff 和 mypy；发布候选还需执行 build/install 终验。
-- 普通默认分支 `push` / `pull_request` CI 门：完整并行 unit、integration、四个 exact golden shard、Ruff、完整生产包 mypy、版本/漏洞门禁，以及 Python 3.11/3.14 的 core/full wheel smoke。
-- 本地 opt-in 门：live publisher/MCP 和不分片的完整 golden corpus 只由开发者通过下文命令显式运行，不配置 GitHub Actions schedule 或 dispatch；offline/release 仍只走相应 dispatch 或 `v*` tag。普通 push/PR 不运行真实 publisher 或认证 browser。
+- 本地完整门：`scripts/dev-preflight.sh`，包含完整并行 unit、integration、Ruff 和 mypy；发布前必须使用 `--with-golden` 完成三层、版本一致性及既有 build/install 终验。
+- 普通默认分支 `push` / `pull_request` CI 门：完整并行 unit、integration、Ruff、完整生产包 mypy、版本/漏洞门禁，以及 Python 3.11/3.14 的 core/full wheel smoke。
+- 本地 opt-in 门：live publisher/MCP 和完整 golden corpus 只由开发者通过下文命令显式运行，不配置 GitHub Actions schedule 或 dispatch；offline/release 仍只走相应 dispatch 或 `v*` tag。普通 push/PR 不运行真实 publisher 或认证 browser。
 
 所有常规 pytest 步骤继续复用 `pyproject.toml` 的 xdist 并行配置，不传 `-n 0`。CI 能力与触发边界以当前 workflow 为准。
 
-不分片的完整 golden corpus regression 默认跳过，可在本地显式打开；CI 仍运行四个
-`PAPER_FETCH_GOLDEN_SHARD=0..3` exact shard。该测试按 fixture 参数化，默认复用
-`pyproject.toml` 的 pytest-xdist 并行配置：
+三层测试各有独立入口，均复用默认并行配置：
 
 ```bash
-PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src uv run python -m pytest tests/integration/test_golden_corpus.py -q
+PYTHONPATH=src uv run python -m pytest tests/unit -q
+PYTHONPATH=src uv run python -m pytest tests/integration -q
+PYTHONPATH=src uv run python -m pytest tests/golden -q
 ```
+
+默认 pytest 的 `testpaths` 只包含 unit＋integration；显式指定 `tests/golden` 就会执行全部可执行样本，无需环境开关。旧 full/shard 开关及分片逻辑已移除；定向调试使用路径、nodeid 或 `-k`。普通 PR/push 不运行 golden，也不新增 golden workflow。分层边界、迁移清单和实测见 [测试说明](../tests/README.md)。
 
 未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live 时，`arxiv` 不需要 browser runtime；包括 `ams` 在内的 browser-backed provider 先按静态报告中的 `browser_runtime.available` 检查本地能力，再启动 Camoufox 做真实页面预检。pytest 隔离 XDG data/runtime、通用 profile 和所有 provider storage-state；Camoufox 的 browser bundle、版本元数据、字体和默认 addon 则复用隔离前由官方包管理器确认的 dependency cache，避免 live/MCP 子进程重复下载 runtime。每家 provider 的状态仍写入临时 `<provider>-camoufox/storage-state.json`，不会进入该共享 dependency cache。
 

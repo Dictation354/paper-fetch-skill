@@ -1,0 +1,228 @@
+{"abstracts-retrieval-response": {
+    "affiliation": [
+        {
+            "affiliation-city": "Guangzhou",
+            "@id": "60021182",
+            "affilname": "Sun Yat-Sen University",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60021182",
+            "affiliation-country": "China"
+        },
+        {
+            "affiliation-city": "Irvine",
+            "@id": "60007278",
+            "affilname": "University of California, Irvine",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60007278",
+            "affiliation-country": "United States"
+        },
+        {
+            "affiliation-city": "Nanjing",
+            "@id": "60064143",
+            "affilname": "Nanjing University of Information Science & Technology",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60064143",
+            "affiliation-country": "China"
+        },
+        {
+            "affiliation-city": "Irvine",
+            "@id": "60142622",
+            "affilname": "Samueli School of Engineering",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60142622",
+            "affiliation-country": "United States"
+        },
+        {
+            "affiliation-city": "Toronto",
+            "@id": "60009800",
+            "affilname": "Ontario Ministry of the Environment",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60009800",
+            "affiliation-country": "Canada"
+        }
+    ],
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-85103087038",
+        "dc:description": "Hydrological drought evolution (development and recovery) is directly related to the amount of precipitation transformed into effective streamflow. However, how hydrological drought alters the precipitation-streamflow relationship, and how the precipitation-streamflow relationship affects the hydrological drought development and recovery require more in-depth research. We present a detailed assessment of the effects of hydrological drought propagation on the precipitation-streamflow relationship. We propose the concept of effective streamflow-precipitation ratio (ESPR), which is defined as the amount of precipitation in the current month that is converted to effective streamflow relative to that of the previous month, for hydrological drought propagation assessment. Long-term unregulated streamflow and precipitation data from six hydrometric stations in different countries (China, USA, and Australia) were used to investigate the proposed concept. The results show that hydrological drought causes a significant decrease in the precipitation-streamflow correlation and coefficient of determination. However, the changes in the precipitation-streamflow relationship are substantially different during the hydrological drought development and recovery stages. In our study areas, the precipitation-streamflow relationship was weakened by 60%, mainly during the hydrological drought development rather than recovery. The ESPR values during the hydrological drought development are substantially lower than those of the recovery period, suggesting insufficient precipitation leads to little to no streamflow especially during the drought development period. Additionally, the larger the ESPR during hydrological drought evolution, the faster the hydrological drought recovery will occur and vice versa. This study provides insights into the drivers of hydrological drought evolution by connecting with the changes in precipitation-streamflow relationship.",
+        "prism:coverDate": "2021-06-01",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/85103087038",
+        "subtypeDescription": "Article",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Jiefeng",
+            "preferred-name": {
+                "ce:given-name": "Jiefeng",
+                "ce:initials": "J.",
+                "ce:surname": "Wu",
+                "ce:indexed-name": "Wu J."
+            },
+            "@seq": "1",
+            "ce:initials": "J.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60064143",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60064143"
+            },
+            "ce:surname": "Wu",
+            "@auid": "57191583537",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57191583537",
+            "ce:indexed-name": "Wu J."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/85103087038"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85103087038&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=85103087038&origin=inward"
+            }
+        ],
+        "prism:publicationName": "Journal of Hydrology",
+        "source-id": "50089",
+        "pii": "S0022169421002572",
+        "citedby-count": "83",
+        "prism:volume": "597",
+        "subtype": "ar",
+        "dc:title": "The interactions between hydrological drought evolution and precipitation-streamflow relationship",
+        "openaccess": "0",
+        "openaccessFlag": "false",
+        "prism:doi": "10.1016/j.jhydrol.2021.126210",
+        "prism:issn": "00221694",
+        "publishercopyright": "© 2021",
+        "article-number": "126210",
+        "dc:identifier": "SCOPUS_ID:85103087038",
+        "dc:publisher": "Elsevier B.V."
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "Jiefeng",
+            "preferred-name": {
+                "ce:given-name": "Jiefeng",
+                "ce:initials": "J.",
+                "ce:surname": "Wu",
+                "ce:indexed-name": "Wu J."
+            },
+            "@seq": "1",
+            "ce:initials": "J.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60064143",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60064143"
+            },
+            "ce:surname": "Wu",
+            "@auid": "57191583537",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57191583537",
+            "ce:indexed-name": "Wu J."
+        },
+        {
+            "ce:given-name": "Xiaohong",
+            "preferred-name": {
+                "ce:given-name": "Xiaohong",
+                "ce:initials": "X.",
+                "ce:surname": "Chen",
+                "ce:indexed-name": "Chen X."
+            },
+            "@seq": "2",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60021182",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60021182"
+            },
+            "ce:surname": "Chen",
+            "@auid": "57056609200",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57056609200",
+            "ce:indexed-name": "Chen X."
+        },
+        {
+            "ce:given-name": "Xing",
+            "preferred-name": {
+                "ce:given-name": "Xing",
+                "ce:initials": "X.",
+                "ce:surname": "Yuan",
+                "ce:indexed-name": "Yuan X."
+            },
+            "@seq": "3",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60064143",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60064143"
+            },
+            "ce:surname": "Yuan",
+            "@auid": "55373025000",
+            "author-url": "https://api.elsevier.com/content/author/author_id/55373025000",
+            "ce:indexed-name": "Yuan X."
+        },
+        {
+            "ce:given-name": "Huaxia",
+            "preferred-name": {
+                "ce:given-name": "Huaxia",
+                "ce:initials": "H.",
+                "ce:surname": "Yao",
+                "ce:indexed-name": "Yao H."
+            },
+            "@seq": "4",
+            "ce:initials": "H.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60009800",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60009800"
+            },
+            "ce:surname": "Yao",
+            "@auid": "56010809300",
+            "author-url": "https://api.elsevier.com/content/author/author_id/56010809300",
+            "ce:indexed-name": "Yao H."
+        },
+        {
+            "ce:given-name": "Yunxia",
+            "preferred-name": {
+                "ce:given-name": "Yunxia",
+                "ce:initials": "Y.",
+                "ce:surname": "Zhao",
+                "ce:indexed-name": "Zhao Y."
+            },
+            "@seq": "5",
+            "ce:initials": "Y.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60142622",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60142622"
+            },
+            "ce:surname": "Zhao",
+            "@auid": "57219760858",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57219760858",
+            "ce:indexed-name": "Zhao Y."
+        },
+        {
+            "ce:given-name": "Amir",
+            "preferred-name": {
+                "ce:given-name": "Amir",
+                "ce:initials": "A.",
+                "ce:surname": "AghaKouchak",
+                "ce:indexed-name": "AghaKouchak A."
+            },
+            "@seq": "6",
+            "ce:initials": "A.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60142622",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60142622"
+                },
+                {
+                    "@id": "60007278",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60007278"
+                }
+            ],
+            "ce:surname": "AghaKouchak",
+            "@auid": "30267501800",
+            "author-url": "https://api.elsevier.com/content/author/author_id/30267501800",
+            "ce:indexed-name": "AghaKouchak A."
+        }
+    ]}
+}}

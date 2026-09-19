@@ -1,10 +1,14 @@
 from __future__ import annotations
-
-import json
+from __future__ import annotations
 import unittest
-from unittest import mock
+from tests.golden_criteria import golden_criteria_scenario_asset
+from paper_fetch.models import (
+    SectionHint,
+    article_from_markdown,
+)
 from types import SimpleNamespace
-
+import json
+from unittest import mock
 from paper_fetch import service as paper_fetch
 from paper_fetch.models import (
     Asset,
@@ -17,9 +21,7 @@ from paper_fetch.models import (
     Reference,
     RenderOptions,
     Section,
-    SectionHint,
     TokenEstimateBreakdown,
-    article_from_markdown,
     article_from_structure,
     estimate_tokens,
     metadata_only_article,
@@ -27,10 +29,7 @@ from paper_fetch.models import (
 )
 from paper_fetch.models.render import is_table_like_figure_asset
 from paper_fetch.markdown.images import render_markdown_image, short_image_alt
-from paper_fetch.providers import _springer_html as springer_html
-from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
-
-from ._paper_fetch_support import sample_article
+from tests.support._paper_fetch_support import sample_article
 
 
 class ModelsRenderTests(unittest.TestCase):
@@ -858,7 +857,9 @@ class ModelsRenderTests(unittest.TestCase):
             assets[0].render_state = "inline"
 
         bundle = SimpleNamespace(
-            render_policy=SimpleNamespace(mark_inline_assets=mark_inline_assets)
+            render_policy=SimpleNamespace(
+                mark_inline_assets=mark_inline_assets, rewrite_asset_links=None
+            )
         )
         with (
             mock.patch(
@@ -1066,29 +1067,6 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("## Abstract", rendered)
         self.assertIn("## Data Availability", rendered)
         self.assertIn("The data are available from the corresponding author", rendered)
-
-    def test_article_from_markdown_keeps_code_availability_without_counting_it_as_fulltext(
-        self,
-    ) -> None:
-        markdown_text = golden_criteria_scenario_asset(
-            "availability_body_metrics", "code_availability.md"
-        ).read_text(encoding="utf-8")
-        article = article_from_markdown(
-            source="springer_html",
-            metadata={"title": "Markdown Article"},
-            doi="10.1000/code-availability",
-            markdown_text=markdown_text,
-        )
-
-        self.assertEqual(article.quality.content_kind, "abstract_only")
-        self.assertEqual(
-            [section.kind for section in article.sections],
-            ["abstract", "code_availability"],
-        )
-        rendered = article.to_ai_markdown(max_tokens="full_text")
-        self.assertIn("## Abstract", rendered)
-        self.assertIn("## Code Availability", rendered)
-        self.assertIn("The analysis code is archived", rendered)
 
     def test_article_from_markdown_preserves_inline_figure_links_without_counting_them_as_body_text(
         self,
@@ -1512,39 +1490,6 @@ class ModelsRenderTests(unittest.TestCase):
         )
         self.assertEqual(article.quality.content_kind, "fulltext")
 
-    def test_article_from_markdown_coerces_dict_object_and_section_hint_in_declared_order(
-        self,
-    ) -> None:
-        markdown_text = golden_criteria_scenario_asset(
-            "section_hints_availability", "article.md"
-        ).read_text(encoding="utf-8")
-        hint_payloads = json.loads(
-            golden_criteria_scenario_asset(
-                "section_hints_availability", "section_hints.json"
-            ).read_text(encoding="utf-8")
-        )
-        article = article_from_markdown(
-            source="springer_html",
-            metadata={"title": "Markdown Article"},
-            doi="10.1000/mixed-section-hints",
-            markdown_text=markdown_text,
-            section_hints=[
-                SimpleNamespace(**hint_payloads[0]),
-                hint_payloads[1],
-                hint_payloads[2],
-                SectionHint(**hint_payloads[3]),
-            ],
-        )
-
-        self.assertEqual(
-            [(section.heading, section.kind) for section in article.sections],
-            [
-                ("Results", "body"),
-                ("Data archive", "data_availability"),
-                ("Code archive", "code_availability"),
-            ],
-        )
-
     def test_article_from_markdown_uses_section_hints_for_nonliteral_code_availability(
         self,
     ) -> None:
@@ -1701,78 +1646,6 @@ class ModelsRenderTests(unittest.TestCase):
         )
         self.assertEqual(article.metadata.abstract, explicit_abstract)
 
-    def test_article_from_markdown_promotes_repeated_methods_summary_to_methods(
-        self,
-    ) -> None:
-        html = golden_criteria_asset("10.1038/nature12915", "original.html").read_text(
-            encoding="utf-8",
-            errors="ignore",
-        )
-        extraction_payload = springer_html.extract_html_payload(
-            html,
-            "https://www.nature.com/articles/nature12915",
-        )
-        article = article_from_markdown(
-            source="springer_html",
-            metadata={
-                "title": "Accelerated increase in vegetation carbon sequestration in tropical forests"
-            },
-            doi="10.1038/nature12915",
-            markdown_text=extraction_payload["markdown_text"],
-            abstract_sections=extraction_payload["abstract_sections"],
-            section_hints=extraction_payload["section_hints"],
-        )
-
-        methods_sections = [
-            section
-            for section in article.sections
-            if section.heading in {"Methods Summary", "Methods", "Online Methods"}
-        ]
-        self.assertEqual(
-            [section.heading for section in methods_sections],
-            ["Methods Summary", "Methods"],
-        )
-        methods_section = methods_sections[1]
-        self.assertEqual(methods_section.text, "")
-
-        markdown = article.to_ai_markdown(max_tokens="full_text")
-
-        self.assertEqual(markdown.count("## Methods Summary"), 1)
-        self.assertEqual(markdown.count("\n## Methods\n"), 1)
-        self.assertNotIn("## Online Methods", markdown)
-
-    def test_article_from_real_nature_markdown_keeps_methods_summary_without_structure_hints(
-        self,
-    ) -> None:
-        html = golden_criteria_asset("10.1038/nature12915", "original.html").read_text(
-            encoding="utf-8",
-            errors="ignore",
-        )
-        extraction_payload = springer_html.extract_html_payload(
-            html,
-            "https://www.nature.com/articles/nature12915",
-        )
-        article = article_from_markdown(
-            source="springer_html",
-            metadata={
-                "title": "Accelerated increase in vegetation carbon sequestration in tropical forests"
-            },
-            doi="10.1038/nature12915",
-            markdown_text=extraction_payload["markdown_text"],
-            abstract_sections=extraction_payload["abstract_sections"],
-        )
-
-        methods_headings = [
-            section.heading
-            for section in article.sections
-            if section.heading in {"Methods Summary", "Methods", "Online Methods"}
-        ]
-        self.assertEqual(methods_headings, ["Methods Summary", "Methods"])
-        markdown = article.to_ai_markdown(max_tokens="full_text")
-
-        self.assertIn("## Methods Summary", markdown)
-        self.assertNotIn("## Online Methods", markdown)
-
     def test_metadata_abstract_strips_redundant_heading_prefix(self) -> None:
         article = metadata_only_article(
             source="wiley_browser",
@@ -1818,3 +1691,86 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("$$\n\\begin{matrix} a \\\\ b \\end{matrix}\n$$", normalized)
         self.assertNotIn("$$\n\n\\begin{matrix}", normalized)
         self.assertNotIn("\\end{matrix}\n\n$$", normalized)
+
+    def test_article_from_markdown_keeps_code_availability_without_counting_it_as_fulltext(
+        self,
+    ) -> None:
+        markdown_text = golden_criteria_scenario_asset(
+            "availability_body_metrics", "code_availability.md"
+        ).read_text(encoding="utf-8")
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/code-availability",
+            markdown_text=markdown_text,
+        )
+
+        self.assertEqual(article.quality.content_kind, "abstract_only")
+        self.assertEqual(
+            [section.kind for section in article.sections],
+            ["abstract", "code_availability"],
+        )
+        rendered = article.to_ai_markdown(max_tokens="full_text")
+        self.assertIn("## Abstract", rendered)
+        self.assertIn("## Code Availability", rendered)
+        self.assertIn("The analysis code is archived", rendered)
+
+    def test_article_from_markdown_coerces_dict_object_and_section_hint_in_declared_order(
+        self,
+    ) -> None:
+        markdown_text = golden_criteria_scenario_asset(
+            "section_hints_availability", "article.md"
+        ).read_text(encoding="utf-8")
+        hint_payloads = json.loads(
+            golden_criteria_scenario_asset(
+                "section_hints_availability", "section_hints.json"
+            ).read_text(encoding="utf-8")
+        )
+        article = article_from_markdown(
+            source="springer_html",
+            metadata={"title": "Markdown Article"},
+            doi="10.1000/mixed-section-hints",
+            markdown_text=markdown_text,
+            section_hints=[
+                SimpleNamespace(**hint_payloads[0]),
+                hint_payloads[1],
+                hint_payloads[2],
+                SectionHint(**hint_payloads[3]),
+            ],
+        )
+
+        self.assertEqual(
+            [(section.heading, section.kind) for section in article.sections],
+            [
+                ("Results", "body"),
+                ("Data archive", "data_availability"),
+                ("Code archive", "code_availability"),
+            ],
+        )
+
+
+def test_front_matter_preserves_markdown_escape_round_trip():
+    import yaml
+    from bs4 import BeautifulSoup
+    from markdown_it import MarkdownIt
+
+    title = r"Allele (*HLA*)*-DRB1\*01:01*"
+    article = article_from_markdown(
+        source="plos_xml",
+        metadata={
+            "title": title,
+            "authors": [r"Name\literal"],
+            "journal": r"Journal\name",
+        },
+        doi="10.1371/journal.pone.0026949",
+        markdown_text="## Results\n\nScientific results.",
+    )
+    rendered = article.to_ai_markdown(max_tokens="full_text")
+    front = yaml.safe_load(rendered.split("---", 2)[1])
+    assert front["title"] == title
+    assert front["authors"] == r"Name\literal"
+    assert front["journal"] == r"Journal\name"
+    assert front["doi"] == article.doi
+    heading = BeautifulSoup(MarkdownIt().render(rendered), "html.parser").h1
+    assert heading.get_text() == "Allele (HLA)-DRB1*01:01"
+    assert heading.find("em", string="-DRB1*01:01") is not None

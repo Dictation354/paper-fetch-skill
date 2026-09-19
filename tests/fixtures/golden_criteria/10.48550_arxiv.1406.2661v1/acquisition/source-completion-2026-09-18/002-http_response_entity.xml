@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/wbCD8lWOIh7952iNt8Uxna1/pCk</id>
+  <title>arXiv Query: search_query=&amp;id_list=1406.2661v1&amp;start=0&amp;max_results=1</title>
+  <updated>2026-09-18T02:20:29Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=1&amp;id_list=1406.2661v1" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>1</opensearch:itemsPerPage>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/1406.2661v1</id>
+    <title>Generative Adversarial Networks</title>
+    <updated>2014-06-10T18:58:17Z</updated>
+    <link href="https://arxiv.org/abs/1406.2661v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/1406.2661v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We propose a new framework for estimating generative models via an adversarial process, in which we simultaneously train two models: a generative model G that captures the data distribution, and a discriminative model D that estimates the probability that a sample came from the training data rather than G. The training procedure for G is to maximize the probability of D making a mistake. This framework corresponds to a minimax two-player game. In the space of arbitrary functions G and D, a unique solution exists, with G recovering the training data distribution and D equal to 1/2 everywhere. In the case where G and D are defined by multilayer perceptrons, the entire system can be trained with backpropagation. There is no need for any Markov chains or unrolled approximate inference networks during either training or generation of samples. Experiments demonstrate the potential of the framework through qualitative and quantitative evaluation of the generated samples.</summary>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2014-06-10T18:58:17Z</published>
+    <arxiv:primary_category term="stat.ML"/>
+    <author>
+      <name>Ian J. Goodfellow</name>
+    </author>
+    <author>
+      <name>Jean Pouget-Abadie</name>
+    </author>
+    <author>
+      <name>Mehdi Mirza</name>
+    </author>
+    <author>
+      <name>Bing Xu</name>
+    </author>
+    <author>
+      <name>David Warde-Farley</name>
+    </author>
+    <author>
+      <name>Sherjil Ozair</name>
+    </author>
+    <author>
+      <name>Aaron Courville</name>
+    </author>
+    <author>
+      <name>Yoshua Bengio</name>
+    </author>
+  </entry>
+</feed>

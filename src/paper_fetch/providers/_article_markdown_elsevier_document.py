@@ -75,7 +75,10 @@ def _extract_author_name(author_node: ET.Element) -> str:
     given_name = normalize_text(child_text(author_node, "given-name"))
     surname = normalize_text(child_text(author_node, "surname"))
     if given_name or surname:
-        return normalize_text(" ".join(item for item in (given_name, surname) if item))
+        suffix = normalize_text(child_text(author_node, "suffix"))
+        return normalize_text(
+            " ".join(item for item in (given_name, surname, suffix) if item)
+        )
     indexed_name = normalize_text(child_text(author_node, "indexed-name"))
     if indexed_name:
         return indexed_name
@@ -141,9 +144,32 @@ def _extract_reference_title(contribution: ET.Element | None) -> str:
 def _extract_reference_source(host: ET.Element | None) -> str:
     series_node = first_descendant(host, "series")
     title_node = first_child(series_node, "title")
-    return _child_text(title_node, "maintitle") or _first_descendant_text(
+    source = _child_text(title_node, "maintitle") or _first_descendant_text(
         host, "maintitle"
     )
+    book = first_descendant(host, "edited-book")
+    if book is None:
+        book = first_descendant(host, "book")
+    if book is not None:
+        editors = [
+            name
+            for editor in _iter_elements_by_local_name(book, "editor")
+            if (name := _extract_author_name(editor))
+        ]
+        if editors:
+            source = ", ".join(editors) + " (eds.), " + source
+        publisher = first_child(book, "publisher")
+        source = ", ".join(
+            part
+            for part in (
+                source,
+                _child_text(book, "edition"),
+                _child_text(publisher, "name"),
+                _child_text(publisher, "location"),
+            )
+            if part
+        )
+    return source
 
 
 def _format_reference_body(
@@ -234,7 +260,7 @@ def extract_elsevier_references(root: ET.Element) -> list[Reference]:
         source_text = _child_text(bib_reference, "source-text")
         fallback_text = source_text or _raw_reference_text(bib_reference, label=label)
         doi = normalize_doi(_first_descendant_text(sb_reference, "doi")) or (
-            extract_doi(source_text) or ""
+            extract_doi(fallback_text) or ""
         )
         title = _extract_reference_title(contribution)
         year = _first_descendant_text(host, "date")
@@ -245,13 +271,26 @@ def extract_elsevier_references(root: ET.Element) -> list[Reference]:
             volume=_first_descendant_text(host, "volume-nr"),
             issue=_first_descendant_text(host, "issue-nr"),
             year=year,
-            first_page=_first_descendant_text(host, "first-page"),
+            first_page=_first_descendant_text(host, "first-page")
+            or _first_descendant_text(host, "article-number"),
             last_page=_first_descendant_text(host, "last-page"),
             doi=doi,
             source_text=fallback_text,
         )
         if fallback_text and _reference_body_is_doi_only(body, doi):
             body = fallback_text
+        # Preserve source annotations and e-locators that are not represented
+        # by the formatted author/title/journal fields (including web sources).
+        for node in sb_reference.iter() if sb_reference is not None else ():
+            if xml_local_name(node.tag) not in {
+                "comment",
+                "inter-ref",
+                "article-number",
+            }:
+                continue
+            note = normalize_text("".join(node.itertext()))
+            if note and note not in body:
+                body = f"{body.rstrip('.')}. {note}"
         if not body:
             body = "[Reference text unavailable]"
         raw = f"{index}. {body}"
@@ -299,16 +338,19 @@ def _build_elsevier_article_structure(
     used_figure_keys: set[str] = set()
     used_table_keys: set[str] = set()
     formula_renders: list[FormulaRenderResult] = []
-    abstract_node = first_descendant(root, "abstract")
     body_node = first_descendant(root, "body")
     markdown_path = xml_path.with_suffix(".md")
     formula_image_lookup = elsevier_formula_asset_lookup(root, assets, markdown_path)
-    abstract_lines = render_elsevier_blocks(
-        abstract_node,
-        heading_level=3,
-        formula_image_lookup=formula_image_lookup,
-        formula_renders=formula_renders,
-    )
+    abstract_lines: list[str] = []
+    for abstract_node in _iter_elements_by_local_name(root, "abstract"):
+        abstract_lines.extend(
+            render_elsevier_blocks(
+                abstract_node,
+                heading_level=3,
+                formula_image_lookup=formula_image_lookup,
+                formula_renders=formula_renders,
+            )
+        )
     if not abstract_lines:
         fallback_abstract = normalize_text(
             str(

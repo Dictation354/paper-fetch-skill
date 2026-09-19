@@ -1,0 +1,54 @@
+{
+  "doi": "10.1126/science.abo2812",
+  "provider": "science",
+  "source_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+  "attempt": 3,
+  "change_from_previous": "User explicitly requested another Science observation after the prior challenge; fresh configured session and wait for visible image readiness, no auth or failure injection.",
+  "transport": "native Camoufox configured provider context",
+  "responses": [
+    {
+      "record": "acquisition/template-browser-user-retry-2026-09-16/004-http_response_entity.html",
+      "status": 200
+    }
+  ],
+  "no_fault_injection": true,
+  "title": "Satellites reveal widespread decline in global lake water storage | Science",
+  "observed_doi": "10.1126/science.abo2812",
+  "final_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+  "challenge": false,
+  "paywall_diagnostics": {},
+  "stop_reason": "single_observation_complete",
+  "visible_article_image_count": 5,
+  "direct_image": "acquisition/template-browser-repeat4-2026-09-16/000-direct_http.jpg",
+  "canvas_result": {
+    "ok": true,
+    "found": true,
+    "status": 200,
+    "url": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+    "contentType": "image/png",
+    "width": 4325,
+    "height": 2111
+  },
+  "canvas_file": "acquisition/template-browser-user-retry-2026-09-16/002-browser_canvas_export.png",
+  "article_challenge": {
+    "doi": "10.1126/science.abo2812",
+    "provider": "science",
+    "size": 5864,
+    "sha256": "7f9e4cad6524a4c4aeeb4a8e54adc054746b23a505e8448517a68f29c33ed726",
+    "capture_kind": "http_response_entity",
+    "transport": "native Camoufox",
+    "requested_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+    "final_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+    "status_code": 403,
+    "response_headers": {
+      "date": "Wed, 16 Sep 2026 10:06:58 GMT",
+      "content-type": "text/html; charset=UTF-8",
+      "cf-mitigated": "challenge"
+    },
+    "captured_at_utc": "2026-09-16T10:07:25.408096+00:00",
+    "raw_response_retained": false,
+    "reason": "Challenge scripts contain temporary browser tokens; only status, safe headers and hash retained."
+  },
+  "interpretation": "Article navigation observed challenge then HTTP200; the image direct HTTP request was already HTTP200. Canvas bytes prove native export, not an image-HTTP-challenge recovery chain.",
+  "canvas_status_semantics": "canvas_result.status is the export helper result, not an observed image HTTP response status."
+}

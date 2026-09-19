@@ -1,0 +1,14 @@
+{
+  "provider": "springer",
+  "doi": "10.1038/nature12915",
+  "started_at_utc": "2026-09-15T06:21:28.032567+00:00",
+  "attempt": 1,
+  "headless": false,
+  "network_context": "User reports current network has no subscription access; not independently verified. Existing configured API credentials and provider storage state retained.",
+  "capture_scope": "Current repository CLI with passive HTTP/browser response and final DOM observers. No injected responses, forced failures, route overrides, or PDF quality fixes.",
+  "responses": [],
+  "capture_errors": [],
+  "exit_code": 0,
+  "completed_at_utc": "2026-09-15T06:21:59.209671+00:00",
+  "excluded_unrelated_responses": 0
+}

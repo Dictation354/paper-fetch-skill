@@ -1,0 +1,413 @@
+{
+  "doi": "10.1088/2058-9565/ac3460",
+  "source": "crossref_meta",
+  "metadata": {
+    "title": "Quantum pattern recognition in photonic circuits",
+    "authors": [
+      "Rui Wang",
+      "Carlos Hernani-Morales",
+      "José D Martín-Guerrero",
+      "Enrique Solano",
+      "Francisco Albarrán-Arriagada"
+    ],
+    "abstract": "This paper proposes a machine learning method to characterize photonic states via a simple optical circuit and data processing of photon number distributions, such as photonic patterns. The input states consist of two coherent states used as references and a two-mode unknown state to be studied. We successfully trained supervised learning algorithms that can predict the degree of entanglement in the two-mode state as well as perform the full tomography of one photonic mode, obtaining satisfactory values in the considered regression metrics.",
+    "journal": "Quantum Science and Technology",
+    "article_type": null,
+    "published": "2022-1-1",
+    "keywords": [],
+    "license_urls": [
+      "https://publishingsupport.iopscience.iop.org/iop-standard/v1",
+      "https://iopscience.iop.org/info/page/text-and-data-mining"
+    ],
+    "landing_page_url": "https://iopscience.iop.org/article/10.1088/2058-9565/ac3460"
+  },
+  "sections": [],
+  "references": [
+    {
+      "raw": "Quantum algorithms: an overview",
+      "doi": "10.1038/npjqi.2015.23",
+      "title": "Quantum algorithms: an overview",
+      "year": "2016"
+    },
+    {
+      "raw": "Quantum error correction: an introductory guide",
+      "doi": "10.1080/00107514.2019.1667078",
+      "title": "Quantum error correction: an introductory guide",
+      "year": "2019"
+    },
+    {
+      "raw": "The security of practical quantum key distribution",
+      "doi": "10.1103/revmodphys.81.1301",
+      "title": "The security of practical quantum key distribution",
+      "year": "2009"
+    },
+    {
+      "raw": "Advances in quantum teleportation",
+      "doi": "10.1038/nphoton.2015.154",
+      "title": "Advances in quantum teleportation",
+      "year": "2015"
+    },
+    {
+      "raw": "Quantum advantage with noisy shallow circuits",
+      "doi": "10.1038/s41567-020-0948-z",
+      "title": "Quantum advantage with noisy shallow circuits",
+      "year": "2020"
+    },
+    {
+      "raw": "Quantum supremacy using a programmable superconducting processor",
+      "doi": "10.1038/s41586-019-1666-5",
+      "title": "Quantum supremacy using a programmable superconducting processor",
+      "year": "2019"
+    },
+    {
+      "raw": "Quantum computational advantage using photons",
+      "doi": "10.1126/science.abe8770",
+      "title": "Quantum computational advantage using photons",
+      "year": "2020"
+    },
+    {
+      "raw": "Entanglement-based secure quantum cryptography over 1120 kilometres",
+      "doi": "10.1038/s41586-020-2401-y",
+      "title": "Entanglement-based secure quantum cryptography over 1120 kilometres",
+      "year": "2020"
+    },
+    {
+      "raw": "Strong quantum computational advantage using a superconducting quantum processor",
+      "doi": "10.1103/physrevlett.127.180501",
+      "title": "Strong quantum computational advantage using a superconducting quantum processor",
+      "year": "2021"
+    },
+    {
+      "raw": "Quantum-state estimation",
+      "doi": "10.1103/physreva.55.r1561",
+      "title": "Quantum-state estimation",
+      "year": "1997"
+    },
+    {
+      "raw": "Quantum tomography for measuring experimentally the matrix elements of an arbitrary quantum operation",
+      "doi": "10.1103/physrevlett.86.4195",
+      "title": "Quantum tomography for measuring experimentally the matrix elements of an arbitrary quantum operation",
+      "year": "2001"
+    },
+    {
+      "raw": "Improving quantum state estimation with mutually unbiased",
+      "doi": "10.1103/physrevlett.105.030406",
+      "title": "Improving quantum state estimation with mutually unbiased",
+      "year": "2010"
+    },
+    {
+      "raw": "Experimental quantum homodyne tomography via machine learning",
+      "doi": "10.1364/optica.389482",
+      "title": "Experimental quantum homodyne tomography via machine learning",
+      "year": "2020"
+    },
+    {
+      "raw": "Experimental neural network enhanced quantum tomography",
+      "doi": "10.1038/s41534-020-0248-6",
+      "title": "Experimental neural network enhanced quantum tomography",
+      "year": "2020"
+    },
+    {
+      "raw": "Neural-network quantum state tomography",
+      "doi": "10.1038/s41567-018-0048-5",
+      "title": "Neural-network quantum state tomography",
+      "year": "2018"
+    },
+    {
+      "raw": "Machine learning assisted quantum state estimation",
+      "doi": "10.1088/2632-2153/ab9a21",
+      "title": "Machine learning assisted quantum state estimation",
+      "year": "2020"
+    },
+    {
+      "raw": "Measurement-based adaptation protocol with quantum reinforcement learning",
+      "doi": "10.1103/physreva.98.042315",
+      "title": "Measurement-based adaptation protocol with quantum reinforcement learning",
+      "year": "2018"
+    },
+    {
+      "raw": "Reconstruction of a photonic qubit state with reinforcement learning",
+      "doi": "10.1002/qute.201800074",
+      "title": "Reconstruction of a photonic qubit state with reinforcement learning",
+      "year": "2019"
+    },
+    {
+      "raw": "Photonic quantum information processing: a review",
+      "doi": "10.1088/1361-6633/aad5b2",
+      "title": "Photonic quantum information processing: a review",
+      "year": "2018"
+    },
+    {
+      "raw": "Scalable architecture for a room temperature solid-state quantum information processor",
+      "doi": "10.1038/ncomms1788",
+      "title": "Scalable architecture for a room temperature solid-state quantum information processor",
+      "year": "2012"
+    },
+    {
+      "raw": "Trapped-ion quantum computing: progress and challenges",
+      "doi": "10.1063/1.5088164",
+      "title": "Trapped-ion quantum computing: progress and challenges",
+      "year": "2019"
+    },
+    {
+      "raw": "Technologies for trapped-ion quantum information systems",
+      "doi": "10.1007/s11128-016-1298-8",
+      "title": "Technologies for trapped-ion quantum information systems",
+      "year": "2016"
+    },
+    {
+      "raw": "Superconducting circuits for quantum information: an outlook",
+      "doi": "10.1126/science.1231930",
+      "title": "Superconducting circuits for quantum information: an outlook",
+      "year": "2013"
+    },
+    {
+      "raw": "Quantum information processing with superconducting circuits: a review",
+      "doi": "10.1088/1361-6633/aa7e1a",
+      "title": "Quantum information processing with superconducting circuits: a review",
+      "year": "2017"
+    },
+    {
+      "raw": "Satellite-to-ground quantum key distribution",
+      "doi": "10.1038/nature23655",
+      "title": "Satellite-to-ground quantum key distribution",
+      "year": "2017"
+    },
+    {
+      "raw": "Ground-to-satellite quantum teleportation",
+      "doi": "10.1038/nature23675",
+      "title": "Ground-to-satellite quantum teleportation",
+      "year": "2017"
+    },
+    {
+      "raw": "An integrated space-to-ground quantum communication network over 4600 kilometres",
+      "doi": "10.1038/s41586-020-03093-8",
+      "title": "An integrated space-to-ground quantum communication network over 4600 kilometres",
+      "year": "2021"
+    },
+    {
+      "raw": "The computational complexity of linear optics",
+      "doi": "10.1145/1993636.1993682",
+      "title": "The computational complexity of linear optics",
+      "year": "2011"
+    },
+    {
+      "raw": "An introduction to boson-sampling",
+      "doi": "10.1142/9789814678704_0008",
+      "title": "An introduction to boson-sampling",
+      "year": "2015"
+    },
+    {
+      "raw": "Photonic boson sampling in a tunable circuit",
+      "doi": "10.1126/science.1231440",
+      "title": "Photonic boson sampling in a tunable circuit",
+      "year": "2013"
+    },
+    {
+      "raw": "Experimental scattershot boson sampling",
+      "doi": "10.1126/sciadv.1400255",
+      "title": "Experimental scattershot boson sampling",
+      "year": "2015"
+    },
+    {
+      "raw": "Experimental validation of photonic boson sampling",
+      "doi": "10.1038/nphoton.2014.135",
+      "title": "Experimental validation of photonic boson sampling",
+      "year": "2014"
+    },
+    {
+      "raw": "Boson sampling with 20 input photons and a 60-mode interferometer in a 1014-dimensional Hilbert space",
+      "doi": "10.1103/physrevlett.123.250503",
+      "title": "Boson sampling with 20 input photons and a 60-mode interferometer in a 1014-dimensional Hilbert space",
+      "year": "2019"
+    },
+    {
+      "raw": "Timestamp boson sampling",
+      "doi": null,
+      "title": "Timestamp boson sampling",
+      "year": "2020"
+    },
+    {
+      "raw": "Quantum advantage with timestamp membosonsampling",
+      "doi": null,
+      "title": "Quantum advantage with timestamp membosonsampling",
+      "year": "2020"
+    },
+    {
+      "raw": "Permanents in linear optical networks",
+      "doi": null,
+      "title": "Permanents in linear optical networks",
+      "year": "2004"
+    },
+    {
+      "raw": "The complexity of computing the permanent",
+      "doi": "10.1016/0304-3975(79)90044-6",
+      "title": "The complexity of computing the permanent",
+      "year": "1979"
+    },
+    {
+      "raw": "Supervised quantum learning without measurements",
+      "doi": "10.1038/s41598-017-13378-0",
+      "title": "Supervised quantum learning without measurements",
+      "year": "2017"
+    },
+    {
+      "raw": "Extremely randomized trees",
+      "doi": "10.1007/s10994-006-6226-1",
+      "title": "Extremely randomized trees",
+      "year": "2006"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": false,
+    "token_estimate": 137,
+    "content_kind": "abstract_only",
+    "has_abstract": true,
+    "warnings": [
+      "iop HTML route was not usable (abstract_only); attempting PDF fallback.",
+      "pdf: iop full text could not be retrieved via HTML or PDF fallback. HTML failure: Publisher HTML only exposed abstract-level content without article body text. PDF failure: Browser context did not trigger a PDF download.",
+      "Full text was not available; returning metadata and abstract only.",
+      "--save-markdown was set but full text was not available; nothing written to disk."
+    ],
+    "source_trail": [
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_iop",
+      "route:signal_publisher_iop",
+      "route:signal_doi_iop",
+      "route:probe_iop_unknown",
+      "route:provider_selected_iop",
+      "route:provider_candidate_iop_metadata_selected_rank_1",
+      "route:provider_candidate_iop_identity_strong",
+      "fulltext:iop_attempt",
+      "fulltext:iop_html_fail",
+      "fulltext:iop_fail",
+      "route:provider_candidate_iop_rejected",
+      "fallback:iop_html_managed_by_provider",
+      "fallback:metadata_only",
+      "fulltext:iop_pdf_transport_fail",
+      "fulltext:iop_pdf_fail",
+      "download:markdown_skipped_no_fulltext"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 137,
+      "body": 0,
+      "refs": 527
+    },
+    "confidence": "low",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 0,
+      "word_count": 0,
+      "body_block_count": 0,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 0.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": false,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "crossref",
+    "route": "metadata",
+    "representation": "metadata",
+    "transport": "api",
+    "fallback_used": true
+  }
+}

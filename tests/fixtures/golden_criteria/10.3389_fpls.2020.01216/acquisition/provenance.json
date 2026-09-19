@@ -1,0 +1,145 @@
+{
+  "records": [
+    {
+      "doi": "10.3389/fpls.2020.01216",
+      "provider": "frontiers",
+      "requested_url": "https://www.frontiersin.org/articles/10.3389/fpls.2020.01216/full",
+      "final_url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/full",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 05:04:18 GMT",
+        "content-type": "text/html;charset=utf-8",
+        "content-length": "219999"
+      },
+      "captured_at_utc": "2026-09-16T05:04:13.528622+00:00",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "body_file": "acquisition/regression-2026-09-16/landing-response.bin",
+      "size": 1068703,
+      "sha256": "cda18e679ad68d95b10dbf55e53e86638c0c2c89e3a8a6a45e3cf4830b974d6d",
+      "error": null
+    },
+    {
+      "doi": "10.3389/fpls.2020.01216",
+      "provider": "frontiers",
+      "requested_url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/xml",
+      "final_url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/xml",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 05:04:47 GMT",
+        "content-type": "text/xml"
+      },
+      "captured_at_utc": "2026-09-16T05:04:44.296573+00:00",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "body_file": "original.xml",
+      "size": 135996,
+      "sha256": "3687624b65cfe4ad9889d04d037cfb3275b363fdfb9caa27996b9d7e69615196",
+      "error": null,
+      "original_body_file": "acquisition/regression-2026-09-16/article.xml"
+    },
+    {
+      "doi": "10.3389/fpls.2020.01216",
+      "provider": "frontiers",
+      "requested_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g001.webp",
+      "final_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g001.webp",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 05:08:28 GMT",
+        "content-type": "image/webp"
+      },
+      "captured_at_utc": "2026-09-16T05:08:26.176442+00:00",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "body_file": "acquisition/regression-2026-09-16/fpls-11-01216-g001.webp",
+      "size": 164730,
+      "sha256": "5979e0cc4e5d16312d6e71b2fc14379e7506c338d8700622636c9ddaa727ba1f",
+      "error": null
+    },
+    {
+      "doi": "10.3389/fpls.2020.01216",
+      "provider": "frontiers",
+      "requested_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g002.webp",
+      "final_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g002.webp",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 05:08:29 GMT",
+        "content-type": "image/webp"
+      },
+      "captured_at_utc": "2026-09-16T05:08:26.875165+00:00",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "body_file": "acquisition/regression-2026-09-16/fpls-11-01216-g002.webp",
+      "size": 144756,
+      "sha256": "af9372f949ca90c928000c35aec2002af08661775069c40f7d842e652687f247",
+      "error": null
+    },
+    {
+      "doi": "10.3389/fpls.2020.01216",
+      "provider": "frontiers",
+      "requested_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g003.webp",
+      "final_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g003.webp",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 05:08:30 GMT",
+        "content-type": "image/webp"
+      },
+      "captured_at_utc": "2026-09-16T05:08:27.538267+00:00",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "body_file": "acquisition/regression-2026-09-16/fpls-11-01216-g003.webp",
+      "size": 144036,
+      "sha256": "f13ceb132faa8c8dc3a2f8c6c59c23b2dcfc0cc4d5048ef801d8aec6a44fdf58",
+      "error": null
+    },
+    {
+      "doi": "10.3389/fpls.2020.01216",
+      "provider": "frontiers",
+      "requested_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g004.webp",
+      "final_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g004.webp",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 05:08:30 GMT",
+        "content-type": "image/webp"
+      },
+      "captured_at_utc": "2026-09-16T05:08:28.213713+00:00",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "body_file": "acquisition/regression-2026-09-16/fpls-11-01216-g004.webp",
+      "size": 63110,
+      "sha256": "92a02942fe1543e55b9c7b53de19571c433f05be6ea62decef32821fa18f9fa3",
+      "error": null
+    },
+    {
+      "doi": "10.3389/fpls.2020.01216",
+      "provider": "frontiers",
+      "requested_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g005.webp",
+      "final_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g005.webp",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 05:08:31 GMT",
+        "content-type": "image/webp"
+      },
+      "captured_at_utc": "2026-09-16T05:08:28.728687+00:00",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "body_file": "acquisition/regression-2026-09-16/fpls-11-01216-g005.webp",
+      "size": 59296,
+      "sha256": "00a045bf8506f5d48a2a79371781ccd6932141a18d17751528101885e88dec69",
+      "error": null
+    },
+    {
+      "body_file": "original.xml",
+      "capture_kind": "local_reuse",
+      "source_input": "original.xml",
+      "requested_url": null,
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": "2026-09-16T05:09:54.426401+00:00",
+      "size": 135996,
+      "sha256": "3687624b65cfe4ad9889d04d037cfb3275b363fdfb9caa27996b9d7e69615196",
+      "evidence": "Byte-identical canonical copy; actual HTTP envelope retained with acquisition source."
+    }
+  ]
+}

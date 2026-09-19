@@ -223,7 +223,7 @@ provider fulltext 内部链路统一接收同一个 `RuntimeContext`：workflow 
 
 provider 身份与能力配置统一来自 provider entry module 导出的 `PROVIDER_BUNDLE`。内置 provider entry 只由 `paper_fetch.providers._BUILTIN_PROVIDER_ENTRY_MODULES` 显式清单加载；固定 loader 在启动时一次构造按 status 排序的不可变 bundle tuple、provider map、`PROVIDER_CATALOG` 与 source map，并立即验证 provider name/status order/client factory/source 及 alias、DOI prefix、exact/suffix domain 无冲突。运行时没有 mutable registry、导入协调、cache invalidation、源码扫描或第三方 bundle 注入。routing、默认资产策略、MCP status 顺序和 client registry 都从这些不可变映射派生，不维护第二份 provider 行为字典。Crossref 的 provider adapter 是 `paper_fetch.providers.crossref.CrossrefClient`，与 resolve 共同依赖 `paper_fetch.metadata.crossref.CrossrefLookupClient`。
 
-`compile_route_execution_policy()` 是 catalog 到 runtime 的唯一非授权执行策略边界。Catalog 合并并公开 exact/suffix/base、API/template/route host 供 routing 与诊断使用，但 `provider_request_policy()` 不把这些 host 或 catalog sensitive headers 自动接入 HTTP/PDF/body/supplementary allowlist；它只投影 transport 实际读取的 timeout、transient/rate retry、QPS/minimum interval 与 rate-wait budget。调用方显式提供的 `HttpRequestPolicy.allowed_hosts` / `SafeRemoteUrlPolicy.allowed_hosts` 仍逐跳 fail closed。minimum interval 通过每 scope 串行 start gate 执行；未显式提供 asset profile 时，compiled route 的 `asset_scope` 选择执行范围，acceptance owner 使用 compiled `acceptance_policy` 验证真实 representation。固定 catalog 的身份重叠直接拒绝，不保留未被内置 provider 使用的 priority/reason 豁免。
+`compile_route_execution_policy()` 是 catalog 到 runtime 的唯一非授权执行策略边界。Catalog 合并并公开 exact/suffix/base、API/template/route host 供 routing 与诊断使用，但 `provider_request_policy()` 不把这些 host 或 catalog sensitive headers 自动接入 HTTP/PDF/body/supplementary allowlist；它投影 transport 实际读取的 timeout、transient/rate retry、QPS/minimum interval 与 rate-wait budget，并仅为 HTML/XML/PDF 正文 route 设置可选的 `body_access_provider`，供 HTTP 失败重试前检查同篇访问限制；资产与 metadata route 不启用该检查，也不从 cooldown 名称推断 provider。调用方显式提供的 `HttpRequestPolicy.allowed_hosts` / `SafeRemoteUrlPolicy.allowed_hosts` 仍逐跳 fail closed。minimum interval 通过每 scope 串行 start gate 执行；未显式提供 asset profile 时，compiled route 的 `asset_scope` 选择执行范围，acceptance owner 使用 compiled `acceptance_policy` 验证真实 representation。固定 catalog 的身份重叠直接拒绝，不保留未被内置 provider 使用的 priority/reason 豁免。
 
 ### 8. Runtime / Artifact / Cache 边界
 
@@ -266,7 +266,7 @@ Camoufox/Playwright 的 navigation、redirect、子资源与 service worker 使�
 
 ### 10. CI / 回归验证边界
 
-`.github/workflows/ci.yml` 是默认分支 push / pull request 的薄触发器，完整命令事实来源是 reusable `.github/workflows/verify.yml`。CI 运行一次完整 unit、integration、Ruff、生产包 mypy、版本与依赖漏洞门禁，并把全部可执行 exact fixture 按 provider 稳定分成四个 shard。已删除的 devtools 不属于当前验证命令。wheel/sdist 仍分别进入隔离 venv 执行 CLI/import/MCP/resource smoke；release 继续验证依赖、inventory、SBOM、checksum 与 provenance。
+`.github/workflows/ci.yml` 是默认分支 push / pull request 的薄触发器，完整命令事实来源是 reusable `.github/workflows/verify.yml`。CI 运行一次完整 unit、integration、Ruff、生产包 mypy、版本与依赖漏洞门禁，普通 PR/push 不执行 golden。完整原文、资产及 exact corpus 回放统一由显式 `tests/golden` 入口执行，发布前必须完成三层验证。已删除的 devtools 不属于当前验证命令。wheel/sdist 仍分别进入隔离 venv 执行 CLI/import/MCP/resource smoke；release 继续验证依赖、inventory、SBOM、checksum 与 provenance。
 
 pytest 在收集前验证锁定 MCP major 与 trafilatura API 行为；ambient 环境不兼容时会提示先执行 `uv sync --frozen --extra dev --extra full`，常规验证统一通过 `PYTHONPATH=src uv run python -m pytest ...`。运行时 registry、公开入口和行为测试负责验证架构边界，不以私有模块布局或文档措辞作为契约。
 

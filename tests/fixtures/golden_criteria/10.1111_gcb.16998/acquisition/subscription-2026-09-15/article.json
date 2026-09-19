@@ -1,0 +1,720 @@
+{
+  "doi": "10.1111/gcb.16998",
+  "source": "wiley_browser",
+  "metadata": {
+    "title": "Drought thresholds that impact vegetation reveal the divergent responses of vegetation growth to drought across China",
+    "authors": [
+      "Mingze Sun",
+      "Xiangyi Li",
+      "Hao Xu",
+      "Kai Wang",
+      "Nazhakaiti Anniwaer",
+      "Songbai Hong"
+    ],
+    "abstract": "Identifying droughts and accurately evaluating drought impacts on vegetation growth are crucial to understanding the terrestrial carbon balance across China. However, few studies have identified the critical drought thresholds that impact China's vegetation growth, leading to large uncertainty in assessing the ecological consequences of droughts. In this study, we utilize gridded surface soil moisture data and satellite‐observed normalized difference vegetation index (NDVI) to assess vegetation response to droughts in China during 2001–2018. Based on the nonlinear relationship between changing drought stress and the coincident anomalies of NDVI during the growing season, we derive the spatial patterns of satellite‐based drought thresholds (T SM) that impact vegetation growth in China via a framework for detecting drought thresholds combining the methods of feature extraction, coincidence analysis, and piecewise linear regression. The T SM values represent percentile‐based drought threshold levels, with smaller T SM values corresponding to more negative anomalies of soil moisture. On average, T SM is at the 8.7th percentile and detectable in 64.4% of China's vegetated lands, with lower values in North China and Jianghan Plain and higher values in the Inner Mongolia Plateau. Furthermore, T SM for forests is commonly lower than that for grasslands. We also find that agricultural irrigation modifies the drought thresholds for croplands in the Sichuan Basin. For future projections, Earth System Models predict that more regions in China will face an increasing risk for ecological drought, and the Hexi Corridor‐Hetao Plain and Shandong Peninsula will become hotspots of ecological drought. This study has important implications for accurately evaluating the impacts of drought on vegetation growth in China and provides a scientific reference for the effective ecomanagement of China's terrestrial ecosystems.",
+    "journal": "Global Change Biology",
+    "article_type": null,
+    "published": "2024-1",
+    "keywords": [],
+    "license_urls": [
+      "http://onlinelibrary.wiley.com/termsAndConditions#vor"
+    ],
+    "landing_page_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16998"
+  },
+  "sections": [
+    {
+      "heading": "",
+      "level": 2,
+      "kind": "body",
+      "text": "Received: 12 July 2023 | Revised: 21 September 2023 | Accepted: 3 October 2023\n\nDOI: 10.1111/gcb.16998"
+    },
+    {
+      "heading": "**Drought thresholds that impact vegetation reveal the divergent responses of vegetation growth to drought across China**",
+      "level": 1,
+      "kind": "body",
+      "text": "**Mingze Sun** | **Xiangyi Li** | **Hao Xu** | **Kai Wang** | **Nazhakaiti Anniwaer** | **Songbai Hong**\n\nInstitute of Carbon Neutrality, SinoFrench Institute for Earth System Science, College of Urban and Environmental Sciences, Peking University, Beijing, China"
+    },
+    {
+      "heading": "**Correspondence**",
+      "level": 5,
+      "kind": "body",
+      "text": "Xiangyi Li, Institute of Carbon Neutrality, Sino-French Institute for Earth System Science, College of Urban and Environmental Sciences, Peking University, Beijing 100871, China. Email: xiangyili@pku.edu.cn"
+    },
+    {
+      "heading": "**Funding information**",
+      "level": 5,
+      "kind": "body",
+      "text": "National Natural Science Foundation of China, Grant/Award Number: 41988101"
+    },
+    {
+      "heading": "**Abstract**",
+      "level": 2,
+      "kind": "body",
+      "text": "Identifying droughts and accurately evaluating drought impacts on vegetation growth are crucial to understanding the terrestrial carbon balance across China. However, few studies have identified the critical drought thresholds that impact China's vegetation growth, leading to large uncertainty in assessing the ecological consequences of droughts. In this study, we utilize gridded surface soil moisture data and satellite-observed normalized difference vegetation index (NDVI) to assess vegetation response to droughts in China during 2001–2018. Based on the nonlinear relationship between changing drought stress and the coincident anomalies of NDVI during the growing season, we derive the spatial patterns of satellite-based drought thresholds (_T_ SM) that impact vegetation growth in China via a framework for detecting drought thresholds combining the methods of feature extraction, coincidence analysis, and piecewise linear regression. The _T_ SM values represent percentile-based drought threshold levels, with smaller _T_ SM values corresponding to more negative anomalies of soil moisture. On average, _T_ SM is at the 8.7th percentile and detectable in 64.4% of China's vegetated lands, with lower values in North China and Jianghan Plain and higher values in the Inner Mongolia Plateau. Furthermore, _T_ SM for forests is commonly lower than that for grasslands. We also find that agricultural irrigation modifies the drought thresholds for croplands in the Sichuan Basin. For future projections, Earth System Models predict that more regions in China will face an increasing risk for ecological drought, and the Hexi Corridor-Hetao Plain and Shandong Peninsula will become hotspots of ecological drought. This study has important implications for accurately evaluating the impacts of drought on vegetation growth in China and provides a scientific reference for the effective ecomanagement of China's terrestrial ecosystems."
+    },
+    {
+      "heading": "**K E Y W O R D S**",
+      "level": 5,
+      "kind": "body",
+      "text": "China, drought threshold, ecological drought, future projections, soil moisture, vegetation growth anomalies"
+    },
+    {
+      "heading": "**1** | **INTRODUCTION**",
+      "level": 2,
+      "kind": "body",
+      "text": "The occurrence of multiple climate extremes, including heatwaves, extreme precipitation, and drought, has become widespread because of global climate change (IPCC, 2021; Yang et al., 2023).\n\nAmong these climate extremes, drought has profound effects on vegetation growth and terrestrial ecosystems (Dai, 2011; Trenberth et al., 2014). Drought weakens the capacity for photosynthesis, suppresses vegetation growth, and triggers tree mortality, leading to substantial negative impacts on the terrestrial carbon cycle (Farooq\n\n© 2023 John Wiley & Sons Ltd. <u>|</u> **1 of 13**\n\n_Glob Change Biol._ 2024;30:e16998. https://doi.org/10.1111/gcb.16998\n\nwileyonlinelibrary.com/journal/gcb\n\n**2 of 13** **<u>|</u>**\n\nSUN et al.\n\net al., 2009; Seleiman et al., 2021; van der Molen et al., 2011). Over the past few decades, drought has resulted in a loss of carbon sink of up to 0.19 ± 0.06 Pg C year<sup>−1</sup>, equivalent to 8%–17% of global forest carbon sink (Pan et al., 2011; Piao et al., 2019; Zscheischler et al., 2014).\n\nChina, which is located in East Asia, plays a crucial role in global carbon sequestration through its terrestrial ecosystem. The country contributes more than 0.20 Pg C year<sup>−1</sup> of carbon sink, accounting for 10%–31% of global terrestrial carbon sink (Piao et al., 2022; Wang et al., 2022; Yang et al., 2022). However, China's terrestrial ecosystem is markedly affected by frequent droughts. Influenced by the East Asian Monsoon, westerly circulation, and the topography of the Qinghai-Tibet Plateau, several drought-prone regions have emerged, such as North China, Northeast China, the Loess Plateau, and the Yunnan-Kweichow Plateau (Zhang et al., 2020). Since 2000, drought has induced a carbon loss of 0.01 Pg C year<sup>−1</sup> in China's terrestrial ecosystem, surpassing 5% of the national carbon sink for an entire year (Liu et al., 2014). Against its importance, our knowledge of both drought detection and the magnitude of drought impacts on vegetation growth is still very limited, which leads to large uncertainties in estimating the terrestrial carbon sink in China (AghaKouchak et al., 2015; Frank et al., 2015; Jiao et al., 2021; Piao et al., 2019; Reichstein et al., 2013). Moreover, the large spatial heterogeneity in climate conditions, topographic features, and community structure in China further complicates the evaluation of the impacts of drought on different vegetation biomes, since they may hold varying capacities to withstand drought stress. Therefore, understanding how vegetation growth responds to drought in China is of great importance for estimating the national carbon sink and predicting the carbon cycle under future climates.\n\nAlthough a number of studies have suggested that droughts induced negative effects on China's ecosystems (Cao et al., 2021; Deng et al., 2021; Ding et al., 2020; Li et al., 2019; Xu et al., 2012, 2018), not all detected droughts have truly caused devastating damage to vegetation growth. Ecological theories and relevant studies suggest that vegetation can withstand drought stress by regulating water potential and photosynthetic rates through stomatal behaviors (Farooq et al., 2009; Wu et al., 2021). In addition, botanical structural traits such as root depth and tree height contribute to the availability of deep soil water and plant water transport, influencing the ability of vegetation to tolerate drought (Kannenberg et al., 2022; Olson et al., 2018). Consequently, vegetation is expected to exhibit nonlinear responses to different levels of drought stress. Several studies have found evidence of a critical inflection point that delineates distinct phases of vegetation response, which transitions from high resistance to high vulnerability as drought intensifies (Groffman et al., 2006; Knapp et al., 2017; Senf et al., 2020; Skelton et al., 2015). Guo et al. (2023) studied the responses of vegetation to drought in China and highlighted that different drought trigger thresholds could lead to varying levels of vegetation productivity loss. However, they did not identify which drought threshold serves as the critical point for the onset of a dramatic increase in vegetation growth response as drought intensifies. Furthermore, given varying\n\ntolerance to drought among vegetation biomes, nonlinear responses and critical drought thresholds may differ across China. Therefore, it remains unknown how critical thresholds determining the impacts of drought on vegetation growth vary across the entire country.\n\nIn this study, we assessed the response trajectories of vegetation greenness to drought during 2001–2018 and evaluated if any drought threshold exists that determines the abrupt change in the response of suppressed vegetation growth in China. To accomplish this, we followed the framework developed by Li et al. (2023) for detecting drought thresholds. We first conducted a coincidence analysis between the anomalies of surface soil moisture and satellite-derived normalized difference vegetation index (NDVI) and then investigated the response performance (linear or nonlinear) for the NDVI to increasing soil moisture deficit. Our study aims to address the following questions: Do drought thresholds exist across China that determine the suppression of vegetation growth? If any drought thresholds exist, how do these drought thresholds vary across different geographic zones and among various vegetation biomes in China? Under future climates, will vegetation growth face a higher risk of exposure to threshold-induced droughts in China?"
+    },
+    {
+      "heading": "2.1.1 | Satellite data",
+      "level": 2,
+      "kind": "body",
+      "text": "The NDVI is commonly used to evaluate the greenness and growth of vegetation. In this study, we utilized monthly NDVI data from the gridded Moderate Resolution Imaging Spectroradiometer (MODIS) product MOD13C2 v006 (Didan, 2015) for the period 2001–2018. The original spatial resolution of the MODIS product is 0.05° × 0.05°. To match the meteorological data used in our study, we aggregated the NDVI data from their original resolution to a spatial resolution of 0.1° × 0.1°. Growing season NDVI values were derived by averaging monthly NDVI values from April to October per year (Piao et al., 2004). Next, we calculated NDVI anomalies by removing the linear trend for the period of 2001–2018 in each pixel. To exclude areas characterized by barren land, rock, sand (i.e., desert), or snow, we removed pixels with low (<0.1) annual mean NDVI values from our analysis."
+    },
+    {
+      "heading": "2.1.2 | Gridded climatic data",
+      "level": 2,
+      "kind": "body",
+      "text": "To identify drought conditions, we utilized surface soil moisture data. Monthly soil moisture data with an original resolution of 0.1° × 0.1° were obtained from the global data set for the land component of the fifth generation of European Reanalysis (ERA5-Land; Muñoz-Sabater et al., 2021). This data set provides four layers of volumetric soil moisture: Layer 1 (0–7 cm), Layer 2 (7–28 cm), Layer 3 (28–100 cm), and Layer 4 (100–289 cm). We focused on surface\n\n**<u>| 3 of 13</u>**\n\nSUN et al.\n\nsoil moisture, which corresponds to Layer 1. Surface soil moisture anomalies during the 2001–2018 growing season were derived using the same methodology as applied to the MODIS NDVI dataset.\n\nIn addition, we used meteorological variables, including 2-m air temperature, precipitation rate, air pressure, and specific humidity, from the China Meteorological Forcing Dataset for the period 2001–2018 at monthly and 0.1° × 0.1° resolution (He et al., 2020). We then calculated the annual average temperature and annual total precipitation to present the mean climatological condition for vegetation growth, and the interannual variation of vapor pressure deficit (VPD) as a metric of the interannual variability of atmospheric water demand."
+    },
+    {
+      "heading": "2.1.3 | Outputs from Earth System Models (ESMs)",
+      "level": 2,
+      "kind": "body",
+      "text": "For future projections, we utilized surface soil moisture data from the outputs of 13 ESMs under two scenarios combining shared socioeconomic pathways (SSPs) and representative concentration pathways: SSP2-4.5 and SSP5-8.5. The SSP2-4.5 scenario represents a medium forcing pathway with an intermediate emissions scenario, whereas the SSP5-8.5 scenario corresponds to a very high level of carbon emissions (Cook et al., 2020; Meinshausen et al., 2020; O'Neill et al., 2016). For consistency with observations, we used the model outputs of 2001–2018 to represent the state under current climate conditions, by combining historical simulations for 2001–2014 and subsequent future simulations for 2015–2018. In comparison, we chose the last 18 years of the end of the century (2083–2100) as the reference for future periods. To minimize uncertainty resulting from the low spatial resolution of the ESM outputs, only models with original spatial resolutions higher than 2° × 2° were selected. The 13 ESMs were ACCESS-CM2, ACCESS-ESM1-5, BCC-CSM2-MR, CESM2-WACCM, EC-Earth3, EC-Earth3-Veg, GFDL-CM4, KACE-10-G, MIROC6, MPI-ESM1-2-HR, MPI-ESM1-2-LR, MRI-ESM2-0, and NorESM2-MM. To match the spatial resolution of our study, nearest neighbor interpolation was used to change the spatial resolution of the model data to 0.1° × 0.1°."
+    },
+    {
+      "heading": "2.1.4 | Auxiliary data",
+      "level": 2,
+      "kind": "body",
+      "text": "To identify tree cover in China, we utilized the high-resolution map of global forest change developed by Hansen et al. (2013), which originally had a spatial resolution of 30 m. In addition, we incorporated irrigation rate data from the Global Map of Irrigation Areas (GMIA) to evaluate the influence of agricultural management on vegetation response to drought. The GMIA dataset provides information on the distribution of irrigation rates for cultivated land globally, with a spatial resolution of 5 arcmin (1/12°; Siebert et al., 2013). Both the tree cover and irrigation rate data were remapped to a spatial resolution of 0.1° × 0.1° to align with the other data.\n\nTo compare the vegetation response to drought across different biomes, we utilized the 1:1,000,000 digitalized vegetation map\n\nof China (Editorial Board of Vegetation Map of China, 2007). This dataset, which has a spatial resolution of 30 arcsec (1/120°), contains information on various types of vegetation in China. The types extracted from this dataset included needleleaf forest, mixed forest, broadleaf forest, shrubland, grassland, and cropland."
+    },
+    {
+      "heading": "**2.2** | **The framework for drought threshold detection**",
+      "level": 2,
+      "kind": "body",
+      "text": "Here, we defined the drought threshold as an inflection point beyond which the response fraction of vegetation growth to droughts will change from low to high, corresponding to the abrupt loss of vegetation resistance to increasing drought stress. In our study, we used a percentile-based method to identify droughts and vegetation growth suppression, based on soil moisture data and NDVI respectively. We adopted the framework for detecting drought thresholds developed by Li et al. (2023) to assess the performances of vegetation response trajectories and evaluate the existence of drought thresholds impacting vegetation growth in China. In detail, the framework consists of four main procedures: (1) feature extraction using principal component analysis (PCA), (2) coincidence analysis between drought and vegetation response, (3) nonlinear tests for vegetation response trajectories to different levels of drought stress, and (4) detection of inflection points (i.e., drought thresholds) by piecewise linear regression.\n\nTo begin, we performed PCA on four environmental variables: annual average temperature, annual total precipitation, interannual variation of VPD, and tree cover (Mahecha et al., 2017). The first two principal components (PC1 and PC2) were selected, explaining 78.6% of the variance (Figure S1). For each grid cell, we then identified its neighboring grid cells in the two-dimensional feature space composed of PC1 and PC2. If any grid cell is located within a 3 × 3 window whose width accounts for 4% of the total length of the scores of PC1 and PC2, we regarded them as neighboring ones for the targeting grid cell because they shared the similarity in environmental conditions and vegetation covers (Figure S2). To detect the occurrence of drought and vegetation response, we derived the anomaly value of soil moisture and NDVI from the percentile of all samples in the same 3 × 3 window in the PC space.\n\nTo identify drought occurrence in Figure 1a, we first obtained the anomaly value for each target grid cell from the 10th percentile of soil moisture samples in the window. Then we identified the drought years when the soil moisture decreased below this anomaly value for the 18-year time slot of the target grid cell (Figure S2). Furthermore, we calculated the coincidence rates (_ri_) between different levels of soil moisture stress (soil moisture anomalies < 1st–50th percentiles) and negative anomalies of vegetation growth (NDVI anomalies <10th percentile) in each window (Rammig et al., 2015). The _ri_ value was thus calculated as the fraction of the co-occurrence of droughts and vegetation suppression in all drought events (Li et al., 2023). The subscript _i_ represents drought detected by different percentiles, _i_ = 1st, 2nd, …, 50th. _ri_ is 0 if no responses of vegetation growth\n\n**4 of 13** **<u>|</u>**\n\nSUN et al.\n\n<!-- Start of picture text -->\n(a) (b) Coincidence rates (r 10th) between drought<br>Occurrence of drought during 2001–2018<br>and vegetation response<br>Times r 10th<br>0.5<br>>5<br>50 ° N 50 ° N<br>5 0.4<br>4<br>40 ° N 40 ° N 0.3<br>3<br>0.2<br>30 ° N 2 30 ° N<br>1<br>0.1<br>20 ° N 0 20 ° N<br>0<br>75 ° E 90 ° E 105 ° E 120 ° E 135 ° E 75 ° E 90 ° E 105 ° E 120 ° E 135 ° E<br><!-- End of picture text -->\n\n**FI G U R E 1** Occurrence of drought and corresponding vegetation response in China during the period 2001–2018. (a) Spatial distribution of drought occurrence based on surface soil moisture anomalies, specifically areas where anomalies are below the 10th percentile threshold. (b) Coincidence rates (_r_ 10th) between the occurrence of drought (soil moisture anomalies <10th percentile) and vegetation response [normalized difference vegetation index (NDVI) anomalies <10th percentile] across China. Map lines delineate study areas and do not necessarily depict accepted national boundaries.\n\nto droughts occur while _ri_ reaches 1 if vegetation responds to all droughts.\n\nSubsequently, we examined the nonlinear relationship between drought stress levels (_i_) and coincidence rates (_ri_) (Figure S3a). However, the linearity showed better fitness than the nonlinearity from the mathematical perspective in some vegetated areas because the vegetation growth was not largely affected by droughts during 2001–2018. By identifying the inflection point where the slopes of the two distinct segments had the greatest difference, we derived the percentile-based drought threshold, referred to as _T_ SM (Figure S3b; Toms & Lesperance, 2003). Lower _T_ SM values correspond to more negative soil moisture anomalies so more rarely occurred drought events featured by higher drought stress are detected, and vice versa.\n\nTo verify the robustness of the drought thresholds, we performed a shuffling test (Figure S4). Firstly, the original date of the NDVI series for each pixel was randomly shuffled 500 times. Then we detected drought thresholds based on the original soil moisture series and these 500 surrogate NDVI time series using the same method. Our null hypothesis was that drought thresholds derived from the original NDVI time series showed no difference from those derived from the surrogate time series. We reject the null hypothesis only if the drought threshold from the original NDVI time series is outside the 2.5%–97.5% (corresponding to _p_ <.05) of the distribution for all threshold values from the surrogate NDVI time series. For grid cells with available _T_ SM values, we projected changes in the probability of _T_ SM-inferred drought occurring in China during the period 2083–2100, relative to the period 2001–2018, based on model simulation data.\n\nIn addition, we examined variation in drought thresholds among different vegetation biomes, including five natural vegetation biomes (needleleaf forest, mixed forest, broadleaf forest, shrubland, and grassland) and one managed vegetation biome (cropland). We\n\napplied the Mann–Whitney U test to examine the significance of the difference in drought thresholds among five vegetation biomes (significance level: _p_ <.05). For croplands, we specifically compared drought thresholds across five major agricultural zones that were highly influenced by human activity: North China, the Huang-Huai Area, the Yangtze River Delta, Jianghan Plain, and the Sichuan Basin. Within each agricultural zone, we compared _T_ SM values across five irrigation rate ranges: 0%–20%, 20%–40%, 40%–60%, 60%–80%, and 80%–100%. It is important to note that only irrigation rate ranges with valid _T_ SM values are presented for each respective region. This analysis allowed us to assess how irrigation rates impacted the drought thresholds for croplands in different agricultural zones."
+    },
+    {
+      "heading": "**3.1** | **Drought occurrence and relevant vegetation response during 2001–2018**",
+      "level": 2,
+      "kind": "body",
+      "text": "The average drought occurrence during 2001–2018 was 1.8 times across all vegetated areas of China, with varying occurrences across different regions. As depicted in Figure 1a, approximately 47% of the study area, including the Qinghai-Tibet Plateau, Northeast China, and northern Xinjiang, experienced fewer than two drought events during this period. Conversely, around 4% of the regions, such as the central Inner Mongolia Plateau and the western Yunnan-Kweichow Plateau, had a much more frequent occurrence of droughts (>5 times from 2001 to 2018).\n\nHowever, it is important to note that not all drought events result in vegetation greenness anomalies falling below the 10th percentile threshold (Figure 1b). We found that the average coincidence rate (_r_ 10th) between the occurrence of once-in-a-decade droughts and vegetation response in the vegetated areas of China was.23.\n\n**<u>| 5 of 13</u>**\n\nSUN et al.\n\nThis indicates that, on a nationwide scale, vegetation growth has a relatively low likelihood of being severely impacted by once-ina-decade drought events. Regionally, the lower coincidence rates (_r_ 10th <.1) were identified in 5.6% of the vegetated areas such as the southeastern China, the Great Khingan Mountains, and the QinghaiTibet Plateau (Figure 1b). This suggests vegetation is less responsive to droughts. By contrast, higher coincidence rates (_r_ 10th >.4) were observed in the Inner Mongolia Plateau and Huang-Huai Area, and even ~0.6 in Mount Tai, which indicates greater susceptibility of vegetation growth to drought.\n\nThe spatial heterogeneity of coincidence rates can be explained by multiple reasons. Specifically, low _r_ 10th values in the southeast are associated with the humid climate, which results in less severe and frequent droughts (Vicente-Serrano et al., 2013; Yang et al., 2016). In the Qinghai-Tibet Plateau where vegetation growth is dominantly limited by low temperatures, low _r_ 10th values were observed because droughts only drive the low plant growth in fewer than one-fourth of the vegetated lands (Zhang et al., 2023). In addition, the low coincidence rates may be associated with the high resistance of vegetation to drought. For example, coniferous forests dominating the Great Khingan Mountains adapt to long-term dry conditions and have good capacities to resist droughts by regulating stomatal openness (Brodribb et al., 2014; Song et al., 2022). Conversely, higher coincidence rates observed in the Inner Mongolia Plateau and the Huang-Huai Area (Figure 1b), are primarily driven by the heightened vulnerability of vegetation growth to drought in these regions (Chen et al., 2022).\n\nTherefore, Figure 1 demonstrates that the occurrence of drought and the response of vegetation do not align perfectly, as the same level of drought stress does not necessarily result in the same magnitude of negative vegetation anomalies. This motivates us to identify the drought thresholds which determine vegetation growth in China,\n\nby considering both drought intensity and the performance of vegetation responding to drought."
+    },
+    {
+      "heading": "**3.2** | **Spatial patterns of drought thresholds (** **_T_ SM) for negative NDVI anomalies in China**",
+      "level": 2,
+      "kind": "body",
+      "text": "Following the applicable framework for detecting drought thresholds developed by Li et al. (2023), we examined the response trajectories of vegetation to increasing drought stress and identified the drought thresholds for the NDVI across China during the period 2001–2018 (Figure 2). Approximately 64.4% of vegetated areas in China exhibited a nonlinear relationship between drought intensity and the coincidence rates of drought-vegetation anomalies, which indicates the existence of drought thresholds in these regions (Figure 2a). However, it is important to note that nonlinearity was not detectable in certain areas, such as the Qinghai-Tibet Plateau or the southeastern regions. We suggest that vegetation growth is not dramatically impacted by droughts during 2001–2018, so coincidence rates remain low and no abrupt shift of vegetation response to drought is detected in these areas (Figure S5). For all vegetated areas where thresholds were detected, the average _T_ SM value was at the 8.7th percentile (Figure 2b). Furthermore, we observed that _T_ SM values exceeded the 15th percentile in 13.9% of vegetated areas characterized as ecological-drought-prone regions, whereas _T_ SM values were smaller than the 5th percentile in a small portion of areas (~6%).\n\nThe spatial variability of drought thresholds reveals variations in vegetation responses and underlying mechanisms used to cope with drought stress in different regions. The Yunnan-Kweichow Plateau exhibited similar patterns of drought thresholds ranging from the 6th to the 10th percentiles. The presence of karst landforms in this\n\n<!-- Start of picture text -->\nFormats of vegetation response trajectories (b) Drought threshold T SM More<br>Formats Percentile vulnerable<br>20th<br>50 ° N 50 ° N<br>Non-linear 16th<br>40 ° N 40 ° N<br>12th<br>30 ° N 30 ° N<br>Linear 8th<br>20 ° N 20 ° N<br>75 ° E 90 ° E 105 ° E 120 ° E 135 ° E 75 ° E 90 ° E 105 ° E 120 ° E 135 ° E 4th More<br>resistant<br>P<br>ecr<br>e<br>n<br>lit<br>e<br>s<br><!-- End of picture text -->"
+    },
+    {
+      "heading": "**(a)** Formats of vegetation response trajectories",
+      "level": 3,
+      "kind": "body",
+      "text": "**FI G U R E 2** Drought response and thresholds for vegetation growth in China during 2001–2018. (a) Spatial distribution of response curve formats for vegetation response to increasing drought stress, fitted by the linear and nonlinear models. Yellow areas indicate nonlinear response models exhibit better fitness with adjusted _R_<sup>2</sup> >.5 and lower Akaike's information criterion (AIC) values than linear models, while blue areas represent that the linear models have better fitness. Drought is identified using soil moisture anomalies, and vegetation response is defined as normalized difference vegetation index (NDVI) anomalies below the 10th percentile. (b) Spatial distribution of drought thresholds (_T_ SM) in China. The annotation on the right shows the vegetation's capacity to withstand drought stress, with higher percentile values corresponding to vegetation growth being more vulnerable to drought. Map lines delineate study areas and do not necessarily depict accepted national boundaries.\n\n**6 of 13** **<u>|</u>**\n\nSUN et al.\n\nregion leads to severe soil and water loss, resulting in higher drought stress for vegetation due to limited soil water and nutrient availability (Liu et al., 2023; Zhang et al., 2022). Yet, local vegetation has developed adaptive biochemical, physiological, and morphological strategies to cope with water deficits, mitigating the negative impacts of drought (Liu et al., 2021). As a result, the drought thresholds in the Yunnan-Kweichow Plateau are relatively smaller than those of regions such as the Inner Mongolia Plateau and the northwestern regions, where lower magnitudes of drought stress may trigger marked vegetation response (_T_ SM > 14th percentile). Ecological droughts are more prone to occur in these arid or semi-arid grassland ecosystems due to the frequent and prolonged duration of drought events (Ding et al., 2020; Zhang et al., 2020). In these areas, soil water availability strongly influences vegetation activity, and droughts of even moderate magnitude can lead to a substantial loss of grassland productivity, resulting in a decline in vegetation greenness (Lei et al., 2020; Walther et al., 2019).\n\nBased on the knowledge of _T_ SM, we identified droughts that trigger the rapid increase in vegetation response using _T_ SM instead of relying on the empirical drought threshold 10th across vegetated areas in China. These _T_ SM-inferred droughts are regarded as ecological droughts. We found that on average, the frequency of ecological droughts was 1.2 times during the period 2001–2018 (Figure S6), slightly less frequently than droughts defined by the 10th percentile (1.8 times, as shown in Figure 1a). Note that water-limited regions such as the Hexi Corridor-Hetao Plain and the southern Inner Mongolia Plateau experienced more than three times ecological drought events during the same period, which indicates larger threats of droughts to vegetation in these areas. Whereas ecological droughts were not detected in 63% of the vegetated areas in China, either due to the absence of detected drought thresholds (35.6%, blue areas in Figure 2a) based on observations during 2001–2018 or because the vegetation in those regions did not experience _T_ SMinferred droughts (27.4%, gray areas in Figure S6). These findings underscore the importance of identifying drought thresholds that impact vegetation growth for accurately assessing the impacts of drought on ecosystems and informing drought risk management policies in China."
+    },
+    {
+      "heading": "**3.3** | **Divergence of drought thresholds among different vegetation biomes**",
+      "level": 2,
+      "kind": "body",
+      "text": "Our findings indicate significant variation in _T_ SM values among different vegetation biomes (_p_ <.05 for every two biomes in the Mann– Whitney _U_ test). Woody vegetation biomes, including forests and shrubs, exhibited similar patterns of drought thresholds ranging from the 4th to the 11th percentile, which were relatively smaller compared to _T_ SM values for grasslands (Figure 3a). Approximately 22% of grassland areas had _T_ SM values greater than the 15th percentile, which indicates a higher likelihood of ecological droughts occurring. These differences in _T_ SM values among vegetation biomes suggest that vegetation responds differently to drought stress,\n\ninfluenced by growth conditions and ecophysiological characteristics specific to each biome (Bréda et al., 2006; Farooq et al., 2009; Farooq et al., 2012).\n\nIn China, forest ecosystems were characterized by relatively smaller drought thresholds, which indicates less susceptibility to ecological droughts. Different types of forests exhibited similar _T_ SM values, with needleleaf forests at 6.4 ± 1.1th percentile on average, mixed forests at 5.5 ± 0.8th percentile, and broadleaf forests at 6.1 ± 1.3th percentile. Temperate and subtropical forests in China are mainly distributed in monsoon regions and influenced by seasonal water availability. They have a strong ability to access deep soil water and store water in the root zone, which mitigates the negative impacts of surface soil water deficits on vegetation photosynthesis (McDowell et al., 2019; Stocker et al., 2023; Walther et al., 2019). Therefore, the response of vegetation growth will not shift dramatically except in cases of severe drought. In addition, it is noteworthy that mixed forests exhibited smaller _T_ SM values than other forest ecosystems. We infer that species diversity enhances the resistance of forests to drought by leveraging compensatory structures and ecosystem functioning for enhanced stability (Fichtner et al., 2020; Gazol & Camarero, 2016; Liu et al., 2022).\n\nHowever, compared to forests, grasslands exhibited relatively large _T_ SM values (averaging at the 10.2 ± 4.7th percentile), especially in the northern arid and semi-arid regions. Due to the simple architecture, grasslands are highly dependent on soil water availability (Walther et al., 2019). Once drought occurs, they tend to take the strategies of dormancy during droughts or death but regeneration after drought (Balachowski et al., 2016; Chaves et al., 2003; Zwicke et al., 2015). In addition, the northern grasslands are ecologically vulnerable due to the resource limitations of soil moisture, heat, and nutrients, which results in high risks of drought damage to local ecosystems (Liu et al., 2020). Therefore, we observed the abrupt shifts of grassland's simultaneous response to drought at a milder stress level, corresponding to larger _T_ SM.\n\nIn addition to natural vegetation, we also investigated the drought thresholds for croplands, which are heavily influenced by human activity. Given the positive impacts of agricultural management, in particular irrigation, _T_ SM values for croplands (averaging at the 6.4 ± 1.1th percentile) tend to be small with little variation compared to _T_ SM values for grasslands (Figure 3a). Furthermore, we compared _T_ SM values for croplands among the five major agricultural zones in China, where the croplands account for over 75% of the vegetated area: North China, the Huang-Huai area, the Sichuan Basin, the Yangtze River Delta, and Jianghan Plain. Our findings indicate that _T_ SM values for croplands differ among these agricultural zones. In general, the smallest average _T_ SM was for croplands in North China (6.0 ± 0.5th percentile), whereas the largest was for the Huang-Huai Area (7.7 ± 1.1th percentile). The average _T_ SM for croplands in Jianghan Plain was 5.8 ± 2.2th percentile, equivalent to that in North China but with greater variation compared to the other four regions.\n\nMoreover, we observed varying effects of agricultural management in mitigating the negative impacts of drought on crops across\n\n**<u>| 7 of 13</u>**\n\nSUN et al.\n\n<!-- Start of picture text -->\n(a) Drought thresholds among different vegetation biomes<br>30th<br>More<br>vulnerable<br>25th<br>20th<br>15th<br>10th<br>5th<br>More<br>resistant<br>1st<br>Vegetation types<br>(b) Impact of irrigation rates on drought thresholds for croplands in five agricultural zones<br>Sichuan Basin Yangtze River Delta<br>The locations of five<br>50° N agricultural zones 8th 10th<br>9th<br>7th<br>8th<br>40° N<br>North China Huang-Huai Area 6th 7th<br>Sichuan Basin Yangtze River 6th<br>30° N Jianghan Plain Delta 5th<br>5th<br>20° N 4th 4th<br>0–20 20–40 40–60 >60 0–20 20–40 >40<br>75° E 90° E 105° E 120° E 135° E Irrigation rate (%) Irrigation rate (%)<br>North China Huang-Huai Area Jianghan Plain<br>9th<br>10th<br>7th<br>8th<br>9th<br>7th<br>8th<br>6th<br>7th 6th<br>6th 5th<br>5th<br>5th<br>4th<br>0–20 20–40 40–60 60–80 80–100 0–20 20–40 >40 0–20 20–40 >40<br>Irrigation rate (%) Irrigation rate (%) Irrigation rate (%)<br>Needleleafforest Mixed Broadleafforest Shrubland Grassland<br>forest Cropland<br>P<br>e<br>r<br>c<br>e<br>n<br>lit<br>e<br>s<br>T<br>dlo<br>h<br>s<br>hre<br>T<br>ht<br>g<br>u<br>Dro<br>T T<br>dlo dlo<br>h h<br>s s<br>hre hre<br>T T<br>ht ht<br>g g<br>u u<br>Dro Dro<br>T T T<br>dlo dlo dlo<br>h h h<br>s s s<br>hre hre hre<br>T T T<br>ht ht ht<br>g g g<br>u u u<br>Dro Dro Dro<br>M<br>S<br>M M<br>S S<br>SM SM SM<br><!-- End of picture text -->\n\n**FI G U R E 3** Drought thresholds in different vegetation biomes and the impact of agricultural irrigation rates on drought thresholds for croplands in various agricultural zones. (a) Comparison of drought thresholds among different vegetation biomes. The _y_ -axis shows percentile-based drought thresholds (_T_ SM), and the _x-_ axis shows five natural vegetation biomes including needleleaf forest, mixed forest, broadleaf forest, shrubland, grassland, and one managed vegetation biome, cropland. The solid horizontal lines inside the boxes represent median _T_ SM values, whereas the upper and lower boundaries of the boxes indicate the 25th percentile (q1) and 75th percentile (q3) of _T_ SM, respectively. The lower and upper whiskers extend from q1 to the minimum and from q3 to the maximum of the respective biome. There are significant differences in drought thresholds for every two biomes (_p_ <.05, Mann–Whitney _U_ test). (b) Impact of agricultural irrigation rates on drought thresholds for croplands in agricultural zones. The boxplots in each panel represent the distribution of _T_ SM values for croplands in five agricultural zones: North China (red), Huang-Huai Area (orange), Yangtze River Delta (purple), Jianghan Plain (blue), and Sichuan Basin (green). The boxplots are categorized based on different ranges of irrigation rates, with an interval of 20%. Map lines delineate study areas and do not necessarily depict accepted national boundaries.\n\n**8 of 13** **<u>|</u>**\n\nSUN et al.\n\n<!-- Start of picture text -->\n(a)<br><!-- End of picture text -->\n\n<!-- Start of picture text -->\n(a) The overall changes of ecological drought risks in China<br>SSP2-4.5 SSP5-8.5<br>0.1 0.1<br>0.08 0.08<br>0.06 0.06<br>–1.7% 1.8% –2.0% 2.0%<br>0.04 0.04<br>0.02 0.02<br>0 0<br>–12 –6 0 6 12 –12 –6 0 6 12<br>Changes of risk (%) Changes of risk (%)<br>(b)<br>The main regions with marked changes of ecological drought risks<br>The locations of six regions<br>50 ° N<br>40 ° N Inner Mongolia Plateau<br>Hetao Plain-Hexi Corridor Shandong Peninsula<br>Central Plains<br>30 ° N Yunnan-Kweichow Plateau(N)<br>20 ° N Yunnan-Kweichow Plateau(S)<br>75 ° E 90 ° E 105° E 120° E 135° E<br>Hetao Plain-Hexi Corridor Central Plains Shandong Peninsula<br>SSP2-4.5 SSP5-8.5 SSP2-4.5 SSP5-8.5 SSP2-4.5 SSP5-8.5<br>0.2 0.2 0.2 0.2 0.2 0.2<br>2.1% 3.9% 1.2% 1.8% 2.5% 2.7%<br>0.16 0.16 0.16 0.16 0.16 0.16<br>0.12 0.12 0.12 0.12 0.12 0.12<br>0.08 0.08 0.08 0.08 0.08 0.08<br>0.04 0.04 0.04 0.04 0.04 0.04<br>0 0 0 0 0 0<br>–12 –6 0 6 12 –12 –6 0 6 12 –12 –6 0 6 12 –12 –6 0 6 12 –12 –6 0 6 12 –12 –6 0 6 12<br>Changes of risk (%) Changes of risk (%) Changes of risk (%) Changes of risk (%) Changes of risk (%) Changes of risk (%)<br>Inner Mongolia Plateau Yunnan-Kweichow Plateau(S) Yunnan-Kweichow Plateau(N)<br>SSP2-4.5 SSP5-8.5 SSP2-4.5 SSP5-8.5 SSP2-4.5 SSP5-8.5<br>0.2 –2.4% 0.2 –3.4% 0.2 –1.5 % 0.2 –0.8% 0.2 1.3% 0.2 1.1%<br>0.16 0.16 0.16 0.16 0.16 0.16<br>0.12 0.12 0.12 0.12 0.12 0.12<br>0.08 0.08 0.08 0.08 0.08 0.08<br>0.04 0.04 0.04 0.04 0.04 0.04<br>0 0 0 0 0 0<br>–12 –6 0 6 12 –12 –6 0 6 12 –12 –6 0 6 12 –12 –6 0 6 12 –12 –6 0 6 12 –12 –6 0 6 12<br>Changes of risk (%) Changes of risk (%) Changes of risk (%) Changes of risk (%) Changes of risk (%) Changes of risk (%)<br>Fraction of areas Fraction of areas<br>Fraction of areas<br>Fraction of areas<br><!-- End of picture text -->\n\n**FI G U R E 4** Changes for ecological drought risks in China in future climate change scenarios. (a) Overall risk changes of ecological droughts in China under SSP2-4.5 (left panel) and SSP5-8.5 (right panel). The _x_ -axis shows the change values of occurrence probability for ecological droughts during 2083–2100 relative to 2001–2018. The _y_ -axis represents the fraction of areas for the changes of drought risk. (b) Main regions with marked changes in the risk for ecological drought. The numerical values on each panel represent the average risk of _T_ SMinferred droughts in the corresponding regions. An overall increase and decrease in the risk of the occurrence of ecological droughts are colored red and blue, respectively, in (a) and (b). Map lines delineate study areas and do not necessarily depict accepted national boundaries.\n\n**<u>| 9 of 13</u>**\n\nSUN et al.\n\nthese five agricultural zones, as reflected in the different drought thresholds along the irrigation rate spectrum (Figure 3b). Our results show that irrigation rates in agricultural areas, in particular in the Sichuan Basin (averagely 6.1 ± 0.7th percentile), play a crucial role in shaping _T_ SM values for crops. In the case of the Sichuan Basin, we observed a decrease in _T_ SM values as irrigation rates increased, with a decrease of more than 0.1 percentile per 20% increment in irrigation rates. Despite the subtropical monsoon climate of the Sichuan Basin and the fact that its annual average precipitation exceeds 1000 mm, the uneven distribution of precipitation throughout the year results in seasonal soil moisture deficits. As a result, spring droughts can profoundly impact crop growth, as indicated by the higher response of croplands to droughts shown in Figure 1b (Ding et al., 2020; Li et al., 2019). Consequently, agricultural irrigation can mitigate these negative drought impacts and alter _T_ SM values for crops in the Sichuan Basin. However, we did not observe marked effects of irrigation on _T_ SM values for crops along the gradient of irrigate rates in the other four agricultural zones."
+    },
+    {
+      "heading": "**3.4** | **Future risk of** **_T_ SM-inferred drought in China**",
+      "level": 2,
+      "kind": "body",
+      "text": "Based on the satellite-derived _T_ SM values in Figure 2b, we identified ecological droughts. Then we utilized outputs of surface soil moisture from 13 ESMs to project the occurrence of ecological droughts as well as the possible change of ecological drought risk in China during 2083–2100 relative to the past periods 2001–2018 under two SSPs (SSP2-4.5 and SSP5-8.5). Figure S7 illustrates that, on average, there will be approximately 1.5 times ecological droughts in China during the period 2083–2100 under both SSP2-4.5 and SSP5-8.5. Certain regions, such as the southern Inner Mongolia Plateau and the Hexi Corridor-Hetao Plain, which were already prone to _T_ SMinferred droughts in the historical periods (2001–2018, as shown in Figure S8), will continue to be hotspots for ecological droughts in the future (i.e., they are projected to experience around three times ecological droughts during the period 2083–2100, as shown in Figure S7).\n\nIn comparisons of the occurrence of _T_ SM-inferred droughts during the period 2001–2018 with future projections, ESMs indicate that the risk that vegetation experiences ecological droughts will change across China (Figure S9). As shown in Figure 4a, of the areas for which satellite _T_ SM values are known (from Figure 2b), approximately 46.6% show an average increase of 1.8% in the risk of experiencing ecological droughts under SSP2-4.5. Conversely, in another 44.0% of these areas, the future risk of ecological droughts is projected to decrease. Under SSP5-8.5, a greater proportion of areas (48.3% of areas with known satellite _T_ SM values) will face a higher risk (averagely 2% increase) of experiencing ecological droughts. Therefore, our findings indicate that if the current high intensity of greenhouse gas emissions is not mitigated, the risk for drought-induced suppression of vegetation growth will likely increase in more regions of China. This highlights the importance of taking effective actions to constrain greenhouse gas emissions and manage the risks.\n\nMoreover, our findings highlight marked changes in the future risk for ecological droughts in several regions, including the Inner Mongolia Plateau, Central Plain, Shandong Peninsula, the Hexi Corridor-Hetao Plain, and the northern and southern YunnanKweichow Plateau (Figure 4b). Under continued global warming, there will be an increase in the risk for ecological droughts of 1.1%– 3.9% in the Central Plain, Shandong Peninsula, the Hexi CorridorHetao Plain, and the northern Yunnan-Kweichow Plateau. Note that the Hexi Corridor-Hetao Plain, where severe desertification is occurring and vegetation growth faces a high risk for ecological droughts (2.7 times for 2001–2018; Figure S8), is projected to have an increase of 3.9% for the ecological drought risk under SSP5-8.5. By contrast, the Inner Mongolia Plateau shows marked decreases in the risk for ecological droughts, with a 2.4% decrease under SSP2-4.5 and a 3.4% decrease under SSP5-8.5. Although ecological droughts will still occur frequently in the Inner Mongolia Plateau (around three times during the period 2083–2100; Figure S7), the future projections suggest a relative alleviation of ecological drought stress compared to historical periods during 2001–2018 (Figure 4b; Figure S9). In contrast to the northern Yunnan-Kweichow Plateau, which will experience an increasing drought risk, the southern Yunnan-Kweichow Plateau is expected to have a decreasing risk for ecological droughts, with a 1.5% decrease under SSP2-4.5 and a 0.8% decrease under SSP5-8.5.\n\nWe also projected that the risk for ecological droughts would decrease more (−3.4%) in the Inner Mongolia Plateau and increase less (+1.1%) in the northern Yunnan-Kweichow Plateau under SSP5-8.5, compared to that under SSP2-4.5, which reveals that these two regions are less likely to have the exposure risk of ecological droughts under a high emissions scenario compared to a mild emissions scenario. This suggests the potential alleviation of drought stress, which may be attributed to the increasing water use efficiency resulting from higher atmospheric CO2 concentrations (Keenan et al., 2013).\n\nThe divergent changes in the risk of the occurrence of ecological drought across different regions indicate that there is a need to take targeted measures in order to cope with future climate challenges. In regions that are experiencing increasing risk for ecological droughts, such as the Hexi Corridor-Hetao Plain, more effective measures should be taken to reduce ecosystem degradation. Despite the marked decrease in the risk for ecological droughts, ecological droughts are still frequent in the Inner Mongolia Plateau under future climates; thus, drought-induced suppression of vegetation growth cannot be ignored in this region."
+    },
+    {
+      "heading": "**4** | **CONCLUSIONS**",
+      "level": 2,
+      "kind": "body",
+      "text": "This study reveals the diverse vegetation responses to droughts across China during the period 2001–2018 by identifying critical drought thresholds that impact vegetation growth. Our findings highlight the importance of considering drought thresholds as a crucial parameter for accurately assessing the impacts of drought on vegetation growth in China. In particular, the Inner Mongolia\n\n**10 of 13** **<u>|</u>**\n\nSUN et al.\n\nPlateau exhibits considerably large drought thresholds, which stresses the need for effective measures to mitigate potential drought damage in this region. Moreover, the higher drought thresholds for grasslands compared to forests suggest that grasslands are more susceptible to ecological droughts. Our study also underscores the positive influence of agricultural management in reducing drought thresholds for croplands and enhancing their resistance to drought, as observed in areas such as the Sichuan Basin. Under future climate scenarios, a larger number of regions in China will face an increasing risk of ecological drought if greenhouse gas emissions continue to rise. It is crucial to implement effective ecosystem risk management strategies in hotspot areas such as the Hexi Corridor-Hetao Plain and the Shandong Peninsula. Overall, this study provides valuable insights for accurately assessing and projecting the impacts of ecological droughts in China."
+    },
+    {
+      "heading": "**AUTHOR CONTRIBUTIONS**",
+      "level": 4,
+      "kind": "body",
+      "text": "**Mingze Sun:** Data curation; formal analysis; software; validation; visualization; writing – original draft. **Xiangyi Li:** Conceptualization; data curation; investigation; methodology; supervision; writing – review and editing. **Hao Xu:** Investigation; writing – review and editing. **Kai Wang:** Methodology; writing – review and editing. **Nazhakaiti Anniwaer:** Data curation; writing – review and editing. **Songbai Hong:** Writing – review and editing."
+    },
+    {
+      "heading": "**ACKNOWLEDGMENTS**",
+      "level": 4,
+      "kind": "body",
+      "text": "This work was supported by the National Natural Science Foundation of China (41988101)."
+    },
+    {
+      "heading": "**CONFLICT OF INTEREST STATEMENT**",
+      "level": 4,
+      "kind": "body",
+      "text": "All authors declare that they have no conflicts of interest."
+    },
+    {
+      "heading": "**DATA AVAILABILITY STATEMENT**",
+      "level": 4,
+      "kind": "body",
+      "text": "All data used in this study is openly available. The MODIS NDVI is available at https:// lpdaac. usgs. gov/ produ cts/ mod13 c2v006. ERA5-Land surface soil moisture is available at https:// doi. org/ 10. 24381/ cds. 68d2bb30. Meteorological data is available at https:// doi. org/ 10. 11888/ Atmos pheri cPhys ics. tpe. 249369. file. Surface soil moisture from outputs of CMIP6 Earth System Models is available at https:// esgf- node. llnl. gov/ search/ cmip6/. Tree cover data is available at https:// glad. earth engine. app/ view/ globa l- fores t- change. Agricultural irrigation rate data is available at https:// www. fao. org/ aquas tat/ en/ geosp atial - infor mation/ globa l- maps- irrig ated- areas/ lates t- versi on/."
+    },
+    {
+      "heading": "**ORCID**",
+      "level": 4,
+      "kind": "body",
+      "text": "_Mingze Sun_ https://orcid.org/0009-0000-4559-4146 _Xiangyi Li_ https://orcid.org/0000-0002-7639-7089 _Hao Xu_ https://orcid.org/0000-0002-3725-9505 _Kai Wang_ https://orcid.org/0000-0001-6269-3517 _Nazhakaiti Anniwaer_ https://orcid.org/0009-0002-1572-6333 _Songbai Hong_ https://orcid.org/0000-0002-0450-0817"
+    },
+    {
+      "heading": "**SUPPORTING INFORMATION**",
+      "level": 4,
+      "kind": "body",
+      "text": "Additional supporting information can be found online in the Supporting Information section at the end of this article.\n\n**How to cite this article:** Sun, M., Li, X., Xu, H., Wang, K., Anniwaer, N., & Hong, S. (2024). Drought thresholds that impact vegetation reveal the divergent responses of vegetation growth to drought across China. _Global Change Biology_, _30_, e16998. <u>https://doi.org/10.1111/gcb.16998</u>"
+    }
+  ],
+  "references": [
+    {
+      "raw": "10.1002/2014RG000456",
+      "doi": "10.1002/2014rg000456",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1093/aob/mcw109",
+      "doi": "10.1093/aob/mcw109",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1051/forest:2006042",
+      "doi": "10.1051/forest:2006042",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.1407930111",
+      "doi": "10.1073/pnas.1407930111",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.ecolind.2021.108420",
+      "doi": "10.1016/j.ecolind.2021.108420",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1071/FP02076",
+      "doi": "10.1071/fp02076",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.scitotenv.2022.154970",
+      "doi": "10.1016/j.scitotenv.2022.154970",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2019EF001461",
+      "doi": "10.1029/2019ef001461",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/wcc.81",
+      "doi": "10.1002/wcc.81",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.agrformet.2020.108307",
+      "doi": "10.1016/j.agrformet.2020.108307",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.scitotenv.2020.137166",
+      "doi": "10.1016/j.scitotenv.2020.137166",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/978-3-642-32653-0_1",
+      "doi": "10.1007/978-3-642-32653-0_1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/978-90-481-2666-8_12",
+      "doi": "10.1007/978-90-481-2666-8_12",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/1365‐2745.13353",
+      "doi": "10.1111/1365-2745.13353",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/gcb.12916",
+      "doi": "10.1111/gcb.12916",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/1365‐2745.12575",
+      "doi": "10.1111/1365-2745.12575",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s10021‐003‐0142‐z",
+      "doi": "10.1007/s10021-003-0142-z",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.agrformet.2023.109349",
+      "doi": "10.1016/j.agrformet.2023.109349",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1244693",
+      "doi": "10.1126/science.1244693",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41597‐020‐0369‐y",
+      "doi": "10.1038/s41597-020-0369-y",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.rse.2021.112313",
+      "doi": "10.1016/j.rse.2021.112313",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/1365‐2435.13945",
+      "doi": "10.1111/1365-2435.13945",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature12291",
+      "doi": "10.1038/nature12291",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/nph.14381",
+      "doi": "10.1111/nph.14381",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.jenvman.2020.111144",
+      "doi": "10.1016/j.jenvman.2020.111144",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.agrformet.2019.01.036",
+      "doi": "10.1016/j.agrformet.2019.01.036",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1093/nsr/nwad049",
+      "doi": "10.1093/nsr/nwad049",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s10265‐021‐01330‐3",
+      "doi": "10.1007/s10265-021-01330-3",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41561‐022‐01026‐w",
+      "doi": "10.1038/s41561-022-01026-w",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41467‐020‐18631‐1",
+      "doi": "10.1038/s41467-020-18631-1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.scitotenv.2022.161250",
+      "doi": "10.1016/j.scitotenv.2022.161250",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.5194/bg‐11‐2583‐2014",
+      "doi": "10.5194/bg-11-2583-2014",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.5194/bg‐14‐4255‐2017",
+      "doi": "10.5194/bg-14-4255-2017",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1088/1748‐9326/ab0921",
+      "doi": "10.1088/1748-9326/ab0921",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.5194/gmd‐13‐3571‐2020",
+      "doi": "10.5194/gmd-13-3571-2020",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.5194/essd‐13‐4349‐2021",
+      "doi": "10.5194/essd-13-4349-2021",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.1721728115",
+      "doi": "10.1073/pnas.1721728115",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.5194/gmd‐9‐3461‐2016",
+      "doi": "10.5194/gmd-9-3461-2016",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1201609",
+      "doi": "10.1126/science.1201609",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1658/1100‐9233(2004)015[0219:VIASVI]2.0.CO;2",
+      "doi": "10.1658/1100-9233(2004)015[0219:viasvi]2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s11430‐021‐9892‐6",
+      "doi": "10.1007/s11430-021-9892-6",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s11430‐018‐9363‐5",
+      "doi": "10.1007/s11430-018-9363-5",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.5194/bg‐12‐373‐2015",
+      "doi": "10.5194/bg-12-373-2015",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature12350",
+      "doi": "10.1038/nature12350",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.3390/plants10020259",
+      "doi": "10.3390/plants10020259",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41467‐020‐19924‐1",
+      "doi": "10.1038/s41467-020-19924-1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.1503376112",
+      "doi": "10.1073/pnas.1503376112",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/nph.18177",
+      "doi": "10.1111/nph.18177",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41561‐023‐01125‐2",
+      "doi": "10.1038/s41561-023-01125-2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1890/02‐0472",
+      "doi": "10.1890/02-0472",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nclimate2067",
+      "doi": "10.1038/nclimate2067",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.agrformet.2011.01.018",
+      "doi": "10.1016/j.agrformet.2011.01.018",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.1207068110",
+      "doi": "10.1073/pnas.1207068110",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1029/2018GL080535",
+      "doi": "10.1029/2018gl080535",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41586‐021‐04255‐y",
+      "doi": "10.1038/s41586-021-04255-y",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/nph.17040",
+      "doi": "10.1111/nph.17040",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.agrformet.2018.06.027",
+      "doi": "10.1016/j.agrformet.2018.06.027",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1088/1748‐9326/7/3/035701",
+      "doi": "10.1088/1748-9326/7/3/035701",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/gcb.16595",
+      "doi": "10.1111/gcb.16595",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/srep23284",
+      "doi": "10.1038/srep23284",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s11427‐021‐2045‐5",
+      "doi": "10.1007/s11427-021-2045-5",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s13351‐020‐9829‐8",
+      "doi": "10.1007/s13351-020-9829-8",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.scitotenv.2021.151209",
+      "doi": "10.1016/j.scitotenv.2021.151209",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.agrformet.2023.109323",
+      "doi": "10.1016/j.agrformet.2023.109323",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/2014GB004826",
+      "doi": "10.1002/2014gb004826",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1093/aob/mcv037",
+      "doi": "10.1093/aob/mcv037",
+      "title": null,
+      "year": null
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 12353,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "wiley HTML route was not usable (redirected_to_abstract); attempting Wiley TDM API PDF fallback first.",
+      "Full text was extracted from the Wiley TDM API PDF fallback after the HTML path was not usable.",
+      "Wiley official full text was downloaded as PDF/binary to /tmp/paper-fetch-paywall-expansion-20260915/wiley/10.1111_gcb.16998/fetch/Sun_et_al_2024_Drought_thresholds_that_impact_vegetation_reveal_the_divergent_responses_of_vegetation_growth_to_drought_across_China.pdf.",
+      "Markdown full text was saved to /tmp/paper-fetch-paywall-expansion-20260915/wiley/10.1111_gcb.16998/fetch/Sun_et_al_2024_Drought_thresholds_that_impact_vegetation_reveal_the_divergent_responses_of_vegetation_growth_to_drought_across_China.md."
+    ],
+    "source_trail": [
+      "fulltext:wiley_html_fail",
+      "fulltext:wiley_pdf_api_ok",
+      "fulltext:wiley_pdf_fallback_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_wiley",
+      "route:signal_publisher_wiley",
+      "route:signal_doi_wiley",
+      "route:probe_wiley_unknown",
+      "route:provider_selected_wiley",
+      "route:provider_candidate_wiley_metadata_selected_rank_1",
+      "route:provider_candidate_wiley_identity_strong",
+      "fulltext:wiley_attempt",
+      "download:wiley_saved",
+      "download:wiley_assets_skipped_profile_none",
+      "fulltext:wiley_article_ok",
+      "route:provider_candidate_wiley_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 483,
+      "body": 11870,
+      "refs": 412
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 47389,
+      "word_count": 7767,
+      "body_block_count": 24,
+      "body_heading_count": 23,
+      "body_to_abstract_ratio": 27.25263157894737,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "wiley",
+    "route": "tdm_pdf",
+    "representation": "pdf",
+    "transport": "api",
+    "fallback_used": true
+  }
+}

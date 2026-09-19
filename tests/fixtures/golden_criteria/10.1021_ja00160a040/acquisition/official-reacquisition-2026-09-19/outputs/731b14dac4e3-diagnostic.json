@@ -1,0 +1,348 @@
+{
+  "schema_version": 2,
+  "provider": "acs",
+  "route": "html",
+  "failure_code": "insufficient_body",
+  "stage": "html_extraction",
+  "backend": "camoufox",
+  "attempt": 1,
+  "target": {
+    "url": "https://pubs.acs.org/doi/abs/10.1021/ja00160a040",
+    "host": "pubs.acs.org",
+    "path": "/doi/abs/10.1021/ja00160a040",
+    "url_sha256": "75b5b9ed73d28e3883e6f2602769bc4cdebc01340903dadb7b222882a8a40b78"
+  },
+  "final": {
+    "url": "https://pubs.acs.org/jacsat/article/112/4/1563/653628/Solvent-control-of-orbital-mixing-and-electronic",
+    "host": "pubs.acs.org",
+    "path": "/jacsat/article/112/4/1563/653628/Solvent-control-of-orbital-mixing-and-electronic",
+    "url_sha256": "0bb9ecdd00d0f3ef3c80deb0072188c6096777e756454f78b87115b7091df351"
+  },
+  "response_status": 200,
+  "title_summary": "Solvent control of orbital mixing and electronic coupling in ligand-bridged mixed-valence complexes: evidence for an intervalence hole-transfer pathway | Journal of the American Chemical Society | ACS Publications",
+  "page_summary": "Solvent control of orbital mixing and electronic coupling in ligand-bridged mixed-valence complexes: evidence for an intervalence hole-transfer pathway | Journal of the American Chemical Society | ACS Publications Opens in a new window Opens an external website Opens an external website in a new window To improve your experience, we (and our partners) store and/or access information on your terminal (cookie or equivalent) with your consent for all our websites and applications, on your connected terminals. Our website may use these cookies to: Measure the audience of the advertising on our website, without profiling Display personalized ads based on your navigation and your profile Personalize our editorial content based on your navigation Allow you to share content on social networks or platforms present on our website Send you advertising based on your location Privacy Policy Manage Preferences Accept All Reject All <!---->Close Cookie Preferences<!----> Skip to Main Content close ad",
+  "page": {
+    "page_state": {
+      "route": "browser_html",
+      "page_sha256": "b2144b5118a87e52adf6c6582769b5a1f5fd4a81eb5ae11c2e82263e3d8f180a"
+    },
+    "browser_runtime": {
+      "backend": "camoufox",
+      "media_blocking": true,
+      "timeout_budget_ms": 15000,
+      "browser_connect_seconds": 1.408,
+      "duration_seconds": 15.466,
+      "remaining_ms": 0,
+      "browser_context_seed": {
+        "provided": false,
+        "cookie_count": 0,
+        "applied": false,
+        "user_agent_reused": false,
+        "reason": "no_compatible_cookies"
+      },
+      "storage_state_save": {
+        "attempted": true,
+        "staged": true,
+        "saved": false,
+        "path": "/home/dictation/.local/share/paper-fetch/publisher-browser-profiles/acs-camoufox/storage-state.json",
+        "filtered": true,
+        "borrowed_context": false,
+        "cookie_count": 5,
+        "reason": "awaiting_provider_acceptance"
+      },
+      "page_events": {
+        "document_requests": [
+          {
+            "url": "https://pubs.acs.org/doi/abs/10.1021/ja00160a040",
+            "host": "pubs.acs.org",
+            "path": "/doi/abs/10.1021/ja00160a040",
+            "url_sha256": "75b5b9ed73d28e3883e6f2602769bc4cdebc01340903dadb7b222882a8a40b78",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "request_finished_ms": 347.866,
+            "response_received_ms": 353.455,
+            "status": 301,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false
+          },
+          {
+            "url": "https://pubs.acs.org/jacsat/article/112/4/1563/653628/Solvent-control-of-orbital-mixing-and-electronic",
+            "host": "pubs.acs.org",
+            "path": "/jacsat/article/112/4/1563/653628/Solvent-control-of-orbital-mixing-and-electronic",
+            "url_sha256": "0bb9ecdd00d0f3ef3c80deb0072188c6096777e756454f78b87115b7091df351",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 1251.781,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 1457.843
+          }
+        ],
+        "failed_requests": [
+          {
+            "url": "https://s.adroll.com/j/sendrolling.js",
+            "host": "s.adroll.com",
+            "path": "/j/sendrolling.js",
+            "url_sha256": "91c102d526700e1a0582e5e846a3e8991cf4c51b5d9395fd1a7becc29d20a360",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://tag.demandbase.com/b01e0bcf02a2a19f.min.js",
+            "host": "tag.demandbase.com",
+            "path": "/b01e0bcf02a2a19f.min.js",
+            "url_sha256": "06f3ae7046b56d60b08c50c3237966efacf1562ded737168dcf59e7064509171",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://acs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/Images/umbrella/ACSPubs_logo_tagline_RGB_rebrand.svg",
+            "host": "acs.silverchair-cdn.com",
+            "path": "/data/SiteBuilderAssetsOriginals/Live/Images/umbrella/ACSPubs_logo_tagline_RGB_rebrand.svg",
+            "url_sha256": "2ebabb2ca1a9b35b0cf517793ac8ac1f25e4c84b0a0891b020795772434045fe",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://acs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/jacsat/jacsat_large-1198042343.jpg",
+            "host": "acs.silverchair-cdn.com",
+            "path": "/data/SiteBuilderAssets/Live/Images/jacsat/jacsat_large-1198042343.jpg",
+            "url_sha256": "db6dc2f614bf91821593991d703bd597f2b80b9edb0501e73570ae5a780b402f",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://acs.silverchair-cdn.com/acs/content_public/journal/jacsat/112/4/10.1021_ja00160a040/2/ja00160a040.pdf.gif",
+            "host": "acs.silverchair-cdn.com",
+            "path": "/acs/content_public/journal/jacsat/112/4/10.1021_ja00160a040/2/ja00160a040.pdf.gif",
+            "url_sha256": "c3e3a716675652ad346ff5bf216ad5dbdb557f125e1db4c72ed61bc39ef94af7",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://acs.silverchair-cdn.com/ImageLibrary/ACSPubs_logo_tagline_Knockout.svg",
+            "host": "acs.silverchair-cdn.com",
+            "path": "/ImageLibrary/ACSPubs_logo_tagline_Knockout.svg",
+            "url_sha256": "c73f23085ba29636bafcfe3591c2295e6622388b49b8e848aa3fc1f0e80e4f3f",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://d2g123z4nw1cg1.cloudfront.net/index.js",
+            "host": "d2g123z4nw1cg1.cloudfront.net",
+            "path": "/index.js",
+            "url_sha256": "8cfe41e3ff1cad6afbc24313ba33cf68f30a06c93a0f6a06f781190183d66723",
+            "resource_type": "script",
+            "error": "NS_ERROR_NET_RESET"
+          },
+          {
+            "url": "https://acs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/Images/umbrella/ACSPubs_logo_tagline_RGB_rebrand.svg",
+            "host": "acs.silverchair-cdn.com",
+            "path": "/data/SiteBuilderAssetsOriginals/Live/Images/umbrella/ACSPubs_logo_tagline_RGB_rebrand.svg",
+            "url_sha256": "2ebabb2ca1a9b35b0cf517793ac8ac1f25e4c84b0a0891b020795772434045fe",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          }
+        ],
+        "failed_scripts": [
+          {
+            "url": "https://s.adroll.com/j/sendrolling.js",
+            "host": "s.adroll.com",
+            "path": "/j/sendrolling.js",
+            "url_sha256": "91c102d526700e1a0582e5e846a3e8991cf4c51b5d9395fd1a7becc29d20a360",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://tag.demandbase.com/b01e0bcf02a2a19f.min.js",
+            "host": "tag.demandbase.com",
+            "path": "/b01e0bcf02a2a19f.min.js",
+            "url_sha256": "06f3ae7046b56d60b08c50c3237966efacf1562ded737168dcf59e7064509171",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://d2g123z4nw1cg1.cloudfront.net/index.js",
+            "host": "d2g123z4nw1cg1.cloudfront.net",
+            "path": "/index.js",
+            "url_sha256": "8cfe41e3ff1cad6afbc24313ba33cf68f30a06c93a0f6a06f781190183d66723",
+            "resource_type": "script",
+            "error": "NS_ERROR_NET_RESET"
+          },
+          {
+            "url": "https://d2g123z4nw1cg1.cloudfront.net/index.js",
+            "host": "d2g123z4nw1cg1.cloudfront.net",
+            "path": "/index.js",
+            "url_sha256": "8cfe41e3ff1cad6afbc24313ba33cf68f30a06c93a0f6a06f781190183d66723",
+            "resource_type": "script",
+            "error": "NS_ERROR_NET_RESET"
+          },
+          {
+            "url": "https://tag.demandbase.com/b01e0bcf02a2a19f.min.js",
+            "host": "tag.demandbase.com",
+            "path": "/b01e0bcf02a2a19f.min.js",
+            "url_sha256": "06f3ae7046b56d60b08c50c3237966efacf1562ded737168dcf59e7064509171",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://s.adroll.com/j/3LBZJ4KXKBF2PJ46QCMT3X/roundtrip.js",
+            "host": "s.adroll.com",
+            "path": "/j/3LBZJ4KXKBF2PJ46QCMT3X/roundtrip.js",
+            "url_sha256": "27b780e9d377ba9f657830b2644e9d9c64e171f2868eed192caf3f2d92e4964b",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+            "host": "snap.licdn.com",
+            "path": "/li.lms-analytics/insight.min.js",
+            "url_sha256": "320d4256fc0e4146a6dcaef0569b0f40caf93a0b95a2ddc9c4188ae0cfd61090",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://s.adroll.com/j/sendrolling.js",
+            "host": "s.adroll.com",
+            "path": "/j/sendrolling.js",
+            "url_sha256": "91c102d526700e1a0582e5e846a3e8991cf4c51b5d9395fd1a7becc29d20a360",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          }
+        ],
+        "console_errors": [
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://acs.silverchair-cdn.com/Themes/Client/app/css/icons-custom/v-639253540020478476/fonts/acs-custom.ttf?[redacted] (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://acs.silverchair-cdn.com/Themes/Silver/app/icons/v-639253540784727696/fonts/white-label.ttf?[redacted] (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://fonts.gstatic.com/s/roboto/v51/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBA.woff2. (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://fonts.gstatic.com/s/roboto/v51/KFO5CnqEu92Fr1Mu53ZEC9_Vu3r1gIhOszmkBnka.woff2. (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://fonts.gstatic.com/s/libertinusserif/v1/RLpkK4bw7KinajYBg0RTTwCLF5Ber64PUQ.woff2. (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"downloadable font: download failed (font-family: \"acs-custom\" style:normal weight:400 stretch:100 src index:1): bad URI or cross-site access not allowed source: https://acs.silverchair-cdn.com/Themes/Client/app/css/icons-custom/v-639253540020478476/fonts/acs-custom.ttf?[redacted]\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"downloadable font: download failed (font-family: \"white-label\" style:normal weight:400 stretch:100 src index:1): bad URI or cross-site access not allowed source: https://acs.silverchair-cdn.com/Themes/Silver/app/icons/v-639253540784727696/fonts/white-label.ttf?[redacted]\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"downloadable font: download failed (font-family: \"Roboto\" style:normal weight:100..900 stretch:100 src index:0): bad URI or cross-site access not allowed source: https://fonts.gstatic.com/s/roboto/v51/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBA.woff2\"]"
+          }
+        ],
+        "page_errors": [
+          {
+            "error_type": "Error",
+            "message": "can't access property \"setAccessIcons\", SCM.SiteJS is undefined"
+          },
+          {
+            "error_type": "Error",
+            "message": "can't access property \"data\", window.ChartistData is undefined"
+          }
+        ]
+      },
+      "candidates": [
+        {
+          "url": "https://pubs.acs.org/doi/abs/10.1021/ja00160a040",
+          "url_sha256": "75b5b9ed73d28e3883e6f2602769bc4cdebc01340903dadb7b222882a8a40b78",
+          "final_url": "https://pubs.acs.org/jacsat/article/112/4/1563/653628/Solvent-control-of-orbital-mixing-and-electronic",
+          "final_url_sha256": "0bb9ecdd00d0f3ef3c80deb0072188c6096777e756454f78b87115b7091df351",
+          "status": 200,
+          "main_document_response": {
+            "url": "https://pubs.acs.org/jacsat/article/112/4/1563/653628/Solvent-control-of-orbital-mixing-and-electronic",
+            "host": "pubs.acs.org",
+            "path": "/jacsat/article/112/4/1563/653628/Solvent-control-of-orbital-mixing-and-electronic",
+            "url_sha256": "0bb9ecdd00d0f3ef3c80deb0072188c6096777e756454f78b87115b7091df351",
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "captured_html_bytes": 955748,
+            "navigation_timing": {
+              "available": true,
+              "document_ready_state": "complete",
+              "navigation_entry_present": true,
+              "response_start_ms": 1598,
+              "response_end_ms": 1598,
+              "dom_interactive_ms": 3657,
+              "dom_content_loaded_event_end_ms": 3670,
+              "load_event_end_ms": 3894,
+              "duration_ms": 3894,
+              "transfer_size_bytes": 23172,
+              "encoded_body_size_bytes": 22872,
+              "decoded_body_size_bytes": 114828,
+              "navigation_type": "navigate",
+              "next_hop_protocol": "h2",
+              "response_completed": true,
+              "dom_content_loaded_completed": true,
+              "load_event_completed": true
+            },
+            "request_lifecycle": {
+              "response_received_observed": true,
+              "response_received_ms": 1251.781,
+              "request_finished_observed": true,
+              "request_finished_ms": 1457.843,
+              "request_failed_observed": false,
+              "observed_ms": 13277.587
+            }
+          },
+          "navigation_seconds": 1.619,
+          "dom_readiness_seconds": 11.764,
+          "dom_readiness_attempted": true,
+          "dom_readiness_ready": false,
+          "dom_readiness_selector": ".article-body",
+          "dom_readiness_text_length": 113,
+          "dom_readiness_paragraph_count": 0,
+          "dom_readiness_heading_count": 1,
+          "dom_readiness_fingerprint_present": true,
+          "duration_seconds": 13.838,
+          "result": "success"
+        }
+      ]
+    },
+    "html_shape": {
+      "byte_count": 955748,
+      "has_html": true,
+      "has_head": true,
+      "has_body": true,
+      "body_text_length": 6071,
+      "body_element_count": 864,
+      "article_container_count": 1
+    }
+  },
+  "raw_html": {
+    "byte_count": 955748,
+    "sha256": "b2144b5118a87e52adf6c6582769b5a1f5fd4a81eb5ae11c2e82263e3d8f180a"
+  },
+  "sanitized_html": {
+    "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/acs/10.1021_ja00160a040/html-1/page-sanitized.html",
+    "byte_count": 46713,
+    "sha256": "67565e076a1d756bdabbbedbca0cfe9f47e9117b0a95f49236411aba20522543",
+    "truncated": false
+  },
+  "diagnostic_path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/acs/10.1021_ja00160a040/html-1/diagnostic.json"
+}

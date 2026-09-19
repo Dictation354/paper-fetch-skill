@@ -61,6 +61,7 @@ class PublisherProfile:
     scoped_asset_extractor: Callable[..., list[dict[str, Any]]] | None = None
     is_front_matter_teaser_figure: Callable[..., bool] | None = None
     prepare_browser_page: Callable[..., Mapping[str, Any] | None] | None = None
+    prepare_source_images: Callable[[Any, str], None] | None = None
 
 
 ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES = (
@@ -122,6 +123,7 @@ def publisher_profile(publisher: str | None) -> PublisherProfile:
             name=normalized,
             hosts=provider_domains(normalized),
             dom_hooks=rules.dom_hooks,
+            prepare_source_images=_ams_dom.prepare_source_images,
             markdown_hooks=rules.markdown_hooks,
             refine_selected_container=_ams_dom.refine_selected_container,
             select_content_nodes=_ams_dom.select_content_nodes,
@@ -133,6 +135,7 @@ def publisher_profile(publisher: str | None) -> PublisherProfile:
         name=normalized,
         hosts=provider_domains(normalized),
         dom_hooks=rules.dom_hooks,
+        prepare_source_images=getattr(module, "prepare_source_images", None),
         markdown_hooks=rules.markdown_hooks,
         refine_selected_container=getattr(module, "refine_selected_container", None),
         select_content_nodes=getattr(module, "select_content_nodes", None),

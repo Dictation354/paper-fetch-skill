@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "doi": "10.1126/science.abb3021",
+      "provider": "science",
+      "requested_url": "https://api.crossref.org/works/10.1126%2Fscience.abb3021",
+      "final_url": "https://api.crossref.org/works/10.1126%2Fscience.abb3021",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:31:02 GMT",
+        "content-type": "application/json",
+        "content-length": "3082"
+      },
+      "captured_at_utc": "2026-09-18T02:31:02.241901+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 9774,
+      "sha256": "cf83d113266b88d600fb00205ddad84db908f1e0e4fd444e06c7872bf5785fef",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1126/science.abb3021",
+      "provider": "science",
+      "requested_url": "https://www.science.org/doi/10.1126/science.abb3021",
+      "final_url": "https://www.science.org/doi/10.1126/science.abb3021",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:31:08 GMT",
+        "content-type": "text/html;charset=UTF-8"
+      },
+      "captured_at_utc": "2026-09-18T02:31:18.425542+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 347600,
+      "sha256": "8e8670a2a1fc9e96994971785fa07c3c23a071db0e146400dcb5a66219e05b32",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

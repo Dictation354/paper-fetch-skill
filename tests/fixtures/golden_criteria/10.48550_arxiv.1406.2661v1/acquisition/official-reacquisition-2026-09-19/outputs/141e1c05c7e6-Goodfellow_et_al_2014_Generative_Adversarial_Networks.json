@@ -1,0 +1,940 @@
+{
+  "doi": "10.48550/arxiv.1406.2661v1",
+  "source": "arxiv_html",
+  "metadata": {
+    "title": "Generative Adversarial Networks",
+    "authors": [
+      "Ian J. Goodfellow",
+      "Jean Pouget-Abadie",
+      "Mehdi Mirza",
+      "Bing Xu",
+      "David Warde-Farley"
+    ],
+    "abstract": "We propose a new framework for estimating generative models via an adversarial process, in which we simultaneously train two models: a generative model $G$ that captures the data distribution, and a discriminative model $D$ that estimates the probability that a sample came from the training data rather than $G$. The training procedure for $G$ is to maximize the probability of $D$ making a mistake. This framework corresponds to a minimax two-player game. In the space of arbitrary functions $G$ and $D$, a unique solution exists, with $G$ recovering the training data distribution and $D$ equal to $\\frac{1}{2}$ everywhere. In the case where $G$ and $D$ are defined by multilayer perceptrons, the entire system can be trained with backpropagation. There is no need for any Markov chains or unrolled approximate inference networks during either training or generation of samples. Experiments demonstrate the potential of the framework through qualitative and quantitative evaluation of the generated samples.",
+    "journal": "arXiv",
+    "article_type": null,
+    "published": "2014-06-10",
+    "keywords": [
+      "stat.ML",
+      "cs.LG"
+    ],
+    "license_urls": [],
+    "landing_page_url": "https://arxiv.org/abs/1406.2661v1"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "We propose a new framework for estimating generative models via an adversarial process, in which we simultaneously train two models: a generative model $G$ that captures the data distribution, and a discriminative model $D$ that estimates the probability that a sample came from the training data rather than $G$. The training procedure for $G$ is to maximize the probability of $D$ making a mistake. This framework corresponds to a minimax two-player game. In the space of arbitrary functions $G$ and $D$, a unique solution exists, with $G$ recovering the training data distribution and $D$ equal to $\\frac{1}{2}$ everywhere. In the case where $G$ and $D$ are defined by multilayer perceptrons, the entire system can be trained with backpropagation. There is no need for any Markov chains or unrolled approximate inference networks during either training or generation of samples. Experiments demonstrate the potential of the framework through qualitative and quantitative evaluation of the generated samples."
+    },
+    {
+      "heading": "1 Introduction",
+      "level": 2,
+      "kind": "body",
+      "text": "The promise of deep learning is to discover rich, hierarchical models [<sup>2</sup>] that represent probability distributions over the kinds of data encountered in artificial intelligence applications, such as natural images, audio waveforms containing speech, and symbols in natural language corpora. So far, the most striking successes in deep learning have involved discriminative models, usually those that map a high-dimensional, rich sensory input to a class label [<sup>14, 22</sup>]. These striking successes have primarily been based on the backpropagation and dropout algorithms, using piecewise linear units [<sup>19, 9, 10</sup>] which have a particularly well-behaved gradient. Deep generative models have had less of an impact, due to the difficulty of approximating many intractable probabilistic computations that arise in maximum likelihood estimation and related strategies, and due to difficulty of leveraging the benefits of piecewise linear units in the generative context. We propose a new generative model estimation procedure that sidesteps these difficulties. <sup>1</sup> All code and hyperparameters available at http://www.github.com/goodfeli/adversarial\n\nIn the proposed adversarial nets framework, the generative model is pitted against an adversary: a discriminative model that learns to determine whether a sample is from the model distribution or the data distribution. The generative model can be thought of as analogous to a team of counterfeiters, trying to produce fake currency and use it without detection, while the discriminative model is analogous to the police, trying to detect the counterfeit currency. Competition in this game drives both teams to improve their methods until the counterfeits are indistiguishable from the genuine articles.\n\nThis framework can yield specific training algorithms for many kinds of model and optimization algorithm. In this article, we explore the special case when the generative model generates samples by passing random noise through a multilayer perceptron, and the discriminative model is also a multilayer perceptron. We refer to this special case as adversarial nets. In this case, we can train both models using only the highly successful backpropagation and dropout algorithms [<sup>17</sup>] and sample from the generative model using only forward propagation. No approximate inference or Markov chains are necessary."
+    },
+    {
+      "heading": "2 Related work",
+      "level": 2,
+      "kind": "body",
+      "text": "An alternative to directed graphical models with latent variables are undirected graphical models with latent variables, such as restricted Boltzmann machines (RBMs) [<sup>27, 16</sup>], deep Boltzmann machines (DBMs) [<sup>26</sup>] and their numerous variants. The interactions within such models are represented as the product of unnormalized potential functions, normalized by a global summation/integration over all states of the random variables. This quantity (the partition function) and its gradient are intractable for all but the most trivial instances, although they can be estimated by Markov chain Monte Carlo (MCMC) methods. Mixing poses a significant problem for learning algorithms that rely on MCMC [<sup>3, 5</sup>].\n\nDeep belief networks (DBNs) [<sup>16</sup>] are hybrid models containing a single undirected layer and several directed layers. While a fast approximate layer-wise training criterion exists, DBNs incur the computational difficulties associated with both undirected and directed models.\n\nAlternative criteria that do not approximate or bound the log-likelihood have also been proposed, such as score matching [<sup>18</sup>] and noise-contrastive estimation (NCE) [<sup>13</sup>]. Both of these require the learned probability density to be analytically specified up to a normalization constant. Note that in many interesting generative models with several layers of latent variables (such as DBNs and DBMs), it is not even possible to derive a tractable unnormalized probability density. Some models such as denoising auto-encoders [<sup>30</sup>] and contractive autoencoders have learning rules very similar to score matching applied to RBMs. In NCE, as in this work, a discriminative training criterion is employed to fit a generative model. However, rather than fitting a separate discriminative model, the generative model itself is used to discriminate generated data from samples a fixed noise distribution. Because NCE uses a fixed noise distribution, learning slows dramatically after the model has learned even an approximately correct distribution over a small subset of the observed variables.\n\nFinally, some techniques do not involve defining a probability distribution explicitly, but rather train a generative machine to draw samples from the desired distribution. This approach has the advantage that such machines can be designed to be trained by back-propagation. Prominent recent work in this area includes the generative stochastic network (GSN) framework [<sup>5</sup>], which extends generalized denoising auto-encoders [<sup>4</sup>]: both can be seen as defining a parameterized Markov chain, i.e., one learns the parameters of a machine that performs one step of a generative Markov chain. Compared to GSNs, the adversarial nets framework does not require a Markov chain for sampling. Because adversarial nets do not require feedback loops during generation, they are better able to leverage piecewise linear units [<sup>19, 9, 10</sup>], which improve the performance of backpropagation but have problems with unbounded activation when used ina feedback loop. More recent examples of training a generative machine by back-propagating into it include recent work on auto-encoding variational Bayes [<sup>20</sup>] and stochastic backpropagation [<sup>24</sup>]."
+    },
+    {
+      "heading": "3 Adversarial nets",
+      "level": 2,
+      "kind": "body",
+      "text": "The adversarial modeling framework is most straightforward to apply when the models are both multilayer perceptrons. To learn the generator’s distribution $p_{g}$ over data $\\bm{x}$, we define a prior on input noise variables $p_{\\bm{z}}(\\bm{z})$, then represent a mapping to data space as $G(\\bm{z};\\theta_{g})$, where $G$ is a differentiable function represented by a multilayer perceptron with parameters $\\theta_{g}$. We also define a second multilayer perceptron $D(\\bm{x};\\theta_{d})$ that outputs a single scalar. $D(\\bm{x})$ represents the probability that $\\bm{x}$ came from the data rather than $p_{g}$. We train $D$ to maximize the probability of assigning the correct label to both training examples and samples from $G$. We simultaneously train $G$ to minimize $\\log(1-D(G(\\bm{z})))$:\n\nIn other words, $D$ and $G$ play the following two-player minimax game with value function $V(G,D)$:\n\n$$ \\min_{G}\\max_{D}V(D,G)=\\mathbb{E}_{\\bm{x}\\sim p_{\\text{data}}(\\bm{x})}[\\log D(\\bm{x})]+\\mathbb{E}_{\\bm{z}\\sim p_{\\bm{z}}(\\bm{z})}[\\log(1-D(G(\\bm{z})))]. $$\n(1)\n\nIn the next section, we present a theoretical analysis of adversarial nets, essentially showing that the training criterion allows one to recover the data generating distribution as $G$ and $D$ are given enough capacity, i.e., in the non-parametric limit. See Figure 1 for a less formal, more pedagogical explanation of the approach. In practice, we must implement the game using an iterative, numerical approach. Optimizing $D$ to completion in the inner loop of training is computationally prohibitive, and on finite datasets would result in overfitting. Instead, we alternate between $k$ steps of optimizing $D$ and one step of optimizing $G$. This results in $D$ being maintained near its optimal solution, so long as $G$ changes slowly enough. This strategy is analogous to the way that SML/PCD [<sup>31, 29</sup>] training maintains samples from a Markov chain from one learning step to the next in order to avoid burning in a Markov chain as part of the inner loop of learning. The procedure is formally presented in Algorithm 1.\n\nIn practice, equation 1 may not provide sufficient gradient for $G$ to learn well. Early in learning, when $G$ is poor, $D$ can reject samples with high confidence because they are clearly different from the training data. In this case, $\\log(1-D(G(\\bm{z})))$ saturates. Rather than training $G$ to minimize $\\log(1-D(G(\\bm{z})))$ we can train $G$ to maximize $\\log D(G(\\bm{z}))$. This objective function results in the same fixed point of the dynamics of $G$ and $D$ but provides much stronger gradients early in learning.\n\n|                                                          |                                                          |                                                          |     |                                                          |\n| -------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- | --- | -------------------------------------------------------- |\n|\n\n![Figure 1](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig1.svg)\n\n|\n\n![Figure 1](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig2.svg)\n\n|\n\n![Figure 1](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig3.svg)\n\n| …   |\n\n![Figure 1](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig4.svg)\n\n|\n| (a)                                                      | (b)                                                      | (c)                                                      |     | (d)                                                      |\n\n**Figure 1.** Generative adversarial nets are trained by simultaneously updating the d iscriminative distribution ($D$, blue, dashed line) so that it discriminates between samples from the data generating distribution (black, dotted line) $p_{\\bm{x}}$ from those of the g enerative distribution $p_{g}$ (G) (green, solid line). The lower horizontal line is the domain from which $\\bm{z}$ is sampled, in this case uniformly. The horizontal line above is part of the domain of $\\bm{x}$. The upward arrows show how the mapping $\\bm{x}=G(\\bm{z})$ imposes the non-uniform distribution $p_{g}$ on transformed samples. $G$ contracts in regions of high density and expands in regions of low density of $p_{g}$. (a) Consider an adversarial pair near convergence: $p_{g}$ is similar to $p_{\\text{data}}$ and $D$ is a partially accurate classifier. (b) In the inner loop of the algorithm $D$ is trained to discriminate samples from data, converging to $D^{*}(\\bm{x})=\\frac{p_{\\text{data}}(\\bm{x})}{p_{\\text{data}}(\\bm{x})+p_{g}(\\bm{x})}$. (c) After an update to $G$, gradient of $D$ has guided $G(\\bm{z})$ to flow to regions that are more likely to be classified as data. (d) After several steps of training, if $G$ and $D$ have enough capacity, they will reach a point at which both cannot improve because $p_{g}=p_{\\text{data}}$. The discriminator is unable to differentiate between the two distributions, i.e. $D(\\bm{x})=\\frac{1}{2}$.\n\n**Algorithm 1.** Minibatch stochastic gradient descent training of generative adversarial nets. The number of steps to apply to the discriminator, $k$, is a hyperparameter. We used $k=1$, the least expensive option, in our experiments.\n\n```text\nfor number of training iterations do\nfor $k$ steps do\n$\\bullet$ Sample minibatch of $m$ noise samples $\\{\\bm{z}^{(1)},\\dots,\\bm{z}^{(m)}\\}$ from noise prior $p_{g}(\\bm{z})$.\n$\\bullet$ Sample minibatch of $m$ examples $\\{\\bm{x}^{(1)},\\dots,\\bm{x}^{(m)}\\}$ from data generating distribution $p_{\\text{data}}(\\bm{x})$.\n$\\bullet$ Update the discriminator by ascending its stochastic gradient: $$ \\nabla_{\\theta_{d}}\\frac{1}{m}\\sum\\limits_{i=1}^{m}\\left[\\log D\\left(\\bm{x}^{(i)}\\right)+\\log\\left(1-D\\left(G\\left(\\bm{z}^{(i)}\\right)\\right)\\right)\\right]. $$\nend for\n$\\bullet$ Sample minibatch of $m$ noise samples $\\{\\bm{z}^{(1)},\\dots,\\bm{z}^{(m)}\\}$ from noise prior $p_{g}(\\bm{z})$.\n$\\bullet$ Update the generator by descending its stochastic gradient: $$ \\nabla_{\\theta_{g}}\\frac{1}{m}\\sum\\limits_{i=1}^{m}\\log\\left(1-D\\left(G\\left(\\bm{z}^{(i)}\\right)\\right)\\right). $$\nend for The gradient-based updates can use any standard gradient-based learning rule. We used momentum in our experiments.\n```"
+    },
+    {
+      "heading": "4 Theoretical Results",
+      "level": 2,
+      "kind": "body",
+      "text": "The generator $G$ implicitly defines a probability distribution $p_{g}$ as the distribution of the samples $G(\\bm{z})$ obtained when $\\bm{z}\\sim p_{\\bm{z}}$. Therefore, we would like Algorithm 1 to converge to a good estimator of $p_{\\text{data}}$, if given enough capacity and training time. The results of this section are done in a non-parametric setting, e.g. we represent a model with infinite capacity by studying convergence in the space of probability density functions.\n\nWe will show in section 4.1 that this minimax game has a global optimum for $p_{g}=p_{\\text{data}}$. We will then show in section 4.2 that Algorithm 1 optimizes Eq 1, thus obtaining the desired result."
+    },
+    {
+      "heading": "4.1 Global Optimality of $p_{g}=p_{\\text{data}}$",
+      "level": 3,
+      "kind": "body",
+      "text": "We first consider the optimal discriminator $D$ for any given generator $G$."
+    },
+    {
+      "heading": "Proposition 1.",
+      "level": 4,
+      "kind": "body",
+      "text": "For $G$ fixed, the optimal discriminator $D$ is\n\n$$ D^{*}_{G}(\\bm{x})=\\frac{p_{\\text{data}}(\\bm{x})}{p_{\\text{data}}(\\bm{x})+p_{g}(\\bm{x})} $$\n(2)"
+    },
+    {
+      "heading": "Proof.",
+      "level": 4,
+      "kind": "body",
+      "text": "The training criterion for the discriminator D, given any generator $G$, is to maximize the quantity $V(G,D)$\n\n$\\displaystyle V(G,D)=$\n$\\displaystyle\\int_{\\bm{x}}p_{\\text{data}}(\\bm{x})\\log(D(\\bm{x}))dx+\\int_{z}p_{\\bm{z}}(\\bm{z})\\log(1-D(g(\\bm{z})))dz$\n$\\displaystyle=$\n$\\displaystyle\\int_{\\bm{x}}p_{\\text{data}}(\\bm{x})\\log(D(\\bm{x}))+p_{g}(\\bm{x})\\log(1-D(\\bm{x}))dx$\n(3)\n\nFor any $(a,b)\\in\\mathbb{R}^{2}\\setminus\\{0,0\\}$, the function $y\\rightarrow a\\log(y)+b\\log(1-y)$ achieves its maximum in $[0,1]$ at $\\frac{a}{a+b}$. The discriminator does not need to be defined outside of $Supp(p_{\\text{data}})\\cup Supp(p_{g})$, concluding the proof. ∎\n\nNote that the training objective for $D$ can be interpreted as maximizing the log-likelihood for estimating the conditional probability $P(Y=y|\\bm{x})$, where $Y$ indicates whether $\\bm{x}$ comes from $p_{\\text{data}}$ (with $y=1$) or from $p_{g}$ (with $y=0$). The minimax game in Eq. 1 can now be reformulated as:\n\n$\\displaystyle C(G)=$\n$\\displaystyle\\max_{D}V(G,D)$\n$\\displaystyle=$\n$\\displaystyle\\mathbb{E}_{\\bm{x}\\sim p_{\\text{data}}}[\\log D^{*}_{G}(\\bm{x})]+\\mathbb{E}_{\\bm{z}\\sim p_{\\bm{z}}}[\\log(1-D^{*}_{G}(G(\\bm{z})))]$\n(4)\n$\\displaystyle=$\n$\\displaystyle\\mathbb{E}_{\\bm{x}\\sim p_{\\text{data}}}[\\log D^{*}_{G}(\\bm{x})]+\\mathbb{E}_{\\bm{x}\\sim p_{g}}[\\log(1-D^{*}_{G}(\\bm{x}))]$\n$\\displaystyle=$\n$\\displaystyle\\mathbb{E}_{\\bm{x}\\sim p_{\\text{data}}}\\left[\\log\\frac{p_{\\text{data}}(\\bm{x})}{P_{\\text{data}}(\\bm{x})+p_{g}(\\bm{x})}\\right]+\\mathbb{E}_{\\bm{x}\\sim p_{g}}\\left[\\log\\frac{p_{g}(\\bm{x})}{p_{\\text{data}}(\\bm{x})+p_{g}(\\bm{x})}\\right]$"
+    },
+    {
+      "heading": "Theorem 1.",
+      "level": 4,
+      "kind": "body",
+      "text": "The global minimum of the virtual training criterion $C(G)$ is achieved if and only if $p_{g}=p_{\\text{data}}$. At that point, $C(G)$ achieves the value $-\\log 4$."
+    },
+    {
+      "heading": "Proof.",
+      "level": 4,
+      "kind": "body",
+      "text": "For $p_{g}=p_{\\text{data}}$, $D^{*}_{G}(\\bm{x})=\\frac{1}{2}$, (consider Eq. 2). Hence, by inspecting Eq. 4 at $D^{*}_{G}(\\bm{x})=\\frac{1}{2}$, we find $C(G)=\\log\\frac{1}{2}+\\log\\frac{1}{2}=-\\log 4$. To see that this is the best possible value of $C(G)$, reached only for $p_{g}=p_{\\text{data}}$, observe that\n\n$$ \\mathbb{E}_{\\bm{x}\\sim p_{\\text{data}}}\\left[-\\log 2\\right]+\\mathbb{E}_{\\bm{x}\\sim p_{g}}\\left[-\\log 2\\right]=-\\log 4 $$\n\nand that by subtracting this expression from $C(G)=V(D_{G}^{*},G)$, we obtain:\n\n$$ C(G)=-\\log(4)+KL\\left(p_{\\text{data}}\\left\\|\\frac{p_{\\text{data}}+p_{g}}{2}\\right.\\right)+KL\\left(p_{g}\\left\\|\\frac{p_{\\text{data}}+p_{g}}{2}\\right.\\right) $$\n(5)\n\nwhere KL is the Kullback–Leibler divergence. We recognize in the previous expression the Jensen–Shannon divergence between the model’s distribution and the data generating process:\n\n$$ C(G)=-\\log(4)+2\\cdot JSD\\left(p_{\\text{data}}\\left\\|p_{g}\\right.\\right) $$\n(6)\n\nSince the Jensen–Shannon divergence between two distributions is always non-negative and zero only when they are equal, we have shown that $C^{*}=-\\log(4)$ is the global minimum of $C(G)$ and that the only solution is $p_{g}=p_{\\text{data}}$, i.e., the generative model perfectly replicating the data generating process. ∎"
+    },
+    {
+      "heading": "4.2 Convergence of Algorithm 1",
+      "level": 3,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "Proposition 2.",
+      "level": 4,
+      "kind": "body",
+      "text": "If $G$ and $D$ have enough capacity, and at each step of Algorithm 1, the discriminator is allowed to reach its optimum given $G$, and $p_{g}$ is updated so as to improve the criterion\n\n$$ \\mathbb{E}_{\\bm{x}\\sim p_{\\text{data}}}[\\log D^{*}_{G}(\\bm{x})]+\\mathbb{E}_{\\bm{x}\\sim p_{g}}[\\log(1-D^{*}_{G}(\\bm{x}))] $$\n\nthen $p_{g}$ converges to $p_{\\text{data}}$"
+    },
+    {
+      "heading": "Proof.",
+      "level": 4,
+      "kind": "body",
+      "text": "Consider $V(G,D)=U(p_{g},D)$ as a function of $p_{g}$ as done in the above criterion. Note that $U(p_{g},D)$ is convex in $p_{g}$. The subderivatives of a supremum of convex functions include the derivative of the function at the point where the maximum is attained. In other words, if $f(x)=\\sup_{\\alpha\\in\\cal{A}}f_{\\alpha}(x)$ and $f_{\\alpha}(x)$ is convex in $x$ for every $\\alpha$, then $\\partial f_{\\beta}(x)\\in\\partial f$ if $\\beta=\\arg\\sup_{\\alpha\\in\\cal{A}}f_{\\alpha}(x)$. This is equivalent to computing a gradient descent update for $p_{g}$ at the optimal $D$ given the corresponding $G$. $\\sup_{D}U(p_{g},D)$ is convex in $p_{g}$ with a unique global optima as proven in Thm 1, therefore with sufficiently small updates of $p_{g}$, $p_{g}$ converges to $p_{x}$, concluding the proof. ∎\n\nIn practice, adversarial nets represent a limited family of $p_{g}$ distributions via the function $G(\\bm{z};\\theta_{g})$, and we optimize $\\theta_{g}$ rather than $p_{g}$ itself. Using a multilayer perceptron to define $G$ introduces multiple critical points in parameter space. However, the excellent performance of multilayer perceptrons in practice suggests that they are a reasonable model to use despite their lack of theoretical guarantees."
+    },
+    {
+      "heading": "5 Experiments",
+      "level": 2,
+      "kind": "body",
+      "text": "We trained adversarial nets an a range of datasets including MNIST[<sup>23</sup>], the Toronto Face Database (TFD) [<sup>28</sup>], and CIFAR-10 [<sup>21</sup>]. The generator nets used a mixture of rectifier linear activations [<sup>19, 9</sup>] and sigmoid activations, while the discriminator net used maxout [<sup>10</sup>] activations. Dropout [<sup>17</sup>] was applied in training the discriminator net. While our theoretical framework permits the use of dropout and other noise at intermediate layers of the generator, we used noise as the input to only the bottommost layer of the generator network.\n\nWe estimate probability of the test set data under $p_{g}$ by fitting a Gaussian Parzen window to the samples generated with $G$ and reporting the log-likelihood under this distribution. The $\\sigma$ parameter of the Gaussians was obtained by cross validation on the validation set. This procedure was introduced in Breuleux et al. [8] and used for various generative models for which the exact likelihood is not tractable [<sup>25, 3, 5</sup>]. Results are reported in Table 1. This method of estimating the likelihood has somewhat high variance and does not perform well in high dimensional spaces but it is the best method available to our knowledge. Advances in generative models that can sample but not estimate likelihood directly motivate further research into how to evaluate such models.\n\n**Table 1.** Parzen window-based log-likelihood estimates. The reported numbers on MNIST are the mean log-likelihood of samples on test set, with the standard error of the mean computed across examples. On TFD, we computed the standard error across folds of the dataset, with a different $\\sigma$ chosen using the validation set of each fold. On TFD, $\\sigma$ was cross validated on each fold and mean log-likelihood on each fold were computed. For MNIST we compare against other models of the real-valued (rather than binary) version of dataset.\n\n| Model                       | MNIST               | TFD                   |\n| --------------------------- | ------------------- | --------------------- |\n| DBN [<sup>3</sup>] | $138\\pm 2$ | $1909\\pm 66$ |\n| Stacked CAE [<sup>3</sup>] | $121\\pm 1.6$ | $\\mathbf{2110\\pm 50}$ |\n| Deep GSN [<sup>6</sup>] | $214\\pm 1.1$ | $1890\\pm 29$ |\n| Adversarial nets            | $\\mathbf{225\\pm 2}$ | $\\mathbf{2057\\pm 26}$ |\n\nIn Figures 2 and 3 we show samples drawn from the generator net after training. While we make no claim that these samples are better than samples generated by existing methods, we believe that these samples are at least competitive with the better generative models in the literature and highlight the potential of the adversarial framework.\n\n|                                                                        |                                                                        |\n| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |\n|\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/mnist_samples.png)\n\n|\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/tfd_samples.png)\n\n|\n| a)                                                                     | b)                                                                     |\n|\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/cifar_full_samples.png)\n\n|\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/cifar_conv_samples.png)\n\n|\n| c)                                                                     | d)                                                                     |\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/mnist_samples.png)\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/tfd_samples.png)\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/cifar_full_samples.png)\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/cifar_conv_samples.png)\n\n**Figure 2.** Visualization of samples from the model. Rightmost column shows the nearest training example of the neighboring sample, in order to demonstrate that the model has not memorized the training set. Samples are fair random draws, not cherry-picked. Unlike most other visualizations of deep generative models, these images show actual samples from the model distributions, not conditional means given samples of hidden units. Moreover, these samples are uncorrelated because the sampling process does not depend on Markov chain mixing. a) MNIST b) TFD c) CIFAR-10 (fully connected model) d) CIFAR-10 (convolutional discriminator and “deconvolutional” generator)\n\n![Figure 3](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/1dsubspace.png)\n\n![Figure 3](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/1dsubspace2.png)\n\n![Figure 3](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/1dsubspace.png)\n\n![Figure 3](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/1dsubspace2.png)\n\n**Figure 3.** Digits obtained by linearly interpolating between coordinates in $\\bm{z}$ space of the full model.\n\n**Table 2.** Challenges in generative modeling: a summary of the difficulties encountered by different approaches to deep generative modeling for each of the major operations involving a model.\n\n|                   | Deep directed graphical models             | Deep undirected graphical models                                                          | Generative autoencoders                                                        | Adversarial models                                                             |\n| ----------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |\n| Training          | Inference needed during training.          | Inference needed during training. MCMC needed to approximate partition function gradient. | Enforced tradeoff between mixing and power of reconstruction generation        | Synchronizing the discriminator with the generator. Helvetica.                 |\n| Inference         | Learned approximate inference              | Variational inference                                                                     | MCMC-based inference                                                           | Learned approximate inference                                                  |\n| Sampling          | No difficulties                            | Requires Markov chain                                                                     | Requires Markov chain                                                          | No difficulties                                                                |\n| Evaluating $p(x)$ | Intractable, may be approximated with AIS  | Intractable, may be approximated with AIS                                                 | Not explicitly represented, may be approximated with Parzen density estimation | Not explicitly represented, may be approximated with Parzen density estimation |\n| Model design      | Nearly all models incur extreme difficulty | Careful design needed to ensure multiple properties                                       | Any differentiable function is theoretically permitted                         | Any differentiable function is theoretically permitted                         |"
+    },
+    {
+      "heading": "6 Advantages and disadvantages",
+      "level": 2,
+      "kind": "body",
+      "text": "This new framework comes with advantages and disadvantages relative to previous modeling frameworks. The disadvantages are primarily that there is no explicit representation of $p_{g}(\\bm{x})$, and that $D$ must be synchronized well with $G$ during training (in particular, $G$ must not be trained too much without updating $D$, in order to avoid “the Helvetica scenario” in which $G$ collapses too many values of $\\mathbf{z}$ to the same value of $\\mathbf{x}$ to have enough diversity to model $p_{\\text{data}}$), much as the negative chains of a Boltzmann machine must be kept up to date between learning steps. The advantages are that Markov chains are never needed, only backprop is used to obtain gradients, no inference is needed during learning, and a wide variety of functions can be incorporated into the model. Table 2 summarizes the comparison of generative adversarial nets with other generative modeling approaches.\n\nThe aforementioned advantages are primarily computational. Adversarial models may also gain some statistical advantage from the generator network not being updated directly with data examples, but only with gradients flowing through the discriminator. This means that components of the input are not copied directly into the generator’s parameters. Another advantage of adversarial networks is that they can represent very sharp, even degenerate distributions, while methods based on Markov chains require that the distribution be somewhat blurry in order for the chains to be able to mix between modes."
+    },
+    {
+      "heading": "7 Conclusions and future work",
+      "level": 2,
+      "kind": "body",
+      "text": "This framework admits many straightforward extensions:\n\n1. A conditional generative model $p(\\bm{x}\\mid\\bm{c})$ can be obtained by adding $\\bm{c}$ as input to both $G$ and $D$.\n2. Learned approximate inference can be performed by training an auxiliary network to predict $\\bm{z}$ given $\\bm{x}$. This is similar to the inference net trained by the wake-sleep algorithm [<sup>15</sup>] but with the advantage that the inference net may be trained for a fixed generator net after the generator net has finished training.\n3. One can approximately model all conditionals $p(\\bm{x}_{S}\\mid\\bm{x}_{\\not S})$ where $S$ is a subset of the indices of $\\bm{x}$ by training a family of conditional models that share parameters. Essentially, one can use adversarial nets to implement a stochastic extension of the deterministic MP-DBM [<sup>11</sup>].\n4. Semi-supervised learning: features from the discriminator or inference net could improve performance of classifiers when limited labeled data is available.\n5. Efficiency improvements: training could be accelerated greatly by divising better methods for coordinating $G$ and $D$ or determining better distributions to sample $\\mathbf{z}$ from during training.\n\nThis paper has demonstrated the viability of the adversarial modeling framework, suggesting that these research directions could prove useful."
+    },
+    {
+      "heading": "Acknowledgments",
+      "level": 3,
+      "kind": "references",
+      "text": "We would like to acknowledge Patrice Marcotte, Olivier Delalleau, Kyunghyun Cho, Guillaume Alain and Jason Yosinski for helpful discussions. Yann Dauphin shared his Parzen window evaluation code with us. We would like to thank the developers of Pylearn2 [<sup>12</sup>] and Theano [<sup>7, 1</sup>], particularly Frédéric Bastien who rushed a Theano feature specifically to benefit this project. Arnaud Bergeron provided much-needed support with L a T e X typesetting. We would also like to thank CIFAR, and Canada Research Chairs for funding, and Compute Canada, and Calcul Québec for providing computational resources. Ian Goodfellow is supported by the 2013 Google Fellowship in Deep Learning. Finally, we would like to thank Les Trois Brasseurs for stimulating our creativity."
+    },
+    {
+      "heading": "References",
+      "level": 2,
+      "kind": "references",
+      "text": "- [1] Bastien, F., Lamblin, P., Pascanu, R., Bergstra, J., Goodfellow, I. J., Bergeron, A., Bouchard, N., and Bengio, Y. (2012). Theano: new features and speed improvements. Deep Learning and Unsupervised Feature Learning NIPS 2012 Workshop.\n- [2] Bengio, Y. (2009). Learning deep architectures for AI. Now Publishers.\n- [3] Bengio, Y., Mesnil, G., Dauphin, Y., and Rifai, S. (2013a). Better mixing via deep representations. In ICML’13.\n- [4] Bengio, Y., Yao, L., Alain, G., and Vincent, P. (2013b). Generalized denoising auto-encoders as generative models. In NIPS26. Nips Foundation.\n- [5] Bengio, Y., Thibodeau-Laufer, E., and Yosinski, J. (2014a). Deep generative stochastic networks trainable by backprop. In ICML’14.\n- [6] Bengio, Y., Thibodeau-Laufer, E., Alain, G., and Yosinski, J. (2014b). Deep generative stochastic networks trainable by backprop. In Proceedings of the 30th International Conference on Machine Learning (ICML’14).\n- [7] Bergstra, J., Breuleux, O., Bastien, F., Lamblin, P., Pascanu, R., Desjardins, G., Turian, J., Warde-Farley, D., and Bengio, Y. (2010). Theano: a CPU and GPU math expression compiler. In Proceedings of the Python for Scientific Computing Conference (SciPy). Oral Presentation.\n- [8] Breuleux, O., Bengio, Y., and Vincent, P. (2011). Quickly generating representative samples from an RBM-derived process. Neural Computation, 23(8), 2053–2073.\n- [9] Glorot, X., Bordes, A., and Bengio, Y. (2011). Deep sparse rectifier neural networks. In AISTATS’2011.\n- [10] Goodfellow, I. J., Warde-Farley, D., Mirza, M., Courville, A., and Bengio, Y. (2013a). Maxout networks. In ICML’2013.\n- [11] Goodfellow, I. J., Mirza, M., Courville, A., and Bengio, Y. (2013b). Multi-prediction deep Boltzmann machines. In NIPS’2013.\n- [12] Goodfellow, I. J., Warde-Farley, D., Lamblin, P., Dumoulin, V., Mirza, M., Pascanu, R., Bergstra, J., Bastien, F., and Bengio, Y. (2013c). Pylearn2: a machine learning research library. arXiv preprint arXiv:1308.4214.\n- [13] Gutmann, M. and Hyvarinen, A. (2010). Noise-contrastive estimation: A new estimation principle for unnormalized statistical models. In AISTATS’2010.\n- [14] Hinton, G., Deng, L., Dahl, G. E., Mohamed, A., Jaitly, N., Senior, A., Vanhoucke, V., Nguyen, P., Sainath, T., and Kingsbury, B. (2012a). Deep neural networks for acoustic modeling in speech recognition. IEEE Signal Processing Magazine, 29(6), 82–97.\n- [15] Hinton, G. E., Dayan, P., Frey, B. J., and Neal, R. M. (1995). The wake-sleep algorithm for unsupervised neural networks. Science, 268, 1558–1161.\n- [16] Hinton, G. E., Osindero, S., and Teh, Y. (2006). A fast learning algorithm for deep belief nets. Neural Computation, 18, 1527–1554.\n- [17] Hinton, G. E., Srivastava, N., Krizhevsky, A., Sutskever, I., and Salakhutdinov, R. (2012b). Improving neural networks by preventing co-adaptation of feature detectors. Technical report, arXiv:1207.0580.\n- [18] Hyvärinen, A. (2005). Estimation of non-normalized statistical models using score matching. J. Machine Learning Res., 6.\n- [19] Jarrett, K., Kavukcuoglu, K., Ranzato, M., and LeCun, Y. (2009). What is the best multi-stage architecture for object recognition? In Proc. International Conference on Computer Vision (ICCV’09), pages 2146–2153. IEEE.\n- [20] Kingma, D. P. and Welling, M. (2014). Auto-encoding variational bayes. In Proceedings of the International Conference on Learning Representations (ICLR).\n- [21] Krizhevsky, A. and Hinton, G. (2009). Learning multiple layers of features from tiny images. Technical report, University of Toronto.\n- [22] Krizhevsky, A., Sutskever, I., and Hinton, G. (2012). ImageNet classification with deep convolutional neural networks. In NIPS’2012.\n- [23] LeCun, Y., Bottou, L., Bengio, Y., and Haffner, P. (1998). Gradient-based learning applied to document recognition. Proceedings of the IEEE, 86(11), 2278–2324.\n- [24] Rezende, D. J., Mohamed, S., and Wierstra, D. (2014). Stochastic backpropagation and approximate inference in deep generative models. Technical report, arXiv:1401.4082.\n- [25] Rifai, S., Bengio, Y., Dauphin, Y., and Vincent, P. (2012). A generative process for sampling contractive auto-encoders. In ICML’12.\n- [26] Salakhutdinov, R. and Hinton, G. E. (2009). Deep Boltzmann machines. In AISTATS’2009, pages 448–455.\n- [27] Smolensky, P. (1986). Information processing in dynamical systems: Foundations of harmony theory. In D. E. Rumelhart and J. L. McClelland, editors, Parallel Distributed Processing, volume 1, chapter 6, pages 194–281. MIT Press, Cambridge.\n- [28] Susskind, J., Anderson, A., and Hinton, G. E. (2010). The Toronto face dataset. Technical Report UTML TR 2010-001, U. Toronto.\n- [29] Tieleman, T. (2008). Training restricted Boltzmann machines using approximations to the likelihood gradient. In W. W. Cohen, A. McCallum, and S. T. Roweis, editors, ICML 2008, pages 1064–1071. ACM.\n- [30] Vincent, P., Larochelle, H., Bengio, Y., and Manzagol, P.-A. (2008). Extracting and composing robust features with denoising autoencoders. In ICML 2008.\n- [31] Younes, L. (1999). On the convergence of Markovian stochastic algorithms with rapidly decreasing ergodicity rates. Stochastics and Stochastic Reports, 65(3), 177–228.\n\n|                                                          |                                                          |                                                          |     |                                                          |\n| -------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- | --- | -------------------------------------------------------- |\n|\n\n![Figure 1](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig1.svg)\n\n|\n\n![Figure 1](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig2.svg)\n\n|\n\n![Figure 1](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig3.svg)\n\n| …   |\n\n![Figure 1](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig4.svg)\n\n|\n| (a)                                                      | (b)                                                      | (c)                                                      |     | (d)                                                      |\n\n|                                                                        |                                                                        |\n| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |\n|\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/mnist_samples.png)\n\n|\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/tfd_samples.png)\n\n|\n| a)                                                                     | b)                                                                     |\n|\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/cifar_full_samples.png)\n\n|\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/cifar_conv_samples.png)\n\n|\n| c)                                                                     | d)                                                                     |"
+    }
+  ],
+  "references": [
+    {
+      "raw": "[1] Bastien, F., Lamblin, P., Pascanu, R., Bergstra, J., Goodfellow, I. J.,\nBergeron, A., Bouchard, N., and Bengio, Y. (2012). Theano: new features and speed improvements. Deep Learning and Unsupervised Feature Learning NIPS 2012 Workshop.",
+      "doi": null,
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "[2] Bengio, Y. (2009). Learning deep architectures for AI. Now Publishers.",
+      "doi": null,
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "[3] Bengio, Y., Mesnil, G., Dauphin, Y., and Rifai, S. (2013a). Better mixing via deep representations. In ICML’13.",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "[4] Bengio, Y., Yao, L., Alain, G., and Vincent, P. (2013b). Generalized denoising auto-encoders as generative models. In NIPS26. Nips Foundation.",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "[5] Bengio, Y., Thibodeau-Laufer, E., and Yosinski, J. (2014a). Deep generative stochastic networks trainable by backprop. In ICML’14.",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "[6] Bengio, Y., Thibodeau-Laufer, E., Alain, G., and Yosinski, J. (2014b). Deep generative stochastic networks trainable by backprop. In Proceedings of the 30th International Conference on Machine\nLearning (ICML’14).",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "[7] Bergstra, J., Breuleux, O., Bastien, F., Lamblin, P., Pascanu, R., Desjardins,\nG., Turian, J., Warde-Farley, D., and Bengio, Y. (2010). Theano: a CPU and GPU math expression compiler. In Proceedings of the Python for Scientific Computing Conference\n(SciPy). Oral Presentation.",
+      "doi": null,
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "[8] Breuleux, O., Bengio, Y., and Vincent, P. (2011). Quickly generating representative samples from an RBM-derived\nprocess. Neural Computation, 23 (8), 2053–2073.",
+      "doi": null,
+      "title": null,
+      "year": "2073"
+    },
+    {
+      "raw": "[9] Glorot, X., Bordes, A., and Bengio, Y. (2011). Deep sparse rectifier neural networks. In AISTATS’2011.",
+      "doi": null,
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "[10] Goodfellow, I. J., Warde-Farley, D., Mirza, M., Courville, A., and Bengio, Y.\n(2013a). Maxout networks. In ICML’2013.",
+      "doi": null,
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "[11] Goodfellow, I. J., Mirza, M., Courville, A., and Bengio, Y. (2013b). Multi-prediction deep Boltzmann machines. In NIPS’2013.",
+      "doi": null,
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "[12] Goodfellow, I. J., Warde-Farley, D., Lamblin, P., Dumoulin, V., Mirza, M.,\nPascanu, R., Bergstra, J., Bastien, F., and Bengio, Y. (2013c). Pylearn2: a machine learning research library. arXiv preprint arXiv:1308.4214.",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "[13] Gutmann, M. and Hyvarinen, A. (2010). Noise-contrastive estimation: A new estimation principle for\nunnormalized statistical models. In AISTATS’2010.",
+      "doi": null,
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "[14] Hinton, G., Deng, L., Dahl, G. E., Mohamed, A., Jaitly, N., Senior, A.,\nVanhoucke, V., Nguyen, P., Sainath, T., and Kingsbury, B. (2012a). Deep neural networks for acoustic modeling in speech recognition. IEEE Signal Processing Magazine, 29 (6), 82–97.",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "[15] Hinton, G. E., Dayan, P., Frey, B. J., and Neal, R. M. (1995). The wake-sleep algorithm for unsupervised neural networks. Science, 268, 1558–1161.",
+      "doi": null,
+      "title": null,
+      "year": "1995"
+    },
+    {
+      "raw": "[16] Hinton, G. E., Osindero, S., and Teh, Y. (2006). A fast learning algorithm for deep belief nets. Neural Computation, 18, 1527–1554.",
+      "doi": null,
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "[17] Hinton, G. E., Srivastava, N., Krizhevsky, A., Sutskever, I., and\nSalakhutdinov, R. (2012b). Improving neural networks by preventing co-adaptation of feature\ndetectors. Technical report, arXiv:1207.0580.",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "[18] Hyvärinen, A. (2005). Estimation of non-normalized statistical models using score matching. J. Machine Learning Res., 6.",
+      "doi": null,
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "[19] Jarrett, K., Kavukcuoglu, K., Ranzato, M., and LeCun, Y. (2009). What is the best multi-stage architecture for object recognition? In Proc. International Conference on Computer Vision\n(ICCV’09), pages 2146–2153. IEEE.",
+      "doi": null,
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "[20] Kingma, D. P. and Welling, M. (2014). Auto-encoding variational bayes. In Proceedings of the International Conference on Learning\nRepresentations (ICLR).",
+      "doi": null,
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "[21] Krizhevsky, A. and Hinton, G. (2009). Learning multiple layers of features from tiny images. Technical report, University of Toronto.",
+      "doi": null,
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "[22] Krizhevsky, A., Sutskever, I., and Hinton, G. (2012). ImageNet classification with deep convolutional neural networks. In NIPS’2012.",
+      "doi": null,
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "[23] LeCun, Y., Bottou, L., Bengio, Y., and Haffner, P. (1998). Gradient-based learning applied to document recognition. Proceedings of the IEEE, 86 (11), 2278–2324.",
+      "doi": null,
+      "title": null,
+      "year": "1998"
+    },
+    {
+      "raw": "[24] Rezende, D. J., Mohamed, S., and Wierstra, D. (2014). Stochastic backpropagation and approximate inference in deep\ngenerative models. Technical report, arXiv:1401.4082.",
+      "doi": null,
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "[25] Rifai, S., Bengio, Y., Dauphin, Y., and Vincent, P. (2012). A generative process for sampling contractive auto-encoders. In ICML’12.",
+      "doi": null,
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "[26] Salakhutdinov, R. and Hinton, G. E. (2009). Deep Boltzmann machines. In AISTATS’2009, pages 448–455.",
+      "doi": null,
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "[27] Smolensky, P. (1986). Information processing in dynamical systems: Foundations of harmony\ntheory. In D. E. Rumelhart and J. L. McClelland, editors, Parallel\nDistributed Processing, volume 1, chapter 6, pages 194–281. MIT Press,\nCambridge.",
+      "doi": null,
+      "title": null,
+      "year": "1986"
+    },
+    {
+      "raw": "[28] Susskind, J., Anderson, A., and Hinton, G. E. (2010). The Toronto face dataset. Technical Report UTML TR 2010-001, U. Toronto.",
+      "doi": null,
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "[29] Tieleman, T. (2008). Training restricted Boltzmann machines using approximations to the\nlikelihood gradient. In W. W. Cohen, A. McCallum, and S. T. Roweis, editors, ICML\n2008, pages 1064–1071. ACM.",
+      "doi": null,
+      "title": null,
+      "year": "2008"
+    },
+    {
+      "raw": "[30] Vincent, P., Larochelle, H., Bengio, Y., and Manzagol, P.-A. (2008). Extracting and composing robust features with denoising autoencoders. In ICML 2008.",
+      "doi": null,
+      "title": null,
+      "year": "2008"
+    },
+    {
+      "raw": "[31] Younes, L. (1999). On the convergence of Markovian stochastic algorithms with rapidly\ndecreasing ergodicity rates. Stochastics and Stochastic Reports, 65 (3), 177–228.",
+      "doi": null,
+      "title": null,
+      "year": "1999"
+    }
+  ],
+  "assets": [
+    {
+      "kind": "figure",
+      "heading": "Figure 1",
+      "caption": "Figure 1: Generative adversarial nets are trained by simultaneously updating the d iscriminative distribution ($D$, blue, dashed line) so that it discriminates between samples from the data generating distribution (black, dotted line) $p_{\\bm{x}}$ from those of the g enerative distribution $p_{g}$ (G) (green, solid line). The lower horizontal line is the domain from which $\\bm{z}$ is sampled, in this case uniformly. The horizontal line above is part of the domain of $\\bm{x}$. The upward arrows show how the mapping $\\bm{x}=G(\\bm{z})$ imposes the non-uniform distribution $p_{g}$ on transformed samples. $G$ contracts in regions of high density and expands in regions of low density of $p_{g}$. (a) Consider an adversarial pair near convergence: $p_{g}$ is similar to $p_{\\text{data}}$ and $D$ is a partially accurate classifier. (b) In the inner loop of the algorithm $D$ is trained to discriminate samples from data, converging to $D^{*}(\\bm{x})=\\frac{p_{\\text{data}}(\\bm{x})}{p_{\\text{data}}(\\bm{x})+p_{g}(\\bm{x})}$. (c) After an update to $G$, gradient of $D$ has guided $G(\\bm{z})$ to flow to regions that are more likely to be classified as data. (d) After several steps of training, if $G$ and $D$ have enough capacity, they will reach a point at which both cannot improve because $p_{g}=p_{\\text{data}}$. The discriminator is unable to differentiate between the two distributions, i.e. $D(\\bm{x})=\\frac{1}{2}$.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig1.svg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://arxiv.org/html/1406.2661v1/fig1.svg",
+      "original_url": "https://arxiv.org/html/1406.2661v1/fig1.svg",
+      "source_url": "https://arxiv.org/html/1406.2661v1/fig1.svg",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/svg+xml",
+      "downloaded_bytes": 182296,
+      "width": 646,
+      "height": 768,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 0.486,
+        "candidate_resolution_ms": 0.028,
+        "dns_policy_validation_ms": 6.156,
+        "connect_to_headers_ttfb_ms": 197.348,
+        "body_stream_ms": 1207.132,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 10.506,
+        "save_ms": 51.187,
+        "total_ms": 1516.908,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 1",
+      "caption": "Figure 1: Generative adversarial nets are trained by simultaneously updating the d iscriminative distribution ($D$, blue, dashed line) so that it discriminates between samples from the data generating distribution (black, dotted line) $p_{\\bm{x}}$ from those of the g enerative distribution $p_{g}$ (G) (green, solid line). The lower horizontal line is the domain from which $\\bm{z}$ is sampled, in this case uniformly. The horizontal line above is part of the domain of $\\bm{x}$. The upward arrows show how the mapping $\\bm{x}=G(\\bm{z})$ imposes the non-uniform distribution $p_{g}$ on transformed samples. $G$ contracts in regions of high density and expands in regions of low density of $p_{g}$. (a) Consider an adversarial pair near convergence: $p_{g}$ is similar to $p_{\\text{data}}$ and $D$ is a partially accurate classifier. (b) In the inner loop of the algorithm $D$ is trained to discriminate samples from data, converging to $D^{*}(\\bm{x})=\\frac{p_{\\text{data}}(\\bm{x})}{p_{\\text{data}}(\\bm{x})+p_{g}(\\bm{x})}$. (c) After an update to $G$, gradient of $D$ has guided $G(\\bm{z})$ to flow to regions that are more likely to be classified as data. (d) After several steps of training, if $G$ and $D$ have enough capacity, they will reach a point at which both cannot improve because $p_{g}=p_{\\text{data}}$. The discriminator is unable to differentiate between the two distributions, i.e. $D(\\bm{x})=\\frac{1}{2}$.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig2.svg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://arxiv.org/html/1406.2661v1/fig2.svg",
+      "original_url": "https://arxiv.org/html/1406.2661v1/fig2.svg",
+      "source_url": "https://arxiv.org/html/1406.2661v1/fig2.svg",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/svg+xml",
+      "downloaded_bytes": 178050,
+      "width": 646,
+      "height": 768,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 1.4,
+        "candidate_resolution_ms": 0.027,
+        "dns_policy_validation_ms": 3.972,
+        "connect_to_headers_ttfb_ms": 196.322,
+        "body_stream_ms": 1317.69,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 5.353,
+        "save_ms": 22.839,
+        "total_ms": 4568.432,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 1",
+      "caption": "Figure 1: Generative adversarial nets are trained by simultaneously updating the d iscriminative distribution ($D$, blue, dashed line) so that it discriminates between samples from the data generating distribution (black, dotted line) $p_{\\bm{x}}$ from those of the g enerative distribution $p_{g}$ (G) (green, solid line). The lower horizontal line is the domain from which $\\bm{z}$ is sampled, in this case uniformly. The horizontal line above is part of the domain of $\\bm{x}$. The upward arrows show how the mapping $\\bm{x}=G(\\bm{z})$ imposes the non-uniform distribution $p_{g}$ on transformed samples. $G$ contracts in regions of high density and expands in regions of low density of $p_{g}$. (a) Consider an adversarial pair near convergence: $p_{g}$ is similar to $p_{\\text{data}}$ and $D$ is a partially accurate classifier. (b) In the inner loop of the algorithm $D$ is trained to discriminate samples from data, converging to $D^{*}(\\bm{x})=\\frac{p_{\\text{data}}(\\bm{x})}{p_{\\text{data}}(\\bm{x})+p_{g}(\\bm{x})}$. (c) After an update to $G$, gradient of $D$ has guided $G(\\bm{z})$ to flow to regions that are more likely to be classified as data. (d) After several steps of training, if $G$ and $D$ have enough capacity, they will reach a point at which both cannot improve because $p_{g}=p_{\\text{data}}$. The discriminator is unable to differentiate between the two distributions, i.e. $D(\\bm{x})=\\frac{1}{2}$.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig3.svg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://arxiv.org/html/1406.2661v1/fig3.svg",
+      "original_url": "https://arxiv.org/html/1406.2661v1/fig3.svg",
+      "source_url": "https://arxiv.org/html/1406.2661v1/fig3.svg",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/svg+xml",
+      "downloaded_bytes": 178333,
+      "width": 646,
+      "height": 768,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 1448.753,
+        "candidate_resolution_ms": 0.024,
+        "dns_policy_validation_ms": 10.714,
+        "connect_to_headers_ttfb_ms": 203.428,
+        "body_stream_ms": 1097.112,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.07,
+        "save_ms": 11.022,
+        "total_ms": 7346.782,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 1",
+      "caption": "Figure 1: Generative adversarial nets are trained by simultaneously updating the d iscriminative distribution ($D$, blue, dashed line) so that it discriminates between samples from the data generating distribution (black, dotted line) $p_{\\bm{x}}$ from those of the g enerative distribution $p_{g}$ (G) (green, solid line). The lower horizontal line is the domain from which $\\bm{z}$ is sampled, in this case uniformly. The horizontal line above is part of the domain of $\\bm{x}$. The upward arrows show how the mapping $\\bm{x}=G(\\bm{z})$ imposes the non-uniform distribution $p_{g}$ on transformed samples. $G$ contracts in regions of high density and expands in regions of low density of $p_{g}$. (a) Consider an adversarial pair near convergence: $p_{g}$ is similar to $p_{\\text{data}}$ and $D$ is a partially accurate classifier. (b) In the inner loop of the algorithm $D$ is trained to discriminate samples from data, converging to $D^{*}(\\bm{x})=\\frac{p_{\\text{data}}(\\bm{x})}{p_{\\text{data}}(\\bm{x})+p_{g}(\\bm{x})}$. (c) After an update to $G$, gradient of $D$ has guided $G(\\bm{z})$ to flow to regions that are more likely to be classified as data. (d) After several steps of training, if $G$ and $D$ have enough capacity, they will reach a point at which both cannot improve because $p_{g}=p_{\\text{data}}$. The discriminator is unable to differentiate between the two distributions, i.e. $D(\\bm{x})=\\frac{1}{2}$.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig4.svg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://arxiv.org/html/1406.2661v1/fig4.svg",
+      "original_url": "https://arxiv.org/html/1406.2661v1/fig4.svg",
+      "source_url": "https://arxiv.org/html/1406.2661v1/fig4.svg",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/svg+xml",
+      "downloaded_bytes": 177691,
+      "width": 646,
+      "height": 768,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 4535.316,
+        "candidate_resolution_ms": 0.023,
+        "dns_policy_validation_ms": 10.013,
+        "connect_to_headers_ttfb_ms": 208.823,
+        "body_stream_ms": 1079.019,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.069,
+        "save_ms": 31.742,
+        "total_ms": 10352.52,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 2",
+      "caption": "Figure 2: Visualization of samples from the model. Rightmost column shows the nearest training example of the neighboring sample, in order to demonstrate that the model has not memorized the training set. Samples are fair random draws, not cherry-picked. Unlike most other visualizations of deep generative models, these images show actual samples from the model distributions, not conditional means given samples of hidden units. Moreover, these samples are uncorrelated because the sampling process does not depend on Markov chain mixing. a) MNIST b) TFD c) CIFAR-10 (fully connected model) d) CIFAR-10 (convolutional discriminator and “deconvolutional” generator)",
+      "url": "arxiv-source://1406.2661v1/mnist_samples.png",
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/mnist_samples.png",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "arxiv_source",
+      "download_url": "https://arxiv.org/e-print/1406.2661v1#mnist_samples.png",
+      "original_url": "https://arxiv.org/e-print/1406.2661v1#mnist_samples.png",
+      "source_url": "https://arxiv.org/e-print/1406.2661v1",
+      "source_path": "mnist_samples.png",
+      "source_href": null,
+      "content_type": "image/png",
+      "downloaded_bytes": 12633,
+      "width": 203,
+      "height": 137,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 2",
+      "caption": "Figure 2: Visualization of samples from the model. Rightmost column shows the nearest training example of the neighboring sample, in order to demonstrate that the model has not memorized the training set. Samples are fair random draws, not cherry-picked. Unlike most other visualizations of deep generative models, these images show actual samples from the model distributions, not conditional means given samples of hidden units. Moreover, these samples are uncorrelated because the sampling process does not depend on Markov chain mixing. a) MNIST b) TFD c) CIFAR-10 (fully connected model) d) CIFAR-10 (convolutional discriminator and “deconvolutional” generator)",
+      "url": "arxiv-source://1406.2661v1/tfd_samples.png",
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/tfd_samples.png",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "arxiv_source",
+      "download_url": "https://arxiv.org/e-print/1406.2661v1#tfd_samples.png",
+      "original_url": "https://arxiv.org/e-print/1406.2661v1#tfd_samples.png",
+      "source_url": "https://arxiv.org/e-print/1406.2661v1",
+      "source_path": "tfd_samples.png",
+      "source_href": null,
+      "content_type": "image/png",
+      "downloaded_bytes": 65878,
+      "width": 323,
+      "height": 217,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 2",
+      "caption": "Figure 2: Visualization of samples from the model. Rightmost column shows the nearest training example of the neighboring sample, in order to demonstrate that the model has not memorized the training set. Samples are fair random draws, not cherry-picked. Unlike most other visualizations of deep generative models, these images show actual samples from the model distributions, not conditional means given samples of hidden units. Moreover, these samples are uncorrelated because the sampling process does not depend on Markov chain mixing. a) MNIST b) TFD c) CIFAR-10 (fully connected model) d) CIFAR-10 (convolutional discriminator and “deconvolutional” generator)",
+      "url": "arxiv-source://1406.2661v1/cifar_full_samples.png",
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/cifar_full_samples.png",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "arxiv_source",
+      "download_url": "https://arxiv.org/e-print/1406.2661v1#cifar_full_samples.png",
+      "original_url": "https://arxiv.org/e-print/1406.2661v1#cifar_full_samples.png",
+      "source_url": "https://arxiv.org/e-print/1406.2661v1",
+      "source_path": "cifar_full_samples.png",
+      "source_href": null,
+      "content_type": "image/png",
+      "downloaded_bytes": 50876,
+      "width": 227,
+      "height": 153,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 2",
+      "caption": "Figure 2: Visualization of samples from the model. Rightmost column shows the nearest training example of the neighboring sample, in order to demonstrate that the model has not memorized the training set. Samples are fair random draws, not cherry-picked. Unlike most other visualizations of deep generative models, these images show actual samples from the model distributions, not conditional means given samples of hidden units. Moreover, these samples are uncorrelated because the sampling process does not depend on Markov chain mixing. a) MNIST b) TFD c) CIFAR-10 (fully connected model) d) CIFAR-10 (convolutional discriminator and “deconvolutional” generator)",
+      "url": "arxiv-source://1406.2661v1/cifar_conv_samples.png",
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/cifar_conv_samples.png",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "arxiv_source",
+      "download_url": "https://arxiv.org/e-print/1406.2661v1#cifar_conv_samples.png",
+      "original_url": "https://arxiv.org/e-print/1406.2661v1#cifar_conv_samples.png",
+      "source_url": "https://arxiv.org/e-print/1406.2661v1",
+      "source_path": "cifar_conv_samples.png",
+      "source_href": null,
+      "content_type": "image/png",
+      "downloaded_bytes": 53068,
+      "width": 227,
+      "height": 153,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 3",
+      "caption": "Figure 3: Digits obtained by linearly interpolating between coordinates in $\\bm{z}$ space of the full model.",
+      "url": "arxiv-source://1406.2661v1/1dsubspace.png",
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/1dsubspace.png",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "arxiv_source",
+      "download_url": "https://arxiv.org/e-print/1406.2661v1#1dsubspace.png",
+      "original_url": "https://arxiv.org/e-print/1406.2661v1#1dsubspace.png",
+      "source_url": "https://arxiv.org/e-print/1406.2661v1",
+      "source_path": "1dsubspace.png",
+      "source_href": null,
+      "content_type": "image/png",
+      "downloaded_bytes": 3863,
+      "width": 335,
+      "height": 38,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 3",
+      "caption": "Figure 3: Digits obtained by linearly interpolating between coordinates in $\\bm{z}$ space of the full model.",
+      "url": "arxiv-source://1406.2661v1/1dsubspace2.png",
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/1dsubspace2.png",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "arxiv_source",
+      "download_url": "https://arxiv.org/e-print/1406.2661v1#1dsubspace2.png",
+      "original_url": "https://arxiv.org/e-print/1406.2661v1#1dsubspace2.png",
+      "source_url": "https://arxiv.org/e-print/1406.2661v1",
+      "source_path": "1dsubspace2.png",
+      "source_href": null,
+      "content_type": "image/png",
+      "downloaded_bytes": 4949,
+      "width": 335,
+      "height": 38,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    }
+  ],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 6947,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "arXiv HTML semantic block placeholders could not all be reinserted; appended 2 block(s) at document end.",
+      "Markdown full text was saved to /home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/Goodfellow_et_al_2014_Generative_Adversarial_Networks.md."
+    ],
+    "source_trail": [
+      "fulltext:arxiv_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_fail",
+      "route:signal_domain_arxiv",
+      "route:signal_doi_arxiv",
+      "route:probe_arxiv_positive",
+      "route:provider_selected_arxiv",
+      "metadata:arxiv_ok",
+      "route:provider_candidate_arxiv_metadata_selected_rank_1",
+      "route:provider_candidate_arxiv_identity_strong",
+      "fulltext:arxiv_attempt",
+      "download:arxiv_html_saved",
+      "download:arxiv_assets_saved_profile_body",
+      "fulltext:arxiv_article_ok",
+      "route:provider_candidate_arxiv_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 253,
+      "body": 6694,
+      "refs": 1287
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 24973,
+      "word_count": 3981,
+      "body_block_count": 14,
+      "body_heading_count": 14,
+      "body_to_abstract_ratio": 25.356687898089174,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 10
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": true,
+      "profile": "body",
+      "expected": null,
+      "discovered": 10,
+      "attempted": 10,
+      "total": 10,
+      "local": 10,
+      "full_size": 10,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 10,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 10,
+          "requested": 10,
+          "full_size": 10,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": [
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig1.svg",
+          "real_mime": "image/svg+xml",
+          "byte_count": 182296,
+          "width": 646,
+          "height": 768,
+          "preview_accepted": false,
+          "sha256": "ec06463b19c790e288f3246e05513f97d089476257b7242055addc1c5e246b87",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig2.svg",
+          "real_mime": "image/svg+xml",
+          "byte_count": 178050,
+          "width": 646,
+          "height": 768,
+          "preview_accepted": false,
+          "sha256": "0a4fdaea5038dd59096d886d7573e444294b95d1dd580c751e3d702d614eb89f",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig3.svg",
+          "real_mime": "image/svg+xml",
+          "byte_count": 178333,
+          "width": 646,
+          "height": 768,
+          "preview_accepted": false,
+          "sha256": "704045c7dc4ced3dec560ab1eafd15682c16af7a3a02b9cb9e07a69f09aba297",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig4.svg",
+          "real_mime": "image/svg+xml",
+          "byte_count": 177691,
+          "width": 646,
+          "height": 768,
+          "preview_accepted": false,
+          "sha256": "9cce642fa1cb0e470978f47f51d4ab08b7f02eadf04e6d1b5fa5e3a09544c31f",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "arxiv_source",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/mnist_samples.png",
+          "real_mime": "image/png",
+          "byte_count": 12633,
+          "width": 203,
+          "height": 137,
+          "preview_accepted": false,
+          "sha256": "e2cc3411a041c37cc6be0afc938b9617fb99aed30c86f0087da07f6119a6d3b6",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "arxiv_source",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/tfd_samples.png",
+          "real_mime": "image/png",
+          "byte_count": 65878,
+          "width": 323,
+          "height": 217,
+          "preview_accepted": false,
+          "sha256": "d1a06cc88c39357487ffdee49ee2a78d7e7661970ad8872bff1143dda617c3ec",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "arxiv_source",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/cifar_full_samples.png",
+          "real_mime": "image/png",
+          "byte_count": 50876,
+          "width": 227,
+          "height": 153,
+          "preview_accepted": false,
+          "sha256": "69235f74367384f90a425faae0b792385b96c9b3d6cd5fb0eabf5c3b8114762a",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "arxiv_source",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/cifar_conv_samples.png",
+          "real_mime": "image/png",
+          "byte_count": 53068,
+          "width": 227,
+          "height": 153,
+          "preview_accepted": false,
+          "sha256": "8a9fbfdfb36c76302fbca2d92b0cc7e90862352b8e57baf867187a9dffcb44a0",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "arxiv_source",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/1dsubspace.png",
+          "real_mime": "image/png",
+          "byte_count": 3863,
+          "width": 335,
+          "height": 38,
+          "preview_accepted": false,
+          "sha256": "945d9743ad879f72b4fb6504f9246d82f40c2fb29ee5f4f77899ed46d1801f56",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "arxiv_source",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/1dsubspace2.png",
+          "real_mime": "image/png",
+          "byte_count": 4949,
+          "width": 335,
+          "height": 38,
+          "preview_accepted": false,
+          "sha256": "ee0811e4d5377bc7d3cf0c69630399992009ee91742af16d630683ca2764c4df",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        }
+      ]
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "arxiv",
+    "route": "official_html",
+    "representation": "html",
+    "transport": "http",
+    "fallback_used": false
+  }
+}

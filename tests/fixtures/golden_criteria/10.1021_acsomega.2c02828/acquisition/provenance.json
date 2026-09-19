@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "doi": "10.1021/acsomega.2c02828",
+      "provider": "acs",
+      "requested_url": "https://api.crossref.org/works/10.1021%2Facsomega.2c02828",
+      "final_url": "https://api.crossref.org/works/10.1021%2Facsomega.2c02828",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:29:15 GMT",
+        "content-type": "application/json",
+        "content-length": "2253"
+      },
+      "captured_at_utc": "2026-09-18T02:29:14.575437+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 7031,
+      "sha256": "d9bc9c261f25aa61c4350b3722c01b382aaf416cd6609e50061e9996940aae69",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1021/acsomega.2c02828",
+      "provider": "acs",
+      "requested_url": "https://pubs.acs.org/doi/10.1021/acsomega.2c02828",
+      "final_url": "https://pubs.acs.org/acsodf/article/7/30/26670/378916/General-Equation-to-Express-Changes-in-the",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:29:19 GMT",
+        "content-type": "text/html; charset=utf-8"
+      },
+      "captured_at_utc": "2026-09-18T02:29:24.948181+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 1560809,
+      "sha256": "aa9e2faa615456fb9473bf9fde1d165fd9219a9e7eed2bc240201974b7a8bd01",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "doi": "10.1146/annurev-control-030123-013355",
+  "source_input": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/original.html",
+  "source_sha256": "3350e0536c236034f2aa97c8182ca2e2c9490635a96765c7a29a294aefa1093a",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "116764adea954beeaa1affbc928e56e8a942b5c5f06a9ef947b296697cb5579e",
+  "files": [
+    {
+      "filename": "as801.f1.png",
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f1.png",
+      "source_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f1.png",
+      "sha256": "cb4aa33977f2a404863b0c68fb4b127fdab3a3f69b6c79e73b91cc8fcca98c2c",
+      "size": 1015459,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 3045,
+      "height": 1490,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "as801.f2.png",
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f2.png",
+      "source_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f2.png",
+      "sha256": "af64e3c58139aa1ff1a1627adbd19377886ab581ba758b85c998c03f6dc1f96d",
+      "size": 5908583,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 3787,
+      "height": 1806,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "as801.f3.png",
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f3.png",
+      "source_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f3.png",
+      "sha256": "fa385243bbe7adc81692fb4b1c4ef18d8a87bd2857f8f2139d26eb3c9c2faf93",
+      "size": 5933211,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 3781,
+      "height": 2793,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "as801.f4.png",
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f4.png",
+      "source_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f4.png",
+      "sha256": "0233ad29b49fc303afbf984d1a21c07a2b3b969e56ee5ca203fd2bc86e174b00",
+      "size": 12293215,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 4680,
+      "height": 3390,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "as801.f5.png",
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f5.png",
+      "source_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f5.png",
+      "sha256": "48a94f58135b12711d175dc4ac1c963eb5fddec945aba8df6250e93a9da89ff9",
+      "size": 154631,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 3039,
+      "height": 1410,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.514313+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 0
+}

@@ -1,0 +1,949 @@
+{
+  "doi": "10.1063/5.0260731",
+  "source": "aip_html",
+  "metadata": {
+    "title": "A basis-free phase space electronic Hamiltonian that recovers beyond Born–Oppenheimer electronic momentum and current density",
+    "authors": [
+      "Tao, Zhen",
+      "Qiu, Tian",
+      "Bian, Xuezhi",
+      "Duston, Titouan",
+      "Bradbury, Nadine",
+      "Subotnik, Joseph E."
+    ],
+    "abstract": "We present a phase-space electronic Hamiltonian ${\\widehat{H}}_{PS}$ (parameterized by both nuclear position *X* and momentum *P*) that boosts each electron into the moving frame of the nuclei that are closest in real space. The final form for the phase space Hamiltonian does not assume the existence of an atomic orbital basis, and relative to standard Born–Oppenheimer theory, the newly proposed one-electron operators can be expressed directly as functions of electronic and nuclear positions and momentum. We show that (*i*) quantum–classical dynamics along such a Hamiltonian maintains momentum conservation and that (*ii*) diagonalizing such a Hamiltonian can recover the electronic momentum and electronic current density reasonably well. In conjunction with other reports in the literature that such a phase-space approach can also recover vibrational circular dichroism spectra, we submit that the present phase-space approach offers a testable and powerful approach to post-BO electronic structure theory. Moreover, the approach is inexpensive and can be immediately applied to simulations of chiral induced spin selectivity experiments (where the transfer of angular momentum between nuclei and electrons is considered critical).",
+    "journal": "The Journal of Chemical Physics",
+    "article_type": null,
+    "published": "2025-4-14",
+    "keywords": [],
+    "license_urls": [],
+    "landing_page_url": "https://pubs.aip.org/jcp/article/162/14/144111/3343998/A-basis-free-phase-space-electronic-Hamiltonian"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "We present a phase-space electronic Hamiltonian ${\\widehat{H}}_{PS}$ (parameterized by both nuclear position *X* and momentum *P*) that boosts each electron into the moving frame of the nuclei that are closest in real space. The final form for the phase space Hamiltonian does not assume the existence of an atomic orbital basis, and relative to standard Born–Oppenheimer theory, the newly proposed one-electron operators can be expressed directly as functions of electronic and nuclear positions and momentum. We show that (*i*) quantum–classical dynamics along such a Hamiltonian maintains momentum conservation and that (*ii*) diagonalizing such a Hamiltonian can recover the electronic momentum and electronic current density reasonably well. In conjunction with other reports in the literature that such a phase-space approach can also recover vibrational circular dichroism spectra, we submit that the present phase-space approach offers a testable and powerful approach to post-BO electronic structure theory. Moreover, the approach is inexpensive and can be immediately applied to simulations of chiral induced spin selectivity experiments (where the transfer of angular momentum between nuclei and electrons is considered critical)."
+    },
+    {
+      "heading": "Main Text",
+      "level": 2,
+      "kind": "body",
+      "text": "TopicsBorn-Oppenheimer approximation,Born-Oppenheimer molecular dynamics,Electronic-structure theory"
+    },
+    {
+      "heading": "I. INTRODUCTION",
+      "level": 2,
+      "kind": "body",
+      "text": "Linear and angular momentum transfer between nuclear and electronic degrees of freedom underlies a wide range of nonadiabatic or non-Born–Oppenheimer (BO) phenomena, including paramagnetic spin lattice relaxation, vibrational circular dichroism (VCD), and perhaps chiral-induced spin-selectivity (CISS).<sup>1–3</sup> Indeed, in the context of recent CISS experiments by the Wasielewski group<sup>4</sup> in solution (i.e., not near a metal), it has become clear that there must be a non-trivial exchange of angular momentum between electronic spins and nuclear motion in some photoexcited processes. As such, there is at present an enormous push to develop nonadiabatic methods that can accurately incorporate such non-Born–Oppenheimer momentum transfer between electrons and nuclei.<sup>5</sup>\n\nNow, when studying momentum transfer between electrons and nuclei, especially with a focus on spin processes where angular momentum comes in small chunks of *ℏ*, one cannot emphasize enough that proper simulation methods must conserve the total momentum. Ironically, however, most modern dynamical techniques in chemistry fail to enforce such conservation. In particular, for standard mean-field (Ehrenfest) dynamics over a few electronic states, one breaks momentum conservation by using a truncated set of Born–Oppenheimer energy surfaces.<sup>6,7</sup> More generally, even for dynamics on a single surface, the true total momentum is usually not conserved.<sup>8</sup> The problem at bottom is that, within the BO approximation, electrons are treated at a very different level of theory from nuclei; electronic states are solved for fixed nuclei and then nuclei are allowed to move, an asymmetry that leads to problems. Most poignantly, for a system composed of nuclei and an even number of electrons, no matter what flavor of Born–Oppenheimer dynamics one applies, the *electronic* momentum will always have an expectation value of zero.<sup>9–12</sup>"
+    },
+    {
+      "heading": "A. Quantum dynamics",
+      "level": 3,
+      "kind": "body",
+      "text": "Let us now be more precise. To begin our analysis, suppose that one treats the nuclei in a purely quantum-mechanical fashion. For such simulations, one should recognize13 that, within the Born–Oppenheimer representation, the total (nuclear plus electronic) momentum is actually represented by the nuclear momentum. This interpretation follows by noticing that if one constructs adiabatic electronic wavefunction Φ(x;X) relative to nuclear positions (X), so that\n\n**Equation 1.**\n\n$$\n\\left({\\frac{\\partial}{\\partial\\mathbf{x}} + \\frac{\\partial}{\\partial\\mathbf{X}}} \\right)\\Phi{({\\mathbf{x};\\mathbf{X}})} = 0,\n$$\n\nthen the matrix elements of the total momentum operator for the total wavefunction Φ(x; X)χ(X, t) are trivial,\n\n**Equation 2.**\n\n$$\n\\langle\\Phi\\chi|\\left({\\widehat{\\mathbf{p}} + \\widehat{\\mathbf{P}}} \\right)|\\Phi\\chi\\rangle = \\langle\\chi|\\widehat{\\mathbf{P}}|\\chi\\rangle \\equiv \\mathbf{P}.\n$$\n\nEquation (2)13 follows from the definitions of the electronic and nuclear momentum operators, $\\widehat{\\mathbf{p}} = - i\\hslash\\frac{\\partial}{\\partial\\mathbf{x}}$ and $\\widehat{\\mathbf{P}} = - i\\hslash\\frac{\\partial}{\\partial\\mathbf{X}}$⁠. The total angular momentum can be represented in a similar fashion. Moreover, because the BO potential energy surface is translationally and rotationally invariant to the position of the nuclei, it follows that the quantum mechanical nuclear momentum is conserved. In this vein, one can argue that, according to the mapping above, BO dynamics conserve the total momentum.\n\nAt this point, there are two important nuances that must be mentioned. First, in principle, one can run two different flavors of quantum mechanical BO simulations. Namely, (i) one can ignore the gauge potential that arises from the electronic state,\n\n**Equation 3.**\n\n$$\ni\\hslash\\frac{\\partial\\chi{({\\mathbf{X},t})}}{\\partial t} = \\left({\\frac{\\widehat{\\mathbf{P}}}{2M} + V_{el}{(\\mathbf{X})}} \\right)\\chi{({\\mathbf{X},t})},\n$$\n\nor (ii) one can include the gauge potential (i.e., the derivative coupling),\n\n**Equation 4.**\n\n$$\ni\\hslash\\frac{\\partial\\chi{({\\mathbf{X},t})}}{\\partial t} = \\left({\\frac{{({\\widehat{\\mathbf{P}} - i\\hslash\\mathbf{d}})}^{2}}{2M} + V_{el}{(\\mathbf{X})}} \\right)\\chi{({\\mathbf{X},t})},\n$$\n\n**Equation 5.**\n\n$$\n\\mathbf{d} \\equiv \\langle\\Phi{(\\mathbf{X})}|\\frac{\\partial}{\\partial\\mathbf{X}}|\\Phi{(\\mathbf{X})}\\rangle.\n$$\n\nHere, Vel(X) is the electronic energy. Both Eqs. (3) and (4) conserve the total nuclear momentum, but only with Eq. (4)—where the gauge potential represents the momentum of the electrons—can one interpret the conservation of the nuclear momentum to really represent the conservation of the total momentum.\n\nSecond, and even more importantly, one must note that, even with Eq. (4), the notion that BO dynamics conserve the *total* momentum of a system of nuclei and electrons is somewhat limiting. For example, note that for the case of a system composed of nuclei and an even number of electrons, the gauge potential is exactly zero (and there is no electronic momentum as stated above). Thus, although the “total” momentum is conserved, the BO approximation sometimes conserves momentum by setting the electronic momentum to zero—which is not very satisfying."
+    },
+    {
+      "heading": "B. Mixed quantum-classical dynamics",
+      "level": 3,
+      "kind": "body",
+      "text": "Consider next the case where the nuclei are treated classically. For classical BO dynamics, it is standard to run simple Newtonian dynamics where one ignores any trace of the gauge potential,\n\n**Equation 6.**\n\n$$\nM\\ddot{\\mathbf{X}} = - \\frac{\\partial V_{el}}{\\partial\\mathbf{X}}.\n$$\n\nAs a result, just as for quantum dynamics, such BO simulations conserve the nuclear momentum rather than the total nuclear plus electronic momentum.8 Moreover, just as for quantum dynamics, one can partially rectify this lack of total momentum conservation by including the effect of the gauge potential. Within semiclassical theory, the relevant term that must be included14 is the Berry pseudomagnetic force,8 which depends on both nuclear velocity and Berry curvature (curl of the derivative coupling),\n\n**Equation 7.**\n\n$$\nM\\ddot{\\mathbf{X}} = - \\frac{\\partial V_{el}}{\\partial\\mathbf{X}} + i\\hslash{({\\nabla_{\\mathbf{X}} \\times \\mathbf{d}})}\\dot{\\mathbf{X}}.\n$$\n\nIndeed, over the past several years, several research groups in the chemical15,16 and physical communities17 have explored ab initio BO dynamics that include Berry forces, in or out of magnetic fields, both in gas and solid phases. Unfortunately, however, running such ab initio dynamics has several limitations. (i) First, in agreement with the quantum case, the Berry force is always exactly zero for a (nondegenerate) system with an even number of electrons; for a nonzero Berry force, one requires either the presence of an external magnetic field or a system with an odd number of electrons and spin–orbit coupling—although in the latter case, because of Kramers degeneracy, fixing an adiabatic state to walk along is difficult and not quite well-defined.7 (ii) Second, the cost of evaluating a Berry force can be quite large. (iii) Third, there is no feedback from the nuclear dynamics on the single-state electronic dynamics, so that all electronic observables remain uncorrected. (iv) Fourth, there is no way to apply a Berry force in a nonadiabatic context,18 and thus, these simulations cannot be used to study momentum transfer during passage through curve crossings (which would represent a meaningful extension of Landau–Zener theory19).\n\nRegarding the final criticism above, one can go beyond BO dynamics and, in principle, run Ehrenfest dynamics with a non-abelian force (as suggested by Takatsuka<sup>20,21</sup> and Krishna<sup>22</sup>) so as to recover momentum conservation.<sup>7</sup> However, the cost of evaluating the non-abelian Berry curvature is enormous, and the introduction of mean-field dynamics introduces other approximations one would like to avoid (e.g., a lack of branching and the incorrect equilibrium distribution<sup>23,24</sup>). Furthermore, the third criticism noted above for running BO dynamics with a Berry force (i.e., the lack of electronic feedback) remains a problem."
+    },
+    {
+      "heading": "C. Outlook",
+      "level": 3,
+      "kind": "body",
+      "text": "For all the reasons above, developing inexpensive fully momentum-conserving nonadiabatic equations of motion for nuclei and electrons is a priority for chemical and condensed matter physics; for the most efficient approach, of course, mixed quantum–classical dynamics are ideal. Before concluding this introduction, we note that, so far, we have limited our discussion on mixed quantum–classical above to those techniques that represent the quantum nuclear wavepacket with an ensemble of independent trajectories. It is worth noting that exact factorization techniques<sup>25–28</sup> offer a very different flavor of mixed quantum–classical dynamics, one where angular momentum is conserved.<sup>5</sup> That being said, despite advances in developing coupled trajectory approaches,<sup>29–31</sup> it will always be true that techniques utilizing independent trajectories will always allow one to study much larger systems than is possible with techniques utilizing ensembles of interacting trajectories. Thus, in this article, we focus on momentum-conservation within independent trajectories with an eye on large-scale future simulations."
+    },
+    {
+      "heading": "II. PHASE SPACE ELECTRONIC STRUCTURE METHODS",
+      "level": 2,
+      "kind": "body",
+      "text": "In this vein, a very enticing alternative, inexpensive strategy to BO theory, is to run dynamics along what we will call phase-space adiabats. The notion of developing self-consistent approaches to electronic transitions through eikonal transformations goes back many decades,32,33 and similar approaches with time-dependent Hamiltonians were derived by Berry in the 1980s (labeled superadiabats34,35), but for our purposes, the cleanest notion of a phase space electronic Hamiltonian for quantum–classical dynamics was written down 15 years ago by Shenvi.36 The basis idea of a phase-space electronic Hamiltonian is to diagonalize the electronic Hamiltonian that depends parametrically on both nuclear position (X) and momentum (P). Guided by the form of the Schrodinger equation in the usual BO basis (and the previous work or others32–35), Shenvi diagonalized a phase-space Hamiltonian of the form\n\n**Equation 8.**\n\n$$\n\\begin{aligned} {{\\widehat{H}}_{\\text{Shenvi}}{({\\mathbf{X},\\mathbf{P}})}} & {= \\sum\\limits_{\\mathit{IJK,A}}\\frac{1}{2M_{A}}\\left({\\mathbf{P}_{A}\\delta_{IJ} - i\\hslash\\mathbf{d}_{IJ}^{A}} \\right) \\cdot \\left({\\mathbf{P}_{A}\\delta_{JK} - i\\hslash\\mathbf{d}_{JK}^{A}} \\right)|\\Phi_{I}\\rangle\\langle\\Phi_{K}|} \\\\ & {\\hspace{1em} + \\sum\\limits_{K}E_{KK}{(\\mathbf{X})}|\\Phi_{K}\\rangle\\langle\\Phi_{K}|.} \\end{aligned}\n$$\n\nA brief interlude about the notations is given as follows: Here, *A*, *B*, … denote the index of atoms, *P*<sub>*A*</sub> denotes the nuclear momentum of atom *A*, and, more generally, all quantities that are **bold** represent vectors (or matrix when stated explicitly) in $\\mathbb{R}^{3}$ Euclidean space. *X* is shorthand for {*X*} = (*X*<sub>*A*</sub>, *X*<sub>*B*</sub>, …), representing the collection of all nuclear positions, and *P* is shorthand for {*P*} = (*P*<sub>*A*</sub>, *P*<sub>*B*</sub>, …), representing the collection of all nuclear momenta. *I*, *J*, *K* index electronic states. $\\mathbf{d}_{JK}^{A} = \\langle\\Phi_{J}|\\frac{\\partial}{\\partial\\mathbf{X}_{A}}|\\Phi_{K}\\rangle$ is the derivative coupling vector between the eigenstates |Φ<sub>*J*</sub>⟩ and |Φ<sub>*K*</sub>⟩ of the conventional electronic Hamiltonian, where ${\\widehat{H}}_{el}|\\Phi_{K}\\rangle = E_{K}|\\Phi_{K}\\rangle$⁠. Although they do not appear in Eq. (8), $\\widehat{\\mathbf{x}}$⁠, $\\widehat{\\mathbf{p}}$⁠, $\\widehat{\\mathbf{l}}$⁠, and $\\widehat{\\mathbf{s}}$ will denote the electronic position, linear momentum, orbital angular momentum, and spin operators, respectively. All quantities with a hat are electronic operators.\n\nTrajectories propagated along the eigensurfaces from diagonalizing the Shenvi Hamiltonian in Eq. (8) do conserve total momentum.<sup>37</sup> Unfortunately, however, these dynamics also suffer from several problems. First, the derivative coupling vector is known to diverge near avoided crossings, leading to numerical instability during dynamics using the phase-space Hamiltonian in Eq. (8). Second, such derivative couplings are not even well-defined in the case of degenerate states. Third, building the phase-space Hamiltonian in Eq. (8) involves computing *N*(*N* + 1)/2 derivative coupling vectors, each of which can be computationally expensive, and for dynamics, one would require the *derivatives* of these vectors—which would be even more expensive. Motivated by these problems, in Ref. 38, we demonstrated that in an atomic orbital (AO) basis, one can construct many other phase-space Hamiltonians [where we approximate the derivative couplings $\\mathbf{d}_{IJ}^{A}$ in Eq. (8) by a to-be determined operator ${\\widehat{\\mathbf{\\Gamma}}}^{A}$] that can satisfy momentum conservation, provided the Hamiltonian is solved in an AO basis. In this article, we will now show that momentum conservation requires no such AO basis, and we will demonstrate that a meaningful Hamiltonian can indeed be constructed by boosting each electron into a frame of the local nucleus.\n\nIf ${\\widehat{H}}_{el}$ is the usual electronic Hamiltonian, consider a phase-space electronic Hamiltonian of the form\n\n**Equation 9.**\n\n$$\n{\\widehat{H}}_{\\text{PS}}{({\\mathbf{X},\\mathbf{P}})} = \\sum\\limits_{A}\\frac{1}{2M_{A}}\\left({\\mathbf{P}_{A} - i\\hslash{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}} \\right) \\cdot \\left({\\mathbf{P}_{A} - i\\hslash{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}} \\right) + {\\widehat{H}}_{el}{(\\mathbf{X})},\n$$\n\nwith eigenvalues and eigenvectors\n\n**Equation 10.**\n\n$$\n{\\widehat{H}}_{\\text{PS}}{({\\mathbf{X},\\mathbf{P}})}|\\Psi_{\\text{PS}}{({\\mathbf{X},\\mathbf{P}})}\\rangle = E_{\\text{PS}}{({\\mathbf{X},\\mathbf{P}})}|\\Psi_{\\text{PS}}{({\\mathbf{X},\\mathbf{P}})}\\rangle.\n$$\n\nTo simplify our notation, we drop the dependence of the phase space wavefunction on nuclear position and momentum from now on. The equations of motion for the corresponding Hamiltonian mechanics are\n\n**Equation 11.**\n\n$$\n\\dot{\\mathbf{X}} = \\frac{\\partial E_{\\text{PS}}}{\\partial\\mathbf{P}},\\hspace{2.77695pt}\\hspace{2.77695pt}\\hspace{2.77695pt}\\hspace{2.77695pt}\\hspace{2.77695pt}\\dot{\\mathbf{P}} = - \\frac{\\partial E_{\\text{PS}}}{\\partial\\mathbf{X}}.\n$$\n\nObviously, such Hamilton’s equations conserve energy. In what follows, we will prove that the dynamics in Eq. (11) conserve linear and angular momentum, provided that the ${\\widehat{\\mathbf{\\Gamma}}}_{A}$ operator satisfies four constraints,\n\n**Equation 12.**\n\n$$\n- i\\hslash\\sum\\limits_{A}{\\widehat{\\mathbf{\\Gamma}}}_{A} + \\widehat{\\mathbf{p}} = 0,\n$$\n\n**Equation 13.**\n\n$$\n\\left\\lbrack {- i\\hslash\\sum\\limits_{B}\\frac{\\partial}{\\partial\\mathbf{X}_{B}} + \\widehat{\\mathbf{p}},{\\widehat{\\mathbf{\\Gamma}}}_{A}} \\right\\rbrack = 0,\n$$\n\n**Equation 14.**\n\n$$\n- i\\hslash\\sum\\limits_{A}\\mathbf{X}_{A} \\times {\\widehat{\\mathbf{\\Gamma}}}_{A} + \\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}} = 0,\n$$\n\n**Equation 15.**\n\n$$\n\\left\\lbrack {- i\\hslash\\sum\\limits_{B}\\left({\\mathbf{X}_{B} \\times \\frac{\\partial}{\\partial\\mathbf{X}_{B}}} \\right)_{\\gamma} + {\\widehat{l}}_{\\gamma} + {\\widehat{s}}_{\\gamma},{\\widehat{\\Gamma}}_{A\\delta}} \\right\\rbrack = i\\hslash\\sum\\limits_{\\alpha}\\epsilon_{\\alpha\\gamma\\delta}{\\widehat{\\Gamma}}_{A\\alpha},\n$$\n\nwhere “×” represents the cross product between two vectors in $\\mathbb{R}^{3}$⁠. Note that Eqs. (12)–(15) are satisfied exactly by the derivative couplings [if we substitute d for Γ as in Eq. (8)].13 In other words, here, we are approximating the derivative couplings by a $\\widehat{\\mathbf{\\Gamma}}$ operator (which is to be determined). Intuitively, Eqs. (12) and (14) insist that the electronic eigenfunctions of ${\\widehat{H}}_{\\text{PS}}$ will be expressed in coordinates relative to the nuclei: when the nuclei translate, the electrons gain momentum [Eq. (12)]; when the nuclei rotate, the electrons gain angular momentum [Eq. (14)]. Equations (13) and (15) dictate that the form of the ${\\widehat{\\mathbf{\\Gamma}}}_{A}$ operators is unchanged if we displace or reorient the molecule."
+    },
+    {
+      "heading": "A. Translational and rotational invariance of the phase space energy",
+      "level": 3,
+      "kind": "body",
+      "text": "Let us now demonstrate that, with Eqs. (13) and (15) satisfied, the phase space eigenenergy is translationally and rotationally invariant.\n\nTo prove translational and rotational invariance, we need to show\n\n**Equation 16.**\n\n$$\n\\sum\\limits_{A}\\frac{\\partial E_{PS}}{\\partial\\mathbf{X}_{A}} = 0,\n$$\n\n**Equation 17.**\n\n$$\n\\sum\\limits_{A}\\mathbf{X}_{A} \\times \\frac{\\partial E_{PS}}{\\partial\\mathbf{X}_{A}} = 0.\n$$\n\n**Equation 18.**\n\n$$\n\\sum\\limits_{A}\\frac{\\partial E_{PS}}{\\partial\\mathbf{X}_{A}} = \\sum\\limits_{A}\\langle\\Psi_{\\text{PS}}|\\frac{\\partial{\\widehat{H}}_{PS}}{\\partial\\mathbf{X}_{A}}|\\Psi_{\\text{PS}}\\rangle,\n$$\n\n**Equation 19.**\n\n$$\n\\sum\\limits_{A}\\mathbf{X}_{A} \\times \\frac{\\partial E_{PS}}{\\partial\\mathbf{X}_{A}} = \\sum\\limits_{A}\\mathbf{X}_{A} \\times \\langle\\Psi_{\\text{PS}}|\\frac{\\partial{\\widehat{H}}_{PS}}{\\partial\\mathbf{X}_{A}}|\\Psi_{\\text{PS}}\\rangle.\n$$\n\nUsing Eqs. (13) and (15), we have the commutation relations\n\n**Equation 20.**\n\n$$\n\\left\\lbrack {- i\\hslash\\sum\\limits_{B}\\frac{\\partial}{\\partial\\mathbf{X}_{B}} + \\widehat{\\mathbf{p}},{\\widehat{H}}_{PS}} \\right\\rbrack = 0,\n$$\n\n**Equation 21.**\n\n$$\n\\left\\lbrack {- i\\hslash\\sum\\limits_{B}\\left({\\mathbf{X}_{B} \\times \\frac{\\partial}{\\partial\\mathbf{X}_{B}}} \\right) + \\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}},{\\widehat{H}}_{PS}} \\right\\rbrack = 0.\n$$\n\nEquations (18) and (19) then become\n\n**Equation 22.**\n\n$$\n\\begin{aligned} {\\sum\\limits_{A}\\frac{\\partial E_{PS}}{\\partial\\mathbf{X}_{A}}} & {= - \\langle\\Psi_{\\text{PS}}|{\\lbrack{\\widehat{\\mathbf{p}},{\\widehat{H}}_{PS}}\\rbrack}|\\Psi_{\\text{PS}}\\rangle} \\\\ & {= E_{PS}\\left({\\langle\\Psi_{\\text{PS}}|\\widehat{\\mathbf{p}}\\Psi_{\\text{PS}}\\rangle - \\langle\\widehat{\\mathbf{p}}\\Psi_{\\text{PS}}|\\Psi_{\\text{PS}}\\rangle} \\right) = 0,} \\end{aligned}\n$$\n\n**Equation 23.**\n\n$$\n\\begin{aligned} & {\\sum\\limits_{A}\\mathbf{X}_{A} \\times \\frac{\\partial E_{PS}}{\\partial\\mathbf{X}_{A}}} \\\\ & {\\hspace{2em} = - \\langle\\Psi_{\\text{PS}}|{\\lbrack{\\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}},{\\widehat{H}}_{PS}}\\rbrack}|\\Psi_{\\text{PS}}\\rangle} \\\\ & {\\hspace{2em} = E_{PS}\\left({\\langle\\Psi_{\\text{PS}}|{({\\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}}})}\\Psi_{\\text{PS}}\\rangle - \\langle{({\\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}}})}\\Psi_{\\text{PS}}|\\Psi_{\\text{PS}}\\rangle} \\right)} \\\\ & {\\hspace{2em} = 0.} \\end{aligned}\n$$"
+    },
+    {
+      "heading": "B. Momentum conservation",
+      "level": 3,
+      "kind": "body",
+      "text": "To prove momentum conservation, we evaluate the total linear and angular momentum (which is the sum of the nuclear and electronic components),\n\n**Equation 24.**\n\n$$\n\\mathbf{P}^{\\text{tot}} = \\sum\\limits_{A}M_{A}{\\dot{\\mathbf{X}}}_{A} + \\langle\\Psi_{\\text{PS}}|\\widehat{\\mathbf{p}}|\\Psi_{\\text{PS}}\\rangle,\n$$\n\n**Equation 25.**\n\n$$\n\\mathbf{L}^{\\text{tot}} = \\sum\\limits_{A}M_{A}\\mathbf{X}_{A} \\times {\\dot{\\mathbf{X}}}_{A} + \\langle\\Psi_{\\text{PS}}|\\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}}|\\Psi_{\\text{PS}}\\rangle.\n$$\n\nNow, using Eqs. (9) and (11), it follows that the nuclear kinetic momentum is\n\n**Equation 26.**\n\n$$\nM_{A}{\\dot{\\mathbf{X}}}_{A} = \\mathbf{P}_{A} - i\\hslash\\langle\\Psi_{\\text{PS}}|{\\widehat{\\mathbf{\\Gamma}}}_{A}|\\Psi_{\\text{PS}}\\rangle.\n$$\n\nIf one plugs Eqs. (12), (14), and (26) into Eqs. (24) and (25), the result is Ptot = ∑APA and Ltot = ∑ALA. Finally, momentum conservation follows from Eq. (11) by noting that the phase-space energy EPS(X, P) is invariant to translation and rotation, as proven in Sec. II A."
+    },
+    {
+      "heading": "III. FORM OF Γ IN EQ. (9)",
+      "level": 2,
+      "kind": "body",
+      "text": "At this stage, the only remaining questions are (*i*) how to properly choose the ${\\widehat{\\mathbf{\\Gamma}}}_{A}$ operators in Eq. (9) and (*ii*) how to judge the merit of that choice. We will address question (*i*) shortly, but as for question (*ii*), we are aware of two means for evaluating the accuracy of a phase-space Hamiltonian and its advantages over a BO electronic Hamiltonian. First, as is well known,<sup>11,39</sup> one can show that if one properly includes non-Born–Oppenheimer effects to first order, an electronic eigenstate (|Φ⟩) with zero momentum $({\\left\\langle {\\Phi|\\widehat{\\mathbf{p}}|\\Phi} \\right\\rangle = 0})$ is perturbed into an electronic eigenstate $({|\\widetilde{\\Psi}\\rangle})$ with non-zero momentum, equal to $\\langle\\widetilde{\\Psi}|\\widehat{\\mathbf{p}}|\\widetilde{\\Psi}\\rangle = md/dt{\\langle{\\Phi|\\widehat{\\mathbf{x}}|\\Phi}\\rangle}$⁠. See more discussion below in Sec. IV B. Second, a strong phase-space electronic approach should yield a good estimate for the electronic current density, which is essential for recovering the missing velocity-form of the electronic dipole moment and the magnetic dipole moment within BO theory.<sup>11,40</sup> These quantities contribute directly to the electronic component of the rotational strength that is observed in vibrational circular dichroism.<sup>12,41</sup> These two constraints will allow us to verify the validity of any phase space Hamiltonian. In the present article, we will investigate how well one recovers electronic momentum and electronic current density according to the continuity equation; in a separate paper, we have already demonstrated that accurate VCD signals can indeed be recovered with this phase space approach.<sup>42,43</sup>\n\nThe simplest physical model for the **Γ**-couplings in Eq. (9) arises from the realization that in an AO basis, whenever a nucleus moves, that nuclear motion drags along an electronic orbital that leads to a trivial derivative coupling. As an example, consider a hydrogen atom moving in free space in the *x*-direction with an electron occupying a hydrogenic 3 *p*<sub>*x*</sub> orbital that translates with the nucleus. If one evaluates the derivative coupling between the hydrogenic 3 *p*<sub>*x*</sub> and 1 *s* orbitals, one finds a nonzero value—even though such a value is clearly eliminated by moving to a center of mass frame. This trivial component of the derivative coupling was recognized long ago and is often labeled a “Bates factor”<sup>44</sup> or “electron translation factor” (ETF).<sup>45–50</sup> Moreover, although translations are much easier to evaluate than rotations, the same physical mechanism also occurs whenever the nuclei of a given molecule rotate, and one can also identify “electron rotation factors” (ERFs)<sup>51,52</sup>.\n\nThus, a natural choice for the Γ-couplings is to set\n\n**Equation 27.**\n\n$$\n{\\widehat{\\mathbf{\\Gamma}}}_{A} = \\sum\\limits_{i}\\mathbf{\\Gamma}_{A}'{({{\\widehat{\\mathbf{x}}}_{i},{\\widehat{\\mathbf{p}}}_{i}})} + \\sum\\limits_{i}\\mathbf{\\Gamma}_{A}^{''}{({{\\widehat{\\mathbf{x}}}_{i},{\\widehat{\\mathbf{p}}}_{i}})},\n$$\n\nwhere the sum over i represents a sum over electrons, ${\\widehat{\\mathbf{\\Gamma}}}_{A}'$ is an ETF operator, and ${\\widehat{\\mathbf{\\Gamma}}}_{A}^{''}$ is an ERF operator. Encouragingly, within the context of quantum chemistry calculations in an AO basis (where explicit forms for ETFs and ERFs are known), we have recently demonstrated that phase-space dynamics using Eq. (27) recovers the correct electronic momentum38 as well as quite accurate VCD signals for three small chiral molecules.42 Unfortunately, however, all previous phase-space calculations relied on an AO basis (in order to construct $\\widehat{\\mathbf{\\Gamma}}$⁠) and, thus, could not probe solid state systems in a plane wave basis (which is very limiting). Furthermore, empirically one finds that using the $\\widehat{\\mathbf{\\Gamma}}$ from Ref. 52, it is difficult to converge VCD results43 and satisfy the electronic continuity equation (shown in Sec. IV) as a function of basis set size (which is both a theoretical and a practical limitation)."
+    },
+    {
+      "heading": "A. Basis-free form of ${\\widehat{\\mathbf{\\Gamma}}}'$ from ETF operators",
+      "level": 3,
+      "kind": "body",
+      "text": "To move beyond an AO basis, let us make the ansatz that we divide up all free space according to regions labeled by the closest nucleus (in the spirit of a Voronoi diagram<sup>53</sup>), and electrons are boosted relative to the motion of the nucleus that labels their location. Mathematically, we imagine constructing a space-partitioning operator $\\Theta_{A}{(\\widehat{\\mathbf{x}})}$ (⁠${\\widehat{\\Theta}}_{A}$ as a shorthand) that satisfies the following:\n\n${\\widehat{\\Theta}}_{A} \\equiv \\Theta_{A}{(\\widehat{\\mathbf{x}})}$ is positive definite.\n\n$\\sum\\limits_{A}\\Theta_{A}{(\\widehat{\\mathbf{x}})} = 1$⁠.\n\nΘ<sub>*A*</sub>(*x*) ≫ Θ<sub>*B*</sub>(*x*) for ‖ *x* − *X*<sub>*A*</sub>‖ ≪ ‖ *x* − *X*<sub>*B*</sub>‖.\n\nOne example of this kind is to define $\\Theta_{A}{(\\widehat{\\mathbf{x}})}$ as\n\n**Equation 28.**\n\n$$\n\\Theta_{A}{(\\widehat{\\mathbf{x}})} = \\frac{Q_{A}e^{- |\\widehat{\\mathbf{x}} - \\mathbf{X}_{A}|^{2}/\\sigma^{2}}}{\\sum\\limits_{B}Q_{B}e^{- |\\widehat{\\mathbf{x}} - \\mathbf{X}_{B}|^{2}/\\sigma^{2}}},\n$$\n\nwhere QA is the bare nuclear charge of atom A and σ is a parameter that determines the length scale over which we partition unity (and can be determined empirically). Alternatively, one can also imagine using the nuclear mass MA as a prefactor,\n\n**Equation 29.**\n\n$$\n\\Theta_{A}{(\\widehat{\\mathbf{x}})} = \\frac{M_{A}e^{- |\\widehat{\\mathbf{x}} - \\mathbf{X}_{A}|^{2}/\\sigma^{2}}}{\\sum\\limits_{B}M_{B}e^{- |\\widehat{\\mathbf{x}} - \\mathbf{X}_{B}|^{2}/\\sigma^{2}}}.\n$$\n\nNote that for most systems, the nuclear mass MA is usually proportional to the nuclear charge QA, so that the differences between Eqs. (28) and (29) need not be enormous. Note also that any positive prefactor will preserve conditions 1–3 above, so one can also employ combinations of mass and charge, etc., in the choice of $\\Theta_{A}{(\\widehat{\\mathbf{x}})}$⁠.\n\nFor linear momentum conservation, one must satisfy Eq. (12). We distribute this condition as follows (between ETFs and ERFs):\n\n**Equation 30.**\n\n$$\n\\sum\\limits_{A}{\\widehat{\\mathbf{\\Gamma}}}_{A}' = \\frac{1}{i\\hslash}\\widehat{\\mathbf{p}},\n$$\n\n**Equation 31.**\n\n$$\n\\sum\\limits_{A}{\\widehat{\\mathbf{\\Gamma}}}_{A}^{''} = 0.\n$$\n\nLet us multiply the R.H.S. of Eq. (30) on the left (and then on the right) by $\\sum\\limits_{A}{\\widehat{\\Theta}}_{A}$ and then take the average. The result is\n\n**Equation 32.**\n\n$$\n\\sum\\limits_{A}{\\widehat{\\mathbf{\\Gamma}}}_{A}' = \\frac{1}{2i\\hslash}\\sum\\limits_{A}\\left({{\\widehat{\\Theta}}_{A}\\widehat{\\mathbf{p}} + \\widehat{\\mathbf{p}}{\\widehat{\\Theta}}_{A}} \\right),\n$$\n\nwhich suggests the following expression for ${\\widehat{\\mathbf{\\Gamma}}}_{A}'$⁠:\n\n**Equation 33.**\n\n$$\n{\\widehat{\\mathbf{\\Gamma}}}_{A}' = \\frac{1}{2i\\hslash}\\left({{\\widehat{\\Theta}}_{A}\\widehat{\\mathbf{p}} + \\widehat{\\mathbf{p}}{\\widehat{\\Theta}}_{A}} \\right).\n$$\n\nIt can be shown easily that ${\\widehat{\\mathbf{\\Gamma}}}_{A}'$ defined by Eq. (33) is anti-Hermitian (note that both ${\\widehat{\\Theta}}_{A}$ and $\\widehat{\\mathbf{p}}$ are Hermitian), which is crucial for constructing a phase-space electronic Hamiltonian."
+    },
+    {
+      "heading": "B. Basis-free form of ${\\widehat{\\mathbf{\\Gamma}}}^{''}$ from ERF operators",
+      "level": 3,
+      "kind": "body",
+      "text": "Given the definition of ${\\widehat{\\mathbf{\\Gamma}}}_{A}'$ in Eq. (33), Eq. (14) becomes\n\n**Equation 34.**\n\n$$\n\\begin{aligned} {\\sum\\limits_{A}\\mathbf{X}_{A} \\times {\\widehat{\\mathbf{\\Gamma}}}_{A}^{''}} & {= \\frac{1}{i\\hslash}{({\\widehat{\\mathbf{x}} \\times \\widehat{\\mathbf{p}} + \\widehat{\\mathbf{s}}})} - \\sum\\limits_{A}\\mathbf{X}_{A} \\times {\\widehat{\\mathbf{\\Gamma}}}_{A}'} \\\\ & {= \\frac{1}{2i\\hslash}\\sum\\limits_{A}\\left({{({\\widehat{\\mathbf{x}} - \\mathbf{X}_{A}})} \\times {({{\\widehat{\\Theta}}_{A}\\widehat{\\mathbf{p}}})}} \\right.} \\\\ & {\\hspace{1em} + \\left. {{({\\widehat{\\mathbf{x}} - \\mathbf{X}_{A}})} \\times {({\\widehat{\\mathbf{p}}{\\widehat{\\Theta}}_{A}})} + 2\\widehat{\\mathbf{s}}{\\widehat{\\Theta}}_{A}} \\right),} \\end{aligned}\n$$\n\nIf one defines\n\n**Equation 35.**\n\n$$\n\\begin{aligned} {\\widehat{\\mathbf{J}}}_{A} & {= \\frac{1}{2i\\hslash}\\left({{({\\widehat{\\mathbf{x}} - \\mathbf{X}_{A}})} \\times {({{\\widehat{\\Theta}}_{A}\\widehat{\\mathbf{p}}})}} \\right.} \\\\ & {\\hspace{1em} + \\left. {{({\\widehat{\\mathbf{x}} - \\mathbf{X}_{A}})} \\times {({\\widehat{\\mathbf{p}}{\\widehat{\\Theta}}_{A}})} + 2\\widehat{\\mathbf{s}}{\\widehat{\\Theta}}_{A}} \\right),} \\end{aligned}\n$$\n\nEquation (34) can be written succinctly as\n\n**Equation 36.**\n\n$$\n\\sum\\limits_{A}\\mathbf{X}_{A} \\times {\\widehat{\\mathbf{\\Gamma}}}_{A}^{''} = \\sum\\limits_{A}{\\widehat{\\mathbf{J}}}_{A}.\n$$\n\nLet us now show that if one defines ${\\widehat{\\mathbf{\\Gamma}}}_{A}^{''}$ as\n\n**Equation 37.**\n\n$$\n{\\widehat{\\mathbf{\\Gamma}}}_{A}^{''} = - \\sum\\limits_{B}\\zeta_{AB}\\left({\\mathbf{X}_{A} - \\mathbf{X}_{B}^{0}} \\right) \\times \\left({\\mathbf{K}_{B}^{- 1}{\\widehat{\\mathbf{J}}}_{B}} \\right),\n$$\n\nboth Eqs. (31) and (36) can be satisfied, given a proper choice of the unknown vector $\\mathbf{X}_{B}^{0}$ and a to-be-determined 3 × 3 matrix KB. In Eq. (37), in order to ensure that ${\\mathbf{\\Gamma}^{''}}_{A}$ is localized around atom A, we introduce a weighting factor ζAB. Here, the function ζAB = ζ(XA, XB) is a function of |XA − XB| (although not necessarily a symmetric function of A and B), and $\\mathbf{X}_{B}^{0}$ is intuitively a local center of mass around atom B. In practice, for ${\\widehat{\\mathbf{\\Gamma}}}_{A}^{''}$ to operate locally on electrons near atom A, we require ζAB to vanish for large separations of XA and XB, and we set\n\n**Equation 38.**\n\n$$\n\\zeta_{AB} = M_{A}e^{- |\\mathbf{X}_{A} - \\mathbf{X}_{B}|^{2}/\\beta_{AB}^{2}}.\n$$\n\nEquation (38) enforces locality through a parameter βAB. The importance of the mass prefactor MA can be understood as follows: if we ignore the exponential in Eq. (38) and set ζAB = MA, then $\\mathbf{X}_{B}^{0}$ becomes the nuclear center of mass, and KB is the total nuclear moment of inertia matrix relative to the center of mass; see the discussion below.\n\nInserting Eq. (37) into Eq. (31), one can rewrite the necessary constraint as\n\n**Equation 39.**\n\n$$\n\\sum\\limits_{AB}\\zeta_{AB}\\left({\\mathbf{X}_{A} - \\mathbf{X}_{B}^{0}} \\right) \\times \\left({\\mathbf{K}_{B}^{- 1}{\\widehat{\\mathbf{J}}}_{B}} \\right) = 0.\n$$\n\nThe simplest way to satisfy Eq. (39) [and therefore Eq. (31)] is to set\n\n**Equation 40.**\n\n$$\n\\sum\\limits_{A}\\zeta_{AB}\\left({\\mathbf{X}_{A} - \\mathbf{X}_{B}^{0}} \\right) = 0,\n$$\n\nwhich suggests that we define a local average position,\n\n**Equation 41.**\n\n$$\n\\mathbf{X}_{B}^{0} = \\frac{\\sum\\limits_{A}\\zeta_{AB}\\mathbf{X}_{A}}{\\sum\\limits_{A}\\zeta_{AB}}.\n$$\n\nNext, inserting Eq. (37) into Eq. (36), one finds that the constraint has the form\n\n**Equation 42.**\n\n$$\n- \\sum\\limits_{A}\\mathbf{X}_{A} \\times \\left({\\sum\\limits_{B}\\zeta_{AB}\\left({\\mathbf{X}_{A} - \\mathbf{X}_{B}^{0}} \\right) \\times \\left({\\mathbf{K}_{B}^{- 1}{\\widehat{\\mathbf{J}}}_{B}} \\right)} \\right) = \\sum\\limits_{B}{\\widehat{\\mathbf{J}}}_{B}.\n$$\n\nThe most natural way to satisfy the above equation is to set\n\n**Equation 43.**\n\n$$\n- \\sum\\limits_{A}\\mathbf{X}_{A} \\times \\left({\\zeta_{AB}\\left({\\mathbf{X}_{A} - \\mathbf{X}_{B}^{0}} \\right) \\times \\left({\\mathbf{K}_{B}^{- 1}{\\widehat{\\mathbf{J}}}_{B}} \\right)} \\right) = {\\widehat{\\mathbf{J}}}_{B}.\n$$\n\nThis ansatz suggests that we define the matrix KB such that for any arbitrary vector v and in particular, $\\mathbf{v} \\equiv \\mathbf{K}_{B}^{- 1}{\\widehat{\\mathbf{J}}}_{B}$⁠, one has\n\n**Equation 44.**\n\n$$\n\\mathbf{K}_{B}\\mathbf{v} = - \\sum\\limits_{A}\\mathbf{X}_{A} \\times \\left({\\zeta_{AB}\\left({\\mathbf{X}_{A} - \\mathbf{X}_{B}^{0}} \\right) \\times \\mathbf{v}} \\right)\n$$\n\n**Equation 45.**\n\n$$\n\\left. \\Rightarrow\\mathbf{K}_{B} = - \\sum\\limits_{A}\\zeta_{AB}\\left({{({\\mathbf{X}_{A} - \\mathbf{X}_{B}^{0}})}\\mathbf{X}_{A}^{\\top} - \\mathbf{X}_{A}^{\\top}{({\\mathbf{X}_{A} - \\mathbf{X}_{B}^{0}})}\\mathcal{I}_{3}} \\right) \\right.\n$$\n\n**Equation 46.**\n\n$$\n= \\sum\\limits_{A}\\zeta_{AB}\\left({{({\\mathbf{X}_{A}^{\\top}\\mathbf{X}_{A} - \\mathbf{X}_{B}^{0\\top}\\mathbf{X}_{B}^{0}})}\\mathcal{I}_{3} - {({\\mathbf{X}_{A}\\mathbf{X}_{A}^{\\top} - \\mathbf{X}_{B}^{0}\\mathbf{X}_{B}^{0\\top}})}} \\right),\n$$\n\nwhere $\\mathcal{I}_{3}$ is a 3 by 3 identity matrix. Note that we have invoked Eq. (40) in deriving Eq. (46)."
+    },
+    {
+      "heading": "C. A demonstration that the Γ′ and Γ″ operators transform correctly under translations and rotations",
+      "level": 3,
+      "kind": "body",
+      "text": "Let us now demonstrate that the ${\\widehat{\\mathbf{\\Gamma}}}_{A}$ operators defined in Eqs. (33) and (37) satisfy Eqs. (13) and (15)."
+    },
+    {
+      "heading": "1. Proof of Eq. (13)",
+      "level": 4,
+      "kind": "body",
+      "text": "Equation (13) can be proven in many ways. For purposes below, the most natural approach is to notice that because the $\\widehat{\\mathbf{\\Gamma}}$ operators in Eqs. (33) and (37) are defined in terms of the electronic positions relative to the nuclei,\n\n**Equation 47.**\n\n$$\n\\widehat{\\mathbf{\\Gamma}}{({\\mathbf{x} + d\\mathbf{s},\\mathbf{X} + d\\mathbf{s}})} = \\widehat{\\mathbf{\\Gamma}}{({\\mathbf{x},\\mathbf{X}})},\n$$\n\nit follows that the matrix representing Γ must be the same in any electronic basis of states that moves with the nuclear coordinates (e.g., the adiabatic basis13,54). Thus, if ds denotes an infinitesimal translation of all atoms, the following identity holds\n\n**Equation 48.**\n\n$$\n\\begin{aligned} & {\\langle{\\Phi_{I}{({\\mathbf{X} + d\\mathbf{s}})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{({\\mathbf{X} + d\\mathbf{s}})}|\\Phi_{J}{({\\mathbf{X} + d\\mathbf{s}})}}\\rangle} \\\\ & {\\hspace{2em} = {\\langle{\\Phi_{I}{(\\mathbf{X})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}|\\Phi_{J}{(\\mathbf{X})}}\\rangle}} \\end{aligned}\n$$\n\nin any basis that satisfies\n\n**Equation 49.**\n\n$$\n\\begin{aligned} & {\\left({- i\\hslash\\sum\\limits_{B}\\nabla_{\\mathbf{X}_{\\mathbf{B}}} + \\widehat{\\mathbf{p}}} \\right)|\\Phi_{I}{(\\mathbf{X})}\\rangle} \\\\ & {\\hspace{2em} = - i\\hslash\\left({\\sum\\limits_{B}\\nabla_{\\mathbf{X}_{\\mathbf{B}}} + \\frac{\\partial}{\\partial\\mathbf{x}}} \\right)|\\Phi_{I}{(\\mathbf{X})}\\rangle = 0.} \\end{aligned}\n$$\n\nEquation (49) is the standard phase relationship chosen for adiabats in Born–Oppenheimer theory.13,54\n\nNow, Eq. (48) is trivial to zeroth order in ds, so let us evaluate the left hand side (LHS) of Eq. (48) to first order in ds (which must vanish),\n\n**Equation 50.**\n\n$$\n\\begin{aligned} {LHS} & {= \\left\\langle {\\Phi_{I}{(\\mathbf{X})}|\\sum\\limits_{B}\\left({d\\mathbf{s} \\cdot \\nabla_{\\mathbf{X}_{\\mathbf{B}}}{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}} \\right)|\\Phi_{J}{(\\mathbf{X})}} \\right\\rangle} \\\\ & {\\hspace{1em} + \\left\\langle {\\sum\\limits_{B}d\\mathbf{s} \\cdot \\nabla_{\\mathbf{X}_{\\mathbf{B}}}\\Phi_{I}{(\\mathbf{X})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}|\\Phi_{J}{(\\mathbf{X})}} \\right\\rangle} \\\\ & {\\hspace{1em} + \\left\\langle {\\Phi_{I}{(\\mathbf{X})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}|\\sum\\limits_{B}d\\mathbf{s} \\cdot \\nabla_{\\mathbf{X}_{\\mathbf{B}}}\\Phi_{J}{(\\mathbf{X})}} \\right\\rangle} \\end{aligned}\n$$\n\n**Equation 51.**\n\n$$\n\\begin{aligned} & {= \\left\\langle {\\Phi_{I}{(\\mathbf{X})}|\\left\\lbrack {\\sum\\limits_{B}d\\mathbf{s} \\cdot \\nabla_{\\mathbf{X}_{\\mathbf{B}}},{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}} \\right\\rbrack|\\Phi_{J}{(\\mathbf{X})}} \\right\\rangle} \\\\ & {\\hspace{1em} + \\frac{i}{\\hslash}\\left(\\left\\langle {d\\mathbf{s} \\cdot \\widehat{\\mathbf{p}}\\Phi_{I}{(\\mathbf{X})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}|\\Phi_{J}{(\\mathbf{X})}} \\right\\rangle \\right.} \\\\ & {\\hspace{1em} - \\left. \\left\\langle {\\Phi_{I}{(\\mathbf{X})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}|d\\mathbf{s} \\cdot \\widehat{\\mathbf{p}}\\Phi_{J}{(\\mathbf{X})}} \\right\\rangle \\right)} \\end{aligned}\n$$\n\n**Equation 52.**\n\n$$\n= \\frac{i}{\\hslash}\\left\\langle {\\Phi_{I}{(\\mathbf{X})}|\\left\\lbrack {d\\mathbf{s} \\cdot \\left({- i\\hslash\\sum\\limits_{B}\\nabla_{\\mathbf{X}_{\\mathbf{B}}} + \\widehat{\\mathbf{p}}} \\right),{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}} \\right\\rbrack|\\Phi_{J}{(\\mathbf{X})}} \\right\\rangle\n$$\n\n**Equation 53.**\n\n$$\n= 0.\n$$\n\nGiven that ds is arbitrary, this final equality implies Eq. (13)."
+    },
+    {
+      "heading": "2. Proof of Eq. (15)",
+      "level": 4,
+      "kind": "body",
+      "text": "Equation (15) can be proved in an analogous fashion. Let $\\mathcal{R}{({d\\mathbf{\\theta}})}$ be an infinitesimal rotation of dθ, and let us begin by showing that the $\\widehat{\\mathbf{\\Gamma}}$ operators in Eqs. (33) and (37) satisfy\n\n**Equation 54.**\n\n$$\n\\mathbf{\\Gamma}_{A}{({\\mathcal{R}\\widehat{\\mathbf{x}},\\mathcal{R}\\widehat{\\mathbf{p}},\\mathcal{R}\\widehat{\\mathbf{s}},\\mathcal{R}\\mathbf{X}})} = \\mathcal{R}\\mathbf{\\Gamma}_{A}{({\\widehat{\\mathbf{x}},\\widehat{\\mathbf{p}},\\widehat{\\mathbf{s}},\\mathbf{X}})}.\n$$\n\nTo prove Eq. (54), the first two things to note are that the dot product between two vectors is invariant under $\\mathcal{R}$ and that the cross product between two vectors rotates with the vectors, i.e.,\n\n**Equation 55.**\n\n$$\n\\mathcal{R}\\mathbf{v}_{i} \\cdot \\mathcal{R}\\mathbf{v}_{j} = \\mathbf{v}_{i} \\cdot \\mathbf{v}_{j},\n$$\n\n**Equation 56.**\n\n$$\n\\mathcal{R}\\mathbf{v}_{i} \\times \\mathcal{R}\\mathbf{v}_{j} = \\mathcal{R}{({\\mathbf{v}_{i} \\times \\mathbf{v}_{j}})},\n$$\n\nwhere vi, vj are any vectors. It follows that\n\n**Equation 57.**\n\n$$\n\\mathbf{\\Gamma}_{A}'{({\\mathcal{R}\\widehat{\\mathbf{x}},\\mathcal{R}\\widehat{\\mathbf{p}},\\mathcal{R}\\mathbf{X}})} = \\mathcal{R}\\mathbf{\\Gamma}_{A}'{({\\widehat{\\mathbf{x}},\\widehat{\\mathbf{p}},\\mathbf{X}})},\n$$\n\n**Equation 58.**\n\n$$\n\\mathbf{J}_{B}{({\\mathcal{R}\\widehat{\\mathbf{x}},\\mathcal{R}\\widehat{\\mathbf{p}},\\mathcal{R}\\widehat{\\mathbf{s}},\\mathcal{R}\\mathbf{X}})} = \\mathcal{R}\\mathbf{J}_{B}{({\\widehat{\\mathbf{x}},\\widehat{\\mathbf{p}},\\widehat{\\mathbf{s}},\\mathbf{X}})}.\n$$\n\nNext, let ${\\widehat{\\mathbf{V}}}_{B} = \\mathbf{K}_{B}^{- 1}{(\\mathbf{X})}{\\widehat{\\mathbf{J}}}_{B}$⁠. A simple derivation shows that [or alternatively see Eq. (43)]\n\n**Equation 59.**\n\n$$\n{\\widehat{\\mathbf{J}}}_{B} = \\mathbf{K}_{B}{(\\mathbf{X})}{\\widehat{\\mathbf{V}}}_{B} = \\sum\\limits_{A}\\mathbf{X}_{A} \\times \\left({\\zeta_{AB}\\left({\\mathbf{X}_{A} - \\mathbf{X}_{B}^{0}} \\right) \\times {\\widehat{\\mathbf{V}}}_{B}} \\right),\n$$\n\n**Equation 60.**\n\n$$\n\\left. \\Rightarrow\\mathcal{R}{\\widehat{\\mathbf{J}}}_{B} = \\mathcal{R}\\left({\\sum\\limits_{A}\\mathbf{X}_{A} \\times \\left({\\zeta_{AB}\\left({\\mathbf{X}_{A} - \\mathbf{X}_{B}^{0}} \\right) \\times {\\widehat{\\mathbf{V}}}_{B}} \\right)} \\right) \\right.\n$$\n\n**Equation 61.**\n\n$$\n= \\sum\\limits_{A}\\mathcal{R}\\mathbf{X}_{A} \\times \\left({\\zeta_{AB}\\left({\\mathcal{R}\\mathbf{X}_{A} - \\mathcal{R}\\mathbf{X}_{B}^{0}} \\right) \\times \\mathcal{R}{\\widehat{\\mathbf{V}}}_{B}} \\right)\n$$\n\n**Equation 62.**\n\n$$\n= \\mathbf{K}_{B}{({\\mathcal{R}\\mathbf{X}})}\\mathcal{R}{\\widehat{\\mathbf{V}}}_{B}\n$$\n\n**Equation 63.**\n\n$$\n\\left. \\Rightarrow\\mathcal{R}{\\widehat{\\mathbf{V}}}_{B} = \\mathbf{K}_{B}^{- 1}{({\\mathcal{R}\\mathbf{X}})}\\mathcal{R}{\\widehat{\\mathbf{J}}}_{B}, \\right.\n$$\n\nfrom which one finds\n\n**Equation 64.**\n\n$$\n\\mathbf{\\Gamma}_{A}^{''}{({\\mathcal{R}\\widehat{\\mathbf{x}},\\mathcal{R}\\widehat{\\mathbf{p}},\\mathcal{R}\\widehat{\\mathbf{s}},\\mathcal{R}\\mathbf{X}})} = \\mathcal{R}\\mathbf{\\Gamma}_{A}^{''}{({\\widehat{\\mathbf{x}},\\widehat{\\mathbf{p}},\\widehat{\\mathbf{s}},\\mathbf{X}})}.\n$$\n\nClearly, Eqs. (57) and (64) imply (54).\n\nEquation (54) dictates that the matrix elements of the $\\widehat{\\mathbf{\\Gamma}}$ operators in Eqs. (33) and (37) are invariant to rotations in a basis that rotates with the system. Mathematically, Eq. (54) implies that\n\n**Equation 65.**\n\n$$\n\\begin{aligned} & {\\langle{\\Phi_{I}{({\\mathcal{R}{({d\\mathbf{\\theta}})}\\mathbf{X}})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{({\\mathcal{R}{({d\\mathbf{\\theta}})}\\mathbf{X}})}|\\Phi_{J}{({\\mathcal{R}{({d\\mathbf{\\theta}})}\\mathbf{X}})}}\\rangle} \\\\ & {\\hspace{2em} = {\\langle{\\Phi_{I}{(\\mathbf{X})}|\\mathcal{R}{({d\\mathbf{\\theta}})}{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}|\\Phi_{J}{(\\mathbf{X})}}\\rangle}} \\end{aligned}\n$$\n\nin a basis that rotates with the molecule and has the standard phase convention,\n\n**Equation 66.**\n\n$$\n\\left({- i\\hslash\\sum\\limits_{B}\\mathbf{X}_{B} \\times \\nabla_{\\mathbf{X}_{\\mathbf{B}}} + \\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}}} \\right)|\\Phi_{I}{(\\mathbf{X})}\\rangle = 0.\n$$\n\nAgain, this phase convention is the standard choice of phase for the adiabatic states within the Born–Oppenheimer approximation.13,54\n\nAt this point, let us expand Eq. (65) in powers of θ. Note that\n\n**Equation 67.**\n\n$$\n\\mathcal{R}_{\\alpha\\beta}{({d\\mathbf{\\theta}})} = \\delta_{\\alpha\\beta} + \\sum\\limits_{\\gamma}\\epsilon_{\\alpha\\beta\\gamma}d\\theta_{\\gamma} + \\mathcal{O}{({d\\mathbf{\\theta}^{2}})},\n$$\n\nso that the Taylor series of the ket is\n\n**Equation 68.**\n\n$$\n\\begin{aligned} & {|\\Phi_{J}{({\\mathcal{R}{({d\\mathbf{\\theta}})}\\mathbf{X}})}\\rangle - |\\Phi_{J}{(\\mathbf{X})}\\rangle} \\\\ & {\\hspace{2em} = - \\left({\\sum\\limits_{B}\\mathbf{X}_{B} \\times \\nabla_{\\mathbf{X}_{\\mathbf{B}}}} \\right) \\cdot d\\mathbf{\\theta}|\\Phi_{J}{(\\mathbf{X})}\\rangle + \\mathcal{O}{({d\\mathbf{\\theta}^{2}})}} \\end{aligned}\n$$\n\n**Equation 69.**\n\n$$\n\\hspace{2em} = - \\frac{1}{i\\hslash}\\left({\\left({\\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}}} \\right) \\cdot d\\mathbf{\\theta}|\\Phi_{I}{(\\mathbf{X})}\\rangle} \\right) + \\mathcal{O}{({d\\mathbf{\\theta}^{2}})}.\n$$\n\nSubtracting $\\langle{\\Phi_{I}{(\\mathbf{X})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}|\\Phi_{J}{(\\mathbf{X})}}\\rangle$ from both sides of Eq. (65), the L.H.S. gives (to the first order in dθ)\n\n**Equation 70.**\n\n$$\n{\\langle{\\Phi_{I}{({\\mathcal{R}{({d\\mathbf{\\theta}})}\\mathbf{X}})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{({\\mathcal{R}{({d\\mathbf{\\theta}})}\\mathbf{X}})}|\\Phi_{J}{({\\mathcal{R}{({d\\mathbf{\\theta}})}\\mathbf{X}})}}\\rangle} - {\\langle{\\Phi_{I}{(\\mathbf{X})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}|\\Phi_{J}{(\\mathbf{X})}}\\rangle}\n$$\n\n**Equation 71.**\n\n$$\n\\begin{aligned} & {\\hspace{2em} = - \\left\\langle {\\Phi_{I}{(\\mathbf{X})}|\\left\\lbrack {\\left({\\sum\\limits_{B}\\mathbf{X}_{B} \\times \\nabla_{\\mathbf{X}_{\\mathbf{B}}}} \\right) \\cdot d\\mathbf{\\theta},{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}} \\right\\rbrack|\\Phi_{J}{(\\mathbf{X})}} \\right\\rangle} \\\\ & {\\hspace{1em}\\hspace{2em} - \\frac{i}{\\hslash}\\left({\\langle{{({\\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}}})} \\cdot d\\mathbf{\\theta}\\Phi_{I}{(\\mathbf{X})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}|\\Phi_{J}{(\\mathbf{X})}}\\rangle} \\right.} \\\\ & {\\hspace{1em}\\hspace{2em}\\left. {- {\\langle{\\Phi_{I}{(\\mathbf{X})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}|{({\\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}}})} \\cdot d\\mathbf{\\theta}\\Phi_{J}{(\\mathbf{X})}}\\rangle}} \\right)} \\end{aligned}\n$$\n\n**Equation 72.**\n\n$$\n\\hspace{2em} = - \\frac{i}{\\hslash}\\left\\langle {\\Phi_{I}{(\\mathbf{X})}|\\left\\lbrack {\\left({- i\\hslash\\sum\\limits_{B}\\mathbf{X}_{B} \\times \\nabla_{\\mathbf{X}_{\\mathbf{B}}} + \\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}}} \\right) \\cdot d\\mathbf{\\theta},{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}} \\right\\rbrack|\\Phi_{J}{(\\mathbf{X})}} \\right\\rangle.\n$$\n\nRearranging the R.H.S of Eq. (65), one can express the result in explicit Cartesian indices,\n\n**Equation 73.**\n\n$$\n\\left({{\\langle{\\Phi_{I}{(\\mathbf{X})}|\\mathcal{R}{({d\\mathbf{\\theta}})}{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}|\\Phi_{J}{(\\mathbf{X})}}\\rangle} - {\\langle{\\Phi_{I}{(\\mathbf{X})}|{\\widehat{\\mathbf{\\Gamma}}}_{A}{(\\mathbf{X})}|\\Phi_{J}{(\\mathbf{X})}}\\rangle}} \\right)_{\\delta}\n$$\n\n**Equation 74.**\n\n$$\n\\hspace{2em} = {\\langle{\\Phi_{I}{(\\mathbf{X})}|\\sum\\limits_{\\beta\\gamma}\\epsilon_{\\delta\\beta\\gamma}d\\theta_{\\gamma}\\mathbf{\\Gamma}_{A\\beta}{(\\mathbf{X})}|\\Phi_{J}{(\\mathbf{X})}}\\rangle}.\n$$\n\nTherefore, Eq. (65) is equivalent to\n\n**Equation 75.**\n\n$$\n\\left\\lbrack {\\sum\\limits_{\\gamma}\\left({- i\\hslash\\sum\\limits_{B}\\mathbf{X}_{B} \\times \\nabla_{\\mathbf{X}_{\\mathbf{B}}} + \\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}}} \\right)_{\\gamma}d\\theta_{\\gamma},{\\widehat{\\Gamma}}_{A\\delta}{(\\mathbf{X})}} \\right\\rbrack = i\\hslash\\sum\\limits_{\\alpha\\gamma}\\epsilon_{\\delta\\alpha\\gamma}{\\widehat{\\Gamma}}_{A\\alpha}{(\\mathbf{X})}d\\theta_{\\gamma},\n$$\n\n**Equation 76.**\n\n$$\n\\left. \\hspace{2em}\\Rightarrow\\left\\lbrack {\\left({- i\\hslash\\sum\\limits_{B}\\mathbf{X}_{B} \\times \\nabla_{\\mathbf{X}_{\\mathbf{B}}} + \\widehat{\\mathbf{l}} + \\widehat{\\mathbf{s}}} \\right)_{\\gamma},{\\widehat{\\Gamma}}_{A\\delta}{(\\mathbf{X})}} \\right\\rbrack = i\\hslash\\sum\\limits_{\\alpha}\\epsilon_{\\alpha\\gamma\\delta}{\\widehat{\\Gamma}}_{A\\alpha}{(\\mathbf{X})}. \\right.\n$$\n\nThus, Eqs. (33) and (37) satisfy Eq. (15)."
+    },
+    {
+      "heading": "D. Parameterization",
+      "level": 3,
+      "kind": "body",
+      "text": "At this point, working with the ansatz in Eqs. (28), (29), and (38), there are only two parameters of interest: *σ* and *β*<sub>*AB*</sub>. These two locality parameters determine the length scale over which the electrons are coupled to the nuclear translation and rotation. Given the huge parameter space possible, we test below the effect of different *σ* parameters by calculating the electronic momentum $\\langle\\Psi_{\\text{PS}}|\\widehat{\\mathbf{p}}|\\Psi_{\\text{PS}}\\rangle$ for different nuclear vibrations. In principle, one would like to find that the electronic momentum matches $md/dt\\langle\\Phi|\\widehat{\\mathbf{x}}|\\Phi\\rangle$⁠, an equality that otherwise would require a non-BO treatment and a sum-over-states expansion [as shown through Eqs. (97)–(101)].<sup>11</sup> As for the choice of the other parameter, *β*<sub>*AB*</sub>, for now, we choose $\\beta_{AB} = 2\\sqrt{2}\\sigma$ in order to explore the effect of locality together with *σ*. Exploring *β*<sub>*AB*</sub> for larger systems will be essential in the future."
+    },
+    {
+      "heading": "IV. RESULTS",
+      "level": 2,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "A. Electronic momentum",
+      "level": 3,
+      "kind": "body",
+      "text": "The power of a phase-space approach [and the $\\widehat{\\mathbf{\\Gamma}}$ operator defined in Eqs. (33) and (37)] is highlighted in Fig. 1, where we show that a sizable amount of the electronic momentum that is missing in the BO approximation can be recovered with the phase-space approach. Here, we calculate the electronic momentum $\\langle\\Psi_{\\text{PS}}|\\widehat{\\mathbf{p}}|\\Psi_{\\text{PS}}\\rangle$ with the phase-space Hamiltonian in Eq. (9), with nuclear momentum *P* corresponding to the three vibrational modes of water and the six vibrational modes of formaldehyde. We also calculate $md/dt\\langle\\Phi|\\widehat{\\mathbf{x}}|\\Phi\\rangle$ by finite difference and plot the ratio of the electronic momentum over the finite-difference calculations. For these calculations, we probe the effect of making each atomic radius smaller (1/*σ*<sup>2</sup> → 18 bohr<sup>−2</sup>) or larger (1/*σ*<sup>2</sup> → 0 bohr<sup>−2</sup>). As noted above, if one uses a complete set of states and diagonalizes Shenvi’s phase space Hamiltonian in Eq. (8), one recovers the exact relationship ${\\langle\\widehat{\\mathbf{p}}\\rangle} = md{\\langle\\widehat{\\mathbf{x}}\\rangle}/dt$⁠, which also corresponds to the horizontal dotted line (*y* = 1) in Fig. 1. The electronic momentum calculated with the phase space approach in Fig. 1 includes both the ETF $({\\widehat{\\mathbf{\\Gamma}}}')$ and ERF $({\\widehat{\\mathbf{\\Gamma}}}^{''})$ contributions. In practice, we find that the effect of the ERFs $({\\widehat{\\mathbf{\\Gamma}}}^{''})$ is more important for bending modes than for the stretching modes.\n\n![Figure 1](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1063_5.0260731_assets/m_144111_1_5.0260731.figures.online.f1.jpg)\n\n**Figure 1.** A plot of the ratio of the dominant Cartesian component of the electronic momentum $\\langle\\widehat{\\mathbf{p}}\\rangle$ with respect to the finite difference benchmark. The results with nuclear charges and masses as the weights in Eqs. (28) and (29) are shown in (a) and (b), respectively. The upper panels show plots for a full range of *σ* values, while the bottom two panels zoom in on the large *σ* range, i.e., the orange shaded zone in the upper panels. The results for water (H<sub>2</sub>O) and formaldehyde (CH<sub>2</sub>O) are shown in blue and red, respectively. In principle, if one were to use **Γ** = *d* as in Eq. (8) together with a complete electronic basis, one would find the standard Ehrenfest result $({{\\langle\\widehat{\\mathbf{p}}\\rangle} = md{\\langle\\widehat{\\mathbf{x}}\\rangle}/dt})$⁠, which corresponds to the black dotted horizontal line at *y* = 1. This graph highlights that a simple phase space approach can recover a strong estimate of the electronic momentum (with the correct sign) using only an approximate **Γ**.\n\nTo generate the data in Fig. 1 in the main body of the paper, the geometries of the water and the formaldehyde molecules are optimized at a standard restricted Hartree–Fock (RHF) level with a cc-pVTZ basis set. The vibrational modes in Fig. 1 are computed from the corresponding Hessian calculations. The benchmarks $md{\\langle\\widehat{\\mathbf{x}}\\rangle}/dt$ are computed from finite-difference standard RHF calculations, and the linear momentum $\\langle\\widehat{\\mathbf{p}}\\rangle$ is computed from phase space RHF calculations, implemented in a developmental version of the Q-Chem electronic structure package.<sup>55</sup> The **Γ**-couplings are evaluated on Lebedev grids. To ensure numerical accuracy, an unpruned (250, 974) grid is used to generate data in Fig. 1, so that constraints in Eqs. (12) and (14) are satisfied to at least less than 10<sup>−4</sup> a.u. for the matrix elements in the atomic orbital basis. In all cases, we assume that the nuclei are moving with momentum in directions corresponding to different vibrational modes and with magnitudes corresponding to the average momentum at temperature 100 K. The finite-difference benchmark calculations use a time step of 0.0242 fs."
+    },
+    {
+      "heading": "1. Limit σ → ∞",
+      "level": 4,
+      "kind": "body",
+      "text": "In Figs. 1(a) and 1(b), we show results using the nuclear charges [Eq. (28)] and nuclear masses [Eq. (29)] as weights, respectively. Note that, as 1/σ2 → 0, the electronic momentum vanishes when we use nuclear masses as the weights [as in Eq. (29)]. This feature follows by construction from Eqs. (28) and (38) because, in this limit, $\\left. 1/\\beta_{AB}^{2}\\rightarrow 0 \\right.$⁠, and all the ΘA terms become MA/Mtot, where Mtot = ∑AMA. In such a case\n\n**Equation 77.**\n\n$$\n\\begin{aligned} {i\\hslash{\\widehat{\\mathbf{\\Gamma}}}_{A}} & {= \\frac{M_{A}}{M_{\\text{tot}}}\\widehat{\\mathbf{p}} - M_{A}{({\\mathbf{X}_{A} - \\mathbf{X}_{\\text{NCM}}})} \\times \\left({\\mathbf{I}_{\\text{NCM}}^{- 1}{({{\\widehat{\\mathbf{l}}}_{\\text{NCM}} + \\widehat{\\mathbf{s}}})}} \\right).} \\end{aligned}\n$$\n\nIt then follows that (with ${\\widehat{\\mathbf{\\Gamma}}}_{A}$ and ${\\widehat{\\mathbf{\\Gamma}}}_{A}^{2}$ as second quantized operators)\n\n**Equation 78.**\n\n$$\n\\begin{aligned} & {\\sum\\limits_{A}\\frac{\\left({\\mathbf{P}_{A} - i\\hslash{\\widehat{\\mathbf{\\Gamma}}}_{A}} \\right)^{2}}{2M_{A}}} \\\\ & {\\hspace{2em} = \\sum\\limits_{A}\\frac{\\mathbf{P}_{A}^{2}}{2M_{A}} - \\frac{\\sum\\limits_{A}\\mathbf{P}_{A}}{M_{\\text{tot}}} \\cdot \\widehat{\\mathbf{p}} + \\frac{{\\widehat{\\mathbf{p}}}^{2}}{2M_{\\text{tot}}}} \\\\ & {\\hspace{2em}\\hspace{1em} - \\left({\\sum\\limits_{A}{({\\mathbf{X}_{A} - \\mathbf{X}_{\\text{NCM}}})} \\times \\mathbf{P}_{A}} \\right) \\cdot \\mathbf{I}_{\\text{NCM}}^{- 1} \\cdot \\left({{\\widehat{\\mathbf{l}}}_{\\text{NCM}} + \\widehat{\\mathbf{s}}} \\right)} \\\\ & {\\hspace{2em}\\hspace{1em} + \\frac{1}{2}\\left({{\\widehat{\\mathbf{l}}}_{\\text{NCM}} + \\widehat{\\mathbf{s}}} \\right) \\cdot \\mathbf{I}_{\\text{NCM}}^{- 1} \\cdot \\left({{\\widehat{\\mathbf{l}}}_{\\text{NCM}} + \\widehat{\\mathbf{s}}} \\right)} \\end{aligned}\n$$\n\n**Equation 79.**\n\n$$\n\\begin{aligned} & {\\hspace{2em} = \\sum\\limits_{A}\\frac{\\left({\\mathbf{P}_{A} - \\frac{M_{A}}{M_{\\text{tot}}}\\left({\\sum\\limits_{B}\\mathbf{P}_{B}} \\right)} \\right)^{2}}{2M_{A}} + \\frac{\\left({\\sum\\limits_{A}\\mathbf{P}_{A} - \\widehat{\\mathbf{p}}} \\right)^{2}}{2M_{\\text{tot}}}} \\\\ & {\\hspace{2em}\\hspace{1em} - \\left({\\sum\\limits_{A}{({\\mathbf{X}_{A} - \\mathbf{X}_{\\text{NCM}}})} \\times \\mathbf{P}_{A}} \\right) \\cdot \\mathbf{I}_{\\text{NCM}}^{- 1} \\cdot \\left({{\\widehat{\\mathbf{l}}}_{\\text{NCM}} + \\widehat{\\mathbf{s}}} \\right)} \\\\ & {\\hspace{2em}\\hspace{1em} + \\frac{1}{2}\\left({{\\widehat{\\mathbf{l}}}_{\\text{NCM}} + \\widehat{\\mathbf{s}}} \\right) \\cdot \\mathbf{I}_{\\text{NCM}}^{- 1} \\cdot \\left({{\\widehat{\\mathbf{l}}}_{\\text{NCM}} + \\widehat{\\mathbf{s}}} \\right).} \\end{aligned}\n$$\n\nHere, *X*<sub>NCM</sub> is the nuclear center of mass, *I*<sub>NCM</sub> is the total nuclear moment of inertia matrix relative to the nuclear center of mass, and ${\\widehat{\\mathbf{l}}}_{\\text{NCM}}$ is the electronic angular momentum relative to the nuclear center of mass. Thus, in this limit, four terms appear: (i) the kinetic energy of the atoms relative to the center of nuclear mass, (ii) the total kinetic energy of the nuclear center of mass (recognizing that ∑<sub>*A*</sub>*P*<sub>*A*</sub> now represents the total nuclear plus electronic momentum, from which one must subtract the electronic momentum),<sup>13</sup> (iii) a Coriolis potential from aligning the electronic frame of the electrons to the nuclei,<sup>56</sup> and (iv) a centrifugal potential that captures the inertia of electrons in a rotating frame.<sup>57</sup>\n\nNext, let us address the electronic momentum of normal modes in this same limit. Let |ΨPS(X, P)⟩ be the electronic wavefunction associated with an internal normal mode, such that ∑APA = ∑AXA × PA = 0. In this limit, the Hamiltonian becomes\n\n**Equation 80.**\n\n$$\n\\begin{aligned} {\\widehat{H}}_{PS} & {= \\sum\\limits_{A}\\frac{\\mathbf{P}_{A}^{2}}{2M_{A}} + \\frac{{\\widehat{\\mathbf{p}}}^{2}}{2M_{\\mathit{tot}}} + \\frac{1}{2}\\left({{\\widehat{\\mathbf{l}}}_{\\text{NCM}} + \\widehat{\\mathbf{s}}} \\right) \\cdot \\mathbf{I}_{\\text{NCM}}^{- 1} \\cdot \\left({{\\widehat{\\mathbf{l}}}_{\\text{NCM}} + \\widehat{\\mathbf{s}}} \\right) + {\\widehat{H}}_{el}.} \\end{aligned}\n$$\n\nNote that, as an electronic operator, ${\\widehat{H}}_{PS}$ commutes with the time-reversal operator. Therefore, provided that the ground state is electronically nondegenerate, it follows that\n\n**Equation 81.**\n\n$$\n\\left\\langle {\\Psi_{\\text{PS}}|\\widehat{\\mathbf{p}}|\\Psi_{\\text{PS}}} \\right\\rangle = \\left\\langle {\\Psi_{\\text{PS}}|\\widehat{\\mathbf{l}}|\\Psi_{\\text{PS}}} \\right\\rangle = 0.\n$$\n\nNote that despite the physical appeal of Eq. (79), the vanishing of the electronic momentum in this limit *σ*, *β*<sub>*AB*</sub> → *∞* makes clear that this limit is unphysical. As the simplest problematic example, consider the vibration of a hydrogen–deuterium molecule. If the center of mass is unchanged, then because of the mass difference between hydrogen and deuterium, each atom must move at a different speed. That being said, each atom has the same charge and is equally attracted to electrons, which means one electron must be moving faster than the other electron, and there must be a total nonzero electron momentum that can be captured only by viewing the internal motion of the system from each atom’s individual body frame; in other words, *σ* must be finite. Note also that if we use charge instead of mass as a weight [Eq. (28) instead of Eq. (29)], we do recover a non-zero electronic momentum even at the limit of *σ* → *∞*, as shown in Fig. 1(a); that being said, the robust and correct solution for large simulations is to set *σ* to be finite.\n\nBefore concluding, let us write down the form of the phase space electronic Hamiltonian in first quantization. If we index the electrons by j, the phase space electronic Hamiltonian in this limit becomes\n\n**Equation 82.**\n\n$$\n\\begin{aligned} & {\\sum\\limits_{A}\\frac{\\left({\\mathbf{P}_{A} - i\\hslash{\\widehat{\\mathbf{\\Gamma}}}_{A}} \\right)^{2}}{2M_{A}}} \\\\ & {\\hspace{2em} = \\sum\\limits_{A}\\frac{\\mathbf{P}_{A}^{2}}{2M_{A}} - \\frac{\\sum\\limits_{A}\\mathbf{P}_{A}}{M_{\\text{tot}}} \\cdot \\sum\\limits_{j}{\\widehat{\\mathbf{p}}}_{j} + \\sum\\limits_{j}\\frac{{\\widehat{\\mathbf{p}}}_{j}^{2}}{2M_{\\text{tot}}}} \\\\ & {\\hspace{1em}\\hspace{2em} - \\sum\\limits_{j}\\left({\\sum\\limits_{A}{({\\mathbf{X}_{A} - \\mathbf{X}_{\\text{NCM}}})} \\times \\mathbf{P}_{A}} \\right) \\cdot \\mathbf{I}_{\\text{NCM}}^{- 1} \\cdot \\left({{\\widehat{\\mathbf{l}}}_{\\text{NCM}}{(\\mathbf{x}_{j})} + {\\widehat{\\mathbf{s}}}_{j}} \\right)} \\\\ & {\\hspace{2em}\\hspace{1em} + \\sum\\limits_{j}\\frac{1}{2}\\left({{\\widehat{\\mathbf{l}}}_{\\text{NCM}}{(\\mathbf{x}_{j})} + {\\widehat{\\mathbf{s}}}_{j}} \\right) \\cdot \\mathbf{I}_{\\text{NCM}}^{- 1} \\cdot \\left({{\\widehat{\\mathbf{l}}}_{\\text{NCM}}{(\\mathbf{x}_{j})} + {\\widehat{\\mathbf{s}}}_{j}} \\right).} \\end{aligned}\n$$\n\nThis form makes clear that the product ${\\widehat{\\mathbf{\\Gamma}}}_{A}^{2}$ operators in Eq. (9) are indeed one-electron operators (just like ${\\widehat{\\mathbf{\\Gamma}}}_{A}$⁠)."
+    },
+    {
+      "heading": "2. Limit σ → 0",
+      "level": 4,
+      "kind": "body",
+      "text": "Second, in the opposite limit (small *σ*), the values of the electronic momentum become relatively constant (and always have the correct sign), which is extremely encouraging. Note that if *σ* gets too small, numerical convergence can become difficult unless one uses a tight grid. At present, we evaluate Θ on a Lebedev grid designed to sample density near that atomic nucleus for density functional theory (DFT) calculations, but there is no reason we could not build a new grid to best sample Θ<sub>*A*</sub>. Thus, as long as the partitioning is not too flat and provided we have enough grid points to model the switching region, there is a large range of parameters whereby the electronic momentum is robust.\n\nImportantly, one should not be very disheartened insofar as the fact that we do not recover exactly ${\\langle\\widehat{\\mathbf{p}}\\rangle} = md/dt\\hspace{0.28em}{\\langle\\Phi|\\widehat{\\mathbf{x}}|\\Phi\\rangle}$ in Fig. 1 because, as shown in Ref. 38, this result follows exactly (analytically) if we set Γ = d and sum over all excited states. Our goal in this article is to generate Γ by approximating the derivative coupling, which, by construction, will violate the above condition. In particular, one can divide the electronic momentum into two contributions,\n\n**Equation 83.**\n\n$$\n\\left\\langle \\widehat{\\mathbf{p}} \\right\\rangle = m\\frac{d}{dt}\\left\\langle \\widehat{\\mathbf{x}} \\right\\rangle\n$$\n\n**Equation 84.**\n\n$$\n= m\\frac{d}{dt}\\sum\\limits_{\\mu\\nu}D_{\\mu\\nu}\\mathbf{x}_{\\nu\\mu}\n$$\n\n**Equation 85.**\n\n$$\n= m\\sum\\limits_{\\mu\\nu}\\left({D_{\\mu\\nu} \\cdot \\frac{d}{dt}\\mathbf{x}_{\\nu\\mu} + \\frac{d}{dt}D_{\\mu\\nu} \\cdot \\mathbf{x}_{\\nu\\mu}} \\right).\n$$\n\nHere, Dμν is the electronic density matrix elements in atomic orbital basis indexed by μ, ν,\n\n**Equation 86.**\n\n$$\nD_{\\mu\\nu} = \\sum\\limits_{i}C_{\\mu i}C_{\\nu i}^{*},\n$$\n\nwhere Cμi is the matrix of molecular orbital coefficients, and we sum over all occupied orbitals i in Eq. (86).\n\nAccording to Eq. (85), the electronic momentum arises from two terms: one term captures how the basis moves and the other term captures how the molecular orbitals change in a moving basis. For the approximate $\\widehat{\\mathbf{\\Gamma}}$ ansatz in Eqs. (33) and (37) above, the aim is to capture only the first term in Eq. (85), the movement of the basis functions; this goal is to be achieved by partitioning real space (with $\\widehat{\\mathbf{\\Theta}}$⁠) into regions centered around each nucleus. By contrast, one cannot expect our approximate $\\widehat{\\mathbf{\\Gamma}}$ to capture the second term in Eq. (85), which represents the full, nonlocal electronic orbital response to nuclear motion. In particular, an electron transfer event that occurs when one moves through a curve crossing (which is the entire rationale for Marcus theory<sup>58</sup>) represents an obvious case where nuclear motion leads to a quick change in orbitals and a massive redistribution of electronic density in a given adiabatic electronic state. Obviously, we cannot account for such nonlocal changes here, although we do find that some moderate fraction of the local orbital response can be captured partially by the approximate $\\widehat{\\mathbf{\\Gamma}}$ operator. For the case of electron transfer, however, one must go beyond the singlet surface approximation made here and explicitly account for nonadiabatic transitions; the most straightforward approach is to run surface hopping within the current phase-space framework.<sup>37,59</sup>\n\nNevertheless, despite the above nonadiabatic limitation, the most striking conclusion from Fig. 1 is that in the adiabatic limit (when adiabatic states are well separate energetically), our simple phase-space approach can capture so much of the electronic momentum. Moreover, in Sec. IV B, we show that our phase space electronic Hamiltonian can even recover the electronic current density (which is a resolution of the electronic momentum over three dimensional space)."
+    },
+    {
+      "heading": "B. Electronic continuity equation",
+      "level": 3,
+      "kind": "body",
+      "text": "Besides agreeing with VCD experiments<sup>43</sup> and capturing a nonvanishing electronic momentum, one of the essential validations of a phase space electronic Hamiltonian is the capacity to recover the missing continuity equation for the electronic motion. Before showing results, let us review how the continuity equations for the current density can be recovered using wavefunctions corrected for non-BO effects.<sup>11,40</sup> Thereafter, we will perform a simple numerical test for an H<sub>2</sub> molecule translating and stretching, from which we will observe that the continuity equation can be reasonably satisfied using the **Γ** expression presented in Eqs. (33) and (37)—although far worse results are recovered using a previously defined phase-space electronic Hamiltonian (from Refs. 38 and 52) based on an atomic orbital basis."
+    },
+    {
+      "heading": "1. Theory",
+      "level": 4,
+      "kind": "body",
+      "text": "For a system of electrons and nuclei, let us begin by defining the electronic charge and the current density operators,\n\n**Equation 87.**\n\n$$\n{\\widehat{\\mathbf{\\rho}}}_{e}{(\\mathbf{r})} = {\\widehat{\\psi}}^{\\dagger}{(\\mathbf{r})}\\widehat{\\psi}{(\\mathbf{r})},\n$$\n\n**Equation 88.**\n\n$$\n{\\widehat{\\mathbf{j}}}_{e}{(\\mathbf{r})} = - \\frac{i\\hslash}{2m}\\left\\lbrack {{\\widehat{\\psi}}^{\\dagger}{(\\mathbf{r})}\\nabla_{\\mathbf{r}}\\widehat{\\psi}{(\\mathbf{r})} - \\left({\\nabla_{\\mathbf{r}}{\\widehat{\\psi}}^{\\dagger}{(\\mathbf{r})}} \\right)\\widehat{\\psi}{(\\mathbf{r})}} \\right\\rbrack,\n$$\n\nwhere ${\\widehat{\\psi}}^{\\dagger}{(\\mathbf{r})}/\\widehat{\\psi}{(\\mathbf{r})}$ is the creation and annihilation operator for an electron at position r. As is well known, there is a continuity equation for the electron based on the electronic Schrodinger’s equation,\n\n**Equation 89.**\n\n$$\n\\frac{d}{dt}{\\widehat{\\mathbf{\\rho}}}_{e}{(\\mathbf{r})} = \\frac{i}{\\hslash}\\left\\lbrack {{\\widehat{H}}_{el},{\\widehat{\\mathbf{\\rho}}}_{e}{(\\mathbf{r})}} \\right\\rbrack = - \\nabla \\cdot {\\widehat{\\mathbf{j}}}_{e}{(\\mathbf{r})}.\n$$\n\nHere, we have written the electronic Hamiltonian operator in terms of the creation and annihilation operators,\n\n**Equation 90.**\n\n$$\n\\begin{aligned} {\\widehat{H}}_{el} & {= \\int d^{3}\\mathbf{r}{\\widehat{\\psi}}^{\\dagger}{(\\mathbf{r})}\\left\\lbrack {- \\frac{\\hslash^{2}}{2m}\\nabla_{\\mathbf{r}}^{2} + V{(\\mathbf{r})}} \\right\\rbrack\\widehat{\\psi}{(\\mathbf{r})}} \\\\ & {\\hspace{1em} + \\frac{1}{2}\\int d^{3}\\mathbf{r}\\int d^{3}\\mathbf{r}'{\\widehat{\\psi}}^{\\dagger}{(\\mathbf{r})}{\\widehat{\\psi}}^{\\dagger}{(\\mathbf{r}')}\\frac{q_{e}^{2}}{|\\mathbf{r} - \\mathbf{r}'|}\\widehat{\\psi}{(\\mathbf{r}')}\\widehat{\\psi}{(\\mathbf{r})}.} \\end{aligned}\n$$\n\nEquation (89) is an operator equation that holds for exact quantum dynamics. One means of checking the accuracy of approximate dynamics, (e.g., for a trajectory moving along the eigensurface of a phase space electronic Hamiltonian) is to test whether or not this continuity equation still holds during such approximate dynamics. Equation (89) clearly does not hold for BO motion because, in such a case, the electronic current operator will always have an expectation value of zero.\n\nTo that end, let Φ be a BO eigenstate. Treating the first-order non-BO operator as a perturbation and assuming non-degenerate states, one can construct a wavefunction corrected to the first order,\n\n**Equation 91.**\n\n$$\n|{\\widetilde{\\Psi}}_{I}\\rangle = |\\Phi_{I}\\rangle - i\\hslash\\sum\\limits_{J \\neq I}\\frac{\\mathbf{P}}{\\mathbf{M}} \\cdot \\frac{\\left\\langle {\\Phi_{J}\\left| \\frac{\\partial}{\\partial\\mathbf{X}} \\right|\\Phi_{I}} \\right\\rangle}{E_{I} - E_{J}}|\\Phi_{J}\\rangle.\n$$\n\nNext, we can evaluate the electronic current density missing in the BO approximation,\n\n**Equation 92.**\n\n$$\n\\langle{\\widetilde{\\Psi}}_{I}|{\\widehat{\\mathbf{j}}}_{e}{(\\mathbf{r})}|{\\widetilde{\\Psi}}_{I}\\rangle = 2\\hslash\\text{Im}\\sum\\limits_{J \\neq I}\\frac{\\mathbf{P}}{\\mathbf{M}} \\cdot \\frac{\\left\\langle {\\Phi_{J}\\left| \\frac{\\partial}{\\partial\\mathbf{X}} \\right|\\Phi_{I}} \\right\\rangle}{E_{I} - E_{J}}\\langle\\Phi_{I}|{\\widehat{\\mathbf{j}}}_{e}{(\\mathbf{r})}|\\Phi_{J}\\rangle.\n$$\n\nOne notices immediately that if we include the first-order non-BO correction, a non-zero current density arises.\n\nThe next step is to evaluate the electronic flux for this current density. From the commutation relationship in Eq. (89), it follows that\n\n**Equation 93.**\n\n$$\n{({E_{I} - E_{J}})}\\langle\\Phi_{I}|{\\widehat{\\mathbf{\\rho}}}_{e}{(\\mathbf{r})}|\\Phi_{J}\\rangle = i\\hslash\\langle\\Phi_{I}|\\nabla \\cdot {\\widehat{\\mathbf{j}}}_{e}{(\\mathbf{r})}|\\Phi_{J}\\rangle.\n$$\n\nUsing Eq. (93), we now evaluate\n\n**Equation 94.**\n\n$$\n\\begin{aligned} & {\\langle{\\widetilde{\\Psi}}_{I}|\\nabla \\cdot {\\widehat{\\mathbf{j}}}_{e}{(\\mathbf{r})}|{\\widetilde{\\Psi}}_{I}\\rangle} \\\\ & {\\hspace{2em} = 2\\hslash\\text{Im}\\sum\\limits_{J \\neq I}\\frac{\\mathbf{P}}{\\mathbf{M}} \\cdot \\frac{\\left\\langle {\\Phi_{J}\\left| \\frac{\\partial}{\\partial\\mathbf{X}} \\right|\\Phi_{I}} \\right\\rangle}{E_{I} - E_{J}}\\langle\\Phi_{I}|\\nabla \\cdot {\\widehat{\\mathbf{j}}}_{e}|\\Phi_{J}\\rangle} \\end{aligned}\n$$\n\n**Equation 95.**\n\n$$\n\\hspace{2em} = - 2\\text{Re}\\sum\\limits_{J}\\frac{\\mathbf{P}}{\\mathbf{M}} \\cdot \\left\\langle {\\Phi_{J}\\left| \\frac{\\partial}{\\partial\\mathbf{X}} \\right|\\Phi_{I}} \\right\\rangle\\left\\langle {\\Phi_{I}\\left| {{\\widehat{\\mathbf{\\rho}}}_{e}{(\\mathbf{r})}} \\right|\\Phi_{J}} \\right\\rangle\n$$\n\n**Equation 96.**\n\n$$\n\\hspace{2em} = - 2\\text{Re}\\left\\langle {\\Phi_{I}\\left| {{\\widehat{\\mathbf{\\rho}}}_{e}{(\\mathbf{r})}\\frac{\\mathbf{P}}{\\mathbf{M}} \\cdot \\frac{\\partial}{\\partial\\mathbf{X}}} \\right|\\Phi_{I}} \\right\\rangle,\n$$\n\n**Equation 97.**\n\n$$\n\\langle{\\widetilde{\\Psi}}_{I}|\\nabla \\cdot {\\widehat{\\mathbf{j}}}_{e}{(\\mathbf{r})}|{\\widetilde{\\Psi}}_{I}\\rangle = - \\frac{d}{dt}\\left\\langle {\\Phi_{I}\\left| {{\\widehat{\\mathbf{\\rho}}}_{e}{(\\mathbf{r})}} \\right|\\Phi_{I}} \\right\\rangle.\n$$\n\nEquation (97) was a key result proven previously by Nafie11 and Hanasaki and Takatsuka.40 According to Eq. (89), in order to recover the electronic continuity equation, we do not need to run exact quantum dynamics; we need only the first-order corrections to BO theory. We will now show that a phase space electronic Hamiltonian also recovers a meaningful electronic current density by plotting the left and right hand sides of Eq. (97).\n\nAs a side note, we mention that, from Eq. (97), one can derive the standard, beyond-Born–Oppenheimer electronic momentum. In particular, we can multiply both LHS and RHS of Eq. (97) by position and electronic mass and integrate over all space. In particular, the LHS becomes\n\n**Equation 98.**\n\n$$\nm\\int\\mathbf{r}\\nabla \\cdot \\left\\langle {{\\widetilde{\\Psi}}_{I}\\left| {{\\widehat{\\mathbf{j}}}_{e}{(\\mathbf{r})}} \\right|{\\widetilde{\\Psi}}_{I}} \\right\\rangle d\\mathbf{r} = - m\\int\\left\\langle {{\\widetilde{\\Psi}}_{I}\\left| {{\\widehat{\\mathbf{j}}}_{e}{(\\mathbf{r})}} \\right|{\\widetilde{\\Psi}}_{I}} \\right\\rangle d\\mathbf{r}\n$$\n\n**Equation 99.**\n\n$$\n= - \\left\\langle {{\\widetilde{\\Psi}}_{I}\\left| \\widehat{\\mathbf{p}} \\right|{\\widetilde{\\Psi}}_{I}} \\right\\rangle.\n$$\n\nHere, in Eq. (98), we used integration by parts. The RHS of Eq. (97) becomes\n\n**Equation 100.**\n\n$$\n\\begin{aligned} & {- m\\int\\mathbf{r}\\frac{d}{dt}\\left\\langle {\\Phi_{I}\\left| {{\\widehat{\\mathbf{\\rho}}}_{e}{(\\mathbf{r})}} \\right|\\Phi_{I}} \\right\\rangle d\\mathbf{r}} \\\\ & {\\hspace{2em} = - m\\frac{d}{dt}\\left\\langle {\\Phi_{I}\\left| {\\int\\mathbf{r}{\\widehat{\\psi}}^{\\dagger}{(\\mathbf{r})}\\widehat{\\psi}{(\\mathbf{r})}d\\mathbf{r}} \\right|\\Phi_{I}} \\right\\rangle} \\end{aligned}\n$$\n\n**Equation 101.**\n\n$$\n\\hspace{2em} = - m\\frac{d}{dt}\\left\\langle {\\Phi_{I}\\left| \\widehat{\\mathbf{r}} \\right|\\Phi_{I}} \\right\\rangle.\n$$\n\nCombining Eqs. (99) and (101), we recover the expression for the electronic momentum. In Fig. 1, we benchmarked our phase space results against the result above [Eq. (101)] for electronic momentum. In Figs. 2 and 3, an even more strenuous test is used to benchmark against the current density.\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1063_5.0260731_assets/m_144111_1_5.0260731.figures.online.f2.jpg)\n\n**Figure 2.** A test of the continuity equation for a translating H<sub>2</sub> molecule. We plot the charge density differences (left panel) and the negative of the divergence of the current density [with basis free (BF) $\\widehat{\\mathbf{\\Gamma}}$ from Eqs. (33) and (37), right panel] projected on the *xy* plane for different basis sets (small at the top, large at the bottom). The positions of the two H atoms are at ±0.693 83 bohr along the *x* axis (indicated by the cross symbol in white). The strong agreement of these figures is a good validation of a phase-space electronic Hamiltonian.\n\n![Figure 3](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1063_5.0260731_assets/m_144111_1_5.0260731.figures.online.f3.jpg)\n\n**Figure 3.** A test of the continuity equation for a stretching H<sub>2</sub> molecule, where we move the H atom located at the negative *x* axis closer to the other H atom with a velocity corresponding to the room temperature. We plot the charge density differences (left panel) and the negative of the divergence of the current density (middle and right panels) projected on the *xy* plane as computed with different basis sets (small at the top, large at the bottom). The positions of the two H atoms are at ±0.693 83 bohr along the *x* axis (indicated by the cross symbol in white). The agreement between the left and middle panels [with basis free (BF) $\\widehat{\\mathbf{\\Gamma}}$ from Eqs. (33) and (37)] offers a resounding validation of the approach taken in this paper. Here, we set *σ* = 0.5 bohr; note that even better results can be found by tuning *σ* in Eq. (28). By contrast, one finds much worse results using the phase-space electronic Hamiltonian approach using a $\\widehat{\\mathbf{\\Gamma}}$ operator built from an atomic orbital (AO) basis (from Refs. 38 and 52, right panel); the latter can clearly predict quite unphysical results for large basis sets."
+    },
+    {
+      "heading": "2. Numerical examples",
+      "level": 4,
+      "kind": "body",
+      "text": "To test if and how a phase-space electronic Hamiltonian approach obeys the continuity equation for the current density [Eq. (97)], we first look at the translational motion of a H<sub>2</sub> molecule along the positive x axis. In Fig. 2, we plot the difference in charge densities as computed by finite difference [left panel, the right hand side of Eq. (97)] vs the divergence of the current densities [right panel, the left hand side of Eq. (97)]. We make this comparison for several different basis sets from small to large. Details of the basis sets used are listed in Table I. The phase-space approach reproduces the correct nodal structures as we increase the size of the basis sets [in principle, a complete set of basis is assumed in Eq. (89)], which is a good first validation of the method. However, a stronger test of the method is to investigate an internal motion (rather a total translation).\n\n**Table** Different basis sets for H<sub>2</sub>.\n\n| Basis set         | Num. and type of shell | Num. of basis functions per H |\n| ----------------- | ---------------------- | ----------------------------- |\n| STO-3G            | 1s                     | 1                             |\n| cc-pVDZ (DZ)      | 2s1p                   | 5                             |\n| cc-pVTZ(TZ)       | 3s2p1d                 | 14                            |\n| aug-cc-pVTZ (aTZ) | 4s3p2d                 | 23                            |\n| cc-pVQZ (QZ)      | 4s3p2d1f               | 30                            |\n| aug-cc-pVQZ (aQZ) | 5s4p3d2f               | 46                            |\n\nTo that end, next, we look at results when we move one H atom closer to the other one, and we show how a poor electronic structure method can produce very low quality, non-physical current densities. In the spirit of the previous figure, on the left panel of Fig. 3, we plot the differences in electronic charge densities computed by finite difference, and in the middle panel, we plot the divergence of the current densities as computed from the $\\widehat{\\mathbf{\\Gamma}}$ operator presented in the main body of our paper (BF = basis free). Finally, on the right panel, we plot the divergence of the current density as found using the previous $\\widehat{\\mathbf{\\Gamma}}$ defined explicitly in atomic orbital basis (from Refs. 38 and 52). Clearly, the left and middle panels do not depend strongly on basis; however, the right panel depends critically (and incorrectly) on basis, and very bizarre nodal structures are found for the aug-cc-pVQZ results in Fig. 3. Altogether, these data highlight the power of the method proposed in the main body of this article and also demonstrate why a basis free approach for $\\widehat{\\mathbf{\\Gamma}}$ is essential when modeling coupled nuclear-electronic dynamics. For the basis-free $\\widehat{\\mathbf{\\Gamma}}$ results shown in Fig. 3, we use 1/*σ*<sup>2</sup> = 4 bohr<sup>−2</sup>. As a side note, we note that further tuning of the parameters (e.g., 1/*σ*<sup>2</sup> = 1 bohr<sup>−2</sup>) can even remove the small extra nodal structures in the divergences of the current densities when computed with basis-free $\\widehat{\\mathbf{\\Gamma}}$⁠, as shown in Fig. S1. A quantitative analysis is also provided in Table S1. A more careful parameterization of the Θ function in Eq. (28) for a diverse group of molecules will be very fruitful for future work."
+    },
+    {
+      "heading": "V. DISCUSSION AND CONCLUSIONS",
+      "level": 2,
+      "kind": "body",
+      "text": "Our phase approach above is summed up by Eqs. (9), (33), and (37). From a bird’s eye view, this approach can be viewed as a local strategy to remove the local center of mass from a messy quantum mechanical problem with many nuclei and electrons. For calculations of a small isolated molecule, such a procedure is well-known and can be found in just about any quantum textbook: one transforms from a system of lab coordinates to a new set of coordinates where the electrons are expressed relative to the nuclear center of mass.<sup>13,60</sup> While this approach is quite logical for an isolated system, upon reflection, this approach is suboptimal in the context of electronic structure theory in the condensed phase. Indeed, within electronic structure theory, one paradigm has always been that calculations of isolated systems should remain separate (which necessarily leads to size-consistency of the total energy).<sup>61</sup> The approach above would seem to break such a paradigm because, for one molecule on earth and another on the moon, the standard separation would express all electronic coordinates relative to some point beyond the exosphere. By contrast, in some senses, the intuition of a phase space approach is that in solving the electronic Schrodinger equation, one can effectively choose different electronic coordinates as relative to the closest nucleus. Put differently, every electron experiences the motion of the nuclei close by such that each composite (nuclear plus electronic) subsystem attempts to conserve the local momentum. When the nuclei are not moving, the phase space electronic Hamiltonian becomes effectively a BO Hamiltonian (with the ${\\widehat{\\mathbf{\\Gamma}}}^{2}$ terms as an approximation to the diagonal BO correction).\n\nLooking forward, the data in Fig. 1 are extremely encouraging as an initial step toward a new and more powerful (but still very inexpensive) approach to electronic structure theory beyond BO theory. As far as developing a practical method, clearly the next step is to generate a large set of data, with many molecules at many different geometries, from which we can generate an optimal Θ partitioning of space [Eq. (28)] and *ζ* localizing functions [Eq. (38)]. The target is clear: we wish to optimize (i) the predicted electronic momenta as well as (ii) VCD spectra<sup>12,62,63</sup> and potentially (iii) vibrational and rotational energies. For point (ii), note that the present method has already been validated against experimental VCD signals for (2S,3S)-oxirane-d2.<sup>43</sup> For point (iii), note that we have recently demonstrated that the present phase-space approaches can yield improved vibrational energies<sup>64</sup> for a model problem where exact eigenstates can be calculated numerically. Comparisons to experimental rotational energies<sup>65</sup> should also be possible in the future. Altogether, so far, we have found a great deal of success with the Θ function in Eq. (28), but future work will benefit greatly by performing a more thorough optimization. After all, we have guessed the Gaussian kernel density form of Θ in Eq. (28), but there are many other localization function and length scales available; the form of *ζ* is equally fungible. Altogether, further benchmarking against highly accurate, perhaps rotationally refined, vibrational and rotational spectra may allow for further development of a meaningful set of parameters.\n\nArmed with a meaningful phase space approach to electronic structure theory, one can imagine a wide swath of potentially exciting applications. As mentioned in the Introduction, phase space dynamics conserve angular momentum, and one immediate application will be to investigate what can be learned by including spin–orbit coupling in our simulations and then running dynamics along phase space adiabats. Indeed, in the context of a curve crossing, it is possible that one will recover new spin physics during an electron transfer event, when changes in the electronic orbital angular momentum must be balanced by changes in the nuclear and/or electronic spin. In particular, there is some hope that the present simulations will offer a new approach toward understanding the CISS effect.<sup>66</sup>\n\nBeyond coupled nuclear–electronic-spin simulations, another very promising avenue is to investigate superconductivity. The underlying physics for many superconductive systems is electron–phonon coupling.<sup>67</sup> Thus, it might be very interesting to investigate the behavior of a phase-space Hamiltonian that directly couples phonons to electrons for low-gap systems, especially solid-state or otherwise extended systems, where the role of electron–electron correlation is critical and becomes entangled with electron–nuclear correlation.<sup>68–70</sup>"
+    },
+    {
+      "heading": "SUPPLEMENTARY MATERIAL",
+      "level": 2,
+      "kind": "body",
+      "text": "In the supplementary material, we include a test of the electronic continuity equation using *σ* = 1 bohr for the basis-free results and a table showing the sum of squares error for the electronic continuity equation."
+    },
+    {
+      "heading": "ACKNOWLEDGMENTS",
+      "level": 2,
+      "kind": "body",
+      "text": "This work was supported by the National Science Foundation under Grant No. CHE-2422858. We thank Mansi Bhati for helpful discussions. J.E.S. thanks Daniel Ezra Subotnik for a lifetime of probing questions."
+    },
+    {
+      "heading": "AUTHOR DECLARATIONS",
+      "level": 2,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "Conflict of Interest",
+      "level": 3,
+      "kind": "body",
+      "text": "The authors have no conflicts to disclose."
+    },
+    {
+      "heading": "Author Contributions",
+      "level": 3,
+      "kind": "body",
+      "text": "Zhen Tao and Tian Qiu contributed equally to this work.\n\n**Zhen Tao**: Conceptualization (equal); Data curation (equal); Investigation (equal); Methodology (equal); Writing – original draft (equal); Writing – review & editing (equal). **Tian Qiu**: Conceptualization (equal); Data curation (equal); Investigation (equal); Methodology (equal); Writing – original draft (equal); Writing – review & editing (equal). **Xuezhi Bian**: Conceptualization (supporting); Data curation (supporting); Investigation (supporting); Methodology (supporting); Writing – original draft (supporting); Writing – review & editing (supporting). **Titouan Duston**: Investigation (supporting); Methodology (supporting); Writing – review & editing (supporting). **Nadine Bradbury**: Investigation (supporting); Methodology (supporting); Writing – review & editing (supporting). **Joseph E. Subotnik**: Conceptualization (equal); Data curation (equal); Funding acquisition (lead); Investigation (equal); Methodology (equal); Writing – original draft (equal); Writing – review & editing (equal)."
+    },
+    {
+      "heading": "DATA AVAILABILITY",
+      "level": 2,
+      "kind": "data_availability",
+      "text": "The data that support the findings of this study are available within the article and its supplementary material."
+    }
+  ],
+  "references": [
+    {
+      "raw": "1. R. Naaman and D. H. Waldeck, “ Chiral-induced spin selectivity effect,” J. Phys. Chem. Lett. 3, 2178 (2012). https://doi.org/10.1021/jz300793y",
+      "doi": "10.1021/jz300793y",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "2. J. Fransson, “ Vibrational origin of exchange splitting and chiral-induced spin selectivity,” Phys. Rev. B 102, 235416 (2020). https://doi.org/10.1103/physrevb.102.235416",
+      "doi": "10.1103/physrevb.102.235416",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "3. J. Gersten, K. Kaasbjerg, and A. Nitzan, “ Induced spin filtering in electron transmission through chiral molecular layers adsorbed on metals with strong spin–orbit coupling,” J. Chem. Phys. 139, 114111 (2013). https://doi.org/10.1063/1.4820907",
+      "doi": "10.1063/1.4820907",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "4. H. J. Eckvahl, N. A. Tcyrulnikov, A. Chiesa, J. M. Bradley, R. M. Young, S. Carretta, M. D. Krzyaniak, and M. R. Wasielewski, “ Direct observation of chirality-induced spin selectivity in electron donor–acceptor molecules,” Science 382, 197 (2023). https://doi.org/10.1126/science.adj5328",
+      "doi": "10.1126/science.adj5328",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "5. C. Li, R. Requist, and E. K. U. Gross, “ Energy, momentum, and angular momentum transfer between electrons and nuclei,” Phys. Rev. Lett. 128, 113001 (2022). https://doi.org/10.1103/physrevlett.128.113001",
+      "doi": "10.1103/physrevlett.128.113001",
+      "title": null,
+      "year": "2022"
+    },
+    {
+      "raw": "6. Y. Shu, L. Zhang, Z. Varga, K. A. Parker, S. Kanchanakungwankul, S. Sun, and D. G. Truhlar, “ Conservation of angular momentum in direct nonadiabatic dynamics,” J. Phys. Chem. Lett. 11, 1135 (2020). https://doi.org/10.1021/acs.jpclett.9b03749",
+      "doi": "10.1021/acs.jpclett.9b03749",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "7. Z. Tao, X. Bian, Y. Wu, J. Rawlinson, R. G. Littlejohn, and J. E. Subotnik, “ Total angular momentum conservation in Ehrenfest dynamics with a truncated basis of adiabatic states,” J. Chem. Phys. 160, 054104 (2024). https://doi.org/10.1063/5.0177778",
+      "doi": "10.1063/5.0177778",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "8. X. Bian, Z. Tao, Y. Wu, J. Rawlinson, R. G. Littlejohn, and J. E. Subotnik, “ Total angular momentum conservation in ab initio Born–Oppenheimer molecular dynamics,” Phys. Rev. B 108, L220304 (2023). https://doi.org/10.1103/physrevb.108.l220304",
+      "doi": "10.1103/physrevb.108.l220304",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "9. N. V. Cohan and H. F. Hameka, “ Isotope effects in optical rotation,” J. Am. Chem. Soc. 88, 2136 (1966). https://doi.org/10.1021/ja00962a010",
+      "doi": "10.1021/ja00962a010",
+      "title": null,
+      "year": "1966"
+    },
+    {
+      "raw": "10. A. D. Buckingham, P. W. Fowler, and P. A. Galwas, “ Velocity-dependent property surfaces and the theory of vibrational circular dichroism,” Chem. Phys. 112, 1 (1987). https://doi.org/10.1016/0301-0104(87)85017-6",
+      "doi": "10.1016/0301-0104(87)85017-6",
+      "title": null,
+      "year": "1987"
+    },
+    {
+      "raw": "11. L. A. Nafie, “ Adiabatic molecular properties beyond the Born–Oppenheimer approximation. Complete adiabatic wave functions and vibrationally induced electronic current density,” J. Chem. Phys. 79, 4950 (1983). https://doi.org/10.1063/1.445588",
+      "doi": "10.1063/1.445588",
+      "title": null,
+      "year": "1983"
+    },
+    {
+      "raw": "12. P. J. Stephens, “ Theory of vibrational circular dichroism,” J. Phys. Chem. 89, 748 (1985). https://doi.org/10.1021/j100251a006",
+      "doi": "10.1021/j100251a006",
+      "title": null,
+      "year": "1985"
+    },
+    {
+      "raw": "13. R. Littlejohn, J. Rawlinson, and J. Subotnik, “ Representation and conservation of angular momentum in the Born–Oppenheimer theory of polyatomic molecules,” J. Chem. Phys. 158, 104302 (2023). https://doi.org/10.1063/5.0143809",
+      "doi": "10.1063/5.0143809",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "14. M. V. Berry and J. M. Robbins, “ Chaotic classical and half-classical adiabatic reactions: Geometric magnetism and deterministic friction,” Proc. R. Soc. A 442, 659 (1993). https://doi.org/10.1098/rspa.1993.0127",
+      "doi": "10.1098/rspa.1993.0127",
+      "title": null,
+      "year": "1993"
+    },
+    {
+      "raw": "15. T. Culpitt, L. D. M. Peters, E. I. Tellgren, and T. Helgaker, “ Ab initio molecular dynamics with screened Lorentz forces. I. Calculation and atomic charge interpretation of berry curvature,” J. Chem. Phys. 155, 024104 (2021). https://doi.org/10.1063/5.0055388",
+      "doi": "10.1063/5.0055388",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "16. L. D. M. Peters, T. Culpitt, E. I. Tellgren, and T. Helgaker, “ Magnetic-translational sum rule and approximate models of the molecular berry curvature,” J. Chem. Phys. 157, 134108 (2022). https://doi.org/10.1063/5.0112943",
+      "doi": "10.1063/5.0112943",
+      "title": null,
+      "year": "2022"
+    },
+    {
+      "raw": "17. S. Ren, J. Bonini, M. Stengel, C. E. Dreyer, and D. Vanderbilt, “ Adiabatic dynamics of coupled spins and phonons in magnetic insulators,” Phys. Rev. X 14, 011041 (2024). https://doi.org/10.1103/physrevx.14.011041",
+      "doi": "10.1103/physrevx.14.011041",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "18. Y. Wu and J. E. Subotnik, “ Semiclassical description of nuclear dynamics moving through complex-valued single avoided crossings of two electronic states,” J. Chem. Phys. 154, 234101 (2021). https://doi.org/10.1063/5.0054014",
+      "doi": "10.1063/5.0054014",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "19. C. Wittig, “ The Landau–Zener formula,” J. Phys. Chem. B 109, 8428 (2005). https://doi.org/10.1021/jp040627u",
+      "doi": "10.1021/jp040627u",
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "20. M. Amano and K. Takatsuka, “ Quantum fluctuation of electronic wave-packet dynamics coupled with classical nuclear motions,” J. Chem. Phys. 122, 084113 (2005). https://doi.org/10.1063/1.1854115",
+      "doi": "10.1063/1.1854115",
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "21. K. Takatsuka and T. Yonehara, “ Exploring dynamical electron theory beyond the Born–Oppenheimer framework: From chemical reactivity to non-adiabatically coupled electronic and nuclear wavepackets on-the-fly under laser field,” Phys. Chem. Chem. Phys. 13, 4987 (2011). https://doi.org/10.1039/c0cp00937g",
+      "doi": "10.1039/c0cp00937g",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "22. V. Krishna, “ Path integral formulation for quantum nonadiabatic dynamics and the mixed quantum classical limit,” J. Chem. Phys. 126, 134107 (2007). https://doi.org/10.1063/1.2716387",
+      "doi": "10.1063/1.2716387",
+      "title": null,
+      "year": "2007"
+    },
+    {
+      "raw": "23. P. V. Parandekar and J. C. Tully, “ Mixed quantum-classical equilibrium,” J. Chem. Phys. 122, 094102 (2005). https://doi.org/10.1063/1.1856460",
+      "doi": "10.1063/1.1856460",
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "24. J. R. Schmidt, P. V. Parandekar, and J. C. Tully, “ Mixed quantum-classical equilibrium: Surface hopping,” J. Chem. Phys. 129, 044104 (2008). https://doi.org/10.1063/1.2955564",
+      "doi": "10.1063/1.2955564",
+      "title": null,
+      "year": "2008"
+    },
+    {
+      "raw": "25. A. Abedi, N. T. Maitra, and E. K. U. Gross, “ Exact factorization of the time-dependent electron-nuclear wave function,” Phys. Rev. Lett. 105, 123002 (2010). https://doi.org/10.1103/physrevlett.105.123002",
+      "doi": "10.1103/physrevlett.105.123002",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "26. A. Abedi, N. T. Maitra, and E. K. U. Gross, “ Correlated electron-nuclear dynamics: Exact factorization of the molecular wavefunction,” J. Chem. Phys. 137, 22A530 (2012). https://doi.org/10.1063/1.4745836",
+      "doi": "10.1063/1.4745836",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "27. A. Scherrer, F. Agostini, D. Sebastiani, E. K. U. Gross, and R. Vuilleumier, “ On the mass of atoms in molecules: Beyond the Born–Oppenheimer approximation,” Phys. Rev. X 7, 031035 (2017). https://doi.org/10.1103/physrevx.7.031035",
+      "doi": "10.1103/physrevx.7.031035",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "28. F. Talotta, D. Lauvergnat, and F. Agostini, “ Describing the photo-isomerization of a retinal chromophore model with coupled and quantum trajectories,” J. Chem. Phys. 156, 184104 (2022). https://doi.org/10.1063/5.0089415",
+      "doi": "10.1063/5.0089415",
+      "title": null,
+      "year": "2022"
+    },
+    {
+      "raw": "29. C. C. Martens, “ Surface hopping by consensus,” J. Phys. Chem. Lett. 7, 2610 (2016). https://doi.org/10.1021/acs.jpclett.6b01186",
+      "doi": "10.1021/acs.jpclett.6b01186",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "30. C. C. Martens, “ Surface hopping without momentum jumps: A quantum-trajectory-based approach to nonadiabatic dynamics,” J. Phys. Chem. A 123, 1110 (2019). https://doi.org/10.1021/acs.jpca.8b10487",
+      "doi": "10.1021/acs.jpca.8b10487",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "31. G. H. Gossel, F. Agostini, and N. T. Maitra, “ Coupled-trajectory mixed quantum-classical algorithm: A deconstruction,” J. Chem. Theory Comput. 14, 4513 (2018). https://doi.org/10.1021/acs.jctc.8b00449",
+      "doi": "10.1021/acs.jctc.8b00449",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "32. D. A. Micha, “ A self-consistent eikonal treatment of electronic transitions in molecular collisions,” J. Chem. Phys. 78, 7138 (1983). https://doi.org/10.1063/1.444753",
+      "doi": "10.1063/1.444753",
+      "title": null,
+      "year": "1983"
+    },
+    {
+      "raw": "33. S. Weinberg, “ Eikonal method in magnetohydrodynamics,” Phys. Rev. 126, 1899 (1962). https://doi.org/10.1103/physrev.126.1899",
+      "doi": "10.1103/physrev.126.1899",
+      "title": null,
+      "year": "1962"
+    },
+    {
+      "raw": "34. M. V. Berry, “ Quantum phase corrections from adiabatic iteration,” Proc. R. Soc. A 414, 31 (1987). https://doi.org/10.1098/rspa.1987.0131",
+      "doi": "10.1098/rspa.1987.0131",
+      "title": null,
+      "year": "1987"
+    },
+    {
+      "raw": "35. M. V. Berry, “ Histories of adiabatic quantum transitions,” Proc. R. Soc. A 429, 61 (1990). https://doi.org/10.1098/rspa.1990.0051",
+      "doi": "10.1098/rspa.1990.0051",
+      "title": null,
+      "year": "1990"
+    },
+    {
+      "raw": "36. N. Shenvi, “ Phase-space surface hopping: Nonadiabatic dynamics in a superadiabatic basis,” J. Chem. Phys. 130, 124117 (2009). https://doi.org/10.1063/1.3098321",
+      "doi": "10.1063/1.3098321",
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "37. Y. Wu, J. Rawlinson, R. G. Littlejohn, and J. E. Subotnik, “ Linear and angular momentum conservation in surface hopping methods,” J. Chem. Phys. 160, 024119 (2024). https://doi.org/10.1063/5.0179599",
+      "doi": "10.1063/5.0179599",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "38. Z. Tao, T. Qiu, M. Bhati, X. Bian, T. Duston, J. Rawlinson, R. G. Littlejohn, and J. E. Subotnik, “ Practical phase-space electronic Hamiltonians for ab initio dynamics,” J. Chem. Phys. 160, 124101 (2024). https://doi.org/10.1063/5.0192084",
+      "doi": "10.1063/5.0192084",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "39. S. Patchkovskii, “ Electronic currents and Born–Oppenheimer molecular dynamics,” J. Chem. Phys. 137, 084109 (2012). https://doi.org/10.1063/1.4747540",
+      "doi": "10.1063/1.4747540",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "40. K. Hanasaki and K. Takatsuka, “ On the molecular electronic flux: Role of nonadiabaticity and violation of conservation,” J. Chem. Phys. 154, 164112 (2021). https://doi.org/10.1063/5.0049821",
+      "doi": "10.1063/5.0049821",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "41. L. A. Nafie, “ Velocity-gauge formalism in the theory of vibrational circular dichroism and infrared absorption,” J. Chem. Phys. 96, 5687 (1992). https://doi.org/10.1063/1.462668",
+      "doi": "10.1063/1.462668",
+      "title": null,
+      "year": "1992"
+    },
+    {
+      "raw": "42. T. Duston, Z. Tao, X. Bian, M. Bhati, J. Rawlinson, R. G. Littlejohn, Z. Pei, Y. Shao, and J. E. Subotnik, “ A phase-space electronic Hamiltonian for vibrational circular dichroism,” J. Chem. Theory Comput. 20, 7904 (2024). https://doi.org/10.1021/acs.jctc.4c00662",
+      "doi": "10.1021/acs.jctc.4c00662",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "43. Z. Tao, T. Duston, Z. Pei, Y. Shao, J. Rawlinson, R. Littlejohn, and J. E. Subotnik, “ An electronic phase-space Hamiltonian approach for electronic current density and vibrational circular dichroism,” J. Chem. Phys. 161, 204107 (2024). https://doi.org/10.1063/5.0233618",
+      "doi": "10.1063/5.0233618",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "44. D. R. Bates and R. McCarroll, “ Electron capture in slow collisions,” Proc. R. Soc. A 245, 175 (1958). https://doi.org/10.1098/rspa.1958.0075",
+      "doi": "10.1098/rspa.1958.0075",
+      "title": null,
+      "year": "1958"
+    },
+    {
+      "raw": "45. W. R. Thorson and J. B. Delos, “ Theory of near-adiabatic collisions. I. Electron translation factor method,” Phys. Rev. A 18, 117 (1978). https://doi.org/10.1103/physreva.18.117",
+      "doi": "10.1103/physreva.18.117",
+      "title": null,
+      "year": "1978"
+    },
+    {
+      "raw": "46. L. F. Errea, C. Harel, H. Jouini, L. Mendez, B. Pons, and A. Riera, “ Common translation factor method,” J. Phys. B: At., Mol. Opt. Phys. 27, 3603 (1994). https://doi.org/10.1088/0953-4075/27/16/010",
+      "doi": "10.1088/0953-4075/27/16/010",
+      "title": null,
+      "year": "1994"
+    },
+    {
+      "raw": "47. E. Deumens, A. Diz, R. Longo, and Y. Öhrn, “ Time-dependent theoretical treatments of the dynamics of electrons and nuclei in molecular systems,” Rev. Mod. Phys. 66, 917 (1994). https://doi.org/10.1103/revmodphys.66.917",
+      "doi": "10.1103/revmodphys.66.917",
+      "title": null,
+      "year": "1994"
+    },
+    {
+      "raw": "48. T. G. Winter, “ Electron transfer in p –He + and He 2+ -H collisions using a Sturmian basis,” Phys. Rev. A 25, 697 (1982). https://doi.org/10.1103/physreva.25.697",
+      "doi": "10.1103/physreva.25.697",
+      "title": null,
+      "year": "1982"
+    },
+    {
+      "raw": "49. S. B. Schneiderman and A. Russek, “ Velocity-dependent orbitals in proton-on-hydrogen-atom collisions,” Phys. Rev. 181, 311 (1969). https://doi.org/10.1103/physrev.181.311",
+      "doi": "10.1103/physrev.181.311",
+      "title": null,
+      "year": "1969"
+    },
+    {
+      "raw": "50. S. Fatehi, E. Alguire, Y. Shao, and J. E. Subotnik, “ Analytic derivative couplings between configuration-interaction-singles states with built-in electron-translation factors for translational invariance,” J. Chem. Phys. 135, 234105 (2011). https://doi.org/10.1063/1.3665031",
+      "doi": "10.1063/1.3665031",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "51. V. Athavale, X. Bian, Z. Tao, Y. Wu, T. Qiu, J. Rawlinson, R. G. Littlejohn, and J. E. Subotnik, “ Surface hopping, electron translation factors, electron rotation factors, momentum conservation, and size consistency,” J. Chem. Phys. 159, 114120 (2023). https://doi.org/10.1063/5.0160965",
+      "doi": "10.1063/5.0160965",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "52. T. Qiu, M. Bhati, Z. Tao, X. Bian, J. Rawlinson, R. G. Littlejohn, and J. E. Subotnik, “ A simple one-electron expression for electron rotational factors,” J. Chem. Phys. 160, 124102 (2024). https://doi.org/10.1063/5.0192083",
+      "doi": "10.1063/5.0192083",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "53. M. Senechal, “ Mathematical structures: Spatial Tessellations. Concepts and applications of voronoi diagrams. Atsuyuki Okabe, Barry Boots, and Kokichi Sugihara. Wiley, New York, 1992. xii, 532 pp., illus. $89.95. Wiley series in probability and mathematical statistics,” Science 260, 1170–1173 (1993). https://doi.org/10.1126/science.260.5111.1170",
+      "doi": "10.1126/science.260.5111.1170",
+      "title": null,
+      "year": "1993"
+    },
+    {
+      "raw": "54. R. Littlejohn, J. Rawlinson, and J. Subotnik, “ Diagonalizing the Born–Oppenheimer Hamiltonian via Moyal perturbation theory, nonadiabatic corrections, and translational degrees of freedom,” J. Chem. Phys. 160, 114103 (2024). https://doi.org/10.1063/5.0192465",
+      "doi": "10.1063/5.0192465",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "55. E. Epifanovsky, A. T. B. Gilbert, X. Feng, J. Lee, Y. Mao, N. Mardirossian, P. Pokhilko, A. F. White, M. P. Coons, A. L. Dempwolff et al, “ Software for the frontiers of quantum chemistry: An overview of developments in the Q-Chem 5 package,” J. Chem. Phys. 155, 084801 (2021). https://doi.org/10.1063/5.0055522",
+      "doi": "10.1063/5.0055522",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "56. R. G. Littlejohn and W. G. Flynn, “ Geometric phases in the asymptotic theory of coupled wave equations,” Phys. Rev. A 44, 5239 (1991). https://doi.org/10.1103/physreva.44.5239",
+      "doi": "10.1103/physreva.44.5239",
+      "title": null,
+      "year": "1991"
+    },
+    {
+      "raw": "57. I. A. Aucar, S. S. Gómez, M. C. R. de Azúa, and C. G. Giribet, “ Theoretical study of the nuclear spin-molecular rotation coupling for relativistic electrons and non-relativistic nuclei,” J. Chem. Phys. 136, 204119 (2012). https://doi.org/10.1063/1.4721627",
+      "doi": "10.1063/1.4721627",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "58. A. Nitzan, Chemical Dynamics in Condensed Phases (Oxford University Press, 2006).",
+      "doi": "10.1093/oso/9780198529798.001.0001",
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "59. X. Bian, Y. Wu, T. Qiu, Z. Tao, and J. E. Subotnik, “ A semiclassical non-adiabatic phase-space approach to molecular translations and rotations: Surface hopping with electronic inertial effects,” J. Chem. Phys. 161, 234114 (2024). https://doi.org/10.1063/5.0242673",
+      "doi": "10.1063/5.0242673",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "60. F. Jensen, Introduction to Computational Chemistry (Wiley, 1999).",
+      "doi": null,
+      "title": null,
+      "year": "1999"
+    },
+    {
+      "raw": "61. David Sherrill CIS notes, http://vergil.chemistry.gatech.edu/notes/ci.pdf.",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "62. A. Scherrer, F. Agostini, D. Sebastiani, E. K. U. Gross, and R. Vuilleumier, “ Nuclear velocity perturbation theory for vibrational circular dichroism: An approach based on the exact factorization of the electron-nuclear wave function,” J. Chem. Phys. 143, 074106 (2015). https://doi.org/10.1063/1.4928578",
+      "doi": "10.1063/1.4928578",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "63. E. Ditler, T. Zimmermann, C. Kumar, and S. Luber, “ Implementation of nuclear velocity perturbation and magnetic field perturbation theory in CP2K and their application to vibrational circular dichroism,” J. Chem. Theory Comput. 18, 2448 (2022). https://doi.org/10.1021/acs.jctc.2c00006",
+      "doi": "10.1021/acs.jctc.2c00006",
+      "title": null,
+      "year": "2022"
+    },
+    {
+      "raw": "64. X. Bian, C. Khan, T. Duston, J. Rawlinson, R. G. Littlejohn, and J. E. Subotnik, “ A phase-space view of vibrational energies without the Born–Oppenheimer framework,” J. Chem. Theory Comput. 21 (6), 2880–2893 (2025). https://doi.org/10.1021/acs.jctc.4c01294",
+      "doi": "10.1021/acs.jctc.4c01294",
+      "title": null,
+      "year": "2025"
+    },
+    {
+      "raw": "65. S. Davis, D. T. Anderson, G. Duxbury, and D. J. Nesbitt, “ Jet-cooled molecular radicals in slit supersonic discharges: Sub-Doppler infrared studies of methyl radical,” J. Chem. Phys. 107, 5661 (1997). https://doi.org/10.1063/1.474259",
+      "doi": "10.1063/1.474259",
+      "title": null,
+      "year": "1997"
+    },
+    {
+      "raw": "66. B. P. Bloom, Y. Paltiel, R. Naaman, and D. H. Waldeck, “ Chiral induced spin selectivity,” Chem. Rev. 124, 1950 (2024). https://doi.org/10.1021/acs.chemrev.3c00661",
+      "doi": "10.1021/acs.chemrev.3c00661",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "67. J. R. Schrieffer, Theory of Superconductivity (CRC Press, 2018).",
+      "doi": "10.1201/9780429495700",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "68. T. Helgaker and P. Jorgensen, Molecular Electronic Structure Theory (Wiley, New York, 2013).",
+      "doi": null,
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "69. G. P. Chen, V. K. Voora, M. M. Agee, S. G. Balasubramani, and F. Furche, “ Random-phase approximation methods,” Annu. Rev. Phys. Chem. 68, 421 (2017). https://doi.org/10.1146/annurev-physchem-040215-112308",
+      "doi": "10.1146/annurev-physchem-040215-112308",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "70. J. A. Parkhill and M. Head-Gordon, “ A tractable and accurate electronic structure method for static correlations: The perfect hextuples model,” J. Chem. Phys. 133, 024103 (2010). https://doi.org/10.1063/1.3456001",
+      "doi": "10.1063/1.3456001",
+      "title": null,
+      "year": "2010"
+    }
+  ],
+  "assets": [
+    {
+      "kind": "figure",
+      "heading": "FIG. 1. Refer to the image caption for details.",
+      "caption": "A plot of the ratio of the dominant Cartesian component of the electronic momentum ⟨ p ̂ ⟩ with respect to the finite difference benchmark. The results with nuclear charges and masses as the weights in Eqs. (28) and (29) are shown in (a) and (b), respectively. The upper panels show plots for a full range of σ values, while the bottom two panels zoom in on the large σ range, i.e., the orange shaded zone in the upper panels. The results for water (H 2 O) and formaldehyde (CH 2 O) are shown in blue and red, respectively. In principle, if one were to use Γ = d as in Eq. (8) together with a complete electronic basis, one would find the standard Ehrenfest result ( ⟨ p ̂ ⟩ = m d ⟨ x ̂ ⟩ / d t ) ⁠ , which corresponds to the black dotted horizontal line at y = 1. This graph highlights that a simple phase space approach can recover a strong estimate of the electronic momentum (with the correct sign) using only an approximate Γ .",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1063_5.0260731_assets/m_144111_1_5.0260731.figures.online.f1.jpg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "preview",
+      "download_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jcp/162/14/10.1063_5.0260731/1/m_144111_1_5.0260731.figures.online.f1.jpeg?Expires=1791914251&Signature=X3bJy5LX0nwR8aiM14zVULG8-Q8ov15AcU-hNctpK0ajyH2iEEFtJHE9JNHXjI2QdThr~kCkK-pxjqudEZTBRvUvbCiq5FwDWZyesE-y1mowBgB~ZqZTDNtjB6wyfZ6WJ2u4EnNeyh2eER4Sq0QEt5NDPikxazWvw33eeBZsM1kRzlZtrU2EXj5z5eKCpKWkD30d4~kLFmGshfzHeaHvGD02p0vCGnKlt8FEeIKyLVx5OI1nrGnLHX0MYap6u28~8SPjeBm4NNlNve~LANjj7W5fP~GaPlhH-pcFTImaCYOQq9BQMpbdfX0HKGQvoLQh51jK69fZCF5y-nmyXHMAUw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "original_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jcp/162/14/10.1063_5.0260731/1/m_144111_1_5.0260731.figures.online.f1.jpeg?Expires=1791914251&Signature=X3bJy5LX0nwR8aiM14zVULG8-Q8ov15AcU-hNctpK0ajyH2iEEFtJHE9JNHXjI2QdThr~kCkK-pxjqudEZTBRvUvbCiq5FwDWZyesE-y1mowBgB~ZqZTDNtjB6wyfZ6WJ2u4EnNeyh2eER4Sq0QEt5NDPikxazWvw33eeBZsM1kRzlZtrU2EXj5z5eKCpKWkD30d4~kLFmGshfzHeaHvGD02p0vCGnKlt8FEeIKyLVx5OI1nrGnLHX0MYap6u28~8SPjeBm4NNlNve~LANjj7W5fP~GaPlhH-pcFTImaCYOQq9BQMpbdfX0HKGQvoLQh51jK69fZCF5y-nmyXHMAUw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jcp/162/14/10.1063_5.0260731/1/m_144111_1_5.0260731.figures.online.f1.jpeg?Expires=1791914251&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/jpeg",
+      "downloaded_bytes": 40868,
+      "width": 520,
+      "height": 451,
+      "preview_accepted": true,
+      "browser_backend": null,
+      "final_fetcher": "direct_http",
+      "recovery_attempts": [],
+      "provenance": [
+        "official_full_size_not_exposed"
+      ],
+      "asset_timing": {
+        "queue_ms": 0.021,
+        "candidate_resolution_ms": 0.049,
+        "dns_policy_validation_ms": 43.209,
+        "connect_to_headers_ttfb_ms": 581.71,
+        "body_stream_ms": 169.499,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.057,
+        "save_ms": 3.012,
+        "total_ms": 798.245,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "FIG. 2. Refer to the image caption for details.",
+      "caption": "A test of the continuity equation for a translating H 2 molecule. We plot the charge density differences (left panel) and the negative of the divergence of the current density [with basis free (BF) Γ ̂ from Eqs. (33) and (37) , right panel] projected on the xy plane for different basis sets (small at the top, large at the bottom). The positions of the two H atoms are at ±0.693 83 bohr along the x axis (indicated by the cross symbol in white). The strong agreement of these figures is a good validation of a phase-space electronic Hamiltonian.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1063_5.0260731_assets/m_144111_1_5.0260731.figures.online.f2.jpg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "preview",
+      "download_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jcp/162/14/10.1063_5.0260731/1/m_144111_1_5.0260731.figures.online.f2.jpeg?Expires=1791914251&Signature=NFDAHcmcmMmAYHEVk~W4-r5o6ajVmkXoawDiU5eWS79GhFE6FPRb9sEiHpmj7k-FOPMe2WhmC-JHoCpPa7df~hTI4sIgZh1q3zHjVWaCmWPQ5GSiWunBq39iv5NSkQ~N~WdEfTeLP0dTA1YU60GK3CGPeligv25iDdDC~lzId4yBuT9x~yHrqdA6TrFPuRqV44-vDcUJEBLdK3aJdoVCOUr2yD6BQxKB3CvfoKolFX2-WST4KKoUx3obPnD8kjMuG-vg-ZcbNsQ2odly8Pjyz0XEONOPsuFDVoTU2SwqZsEYUxj6ClAefEAr6ar-SryVRFMyIpq4jnJyvIN4F~w-4g__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "original_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jcp/162/14/10.1063_5.0260731/1/m_144111_1_5.0260731.figures.online.f2.jpeg?Expires=1791914251&Signature=NFDAHcmcmMmAYHEVk~W4-r5o6ajVmkXoawDiU5eWS79GhFE6FPRb9sEiHpmj7k-FOPMe2WhmC-JHoCpPa7df~hTI4sIgZh1q3zHjVWaCmWPQ5GSiWunBq39iv5NSkQ~N~WdEfTeLP0dTA1YU60GK3CGPeligv25iDdDC~lzId4yBuT9x~yHrqdA6TrFPuRqV44-vDcUJEBLdK3aJdoVCOUr2yD6BQxKB3CvfoKolFX2-WST4KKoUx3obPnD8kjMuG-vg-ZcbNsQ2odly8Pjyz0XEONOPsuFDVoTU2SwqZsEYUxj6ClAefEAr6ar-SryVRFMyIpq4jnJyvIN4F~w-4g__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jcp/162/14/10.1063_5.0260731/1/m_144111_1_5.0260731.figures.online.f2.jpeg?Expires=1791914251&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/jpeg",
+      "downloaded_bytes": 31936,
+      "width": 520,
+      "height": 372,
+      "preview_accepted": true,
+      "browser_backend": null,
+      "final_fetcher": "direct_http",
+      "recovery_attempts": [],
+      "provenance": [
+        "official_full_size_not_exposed"
+      ],
+      "asset_timing": {
+        "queue_ms": 0.165,
+        "candidate_resolution_ms": 0.056,
+        "dns_policy_validation_ms": 4.255,
+        "connect_to_headers_ttfb_ms": 229.077,
+        "body_stream_ms": 42.326,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.055,
+        "save_ms": 2.734,
+        "total_ms": 279.367,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "FIG. 3. Refer to the image caption for details.",
+      "caption": "A test of the continuity equation for a stretching H 2 molecule, where we move the H atom located at the negative x axis closer to the other H atom with a velocity corresponding to the room temperature. We plot the charge density differences (left panel) and the negative of the divergence of the current density (middle and right panels) projected on the xy plane as computed with different basis sets (small at the top, large at the bottom). The positions of the two H atoms are at ±0.693 83 bohr along the x axis (indicated by the cross symbol in white). The agreement between the left and middle panels [with basis free (BF) Γ ̂ from Eqs. (33) and (37) ] offers a resounding validation of the approach taken in this paper. Here, we set σ = 0.5 bohr; note that even better results can be found by tuning σ in Eq. (28) . By contrast, one finds much worse results using the phase-space electronic Hamiltonian approach using a Γ ̂ operator built from an atomic orbital (AO) basis (from Refs. 38 and 52 , right panel); the latter can clearly predict quite unphysical results for large basis sets.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1063_5.0260731_assets/m_144111_1_5.0260731.figures.online.f3.jpg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "preview",
+      "download_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jcp/162/14/10.1063_5.0260731/1/m_144111_1_5.0260731.figures.online.f3.jpeg?Expires=1791914251&Signature=bwIvfYR-IRXZiF~IuO0-AliJJTdEhAHUYYMvB~ev7CqeTuYIganRuNOW2q7JeQjvHNKa6HsFMHXvTw4puFoEYyqXh0kh6tqRdOu7Kfw1xyPHl6ptTcBcoLk6buTZj9vrJUavevRid3GBjATuymCkP5XHgBGptyJKThiB9p1RDAdqdJLJ4qJzieHTSsvrPR5xHqUHh25VKPAYzUUo-6lE8-4j6VHfqdLl2TKWpMLhBb1Oq25pWTql-jLZHfnA2Uo2G-SnojhzWCvjkqTPd28tjS6NxvJ17IeBPXUMMl3~oXOzZnz0yiiuLQ6vQwwD1RpjK8y~SO57aPfAU1cfMpESaA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "original_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jcp/162/14/10.1063_5.0260731/1/m_144111_1_5.0260731.figures.online.f3.jpeg?Expires=1791914251&Signature=bwIvfYR-IRXZiF~IuO0-AliJJTdEhAHUYYMvB~ev7CqeTuYIganRuNOW2q7JeQjvHNKa6HsFMHXvTw4puFoEYyqXh0kh6tqRdOu7Kfw1xyPHl6ptTcBcoLk6buTZj9vrJUavevRid3GBjATuymCkP5XHgBGptyJKThiB9p1RDAdqdJLJ4qJzieHTSsvrPR5xHqUHh25VKPAYzUUo-6lE8-4j6VHfqdLl2TKWpMLhBb1Oq25pWTql-jLZHfnA2Uo2G-SnojhzWCvjkqTPd28tjS6NxvJ17IeBPXUMMl3~oXOzZnz0yiiuLQ6vQwwD1RpjK8y~SO57aPfAU1cfMpESaA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/jcp/162/14/10.1063_5.0260731/1/m_144111_1_5.0260731.figures.online.f3.jpeg?Expires=1791914251&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/jpeg",
+      "downloaded_bytes": 44492,
+      "width": 520,
+      "height": 374,
+      "preview_accepted": true,
+      "browser_backend": null,
+      "final_fetcher": "direct_http",
+      "recovery_attempts": [],
+      "provenance": [
+        "official_full_size_not_exposed"
+      ],
+      "asset_timing": {
+        "queue_ms": 0.959,
+        "candidate_resolution_ms": 0.07,
+        "dns_policy_validation_ms": 13.542,
+        "connect_to_headers_ttfb_ms": 579.484,
+        "body_stream_ms": 172.77,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.059,
+        "save_ms": 1.473,
+        "total_ms": 769.079,
+        "status": "saved"
+      }
+    }
+  ],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 20018,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "Markdown full text was saved to /home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/Tao_et_al_2025_A_basis-free_phase_space_electronic_Hamiltonian_that_recovers_beyond_Born_Oppenheimer_electronic_momentum_and_current_density.md."
+    ],
+    "source_trail": [
+      "fulltext:aip_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_aip",
+      "route:signal_publisher_aip",
+      "route:signal_doi_aip",
+      "route:probe_aip_unknown",
+      "route:provider_selected_aip",
+      "route:provider_candidate_aip_metadata_selected_rank_1",
+      "route:provider_candidate_aip_identity_strong",
+      "fulltext:aip_attempt",
+      "download:aip_assets_saved_profile_body",
+      "download:aip_assets_preview_accepted",
+      "fulltext:aip_article_ok",
+      "route:provider_candidate_aip_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 311,
+      "body": 19707,
+      "refs": 3600
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 78200,
+      "word_count": 12650,
+      "body_block_count": 26,
+      "body_heading_count": 26,
+      "body_to_abstract_ratio": 68.37837837837837,
+      "explicit_body_container": true,
+      "post_abstract_body_run": false,
+      "figure_count": 3
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": true,
+      "profile": "body",
+      "expected": null,
+      "discovered": 3,
+      "attempted": 3,
+      "total": 3,
+      "local": 3,
+      "full_size": 0,
+      "preview": 3,
+      "accepted_preview": 3,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 3,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 3,
+          "requested": 3,
+          "full_size": 0,
+          "preview": 3,
+          "accepted_preview": 3,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": [
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "preview",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1063_5.0260731_assets/m_144111_1_5.0260731.figures.online.f1.jpg",
+          "real_mime": "image/jpeg",
+          "byte_count": 40868,
+          "width": 520,
+          "height": 451,
+          "preview_accepted": true,
+          "sha256": "11ca5870d7a5c5e6b38570508fe95df5f1301a0fdfacec34b540ad5084cdf36e",
+          "failure_code": null,
+          "provenance": [
+            "official_full_size_not_exposed"
+          ],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "preview",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1063_5.0260731_assets/m_144111_1_5.0260731.figures.online.f2.jpg",
+          "real_mime": "image/jpeg",
+          "byte_count": 31936,
+          "width": 520,
+          "height": 372,
+          "preview_accepted": true,
+          "sha256": "58ab8c6f54ef060fd94788228a826432889b54cd8293160466436543686fc9c0",
+          "failure_code": null,
+          "provenance": [
+            "official_full_size_not_exposed"
+          ],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "preview",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1063_5.0260731_assets/m_144111_1_5.0260731.figures.online.f3.jpg",
+          "real_mime": "image/jpeg",
+          "byte_count": 44492,
+          "width": 520,
+          "height": 374,
+          "preview_accepted": true,
+          "sha256": "416edf1227e1047f95ad86d583a1aee9f5c272e7326cfe27161917563914648d",
+          "failure_code": null,
+          "provenance": [
+            "official_full_size_not_exposed"
+          ],
+          "suspected_reasons": []
+        }
+      ]
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "aip",
+    "route": "browser_html",
+    "representation": "html",
+    "transport": "browser",
+    "fallback_used": false
+  }
+}

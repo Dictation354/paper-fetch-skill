@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "doi": "10.1098/rsta.2020.0108",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://api.crossref.org/works/10.1098%2Frsta.2020.0108",
+      "final_url": "https://api.crossref.org/works/10.1098%2Frsta.2020.0108",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:27:22 GMT",
+        "content-type": "application/json",
+        "content-length": "6992"
+      },
+      "captured_at_utc": "2026-09-18T02:27:21.810322+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 27194,
+      "sha256": "a4efdbe3042c94c1ca3a740d3bd8e3d6143283065aa80279b97358a6e2dc9335",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1098/rsta.2020.0108",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://royalsocietypublishing.org/doi/10.1098/rsta.2020.0108",
+      "final_url": "https://royalsocietypublishing.org/rsta/article/379/2201/20200108/58186/Topics-in-the-mathematical-design-of",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:27:26 GMT",
+        "content-type": "text/html; charset=utf-8"
+      },
+      "captured_at_utc": "2026-09-18T02:27:30.234327+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 616602,
+      "sha256": "6a0cd2ad1d9443d6cdcf5093fb27c316ce4b08959d4ef79dc168009c359eec79",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

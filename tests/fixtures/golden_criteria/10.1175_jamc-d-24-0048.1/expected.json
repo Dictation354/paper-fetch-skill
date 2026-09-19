@@ -17,5 +17,220 @@
     "figures": false,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1175_jamc-d-24-0048.1",
+    "provider": "ams",
+    "doi": "10.1175/jamc-d-24-0048.1",
+    "original": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/original.html",
+    "sha256": "1f963d25078cab358ca2cce178580ab5f21feb015236be5bbbf09ddadf8d0b0e",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 3,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 44,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 56,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 10,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 0,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "No structured formula in the selected original; bitmap/externally loaded formulas have only captured index/link evidence.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/provenance.json",
+    "captured_image_files": [
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/figure-1-2026-09-15.jpg",
+        "sha256": "c1be8d12d8d992948df4304455f3c7f9235cce3a25177418e1fd7c715ce87f51",
+        "bytes": 27290
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/8faf4183bd6e19e3-http-1.bin",
+        "sha256": "322e86c9a61a9bc9803800d4e7c828c07943f728a80e9fb26f6bb6891bc375a9",
+        "bytes": 54022
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/e0b4a3479fa3905c-http-1.bin",
+        "sha256": "bdc7fac80b88328d50e18308a1b1737890aaa00c5792812e5857f7655136d6ef",
+        "bytes": 52018
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/5c62365b2c75b67a-http-1.bin",
+        "sha256": "4e89a1185e1fcee96320d1fa3faff7b0ccb5831b49bd69c3d3f5a42b3ffd45ba",
+        "bytes": 39947
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/04ba429313af0a04-http-1.bin",
+        "sha256": "7b330600b18e340695f76378e79d9901c3a552fcd068df78db03de3251880074",
+        "bytes": 50016
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/3e4d1baa34c22769-http-1.bin",
+        "sha256": "15781bd4b2461ea9984688d3b83a3aa47114f868cd1f72d1563c11f1eb1e18d2",
+        "bytes": 31329
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headless-body-002-http_response_entity.bin",
+        "sha256": "59583b1fee57fd97af13cb3434f0bba98102b951fa2d82e70c5427fccf9fa22a",
+        "bytes": 699112
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headless-body-006-http_response_entity.bin",
+        "sha256": "32af62c7f30de5428222fdb058230fd666f4c5824c1f70a6398e863077a2b610",
+        "bytes": 1635324
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headless-body-007-http_response_entity.bin",
+        "sha256": "bde4f8c37d47b698eaa55cb4ba048dede4e9294263909f9e76409bb8c46721d1",
+        "bytes": 8543900
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headless-body-008-http_response_entity.bin",
+        "sha256": "39e9bfb3b47a996100ea9f3cecb8aceb94803966000b5ca2daad19b874b79a59",
+        "bytes": 10897916
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headless-body-009-http_response_entity.bin",
+        "sha256": "041a20bf153d5906968ab4dbc075747f475d84ac03482d89eb58e7b4f1d22949",
+        "bytes": 5346660
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headless-body-010-http_response_entity.bin",
+        "sha256": "ecee145e36390298ef72ca22acdf17597f92c5ac233b2cf06ff2448073feca9b",
+        "bytes": 6947648
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headless-body-011-http_response_entity.bin",
+        "sha256": "576c0f459fdd2afa9c563cb34913ab4f90510ab2b4d21dcd1bf16012f75ee841",
+        "bytes": 9203176
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headless-body-012-http_response_entity.bin",
+        "sha256": "455b827d9f9992c2c3b48daa37bc40d4901ba447099c0d7fa51b62fc502aec30",
+        "bytes": 7471368
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headless-body-013-http_response_entity.bin",
+        "sha256": "6cb440c388750051af4a1cecbc6ec7014236f6c5f34f852d3d91f5779563c449",
+        "bytes": 6128664
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headed-body-002-http_response_entity.bin",
+        "sha256": "98c7d45c8c0026a5b0b8eeadd213785c1b144b586a6b16db8c09c47e4edeebb5",
+        "bytes": 118835
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headed-body-003-http_response_entity.bin",
+        "sha256": "c711c33bec0baa7c3bd571683551e6d2d23c240ab7cd2d218fa58c44d186a737",
+        "bytes": 137473
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headed-body-004-http_response_entity.bin",
+        "sha256": "bd2046ebb57a0599b6f13b3c46bed2836cd571f9c79fb1d843b73a0b10130a63",
+        "bytes": 119029
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headed-body-005-http_response_entity.bin",
+        "sha256": "6df99b07ca4cc68f8f00a64731ed8849019ad2b4b79d867593b647dfd651d7cc",
+        "bytes": 331428
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headed-body-006-http_response_entity.bin",
+        "sha256": "d9be8b1e6df65dbe38fc50ae75705d5c90e48de1544cccc6dc3aedebd65eb49f",
+        "bytes": 254079
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headed-body-007-http_response_entity.bin",
+        "sha256": "d0ccacec15948ac1eab2f7018a584eeaf2c79b16dcdfda94d1f6afe6f04deec2",
+        "bytes": 143407
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headed-body-008-http_response_entity.bin",
+        "sha256": "71a54c873b5bf30577b94a6c3bfca34f1886b5c233aaeb9499077f01007653f6",
+        "bytes": 235155
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headed-body-009-http_response_entity.bin",
+        "sha256": "63ff8c45c253c810132b170cb437458728d2a713aa3b517fd4955acec8b18883",
+        "bytes": 261422
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headed-body-010-http_response_entity.bin",
+        "sha256": "713dd459f3c07e75cedb003177dbcc2ef9565c9659341aec88c8a66e4a597cf2",
+        "bytes": 231427
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/ams-headed-body-011-http_response_entity.bin",
+        "sha256": "33e87fe873e6a99517fe9f5d89a8c9f975664de6fe779ee5f8d5a729e26c593e",
+        "bytes": 228104
+      }
+    ],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 0,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/original.html",
+      "sha256": "1f963d25078cab358ca2cce178580ab5f21feb015236be5bbbf09ddadf8d0b0e",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [],
+      "mathml": []
+    }
+  ]
 }

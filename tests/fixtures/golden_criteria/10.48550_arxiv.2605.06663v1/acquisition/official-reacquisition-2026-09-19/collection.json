@@ -1,0 +1,248 @@
+{
+  "doi": "10.48550/arxiv.2605.06663v1",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Wang_et_al_2026_EMO_Pretraining_Mixture_of_Experts_for_Emergent_Modularity.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/outputs/d9808ea4ca0c-Wang_et_al_2026_EMO_Pretraining_Mixture_of_Experts_for_Emergent_Modularity.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "d9808ea4ca0c84d391c700496a6b3dd0c9afe7dc886c57040811b647a565f665",
+      "size": 151848
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Wang_et_al_2026_EMO_Pretraining_Mixture_of_Experts_for_Emergent_Modularity.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/outputs/909f94c00abb-Wang_et_al_2026_EMO_Pretraining_Mixture_of_Experts_for_Emergent_Modularity.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "909f94c00abbac71d555b6f6f6420cda9dd044c46a0c87c16c68ebcbd3a2606d",
+      "size": 79855
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/eval_pipeline_with_pareto.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/4772dfac1d6b-eval_pipeline_with_pareto.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "4772dfac1d6bc97fe8da106d5b9fe9b7e094126603ba906a8fb7adca1538766e",
+      "size": 245814
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/modmoe_method.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/ed3c757a8959-modmoe_method.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "ed3c757a895909afcbf153759b3f959e71d26d4cab2f7ed2c629736bfb2a197c",
+      "size": 215858
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/modular_use_1t.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/a99a4132cc74-modular_use_1t.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "a99a4132cc74808818fbc83ec4732b45043b403cf2abd07193a60caa7bc17309",
+      "size": 131027
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/expert_selection_method.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/3323221f2b5f-expert_selection_method.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "3323221f2b5fbbbe3d387a70770c205afc851c39b1b3ee7b53bd7620f064a1c7",
+      "size": 143483
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/token_cluster_comparison.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/d3407836bf0a-token_cluster_comparison.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "d3407836bf0a88fd18406e335d506539c00a6a2a5347f253134c06113c51e781",
+      "size": 488964
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/global_vs_local_lb.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/e8f81e731694-global_vs_local_lb.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "e8f81e731694c69f5df4cfd305bb2acf215956b5769eb72e9bb034dab60edd71",
+      "size": 102179
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/moe_hyperparameter_ablations.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/38366ed73468-moe_hyperparameter_ablations.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "38366ed7346891bd25108c4aee278eb4065c08ccdeadef9781629833f91546a2",
+      "size": 235123
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/twolevel_hyperparameter_ablations.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/1be266605aa7-twolevel_hyperparameter_ablations.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "1be266605aa7032b06181b8cc9c08253a1581422dc0da9bd1d9a7597c27240b9",
+      "size": 146667
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/prenorm_noqknorm_ablations.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/756cfab696d4-prenorm_noqknorm_ablations.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "756cfab696d443ef1291a4f19d4090fb11e1ab809650bf481252a9e6774278d9",
+      "size": 112563
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/modular_use_130b.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/82bd3b25a666-modular_use_130b.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "82bd3b25a666b7d78f10e13298f75ce5251fba9207adf501fc5595639e4a8390",
+      "size": 193703
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/calibration_sample_ablation.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/1dad5d412843-calibration_sample_ablation.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "1dad5d412843296dae3c28e54c0d563b270a2e25f306086af498cdabc9280c00",
+      "size": 213706
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/modular_use_mmlu_other_130b.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/20677a60605e-modular_use_mmlu_other_130b.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "20677a60605eaea73fdf4eca18cf7fdb18eb25ac50f8a610aa9b309925e1a75e",
+      "size": 117347
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06663v1_assets/domain_similarities.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/official-reacquisition-2026-09-19/assets/81c67f84d307-domain_similarities.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "81c67f84d30762967a0220d1dea14f07980cc4c26d3d85e8c6a8073d9cb7eaca",
+      "size": 346834
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/unknown_unknown_10.48550_arxiv.2605.06663v1_original.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "category": "raw_sources",
+      "origin_kind": "real_replay",
+      "sha256": "975efd41f740ee2ec6047345e36e60377da5a8b8a933220ce02e3920c70b7f68",
+      "size": 406089
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "complete",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.48550/arxiv.2605.06663v1",
+      "expected_doi": "10.48550/arxiv.2605.06663v1",
+      "title": "EMO: Pretraining Mixture of Experts for Emergent Modularity",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 14662,
+      "confidence": "high",
+      "flags": [],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 13,
+      "attempted": 13,
+      "total": 13,
+      "local": 13,
+      "full_size": 13,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 13,
+      "remote_only_count": 0,
+      "body_discovered": 13,
+      "body_attempted": 13,
+      "body_local": 13,
+      "body_full_size": 13,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "complete",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "arxiv_html",
+      "acquisition": {
+        "provider": "arxiv",
+        "route": "official_html",
+        "representation": "html",
+        "transport": "http",
+        "fallback_used": false
+      },
+      "trace_event_count": 17,
+      "fallback_codes": [],
+      "warning_codes": [],
+      "failure_codes": [],
+      "unstructured_warning_count": 1,
+      "acceptance_policy": "provider_html_body",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

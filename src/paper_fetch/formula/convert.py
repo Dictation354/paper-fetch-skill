@@ -1190,12 +1190,39 @@ def _convert_mathml_string_uncached(
 ) -> FormulaConversionResult:
     runtime_env = dict(env)
     selected_backend = resolve_backend(env=runtime_env, backend=backend)
-    return backend_strategy(selected_backend).convert(
-        raw_mathml,
+    from .semantics import prepare_mathml_semantics, restore_mathml_spacing
+    from ..xml_security import XmlParseFailure
+
+    try:
+        prepared, spaces = prepare_mathml_semantics(raw_mathml)
+    except XmlParseFailure as exc:
+        return FormulaConversionResult(
+            backend=selected_backend,
+            status="failed",
+            latex="",
+            raw_mathml=raw_mathml,
+            error=str(exc),
+            duration_ms=0,
+            display_mode=display_mode,
+        )
+    result = backend_strategy(selected_backend).convert(
+        prepared,
         display_mode=display_mode,
         env=runtime_env,
         explicitly_selected=explicitly_selected,
     )
+    result = replace(result, raw_mathml=raw_mathml)
+    if result.status == "ok" and spaces:
+        restored = restore_mathml_spacing(result.latex, spaces)
+        if restored is None:
+            return replace(
+                result,
+                status="failed",
+                latex="",
+                error="MathML spacing markers were not preserved by the backend.",
+            )
+        result = replace(result, latex=restored)
+    return result
 
 
 def convert_mathml_element_to_latex(

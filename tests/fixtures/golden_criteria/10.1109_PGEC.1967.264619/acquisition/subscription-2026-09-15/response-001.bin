@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+    <style>
+        body {
+            font-family: "Arial";
+        }
+    </style>
+    <script type="text/javascript">
+    window.awsWafCookieDomainList = [];
+    window.gokuProps = {
+"key":"AQIDAHjcYu/GjX+QlghicBgQ/7bFaQZ+m5FKCMDnO+vTbNg96AGoI2GJn8OasRg3GRk4GOKTAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMi/zVR1hr09/Q3JRIAgEQgDugT3k4D1Vt+nxWNEKC+/CrTclexU679LD1/38Z4fcKLHzGS96pYwgn/hFUB3APwdnuoVLCQYpmM7dQZw==",
+          "iv":"A6xsaQBAkAAAAPsq",
+          "context":"rEronFfY0zuCCRhCATznyCOY52wGTQdsDPEs53s/BC4fDWVx4jOETWbS+BiR3jLQK/jE4AoN9TVn2QrQE0a/EL6jXl6qeCA1zi2TesagV2G/bH7GPd1WIkrgTF+iVwjJrjwt+1M4S0aCDy6tzlmAP6YNaHJjai3WzHL6I78g+sYQyj8aSO/LBuyfSvK+Ha1bLhSwnkrtkzeHzTFzWiRMuzwWE2Gr3AaQdPyZHmuPxwdjevM4lSb2VM9JFkc+5lGHrUIpmGXHpsSR52xLpH+38DVd7OpHwmNdH4JUWVw9MR07TbIWLlnegLSBGlaCz9i9G35Y6cmNe67TLyu7iA1g70JPNlvjsXPSaSmV0nvhAUiytKQ43VnCqROeY0ecRB958T6JxIgrWM54u8RHoNNLtrGCxx0pDKGrmBFjqMG391Arb2SUTH3Zqg=="
+};
+    </script>
+    <script src="https://f321f3b23f09.e9817652.ap-northeast-1.token.awswaf.com/f321f3b23f09/7311181d7708/27944042042b/challenge.js"></script>
+</head>
+<body>
+    <div id="challenge-container"></div>
+    <script type="text/javascript">
+        AwsWafIntegration.saveReferrer();
+        AwsWafIntegration.checkForceRefresh().then((forceRefresh) => {
+            if (forceRefresh) {
+                AwsWafIntegration.forceRefreshToken().then(() => {
+                    window.location.reload(true);
+                });
+            } else {
+                AwsWafIntegration.getToken().then(() => {
+                    window.location.reload(true);
+                });
+            }
+        });
+    </script>
+    <noscript>
+        <h1>JavaScript is disabled</h1>
+        In order to continue, we need to verify that you're not a robot.
+        This requires JavaScript. Enable JavaScript and then reload the page.
+    </noscript>
+</body>
+</html>

@@ -1,0 +1,99 @@
+{
+  "provider": "pnas",
+  "doi": "10.1073/pnas.2509692123",
+  "sample_id": "10.1073_pnas.2509692123",
+  "source_url": "https://www.pnas.org/doi/10.1073/pnas.2509692123",
+  "source_input": "tests/fixtures/golden_criteria/10.1073_pnas.2509692123/acquisition/subscription-2026-09-15/response-002.bin",
+  "include_supplementary": true,
+  "include_body": false,
+  "source_sha256": "ddfeb2281f844396a413f2b7e6c4d59d6bbeb37beab7cad2fa1bbc0f35f67d54",
+  "targets": [
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Download",
+        "caption": "",
+        "section": "supplementary",
+        "url": "https://www.pnas.org/doi/suppl/10.1073/pnas.2509692123/suppl_file/pnas.2509692123.sapp.pdf"
+      },
+      "download_url": "https://www.pnas.org/doi/suppl/10.1073/pnas.2509692123/suppl_file/pnas.2509692123.sapp.pdf",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/b6c438a1ed3eaf91-http-3.bin"
+      ],
+      "file_role": "supplementary",
+      "reason": "HTTP 403; not an expected readable binary",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "historical_capture": {
+        "state": "unavailable",
+        "validation": {
+          "valid": false,
+          "reason": "not an expected readable binary"
+        },
+        "replay_verified": false,
+        "outcome": "blocked",
+        "former_record": "acquisition/assets-2026-09-15/b6c438a1ed3eaf91-http-3.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Download",
+        "caption": "",
+        "section": "supplementary",
+        "url": "https://www.pnas.org/doi/suppl/10.1073/pnas.2509692123/suppl_file/pnas.2509692123.sd01.xlsx"
+      },
+      "download_url": "https://www.pnas.org/doi/suppl/10.1073/pnas.2509692123/suppl_file/pnas.2509692123.sd01.xlsx",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/f56f2ae149b9a802-http-3.bin"
+      ],
+      "file_role": "supplementary",
+      "reason": "HTTP 403; not an expected readable binary",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "historical_capture": {
+        "state": "unavailable",
+        "validation": {
+          "valid": false,
+          "reason": "not an expected readable binary"
+        },
+        "replay_verified": false,
+        "outcome": "blocked",
+        "former_record": "acquisition/assets-2026-09-15/f56f2ae149b9a802-http-3.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    }
+  ],
+  "counts": {
+    "discovered_references": 2,
+    "unique_files": 2,
+    "verified_files": 0,
+    "replayed_files": 0,
+    "complete_received_files": 0,
+    "index_only_files": 2
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1073_pnas.2509692123/acquisition/assets-2026-09-15/collection.json",
+  "outcome": "index_only",
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 2,
+    "unique_files": 2,
+    "verified_files": 0,
+    "replayed_files": 0,
+    "complete_received_files": 0
+  },
+  "historical_outcome_before_supplementary_removal": "blocked",
+  "historical_blocking_evidence": [
+    "acquisition/assets-2026-09-15/b6c438a1ed3eaf91-http-3.bin",
+    "acquisition/assets-2026-09-15/f56f2ae149b9a802-http-3.bin",
+    "acquisition/assets-2026-09-15/pnas-headless-001-browser_dom.html"
+  ]
+}

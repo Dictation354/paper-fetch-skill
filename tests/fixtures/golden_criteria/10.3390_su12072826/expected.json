@@ -17,5 +17,1864 @@
     "figures": false,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.3390_su12072826",
+    "provider": "mdpi",
+    "doi": "10.3390/su12072826",
+    "original": "tests/fixtures/golden_criteria/10.3390_su12072826/original.html",
+    "sha256": "29330be3e5843712799dc2382f0578173620ea7e30143a207e888e3a673bf779",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 3,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 54,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 82,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 5,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 234,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 43,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 67,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 43,
+      "tex_checked": 0,
+      "mathml_checked": 43,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.3390_su12072826/original.html",
+      "sha256": "29330be3e5843712799dc2382f0578173620ea7e30143a207e888e3a673bf779",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "86a80a0fe5472dee852e0b1b9bf4ea49e7544c201a9b660d4002bc1caedaad35",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1
+              ]
+            ],
+            [
+              1,
+              [
+                2,
+                3
+              ]
+            ],
+            [
+              2,
+              [
+                4,
+                5
+              ]
+            ],
+            [
+              3,
+              [
+                6,
+                7
+              ]
+            ],
+            [
+              4,
+              [
+                8,
+                9
+              ]
+            ],
+            [
+              5,
+              [
+                10,
+                11
+              ]
+            ],
+            [
+              6,
+              [
+                12,
+                13
+              ]
+            ]
+          ],
+          "cells": [
+            "Scale",
+            "Meaning Description",
+            "1",
+            "i and j are equally important",
+            "3",
+            "i is slightly more important than j",
+            "5",
+            "i is obviously more important than j",
+            "7",
+            "i is strongly important than j",
+            "9",
+            "i is extremely important than j",
+            "1,1/3,1/5,1/7,1/9",
+            "If the importance ratio of i to j is one of the above values, then the importance ratio of j to i is the reciprocal of i ."
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "586bd9c1f9e5fce222af60cc2721e4acebbf9cedb320a8e510dfb3d8903b64ea",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            [
+              2,
+              [
+                4,
+                5,
+                6,
+                8
+              ]
+            ],
+            [
+              3,
+              [
+                4,
+                5,
+                6,
+                9
+              ]
+            ],
+            [
+              4,
+              [
+                4,
+                5,
+                10,
+                11
+              ]
+            ],
+            [
+              5,
+              [
+                4,
+                5,
+                10,
+                12
+              ]
+            ],
+            [
+              6,
+              [
+                4,
+                5,
+                10,
+                13
+              ]
+            ],
+            [
+              7,
+              [
+                4,
+                5,
+                14,
+                15
+              ]
+            ],
+            [
+              8,
+              [
+                4,
+                5,
+                14,
+                16
+              ]
+            ],
+            [
+              9,
+              [
+                4,
+                5,
+                17,
+                18
+              ]
+            ],
+            [
+              10,
+              [
+                4,
+                5,
+                17,
+                19
+              ]
+            ],
+            [
+              11,
+              [
+                4,
+                20,
+                21,
+                22
+              ]
+            ],
+            [
+              12,
+              [
+                4,
+                20,
+                21,
+                23
+              ]
+            ],
+            [
+              13,
+              [
+                4,
+                20,
+                21,
+                24
+              ]
+            ],
+            [
+              14,
+              [
+                4,
+                20,
+                25,
+                26
+              ]
+            ],
+            [
+              15,
+              [
+                4,
+                20,
+                25,
+                27
+              ]
+            ],
+            [
+              16,
+              [
+                4,
+                20,
+                28,
+                29
+              ]
+            ],
+            [
+              17,
+              [
+                4,
+                20,
+                28,
+                30
+              ]
+            ],
+            [
+              18,
+              [
+                4,
+                20,
+                31,
+                32
+              ]
+            ],
+            [
+              19,
+              [
+                4,
+                20,
+                31,
+                33
+              ]
+            ],
+            [
+              20,
+              [
+                4,
+                20,
+                31,
+                34
+              ]
+            ],
+            [
+              21,
+              [
+                4,
+                20,
+                31,
+                35
+              ]
+            ]
+          ],
+          "cells": [
+            "Target Layer",
+            "First Grade Index",
+            "Second Grade Index",
+            "Third Grade Index",
+            "Effectiveness of financing platform for buildings energy saving transformation",
+            "Effectiveness of operating mechanism implementation",
+            "Systematization of operating objectives [ 49 ]",
+            "Target consistency [ 46 ]",
+            "Efficiency of platform organization and management",
+            "Degree of information sharing among departments [ 10 ]",
+            "Comprehensiveness of operation mechanism",
+            "Coordination of operation mechanism",
+            "Diversity of mechanism functions [ 12 ]",
+            "Effectiveness of feedback mechanism [ 48 ]",
+            "Coordination of operation process",
+            "Rationality of operation process",
+            "Linkage of operation links",
+            "Compatibility between operating mechanism and market environment",
+            "Dynamic change of operating process",
+            "Differences in operating mechanism",
+            "Effectiveness of operation subject’s behavior",
+            "Development of ESCO",
+            "ESCO’s economic strength [ 39 ]",
+            "ESCO’s technical level",
+            "ESCO’s market credit",
+            "Energy saving enthusiasm of owners",
+            "Demand for energy saving transformation of owners",
+            "Proportion of owner’s investment [ 20 ]",
+            "Investor enthusiasm",
+            "Investor’s willingness to invest [ 17 ]",
+            "Investor’s income distribution ratio [ 29 ]",
+            "Cooperation among subjects",
+            "Trust level among operating subjects",
+            "Benefit sharing ratio of energy saving transformation",
+            "Input of operating mechanism and supporting funds",
+            "Risk sharing ratio of energy saving transformation [ 46 ]"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "b674d57f8191425da6bb7dfcde7b08979afa6dca32ec0f1c9406630a60f91248",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              1,
+              [
+                6,
+                7,
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                7,
+                8,
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              3,
+              [
+                6,
+                7,
+                8,
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              4,
+              [
+                6,
+                7,
+                18,
+                19,
+                20,
+                21
+              ]
+            ],
+            [
+              5,
+              [
+                6,
+                7,
+                18,
+                22,
+                23,
+                24
+              ]
+            ],
+            [
+              6,
+              [
+                6,
+                7,
+                18,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              7,
+              [
+                6,
+                7,
+                28,
+                29,
+                30,
+                31
+              ]
+            ],
+            [
+              8,
+              [
+                6,
+                7,
+                28,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              9,
+              [
+                6,
+                7,
+                35,
+                36,
+                37,
+                38
+              ]
+            ],
+            [
+              10,
+              [
+                6,
+                7,
+                35,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              11,
+              [
+                6,
+                42,
+                43,
+                44,
+                45,
+                46
+              ]
+            ],
+            [
+              12,
+              [
+                6,
+                42,
+                43,
+                47,
+                48,
+                49
+              ]
+            ],
+            [
+              13,
+              [
+                6,
+                42,
+                43,
+                50,
+                51,
+                52
+              ]
+            ],
+            [
+              14,
+              [
+                6,
+                42,
+                53,
+                54,
+                55,
+                56
+              ]
+            ],
+            [
+              15,
+              [
+                6,
+                42,
+                53,
+                57,
+                58,
+                59
+              ]
+            ],
+            [
+              16,
+              [
+                6,
+                42,
+                60,
+                61,
+                62,
+                63
+              ]
+            ],
+            [
+              17,
+              [
+                6,
+                42,
+                60,
+                64,
+                65,
+                66
+              ]
+            ],
+            [
+              18,
+              [
+                6,
+                42,
+                67,
+                68,
+                69,
+                70
+              ]
+            ],
+            [
+              19,
+              [
+                6,
+                42,
+                67,
+                71,
+                72,
+                73
+              ]
+            ],
+            [
+              20,
+              [
+                6,
+                42,
+                67,
+                74,
+                75,
+                76
+              ]
+            ],
+            [
+              21,
+              [
+                6,
+                42,
+                67,
+                77,
+                78,
+                79
+              ]
+            ]
+          ],
+          "cells": [
+            "Target Layer",
+            "First Grade Index",
+            "Second Grade Index",
+            "Third Grade Index",
+            "Intra-Group Weight",
+            "Objective Weight",
+            "Effectiveness of financing platform for buildings energy saving transformation",
+            "Effectiveness of operating mechanism implementation 0.4722",
+            "Systematization of operating objectives 0.2084",
+            "Target consistency",
+            "0.3070",
+            "0.0408",
+            "Efficiency of platform organization and management",
+            "0.3446",
+            "0.0458",
+            "Degree of information sharing among departments",
+            "0.3484",
+            "0.0463",
+            "Comprehensiveness of operation mechanism 0.2916",
+            "Coordination of operation mechanism",
+            "0.3336",
+            "0.0443",
+            "Diversity of mechanism functions",
+            "0.3237",
+            "0.0430",
+            "Effectiveness of feedback mechanism",
+            "0.3426",
+            "0.0455",
+            "Coordination of operation process 0.2500",
+            "Rationality of operation process",
+            "0.5651",
+            "0.0751",
+            "Linkage of operation links",
+            "0.4349",
+            "0.0578",
+            "Compatibility between operating mechanism and market environment 0.2500",
+            "Dynamic change of operating process",
+            "0.5177",
+            "0.0688",
+            "Differences in operating mechanism",
+            "0.4823",
+            "0.0641",
+            "Effectiveness of operation subject’s behavior 0.5278",
+            "Development of ESCO 0.2376",
+            "ESCO’s economic strength",
+            "0.3440",
+            "0.0268",
+            "ESCO’s technical level",
+            "0.3440",
+            "0.0268",
+            "ESCO’s market credit",
+            "0.3220",
+            "0.0251",
+            "Energy-saving enthusiasm of owners 0.2469",
+            "Demand for energy saving transformation of owners",
+            "0.4816",
+            "0.0640",
+            "Proportion of owner’s investment",
+            "0.5184",
+            "0.0689",
+            "Investor enthusiasm 0.2907",
+            "Investor’s willingness to invest",
+            "0.4996",
+            "0.0617",
+            "Investor’s income distribution ratio",
+            "0.5004",
+            "0.0618",
+            "Cooperation among subjects 0.2248",
+            "Trust level among operating subjects",
+            "0.2380",
+            "0.0398",
+            "Benefit sharing ratio of energy saving transformation",
+            "0.2500",
+            "0.0418",
+            "Input of operating mechanism and supporting funds",
+            "0.2614",
+            "0.0437",
+            "Risk sharing ratio of energy saving transformation",
+            "0.2506",
+            "0.0419"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "2fbf7c243654584ddd29ac6bf08b1fd39a5d7dc9eafd1a30ae87f835b2b80eda",
+          "numbers": "12",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Χ",
+            "χ",
+            "χ",
+            "χ",
+            "i"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "7ab4776312c3795de9d89694a0deda34799883807ea0095586476cb4caddaab8",
+          "numbers": "12",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "U",
+            "U",
+            "U",
+            "U",
+            "m"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "12c6e85dc982b96499b44fa340c5c8e1ef42bd1de418db6617ea85aad201911c",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "U",
+            "i"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "b06ab85e350e32a0f4d41a73377b99166719bf1e5cc05c1a6d5dfe0a579bb1f6",
+          "numbers": "12",
+          "minimum": {
+            "_": 5,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "μ",
+            "i",
+            "j",
+            "U",
+            "i",
+            "μ",
+            "i",
+            "μ",
+            "i",
+            "μ",
+            "i",
+            "m"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "02515bae32e0a6a1d93ee9a61c15be736b048ce308fba7030bcd1fbc2dd6afeb",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "μ",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "83ee9f9c1685b7ea4846bf04c8c013626ce0660c8f055de18c03d999bf6955fd",
+          "numbers": "1212",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "i",
+            "m",
+            "j",
+            "n"
+          ],
+          "operators": [
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 6,
+          "id": null,
+          "node_sha256": "f7be204add3978e55def49b0e368a7b7770433e11e4b3bedffbfe29d1ffd9ea2",
+          "numbers": "1212",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "V",
+            "v",
+            "v",
+            "v",
+            "h",
+            "v",
+            "k",
+            "k",
+            "h"
+          ],
+          "operators": [
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 7,
+          "id": null,
+          "node_sha256": "5e729664561b00dab2e06db520bac80c7974adf87d905d446b3377808625b0a3",
+          "numbers": "12",
+          "minimum": {
+            "_": 5,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "i",
+            "A",
+            "i",
+            "a",
+            "i",
+            "a",
+            "i",
+            "a",
+            "i",
+            "n"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 8,
+          "id": null,
+          "node_sha256": "dfde8a0f65c0cd5bbac9a3a3ea34ddd3ff4a06ccf7c95f1df44b669e04f7c710",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 9,
+          "id": null,
+          "node_sha256": "b903d5c651e2682d6e8db81b270abb91fc9c0813cfdf7b9b94bab41a21a7840a",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "i",
+            "n",
+            "a",
+            "i",
+            "j"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 10,
+          "id": null,
+          "node_sha256": "b9e13e23c5e3498160942a753c0fa91dae93e57ae8aaf5e940745c894dababc9",
+          "numbers": "11121212121212",
+          "minimum": {
+            "_": 10,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "i",
+            "r",
+            "i",
+            "r",
+            "i",
+            "r",
+            "i",
+            "h",
+            "r",
+            "i",
+            "r",
+            "i",
+            "r",
+            "i",
+            "h",
+            "r",
+            "i",
+            "n",
+            "r",
+            "i",
+            "n",
+            "r",
+            "i",
+            "n",
+            "h",
+            "m"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 11,
+          "id": null,
+          "node_sha256": "1aea42727e3bc954985c514219ff17a56a9bc705c3cc5486f15cfc9fd08c04a1",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "r",
+            "i",
+            "j",
+            "k"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 12,
+          "id": null,
+          "node_sha256": "d9b40714ab8a9acd82222d9050d4453a5936f5da9f855f34df755be3f9ddfd67",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "v",
+            "k"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 13,
+          "id": null,
+          "node_sha256": "c12f66cc778a0f05b4926303b99578d5e28513110e63259964aad33bd8cd5e30",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "u",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 14,
+          "id": null,
+          "node_sha256": "72e6a00bb0261817519761bc389dac1758012abbd216679a33e2cd7f414f7944",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "U",
+            "i"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 15,
+          "id": null,
+          "node_sha256": "62c03e323eace2862f96859802a161dc9fda24c5198193c4f3a8458974f7c192",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "r",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 16,
+          "id": null,
+          "node_sha256": "4db59b95b84720628ad696337c540aae13fe38e8a57d653fc8f777592ae0e70a",
+          "numbers": "12",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "i",
+            "a",
+            "i",
+            "a",
+            "i",
+            "a",
+            "i",
+            "n"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 17,
+          "id": null,
+          "node_sha256": "73b5d0953000b9ec5792f228057609b9159056e0b192672dd6c238e962489f5e",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "i"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 18,
+          "id": null,
+          "node_sha256": "78791205fb320a5fc3a2049b52b522ec881ec746c9ba58b9b70e84ecf8ccf62a",
+          "numbers": "1211121212121212",
+          "minimum": {
+            "_": 18,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "i",
+            "A",
+            "i",
+            "R",
+            "i",
+            "a",
+            "i",
+            "a",
+            "i",
+            "a",
+            "i",
+            "n",
+            "r",
+            "i",
+            "r",
+            "i",
+            "r",
+            "i",
+            "h",
+            "r",
+            "i",
+            "r",
+            "i",
+            "r",
+            "i",
+            "h",
+            "r",
+            "i",
+            "n",
+            "r",
+            "i",
+            "n",
+            "r",
+            "i",
+            "n",
+            "h",
+            "b",
+            "i",
+            "b",
+            "i",
+            "b",
+            "i",
+            "n"
+          ],
+          "operators": [
+            "=",
+            "×",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 19,
+          "id": null,
+          "node_sha256": "7bce6a438b0755d97ec14acc96d5570684b0e395dc8e8c299c5f4801c4eff3d1",
+          "numbers": "121122",
+          "minimum": {
+            "_": 10,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "B",
+            "B",
+            "B",
+            "m",
+            "A",
+            "R",
+            "A",
+            "R",
+            "A",
+            "m",
+            "R",
+            "m",
+            "r",
+            "i",
+            "k",
+            "m",
+            "h"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "=",
+            "×"
+          ]
+        },
+        {
+          "object_index": 20,
+          "id": null,
+          "node_sha256": "4e382bc4e3cb3c1c52a8068c2df22a1cf150b4c0f1c2a0bd162dcb07c5d62e6c",
+          "numbers": "1212",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "r",
+            "i",
+            "k",
+            "b",
+            "i",
+            "k",
+            "i",
+            "m",
+            "k",
+            "h"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 21,
+          "id": null,
+          "node_sha256": "22f64c9dcb2ab34b27b48a5d9fc3ab3dfcf9e57f15c6a20fc53aaa7e8bb0baf2",
+          "numbers": "112212",
+          "minimum": {
+            "_": 9,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "A",
+            "R",
+            "A",
+            "A",
+            "R",
+            "A",
+            "R",
+            "A",
+            "m",
+            "R",
+            "m",
+            "b",
+            "b",
+            "b",
+            "h"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 22,
+          "id": null,
+          "node_sha256": "668a6a3206fd532d0369618a49571e50e2e3b05448ddd59ef782bf94095cc5bf",
+          "numbers": "11",
+          "minimum": {
+            "_": 3,
+            "^": 2,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "k",
+            "h",
+            "b",
+            "k",
+            "p",
+            "c",
+            "k",
+            "k",
+            "h",
+            "b",
+            "k",
+            "p"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 23,
+          "id": null,
+          "node_sha256": "12b69e24ba4eab670e049ffe5826c3e02cedb7b65f120979eb252332a3016e78",
+          "numbers": "1221",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "U",
+            "u",
+            "u",
+            "u"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 24,
+          "id": null,
+          "node_sha256": "ff02c591f957473b90a8e06d50c132c7f707ab4672899224db39fb9066f04537",
+          "numbers": "121",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "U",
+            "U",
+            "U"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 25,
+          "id": null,
+          "node_sha256": "caa35b74364bb408f4a8940f38ef535373c22b64c46058d8f9948d30c5275333",
+          "numbers": "11112131422122232411",
+          "minimum": {
+            "_": 11,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "U",
+            "U",
+            "U",
+            "U",
+            "U",
+            "U",
+            "U",
+            "U",
+            "U",
+            "U",
+            "U"
+          ],
+          "operators": [
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 26,
+          "id": null,
+          "node_sha256": "1a7ba417e0c10e8dc7663b4d8be2ddbe24b278e768071916262b029718f06268",
+          "numbers": "1213",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "U",
+            "U"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 27,
+          "id": null,
+          "node_sha256": "9aab428f1ae61c26222da86bf7d436fc369188d8060d47eb882a344791ecbd45",
+          "numbers": "1421222324",
+          "minimum": {
+            "_": 5,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "U",
+            "U",
+            "U",
+            "U",
+            "U"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 28,
+          "id": null,
+          "node_sha256": "e02dc557b74076b020771ee15b5ee43695526494e627cfc32b142db54d411ad2",
+          "numbers": "1112312456137814910211112221314152316172418192021",
+          "minimum": {
+            "_": 29,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "U",
+            "u",
+            "u",
+            "u",
+            "U",
+            "u",
+            "u",
+            "u",
+            "U",
+            "u",
+            "u",
+            "U",
+            "u",
+            "u",
+            "U",
+            "u",
+            "u",
+            "U",
+            "u",
+            "u",
+            "u",
+            "U",
+            "u",
+            "u",
+            "U",
+            "u",
+            "u",
+            "u",
+            "u"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 29,
+          "id": null,
+          "node_sha256": "3563bf5bcb2191be73d15c638d3ed040fe214402c7972042085217893996c93c",
+          "numbers": "1221",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "u",
+            "i",
+            "i"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 30,
+          "id": null,
+          "node_sha256": "98a4e23825fa377b7f65278a9c867d5c3c56fa8c41b53a758630c7f5bfc378eb",
+          "numbers": "0.47220.527810.20840.29160.25000.250020.23760.24690.29070.2248110.30700.34460.3484120.33360.32370.3426130.56510.4349140.51770.4823210.34400.34400.3220220.48160.5184230.49960.5004240.23800.25000.26140.2506",
+          "minimum": {
+            "_": 10,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "W",
+            "W",
+            "W",
+            "W",
+            "W",
+            "W",
+            "W",
+            "W",
+            "W",
+            "W",
+            "W"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 31,
+          "id": null,
+          "node_sha256": "b3b07906c7d65f4d126d3cfdfa1acfa2b21a648ee296dcab8d04a53bf2c77542",
+          "numbers": "110.150.20.30.250.10.10.30.350.2500.150.350.250.20.05120.20.350.20.10.050.250.250.30.150.050.30.250.350.050.05",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "R"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 32,
+          "id": null,
+          "node_sha256": "6e53126c119e44564fd63fb2fa78222b66c3beb102f8cfd3ff3bac2499653089",
+          "numbers": "130.150.20.350.20.10.10.20.30.250.15140.20.20.350.20.050.30.250.30.150",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "R"
+          ],
+          "operators": [
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 33,
+          "id": null,
+          "node_sha256": "f402bbedea96babfb77a83e34dd740db06b26823b83c8c9e9618b111be65c211",
+          "numbers": "210.30.350.20.10.050.20.250.30.10.15220.10.250.30.30.050.250.150.40.10.10.050.250.30.250.15",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "R"
+          ],
+          "operators": [
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 34,
+          "id": null,
+          "node_sha256": "c0fbcf69fabf28b6b647446e739742fd8fb92ada6e78c2c7d20e2b115294211c",
+          "numbers": "230.350.250.20.150.050.150.20.30.250.1240.30.350.20.10.050.250.250.30.10.10.20.30.150.150.20.30.250.250.150.05",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "R"
+          ],
+          "operators": [
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 35,
+          "id": null,
+          "node_sha256": "df431c41c57b3d14da2f784c8b6f90001f6635cfce45dbbcb31b966c696a7aaf",
+          "numbers": "1111110.30700.34460.34840.150.20.30.250.10.10.30.350.2500.150.350.250.20.050.13280.28680.29990.23260.0635",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "W",
+            "R"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 36,
+          "id": null,
+          "node_sha256": "c2a8d5efbe9ede4aa930c2cbf136613fafd14785df4e3c75624ce627592005ce",
+          "numbers": "1212120.25040.28330.28370.09900.05051313130.25650.30650.15650.10000.09361414140.24820.22410.32590.17590.02592121210.13650.21810.33740.21810.09992222220.24820.29820.25180.10000.10182323230.25000.22500.25000.20000.07502424240.26140.28690.22450.12560.1017",
+          "minimum": {
+            "_": 21,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "W",
+            "R",
+            "B",
+            "W",
+            "R",
+            "B",
+            "W",
+            "R",
+            "B",
+            "W",
+            "R",
+            "B",
+            "W",
+            "R",
+            "B",
+            "W",
+            "R",
+            "B",
+            "W",
+            "R"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 37,
+          "id": null,
+          "node_sha256": "b2f5466ccf37bf29f189c4a94d60cbb64ea0944dfd50176c10fd760783bf9661",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "M"
+          ],
+          "operators": [
+            "+"
+          ]
+        },
+        {
+          "object_index": 38,
+          "id": null,
+          "node_sha256": "99f645f50494417c0752547fd6bfcf5ffbaee46a14994fc757e633d26f02342a",
+          "numbers": "1111111213140.20840.29160.25000.25000.13280.28680.29990.23260.06350.25040.28330.28370.09900.05050.25650.30650.30650.10000.09350.24820.22410.32590.17590.02590.22690.27500.25180.14630.0578",
+          "minimum": {
+            "_": 8,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "W",
+            "R",
+            "W",
+            "B",
+            "B",
+            "B",
+            "B"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 39,
+          "id": null,
+          "node_sha256": "f2816d9479481907b1337319f992cf17e8871d12204c45a336b5824b0b8b95a3",
+          "numbers": "2222212223240.23760.24690.29070.22480.13650.21810.33740.21810.09990.24820.29820.25180.10000.10180.25000.22500.25000.20000.07500.26140.28690.22450.12560.10170.22520.25530.26550.16280.0935",
+          "minimum": {
+            "_": 8,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "W",
+            "R",
+            "W",
+            "B",
+            "B",
+            "B",
+            "B"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 40,
+          "id": null,
+          "node_sha256": "cad43b473bab2601357d5e242e7b4d26db94464c5c26fc8d760eb605d93f88e9",
+          "numbers": "0.47220.52780.22690.27500.25180.14630.05780.22520.25530.26550.16280.09350.22610.19140.25830.15410.0747",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "W",
+            "R"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 41,
+          "id": null,
+          "node_sha256": "1c870d2e1a294a0bb3e67c8df8e91343a9c1f9c724e490f4a4bfcd5230c97005",
+          "numbers": "0.22601000.2646800.2590600.1550400.07662067.04",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "V"
+          ],
+          "operators": [
+            "=",
+            "×",
+            "+",
+            "×",
+            "+",
+            "×",
+            "+",
+            "×",
+            "+",
+            "×",
+            "="
+          ]
+        },
+        {
+          "object_index": 42,
+          "id": null,
+          "node_sha256": "92151c6e27d7098c970278d0e5fa5a786d8b4511a2565c069df3062c8bd8febf",
+          "numbers": "1164.7921269.0961363.65351469.8562162.0642269.822367.52469.62",
+          "minimum": {
+            "_": 8,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "V",
+            "V",
+            "V",
+            "V",
+            "V",
+            "V",
+            "V",
+            "V"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "=",
+            "="
+          ]
+        }
+      ]
+    }
+  ]
 }

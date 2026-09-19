@@ -155,11 +155,40 @@ def extract_scoped_html_assets(
         supplementary_html_text=supplementary_html,
         noise_profile=MDPI_NOISE_PROFILE,
     )
+    _bind_explicit_cdn_download_urls(html_text, assets)
     if asset_profile == "all":
         assets.extend(
             _extract_mdpi_supplementary_assets(supplementary_html, source_url)
         )
     return _dedupe_assets(assets)
+
+
+def _bind_explicit_cdn_download_urls(
+    html_text: str, assets: list[dict[str, str]]
+) -> None:
+    """Bind relative body images to same-path CDN links in the figure gallery.
+
+    Keep the body URL for inline matching. Only URLs actually present in this
+    article are candidates; do not invent a CDN host or strip its query string.
+    """
+    soup = BeautifulSoup(html_text, choose_parser())
+    by_path: dict[str, str] = {}
+    for node in soup.select("a[href], img[src]"):
+        value = normalize_text(str(node.get("href") or node.get("src") or ""))
+        parsed = urllib.parse.urlparse(value)
+        if (
+            parsed.scheme == "https"
+            and parsed.hostname == "pub.mdpi-res.com"
+            and "/article_deploy/html/images/" in parsed.path
+        ):
+            by_path.setdefault(parsed.path, value)
+    for asset in assets:
+        original = asset.get("full_size_url") or asset.get("url") or ""
+        if not is_mdpi_url(original):
+            continue
+        candidate = by_path.get(urllib.parse.urlparse(original).path)
+        if candidate:
+            asset.setdefault("download_url", candidate)
 
 
 def _extract_mdpi_supplementary_assets(

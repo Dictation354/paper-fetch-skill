@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 from dataclasses import asdict, dataclass
 import json
 from pathlib import Path
-import tempfile
 from typing import Any
 
 from bs4 import BeautifulSoup
@@ -20,7 +18,7 @@ from paper_fetch.extraction.html._metadata import (
 from paper_fetch.extraction.html.assets import merge_extracted_and_downloaded_assets
 from paper_fetch.http import HttpTransport
 from paper_fetch.models import article_from_markdown
-from paper_fetch.publisher_identity import normalize_doi
+from paper_fetch.publisher_identity import normalize_doi, validate_extracted_identity
 from paper_fetch.providers import (
     _acs_html,
     _aip_html,
@@ -211,25 +209,47 @@ def golden_corpus_fixture_for_doi(doi: str) -> GoldenCorpusFixture:
 
 
 def _base_metadata(fixture: GoldenCorpusFixture) -> dict[str, Any]:
-    return {
+    metadata = {
         "doi": fixture.doi,
-        "title": fixture.title,
         "landing_page_url": fixture.landing_url,
         "authors": [],
         "fulltext_links": [],
         "references": [],
     }
+    if fixture.route_kind == "pdf_fallback":
+        # Keep PDF replay metadata outside this HTML/XML source-title repair.
+        metadata["title"] = fixture.title
+        return metadata
+    # fixture.title has a DOI display fallback, not bibliographic evidence.
+    title = normalize_text(str(fixture.sample.get("title") or ""))
+    if title and normalize_doi(title) != normalize_doi(fixture.doi):
+        metadata["title"] = title
+    return metadata
+
+
+def _merge_replay_source_metadata(
+    metadata: dict[str, Any], source_metadata: dict[str, Any]
+) -> dict[str, Any]:
+    identity = validate_extracted_identity(metadata, {}, source_metadata)
+    if identity.mismatch:
+        raise ValueError(identity.reason)
+    return dict(merge_html_metadata(metadata, source_metadata))
 
 
 def _build_elsevier_article(fixture: GoldenCorpusFixture):
     metadata = _base_metadata(fixture)
+    body = fixture.raw_path.read_bytes()
+    identity = elsevier_provider.extract_elsevier_xml_identity(body)
+    metadata = _merge_replay_source_metadata(
+        metadata, dict(identity.get("identity_evidence") or {})
+    )
     raw_payload = RawFulltextPayload(
         provider="elsevier",
         content=ProviderContent(
             route_kind="xml",
             source_url=fixture.source_url,
             content_type=fixture.content_type or "text/xml",
-            body=fixture.raw_path.read_bytes(),
+            body=body,
             merged_metadata=metadata,
         ),
         trace=trace_from_markers(["fulltext:elsevier_xml_ok"]),
@@ -242,7 +262,7 @@ def _build_springer_article(fixture: GoldenCorpusFixture):
     metadata = _base_metadata(fixture)
     html_text = fixture.raw_path.read_text(encoding="utf-8", errors="ignore")
     html_metadata = springer_html.parse_html_metadata(html_text, fixture.source_url)
-    merged_metadata = springer_html.merge_html_metadata(metadata, html_metadata)
+    merged_metadata = _merge_replay_source_metadata(metadata, dict(html_metadata))
     if not merged_metadata.get("doi"):
         merged_metadata["doi"] = fixture.doi
     extraction_payload = springer_html.extract_html_payload(
@@ -281,6 +301,7 @@ def _build_springer_article(fixture: GoldenCorpusFixture):
                     "extracted_authors": list(
                         extraction_payload.get("extracted_authors") or []
                     ),
+                    "references": list(extraction_payload.get("references") or []),
                 },
             },
         ),
@@ -353,9 +374,7 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
         metadata=metadata,
     )
     downloaded_assets = (
-        _downloaded_annualreviews_body_assets(
-            fixture, list(extraction.get("extracted_assets") or [])
-        )
+        _captured_body_assets(fixture, list(extraction.get("extracted_assets") or []))
         if fixture.provider == "annualreviews"
         else []
     )
@@ -446,50 +465,57 @@ def _downloaded_aip_body_assets(
     return downloaded
 
 
-def _downloaded_annualreviews_body_assets(
+def _captured_body_assets(
     fixture: GoldenCorpusFixture,
     extracted_assets: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    downloaded: list[dict[str, Any]] = []
-    assets_dir = golden_criteria_asset(fixture.doi, "body_assets")
-    if not assets_dir.is_dir():
-        return downloaded
-    local_asset_paths = sorted(assets_dir.glob("annualreviews-figure-*"))
-    if not local_asset_paths:
-        return downloaded
-    figure_index = 0
+    """Keep source links and attach only captured original image responses."""
+    from urllib.parse import unquote, urlsplit
+    import hashlib
+
+    provenance_path = fixture.raw_path.parent / "acquisition/provenance.json"
+    if not provenance_path.exists():
+        return [dict(item) for item in extracted_assets]
+
+    def identity(url):
+        parsed = urlsplit(unquote(str(url or "")))
+        return parsed.netloc.lower(), parsed.path
+
+    responses = {}
+    for record in json.loads(provenance_path.read_text()).get("records", []):
+        media_type = (record.get("response_headers") or {}).get("content-type", "")
+        path = fixture.raw_path.parent / record["body_file"]
+        if not media_type.startswith("image/") or not path.is_file():
+            continue
+        for url in (record.get("requested_url"), record.get("final_url")):
+            if url:
+                responses[identity(url)] = (path, record, media_type)
+    downloaded = []
     for item in extracted_assets:
-        if str(item.get("kind") or "").lower() != "figure":
+        if item.get("kind") not in {"figure", "table", "formula"}:
             continue
-        if str(item.get("section") or "body").lower() not in {"", "body"}:
-            continue
-        asset_url = str(
-            item.get("full_size_url")
-            or item.get("url")
-            or item.get("preview_url")
-            or ""
-        )
-        if not asset_url:
-            continue
-        figure_index += 1
-        if figure_index > len(local_asset_paths):
+        for key in ("full_size_url", "url", "preview_url"):
+            url = item.get(key)
+            response = responses.get(identity(url)) if url else None
+            if response is None:
+                continue
+            path, record, media_type = response
+            data = path.read_bytes()
+            assert len(data) == record["size"]
+            assert hashlib.sha256(data).hexdigest() == record["sha256"]
+            downloaded.append(
+                dict(
+                    item,
+                    path=golden_criteria_repo_path(path),
+                    download_url=url,
+                    source_url=url,
+                    content_type=media_type,
+                    downloaded_bytes=len(data),
+                    download_tier="preview" if key == "preview_url" else "full_size",
+                )
+            )
             break
-        asset_path = local_asset_paths[figure_index - 1]
-        downloaded_asset = dict(item)
-        downloaded_asset.update(
-            {
-                "path": golden_criteria_repo_path(asset_path),
-                "download_url": asset_url,
-                "source_url": asset_url,
-                "content_type": "image/gif"
-                if asset_path.suffix.lower() == ".gif"
-                else "image/png",
-                "download_tier": "full_size",
-                "downloaded_bytes": asset_path.stat().st_size,
-            }
-        )
-        downloaded.append(downloaded_asset)
-    return downloaded
+    return merge_extracted_and_downloaded_assets(extracted_assets, downloaded)
 
 
 def _ieee_fixture_metadata(fixture: GoldenCorpusFixture) -> dict[str, Any]:
@@ -518,35 +544,6 @@ def _ieee_fixture_metadata(fixture: GoldenCorpusFixture) -> dict[str, Any]:
         metadata["article_number"] = article_number
         metadata["articleNumber"] = article_number
     return metadata
-
-
-def _ieee_downloaded_body_assets(
-    extracted_assets: list[dict[str, Any]],
-    tmpdir: Path,
-) -> list[dict[str, Any]]:
-    downloaded_assets: list[dict[str, Any]] = []
-    for index, item in enumerate(extracted_assets, start=1):
-        if item.get("kind") not in {"figure", "table"} or item.get("section") != "body":
-            continue
-        asset_url = (
-            item.get("url") or item.get("full_size_url") or item.get("preview_url")
-        )
-        if not asset_url:
-            continue
-        path = tmpdir / f"ieee-asset-{index}.gif"
-        path.write_bytes(b"GIF89a\x01\x00\x01\x00\x00\x00;")
-        downloaded = dict(item)
-        downloaded.update(
-            {
-                "path": str(path),
-                "download_url": asset_url,
-                "source_url": asset_url,
-                "content_type": "image/gif",
-                "download_tier": "full_size",
-            }
-        )
-        downloaded_assets.append(downloaded)
-    return downloaded_assets
 
 
 def _build_ieee_article(fixture: GoldenCorpusFixture):
@@ -580,13 +577,11 @@ def _build_ieee_article(fixture: GoldenCorpusFixture):
         trace=trace_from_markers(["fulltext:ieee_html_ok"]),
     )
     client = IeeeClient(HttpTransport(), {})
-    with tempfile.TemporaryDirectory() as tmpdir:
-        downloaded_assets = _ieee_downloaded_body_assets(
-            extraction.extracted_assets, Path(tmpdir)
-        )
-        return client.to_article_model(
-            {"doi": fixture.doi}, raw_payload, downloaded_assets=downloaded_assets
-        )
+    return client.to_article_model(
+        {"doi": fixture.doi},
+        raw_payload,
+        downloaded_assets=_captured_body_assets(fixture, extraction.extracted_assets),
+    )
 
 
 def _build_oxfordacademic_article(fixture: GoldenCorpusFixture):
@@ -640,6 +635,9 @@ def _build_oxfordacademic_article(fixture: GoldenCorpusFixture):
         section_hints=extraction.section_hints,
         assets=extraction.extracted_assets,
         trace=trace_from_markers(["fulltext:oxfordacademic_html_ok"]),
+        warnings=_oxfordacademic_html.source_mathml_warnings(
+            extraction.source_mathml_error_count
+        ),
     )
 
 
@@ -815,7 +813,7 @@ def _build_plos_article(fixture: GoldenCorpusFixture):
             ],
         )
 
-    extraction = parse_jats_xml(
+    extraction = plos_provider.parse_plos_xml(
         body,
         source_url=fixture.source_url,
         base_metadata=metadata,
@@ -1061,6 +1059,9 @@ def _article_model_positive_summary(
 
 
 def build_article_from_fixture(fixture: GoldenCorpusFixture):
+    from tests.support.layer_policy import reject
+
+    reject("full-paper replay builder")
     return golden_corpus_adapter(fixture.provider).build_article(fixture)
 
 
@@ -1354,36 +1355,6 @@ def golden_corpus_replay_inventory() -> GoldenCorpusReplayInventory:
     )
     return GoldenCorpusReplayInventory(
         records=tuple(sorted(records, key=lambda item: (item.provider, item.sample_id)))
-    )
-
-
-GOLDEN_CORPUS_SHARD_COUNT = 4
-
-
-def plan_golden_corpus_shards(
-    fixtures: tuple[GoldenCorpusFixture, ...] | None = None,
-    *,
-    shard_count: int = GOLDEN_CORPUS_SHARD_COUNT,
-) -> tuple[tuple[GoldenCorpusFixture, ...], ...]:
-    """Assign whole providers to deterministic, count-balanced exact shards."""
-
-    if shard_count <= 0:
-        raise ValueError("golden corpus shard_count must be positive")
-    provider_groups: dict[str, list[GoldenCorpusFixture]] = defaultdict(list)
-    for fixture in fixtures or iter_golden_corpus_fixtures():
-        provider_groups[fixture.provider].append(fixture)
-    shards: list[list[GoldenCorpusFixture]] = [[] for _ in range(shard_count)]
-    for provider, group in sorted(
-        provider_groups.items(), key=lambda item: (-len(item[1]), item[0])
-    ):
-        del provider
-        shard_index = min(
-            range(shard_count), key=lambda index: (len(shards[index]), index)
-        )
-        shards[shard_index].extend(sorted(group, key=lambda item: item.doi))
-    return tuple(
-        tuple(sorted(shard, key=lambda item: (item.provider, item.doi)))
-        for shard in shards
     )
 
 

@@ -48,6 +48,7 @@ _ARXIV_AR5IV_SELECTORS: Mapping[str, tuple[str, ...]] = {
         ".ltx_note",
         ".ltx_contact",
         ".ltx_author_notes",
+        ".ltx_pubnotes",
         ".ltx_role_email",
         ".ltx_role_orcid",
         ".ltx_role_affiliation",
@@ -72,7 +73,7 @@ _ARXIV_AR5IV_SELECTORS: Mapping[str, tuple[str, ...]] = {
     "reference_title": (".ltx_bib_title",),
     "algorithm_listing": ("div.ltx_listing",),
     "latexml_error_nodes": (".ltx_ERROR", ".undefined"),
-    "math_nodes": ("math.ltx_Math",),
+    "math_nodes": ("math.ltx_Math, math.ltx_math_unparsed",),
     "note_nodes": ("span.ltx_note",),
     "note_markers": (".ltx_note_mark", ".ltx_tag_note"),
     "note_content": (".ltx_note_content",),
@@ -477,13 +478,16 @@ def _extract_arxiv_html_markdown(
         source_url,
         metadata=metadata,
     )
+    from ._arxiv_graphics import prepare_arxiv_graphics
+
+    prepare_arxiv_graphics(article, source_url)
     noise_diagnostics = _clean_official_html_latexml_noise(article)
     extracted_references = _extract_arxiv_html_references(article)
     extracted_assets = _extract_arxiv_html_assets(str(article), source_url)
-    semantic_preparation = _prepare_arxiv_semantic_blocks(article, soup)
     inline_figure_diagnostics = _annotate_arxiv_inline_figure_images(
         article, extracted_assets, source_url
     )
+    semantic_preparation = _prepare_arxiv_semantic_blocks(article, soup)
 
     for selector in _arxiv_ar5iv_selectors("article_chrome"):
         for node in article.select(selector):

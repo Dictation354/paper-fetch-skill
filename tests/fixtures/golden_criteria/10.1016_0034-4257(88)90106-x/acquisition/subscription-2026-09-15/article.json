@@ -1,0 +1,328 @@
+{
+  "doi": "10.1016/0034-4257(88)90106-x",
+  "source": "crossref_meta",
+  "metadata": {
+    "title": "A soil-adjusted vegetation index (SAVI)",
+    "authors": [
+      "A.R Huete"
+    ],
+    "abstract": "A transformation technique is presented to minimize soil brightness influences from spectral vegetation indices involving red and near-infrared (NIR) wavelengths. Graphically, the transformation involves a shifting of the origin of reflectance spectra plotted in NIR-red wavelength space to account for first-order soil-vegetation interactions and differential red and NIR flux extinction through vegetated canopies. For cotton (Gossypium hirsutum L. var DPI-70) and range grass (Eragrostics lehmanniana Nees) canopies, underlain with different soil backgrounds, the transformation nearly eliminated soil-induced variations in vegetation indices. A physical basis for the soil-adjusted vegetation index (SAVI) is subsequently presented. The SAVI was found to be an important step toward the establishment of simple °lobal\" that can describe dynamic soil-vegetation systems from remotely sensed data. © 1988.",
+    "journal": "Remote Sensing of Environment",
+    "article_type": null,
+    "published": "1988-01-01",
+    "keywords": [],
+    "license_urls": [
+      "https://www.elsevier.com/tdm/userlicense/1.0/"
+    ],
+    "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/003442578890106X"
+  },
+  "sections": [],
+  "references": [
+    {
+      "raw": "Estimating absorbed photosynthetic radiation and leaf area index from spectral reflectance in wheat",
+      "doi": "10.2134/agronj1984.00021962007600020029x",
+      "title": "Estimating absorbed photosynthetic radiation and leaf area index from spectral reflectance in wheat",
+      "year": "1984"
+    },
+    {
+      "raw": "Relationship between vegetation indices, radiation absorption, and net photosynthesis evaluated by a sensitivity analysis",
+      "doi": "10.1016/0034-4257(87)90059-9",
+      "title": "Relationship between vegetation indices, radiation absorption, and net photosynthesis evaluated by a sensitivity analysis",
+      "year": "1987"
+    },
+    {
+      "raw": "Vegetation canopy reflectance",
+      "doi": "10.1016/0034-4257(74)90003-0",
+      "title": "Vegetation canopy reflectance",
+      "year": "1974"
+    },
+    {
+      "raw": "Application of the Tasseled Cap concept to simulated Thematic Mapper data",
+      "doi": null,
+      "title": "Application of the Tasseled Cap concept to simulated Thematic Mapper data",
+      "year": "1984"
+    },
+    {
+      "raw": "Influence of rock-soil spectral variation on assessment of green biomass",
+      "doi": "10.1016/0034-4257(85)90099-9",
+      "title": "Influence of rock-soil spectral variation on assessment of green biomass",
+      "year": "1985"
+    },
+    {
+      "raw": "Intercepted photosynthetically active radiation estimated by spectral reflectance",
+      "doi": "10.1016/0034-4257(84)90008-7",
+      "title": "Intercepted photosynthetically active radiation estimated by spectral reflectance",
+      "year": "1984"
+    },
+    {
+      "raw": "Effects of vegetation on spectral irradiance at the soil surfaces",
+      "doi": "10.2134/agronj1987.00021962007900050002x",
+      "title": "Effects of vegetation on spectral irradiance at the soil surfaces",
+      "year": "1987"
+    },
+    {
+      "raw": "Soil-dependent spectral response in a developing plant canopy",
+      "doi": "10.2134/agronj1987.00021962007900010013x",
+      "title": "Soil-dependent spectral response in a developing plant canopy",
+      "year": "1987"
+    },
+    {
+      "raw": "The suitability of spectral indices for evaluating vegetation characteristics on arid rangelands",
+      "doi": "10.1016/0034-4257(87)90038-1",
+      "title": "The suitability of spectral indices for evaluating vegetation characteristics on arid rangelands",
+      "year": "1987"
+    },
+    {
+      "raw": "Soil spectral effects on 4-space vegetation discrimination",
+      "doi": "10.1016/0034-4257(84)90043-9",
+      "title": "Soil spectral effects on 4-space vegetation discrimination",
+      "year": "1984"
+    },
+    {
+      "raw": "Spectral response of a plant canopy with different soil backgrounds",
+      "doi": "10.1016/0034-4257(85)90111-7",
+      "title": "Spectral response of a plant canopy with different soil backgrounds",
+      "year": "1985"
+    },
+    {
+      "raw": "An Introduction to Solar Radiation",
+      "doi": null,
+      "title": "An Introduction to Solar Radiation",
+      "year": "1983"
+    },
+    {
+      "raw": "Spectral indices in n-space",
+      "doi": "10.1016/0034-4257(83)90010-x",
+      "title": "Spectral indices in n-space",
+      "year": "1983"
+    },
+    {
+      "raw": "Discrimination of growth and water stress in wheat by various vegetation indices through clear and turbid atmospheres",
+      "doi": "10.1016/0034-4257(83)90039-1",
+      "title": "Discrimination of growth and water stress in wheat by various vegetation indices through clear and turbid atmospheres",
+      "year": "1983"
+    },
+    {
+      "raw": "Plant canopy information extraction from composite scene reflectance of row crops",
+      "doi": "10.1364/ao.18.003775",
+      "title": "Plant canopy information extraction from composite scene reflectance of row crops",
+      "year": "1979"
+    },
+    {
+      "raw": "Hand-Held Radiometry",
+      "doi": null,
+      "title": "Hand-Held Radiometry",
+      "year": "1980"
+    },
+    {
+      "raw": "The Tasseled Cap—a graphic description of the spectral-temporal development of agricultural crops as seen by Landsat",
+      "doi": null,
+      "title": "The Tasseled Cap—a graphic description of the spectral-temporal development of agricultural crops as seen by Landsat",
+      "year": "1976"
+    },
+    {
+      "raw": "Modeling the radiant transfers of sparse vegetation",
+      "doi": "10.1109/tgrs.1985.289388",
+      "title": "Modeling the radiant transfers of sparse vegetation",
+      "year": "1985"
+    },
+    {
+      "raw": "Spectral reflectance of partly transmitting leaves: laboratory measurements and mathematical modeling",
+      "doi": "10.1016/0034-4257(82)90057-8",
+      "title": "Spectral reflectance of partly transmitting leaves: laboratory measurements and mathematical modeling",
+      "year": "1982"
+    },
+    {
+      "raw": "Radiative transfer in an array of canopies",
+      "doi": "10.2134/agronj1983.00021962007500030016x",
+      "title": "Radiative transfer in an array of canopies",
+      "year": "1983"
+    },
+    {
+      "raw": "Distinguishing vegetation from soil background information",
+      "doi": null,
+      "title": "Distinguishing vegetation from soil background information",
+      "year": "1977"
+    },
+    {
+      "raw": "Canopy reflectance, photosynthesis and transpiration",
+      "doi": "10.1080/01431168508948283",
+      "title": "Canopy reflectance, photosynthesis and transpiration",
+      "year": "1985"
+    },
+    {
+      "raw": "Atmospheric effect on radiation reflected from soil and vegetation as measured by orbiting sensors using various scanning directions",
+      "doi": "10.1364/ao.21.003923",
+      "title": "Atmospheric effect on radiation reflected from soil and vegetation as measured by orbiting sensors using various scanning directions",
+      "year": "1982"
+    },
+    {
+      "raw": "Red and photographic infrared linear combinations for monitoring vegetation",
+      "doi": "10.1016/0034-4257(79)90013-0",
+      "title": "Red and photographic infrared linear combinations for monitoring vegetation",
+      "year": "1979"
+    },
+    {
+      "raw": "Light scattering by leaf layers with application to canopy reflectance modeling: the SAIL model",
+      "doi": "10.1016/0034-4257(84)90057-9",
+      "title": "Light scattering by leaf layers with application to canopy reflectance modeling: the SAIL model",
+      "year": "1984"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": false,
+    "token_estimate": 227,
+    "content_kind": "abstract_only",
+    "has_abstract": true,
+    "warnings": [
+      "Elsevier official XML route was not usable (HTTP 400 for https://api.elsevier.com/content/article/doi/10.1016%2F0034-4257%2888%2990106-x?view=FULL); attempting Elsevier PII XML fallback.",
+      "Elsevier PII XML fallback was not usable (HTTP 400 for https://api.elsevier.com/content/article/pii/003442578890106X?view=FULL); attempting official PDF fallback.",
+      "xml: HTTP 400 for https://api.elsevier.com/content/article/doi/10.1016%2F0034-4257%2888%2990106-x?view=FULL; pii_xml: HTTP 400 for https://api.elsevier.com/content/article/pii/003442578890106X?view=FULL; pdf: HTTP 400 for https://api.elsevier.com/content/article/doi/10.1016%2F0034-4257%2888%2990106-x?view=FULL",
+      "Full text was not available; returning metadata and abstract only.",
+      "--save-markdown was set but full text was not available; nothing written to disk."
+    ],
+    "source_trail": [
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_elsevier",
+      "route:signal_publisher_elsevier",
+      "route:signal_doi_elsevier",
+      "route:probe_elsevier_positive",
+      "route:provider_selected_elsevier",
+      "metadata:elsevier_ok",
+      "route:provider_candidate_elsevier_metadata_selected_rank_1",
+      "route:provider_candidate_elsevier_identity_strong",
+      "fulltext:elsevier_attempt",
+      "fulltext:elsevier_xml_fail",
+      "fulltext:elsevier_xml_pii_fail",
+      "fulltext:elsevier_pdf_api_fail",
+      "fulltext:elsevier_fail",
+      "route:provider_candidate_elsevier_rejected",
+      "fallback:elsevier_html_managed_by_provider",
+      "fallback:metadata_only",
+      "fulltext:elsevier_pii_xml_fail",
+      "fulltext:elsevier_pdf_fail",
+      "download:markdown_skipped_no_fulltext"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 227,
+      "body": 0,
+      "refs": 462
+    },
+    "confidence": "low",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 0,
+      "word_count": 0,
+      "body_block_count": 0,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 0.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": false,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "crossref",
+    "route": "metadata",
+    "representation": "metadata",
+    "transport": "api",
+    "fallback_used": true
+  }
+}

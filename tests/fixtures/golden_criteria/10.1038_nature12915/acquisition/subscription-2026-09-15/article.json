@@ -1,0 +1,528 @@
+{
+  "doi": "10.1038/nature12915",
+  "source": "springer_pdf",
+  "metadata": {
+    "title": "A two-fold increase of carbon cycle sensitivity to tropical temperature variations",
+    "authors": [
+      "Xuhui Wang",
+      "Shilong Piao",
+      "Philippe Ciais",
+      "Pierre Friedlingstein",
+      "Ranga B. Myneni",
+      "Peter Cox",
+      "Martin Heimann",
+      "John Miller",
+      "Shushi Peng",
+      "Tao Wang",
+      "Hui Yang",
+      "Anping Chen"
+    ],
+    "abstract": null,
+    "journal": "Nature",
+    "article_type": "Article",
+    "published": "2014-2-13",
+    "keywords": [],
+    "license_urls": [
+      "https://www.springer.com/tdm"
+    ],
+    "landing_page_url": "https://www.nature.com/articles/nature12915"
+  },
+  "sections": [
+    {
+      "heading": "",
+      "level": 2,
+      "kind": "body",
+      "text": "doi:10.1038/nature12915"
+    },
+    {
+      "heading": "A two-fold increase of carbon cycle sensitivity to tropical temperature variations",
+      "level": 2,
+      "kind": "body",
+      "text": "Xuhui Wang<sup>1</sup>, Shilong Piao<sup>1,2</sup>, Philippe Ciais<sup>1,3</sup>, Pierre Friedlingstein<sup>4</sup>, Ranga B. Myneni<sup>5</sup>, Peter Cox<sup>4</sup>, Martin Heimann<sup>6</sup>, John Miller<sup>7,8</sup>, Shushi Peng<sup>1</sup>, Tao Wang<sup>1,3</sup>, Hui Yang<sup>1</sup> & Anping Chen<sup>9</sup>\n\nEarth system models project that the tropical land carbon sink will decrease in size in response to an increase in warming and drought during this century, probably causing a positive climate feedback<sup>1,2</sup>. But available data<sup>3–5</sup> are too limited at present to test the predicted changesinthetropicalcarbonbalanceinresponsetoclimatechange. Long-termatmospheric carbondioxide dataprovide a globalrecord that integrates the interannual variability of the global carbon balance. Multiple lines of evidence<sup>6–8</sup> demonstrate that most of this variability originates in the terrestrial biosphere. In particular, the year-to-year variations in the atmospheric carbon dioxide growth rate (CGR) are thought to be the result of fluctuations in the carbon fluxes of tropical land areas<sup>6,9,10</sup>. Recently, the response of CGR to tropical climate interannual variability was used to put a constraint on the sensitivity of tropical land carbon to climate change<sup>10</sup>. Here we use the long-term CGR record from Mauna Loa and the South Pole to show that the sensitivity of CGR to tropical temperature interannual variability has increased by a factor of 1.9 6 0.3 in the pastfivedecades.Wefindthatthissensitivitywas greaterwhentropical landregionsexperienceddrier conditions. Thissuggeststhatthe sensitivity of CGR to interannual temperature variations is regulated by moisture conditions, even though the direct correlation between CGR and tropical precipitation is weak<sup>9</sup>. We also find that present terrestrial carbon cycle models do not capture the observed enhancement in CGR sensitivity in the past five decades. More realistic model predictions of future carbon cycle and climate feedbacks require a better understanding of the processes driving the response of tropical ecosystems to drought and warming.\n\nClimatevariabilityrelatedtoElNin˜o/SouthernOscillationhasadominant role in forcing year-to-year variation in CGR, particularly the forcing of temperature variability<sup>9–13</sup> (Fig. 1a and Extended Data Fig. 1). TheobservedpositivecorrelationbetweenCGRandtemperaturereflects the direct impacts of temperature variations in driving variations of tropical carbon fluxes<sup>9,10</sup>, rather than, in reverse, the greenhouse effect ofatmosphericCO2 (Methods).Becausetropicaltemperaturesarethought to be close to the optimal photosynthetic temperature<sup>14</sup>, rising tropical temperatures could decrease vegetation photosynthesis and increase ecosystem respiration, which amplifies the influence of temperature on ecosystem carbon exchange<sup>9</sup>. However, vegetation productivity and respiration both increase with higher precipitation and thus offset each other<sup>9</sup>. These processes lead to a weaker correlation of CGR with precipitation<sup>9</sup> (with coefficient R 5 20.19; P. 0.10) than that of CGR with temperature, on interannual timescale. An application of causality analysis (convergent cross-mapping<sup>15</sup>) also shows that temperature is the major climatic driver of CGR variations (Extended Data Fig. 2). Below, by analysing the atmospheric CO2 record, we investigated how the sensitivity of tropical carbon fluxes to tropical land surface mean annual temperature (MAT) has changed over the past five decades (Methods).\n\n<!-- Start of picture text -->\na<br>6 0.8<br>3 0.4<br>0 0.0<br>–3 –0.4<br>CGR MAT<br>–6 –0.8<br>1960 1970 1980 1990 2000 2010<br>b<br>7<br>6<br>5<br>4<br>3<br>20-yr window<br>2<br>25-yr window<br>1<br>1975 1985 1995 2005<br>c<br>7<br>6<br>5<br>4<br>3<br>20-yr window<br>2<br>25-yr window<br>1<br>1975 1985 1995 2005<br>Year<br>(°C)<br>–1)(Pg C yr<br>Detrended CGR anomaly Detrended MAT anomaly<br>–1–1dCGR/dMAT (Pg C yr °C)<br>int–1–1 (Pg C yr °C) γ CGR<br><!-- End of picture text -->\n\nFigure 1 | Change in detrended anomalies in CGR and tropical MAT, in dCGR/dMAT and in ª<sup>int</sup> CGR<sup>over the past five decades.a, Change in detrended</sup> CGR anomalies at Mauna Loa Observatory (black) and in detrended tropical MAT anomalies (red) derived from the CRU data set<sup>16</sup>. Tropical MAT is calculated as the spatial average over vegetated tropical lands (23u N to 23u S). The highest correlations between detrended CGR and detrended tropical MAT are obtained when no time lags are applied (R 5 0.53, P, 0.01). b, Change in dCGR/dMAT during the past five decades. c, Change in c<sup>int</sup> CGR<sup>during the past</sup> five decades. In b and c, different colours show dCGR/dMAT or c<sup>int</sup> CGR<sup>estimated</sup> with moving time windows of different lengths (20 yr and 25 yr). Years on the horizontal axis indicate the central year of the moving time window used to derive dCGR/dMAT or c<sup>int</sup> CGR<sup>(for example, 1970 represents period 1960–1979</sup> in the 20-yr time window). The shaded areas show the confidence interval of dCGR/dMAT and c<sup>int</sup> CGR<sup>, as appropriate, derived using 20-yr or 25-yr moving</sup> windows in 500 bootstrap estimates.\n\n> 1Sino-French Institute for Earth System Science, College of Urban and Environmental Sciences, Peking University, Beijing 100871, China. 2Institute of Tibetan Plateau Research, Chinese Academy of Sciences, Beijing 100085, China.<sup>3</sup> Laboratoire des Sciences du Climat et de l’Environnement, CEA CNRS UVSQ, 91191 Gif-sur-Yvette, France.<sup>4</sup> College of Engineering, Mathematics, and Physical Sciences, University of Exeter, Exeter EX4 4QF, UK.<sup>5</sup> Department of Earth and Environment, Boston University, Boston, Massachusetts 02215, USA.<sup>6</sup> Max Planck Institute for Biogeochemistry, 07701 Jena, Germany. 7Global Monitoring Division, Earth System Research Laboratory, National Oceanic and Atmospheric Administration, 325 Broadway, Boulder, Colorado 80305, USA. 8Cooperative Institute for Research in Environmental Sciences, University of Colorado, Boulder, Colorado 80309, USA.<sup>9</sup> Department of Ecology and Evolutionary Biology, Princeton University, Princeton, New Jersey 08544-1003, USA.\n\n2 1 2 | N A T U R E | V O L 5 0 6 | 1 3 F E B R U A R Y 2 0 1 4 ©2014 **Macmillan Publishers Limited. All rights reserved**\n\nLETTER RESEARCH\n\nThelinearregressionslopebetweenCGR andtropicalMAT (dCGR/ dMAT) indicates the sensitivity of the tropical carbon cycle to climate interannual variability, and was used to constrain future projections of carbon cycle/climate feedbacks<sup>10</sup>. Using CGR at Mauna Loa Observatory and tropical MAT from the Climatic Research Unit (CRU) at the University of East Anglia<sup>16</sup>, we first calculated how dCGR/dMAT changes with time using a 20-yr moving window between 1960 and 2011 (both variables detrended; Fig. 1b). Within each moving window, there is a significant positive correlation between CGR and MAT (R 5 0.49–0.71, P, 0.01). Furthermore, dCGR/dMAT increased from 3.4 6 0.4 Pg C yr<sup>21</sup> uC<sup>21</sup> (all uncertainties are s.e.; Pg C, petagrams of carbon) during 1960–1979 to 5.4 6 0.4 Pg C yr<sup>21</sup> uC<sup>21</sup> during 1992– 2011 (Fig. 1b).\n\nWheninterpretingthisobservedlong-termincreaseofdCGR/dMAT, it might be argued that it does not reflect the change in the true response of CGR to temperature variations, but could be due to indirect effects of other climate variables that tend to covary with temperature, such as precipitation and solar radiation. Therefore, to isolate the role oftemperaturebetter,wedefinedtheinterannualtemperaturesensitivity of CGR (c<sup>int</sup> CGR<sup>) as the partial derivative of CGR with respect to MAT in a</sup> multiple regression of CGR against MAT, precipitation and solar radiation(allvariablesdetrended;Methods).Theincrease indCGR/dMAT was found to reflect mainly an enhanced c<sup>int</sup> CGR<sup>, rather than a change</sup> induced by covariations with the other climate variables (Extended Data Fig. 3). As shown in Fig. 1c, the value of c<sup>int</sup> CGR<sup>has increased by a factor of</sup> two, from2.7 6 0.4 PgC yr<sup>21</sup> uC<sup>21</sup> to 5.5 6 0.4 Pg C yr<sup>21</sup> uC<sup>21</sup> between 1960–1979 and 1992–2011. The window-by-window changes in c<sup>int</sup> CGR were fitted with three different models (the Mann–Kendall trend test, a regime shift model and a linear trend model), all of which showed that c<sup>int</sup> CGR<sup>has increased over the past five decades. However, there are</sup> too few degrees of freedom, as a result of data overlapping in neighbouring time windows. Thus, we focus below on the difference in c<sup>int</sup> CGR between the earliest time window (the first 20–25 yr) and the most recent time window (the past 20–25 yr), which are derived from fully independent subsets of the data (Methods).\n\nWe assessed the robustness of the inferred enhancement in c<sup>int</sup> CGR between the first and the last 20–25-yr period of the Mauna Loa CO2 records.GiventhesignificantdisturbancecausedbytheMountPinatubo eruption to the global carbon cycle<sup>17</sup>, we first proposed that the cooler post-Pinatubo years characterized by enhanced carbon sinks were an unusual response of carbon sinks to MAT, which could alone explain thehigher c<sup>int</sup> CGR<sup>valueofthemostrecenttwodecades.Thus,weexcluded</sup> the two years following the Mount Pinatubo eruption (1992–1993) from our calculation of c<sup>int</sup> CGR<sup>, which had very little effect on its value,</sup> duringthemostrecenttwodecades(5.4 6 0.4PgCyr<sup>21</sup> uC<sup>21</sup>)(Extended Data Fig. 4a). To investigate whether extreme years could explain the enhancement in c<sup>int</sup> CGR<sup>, we performed 500 bootstrap analyses by ran-</sup> domly selecting a subsetof data in each 20-yr moving window to calculate c<sup>int</sup> CGR<sup>. The confidence interval of these estimates is shown in Fig. 1c</sup> and confirms that the increase in c<sup>int</sup> CGR<sup>is not particularly sensitive to a</sup> few extreme years. For instance, we still obtain a significant increase in c<sup>int</sup> CGR<sup>(by a factor of 2.3–2.6) when excluding the two highest positive</sup> anomalies in CGR (Fig. 1a), which correspond to the El Nin˜o events of 1972–1973 and 1997–1998, respectively (Extended Data Fig. 4b).\n\nWe further verified that the enhancement in c<sup>int</sup> CGR<sup>over the past five</sup> decades is robust with respect to (1) the length of the moving window for calculating c<sup>int</sup> CGR<sup>(ranging from 20 to 25 yr); (2) the application of a</sup> frequency decomposition method by singular spectrum analysis<sup>18</sup> to separatetheinterannual-timescalecomponentinCGRandMAT,instead of linear detrending (this resulted in c<sup>int</sup> CGR<sup>increasing by a factor of 1.7</sup> for the 25-yr time windows and by a factor of 2.0 for the 20-yr time windows; Extended Data Fig. 4c); (3) the choice of climate data, using MAT from the Global Historical Climate Network<sup>19</sup>, precipitation from Global Precipitation Climatology Centre<sup>20</sup> and data on short-wave radiation<sup>21</sup> (c<sup>int</sup> CGR<sup>increasedbyafactorof1.9–2.1;ExtendedDataFig.4d);</sup> and (4) the choice of the other long-term CO2 record from the South\n\nPole (Methods) instead of Mauna Loa (c<sup>int</sup> CGR<sup>increased by a factor of</sup> 1.7–1.9; Extended Data Fig. 4e). Overall, by analysing the histogram distribution of c<sup>int</sup> CGR<sup>values obtained with different data sources and</sup> different sensitivity tests described above (Methods), we conclude that c<sup>int</sup> CGR<sup>hasrobustlyincreasedfrom2.6 6 0.5 Pg C yr21 uC21to4.8 6</sup> 1.0 Pg C yr<sup>21</sup> uC<sup>21</sup> (Fig.2a).Thisrepresents anaveragerelativeincrease by a factor of 1.9 6 0.3 (Fig. 2b). This enhancement is very unlikely to have resulted by chance (,10<sup>24</sup>).\n\nFinally, we applied the same analysis using the land sink calculated as a residual from all other terms of the global carbon budget, as an alternative to CGR for measuring variations in the global land carbon balance<sup>22</sup>,andalsoverifiedadoublingof c<sup>int</sup> Land Sink<sup>(ExtendedDataFig.4f).</sup> Thistestdemonstratesthatenhanced c<sup>int</sup> CGR<sup>isnotexplainedbyanyknown</sup> change in the variability of fossil fuel fluxes, ocean fluxes or emission from land-use change.\n\nTropical lands have experienced increasing drought in the past five decades<sup>23,24</sup>,particularlyfromthemid1970stotheearly1990s(Extended Data Fig. 5), when the increase in c<sup>int</sup> CGR<sup>began (Fig. 1c). On the regional</sup> scale, the more recent period (1992–2011) is drier than the earlier period (1960–1979), mainly in northern and central Africa and eastern South America (Extended Data Fig. 6), where a significant correlation between localMATvariabilityandCGRisobserved(ExtendedDataFig.1).Large uncertainties exist in the spatiotemporal patterns of tropical drought changes, as indicated by the spread in the temporal evolution of three drought indices (the annual Palmer drought severity index<sup>23</sup> (PDSI),\n\n<!-- Start of picture text -->\na<br>70 69%<br>Earliest period<br>60 Most recent period<br>50<br>40<br>30 31% 29%<br>22% 24%<br>20<br>13%<br>10 9%<br><1% <1% <1% <1% <1% <1% 1%<br>0<br><2 2–3 3–4 4–5 5–6 6–7 >7<br>γ CGR int (Pg C yr –1 °C –1)<br>b<br>15<br>13%13%<br>11% 11%<br>10 9% 9%<br>7%<br>6%<br>5%<br>5 3% 4% 3%<br>2% 2%<br>2%<br>0<br><30 40 50 60 70 80 90 100 110 120 130 140 150 >160<br>Relative change in γ CGR int (%)<br>Frequency (%)<br>Frequency (%)<br><!-- End of picture text -->\n\nFigure 2 | Histograms of ª<sup>int</sup> CGR<sup>during the earliest period and during the</sup> most recent period, and of relative change in ª<sup>int</sup> CGR<sup>over the past five decades.</sup> a, Early–recent comparison; b, relative change. The relative change in c<sup>int</sup> CGR<sup>is</sup> the ratio of the calculated difference in c<sup>int</sup> CGR<sup>between the most recent period</sup> (1992–2011 for a 20-yr time-window) and the earliest period (1960–1979 for 20-yr time window) to the value of c<sup>int</sup> CGR<sup>during the earliest period. The</sup> histograms of c<sup>int</sup> CGR<sup>and of relative changes in cint</sup> CGR<sup>are calculated using</sup> bootstrap analyses, considering different data sources (CGR from Mauna Loa or the South Pole, MAT from CRU<sup>16</sup> or the Global the Historical Climate Network<sup>19</sup>, precipitation from CRU<sup>16</sup> or the Global Precipitation Climatology Centre<sup>20</sup>, and solar radiation from CRU-NCEP, ref. 21 and cloud fraction from CRU<sup>16</sup> as a surrogate), different moving-window lengths (20–25 yr) to calculate the c<sup>int</sup> CGR<sup>, and different methods to filter out the long-term increase</sup> in CGR with time (linear regression and singular spectrum analysis<sup>18</sup>).\n\n1 3 F E B R U A R Y 2 0 1 4 | V O L 5 0 6 | N A T U R E | 2 1 3\n\n**Macmillan Publishers Limited. All rights reserved**\n\n©2014\n\nRESEARCH LETTER\n\n<!-- Start of picture text -->\nVery dry Dry Wet Very wet<br>10<br>* Precipitation<br>* PDSI<br>8 * *<br>SPEI6<br>Soil moisture<br>6<br>* *<br>*<br>4 * *<br>*<br>* * * * *<br>2<br>0<br>σ < –1 –1 < σ < 0 0 < σ < 1 σ > 1<br>Detrended moisture anomaly, σ<br>int–1–1 (Pg C yr °C) γ CGR<br><!-- End of picture text -->\n\nFigure 3 | ª<sup>int</sup> CGR<sup>for each bin of detrended tropical moisture anomaly.</sup> Two different drought indicators (PDSI and SPEI calculated on the 6-month scale (SPEI6)), ORCHIDEE-estimated soil moisture and precipitation were used. We grouped the 50 years’ worth of data into four distinct bins of detrended tropical moisture anomaly: very dry (s less than 21), dry (s between\n\n21 and 0), wet (s between 0 and 1) and very wet (s greater than 1) (Methods). We then calculated c<sup>int</sup> CGR<sup>for each bin of detrended moisture anomaly, using</sup> Mauna Loa CO2 records. The error bars indicate the s.e. of c<sup>int</sup> CGR<sup>calculated</sup> using bootstrap method (Methods). *P, 0.05 for c<sup>int</sup> CGR<sup>being significantly</sup> different from zero.\n\nthe standardized precipitation–evapotranspiration index<sup>24</sup> (SPEI) and the soil moisture estimated from the ORCHIDEE model<sup>25</sup>; Extended Data Figs 5 and 6). For instance, the ORCHIDEE-estimated soil moisture shows an increase since the 1990s, whereas PDSI and SPEI are comparatively flat during the same period (Extended Data Fig. 5). To gain insight into the possible impact of tropical droughts on c<sup>int</sup> CGR<sup>, we</sup> grouped c<sup>int</sup> CGR<sup>intodifferentbinsofdetrendedtropicalmoistureanomaly</sup> (Methods). Figure 3 shows that c<sup>int</sup> CGR<sup>is higher when tropical regions are</sup> drier. A Monte Carlo null experiment, assuming no change in moisture conditions, indicates that this relationship between c<sup>int</sup> CGR<sup>and drought is</sup> very unlikely to occurpurelyby chance (P, 0.01; Extended Data Fig.7). Thisresultsuggeststhatsoilmoisturemaycontrolthe responseoftropical terrestrial carbon fluxes to temperature fluctuations. Many tropical ecosystems are not only subject to high temperature close to the optimal temperature of photosynthesis<sup>14</sup>, but are also subject to water limitations, at least during a dry season. Below a critical threshold for plantrootwateruptake,soilmoisturewilllimitanytemperature-driven increase in evapotranspiration during a warmer year. Photosynthesis will thus drop during a warmer year when soil moisture is limiting duringadryperiod.Inturn,areductioninphotosynthesiswillprobably result in a larger anomaly of CO2 input to the atmosphere<sup>26</sup>, because respiration usually decreases less than photosynthesis during drought. A soil-moisture-threshold-like response of photosynthesis to temperature interannual anomalies thus can qualitatively explain why c<sup>int</sup> CGR is higher during drier periods, but additional investigation is needed to confirm that this is the main mechanism. Droughts in mid latitudes(23u–48u north)havealsoincreased,mostlyoverthepastdecade<sup>27</sup> (ExtendedDataFig.5),butthisisinconsistentwiththeobservedchange in c<sup>int</sup> CGR<sup>(Fig. 1c). Further statistical analyses suggest that changes in</sup> mid-latitude climate must have only minor impacts on the observed c<sup>int</sup> CGR<sup>change (Extended Data Fig. 8).</sup>\n\nNext, we explored whether terrestrial carbon cycle models can capture the observed increase in c<sup>int</sup> CGR<sup>over the past 50 years. To address</sup> this issue, we calculated the temperature sensitivity of simulated tropical net biome productivity (c<sup>int</sup> mod NBP<sup>) estimated by an ensemble of five</sup> terrestrial biosphere models (Methods) previously used in ref. 22 to reconstructhistoricalchangesinthecarbonbudget.Wefoundthatonly one model produced an enhancement in c<sup>int</sup> mod NBP<sup>overthe pastfive</sup> decades, and that enhancement was much smaller in magnitude than the observed change (Extended Data Fig. 9). This implies that most of the models used do not correctly capture the response of tropical carbon fluxes to climate variability<sup>9</sup>, probably because of biases in the response of productivity or ecosystem respiration to climate, or because\n\nof inaccurate representations of soil temperature and moisture in these models. Thus, the problems present models have in reproducing the observed response of the carbon cycle to climate variability on interannualtimescalesmaycallintoquestiontheirabilitytopredictthefuture evolution of the carbon cycle and its feedbacks to climate. Yet it should also be noted that a realistic simulation of the interannual carbon cycle dynamics provides a necessary but not sufficient test of a model’s performancefor the nextcentury,because,onlonger timescales,additional processes such as forest dynamics and changes in soil carbon stocks with low turnover rates become important as well<sup>28</sup>.\n\nTheterrestrialcarboncyclehasexperienced significantchangesover the past five decades<sup>17,29,30</sup>. In addition to the enhanced magnitude of the land carbon sink<sup>17,29</sup>, the observed significant enhancement in c<sup>int</sup> CGR found in this study provides a new perspective on a possible shift in the terrestrial carbon cycle. Increased tropical droughts are found to berelatedto c<sup>int</sup> CGR<sup>enhancement,highlighting the potentiallyimportant</sup> role of moisture-temperature interaction in regulating the terrestrial carbon cycle. But it should also be noted that our understanding of the mechanism of c<sup>int</sup> CGR<sup>enhancementisstilllimited.Furtherstudiesare</sup> needed on the response of fundamental carbon cycle processes in the tropicalecosystemsandofthesensitivityofecosystemcompositionand structure to environmental change. New insights could be obtained from integrated studies, combining dynamic vegetation models with data from long-term manipulative field experiments. Furthermore, new observations of atmospheric CO2 over tropical land masses from aircraft, towers and satellites may allow for more accurate correlation with climate variables than using Mauna Loa or South Pole CO2 data."
+    },
+    {
+      "heading": "METHODS SUMMARY",
+      "level": 4,
+      "kind": "body",
+      "text": "To estimate the interannual sensitivity of CGR to tropical MAT (c<sup>int</sup> CGR<sup>), weuse</sup> atmospheric CGR from the two longest atmospheric records at Mauna Loa and South Pole<sup>31</sup>, gridded MAT from the CRU<sup>16</sup> and from Global Historical Climate Network data<sup>19</sup>, annual precipitation from CRU and from the Global Precipitation Climatology Centre<sup>20</sup>, solar radiation data from CRU-NCEP and ref. 21, and cloud fractionfromCRUovervegetatedareas(Methods)inthetropics.Thevalueof c<sup>int</sup> CGR was calculated as the regression coefficient of temperature in a multilinear regression of CGR variations against variations in temperature, precipitation and solar radiationover a runningtime window(rangingfrom 20 to25 yr). Several statistical tests (Methods) were done to assess the robustness of the increase in c<sup>int</sup> CGR<sup>over the</sup> past five decades. Two different drought indicators (PDSI<sup>23</sup> and SPEI<sup>24</sup>) and soil moisture estimated using the ORCHIDEE model<sup>25</sup> were used to investigate the effects of drought on c<sup>int</sup> CGR<sup>. We grouped the 50 years of data into four distinct bins</sup> of detrended tropical moisture anomaly (standardized departure (s) less than 21, between 21 and 0, between 0 and 1, and more than 1). For each bin of detrended\n\n2 1 4 | N A T U R E | V O L 5 0 6 | 1 3 F E B R U A R Y 2 0 1 4\n\n©2014 **Macmillan Publishers Limited. All rights reserved**\n\nLETTER RESEARCH\n\nmoisture anomaly, wecalculated c<sup>int</sup> CGR<sup>. Finally, the outputsoffive terrestrialcarbon</sup> cyclemodels<sup>22</sup> wereanalysedtotestwhetherthesemodelscouldcapturetheobserved increase in c<sup>int</sup> CGR<sup>during the past 50 years.</sup>\n\nOnline Content Any additional Methods, Extended Data display items and Source Data are available in the online version of the paper; references unique to these sections appear only in the online paper."
+    },
+    {
+      "heading": "Received 26 July; accepted 27 November 2013.",
+      "level": 5,
+      "kind": "body",
+      "text": "Published online 26 January; corrected online 12 February 2014 (see full-text HTML version for details).\n\n1. Cox, P. M., Betts, R. A., Jones, C. D., Spall, S. A. & Totterdell,I. J. Acceleration of global warming due to carbon-cycle feedbacks in a coupled climate model. Nature 408, 184–187 (2000).\n\n2. Sitch, S. et al. Evaluation of the terrestrial carbon cycle, future plant geography and climate-carbon cycle feedbacks using five dynamic global vegetation models (DGVMs). Glob. Change Biol. 14, 2015–2039 (2008).\n\n3. Phillips, O. L. et al. Drought sensitivity of the Amazon rainforest. Science 323, 1344–1347 (2009).\n\n4. Meir, P. & Woodward, F. I. Amazonian rain forests and drought: response and vulnerability. New Phytol. 187, 553–557 (2010).\n\n5. Davidson, E. A. et al. The Amazon basin in transition. Nature 481, 321–328 (2012). 6. Baker, D. F. et al. TransCom 3 inversion intercomparison: Impact of transport model errors on the interannual variability of regional CO2 fluxes, 1988–2003. Glob. Biogeochem. Cycles 20, GB1002 (2006).\n\n7. Lee, K., Wanninkhof, R., Takahashi, T., Doney, S. C. & Feely, R. A. Low interannual variability in recent oceanic uptake of atmospheric carbon dioxide. Nature 396, 155–159 (1998).\n\n8. Alden, C. B., Miller, J. B. & White, J. W. C. Can bottom-up ocean CO2 fluxes be reconciled with atmospheric<sup>13</sup> C observations? Tellus B 62, 369–388 (2010).\n\n9. Wang, W. et al. Variations in atmospheric CO2 growth rates coupled with tropical temperature. Proc. Natl Acad. Sci. USA 110, 13061–13066 (2013).\n\n10. Cox, P. M. et al. Sensitivity of tropical carbon to climate change constrained by carbon dioxide variability. Nature 494, 341–344 (2013).\n\n11. Patra, P. K., Ishizawa, M., Maksyutov, S., Nakazawa, T. & Inoue, G. Role of biomass burningandclimateanomaliesforland-atmospherecarbonfluxesbasedoninverse modeling of atmospheric CO2. Glob. Biogeochem. Cycles 19, GB3005 (2005).\n\n12. Keeling, C. D., Whorf, T. P., Wahlen, M. & van der Plichtt, J. Interannual extremes in the rate of rise of atmospheric carbon dioxide since 1980. Nature 375, 666–670 (1995).\n\n13. Adams, J. M. & Piovesan, G. Long series relationships between global interannual CO2incrementandclimate:evidence for stabilityandchange inrole ofthe tropical and boreal-temperate zones. Chemosphere 59, 1595–1612 (2005).\n\n14. Corlett, R. T. Impacts of warming on tropical lowland rainforests. Trends Ecol. Evol. 26, 606–613 (2011).\n\n15. Sugihara, G. et al. Detecting causality in complex ecosystems. Science 338, 496–500 (2012).\n\n16. Mitchell, T. D. & Jones, P. D. An improved method of constructing a database of monthly climate observations and associated high-resolution grids. Int. J. Climatol. 25, 693–712 (2005).\n\n17. Sarmiento, J. L. et al. Trends and regional distributions of land and ocean carbon sinks. Biogeosciences 7, 2351–2367 (2010).\n\n18. Mahecha, M. D. et al. Characterizing ecosystem-atmosphere interactions from short to interannual time scales. Biogeosciences 4, 743–758 (2007).\n\n19. Smith, T. M., Reynolds, R. W., Peterson, T. C. & Lawrimore, J. Improvements to NOAA’s historical merged land–ocean surface temperature analysis (1880– 2006). J. Clim. 21, 2283–2296 (2008).\n\n20. Schneider, U. et al. GPCC’s new land surface precipitation climatology based on quality-controlled in situ data and its role in quantifying the global water cycle. Theor. Appl. Climatol. http://dx.doi.org/10.1007/s00704-013-0860-x (2013).\n\n21. Sheffield, J., Goteti, G. & Wood, E. F. Development of a 50-year high-resolution global dataset of meteorological forcings for land surface modeling. J. Clim. 19, 3088–3111 (2006).\n\n22. Le Que´re´, C. et al. Trends in the sources and sinks of carbon dioxide. Nature Geosci. 2, 831–836 (2009).\n\n23. Dai, A. Characteristics and trends in various forms of the Palmer drought severity index during 1900–2008. J. Geophys. Res. 116, D12115 (2011).\n\n24. Vicente-Serrano, S. M., Beguerı´a, S. & Lo´pez-Moreno, J. I. A multiscalar drought index sensitive to global warming: the standardized precipitation evapotranspiration index. J. Clim. 23, 1696–1718 (2010).\n\n25. Piao, S. et al. Spatiotemporal patterns of terrestrial carbon cycle during the 20th century. Glob. Biogeochem. Cycles 23, GB4026 (2009).\n\n26. Schwalm, C. R. et al. Does terrestrial drought explain global CO2 flux anomalies induced by El Nin˜o? Biogeosciences 8, 2493–2506 (2011).\n\n27. Dai, A. Increasing drought under global warming in observations and models. Nature Clim. Change 3, 52–58 (2013).\n\n28. Randerson, J. T. Climate science: global warming and tropical carbon. Nature 494, 319–320 (2013).\n\n29. Ballantyne, A. P., Alden, C. B., Miller, J. B., Tans, P. P. & White, J. W. C. Increase in observed net carbon dioxide uptake by land and oceans during the past 50 years. Nature 488, 70–72 (2012).\n\n30. Graven, H. D. et al. Enhanced seasonal exchange of CO2 by northern ecosystems since 1960. Science 341, 1085–1089 (2013).\n\n31. Keeling, C. D. et al. in A History of Atmospheric CO2 and its effects on Plants, Animals, and Ecosystems (eds Ehleringer, J. R. et al.) 83–113 (Springer, 2005).\n\nAcknowledgements We thank S. Seneviratne and G. Zhang for comments and J. Gash for English editing. This study was supported by the National Natural Science Foundation of China (41125004), the National Basic Research Program of China (grant nos 2010CB950601 and 2013CB956303) and the National Youth Top-notch Talent Support Program in China. R.B.M. was funded by the NASA Earth Science Division.\n\nAuthor Contributions S. Piao, P. Ciais and X.W. designed the research; X.W. performed the analysis; S. Piao, P. Ciais and X.W. drafted the paper; and P.F., R.B.M., P. Cox., M.H., J.M., S. Peng, T.W., H.Y. and A.C. contributed to the interpretation of the results and to the text.\n\nAuthor Information Reprints and permissions information is available at www.nature.com/reprints. The authors declare no competing financial interests. Readers are welcome to comment on the online version of the paper. Correspondence and requests for materials should be addressed to S. Piao (slpiao@pku.edu.cn).\n\n1 3 F E B R U A R Y 2 0 1 4 | V O L 5 0 6 | N A T U R E | 2 1 5\n\n**Macmillan Publishers Limited. All rights reserved**\n\n©2014\n\nRESEARCH LETTER"
+    },
+    {
+      "heading": "METHODS",
+      "level": 4,
+      "kind": "body",
+      "text": "Atmospheric CO2 concentration. The measurements of monthly mean atmospheric CO2 concentration at the Mauna Loa Observatory were obtained from the US National Oceanic and Atmospheric Administration for the period 1959 to 2011 (http://www.esrl.noaa.gov/gmd/ccgg/trends/) and that from the South Pole stationwereobtainedfromtheScrippsInstitutionofOceanography(http://scrippsco2. ucsd.edu/)<sup>31</sup>. Note that about 15% of monthly CO2 concentrations in the South Pole station during 1959–2011, particularly during the 1960s, were gap-filled (see http://scrippsco2.ucsd.edu for more processing details).\n\nGridded climate fields. Gridded climate fields used in this study include mean annual temperature (MAT), precipitation, solar radiation, PDSI and SPEI.\n\nGridded MAT, annual precipitation data and cloud fraction data are from Climatic Research Unit, University of East Anglia<sup>16</sup> (CRUTS 3.2). CRUTS 3.2 provides monthly air temperature, precipitation and other climate variables with spatial resolution of 0.5u 3 0.5u overthe globallandsurfaceduringthe period1901–2011. Because solar radiation is not included in the CRU TS 3.2 data set, we used cloud fraction as a surrogate for variations in solar radiation. We further obtained solar radiationfromtheCRU-NCEPdataproduct(http://dods.extra.cea.fr/store/p529viov/ cruncep/). CRU-NCEP is a gridded climate data product combining CRU TS 3.1 and NCEP-NCAR reanalysis. It provides 6-hourly meteorological forcing fields, including solar radiation, for carbon cycle model simulations (see, for example, ref. 2). Given that the discontinuity of the assimilated observations possibly causes the spurious trends in the reanalysis data set<sup>32</sup>, the monthly mean value of incomingsolar radiation from the NCEP-NCARreanalysis was corrected in CRU-NCEP to match the empirically derived monthly solar radiation using an approach based on latitude andsunshine hours<sup>33</sup>, which was estimated to be proportional to observed cloudfractioninCRU TS 3.1.ThepreparationoftheCRU-NCEPdatasetwasperformed in a carbon cycle model intercomparison project<sup>2</sup>. Among all the climate stations used in generating this data set, about 500 are located between 23u north and 23u south, but their spatiotemporal distribution is uneven<sup>16</sup>. For example, groundmeasurementsare particularlysparseoveruninhabitedarea,including the Amazon basin and the tropical rainforest area in Southeast Asia. Thus, we have also used other climate data streams, including different interpolation approaches, climate reanalysis and a combination of ground and satellite measurements, to test the robustness of the inferred increase in c<sup>int</sup> CGR<sup>to uncertainties in the climate fields.</sup> ThealternativeclimatedatasetsincludeairtemperaturefieldsoftheGlobalHistorical Climate Network Gridded Product (GHCN v3) of the National Climatic Data Center<sup>19</sup>, which has a spatial resolution of 5u 3 5u; precipitation fields from the Global Precipitation Climatology Centre<sup>20</sup> (GPCC), which have a spatial resolution of 1u 3 1u; and a solar radiation data set with a spatial resolution of 1u 3 1u (ref. 21). The short-wave radiation product from ref. 21 was obtained by correcting radiation in NCEP-NCAR reanalysis product with satellite-derived SRB v3.0 radiation data<sup>34</sup>. All the data streams (ground measurement interpolation, climate reanalysis, and combination of ground and satellite measurements) have advantages and disadvantages, and thus could have differences despite the general consistency<sup>35,36</sup>. For example, from the late 1990s onwards the CRU data set seems to be giving higher estimates of global precipitation than does GPCC<sup>37</sup>. These differences in the climate data are one of the major sources of uncertainty in c<sup>int</sup> CGR estimates (Fig. 2).\n\nThe PDSI is a widely used index of drought stress and aridity change<sup>27,38</sup>. We usedglobalPDSIdataprovidedbyUniversityCorporationforAtmosphericResearch<sup>24</sup>. The PDSI data have a spatial resolution of 2.5u 3 2.5u and a temporal resolution of one month from 1850 to 2010. This PDSI data set calculates potential evapotranspirationusingthePenman–Monteithequation,whichgivesmorerealisticestimates than do Thornthwaite equations<sup>27,37</sup>.\n\nThe SPEI is a multiscalar drought index similar to the standardized precipitation index but involving a climatic water balance considering both precipitation and evapotranspiration<sup>24</sup>. The timescale of SPEI (or the standardized precipitation index) is defined so that an n-month scale considers the water surplus or deficit accumulated over n 2 1 previous months<sup>24</sup>. Previous studies suggest that timescales ranging from 3 to 12 months are best suited to monitoring various drought types<sup>39</sup>. In this study, we adopted the same 6-month scale for SPEI (SPEI6) as in ref. 40, but also performed all calculations with SPEI on timescales of 3 months (SPEI3), 9 months (SPEI9) and 12 months (SPEI12). The global SPEI data set was provided by ref. 41 with a spatial resolution of 0.5u 3 0.5u and a temporal resolution of one month from 1901 to 2011.\n\nCarbon fluxes and soil moisture from global ecosystem models. Annual net biomeproductivity from 1901to2008was simulated byfive dynamicglobalvegetation models (DGVMs) (HyLand (HYL), Lund-Potsdam-Jena (LPJ), ORCHIDEE (ORC), Sheffield-DGVM (SHE) and TRIFFID (TRI)) in the comparison study of ref. 2, and land carbon sink simulations in ref. 22 (http://dgvm.ceh.ac.uk). Because spatially explicit output from ORCHIDEE was not available before 1972 in this data set, results from an updated ORCHIDEE simulation are used. Starting from\n\npre-industrial equilibrium for all ecosystem carbon pools reached after spin-up, all models were forced with CRU-NCEP climate fields and increasing atmospheric CO2 concentration for the period 1901–2008. It is important to note that the DGVM models produce only land–atmosphere CO2 fluxes because of changed climate and CO2; other drivers, such as nitrogen deposition, forest demography changes and land-use change, are not considered. Four DGVM models (HYL, LPJ, SHEandTRI)haveaspatialresolutionof3.75u 3 2.5u,andtheupdatedORCHIDEE simulation has a spatial resolution of 0.5u 3 0.5u.\n\nAnalyses. TheannualCGRofaspecificmonthiscalculatedasthedifferencebetween the CO2 concentration in that month and in the same month the previous year. Tropical MAT, annual precipitation, annual solar radiation, annual PDSI and annual SPEI were all calculated as the spatial average over all the vegetated land area between 23u north and 23u south. The vegetated land area is defined as all grid points for whichthe meanannualnormalized difference vegetation indexduring1982–2006 was larger than 0.1. Normalized difference vegetation index data were obtained from the Global Inventory Monitoring and Modelling Studies group<sup>42</sup>.\n\nInterannual variation of CGR was found to be driven by climate variations, particularly by tropical temperature, on the basis of atmospheric CO2 observations and terrestrial carbon cycle modelling (see, for example, refs 9, 10). This finding is consistent with field observations that tropical forest growth is more closely linked tovariationsintemperaturethantovariations inprecipitationandsolarradiation<sup>43</sup>. To improve our understanding of the climate–CGR relationship, we also applied a convergent cross-mapping method<sup>18</sup> to detect the linkage between CGR and tropical MAT (or other climate variables).\n\nWe calculated c<sup>int</sup> CGR<sup>overarunningtimewindow(rangingfrom20to25 yr)</sup> during the study period. Linear trends, estimated by the least-squares method, were removed from the CGR and tropical climate (MAT, annual precipitation, mean annual solar radiation) time series within each time window. Then c<sup>int</sup> CGR<sup>was</sup> calculatedasthe regressionslope ofMATinamultilinearregressionofCGRagainst MAT, annualprecipitation and mean annualincoming solar radiation(allvariables detrended). Different time-window lengths were tested, up to a maximum length of 25 yr. This avoids data overlapping between the first and the most recent time window. Considering thefactthat detrended CGR and MATanomalies have 1–2-yr autocorrelation (Extended Data Fig. 10), a minimum time-window length was chosenas20 yr.Notethat,eventhough c<sup>int</sup> CGR<sup>calculated with shorter timewindows,</sup> such as 15 yr, could be affected by autocorrelation, our main result—that c<sup>int</sup> CGR increased by a factor of two—is robust to changes in the length of the selected time window.Wealsocalculated c<sup>int</sup> CGR<sup>usingalinearmixedmodelthatspecificallyaccounts</sup> for temporal autocorrelation with a first-order autocorrelation function<sup>44,45</sup>. The results show that including data autocorrelation in the regression does not change the value of c<sup>int</sup> CGR<sup>(Extended Data Fig. 10).</sup>\n\nThe window-by-window change in c<sup>int</sup> CGR<sup>was fitted using three different meth-</sup> ods: the Mann–Kendall test<sup>46</sup>, linear regression of c<sup>int</sup> CGR<sup>against time, and a regime</sup> shift model. We noted that the data overlapping in neighbouring time windows result in toofew degrees of freedom to test the statistical significanceof the trend in c<sup>int</sup> CGR<sup>. Thus, statistical tests were made tocompare cint</sup> CGR<sup>forthe earliest time window</sup> with that for the most recent time window, which are fully independent from each other.\n\nTo test whether the shift in c<sup>int</sup> CGR<sup>during the study period was an artefact of our</sup> detrending method for CGR and tropical climate time series (MAT, annual precipitation and mean annual solar radiation), we applied frequency decomposition by singular spectrum analysis (SSA; see, for example, ref. 18) to extract the interannualvariabilityofCGRandclimatevariables. Here the monthly CGRtime series was decomposed into four frequency components: a high-frequency component<sup>47</sup>, a seasonal component, an interannual component and a long-term trend component. Thresholds separating the frequency components were set a priori and constrained by the temporal resolution and length of CGR time series. Frequency components with the variability up to 4.5 months were regarded as the highfrequency component, whereas the thresholds separating seasonal, interannual and long-term trend components were respectively set to be 20 and 90 months, which were equally spaced on the logarithm axis of the frequency domain (see ref. 18 for more detailed descriptions of SSA). The interannual component of the climate variables was obtained in the same way. Then a linear regression between interannual components of CGR and those of the climate variables was calculated to estimate c<sup>int</sup> CGR<sup>.</sup>\n\nTo estimate uncertainty in c<sup>int</sup> CGR<sup>, we calculated it in 500 bootstrap analyses48, for</sup> each combination of different data sources (CGR from Mauna Loa or the South Pole, MAT from CRU or from GHCN, precipitation from CRU or from GPCP, solar radiationfrom CRU-NCEP and ref. 21, and cloud fraction from CRU asa surrogatefor solar radiation), different moving-window lengths (20–25yr) to calculate c<sup>int</sup> CGR<sup>, and different methods for filtering the long-term increase in CGR with time</sup> (linear regression and SSA). The uncertainty of change in c<sup>int</sup> CGR<sup>was taken from the</sup> 72,000,000 sensitivity tests.\n\n©2014 **Macmillan Publishers Limited. All rights reserved**\n\nLETTER RESEARCH\n\nTo study the linkage between change in c<sup>int</sup> CGR<sup>and tropical drought, we grouped</sup> the 50 years’ worth of data into four distinct bins of detrended tropical moisture anomaly (standardized departure (s) less than 21, between 21 and 0, between 0 and 1, and greater than 1). For each bin of detrended moisture anomaly, we calculated c<sup>int</sup> CGR<sup>.Thedetrended soil moisture (SM)index anomaly isdefined as</sup> the standardized departure from average of detrended SM:\n\nHere SM(i) is the detrended SM for the year i, and Mean(SM) and Std(SM) are the average and standard deviation of the SM during the whole study period, respectively. An alternative of binning tropical moisture anomalies into eight bins on the basis of s (less than 21.5, between 21.5 and 21, between 21 and 20.5, between 20.5 and 0, between 0 and 0.5, between 0.5 and 1, between 1 and 1.5, and greater than 1.5) did not qualitatively change the result.\n\nTo test the robustness of the observed relationship between c<sup>int</sup> CGR<sup>and anomalies</sup> (Fig. 3), we performed a null Monte Carlo experiment. In the Monte Carlo experiment, we randomly generated artificial time series of CGR, MAT, annual precipitation and annual solar radiation following a multivariate normal distribution defined by the mean and covariations of the observed time series during 1960– 2011. Because the relationship between CGR and MAT is forced to be stable during the entire period, we expected no change in c<sup>int</sup> CGR<sup>(Extended Data Fig. 7).</sup> The hypothesis to test is whether the covariations between CGR, MAT and precipitation could result in differences in c<sup>int</sup> CGR<sup>for different bins of detrended precip-</sup> itation anomalies, as observed in Fig. 3.\n\nImpacts of interannual CO2 variations on interannual temperature variations. To estimate quantitatively the impacts of year-to-year variations in CO2 on temperature variations, we followed refs 49, 50 to calculate the radiative forcing of CO2 from its concentration, and used the climate sensitivity from different models. The transient temperature change due to changing CO2 concentration is<sup>50</sup>\n\nwhere Ti and Ci are the mean annual temperature and atmospheric CO2 concentration in year i, respectively, and a is the transient temperature change in response to the doubling of CO2 concentration. The likely range of transient climate sensitivity is a 5 1.0–2.5 uC (ref. 51). Here we used the largest value in this range to estimate the maximum plausible impact of CO2 greenhouse effect on temperature variations. The result suggests that the impact of CO2 variations on interannual temperature variations is one order of magnitude smaller than the observed interannual variations in mean annual temperature. It confirms that the impact of the CO2 greenhouse effect on temperature is not the reason for the observed significant correlation between CGR and temperature.\n\n32. Kistler, R. et al. The NCEP–NCAR 50-year reanalysis: monthly means CD–ROM and documentation. Bull. Am. Meteorol. Soc. 82, 247–267 (2001).\n\n33. Angstrom,A.Solarandterrestrialradiation:reporttothe internationalcommission for solar research on actinometric investigations of solar and atmospheric radiation. Q. J. R. Meteorol. Soc. 50, 121–126 (1924).\n\n34. Stackhouse, P. et al. 12-year surface radiation budget data set. GEWEX News 14, 10–12 (2004).\n\n35. Dinku, T., Connor, S. J., Ceccato, P. & Ropelewski, C. F. Comparison of global gridded precipitation products over a mountainous region of Africa. Int. J. Climatol. 28, 1627–1638 (2008).\n\n36. Solomon, S. et al. (eds) Climate Change 2007: The Physical Science Basis 241–265 (Cambridge Univ. Press, 2007).\n\n37. Sheffield, J., Wood, E. F. & Roderick, M. L. Little change in global drought over the past 60 years. Nature 491, 435–438 (2012).\n\n38. Seneviratne, S. I. et al. Investigating soil moisture-climate interactions in a changing climate: a review. Earth Sci. Rev. 99, 125–161 (2010).\n\n39. Edwards, D.C. Characteristicsof20thCentury Drought inthe United StatesatMultiple Time Scales. MSc thesis, Colorado State Univ. (1997).\n\n40. Hirschi, M. et al. Observational evidence for soil-moisture impact on hot extremes in southeastern Europe. Nature Geosci. 4, 17–21 (2011).\n\n41. Vicente-Serrano, S. M., Beguerı´a, S., Lo´pez-Moreno, J. I., Angulo, M. & El Kenawy, A. A new global 0.5u gridded dataset (1901–2006) of a multiscalar drought index: comparison with current drought index datasets based on the Palmer drought severity index. J. Hydrometeorol. 11, 1033–1043 (2010).\n\n42. Tucker, C. J. et al. An extended AVHRR 8-km NDVI dataset compatible with MODIS and SPOT vegetation NDVI data. Int. J. Remote Sens. 26, 4485–4498 (2005).\n\n43. Clark, D. A., Piper, S. C., Keeling, C. D. & Clark, D. B. Tropical rain forest tree growth and atmospheric carbon dynamics linked to interannual temperature variation during 1984–2000. Proc. Natl Acad. Sci. USA 100, 5852–5857 (2003).\n\n44. van Mantgem, P. J. & Stephenson, N. L. Apparent climatically induced increase of tree mortality rates in a temperate forest. Ecol. Lett. 10, 909–916 (2007).\n\n45. Carnicer, J. et al. Widespread crown condition decline, food web disruption, and amplified tree mortality with increased climate change-type drought. Proc. Natl Acad. Sci. USA 108, 1474–1478 (2011).\n\n46. Mann,H.B.Nonparametrictestsagainsttrend. Econometrica 13, 245–259 (1945).\n\n47. Mahecha, M. D., Fu¨rst, L. M., Gobron, N. & Lange, H. Identifying multiple spatiotemporal patterns: a refined view on terrestrial photosynthetic activity. Pattern Recognit. Lett. 31, 2309–2317 (2010).\n\n48. Manly, B. Randomization, Bootstrap and Monte Carlo Methods in Biology 3rd edn (Chapman & Hall/CRC, 2007).\n\n49. Solomon, S. et al. (eds) Climate Change 2001: The Scientific Basis 351–358 (Cambridge Univ. Press, 2007).\n\n50. Hansen, J. et al. Global climate changes as forecast by Goddard Institute for Space Studies three-dimensional model. J. Geophys. Res. 93, 9341–9364 (1988).\n\n51. Alexander, L. V. et al. in Climate Change 2013: The Physical Science Basis (eds Stocker, T. F. et al.) 1–33 (Cambridge Univ. Press, 2013).\n\n©2014 **Macmillan Publishers Limited. All rights reserved**\n\nRESEARCH LETTER\n\nExtended Data Figure 1 | Spatial distribution of the correlation coefficient between detrended CGR and MAT anomalies. CGR anomalies are from Mauna Loa Observatory and local MAT anomalies were derived from the CRU data set for the period 1960–2011. The correlation coefficients 0.23 and 0.28 are the critical thresholds at significance levels of 0.10 and 0.05 (n 5 52), respectively.\n\n©2014 **Macmillan Publishers Limited. All rights reserved**\n\nLETTER RESEARCH\n\nExtended Data Figure 2 | Convergent cross-mapping for reconstruction of variations in MAT, annual precipitation and mean annual solar radiation from variations in CGR. CGR data are from Mauna Loa Observatory. The CGR-reconstructed temperature curve gradually converges to a large positive correlation coefficient (R 5 0.70), whereas the CGR-reconstructed precipitation (P) and radiation (R) curves lead to smaller correlation coefficients (R 5 0.04 and R 5 0.23, respectively) as time-series length increases, suggesting that CGR variations are mainly forced by temperature variations rather than by variations in precipitation and solar radiation.\n\n©2014 **Macmillan Publishers Limited. All rights reserved**\n\nRESEARCH LETTER\n\nExtended Data Figure 3 | Change in dCGR/dMAT, c<sup>int</sup> CGR<sup>, and the effects of</sup> interannual variations of precipitation and solar radiation on the estimate of dCGR/dMAT. The changes are calculated between the latest two decades and the earliest two decades in 1960–2011. Precipitation and radiation effects are denoted f2 3 dP/dMAT and f3 3 dR/dMAT, respectively. dCGR/dMAT is calculated as the slope of MAT in the regression of CGR at Mauna Loa Observatory against MAT over the tropical vegetated land. c<sup>int</sup> CGR<sup>,</sup> f2 and f3 are the slopes of MAT, precipitation and radiation, respectively, in the multiple regression of CGR against MAT, precipitation and radiation over the tropical vegetated land. dP/dMAT is the slope of MAT in the regression of precipitation against MAT. dR/dMAT is the slope of MAT in the regression of radiation against MAT. Error bars indicate the 95% confidence interval of the corresponding value derived from 500 bootstrap estimates.\n\n©2014 **Macmillan Publishers Limited. All rights reserved**\n\nLETTER RESEARCH\n\nExtended Data Figure 4 | ª<sup>int</sup> CGR<sup>and ªint</sup> LandSink<sup>for the first and the last time</sup> window during the study period 1960–2011. For 20-yr windows, the two windows are 1960–1979 and 1992–2011. For 25-yr windows, they are 1960–1984 and 1987–2011. a, Data from 1992 and 1993 (post-Pinatubo years) are excluded from c<sup>int</sup> CGR<sup>estimates. b, Data from the record-high El Nin˜o events</sup> of 1972–1973 and 1997–1998 are excluded from c<sup>int</sup> CGR<sup>estimates. c, Interannual</sup> variations of CGR and climate variables are obtained from the frequency decomposition by SSA (Methods). d, c<sup>int</sup> CGR<sup>is estimated with alternative climate</sup> data sets (tropical MAT is from the GHCN data set<sup>19</sup>, tropical annual\n\nprecipitation is from the GPCC<sup>20</sup> and solar radiation is from ref. 21). e, CGR is obtained from monthly CO2 records at the South Pole. f, Interannual temperature sensitivity of the residual land carbon sink (c<sup>int</sup> LandSink<sup>). The residual</sup> land carbon sink of each year is estimated from the CGR by adding the ocean sink and subtracting fossil fuel emission and emission due to land-use change<sup>22</sup>. In a–d, c<sup>int</sup> CGR<sup>is estimated from Mauna Loa CO2 records. Error bars</sup> indicate the 95% confidence interval of c<sup>int</sup> CGR<sup>derived from 500 bootstrap</sup> estimates.\n\n©2014 **Macmillan Publishers Limited. All rights reserved**\n\nRESEARCH LETTER\n\nExtended Data Figure 5 | Change in drought indices and 20-yr smoothed drought indices over tropical and mid-latitude regions during the past five decades. a, Change in tropical (23u south to 23u north) annual PDSI, SPEI6 and ORCHIDEE-estimated soil moisture. b, 20-yr smoothed tropical PDSI, SPEI6 and ORCHIDEE-simulated soil moisture. c, Change in mid-latitude (23u north to 48u north) annual PDSI, SPEI6 and ORCHIDEE-simulated soil\n\nmoisture. d, 20-yr smoothed mid-latitude PDSI, SPEI6 and ORCHIDEEsimulated soil moisture. Years on the x-axis indicate the central year of the 20-yr time window (for example, 1970 represents 1960–1979). All variables are normalized by their respective standard deviations. The changes in SPEI3, SPEI9andSPEI12 areclose to that in SPEI6. Note that SPEI is availabletill 2011, PDSI is available till 2010 and model soil moisture is available till 2009.\n\n©2014 **Macmillan Publishers Limited. All rights reserved**\n\nLETTER RESEARCH\n\nExtended Data Figure 6 | Spatial distribution of the difference between the latest andfirst 20-yr periods during thepast five decades in PDSI, SPEI6and ORCHIDEE-estimated soil moisture. a, PDSI; b, SPEI6; c, ORCHIDEEsimulated soil moisture. The changes in SPEI3, SPEI9 and SPEI12 are close to that in SPEI6.\n\n©2014 **Macmillan Publishers Limited. All rights reserved**"
+    },
+    {
+      "heading": "RESEARCH LETTER",
+      "level": 3,
+      "kind": "body",
+      "text": "Extended Data Figure 7 | Change in ª<sup>int</sup> CGR<sup>and the relationship between ªint</sup> CGR and precipitation anomalies in the null Monte Carlo experiment. a, c<sup>int</sup> CGR<sup>in</sup> the first and last 20 yr during 1960–2011. b, c<sup>int</sup> CGR<sup>for each bin of detrended</sup> tropical precipitation anomalies, which are divided into four bins (standardized departure (s) less than 21, between 21 and 0, between 0 and 1, and greater than 1). Values of c<sup>int</sup> CGR<sup>for different bins of detrended tropical precipitation</sup> anomaly are similar. c, Frequency distribution of the difference between c<sup>int</sup> CGR calculated for s. 1 (wet conditions) and c<sup>int</sup> CGR<sup>calculated for s, 21 (dry</sup> conditions). The probability of the observed difference (ranging from 5.1 to 6.0Pg C yr<sup>21</sup> uC<sup>21</sup>; Fig. 3) occurring purely by chance is very low (P, 0.01). Error bars indicate the confidence intervals of the corresponding estimates.\n\n©2014 **Macmillan Publishers Limited. All rights reserved**\n\nLETTER RESEARCH\n\nExtended Data Figure 8 | Change in dCGR/dMAT and ª<sup>int</sup> CGR<sup>and variational</sup> effects on estimating dCGR/dMAT between the earlier and latest two decades during 1960–2011. The effects of interannual variations of tropical precipitation (P), tropical short-wave solar radiation (R), mid-latitude (23u north to 48u north)temperature (MidMAT), mid-latitudeprecipitation (MidP) and mid-latitude short-wave solar radiation (MidR) are denoted f2 3 dP/ dMAT, f3 3 dR/dMAT, f4 3 dMidMAT/dMAT, f5 3 dMidP/dMAT and f6 3 dMidR/dMAT, respectively, where f2, f3, f4, f5 and f6 are respectively the slopes of P, R, MidMAT, MidP and MidR in the multiple regression of CGR against P, R, MidMAT, MidP, MidR. dy/dx represents the slope of x in the regression of y against x. Error bars indicate the 95% confidence interval of the corresponding value derived from 500 bootstrap estimates.\n\n©2014 **Macmillan Publishers Limited. All rights reserved**\n\nRESEARCH LETTER\n\nExtended Data Figure 9 | Change in ª<sup>int</sup> CGR<sup>and ª</sup> modNBP<sup>intduring 1960–2008</sup> with a 20-yr moving time window. c<sup>int</sup> modNBP<sup>is the interannual temperature</sup> sensitivity of tropical net biome productivity, estimated using five carbon cycle models (HYL, LPJ, ORC, SHE and TRI). To be consistent with model estimated annual net biome productivity, CGR of a specific year is calculated as the difference between the December Mauna Loa CO2 concentration of the year and that of December the previous year. Positive value of c<sup>int</sup> modNBP<sup>indicates</sup> reduced anomalies of carbon sinks during warm years.\n\n©2014 **Macmillan Publishers Limited. All rights reserved**\n\nLETTER RESEARCH\n\nExtended Data Figure 10 | Autocorrelations in CGR and MAT, and their impacts on the estimates of ª<sup>int</sup> CGR<sup>.a, Autocorrelation coefficients for</sup> detrended anomalies of CGR from Mauna Loa during 1960–2011. b, Autocorrelation coefficients for detrended anomalies of MAT during 1960–2011. Dashed lines in a and b indicate 95% confidence bands. c, The comparison between c<sup>int</sup> CGR<sup>calculated in the multiple regression of interannual</sup> variations of the Mauna Loa CGR record against interannual variations in temperature, precipitation and solar radiation (x axis) and c<sup>int</sup> CGR<sup>calculated in</sup> the linear mixed model with same independent variables and a first-order autocorrelation function (y axis). Solid line indicates 1:1 ratio. This 1:1 relationship holds for c<sup>int</sup> CGR<sup>derived for different time-window lengths.</sup>\n\n©2014 **Macmillan Publishers Limited. All rights reserved**"
+    }
+  ],
+  "references": [
+    {
+      "raw": "Cox, P. M., Betts, R. A., Jones, C. D., Spall, S. A. & Totterdell, I. J. Acceleration of global warming due to carbon-cycle feedbacks in a coupled climate model. Nature 408, 184–187 (2000)",
+      "doi": "10.1038/35041539",
+      "title": null,
+      "year": "2000"
+    },
+    {
+      "raw": "Sitch, S. et al. Evaluation of the terrestrial carbon cycle, future plant geography and climate-carbon cycle feedbacks using five dynamic global vegetation models (DGVMs). Glob. Change Biol. 14, 2015–2039 (2008)",
+      "doi": "10.1111/j.1365-2486.2008.01626.x",
+      "title": null,
+      "year": "2008"
+    },
+    {
+      "raw": "Phillips, O. L. et al. Drought sensitivity of the Amazon rainforest. Science 323, 1344–1347 (2009)",
+      "doi": "10.1126/science.1164033",
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "Meir, P. & Woodward, F. I. Amazonian rain forests and drought: response and vulnerability. New Phytol. 187, 553–557 (2010)",
+      "doi": "10.1111/j.1469-8137.2010.03390.x",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "Davidson, E. A. et al. The Amazon basin in transition. Nature 481, 321–328 (2012)",
+      "doi": "10.1038/nature10717",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "Baker, D. F. et al. TransCom 3 inversion intercomparison: Impact of transport model errors on the interannual variability of regional CO2 fluxes, 1988–2003. Glob. Biogeochem. Cycles 20, GB1002 (2006)",
+      "doi": "10.1029/2004gb002439",
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "Lee, K., Wanninkhof, R., Takahashi, T., Doney, S. C. & Feely, R. A. Low interannual variability in recent oceanic uptake of atmospheric carbon dioxide. Nature 396, 155–159 (1998)",
+      "doi": "10.1038/24139",
+      "title": null,
+      "year": "1998"
+    },
+    {
+      "raw": "Alden, C. B., Miller, J. B. & White, J. W. C. Can bottom-up ocean CO2 fluxes be reconciled with atmospheric 13C observations? Tellus B 62, 369–388 (2010)",
+      "doi": "10.1111/j.1600-0889.2010.00481.x",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "Wang, W. et al. Variations in atmospheric CO2 growth rates coupled with tropical temperature. Proc. Natl Acad. Sci. USA 110, 13061–13066 (2013)",
+      "doi": "10.1073/pnas.1219683110",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "Cox, P. M. et al. Sensitivity of tropical carbon to climate change constrained by carbon dioxide variability. Nature 494, 341–344 (2013)",
+      "doi": "10.1038/nature11882",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "Patra, P. K., Ishizawa, M., Maksyutov, S., Nakazawa, T. & Inoue, G. Role of biomass burning and climate anomalies for land-atmosphere carbon fluxes based on inverse modeling of atmospheric CO2 . Glob. Biogeochem. Cycles 19, GB3005 (2005)",
+      "doi": null,
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "Keeling, C. D., Whorf, T. P., Wahlen, M. & van der Plichtt, J. Interannual extremes in the rate of rise of atmospheric carbon dioxide since 1980. Nature 375, 666–670 (1995)",
+      "doi": "10.1038/375666a0",
+      "title": null,
+      "year": "1995"
+    },
+    {
+      "raw": "Adams, J. M. & Piovesan, G. Long series relationships between global interannual CO2 increment and climate: evidence for stability and change in role of the tropical and boreal-temperate zones. Chemosphere 59, 1595–1612 (2005)",
+      "doi": "10.1016/j.chemosphere.2005.03.064",
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "Corlett, R. T. Impacts of warming on tropical lowland rainforests. Trends Ecol. Evol. 26, 606–613 (2011)",
+      "doi": "10.1016/j.tree.2011.06.015",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "Sugihara, G. et al. Detecting causality in complex ecosystems. Science 338, 496–500 (2012)",
+      "doi": "10.1126/science.1227079",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "Mitchell, T. D. & Jones, P. D. An improved method of constructing a database of monthly climate observations and associated high-resolution grids. Int. J. Climatol. 25, 693–712 (2005)",
+      "doi": "10.1002/joc.1181",
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "Sarmiento, J. L. et al. Trends and regional distributions of land and ocean carbon sinks. Biogeosciences 7, 2351–2367 (2010)",
+      "doi": "10.5194/bg-7-2351-2010",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "Mahecha, M. D. et al. Characterizing ecosystem-atmosphere interactions from short to interannual time scales. Biogeosciences 4, 743–758 (2007)",
+      "doi": "10.5194/bg-4-743-2007",
+      "title": null,
+      "year": "2007"
+    },
+    {
+      "raw": "Smith, T. M., Reynolds, R. W., Peterson, T. C. & Lawrimore, J. Improvements to NOAA’s historical merged land–ocean surface temperature analysis (1880–2006). J. Clim. 21, 2283–2296 (2008)",
+      "doi": "10.1175/2007jcli2100.1",
+      "title": null,
+      "year": "2008"
+    },
+    {
+      "raw": "Schneider, U. et al. GPCC’s new land surface precipitation climatology based on quality-controlled in situ data and its role in quantifying the global water cycle. Theor. Appl. Climatol.. http://dx.doi.org/10.1007/s00704-013-0860-x (2013)",
+      "doi": "10.1007/s00704-013-0860-x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Sheffield, J., Goteti, G. & Wood, E. F. Development of a 50-year high-resolution global dataset of meteorological forcings for land surface modeling. J. Clim. 19, 3088–3111 (2006)",
+      "doi": "10.1175/jcli3790.1",
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "Le Quéré, C. et al. Trends in the sources and sinks of carbon dioxide. Nature Geosci. 2, 831–836 (2009)",
+      "doi": "10.1038/ngeo689",
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "Dai, A. Characteristics and trends in various forms of the Palmer drought severity index during 1900–2008. J. Geophys. Res. 116, D12115 (2011)",
+      "doi": "10.1029/2010jd015541",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "Vicente-Serrano, S. M., Beguería, S. & López-Moreno, J. I. A multiscalar drought index sensitive to global warming: the standardized precipitation evapotranspiration index. J. Clim. 23, 1696–1718 (2010)",
+      "doi": "10.1175/2009jcli2909.1",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "Piao, S. et al. Spatiotemporal patterns of terrestrial carbon cycle during the 20th century. Glob. Biogeochem. Cycles 23, GB4026 (2009)",
+      "doi": "10.1029/2008gb003339",
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "Schwalm, C. R. et al. Does terrestrial drought explain global CO2 flux anomalies induced by El Niño? Biogeosciences 8, 2493–2506 (2011)",
+      "doi": "10.5194/bg-8-2493-2011",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "Dai, A. Increasing drought under global warming in observations and models. Nature Clim. Change 3, 52–58 (2013)",
+      "doi": "10.1038/nclimate1633",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "Randerson, J. T. Climate science: global warming and tropical carbon. Nature 494, 319–320 (2013)",
+      "doi": "10.1038/nature11949",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "Ballantyne, A. P., Alden, C. B., Miller, J. B., Tans, P. P. & White, J. W. C. Increase in observed net carbon dioxide uptake by land and oceans during the past 50 years. Nature 488, 70–72 (2012)",
+      "doi": "10.1038/nature11299",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "Graven, H. D. et al. Enhanced seasonal exchange of CO2 by northern ecosystems since 1960. Science 341, 1085–1089 (2013)",
+      "doi": "10.1126/science.1239207",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "Keeling, C. D. et al. in A History of Atmospheric CO 2 and its effects on Plants, Animals, and Ecosystems (eds Ehleringer, J. R. et al.) 83–113 (Springer, 2005)",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Kistler, R. et al. The NCEP–NCAR 50-year reanalysis: monthly means CD–ROM and documentation. Bull. Am. Meteorol. Soc. 82, 247–267 (2001)",
+      "doi": "10.1175/1520-0477(2001)082<0247:tnnyrm>2.3.co;2",
+      "title": null,
+      "year": "2001"
+    },
+    {
+      "raw": "Angstrom, A. Solar and terrestrial radiation: report to the international commission for solar research on actinometric investigations of solar and atmospheric radiation. Q. J. R. Meteorol. Soc. 50, 121–126 (1924)",
+      "doi": "10.1002/qj.49705021008",
+      "title": null,
+      "year": "1924"
+    },
+    {
+      "raw": "Stackhouse, P. et al. 12-year surface radiation budget data set. GEWEX News 14, 10–12 (2004)",
+      "doi": null,
+      "title": null,
+      "year": "2004"
+    },
+    {
+      "raw": "Dinku, T., Connor, S. J., Ceccato, P. & Ropelewski, C. F. Comparison of global gridded precipitation products over a mountainous region of Africa. Int. J. Climatol. 28, 1627–1638 (2008)",
+      "doi": "10.1002/joc.1669",
+      "title": null,
+      "year": "2008"
+    },
+    {
+      "raw": "Solomon S., et al., eds. (eds) Climate Change 2007: The Physical Science Basis 241–265 (Cambridge Univ. Press, 2007)",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Sheffield, J., Wood, E. F. & Roderick, M. L. Little change in global drought over the past 60 years. Nature 491, 435–438 (2012)",
+      "doi": "10.1038/nature11575",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "Seneviratne, S. I. et al. Investigating soil moisture-climate interactions in a changing climate: a review. Earth Sci. Rev. 99, 125–161 (2010)",
+      "doi": "10.1016/j.earscirev.2010.02.004",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "Edwards, D. C. Characteristics of 20th Century Drought in the United States at Multiple Time Scales. MSc thesis, Colorado State Univ. (1997)",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Hirschi, M. et al. Observational evidence for soil-moisture impact on hot extremes in southeastern Europe. Nature Geosci. 4, 17–21 (2011)",
+      "doi": "10.1038/ngeo1032",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "Vicente-Serrano, S. M., Beguería, S., López-Moreno, J. I., Angulo, M. & El Kenawy, A. A new global 0.5° gridded dataset (1901–2006) of a multiscalar drought index: comparison with current drought index datasets based on the Palmer drought severity index. J. Hydrometeorol. 11, 1033–1043 (2010)",
+      "doi": "10.1175/2010jhm1224.1",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "Tucker, C. J. et al. An extended AVHRR 8-km NDVI dataset compatible with MODIS and SPOT vegetation NDVI data. Int. J. Remote Sens. 26, 4485–4498 (2005)",
+      "doi": "10.1080/01431160500168686",
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "Clark, D. A., Piper, S. C., Keeling, C. D. & Clark, D. B. Tropical rain forest tree growth and atmospheric carbon dynamics linked to interannual temperature variation during 1984–2000. Proc. Natl Acad. Sci. USA 100, 5852–5857 (2003)",
+      "doi": "10.1073/pnas.0935903100",
+      "title": null,
+      "year": "2003"
+    },
+    {
+      "raw": "van Mantgem, P. J. & Stephenson, N. L. Apparent climatically induced increase of tree mortality rates in a temperate forest. Ecol. Lett. 10, 909–916 (2007)",
+      "doi": "10.1111/j.1461-0248.2007.01080.x",
+      "title": null,
+      "year": "2007"
+    },
+    {
+      "raw": "Carnicer, J. et al. Widespread crown condition decline, food web disruption, and amplified tree mortality with increased climate change-type drought. Proc. Natl Acad. Sci. USA 108, 1474–1478 (2011)",
+      "doi": "10.1073/pnas.1010070108",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "Mann, H. B. Nonparametric tests against trend. Econometrica 13, 245–259 (1945)",
+      "doi": "10.2307/1907187",
+      "title": null,
+      "year": "1945"
+    },
+    {
+      "raw": "Mahecha, M. D., Fürst, L. M., Gobron, N. & Lange, H. Identifying multiple spatiotemporal patterns: a refined view on terrestrial photosynthetic activity. Pattern Recognit. Lett. 31, 2309–2317 (2010)",
+      "doi": "10.1016/j.patrec.2010.06.021",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "Manly, B. Randomization, Bootstrap and Monte Carlo Methods in Biology 3rd edn (Chapman & Hall/CRC, 2007)",
+      "doi": null,
+      "title": null,
+      "year": "2007"
+    },
+    {
+      "raw": "Solomon S., et al., eds. (eds) Climate Change 2001: The Scientific Basis 351–358 (Cambridge Univ. Press, 2007)",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Hansen, J. et al. Global climate changes as forecast by Goddard Institute for Space Studies three-dimensional model. J. Geophys. Res. 93, 9341–9364 (1988)",
+      "doi": "10.1029/jd093id08p09341",
+      "title": null,
+      "year": "1988"
+    },
+    {
+      "raw": "Alexander, L. V. et al. in Climate Change 2013: The Physical Science Basis (eds Stocker, T. F. et al.) 1–33 (Cambridge Univ. Press, 2013)",
+      "doi": null,
+      "title": null,
+      "year": null
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 14137,
+    "content_kind": "fulltext",
+    "has_abstract": false,
+    "warnings": [
+      "Springer HTML route was not usable (Publisher HTML only exposed abstract-level content without article body text.); attempting PDF fallback.",
+      "Full text was extracted from PDF fallback after the Springer HTML path was not usable.",
+      "Springer official full text was downloaded as PDF/binary to /tmp/paper-fetch-paywall-expansion-20260915/springer/10.1038_nature12915/fetch/Wang_et_al_2014_A_two-fold_increase_of_carbon_cycle_sensitivity_to_tropical_temperature_variations.pdf.",
+      "Markdown full text was saved to /tmp/paper-fetch-paywall-expansion-20260915/springer/10.1038_nature12915/fetch/Wang_et_al_2014_A_two-fold_increase_of_carbon_cycle_sensitivity_to_tropical_temperature_variations.md."
+    ],
+    "source_trail": [
+      "fulltext:springer_html_fail",
+      "fulltext:springer_pdf_fallback_ok",
+      "fulltext:springer_pdf_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_springer",
+      "route:signal_publisher_springer",
+      "route:signal_doi_springer",
+      "route:probe_springer_unknown",
+      "route:provider_selected_springer",
+      "route:provider_candidate_springer_metadata_selected_rank_1",
+      "route:provider_candidate_springer_identity_strong",
+      "fulltext:springer_attempt",
+      "download:springer_saved",
+      "download:springer_assets_skipped_profile_none",
+      "fulltext:springer_article_ok",
+      "route:provider_candidate_springer_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 0,
+      "body": 14137,
+      "refs": 1984
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 56402,
+      "word_count": 9203,
+      "body_block_count": 6,
+      "body_heading_count": 5,
+      "body_to_abstract_ratio": 9203.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "springer",
+    "route": "direct_pdf",
+    "representation": "pdf",
+    "transport": "http",
+    "fallback_used": true
+  }
+}

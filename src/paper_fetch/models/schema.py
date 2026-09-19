@@ -91,7 +91,8 @@ QualityConfidence = Literal["high", "medium", "low"]
 
 
 TRUNCATION_WARNING = "Output truncated to satisfy token budget."
-EXTRACTION_REVISION = 5
+# 7.0 changes HTML/XML extraction and confirmed access-stop semantics across providers.
+EXTRACTION_REVISION = 6
 
 
 @dataclass
@@ -558,6 +559,9 @@ class ArticleModel:
             render_table_asset_groups,
         )
 
+        from ..acquisition import is_pdf_article
+
+        preserve_pdf = is_pdf_article(self)
         warnings = list(self.quality.warnings)
         render_plan = _build_markdown_render_plan(
             self,
@@ -606,6 +610,7 @@ class ArticleModel:
             sections=render_plan.body_sections + render_plan.retained_sections,
             level_shift=render_plan.level_shift,
             context=context,
+            preserve_text=preserve_pdf,
         )
 
         append_asset_block_with_budget(
@@ -640,6 +645,8 @@ class ArticleModel:
         )
 
         context.finalize_warnings()
+        if preserve_pdf:
+            return "\n".join(lines) + "\n"
         return "\n".join(lines).strip() + "\n"
 
 

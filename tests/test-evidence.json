@@ -1,0 +1,4241 @@
+{
+  "version": 2,
+  "modules": {
+    "tests/unit/test_acceptance_adapter_contract.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "acceptance adapter contract",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_acquisition_provenance.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "acquisition provenance",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_acs_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "acs provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "Silverchair 正文、嵌套已加载 Figshare 查看器排除、引用、公式、表格和直链原图已有原文回归；人为超长 viewer、作者优先级及 readiness 仍为机制。 2026-09-16 复查原始文章证实原图只在 DownloadImage 包装中，解包装保留并有原文断言；ACS 缺原图后访问 viewer 的额外回退已删除；Royal 原文存在分组 slide 只指向邻图的反例，故按用户条件保留缺原图时的 viewer 回退。先前把独立 viewer 直链当成文章直链的判断已纠正。",
+          "evidence_tests": [
+            "tests/golden/test_acs_provider.py::test_acs_silverchair_structure_fixture_extracts_complete_current_article",
+            "tests/golden/test_acs_provider.py::test_acs_silverchair_formula_fixture_preserves_mathml_and_tables",
+            "tests/golden/test_requested_template_evidence.py::test_original_silverchair_article_requires_downloadimage_unwrapping"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_aip_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "aip provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "离子泵及 AlN 原文、图注/alt/modal 重复变体、正文顺序和引用已有回归；手写无标签 Markdown 保留最小去重机制，不代表额外原文模板。",
+          "evidence_tests": [
+            "tests/golden/test_aip_provider.py::test_real_aip_ion_pump_figure_identity_and_caption",
+            "tests/golden/test_reviewed_publisher_content.py::test_reviewed_body_prose_runs_and_headings_remain_in_source_order",
+            "tests/golden/test_acquired_article_assets.py::test_original_article_figure_candidates_download_and_assembly",
+            "tests/golden/test_aip_provider.py::test_original_aip_alt_and_modal_caption_variants_render_once"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_ams_inline_snippets.py": {
+      "default": {
+        "kind": "content",
+        "scope": "AMS 原文图注最小片段的上下标、公式和空格；不覆盖整篇文章。",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_ams_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "ams provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "原始 TIFF/EPS 入口、表图片、行内公式及 data availability/appendix 顺序均有定向原文回归；seed 和 route 顺序仍为注入控制。",
+          "evidence_tests": [
+            "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_fixture_extracts_mixed_tiff_and_eps_download_figure_sources",
+            "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_table_images_are_extracted_and_rendered_inline",
+            "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_aies_fixture_preserves_inline_mathml_formulas",
+            "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_data_availability_stays_before_appendix"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_annualreviews_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "annualreviews provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "真实表格、正文图片下载和空壳拒绝；任意 rowspan/colspan 组合仅证明网格算法。",
+          "evidence_tests": [
+            "tests/golden/test_annualreviews_provider.py::test_markdown_contract_table_fixture",
+            "tests/golden/test_annualreviews_provider.py::test_golden_replay_rewrites_downloaded_figure_assets_to_local_paths",
+            "tests/golden/test_annualreviews_provider.py::test_real_empty_shell_does_not_promote_page_chrome_to_fulltext"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_artifact_secret_scan.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "artifact secret scan"
+      }
+    },
+    "tests/unit/test_arxiv_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "arxiv provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "LaTeXML 正文、表格、参考文献、嵌套源码图片及附件目录由原文回归承担；ID 解析、字节预算和归档成员共享为机制。 无 ltx 的通用标题/摘要/参考文献分支没有已验证的支持样本，已按用户要求删除；审阅了 14 份真实 arXiv HTML 资产，其中 8 份包含 ltx，未发现包含 article 却无 ltx 的全文样本。不声称证明互联网不存在任何历史 HTML。",
+          "evidence_tests": [
+            "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_preserves_tables_and_cleans_error_and_alt_noise",
+            "tests/golden/test_arxiv_original_source_figures.py::test_original_tex_resolves_nested_figure_paths_and_exact_bytes",
+            "tests/golden/test_acquired_completion.py::test_complete_arxiv_pages_discover_exact_version_and_all_files"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_asset_budget.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "asset budget",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_asset_download_kind.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "asset download kind",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_asset_quality.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "asset quality",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_asset_retry_policy.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "asset retry policy",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_atomic_commit_and_singleflight.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "atomic commit and singleflight",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_atypon_browser_workflow_browser_runtime.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "atypon browser workflow browser runtime",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_atypon_browser_workflow_candidates.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "atypon browser workflow candidates",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_atypon_browser_workflow_markdown.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "atypon browser workflow markdown",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_atypon_browser_workflow_postprocess.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "atypon browser workflow postprocess",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_atypon_browser_workflow_postprocess_units.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "atypon browser workflow postprocess units",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_atypon_browser_workflow_provider_asset_downloads.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "atypon browser workflow provider asset downloads",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "ACS/AMS/PNAS/Science 图片有真实下载回归；fetcher 复用、重复项缓存、body/all 过滤及点击失败是注入契约。 PNAS 原图失败后的 preview 降级及无原图时 preview 下载已按用户明确要求删除，对应成功测试删除；保留原图下载与浏览器原图恢复。",
+          "evidence_tests": [
+            "tests/golden/test_acquired_article_assets.py::test_original_article_figure_candidates_download_and_assembly"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_atypon_browser_workflow_provider_asset_failures.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "atypon browser workflow provider asset failures",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "旧 Science adz3492 的真实 SVG 原已存在；现移出 unit 为同篇 DOM→SVG 字节→本地链接 golden 回归。preview 失败、challenge 与回退仍是机制。",
+          "evidence_tests": [
+            "tests/golden/test_acquired_article_assets.py::test_original_article_figure_candidates_download_and_assembly",
+            "tests/golden/test_science_original_svg.py::test_original_science_svg_is_bound_to_figure_and_saved_unchanged"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_atypon_browser_workflow_provider_fallbacks.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "atypon browser workflow provider fallbacks",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "浏览器调用次数、seed 传递与模拟失败后的终态是状态机契约；真实门禁停止及 TDM PDF 另有回放。",
+          "evidence_tests": [
+            "tests/golden/test_acquired_wiley_pdf.py::test_captured_tdm_pdf_current_wiley_fallback_and_final_acceptance",
+            "tests/golden/test_confirmed_paywall_stop.py::test_real_subscription_pages_confirm_same_article_and_preserve_abstract"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_atypon_browser_workflow_provider_html.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "atypon browser workflow provider html",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "Science 原始 frontmatter、作者、主文与图片落盘回归；删除 datalayer 后的优先级分支保持机制性质。",
+          "evidence_tests": [
+            "tests/golden/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_provider_owned_html_signals_populate_final_article_authors",
+            "tests/golden/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_science_provider_keeps_frontmatter_sections_but_only_one_abstract_in_final_article",
+            "tests/golden/test_acquired_article_assets.py::test_original_article_figure_candidates_download_and_assembly"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_atypon_browser_workflow_provider_retries.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "atypon browser workflow provider retries",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "精确构造某次请求失败、仅重试失败项、保持结果顺序及 fetcher 复用；该类因果条件应保留可控 mock，不要求出版页面。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_auth.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "auth",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_author_pipeline_per_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "author pipeline per provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "按用户确认保留作者 pipeline，并以限定的真实结构为依据：arXiv 原文自然进入 person-names；Wiley/Springer/Science/PNAS 原文验证首选与备用作者源共存；Springer JSON-LD 自然回退仅有表格子页证据。未修改原文或删除首选字段。Wiley JSON-LD、AMS 备用选择器、IEEE 容器/姓名形状及其余无原文分支保留为机制契约，不宣称逐分支真实回退覆盖。",
+          "evidence_tests": [
+            "tests/golden/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_provider_owned_html_signals_populate_final_article_authors",
+            "tests/golden/test_original_author_branches.py::test_original_arxiv_naturally_uses_person_name_fallback",
+            "tests/golden/test_original_author_branches.py::test_original_coexisting_author_sources_preserve_names",
+            "tests/golden/test_original_author_branches.py::test_original_springer_table_page_uses_jsonld_without_author_meta"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_browser_asset_download.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "browser asset download",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_browser_image_payload.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "browser image payload",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_browser_preflight.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "browser preflight",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_browser_storage_state.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "browser storage state",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_browser_workflow_fetchers.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "browser workflow fetchers",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_cache_index_semantics.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "cache index semantics",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_camoufox_backend.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "camoufox backend",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_capability_scope.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "capability scope",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_ci_release_workflow.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "ci release workflow"
+      }
+    },
+    "tests/unit/test_cli.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "cli",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_cli_manifest_v2.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "cli manifest v2",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_config.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "config"
+      }
+    },
+    "tests/unit/test_confirmed_paywall_stop.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Article entitlement stops requests, with local degradation and evidence.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_cookie_requester.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "cookie requester",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_copernicus_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "copernicus provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "真实 JATS 段落、引用、CALS 列关联与图片已有回归；空 XML、请求失败和无候选由注入控制。",
+          "evidence_tests": [
+            "tests/golden/test_copernicus_provider.py::test_real_bg_table_preserves_cals_column_associations",
+            "tests/golden/test_copernicus_provider.py::test_real_acp_figure_and_numbered_equations",
+            "tests/golden/test_reviewed_publisher_content.py::test_reviewed_body_prose_runs_and_headings_remain_in_source_order"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_crossref_response_contract.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "crossref response contract",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_datalayer_signal_set.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "datalayer signal set",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_elsevier_markdown.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "elsevier markdown",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_fetch_cache_variant_selection.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "fetch cache variant selection",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_fetch_common.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "fetch common",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_fetch_pipeline.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "fetch pipeline",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_formula_conversion.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "formula conversion",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "这里测试 HTML/XML MathML 的后端选择、字符串规则、缓存和失败回退；不修改或评价 PDF 转换结果。真实 HTML 公式另有回归。",
+          "evidence_tests": [
+            "tests/golden/test_acs_provider.py::test_acs_silverchair_formula_fixture_preserves_mathml_and_tables",
+            "tests/golden/test_oxfordacademic_provider.py::test_markdown_contract_formula_fixture"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_formula_install.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "formula install"
+      }
+    },
+    "tests/unit/test_formula_package_sync.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "formula package sync"
+      }
+    },
+    "tests/unit/test_frontiers_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "frontiers provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "两种真实 XML 模板、物种表格、正文图和附件 API 绑定已覆盖；无效 span、缺字段及配额错误为机制。",
+          "evidence_tests": [
+            "tests/golden/test_frontiers_provider.py::test_real_fmars_treatment_table_preserves_species_and_cells",
+            "tests/golden/test_frontiers_second_template.py::test_real_frontiers_nlm23_structure_prose_references_and_tables",
+            "tests/golden/test_acquired_publisher_inputs.py::test_frontiers_actual_api_resolves_same_article_supplementary_link"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_golden_corpus_adapters.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "golden corpus adapters",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_header_value.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "header value",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_html_access_signals.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "html access signals",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "真实 challenge、订阅页及正常 HTML 由 block/正文回归承担；hidden script、短 token、datalayer 别名是检测边界。",
+          "evidence_tests": [
+            "tests/golden/test_block_corpus.py::test_block_raw_response_matches_current_extractor_rejection_contract",
+            "tests/golden/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_accepts_science_entitled_fulltext_fixture"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_html_authors.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "html authors",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "纯 pipeline 顺序、短路、空结果和 soup 复用次数；不对任何出版社姓名或模板作真实性断言。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_html_availability.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "html availability",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "真实原文覆盖正常主文、门禁与后置声明；当前 Springer 待刊页只有摘要，真实 HTML 拒绝验收并进入 PDF 候选流程。通知与正文人为组合仅为验收优先级机制，不再要求补采该组合。PDF 边界被注入中止，不声明真实 PDF 下载或转换质量。",
+          "evidence_tests": [
+            "tests/golden/test_html_availability.py::HtmlAvailabilityTests::test_body_metrics_excludes_real_structural_back_matter_and_chrome_headings",
+            "tests/golden/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_rejects_springer_paywall_samples_without_promoting_ancillary_sections",
+            "tests/golden/test_requested_template_evidence.py::test_current_springer_early_article_notice_requests_pdf_fallback"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_html_citations.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "html citations",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "数字、年份区间、同位素、sup/sub 和链接边界是文本语法契约；真实引用内容及顺序独立回归。",
+          "evidence_tests": [
+            "tests/golden/test_reviewed_remaining_provider_content.py::test_all_original_reference_entries_and_rendered_order",
+            "tests/golden/test_reviewed_atypon_springer_content.py::test_major_body_sections_prose_runs_remain_in_source_order",
+            "tests/golden/test_reviewed_atypon_springer_content.py::test_all_visible_reference_entries_preserve_text_and_order"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_html_landing.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "html landing",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "只验证 HTTP 相对重定向按当前 URL 解析，不涉及论文内容或出版社模板。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_html_profiles.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "html profiles",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "站点规则合并、拷贝隔离及字段相等性；没有内容提取断言。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_html_renderer.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "html renderer",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "通用清理、postprocess 及 sidecar 返回约定；手写输入用于隔离 renderer 组合机制。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_html_semantics.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "html semantics",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "canonical identity token、显式 body container 和 reference anchor 词法分类；任意 token 应使用最小正反例。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_html_shared_helpers.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "html shared helpers",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "真实公式 URL、支持材料范围和 Nature source data 有定向回归；解码、并发、目录和边界文本为机制。 2026-09-16 复查原始文章证实原图只在 DownloadImage 包装中，解包装保留并有原文断言；ACS 缺原图后访问 viewer 的额外回退已删除；Royal 原文存在分组 slide 只指向邻图的反例，故按用户条件保留缺原图时的 viewer 回退。先前把独立 viewer 直链当成文章直链的判断已纠正。",
+          "evidence_tests": [
+            "tests/golden/test_html_shared_helpers.py::SharedHtmlHelperTests::test_formula_rules_detect_real_formula_image_urls",
+            "tests/golden/test_html_shared_helpers.py::SharedHtmlHelperTests::test_real_nature_fixture_keeps_source_data_without_chrome_sections",
+            "tests/golden/test_html_shared_helpers.py::SharedHtmlHelperTests::test_wiley_real_fixture_supporting_information_only_yields_true_supplementary_asset",
+            "tests/golden/test_requested_template_evidence.py::test_original_silverchair_article_requires_downloadimage_unwrapping"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_http_cache.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "http cache",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_ieee_provider_asset_downloads.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "ieee provider asset downloads",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "真实 mediastore 图片、原图集合和本地链接已有回归；warm/cache 次数、challenge 后失败与部分重试均是注入控制。",
+          "evidence_tests": [
+            "tests/golden/test_acquired_ieee_inputs.py::test_captured_figure_through_original_extraction_download_and_article",
+            "tests/golden/test_regression_asset_collections.py::test_real_collection_provider_download_and_final_article_links"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_ieee_provider_asset_extraction.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "ieee provider asset extraction",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "Historical original TBME REST Table III alt contains Equation, causing the same preview URL to be proposed as both formula and table. Original candidate intersection, final table priority, caption and one asset are verified. Download-merge fault injection remains mechanism-only.",
+          "evidence_tests": [
+            "tests/golden/test_online_template_evidence.py::test_original_ieee_table_wins_over_formula_candidate_with_same_preview"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_ieee_provider_pdf_golden.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "ieee provider pdf golden",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "HTML 包装、空正文、404 和浏览器 allow-list 由精确注入验证；真实 stamp PDF 身份和组装另有回归。",
+          "evidence_tests": [
+            "tests/golden/test_acquired_ieee_inputs.py::test_captured_stamp_pdf_current_provider_and_final_article"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_ieee_provider_routes.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "ieee provider routes",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "REST/DOM 事件竞争、限流、超时和分页终止为状态机机制；真实引用分页、门禁停止由捕获响应回放承担。",
+          "evidence_tests": [
+            "tests/golden/test_acquired_ieee_inputs.py::test_original_reference_pages_overlap_and_preserve_every_entry",
+            "tests/golden/test_acquired_ieee_paywall_flow.py::test_confirmed_paywall_landing_prevents_rest_browser_and_pdf_requests"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_image_payloads.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "image payloads",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_image_tools.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "image tools",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_iop_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "iop provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "真实全文、图表、索引发现和逐个附件链接已有回归；SM 编号筛选、签名缓存、缺索引错误保留机制。",
+          "evidence_tests": [
+            "tests/golden/test_iop_provider.py::test_iop_real_article_replay_does_not_promote_figure_controls_or_qr_to_supplementary",
+            "tests/golden/test_iop_provider.py::test_iop_real_replay_covers_table_and_formula_purposes",
+            "tests/golden/test_acquired_network_repair.py::test_iop_real_article_index_and_link_metadata"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_jats_body_availability.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "jats body availability",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "真实 XML 换行、CALS 表格和主文由原文回归承担；阈值附近字数、空 body 与短 editorial 是验收边界。",
+          "evidence_tests": [
+            "tests/golden/test_jats_body_availability.py::test_shared_jats_renderer_normalizes_real_frontiers_and_copernicus_wrapping",
+            "tests/golden/test_copernicus_provider.py::test_real_bg_table_preserves_cals_column_associations"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_live_runtime_env.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "live runtime env",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_macos_adaptation_validator.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "macos adaptation validator"
+      }
+    },
+    "tests/unit/test_manifest.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "manifest",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_markdown_render_ir.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "markdown render ir",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "纯 IR round-trip、序列化、列宽/表头/不规则行与降级展示约定；不声称来源于论文。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_mcp_async_tools.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "mcp async tools",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_mcp_batch_fetch.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "mcp batch fetch",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_mcp_batch_resolve_payloads.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "mcp batch resolve payloads",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_mcp_browser_preflight.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "mcp browser preflight",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_mcp_cache_compact.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "mcp cache compact",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_mcp_fetch_acceptance.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "mcp fetch acceptance",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_mcp_input_schema_contract.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "mcp input schema contract",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_mcp_logging_inline_images.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "mcp logging inline images",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_mcp_payload_cache.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "mcp payload cache",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_mcp_provider_catalog.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "mcp provider catalog"
+      }
+    },
+    "tests/unit/test_mcp_server.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "mcp server",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_mdpi_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "mdpi provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "原始段落变量说明、display objects、图注与最终文章已有回归；403、候选失败及空结果是注入控制。",
+          "evidence_tests": [
+            "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_display_objects_are_anchored_and_deduplicated",
+            "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_formula_fallbacks_do_not_fragment_or_emit_unavailable",
+            "tests/golden/test_acquired_article_assets.py::test_original_article_figure_candidates_download_and_assembly"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_metadata_layer_merge.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "metadata layer merge",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_models_render.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "models render",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "模型字段、预算、section hints、重复摘要、链接重写和默认选项为模型契约；真实 frontmatter、声明和图片另有原文回归。",
+          "evidence_tests": [
+            "tests/golden/test_retained_publisher_notes.py::test_original_oup_table_notes_complete_and_in_place",
+            "tests/golden/test_retained_publisher_notes.py::test_original_science_statement_text_links_kind_and_rendering",
+            "tests/golden/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_pnas_provider_keeps_frontmatter_once_and_filters_collateral_noise_in_final_render"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_offline_evidence.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "offline evidence"
+      }
+    },
+    "tests/unit/test_offline_install.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "offline install"
+      }
+    },
+    "tests/unit/test_offline_package_build.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "offline package build"
+      }
+    },
+    "tests/unit/test_offline_setup.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "offline setup"
+      }
+    },
+    "tests/unit/test_oxfordacademic_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "oxfordacademic provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "真实原文图像、引用和附件发现由 golden 承担；资产 profile、签名参数和无 citation meta 的 fallback 是机制。",
+          "evidence_tests": [
+            "tests/golden/test_oxfordacademic_provider.py::test_html_fixture_localizes_all_preview_images_without_duplicates",
+            "tests/golden/test_oxfordacademic_provider.py::test_oxford_references_prefer_visible_html_reference_text",
+            "tests/golden/test_oxfordacademic_provider.py::test_oxford_supplements_exclude_body_pdf_and_dedupe_before_download"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_page_diagnostics.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "page diagnostics",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_pdf_document_acceptance.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Real wrong-document/preview and synthetic supplement rejection regressions.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_pdf_fallback_helpers.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "pdf fallback helpers",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_pdf_identity_insufficient.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Identity acceptance mechanism with bounded evidence and converter boundary mocks.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_pdf_reference_boundaries.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "PDF conversion output is opaque, including malformed bibliography/layout.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_plos_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "plos provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "仅验证未知期刊代码、重定向失败、解析域边界和运行时不持久化规则；不是出版社模板缺口。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_presets_contract.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "presets contract",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_probe_status_default.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "probe status default",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_provider_bundle_registration.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "provider bundle registration",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "provider bundle 注册表、别名、默认策略及重复注册契约；不读取论文。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_provider_catalog.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "provider catalog"
+      }
+    },
+    "tests/unit/test_provider_catalog_copernicus.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "provider catalog copernicus"
+      }
+    },
+    "tests/unit/test_provider_diagnostics.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "provider diagnostics",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "配置来源脱敏、参数校验、client 构造范围和离线状态查询；不涉及内容或模板。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_provider_fetch_result_template.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "provider fetch result template",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "通用 fetch template、状态机失败合并、停止条件、trace 和 mutable cache 隔离；无需真实出版社内容才能验证这些机制。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_provider_html_rules_shape.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "provider html rules shape",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "规则对象形状、别名冲突、未知 provider 的警告与通用 fallback；不宣称模板兼容性。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_provider_payloads.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "provider payloads",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "typed content 字段投影、序列化、replace、trace 和 artifact store 约定；纯数据契约。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_provider_pdf_fallback_route_contract.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "provider pdf fallback route contract",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "逐个故障码是否到达现有 PDF fallback，以及 text-only 标记；必须注入目标故障才能稳定验证。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_provider_registry_concurrency.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "provider registry concurrency"
+      }
+    },
+    "tests/unit/test_provider_request_options.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "provider request options",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "用户明确接受并保留 Science 同图挑战后的浏览器恢复设计及机制测试，不再要求本轮补采。尚无同图 HTTP challenge 后 canvas 成功的真实链路 fixture：第三、第四次均为图片 HTTP200，已有正常下载和 canvas 原文回归不证明 challenge 恢复。其余超时、限流、线程及错误传播仍为注入机制；不计为真实挑战覆盖。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_provider_status.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "provider status",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "环境配置、browser runtime readiness、API key 缺失和 status 枚举；不属于内容模板测试。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_provider_typed_hooks.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "provider typed hooks",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "typed hook 注册、调用次序和透传参数的契约；小片段用于隔离回调作用。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_provider_waterfalls.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "provider waterfalls",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "真实 XML/HTML 作者和主文由 golden 承担；所有故障组合、优先级、缺 token、重定向和降级是机制。",
+          "evidence_tests": [
+            "tests/golden/test_provider_waterfalls.py::PublisherWaterfallTests::test_elsevier_official_xml_success_keeps_elsevier_xml_source"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_publisher_identity.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "publisher identity",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_regression_samples.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "regression samples",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_release_asset_inventory.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "release asset inventory"
+      }
+    },
+    "tests/unit/test_replay_contract_regressions.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Local contracts exposed by full source replays, without replay in unit.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_resolve_offline_dependencies.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "resolve offline dependencies"
+      }
+    },
+    "tests/unit/test_resolve_query.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "resolve query",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_retained_publisher_notes.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Minimal mechanism scenarios; publisher originals live in golden regressions.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "Original Science abo2812 has a bold Code availability paragraph inside acknowledgments; independent original wording, link, code_availability kind and final one-time rendering asserted.",
+          "evidence_tests": [
+            "tests/golden/test_online_template_evidence.py::test_original_science_pure_code_statement_survives_acknowledgments"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_route_execution_policy.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "route execution policy",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_royalsocietypublishing_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "royalsocietypublishing provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "真实正文、图及资产范围已有回归；host allow-list、缺直链及 DOI 候选是机制。 2026-09-16 复查原始文章证实原图只在 DownloadImage 包装中，解包装保留并有原文断言；ACS 缺原图后访问 viewer 的额外回退已删除；Royal 原文存在分组 slide 只指向邻图的反例，故按用户条件保留缺原图时的 viewer 回退。先前把独立 viewer 直链当成文章直链的判断已纠正。 rsos.150470 新采原文中图二自然缺原图，同次 viewer 与 JPEG HTTP200、最终本地链接均有真实回归。",
+          "evidence_tests": [
+            "tests/golden/test_reviewed_html_publisher_content.py::test_reviewed_html_body_runs_and_headings_preserve_order",
+            "tests/golden/test_reviewed_html_publisher_content.py::test_reviewed_html_references_preserve_source_entries_and_order",
+            "tests/golden/test_royalsocietypublishing_provider.py::test_markdown_contract_figure_fixture",
+            "tests/golden/test_requested_template_evidence.py::test_original_silverchair_article_requires_downloadimage_unwrapping",
+            "tests/golden/test_requested_template_evidence.py::test_original_royal_missing_original_downloads_from_its_actual_viewer"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_runtime_deadline_and_readiness.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "runtime deadline and readiness",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_runtime_parse_cache.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "runtime parse cache",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_safe_remote_url_policy.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "safe remote url policy",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_section_scan.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "section scan",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_service.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Tests split into smaller focused modules.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_service_browser_workflow.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "service browser workflow",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_service_metadata_routing.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "service metadata routing",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_service_official_pipeline.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "service official pipeline",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_service_pdf_and_provider_fallbacks.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "service pdf and provider fallbacks",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "service source 选择、空值元数据合并、artifact 语义和 PDF opaque section 原样组装；不是 PDF 解析质量或内容模板测试。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_service_probe_and_assets.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "service probe and assets",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_service_provider_managed_fallbacks.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "service provider managed fallbacks",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "provider-managed failure、abstract/metadata-only 与 service 接管边界；只验证控制流，不需要额外真实论文。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_service_runtime.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "service runtime",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_session_cache.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "session cache",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_skill_installers.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "skill installers"
+      }
+    },
+    "tests/unit/test_skill_integrity.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "skill integrity"
+      }
+    },
+    "tests/unit/test_springer_cookie_recovery.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "springer cookie recovery",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_springer_html_regressions.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "springer html regressions",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "Real same-template source and successful image bytes are independently verified; injected redirection/unavailable/DOM variations remain mechanism-only.",
+          "evidence_tests": [
+            "tests/golden/test_online_template_evidence.py::test_original_expandable_boxes_survive_hidden_interface_cleanup"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_springer_html_tables.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "springer html tables",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "Real same-template source and successful image bytes are independently verified; injected redirection/unavailable/DOM variations remain mechanism-only.",
+          "evidence_tests": [
+            "tests/golden/test_online_template_evidence.py::test_original_old_nature_table_pages_recover_all_four_real_images"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_table_grid.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "table grid",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "网格限额、非法维度、重叠列及 ragged fallback 是算法边界，不能期待每个恶意组合都有出版社实例；真实 CALS 单独覆盖。",
+          "evidence_tests": [
+            "tests/golden/test_copernicus_provider.py::test_real_bg_table_preserves_cals_column_associations"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_tandf_lst_render.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Local formula classification and hidden MathML contracts.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "真实 LST 原文逐公式和段落回归覆盖正常模板；近邻分类和人为 hidden 组合为机制。",
+          "evidence_tests": [
+            "tests/golden/test_tandf_lst_render.py::test_lst_every_inline_math_preserves_operands_and_scripts",
+            "tests/golden/test_tandf_lst_render.py::test_lst_all_prose_paragraphs_survive_in_order"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_tandf_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "tandf provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "covered",
+          "scope": "原始表格/公式/图与最终落盘由真实回放承担；JS page preparation 的批次、deadline、CSV 失败与顺序使用可控 page mock。",
+          "evidence_tests": [
+            "tests/golden/test_tandf_provider.py::test_markdown_contract_table_fixture",
+            "tests/golden/test_tandf_provider.py::test_tandf_article_assets_keep_body_figures_and_scope_supplement",
+            "tests/golden/test_acquired_network_repair.py::test_tandf_original_jpeg_matches_browser_recovered_figure"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_test_environment_isolation.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "test environment isolation"
+      }
+    },
+    "tests/unit/test_text_marker_signal_set.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "text marker signal set",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_waterfall_default_fetch.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "waterfall default fetch",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_wiley_appendix.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Minimal Wiley DOM boundary scenarios; complete papers live in golden.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_wiley_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "wiley provider",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "仅验证 BrowserWorkflow/Camoufox 不强制 HTTP User-Agent；没有内容断言，不应列真实模板缺口。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/unit/test_workflow_acceptance.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "workflow acceptance",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_workflow_batch_runner.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "workflow batch runner",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_workflow_fulltext_trace.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "workflow fulltext trace",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_workflow_routing.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "workflow routing",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_xml_security.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "xml security",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "DTD/实体、超深、超大、节点上限和畸形 XML 必须构造恶意边界；不采集真实论文作为攻击输入。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/integration/test_artifact_secret_scan.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "artifact secret scan"
+      }
+    },
+    "tests/integration/test_atomic_commit_and_singleflight.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "atomic commit and singleflight",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_browser_workflow_fetchers.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "browser workflow fetchers",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_camoufox_backend.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "camoufox backend",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_camoufox_native_macos.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "camoufox native macos"
+      }
+    },
+    "tests/integration/test_fixture_provenance.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "fixture provenance"
+      }
+    },
+    "tests/integration/test_formula_conversion.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "formula conversion",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "本机外部命令发现与非 UTF-8 输出处理；真实进程契约，不是论文公式质量验收。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
+    },
+    "tests/integration/test_golden_replay_cache.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "Canonical build reuse preserves caller isolation and route distinctions."
+      }
+    },
+    "tests/integration/test_mcp_integration.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "mcp integration",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_offline_evidence.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "offline evidence"
+      }
+    },
+    "tests/integration/test_offline_install.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "offline install"
+      }
+    },
+    "tests/integration/test_offline_optional_tools.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "Local conversion evidence; never install tools or access provider sites."
+      }
+    },
+    "tests/integration/test_offline_package_build.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "offline package build"
+      }
+    },
+    "tests/integration/test_paywall_stop_replay.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Real subscription HTML stops fetching and still lands CLI/MCP reports.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_pdf_conversion_passthrough.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "A representative real conversion, with opaque output across model/rendering.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_resolve_offline_dependencies.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "resolve offline dependencies"
+      }
+    },
+    "tests/integration/test_service_runtime.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "service runtime",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_skill_template.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "skill template"
+      }
+    },
+    "tests/integration/test_tandf_lst_replay.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Replay the publisher HTML through provider, service, CLI and MCP outputs.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_test_evidence_policy.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Child pytest probes demonstrate that evidence policy fails closed.",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_test_layer_boundaries.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "Exercise unit policy in child pytest sessions with the project configuration."
+      }
+    },
+    "tests/golden/test_acquired_article_assets.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Real HTML extraction, candidate selection, bytes and final article assembly.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_original_article_figure_candidates_download_and_assembly": {
+          "kind": "content",
+          "scope": "original article figure candidates download and assembly",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/golden/test_acquired_completion.py": {
+      "default": {
+        "kind": "content",
+        "scope": "September 15 inputs: current PDF assembly and complete arXiv discovery pages.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_acquired_completion_assets.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Captured object/Silverchair images through their provider-owned asset routes.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_elsevier_original_xml_object_download_and_final_article": {
+          "kind": "content",
+          "scope": "elsevier original xml object download and final article",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "test_oxford_fresh_signed_figure_current_discovery_download_and_article": {
+          "kind": "content",
+          "scope": "oxford fresh signed figure current discovery download and article",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/golden/test_acquired_ieee_inputs.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Camoufox-acquired IEEE PDF and unmodified, overlapping reference pages.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_captured_figure_through_original_extraction_download_and_article": {
+          "kind": "content",
+          "scope": "captured figure through original extraction download and article",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/golden/test_acquired_ieee_paywall_flow.py": {
+      "default": {
+        "kind": "content",
+        "scope": "IEEE subscription landing through current readiness and provider waterfall.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_acquired_network_repair.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Real IOP/arXiv supplementary indexes and retained T&F body image bytes.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_tandf_original_jpeg_matches_browser_recovered_figure": {
+          "kind": "content",
+          "scope": "tandf original jpeg matches browser recovered figure",
+          "primary": [
+            "asset"
+          ],
+          "auxiliary": [
+            "source",
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/golden/test_acquired_paywall_inputs.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Real subscription pages; transient challenges are not paywall evidence.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_acquired_pdf_failures.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Captured PDF failures and explicitly labeled browser DOM observations.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_acquired_publisher_inputs.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Replay 2026-09-14 response bytes, preserving endpoint and evidence limits.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_elsevier_synthetic_pdf_unrelated_warning_control": {
+          "kind": "mechanism",
+          "scope": "无关 x-els-status warning 不应拒绝正文 PDF 的负向控制；合成 PDF 故意隔离 header 决策，不宣称实际 Elsevier 响应。",
+          "reason": "无关 x-els-status warning 不应拒绝正文 PDF 的负向控制；合成 PDF 故意隔离 header 决策，不宣称实际 Elsevier 响应。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "无关 x-els-status warning 不应拒绝正文 PDF 的负向控制；合成 PDF 故意隔离 header 决策，不宣称实际 Elsevier 响应。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        }
+      }
+    },
+    "tests/golden/test_acquired_subscription_access.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Real access evidence, independent of PDF conversion/formatting quality.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_acquired_wiley_pdf.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Official TDM response through Wiley's current fallback and acceptance.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_acs_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "acs provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_aip_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "aip provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_ams_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "ams provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "AmsProviderTests::test_ams_downloaded_inline_figure_and_table_assets_do_not_repeat_at_tail": {
+          "kind": "content",
+          "scope": "复用 JAMC f2/t1 的同篇真实 JPEG，经下载、字节相等和模型渲染验证图与表只出现一次。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "复用 JAMC f2/t1 的同篇真实 JPEG，经下载、字节相等和模型渲染验证图与表只出现一次。",
+            "evidence_tests": [
+              "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_downloaded_inline_figure_and_table_assets_do_not_repeat_at_tail"
+            ],
+            "remaining": []
+          },
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/golden/test_annualreviews_complete_formula_assets.py": {
+      "default": {
+        "kind": "content",
+        "scope": "真实 Annual Reviews HTML 中 128 个公式 GIF 的发现、链接与分类；不声明该测试下载了图片。",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_annualreviews_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "annualreviews provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_golden_replay_rewrites_downloaded_figure_assets_to_local_paths": {
+          "kind": "content",
+          "scope": "五张真实 acquisition PNG 替代 1×1 占位图，经下载并逐个核对最终本地链接。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "五张真实 acquisition PNG 替代 1×1 占位图，经下载并逐个核对最终本地链接。",
+            "evidence_tests": [
+              "tests/golden/test_annualreviews_provider.py::test_golden_replay_rewrites_downloaded_figure_assets_to_local_paths"
+            ],
+            "remaining": []
+          },
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "test_supplementary_files_download_and_render_with_partial_failures": {
+          "kind": "mechanism",
+          "scope": "五个原文附件入口叠加合成 PDF/MPEG 和指定 404，仅证明部分失败、profile 过滤和存储映射；附件字节不在约定采集范围。",
+          "reason": "五个原文附件入口叠加合成 PDF/MPEG 和指定 404，仅证明部分失败、profile 过滤和存储映射；附件字节不在约定采集范围。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "五个原文附件入口叠加合成 PDF/MPEG 和指定 404，仅证明部分失败、profile 过滤和存储映射；附件字节不在约定采集范围。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        }
+      }
+    },
+    "tests/golden/test_arxiv_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "arxiv provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "ArxivProviderTests::test_arxiv_route_fixtures_have_expected_html_or_pdf_assets": {
+          "kind": "infrastructure",
+          "scope": "ArxivProviderTests::test arxiv route fixtures have expected html or pdf assets"
+        },
+        "ArxivProviderTests::test_api_failure_uses_html_frontmatter_metadata_without_untitled_article": {
+          "kind": "mechanism",
+          "scope": "人为 API 失败时保留 HTML 元数据；失败由 mock 控制，不宣称捕获了一次 API 故障。",
+          "reason": "人为 API 失败时保留 HTML 元数据；失败由 mock 控制，不宣称捕获了一次 API 故障。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人为 API 失败时保留 HTML 元数据；失败由 mock 控制，不宣称捕获了一次 API 故障。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_api_metadata_success_takes_priority_over_html_frontmatter_metadata": {
+          "kind": "mechanism",
+          "scope": "人为设置冲突的 API 标题/作者以证明优先级；冲突内容不应伪装为真实论文。",
+          "reason": "人为设置冲突的 API 标题/作者以证明优先级；冲突内容不应伪装为真实论文。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人为设置冲突的 API 标题/作者以证明优先级；冲突内容不应伪装为真实论文。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_api_transient_failure_with_arxiv_doi_uses_derived_html_url": {
+          "kind": "mechanism",
+          "scope": "人为 SSL EOF 下 DOI→HTML 候选与 warning 透传；仅验证路由和错误处理。",
+          "reason": "人为 SSL EOF 下 DOI→HTML 候选与 warning 透传；仅验证路由和错误处理。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人为 SSL EOF 下 DOI→HTML 候选与 warning 透传；仅验证路由和错误处理。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_crossref_only_preferred_providers_skip_arxiv_fulltext": {
+          "kind": "mechanism",
+          "scope": "显式 preferred_providers 排除 arXiv 后零 arXiv 请求；策略契约不要求模板。",
+          "reason": "显式 preferred_providers 排除 arXiv 后零 arXiv 请求；策略契约不要求模板。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "显式 preferred_providers 排除 arXiv 后零 arXiv 请求；策略契约不要求模板。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_default_api_enrichment_fills_authors_when_html_has_no_author_dom": {
+          "kind": "mechanism",
+          "scope": "人工无作者 DOM 与指定 API 作者用于隔离 enrichment 条件，不作为该篇作者真实性证据。",
+          "reason": "人工无作者 DOM 与指定 API 作者用于隔离 enrichment 条件，不作为该篇作者真实性证据。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人工无作者 DOM 与指定 API 作者用于隔离 enrichment 条件，不作为该篇作者真实性证据。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_download_dir_saves_arxiv_html_payload_only": {
+          "kind": "mechanism",
+          "scope": "只落盘 HTML、不落盘源码归档的 artifact 模式契约。",
+          "reason": "只落盘 HTML、不落盘源码归档的 artifact 模式契约。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "只落盘 HTML、不落盘源码归档的 artifact 模式契约。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_fetch_paper_uses_arxiv_provider_for_resolved_arxiv_id": {
+          "kind": "mechanism",
+          "scope": "resolver 结果选择 arXiv provider、source trail 和模式契约；原文内容由独立回归承担。",
+          "reason": "resolver 结果选择 arXiv provider、source trail 和模式契约；原文内容由独立回归承担。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "resolver 结果选择 arXiv provider、source trail 和模式契约；原文内容由独立回归承担。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_html_404_directly_requests_pdf_fallback": {
+          "kind": "mechanism",
+          "scope": "人为 HTML404 触发 PDF fallback、text-only 及请求顺序；不是实测 HTTP404 记录。",
+          "reason": "人为 HTML404 触发 PDF fallback、text-only 及请求顺序；不是实测 HTTP404 记录。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人为 HTML404 触发 PDF fallback、text-only 及请求顺序；不是实测 HTTP404 记录。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_html_route_asset_download_limits_concurrency_and_retries_network_failures": {
+          "kind": "mechanism",
+          "scope": "混合 TLS/404/非图片错误注入，核对只重试可重试项和并发上限；必须保持可控。",
+          "reason": "混合 TLS/404/非图片错误注入，核对只重试可重试项和并发上限；必须保持可控。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "混合 TLS/404/非图片错误注入，核对只重试可重试项和并发上限；必须保持可控。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_html_route_asset_partial_failure_surfaces_quality_diagnostics": {
+          "kind": "mechanism",
+          "scope": "人为图片超时必须进入 quality.asset_failures；不宣称真实超时。",
+          "reason": "人为图片超时必须进入 quality.asset_failures；不宣称真实超时。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人为图片超时必须进入 quality.asset_failures；不宣称真实超时。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_html_route_asset_profile_none_skips_asset_downloads": {
+          "kind": "mechanism",
+          "scope": "asset_profile=none 令文章保持全文且不下载资产；profile 行为契约。",
+          "reason": "asset_profile=none 令文章保持全文且不下载资产；profile 行为契约。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "asset_profile=none 令文章保持全文且不下载资产；profile 行为契约。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_html_route_recovers_missing_official_html_images_from_source_archive": {
+          "kind": "mechanism",
+          "scope": "Missing src is explicitly injected in original HTML; source recovery replays the actual same-version archive and verifies its exact original image bytes.",
+          "reason": "Missing src is explicitly injected in original HTML; source recovery replays the actual same-version archive and verifies its exact original image bytes.",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "Missing src is explicitly injected in original HTML; source recovery replays the actual same-version archive and verifies its exact original image bytes. This does not establish a naturally broken remote HTML page.",
+            "evidence_tests": [
+              "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_upgrades_existing_preview_from_official_source_archive"
+            ],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_html_route_unmatched_figure_asset_stays_caption_only_and_can_append_fallback": {
+          "kind": "mechanism",
+          "scope": "人工错配 DOM id/图号隔离未匹配资产的尾部 fallback；最小反例不是出版社内容。",
+          "reason": "人工错配 DOM id/图号隔离未匹配资产的尾部 fallback；最小反例不是出版社内容。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人工错配 DOM id/图号隔离未匹配资产的尾部 fallback；最小反例不是出版社内容。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_html_route_upgrades_existing_preview_from_official_source_archive": {
+          "kind": "content",
+          "scope": "Same-paper original HTML and captured image/source archive bytes; exact stored bytes and localized rendering (no synthetic primary input).",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "Same-paper original HTML and captured image/source archive bytes; exact stored bytes and localized rendering (no synthetic primary input).",
+            "evidence_tests": [
+              "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_upgrades_existing_preview_from_official_source_archive"
+            ],
+            "remaining": []
+          },
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "ArxivProviderTests::test_html_success_requests_official_html_then_default_api_enrichment": {
+          "kind": "mechanism",
+          "scope": "HTML 成功→API enrichment 的调用顺序契约；本测试不验收原文语义。",
+          "reason": "HTML 成功→API enrichment 的调用顺序契约；本测试不验收原文语义。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "HTML 成功→API enrichment 的调用顺序契约；本测试不验收原文语义。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_insufficient_html_body_directly_requests_pdf_fallback": {
+          "kind": "mechanism",
+          "scope": "人为短主文触发 PDF 回退，阈值边界不需要额外论文。",
+          "reason": "人为短主文触发 PDF 回退，阈值边界不需要额外论文。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人为短主文触发 PDF 回退，阈值边界不需要额外论文。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_internal_atom_parse_failure_keeps_html_fulltext_payload": {
+          "kind": "mechanism",
+          "scope": "人工破坏 Atom payload 时保留 HTML，属于解析失败控制。",
+          "reason": "人工破坏 Atom payload 时保留 HTML，属于解析失败控制。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人工破坏 Atom payload 时保留 HTML，属于解析失败控制。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_no_download_returns_markdown_without_payload_artifacts": {
+          "kind": "mechanism",
+          "scope": "禁止下载时返回 Markdown 且目录无副作用；artifact 行为契约。",
+          "reason": "禁止下载时返回 Markdown 且目录无副作用；artifact 行为契约。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "禁止下载时返回 Markdown 且目录无副作用；artifact 行为契约。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_non_html_candidate_directly_requests_pdf_fallback": {
+          "kind": "mechanism",
+          "scope": "候选 MIME 被注入为非 HTML，证明继续 PDF 路线。",
+          "reason": "候选 MIME 被注入为非 HTML，证明继续 PDF 路线。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "候选 MIME 被注入为非 HTML，证明继续 PDF 路线。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_polluted_html_body_directly_requests_pdf_fallback": {
+          "kind": "mechanism",
+          "scope": "人工污染正文使其不充分，验证既有 fallback，不作为真实污染模板。",
+          "reason": "人工污染正文使其不充分，验证既有 fallback，不作为真实污染模板。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人工污染正文使其不充分，验证既有 fallback，不作为真实污染模板。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "TestArxivAncillaryAssets::test_attachments_obey_shared_bytes_and_file_budgets": {
+          "kind": "mechanism",
+          "scope": "8/20 字节及零文件配额、人为流式 PDF 和已有预算占用，仅验证配额与临时文件清理。",
+          "reason": "8/20 字节及零文件配额、人为流式 PDF 和已有预算占用，仅验证配额与临时文件清理。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "8/20 字节及零文件配额、人为流式 PDF 和已有预算占用，仅验证配额与临时文件清理。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "TestArxivAncillaryAssets::test_html_downloads_notebooks_pdf_and_same_basename_paths": {
+          "kind": "mechanism",
+          "scope": "人为增加 a/code.m 与 b/code.m，用手写字节证明同 basename 不覆盖及链接一一对应；附件字节不在约定采集范围。",
+          "reason": "人为增加 a/code.m 与 b/code.m，用手写字节证明同 basename 不覆盖及链接一一对应；附件字节不在约定采集范围。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人为增加 a/code.m 与 b/code.m，用手写字节证明同 basename 不覆盖及链接一一对应；附件字节不在约定采集范围。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "TestArxivAncillaryAssets::test_no_extra_requests_without_all_and_asset_output": {
+          "kind": "mechanism",
+          "scope": "profile/artifact mode/output 组合禁止多余附件请求；纯调用边界。",
+          "reason": "profile/artifact mode/output 组合禁止多余附件请求；纯调用边界。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "profile/artifact mode/output 组合禁止多余附件请求；纯调用边界。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "TestArxivAncillaryAssets::test_pdf_figures_and_attachments_are_registered_once_and_keep_fallback": {
+          "kind": "mechanism",
+          "scope": "人工 PDF fallback、源码图与附件组合验证单次登记及 acceptance；不声称捕获了组合网络链。",
+          "reason": "人工 PDF fallback、源码图与附件组合验证单次登记及 acceptance；不声称捕获了组合网络链。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人工 PDF fallback、源码图与附件组合验证单次登记及 acceptance；不声称捕获了组合网络链。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "TestArxivAncillaryAssets::test_service_acceptance_and_asset_failures_preserve_successful_body": {
+          "kind": "mechanism",
+          "scope": "合成附件成功/失败用于验证 service acceptance，真实主文不能提升附件字节来源。",
+          "reason": "合成附件成功/失败用于验证 service acceptance，真实主文不能提升附件字节来源。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "合成附件成功/失败用于验证 service acceptance，真实主文不能提升附件字节来源。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "TestArxivAncillaryAssets::test_unversioned_request_pins_body_and_enrichment_preserves_version": {
+          "kind": "mechanism",
+          "scope": "人为较新 API version 与固定正文 version 冲突，隔离版本锁定规则。",
+          "reason": "人为较新 API version 与固定正文 version 冲突，隔离版本锁定规则。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人为较新 API version 与固定正文 version 冲突，隔离版本锁定规则。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_arxiv_html_section_hints_are_limited_to_article_dom": {
+          "kind": "mechanism",
+          "scope": "人工 Metrics 同名冲突覆盖页面 chrome 与主文的选择边界；真实 Metrics 正例已有回归。",
+          "reason": "人工 Metrics 同名冲突覆盖页面 chrome 与主文的选择边界；真实 Metrics 正例已有回归。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "人工 Metrics 同名冲突覆盖页面 chrome 与主文的选择边界；真实 Metrics 正例已有回归。",
+            "evidence_tests": [
+              "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_arxiv_html_metrics_section_remains_renderable_body_content"
+            ],
+            "remaining": []
+          }
+        },
+        "ArxivProviderTests::test_pdf_without_metadata_rejected_before_api_enrichment": {
+          "kind": "mechanism",
+          "scope": "不给目标标题且 PDF 不含目标 DOI 时在 API enrichment 前拒绝，身份验收时序契约。",
+          "reason": "不给目标标题且 PDF 不含目标 DOI 时在 API enrichment 前拒绝，身份验收时序契约。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "不给目标标题且 PDF 不含目标 DOI 时在 API enrichment 前拒绝，身份验收时序契约。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        }
+      }
+    },
+    "tests/golden/test_atypon_browser_workflow_markdown.py": {
+      "default": {
+        "kind": "content",
+        "scope": "atypon browser workflow markdown",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_atypon_browser_workflow_postprocess.py": {
+      "default": {
+        "kind": "content",
+        "scope": "atypon browser workflow postprocess",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_atypon_browser_workflow_provider_fallbacks.py": {
+      "default": {
+        "kind": "content",
+        "scope": "atypon browser workflow provider fallbacks",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_atypon_browser_workflow_provider_html.py": {
+      "default": {
+        "kind": "content",
+        "scope": "atypon browser workflow provider html",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_block_corpus.py": {
+      "default": {
+        "kind": "content",
+        "scope": "block corpus",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_browser_retry_asset_collections.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Real Wiley and T&F browser captures: original bytes and final article links.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_browser_original_images_download_and_article_links": {
+          "kind": "content",
+          "scope": "browser original images download and article links",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/golden/test_collected_asset_files.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Captured source -> discovered collection -> real byte download -> article links.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_fixed_scope_and_independent_collection_counts": {
+          "kind": "infrastructure",
+          "scope": "fixed scope and independent collection counts"
+        },
+        "test_removed_supplementary_files_are_absent_from_fixture_catalog": {
+          "kind": "infrastructure",
+          "scope": "removed supplementary files are absent from fixture catalog"
+        },
+        "test_captured_collection_download_and_final_article_links": {
+          "kind": "content",
+          "scope": "captured collection download and final article links",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "test_xml_provider_owns_the_complete_download_and_article_chain": {
+          "kind": "content",
+          "scope": "xml provider owns the complete download and article chain",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "test_supplementary_indexes_keep_article_link_metadata_without_payloads": {
+          "kind": "mechanism",
+          "scope": "已登记索引→模型远程 URL 且 path=None 的数据投影；不验证下载。原始索引发现由各 provider 内容回归承担，附件字节明确不在范围。",
+          "reason": "已登记索引→模型远程 URL 且 path=None 的数据投影；不验证下载。原始索引发现由各 provider 内容回归承担，附件字节明确不在范围。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "已登记索引→模型远程 URL 且 path=None 的数据投影；不验证下载。原始索引发现由各 provider 内容回归承担，附件字节明确不在范围。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        }
+      }
+    },
+    "tests/golden/test_confirmed_paywall_stop.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Article entitlement stops requests, with local degradation and evidence.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_copernicus_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "copernicus provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_elsevier_markdown.py": {
+      "default": {
+        "kind": "content",
+        "scope": "elsevier markdown",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "ElsevierMarkdownTests::test_apgeog_xml_preserves_author_abstract_and_textual_highlights": {
+          "kind": "content",
+          "scope": "10.1016/j.apgeog.2012.04.006 输入 XML 的 author 摘要与 class=graphical 下文字 Highlights：逐段标题、全文与次序；来源审计标为 unverified，仅验证已有输入，不证明出版社真实捕获。",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": []
+        }
+      }
+    },
+    "tests/golden/test_frontiers_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "frontiers provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_frontiers_second_template.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Reviewed NLM 2.3 Frontiers article with an internal id unlike its DOI suffix.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_golden_corpus.py": {
+      "default": {
+        "kind": "content",
+        "scope": "当前原文 extractor 的结构摘要与派生 expected.json 精确比较；不证明占位图片字节或全文逐字一致。",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_golden_corpus_uses_declared_providers": {
+          "kind": "infrastructure",
+          "scope": "golden corpus uses declared providers"
+        },
+        "test_canonical_review_register_covers_exact_corpus": {
+          "kind": "infrastructure",
+          "scope": "canonical 151 source review registration completeness and fixed source selection counts; not content acceptance by itself",
+          "reason": "集合、来源哈希和审阅范围防缩减；内容验收由对应逐篇断言承担。"
+        },
+        "test_canonical_registered_source_counts_and_hash": {
+          "kind": "infrastructure",
+          "scope": "151-source registration/hash/selector counts plus selected, TeX-checked, MathML-checked and empty-excluded formula accounting; not independent content acceptance",
+          "reason": "集合、来源哈希和审阅范围防缩减；内容验收由对应逐篇断言承担。"
+        },
+        "test_canonical_all_source_figure_captions": {
+          "kind": "content",
+          "scope": "Scientific caption runs bound to own original image or shared panel group; explicit figure labels and available inline prose neighbors checked",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "asset",
+            "snapshot"
+          ]
+        },
+        "test_canonical_all_source_reference_text_and_doi": {
+          "kind": "content",
+          "scope": "all source reference text and doi",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "asset",
+            "snapshot"
+          ]
+        },
+        "test_canonical_complete_source_author_order": {
+          "kind": "content",
+          "scope": "complete source author order",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "asset",
+            "snapshot"
+          ]
+        },
+        "test_canonical_mathml_numeric_and_structural_facts": {
+          "kind": "content",
+          "scope": "Every selected nonempty MathML without valid TeX, including placeholder alttext; numeric/identifier/operator facts and minimum structure, not full AST equivalence",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "asset",
+            "snapshot"
+          ]
+        },
+        "test_canonical_pdf_identity_and_converter_passthrough": {
+          "kind": "content",
+          "scope": "pdf identity and converter passthrough",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "asset",
+            "snapshot"
+          ]
+        },
+        "test_canonical_rendered_images_have_original_source_identity": {
+          "kind": "content",
+          "scope": "rendered images have original source identity",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "asset",
+            "snapshot"
+          ]
+        },
+        "test_canonical_source_citations_resolve_to_ordered_references": {
+          "kind": "content",
+          "scope": "source citations resolve to ordered references",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "asset",
+            "snapshot"
+          ]
+        },
+        "test_canonical_source_prose_blocks_in_order": {
+          "kind": "content",
+          "scope": "Selected source prose/heading order with decimal points, signs, case and scientific scripts retained; editorial punctuation normalized",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "asset",
+            "snapshot"
+          ]
+        },
+        "test_canonical_source_table_cells": {
+          "kind": "content",
+          "scope": "Owned output table groups, row/column identity without reuse, script/fraction semantics, corresponding notes and available source placement anchors; explicit gallery/list boundaries",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "asset",
+            "snapshot"
+          ]
+        },
+        "test_canonical_source_table_notes_and_retained_statements": {
+          "kind": "content",
+          "scope": "source table notes and retained statements",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "asset",
+            "snapshot"
+          ]
+        },
+        "test_canonical_source_tex_formulas_preserve_structure": {
+          "kind": "content",
+          "scope": "source tex formulas preserve structure",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "asset",
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/golden/test_html_availability.py": {
+      "default": {
+        "kind": "content",
+        "scope": "html availability",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_html_semantics.py": {
+      "default": {
+        "kind": "content",
+        "scope": "html semantics",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_html_shared_helpers.py": {
+      "default": {
+        "kind": "content",
+        "scope": "html shared helpers",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_ieee_no_subscription_evidence.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Real current subscription landings, distinct from REST/PDF denial samples.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_ieee_provider_asset_extraction.py": {
+      "default": {
+        "kind": "content",
+        "scope": "ieee provider asset extraction",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_ieee_provider_pdf_golden.py": {
+      "default": {
+        "kind": "content",
+        "scope": "真实 IEEE HTML 的正文、公式、引用与图注语义；组装中的占位文件仅为辅助定位机制。",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "IeeeProviderPdfGoldenTests::test_synthetic_pdf_candidate_order_contract": {
+          "kind": "mechanism",
+          "scope": "合成 landing 两种 pdfUrl/pdfPath 组合验证候选排序；真实 PGEC acquisition 不改变旧 synthetic 分类。",
+          "reason": "合成 landing 两种 pdfUrl/pdfPath 组合验证候选排序；真实 PGEC acquisition 不改变旧 synthetic 分类。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "合成 landing 两种 pdfUrl/pdfPath 组合验证候选排序；真实 PGEC acquisition 不改变旧 synthetic 分类。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "IeeeProviderPdfGoldenTests::test_ieee_golden_criteria_manifest_records_expected_shapes": {
+          "kind": "infrastructure",
+          "scope": "IeeeProviderPdfGoldenTests::test ieee golden criteria manifest records expected shapes"
+        }
+      }
+    },
+    "tests/golden/test_iop_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "iop provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_jats_body_availability.py": {
+      "default": {
+        "kind": "content",
+        "scope": "jats body availability",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_known_gap_evidence.py": {
+      "default": {
+        "kind": "content",
+        "scope": "New observations supplement historical unknown envelopes without rewriting them.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_current_wiley_formula_link_still_has_only_captured_preview": {
+          "kind": "content",
+          "scope": "已采集 Wiley 公式预览字节的尺寸、来源目标和预览等级；采集摘要链接为辅助记录。",
+          "primary": [
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/golden/test_mdpi_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "mdpi provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "MdpiProviderTests::test_mdpi_pdf_fallback_fixture_exists": {
+          "kind": "infrastructure",
+          "scope": "MdpiProviderTests::test mdpi pdf fallback fixture exists"
+        }
+      }
+    },
+    "tests/golden/test_models_render.py": {
+      "default": {
+        "kind": "content",
+        "scope": "models render",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_oxfordacademic_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "oxfordacademic provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_html_fixture_localizes_all_preview_images_without_duplicates": {
+          "kind": "content",
+          "scope": "原文九个图入口绑定同篇完整 JPEG 响应，逐图下载及验证替换 preview 后位置和唯一性。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "原文九个图入口绑定同篇完整 JPEG 响应，逐图下载及验证替换 preview 后位置和唯一性。",
+            "evidence_tests": [
+              "tests/golden/test_oxfordacademic_provider.py::test_html_fixture_localizes_all_preview_images_without_duplicates"
+            ],
+            "remaining": []
+          },
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "test_figure_fixture_stage_asset_contract_is_inline_body_image": {
+          "kind": "content",
+          "scope": "原文 btaa823 未提供本地资产时，正文中保留真实远程图链接；不声称图像下载成功。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "原文 btaa823 未提供本地资产时，正文中保留真实远程图链接；不声称图像下载成功。",
+            "evidence_tests": [
+              "tests/golden/test_oxfordacademic_provider.py::test_figure_fixture_stage_asset_contract_is_inline_body_image"
+            ],
+            "remaining": []
+          },
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/golden/test_pdf_document_acceptance.py": {
+      "default": {
+        "kind": "content",
+        "scope": "pdf document acceptance",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_rejected_preview_continues_to_full_article": {
+          "kind": "mechanism",
+          "scope": "真实 AMS 预览拒绝后继续合成同身份完整 PDF，仅证明候选继续机制；真实正确 AIP 候选链由独立回归承担。",
+          "reason": "真实 AMS 预览拒绝后继续合成同身份完整 PDF，仅证明候选继续机制；真实正确 AIP 候选链由独立回归承担。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "真实 AMS 预览拒绝后继续合成同身份完整 PDF，仅证明候选继续机制；真实正确 AIP 候选链由独立回归承担。",
+            "evidence_tests": [
+              "tests/golden/test_pdf_document_acceptance.py::test_wrong_aip_lecture_continues_to_real_same_article_pdf"
+            ],
+            "remaining": []
+          }
+        }
+      }
+    },
+    "tests/golden/test_plos_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "plos provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_provider_waterfalls.py": {
+      "default": {
+        "kind": "content",
+        "scope": "provider waterfalls",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_regression_asset_collections.py": {
+      "default": {
+        "kind": "content",
+        "scope": "New real collections: source discovery, provider download and article links.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_real_collection_provider_download_and_final_article_links": {
+          "kind": "content",
+          "scope": "real collection provider download and final article links",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/golden/test_regression_samples.py": {
+      "default": {
+        "kind": "content",
+        "scope": "regression samples",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "RegressionSampleTests::test_wiley_derived_markdown_pdf_assembly_contract": {
+          "kind": "mechanism",
+          "scope": "派生 Markdown 作为 opaque converter 输出验证组装和 trace；真实 TDM PDF 的身份、转换原样与文章验收另有回归。",
+          "reason": "派生 Markdown 作为 opaque converter 输出验证组装和 trace；真实 TDM PDF 的身份、转换原样与文章验收另有回归。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "派生 Markdown 作为 opaque converter 输出验证组装和 trace；真实 TDM PDF 的身份、转换原样与文章验收另有回归。",
+            "evidence_tests": [
+              "tests/golden/test_acquired_wiley_pdf.py::test_captured_tdm_pdf_current_wiley_fallback_and_final_acceptance"
+            ],
+            "remaining": []
+          }
+        },
+        "RegressionSampleTests::test_injected_elsevier_failure_falls_back_to_crossref_metadata": {
+          "kind": "mechanism",
+          "scope": "人为官方元数据/全文均失败以验证 Crossref 降级；不是出版社实际权限拒绝或原文证据。",
+          "reason": "人为官方元数据/全文均失败以验证 Crossref 降级；不是出版社实际权限拒绝或原文证据。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "人为官方元数据/全文均失败以验证 Crossref 降级；不是出版社实际权限拒绝或原文证据。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        },
+        "RegressionSampleTests::test_elsevier_bilingual_fixture_preserves_parallel_abstract_sections": {
+          "kind": "content",
+          "scope": "真实 Elsevier 10.1016/j.edumed.2018.09.002 XML 的西语及 xml:lang=en 英语平行摘要；逐段对照原文验收各 4 段、结构标题、内容及次序。",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": []
+        }
+      }
+    },
+    "tests/golden/test_representative_asset_bytes.py": {
+      "default": {
+        "kind": "content",
+        "scope": "One source-bound image per provider through download/hash/final link.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_existing_same_paper_image_download_and_final_link": {
+          "kind": "content",
+          "scope": "existing same paper image download and final link",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "test_new_same_paper_image_download_and_final_link": {
+          "kind": "content",
+          "scope": "new same paper image download and final link",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/golden/test_retained_publisher_notes.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Independent original-source assertions before exact baseline updates.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_reviewed_atypon_springer_content.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Reviewed publisher originals: prose order, complete visible references and cells.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_reviewed_block_provider_paths.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Original rejection pages through real extraction/candidate selection/degradation.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_reviewed_copernicus_xml_blocks.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Unmodified publisher XML rejects, then same-paper PDF recovers or fails.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_reviewed_html_publisher_content.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Original HTML contracts reviewed from publisher DOM, never extracted.md.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_reviewed_html_variants.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Existing full papers promoted only after source structure/content review.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_reviewed_pdf_assembly.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Real PDF bytes through current providers and article rendering.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_reviewed_pdf_completion.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Remaining original PDFs through current provider/service assembly.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_reviewed_publisher_content.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Reviewed original-source contracts, independent of extracted.md snapshots.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_reviewed_remaining_provider_content.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Independent review of existing Elsevier/IEEE/arXiv/T&F originals.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_ieee_constructed_overlapping_pages_of_real_entries_merge_at_boundary": {
+          "kind": "mechanism",
+          "scope": "构造分页重叠测试 dedupe/limit；真实分页面及每条引用已由独立捕获回归核对。",
+          "reason": "构造分页重叠测试 dedupe/limit；真实分页面及每条引用已由独立捕获回归核对。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "构造分页重叠测试 dedupe/limit；真实分页面及每条引用已由独立捕获回归核对。",
+            "evidence_tests": [
+              "tests/golden/test_acquired_ieee_inputs.py::test_original_reference_pages_overlap_and_preserve_every_entry"
+            ],
+            "remaining": []
+          }
+        }
+      }
+    },
+    "tests/golden/test_royalsocietypublishing_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "royalsocietypublishing provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_science_project_pdf_fallback.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Actual project PDF fallback receipt; no assertions about PDF conversion.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_springer_cookie_recovery.py": {
+      "default": {
+        "kind": "content",
+        "scope": "springer cookie recovery",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_springer_html_regressions.py": {
+      "default": {
+        "kind": "content",
+        "scope": "springer html regressions",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "SpringerHtmlRegressionTests::test_old_nature_downloaded_body_figures_inline_without_trailing_figures_block": {
+          "kind": "content",
+          "scope": "Same-paper original HTML and captured image/source archive bytes; exact stored bytes and localized rendering (no synthetic primary input).",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "Same-paper original HTML and captured image/source archive bytes; exact stored bytes and localized rendering (no synthetic primary input).",
+            "evidence_tests": [
+              "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_old_nature_downloaded_body_figures_inline_without_trailing_figures_block"
+            ],
+            "remaining": []
+          },
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "SpringerHtmlRegressionTests::test_new_nature_downloaded_body_figures_inline_without_trailing_figures_block": {
+          "kind": "content",
+          "scope": "用真实 s43247-024-01295-w 替换 synthetic s41561-022-00983-6；五张原图下载后均只在正文出现一次。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "用真实 s43247-024-01295-w 替换 synthetic s41561-022-00983-6；五张原图下载后均只在正文出现一次。",
+            "evidence_tests": [
+              "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_new_nature_downloaded_body_figures_inline_without_trailing_figures_block"
+            ],
+            "remaining": []
+          },
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "SpringerHtmlRegressionTests::test_old_nature_reporting_within_methods_precedes_external_availability": {
+          "kind": "content",
+          "scope": "以 2019 未修改 Nature 原文为准：Reporting summary 位于 Methods 内，Data availability 位于 main-content 外；验证提取及最终渲染的原文、单次出现和顺序，不要求手写同级排列。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "以 2019 未修改 Nature 原文为准：Reporting summary 位于 Methods 内，Data availability 位于 main-content 外；验证提取及最终渲染的原文、单次出现和顺序，不要求手写同级排列。",
+            "evidence_tests": [
+              "tests/golden/test_requested_template_evidence.py::test_original_2018_nature_unsectioned_blocks_keep_source_order",
+              "tests/golden/test_requested_template_evidence.py::test_original_old_nature_body_and_availability_follow_source_order",
+              "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_old_nature_reporting_within_methods_precedes_external_availability"
+            ],
+            "remaining": []
+          },
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "SpringerHtmlRegressionTests::test_springer_html_route_saves_original_html_in_article_dir": {
+          "kind": "mechanism",
+          "scope": "ArtifactStore 原样保存 bytes、文件名与 trace；输入文字无内容主张，无需真实模板。",
+          "reason": "ArtifactStore 原样保存 bytes、文件名与 trace；输入文字无内容主张，无需真实模板。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "mechanism",
+            "scope": "ArtifactStore 原样保存 bytes、文件名与 trace；输入文字无内容主张，无需真实模板。",
+            "evidence_tests": [],
+            "remaining": []
+          }
+        }
+      }
+    },
+    "tests/golden/test_springer_html_tables.py": {
+      "default": {
+        "kind": "content",
+        "scope": "springer html tables",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "SpringerHtmlTableTests::test_springer_html_keeps_article_success_when_inline_table_page_has_no_table": {
+          "kind": "mechanism",
+          "scope": "人为表页 HTTP200 但无 table，用于验证局部失败不丢弃正文；成功表页有真实独立回放。",
+          "reason": "人为表页 HTTP200 但无 table，用于验证局部失败不丢弃正文；成功表页有真实独立回放。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "人为表页 HTTP200 但无 table，用于验证局部失败不丢弃正文；成功表页有真实独立回放。",
+            "evidence_tests": [
+              "tests/golden/test_springer_html_tables.py::SpringerHtmlTableTests::test_render_table_markdown_handles_real_springer_classic_table_page"
+            ],
+            "remaining": []
+          }
+        },
+        "SpringerHtmlTableTests::test_old_nature_extended_data_tables_render_table_image_or_degraded_placeholder": {
+          "kind": "mechanism",
+          "scope": "四种重定向/图片/无表/HTML 表格响应均为人为注入；只能证明有序降级。",
+          "reason": "四种重定向/图片/无表/HTML 表格响应均为人为注入；只能证明有序降级。",
+          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "template_review": {
+            "status": "covered",
+            "scope": "Real same-template source and successful image bytes are independently verified; injected redirection/unavailable/DOM variations remain mechanism-only.",
+            "evidence_tests": [
+              "tests/golden/test_online_template_evidence.py::test_original_old_nature_table_pages_recover_all_four_real_images"
+            ],
+            "remaining": []
+          }
+        }
+      }
+    },
+    "tests/golden/test_subscription_response_contracts.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Fixed DOI + response access expectations, through current provider boundaries.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_tandf_lst_render.py": {
+      "default": {
+        "kind": "content",
+        "scope": "HTML-derived semantic oracle for the LST article (not a generated snapshot).",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_tandf_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "tandf provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_wiley_appendix.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Reviewed Appendix A content, independent of the extractor's summary baseline.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_wiley_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "wiley provider",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/live/test_live_ieee_protected.py": {
+      "default": {
+        "kind": "content",
+        "scope": "在线 provider/MCP 身份、正文可用性与资产契约；本轮仅收集分类，不作离线原文覆盖。",
+        "primary": [
+          "live_response"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/live/test_live_mcp.py": {
+      "default": {
+        "kind": "content",
+        "scope": "在线 provider/MCP 身份、正文可用性与资产契约；本轮仅收集分类，不作离线原文覆盖。",
+        "primary": [
+          "live_response"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/live/test_live_publishers.py": {
+      "default": {
+        "kind": "content",
+        "scope": "在线 provider/MCP 身份、正文可用性与资产契约；本轮仅收集分类，不作离线原文覆盖。",
+        "primary": [
+          "live_response"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_arxiv_original_source_figures.py": {
+      "default": {
+        "kind": "content",
+        "scope": "原始 TeX 中七个嵌套图路径、顺序、图三标签及采集图片字节；不证明 tar 下载和缺图恢复",
+        "primary": [
+          "source",
+          "asset"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_arxiv_source_figures.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "figure/extdatafigure 环境与 caption/label 的最小边界契约",
+        "reason": "合成 TeX 和占位字节只隔离语法；原始 TeX/图片由 golden 独立覆盖。"
+      }
+    },
+    "tests/golden/test_science_original_svg.py": {
+      "default": {
+        "kind": "content",
+        "scope": "同篇 DOM 图入口与真实 SVG 字节保存、本地链接；HTTP200 是注入，不补造历史响应",
+        "primary": [
+          "source",
+          "asset"
+        ]
+      }
+    },
+    "tests/golden/test_online_template_evidence.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Unmodified publisher expandable boxes and old Nature table satellite pages/images; original HTTP provenance and final rendering.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot",
+          "asset"
+        ]
+      },
+      "overrides": {
+        "test_original_old_nature_table_pages_recover_all_four_real_images": {
+          "kind": "content",
+          "scope": "Four original table pages bind four captured JPEGs to the original article; download bytes and rendered order.",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "test_original_image_only_box_preserves_title_and_local_bitmap": {
+          "kind": "content",
+          "scope": "Original hidden image-only Nature Box title, captured same-paper bitmap bytes and final localized rendering.",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/unit/test_provider_asset_candidate_boundaries.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "ACS no longer visits image viewers; PNAS original failure never requests preview, on both serial-browser and direct execution paths.",
+        "reason": "Controlled original failure and decoy preview/viewer distinguish removed routes from successful direct downloads."
+      }
+    },
+    "tests/golden/test_requested_template_evidence.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Unmodified Silverchair wrapper links; current early-article absence of body; old Nature block order; actual Science HTTP image and native canvas observations. No claim of injected failures as original content.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_original_science_image_and_native_canvas_are_separate_evidence": {
+          "kind": "content",
+          "scope": "Same-paper native DOM, actual HTTP200 image download and separately recorded canvas PNG bytes; does not assert image challenge recovery.",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "test_original_royal_missing_original_downloads_from_its_actual_viewer": {
+          "kind": "content",
+          "scope": "Unmodified rsos.150470 native article naturally lacks a matching Figure 2 original; actual same-paper viewer and HTTP200 JPEG prove discovery, download bytes and one final local link.",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        },
+        "test_current_springer_early_article_notice_requests_pdf_fallback": {
+          "kind": "content",
+          "scope": "Unmodified early-article HTML is abstract-only and reaches the provider PDF boundary through raw and prepared routes; original PDF candidate and target identity retained. Injected stop at PDF fetch proves routing only, not successful PDF acquisition or conversion.",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/golden/test_original_author_branches.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Unmodified originals establish arXiv natural person-name fallback, coexisting Wiley/Springer/Science/PNAS author structures, and Springer JSON-LD fallback limited to a table subpage. No removal of preferred fields and no claim of natural article fallback for coexisting sources.",
+        "primary": [
+          "source"
+        ]
+      }
+    },
+    "tests/unit/test_scientific_content_contract.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Scientific comparison and formula routing negative controls",
+        "reason": "最小片段验证断言能识别内容损坏，不作为出版社原文证据。"
+      }
+    },
+    "tests/golden/test_scientific_assertion_controls.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Original placeholder MathML routing and checked coverage",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_real_formula_assertions_reject_empty_or_formula_deleted_output": {
+          "kind": "mechanism",
+          "scope": "Real-output formula deletion controls",
+          "reason": "真实输出上人为删除公式，验证断言有效；不作为新增原文模板。"
+        },
+        "test_real_figure_bindings_reject_swapped_assets": {
+          "kind": "mechanism",
+          "scope": "Real-output mutation controls for scientific content and object placement",
+          "reason": "在真实输出上人为注入删除、错配或移动，验证断言敏感性，不作为新增出版社模板证据。"
+        },
+        "test_real_table_checks_reject_row_loss_and_whole_table_relocation": {
+          "kind": "mechanism",
+          "scope": "Real-output mutation controls for scientific content and object placement",
+          "reason": "在真实输出上人为注入删除、错配或移动，验证断言敏感性，不作为新增出版社模板证据。"
+        }
+      }
+    },
+    "tests/golden/test_reacquired_source_inputs.py": {
+      "default": {
+        "kind": "content",
+        "scope": "P12: unmodified captured entity/DOM, independent source DOI/title and provider fulltext assembly; not proof of missing template coverage.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot",
+          "asset"
+        ]
+      },
+      "overrides": {
+        "test_science_pnas_captured_full_article_preserves_bibliography": {
+          "kind": "content",
+          "scope": "Science/PNAS captured biblioentry templates: every visible citation text, label, DOI and rendered order; Science 100, PNAS 78, commentary 21 nonempty citations plus independently verified empty r22 source node.",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "snapshot",
+            "asset"
+          ]
+        }
+      }
+    },
+    "tests/unit/test_provider_relative_images.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Wiley/AMS source-image hook boundaries and Springer/Nature image protocol context; preserve local, absolute and non-image URLs.",
+        "reason": "最小 DOM 片段仅证明 URL 解析边界；不证明出版社内容完整性。"
+      }
+    },
+    "tests/golden/test_relative_image_sources.py": {
+      "default": {
+        "kind": "content",
+        "scope": "P03/P04: six provenance-bound captures, eight Wiley/AMS and three Springer/Nature image URLs individually compared with final article Markdown; preserve asset rendition and download state.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot",
+          "asset"
+        ]
+      }
+    },
+    "tests/golden/test_source_completion.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Same-DOI raw response and file identity; selected HTML/XML source fulltext availability only, not complete formula/table fidelity or online access success",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot",
+          "asset"
+        ]
+      },
+      "overrides": {
+        "test_current_source_selections_are_complete_and_resolvable": {
+          "kind": "mechanism",
+          "scope": "Audit coverage of every baseline missing-source input and honest full-article totals",
+          "reason": "只核验审计清单覆盖与统计一致性，不作为原文内容证据。"
+        }
+      }
+    },
+    "tests/unit/test_verified_source_identity.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Captured identity boundaries for cited DOI, PDF metadata DOI and wrong arXiv version",
+        "reason": "最小片段只验证身份边界，不作为论文原文证据。"
+      }
+    },
+    "tests/unit/test_wiley_inline_formula_fallback.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Wiley adjacent inline formula fallback",
+        "reason": "最小片段验证相邻公式图片身份、结构化公式优先和跨正文边界；不替代完整原文证据。"
+      }
+    },
+    "tests/golden/test_wiley_gcb16758_formulas.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Wiley gcb.16758 原生 MathML 和 MathJax DOM 的 26 处公式图片身份、Markdown 与正式资产清单；不声明远程图片已下载。",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_acs_table_graphic_assets.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "ACS table graphic candidate scope and signature preservation",
+        "reason": "Minimal HTML nodes; no publisher image availability claim."
+      }
+    },
+    "tests/golden/test_historical_signed_assets.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Historical signed article bodies to captured current assets through provider assembly",
+        "primary": [
+          "source",
+          "asset"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_oxford_signed_asset_identity.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "OUP figure signing tokens do not duplicate an unchanged object rendition",
+        "reason": "Minimal asset records; no network availability claim."
+      }
+    },
+    "tests/unit/test_retained_object_links.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "MDPI/Science retained object source-link resolution and reference filtering",
+        "reason": "Minimal HTML/Markdown snippets; no full article content claim."
+      }
+    },
+    "tests/golden/test_retained_object_links.py": {
+      "default": {
+        "kind": "content",
+        "scope": "P06 five source-verified MDPI/Science bibliography and table links, including filtered targets; P09 independent source-object corruption checks",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_replay_metadata.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Replay metadata DOI-placeholder, title precedence and identity refusal contracts",
+        "reason": "Minimal metadata snippets and adapter boundary only; no full article input."
+      }
+    },
+    "tests/golden/test_replay_source_titles.py": {
+      "default": {
+        "kind": "content",
+        "scope": "P07 original titles in legacy replay Article JSON, YAML and H1 for three source-verified articles",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_plos_scientific_identifier_survives_source_to_yaml_and_rendered_title": {
+          "kind": "content",
+          "scope": "PLOS official XML scientific allele identifier survives Markdown emphasis and YAML serialization",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": []
+        }
+      }
+    },
+    "tests/unit/test_annualreviews_object_ownership.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Annual Reviews figure-caption ownership and heading semantics",
+        "reason": "Minimal HTML snippets, no full article input."
+      }
+    },
+    "tests/golden/test_annualreviews_object_ownership.py": {
+      "default": {
+        "kind": "content",
+        "scope": "P08/P26 independent Annual Reviews source-object counts, identities, positions and heading semantics; P09 independent source-object corruption checks",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/integration/test_ieee_iframe_pdf.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Real offline Camoufox IEEE iframe response, cookie/referer and PDF identity contract",
+        "reason": "真实浏览器承载最小路由响应；验证PDF字节与身份边界，不声明出版社在线可用性或转换质量。"
+      }
+    },
+    "tests/unit/test_ieee_iframe_pdf.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "IEEE same-article iframe URL boundary",
+        "reason": "最小片段验证官方域名和article number边界。"
+      }
+    },
+    "tests/golden/test_ieee_iframe_pdf.py": {
+      "default": {
+        "kind": "content",
+        "scope": "真实IEEE包装页与PDF字节、DOI、页数、来源验收；PDF转换为不透明边界，不评价排版。",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_tandf_formula_sources.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "T&F paired formula source priority, fallback and missing branches",
+        "reason": "Minimal HTML fragments; no full article input."
+      }
+    },
+    "tests/golden/test_tandf_formula_sources.py": {
+      "default": {
+        "kind": "content",
+        "scope": "P17 all 232 source-owned T&F formulas including 46 display equations behind 92 invalid representations",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_arxiv_graphic_nodes.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "arXiv LaTeXML graphic nodes, original positions and frontmatter",
+        "reason": "Minimal synthetic nodes and filesystem/budget boundaries; no publisher content or remote availability claim."
+      }
+    },
+    "tests/integration/test_arxiv_inline_svg_artifact.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "arXiv LaTeXML graphic nodes, original positions and frontmatter",
+        "reason": "Minimal synthetic nodes and filesystem/budget boundaries; no publisher content or remote availability claim."
+      }
+    },
+    "tests/golden/test_arxiv_graphic_nodes.py": {
+      "default": {
+        "kind": "content",
+        "scope": "arXiv LaTeXML graphic nodes, original positions and frontmatter; P09 independent source-object corruption checks",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_mathml_semantics.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "MathML semantic dimensions/error children unit boundary",
+        "reason": "最小MathML片段；unit只测纯语义边界，integration运行已安装真实转换进程。"
+      }
+    },
+    "tests/integration/test_mathml_semantics.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "MathML semantic dimensions/error children integration boundary",
+        "reason": "最小MathML片段；unit只测纯语义边界，integration运行已安装真实转换进程。"
+      }
+    },
+    "tests/golden/test_mathml_semantics.py": {
+      "default": {
+        "kind": "content",
+        "scope": "OUP btaa153 merror及PNAS2310157121公式3通过实际texmath/mathml-to-latex全文回放",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot",
+          "asset"
+        ]
+      }
+    },
+    "tests/unit/test_jats_problem_fixes.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "PLOS inline graphic and Copernicus citation boundaries",
+        "reason": "Minimal XML snippets."
+      }
+    },
+    "tests/golden/test_jats_problem_fixes.py": {
+      "default": {
+        "kind": "content",
+        "scope": "P19/P22 independent original JATS formula and citation objects",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_science_springer_source_boundaries.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Science unspanned source row and Springer Methods DOM classification boundary",
+        "reason": "最小片段验证局部机制；原文全文证据另归 golden。"
+      }
+    },
+    "tests/golden/test_science_springer_source_boundaries.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Science abj3309全部表3字段与两篇Springer Methods伦理完整原文回放",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_output_object_oracles.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "P09 independent source object corruption rejection",
+        "reason": "Minimal source fragments; verifies deleted/wrong targets, repeated/missing image occurrences and SVG content corruption."
+      }
+    },
+    "tests/golden/test_completed_asset_evidence.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Bounded official asset captures, original paper assembly and complete source asset denominators",
+        "primary": [
+          "source",
+          "asset"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_p18_all_target_vectors_are_local_without_hiding_other_source_images": {
+          "kind": "content",
+          "scope": "29 captured remote SVGs and five inline SVG vectors acquired in the original HTML; all source image candidates stay in audit",
+          "primary": [
+            "source"
+          ],
+          "auxiliary": [
+            "asset",
+            "snapshot"
+          ]
+        }
+      }
+    },
+    "tests/unit/test_plos_asset_identity_assembly.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "PLOS source DOI identity across two same-path query URLs, partial downloads and source asset denominator",
+        "reason": "Minimal synthetic payloads only; no real file or full-article fixture."
+      }
+    },
+    "tests/unit/test_arxiv_source_identity.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "arXiv source identity, per-occurrence assembly and strict local acceptance",
+        "reason": "Minimal boundary inputs; source image fidelity is covered by golden replays."
+      }
+    },
+    "tests/golden/test_arxiv_review_regressions.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Captured HTML raster occurrence counts and algorithm source positions; download completion is injected, no archive byte fidelity claim",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_springer_fallback_diagnostics.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Springer preparation and PDF recovery preserve specific HTML trace diagnostics",
+        "reason": "Failure and PDF transport boundaries are injected; no PDF conversion assertions."
+      }
+    },
+    "tests/golden/test_springer_fallback_diagnostics.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Captured Springer abstract-only reason survives preparation and injected successful PDF recovery; PDF content fidelity excluded",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_plos_partial_asset_output.py": {
+      "default": {
+        "kind": "content",
+        "scope": "PLOS 现有整篇 XML 与已采集公式图片在 0/1/2/7 个下载完成条件下的 provider 组装及最终文件链接；不证明在线下载可用性。",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_audit_quality_regressions.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Audit Q1-Q13 minimal HTML/XML and assembly contracts",
+        "reason": "最小片段检查结构边界；不宣称真实全文质量。"
+      }
+    },
+    "tests/golden/test_audit_quality_regressions.py": {
+      "default": {
+        "kind": "content",
+        "scope": "审计问题的已有真实 HTML/XML/PDF 身份与结构回放；非线上重新获取，PDF 仅验证身份与字节保留",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/integration/test_science_reference_loading.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Science visible bibliography loading with real offline Camoufox",
+        "reason": "真实浏览器验证最小分页/懒加载与缺失报告契约，不声明线上可用性。"
+      }
+    },
+    "tests/unit/test_refetch_quality_regressions.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "refetch N1–N6 provider preparation, assembly and acceptance",
+        "reason": "最小片段与边界 mock，验证元数据、准备 HTML、资产合并和最终输出契约；不作为联网或原文完整性证据。"
+      }
+    },
+    "tests/integration/test_pnas_document_navigation.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "PNAS current document ownership and candidate readiness in real offline Camoufox",
+        "reason": "真实离线浏览器与最小页面验证导航响应归属和候选等待，不证明线上可用性。"
+      }
+    }
+  }
+}

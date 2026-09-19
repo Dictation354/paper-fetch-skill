@@ -1,37 +1,39 @@
 from __future__ import annotations
-
-import tempfile
-import unittest
-import urllib.parse
-from pathlib import Path
-from unittest import mock
-
-from paper_fetch.http import RequestFailure
-from paper_fetch.providers import _springer_dom as springer_dom
-from paper_fetch.providers import _springer_html as springer_html
-from paper_fetch.providers import _springer_markdown as springer_markdown
-from paper_fetch.providers import (
-    browser_runtime,
-    browser_workflow,
-    elsevier as elsevier_provider,
-    springer as springer_provider,
-    wiley as wiley_provider,
-)
-from paper_fetch.providers.base import (
-    ProviderContent,
-    ProviderFailure,
-    RawFulltextPayload,
-)
-from paper_fetch.reason_codes import NO_ACCESS
-from paper_fetch.runtime import RuntimeContext
-from tests.golden_criteria import golden_criteria_scenario_asset
+from __future__ import annotations
 from tests.provider_benchmark_samples import (
     WILEY_PDF_FALLBACK_SAMPLE,
     provider_benchmark_sample,
 )
-from tests.paths import FIXTURE_DIR
-from tests.unit._browser_workflow_deps import install_browser_workflow_deps
-from tests.unit._paper_fetch_support import RecordingTransport, fulltext_pdf_bytes
+from tests.golden_criteria import golden_criteria_scenario_asset
+from paper_fetch.runtime import RuntimeContext
+from unittest import mock
+from pathlib import Path
+import unittest
+from tests.support._paper_fetch_support import RecordingTransport
+from paper_fetch.providers.base import (
+    ProviderContent,
+    RawFulltextPayload,
+)
+from paper_fetch.providers import (
+    browser_runtime,
+    elsevier as elsevier_provider,
+)
+from paper_fetch.http import RequestFailure
+import tempfile
+from paper_fetch.providers import _springer_dom as springer_dom
+from paper_fetch.providers import _springer_html as springer_html
+from paper_fetch.providers import _springer_markdown as springer_markdown
+from paper_fetch.providers import (
+    browser_workflow,
+    springer as springer_provider,
+    wiley as wiley_provider,
+)
+from paper_fetch.providers.base import (
+    ProviderFailure,
+)
+from paper_fetch.reason_codes import NO_ACCESS
+from tests.support._browser_workflow_deps import install_browser_workflow_deps
+from tests.support._paper_fetch_support import fulltext_pdf_bytes
 
 
 ELSEVIER_SAMPLE = provider_benchmark_sample("elsevier")
@@ -67,161 +69,6 @@ class PublisherWaterfallTests(unittest.TestCase):
             headless=True,
             user_agent="paper-fetch-test/1",
         )
-
-    def test_elsevier_official_xml_success_keeps_elsevier_xml_source(self) -> None:
-        doi = ELSEVIER_SAMPLE.doi
-        metadata = {
-            "doi": doi,
-            "title": ELSEVIER_SAMPLE.title,
-            "landing_page_url": ELSEVIER_SAMPLE.landing_url,
-        }
-        xml_body = (FIXTURE_DIR / ELSEVIER_SAMPLE.fixture_name).read_bytes()
-        official_payload = RawFulltextPayload(
-            provider="elsevier",
-            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2025.114648",
-            content_type="text/xml",
-            body=xml_body,
-            content=ProviderContent(
-                route_kind="official",
-                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2025.114648",
-                content_type="text/xml",
-                body=xml_body,
-                reason="Downloaded full text from the official Elsevier API.",
-            ),
-        )
-        client = elsevier_provider.ElsevierClient(
-            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
-        )
-
-        with (
-            mock.patch.object(
-                client, "_fetch_official_xml_payload", return_value=official_payload
-            ),
-            mock.patch.object(client, "_official_payload_is_usable", return_value=True),
-            mock.patch.object(client, "_fetch_official_pdf_payload") as mocked_pdf,
-        ):
-            raw_payload = client.fetch_raw_fulltext(doi, metadata)
-            article = client.to_article_model(metadata, raw_payload)
-
-        mocked_pdf.assert_not_called()
-        self.assertEqual(raw_payload.provider, "elsevier")
-        self.assertEqual(article.source, "elsevier_xml")
-        self.assertTrue(article.quality.has_fulltext)
-
-    def test_elsevier_xml_route_populates_article_authors_from_author_groups(
-        self,
-    ) -> None:
-        metadata = {
-            "doi": "10.1016/test-authors",
-            "title": "Elsevier Author Example",
-            "landing_page_url": "https://example.test/article",
-        }
-        xml_body = golden_criteria_scenario_asset(
-            "elsevier_author_groups_minimal", "original.xml"
-        ).read_bytes()
-        raw_payload = RawFulltextPayload(
-            provider="elsevier",
-            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
-            content_type="text/xml",
-            body=xml_body,
-            content=ProviderContent(
-                route_kind="official",
-                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
-                content_type="text/xml",
-                body=xml_body,
-                reason="Downloaded full text from the official Elsevier API.",
-            ),
-        )
-        client = elsevier_provider.ElsevierClient(
-            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
-        )
-
-        article = client.to_article_model(metadata, raw_payload)
-
-        self.assertEqual(article.source, "elsevier_xml")
-        self.assertEqual(
-            article.metadata.authors,
-            ["Jane Doe", "Smith, J.", "Open Climate Consortium"],
-        )
-
-    def test_elsevier_xml_root_is_reused_across_asset_and_article_conversion(
-        self,
-    ) -> None:
-        metadata = {
-            "doi": "10.1016/test-authors",
-            "title": "Elsevier Author Example",
-            "landing_page_url": "https://example.test/article",
-        }
-        xml_body = golden_criteria_scenario_asset(
-            "elsevier_author_groups_minimal", "original.xml"
-        ).read_bytes()
-        raw_payload = RawFulltextPayload(
-            provider="elsevier",
-            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
-            content_type="text/xml",
-            body=xml_body,
-            content=ProviderContent(
-                route_kind="official",
-                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
-                content_type="text/xml",
-                body=xml_body,
-                reason="Downloaded full text from the official Elsevier API.",
-            ),
-        )
-        context = RuntimeContext(
-            env={"ELSEVIER_API_KEY": "secret"}, transport=mock.Mock()
-        )
-        client = elsevier_provider.ElsevierClient(
-            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
-        )
-
-        with mock.patch.object(
-            elsevier_provider,
-            "parse_xml",
-            wraps=elsevier_provider.parse_xml,
-        ) as parse_xml:
-            elsevier_provider.extract_elsevier_asset_references(
-                raw_payload.body,
-                context=context,
-                source_url=raw_payload.source_url,
-            )
-            article = client.to_article_model(metadata, raw_payload, context=context)
-
-        self.assertEqual(parse_xml.call_count, 1)
-        self.assertEqual(article.source, "elsevier_xml")
-
-    def test_elsevier_official_xml_usable_records_structured_diagnostics(self) -> None:
-        doi = ELSEVIER_SAMPLE.doi
-        metadata = {
-            "doi": doi,
-            "title": ELSEVIER_SAMPLE.title,
-            "landing_page_url": ELSEVIER_SAMPLE.landing_url,
-        }
-        xml_body = (FIXTURE_DIR / ELSEVIER_SAMPLE.fixture_name).read_bytes()
-        raw_payload = RawFulltextPayload(
-            provider="elsevier",
-            source_url="https://api.elsevier.com/content/article/doi/example",
-            content_type="text/xml",
-            body=xml_body,
-            content=ProviderContent(
-                route_kind="official",
-                source_url="https://api.elsevier.com/content/article/doi/example",
-                content_type="text/xml",
-                body=xml_body,
-                reason="Downloaded full text from the official Elsevier API.",
-            ),
-        )
-        client = elsevier_provider.ElsevierClient(
-            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
-        )
-
-        usable = client._official_payload_is_usable(metadata, raw_payload)
-
-        self.assertTrue(usable)
-        diagnostics = _payload_availability_diagnostics(raw_payload)
-        self.assertEqual(diagnostics["content_kind"], "fulltext")
-        self.assertTrue(diagnostics["accepted"])
-        self.assertEqual(diagnostics["reason"], "structured_body_sections")
 
     def test_elsevier_official_plain_text_uses_body_sufficiency(self) -> None:
         raw_payload = RawFulltextPayload(
@@ -443,60 +290,6 @@ class PublisherWaterfallTests(unittest.TestCase):
                     [call["query"] for call in transport.calls],
                     [{"view": "FULL"}, {"view": "FULL"}],
                 )
-
-    def test_elsevier_transient_doi_xml_failure_uses_pii_xml_fallback(self) -> None:
-        doi = ELSEVIER_SAMPLE.doi
-        pii = elsevier_provider.extract_elsevier_pii_from_url(
-            ELSEVIER_SAMPLE.landing_url
-        )
-        assert pii
-        metadata = {
-            "doi": doi,
-            "title": ELSEVIER_SAMPLE.title,
-            "landing_page_url": ELSEVIER_SAMPLE.landing_url,
-            "fulltext_links": [],
-        }
-        xml_body = (FIXTURE_DIR / ELSEVIER_SAMPLE.fixture_name).read_bytes()
-        doi_url = "https://api.elsevier.com/content/article/doi/" + urllib.parse.quote(
-            doi, safe=""
-        )
-        pii_url = f"https://api.elsevier.com/content/article/pii/{pii}"
-        transport = RecordingTransport(
-            {
-                ("GET", doi_url): RequestFailure(
-                    503, f"HTTP 503 for {doi_url}?view=FULL"
-                ),
-                ("GET", pii_url): {
-                    "status_code": 200,
-                    "headers": {"content-type": "text/xml"},
-                    "body": xml_body,
-                    "url": f"{pii_url}?view=FULL",
-                },
-            }
-        )
-        client = elsevier_provider.ElsevierClient(
-            transport=transport, env={"ELSEVIER_API_KEY": "secret"}
-        )
-
-        with (
-            mock.patch.object(client, "_official_payload_is_usable", return_value=True),
-            mock.patch.object(client, "_fetch_official_pdf_payload") as mocked_pdf,
-        ):
-            raw_payload = client.fetch_raw_fulltext(doi, metadata)
-
-        mocked_pdf.assert_not_called()
-        self.assertEqual(_payload_route(raw_payload), "official")
-        self.assertEqual(raw_payload.source_url, f"{pii_url}?view=FULL")
-        self.assertIn("fulltext:elsevier_xml_fail", _payload_source_trail(raw_payload))
-        self.assertIn(
-            "fulltext:elsevier_xml_pii_ok", _payload_source_trail(raw_payload)
-        )
-        self.assertNotIn(
-            "fulltext:elsevier_pdf_api_ok", _payload_source_trail(raw_payload)
-        )
-        self.assertEqual(
-            [str(call["url"]) for call in transport.calls], [doi_url, pii_url]
-        )
 
     def test_elsevier_pii_candidates_are_extracted_from_public_landing_urls(
         self,
@@ -1681,6 +1474,10 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertEqual(article.source, "wiley_browser")
         self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
 
+    @mock.patch(
+        "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
+        new=lambda *a, **k: "Mock converter output. " * 120,
+    )
     def test_wiley_tdm_api_helper_follows_redirect_to_pdf_payload(self) -> None:
         api_url = (
             "https://api.wiley.com/onlinelibrary/tdm/v1/articles/10.1111%2Fexample"
@@ -1735,6 +1532,91 @@ class PublisherWaterfallTests(unittest.TestCase):
             [api_url, download_url],
         )
 
+    def test_elsevier_xml_route_populates_article_authors_from_author_groups(
+        self,
+    ) -> None:
+        metadata = {
+            "doi": "10.1016/test-authors",
+            "title": "Elsevier Author Example",
+            "landing_page_url": "https://example.test/article",
+        }
+        xml_body = golden_criteria_scenario_asset(
+            "elsevier_author_groups_minimal", "original.xml"
+        ).read_bytes()
+        raw_payload = RawFulltextPayload(
+            provider="elsevier",
+            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
+            content_type="text/xml",
+            body=xml_body,
+            content=ProviderContent(
+                route_kind="official",
+                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
+                content_type="text/xml",
+                body=xml_body,
+                reason="Downloaded full text from the official Elsevier API.",
+            ),
+        )
+        client = elsevier_provider.ElsevierClient(
+            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
+        )
+
+        article = client.to_article_model(metadata, raw_payload)
+
+        self.assertEqual(article.source, "elsevier_xml")
+        self.assertEqual(
+            article.metadata.authors,
+            ["Jane Doe", "Smith, J.", "Open Climate Consortium"],
+        )
+
+    def test_elsevier_xml_root_is_reused_across_asset_and_article_conversion(
+        self,
+    ) -> None:
+        metadata = {
+            "doi": "10.1016/test-authors",
+            "title": "Elsevier Author Example",
+            "landing_page_url": "https://example.test/article",
+        }
+        xml_body = golden_criteria_scenario_asset(
+            "elsevier_author_groups_minimal", "original.xml"
+        ).read_bytes()
+        raw_payload = RawFulltextPayload(
+            provider="elsevier",
+            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
+            content_type="text/xml",
+            body=xml_body,
+            content=ProviderContent(
+                route_kind="official",
+                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest-authors",
+                content_type="text/xml",
+                body=xml_body,
+                reason="Downloaded full text from the official Elsevier API.",
+            ),
+        )
+        context = RuntimeContext(
+            env={"ELSEVIER_API_KEY": "secret"}, transport=mock.Mock()
+        )
+        client = elsevier_provider.ElsevierClient(
+            transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
+        )
+
+        with mock.patch.object(
+            elsevier_provider,
+            "parse_xml",
+            wraps=elsevier_provider.parse_xml,
+        ) as parse_xml:
+            elsevier_provider.extract_elsevier_asset_references(
+                raw_payload.body,
+                context=context,
+                source_url=raw_payload.source_url,
+            )
+            article = client.to_article_model(metadata, raw_payload, context=context)
+
+        self.assertEqual(parse_xml.call_count, 1)
+        self.assertEqual(article.source, "elsevier_xml")
+
+
+if __name__ == "__main__":
+    unittest.main()
 
 if __name__ == "__main__":
     unittest.main()

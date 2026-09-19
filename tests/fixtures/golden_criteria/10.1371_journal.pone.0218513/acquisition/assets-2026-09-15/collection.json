@@ -1,0 +1,853 @@
+{
+  "provider": "plos",
+  "doi": "10.1371/journal.pone.0218513",
+  "sample_id": "10.1371_journal.pone.0218513",
+  "source_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0218513&type=manuscript",
+  "source_input": "tests/fixtures/golden_criteria/10.1371_journal.pone.0218513/original.xml",
+  "include_supplementary": true,
+  "include_body": false,
+  "source_sha256": "ee329de562cf5ea1638dc735d3809c432001dd5a8649449b4c0d8fa240abe97e",
+  "targets": [
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s001",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s001",
+        "heading": "S1 Fig Electrophoresis of total DNA from mung bean hypocotyls in different preimbibition and dehydration states. A shows electrophoresis of total DNA at 0, 3, 6, 18 and 24 h of preimbibition, while B shows electrophoresis of total DNA at 0, 3, 6, 18 and 24 h preimbibition after 24 h of dehydration. (TIF)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s001",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s001",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s001",
+        "content_type": "image/tiff",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s001"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s001",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "valid": true,
+          "format": "tiff",
+          "width": 1181,
+          "height": 439
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s001.tiff",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/77d3f71bc5943319-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s002",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s002",
+        "heading": "S2 Fig TUNEL in mung bean hypocotyls in different preimbibition and dehydration states. A, C, E and G show mung bean hypocotyl tissue at 3, 6, 18 and 24 h of preimbibition, respectively. B, D, F and H show the transverse section of the hypocotyl at 3, 6, 18 and 24 h of preimbibition after 24 h of dehydration, respectively. (TIF)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s002",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s002",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s002",
+        "content_type": "image/tiff",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s002"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s002",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "valid": true,
+          "format": "tiff",
+          "width": 945,
+          "height": 1467
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s002.tiff",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/9525842464007647-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s003",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s003",
+        "heading": "S3 Fig Flow cytometer quantity of JC-1 staining in protoplasts from mung bean hypocotyls in different preimbibition and dehydration states. A, C, E, G and I represent the measurement of protoplasts at 3, 6, 18 and 24 h of preimbibition, respectively. B, D, F, H and J represent the measurement of protoplasts at 0, 3, 6, 18 and 24 h of preimbibition after 24 h of dehydration, respectively. (TIF)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s003",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s003",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s003",
+        "content_type": "image/tiff",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s003"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s003",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "valid": true,
+          "format": "tiff",
+          "width": 945,
+          "height": 2247
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s003.tiff",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/5341b8e7b7794c19-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s004",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s004",
+        "heading": "S4 Fig Illustration of the mechanism of PCD induced by dehydration in mung bean hypocotyls. (TIF)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s004",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s004",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s004",
+        "content_type": "image/tiff",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s004"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s004",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "valid": true,
+          "format": "tiff",
+          "width": 709,
+          "height": 1011
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s004.tiff",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/31852ec5f41827cd-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s005",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s005",
+        "heading": "S1 Supporting Information Raw images of Evans blue staining of mung bean hypocotyls in different preimbibition and dehydration states. (ZIP)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s005",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s005",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s005",
+        "content_type": "application/zip",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s005"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s005",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "reason": "response_too_large: current 32 MiB per-asset limit; truncated capture is not a complete file",
+      "bytes_received_complete": false,
+      "blocker": "current_asset_size_limit",
+      "historical_capture": {
+        "state": "unavailable",
+        "validation": {
+          "valid": false,
+          "reason": "not an expected readable binary"
+        },
+        "replay_verified": false,
+        "outcome": "blocked",
+        "former_record": "acquisition/assets-2026-09-15/8e5e75a929cffcec-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s006",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s006",
+        "heading": "S2 Supporting Information Raw images of TTC staining of mung bean hypocotyls in different preimbibition and dehydration states. (ZIP)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s006",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s006",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s006",
+        "content_type": "application/zip",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s006"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s006",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "reason": "response_too_large: current 32 MiB per-asset limit; truncated capture is not a complete file",
+      "bytes_received_complete": false,
+      "blocker": "current_asset_size_limit",
+      "historical_capture": {
+        "state": "unavailable",
+        "validation": {
+          "valid": false,
+          "reason": "not an expected readable binary"
+        },
+        "replay_verified": false,
+        "outcome": "blocked",
+        "former_record": "acquisition/assets-2026-09-15/996d2280010c1f9e-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s007",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s007",
+        "heading": "S3 Supporting Information Raw images of Toluidine blue staining of mung bean hypocotyls in different preimbibition and dehydration states. (ZIP)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s007",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s007",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s007",
+        "content_type": "application/zip",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s007"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s007",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "S3_Supporting Information.zip/",
+            "S3_Supporting Information.zip/╣Γ╛╡1.jpg",
+            "S3_Supporting Information.zip/╣Γ╛╡2.jpg",
+            "S3_Supporting Information.zip/╣Γ╛╡3.jpg",
+            "S3_Supporting Information.zip/╣Γ╛╡4.jpg",
+            "S3_Supporting Information.zip/╣Γ╛╡5.jpg",
+            "S3_Supporting Information.zip/╣Γ╛╡6.jpg",
+            "S3_Supporting Information.zip/╣Γ╛╡7.jpg",
+            "S3_Supporting Information.zip/╣Γ╛╡8.jpg"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s007.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/80fc6bec7709a501-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s008",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s008",
+        "heading": "S4 Supporting Information Raw images of subcellular structure of meristematic cells from mung bean hypocotyls in different preimbibition and dehydration states. (ZIP)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s008",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s008",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s008",
+        "content_type": "application/zip",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s008"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s008",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "S4_Supporting Information.zip/",
+            "S4_Supporting Information.zip/A.tif",
+            "S4_Supporting Information.zip/B.tif",
+            "S4_Supporting Information.zip/C.tif",
+            "S4_Supporting Information.zip/D.tif",
+            "S4_Supporting Information.zip/E.tif",
+            "S4_Supporting Information.zip/F.tif",
+            "S4_Supporting Information.zip/G.tif",
+            "S4_Supporting Information.zip/H.tif",
+            "S4_Supporting Information.zip/I.tif",
+            "S4_Supporting Information.zip/J.tif"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s008.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/3c5762061b6456bf-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s009",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s009",
+        "heading": "S5 Supporting Information Raw images of ultrastructure of meristematic cell nuclei in different preimbibition and dehydration states. (ZIP)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s009",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s009",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s009",
+        "content_type": "application/zip",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s009"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s009",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "S5_Supporting Information.zip/",
+            "S5_Supporting Information.zip/A.tif",
+            "S5_Supporting Information.zip/B.tif",
+            "S5_Supporting Information.zip/C.tif",
+            "S5_Supporting Information.zip/D.tif",
+            "S5_Supporting Information.zip/E.tif",
+            "S5_Supporting Information.zip/F.tif",
+            "S5_Supporting Information.zip/G.tif",
+            "S5_Supporting Information.zip/H.tif",
+            "S5_Supporting Information.zip/I.tif",
+            "S5_Supporting Information.zip/J.tif"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s009.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/4274e332b904bb22-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s010",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s010",
+        "heading": "S6 Supporting Information Raw images of ultrastructure of meristematic cell mitochondria in different preimbibition and dehydration states. (ZIP)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s010",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s010",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s010",
+        "content_type": "application/zip",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s010"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s010",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "S6_Supporting Information.zip/",
+            "S6_Supporting Information.zip/A.tif",
+            "S6_Supporting Information.zip/B.tif",
+            "S6_Supporting Information.zip/C.tif",
+            "S6_Supporting Information.zip/D.tif",
+            "S6_Supporting Information.zip/E.tif",
+            "S6_Supporting Information.zip/F.tif",
+            "S6_Supporting Information.zip/G.tif",
+            "S6_Supporting Information.zip/H.tif",
+            "S6_Supporting Information.zip/I.tif",
+            "S6_Supporting Information.zip/J.tif"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s010.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/dd856a9e8858ae87-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s011",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s011",
+        "heading": "S7 Supporting Information Raw images of electrophoresis of total DNA from mung bean hypocotyls in different preimbibition and dehydration states. (ZIP)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s011",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s011",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s011",
+        "content_type": "application/zip",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s011"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s011",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "S7_Supporting Information.zip/desiccation.tif",
+            "S7_Supporting Information.zip/undesiccation.jpg",
+            "S7_Supporting Information.zip/"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s011.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/cf6b944861589b65-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s012",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s012",
+        "heading": "S8 Supporting Information Raw images of TUNEL in mung bean hypocotyls in different preimbibition and dehydration states. (ZIP)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s012",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s012",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s012",
+        "content_type": "application/zip",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s012"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s012",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "S8_Supporting Information.zip/",
+            "S8_Supporting Information.zip/A.jpg",
+            "S8_Supporting Information.zip/B.jpg",
+            "S8_Supporting Information.zip/C.jpg",
+            "S8_Supporting Information.zip/D.jpg",
+            "S8_Supporting Information.zip/E.jpg",
+            "S8_Supporting Information.zip/F.jpg",
+            "S8_Supporting Information.zip/G.jpg",
+            "S8_Supporting Information.zip/H.jpg"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s012.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/e9d78093980774fb-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s013",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s013",
+        "heading": "S9 Supporting Information Individual data points for analysis of nuclease activity and nucleosome content in mung bean hypocotyls in different preimbibition and dehydration states. (OPJ)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s013",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s013",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s013",
+        "content_type": null,
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s013"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s013",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "reason": "Origin project bytes received; CPYA signature present, but no existing reader can verify project readability",
+      "bytes_received_complete": true,
+      "blocker": "format_readability_unverified",
+      "historical_capture": {
+        "state": "unavailable",
+        "validation": {
+          "valid": false,
+          "format": "Origin project",
+          "signature": "CPYA",
+          "readability_verified": false
+        },
+        "replay_verified": false,
+        "outcome": "blocked",
+        "former_record": "acquisition/assets-2026-09-15/2a7a8b610ed53131-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s014",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s014",
+        "heading": "S10 Supporting Information Individual data points for analysis of activities of caspase-3 and caspase-9 in mung bean hypocotyls in different preimbibition and dehydration states. (OPJ)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s014",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s014",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s014",
+        "content_type": null,
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s014"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s014",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "reason": "Origin project bytes received; CPYA signature present, but no existing reader can verify project readability",
+      "bytes_received_complete": true,
+      "blocker": "format_readability_unverified",
+      "historical_capture": {
+        "state": "unavailable",
+        "validation": {
+          "valid": false,
+          "format": "Origin project",
+          "signature": "CPYA",
+          "readability_verified": false
+        },
+        "replay_verified": false,
+        "outcome": "blocked",
+        "former_record": "acquisition/assets-2026-09-15/6c29631789003477-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s015",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s015",
+        "heading": "S11 Supporting Information Raw images of JC-1 staining of protoplasts from mung bean hypocotyls in different preimbibition and dehydration states. (ZIP)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s015",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s015",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s015",
+        "content_type": "application/zip",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s015"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s015",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "S11_Supporting Information.zip/",
+            "S11_Supporting Information.zip/105MSDCF/",
+            "S11_Supporting Information.zip/105MSDCF/DSC05038.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05039.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05040.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05041.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05042.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05043.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05044.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05045.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05046.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05047.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05048.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05049.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05050.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05051.JPG",
+            "S11_Supporting Information.zip/105MSDCF/DSC05052.JPG",
+            "S11_Supporting Information.zip/cccp/",
+            "S11_Supporting Information.zip/cccp/DSC05019.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05020.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05021.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05022.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05023.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05025.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05026.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05027.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05028.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05029.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05030.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05031.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05032.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05033.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05034.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05035.JPG",
+            "S11_Supporting Information.zip/cccp/DSC05036.JPG"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s015.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/70bcf75833e4010f-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s016",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s016",
+        "heading": "S12 Supporting Information Raw images of flow cytometer quantity of JC-1 staining in protoplasts from mung bean hypocotyls in different preimbibition and dehydration states. (ZIP)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s016",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s016",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s016",
+        "content_type": "application/zip",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s016"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s016",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "A.bmp",
+            "B.bmp",
+            "C.bmp",
+            "D.bmp",
+            "E.bmp",
+            "F.bmp",
+            "G.bmp",
+            "H.bmp",
+            "I.bmp",
+            "J.bmp"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s016.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/165c35a3b970459f-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s017",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s017",
+        "heading": "S13 Supporting Information Raw images of fluorescent in situ localization of cytochrome C from mung bean hypocotyls in different preimbibition and dehydration states. (ZIP)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s017",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s017",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s017",
+        "content_type": "application/zip",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s017"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s017",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "S13_Supporting Information.zip/",
+            "S13_Supporting Information.zip/A.tif",
+            "S13_Supporting Information.zip/B.tif",
+            "S13_Supporting Information.zip/C.tif",
+            "S13_Supporting Information.zip/D.tif",
+            "S13_Supporting Information.zip/E.tif",
+            "S13_Supporting Information.zip/F.tif",
+            "S13_Supporting Information.zip/G.tif",
+            "S13_Supporting Information.zip/H.tif"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s017.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/6652946ee86586ce-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "key": "info:doi/10.1371/journal.pone.0218513.s018",
+        "anchor_key": "info:doi/10.1371/journal.pone.0218513.s018",
+        "heading": "S14 Supporting Information Individual data points for concentration of cytoplasmic Ca<sup>2+</sup> in mung bean hypocotyl tissue in different preimbibition and dehydration states. (XLSX)",
+        "caption": "",
+        "section": "supplementary",
+        "link": "info:doi/10.1371/journal.pone.0218513.s018",
+        "original_url": "info:doi/10.1371/journal.pone.0218513.s018",
+        "source_href": "info:doi/10.1371/journal.pone.0218513.s018",
+        "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "attachment_index": 1,
+        "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s018"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0218513.s018",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "[Content_Types].xml",
+            "_rels/.rels",
+            "xl/workbook.xml",
+            "xl/_rels/workbook.xml.rels",
+            "xl/worksheets/sheet1.xml",
+            "xl/theme/theme1.xml",
+            "xl/styles.xml",
+            "xl/sharedStrings.xml",
+            "xl/worksheets/_rels/sheet1.xml.rels",
+            "xl/externalLinks/externalLink1.xml",
+            "xl/printerSettings/printerSettings1.bin",
+            "xl/calcChain.xml",
+            "docProps/core.xml",
+            "docProps/app.xml",
+            "xl/externalLinks/_rels/externalLink1.xml.rels"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "pone.0218513.s018.xlsx",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/5075855ae2dd59cb-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    }
+  ],
+  "counts": {
+    "discovered_references": 18,
+    "unique_files": 18,
+    "verified_files": 0,
+    "replayed_files": 0,
+    "complete_received_files": 0,
+    "index_only_files": 18
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1371_journal.pone.0218513/acquisition/assets-2026-09-15/collection.json",
+  "outcome": "index_only",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 18,
+    "unique_files": 18,
+    "verified_files": 14,
+    "replayed_files": 14,
+    "complete_received_files": 16
+  },
+  "historical_outcome_before_supplementary_removal": "partial",
+  "former_replay_receipt": "tests/fixtures/golden_criteria/10.1371_journal.pone.0218513/acquisition/assets-2026-09-15/replay-receipt.json"
+}

@@ -39,7 +39,7 @@ _PROVIDER_SPEC = ProviderSpec(
     provider_managed_abstract_only=True,
     status_order=5,
     base_domains=("www.pnas.org", "pnas.org"),
-    html_path_templates=("/doi/{doi}", "/doi/full/{doi}"),
+    html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
     pdf_path_templates=(
         "/doi/epdf/{doi}",
         "/doi/pdf/{doi}?download=true",
@@ -94,6 +94,7 @@ PNAS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     html_readiness=BrowserHtmlReadiness(wait_for_article_body=True),
     policy=browser_workflow.BrowserWorkflowPolicy(
         fast_html_attempt=False,
+        preview_fallback=False,
         html_readiness_budget_seconds=8.0,
         blocked_resource_types=("image", "font", "media"),
     ),
@@ -110,8 +111,8 @@ class PnasClient(browser_workflow.BrowserWorkflowClient):
         if not normalized_doi:
             return []
         return [
-            f"https://www.pnas.org/doi/{normalized_doi}",
             f"https://www.pnas.org/doi/full/{normalized_doi}",
+            f"https://www.pnas.org/doi/{normalized_doi}",
             f"https://doi.org/{normalized_doi}",
         ]
 
@@ -127,6 +128,10 @@ PROVIDER_BUNDLE = ProviderBundle(
             extraction_drop_keywords=("signup-alert-ad", "tab-nav"),
         ),
         availability=AvailabilityPolicy(
+            paywall_gate_selectors="#bodymatter > .core-container > .denial-block",
+            paywall_gate_pattern=r"view all access options to continue reading this article",
+            paywall_paragraph_selector="p, [role='paragraph']",
+            paywall_entitlement_signals=("pnas_paywall_no_access",),
             name="pnas",
             site_rule_overrides=PNAS_SITE_RULE_OVERRIDES,
             datalayer_signal_set=PNAS_SIGNAL_SET,

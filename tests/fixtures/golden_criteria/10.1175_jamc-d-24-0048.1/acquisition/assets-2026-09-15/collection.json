@@ -1,0 +1,523 @@
+{
+  "provider": "ams",
+  "doi": "10.1175/jamc-d-24-0048.1",
+  "sample_id": "10.1175_jamc-d-24-0048.1",
+  "source_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1.xml",
+  "source_input": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/original.html",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "1f963d25078cab358ca2cce178580ab5f21feb015236be5bbbf09ddadf8d0b0e",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 1. The boundary of the domain of interest is colored in red, with a blue li",
+        "caption": "Fig. 1. The boundary of the domain of interest is colored in red, with a blue line at 101°W indicating the longitude that dryline most frequently forms.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f1.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-f1.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f1.jpg",
+        "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1-f1.tif",
+        "source_asset_format": "tiff",
+        "source_filename": "JAMC-D-24-0048.1-f1.tif"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f1.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ams-headed-body-002-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ams-headed-body-002-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 974,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-f1.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 2. U-Net model architecture is shown here. Blue and gray arrows represent c",
+        "caption": "Fig. 2. U-Net model architecture is shown here. Blue and gray arrows represent convolution layers; while black, yellow, and green arrows represent concatenation, maxpooling, and upsampling, respectively. The number of kernels for each convolution layers are shown in pink colors. A rectified linear unit (ReLU) is used after all convolution layers.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f2.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-f2.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f2.jpg",
+        "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1-f2.eps",
+        "source_asset_format": "eps",
+        "source_filename": "JAMC-D-24-0048.1-f2.eps"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f2.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ams-headed-body-003-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ams-headed-body-003-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 482,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-f2.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 3. (a) MSE by the time of day for the CTL, ALL, and ABI models (purple, blu",
+        "caption": "Fig. 3. (a) MSE by the time of day for the CTL, ALL, and ABI models (purple, blue, and orange lines, respectively). (b) Comparisons between U-Net model BLPW estimates and radiosonde BLPW for each model. HRRR-based estimates (green) are also compared for reference in (b).",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f3.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-f3.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f3.jpg",
+        "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1-f3.tif",
+        "source_asset_format": "tiff",
+        "source_filename": "JAMC-D-24-0048.1-f3.tif"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f3.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ams-headed-body-004-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ams-headed-body-004-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 492,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-f3.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 4. (a) Surface analysis from the Storm Prediction Center at 2100 UTC and (b",
+        "caption": "Fig. 4. (a) Surface analysis from the Storm Prediction Center at 2100 UTC and (b) channel 10 *T*<sub>b</sub> (low-level water vapor channel) at 2101 UTC 30 May 2022.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f4.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-f4.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f4.jpg",
+        "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1-f4.tif",
+        "source_asset_format": "tiff",
+        "source_filename": "JAMC-D-24-0048.1-f4.tif"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f4.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ams-headed-body-005-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ams-headed-body-005-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 722,
+        "height": 1024,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-f4.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 5. (a) HRRR-based BLPW, (b) CTL model–based BLPW, (c) ALL model–based BLPW,",
+        "caption": "Fig. 5. (a) HRRR-based BLPW, (b) CTL model–based BLPW, (c) ALL model–based BLPW, and (d) ABI model–based BLPW are shown every 2 h from 1300 to 2300 UTC 30 May 2022. Gray color indicates the presence of clouds, and orange dots are the location of the empirically determined dryline where moisture gradient is high.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f5.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-f5.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f5.jpg",
+        "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1-f5.tif",
+        "source_asset_format": "tiff",
+        "source_filename": "JAMC-D-24-0048.1-f5.tif"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f5.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ams-headed-body-006-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ams-headed-body-006-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 786,
+        "height": 1024,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-f5.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 6. Maps of SWD at (a) 1300 UTC and (b) 1700 UTC.",
+        "caption": "Fig. 6. Maps of SWD at (a) 1300 UTC and (b) 1700 UTC.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f6.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-f6.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f6.jpg",
+        "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1-f6.tif",
+        "source_asset_format": "tiff",
+        "source_filename": "JAMC-D-24-0048.1-f6.tif"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f6.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ams-headed-body-007-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ams-headed-body-007-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 450,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-f6.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 7. BLPW derived from the (a) HRRR model, (b) CTL model, (c) ABI model, and ",
+        "caption": "Fig. 7. BLPW derived from the (a) HRRR model, (b) CTL model, (c) ABI model, and (d) ALL model at 1200 UTC 30 Jun 2022. The color of star in (a) represents the radiosonde-based BLPW value at that location.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f7.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-f7.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f7.jpg",
+        "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1-f7.tif",
+        "source_asset_format": "tiff",
+        "source_filename": "JAMC-D-24-0048.1-f7.tif"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f7.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ams-headed-body-008-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ams-headed-body-008-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 902,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-f7.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 8. BLPW derived by applying the ABI model to the 2-km ABI data at (a) 1300 ",
+        "caption": "Fig. 8. BLPW derived by applying the ABI model to the 2-km ABI data at (a) 1300 UTC, (b) 1500 UTC, (c) 1700 UTC, and (d) 1900 UTC 30 May 2022. This is the same dryline case as in Fig. 5d. Similarly, gray colors indicate the presence of clouds, and orange dots are the location of the empirically determined dryline where moisture gradient is high.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f8.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-f8.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f8.jpg",
+        "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1-f8.tif",
+        "source_asset_format": "tiff",
+        "source_filename": "JAMC-D-24-0048.1-f8.tif"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f8.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ams-headed-body-009-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ams-headed-body-009-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 902,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-f8.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 9. (a) ABI channel 2 reflectance, (b) channel 13 *T*<sub>b</sub>, (c) SWD, ",
+        "caption": "Fig. 9. (a) ABI channel 2 reflectance, (b) channel 13 *T*<sub>b</sub>, (c) SWD, and (d) HRRR-based BLPW for the case at 1600 UTC 3 May 2022.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f9.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-f9.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f9.jpg",
+        "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1-f9.tif",
+        "source_asset_format": "tiff",
+        "source_filename": "JAMC-D-24-0048.1-f9.tif"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f9.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ams-headed-body-010-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ams-headed-body-010-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 896,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-f9.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 10. (a) NOTPW model–based BLPW, (b) CTL model–based BLPW, (c) ALL model–bas",
+        "caption": "Fig. 10. (a) NOTPW model–based BLPW, (b) CTL model–based BLPW, (c) ALL model–based BLPW, and (d) ABI model–based BLPW for the case at 1600 UTC 3 May 2022.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f10.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-f10.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f10.jpg",
+        "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1-f10.tif",
+        "source_asset_format": "tiff",
+        "source_filename": "JAMC-D-24-0048.1-f10.tif"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-f10.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ams-headed-body-011-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ams-headed-body-011-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 902,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-f10.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "heading": "Table 1.",
+        "caption": "Minimum and maximum values used to normalize each input variable.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t1.jpg",
+        "section": "body",
+        "dom_id": "tbl1",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-t1.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t1.jpg"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t1.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/8faf4183bd6e19e3-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/8faf4183bd6e19e3-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 465,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-t1.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "heading": "Table 2.",
+        "caption": "A summary of training, validation, and testing datasets. The number of data is written in a bold font, next to the year used for each dataset.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t2.jpg",
+        "section": "body",
+        "dom_id": "tbl2",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-t2.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t2.jpg"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t2.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/e0b4a3479fa3905c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/e0b4a3479fa3905c-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 165,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-t2.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "heading": "Table 3.",
+        "caption": "Variables used for a hyperparameter search.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t3.jpg",
+        "section": "body",
+        "dom_id": "tbl3",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-t3.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t3.jpg"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t3.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/5c62365b2c75b67a-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/5c62365b2c75b67a-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 249,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-t3.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "heading": "Table 4.",
+        "caption": "Model performances are shown in terms of MSE and MAE against HRRR-based BLPW (mm<sup>2</sup> and mm, respectively) for the testing data with the 95% confidence interval. C13, C14, and C15 represent *T*<sub>b</sub> values at channels 13, 14, and 15, respectively. The NOTPW model highlighted in a bold text is the model using channel 13, 14, 15 *T*<sub>b</sub> values, SWD, *T*<sub>skin,</sub> and SZA as inputs, which shows the minimum MSE and MAE.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t4.jpg",
+        "section": "body",
+        "dom_id": "tbl4",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-t4.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t4.jpg"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t4.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/04ba429313af0a04-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/04ba429313af0a04-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 227,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-t4.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "heading": "Table 5.",
+        "caption": "Model performances in MSE and MAE against HRRR-based BLPW and radiosonde BLPW for adding GOES TPW as input. The names of the models for each experiment are CTL, TPW, and ABI models.",
+        "url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t5.jpg",
+        "section": "body",
+        "dom_id": "tbl5",
+        "preview_url": "https://journals.ametsoc.org/view/journals/apme/63/12/inline-JAMC-D-24-0048.1-t5.jpg",
+        "full_size_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t5.jpg"
+      },
+      "download_url": "https://journals.ametsoc.org/view/journals/apme/63/12/full-JAMC-D-24-0048.1-t5.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/3e4d1baa34c22769-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/3e4d1baa34c22769-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1024,
+        "height": 138,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "outcome": "complete",
+      "output_filename": "full-JAMC-D-24-0048.1-t5.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 15,
+    "unique_files": 15,
+    "verified_files": 15,
+    "replayed_files": 15,
+    "complete_received_files": 15,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1175_jamc-d-24-0048.1/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 15,
+    "unique_files": 15,
+    "verified_files": 15,
+    "replayed_files": 15,
+    "complete_received_files": 15
+  },
+  "historical_outcome_before_supplementary_removal": "complete",
+  "historical_blocking_evidence": [
+    "acquisition/assets-2026-09-15/657aaf08ebceb6d7-http-1.bin",
+    "acquisition/assets-2026-09-15/d9f9fe7a87b9385e-http-1.bin",
+    "acquisition/assets-2026-09-15/5ddd66660da6a741-http-1.bin",
+    "acquisition/assets-2026-09-15/f7aaf19e6c1930aa-http-1.bin",
+    "acquisition/assets-2026-09-15/13532b9d0c688989-http-1.bin",
+    "acquisition/assets-2026-09-15/5a521713f0167fbd-http-1.bin",
+    "acquisition/assets-2026-09-15/030c918418d3dfea-http-1.bin",
+    "acquisition/assets-2026-09-15/c19be5ca2e00a12b-http-1.bin",
+    "acquisition/assets-2026-09-15/f4be740607b65dd3-http-1.bin",
+    "acquisition/assets-2026-09-15/ed81ef77a3ed13d2-http-1.bin"
+  ]
+}

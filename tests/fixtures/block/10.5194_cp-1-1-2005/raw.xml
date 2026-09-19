@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN" "https://jats.nlm.nih.gov/nlm-dtd/publishing/3.0/journalpublishing3.dtd">
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" article-type="research-article" dtd-version="3.0" xml:lang="en">
+<front>
+<journal-meta>
+<journal-id journal-id-type="publisher">CP</journal-id>
+<journal-title-group>
+<journal-title>Climate of the Past</journal-title>
+<abbrev-journal-title abbrev-type="publisher">CP</abbrev-journal-title>
+<abbrev-journal-title abbrev-type="nlm-ta">Clim. Past</abbrev-journal-title>
+</journal-title-group>
+<issn pub-type="epub">1814-9332</issn>
+<publisher><publisher-name>Copernicus Publications</publisher-name>
+<publisher-loc>Göttingen, Germany</publisher-loc>
+</publisher>
+</journal-meta>
+<article-meta>
+<article-id pub-id-type="doi">10.5194/cp-1-1-2005</article-id>
+<title-group>
+<article-title>Quantifying the effect of vegetation dynamics on the climate of the Last Glacial Maximum</article-title>
+</title-group>
+<contrib-group><contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Jahn</surname>
+<given-names>A.</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+<xref ref-type="aff" rid="aff2">
+<sup>2</sup>
+</xref>
+</contrib>
+<contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Claussen</surname>
+<given-names>M.</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+<xref ref-type="aff" rid="aff3">
+<sup>3</sup>
+</xref>
+</contrib>
+<contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Ganopolski</surname>
+<given-names>A.</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+</contrib>
+<contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Brovkin</surname>
+<given-names>V.</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+</contrib>
+</contrib-group><aff id="aff1">
+<label>1</label>
+<addr-line>Potsdam Institute for Climate Impact Research (PIK), P.O. Box 601203, 14412 Potsdam, Germany</addr-line>
+</aff>
+<aff id="aff2">
+<label>2</label>
+<addr-line>Now at Department of Atmospheric and Oceanic Sciences, McGill University, Burnside Hall Room 945, 805 Sherbrooke Street West, Montreal, Quebec, H3A 2K6, Canada</addr-line>
+</aff>
+<aff id="aff3">
+<label>3</label>
+<addr-line>Institute of Physics, Potsdam University, P.O. Box 601543, 14415 Potsdam, Germany</addr-line>
+</aff>
+<pub-date pub-type="epub">
+<day>04</day>
+<month>10</month>
+<year>2005</year>
+</pub-date>
+<volume>1</volume>
+<issue>1</issue>
+<fpage>1</fpage>
+<lpage>7</lpage>
+<permissions>
+<copyright-statement>Copyright: &#x000a9; 2005 A. Jahn et al.</copyright-statement>
+<copyright-year>2005</copyright-year>
+<license license-type="open-access">
+<license-p>This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 2.5 Generic License. To view a copy of this licence, visit <ext-link ext-link-type="uri"  xlink:href="https://creativecommons.org/licenses/by-nc-sa/2.5/">https://creativecommons.org/licenses/by-nc-sa/2.5/</ext-link></license-p>
+</license>
+</permissions>
+<self-uri xlink:href="https://cp.copernicus.org/articles/1/1/2005/cp-1-1-2005.html">This article is available from https://cp.copernicus.org/articles/1/1/2005/cp-1-1-2005.html</self-uri>
+<self-uri xlink:href="https://cp.copernicus.org/articles/1/1/2005/cp-1-1-2005.pdf">The full text article is available as a PDF file from https://cp.copernicus.org/articles/1/1/2005/cp-1-1-2005.pdf</self-uri>
+<abstract>
+<p>The importance of the biogeophysical atmosphere-vegetation
+feedback in comparison with the radiative effect of lower
+atmospheric CO&lt;sub&gt;2&lt;/sub&gt; concentrations and the presence of ice sheets
+at the last glacial maximum (LGM) is investigated with the climate
+system model CLIMBER-2. Equilibrium experiments reveal that most
+of the global cooling at the LGM (-5.1&amp;deg;C) relative
+to (natural) present-day conditions is caused by the introduction
+of ice sheets into the model (-3.0&amp;deg;C), followed by
+the effect of lower atmospheric CO&lt;sub&gt;2&lt;/sub&gt; levels at the LGM
+(-1.5&amp;deg;C), while a synergy between these two factors
+appears to be very small on global average. The biogeophysical
+effects of changes in vegetation cover are found to cool the global LGM
+climate by 0.6&amp;deg;C. The latter are most pronounced in
+the northern high latitudes, where the taiga-tundra feedback
+causes annually averaged temperature changes of up to
+-2.0&amp;deg;C, while the radiative effect of lower
+atmospheric CO&lt;sub&gt;2&lt;/sub&gt; in this region only produces a cooling of
+1.5&amp;deg;C. Hence, in this region, the temperature
+changes caused by vegetation dynamics at the LGM exceed the
+cooling due to lower atmospheric CO&lt;sub&gt;2&lt;/sub&gt; concentrations.</p>
+</abstract>
+<counts><page-count count="7"/></counts>
+</article-meta>
+</front>
+<body/>
+<back>
+</back>
+</article>

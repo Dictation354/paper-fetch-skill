@@ -1,0 +1,390 @@
+{
+  "doi": "10.1016/0034-4257(94)90046-9",
+  "source": "crossref_meta",
+  "metadata": {
+    "title": "Remote sensing and the measurement of geographical entities in a forested environment. 1. The scale and spatial aggregation problem",
+    "authors": [
+      "Danielle J. Marceau",
+      "Philip J. Howarth",
+      "Denis J. Gratton"
+    ],
+    "abstract": "The hypothesis tested in this study was that remote sensing constitutes a particular case of an arbitrary uniform spatial sampling grid used to obtain measurements about geographical entities that induces the scale and aggregation effect responsible for haphazard analysis results. The main objective was to evaluate the impact of measurement scale and spatial aggregation on the information content and classification accuracies of airborne MEIS-II data acquired over a midlatitude temperate forested environment. The original MEIS-II data were resampled to four spatial resolutions, namely 5 m, 10 m, 20 m, and 30 m. Forest classes were established according to three progressive levels of spatial aggregation. Descriptive statistics (Wald-Wolfowitz runs test, mean and variance) were calculated on transects of pixels representing each forest class delineated on the images at every spatial resolution. A maximum-likelihood classification was also performed for each combination of spatial resolution and aggregation level. The results reveal that, except for the mean, changing the measurement scale and the aggregation level of the classes greatly affects the values of the descriptive statistics. The Z value of the Wald-Wolfowitz runs test decreases with decreasing spatial resolution. The effect is more pronounced when the classes are progressively aggregated. For most classes, the variance decreases with the decrease of spatial resolution. In such cases, the impact of changing the measurement scale is greater than the change of aggregation level. Per-class accuracies are also considerably modified depending on the measurement scale and the aggregation level. Within a particular aggregation level, some classes are better classified at fine spatial resolutions, while others require coarser spatial resolutions. Three major conclusions can be stated from these results: 1) The information content of remote sensing images is dependent on the measurement scale determined by the spatial resolution of the sensor; 2) neglecting the scale and aggregation level when classifying remote sensing images can produce haphazard results having little correspondence with the objects of the scene; and 3) there is no unique spatial resolution appropriate for the detection and discrimination of all geographical entities composing a complex natural scene such as a forested environment. These conclusions provide a theoretical foundation from which original solutions to the problem of appropriate scales of measurement for geographical entities can be experimented. Logically, there exists an optimal spatial resolution for each entity of interest, corresponding to its intrinsic spatial and spectral characteristics. © 1994.",
+    "journal": "Remote Sensing of Environment",
+    "article_type": null,
+    "published": "1994-01-01",
+    "keywords": [],
+    "license_urls": [
+      "https://www.elsevier.com/tdm/userlicense/1.0/"
+    ],
+    "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/0034425794900469"
+  },
+  "sections": [],
+  "references": [
+    {
+      "raw": "Digital processing to improve classification results at resolutions of 5 to 50 metres",
+      "doi": null,
+      "title": "Digital processing to improve classification results at resolutions of 5 to 50 metres",
+      "year": "1983"
+    },
+    {
+      "raw": "Effect of intraclass correlation among training samples on the misclassification probabilities of Bayes' procedure",
+      "doi": "10.1016/0031-3203(74)90004-1",
+      "title": "Effect of intraclass correlation among training samples on the misclassification probabilities of Bayes' procedure",
+      "year": "1974"
+    },
+    {
+      "raw": "Data processing and reprocessing",
+      "doi": null,
+      "title": "Data processing and reprocessing",
+      "year": "1983"
+    },
+    {
+      "raw": "Nonlinear estimation of scene parameters from digital images using zero-hit run-length statistics",
+      "doi": null,
+      "title": "Nonlinear estimation of scene parameters from digital images using zero-hit run-length statistics",
+      "year": "1993"
+    },
+    {
+      "raw": "La Statistique",
+      "doi": null,
+      "title": "La Statistique",
+      "year": "1983"
+    },
+    {
+      "raw": "A coefficient of agreement for nominal scales",
+      "doi": "10.1177/001316446002000104",
+      "title": "A coefficient of agreement for nominal scales",
+      "year": "1960"
+    },
+    {
+      "raw": "A quantitative method to test for consistency and correctness in photointerpretation",
+      "doi": null,
+      "title": "A quantitative method to test for consistency and correctness in photointerpretation",
+      "year": "1983"
+    },
+    {
+      "raw": "The interactive effect of spatial resolution and degree of internal variability within land-cover types on classification accuracies",
+      "doi": "10.1080/01431168708948612",
+      "title": "The interactive effect of spatial resolution and degree of internal variability within land-cover types on classification accuracies",
+      "year": "1987"
+    },
+    {
+      "raw": "Scale, aggregation, and the modifiable areal unit problem",
+      "doi": null,
+      "title": "Scale, aggregation, and the modifiable areal unit problem",
+      "year": "1991"
+    },
+    {
+      "raw": "Large sample standard errors of kappa and weighted kappa",
+      "doi": "10.1037/h0028106",
+      "title": "Large sample standard errors of kappa and weighted kappa",
+      "year": "1969"
+    },
+    {
+      "raw": "The modifiable areal unit problem in multivariate statistical analysis",
+      "doi": "10.1068/a231025",
+      "title": "The modifiable areal unit problem in multivariate statistical analysis",
+      "year": "1991"
+    },
+    {
+      "raw": "Vegetation mapping and change detection using Spot MLA and Landsat imagery in Kluane National Park",
+      "doi": "10.1080/07038992.1990.11487601",
+      "title": "Vegetation mapping and change detection using Spot MLA and Landsat imagery in Kluane National Park",
+      "year": "1991"
+    },
+    {
+      "raw": "An assessment of some factors influencing multispectral land-cover classification",
+      "doi": null,
+      "title": "An assessment of some factors influencing multispectral land-cover classification",
+      "year": "1990"
+    },
+    {
+      "raw": "Evaluation of several schemes for classification of remotely sensed data",
+      "doi": null,
+      "title": "Evaluation of several schemes for classification of remotely sensed data",
+      "year": "1980"
+    },
+    {
+      "raw": "The effects of spatial resolution on the classification of Thematic Mapper data",
+      "doi": "10.1080/01431168508948285",
+      "title": "The effects of spatial resolution on the classification of Thematic Mapper data",
+      "year": "1985"
+    },
+    {
+      "raw": "Segmentating satellite imagery: a region growing scheme",
+      "doi": null,
+      "title": "Segmentating satellite imagery: a region growing scheme",
+      "year": "1991"
+    },
+    {
+      "raw": "Hierarchical classification of Landsat TM image using spectral and spatial information",
+      "doi": null,
+      "title": "Hierarchical classification of Landsat TM image using spectral and spatial information",
+      "year": "1991"
+    },
+    {
+      "raw": "On the issues of scale, resolution, and fractal analysis in the mapping sciences",
+      "doi": "10.1111/j.0033-0124.1992.00088.x",
+      "title": "On the issues of scale, resolution, and fractal analysis in the mapping sciences",
+      "year": "1992"
+    },
+    {
+      "raw": "Computer-based classification accuracy due to the spatial resolution using perpoint versus per-field classification techniques",
+      "doi": null,
+      "title": "Computer-based classification accuracy due to the spatial resolution using perpoint versus per-field classification techniques",
+      "year": "1981"
+    },
+    {
+      "raw": "Synergism of synthetic aperture radar and visible / infrared data for forest type discrimination",
+      "doi": null,
+      "title": "Synergism of synthetic aperture radar and visible / infrared data for forest type discrimination",
+      "year": "1990"
+    },
+    {
+      "raw": "Spectral texture pattern matching: a classifier for digital imagery",
+      "doi": "10.1109/36.135816",
+      "title": "Spectral texture pattern matching: a classifier for digital imagery",
+      "year": "1991"
+    },
+    {
+      "raw": "The problem of scale and spatial aggregation in remote sensing: an empirical investigation using forestry data",
+      "doi": null,
+      "title": "The problem of scale and spatial aggregation in remote sensing: an empirical investigation using forestry data",
+      "year": "1992"
+    },
+    {
+      "raw": "Étude du contenu spectral et spatial d'images numériques et de l'impact sur la classification automatisée d'un couvert forestier",
+      "doi": null,
+      "title": "Étude du contenu spectral et spatial d'images numériques et de l'impact sur la classification automatisée d'un couvert forestier",
+      "year": "1993"
+    },
+    {
+      "raw": "Land cover classification accuracy as a function of sensor spatial resolution",
+      "doi": null,
+      "title": "Land cover classification accuracy as a function of sensor spatial resolution",
+      "year": "1981"
+    },
+    {
+      "raw": "Multidetector electro-optical imaging scanner MEIS II",
+      "doi": null,
+      "title": "Multidetector electro-optical imaging scanner MEIS II",
+      "year": "1984"
+    },
+    {
+      "raw": "The modifiable areal unit problem, CATMOG (Concepts and Techniques in Modern Geography)-38",
+      "doi": null,
+      "title": "The modifiable areal unit problem, CATMOG (Concepts and Techniques in Modern Geography)-38",
+      "year": "1984"
+    },
+    {
+      "raw": "Ecological fallacies and the analysis of areal census data",
+      "doi": "10.1068/a160017",
+      "title": "Ecological fallacies and the analysis of areal census data",
+      "year": "1984"
+    },
+    {
+      "raw": "The influence of multispectral scanner spatial resolution on forest feature classification",
+      "doi": null,
+      "title": "The influence of multispectral scanner spatial resolution on forest feature classification",
+      "year": "1977"
+    },
+    {
+      "raw": "Unsupervised training area selection in forests using a nonparametric distance measure and spatial information",
+      "doi": "10.1080/01431168908903852",
+      "title": "Unsupervised training area selection in forests using a nonparametric distance measure and spatial information",
+      "year": "1989"
+    },
+    {
+      "raw": "On the nature of models in remote sensing",
+      "doi": "10.1016/0034-4257(86)90018-0",
+      "title": "On the nature of models in remote sensing",
+      "year": "1986"
+    },
+    {
+      "raw": "Remote Sensing",
+      "doi": null,
+      "title": "Remote Sensing",
+      "year": "1978"
+    },
+    {
+      "raw": "Knowledge-based segmentation of Landsat images",
+      "doi": "10.1109/36.73663",
+      "title": "Knowledge-based segmentation of Landsat images",
+      "year": "1991"
+    },
+    {
+      "raw": "Selecting the spatial resolution of satellite sensors required for global monitoring of land transformations",
+      "doi": "10.1080/01431168808954847",
+      "title": "Selecting the spatial resolution of satellite sensors required for global monitoring of land transformations",
+      "year": "1988"
+    },
+    {
+      "raw": "The capabilities of two airborne multispectral sensors for classifying coniferous forest species",
+      "doi": null,
+      "title": "The capabilities of two airborne multispectral sensors for classifying coniferous forest species",
+      "year": "1985"
+    },
+    {
+      "raw": "The factor of scale in remote sensing",
+      "doi": "10.1016/0034-4257(87)90015-0",
+      "title": "The factor of scale in remote sensing",
+      "year": "1987"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": false,
+    "token_estimate": 683,
+    "content_kind": "abstract_only",
+    "has_abstract": true,
+    "warnings": [
+      "Elsevier official XML route was not usable (HTTP 400 for https://api.elsevier.com/content/article/doi/10.1016%2F0034-4257%2894%2990046-9?view=FULL); attempting Elsevier PII XML fallback.",
+      "Elsevier PII XML fallback was not usable (HTTP 400 for https://api.elsevier.com/content/article/pii/0034425794900469?view=FULL); attempting official PDF fallback.",
+      "xml: HTTP 400 for https://api.elsevier.com/content/article/doi/10.1016%2F0034-4257%2894%2990046-9?view=FULL; pii_xml: HTTP 400 for https://api.elsevier.com/content/article/pii/0034425794900469?view=FULL; pdf: HTTP 400 for https://api.elsevier.com/content/article/doi/10.1016%2F0034-4257%2894%2990046-9?view=FULL",
+      "Full text was not available; returning metadata and abstract only.",
+      "--save-markdown was set but full text was not available; nothing written to disk."
+    ],
+    "source_trail": [
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_elsevier",
+      "route:signal_publisher_elsevier",
+      "route:signal_doi_elsevier",
+      "route:probe_elsevier_positive",
+      "route:provider_selected_elsevier",
+      "metadata:elsevier_ok",
+      "route:provider_candidate_elsevier_metadata_selected_rank_1",
+      "route:provider_candidate_elsevier_identity_strong",
+      "fulltext:elsevier_attempt",
+      "fulltext:elsevier_xml_fail",
+      "fulltext:elsevier_xml_pii_fail",
+      "fulltext:elsevier_pdf_api_fail",
+      "fulltext:elsevier_fail",
+      "route:provider_candidate_elsevier_rejected",
+      "fallback:elsevier_html_managed_by_provider",
+      "fallback:metadata_only",
+      "fulltext:elsevier_pii_xml_fail",
+      "fulltext:elsevier_pdf_fail",
+      "download:markdown_skipped_no_fulltext"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 683,
+      "body": 0,
+      "refs": 680
+    },
+    "confidence": "low",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 0,
+      "word_count": 0,
+      "body_block_count": 0,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 0.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": false,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "crossref",
+    "route": "metadata",
+    "representation": "metadata",
+    "transport": "api",
+    "fallback_used": true
+  }
+}

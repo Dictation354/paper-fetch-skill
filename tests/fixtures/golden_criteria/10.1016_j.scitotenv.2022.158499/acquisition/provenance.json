@@ -1,0 +1,62 @@
+{
+  "records": [
+    {
+      "doi": "10.1016/j.scitotenv.2022.158499",
+      "provider": "elsevier",
+      "requested_url": "https://api.crossref.org/works/10.1016%2Fj.scitotenv.2022.158499",
+      "final_url": "https://api.crossref.org/works/10.1016%2Fj.scitotenv.2022.158499",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:50 GMT",
+        "content-type": "application/json",
+        "content-length": "6410"
+      },
+      "captured_at_utc": "2026-09-18T02:20:49.894682+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 26491,
+      "sha256": "28454afc138e216b16f0570ca2b4d50da74d7865e460164145a5bc56e5ca92fe",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1016/j.scitotenv.2022.158499",
+      "provider": "elsevier",
+      "requested_url": "https://api.elsevier.com/content/abstract/doi/10.1016%2Fj.scitotenv.2022.158499",
+      "final_url": "https://api.elsevier.com/content/abstract/doi/10.1016%2Fj.scitotenv.2022.158499",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:50 GMT",
+        "content-type": "application/json;charset=UTF-8",
+        "last-modified": "Fri, 27 Feb 2026 02:46:37 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:20:49.928932+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
+      "size": 10869,
+      "sha256": "bfbeb926a3e2d8ca7fc775ea3c58615114d4f39be352dc55f8a6db7ea0a9df8d",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1016/j.scitotenv.2022.158499",
+      "provider": "elsevier",
+      "requested_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.scitotenv.2022.158499",
+      "final_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.scitotenv.2022.158499",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:51 GMT",
+        "content-type": "text/xml;charset=UTF-8",
+        "last-modified": "Mon, 18 Nov 2024 09:11:55 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:20:50.599172+00:00",
+      "body_file": "original.xml",
+      "size": 477819,
+      "sha256": "85989b0a4db4403422bfde4bee420132f259ed283f28c003cefb0112760efc60",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes",
+      "original_body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.xml"
+    }
+  ]
+}

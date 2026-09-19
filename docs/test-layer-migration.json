@@ -1,0 +1,2512 @@
+{
+  "baseline_test_functions": 2380,
+  "current_test_functions": 2386,
+  "moved": 446,
+  "removed": 3,
+  "unchanged_location": 1931,
+  "entries": [
+    {
+      "old": "tests/unit/test_acquired_article_assets.py::test_original_article_figure_candidates_download_and_assembly",
+      "new": "tests/golden/test_acquired_article_assets.py::test_original_article_figure_candidates_download_and_assembly",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_completion.py::test_complete_arxiv_pages_discover_exact_version_and_all_files",
+      "new": "tests/golden/test_acquired_completion.py::test_complete_arxiv_pages_discover_exact_version_and_all_files",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_completion.py::test_complete_pdf_current_parser_provider_and_acceptance",
+      "new": "tests/golden/test_acquired_completion.py::test_complete_pdf_current_parser_provider_and_acceptance",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_completion_assets.py::test_elsevier_original_xml_object_download_and_final_article",
+      "new": "tests/golden/test_acquired_completion_assets.py::test_elsevier_original_xml_object_download_and_final_article",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_completion_assets.py::test_oxford_fresh_signed_figure_current_discovery_download_and_article",
+      "new": "tests/golden/test_acquired_completion_assets.py::test_oxford_fresh_signed_figure_current_discovery_download_and_article",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_ieee_inputs.py::test_captured_figure_through_original_extraction_download_and_article",
+      "new": "tests/golden/test_acquired_ieee_inputs.py::test_captured_figure_through_original_extraction_download_and_article",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_ieee_inputs.py::test_captured_stamp_pdf_current_provider_and_final_article",
+      "new": "tests/golden/test_acquired_ieee_inputs.py::test_captured_stamp_pdf_current_provider_and_final_article",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_ieee_inputs.py::test_original_reference_pages_overlap_and_preserve_every_entry",
+      "new": "tests/golden/test_acquired_ieee_inputs.py::test_original_reference_pages_overlap_and_preserve_every_entry",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_ieee_paywall_flow.py::test_confirmed_paywall_landing_prevents_rest_browser_and_pdf_requests",
+      "new": "tests/golden/test_acquired_ieee_paywall_flow.py::test_confirmed_paywall_landing_prevents_rest_browser_and_pdf_requests",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_ieee_paywall_flow.py::test_confirmed_paywall_landing_stops_even_when_rest_fixture_has_fulltext",
+      "new": "tests/golden/test_acquired_ieee_paywall_flow.py::test_confirmed_paywall_landing_stops_even_when_rest_fixture_has_fulltext",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_network_repair.py::test_arxiv_complete_index_and_article_link_metadata",
+      "new": "tests/golden/test_acquired_network_repair.py::test_arxiv_complete_index_and_article_link_metadata",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_network_repair.py::test_iop_real_article_index_and_link_metadata",
+      "new": "tests/golden/test_acquired_network_repair.py::test_iop_real_article_index_and_link_metadata",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_network_repair.py::test_tandf_original_jpeg_matches_browser_recovered_figure",
+      "new": "tests/golden/test_acquired_network_repair.py::test_tandf_original_jpeg_matches_browser_recovered_figure",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_paywall_inputs.py::test_http200_paywall_keeps_identity_and_abstract_without_primary_body",
+      "new": "tests/golden/test_acquired_paywall_inputs.py::test_http200_paywall_keeps_identity_and_abstract_without_primary_body",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_paywall_inputs.py::test_ieee_purchase_landing_preserves_real_abstract_without_fulltext_claim",
+      "new": "tests/golden/test_acquired_paywall_inputs.py::test_ieee_purchase_landing_preserves_real_abstract_without_fulltext_claim",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_pdf_failures.py::test_captured_pdf_endpoint_failure_preserves_diagnostics",
+      "new": "tests/golden/test_acquired_pdf_failures.py::test_captured_pdf_endpoint_failure_preserves_diagnostics",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_pdf_failures.py::test_observed_browser_dom_is_a_challenge_without_inventing_http_status",
+      "new": "tests/golden/test_acquired_pdf_failures.py::test_observed_browser_dom_is_a_challenge_without_inventing_http_status",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_acquired_same_paper_pdf_current_provider_and_acceptance",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_acquired_same_paper_pdf_current_provider_and_acceptance",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_arxiv_same_version_ancillary_discovery_and_article_link_metadata",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_arxiv_same_version_ancillary_discovery_and_article_link_metadata",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_elsevier_actual_first_page_entitlement_response_is_rejected",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_elsevier_actual_first_page_entitlement_response_is_rejected",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_elsevier_normal_pdf_and_unrelated_warning_remain_accepted",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_elsevier_normal_pdf_and_unrelated_warning_remain_accepted",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_elsevier_open_access_pdf_api_complete_response_and_article",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_elsevier_open_access_pdf_api_complete_response_and_article",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_frontiers_actual_api_resolves_same_article_supplementary_link",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_frontiers_actual_api_resolves_same_article_supplementary_link",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_iop_actual_data_challenge_rejects_as_attachment_index",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_iop_actual_data_challenge_rejects_as_attachment_index",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_tandf_actual_figure_challenge_reports_failed_asset",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_tandf_actual_figure_challenge_reports_failed_asset",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_subscription_access.py::test_elsevier_entitlement_is_explicit_separate_api_evidence",
+      "new": "tests/golden/test_acquired_subscription_access.py::test_elsevier_entitlement_is_explicit_separate_api_evidence",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_subscription_access.py::test_elsevier_http200_first_page_is_not_a_complete_pdf_access_success",
+      "new": "tests/golden/test_acquired_subscription_access.py::test_elsevier_http200_first_page_is_not_a_complete_pdf_access_success",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_subscription_access.py::test_iop_real_subscription_html_and_pdf_target_both_return_access_page",
+      "new": "tests/golden/test_acquired_subscription_access.py::test_iop_real_subscription_html_and_pdf_target_both_return_access_page",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_subscription_access.py::test_legacy_elsevier_real_full_view_failures_exhaust_current_api_waterfall",
+      "new": "tests/golden/test_acquired_subscription_access.py::test_legacy_elsevier_real_full_view_failures_exhaust_current_api_waterfall",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_subscription_access.py::test_oxford_subscription_page_has_explicit_access_denial_and_only_abstract",
+      "new": "tests/golden/test_acquired_subscription_access.py::test_oxford_subscription_page_has_explicit_access_denial_and_only_abstract",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_subscription_access.py::test_real_subscription_page_and_recorded_cli_pdf_acceptance",
+      "new": "tests/golden/test_acquired_subscription_access.py::test_real_subscription_page_and_recorded_cli_pdf_acceptance",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_subscription_access.py::test_tandf_subscription_page_has_article_purchase_and_no_fulltext",
+      "new": "tests/golden/test_acquired_subscription_access.py::test_tandf_subscription_page_has_article_purchase_and_no_fulltext",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acquired_wiley_pdf.py::test_captured_tdm_pdf_current_wiley_fallback_and_final_acceptance",
+      "new": "tests/golden/test_acquired_wiley_pdf.py::test_captured_tdm_pdf_current_wiley_fallback_and_final_acceptance",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acs_provider.py::test_acs_silverchair_formula_fixture_preserves_mathml_and_tables",
+      "new": "tests/golden/test_acs_provider.py::test_acs_silverchair_formula_fixture_preserves_mathml_and_tables",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_acs_provider.py::test_acs_silverchair_structure_fixture_extracts_complete_current_article",
+      "new": "tests/golden/test_acs_provider.py::test_acs_silverchair_structure_fixture_extracts_complete_current_article",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_aip_provider.py::test_real_aip_energy_equations_and_lattice_parameter_table",
+      "new": "tests/golden/test_aip_provider.py::test_real_aip_energy_equations_and_lattice_parameter_table",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_aip_provider.py::test_real_aip_ion_pump_figure_identity_and_caption",
+      "new": "tests/golden/test_aip_provider.py::test_real_aip_ion_pump_figure_identity_and_caption",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_aies_fixture_preserves_inline_mathml_formulas",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_aies_fixture_preserves_inline_mathml_formulas",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_aies_table_image_is_not_rewritten_to_next_figure",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_aies_table_image_is_not_rewritten_to_next_figure",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_bams_fixture_keeps_late_body_sections",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_bams_fixture_keeps_late_body_sections",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_caption_inline_markup_is_preserved",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_caption_inline_markup_is_preserved",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_data_availability_stays_before_appendix",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_data_availability_stays_before_appendix",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_downloaded_inline_figure_and_table_assets_do_not_repeat_at_tail",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_downloaded_inline_figure_and_table_assets_do_not_repeat_at_tail",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_figures_are_inline_with_complete_caption_without_chrome",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_figures_are_inline_with_complete_caption_without_chrome",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_fixture_extracts_mixed_tiff_and_eps_download_figure_sources",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_fixture_extracts_mixed_tiff_and_eps_download_figure_sources",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_formula_cleanup_removes_mathjax_fallback_noise",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_formula_cleanup_removes_mathjax_fallback_noise",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_inline_renderer_preserves_body_subscripts_and_spacing",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_inline_renderer_preserves_body_subscripts_and_spacing",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_inline_spacing_repairs_prose_parentheses_conservatively",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_inline_spacing_repairs_prose_parentheses_conservatively",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::test_ams_inline_supplements_are_scoped_to_parent_and_deduplicated",
+      "new": "tests/golden/test_ams_provider.py::test_ams_inline_supplements_are_scoped_to_parent_and_deduplicated",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_numbered_display_equations_use_source_labels_only",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_numbered_display_equations_use_source_labels_only",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_table_images_are_extracted_and_rendered_inline",
+      "new": "tests/golden/test_ams_provider.py::AmsProviderTests::test_ams_table_images_are_extracted_and_rendered_inline",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_complete_formula_assets.py::test_every_source_equation_gif_has_one_downloadable_asset",
+      "new": "tests/golden/test_annualreviews_complete_formula_assets.py::test_every_source_equation_gif_has_one_downloadable_asset",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_article_model_uses_extracted_html_title_instead_of_doi_placeholder",
+      "new": "tests/golden/test_annualreviews_provider.py::test_article_model_uses_extracted_html_title_instead_of_doi_placeholder",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_extracts_authors_references_and_body_figure_assets",
+      "new": "tests/golden/test_annualreviews_provider.py::test_extracts_authors_references_and_body_figure_assets",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_golden_replay_rewrites_downloaded_figure_assets_to_local_paths",
+      "new": "tests/golden/test_annualreviews_provider.py::test_golden_replay_rewrites_downloaded_figure_assets_to_local_paths",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_markdown_contract_figure_fixture",
+      "new": "tests/golden/test_annualreviews_provider.py::test_markdown_contract_figure_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_markdown_contract_pdf_fallback_fixture",
+      "new": "tests/golden/test_annualreviews_provider.py::test_markdown_contract_pdf_fallback_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_markdown_contract_references_fixture",
+      "new": "tests/golden/test_annualreviews_provider.py::test_markdown_contract_references_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_markdown_contract_structure_fixture",
+      "new": "tests/golden/test_annualreviews_provider.py::test_markdown_contract_structure_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_markdown_contract_supplementary_fixture",
+      "new": "tests/golden/test_annualreviews_provider.py::test_markdown_contract_supplementary_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_markdown_contract_table_fixture",
+      "new": "tests/golden/test_annualreviews_provider.py::test_markdown_contract_table_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_neuroscience_fixture_preserves_text_and_ion_formatting",
+      "new": "tests/golden/test_annualreviews_provider.py::test_neuroscience_fixture_preserves_text_and_ion_formatting",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_pdf_fallback_contract_uses_pdf_magic_and_annualreviews_pdf_source",
+      "new": "tests/golden/test_annualreviews_provider.py::test_pdf_fallback_contract_uses_pdf_magic_and_annualreviews_pdf_source",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_real_empty_shell_does_not_promote_page_chrome_to_fulltext",
+      "new": "tests/golden/test_annualreviews_provider.py::test_real_empty_shell_does_not_promote_page_chrome_to_fulltext",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_real_numbered_equation_images_preserve_identity_and_position",
+      "new": "tests/golden/test_annualreviews_provider.py::test_real_numbered_equation_images_preserve_identity_and_position",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_supplementary_files_download_and_render_with_partial_failures",
+      "new": "tests/golden/test_annualreviews_provider.py::test_supplementary_files_download_and_render_with_partial_failures",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_annualreviews_provider.py::test_supplementary_fixture_discovers_five_official_files_and_filters_scope",
+      "new": "tests/golden/test_annualreviews_provider.py::test_supplementary_fixture_discovers_five_official_files_and_filters_scope",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_artifact_secret_scan.py::test_controlled_pytest_failure_junit_cannot_render_live_secret",
+      "new": "tests/integration/test_artifact_secret_scan.py::test_controlled_pytest_failure_junit_cannot_render_live_secret",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_api_failure_uses_html_frontmatter_metadata_without_untitled_article",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_api_failure_uses_html_frontmatter_metadata_without_untitled_article",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_api_metadata_success_takes_priority_over_html_frontmatter_metadata",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_api_metadata_success_takes_priority_over_html_frontmatter_metadata",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_api_transient_failure_continues_to_pdf_fallback_when_html_is_unavailable",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_api_transient_failure_continues_to_pdf_fallback_when_html_is_unavailable",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_api_transient_failure_with_arxiv_doi_uses_derived_html_url",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_api_transient_failure_with_arxiv_doi_uses_derived_html_url",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_arxiv_html_metrics_section_remains_renderable_body_content",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_arxiv_html_metrics_section_remains_renderable_body_content",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_arxiv_html_section_hints_are_limited_to_article_dom",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_arxiv_html_section_hints_are_limited_to_article_dom",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_arxiv_route_fixtures_have_expected_html_or_pdf_assets",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_arxiv_route_fixtures_have_expected_html_or_pdf_assets",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::TestArxivAncillaryAssets::test_attachments_obey_shared_bytes_and_file_budgets",
+      "new": "tests/golden/test_arxiv_provider.py::TestArxivAncillaryAssets::test_attachments_obey_shared_bytes_and_file_budgets",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_crossref_only_preferred_providers_skip_arxiv_fulltext",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_crossref_only_preferred_providers_skip_arxiv_fulltext",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_default_api_enrichment_fills_authors_when_html_has_no_author_dom",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_default_api_enrichment_fills_authors_when_html_has_no_author_dom",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_download_dir_saves_arxiv_html_payload_only",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_download_dir_saves_arxiv_html_payload_only",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_fetch_metadata_rejects_api_result_for_different_arxiv_id",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_fetch_metadata_rejects_api_result_for_different_arxiv_id",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_fetch_metadata_uses_replayed_arxiv_api_result",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_fetch_metadata_uses_replayed_arxiv_api_result",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_fetch_paper_uses_arxiv_provider_for_resolved_arxiv_id",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_fetch_paper_uses_arxiv_provider_for_resolved_arxiv_id",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_404_directly_requests_pdf_fallback",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_404_directly_requests_pdf_fallback",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::TestArxivAncillaryAssets::test_html_downloads_notebooks_pdf_and_same_basename_paths",
+      "new": "tests/golden/test_arxiv_provider.py::TestArxivAncillaryAssets::test_html_downloads_notebooks_pdf_and_same_basename_paths",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_asset_download_limits_concurrency_and_retries_network_failures",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_asset_download_limits_concurrency_and_retries_network_failures",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_asset_partial_failure_surfaces_quality_diagnostics",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_asset_partial_failure_surfaces_quality_diagnostics",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_asset_profile_none_skips_asset_downloads",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_asset_profile_none_skips_asset_downloads",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_collapses_plain_prose_hard_linebreaks_in_real_arxiv_fixtures",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_collapses_plain_prose_hard_linebreaks_in_real_arxiv_fixtures",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_downloads_body_figure_assets_for_body_profile",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_downloads_body_figure_assets_for_body_profile",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_extracts_multi_image_multi_caption_figures",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_extracts_multi_image_multi_caption_figures",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_extracts_sections_abstract_formulas_and_citations_from_fixture",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_extracts_sections_abstract_formulas_and_citations_from_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_inlines_all_images_from_shared_caption_figures_once",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_inlines_all_images_from_shared_caption_figures_once",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_inlines_single_official_html_figure_without_trailing_figures",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_inlines_single_official_html_figure_without_trailing_figures",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_keeps_all_images_from_shared_caption_figures",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_keeps_all_images_from_shared_caption_figures",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_keeps_images_but_suppresses_repeated_appendix_captions",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_keeps_images_but_suppresses_repeated_appendix_captions",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_lifts_cross_column_table_titles_and_keeps_pipe_tables_valid",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_lifts_cross_column_table_titles_and_keeps_pipe_tables_valid",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_normalizes_footnotes_tables_and_image_alt_noise",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_normalizes_footnotes_tables_and_image_alt_noise",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_normalizes_math_without_duplicate_fallback_text",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_normalizes_math_without_duplicate_fallback_text",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_omits_bare_table_heading_for_unnumbered_tables",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_omits_bare_table_heading_for_unnumbered_tables",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_preserves_algorithm_listing_from_fixture",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_preserves_algorithm_listing_from_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_preserves_tables_and_cleans_error_and_alt_noise",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_preserves_tables_and_cleans_error_and_alt_noise",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_recovers_missing_official_html_images_from_source_archive",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_recovers_missing_official_html_images_from_source_archive",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_renders_ordered_lists_as_markdown_numbers",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_renders_ordered_lists_as_markdown_numbers",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_strips_visible_unordered_list_markers_once",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_strips_visible_unordered_list_markers_once",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_unmatched_figure_asset_stays_caption_only_and_can_append_fallback",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_unmatched_figure_asset_stays_caption_only_and_can_append_fallback",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_upgrades_existing_preview_from_official_source_archive",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_upgrades_existing_preview_from_official_source_archive",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_route_uses_dom_id_labels_for_captionless_panel_figures",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_route_uses_dom_id_labels_for_captionless_panel_figures",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_html_success_requests_official_html_then_default_api_enrichment",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_html_success_requests_official_html_then_default_api_enrichment",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_insufficient_html_body_directly_requests_pdf_fallback",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_insufficient_html_body_directly_requests_pdf_fallback",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_internal_atom_parse_failure_keeps_html_fulltext_payload",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_internal_atom_parse_failure_keeps_html_fulltext_payload",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_no_download_returns_markdown_without_payload_artifacts",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_no_download_returns_markdown_without_payload_artifacts",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::TestArxivAncillaryAssets::test_no_extra_requests_without_all_and_asset_output",
+      "new": "tests/golden/test_arxiv_provider.py::TestArxivAncillaryAssets::test_no_extra_requests_without_all_and_asset_output",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_non_html_candidate_directly_requests_pdf_fallback",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_non_html_candidate_directly_requests_pdf_fallback",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::TestArxivAncillaryAssets::test_pdf_figures_and_attachments_are_registered_once_and_keep_fallback",
+      "new": "tests/golden/test_arxiv_provider.py::TestArxivAncillaryAssets::test_pdf_figures_and_attachments_are_registered_once_and_keep_fallback",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::ArxivProviderTests::test_polluted_html_body_directly_requests_pdf_fallback",
+      "new": "tests/golden/test_arxiv_provider.py::ArxivProviderTests::test_polluted_html_body_directly_requests_pdf_fallback",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::TestArxivAncillaryAssets::test_real_complete_lists_and_nested_paths",
+      "new": "tests/golden/test_arxiv_provider.py::TestArxivAncillaryAssets::test_real_complete_lists_and_nested_paths",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::TestArxivAncillaryAssets::test_service_acceptance_and_asset_failures_preserve_successful_body",
+      "new": "tests/golden/test_arxiv_provider.py::TestArxivAncillaryAssets::test_service_acceptance_and_asset_failures_preserve_successful_body",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::TestArxivAncillaryAssets::test_unversioned_request_pins_body_and_enrichment_preserves_version",
+      "new": "tests/golden/test_arxiv_provider.py::TestArxivAncillaryAssets::test_unversioned_request_pins_body_and_enrichment_preserves_version",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atomic_commit_and_singleflight.py::test_same_path_process_writers_share_the_path_lock",
+      "new": "tests/integration/test_atomic_commit_and_singleflight.py::test_same_path_process_writers_share_the_path_lock",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_pnas_abstract_fixture_is_rejected",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_pnas_abstract_fixture_is_rejected",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_pnas_collateral_data_availability_fixture_is_not_duplicated",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_pnas_collateral_data_availability_fixture_is_not_duplicated",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_pnas_full_fixture_extracts_body_sections_from_real_html",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_pnas_full_fixture_extracts_body_sections_from_real_html",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_pnas_full_fixture_keeps_data_availability_and_renders_table_markdown",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_pnas_full_fixture_keeps_data_availability_and_renders_table_markdown",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_pnas_full_fixture_omits_real_page_collateral_noise",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_pnas_full_fixture_omits_real_page_collateral_noise",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_pnas_real_figure_identity_and_equation_bodies",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_pnas_real_figure_identity_and_equation_bodies",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_adp0212_fixture_splits_display_equations_and_caption_sentences",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_adp0212_fixture_splits_display_equations_and_caption_sentences",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_fixture_extracts_fulltext_markdown",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_fixture_extracts_fulltext_markdown",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_fixture_keeps_data_availability_but_filters_teaser_figure",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_fixture_keeps_data_availability_but_filters_teaser_figure",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_fixture_markdown_omits_frontmatter_and_collateral_noise",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_fixture_markdown_omits_frontmatter_and_collateral_noise",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_perspective_fixture_extracts_fulltext_without_section_headings",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_perspective_fixture_extracts_fulltext_without_section_headings",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_real_fixture_does_not_leak_competing_interests_modal",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_real_fixture_does_not_leak_competing_interests_modal",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_real_tables_preserve_headers_cells_and_scripts",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_science_real_tables_preserve_headers_cells_and_scripts",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_fixture_renders_rule_table_as_markdown_table",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_fixture_renders_rule_table_as_markdown_table",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_formula_image_fallbacks_are_preserved",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_formula_image_fallbacks_are_preserved",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_full_fixture_extracts_body_sections_from_real_html",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_full_fixture_extracts_body_sections_from_real_html",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_full_fixture_keeps_data_availability_but_filters_other_back_matter",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_full_fixture_keeps_data_availability_but_filters_other_back_matter",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_full_fixture_omits_real_page_collateral_noise",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_full_fixture_omits_real_page_collateral_noise",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_labeled_formula_image_fixture_does_not_render_label_as_math",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_labeled_formula_image_fixture_does_not_render_label_as_math",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_real_fixture_does_not_count_research_funding_as_body",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_real_fixture_does_not_count_research_funding_as_body",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_references_use_visible_citation_text_not_doi_only",
+      "new": "tests/golden/test_atypon_browser_workflow_markdown.py::AtyponBrowserWorkflowMarkdownTests::test_wiley_references_use_visible_citation_text_not_doi_only",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_pnas_real_commentary_keeps_headingless_body_flat",
+      "new": "tests/golden/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_pnas_real_commentary_keeps_headingless_body_flat",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_pnas_real_fixture_keeps_significance_and_abstract_before_main_text",
+      "new": "tests/golden/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_pnas_real_fixture_keeps_significance_and_abstract_before_main_text",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_pnas_real_fixture_preserves_figures_equations_and_heading_trimming",
+      "new": "tests/golden/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_pnas_real_fixture_preserves_figures_equations_and_heading_trimming",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_pnas_real_fixture_renders_table_and_inline_cell_formatting",
+      "new": "tests/golden/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_pnas_real_fixture_renders_table_and_inline_cell_formatting",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_science_real_fixture_keeps_formula_and_figure_caption_spacing",
+      "new": "tests/golden/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_science_real_fixture_keeps_formula_and_figure_caption_spacing",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_science_real_frontmatter_fixture_preserves_structured_summaries_and_main_text",
+      "new": "tests/golden/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_science_real_frontmatter_fixture_preserves_structured_summaries_and_main_text",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_shared_equation_normalization_handles_real_science_and_pnas_fixtures",
+      "new": "tests/golden/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_shared_equation_normalization_handles_real_science_and_pnas_fixtures",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_wiley_real_fixture_appends_abbreviations_after_body_content",
+      "new": "tests/golden/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_wiley_real_fixture_appends_abbreviations_after_body_content",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_wiley_real_fixture_filters_frontmatter_and_viewer_noise",
+      "new": "tests/golden/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_wiley_real_fixture_filters_frontmatter_and_viewer_noise",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_wiley_real_fixture_keeps_methods_subcontent_in_body",
+      "new": "tests/golden/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_wiley_real_fixture_keeps_methods_subcontent_in_body",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_provider_fallbacks.py::AtyponBrowserWorkflowProviderFallbackTests::test_pnas_provider_fetch_result_recovers_pdf_when_html_article_is_abstract_only",
+      "new": "tests/golden/test_atypon_browser_workflow_provider_fallbacks.py::AtyponBrowserWorkflowProviderFallbackTests::test_pnas_provider_fetch_result_recovers_pdf_when_html_article_is_abstract_only",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_provider_fallbacks.py::AtyponBrowserWorkflowProviderFallbackTests::test_pnas_provider_fetch_result_returns_abstract_only_when_pdf_recovery_fails",
+      "new": "tests/golden/test_atypon_browser_workflow_provider_fallbacks.py::AtyponBrowserWorkflowProviderFallbackTests::test_pnas_provider_fetch_result_returns_abstract_only_when_pdf_recovery_fails",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_provider_fallbacks.py::AtyponBrowserWorkflowProviderFallbackTests::test_science_provider_fetch_result_recovers_pdf_for_paywall_sample_markdown",
+      "new": "tests/golden/test_atypon_browser_workflow_provider_fallbacks.py::AtyponBrowserWorkflowProviderFallbackTests::test_science_provider_fetch_result_recovers_pdf_for_paywall_sample_markdown",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_provider_fallbacks.py::AtyponBrowserWorkflowProviderFallbackTests::test_science_provider_fetch_result_returns_abstract_only_when_pdf_recovery_fails",
+      "new": "tests/golden/test_atypon_browser_workflow_provider_fallbacks.py::AtyponBrowserWorkflowProviderFallbackTests::test_science_provider_fetch_result_returns_abstract_only_when_pdf_recovery_fails",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_pnas_provider_keeps_frontmatter_once_and_filters_collateral_noise_in_final_render",
+      "new": "tests/golden/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_pnas_provider_keeps_frontmatter_once_and_filters_collateral_noise_in_final_render",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_pnas_provider_renders_headingless_commentary_without_synthetic_title_section",
+      "new": "tests/golden/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_pnas_provider_renders_headingless_commentary_without_synthetic_title_section",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_provider_owned_html_signals_populate_final_article_authors",
+      "new": "tests/golden/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_provider_owned_html_signals_populate_final_article_authors",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_science_provider_keeps_frontmatter_sections_but_only_one_abstract_in_final_article",
+      "new": "tests/golden/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_science_provider_keeps_frontmatter_sections_but_only_one_abstract_in_final_article",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_science_provider_replay_for_adl6155_keeps_materials_and_methods_wrapper_heading",
+      "new": "tests/golden/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_science_provider_replay_for_adl6155_keeps_materials_and_methods_wrapper_heading",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_wiley_provider_deduplicates_near_matching_abstract_in_final_article_render",
+      "new": "tests/golden/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_wiley_provider_deduplicates_near_matching_abstract_in_final_article_render",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_wiley_provider_replay_for_2004gb002273_body_assets_avoid_trailing_figures_noise",
+      "new": "tests/golden/test_atypon_browser_workflow_provider_html.py::AtyponBrowserWorkflowProviderHtmlTests::test_wiley_provider_replay_for_2004gb002273_body_assets_avoid_trailing_figures_noise",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_block_corpus.py::test_block_raw_response_matches_current_extractor_rejection_contract",
+      "new": "tests/golden/test_block_corpus.py::test_block_raw_response_matches_current_extractor_rejection_contract",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_browser_workflow_fetchers.py::test_wiley_click_survives_collapsed_panel_redraw_in_browser",
+      "new": "tests/integration/test_browser_workflow_fetchers.py::test_wiley_click_survives_collapsed_panel_redraw_in_browser",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_browser_workflow_fetchers.py::test_wiley_picture_uses_loaded_target_at_both_viewports",
+      "new": "tests/integration/test_browser_workflow_fetchers.py::test_wiley_picture_uses_loaded_target_at_both_viewports",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_camoufox_backend.py::test_managed_camoufox_process_lock_prevents_duplicate_install",
+      "new": "tests/integration/test_camoufox_backend.py::test_managed_camoufox_process_lock_prevents_duplicate_install",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_collected_asset_files.py::test_captured_collection_download_and_final_article_links",
+      "new": "tests/golden/test_collected_asset_files.py::test_captured_collection_download_and_final_article_links",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_collected_asset_files.py::test_fixed_scope_and_independent_collection_counts",
+      "new": "tests/golden/test_collected_asset_files.py::test_fixed_scope_and_independent_collection_counts",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_collected_asset_files.py::test_original_source_contains_the_complete_discovered_collection",
+      "new": "tests/golden/test_collected_asset_files.py::test_original_source_contains_the_complete_discovered_collection",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_collected_asset_files.py::test_removed_supplementary_files_are_absent_from_fixture_catalog",
+      "new": "tests/golden/test_collected_asset_files.py::test_removed_supplementary_files_are_absent_from_fixture_catalog",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_collected_asset_files.py::test_supplementary_indexes_keep_article_link_metadata_without_payloads",
+      "new": "tests/golden/test_collected_asset_files.py::test_supplementary_indexes_keep_article_link_metadata_without_payloads",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_collected_asset_files.py::test_xml_provider_owns_the_complete_download_and_article_chain",
+      "new": "tests/golden/test_collected_asset_files.py::test_xml_provider_owns_the_complete_download_and_article_chain",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_confirmed_paywall_stop.py::test_http_error_with_real_article_gate_stops_before_browser_or_pdf",
+      "new": "tests/golden/test_confirmed_paywall_stop.py::test_http_error_with_real_article_gate_stops_before_browser_or_pdf",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_confirmed_paywall_stop.py::test_real_official_api_entitlement_stops_xml_pdf_pii_and_abstract_requests",
+      "new": "tests/golden/test_confirmed_paywall_stop.py::test_real_official_api_entitlement_stops_xml_pdf_pii_and_abstract_requests",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_confirmed_paywall_stop.py::test_real_subscription_pages_confirm_same_article_and_preserve_abstract",
+      "new": "tests/golden/test_confirmed_paywall_stop.py::test_real_subscription_pages_confirm_same_article_and_preserve_abstract",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_copernicus_provider.py::test_real_acp_figure_and_numbered_equations",
+      "new": "tests/golden/test_copernicus_provider.py::test_real_acp_figure_and_numbered_equations",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_copernicus_provider.py::test_real_bg_table_preserves_cals_column_associations",
+      "new": "tests/golden/test_copernicus_provider.py::test_real_bg_table_preserves_cals_column_associations",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_build_article_structure_extracts_numbered_xml_references",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_build_article_structure_extracts_numbered_xml_references",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_appendix_figure_renders_as_figure_block",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_appendix_figure_renders_as_figure_block",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_appendix_reference_keeps_asset_in_appendix",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_appendix_reference_keeps_asset_in_appendix",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_appendix_table_renders_as_markdown_table",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_appendix_table_renders_as_markdown_table",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_golden_fixture_classifies_data_and_code_availability_sections",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_golden_fixture_classifies_data_and_code_availability_sections",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::test_elsevier_original_mathml_sample_has_no_independent_formula_supplements",
+      "new": "tests/golden/test_elsevier_markdown.py::test_elsevier_original_mathml_sample_has_no_independent_formula_supplements",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_real_complex_table_records_successful_normalization",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_real_complex_table_records_successful_normalization",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_real_display_formula_renders_as_formula_block",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_real_display_formula_renders_as_formula_block",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_real_multilevel_header_is_flattened_without_body_header_row",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_real_multilevel_header_is_flattened_without_body_header_row",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_regression_32_preserves_independent_table_groups",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_regression_32_preserves_independent_table_groups",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_regression_42_uses_two_official_formula_images",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_regression_42_uses_two_official_formula_images",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_regression_97_renders_wbgt_t_at_groups_in_order",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_regression_97_renders_wbgt_t_at_groups_in_order",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_table_placement_contracts",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_elsevier_table_placement_contracts",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_real_author_manuscript_alias_is_registered_and_rendered_once",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_real_author_manuscript_alias_is_registered_and_rendered_once",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_real_graphical_abstract_from_golden_xml_is_excluded_from_figures",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_real_graphical_abstract_from_golden_xml_is_excluded_from_figures",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_elsevier_markdown.py::ElsevierMarkdownTests::test_real_supplementary_e_component_from_golden_xml_is_listed",
+      "new": "tests/golden/test_elsevier_markdown.py::ElsevierMarkdownTests::test_real_supplementary_e_component_from_golden_xml_is_listed",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_formula_conversion.py::FormulaConversionTests::test_external_formula_command_replaces_invalid_utf8_output",
+      "new": "tests/integration/test_formula_conversion.py::FormulaConversionTests::test_external_formula_command_replaces_invalid_utf8_output",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_formula_conversion.py::FormulaConversionTests::test_texmath_exe_under_formula_tools_is_discovered",
+      "new": "tests/integration/test_formula_conversion.py::FormulaConversionTests::test_texmath_exe_under_formula_tools_is_discovered",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_frontiers_provider.py::test_real_fmars_figure_and_scoc_equation",
+      "new": "tests/golden/test_frontiers_provider.py::test_real_fmars_figure_and_scoc_equation",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_frontiers_provider.py::test_real_fmars_treatment_table_preserves_species_and_cells",
+      "new": "tests/golden/test_frontiers_provider.py::test_real_fmars_treatment_table_preserves_species_and_cells",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/integration/test_golden_corpus.py::test_golden_corpus_expected_summary_matches_current_extractor",
+      "new": "tests/golden/test_golden_corpus.py::test_golden_corpus_expected_summary_matches_current_extractor",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/integration/test_golden_corpus.py::test_golden_corpus_uses_declared_providers",
+      "new": "tests/golden/test_golden_corpus.py::test_golden_corpus_uses_declared_providers",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_golden_corpus_adapters.py::test_exact_fixture_shards_cover_every_fixture_once_without_splitting_provider",
+      "new": null,
+      "reason": "分片功能移除；全量参数清单与默认收集排除 golden 改由分层入口测试验证。"
+    },
+    {
+      "old": "tests/unit/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_accepts_pnas_fulltext_fixture_despite_institutional_login_chrome",
+      "new": "tests/golden/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_accepts_pnas_fulltext_fixture_despite_institutional_login_chrome",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_accepts_science_entitled_fulltext_fixture",
+      "new": "tests/golden/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_accepts_science_entitled_fulltext_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_accepts_wiley_fulltext_fixture_despite_login_chrome",
+      "new": "tests/golden/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_accepts_wiley_fulltext_fixture_despite_login_chrome",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_rejects_pnas_paywall_metadata_with_abstract",
+      "new": "tests/golden/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_rejects_pnas_paywall_metadata_with_abstract",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_rejects_science_paywall_sample_with_abstract",
+      "new": "tests/golden/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_rejects_science_paywall_sample_with_abstract",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_rejects_springer_paywall_samples_without_promoting_ancillary_sections",
+      "new": "tests/golden/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_rejects_springer_paywall_samples_without_promoting_ancillary_sections",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_rejects_wiley_paywall_metadata_with_abstract",
+      "new": "tests/golden/test_html_availability.py::HtmlAvailabilityTests::test_assess_html_rejects_wiley_paywall_metadata_with_abstract",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_availability.py::HtmlAvailabilityTests::test_body_metrics_excludes_real_structural_back_matter_and_chrome_headings",
+      "new": "tests/golden/test_html_availability.py::HtmlAvailabilityTests::test_body_metrics_excludes_real_structural_back_matter_and_chrome_headings",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_semantics.py::HtmlSemanticsTests::test_heading_category_maps_canonical_headings",
+      "new": "tests/golden/test_html_semantics.py::HtmlSemanticsTests::test_heading_category_maps_canonical_headings",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_semantics.py::HtmlSemanticsTests::test_markdown_heading_taxonomy_maps_article_sections",
+      "new": "tests/golden/test_html_semantics.py::HtmlSemanticsTests::test_markdown_heading_taxonomy_maps_article_sections",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_shared_helpers.py::SharedHtmlHelperTests::test_extract_formula_assets_reuses_shared_formula_rules",
+      "new": "tests/golden/test_html_shared_helpers.py::SharedHtmlHelperTests::test_extract_formula_assets_reuses_shared_formula_rules",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_shared_helpers.py::SharedHtmlHelperTests::test_formula_rules_detect_real_formula_image_urls",
+      "new": "tests/golden/test_html_shared_helpers.py::SharedHtmlHelperTests::test_formula_rules_detect_real_formula_image_urls",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_shared_helpers.py::SharedHtmlHelperTests::test_pnas_real_fixture_supplementary_ignores_body_anchor_to_section",
+      "new": "tests/golden/test_html_shared_helpers.py::SharedHtmlHelperTests::test_pnas_real_fixture_supplementary_ignores_body_anchor_to_section",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_shared_helpers.py::SharedHtmlHelperTests::test_real_nature_fixture_keeps_source_data_without_chrome_sections",
+      "new": "tests/golden/test_html_shared_helpers.py::SharedHtmlHelperTests::test_real_nature_fixture_keeps_source_data_without_chrome_sections",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_shared_helpers.py::SharedHtmlHelperTests::test_science_real_fixture_supplementary_comes_only_from_supplementary_section",
+      "new": "tests/golden/test_html_shared_helpers.py::SharedHtmlHelperTests::test_science_real_fixture_supplementary_comes_only_from_supplementary_section",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_html_shared_helpers.py::SharedHtmlHelperTests::test_wiley_real_fixture_supporting_information_only_yields_true_supplementary_asset",
+      "new": "tests/golden/test_html_shared_helpers.py::SharedHtmlHelperTests::test_wiley_real_fixture_supporting_information_only_yields_true_supplementary_asset",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_ieee_html_payload_merges_multimedia_supplementary_assets_from_landing_scope",
+      "new": "tests/golden/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_ieee_html_payload_merges_multimedia_supplementary_assets_from_landing_scope",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_real_ieee_multimedia_fixture_yields_supplementary_asset_from_explicit_scope",
+      "new": "tests/golden/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_real_ieee_multimedia_fixture_yields_supplementary_asset_from_explicit_scope",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ieee_provider_pdf_golden.py::IeeeProviderPdfGoldenTests::test_ieee_golden_criteria_manifest_records_expected_shapes",
+      "new": "tests/golden/test_ieee_provider_pdf_golden.py::IeeeProviderPdfGoldenTests::test_ieee_golden_criteria_manifest_records_expected_shapes",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ieee_provider_pdf_golden.py::IeeeProviderPdfGoldenTests::test_ieee_tim_fixture_original_html_is_parsed_as_body",
+      "new": "tests/golden/test_ieee_provider_pdf_golden.py::IeeeProviderPdfGoldenTests::test_ieee_tim_fixture_original_html_is_parsed_as_body",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ieee_provider_pdf_golden.py::IeeeProviderPdfGoldenTests::test_legacy_fixture_pdf_candidates_preserve_pdf_url_pdf_path_stamp_order",
+      "new": "tests/golden/test_ieee_provider_pdf_golden.py::IeeeProviderPdfGoldenTests::test_legacy_fixture_pdf_candidates_preserve_pdf_url_pdf_path_stamp_order",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_ieee_provider_pdf_golden.py::IeeeProviderPdfGoldenTests::test_real_ieee_html_golden_samples_preserve_semantics",
+      "new": "tests/golden/test_ieee_provider_pdf_golden.py::IeeeProviderPdfGoldenTests::test_real_ieee_html_golden_samples_preserve_semantics",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_iop_provider.py::test_iop_real_article_replay_does_not_promote_figure_controls_or_qr_to_supplementary",
+      "new": "tests/golden/test_iop_provider.py::test_iop_real_article_replay_does_not_promote_figure_controls_or_qr_to_supplementary",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_iop_provider.py::test_iop_real_pdf_fallback_fixture_records_iop_pdf_source",
+      "new": "tests/golden/test_iop_provider.py::test_iop_real_pdf_fallback_fixture_records_iop_pdf_source",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_iop_provider.py::test_iop_real_replay_covers_table_and_formula_purposes",
+      "new": "tests/golden/test_iop_provider.py::test_iop_real_replay_covers_table_and_formula_purposes",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_jats_body_availability.py::test_shared_jats_renderer_normalizes_real_frontiers_and_copernicus_wrapping",
+      "new": "tests/golden/test_jats_body_availability.py::test_shared_jats_renderer_normalizes_real_frontiers_and_copernicus_wrapping",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_abstract_keywords_do_not_render_as_abstract_body",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_abstract_keywords_do_not_render_as_abstract_body",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_display_objects_are_anchored_and_deduplicated",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_display_objects_are_anchored_and_deduplicated",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_extra_real_html_fixtures_extract_fulltext",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_extra_real_html_fixtures_extract_fulltext",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_figure_fixture_markdown_and_assets",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_figure_fixture_markdown_and_assets",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_formula_fallbacks_do_not_fragment_or_emit_unavailable",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_formula_fallbacks_do_not_fragment_or_emit_unavailable",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_formula_fixture_markdown",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_formula_fixture_markdown",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_html_fixtures_to_article_model_are_fulltext",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_html_fixtures_to_article_model_are_fulltext",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_markdown_image_alts_are_short_and_balanced",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_markdown_image_alts_are_short_and_balanced",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_markdown_removes_abstract_colon_and_preserves_heading_levels",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_markdown_removes_abstract_colon_and_preserves_heading_levels",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_pdf_fallback_fixture_exists",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_pdf_fallback_fixture_exists",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_reference_ui_tokens_are_removed_from_markdown_and_raw_references",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_reference_ui_tokens_are_removed_from_markdown_and_raw_references",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_references_fixture_markdown",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_references_fixture_markdown",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_structure_fixture_markdown",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_structure_fixture_markdown",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_supplementary_fixture_markdown_and_all_assets",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_supplementary_fixture_markdown_and_all_assets",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_table_fixture_markdown",
+      "new": "tests/golden/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_table_fixture_markdown",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_models_render.py::ModelsRenderTests::test_article_from_markdown_promotes_repeated_methods_summary_to_methods",
+      "new": "tests/golden/test_models_render.py::ModelsRenderTests::test_article_from_markdown_promotes_repeated_methods_summary_to_methods",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_models_render.py::ModelsRenderTests::test_article_from_real_nature_markdown_keeps_methods_summary_without_structure_hints",
+      "new": "tests/golden/test_models_render.py::ModelsRenderTests::test_article_from_real_nature_markdown_keeps_methods_summary_without_structure_hints",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_offline_evidence.py::test_evidence_is_derived_from_actual_staged_target",
+      "new": "tests/integration/test_offline_evidence.py::test_evidence_is_derived_from_actual_staged_target",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_evidence.py::test_python_inventory_hashes_distribution_data_outside_site_packages",
+      "new": "tests/integration/test_offline_evidence.py::test_python_inventory_hashes_distribution_data_outside_site_packages",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_activate_script_is_sourceable_from_macos_default_zsh",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_activate_script_is_sourceable_from_macos_default_zsh",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_activate_script_parses_dotenv_without_executing_shell_code",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_activate_script_parses_dotenv_without_executing_shell_code",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_antigravity_mcp_config_uses_manifest_env_keys_and_preserves_existing_servers",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_antigravity_mcp_config_uses_manifest_env_keys_and_preserves_existing_servers",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_cli_registration_uses_offline_env_with_headless_without_legacy_browser_paths",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_cli_registration_uses_offline_env_with_headless_without_legacy_browser_paths",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_default_install_copies_runtime_to_user_data_dir",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_default_install_copies_runtime_to_user_data_dir",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_default_install_writes_browser_runtime_env_hint",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_default_install_writes_browser_runtime_env_hint",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_install_allows_existing_empty_directory",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_install_allows_existing_empty_directory",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_install_dir_upgrade_cleans_old_payload_and_preserves_offline_env",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_install_dir_upgrade_cleans_old_payload_and_preserves_offline_env",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_install_rejects_home_ancestor_before_removing_existing_content",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_install_rejects_home_ancestor_before_removing_existing_content",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_install_rejects_home_before_removing_existing_content",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_install_rejects_home_before_removing_existing_content",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_install_rejects_nonempty_unowned_directory",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_install_rejects_nonempty_unowned_directory",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_install_rejects_symlink_to_nonempty_unowned_directory",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_install_rejects_symlink_to_nonempty_unowned_directory",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_macos_bundle_headful_preset_sets_headless_false",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_macos_bundle_headful_preset_sets_headless_false",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_macos_checksum_failure_precedes_quarantine_check",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_macos_checksum_failure_precedes_quarantine_check",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_macos_host_below_manifest_minimum_is_rejected_before_writes",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_macos_host_below_manifest_minimum_is_rejected_before_writes",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_macos_quarantine_fails_before_user_writes",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_macos_quarantine_fails_before_user_writes",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_macos_rejects_nonstandard_cpython_abi_before_writes",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_macos_rejects_nonstandard_cpython_abi_before_writes",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_macos_rejects_rosetta_python_before_writes",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_macos_rejects_rosetta_python_before_writes",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_macos_user_config_uses_application_support",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_macos_user_config_uses_application_support",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_macos_xattr_inspection_error_fails_closed_before_user_writes",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_macos_xattr_inspection_error_fails_closed_before_user_writes",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_matching_manifest_and_interpreter_tags_are_accepted",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_matching_manifest_and_interpreter_tags_are_accepted",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_mismatched_manifest_and_interpreter_tag_is_rejected",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_mismatched_manifest_and_interpreter_tag_is_rejected",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_missing_codex_cli_writes_config_toml_with_headless_without_browser_paths",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_missing_codex_cli_writes_config_toml_with_headless_without_browser_paths",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_missing_skill_reference_is_rejected_after_checksum_passes",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_missing_skill_reference_is_rejected_after_checksum_passes",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_purge_from_installed_copy_allows_owned_target",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_purge_from_installed_copy_allows_owned_target",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_purge_normalizes_owned_dot_path_before_deletion",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_purge_normalizes_owned_dot_path_before_deletion",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_purge_rejects_home_ancestor_before_removing_integrations",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_purge_rejects_home_ancestor_before_removing_integrations",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_purge_rejects_home_before_removing_integrations",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_purge_rejects_home_before_removing_integrations",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_purge_rejects_owned_symlink_before_removing_integrations",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_purge_rejects_owned_symlink_before_removing_integrations",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_purge_rejects_uninstalled_bundle_root",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_purge_rejects_uninstalled_bundle_root",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_purge_removes_install_directory_after_user_level_cleanup",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_purge_removes_install_directory_after_user_level_cleanup",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_purge_requires_install_marker_for_every_owned_target",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_purge_requires_install_marker_for_every_owned_target",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_purge_requires_owned_target_manifest_before_removing_integrations",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_purge_requires_owned_target_manifest_before_removing_integrations",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_reuse_env_file_keeps_file_untouched_and_activate_script_sets_runtime_dirs",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_reuse_env_file_keeps_file_untouched_and_activate_script_sets_runtime_dirs",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_schema_v1_legacy_env_sets_do_not_override_canonical_mcp_keys",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_schema_v1_legacy_env_sets_do_not_override_canonical_mcp_keys",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_shell_startup_blocks_set_headless_without_legacy_browser_paths",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_shell_startup_blocks_set_headless_without_legacy_browser_paths",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_skill_hash_drift_is_rejected_after_bundle_checksum_passes",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_skill_hash_drift_is_rejected_after_bundle_checksum_passes",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_uninstall_removes_user_level_integrations_without_deleting_bundle_data",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_uninstall_removes_user_level_integrations_without_deleting_bundle_data",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_uninstall_without_installer_manifest_keeps_default_markers",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_uninstall_without_installer_manifest_keeps_default_markers",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_unknown_preset_is_rejected",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_unknown_preset_is_rejected",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_unlisted_runtime_payload_is_rejected_before_bundled_python_runs",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_unlisted_runtime_payload_is_rejected_before_bundled_python_runs",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_unlisted_top_level_sitecustomize_is_rejected_before_host_python_import",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_unlisted_top_level_sitecustomize_is_rejected_before_host_python_import",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_install.py::OfflineInstallTests::test_zsh_startup_symlink_is_preserved",
+      "new": "tests/integration/test_offline_install.py::OfflineInstallTests::test_zsh_startup_symlink_is_preserved",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_macos_binary_checks_do_not_accept_arm64_from_path_text",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_macos_binary_checks_do_not_accept_arm64_from_path_text",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_macos_dependency_containment_rejects_escape_symlink_and_nonregular",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_macos_dependency_containment_rejects_escape_symlink_and_nonregular",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_macos_rpath_parser_rejects_absolute_build_host_path",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_macos_rpath_parser_rejects_absolute_build_host_path",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_archive_excludes_staging_ownership_marker",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_archive_excludes_staging_ownership_marker",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_build_rejects_nonempty_unowned_staging_before_cleanup",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_build_rejects_nonempty_unowned_staging_before_cleanup",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_build_rejects_output_directory_inside_staging",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_build_rejects_output_directory_inside_staging",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_build_rejects_repository_as_build_directory_before_cleanup",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_build_rejects_repository_as_build_directory_before_cleanup",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_build_validates_manifest_derived_package_name",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_build_validates_manifest_derived_package_name",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_checksum_inventory_rejects_payload_symlinks",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_checksum_inventory_rejects_payload_symlinks",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_offline_verifier_rejects_malicious_tar_members_before_extraction",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_offline_verifier_rejects_malicious_tar_members_before_extraction",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_package_name_rejects_path_traversal_before_build_cleanup",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_package_name_rejects_path_traversal_before_build_cleanup",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_release_publish_failure_preserves_existing_artifact",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_release_publish_failure_preserves_existing_artifact",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_release_publish_rejects_directory_destinations",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_release_publish_rejects_directory_destinations",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_staging_marker_binds_repo_path_and_package",
+      "new": "tests/integration/test_offline_package_build.py::OfflinePackageBuildTests::test_posix_staging_marker_binds_repo_path_and_package",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_article_html_route_contract_fixture_meets_minimum_body_shape",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_article_html_route_contract_fixture_meets_minimum_body_shape",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_figure_fixture_stage_asset_contract_is_inline_body_image",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_figure_fixture_stage_asset_contract_is_inline_body_image",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_html_fixture_localizes_all_preview_images_without_duplicates",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_html_fixture_localizes_all_preview_images_without_duplicates",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_markdown_contract_figure_fixture",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_markdown_contract_figure_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_markdown_contract_formula_fixture",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_markdown_contract_formula_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_markdown_contract_pdf_fallback_fixture",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_markdown_contract_pdf_fallback_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_markdown_contract_references_fixture",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_markdown_contract_references_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_markdown_contract_structure_fixture",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_markdown_contract_structure_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_markdown_contract_supplementary_fixture",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_markdown_contract_supplementary_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_markdown_contract_table_fixture",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_markdown_contract_table_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_oxford_formula_paragraphs_keep_inline_prose_together",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_oxford_formula_paragraphs_keep_inline_prose_together",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_oxford_references_prefer_visible_html_reference_text",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_oxford_references_prefer_visible_html_reference_text",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_oxford_supplements_exclude_body_pdf_and_dedupe_before_download",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_oxford_supplements_exclude_body_pdf_and_dedupe_before_download",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_pdf_fallback_fixture_is_captured_pdf",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_pdf_fallback_fixture_is_captured_pdf",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_oxfordacademic_provider.py::test_provider_helper_extracts_markdown_from_html_fixture",
+      "new": "tests/golden/test_oxfordacademic_provider.py::test_provider_helper_extracts_markdown_from_html_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_pdf_document_acceptance.py::test_real_html_does_not_offer_citations_supplements_or_previews_as_body",
+      "new": "tests/golden/test_pdf_document_acceptance.py::test_real_html_does_not_offer_citations_supplements_or_previews_as_body",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_pdf_document_acceptance.py::test_real_non_article_pdf_rejected_before_conversion",
+      "new": "tests/golden/test_pdf_document_acceptance.py::test_real_non_article_pdf_rejected_before_conversion",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_pdf_document_acceptance.py::test_rejected_preview_continues_to_full_article",
+      "new": "tests/golden/test_pdf_document_acceptance.py::test_rejected_preview_continues_to_full_article",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_pdf_document_acceptance.py::test_remaining_captured_article_pdfs_pass_identity_without_conversion",
+      "new": "tests/golden/test_pdf_document_acceptance.py::test_remaining_captured_article_pdfs_pass_identity_without_conversion",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_pdf_document_acceptance.py::test_wrong_aip_lecture_continues_to_real_same_article_pdf",
+      "new": "tests/golden/test_pdf_document_acceptance.py::test_wrong_aip_lecture_continues_to_real_same_article_pdf",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_plos_provider.py::test_plos_asset_download_contract_resolves_figure_doi_uri",
+      "new": "tests/golden/test_plos_provider.py::test_plos_asset_download_contract_resolves_figure_doi_uri",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_plos_provider.py::test_plos_asset_download_follows_signed_image_redirect",
+      "new": "tests/golden/test_plos_provider.py::test_plos_asset_download_follows_signed_image_redirect",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_plos_provider.py::test_plos_formula_graphic_assets_are_rendered_and_downloaded",
+      "new": "tests/golden/test_plos_provider.py::test_plos_formula_graphic_assets_are_rendered_and_downloaded",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_plos_provider.py::test_plos_markdown_review_loop_non_null_fixture_contracts",
+      "new": "tests/golden/test_plos_provider.py::test_plos_markdown_review_loop_non_null_fixture_contracts",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_plos_provider.py::test_plos_pdf_fallback_route_uses_pdf_magic_and_rejects_html_wrapper",
+      "new": "tests/golden/test_plos_provider.py::test_plos_pdf_fallback_route_uses_pdf_magic_and_rejects_html_wrapper",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_plos_provider.py::test_plos_runtime_pdf_fallback_rejects_html_xml_candidate",
+      "new": "tests/golden/test_plos_provider.py::test_plos_runtime_pdf_fallback_rejects_html_xml_candidate",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_plos_provider.py::test_plos_runtime_xml_route_fetches_and_converts_jats_fixture",
+      "new": "tests/golden/test_plos_provider.py::test_plos_runtime_xml_route_fetches_and_converts_jats_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_plos_provider.py::test_plos_runtime_xml_route_follows_relative_and_signed_redirects",
+      "new": "tests/golden/test_plos_provider.py::test_plos_runtime_xml_route_follows_relative_and_signed_redirects",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_plos_provider.py::test_plos_xml_redirect_failure_continues_to_pdf_fallback",
+      "new": "tests/golden/test_plos_provider.py::test_plos_xml_redirect_failure_continues_to_pdf_fallback",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_plos_provider.py::test_plos_xml_route_replays_jats_fixture_as_fulltext",
+      "new": "tests/golden/test_plos_provider.py::test_plos_xml_route_replays_jats_fixture_as_fulltext",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_plos_provider.py::test_real_plos_table_preserves_cipher_parameters",
+      "new": "tests/golden/test_plos_provider.py::test_real_plos_table_preserves_cipher_parameters",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_provider_waterfalls.py::PublisherWaterfallTests::test_elsevier_official_xml_success_keeps_elsevier_xml_source",
+      "new": "tests/golden/test_provider_waterfalls.py::PublisherWaterfallTests::test_elsevier_official_xml_success_keeps_elsevier_xml_source",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_provider_waterfalls.py::PublisherWaterfallTests::test_elsevier_official_xml_usable_records_structured_diagnostics",
+      "new": "tests/golden/test_provider_waterfalls.py::PublisherWaterfallTests::test_elsevier_official_xml_usable_records_structured_diagnostics",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_provider_waterfalls.py::PublisherWaterfallTests::test_elsevier_transient_doi_xml_failure_uses_pii_xml_fallback",
+      "new": "tests/golden/test_provider_waterfalls.py::PublisherWaterfallTests::test_elsevier_transient_doi_xml_failure_uses_pii_xml_fallback",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_elsevier_bilingual_fixture_preserves_parallel_abstract_sections",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_elsevier_bilingual_fixture_preserves_parallel_abstract_sections",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_nature_shared_html_regression_samples",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_nature_shared_html_regression_samples",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_elsevier_negative_sample_falls_back_to_crossref_metadata",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_elsevier_negative_sample_falls_back_to_crossref_metadata",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_uses_elsevier_xml_fixture_for_positive_sample",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_uses_elsevier_xml_fixture_for_positive_sample",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_uses_pnas_replay_fixture_for_positive_sample",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_uses_pnas_replay_fixture_for_positive_sample",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_uses_science_replay_fixture_for_positive_sample",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_uses_science_replay_fixture_for_positive_sample",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_uses_springer_html_provider_for_nature_samples",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_uses_springer_html_provider_for_nature_samples",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_uses_wiley_html_replay_fixture_for_positive_sample",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_uses_wiley_html_replay_fixture_for_positive_sample",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_uses_wiley_pdf_fallback_replay_fixture_for_secondary_sample",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_paper_fetch_uses_wiley_pdf_fallback_replay_fixture_for_secondary_sample",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_sage_bilingual_fixture_preserves_parallel_abstract_sections",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_sage_bilingual_fixture_preserves_parallel_abstract_sections",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_springer_bilingual_fixture_preserves_parallel_abstract_sections",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_springer_bilingual_fixture_preserves_parallel_abstract_sections",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_tandf_bilingual_fixture_preserves_parallel_abstract_sections",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_tandf_bilingual_fixture_preserves_parallel_abstract_sections",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_regression_samples.py::RegressionSampleTests::test_wiley_bilingual_fixture_preserves_parallel_abstract_sections",
+      "new": "tests/golden/test_regression_samples.py::RegressionSampleTests::test_wiley_bilingual_fixture_preserves_parallel_abstract_sections",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_representative_asset_bytes.py::test_existing_same_paper_image_download_and_final_link",
+      "new": "tests/golden/test_representative_asset_bytes.py::test_existing_same_paper_image_download_and_final_link",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_representative_asset_bytes.py::test_new_same_paper_image_download_and_final_link",
+      "new": "tests/golden/test_representative_asset_bytes.py::test_new_same_paper_image_download_and_final_link",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_resolve_offline_dependencies.py::test_verify_cli_runs_without_resolver_site_packages",
+      "new": "tests/integration/test_resolve_offline_dependencies.py::test_verify_cli_runs_without_resolver_site_packages",
+      "reason": "真实进程/安装器执行/浏览器边界"
+    },
+    {
+      "old": "tests/unit/test_reviewed_atypon_springer_content.py::test_all_visible_reference_entries_preserve_text_and_order",
+      "new": "tests/golden/test_reviewed_atypon_springer_content.py::test_all_visible_reference_entries_preserve_text_and_order",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_atypon_springer_content.py::test_ams_full_boundary_layer_water_equation_and_table_bitmap_boundary",
+      "new": "tests/golden/test_reviewed_atypon_springer_content.py::test_ams_full_boundary_layer_water_equation_and_table_bitmap_boundary",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_atypon_springer_content.py::test_complete_representative_table_preserves_every_value_and_column",
+      "new": "tests/golden/test_reviewed_atypon_springer_content.py::test_complete_representative_table_preserves_every_value_and_column",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_atypon_springer_content.py::test_major_body_sections_prose_runs_remain_in_source_order",
+      "new": "tests/golden/test_reviewed_atypon_springer_content.py::test_major_body_sections_prose_runs_remain_in_source_order",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_atypon_springer_content.py::test_original_body_citations_map_to_preserved_reference_entries",
+      "new": "tests/golden/test_reviewed_atypon_springer_content.py::test_original_body_citations_map_to_preserved_reference_entries",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_atypon_springer_content.py::test_reviewed_first_middle_last_reference_identity",
+      "new": "tests/golden/test_reviewed_atypon_springer_content.py::test_reviewed_first_middle_last_reference_identity",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_atypon_springer_content.py::test_science_entire_precipitation_variability_equation",
+      "new": "tests/golden/test_reviewed_atypon_springer_content.py::test_science_entire_precipitation_variability_equation",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_atypon_springer_content.py::test_wiley_complete_approved_device_table_preserves_all_rows",
+      "new": "tests/golden/test_reviewed_atypon_springer_content.py::test_wiley_complete_approved_device_table_preserves_all_rows",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_atypon_springer_content.py::test_wiley_original_figure_and_image_only_formula_identity",
+      "new": "tests/golden/test_reviewed_atypon_springer_content.py::test_wiley_original_figure_and_image_only_formula_identity",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_block_provider_paths.py::test_original_rejection_page_selects_pdf_then_degrades",
+      "new": "tests/golden/test_reviewed_block_provider_paths.py::test_original_rejection_page_selects_pdf_then_degrades",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_block_provider_paths.py::test_oxford_original_browser_dom_rejects_then_tries_current_pdf_candidates",
+      "new": "tests/golden/test_reviewed_block_provider_paths.py::test_oxford_original_browser_dom_rejects_then_tries_current_pdf_candidates",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_copernicus_xml_blocks.py::test_original_empty_xml_current_provider_waterfall",
+      "new": "tests/golden/test_reviewed_copernicus_xml_blocks.py::test_original_empty_xml_current_provider_waterfall",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_html_publisher_content.py::test_iop_missing_original_reference_slot_does_not_shift_later_citations",
+      "new": "tests/golden/test_reviewed_html_publisher_content.py::test_iop_missing_original_reference_slot_does_not_shift_later_citations",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_html_publisher_content.py::test_reviewed_complete_html_equations",
+      "new": "tests/golden/test_reviewed_html_publisher_content.py::test_reviewed_complete_html_equations",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_html_publisher_content.py::test_reviewed_html_body_callout_maps_to_first_reference",
+      "new": "tests/golden/test_reviewed_html_publisher_content.py::test_reviewed_html_body_callout_maps_to_first_reference",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_html_publisher_content.py::test_reviewed_html_body_runs_and_headings_preserve_order",
+      "new": "tests/golden/test_reviewed_html_publisher_content.py::test_reviewed_html_body_runs_and_headings_preserve_order",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_html_publisher_content.py::test_reviewed_html_publishers_current_pdf_parser_content",
+      "new": null,
+      "reason": "已撤销的 PDF 正文和引用文本质量契约；保留全文获取、身份、完整性与转换回放。"
+    },
+    {
+      "old": "tests/unit/test_reviewed_html_publisher_content.py::test_reviewed_html_reference_author_title_and_doi",
+      "new": "tests/golden/test_reviewed_html_publisher_content.py::test_reviewed_html_reference_author_title_and_doi",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_html_publisher_content.py::test_reviewed_html_references_preserve_source_entries_and_order",
+      "new": "tests/golden/test_reviewed_html_publisher_content.py::test_reviewed_html_references_preserve_source_entries_and_order",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_html_publisher_content.py::test_reviewed_supplements_source_identity_and_body_all_scopes",
+      "new": "tests/golden/test_reviewed_html_publisher_content.py::test_reviewed_supplements_source_identity_and_body_all_scopes",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_html_publisher_content.py::test_reviewed_table_all_rows_preserve_column_assignment",
+      "new": "tests/golden/test_reviewed_html_publisher_content.py::test_reviewed_table_all_rows_preserve_column_assignment",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_pdf_assembly.py::test_real_pdf_recovery_keeps_converter_output",
+      "new": "tests/golden/test_reviewed_pdf_assembly.py::test_real_pdf_recovery_keeps_converter_output",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_pdf_completion.py::test_real_pdf_is_opaque_through_service",
+      "new": "tests/golden/test_reviewed_pdf_completion.py::test_real_pdf_is_opaque_through_service",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_publisher_content.py::test_real_aip_supplement_identity_and_scope",
+      "new": "tests/golden/test_reviewed_publisher_content.py::test_real_aip_supplement_identity_and_scope",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_publisher_content.py::test_real_jats_supplements_retain_source_identity_without_claiming_download",
+      "new": "tests/golden/test_reviewed_publisher_content.py::test_real_jats_supplements_retain_source_identity_without_claiming_download",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_publisher_content.py::test_real_oxford_journal_crossref_link_is_not_a_reference_doi",
+      "new": "tests/golden/test_reviewed_publisher_content.py::test_real_oxford_journal_crossref_link_is_not_a_reference_doi",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_publisher_content.py::test_real_oxford_supplement_has_stable_article_file_identity",
+      "new": "tests/golden/test_reviewed_publisher_content.py::test_real_oxford_supplement_has_stable_article_file_identity",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_publisher_content.py::test_real_plos_supporting_files_preserve_all_18_identities",
+      "new": "tests/golden/test_reviewed_publisher_content.py::test_real_plos_supporting_files_preserve_all_18_identities",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_publisher_content.py::test_retained_back_matter_precedes_references",
+      "new": "tests/golden/test_reviewed_publisher_content.py::test_retained_back_matter_precedes_references",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_publisher_content.py::test_reviewed_body_prose_runs_and_headings_remain_in_source_order",
+      "new": "tests/golden/test_reviewed_publisher_content.py::test_reviewed_body_prose_runs_and_headings_remain_in_source_order",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_publisher_content.py::test_reviewed_citations_still_identify_the_visible_reference",
+      "new": "tests/golden/test_reviewed_publisher_content.py::test_reviewed_citations_still_identify_the_visible_reference",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_publisher_content.py::test_reviewed_pdf_prose_and_page_order",
+      "new": null,
+      "reason": "已撤销的 PDF 正文锚点和页序质量契约；PDF 仍由 exact corpus 和透传回放执行。"
+    },
+    {
+      "old": "tests/unit/test_reviewed_publisher_content.py::test_reviewed_reference_identifiers",
+      "new": "tests/golden/test_reviewed_publisher_content.py::test_reviewed_reference_identifiers",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_publisher_content.py::test_reviewed_visible_references_preserve_every_entry_in_order",
+      "new": "tests/golden/test_reviewed_publisher_content.py::test_reviewed_visible_references_preserve_every_entry_in_order",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_remaining_provider_content.py::test_all_original_reference_entries_and_rendered_order",
+      "new": "tests/golden/test_reviewed_remaining_provider_content.py::test_all_original_reference_entries_and_rendered_order",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_remaining_provider_content.py::test_archived_ancillary_excerpts_preserve_source_date_version_and_complete_list",
+      "new": "tests/golden/test_reviewed_remaining_provider_content.py::test_archived_ancillary_excerpts_preserve_source_date_version_and_complete_list",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_remaining_provider_content.py::test_arxiv_full_table_one_keeps_all_numeric_rows_and_columns",
+      "new": "tests/golden/test_reviewed_remaining_provider_content.py::test_arxiv_full_table_one_keeps_all_numeric_rows_and_columns",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_remaining_provider_content.py::test_complete_reviewed_equations",
+      "new": "tests/golden/test_reviewed_remaining_provider_content.py::test_complete_reviewed_equations",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_remaining_provider_content.py::test_elsevier_ice_phenology_table_preserves_every_data_cell_and_column",
+      "new": "tests/golden/test_reviewed_remaining_provider_content.py::test_elsevier_ice_phenology_table_preserves_every_data_cell_and_column",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_remaining_provider_content.py::test_ieee_constructed_overlapping_pages_of_real_entries_merge_at_boundary",
+      "new": "tests/golden/test_reviewed_remaining_provider_content.py::test_ieee_constructed_overlapping_pages_of_real_entries_merge_at_boundary",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_remaining_provider_content.py::test_ieee_original_short_api_response_keeps_every_entry_without_second_request",
+      "new": "tests/golden/test_reviewed_remaining_provider_content.py::test_ieee_original_short_api_response_keeps_every_entry_without_second_request",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_remaining_provider_content.py::test_major_sections_and_long_prose_including_arxiv_appendices",
+      "new": "tests/golden/test_reviewed_remaining_provider_content.py::test_major_sections_and_long_prose_including_arxiv_appendices",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_remaining_provider_content.py::test_reviewed_first_middle_last_reference_identity",
+      "new": "tests/golden/test_reviewed_remaining_provider_content.py::test_reviewed_first_middle_last_reference_identity",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_remaining_provider_content.py::test_source_body_callout_maps_to_preserved_reference",
+      "new": "tests/golden/test_reviewed_remaining_provider_content.py::test_source_body_callout_maps_to_preserved_reference",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_reviewed_remaining_provider_content.py::test_tandf_cited_work_dois_come_from_original_reference_controls",
+      "new": "tests/golden/test_reviewed_remaining_provider_content.py::test_tandf_cited_work_dois_come_from_original_reference_controls",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_royalsocietypublishing_provider.py::test_markdown_contract_figure_fixture",
+      "new": "tests/golden/test_royalsocietypublishing_provider.py::test_markdown_contract_figure_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_royalsocietypublishing_provider.py::test_markdown_contract_formula_fixture",
+      "new": "tests/golden/test_royalsocietypublishing_provider.py::test_markdown_contract_formula_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_royalsocietypublishing_provider.py::test_markdown_contract_pdf_fallback_fixture",
+      "new": "tests/golden/test_royalsocietypublishing_provider.py::test_markdown_contract_pdf_fallback_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_royalsocietypublishing_provider.py::test_markdown_contract_references_fixture",
+      "new": "tests/golden/test_royalsocietypublishing_provider.py::test_markdown_contract_references_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_royalsocietypublishing_provider.py::test_markdown_contract_structure_fixture",
+      "new": "tests/golden/test_royalsocietypublishing_provider.py::test_markdown_contract_structure_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_royalsocietypublishing_provider.py::test_markdown_contract_supplementary_fixture",
+      "new": "tests/golden/test_royalsocietypublishing_provider.py::test_markdown_contract_supplementary_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_royalsocietypublishing_provider.py::test_markdown_contract_table_fixture",
+      "new": "tests/golden/test_royalsocietypublishing_provider.py::test_markdown_contract_table_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_royalsocietypublishing_provider.py::test_royal_fixture_extracts_signed_original_viewer_and_preview_urls",
+      "new": "tests/golden/test_royalsocietypublishing_provider.py::test_royal_fixture_extracts_signed_original_viewer_and_preview_urls",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_royalsocietypublishing_provider.py::test_royal_grouped_slide_url_is_not_assigned_to_the_wrong_figure",
+      "new": "tests/golden/test_royalsocietypublishing_provider.py::test_royal_grouped_slide_url_is_not_assigned_to_the_wrong_figure",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_service_runtime.py::ServiceRuntimeTests::test_artifact_store_markdown_assets_keeps_pdf_fallback_but_skips_raw_html",
+      "new": "tests/integration/test_service_runtime.py::ServiceRuntimeTests::test_artifact_store_markdown_assets_keeps_pdf_fallback_but_skips_raw_html",
+      "reason": "受控 PDF/HTML 响应的 artifact 落盘与模式契约"
+    },
+    {
+      "old": "tests/unit/test_service_runtime.py::ServiceRuntimeTests::test_artifact_store_preserves_provider_payload_and_springer_html_markers",
+      "new": "tests/integration/test_service_runtime.py::ServiceRuntimeTests::test_artifact_store_preserves_provider_payload_and_springer_html_markers",
+      "reason": "受控 PDF/HTML 响应的 artifact 落盘与模式契约"
+    },
+    {
+      "old": "tests/unit/test_springer_cookie_recovery.py::test_springer_cookie_recovery_stays_on_html_and_preserves_article_type",
+      "new": "tests/golden/test_springer_cookie_recovery.py::test_springer_cookie_recovery_stays_on_html_and_preserves_article_type",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_drought_self_propagation_fixture_has_no_trailing_figures_block",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_drought_self_propagation_fixture_has_no_trailing_figures_block",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_nature_asset_profile_none_keeps_remote_figure_links_without_downloads",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_nature_asset_profile_none_keeps_remote_figure_links_without_downloads",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_nature_fixture_keeps_data_and_code_availability_sections",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_nature_fixture_keeps_data_and_code_availability_sections",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_nature_matters_arising_fixture_keeps_main_content_before_reporting_summary",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_nature_matters_arising_fixture_keeps_main_content_before_reporting_summary",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_new_nature_downloaded_body_figures_inline_without_trailing_figures_block",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_new_nature_downloaded_body_figures_inline_without_trailing_figures_block",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_old_nature_downloaded_body_figures_inline_without_trailing_figures_block",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_old_nature_downloaded_body_figures_inline_without_trailing_figures_block",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_old_nature_fixture_keeps_single_methods_summary_and_methods_sections",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_old_nature_fixture_keeps_single_methods_summary_and_methods_sections",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_old_nature_fixture_preserves_inline_equation_images",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_old_nature_fixture_preserves_inline_equation_images",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_real_nature_fixture_resolves_source_data_links_from_extended_data_descriptions",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_real_nature_fixture_resolves_source_data_links_from_extended_data_descriptions",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_real_nature_fixture_separates_source_data_from_supplementary_assets",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_real_nature_fixture_separates_source_data_from_supplementary_assets",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_real_nature_fixture_skips_peer_review_files_from_supplementary_assets",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_real_nature_fixture_skips_peer_review_files_from_supplementary_assets",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_springer_bilingual_fixture_enters_body_without_duplicate_title_or_cta",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_springer_bilingual_fixture_enters_body_without_duplicate_title_or_cta",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_springer_html_route_saves_original_html_in_article_dir",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_springer_html_route_saves_original_html_in_article_dir",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_springer_main_content_scenario_keeps_direct_child_order",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_springer_main_content_scenario_keeps_direct_child_order",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_springer_paywall_article_markdown_strips_preview_sentence",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_springer_paywall_article_markdown_strips_preview_sentence",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_springernature_fulltext_markdown_strips_ai_alt_disclaimer",
+      "new": "tests/golden/test_springer_html_regressions.py::SpringerHtmlRegressionTests::test_springernature_fulltext_markdown_strips_ai_alt_disclaimer",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_tables.py::SpringerHtmlTableTests::test_old_nature_extended_data_tables_render_table_image_or_degraded_placeholder",
+      "new": "tests/golden/test_springer_html_tables.py::SpringerHtmlTableTests::test_old_nature_extended_data_tables_render_table_image_or_degraded_placeholder",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_tables.py::SpringerHtmlTableTests::test_render_table_markdown_handles_real_springer_classic_table_page",
+      "new": "tests/golden/test_springer_html_tables.py::SpringerHtmlTableTests::test_render_table_markdown_handles_real_springer_classic_table_page",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_tables.py::SpringerHtmlTableTests::test_springer_classic_fixture_strips_chrome_and_spaces_numbered_headings",
+      "new": "tests/golden/test_springer_html_tables.py::SpringerHtmlTableTests::test_springer_classic_fixture_strips_chrome_and_spaces_numbered_headings",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_tables.py::SpringerHtmlTableTests::test_springer_html_injects_real_nature_inline_table_page_with_flattened_headers",
+      "new": "tests/golden/test_springer_html_tables.py::SpringerHtmlTableTests::test_springer_html_injects_real_nature_inline_table_page_with_flattened_headers",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_springer_html_tables.py::SpringerHtmlTableTests::test_springer_html_keeps_article_success_when_inline_table_page_has_no_table",
+      "new": "tests/golden/test_springer_html_tables.py::SpringerHtmlTableTests::test_springer_html_keeps_article_success_when_inline_table_page_has_no_table",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_lst_render.py::test_lst_all_prose_paragraphs_survive_in_order",
+      "new": "tests/golden/test_tandf_lst_render.py::test_lst_all_prose_paragraphs_survive_in_order",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_lst_render.py::test_lst_every_inline_math_preserves_operands_and_scripts",
+      "new": "tests/golden/test_tandf_lst_render.py::test_lst_every_inline_math_preserves_operands_and_scripts",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_lst_render.py::test_lst_formula_oracle_and_references",
+      "new": "tests/golden/test_tandf_lst_render.py::test_lst_formula_oracle_and_references",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_lst_render.py::test_lst_normalization_is_idempotent",
+      "new": "tests/golden/test_tandf_lst_render.py::test_lst_normalization_is_idempotent",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_lst_render.py::test_lst_structure_tables_and_figures",
+      "new": "tests/golden/test_tandf_lst_render.py::test_lst_structure_tables_and_figures",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_provider.py::test_markdown_contract_figure_fixture",
+      "new": "tests/golden/test_tandf_provider.py::test_markdown_contract_figure_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_provider.py::test_markdown_contract_formula_fixture",
+      "new": "tests/golden/test_tandf_provider.py::test_markdown_contract_formula_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_provider.py::test_markdown_contract_pdf_fallback_fixture",
+      "new": "tests/golden/test_tandf_provider.py::test_markdown_contract_pdf_fallback_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_provider.py::test_markdown_contract_references_fixture",
+      "new": "tests/golden/test_tandf_provider.py::test_markdown_contract_references_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_provider.py::test_markdown_contract_structure_fixture",
+      "new": "tests/golden/test_tandf_provider.py::test_markdown_contract_structure_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_provider.py::test_markdown_contract_supplementary_fixture",
+      "new": "tests/golden/test_tandf_provider.py::test_markdown_contract_supplementary_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_provider.py::test_markdown_contract_table_fixture",
+      "new": "tests/golden/test_tandf_provider.py::test_markdown_contract_table_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_provider.py::test_tandf_article_assets_keep_body_figures_and_scope_supplement",
+      "new": "tests/golden/test_tandf_provider.py::test_tandf_article_assets_keep_body_figures_and_scope_supplement",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_provider.py::test_tandf_formula_dom_repair_preserves_complex_math_structure",
+      "new": "tests/golden/test_tandf_provider.py::test_tandf_formula_dom_repair_preserves_complex_math_structure",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_tandf_provider.py::test_tandf_multilingual_fixture_is_authentic_and_keeps_parallel_abstracts",
+      "new": "tests/golden/test_tandf_provider.py::test_tandf_multilingual_fixture_is_authentic_and_keeps_parallel_abstracts",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_wiley_provider.py::test_markdown_review_loop_formula_references_and_abstract_only_fixture",
+      "new": "tests/golden/test_wiley_provider.py::test_markdown_review_loop_formula_references_and_abstract_only_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_wiley_provider.py::test_markdown_review_loop_structure_figure_and_supplementary_fixture",
+      "new": "tests/golden/test_wiley_provider.py::test_markdown_review_loop_structure_figure_and_supplementary_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_wiley_provider.py::test_markdown_review_loop_table_and_pdf_fallback_fixture",
+      "new": "tests/golden/test_wiley_provider.py::test_markdown_review_loop_table_and_pdf_fallback_fixture",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_wiley_provider.py::test_wiley_confirmed_403_extraction_failure_continues_next_candidate",
+      "new": "tests/golden/test_wiley_provider.py::test_wiley_confirmed_403_extraction_failure_continues_next_candidate",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    },
+    {
+      "old": "tests/unit/test_wiley_provider.py::test_wiley_confirmed_403_html_passes_markdown_and_availability",
+      "new": "tests/golden/test_wiley_provider.py::test_wiley_confirmed_403_html_passes_markdown_and_availability",
+      "reason": "整篇原文/完整资产/真实采集证据回放"
+    }
+  ],
+  "changed_bodies_or_decorators": [
+    {
+      "old": "tests/unit/test_acquired_completion.py::test_complete_pdf_current_parser_provider_and_acceptance",
+      "new": "tests/golden/test_acquired_completion.py::test_complete_pdf_current_parser_provider_and_acceptance"
+    },
+    {
+      "old": "tests/unit/test_acquired_ieee_inputs.py::test_captured_stamp_pdf_current_provider_and_final_article",
+      "new": "tests/golden/test_acquired_ieee_inputs.py::test_captured_stamp_pdf_current_provider_and_final_article"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_acquired_same_paper_pdf_current_provider_and_acceptance",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_acquired_same_paper_pdf_current_provider_and_acceptance"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_arxiv_same_version_ancillary_discovery_and_article_link_metadata",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_arxiv_same_version_ancillary_discovery_and_article_link_metadata"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_elsevier_normal_pdf_and_unrelated_warning_remain_accepted",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_elsevier_normal_pdf_and_unrelated_warning_remain_accepted"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_elsevier_open_access_pdf_api_complete_response_and_article",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_elsevier_open_access_pdf_api_complete_response_and_article"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_tandf_actual_figure_challenge_reports_failed_asset",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_tandf_actual_figure_challenge_reports_failed_asset"
+    },
+    {
+      "old": "tests/unit/test_acquired_wiley_pdf.py::test_captured_tdm_pdf_current_wiley_fallback_and_final_acceptance",
+      "new": "tests/golden/test_acquired_wiley_pdf.py::test_captured_tdm_pdf_current_wiley_fallback_and_final_acceptance"
+    },
+    {
+      "old": "tests/unit/test_arxiv_provider.py::TestArxivAncillaryAssets::test_attachments_obey_shared_bytes_and_file_budgets",
+      "new": "tests/golden/test_arxiv_provider.py::TestArxivAncillaryAssets::test_attachments_obey_shared_bytes_and_file_budgets"
+    },
+    {
+      "old": "tests/unit/test_browser_asset_download.py::test_silverchair_later_figure_discovery_precedes_parallel_http",
+      "new": "tests/unit/test_browser_asset_download.py::test_silverchair_later_figure_discovery_precedes_parallel_http"
+    },
+    {
+      "old": "tests/unit/test_browser_asset_download.py::test_wiley_split_preview_preserves_fidelity_and_full_failure",
+      "new": "tests/unit/test_browser_asset_download.py::test_wiley_split_preview_preserves_fidelity_and_full_failure"
+    },
+    {
+      "old": "tests/unit/test_confirmed_paywall_stop.py::test_browser_candidate_loop_closes_page_before_preparation_or_next_url",
+      "new": "tests/unit/test_confirmed_paywall_stop.py::test_browser_candidate_loop_closes_page_before_preparation_or_next_url"
+    },
+    {
+      "old": "tests/unit/test_confirmed_paywall_stop.py::test_confirmed_http_error_prevents_retry_only_for_article_routes",
+      "new": "tests/unit/test_confirmed_paywall_stop.py::test_confirmed_http_error_prevents_retry_only_for_article_routes"
+    },
+    {
+      "old": "tests/unit/test_confirmed_paywall_stop.py::test_http_error_with_real_article_gate_stops_before_browser_or_pdf",
+      "new": "tests/golden/test_confirmed_paywall_stop.py::test_http_error_with_real_article_gate_stops_before_browser_or_pdf"
+    },
+    {
+      "old": "tests/unit/test_confirmed_paywall_stop.py::test_weak_provider_candidate_stops_cross_provider_dispatch",
+      "new": "tests/unit/test_confirmed_paywall_stop.py::test_weak_provider_candidate_stops_cross_provider_dispatch"
+    },
+    {
+      "old": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_abstract_only_short_body_xml_falls_back_to_pdf",
+      "new": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_abstract_only_short_body_xml_falls_back_to_pdf"
+    },
+    {
+      "old": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_empty_body_xml_falls_back_to_pdf",
+      "new": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_empty_body_xml_falls_back_to_pdf"
+    },
+    {
+      "old": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_landing_failure_continues_with_doi_derived_pdf_candidate",
+      "new": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_landing_failure_continues_with_doi_derived_pdf_candidate"
+    },
+    {
+      "old": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_pdf_fallback_is_text_only_artifact_path",
+      "new": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_pdf_fallback_is_text_only_artifact_path"
+    },
+    {
+      "old": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_pdf_fallback_uses_doi_derived_candidate_when_landing_omits_pdf_meta",
+      "new": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_pdf_fallback_uses_doi_derived_candidate_when_landing_omits_pdf_meta"
+    },
+    {
+      "old": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_xml_failure_skips_landing_html_and_falls_back_to_pdf",
+      "new": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_xml_failure_skips_landing_html_and_falls_back_to_pdf"
+    },
+    {
+      "old": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_xml_without_body_paragraphs_falls_back_to_pdf",
+      "new": "tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_xml_without_body_paragraphs_falls_back_to_pdf"
+    },
+    {
+      "old": "tests/unit/test_frontiers_provider.py::test_frontiers_direct_pdf_fallback_does_not_request_landing_page",
+      "new": "tests/unit/test_frontiers_provider.py::test_frontiers_direct_pdf_fallback_does_not_request_landing_page"
+    },
+    {
+      "old": "tests/unit/test_frontiers_provider.py::test_frontiers_pdf_fallback_rejects_html_xml_candidate",
+      "new": "tests/unit/test_frontiers_provider.py::test_frontiers_pdf_fallback_rejects_html_xml_candidate"
+    },
+    {
+      "old": "tests/integration/test_golden_corpus.py::test_golden_corpus_expected_summary_matches_current_extractor",
+      "new": "tests/golden/test_golden_corpus.py::test_golden_corpus_expected_summary_matches_current_extractor"
+    },
+    {
+      "old": "tests/unit/test_ieee_provider_asset_downloads.py::IeeeProviderAssetDownloadTests::test_ieee_supplementary_download_failure_does_not_discard_body_assets",
+      "new": "tests/unit/test_ieee_provider_asset_downloads.py::IeeeProviderAssetDownloadTests::test_ieee_supplementary_download_failure_does_not_discard_body_assets"
+    },
+    {
+      "old": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_pdf_fallback_uses_article_pdf_candidate",
+      "new": "tests/unit/test_mdpi_provider.py::MdpiProviderTests::test_mdpi_pdf_fallback_uses_article_pdf_candidate"
+    },
+    {
+      "old": "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_credentialed_pdf_cross_origin_uses_native_browser_context",
+      "new": "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_credentialed_pdf_cross_origin_uses_native_browser_context"
+    },
+    {
+      "old": "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_browser_owned_download_url_uses_saved_bytes_without_direct_replay",
+      "new": "tests/unit/test_pdf_fallback_helpers.py::PdfFallbackHelperTests::test_pdf_browser_owned_download_url_uses_saved_bytes_without_direct_replay"
+    },
+    {
+      "old": "tests/unit/test_pdf_reference_boundaries.py::test_old_pdf_envelope_cache_is_rejected_without_affecting_html",
+      "new": "tests/unit/test_pdf_reference_boundaries.py::test_old_pdf_envelope_cache_is_rejected_without_affecting_html"
+    },
+    {
+      "old": "tests/unit/test_provider_waterfalls.py::PublisherWaterfallTests::test_wiley_tdm_api_helper_follows_redirect_to_pdf_payload",
+      "new": "tests/unit/test_provider_waterfalls.py::PublisherWaterfallTests::test_wiley_tdm_api_helper_follows_redirect_to_pdf_payload"
+    },
+    {
+      "old": "tests/unit/test_reviewed_copernicus_xml_blocks.py::test_original_empty_xml_current_provider_waterfall",
+      "new": "tests/golden/test_reviewed_copernicus_xml_blocks.py::test_original_empty_xml_current_provider_waterfall"
+    },
+    {
+      "old": "tests/unit/test_reviewed_pdf_assembly.py::test_real_pdf_recovery_keeps_converter_output",
+      "new": "tests/golden/test_reviewed_pdf_assembly.py::test_real_pdf_recovery_keeps_converter_output"
+    },
+    {
+      "old": "tests/unit/test_reviewed_pdf_completion.py::test_real_pdf_is_opaque_through_service",
+      "new": "tests/golden/test_reviewed_pdf_completion.py::test_real_pdf_is_opaque_through_service"
+    },
+    {
+      "old": "tests/unit/test_royalsocietypublishing_provider.py::test_metadata_only_route_contract_is_service_fallback_after_provider_failure",
+      "new": "tests/unit/test_royalsocietypublishing_provider.py::test_metadata_only_route_contract_is_service_fallback_after_provider_failure"
+    },
+    {
+      "old": "tests/unit/test_springer_cookie_recovery.py::test_springer_discards_cookie_error_session_and_retries_once",
+      "new": "tests/unit/test_springer_cookie_recovery.py::test_springer_discards_cookie_error_session_and_retries_once"
+    },
+    {
+      "old": "tests/integration/test_tandf_lst_replay.py::test_python_cli_mcp_saved_semantics",
+      "new": "tests/integration/test_tandf_lst_replay.py::test_python_cli_mcp_saved_semantics"
+    }
+  ],
+  "notes": [
+    "只列出迁移、删除及实现/装饰器发生变化的测试，其余原位置保留。参数样本保持；唯一删除的参数集为已撤销的 PDF 正文锚点/页序质量契约。",
+    "局部 PDF 路由测试 mock 转换器输出；浏览器失败 mock 显式设在边界。Springer cookie 重试使用受控短响应并精确比较响应透传，完整文章类型断言进入 golden。",
+    "CLI/MCP representative replay 保留落盘、缓存、跨输出一致性和 acceptance；完整原文公式、引用、12 图集合由 golden 原有测试覆盖。",
+    "新 AMS 四个原文段落 excerpt 使用同一 manifest/canonical scenario 目录，完整四篇回放保留。",
+    "tests/golden/test_reviewed_pdf_assembly.py 复用同次 provider 获取中的转换输出进行透传比较，删除重复转换调用，不删除断言。"
+  ],
+  "assertion_replacements": [
+    {
+      "old": "tests/unit/test_acquired_ieee_inputs.py::test_captured_stamp_pdf_current_provider_and_final_article",
+      "new": "tests/golden/test_acquired_ieee_inputs.py::test_captured_stamp_pdf_current_provider_and_final_article",
+      "removed_or_replaced_assertions": [
+        "assert '10365' in document[-1].get_text()",
+        "assert 'Gem5-SALAM' in rendered"
+      ],
+      "added_assertions": [
+        "assert payload.content.markdown_text in rendered"
+      ],
+      "reason": "撤销 PDF 转换文本、页序或引用质量断言；新增或保留转换结果透传比较，文件身份、完整性及来源断言不删除。"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_acquired_same_paper_pdf_current_provider_and_acceptance",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_acquired_same_paper_pdf_current_provider_and_acceptance",
+      "removed_or_replaced_assertions": [
+        "assert anchor.casefold() in text.casefold()"
+      ],
+      "added_assertions": [
+        "assert article.sections[0].text in text"
+      ],
+      "reason": "撤销 PDF 转换文本、页序或引用质量断言；新增或保留转换结果透传比较，文件身份、完整性及来源断言不删除。"
+    },
+    {
+      "old": "tests/unit/test_acquired_publisher_inputs.py::test_elsevier_open_access_pdf_api_complete_response_and_article",
+      "new": "tests/golden/test_acquired_publisher_inputs.py::test_elsevier_open_access_pdf_api_complete_response_and_article",
+      "removed_or_replaced_assertions": [
+        "assert '292' in document[-1].get_text()",
+        "assert 'Ambient temperature and' in envelope.markdown",
+        "assert 'morbidity' in envelope.markdown",
+        "assert 'using health risk increments' in envelope.markdown"
+      ],
+      "added_assertions": [
+        "assert article.sections[0].text == payload.content.markdown_text",
+        "assert payload.content.markdown_text in envelope.markdown"
+      ],
+      "reason": "撤销 PDF 转换文本、页序或引用质量断言；新增或保留转换结果透传比较，文件身份、完整性及来源断言不删除。"
+    },
+    {
+      "old": "tests/unit/test_acquired_wiley_pdf.py::test_captured_tdm_pdf_current_wiley_fallback_and_final_acceptance",
+      "new": "tests/golden/test_acquired_wiley_pdf.py::test_captured_tdm_pdf_current_wiley_fallback_and_final_acceptance",
+      "removed_or_replaced_assertions": [
+        "assert 'Contrasting temperature' in rendered",
+        "assert 'Greening of the Earth and its drivers' in rendered"
+      ],
+      "added_assertions": [
+        "assert payload.content.markdown_text in rendered"
+      ],
+      "reason": "撤销 PDF 转换文本、页序或引用质量断言；新增或保留转换结果透传比较，文件身份、完整性及来源断言不删除。"
+    },
+    {
+      "old": "tests/unit/test_frontiers_provider.py::test_frontiers_pdf_fallback_rejects_html_xml_candidate",
+      "new": "tests/unit/test_frontiers_provider.py::test_frontiers_pdf_fallback_rejects_html_xml_candidate",
+      "removed_or_replaced_assertions": [
+        "assert 'Abstract' in markdown"
+      ],
+      "added_assertions": [
+        "assert markdown == 'Mock converter output. ' * 120"
+      ],
+      "reason": "边界 mock 转换结果；PDF 正文标题锚点替换为原样透传相等。"
+    },
+    {
+      "old": "tests/unit/test_reviewed_copernicus_xml_blocks.py::test_original_empty_xml_current_provider_waterfall",
+      "new": "tests/golden/test_reviewed_copernicus_xml_blocks.py::test_original_empty_xml_current_provider_waterfall",
+      "removed_or_replaced_assertions": [
+        "assert anchor.casefold() in article.to_ai_markdown(include_refs='all', max_tokens='full_text').casefold()"
+      ],
+      "added_assertions": [
+        "assert article.references == []",
+        "assert converted in article.to_ai_markdown(include_refs='all', max_tokens='full_text')"
+      ],
+      "reason": "撤销 PDF 转换文本、页序或引用质量断言；新增或保留转换结果透传比较，文件身份、完整性及来源断言不删除。"
+    },
+    {
+      "old": "tests/unit/test_springer_cookie_recovery.py::test_springer_discards_cookie_error_session_and_retries_once",
+      "new": "tests/unit/test_springer_cookie_recovery.py::test_springer_discards_cookie_error_session_and_retries_once",
+      "removed_or_replaced_assertions": [
+        "assert len(result.html_text) > 1000"
+      ],
+      "added_assertions": [
+        "assert result.html_text == BRIEFING_HTML.decode()"
+      ],
+      "reason": "局部 cookie 恢复改用最小受控 HTML；长度阈值替换为更严格的响应透传相等。完整文章类型回放保留在 golden。"
+    },
+    {
+      "old": "tests/integration/test_tandf_lst_replay.py::test_python_cli_mcp_saved_semantics",
+      "new": "tests/integration/test_tandf_lst_replay.py::test_python_cli_mcp_saved_semantics",
+      "removed_or_replaced_assertions": [
+        "assert len(images) == 12",
+        "assert saved['acceptance']['overall'] == 'complete'"
+      ],
+      "added_assertions": [
+        "assert len(images) == 1",
+        "assert saved['acceptance']['overall'] == 'complete', saved['acceptance']"
+      ],
+      "reason": "integration 使用 1 图代表性输入；完整 12 图语义与集合保留在 golden 的 LST 内容和资产回放中。acceptance complete 断言仅增加失败诊断。"
+    }
+  ],
+  "scope_note": "Historical test-layer migration snapshot; subsequent removals are not active test registrations. P15 retired the SAGE bilingual test.",
+  "record_status": "historical"
+}

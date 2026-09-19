@@ -1,0 +1,52 @@
+{
+  "provider": "oxfordacademic",
+  "doi": "10.1093/pq/pqaf022",
+  "started_at_utc": "2026-09-15T06:28:26.522802+00:00",
+  "attempt": 1,
+  "headless": false,
+  "network_context": "User reports current network has no subscription access; not independently verified. Existing configured API credentials and provider storage state retained.",
+  "capture_scope": "Current repository CLI with passive HTTP/browser response and final DOM observers. No injected responses, forced failures, route overrides, or PDF quality fixes.",
+  "responses": [
+    {
+      "requested_url": "https://academic.oup.com/pq/article/76/1/444/8071416",
+      "request_query": null,
+      "final_url": "https://academic.oup.com/pq/article/76/1/444/8071416",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Tue, 15 Sep 2026 06:28:30 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "transfer-encoding": "chunked",
+        "connection": "keep-alive",
+        "cache-control": "private",
+        "vary": "Accept-Encoding",
+        "server": "cloudflare",
+        "x-content-type-options": "nosniff",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), usb=(), picture-in-picture=(), web-share=(), clipboard-read=(), interest-cohort=(), display-capture=(), screen-wake-lock=(), cross-origin-isolated=(), accelerometer=(), gyroscope=(), magnetometer=(), keyboard-map=(), midi=(), serial=(), hid=(), idle-detection=(), gamepad=(), xr-spatial-tracking=()",
+        "x-powered-by": "ASP.NET",
+        "x-scm-server-number": "SCM06WEB05",
+        "access-control-allow-origin": "https://academic.oup.com",
+        "access-control-allow-headers": "accept, cache-control, content-type, authorization",
+        "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "x-frame-options": "SAMEORIGIN",
+        "content-security-policy": "frame-ancestors 'self'",
+        "cf-cache-status": "DYNAMIC",
+        "content-encoding": "gzip",
+        "cf-ray": "a3b59252889a6aba-HKG"
+      },
+      "capture_kind": "http_response_entity",
+      "transport": "Current CLI HttpTransport passive observer",
+      "error": null,
+      "body_file": "acquisition/subscription-2026-09-15/response-001.bin",
+      "size": 130883,
+      "sha256": "5bafbc71ed4ffeb0d6afc0daecc026d896f334168239ceecb011290ff01e9c7e",
+      "captured_at_utc": "2026-09-15T06:28:28.995135+00:00",
+      "headless": false,
+      "network_context": "User reports current network has no subscription access; not independently verified. Existing configured API credentials and provider storage state retained.",
+      "capture_scope": "Current repository CLI with passive HTTP/browser response and final DOM observers. No injected responses, forced failures, route overrides, or PDF quality fixes."
+    }
+  ],
+  "capture_errors": [],
+  "exit_code": 0,
+  "completed_at_utc": "2026-09-15T06:28:29.246617+00:00",
+  "excluded_unrelated_responses": 0
+}

@@ -1,0 +1,379 @@
+{
+  "doi": "10.48550/arxiv.2605.06659v1",
+  "source": "arxiv_html",
+  "metadata": {
+    "title": "The Pulsar Radial Acceleration Relation",
+    "authors": [
+      "Tariq Yasin",
+      "Harry Desmond"
+    ],
+    "abstract": "The radial acceleration relation (RAR) links observed and baryonic accelerations, and is best established in rotation curves of late-type galaxies. Pulsar timing, which measures line-of-sight (LOS) differential accelerations between the Sun and pulsars, provides a novel probe of this relation, including along directions outside the Galactic disc. By combining these pulsar differential accelerations with the acceleration at the Sun, we test whether current pulsar timing data carry information on a vector generalisation of the RAR, ${\\bm{g}}_{\\rm obs}=\\nu(|{\\bm{g}}_{\\rm bar}|){\\bm{g}}_{\\rm bar}$. Comparing the measured SPARC RAR (generalised to 3D) to 26 binary-system pulsars with literature accelerations, we find a reduced $\\chi^{2}$ of 3.58, compared with 10.86 for Newtonian baryonic gravity alone. However, setting all accelerations to that of the Sun gives a reduced $\\chi^{2}$ of 3.75, showing that this vector RAR test is dominated by the Solar acceleration with current data.",
+    "journal": "arXiv",
+    "article_type": null,
+    "published": "2026-05-07",
+    "keywords": [
+      "astro-ph.GA",
+      "astro-ph.CO",
+      "astro-ph.HE"
+    ],
+    "license_urls": [],
+    "landing_page_url": "https://arxiv.org/abs/2605.06659v1"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "The radial acceleration relation (RAR) links observed and baryonic accelerations, and is best established in rotation curves of late-type galaxies. Pulsar timing, which measures line-of-sight (LOS) differential accelerations between the Sun and pulsars, provides a novel probe of this relation, including along directions outside the Galactic disc. By combining these pulsar differential accelerations with the acceleration at the Sun, we test whether current pulsar timing data carry information on a vector generalisation of the RAR, ${\\bm{g}}_{\\rm obs}=\\nu(|{\\bm{g}}_{\\rm bar}|){\\bm{g}}_{\\rm bar}$. Comparing the measured SPARC RAR (generalised to 3D) to 26 binary-system pulsars with literature accelerations, we find a reduced $\\chi^{2}$ of 3.58, compared with 10.86 for Newtonian baryonic gravity alone. However, setting all accelerations to that of the Sun gives a reduced $\\chi^{2}$ of 3.75, showing that this vector RAR test is dominated by the Solar acceleration with current data."
+    },
+    {
+      "heading": "I Introduction",
+      "level": 2,
+      "kind": "body",
+      "text": "The radial acceleration relation (RAR) is a tight empirical correlation between the inferred centripetal acceleration $g_{\\rm obs}$ and the baryonic gravitational acceleration $g_{\\rm bar}$, established primarily in disc galaxies [<sup>13, 20</sup>]. Its near-zero intrinsic scatter, simple functional form, and lack of secondary correlations [<sup>5, 6, 19</sup>] have been viewed as evidence for non-Newtonian dynamics [<sup>9</sup>, e.g.] or as a consequence of coupled baryon–halo assembly in $\\Lambda$ CDM [<sup>17</sup>, e.g.]; here we treat it agnostically as simply an empirical mapping. Whether the RAR phenomenology extends beyond the radial dynamics of late-type galaxies measured from rotation curves remains unsettled [<sup>12, 3, 10, 15, 11</sup>, e.g.]. Pulsar timing provides a new probe of Galactic accelerations outside the Galactic disc: binary orbital-period derivatives measure line-of-sight (LOS) accelerations through the acceleration-induced drift of the Doppler shift [<sup>18, 4, 16, 8</sup>]. In this note, we use these measurements to test a phenomenological RAR rather than infer a full Galactic acceleration field [<sup>8, 7</sup>] or test a theory-specific model. We assume a local vector relation ${\\bm{g}}_{\\rm obs}=\\nu(|{\\bm{g}}_{\\rm bar}|){\\bm{g}}_{\\rm bar}$ which we project onto the Sun–pulsar sightline. This tests whether pulsar timing, one of very few non-rotation-curve acceleration probes, is already informative about this striking relation."
+    },
+    {
+      "heading": "II Data and model",
+      "level": 2,
+      "kind": "body",
+      "text": "We use the v3 catalogue of T. Donlon et al. [7], which has 26 independent LOS accelerations inferred from orbital-period derivatives of pulsars in binary systems after Shklovskii and relativistic corrections. The catalogue also contains a sample of spin-only millisecond-pulsar accelerations (inferred with empirical magnetic-braking corrections). However we did not find that sample informative for our test due to the larger uncertainties, and so we report results for the binary sample only.\n\nWe compute the baryonic field from an analytic approximation to the photometric Milky Way census of J. Bland-Hawthorn & O. Gerhard [2]. We represent their thin disc, thick disc, cold gas and bulge/inner-disc components by three Miyamoto–Nagai discs with $(M,a,b)=(3.5\\times 10^{10},2.6,0.3)$, $(6\\times 10^{9},2.0,0.9)$ and $(1.0\\times 10^{10},4.5,0.08)$, denoting mass and radial/vertical scale lengths in $M_{\\odot}$ and kpc, plus a Hernquist bulge with mass $1.5\\times 10^{10}M_{\\odot}$ and scale radius $0.6\\,{\\rm kpc}$. The gas disc normalisation reproduces their quoted local gas surface density, $\\Sigma_{g}(R_{0})\\simeq 13\\,M_{\\odot}{\\rm pc}^{-2}$. Observed pulsar positions are transformed to Galactocentric coordinates using $R_{0}=8.20\\pm 0.09\\,{\\rm kpc}$ [<sup>14</sup>] and $z_{\\odot}=20.8\\,{\\rm pc}$ [<sup>1</sup>]. Distance uncertainties are propagated approximately by re-evaluating the field at $d+\\sigma_{d}$ and $d-\\sigma_{d}$ and taking half the difference.\n\nPulsar timing measures the differential LOS acceleration of the pulsar relative to the Sun,\n\n$$ a_{\\rm LOS}^{\\rm diff}=({\\bm{g}}_{\\rm psr}-{\\bm{g}}_{\\odot})\\cdot\\hat{\\bm{\\ell}}, $$\n(1)\n\nwhere ${\\bm{g}}_{\\rm psr}$ and ${\\bm{g}}_{\\odot}$ are Galactocentric accelerations and $\\hat{\\bm{\\ell}}$ points from the Sun to the pulsar. Timing gives no information on components orthogonal to the Sun–pulsar sightline. We therefore compute $a_{\\rm LOS}^{\\rm obs}$, the pulsar’s Galactocentric acceleration projected onto the Sun–pulsar sightline:\n\n$$ a_{\\rm LOS}^{\\rm obs}=a_{\\rm LOS}^{\\rm diff}+{\\bm{g}}_{\\odot}\\cdot\\hat{\\bm{\\ell}}={\\bm{g}}_{\\rm psr}\\cdot\\hat{\\bm{\\ell}}. $$\n(2)\n\nWe adopt the Solar acceleration from P. J. McMillan [14] $a_{\\odot,R}=-v_{0}^{2}/R_{0}=-2.15\\times 10^{-10}\\,{\\rm m\\,s}^{-2}$ (corresponding to circular velocity $v_{0}=233.1\\pm 3.0\\,{\\rm km\\,s}^{-1}$). The vertical Solar acceleration is evaluated from the baryonic model and is 1.7% of the centripetal term. As our primary output we plot $a_{\\rm LOS}^{\\rm obs}/({\\bm{g}}_{\\rm bar}\\cdot\\hat{\\bm{\\ell}})$, the ratio of the observed to baryonic Galactocentric accelerations projected along the line of sight.\n\nThe vector RAR prediction for $a_{\\rm LOS}^{\\rm obs}$ is\n\n$$ a_{{\\rm LOS},i}^{\\rm pred}=\\nu(|{\\bm{g}}_{{\\rm bar},i}|)({\\bm{g}}_{{\\rm bar},i}\\cdot\\hat{\\bm{\\ell}}_{i}), $$\n(3)\n\nwith $\\nu=1$ for Newtonian baryon-only gravity. We adopt the Simple interpolating function as constrained by galaxy dynamics in H. Desmond [6],\n\n$$ \\nu(x)=\\frac{1}{2}+\\sqrt{\\frac{1}{4}+\\frac{a_{0}}{x}},\\quad a_{0}=1.19\\times 10^{-10}\\,{\\rm m\\,s}^{-2}. $$\n(4)\n\nWe compare observed and predicted accelerations with $\\chi^{2}_{\\rm LOS}=\\sum\\limits_{i}(a_{{\\rm LOS},i}^{\\rm obs}-a_{{\\rm LOS},i}^{\\rm pred})^{2}/\\sigma_{i}^{2}$, where $\\sigma_{i}$ includes timing, Solar-correction, and distance-propagated baryonic-field uncertainties.\n\nConverting the pulsar differential timing acceleration to a Galactocentric acceleration requires combining it with the empirical Solar centripetal acceleration. With the present sample, the median Solar acceleration fraction, $f_{\\odot}\\equiv|a_{\\odot,\\rm LOS}|/(|a_{\\rm LOS}^{\\rm diff}|+|a_{\\odot,\\rm LOS}|)$, is 0.73 for the binary sample. We therefore additionally conduct a Solar-acceleration-only test ($a_{\\rm LOS}^{\\rm diff}=0$) to isolate the effect of the pulsar-specific accelerations."
+    },
+    {
+      "heading": "III Results and discussion",
+      "level": 2,
+      "kind": "body",
+      "text": "![Figure 1](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06659v1_assets/fig_combined_binary.svg)\n\n**Figure 1.** (a) Galactocentric positions of the binary pulsar sample (circles). (b) Boost ratio $a_{\\rm LOS}^{\\rm obs}/({\\bm{g}}_{\\rm bar}\\cdot\\hat{\\bm{\\ell}})$ versus $|{\\bm{g}}_{\\rm bar}|$. The red curve is the Simple RAR fit to galaxy rotation curves of H. Desmond [5] and the grey line is Newtonian. Points are coloured by the fraction of acceleration magnitude that is from the Solar acceleration. The cyan error bars show inverse-variance-weighted means in equally spaced bins in $\\log_{10}g_{\\rm bar}$ (only bins with two or more pulsars are shown). The black crosses show the Solar-only bin means (i.e. setting the measured differential acceleration to zero), offset horizontally for visual clarity. Triangles mark points clipped beyond the plotting range.\n\nFor the binary sample, the projected RAR gives $\\chi^{2}_{\\rm LOS}/N=3.58$ (for $N=26$ binaries), compared with 10.86 for Newtonian baryonic gravity. Neither value gives a satisfactory absolute goodness of fit, but the projected RAR is substantially closer to the data. The plot in fig. 1 shows this in ratio form, but the scatter is large and the sampled range in $|{\\bm{g}}_{\\rm bar}|$ is only about 0.8 dex around $a_{0}$. These data therefore cannot distinguish non-radial RAR extensions or theory-specific Galactic acceleration fields. The Solar-only null (setting $a_{\\rm LOS}^{\\rm diff}=0$ while retaining each sightline’s Solar projection) gives $\\chi^{2}_{\\rm LOS}/N=3.75$, close to the real binary value. This shows that the result is determined in large part by the Solar acceleration rather than by the pulsar-specific differential accelerations. Using the Milky Way baryonic potential of P. J. McMillan [14] instead gives $\\chi^{2}/N=3.94$ for the projected RAR, 10.74 for Newtonian baryons, and 4.16 for the Solar-only comparison, demonstrating qualitative insensitivity to this systematic.\n\nIn conclusion, pulsar timing offers a direct probe of acceleration-based scaling relations, but the current binary sample is not yet significantly more informative than the Solar acceleration contribution alone. More precise binary acceleration measurements, larger samples, improved distances, and sightlines for which the Solar acceleration is a smaller fraction of the Galactocentric acceleration are required for more informative tests. The most useful future objects will be binary pulsars at lower $|{\\bm{g}}_{\\rm bar}|$, larger $|z|$, or Galactic longitudes for which the Solar centripetal acceleration projects weakly onto the Sun–pulsar sightline."
+    },
+    {
+      "heading": "References",
+      "level": 2,
+      "kind": "references",
+      "text": "- [1] Bennett, M., & Bovy, J. 2019,, MNRAS, 482, 1417, doi: 10.1093/mnras/sty2813\n- [2] Bland-Hawthorn, J., & Gerhard, O. 2016, The Galaxy in Context: Structural, Kinematic, and Integrated Properties, ARA&A, 54, 529, doi: 10.1146/annurev-astro-081915-023441\n- [3] Brouwer, M. M., Oman, K. A., Valentijn, E. A., et al. 2021,, A&A, 650, A113, doi: 10.1051/0004-6361/202040108\n- [4] Chakrabarti, S., Chang, P., Lam, M. T., Vigeland, S. J., & Quillen, A. C. 2021, A Measurement of the Galactic Plane Mass Density from Binary Pulsar Accelerations, ApJ, 907, L26, doi: 10.3847/2041-8213/abd635\n- [5] Desmond, H. 2023a,, MNRAS, 526, 3342, doi: 10.1093/mnras/stad2762\n- [6] Desmond, H. 2023b,, MNRAS, 521, 1817, doi: 10.1093/mnras/stad597\n- [7] Donlon, T., Chakrabarti, S., Vanderwaal, S., et al. 2025,, Phys. Rev. D, 111, 103036, doi: 10.1103/PhysRevD.111.103036\n- [8] Donlon, T. I., Chakrabarti, S., Widrow, L. M., et al. 2024, Galactic structure from binary pulsar accelerations: Beyond smooth models, Phys. Rev. D, 110, 023026, doi: 10.1103/PhysRevD.110.023026\n- [9] Famaey, B., & McGaugh, S. S. 2012,, Living Reviews in Relativity, 15, 10, doi: 10.12942/lrr-2012-10\n- [10] Freundlich, J., Famaey, B., Oria, P.-A., et al. 2022,, A&A, 658, A26, doi: 10.1051/0004-6361/202142060\n- [11] Júlio, M. P., Read, J. I., Pawlowski, M. S., et al. 2025,, A&A, 704, A330, doi: 10.1051/0004-6361/202557106\n- [12] Lelli, F., McGaugh, S. S., Schombert, J. M., & Pawlowski, M. S. 2017, One Law to Rule Them All: The Radial Acceleration Relation of Galaxies, ApJ, 836, 152, doi: 10.3847/1538-4357/836/2/152\n- [13] McGaugh, S. S., Lelli, F., & Schombert, J. M. 2016,, Physical Review Letters, 117, 201101, doi: 10.1103/PhysRevLett.117.201101\n- [14] McMillan, P. J. 2017,, MNRAS, 465, 76, doi: 10.1093/mnras/stw2759\n- [15] Mistele, T., McGaugh, S., Lelli, F., Schombert, J., & Li, P. 2024,, Journal of Cosmology and Astroparticle Physics, 2024, 020, doi: 10.1088/1475-7516/2024/04/020\n- [16] Moran, A., Mingarelli, C. M. F., Van Tilburg, K., & Good, D. 2024, Pulsar-based map of galactic acceleration, Phys. Rev. D, 109, 123015, doi: 10.1103/PhysRevD.109.123015\n- [17] Paranjape, A., & Sheth, R. K. 2021,, MNRAS, 507, 632, doi: 10.1093/mnras/stab2141\n- [18] Phillips, D. F., Ravi, A., Ebadi, R., & Walsworth, R. L. 2021, Milky Way Accelerometry via Millisecond Pulsar Timing, Phys. Rev. Lett., 126, 141103, doi: 10.1103/PhysRevLett.126.141103\n- [19] Stiskalek, R., & Desmond, H. 2023,, MNRAS, 525, 6130, doi: 10.1093/mnras/stad2675\n- [20] Vărăşteanu, A. A., Jarvis, M. J., Ponomareva, A. A., et al. 2025, MIGHTEE-HI: the radial acceleration relation with resolved stellar mass measurements, MNRAS, 541, 2366, doi: 10.1093/mnras/staf1079"
+    }
+  ],
+  "references": [
+    {
+      "raw": "[1] Bennett, M., & Bovy, J. 2019,, MNRAS, 482, 1417, doi: 10.1093/mnras/sty2813",
+      "doi": "10.1093/mnras/sty2813",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "[2] Bland-Hawthorn, J., & Gerhard, O. 2016, The Galaxy in Context: Structural, Kinematic, and Integrated Properties, ARA&A, 54, 529, doi: 10.1146/annurev-astro-081915-023441",
+      "doi": "10.1146/annurev-astro-081915-023441",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "[3] Brouwer, M. M., Oman, K. A., Valentijn, E. A., et al. 2021,, A&A, 650, A113, doi: 10.1051/0004-6361/202040108",
+      "doi": "10.1051/0004-6361/202040108",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "[4] Chakrabarti, S., Chang, P., Lam, M. T., Vigeland, S. J., & Quillen, A. C. 2021, A Measurement of the Galactic Plane Mass Density from Binary Pulsar Accelerations, ApJ, 907, L26, doi: 10.3847/2041-8213/abd635",
+      "doi": "10.3847/2041-8213/abd635",
+      "title": null,
+      "year": "2041"
+    },
+    {
+      "raw": "[5] Desmond, H. 2023a,, MNRAS, 526, 3342, doi: 10.1093/mnras/stad2762",
+      "doi": "10.1093/mnras/stad2762",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "[6] Desmond, H. 2023b,, MNRAS, 521, 1817, doi: 10.1093/mnras/stad597",
+      "doi": "10.1093/mnras/stad597",
+      "title": null,
+      "year": "1817"
+    },
+    {
+      "raw": "[7] Donlon, T., Chakrabarti, S., Vanderwaal, S., et al. 2025,, Phys. Rev. D, 111, 103036, doi: 10.1103/PhysRevD.111.103036",
+      "doi": "10.1103/physrevd.111.103036",
+      "title": null,
+      "year": "2025"
+    },
+    {
+      "raw": "[8] Donlon, T. I., Chakrabarti, S., Widrow, L. M., et al. 2024, Galactic structure from binary pulsar accelerations: Beyond smooth models, Phys. Rev. D, 110, 023026, doi: 10.1103/PhysRevD.110.023026",
+      "doi": "10.1103/physrevd.110.023026",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "[9] Famaey, B., & McGaugh, S. S. 2012,, Living Reviews in Relativity, 15, 10, doi: 10.12942/lrr-2012-10",
+      "doi": "10.12942/lrr-2012-10",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "[10] Freundlich, J., Famaey, B., Oria, P.-A., et al. 2022,, A&A, 658, A26, doi: 10.1051/0004-6361/202142060",
+      "doi": "10.1051/0004-6361/202142060",
+      "title": null,
+      "year": "2022"
+    },
+    {
+      "raw": "[11] Júlio, M. P., Read, J. I., Pawlowski, M. S., et al. 2025,, A&A, 704, A330, doi: 10.1051/0004-6361/202557106",
+      "doi": "10.1051/0004-6361/202557106",
+      "title": null,
+      "year": "2025"
+    },
+    {
+      "raw": "[12] Lelli, F., McGaugh, S. S., Schombert, J. M., & Pawlowski, M. S. 2017, One Law to Rule Them All: The Radial Acceleration Relation of Galaxies, ApJ, 836, 152, doi: 10.3847/1538-4357/836/2/152",
+      "doi": "10.3847/1538-4357/836/2/152",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "[13] McGaugh, S. S., Lelli, F., & Schombert, J. M. 2016,, Physical Review Letters, 117, 201101, doi: 10.1103/PhysRevLett.117.201101",
+      "doi": "10.1103/physrevlett.117.201101",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "[14] McMillan, P. J. 2017,, MNRAS, 465, 76, doi: 10.1093/mnras/stw2759",
+      "doi": "10.1093/mnras/stw2759",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "[15] Mistele, T., McGaugh, S., Lelli, F., Schombert, J., & Li, P. 2024,, Journal of Cosmology and Astroparticle Physics, 2024, 020, doi: 10.1088/1475-7516/2024/04/020",
+      "doi": "10.1088/1475-7516/2024/04/020",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "[16] Moran, A., Mingarelli, C. M. F., Van Tilburg, K., & Good, D. 2024, Pulsar-based map of galactic acceleration, Phys. Rev. D, 109, 123015, doi: 10.1103/PhysRevD.109.123015",
+      "doi": "10.1103/physrevd.109.123015",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "[17] Paranjape, A., & Sheth, R. K. 2021,, MNRAS, 507, 632, doi: 10.1093/mnras/stab2141",
+      "doi": "10.1093/mnras/stab2141",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "[18] Phillips, D. F., Ravi, A., Ebadi, R., & Walsworth, R. L. 2021, Milky Way Accelerometry via Millisecond Pulsar Timing, Phys. Rev. Lett., 126, 141103, doi: 10.1103/PhysRevLett.126.141103",
+      "doi": "10.1103/physrevlett.126.141103",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "[19] Stiskalek, R., & Desmond, H. 2023,, MNRAS, 525, 6130, doi: 10.1093/mnras/stad2675",
+      "doi": "10.1093/mnras/stad2675",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "[20] Vărăşteanu, A. A., Jarvis, M. J., Ponomareva, A. A., et al. 2025, MIGHTEE-HI: the radial acceleration relation with resolved stellar mass measurements, MNRAS, 541, 2366, doi: 10.1093/mnras/staf1079",
+      "doi": "10.1093/mnras/staf1079",
+      "title": null,
+      "year": "2025"
+    }
+  ],
+  "assets": [
+    {
+      "kind": "figure",
+      "heading": "Figure 1",
+      "caption": "Figure 1: (a) Galactocentric positions of the binary pulsar sample (circles). (b) Boost ratio $a_{\\rm LOS}^{\\rm obs}/({\\bm{g}}_{\\rm bar}\\cdot\\hat{\\bm{\\ell}})$ versus $|{\\bm{g}}_{\\rm bar}|$. The red curve is the Simple RAR fit to galaxy rotation curves of H. Desmond [5] and the grey line is Newtonian. Points are coloured by the fraction of acceleration magnitude that is from the Solar acceleration. The cyan error bars show inverse-variance-weighted means in equally spaced bins in $\\log_{10}g_{\\rm bar}$ (only bins with two or more pulsars are shown). The black crosses show the Solar-only bin means (i.e. setting the measured differential acceleration to zero), offset horizontally for visual clarity. Triangles mark points clipped beyond the plotting range.",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06659v1_assets/fig_combined_binary.svg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://arxiv.org/html/2605.06659v1/fig_combined_binary.svg",
+      "original_url": "https://arxiv.org/html/2605.06659v1/fig_combined_binary.svg",
+      "source_url": "https://arxiv.org/html/2605.06659v1/fig_combined_binary.svg",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/svg+xml",
+      "downloaded_bytes": 263739,
+      "width": 939,
+      "height": 366,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 0.027,
+        "candidate_resolution_ms": 0.026,
+        "dns_policy_validation_ms": 9.766,
+        "connect_to_headers_ttfb_ms": 202.931,
+        "body_stream_ms": 74.466,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 5.338,
+        "save_ms": 32.523,
+        "total_ms": 1906.852,
+        "status": "saved"
+      }
+    }
+  ],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 2217,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "Markdown full text was saved to /home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/Yasin_et_al_2026_The_Pulsar_Radial_Acceleration_Relation.md."
+    ],
+    "source_trail": [
+      "fulltext:arxiv_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_fail",
+      "route:signal_domain_arxiv",
+      "route:signal_doi_arxiv",
+      "route:probe_arxiv_positive",
+      "route:provider_selected_arxiv",
+      "metadata:arxiv_ok",
+      "route:provider_candidate_arxiv_metadata_selected_rank_1",
+      "route:provider_candidate_arxiv_identity_strong",
+      "fulltext:arxiv_attempt",
+      "download:arxiv_html_saved",
+      "download:arxiv_assets_saved_profile_body",
+      "fulltext:arxiv_article_ok",
+      "route:provider_candidate_arxiv_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 248,
+      "body": 1969,
+      "refs": 668
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 7858,
+      "word_count": 1330,
+      "body_block_count": 3,
+      "body_heading_count": 3,
+      "body_to_abstract_ratio": 8.3125,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 1
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": true,
+      "profile": "body",
+      "expected": null,
+      "discovered": 1,
+      "attempted": 1,
+      "total": 1,
+      "local": 1,
+      "full_size": 1,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 1,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 1,
+          "requested": 1,
+          "full_size": 1,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": [
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/2605.06659v1_assets/fig_combined_binary.svg",
+          "real_mime": "image/svg+xml",
+          "byte_count": 263739,
+          "width": 939,
+          "height": 366,
+          "preview_accepted": false,
+          "sha256": "4fcae767001be4851e0ff19b307784be5b65abf317bba6f72d69529598a4748f",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        }
+      ]
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "arxiv",
+    "route": "official_html",
+    "representation": "html",
+    "transport": "http",
+    "fallback_used": false
+  }
+}

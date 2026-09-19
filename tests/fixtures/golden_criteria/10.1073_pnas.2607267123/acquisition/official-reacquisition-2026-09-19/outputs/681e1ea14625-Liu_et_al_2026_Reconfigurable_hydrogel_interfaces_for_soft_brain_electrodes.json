@@ -1,0 +1,365 @@
+{
+  "doi": "10.1073/pnas.2607267123",
+  "source": "pnas",
+  "metadata": {
+    "title": "Reconfigurable hydrogel interfaces for soft brain electrodes",
+    "authors": [
+      "Zhichang Liu",
+      "Sihong Wang"
+    ],
+    "abstract": null,
+    "journal": "Proceedings of the National Academy of Sciences",
+    "article_type": null,
+    "published": "2026-4-28",
+    "keywords": [],
+    "license_urls": [
+      "https://creativecommons.org/licenses/by-nc-nd/4.0/"
+    ],
+    "landing_page_url": "https://pnas.org/doi/10.1073/pnas.2607267123"
+  },
+  "sections": [
+    {
+      "heading": "",
+      "level": 2,
+      "kind": "body",
+      "text": "**COMMENTARY** \n\n\n![](10.1073_pnas.2607267123_assets/liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-02.png)\n\n\n# **Reconfigurable hydrogel interfaces for soft brain electrodes** \n\n**Zhichang Liu**<sup>**a**</sup> **and Sihong Wang**<sup>**a,b,c,1**</sup> \n\nReal - time monitoring of neural activity is essential during neurosurgery to minimize unintended damage to healthy brain tissue (1–3). Current approaches typically rely on multichannel electrode arrays placed directly on the brain surface to record electrical signals (4–6). To improve signal quality at this interface, hydrogel layers are often incorporated to promote conformal adhesion between electrodes and the cortical surface (7, 8). However, in the complex biological environment of the brain, these hydrogel interfaces can degrade over time, leading to weakened adhesion and compromised electrical stability (9–11). Writing in PNAS, Yang et al. report a soft electrode array with reconfigurable hydrogel interfaces enabled by a solution - triggered reconfiguration strategy (12). This design allows the hydrogel layer to be repeatedly disassembled and replaced, enabling more reliable and sustained monitoring of electrophysiological signals from the brain surface throughout neurosurgical procedures (Fig. 1 _A_ ). \n\nThe main innovation in the reconfigurable hydrogel interface design lies in a bilayer hydrogel structure that can be separated on demand. In this bilayer structure, a hydrogel transition layer forms stable covalent bonds with the electrode array substrate, providing a robust foundation for the interface. On top of this layer, an adhesive and antiswelling hydrogel contacts the brain tissue and helps maintain intimate contact with the cortical surface (Fig. 1 _B_ ). The two layers are connected through a reversible network formed by ferric \n\nions and poly(acrylic acid) (PAA). This network can be strengthened by treating the interface with an Fe<sup>3+</sup> /citrate solution and selectively disassembled using ethylenediaminetetraacetic acid disodium salt (EDTA) solution (Fig. 1 _C_ ). EDTA competitively binds Fe<sup>3+</sup> ions with higher affinity, disrupting the coordination bonds at the interface, thereby effectively weakening the interfacial bonding between the adhesive and transition layers. The tissue - contacting adhesive layer can therefore be removed from the brain surface without leaving residues and replaced with a fresh one when its performance deteriorates during surgery. This solution - triggered reconfiguration strategy enables the electrode array to maintain a stable and reliable interface with the brain throughout prolonged neurosurgical procedures. \n\nAuthor affiliations:<sup>a</sup> Pritzker School of Molecular Engineering, The University of Chicago, Chicago, IL 60637;<sup>b</sup> Nanoscience and Technology Division, Argonne National Laboratory, Lemont, IL 60439; and<sup>c</sup> Biohub, Chicago, IL 60642 \n\nAuthor contributions: Z.L. and S.W. wrote the paper. \n\nThe authors declare no competing interest. \n\nCopyright © 2026 the Author(s). Published by PNAS. This article is distributed under Creative Commons Attribution - NonCommercial - NoDerivatives License 4.0 (CC BY - NC - ND). See companion article, “A soft electrode array with reconfigurable hydrogel interfaces for high - fidelity neurophysiological monitoring during craniotomy,” 10.1073/pnas.2533145123. 1To whom correspondence may be addressed. Email: sihongwang@uchicago.edu. Published April 20, 2026. \n\n\n![](10.1073_pnas.2607267123_assets/liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-12.png)\n\n\n**Fig. 1.** ( _A_ ) Schematic illustration of reconfigurable hydrogel electrode channels conformally attached to the sensory and motor cortices. ( _B_ ) Exploded schematic of the electrode array and the reconfiguration process of MADH interface layers in the electrode array. ( _C_ ) Reconfiguration procedures of hydrogel electrodes, including diffusion of Fe<sup>3+/</sup> citrate anchoring solutions ( _i_ ), formation of crosslinking networks in the MADH/AMSH interfaces ( _ii_ ), chelation of ferric ions in hydrogels induced by EDTA solutions ( _iii_ ), discarding of disassembled MADHs and cleaning of electrode interfaces for integration of a new MADH layer ( _iv_ ). ( _D_ ) Adhesion/ antiswelling mechanisms of the hydrogel/brain interface. ( _E_ ) Analysis of somatosensory evoked potential (SSEP) waveforms of DH electrodes and AH electrodes during intracranial neurosurgical procedures at 0, 5, and 10 repositions. Commercial ECoG electrode served as the control. N20 and P25 represent negative and positive potential peaks at the latencies of approximately 20 ms and 25 ms, respectively. \n\nhttps://doi.org/10.1073/pnas.2607267123 **1 of 2** \n\n**PNAS** 2026 Vol. 123 No. 17 e2607267123 \n\nhydrogel interface could be replaced by a new adhesive layer, allowing the device to consistently collect high - quality electrical signals (Fig. 1 _E_ ). Using this electrode array, the authors were able to capture distinct neural waveform features and evaluate neural conduction pathways by comparing signal amplitudes across different brain regions, enabling the detection of potential neural injury. In contrast, a nonreconfigurable control—an acrylamide - based hydrogel (AH) electrode array—initially provided good contact but showed signal deterioration after several repositioning cycles because of the hydrogel contamination. \n\nThe tissue - adhesive layer is designed with cationic microspheres, Alg - DA, and PAA - NHS chains. The quaternary ammonium groups on the microspheres form electrostatic interac tions with brain tissue, while PAA - NHS and Alg - DA within the hydrogel network provide additional chemical adhesion (Fig. 1 _D_ ). This gives threefold stronger adhesion on pig brain compared to 3M tapes, while still leaving room for improvement relative to state - of - the - art tissue adhesives (13–16). The cationic microspheres also enhance the mechanical stability of the hydrogel by increasing physical crosslinking and polymer entanglement through electrostatic interactions and hydrogen bonding, which greatly reduces swelling from long - term immersion in biofluid. These multiple dynamic interactions within the network also result in low hysteresis and minimal energy dissipation, helping maintain stable performance during operation. \n\nThis work demonstrates a materials - level advance in electrode–tissue interfaces, introducing a reconfigurable, high - performance hydrogel interface that can undergo repeated disassembly and replacement. This capability enables the soft electrode array to maintain sustained, high - fidelity signal \n\nacquisition and supports accurate assessment of brain activity during neurosurgery, thereby improving surgical safety. Looking ahead, several challenges remain before such systems can be translated into practical biomedical platforms. At the materials level, improving the long - term stability of hydrogel adhesion will be important for maintaining reliable contact with tissue during extended use. From an engineering perspective, integration with high - density electrode arrays may require further reducing device thickness while preserving strong adhesion, so that the spatial resolution of signal recording is not compromised. In addition, extending the reconfigurable hydrogel strategy to other sensing modalities, such as chemical sensors, could broaden its applications, which requires the hydrogel layer to have efficient molecular diffusion while maintaining stable device performance. Addressing these challenges could advance soft neural interfaces for more reliable intraoperative brain monitoring and safer neurosurgical procedures, while opening new opportunities for bioelectronic technologies in healthcare. \n\n**Writing in PNAS, Yang et al. report a soft electrode array with reconfigurable hydrogel interfaces enabled by a solution-triggered reconfiguration strategy.** \n\nAt the device level, this reconfigurable dual - layer hydrogel is integrated with a PEDOT:PSS - based electrode array, which exhibits a low impedance at 1 kHz, together with higher charge injection and charge storage capacities than commercial electrodes. The dual - layer hydrogel (DH) electrodes were applied to record the electrocorticogram (ECoG) from multiple locations on the brain cortex surface in rabbits, by repeatedly repositioning the electrode array. At the initial placement location on the brain surface, the recorded signals from the DH electrodes showed higher quality than those obtained with commercial electrodes, due to the improved conformability with the brain surface. After 10 repeated repositionings on the cortex surface to different locations, which led to some decline in the adhesion properties, the tissue - adhesive \n\n1. A. Zhang _et al._ , Ultraflexible endovascular probes for brain recording through micrometer-scale vasculature. _Science_ 381, 306–312 (2023). \n\n2. A. G. Kolias, A. Chari, T. Santarius, P. J. Hutchinson, Chronic subdural haematoma: Modern management and emerging therapies. _Nat. Rev. Neurol._ 10, 570–578 (2014). \n\n3. S. P. Lacour, G. Courtine, J. Guck, Materials and technologies for soft implantable neuroprostheses. _Nat. Rev. Mater._ 1, 1–14 (2016). \n\n4. J. D. Breshears _et al._ , Mapping sensorimotor cortex with slow cortical potential resting-state networks while awake and under anesthesia. _Neurosurgery_ 71, 305–316 (2012). \n\n5. K. Shen, O. Chen, J. L. Edmunds, D. K. Piech, M. M. Maharbiz, Translational opportunities and challenges of invasive electrodes for neural interfaces. _Nat. Biomed. Eng._ 7, 424–442 (2023). \n\n6. E. Song, J. Li, S. M. Won, W. Bai, J. A. Rogers, Materials for flexible bioelectronic systems as chronic neural interfaces. _Nat. Mater._ 19, 590–603 (2020). \n\n7. C. M. Tringides _et al._ , Viscoelastic surface electrode arrays to interface with viscoelastic tissues. _Nat. Nanotechnol._ 16, 1019–1029 (2021). \n\n8. E. Martinelli _et al._ , The e-flower: A hydrogel-actuated 3D MEA for brain spheroid electrophysiology. _Sci. Adv._ 10, eadp8054 (2024). \n\n9. J. Wang _et al._ , Flexible electrodes for brain–computer interface system. _Adv. Mater._ 35, 2211012 (2023). \n\n10. J.-Y. Bae _et al._ , A biodegradable and self-deployable electronic tent electrode for brain cortex interfacing. _Nat. Electron._ 7, 815–828 (2024). \n\n11. S. Lee _et al._ , A shape-morphing cortex-adhesive sensor for closed-loop transcranial ultrasound neurostimulation. _Nat. Electron._ 7, 800–814 (2024). \n\n12. G. Yang _et al._ , A soft electrode array with reconfigurable hydrogel interfaces for high-fidelity neurophysiological monitoring during craniotomy. _Proc. Natl. Acad. Sci. U.S.A._ 123, e2533145123 (2026). \n\n13. G. Tian _et al._ , A nonswelling hydrogel with regenerable high wet tissue adhesion for bioelectronics. _Adv. Mater._ 35, 2212302 (2023). \n\n14. J. Wu _et al._ , Adhesive anti-fibrotic interfaces on diverse organs. _Nature_ 630, 360–367 (2024). \n\n15. B. R. Freedman _et al._ , Enhanced tendon healing by a tough hydrogel with an adhesive side and high drug-loading capacity. _Nat. Biomed. Eng._ 6, 1167–1179 (2022). \n\n16. N. Li _et al._ , Bioadhesive polymer semiconductors and transistors for intimate biointerfaces. _Science_ 381, 686–693 (2023). \n\n**2 of 2** https://doi.org/10.1073/pnas.2607267123 \n\npnas.org \n\n"
+    }
+  ],
+  "references": [
+    {
+      "raw": "10.1126/science.adh3916",
+      "doi": "10.1126/science.adh3916",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nrneurol.2014.163",
+      "doi": "10.1038/nrneurol.2014.163",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/natrevmats.2016.63",
+      "doi": "10.1038/natrevmats.2016.63",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1227/NEU.0b013e318258e5d1",
+      "doi": "10.1227/neu.0b013e318258e5d1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41551-023-01021-5",
+      "doi": "10.1038/s41551-023-01021-5",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41563-020-0679-7",
+      "doi": "10.1038/s41563-020-0679-7",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41565-021-00926-z",
+      "doi": "10.1038/s41565-021-00926-z",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/sciadv.adp8054",
+      "doi": "10.1126/sciadv.adp8054",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/adma.202211012",
+      "doi": "10.1002/adma.202211012",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41928-024-01216-x",
+      "doi": "10.1038/s41928-024-01216-x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41928-024-01240-x",
+      "doi": "10.1038/s41928-024-01240-x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.2533145123",
+      "doi": "10.1073/pnas.2533145123",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/adma.202212302",
+      "doi": "10.1002/adma.202212302",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41586-024-07426-9",
+      "doi": "10.1038/s41586-024-07426-9",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41551-021-00810-0",
+      "doi": "10.1038/s41551-021-00810-0",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.adg8758",
+      "doi": "10.1126/science.adg8758",
+      "title": null,
+      "year": null
+    }
+  ],
+  "assets": [
+    {
+      "kind": "figure",
+      "heading": "Figure 1",
+      "caption": null,
+      "url": "10.1073_pnas.2607267123_assets/liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-02.png",
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1073_pnas.2607267123_assets/liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-02.png",
+      "section": "body",
+      "render_state": "inline",
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "10.1073_pnas.2607267123_assets/liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-02.png",
+      "original_url": "https://www.pnas.org/doi/pdf/10.1073/pnas.2607267123?download=true",
+      "source_url": "https://www.pnas.org/doi/pdf/10.1073/pnas.2607267123?download=true",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/png",
+      "downloaded_bytes": 2814,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 2",
+      "caption": null,
+      "url": "10.1073_pnas.2607267123_assets/liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-12.png",
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1073_pnas.2607267123_assets/liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-12.png",
+      "section": "body",
+      "render_state": "inline",
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "10.1073_pnas.2607267123_assets/liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-12.png",
+      "original_url": "https://www.pnas.org/doi/pdf/10.1073/pnas.2607267123?download=true",
+      "source_url": "https://www.pnas.org/doi/pdf/10.1073/pnas.2607267123?download=true",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/png",
+      "downloaded_bytes": 525318,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    }
+  ],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 2783,
+    "content_kind": "fulltext",
+    "has_abstract": false,
+    "warnings": [
+      "pnas HTML route was not usable (empty_article_shell); attempting PDF fallback.",
+      "Full text was extracted from PDF fallback after the HTML path was not usable.",
+      "PNAS official full text was downloaded as PDF/binary to /home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.pdf.",
+      "Markdown full text was saved to /home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.md."
+    ],
+    "source_trail": [
+      "fulltext:pnas_html_fail",
+      "fulltext:pnas_pdf_fallback_ok",
+      "fulltext:pnas_pdf_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_pnas",
+      "route:signal_doi_pnas",
+      "route:probe_pnas_unknown",
+      "route:provider_selected_pnas",
+      "route:provider_candidate_pnas_metadata_selected_rank_1",
+      "route:provider_candidate_pnas_identity_strong",
+      "fulltext:pnas_attempt",
+      "download:pnas_saved",
+      "download:pnas_assets_saved_profile_body",
+      "fulltext:pnas_article_ok",
+      "route:provider_candidate_pnas_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 0,
+      "body": 2783,
+      "refs": 103
+    },
+    "confidence": "medium",
+    "flags": [
+      "weak_body_structure"
+    ],
+    "body_metrics": {
+      "char_count": 11092,
+      "word_count": 1606,
+      "body_block_count": 1,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 1606.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 2
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": true,
+      "profile": "body",
+      "expected": null,
+      "discovered": 2,
+      "attempted": 2,
+      "total": 2,
+      "local": 2,
+      "full_size": 2,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 2,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 2,
+          "requested": 2,
+          "full_size": 2,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": [
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1073_pnas.2607267123_assets/liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-02.png",
+          "real_mime": "image/png",
+          "byte_count": 2814,
+          "width": 60,
+          "height": 61,
+          "preview_accepted": false,
+          "sha256": "5a1398bfe0db47647e5d83086283719ede23d427f471d960630c5dbbca1bf425",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1073_pnas.2607267123_assets/liu-wang-2026-reconfigurable-hydrogel-interfaces-for-soft-brain-electrodes-d42dc08563.pdf-0001-12.png",
+          "real_mime": "image/png",
+          "byte_count": 525318,
+          "width": 1068,
+          "height": 430,
+          "preview_accepted": false,
+          "sha256": "efa57ce98e847024586833b96e841647ee88b3d1bab270eebf4337985dfbdfe4",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        }
+      ]
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "pnas",
+    "route": "browser_pdf",
+    "representation": "pdf",
+    "transport": "browser",
+    "fallback_used": true
+  }
+}

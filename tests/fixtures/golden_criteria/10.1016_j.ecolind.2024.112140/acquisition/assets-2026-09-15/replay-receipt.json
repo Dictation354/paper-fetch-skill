@@ -1,0 +1,121 @@
+{
+  "doi": "10.1016/j.ecolind.2024.112140",
+  "source_input": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml",
+  "source_sha256": "a59871f1deee860d4a50b8ae9f29961fd5b687dc0bd5c3050ed1dc0572dff2e4",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "3724a76475b0dd07e09431502721999017a4c5d7e1c95515476919f4087fef68",
+  "files": [
+    {
+      "filename": "1-s2.0-S1470160X24005971-gr3_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr3_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr3_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "9916a3f7dec42078f6b38d7e406dfaae6043cb1b0d7b1fd8bd9f9f56fda6db39",
+      "size": 670977,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 2756,
+      "height": 1482,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S1470160X24005971-gr4_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr4_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr4_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "2b9a55e4309aae1540ec42180ed435871ce5a06c722476a15e41d92863e14888",
+      "size": 459477,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 2362,
+      "height": 1651,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S1470160X24005971-gr1_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr1_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr1_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "8b58a268b581d25cce92fd8803a98a81baca3f85cbf72a3158f53e602242a9d3",
+      "size": 407184,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 2362,
+      "height": 1267,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S1470160X24005971-gr2_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr2_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr2_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "c9877ab670af55f67a0d5cb377d33da008d98eb0c02080c34a68e677f474dbb2",
+      "size": 467307,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 2474,
+      "height": 1602,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S1470160X24005971-gr7_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr7_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr7_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "46a3eaff5a59318ed60015a934c57068647ed9ee4170d79d2c6fd4f0d93cf758",
+      "size": 441647,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 2756,
+      "height": 2698,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S1470160X24005971-gr8_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr8_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr8_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "ffab85939c68e258e3d1e335a058701fbd1f0e0b26a8745e789e5b5ccf111db4",
+      "size": 425084,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 2756,
+      "height": 2703,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S1470160X24005971-gr5_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr5_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr5_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "69c583eb6aff29e938641b1a65c1eedbf5e82782cf71034112c494d1de61fab1",
+      "size": 801885,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 2756,
+      "height": 2784,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S1470160X24005971-gr6_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr6_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-gr6_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "35efb78d3929f6c888ec547af9587cd7c0647a71dc4b34105b7e99408e2b15f7",
+      "size": 791868,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 2368,
+      "height": 2971,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S1470160X24005971-am.pdf",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-am.pdf?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S1470160X24005971-am.pdf?httpAccept=%2A%2F%2A",
+      "sha256": "ef2339b076f72cb8cbebef4e3167f3b8582b01feca38f77ca9b35e3c7a8aae0d",
+      "size": 679063,
+      "kind": "supplementary",
+      "download_tier": "supplementary_file",
+      "width": null,
+      "height": null,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.595733+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 1
+}

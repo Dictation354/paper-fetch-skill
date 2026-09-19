@@ -476,7 +476,27 @@ def _postprocess_browser_workflow_markdown(
                 break
             continue
         if not started_content and is_auxiliary_block:
-            continue
+            # Science perspectives can begin with a manuscript photograph,
+            # without an abstract or section heading. Its body asset survived
+            # the provider's teaser filter and must retain its caption.
+            from ...extraction.html.figure_links import (
+                canonical_figure_label_from_asset,
+            )
+
+            leading_figure = re.match(
+                r"^\*\*(Figure\s+\d+)\.\*\*", normalized_block, re.I
+            )
+            if not (
+                publisher == "science"
+                and leading_figure is not None
+                and any(
+                    canonical_figure_label_from_asset(asset)
+                    == leading_figure[1].lower()
+                    for asset in figure_assets or []
+                    if asset.get("section", "body") == "body"
+                )
+            ):
+                continue
         if not is_auxiliary_block and _looks_like_front_matter_paragraph(
             normalized_block,
             title=normalized_title or None,

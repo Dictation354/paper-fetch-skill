@@ -1,0 +1,5010 @@
+
+
+
+
+
+    
+        
+
+
+
+
+
+
+
+<!DOCTYPE html>
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+<html lang="en"
+      
+        
+      
+      
+        
+
+        
+
+        
+        
+            
+        
+        
+        
+        
+        
+
+      class="pb-page"
+         data-request-id="a3b5e916ad7fdb55-SJC"  
+
+>
+
+    
+        <head data-pb-dropzone="head">
+            
+
+
+
+
+
+
+
+
+
+    
+        
+            
+        
+    
+        
+            
+        
+    
+        
+            
+        
+    
+        
+            
+                
+                
+<title>Error</title>
+
+
+
+
+
+
+                
+            
+        
+    
+        
+            
+        
+    
+
+
+
+
+
+
+
+    
+        
+            
+                
+                
+
+
+
+    
+        
+    
+
+                
+            
+        
+    
+        
+            
+        
+    
+        
+            
+        
+    
+        
+            
+        
+    
+        
+            
+        
+    
+
+
+
+
+
+
+
+
+
+
+
+<link rel="preload" as="font" href="/templates/jsp/css/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/icomoon/icomoon.woff2?g276mb" type="font/woff2" crossorigin="anonymous">
+
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/google/opensans/open-sans-v23-latin-300.woff2" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/google/opensans/open-sans-v23-latin-300italic.woff2" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/google/opensans/open-sans-v23-latin-600.woff2" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/google/opensans/open-sans-v23-latin-600italic.woff2" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/google/opensans/open-sans-v23-latin-700.woff2" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/google/opensans/open-sans-v23-latin-700italic.woff2" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/google/opensans/open-sans-v23-latin-italic.woff2" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/google/opensans/open-sans-v23-latin-regular.woff2" type="font/woff2" crossorigin="anonymous">
+
+
+
+
+
+
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/pt-serif-micro/ptserif_bold/PTF75F-webfont.woff2" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/pt-serif-micro/ptserif_bolditalic/PTF76F-webfont.woff2" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/pt-serif-micro/ptserif_italic/PTF56F-webfont.woff2" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" as="font" href="/templates/jsp/_style2/_tandf/pb2/fonts/pt-serif-micro/ptserif_regular/PTF55F-webfont.woff2" type="font/woff2" crossorigin="anonymous">
+
+<link type="text/css" rel="stylesheet" href="/wro/77da6987572d596b793244c88de74445b23515f2~product.css">
+
+
+
+
+
+
+
+
+
+
+    
+
+    
+    
+
+    
+    
+    
+    
+        
+            
+            
+            
+                
+            
+        
+    
+
+
+
+
+
+    <link rel="stylesheet" type="text/css" href="/pb/css/t1788931274000-v1788931274000/head_4_698_en.css" id="pb-css" data-pb-css-id="t1788931274000-v1788931274000/head_4_698_en.css"/>
+
+
+
+
+
+
+
+
+
+
+<!-- 
+  Transcend Head Asset
+
+  Last Updated: 2025-12-10 by Mandy Luk - Added Load airgap.js Asynchronously for PROD
+
+  IMPORTANT: If you make any changes to this file,
+  please update the 'Last Updated' date above and
+  add your name. Optionally include a one-line note
+  on what was changed.
+
+-->
+
+<!-- Load airgap.js Asynchronously -->
+ <script nonce="a3b5e916ad7fdb55-SJC">
+ // Call `await getAirgap()` to load airgap.js
+
+const BUNDLE_ID = 'ef49a3f1-d8c1-47d6-88fc-50e41130631f';
+
+let airgapAPI;
+const getAirgap = () =>
+  (airgapAPI ??= new Promise((resolve, reject) => {
+    // Stub airgap.js ready queue
+    if (!self?.airgap?.ready) {
+      self.airgap = {
+        readyQueue: [],
+        ready(callback) {
+          this.readyQueue.push(callback);
+        },
+        ...self?.airgap,
+      };
+    }
+
+    // Wait for airgap.js to be ready
+    self.airgap.ready((airgap) => {
+      resolve(airgap);
+    });
+
+    const script = document.createElement('script');
+
+    // Reject promise if airgap.js fails to load
+    script.addEventListener('error', (evt) => {
+      reject(evt);
+    });
+
+    // Specify load options:
+    // e.g.
+    // script.dataset.lazyLoadUi = 'on';
+    // script.dataset.prompt = 'auto';
+    // script.dataset.dismissedViewState = 'Closed';
+
+    // Load airgap.js script asynchronously
+    script.async = script.defer = true;
+    script.src = `https://transcend-cdn.com/cm/$ef49a3f1-d8c1-47d6-88fc-50e41130631f/airgap.js`;
+    document.documentElement?.appendChild?.(script);
+  }));
+  </script>
+
+<!-- TCF API Stub -->
+<script type="text/javascript" nonce="a3b5e916ad7fdb55-SJC">"use strict";function _typeof(t){return(_typeof="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t})(t)}!function(){self.airgap?.ready||(self.airgap={readyQueue:[],ready(e){this.readyQueue.push(e)},...self.airgap});const e=()=>{const e="__tcfapiLocator",t=[],a=window;let n,s,o=a;for(;o;){try{if(o.frames[e]){n=o;break}}catch(e){}if(o===a.top)break;o=o.parent}n||(!function t(){const n=a.document,s=!!a.frames[e];if(!s)if(n.body){const t=n.createElement("iframe");t.style.cssText="display:none",t.name=e,n.body.appendChild(t)}else setTimeout(t,5);return!s}(),a.__tcfapi=function(...e){if(!e.length)return t;"setGdprApplies"===e[0]?e.length>3&&2===parseInt(e[1],10)&&"boolean"==typeof e[3]&&(s=e[3],"function"==typeof e[2]&&e[2]("set",!0)):"ping"===e[0]?"function"==typeof e[2]&&e[2]({gdprApplies:s,cmpLoaded:!1,cmpStatus:"stub"}):t.push(e)},a.addEventListener("message",(function(e){const t="string"==typeof e.data;let a={};if(t)try{a=JSON.parse(e.data)}catch(e){}else a=e.data;const n="object"==typeof a&&null!==a?a.__tcfapiCall:null;n&&window.__tcfapi(n.command,n.version,(function(a,s){let o={__tcfapiReturn:{returnValue:a,success:s,callId:n.callId}};e&&e.source&&e.source.postMessage&&e.source.postMessage(t?JSON.stringify(o):o,"*")}),n.parameter)}),!1))};airgap.ready((t=>{"TCF_EU"===t.loadOptions.consentManagerConfig.initialViewStateByPrivacyRegime[t.getRegimes()[0]]&&("undefined"!=typeof module?module.exports=e:e())}))}();</script>
+
+<!-- The following snippet should be added to the head of the product, placed before the airgap tag. Advanced Consent Override -->
+<script nonce="a3b5e916ad7fdb55-SJC">
+self.airgap = {
+overrides: [],
+cookieOverrides: [],
+...self.airgap,
+};
+const allowGcmAdvanced = (event) => {
+if (event.purposes.has('GcmAdvanced')) {
+event.allow();
+}
+};
+self.airgap.overrides.push({override: allowGcmAdvanced});
+self.airgap.cookieOverrides.push(allowGcmAdvanced);
+</script>
+
+<!-- AirGap (Banner) Test Script -->
+<script
+data-cfasync="false"
+data-local-sync="allow-network-observable"
+data-prompt="1" data-report-only="off"
+data-dismissed-view-state="Collapsed"
+data-tcf-ui-dismissed-view-state="Collapsed"
+src="https://transcend-cdn.com/cm/ef49a3f1-d8c1-47d6-88fc-50e41130631f/airgap.js"
+ nonce="a3b5e916ad7fdb55-SJC"></script>
+
+<!-- Onetrust-head-meta End -->
+
+
+
+<script nonce="a3b5e916ad7fdb55-SJC">var JQSHIM={$:[]};function $(f){JQSHIM.$.push(f);console.warn("$function added to be executed using the JQUERY shim.\n", f);}</script>
+<script type="text/javascript" src="//cdn.pbgrd.com/core-tandf.js" async nonce="a3b5e916ad7fdb55-SJC"></script>
+
+
+    <script nonce="a3b5e916ad7fdb55-SJC">var _prum=[['id','54ff88bcabe53dc41d1004a5'],['mark','firstbyte',(new Date()).getTime()]];(function(){var s=document.getElementsByTagName('script')[0],p=document.createElement('script');p.async='async';p.src='//rum-static.pingdom.net/prum.min.js';s.parentNode.insertBefore(p,s);})();</script>
+
+
+
+
+<script nonce="a3b5e916ad7fdb55-SJC">var tandf = {}, tandfData ={"search":{},"seamlessAccess":{"apiUrl":"https://service.seamlessaccess.org/ps/","context":"seamlessaccess.org","enabled":false},"identity":{"isSpv":false,"isAuthenticated":false,"isPSA":false,"isChineseSession":false,"regionCode":"US"},"exports":{"pdf":{"max":30}},"altmetric":{"key":"be0ef6915d1b2200a248b7195d01ef22"},"pubCount":{},"actionLog":{}};
+tandf.initialHash=location.hash,tandf.initialHash&&history.replaceState(null,null," ");
+</script>
+<script nonce="a3b5e916ad7fdb55-SJC">window.dataLayer=window.dataLayer||[];window.dataLayer.push({'tfo_environment':'atypon'});</script>
+<!-- Google Tag Manager -->
+    <script nonce="a3b5e916ad7fdb55-SJC">(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl+'';var n=d.querySelector('[nonce]');n&&j.setAttribute('nonce',n.nonce||n.getAttribute('nonce'));f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-W2RHRDH');</script>
+    <!-- End Google Tag Manager -->
+
+
+
+
+
+
+
+
+
+
+
+    
+        
+            
+                
+                
+                
+                
+                
+            
+        
+    
+        
+            
+                
+                
+                
+                    
+                    
+                    
+                
+            
+        
+    
+        
+            
+                
+                
+                    
+                
+                
+            
+        
+    
+        
+            
+                
+                
+                
+                
+                
+            
+        
+    
+        
+            
+                
+                
+                
+                    
+                    
+                    
+                
+            
+        
+    
+
+
+
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+<!-- head-meta Start Updated 08/01/2026 - Jim Brown -->
+ 
+<!-- third party advertiser: doceree -->
+<script async src="https://servedbydoceree.doceree.com/resources/p/doc_ad/75/248/dc.js" data-siteId="248" data-platId="1" data-pubId="75" nonce="a3b5e916ad7fdb55-SJC"></script>
+
+<!-- cloudflare -->
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v52afc6f149f6479b8c77fa569edb01181681764108816" integrity="sha512-jGCTpDpBAYDGNYR5ztKt4BQPGef1P0giN6ZGVUi835kFF88FOmmn8jBQWNgrNd8g/Yu421NdgWhwQoaOPFflDw==" data-cf-beacon="{&quot;rayId&quot;:&quot;7dbec9692ec52506&quot;,&quot;token&quot;:&quot;b6951d00f50a499ab38e94f58955e14d&quot;,&quot;version&quot;:&quot;2023.4.0&quot;,&quot;si&quot;:100}" crossorigin="anonymous" nonce="a3b5e916ad7fdb55-SJC"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8b253dfea2ab4077af8c6f58422dfbfd1689876627854" integrity="sha512-bjgnUKX4azu3dLTVtie9u6TKqgx29RBwfj3QXYt5EKfWM/9hPSAI/4qcV5NACjwAo8UtTeWefx6Zq5PHcMm7Tg==" data-cf-beacon="{&quot;rayId&quot;:&quot;7f7ba1d6198c97bd&quot;,&quot;token&quot;:&quot;b6951d00f50a499ab38e94f58955e14d&quot;,&quot;version&quot;:&quot;2023.8.0&quot;,&quot;si&quot;:100}" crossorigin="anonymous" nonce="a3b5e916ad7fdb55-SJC"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317" integrity="sha512-euoFGowhlaLqXsPWQ48qSkBSCFs3DPRyiwVu3FjR96cMPx+Fr+gpWRhIafcHwqwCqWS42RZhIudOvEI+Ckf6MA==" data-cf-beacon="{&quot;rayId&quot;:&quot;833ec1854f7d67a4&quot;,&quot;version&quot;:&quot;2023.10.0&quot;,&quot;token&quot;:&quot;b6951d00f50a499ab38e94f58955e14d&quot;}" crossorigin="anonymous" nonce="a3b5e916ad7fdb55-SJC"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317" integrity="sha512-euoFGowhlaLqXsPWQ48qSkBSCFs3DPRyiwVu3FjR96cMPx+Fr+gpWRhIafcHwqwCqWS42RZhIudOvEI+Ckf6MA==" data-cf-beacon="{&quot;rayId&quot;:&quot;83be15635d25413e&quot;,&quot;version&quot;:&quot;2023.10.0&quot;,&quot;token&quot;:&quot;3bb0add5452d43a2b5d4b3d6c628944c&quot;}" crossorigin="anonymous" nonce="a3b5e916ad7fdb55-SJC"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317" integrity="sha512-euoFGowhlaLqXsPWQ48qSkBSCFs3DPRyiwVu3FjR96cMPx+Fr+gpWRhIafcHwqwCqWS42RZhIudOvEI+Ckf6MA==" data-cf-beacon="{&quot;rayId&quot;:&quot;85878feb3ad8987c&quot;,&quot;version&quot;:&quot;2024.2.0&quot;,&quot;token&quot;:&quot;3bb0add5452d43a2b5d4b3d6c628944c&quot;}" crossorigin="anonymous" nonce="a3b5e916ad7fdb55-SJC"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317" integrity="sha512-euoFGowhlaLqXsPWQ48qSkBSCFs3DPRyiwVu3FjR96cMPx+Fr+gpWRhIafcHwqwCqWS42RZhIudOvEI+Ckf6MA==" data-cf-beacon='{"rayId":"8598828908bb7ac1","version":"2024.2.1","token":"3bb0add5452d43a2b5d4b3d6c628944c"}' crossorigin="anonymous" nonce="a3b5e916ad7fdb55-SJC"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317" integrity="sha512-euoFGowhlaLqXsPWQ48qSkBSCFs3DPRyiwVu3FjR96cMPx+Fr+gpWRhIafcHwqwCqWS42RZhIudOvEI+Ckf6MA==" data-cf-beacon='{"rayId":"85c1a364cc8e642f","version":"2024.2.1","token":"3bb0add5452d43a2b5d4b3d6c628944c"}' crossorigin="anonymous" nonce="a3b5e916ad7fdb55-SJC"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v84a3a4012de94ce1a686ba8c167c359c1696973893317" integrity="sha512-euoFGowhlaLqXsPWQ48qSkBSCFs3DPRyiwVu3FjR96cMPx+Fr+gpWRhIafcHwqwCqWS42RZhIudOvEI+Ckf6MA==" data-cf-beacon='{"rayId":"85f30909ed1167d0","version":"2024.2.4","token":"3bb0add5452d43a2b5d4b3d6c628944c"}' crossorigin="anonymous" nonce="a3b5e916ad7fdb55-SJC"></script>
+
+<!-- Kameleoon -->
+<script nonce="a3b5e916ad7fdb55-SJC">
+  // Duration in milliseconds to wait while the Kameleoon application file is loaded
+  var kameleoonLoadingTimeout = 1000;
+
+  window.kameleoonQueue = window.kameleoonQueue || [];
+  window.kameleoonStartLoadTime = new Date().getTime();
+  if (! document.getElementById("kameleoonLoadingStyleSheet") && ! window.kameleoonDisplayPageTimeOut) {
+    var kameleoonS = document.getElementsByTagName("script")[0];
+    var kameleoonCc = "* { visibility: hidden !important; background-image: none !important; }";
+    var kameleoonStn = document.createElement("style");
+    kameleoonStn.type = "text/css";
+    kameleoonStn.id = "kameleoonLoadingStyleSheet";
+    if (kameleoonStn.styleSheet) {
+      kameleoonStn.styleSheet.cssText = kameleoonCc;
+    } else {
+      kameleoonStn.appendChild(document.createTextNode(kameleoonCc));
+    }
+    kameleoonS.parentNode.insertBefore(kameleoonStn, kameleoonS);
+    window.kameleoonDisplayPage = function(fromEngine) {
+      if (!fromEngine) {
+        window.kameleoonTimeout = true;
+      }
+      if (kameleoonStn.parentNode) {
+        kameleoonStn.parentNode.removeChild(kameleoonStn);
+      }
+    };
+    window.kameleoonDisplayPageTimeOut = window.setTimeout(window.kameleoonDisplayPage, kameleoonLoadingTimeout);
+  }
+
+</script>
+
+<script type="text/javascript" src="//7p6n62phet.kameleoon.io/engine.js" async="true" fetchpriority="high" nonce="a3b5e916ad7fdb55-SJC"></script>
+
+<!-- head-meta end -->
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+    
+
+
+
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+       
+
+
+    
+    
+        
+            
+            
+            <link rel="canonical" href="">
+        
+        
+        
+    
+
+
+
+
+
+
+
+<meta name="pbContext" content=";subPage:string:Status ;wgroup:string:Publication Websites;website:website:TFOPB;page:string:IP blocked;pageGroup:string:Error">
+        </head>
+    
+
+    
+
+
+
+    
+        
+        
+        
+            <body
+                    class="pb-ui website-TFOPB">
+            
+
+
+
+
+
+
+    
+    
+        <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W2RHRDH" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+
+
+<link rel="stylesheet" href="/wro/77da6987572d596b793244c88de74445b23515f2~google-fonts.css">
+
+        <div id="pb-page-content" data-ng-non-bindable>
+                
+            <div data-pb-dropzone="main" data-pb-dropzone-name="Main">
+                
+                    
+                        
+
+
+
+
+
+                    
+                        
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget pageHeader none  widget-none  widget-compact-all" id="a4d4fdd3-c594-4d68-9f06-b69b8b37ed56"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="modal-overlay fade-and-pop modal-open top-nav"></div>
+<header class="page-header" aria-label="Global Navigation">
+    
+
+
+
+
+
+
+
+
+
+
+
+<div  data-pb-dropzone="main" class="">
+    
+        
+            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget responsive-layout none header-top widget-none  widget-compact-all" id="00d6f1bb-2b57-4858-a0da-0ad54a8ec65b"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="container-fluid">
+    <div class="row row-md gutterless ">
+        
+            <div class="col-md-1-1 top-nav-resp">
+                <div class="contents" data-pb-dropzone="contents0">
+                    
+                    
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget general-image alignLeft header-logo widget-none  widget-compact-horizontal" id="296b7422-bb24-4e9f-a0de-c7b1351f1792"  >
+        
+        
+
+        <div class="wrapped 172" >
+            
+            <div class="widget-body body body-none  body-compact-horizontal"><a href="/" title="Taylor and Francis Online homepage"> <img src="/pb-assets/Global/TFO-logo-new-1716484961953.svg" alt="Taylor and Francis Online homepage" height="41" width="172"/> </a></div>
+        </div>
+    </div>
+    
+
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget general-html none first-top-navigation qsw-global-nav widget-none" id="95bb198f-2314-4e18-995d-c13968636386"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none "><ul class="top-navigation" aria-label="global menu" data-dropdown-wrapper>
+    <li class="top-navigation-list">
+        <button
+            class="journals--item__dropdown topnav-journals-button topnav-browse-button"
+            aria-expanded="false"
+            data-behaviour="toggle-dropdown">
+            <span>Journals</span>
+            <i class="fa fa-chevron-down" aria-hidden="true"></i>
+        </button>
+        <div
+            class="navigation--item__dropdown-content journals__desktopNavItem hidden"
+            tabindex="-1" data-dropdown-content>
+            <div class="journals__nav-container">
+                <button class="close-search journals__close-btn"
+                    data-behaviour="close-dropdown">
+                    <span class="off-screen">Close Journals Menu</span>
+                    <i class="fa fa-times" aria-hidden="true"></i>
+                </button>
+                <div class="journals__browse-column journals__left">
+                    <div class="journals__column-left">
+                        <div class="journals__browse-journals">
+                            <p class="journals__nav-title">Browse all
+                                journals</p>
+                            <ul>
+                                <li><a class="topnav-journals-az-link"
+                                        href="/action/showPublications?pubType=journal&amp;ejf=on">Browse
+                                        all journals A-Z</a>
+                                </li>
+                                <li><a class="topnav-oa-journals-link"
+                                        href="/openaccess/openjournals">Open
+                                        access journals</a>
+                                </li>
+                                <li><a class="topnav-hybrid-journals-link"
+                                        href="/openaccess/openselect">Open
+                                        Select (hybrid) journals</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="journals__browse-books">
+                            <p class="journals__nav-title">Browse all books</p>
+                            <ul>
+                                <li><a class="topnav-ebooks-link"
+                                        target="_blank"
+                                        href="https://www.taylorfrancis.com"
+                                        rel="noopener">Explore Taylor &amp;
+                                        Francis eBooks <i
+                                            class="fa fa-external-link"
+                                            aria-hidden="true"></i></a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="journals__column-right journals__publish">
+                        <div class="journals__browse-publish">
+                            <p class="journals__nav-title">Publish</p>
+                            <ul>
+                                <li><a
+                                        href="/action/showPublications?pubType=journal&amp;ejf=on">Find
+                                        a journal</a>
+                                </li>
+                                <li><a
+                                        href="https://authorservices.taylorandfrancis.com/call-for-papers/">Search
+                                        calls for papers</a>
+                                </li>
+                                <li><a
+                                        href="https://authorservices.taylorandfrancis.com/publishing-your-research/choosing-a-journal/journal-suggester/">Journal
+                                        Suggester</a>
+                                </li>
+                                <li><a href="/openaccess">Open access
+                                        publishing</a></li>
+                                <li><a
+                                        href="https://authorservices.taylorandfrancis.com">Find
+                                        guidance on Author Services</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="journals__browse-column journals__right">
+                    <div class="journals__browse-subject">
+                        <p class="journals__nav-title">Browse by subject</p>
+                        <div
+                            class="journals__browse-subject__column__col"
+                            style="display: flex;">
+                            <ul class="journals__browse-subject__column">
+                                <li><a href="/subjects/area-studies"
+                                        class="social-sciences topnav-subject-link">Area
+                                        Studies</a>
+                                </li>
+                                <li><a href="/subjects/arts"
+                                        class="social-sciences topnav-subject-link">Arts</a>
+                                </li>
+                                <li><a href="/subjects/behavioral-sciences"
+                                        class="medicine-health topnav-subject-link">Behavioral
+                                        Sciences</a>
+                                </li>
+                                <li><a href="/subjects/bioscience"
+                                        class="medicine-health topnav-subject-link">Bioscience</a>
+                                </li>
+                                <li><a href="/subjects/built-environment"
+                                        class="environmental-science topnav-subject-link">Built
+                                        Environment</a>
+                                </li>
+                                <li><a href="/subjects/communication-studies"
+                                        class="social-sciences topnav-subject-link">Communication
+                                        Studies</a>
+                                </li>
+                                <li><a href="/subjects/computer-science"
+                                        class="phy-science topnav-subject-link">Computer
+                                        Science</a>
+                                </li>
+                                <li><a href="/subjects/earth-sciences"
+                                        class="environmental-science topnav-subject-link">Earth
+                                        Sciences</a>
+                                </li>
+                                <li><a
+                                        href="/subjects/economics-finance-business-industry"
+                                        class="social-sciences topnav-subject-link">Economics,
+                                        Finance, Business &amp; Industry</a>
+                                </li>
+                                <li><a href="/subjects/education"
+                                        class="social-sciences topnav-subject-link">Education</a>
+                                </li>
+                                <li><a
+                                        href="/subjects/engineering-and-technology"
+                                        class="phy-science topnav-subject-link">Engineering
+                                        &amp; Technology</a>
+                                </li>
+                                <li><a
+                                        href="/subjects/environment-and-agriculture"
+                                        class="environmental-science topnav-subject-link">Environment
+                                        &amp; Agriculture</a>
+                                </li>
+                                <li><a
+                                        href="/subjects/environment-and-sustainability"
+                                        class="environmental-science topnav-subject-link">Environment
+                                        and Sustainability</a>
+                                </li>
+                                <li><a
+                                        href="/subjects/food-science-and-technology"
+                                        class="phy-science topnav-subject-link">Food
+                                        Science &amp; Technology</a>
+                                </li>
+                                <li><a href="/subjects/geography"
+                                        class="social-sciences topnav-subject-link">Geography</a>
+                                </li>
+                            </ul>
+                            <ul class="journals__browse-subject__column">
+                                <li><a href="/subjects/global-development"
+                                        class="environmental-science topnav-subject-link">Global
+                                        Development</a>
+                                </li>
+                                <li><a href="/subjects/health-and-social-care"
+                                        class="medicine-health topnav-subject-link">Health
+                                        and Social Care</a>
+                                </li>
+                                <li><a href="/subjects/humanities"
+                                        class="social-sciences topnav-subject-link">Humanities</a>
+                                </li>
+                                <li><a href="/subjects/information-science"
+                                        class="phy-science topnav-subject-link">Information
+                                        Science</a>
+                                </li>
+                                <li><a href="/subjects/language-and-literature"
+                                        class="social-sciences topnav-subject-link">Language
+                                        &amp; Literature</a>
+                                </li>
+                                <li><a href="/subjects/law"
+                                        class="social-sciences topnav-subject-link">Law</a>
+                                </li>
+                                <li><a
+                                        href="/subjects/mathematics-and-statistics"
+                                        class="phy-science topnav-subject-link">Mathematics
+                                        &amp; Statistics</a>
+                                </li>
+                                <li><a
+                                        href="/subjects/medicine-dentistry-nursing-and-allied-health"
+                                        class="medicine-health topnav-subject-link">Medicine,
+                                        Dentistry, Nursing &amp; Allied
+                                        Health</a>
+                                </li>
+                                <li><a
+                                        href="/subjects/museum-and-heritage-studies"
+                                        class="social-sciences topnav-subject-link">Museum
+                                        and Heritage Studies</a>
+                                </li>
+                                <li><a href="/subjects/physical-sciences"
+                                        class="phy-science topnav-subject-link">Physical
+                                        Sciences</a>
+                                </li>
+                                <li><a
+                                        href="/subjects/politics-and-international-relations"
+                                        class="social-sciences topnav-subject-link">Politics
+                                        &amp; International Relations</a>
+                                </li>
+                                <li><a href="/subjects/social-sciences"
+                                        class="social-sciences topnav-subject-link">Social
+                                        Sciences</a>
+                                </li>
+                                <li><a href="/subjects/sports-and-leisure"
+                                        class="social-sciences topnav-subject-link">Sports
+                                        and Leisure</a>
+                                </li>
+                                <li><a
+                                        href="/subjects/tourism-hospitality-and-events"
+                                        class="social-sciences topnav-subject-link">Tourism,
+                                        Hospitality and Events</a>
+                                </li>
+                                <li><a href="/subjects/urban-studies"
+                                        class="environmental-science topnav-subject-link">Urban
+                                        Studies</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </li>
+    <li class="search--item top-navigation-list">
+        <button aria-expanded="false" data-behaviour="toggle-dropdown"
+            class="search--item__dropdown topnav-search-button">
+            <span>Search</span>
+            <i aria-hidden="true" class="fa fa-chevron-down"></i>
+        </button>
+        <div data-dropdown-content
+            class="quickSearchFormContainer search-home navigation--item__dropdown-content hidden">
+            <form name="quickSearch" action="/action/doSearch"
+                class="quickSearchForm" title="Quick Search"
+                role="search" method="get" onsubmit="appendSearchFilters(this)"
+                aria-label="Quick Search">
+                <span class="quickSearchContainer">
+                    <span class="simpleSearchBoxContainer">
+                        <input name="AllField"
+                            class="searchText main-search-field autocomplete ui-autocomplete-input"
+                            value type="search"
+                            id="searchText-95bb198f-2314-4e18-995d-c13968636386"
+                            title="Type search term here" aria-label="Search"
+                            placeholder="Search Taylor &amp; Francis for journals, articles and special issues, by keywords, authors, DOI, etc."
+                            autocomplete="off" data-history-items-conf="3"
+                            data-publication-titles-conf="3"
+                            data-publication-items-conf="3" data-topics-conf="3"
+                            data-contributors-conf="3"
+                            data-fuzzy-suggester="false"
+                            data-auto-complete-target="title-auto-complete">
+                    </span>
+                    <div class="quick-search-btn">
+                        <button class="mainSearchButton searchButtons pointer"
+                            type="submit" value title="Search"
+                            aria-label="Search"></button>
+                    </div>
+                </span>
+                <button class="close-search" data-behaviour="close-dropdown">
+                    <span class="off-screen">Close Search Menu</span>
+                    <i aria-hidden="true" class="fa fa-times"></i>
+                </button>
+            </form>
+        </div>
+    </li>
+    <li class="publish--item top-navigation-list">
+        <button aria-expanded="false" data-behaviour="toggle-dropdown"
+            class="publish--item__dropdown topnav-publish-button">
+            <span>Publish</span>
+            <i aria-hidden="true" class="fa fa-chevron-down"></i>
+        </button>
+        <div data-dropdown-content
+            class="navigation--item__dropdown-content hidden">
+            <ul>
+                <li><a class="topnav-why-pub-link" href="/why-publish-with-us">Why publish with us?</a></li>
+                <li><a class="topnav-find-jnr-link" href="/action/showPublications?pubType=journal&amp;ejf=on">Find a journal </a></li>
+                <li><a class="topnav-cfp-link" href="https://authorservices.taylorandfrancis.com/call-for-papers/">Search calls for papers</a></li>
+                <li><a class="topnav-jnr-sug-link" href="https://authorservices.taylorandfrancis.com/publishing-your-research/choosing-a-journal/journal-suggester/">Journal Suggester</a></li>
+                <li><a class="topnav-step-by-step-link" href="https://authorservices.taylorandfrancis.com/publishing-your-research/">Step-by-step guide</a></li>
+                <li><a class="topnav-oa-pub-link" href="/openaccess">Open access publishing </a></li>
+            </ul>
+            <div class="authorServices-help">
+                <p>We're here to help</p>
+                <p>Find guidance on <a class="topnav-auth-serv-link" href="https://authorservices.taylorandfrancis.com">Author Services</a></p>
+            </div>
+        </div>
+    </li>
+</ul></div>
+        </div>
+    </div>
+    
+
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget literatumInstitutionBanner none bannerWidth widget-none" id="7283c6d9-1060-407d-a084-09d65236931e"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none "><div class="institution-image hidden-xs  hidden-sm logout-institution-image">
+    
+</div></div>
+        </div>
+    </div>
+    
+
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget literatumNavigationLoginBar none  widget-none  widget-compact-all" id="78ed73f4-350d-4935-9c1b-bf71130be6dd"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="loginBar not-logged-in">
+    <span class="icon-user"></span>
+    <a href="/action/showLogin?uri=" class="sign-in-link">
+        Login
+    </a>
+    <span class="loginSeprator">&nbsp;|&nbsp;</span>
+    
+
+
+
+
+
+    
+
+
+
+    
+    
+        <a href="/action/registration?redirectUri=%2F" class="register-link">
+            <span>Register</span>
+        </a>
+    
+
+</div>
+
+<span class="not-logged-in-list-new">
+    <button class="loginBar not-logged-in-mobile" aria-expanded="false">
+        <span class="fullIndividualName visible-tl">
+        <span class="icon-user"></span>
+        <span class="off-screen">Log in or Register</span>
+        </span>
+    </button>
+    <ul class="LoginBarList">
+        <li>
+            <a href="/action/showLogin?uri=" class="sign-in-link">
+                <span>Login</span>
+            </a>
+
+        </li>
+        <li>
+            
+
+
+
+
+
+    
+
+
+
+    
+    
+        <a href="/action/registration?redirectUri=%2F" class="register-link">
+            <span>Register</span>
+        </a>
+    
+
+        </li>
+    </ul>
+</span></div>
+        </div>
+    </div>
+    
+
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget eCommerceCartIndicatorWidget none literatumCartLink widget-none" id="492ea409-0544-4418-822b-f467dbb4f761"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none "><a href="/action/showCart?FlowID=1" class="cartLabel" aria-labelledby="cartLabel cartItems">
+            <span id="cartLabel" class="visible-tl-inline-block">Cart</span>
+            <span class="cartItemSize-new">
+                <span class="cartItems" role="status">
+                    <span class="off-screen">
+                        
+                            
+                            
+                                Add to Cart
+                            
+                        
+                    </span>
+                    <span class="fa cart-size fa-lg notification">
+                        <span class="fa fa-shopping-cart">
+                            
+                        </span>
+                    </span>
+                </span>
+            </span>
+            <span class="cartItemSize-old">
+                <span id="cartItems" class="cartItems" data-id="cart-size" role="status">
+                    
+                </span>
+            </span>
+        </a></div>
+        </div>
+    </div>
+    
+
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget general-html none  widget-none" id="ae54c4d3-b3ec-48fa-a62b-314bcb75e211"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none "><div class="header_burger-menu" data-dropdown-wrapper="">
+    <button aria-expanded="false" data-behaviour="toggle-dropdown" class="burger-menu-button">
+        <span class="burger-menu off-screen" >Search, Browse, or Publish</span><i aria-hidden="true" class="fa fa-bars"></i><span class="close-burger-menu off-screen">Close Menu</span>
+        <i aria-hidden="true" class="fa fa-times"></i>
+    </button>
+
+    <div data-dropdown-content="" tabindex="-1" class="navigation--item__dropdown-content-mobile hidden">
+        <ul class="top-navigation" aria-label="global menu" data-more-wrapper="">
+            <li class="top-navigation-list">
+                <span class="off-screen">Search</span>
+                <div class="quickSearchFormContainer search-home navigation--item__dropdown-content-mobile">
+                    <form name="quickSearch" action="/action/doSearch" class="quickSearchForm"
+                          title="Quick Search" role="search"
+                          method="get" onsubmit="appendSearchFilters(this)" aria-label="Quick Search">
+                        <span class="quickSearchContainer">
+                            <span class="simpleSearchBoxContainer">
+                                <input name="AllField" class="searchText main-search-field autocomplete ui-autocomplete-input"
+                                   value=""
+                                   type="search" id="searchText-"
+                                   title="Type search term here"
+                                   aria-label="Search"
+                                   placeholder="Search journals, articles &amp; issues"
+                                   autocomplete="off"
+                                   data-history-items-conf="3" data-publication-titles-conf="3" data-publication-items-conf="3"
+                                   data-topics-conf="3" data-contributors-conf="3" data-fuzzy-suggester="false"
+                                   data-auto-complete-target="title-auto-complete"/>
+                            </span>
+                        </span>
+                        <div class="quick-search-btn">
+                            <button class="mainSearchButton searchButtons pointer" type="submit" value="" title="Search"
+                                    aria-label="Search"></button>
+                        </div>
+                        <button class="close-search" data-behaviour="close-dropdown">
+                            <span class="off-screen">Close search</span>
+                            <i aria-hidden="true" class="fa fa-times"></i>
+                        </button>
+                    </form>
+                </div>
+            </li>
+            <li class="journals--item top-navigation-list" data-more-wrapper="">
+                <button
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        data-behaviour="toggle-more"
+                        data-only-one=""
+                        class="journals--item__dropdown show-more">
+                    <span>Journals</span>
+                    <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.29414 0.293848C5.68477 -0.0967774 6.31914 -0.0967774 6.70977 0.293848L11.7098 5.29385C12.1004 5.68447 12.1004 6.31885 11.7098 6.70947C11.3191 7.1001 10.6848 7.1001 10.2941 6.70947L6.00039 2.41572L1.70664 6.70635C1.31602 7.09697 0.681641 7.09697 0.291016 6.70635C-0.0996094 6.31572 -0.0996094 5.68135 0.291016 5.29072L5.29102 0.290722L5.29414 0.293848Z" fill="#0F147E"></path>
+                    </svg>
+                </button>
+                <div data-more="" class="navigation--item__dropdown-content hidden">
+                    <ul>
+                        <li
+                                data-name="journals__browse-subject"
+                                class="has-child"
+                                data-more-wrapper="">
+                            <button
+                                    aria-haspopup="true"
+                                    aria-expanded="false"
+                                    data-behaviour="toggle-more"
+                                    data-only-one=""
+                                    class="browse--item__dropdown show-more">
+                                
+                                <span>Browse by subject</span>
+                                <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.29414 0.293848C5.68477 -0.0967774 6.31914 -0.0967774 6.70977 0.293848L11.7098 5.29385C12.1004 5.68447 12.1004 6.31885 11.7098 6.70947C11.3191 7.1001 10.6848 7.1001 10.2941 6.70947L6.00039 2.41572L1.70664 6.70635C1.31602 7.09697 0.681641 7.09697 0.291016 6.70635C-0.0996094 6.31572 -0.0996094 5.68135 0.291016 5.29072L5.29102 0.290722L5.29414 0.293848Z" fill="#0F147E"></path>
+                    </svg>
+                            </button>
+                            <div
+                                    data-more=""
+                                    class="navigation--item__dropdown-content hidden">
+                                <ul>
+                                    <li
+                                            data-name="journals__social-sciences"
+                                            class="has-child"
+                                            data-more-wrapper="">
+                                        <button
+                                                aria-haspopup="true"
+                                                aria-expanded="false"
+                                                data-behaviour="toggle-more"
+                                                data-only-one=""
+                                                class="social--item__dropdown show-more">
+                                            
+                                            <span>Social Sciences &amp; Humanities</span>
+                                            <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.29414 0.293848C5.68477 -0.0967774 6.31914 -0.0967774 6.70977 0.293848L11.7098 5.29385C12.1004 5.68447 12.1004 6.31885 11.7098 6.70947C11.3191 7.1001 10.6848 7.1001 10.2941 6.70947L6.00039 2.41572L1.70664 6.70635C1.31602 7.09697 0.681641 7.09697 0.291016 6.70635C-0.0996094 6.31572 -0.0996094 5.68135 0.291016 5.29072L5.29102 0.290722L5.29414 0.293848Z" fill="#0F147E"></path>
+                    </svg>
+                                        </button>
+                                        <div
+                                                data-more=""
+                                                class="navigation--item__dropdown-content hidden">
+                                            <ul>
+                                                <li>
+                                                    <a class="topnav-subject-link"
+                                                            href="/subjects/area-studies"
+                                                    ><span>Area Studies</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link" href="/subjects/arts"
+                                                    ><span>Arts</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link"
+                                                            href="/subjects/communication-studies"
+                                                    ><span>Communication Studies</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link"
+                                                            href="/subjects/economics-finance-business-industry"
+                                                    ><span>Economics, Finance, Business &amp; Industry</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link"
+                                                            href="/subjects/education"
+                                                    ><span>Education</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link"
+                                                            href="/subjects/geography"
+                                                    ><span>Geography</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link"
+                                                            href="/subjects/humanities"
+                                                    ><span>Humanities</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link"
+                                                            href="/subjects/language-and-literature"
+                                                    ><span>Language &amp; Literature</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link" href="/subjects/law"
+                                                    ><span>Law</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link"
+                                                            href="/subjects/museum-and-heritage-studies"
+                                                    ><span>Museum and Heritage Studies</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link"
+                                                            href="/subjects/politics-and-international-relations"
+                                                    ><span>Politics &amp; International Relations</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link"
+                                                            href="/subjects/social-sciences"
+                                                    ><span>Social Sciences</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link"
+                                                            href="/subjects/sports-and-leisure"
+                                                    ><span>Sports and Leisure</span></a
+                                                    >
+                                                </li>
+                                                <li>
+                                                    <a class="topnav-subject-link"
+                                                            href="/subjects/tourism-hospitality-and-events"
+                                                    ><span>Tourism, Hospitality and Events</span></a
+                                                    >
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <li
+                                            data-name="journals__Physical-sciences"
+                                            class="has-child"
+                                            data-more-wrapper="">
+                                        <button
+                                                aria-haspopup="true"
+                                                aria-expanded="false"
+                                                data-behaviour="toggle-more"
+                                                data-only-one=""
+                                                class="Physical--item__dropdown show-more">
+                                            
+                                            <span>Physical Sciences &amp; Engineering</span>
+                                            <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.29414 0.293848C5.68477 -0.0967774 6.31914 -0.0967774 6.70977 0.293848L11.7098 5.29385C12.1004 5.68447 12.1004 6.31885 11.7098 6.70947C11.3191 7.1001 10.6848 7.1001 10.2941 6.70947L6.00039 2.41572L1.70664 6.70635C1.31602 7.09697 0.681641 7.09697 0.291016 6.70635C-0.0996094 6.31572 -0.0996094 5.68135 0.291016 5.29072L5.29102 0.290722L5.29414 0.293848Z" fill="#0F147E"></path>
+                    </svg>
+                                        </button>
+                                        <div
+                                                data-more=""
+                                                class="navigation--item__dropdown-content hidden">
+                                            <ul>
+
+                                                <li><a class="topnav-subject-link" href="/subjects/computer-science"><span>Computer
+                                                    Science</span></a></li>
+
+                                                <li>
+                                                    <a class="topnav-subject-link" href="/subjects/engineering-and-technology"><span>Engineering
+                                                        &amp; Technology</span></a></li>
+
+                                                <li>
+                                                    <a class="topnav-subject-link" href="/subjects/food-science-and-technology"><span>Food
+                                                        Science &amp; Technology</span></a></li>
+
+                                                <li><a class="topnav-subject-link" href="/subjects/information-science"><span>Information
+                                                    Science</span></a></li>
+
+                                                <li>
+                                                    <a class="topnav-subject-link" href="/subjects/mathematics-and-statistics"><span>Mathematics
+                                                        &amp; Statistics</span></a></li>
+
+                                                <li><a class="topnav-subject-link" href="/subjects/physical-sciences"><span>Physical
+                                                    Sciences</span></a></li>
+
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <li
+                                            data-name="journals__medicine-health"
+                                            class="has-child"
+                                            data-more-wrapper="">
+                                        <button
+                                                aria-haspopup="true"
+                                                aria-expanded="false"
+                                                data-behaviour="toggle-more"
+                                                data-only-one=""
+                                                class="medicine--item__dropdown show-more">
+                                            
+                                            <span>Medicine, Health &amp; Life Sciences</span>
+                                            <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.29414 0.293848C5.68477 -0.0967774 6.31914 -0.0967774 6.70977 0.293848L11.7098 5.29385C12.1004 5.68447 12.1004 6.31885 11.7098 6.70947C11.3191 7.1001 10.6848 7.1001 10.2941 6.70947L6.00039 2.41572L1.70664 6.70635C1.31602 7.09697 0.681641 7.09697 0.291016 6.70635C-0.0996094 6.31572 -0.0996094 5.68135 0.291016 5.29072L5.29102 0.290722L5.29414 0.293848Z" fill="#0F147E"></path>
+                    </svg>
+                                        </button>
+                                        <div
+                                                data-more=""
+                                                class="navigation--item__dropdown-content hidden">
+                                            <ul>
+
+                                                <li><a class="topnav-subject-link" href="/subjects/behavioral-sciences"><span>Behavioral
+                                                    Sciences</span></a></li>
+
+                                                <li>
+                                                    <a class="topnav-subject-link" href="/subjects/bioscience"><span>Bioscience</span></a>
+                                                </li>
+
+                                                <li>
+                                                    <a class="topnav-subject-link" href="/subjects/health-and-social-care"><span>Health
+                                                        and Social Care</span></a></li>
+
+                                                <li>
+                                                    <a class="topnav-subject-link" href="/subjects/medicine-dentistry-nursing-and-allied-health"><span>Medicine,
+                                                        Dentistry, Nursing &amp; Allied Health</span></a></li>
+
+                                            </ul>
+                                        </div>
+                                    </li>
+                                    <li
+                                            data-name="journals__environmental-science"
+                                            class="has-child"
+                                            data-more-wrapper="">
+                                        <button
+                                                aria-haspopup="true"
+                                                aria-expanded="false"
+                                                data-behaviour="toggle-more"
+                                                data-only-one=""
+                                                class="environmental--item__dropdown show-more">
+                                            
+                                            <span>Earth &amp; Environmental Sciences</span>
+                                            <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.29414 0.293848C5.68477 -0.0967774 6.31914 -0.0967774 6.70977 0.293848L11.7098 5.29385C12.1004 5.68447 12.1004 6.31885 11.7098 6.70947C11.3191 7.1001 10.6848 7.1001 10.2941 6.70947L6.00039 2.41572L1.70664 6.70635C1.31602 7.09697 0.681641 7.09697 0.291016 6.70635C-0.0996094 6.31572 -0.0996094 5.68135 0.291016 5.29072L5.29102 0.290722L5.29414 0.293848Z" fill="#0F147E"></path>
+                    </svg>
+                                        </button>
+                                        <div
+                                                data-more=""
+                                                class="navigation--item__dropdown-content hidden">
+
+                                            <ul>
+
+                                                <li><a class="topnav-subject-link" href="/subjects/built-environment"><span>Built
+                                                    Environment</span></a></li>
+
+                                                <li><a class="topnav-subject-link" href="/subjects/earth-sciences"><span>Earth
+                                                    Sciences</span></a></li>
+
+                                                <li>
+                                                    <a class="topnav-subject-link" href="/subjects/environment-and-agriculture"><span>Environment
+                                                        &amp; Agriculture</span></a></li>
+
+                                                <li>
+                                                    <a class="topnav-subject-link" href="/subjects/environment-and-sustainability"><span>Environment
+                                                        and Sustainability</span></a></li>
+
+                                                <li><a class="topnav-subject-link" href="/subjects/global-development"><span>Global
+                                                    Development</span></a></li>
+
+                                                <li><a class="topnav-subject-link" href="/subjects/urban-studies"><span>Urban
+                                                    Studies</span></a></li>
+
+                                            </ul>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="topnav-journals-az-link" href="/action/showPublications?pubType=journal&amp;ejf=on"
+                            ><span>Browse all journals A-Z</span></a
+                            >
+                        </li>
+                        <li><a class="topnav-oa-journals-link" href="/openaccess/openjournals"><span>Open access journals</span></a></li>
+                        <li>
+                            <a class="topnav-hybrid-journals-link" href="/openaccess/openselect"><span>Open Select (hybrid) journals</span></a>
+                        </li>
+                        <li>
+                            <a class="topnav-ebooks-link"
+                                    target="_blank"
+                                    href="https://www.taylorfrancis.com/"
+                                    rel="noopener"
+                            ><span>Explore Taylor &amp; Francis eBooks <i class="fa fa-external-link" aria-hidden="true"></i></span></a
+                            >
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            <li class="publish--item top-navigation-list" data-more-wrapper="">
+                <button
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        data-behaviour="toggle-more"
+                        class="publish--item__dropdown show-more">
+                    <span>Publish</span>
+                    <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.29414 0.293848C5.68477 -0.0967774 6.31914 -0.0967774 6.70977 0.293848L11.7098 5.29385C12.1004 5.68447 12.1004 6.31885 11.7098 6.70947C11.3191 7.1001 10.6848 7.1001 10.2941 6.70947L6.00039 2.41572L1.70664 6.70635C1.31602 7.09697 0.681641 7.09697 0.291016 6.70635C-0.0996094 6.31572 -0.0996094 5.68135 0.291016 5.29072L5.29102 0.290722L5.29414 0.293848Z" fill="#0F147E"></path>
+                    </svg>
+                </button>
+                <div data-more="" class="navigation--item__dropdown-content hidden">
+                    <ul>
+                        <li><a class="topnav-why-pub-link" href="/why-publish-with-us"><span>Why publish with us?</span></a></li>
+                        <li><a class="topnav-find-jnr-link" href="/action/showPublications?pubType=journal&amp;ejf=on"><span>Find a journal</span> </a></li>
+                        <li><a class="topnav-cfp-link" href="https://authorservices.taylorandfrancis.com/call-for-papers"><span>Search calls for papers</span></a></li>
+                        <li><a class="topnav-jnr-sug-link" href="https://authorservices.taylorandfrancis.com/publishing-your-research/choosing-a-journal/journal-suggester/"><span>Journal Suggester</span></a></li>
+                        <li><a class="topnav-step-by-step-link" href="https://authorservices.taylorandfrancis.com/publishing-your-research/"><span>Step-by-step guide</span></a></li>
+                        <li><a class="topnav-oa-pub-link" href="/openaccess"><span>Open access publishing</span></a></li>
+                        <li><a class="topnav-auth-serv-link" href="https://authorservices.taylorandfrancis.com"><span>Find guidance on <strong>Author Services</strong></span></a></li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div></div>
+        </div>
+    </div>
+    
+
+                        
+                    
+                </div>
+            </div>
+        
+    </div>
+</div></div>
+        </div>
+    </div>
+    
+
+        
+    
+</div>
+
+</header></div>
+        </div>
+    </div>
+    
+
+                    
+                        
+
+
+
+
+
+
+
+
+
+    
+    
+        <div data-widget-def="pageBody" data-widget-id="35d9ca18-265e-4501-9038-4105e95a4b7d" role="main">
+        
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget pageBody none open-access-members widget-none  widget-compact-all" id="35d9ca18-265e-4501-9038-4105e95a4b7d"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><!--begin pagefulltext-->
+<div class="page-body pagefulltext">
+    
+
+
+
+
+
+
+
+
+
+
+
+<div  data-pb-dropzone="main" class="">
+    
+        
+            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget responsive-layout none body-header fit container widget-none  widget-compact-all" id="dc2d36f3-b1bf-40fd-a61d-83eb402ce80c"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="container-fluid">
+    <div class="row row-md gutterless ">
+        
+            <div class="col-md-1-6 hidden-xs hidden-sm ">
+                <div class="contents" data-pb-dropzone="contents0">
+                    
+                    
+                </div>
+            </div>
+        
+            <div class="col-md-7-12 fit padding">
+                <div class="contents" data-pb-dropzone="contents1">
+                    
+                    
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget quickSearchWidget none  widget-none  widget-compact-all" id="a1767d0a-3455-45c4-aee3-43efdc88fc94"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="quickSearchFormContainer ">
+    <form action="/action/doSearch" name="quickSearch" class="quickSearchForm " title="Quick Search" role="search" method="get"aria-label="Quick Search"><span class="simpleSearchBoxContainer">
+                            <input name="AllField" class="searchText main-search-field autocomplete" value="" type="search" id="searchText-a1767d0a-3455-45c4-aee3-43efdc88fc94" title="Type search term here" aria-label="Search" placeholder="Enter keywords, authors, DOI etc." autocomplete="off" data-history-items-conf="3" data-publication-titles-conf="3" data-publication-items-conf="3" data-topics-conf="3" data-contributors-conf="3" data-fuzzy-suggester="false" data-auto-complete-target="title-auto-complete" />
+                                </span>
+                    <div class="quick-search-btn">
+                    <button class="mainSearchButton searchButtons pointer" type="submit" value="" title="Search" aria-label="Search"></button>
+                </div></form></div>
+<div class="advancedSearchLinkDropZone" data-pb-dropzone="advancedSearchLinkDropZone">
+    </div></div>
+        </div>
+    </div>
+    
+
+                        
+                    
+                </div>
+            </div>
+        
+            <div class="col-md-1-4 ">
+                <div class="contents" data-pb-dropzone="contents2">
+                    
+                    
+                </div>
+            </div>
+        
+    </div>
+</div></div>
+        </div>
+    </div>
+    
+
+        
+            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget responsive-layout none  widget-none" id="276cbded-968c-4ef4-8244-27166b9cae34"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none "><div class="container">
+    <div class="row row-md  ">
+        
+            <div class="col-md-1-1 ">
+                <div class="contents" data-pb-dropzone="contents0">
+                    
+                    
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget general-html none  widget-none" id="58ee1299-018d-4502-ae77-4f89c0ff4da5"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none "><h4><strong>The IP address of 2602:f93b:142:a:bc24:11ff:fec5:aa86 has not been recognised to access this page.</strong></h4>
+<p>Please contact <a href="mailto:support@tandfonline.com">support@tandfonline.com</a> quoting the IP address of 2602:f93b:142:a:bc24:11ff:fec5:aa86 for further assistance.</p></div>
+        </div>
+    </div>
+    
+
+                        
+                    
+                </div>
+            </div>
+        
+    </div>
+</div></div>
+        </div>
+    </div>
+    
+
+        
+    
+</div>
+
+</div>
+<!--end pagefulltext--></div>
+        </div>
+    </div>
+    
+
+        </div>
+    
+
+
+                    
+                        
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget pageFooter none  widget-none  widget-compact-all" id="d97c173f-d838-4de1-bbd7-ed69f0d36a91"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><footer class="page-footer">
+    
+
+
+
+
+
+
+
+
+
+
+
+<div  data-pb-dropzone="main" class="">
+    
+        
+            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget responsive-layout none footer-subjects hidden-xs hidden-sm widget-none  widget-compact-all" id="1f15adc0-4a59-4d27-93fe-8cbb14a5108a"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="container">
+    <div class="row row-md gutterless ">
+        
+            <div class="col-md-1-1 fit-padding">
+                <div class="contents" data-pb-dropzone="contents0">
+                    
+                    
+                        
+                            
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    
+        <div class="widget pbOptimizerWidget none widget-none widget-compact-all" id="af788167-0054-4892-bd47-5de7cbd64256"> <div class="wrapped "> <div class="widget-body body body-none body-compact-all"><div data-optimizer data-widget-id="af788167-0054-4892-bd47-5de7cbd64256" id="widget-af788167-0054-4892-bd47-5de7cbd64256" data-observer> </div></div> </div> </div>
+    
+    
+
+
+                        
+                    
+                </div>
+            </div>
+        
+    </div>
+</div></div>
+        </div>
+    </div>
+    
+
+        
+            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget responsive-layout none footer-links widget-none" id="dbc2c841-5251-4c2c-8eaa-61177ffde93c"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none "><div class="container">
+    <div class="row row-md  ">
+        
+            <div class="col-md-1-6 ">
+                <div class="contents" data-pb-dropzone="contents0">
+                    
+                    
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget general-html none  widget-none  widget-compact-all" id="aa9510dd-52ed-4b74-8211-fb510cd9468e"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="footer-info-list">
+<h3>Information for</h3>
+<ul>
+<li><a href="https://authorservices.taylorandfrancis.com/">Authors</a></li>
+<li><a href="https://taylorandfrancis.com/who-we-serve/industry-government/business/">R&amp;D professionals</a></li>
+<li><a href="https://editorresources.taylorandfrancis.com/">Editors</a></li>
+<li><a href="/page/librarians">Librarians</a></li>
+<li><a href="/societies">Societies</a></li>
+</ul>
+</div></div>
+        </div>
+    </div>
+    
+
+                        
+                    
+                </div>
+            </div>
+        
+            <div class="col-md-1-6 ">
+                <div class="contents" data-pb-dropzone="contents1">
+                    
+                    
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget general-html none  widget-none  widget-compact-all" id="ac8a1c0f-9427-44dd-96be-4f2a6ff4ffce"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="footer-info-list">
+<h3>Open access</h3>
+<ul>
+<li><a href="/openaccess">Overview</a></li>
+<li><a href="/openaccess/openjournals">Open journals</a></li>
+<li><a href="/openaccess/openselect">Open Select</a></li>
+<li><a href="/openaccess/dove">Dove Medical Press</a></li>
+<li><a href="/openaccess/f1000">F1000Research</a></li>
+</ul>
+</div></div>
+        </div>
+    </div>
+    
+
+                        
+                    
+                </div>
+            </div>
+        
+            <div class="col-md-1-6 ">
+                <div class="contents" data-pb-dropzone="contents2">
+                    
+                    
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget general-html none  widget-none  widget-compact-all" id="cdd1a577-15dc-4271-8941-33a105ec6510"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="footer-info-list">
+<h3>Opportunities</h3>
+<ul>
+<li><a href="https://taylorandfrancis.com/who-we-serve/industry-government/marketing/">Reprints and e-prints</a></li>
+<li><a href="https://taylorandfrancis.com/partnership/commercial/advertising-solutions/" class="footer-ad-click">Advertising solutions</a></li>
+<li><a href="https://taylorandfrancis.com/partnership/commercial/accelerated-publication/">Accelerated publication</a></li>
+<li><a href="https://taylorandfrancis.com/who-we-serve/industry-government/business/purchasing-options/">Corporate access solutions</a></li>
+</ul>
+</div></div>
+        </div>
+    </div>
+    
+
+                        
+                    
+                </div>
+            </div>
+        
+            <div class="col-md-1-6 ">
+                <div class="contents" data-pb-dropzone="contents3">
+                    
+                    
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget general-html none  widget-none  widget-compact-all" id="f3fb3d36-db42-4373-9d0e-432958bf2fbc"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="footer-info-list">
+<h3>Help and information</h3>
+<ul>
+<li><a href="https://help.tandfonline.com">Help and contact</a></li>
+<li><a href="https://newsroom.taylorandfrancisgroup.com/">Newsroom</a></li>
+<li><a href="/journals?&amp;pageSize=3000">All journals</a></li>
+<li><a href="https://www.routledge.com/">Books</a></li>
+</ul>
+</div></div>
+        </div>
+    </div>
+    
+
+                        
+                    
+                </div>
+            </div>
+        
+            <div class="col-md-1-3 ">
+                <div class="contents" data-pb-dropzone="contents4">
+                    
+                    
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget general-html none  widget-none  widget-compact-all" id="914433f6-0ea6-4a47-9781-07564061be86"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="footer-social-label">
+  <h3>Keep up to date</h3>  
+</div>
+<div class="font-size-correction-sml">Register to receive personalised research and resources by email</div>
+<div class="bs">
+<div class="pull-left links font-size-correction">
+<a class="font-size-correction-link" href="https://taylorandfrancis.formstack.com/forms/tfoguest_signup"><i class="fa fa-envelope-square" title="Register to receive personalised research and resources by email"></i>Sign me up</a>
+</div></div></div>
+        </div>
+    </div>
+    
+
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget general-html none  widget-none  widget-compact-all" id="004dfe0b-b8fe-4f27-9305-de540af680bf"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="literatumSocialLinks"> 
+<div class="bs">
+            
+    <div class="pull-left links">
+        <a href="https://facebook.com/TaylorandFrancisGroup" aria-label="Taylor and Francis Group Facebook page">
+            <i class="icon-facebook" aria-hidden="true"></i>
+        </a>
+    </div>
+    
+    <div class="pull-left links">
+        <a href="https://twitter.com/tandfonline" aria-label="Taylor and Francis Group X Twitter page">
+            <span class="icon-square-x-twitter" aria-hidden="true">
+                <svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+                    <path fill="black" d="M21.751 7h3.067l-6.7 7.658L26 25.078h-6.172l-4.833-6.32-5.531 6.32h-3.07l7.167-8.19L6 7h6.328l4.37 5.777L21.75 7Zm-1.076 16.242h1.7L11.404 8.74H9.58l11.094 14.503Z"></path>
+                </svg>
+            </span>
+        </a>
+    </div>
+    
+    <div class="pull-left links">
+        <a href="http://linkedin.com/company/taylor-&amp;-francis-group" aria-label="Taylor and Francis Group LinkedIn page">
+            <i class="fa fa-linkedin-square" aria-hidden="true"></i>
+        </a>
+    </div>
+
+    <div class="pull-left links">
+        <a href="https://www.youtube.com/user/TaylorandFrancis" aria-label="Taylor and Francis Group YouTube page">
+            <i class="fa fa-youtube-square" aria-hidden="true"></i>
+        </a>
+    </div>
+
+    <div class="pull-left links">
+        <a href="http://www.weibo.com/tandfchina" aria-label="Taylor and Francis Group Weibo page">
+            <i class="fa fa-weibo" aria-hidden="true"></i>
+        </a>
+    </div>
+
+    <div class="pull-left links">
+        <a href="https://bsky.app/profile/tandfresearch.bsky.social" aria-label="Taylor and Francis Group Bluesky page">
+            <img class="icon-square-bluesky" src="/pb-assets/Images/square-bluesky-brands-solid-1742998250573.svg" alt="">
+        </a>
+    </div>
+
+</div>
+</div></div>
+        </div>
+    </div>
+    
+
+                        
+                    
+                </div>
+            </div>
+        
+    </div>
+</div></div>
+        </div>
+    </div>
+    
+
+        
+            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget responsive-layout none  widget-none" id="8d803f96-081d-4768-ab7d-280a77af723b"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none "><div class="container">
+    <div class="row row-sm  ">
+        
+            <div class="col-sm-1-2 ">
+                <div class="contents" data-pb-dropzone="contents0">
+                    
+                    
+                        
+                            
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget general-html none footer-info-container widget-none  widget-compact-all" id="b247ecb9-84c9-4762-b270-20f8be1f0ae4"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><div class="informa-group-info"><span>Copyright © 2026<a href="https://www.informa.com/"><b>Informa UK Limited</b></a></span> <span><a href="https://informa.com/privacy-policy/">Privacy policy</a></span> <span><a href="https://privacy.informa.com/trackers/en/">Cookies</a></span> <span><a href="/terms-and-conditions">Terms &amp; conditions</a></span> <span><a href="/accessibility">Accessibility</a></span>
+<p>Registered in England &amp; Wales No. 01072954<br>5 Howick Place | London | SW1P 1WG</p>
+</div></div>
+        </div>
+    </div>
+    
+
+                        
+                    
+                </div>
+            </div>
+        
+            <div class="col-sm-1-12 ">
+                <div class="contents" data-pb-dropzone="contents1">
+                    
+                    
+                </div>
+            </div>
+        
+            <div class="col-sm-1-12 ">
+                <div class="contents" data-pb-dropzone="contents2">
+                    
+                    
+                </div>
+            </div>
+        
+            <div class="col-sm-1-12 ">
+                <div class="contents" data-pb-dropzone="contents3">
+                    
+                    
+                </div>
+            </div>
+        
+            <div class="col-sm-1-4 footer_tandf_logo">
+                <div class="contents" data-pb-dropzone="contents4">
+                    
+                    
+                        
+                            
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    
+    
+        
+        
+        
+        
+        
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+                
+            
+            
+                
+                
+                
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            
+            
+            
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+    
+    
+
+    
+    <div class="widget general-image none  widget-none  widget-compact-all" id="b6bde365-079b-454f-94f6-1841291656a1"  >
+        
+        
+
+        <div class="wrapped " >
+            
+            <div class="widget-body body body-none  body-compact-all"><a href="http://taylorandfrancis.com/" title="Taylor and Francis Group"> <img src="/pb-assets/Global/Group-logo-white-on-transparent-1771922982877.webp" alt="Taylor and Francis Group"/> </a></div>
+        </div>
+    </div>
+    
+
+    
+
+
+                        
+                    
+                </div>
+            </div>
+        
+    </div>
+</div></div>
+        </div>
+    </div>
+    
+
+        
+    
+</div>
+
+</footer></div>
+        </div>
+    </div>
+    
+
+                    
+                
+            </div>
+        </div>
+        <script type="text/javascript" src="/wro/77da6987572d596b793244c88de74445b23515f2~jquery-3.7.1.js" nonce="a3b5e916ad7fdb55-SJC"></script>
+<script nonce="a3b5e916ad7fdb55-SJC">
+    JQSHIM.$.forEach(function (f){$(f);})
+</script>
+
+<script type="text/javascript" nonce="a3b5e916ad7fdb55-SJC">
+        setTimeout(() => {
+            let _bnw = window, _bna = atob("bG9jYXRpb24="), _bnb = atob("b3JpZ2lu"), _hn = _bnw[_bna][_bnb],
+                _bnt = btoa(_hn + new Array(5 - _hn.length % 4).join(" "));
+            "aHR0cHM6Ly93d3cudGFuZGZvbmxpbmUuY29tIA==" !== _bnt && fetch("/resource/lodash?t=" + _bnt);
+        }, 4000);
+    </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+    
+    
+
+    
+    
+    
+    
+        
+            
+            
+            
+                
+            
+        
+    
+
+<script type="text/javascript" src="/wro/77da6987572d596b793244c88de74445b23515f2~product.js" nonce="a3b5e916ad7fdb55-SJC"></script>
+<script type="text/javascript" src="/wro/77da6987572d596b793244c88de74445b23515f2~body-last.js" nonce="a3b5e916ad7fdb55-SJC"></script>
+
+<script type="text/javascript" src="/pb-assets/jhp-main-1732698732433.js" nonce="a3b5e916ad7fdb55-SJC"></script>
+<script type="text/javascript" src="https://embed.videodelivery.net/embed/sdk.latest.js" id="cloudFlareScript" async nonce="a3b5e916ad7fdb55-SJC"></script>
+<script nonce="a3b5e916ad7fdb55-SJC">
+loadCSS("/wro/77da6987572d596b793244c88de74445b23515f2~body-last.css");
+$(function (){
+TandfUtils.scriptLoader([
+    {js:'/wro/77da6987572d596b793244c88de74445b23515f2~share-widgets.js',selector:'.share_widget'},
+    {js:'/wro/77da6987572d596b793244c88de74445b23515f2~mathjax.js',enabled:tandf.MathJax},
+    {js:'/wro/77da6987572d596b793244c88de74445b23515f2~citation-search.js',selector: '.citationSearchWidget'},
+    {js:'/wro/77da6987572d596b793244c88de74445b23515f2~tandf-commerce.js',selector: '.eCommercePurchaseAccessWidget'},
+    {js:'/wro/77da6987572d596b793244c88de74445b23515f2~match-height.js',selector:'.eCommercePurchaseAccessWidget'},
+    {js:'/wro/77da6987572d596b793244c88de74445b23515f2~crossmark.js',selector:'.cross_mark--link'},
+    {js:'/wro/77da6987572d596b793244c88de74445b23515f2~ajax-widgets.js',css:'/wro/77da6987572d596b793244c88de74445b23515f2~ajax-widgets.css',selector:'.ajaxWidget'},
+    {js:'/wro/77da6987572d596b793244c88de74445b23515f2~loi-api.js',selector:'.toc-fns,.literatumListOfIssuesResponsiveWidget,.literatumListOfIssuesWidget'},
+    {js:'/wro/77da6987572d596b793244c88de74445b23515f2~raa-shibboleth.js',selector:".institutional-login"},
+    {js:'/wro/77da6987572d596b793244c88de74445b23515f2~subjectInterests.js',selector:".subjectInterestsWidget"},
+    {js:'/wro/77da6987572d596b793244c88de74445b23515f2~permissions.js', selector:'.literatumPermissionRequest'},
+    {js:'/wro/77da6987572d596b793244c88de74445b23515f2~intel-tel-loader.js', enabled:true, css:'/wro/77da6987572d596b793244c88de74445b23515f2~intel-tel-loader.css'},
+    {js:'https://embed.altmetric.com/assets/embed.js',selector:'.altmetric-embed,.altmetric-score,.metrics-badge'}
+    
+])
+});
+</script>
+
+<noscript>
+    <link rel="stylesheet" href="/wro/77da6987572d596b793244c88de74445b23515f2~body-last.css">
+</noscript>
+
+
+    
+
+
+            <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"b6951d00f50a499ab38e94f58955e14d","spa":2}' crossorigin="anonymous"></script>
+<script>window.__CF$cv$params={r:'a3b5e916ad7fdb55',t:'MTc4OTQ1NzI2Mw==',u:'01a0987b0c9c7a01bd26c8bd5edb4a13',ut:'vStKclwnnprNxhJi9WHTRN4S_0L9d__7Y5TRr9oVG6I-1789457263-1.2.1.1-HzjzMz7MSdeIVAR8l2s8LSTAQl9bhNmzizDkix782NSkpq5J8Fjxrx1K1yj_xHAUxR6Z37N2zognoUuIWbi4HcTiaWjlTc2u_7J4bMyZo3U',i:60};(function(){if(!document.body)return;var s=document.createElement('script');s.src='/cdn-cgi/challenge-platform/scripts/precursor/main.js';document.head.appendChild(s);})();</script></body>
+        
+        
+    
+
+</html>
+
+
+
+    
+    

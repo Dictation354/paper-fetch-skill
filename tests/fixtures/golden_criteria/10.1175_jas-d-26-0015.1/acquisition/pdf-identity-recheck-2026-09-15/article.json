@@ -1,0 +1,650 @@
+{
+  "doi": "10.1175/jas-d-26-0015.1",
+  "source": "ams_html",
+  "metadata": {
+    "title": "Local Energetics of Extratropical Transition: A Case Study of Typhoon Hagibis (2019)",
+    "authors": [
+      "Yeeun Kwon",
+      "Seok-Woo Son"
+    ],
+    "abstract": "Tropical cyclones (TCs) moving into the midlatitudes often undergo notable structural changes as they transition into extratropical cyclones (ETCs). This transition, known as the extratropical transition (ET), results from interactions between the TC and the midlatitude baroclinic environment. To elucidate the dynamical processes underlying ET, this study proposes a cyclone-following local energetics framework and applies it to TC Hagibis (2019) in the western North Pacific. The energy cycle intensifies during the ET phase, with its spatial structure becoming markedly asymmetric relative to that in the TC phase. In both the TC and ET phases, eddy available potential energy increases as its generation and energy conversion from background flow dominate over the baroclinic energy conversion. During ET, enhanced diabatic heating, warm temperature anomalies, and vertical motion appear ahead of the cyclone due to its interaction with the midlatitude jet. This leads to an asymmetric distribution of enhanced energy sources and energy conversions for eddy available potential energy. While eddy kinetic energy also increases in the TC phase as baroclinic energy conversion exceeds lateral boundary flux, it decreases and redistributes asymmetrically during ET due to enhanced divergence of eddy geopotential flux along the boundary of the western North Pacific subtropical high and the upper-level divergent TC outflow associated with jet–TC interaction. These results show that local energetics can effectively capture asymmetric thermal and dynamical processes during ET, offering a physical interpretation of TC-to-ETC transition processes.",
+    "journal": "Journal of the Atmospheric Sciences",
+    "article_type": null,
+    "published": "2026-9",
+    "keywords": [],
+    "license_urls": [
+      "http://www.ametsoc.org/PUBSReuseLicenses"
+    ],
+    "landing_page_url": "https://journals.ametsoc.org/view/journals/atsc/83/9/JAS-D-26-0015.1.xml"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "Tropical cyclones (TCs) moving into the midlatitudes often undergo notable structural changes as they transition into extratropical cyclones (ETCs). This transition, known as the extratropical transition (ET), results from interactions between the TC and the midlatitude baroclinic environment. To elucidate the dynamical processes underlying ET, this study proposes a cyclone-following local energetics framework and applies it to TC Hagibis (2019) in the western North Pacific. The energy cycle intensifies during the ET phase, with its spatial structure becoming markedly asymmetric relative to that in the TC phase. In both the TC and ET phases, eddy available potential energy increases as its generation and energy conversion from background flow dominate over the baroclinic energy conversion. During ET, enhanced diabatic heating, warm temperature anomalies, and vertical motion appear ahead of the cyclone due to its interaction with the midlatitude jet. This leads to an asymmetric distribution of enhanced energy sources and energy conversions for eddy available potential energy. While eddy kinetic energy also increases in the TC phase as baroclinic energy conversion exceeds lateral boundary flux, it decreases and redistributes asymmetrically during ET due to enhanced divergence of eddy geopotential flux along the boundary of the western North Pacific subtropical high and the upper-level divergent TC outflow associated with jet–TC interaction. These results show that local energetics can effectively capture asymmetric thermal and dynamical processes during ET, offering a physical interpretation of TC-to-ETC transition processes."
+    },
+    {
+      "heading": "1. Introduction",
+      "level": 2,
+      "kind": "body",
+      "text": "Tropical cyclones (TCs) that travel to the midlatitudes often undergo profound structural changes, transitioning into extratropical cyclones (ETCs). This transition, known as the extratropical transition (ET), evolves as the storm interacts with the midlatitude baroclinic environment (e.g., Jones et al. 2003; Evans et al. 2017). The ET is often associated with high-impact hazards, such as strong wind expansion (Powell 1982; Evans and Hart 2008), large ocean waves (Bowyer and MacAfee 2005), and heavy rainfall (Atallah and Bosart 2003; Chen 2011), allowing the storm to maintain or even expand its hazardous footprint well beyond the TC phase.\n\nPrevious studies have documented ET processes in various basins, including the western North Pacific (e.g., Klein et al. 2000; Kitabatake 2011), eastern Pacific (Wood and Ritchie 2014), North Atlantic (e.g., Bosart and Lackmann 1995; Hart and Evans 2001), and Southern Hemisphere (e.g., Foley and Hanstrum 1994; Sinclair 2002). Although regional differences exist, transitioning TCs exhibit a similar structural evolution. As a TC moves into the midlatitudes, it encounters decreasing sea surface temperature and increasing vertical wind shear. This leads to a weakening of its tropical characteristics, such as deep, moist, and warm-core structures. Simultaneously, the storm develops pronounced asymmetric structures, including dry intrusions, poleward-expanding cirrus shields, and frontal cloud bands (e.g., Klein et al. 2000; Harr and Elsberry 2000; Ritchie and Elsberry 2001). Consistent with these changes, the precipitation and wind fields show asymmetric evolutions (Abraham et al. 2004; Atallah et al. 2007; Fujibe and Kitabatake 2007; Evans and Hart 2008). As the storm becomes fully embedded within the midlatitude baroclinic zone, it transitions to a distinct cold-cored extratropical system and often exhibits well-defined warm and cold sectors with pronounced frontal boundaries.\n\nThe midlatitude environment both drives and responds to the transitioning TCs (Evans et al. 2017; Keller et al. 2019). Throughout the evolution, upper-level divergent outflow of the TC is crucial, being primarily driven by diabatic heating but partially influenced by dry dynamic forcing (Grams and Archambault 2016; Quinting and Jones 2016). The divergent TC outflow modifies the background flow by advecting low potential vorticity (PV) air from the subtropics into the midlatitudes, lifting the tropopause and amplifying the downstream ridge (Bosart and Lackmann 1995; Archambault et al. 2013; Grams et al. 2013a). The enhanced PV gradient along the tropopause often anchors and intensifies the upper-level jet, while the upper-level divergent and anticyclonic PV anomaly inhibits eastward propagation of the upstream trough and wraps it up cyclonically (Agustí-Panareda et al. 2004; Riemer et al. 2008; Grams et al. 2013a; Grams and Archambault 2016). When the upstream trough and the transitioning TC are optimally phased, it can promote reintensification of a cyclone and downstream development (Ritchie and Elsberry 2003, 2007; Grams et al. 2013b; Archambault et al. 2015; Grams and Archambault 2016; Riboldi et al. 2019).\n\nTo objectively monitor the transformation of TCs into extratropical systems, the cyclone phase space (CPS) framework has been employed in both research and operations (Evans and Hart 2003; Hart 2003; Kitabatake 2011; Wood and Ritchie 2014). CPS characterizes the thermal and kinematic structure of a cyclone using parameters that represent the lower- and upper-tropospheric thermal wind and the storm asymmetry (Hart 2003). This framework allows the structural evolution of a TC to be interpreted in terms of its transition from a symmetric warm-core tropical system to an asymmetric cold-core extratropical system. Although CPS provides a continuous and quantitative depiction of structural evolution of a cyclone, understanding these structural changes requires a dynamical interpretation.\n\nThe present study adopts a local energetics framework to assess how TC–midlatitude interaction affects ET. Lorenz (1955) laid the groundwork for atmospheric energetics by introducing available potential energy and developing a global energy cycle. By decomposing basic variables into zonal-mean and eddy components, this framework quantifies the generation, dissipation, and conversion of kinetic energy and available potential energy. This conceptual framework, known as the Lorenz energy cycle, has become the cornerstone for understanding the fundamental energetics of the atmospheric general circulation. Building on this, local energy budget approaches further characterize the regional energy structure and evolution. Local kinetic energy budgets have been used to examine the energy dispersion in baroclinic waves, establishing the concept of downstream development (Orlanski and Katzfey 1991; Orlanski and Chang 1993; Orlanski and Sheldon 1995). Studies on locally available potential energy have linked regional energy reservoirs to storm-track activity and the thermodynamic potential for organized ascent such as warm conveyor belts (Novak and Tailleux 2018; Gertler et al. 2023).\n\nMurakami (2011) proposed a local version of the complete Lorenz energy cycle. By introducing interaction energy and boundary flux terms, this framework distinguishes energy conversions within the local domain from energy exchanges across its boundaries, providing a local energy cycle that encompasses both the kinetic and available potential energy of the mean and eddy fields. This framework has been applied to paleoclimate (Murakami et al. 2011) and energy cascades in heavy rainfall events and their interactions with the large-scale background flow (Fu et al. 2016, 2018), demonstrating its usefulness across various temporal and spatial scales. However, Murakami’s local energy cycle is formulated within an Eulerian framework, and its application to moving systems such as TCs requires reformulation into a cyclone-following framework.\n\nIn this study, local energetics during ET are examined and compared with those during the TC. To this end, the local energy cycle of Murakami (2011) is modified for use in a cyclone frame of reference. The proposed framework is applied to TC Hagibis (2019), which made landfall in Japan and caused widespread damage. TC Hagibis exhibited pronounced structural changes through interactions with the baroclinic environment in midlatitudes, making it a representative ET case (Ito and Ichikawa 2021; Yanase et al. 2022; Nayak and Takemi 2023).\n\nThe rest of this paper is organized as follows. Section 2 explains the dataset and methods, including the cyclone-following local eddy energetics. Section 3 presents an overview of TC Hagibis, including its CPS evolution and synoptic environment. Section 4 applies the local eddy energetics to ET of Hagibis. The results are summarized and discussed in section 5."
+    },
+    {
+      "heading": "2. Data and methods",
+      "level": 2,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "a. Dataset",
+      "level": 3,
+      "kind": "body",
+      "text": "The best track data of the Regional Specialized Meteorological Center Tokyo-Typhoon Center, operated by the Japan Meteorological Agency (JMA), are used for TC identification. The dataset provides at least 6-hourly (0000, 0600, 1200, and 1800 UTC) observations of longitude, latitude, central pressure, maximum sustained wind speed, storm category (i.e., tropical depression, tropical storm, typhoon, or extratropical cyclone), and wind radii for 30 and 50 kt (1 kt ≈ 0.51 m s<sup>−1</sup>) winds at 10 m above ground level. Satellite images from the *Geostationary Korea Multi-Purpose Satellite-2A* (*GK2A*) are also used to examine the structural evolution of the TC. The background fields are analyzed with the Japanese Reanalysis of Three Quarters of a Century (JRA-3Q; Kosaka et al. 2024) reanalysis data at 1.25° × 1.25° horizontal resolution, 45 pressure levels, and 6-hourly temporal resolution. Although this spatial resolution is too coarse to resolve the detailed TC structure, it is sufficient to explore the synoptic-scale features of TC and its interaction with the large-scale environment. Although not shown, the overall results are robust to the choice of reanalysis dataset (JRA-3Q vs ERA5) and spatial resolution (0.25° × 0.25° vs 1.5° × 1.5°)."
+    },
+    {
+      "heading": "b. Cyclone phase space",
+      "level": 3,
+      "kind": "body",
+      "text": "The ET onset and completion are defined using the CPS diagram (Hart 2003; Evans and Hart 2003). The CPS employs three different parameters: the storm-relative geopotential thickness asymmetry between the right and left sides of the storm at 900–600 hPa (*B*), the low-level thermal wind between 900- and 600-hPa levels ($- V_{T}^{L}$), and the upper-level thermal wind between 600- and 300-hPa levels ($- V_{T}^{U}$). The thermal asymmetry of the storm *B* is calculated as\n\n**Equation 1.**\n\n$$\nB = {(\\overline{Z_{600\\text{hPa}}-Z_{900\\text{hPa}}})}_{R} - {(\\overline{Z_{600\\text{hPa}}-Z_{900\\text{hPa}}})}_{L},\n$$\n\nwhere *Z* is the geopotential height, *R* and *L* denote the right and left sides of the storm relative to its direction of motion, and the overbar indicates the area mean within a 500-km radius of the storm center. The temperature and depth of the storm core are represented by lower-tropospheric thermal wind ($- V_{T}^{L}$), which is calculated as\n\n**Equation 2.**\n\n$$\n- V_{T}^{L} = \\left. \\frac{\\partial\\text{Δ}Z}{\\partial\\text{ln}p} \\right|_{900\\text{hPa}}^{600\\text{hPa}},\n$$\n\nand upper-tropospheric thermal wind ($- V_{T}^{U}$), which is calculated as\n\n**Equation 3.**\n\n$$\n- V_{T}^{U} = \\left. \\frac{\\partial\\text{Δ}Z}{\\partial\\text{ln}p} \\right|_{600\\text{hPa}}^{300\\text{hPa}}.\n$$\n\nA positive $- V_{T}^{L}$ indicates a warm-core system, while a negative $- V_{T}^{L}$ indicates a cold-core system. Combined with $- V_{T}^{L}$, $- V_{T}^{U}\\,$ offers a measure of the vertical extent of the storm core. For example, positive $- V_{T}^{L}$ and positive $- V_{T}^{U}$ indicate a deep warm-core storm. In contrast, positive $- V_{T}^{L}\\,$ but negative $- V_{T}^{U}$ indicates a shallow warm-core storm.\n\nThe onset of ET is typically defined as the time when *B* exceeds 10 m, corresponding to a mature or developing frontal structure (Hart 2003; Evans and Hart 2003). The completion of ET is then defined as the time when $- V_{T}^{L}$ becomes negative, indicating a transition to a cold-core system (Hart 2003; Evans and Hart 2003)."
+    },
+    {
+      "heading": "c. Local eddy energetics",
+      "level": 3,
+      "kind": "body",
+      "text": "In this study, the transition from TC to ET is dynamically examined in the context of local energetics. The local energetics framework, which is used to characterize TC and ET, follows Murakami (2011) but with modifications. The derivation begins with the primitive equations in the spherical pressure coordinate:\n\n**Equation 4a.**\n\n$$\n\\frac{\\partial u}{\\partial t} + \\frac{u}{a\\ \\text{cos}\\varphi}\\frac{\\partial u}{\\partial\\lambda} + \\frac{\\upsilon}{a}\\frac{\\partial u}{\\partial\\varphi} + \\omega\\frac{\\partial u}{\\partial p} - \\frac{\\text{tan}\\varphi}{a}u\\upsilon - f\\upsilon = - \\frac{1}{a\\ \\text{cos}\\varphi}\\frac{\\partial\\text{Φ}}{\\partial\\lambda} + \\mathcal{F}_{\\lambda},\n$$\n\n**Equation 4b.**\n\n$$\n\\frac{\\partial\\upsilon}{\\partial t} + \\frac{u}{a\\ \\text{cos}\\varphi}\\frac{\\partial\\upsilon}{\\partial\\lambda} + \\frac{\\upsilon}{a}\\frac{\\partial\\upsilon}{\\partial\\varphi} + \\omega\\frac{\\partial\\upsilon}{\\partial p} + \\frac{\\text{tan}\\varphi}{a}u^{2} + fu = - \\frac{1}{a}\\frac{\\partial\\text{Φ}}{\\partial\\varphi} + \\mathcal{F}_{\\varphi},\n$$\n\n**Equation 4c.**\n\n$$\n0 = - \\frac{\\partial\\text{Φ}}{\\partial p} - \\alpha,\n$$\n\n**Equation 4d.**\n\n$$\n\\frac{\\partial\\theta}{\\partial t} + \\frac{u}{a\\ \\text{cos}\\varphi}\\frac{\\partial\\theta}{\\partial\\lambda} + \\frac{\\upsilon}{a}\\frac{\\partial\\theta}{\\partial\\varphi} + \\omega\\frac{\\partial\\theta}{\\partial p} = \\left(\\frac{p_{0}}{p} \\right)^{\\kappa}\\frac{Q}{C_{p}},\n$$\n\n**Equation 4e.**\n\n$$\n\\frac{1}{a\\ \\text{cos}\\varphi}\\left({\\frac{\\partial u}{\\partial\\lambda} + \\frac{\\partial\\upsilon\\ \\text{cos}\\varphi}{\\partial\\varphi}} \\right) + \\frac{\\partial\\omega}{\\partial p} = 0,\n$$\n\nwhere *λ*, *φ*, and *p* are the longitude, latitude, and pressure, respectively; *t* is the time; *u* and *υ* are the zonal and meridional winds, respectively; *ω* is the *p* velocity; Φ is the geopotential; *a* is the radius of Earth; *f* is the Coriolis parameter; $\\mathcal{F} = {({\\mathcal{F}_{\\lambda},\\mathcal{F}_{\\varphi},0})}$ is the horizontal damping; *Q* is the diabatic heating; *p*<sub>0</sub> is the reference pressure; *C*<sub>p</sub> is the atmospheric specific heat at constant pressure; *κ* is the ratio of gas constant to the specific heat (=*R*/*C*<sub>p</sub>); *θ* is the potential temperature; and *α* is the specific volume.\n\nBy dividing the basic variables *u*, *υ*, *ω*, Φ, *θ*, and *α* into time-mean $(\\overline{\\cdot})$ and transient eddy (·)′ components (e.g., $u = \\overline{u} + u'$) and taking only the eddy components, the equations for the eddy components in Eqs. (5a)–(5d) are obtained as follows:\n\n**Equation 5a.**\n\n$$\n\\begin{array}{l} {\\frac{\\partial u'}{\\partial t} + \\overline{\\mathbf{u}} \\cdot \\nabla u' + \\mathbf{u}' \\cdot \\nabla\\overline{u} + \\mathbf{u}' \\cdot \\nabla u' - \\nabla \\cdot \\overline{u^{\\prime}\\mathbf{u}^{\\prime}} - \\frac{\\text{tan}\\varphi}{a}\\left(u'\\overline{\\upsilon} + \\overline{u}\\upsilon' + u'\\upsilon' - \\overline{u^{\\prime}\\upsilon^{\\prime}} \\right) - f\\upsilon'} \\\\ {= - \\frac{1}{a\\ \\text{cos}\\varphi}\\frac{\\partial\\text{Φ}'}{\\partial\\lambda} + \\mathcal{F}_{\\lambda}',} \\end{array}\n$$\n\n**Equation 5b.**\n\n$$\n\\frac{\\partial\\upsilon'}{\\partial t} + \\overline{\\mathbf{u}} \\cdot \\nabla\\upsilon' + \\mathbf{u}' \\cdot \\nabla\\overline{\\upsilon} + \\mathbf{u}' \\cdot \\nabla\\upsilon' - \\nabla \\cdot \\overline{\\upsilon^{\\prime}\\mathbf{u}^{\\prime}} - \\frac{\\text{tan}\\varphi}{a} \\times \\left(u'\\overline{u} + \\overline{u}u' + u'u' - \\overline{u^{\\prime}u^{\\prime}} \\right) - fu' = - \\frac{1}{a}\\frac{\\partial\\text{Φ}'}{\\partial\\varphi} + \\mathcal{F}_{\\varphi}',\n$$\n\n**Equation 5c.**\n\n$$\n0 = - \\frac{\\partial\\text{Φ}'}{\\partial p} - \\alpha',\n$$\n\n**Equation 5d.**\n\n$$\n\\frac{\\partial\\theta'}{\\partial t} + \\overline{\\mathbf{u}} \\cdot \\nabla\\theta' + \\mathbf{u}' \\cdot \\nabla\\overline{\\theta} + \\mathbf{u}' \\cdot \\nabla\\theta' - \\nabla \\cdot \\overline{\\theta^{\\prime}\\mathbf{u}^{\\prime}} = \\left(\\frac{p_{0}}{p} \\right)^{\\kappa}\\frac{Q'}{C_{p}},\n$$\n\nwhere **u** = (*u*, *υ*, *ω*) is the three-dimensional wind vector and ∇ is the differential operator in spherical coordinates. Unlike in Murakami (2011), the time mean is defined here as a 30-day running mean, which is sufficiently long to represent the background flow while ensuring that perturbations are well separated from the mean. In this regard, the time-mean variable represents the low-frequency variability of background flow. Although not shown, the overall results remain unchanged when a 10- or 60-day running mean is applied.\n\n**Equation 6.**\n\n$$\n\\begin{array}{l} {\\frac{\\partial K_{E}}{\\partial t} + \\mathbf{u} \\cdot \\nabla K_{E} + \\mathbf{u}' \\cdot \\nabla\\text{Φ}' - u'\\nabla \\cdot \\overline{u^{\\prime}\\mathbf{u}^{\\prime}} - \\upsilon'\\nabla \\cdot \\overline{\\upsilon^{\\prime}\\mathbf{u}^{\\prime}} + \\frac{\\text{tan}\\varphi}{a} \\times \\left(u'\\overline{u^{\\prime}\\upsilon^{\\prime}} - \\upsilon'\\overline{u^{\\prime}u^{\\prime}} \\right) = - \\omega'\\alpha' - u'\\mathbf{u}' \\cdot \\nabla\\overline{u} - \\upsilon'\\mathbf{u}' \\cdot \\nabla\\overline{\\upsilon}} \\\\ {- \\frac{\\text{tan}\\varphi}{a}\\left(\\overline{u}u'\\upsilon' - \\overline{\\upsilon}u'u' \\right) + \\mathbf{u}' \\cdot \\mathcal{F}',} \\end{array}\n$$\n\nwhere\n\n**Equation 7.**\n\n$$\nK_{E} = \\frac{{u'}^{2} + {\\upsilon'}^{2}}{2}.\n$$\n\nThe second term on the left-hand side of Eq. (6) represents the advection of EKE. To focus on EKE redistribution around the cyclone, this term is rearranged by considering the phase speed of the cyclone (**u**<sub>c</sub>) and the adjusted background flow (**u**<sub>adj</sub> = **u** − **u**<sub>c</sub>) as in Rivière et al. (2015). The first two terms in Eq. (6) are then written in the cyclone frame of reference (or the cyclone-following framework) as follows:\n\n**Equation 8a.**\n\n$$\n\\frac{\\partial K_{E}}{\\partial t} + \\mathbf{u} \\cdot \\nabla K_{E} = \\frac{DK_{E}}{Dt} + \\mathbf{u}_{\\text{adj}} \\cdot \\nabla K_{E},\n$$\n\nwhere\n\n**Equation 8b.**\n\n$$\n\\frac{DK_{E}}{Dt} = \\frac{\\partial K_{E}}{\\partial t} + \\mathbf{u}_{c} \\cdot \\nabla K_{E}.\n$$\n\nHere, *D*/*Dt* is the time operator in the cyclone frame of reference, rather than the usual Lagrangian derivative (Rivière et al. 2015). The second term on the right-hand side of Eq. (8a) represents relative advection with respect to TC movement. In this study, this term is referred to simply as the advection term. By assuming a nondivergent condition and neglecting higher-order perturbation terms, the EKE equation is obtained as\n\n**Equation 9.**\n\n$$\n\\begin{array}{l} {\\frac{DK_{E}}{Dt} = - \\nabla \\cdot \\mathbf{u}'\\text{Φ}' - \\omega'\\alpha' - u'\\mathbf{u}' \\cdot \\nabla\\overline{u} - \\upsilon'\\mathbf{u}' \\cdot \\nabla\\overline{\\upsilon} - \\frac{\\text{tan}\\varphi}{a}\\left(\\overline{u}u'\\upsilon' - \\overline{\\upsilon}u'u' \\right) + \\mathbf{u}' \\cdot \\mathcal{F}' - \\mathbf{u}_{\\text{adj}} \\cdot \\nabla K_{E}.} \\end{array}\n$$\n\nThis formulation is a rearrangement of the Eulerian equation of Murakami (2011) in the cyclone frame of reference.\n\n**Equation 10.**\n\n$$\n\\frac{\\partial}{\\partial t}\\left(\\frac{{\\theta'}^{2}}{2} \\right) + \\mathbf{u} \\cdot \\nabla\\left(\\frac{{\\theta'}^{2}}{2} \\right) - \\theta'\\nabla \\cdot \\overline{\\theta^{\\prime}\\mathbf{u}^{\\prime}} = \\left(\\frac{p_{0}}{p} \\right)^{\\kappa}\\frac{\\theta'Q'}{C_{p}} - \\theta'\\omega'\\frac{\\partial\\left\\langle \\overline{\\theta} \\right\\rangle}{\\partial p} - \\theta'\\mathbf{u}' \\cdot \\nabla\\left(\\overline{\\theta} - \\left\\langle \\overline{\\theta} \\right\\rangle \\right),\n$$\n\nwhere ⟨·⟩ denotes the global average. By multiplying Eq. (10) by *C*<sub>p</sub> (*p*/*p*<sub>0</sub>)<sup>2</sup><sup>κ</sup>*γ*, the equation is rewritten as\n\n**Equation 11.**\n\n$$\n\\begin{array}{l} {\\frac{\\partial}{\\partial t}\\left\\lbrack \\frac{C_{p}}{2}\\left(\\frac{p}{p_{0}} \\right)^{2\\kappa}\\gamma{\\theta'}^{2} \\right\\rbrack + C_{p}\\left(\\frac{p}{p_{0}} \\right)^{2\\kappa}\\gamma\\mathbf{u} \\cdot \\nabla\\left(\\frac{{\\theta'}^{2}}{2} \\right) - C_{p}\\left(\\frac{p}{p_{0}} \\right)^{2\\kappa}\\gamma\\theta'\\nabla \\cdot \\overline{\\theta^{\\prime}\\mathbf{u}^{\\prime}}} \\\\ {= \\gamma Q'\\theta'\\left(\\frac{p}{p_{0}} \\right)^{\\kappa} - \\omega'C_{p}\\left(\\frac{p}{p_{0}} \\right)^{2\\kappa}\\gamma\\theta'\\frac{\\partial\\left\\langle \\overline{\\theta} \\right\\rangle}{\\partial p} - C_{p}\\left(\\frac{p}{p_{0}} \\right)^{2\\kappa}\\gamma\\theta'\\mathbf{u}' \\cdot \\nabla\\left(\\overline{\\theta} - \\left\\langle \\overline{\\theta} \\right\\rangle \\right).} \\end{array}\n$$\n\nAfter neglecting higher-order perturbation terms and the contribution associated with the vertical gradient of γ, and rearranging the eddy available potential energy (EAPE; *A*<sub>E</sub>) advection (the second term on the left-hand side) by considering the cyclone phase speed and the adjusted background flow, the EAPE equation is derived:\n\n**Equation 12.**\n\n$$\n\\frac{DA_{E}}{Dt} = \\gamma Q'T' + \\omega'\\alpha' - C_{p}\\left(\\frac{p}{p_{0}} \\right)^{2\\kappa}\\gamma\\theta'\\mathbf{u}' \\cdot \\nabla\\left(\\overline{\\theta} - \\left\\langle \\overline{\\theta} \\right\\rangle \\right) - \\mathbf{u}_{\\text{adj}} \\cdot \\nabla A_{E}.\n$$\n\nThe *A*<sub>E</sub> is defined as\n\n**Equation 13.**\n\n$$\nA_{E} = \\frac{C_{p}}{2}\\left(\\frac{p}{p_{0}} \\right)^{2\\kappa}\\gamma{\\theta'}^{2},\n$$\n\nwhere *γ* denotes the static stability index of the dry atmosphere, defined as\n\n**Equation 14.**\n\n$$\n\\gamma = - \\frac{\\kappa}{p}\\left(\\frac{p_{0}}{p} \\right)^{\\kappa}\\left(\\frac{d\\left\\langle \\overline{\\theta} \\right\\rangle}{dp} \\right)^{- 1},\n$$\n\nand *T* is the temperature.\n\nFrom Eqs. (9) and (12), one can express local eddy energy equations in the cyclone frame of reference as\n\n**Equation 15.**\n\n$$\n\\frac{DK_{E}}{Dt} = B{(K_{E})} + C{({A_{E},K_{E}})} + C{({K_{I},K_{E}})} + D{(K_{E})} + A{(K_{E})},\n$$\n\n**Equation 16.**\n\n$$\n\\frac{DA_{E}}{Dt} = G{(A_{E})} - C{({A_{E},K_{E}})} + C{({A_{I},A_{E}})} + A{(A_{E})}.\n$$\n\nThe right-hand side terms of Eq. (15) are\n\n**Equation 17a.**\n\n$$\nB\\left(K_{E} \\right) = - \\nabla \\cdot \\mathbf{u}'\\text{Φ}',\n$$\n\n**Equation 17b.**\n\n$$\nC{({A_{E},K_{E}})} = - \\omega'\\alpha',\n$$\n\n**Equation 17c.**\n\n$$\nC\\left(K_{I},K_{E} \\right) = - u'\\mathbf{u}' \\cdot \\nabla\\overline{u} - \\upsilon'\\mathbf{u}' \\cdot \\nabla\\overline{\\upsilon} - \\frac{\\text{tan}\\varphi}{a}\\left(\\overline{u}u'\\upsilon' - \\overline{\\upsilon}u'u' \\right),\n$$\n\n**Equation 17d.**\n\n$$\nD\\left(K_{E} \\right) = \\mathbf{u}' \\cdot \\mathcal{F}',\n$$\n\n**Equation 17e.**\n\n$$\nA\\left(K_{E} \\right) = - \\mathbf{u}_{\\text{adj}} \\cdot \\nabla K_{E}.\n$$\n\nThose of Eq. (16) are\n\n**Equation 18a.**\n\n$$\nG{(A_{E})} = \\gamma Q'T',\n$$\n\n**Equation 18b.**\n\n$$\nC\\left(A_{I},A_{E} \\right) = - C_{p}\\left(\\frac{p}{p_{0}} \\right)^{2\\kappa}\\gamma\\theta'\\mathbf{u}' \\cdot \\nabla\\left(\\overline{\\theta} - \\left\\langle \\overline{\\theta} \\right\\rangle \\right),\n$$\n\n**Equation 18c.**\n\n$$\nA\\left(A_{E} \\right) = - \\mathbf{u}_{\\text{adj}} \\cdot \\nabla A_{E}.\n$$\n\nThe symbols *B*(*), *D*(*), *A*(*), and *G*(*) denote the lateral boundary flux when spatially averaged over the storm area, dissipation by damping which is mostly due to surface friction, advection by background flow, and eddy energy generation, respectively. The symbol *C*<sup>1, 2</sup> denotes the energy conversion term from *1 to *2. For example, *C*(*A*<sub>E</sub>, *K*<sub>E</sub>) represents the baroclinic energy conversion from EAPE to EKE through vertical eddy heat fluxes. The terms with subscript *I* refer to interaction energies. Interaction energies are introduced to retain the mean-eddy cross terms required for local energy conservation (Murakami 2011). They do not constitute independent energy reservoirs as they vanish under the time mean but serve as intermediate energies mediating energy conversions between the local background flow and eddies. See Murakami (2011) for a more detailed discussion on interaction energies and their conversions. The two interaction energies are defined as\n\n**Equation 19a.**\n\n$$\nA_{I} = C_{p}\\left(\\frac{p}{p_{0}} \\right)^{2\\kappa}\\gamma\\theta'{({\\overline{\\theta} - \\left\\langle \\overline{\\theta} \\right\\rangle})},\n$$\n\n**Equation 19b.**\n\n$$\nK_{I} = \\overline{u}u' + \\overline{\\upsilon}\\upsilon'.\n$$\n\nEnergy conversions involving interaction energies are interpreted as energy conversions from background flow, as both *A*<sub>I</sub> and *K*<sub>I</sub> are dominated by the mean component [overbar in Eq. (19)] rather than the eddy component. For example, *C*(*K*<sub>I</sub>, *K*<sub>E</sub>) is interpreted as KE conversion from the local background flow to eddies. Likewise, *C*(*A*<sub>I</sub>, *A*<sub>E</sub>) is interpreted as APE conversion from the local background flow to eddies.\n\nIt should be noted that Eqs. (15) and (16) differ from the corresponding equations in Murakami (2011) due to the use of the cyclone-following formulation. The divergence of EAPE and EKE, originally included in boundary flux terms, is transformed into advection terms using the continuity equation [Eq. (4e)]. As a result, the EAPE boundary flux term vanishes, while the EKE boundary flux term is determined by the convergence of eddy geopotential flux alone. In addition, energy advection by background flow relative to TC movement appears as an advection term on the right-hand side of the equations.\n\nLocal eddy energetics in the cyclone frame of reference are schematized in Fig. 1. This study focuses on temporal and spatial changes in EAPE and EKE (*DA*<sub>E</sub>/*Dt* and *DK*<sub>E</sub>/*Dt*). The key processes that determine the local eddy energies over a cyclone center, i.e., energy generation, dissipation, and conversions, are discussed in detail.\n\n![Figure 1](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f1.jpg)\n\n**Figure 1.** Box diagram of the local eddy energetics in the cyclone frame of reference. The boxes labeled *DA*<sub>E</sub>/*Dt* and *DK*<sub>E</sub>/*Dt* represent the tendencies of EAPE and EKE, respectively. The arrows labeled *G*(*A*<sub>E</sub>), *D*(*K*<sub>E</sub>), and *B*(*K*<sub>E</sub>) represent the generation of EAPE, the dissipation of EKE, and the boundary flux of EKE in the eddy energy equations [Eqs. (15) and (16)]. The arrow labeled *C*(*, *) represents the energy conversion terms, while the wavy arrows labeled *A*(*A*<sub>E</sub>) and *A*(*K*<sub>E</sub>) represent the energy advection by the background flow relative to the cyclone movement."
+    },
+    {
+      "heading": "3. Overview of Typhoon Hagibis",
+      "level": 2,
+      "kind": "body",
+      "text": "We first present a life cycle overview of TC Hagibis (2019) in the western North Pacific. Its track, temporal evolution in the CPS diagram, and synoptic backgrounds are illustrated in Figs. 2–5. When the TC entered the midlatitudes, it underwent a structural change from a symmetric system to an asymmetric system (Klein et al. 2000; Evans and Hart 2003; Jones et al. 2003). The infrared satellite images clearly show such evolution (Fig. 2). The TC was well defined on 9 October (Fig. 2a). Both the TC eye and the symmetric spiral clouds wrapping around it were distinct. However, as the TC moved into the midlatitudes, a dry slot gradually enlarged and an elongated cloud extended northeastward, making the system asymmetric (Figs. 2a–c). Here, a dry slot results from dry and cold air descending from the upper levels to the rear of the surface cyclone. It indicates that the storm was under the influence of the midlatitude baroclinic environment (Browning 1997; Carlson 1980). The TC eye was no longer observed on 11 October, as the eyewall started to erode (Fig. 2d). Afterward, the asymmetry intensified, with a broad cirrus shield extending northeastward (Figs. 2e,f). Figure 2f shows a distinct dry slot intruding into the surface cyclone, revealing clear extratropical characteristics.\n\n![Figure 2](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f2.jpg)\n\n**Figure 2.** Satellite images (10.5-*μ* m infrared channel) obtained from GK2A at (a) 1100 UTC 9 Oct, (b) 0400 UTC 10 Oct, (c) 1800 UTC 10 Oct, (d) 0900 UTC 11 Oct, (e) 2100 UTC 11 Oct, and (f) 0500 UTC 12 Oct 2019.\n\nThe CPS diagram corroborates this structural change (Fig. 3). TC Hagibis formed over the tropical ocean and moved rapidly westward until reaching 20°N (Fig. 3a). The storm then accelerated northward and recurved northeastward at 30.8°N. ET onset was identified at 0600 UTC 12 October, with the storm center located south of Honshu, the main island of Japan (Figs. 3a,b). The storm then made landfall, causing widespread damage (Iizuka et al. 2021; Yanase et al. 2022), and subsequently moved over the open ocean northeast of Japan at 0000 UTC 13 October, marking ET completion. This was nearly coincident with the time at which the JMA best track first classified Hagibis as an extratropical cyclone (0300 UTC 13 October). Throughout the pretransition period, the TC maintained a deep warm-core structure (Fig. 3c). During ET, the storm transitioned into a shallow warm-core structure, eventually exhibiting a deep cold-core structure after ET completion. This evolution represents a canonical ET pathway, suggesting that TC Hagibis is a representative case for exploring ET dynamics through the local energetics framework.\n\n![Figure 3](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f3.jpg)\n\n**Figure 3.** (a) Track of TC Hagibis (2019) at 6-h intervals. (b) CPS diagram of 900–600-hPa thermal wind $- V_{T}^{L}$ and thermal symmetry *B* for TC Hagibis (2019). (c) As in (b), but for 900–600-hPa thermal wind $- V_{T}^{L}$ and 600–300-hPa thermal wind $- V_{T}^{U}$. Red, orange, green, and blue dots indicate the beginning of the cyclone life cycle as a tropical storm, ET onset, ET completion, and the end of the JMA best track record, respectively.\n\nTC Hagibis was accompanied by a large amount of moisture transport, which is quantified by integrated water vapor transport from 1000 to 300 hPa:\n\n**Equation 19.**\n\n$$\n\\text{IVT} = \\left(- \\frac{1}{g}\\int_{1000~\\text{hPa}}^{300~\\text{hPa}}\\mathit{uqdp} \\right)\\mathbf{x} + \\left(- \\frac{1}{g}\\int_{1000~\\text{hPa}}^{300~\\text{hPa}}\\upsilon\\mathit{qdp} \\right)\\mathbf{y},\n$$\n\nwhere *g* is the gravitational acceleration; *q* is the specific humidity; and **x** and **y** are the unit vectors in the zonal and meridional directions, respectively. In the TC stage, a strong cyclonic circulation was evident around the center, accompanied by counterclockwise moisture transport (Fig. 4a). In particular, in the right quadrant of the storm, stronger moisture transport appeared due to abundant moisture inflow from lower latitudes. In Fig. 4b, 850-hPa equivalent potential temperature *θ*<sub>e</sub> was maximized at the cyclone center, reflecting the symmetric warm-core structure during the TC stage. This symmetric structure was maintained, but the 850-hPa geopotential height anomaly weakened and *θ*<sub>e</sub> at the storm center decreased within 18 h (Figs. 4c,d). The central pressure in the best track indeed increased from 925 to 945 hPa during this period. Moisture transport not only continued to spiral counterclockwise around the center but also became more pronounced toward the northeast of the cyclone.\n\n![Figure 4](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f4.jpg)\n\n**Figure 4.** 850-hPa geopotential height anomaly (shading; gpm), integrated water vapor transport (IVT) (vectors; >300 kg m<sup>−1</sup> s<sup>−1</sup>), 250-hPa geopotential height (contours; gpm) at (a) 1800 UTC 10 Oct, (c) 1200 UTC 11 Oct, (e) 0600 UTC 12 Oct, and (g) 0000 UTC 13 Oct 2019. The boundary of the western North Pacific high is highlighted by a bold 5880-gpm contour. (b),(d),(f),(h) As in (a), (c), (e), and (g), but for 850-hPa equivalent potential temperature (shading; K), and the horizontal gradient of 850-hPa equivalent potential temperature [contours; for positive values starting from 6 K (100 km)<sup>−1</sup> with a 1 K (100 km)<sup>−1</sup> interval]. The red × in the (a), (c), (e), and (g) marks the TC center.\n\nIn the ET stage, the asymmetry became more evident, as intensified winds in the right quadrant of the storm enhanced the poleward moisture transport (Fig. 4e). The prominent *θ*<sub>e</sub> maximum, centered at the storm center, also became weakened (Fig. 4f). In the ETC stage, no pronounced *θ*<sub>e</sub> maximum remained at the center (Fig. 4h), which is consistent with the negative $- V_{T}^{L}$ observed in the CPS diagram (green dot in Fig. 3b), indicating that the storm transitioned into a cold-core system. Instead, *θ*<sub>e</sub> exhibited a strong horizontal gradient along the Oyashio region, northeast of Japan. This is consistent with previous studies that have reported warm front development and associated precipitation in this region (Iizuka et al. 2021; Yanase et al. 2022). Moisture transport organized on the southeastern flank of the storm also reflects the transition into an asymmetric extratropical system (Fig. 4g).\n\nIt is noteworthy that no distinct upper-level trough developed either before or after the TC entered the midlatitude environment (Figs. 4a,c,e,g). An upper-level trough positioned northwest of a recurving TC represents a favorable condition for ET reintensification (Ritchie and Elsberry 2003, 2007), but no notable trough–TC interaction occurred in the case of TC Hagibis. The track of TC Hagibis was likely steered by the western North Pacific high (Figs. 4a,c,e,g). Previous studies have shown that TCs in the western North Pacific are often steered by the western North Pacific high (e.g., Chan and Gray 1982; Liu et al. 2018), suggesting that the northeastward movement of TC Hagibis could be explained without notable interaction with an upper-level trough. The western North Pacific high played a further role in the eddy energy evolution of TC Hagibis during ET, as will be discussed in section 4.\n\nTC Hagibis exhibited a distinct ET evolution through jet–TC interaction (Fig. 5). In the TC stage, a symmetric upward motion was confined within the storm center (Figs. 5a,b). After 18 h, a strong westerly jet developed north of the TC (Figs. 5c,d). As the TC moved poleward, a northward-tilted asymmetric ascent emerged, suggesting the presence of jet–TC interaction. In the ET stage, the westerly jet further intensified, accompanied by a broad northeastward-tilted ascent region (Figs. 5e,f). An asymmetric structure in upward motion during ETC (Figs. 5g,h) further promoted asymmetric precipitation on the northeast flank of the cyclone (Yanase et al. 2022).\n\n![Figure 5](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f5.jpg)\n\n**Figure 5.** (a),(c),(e),(g) As in Fig. 4, but for 250-hPa horizontal wind speed (shading; m s<sup>−1</sup>) and 500-hPa omega (blue contours; for negative values with a 0.2 Pa s<sup>−1</sup> interval). (b),(d),(f),(h) As in (a), (c), (e), and (g), but for the latitude–pressure cross sections along the TC center for horizontal wind speed (shading; m s<sup>−1</sup>), omega (blue contours; for negative values with a 0.2 Pa s<sup>−1</sup> interval), and meridional–vertical wind (vectors; *ω* is multiplied by an aspect ratio of −21.46).\n\nYanase et al. (2022) examined the jet–TC interaction process for TC Hagibis, dividing it into the prefrontal and frontal stages. During the early ET stage (prefrontal stage), the jet–TC interaction was attributed to reduced moist symmetric stability in the lower troposphere and midtroposphere along with conditional instability in the lower troposphere and inertial instability in the upper troposphere. In the lower troposphere, warm and moist air from lower latitudes resulted in conditional instability, establishing a thermodynamically favorable environment for ascent [Fig. 14b in Yanase et al. (2022); see also Figs. 4a–d herein]. Above this layer, strong vertical shear, associated with an intensified meridional temperature gradient, reduced moist symmetric stability, promoting slantwise ascent along tilted isentropic surfaces [Figs. 14b,c in Yanase et al. (2022); see also Figs. 5a–d herein]. Meanwhile, in the upper troposphere, poleward outflow from the TC was enhanced due to weakened inertial stability on the anticyclonic shear side (i.e., equatorward) of the westerly jet [Fig. 10b in Yanase et al. (2022); see also Figs. 5a–d herein]. During the late ET and ETC stages (frontal stage), quasigeostrophic forcing associated with warm frontogenesis became dominant, enhancing the dynamical ascent and amplifying the asymmetry of the storm [Fig. 7d in Yanase et al. (2022); see also Figs. 4e–h and 5e–h herein]. This jet–TC interaction resulted in a pronounced asymmetric structure in TC Hagibis and related precipitation during its transition, even in the absence of a distinct upper-level trough."
+    },
+    {
+      "heading": "4. Local energetics of Typhoon Hagibis",
+      "level": 2,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "a. Temporal evolution",
+      "level": 3,
+      "kind": "body",
+      "text": "In this section, we demonstrate that the local energetics framework effectively captures the asymmetric features that emerge during the ET evolution of TC Hagibis. Figure 6 shows the evolution of vertically integrated EAPE (*A*<sub>E</sub>) and EKE (*K*<sub>E</sub>). The vertical integration is conducted over the 1000–100-hPa layer, and storm-relative distributions are presented to examine structural changes around the storm.\n\n![Figure 6](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f6.jpg)\n\n**Figure 6.** Storm-relative distributions of vertically integrated (a),(c),(e) EAPE (*A*<sub>E</sub>) and (b),(d),(f) EKE (*K*<sub>E</sub>) at (a),(b) 1200 UTC 11 Oct 2019 (TC stage), (c),(d) 0600 UTC 12 Oct 2019 (ET stage), and (e),(f) 0000 UTC 13 Oct 2019 (ETC stage). The black circle denotes a 500-km radius from the TC center.\n\nThe EAPE is maximum near the storm center in the TC stage, reflecting strong local temperature perturbations (Fig. 6a). As the storm undergoes ET and becomes ETC, thermal perturbations are enhanced while being redistributed asymmetrically (Figs. 6c,e). The EKE also evolves markedly. In the TC stage, its distribution is zonally symmetric but meridionally asymmetric with a maximum to the north of the storm center (Fig. 6b). It subsequently decreases in magnitude and becomes zonally asymmetric in the ET and ETC stages, with a pronounced maximum to the east of the storm center (Figs. 6d,f).\n\nFigure 7 summarizes the temporal evolution of eddy energies within a 500-km radius around TC Hagibis. The 500-km radius is chosen here to encompass the characteristic scales of both TC and ETC systems and to maintain consistency with the CPS-based ET criteria. The results are robust to the choice of radius, although the overall magnitudes increase with a decreasing radius (e.g., from 600 to 500 km and to 400 km). Total eddy energy, which is the sum of EAPE and EKE, increases until 1200 UTC 11 October due to a rapid increase in EKE and a rather slow increase in EAPE. Afterward, EAPE continues to increase at an even faster rate until 1200 UTC 13 October. However, EKE sharply decreases at a rate exceeding its prior increase. This leaves the total eddy energy relatively unchanged from the late TC stage (last day of the green shaded period) to ET completion (second vertical dashed line). After ET completion at 0000 UTC 13 October, total eddy energy slightly increases and then decreases.\n\n![Figure 7](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f7.jpg)\n\n**Figure 7.** Time series of vertically integrated total eddy energy (*A*<sub>E</sub>+ *K*<sub>E</sub>; gray line), EAPE (*A*<sub>E</sub>; blue line), and EKE (*K*<sub>E</sub>; green line) for TC Hagibis (2019), averaged within a 500-km radius around the TC center. Dashed gray lines denote the onset and completion of ET as defined by the CPS diagram. Green and blue shadings indicate the TC and ET phases, respectively.\n\nThis result suggests that local energetics undergo marked changes from the TC stage to the ET stage and then to the ETC stage. To characterize TC and ET energetics, two periods are examined in detail below. The first period is from 0600 UTC 10 October to 1200 UTC 11 October, when both EAPE and EKE increase (green shading in Fig. 7). This period is defined as the TC phase. The second period is from 0600 UTC 12 October to 1200 UTC 13 October, when EAPE increases but EKE decreases (blue shading in Fig. 7). This period is defined as the extended ET phase (hereafter simply ET phase). It encompasses the CPS-based ET and early ETC stages and represents an energetically defined ET stage.\n\nFigure 8 shows the vertically integrated EAPE and EKE tendency budgets during the TC and ET phases. All budget terms maintain the same signs from the TC to ET phases, but their magnitudes increase. The only exception is the EKE dissipation term [*D*(*K*<sub>E</sub>)] in Fig. 8b. Unlike individual budget terms, the total tendency of EKE switches from positive in the TC phase to negative in the ET phase (first two bars in Fig. 8b). This result indicates that the energy cycle becomes stronger in the ET phase, accompanied by an EKE decrease. The exact values for each term and their positions in the energy cycle are summarized later (see Fig. 16).\n\n![Figure 8](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f8.jpg)\n\n**Figure 8.** (a) The vertically integrated EAPE tendency (*DA*<sub>E</sub>/*Dt*; black bar; left *y* axis) derived from EAPE budget [Eq. (16)], consisting of EAPE generation [*G*(*A*<sub>E</sub>); red bar; right *y* axis], EAPE conversion from background flow [*C*(*A*<sub>I</sub>, *A*<sub>E</sub>); yellow bar; right *y* axis], baroclinic energy conversion from EKE to EAPE [−*C*(*A*<sub>E</sub>, *K*<sub>E</sub>); green bar; right *y* axis], EAPE advection [*A*(*A*<sub>E</sub>); blue bar; right *y* axis], and residual (pink bar; right *y* axis). (b) As in (a), but for the EKE tendency (*DK*<sub>E</sub>/*Dt*; black bar) derived from EKE budget [Eq. (15)], consisting of boundary flux [*B*(*K*<sub>E</sub>); red bar], dissipation [*D*(*K*<sub>E</sub>); orange bar], EKE conversion from background flow [*C*(*K*<sub>I</sub>, *K*<sub>E</sub>); yellow bar], baroclinic energy conversion from EAPE to EKE [*C*(*A*<sub>E</sub>, *K*<sub>E</sub>); green bar], EKE advection [*A*(*K*<sub>E</sub>); blue bar], and residual (pink bar). All values are averaged within a 500-km radius around the TC center. Solid bars and hatched bars indicate TC and ET phases, respectively. Note that the ranges of the left and right *y* axes differ.\n\nThe EAPE increase is mainly caused by its generation [*G*(*A*<sub>E</sub>)] and the APE conversion from background flow [*C*(*A*<sub>I</sub>, *A*<sub>E</sub>)], while it decreases through the baroclinic energy conversion [−*C*(*A*<sub>E</sub>, *K*<sub>E</sub>)] (Fig. 8a). In other words, EAPE of the storm increases through diabatic heating and warm temperature anomalies [*G*(*A*<sub>E</sub>)] and thermodynamic energy conversion from background flow [*C*(*A*<sub>I</sub>, *A*<sub>E</sub>)]. This is partly offset by the energy conversion from EAPE to EKE [−*C*(*A*<sub>E</sub>, *K*<sub>E</sub>)]. The sum of EAPE generation [*G*(*A*<sub>E</sub>)] and energy conversion from background flow [*C*(*A*<sub>I</sub>, *A*<sub>E</sub>)] is slightly larger than the baroclinic energy conversion [−*C*(*A*<sub>E</sub>, *K*<sub>E</sub>)], leading to a positive tendency of EAPE (leftmost bars in Fig. 8a), although the residual is nonnegligible (note that the difference in the ranges of the left and right *y* axes). The residual is possibly attributed to the temporal mismatch between local tendency and advection terms in the 6-hourly dataset, as well as other numerical errors. As the storm undergoes ET, all processes intensify. Among them, APE conversion from background flow [*C*(*A*<sub>I</sub>, *A*<sub>E</sub>)] is more than doubled, contributing to a stronger EAPE change in the ET phase compared to the TC phase.\n\nThe EKE shows a different life cycle. It increases in the TC phase but decreases in the ET phase (leftmost bars in Fig. 8b). This is caused by the lateral boundary flux [*B*(*K*<sub>E</sub>)] exceeding the baroclinic energy conversion [*C*(*A*<sub>E</sub>, *K*<sub>E</sub>)] in the ET phase (first and fourth budget terms in Fig. 8b). This contrasts with the TC phase, where the EKE increase due to baroclinic energy conversion is partly offset by the lateral boundary flux. The energy conversion from the background flow [*C*(*K*<sub>I</sub>, *K*<sub>E</sub>)] plays only a minor role. Here, it should be noted that the baroclinic energy conversion does not necessarily indicate baroclinic instability as this term is associated with vertical heat flux instead of meridional heat flux [Eq. (17b)]."
+    },
+    {
+      "heading": "b. Spatial distribution of major terms",
+      "level": 3,
+      "kind": "body",
+      "text": "The above results suggest that during the ET phase, EAPE increases due to enhanced diabatic heating and energy conversion from background flow, while EKE decreases due to dominant boundary flux divergence, which overwhelms enhanced baroclinic energy conversion. Figure 9 further presents the spatial distribution of four major terms that determine eddy energy changes. In the TC phase, all terms show symmetric patterns about the storm center (Figs. 9a–d). They become asymmetric in the ET phase (Figs. 9e–h). The increase in magnitude and spatial asymmetry of energy terms during the ET phase largely results from the interaction of the cyclone with the midlatitude baroclinic environment.\n\n![Figure 9](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f9.jpg)\n\n**Figure 9.** Storm-relative composites of vertically integrated (a),(e) *G*(*A*<sub>E</sub>), (b),(f) *C*(*A*<sub>I</sub>, *A*<sub>E</sub>), (c),(g) *C*(*A*<sub>E</sub>, *K*<sub>E</sub>), and (d),(h) *B*(*K*<sub>E</sub>) during (a)–(d) TC phase and (e)–(h) ET phase. The black circle denotes a 500-km radius from the TC center.\n\nFigure 10 shows the storm-relative composite of vertically integrated EAPE generation [*G*(*A*<sub>E</sub>)]. Note that Figs. 10a and 10d are identical to Figs. 9a and 9e and shown for comparison with the spatial structures of diabatic heating and temperature anomalies in the middle and right columns of Fig. 10. Here, the term “anomaly” is used to denote the eddy component, which is defined by removing the 30-day running mean. In the TC phase, *G*(*A*<sub>E</sub>) shows an overall symmetric pattern with a maximum near the storm center although slightly shifted northeastward (Fig. 10a). This pattern results from the combined effects of diabatic heating and temperature anomalies [Eq. (18a)]. By definition, EAPE increases [*G*(*A*<sub>E</sub>) > 0] through diabatic heating and warm temperature anomalies within the storm. The diabatic heating anomaly exhibits a slightly eastward-shifted distribution (Fig. 10b). This pattern, not exactly centered at the storm center, is due to convective heating. Unlike condensational heating, which is centered at the storm center (Fig. 11b), convective heating is centered to the east of the storm center (Fig. 11a) where the moisture supply is stronger (Fig. 4c). Temperature anomaly is controlled by diabatic heating and temperature advection. Warm advection is enhanced in the northeast quadrant of the storm (Fig. 11c). Despite this enhancement and an eastward-shifted diabatic heating (Fig. 10b), their combination maintains an overall symmetric pattern when integrated in the vertical (Fig. 10c).\n\n![Figure 10](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f10.jpg)\n\n**Figure 10.** As in Fig. 9, but for vertically integrated (a),(d) *G*(*A*<sub>E</sub>) (W m<sup>−2</sup>), (b),(e) vertically averaged diabatic heating rate anomaly [K (6 h)<sup>−1</sup>], and (c),(f) vertically averaged temperature anomaly (K).\n\n![Figure 11](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f11.jpg)\n\n**Figure 11.** As in Fig. 9, but for (a),(d) vertically averaged convective heating rate anomaly [K (6 h)<sup>−1</sup>], (b),(e) vertically averaged large-scale condensation heating rate anomaly [K (6 h)<sup>−1</sup>], and (c),(f) vertically averaged temperature advection (shading; 10<sup>−4</sup> K s<sup>−1</sup>) and vertically averaged horizontal wind anomaly (vectors; m s<sup>−1</sup>).\n\nIn the ET phase, *G*(*A*<sub>E</sub>) intensifies strongly with a distinct asymmetric structure extending northeastward (Fig. 10d). Diabatic heating is enhanced to the north of the storm and extends northeastward (Fig. 10e), due to large-scale condensation (Fig. 11e). This pattern is associated with enhanced precipitation processes northeast of the storm under the jet–TC interaction (Figs. 5e,f). Temperature anomaly also shows a notable enhancement to the northeast of the storm (Fig. 10f). It reflects both the northeastward-extended diabatic heating and the temperature advection. As shown in Fig. 11f, temperature advection is characterized by warm advection ahead and cold advection in the rear of the storm. This pattern is a typical feature of a midlatitude cyclone (e.g., Lackmann 2015; Catto et al. 2010) and creates the asymmetry in ET temperature anomaly shown in Fig. 10f. This suggests that the intensification and strong asymmetry of *G*(*A*<sub>E</sub>) during the ET phase (first bars in the right-hand column of Fig. 8a) result from enhanced diabatic heating and asymmetric temperature advection due to interactions between the storm and background flow in midlatitudes.\n\nThe *C*(*A*<sub>I</sub>, *A*<sub>E</sub>), APE conversion from background flow to eddy, shows an asymmetric pattern especially in the ET phase (Figs. 12a,d). These figures are again identical to Figs. 9b and 9f and shown here for reference. The spatial pattern of this term is decomposed into the three components, i.e., zonal, meridional, and vertical heat fluxes [Eq. (18b)]. It is dominated by vertical heat flux in the TC phase (Figs. 12b,c) but by meridional heat flux in the ET phase (Figs. 12e,f). In the TC phase, upward heat flux (*ω*′ *θ*′ < 0) weakens the vertical temperature gradient east of the storm, facilitating APE conversion from background flow to eddy [*C*(*A*<sub>I</sub>, *A*<sub>E</sub>) > 0; Fig. 12a]. In the ET phase, *C*(*A*<sub>I</sub>, *A*<sub>E</sub>) intensifies to the northeastward of the storm (Fig. 12d). This is because the cyclonic circulation, maximized on the east of the storm center, drives an enhanced meridional eddy heat flux under the stronger background meridional temperature gradient (Figs. 12e,f). The enhanced meridional eddy heat flux reduces the background potential temperature gradient, leading to the decrease in background APE and the increase in EAPE. This explains positive *C*(*A*<sub>I</sub>, *A*<sub>E</sub>) (Figs. 12a,d) in both the TC and ET phases, which increases from the TC to ET phases (second bars in the right-hand column of Fig. 8a).\n\n![Figure 12](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f12.jpg)\n\n**Figure 12.** As in Fig. 9, but for (a),(d) vertically integrated *C*(*A*<sub>I</sub>, *A*<sub>E</sub>) (W m<sup>−2</sup>), (b) vertical component of vertically integrated *C*(*A*<sub>I</sub>, *A*<sub>E</sub>) (shading; W m<sup>−2</sup>) and vertically averaged *p*-velocity anomaly (contours; with a 0.1 Pa s<sup>−1</sup> interval), (c) vertically averaged vertical eddy heat flux (contours; with a 1 K Pa s<sup>−1</sup> interval) and vertically averaged vertical ($\\overline{\\theta} - \\left\\langle \\overline{\\theta} \\right\\rangle$) gradient (shading; 10<sup>−4</sup> K Pa<sup>−1</sup>), (e) meridional component of vertically integrated *C*(*A*<sub>I</sub>, *A*<sub>E</sub>) (shading; W m<sup>−2</sup>) and vertically averaged horizontal wind anomaly (vectors; m s<sup>−1</sup>), and (f) vertically averaged meridional eddy heat flux (contours; with a 30 K m s<sup>−1</sup> interval) and vertically averaged meridional ($\\overline{\\theta} - \\left\\langle \\overline{\\theta} \\right\\rangle$) gradient (shading; 10<sup>−6</sup> K m<sup>−1</sup>).\n\nSimilar results are found in the baroclinic energy conversion term *C*(*A*<sub>E</sub>, *K*<sub>E</sub>), which is one of the key terms that determine both EAPE and EKE changes (Fig. 8). In the TC phase, this term exhibits a symmetric pattern concentrated near the storm center with a slight northeastward extension (Fig. 13a; identical to Fig. 9c). By contrast, in the ET phase, it shows a significant asymmetric pattern with a northeast–southwest dipole structure (Fig. 13d; identical to Fig. 9g). This term essentially represents the vertical heat flux [Eq. (17b)], which is determined by a specific volume anomaly centered at the storm center (Figs. 13c,f) and *p*-velocity anomaly whose center changes from the TC to ET phases (Figs. 13b,e). The spatial pattern of the former resembles that of temperature anomaly (Figs. 10c,f), as specific volume is directly related to temperature on isobaric surface through the ideal gas law. The latter is also related to the diabatic heating anomaly (Figs. 10b,e), as latent heating, which accounts for most of the diabatic heating, needs to accompany strong upward motion.\n\n![Figure 13](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f13.jpg)\n\n**Figure 13.** As in Fig. 9, but for (a),(d) vertically integrated *C*(*A*<sub>E</sub>, *K*<sub>E</sub>) (W m<sup>−2</sup>), (b),(e) vertically averaged *p*-velocity anomaly (Pa s<sup>−1</sup>), and (c),(f) vertically averaged specific volume anomaly (10<sup>−2</sup> m<sup>3</sup> kg<sup>−1</sup>).\n\nIn the northeast quadrant of the ET, positive *C*(*A*<sub>E</sub>, *K*<sub>E</sub>) reaches its maximum and extends northeastward (Fig. 13d). This indicates strong energy conversion from EAPE to EKE. In the southwest quadrant of the ET, negative *C*(*A*<sub>E</sub>, *K*<sub>E</sub>) extends westward, showing the opposite energy conversion. This dipole pattern results from enhanced upward motion ahead of the storm and downward motion in the rear of the storm (Fig. 13e), which is a common feature of the ETC (e.g., Lackmann 2015; Catto et al. 2010). The associated thermodynamically and dynamically driven ascent is likely enhanced under the jet–TC interaction, as discussed earlier. This may explain enhanced large-scale condensation in the ET phase (Fig. 11e). It should be noted that in midlatitudes, *C*(*A*<sub>E</sub>, *K*<sub>E</sub>) can be positive even in the rear of the storm due to downward motion accompanied by a cold anomaly. The dipole pattern shown in the present study likely reflects the relatively warm air associated with the TC that persists even during the ET and ETC stages (Figs. 4f,h). It should also be noted that *C*(*A*<sub>E</sub>, *K*<sub>E</sub>) and the vertical component of *C*(*A*<sub>I</sub>, *A*<sub>E</sub>) are physically linked. The upward eddy heat flux converts EAPE to EKE through *C*(*A*<sub>E</sub>, *K*<sub>E</sub>), while simultaneously reducing the vertical temperature gradient and driving APE conversion from the background flow to the eddy through *C*(*A*<sub>I</sub>, *A*<sub>E</sub>).\n\nThe lateral boundary flux *B*(*K*<sub>E</sub>) is the key factor in determining EKE change in the ET phase (Figs. 8b and 14). This term is quantified by eddy geopotential flux convergence [Eq. (17a)] and represents spatial redistribution of EKE, rather than its generation or dissipation. Its divergence weakens EKE, whereas the convergence strengthens EKE [Eq. (15)]. The *B*(*K*<sub>E</sub>) is dominated by the horizontal eddy geopotential flux divergence during the TC and ET phases (Fig. 14). In the TC phase, eddy geopotential flux divergence occurs along the northeast–southwest axis and convergence in the northwest and southeast quadrants outside the storm (Fig. 14b). Within the 500-km radius, eddy geopotential flux diverges radially [*B*(*K*<sub>E</sub>) < 0 in Fig. 8b], indicating a net outward transport of EKE away from the storm center (Fig. 14c). In the ET phase, eddy geopotential flux divergence is enhanced in the northeast quadrant, while convergence occurs in the southwest quadrant (Fig. 14e). This is due to a background anticyclonic circulation anomaly that appears to the northeast of the storm. This circulation, which is associated with the western North Pacific high in the lower–midtroposphere, enhances eddy geopotential flux divergence in the northeast quadrant of the storm (Fig. 14f). In the upper troposphere, the divergent TC outflow associated with the jet–TC interaction also contributes to the redistribution of EKE. Together, these processes highlight the role of the large-scale midlatitude environment in redistributing EKE around the storm. This outward transport of EKE may be linked to the wind field expansion typically observed during ET (e.g., Evans and Hart 2008). However, a clear expansion of the EKE distribution is not evident in our results (Fig. 6f), likely due to the offset by baroclinic energy conversion (Figs. 9g,h).\n\n![Figure 14](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f14.jpg)\n\n**Figure 14.** As in Fig. 9, but for (a),(d) vertically integrated *B*(*K*<sub>E</sub>) (W m<sup>−2</sup>), (b),(e) horizontal component of vertically integrated *B*(*K*<sub>E</sub>) (W m<sup>−2</sup>), and (c),(f) vertically averaged eddy geopotential flux (vectors; m<sup>3</sup> s<sup>−3</sup>) and vertically averaged geopotential anomaly (shading; m<sup>2</sup> s<sup>−2</sup>)."
+    },
+    {
+      "heading": "5. Summary and discussion",
+      "level": 2,
+      "kind": "body",
+      "text": "This study proposes a local energetics framework to examine ET dynamics and demonstrates its usefulness by applying it to TC Hagibis (2019) in the western North Pacific. TC Hagibis (2019) showed marked extratropical characteristics during its transition, as clearly captured in the CPS diagram. The storm exhibited a deep warm core and symmetric structure during the TC stage, evolved into an increasingly asymmetric system during the ET stage, and ultimately developed a deep cold core during the ETC stage. As the storm moved into the midlatitudes, asymmetries in low-level circulation, moisture transport, and associated upward motion became more apparent. This distinct ET evolution was primarily driven by the jet–TC interaction, in which the strong vertical wind shear and the anticyclonic shear of the upper-level jet enhanced slantwise ascent and strengthened the TC outflow. The quasigeostrophic ascent on the equatorward side of the jet entrance region also likely contributed to a pronounced asymmetric structure during ET.\n\nThe energy cycle of TC Hagibis is quantified using the local energetics proposed by Murakami (2011). The original formulation is modified for use in the cyclone frame of reference (or cyclone-following framework). All budget terms are vertically integrated over the 1000–100-hPa layer and averaged within a 500-km radius of the storm center. Local energetics undergo marked changes from the TC to ET phases. All budget terms maintain the same sign from the TC to ET phases, but their magnitudes increase except for the EKE dissipation term. During the TC phase (green line in Fig. 15; top panel of Fig. 16), EAPE increases (*DA*<sub>E</sub>/*Dt* > 0 in Fig. 15) as its generation and conversion from background flow dominate over the baroclinic energy conversion, whereas EKE increases slightly on average (*DK*<sub>E</sub>/*Dt* > 0 in Fig. 15) as baroclinic energy conversion dominates over lateral boundary flux. During the ET phase (blue line in Fig. 15; bottom panel of Fig. 16), as the storm moves into the midlatitudes, EAPE increases (*DA*<sub>E</sub>/*Dt* > 0 in Fig. 15) due to enhanced diabatic heating and energy conversion from background flow. In particular, the energy conversion from background flow more than doubles relative to the TC phase, contributing substantially to the EAPE increase. However, EKE decreases significantly (*DK*<sub>E</sub>/*Dt* < 0 in Fig. 15). This reduction results from strong lateral boundary flux divergence, which is influenced by large-scale circulation in the mid–lower levels (e.g., the western North Pacific subtropical high) and divergent TC outflow in the upper levels, despite enhanced baroclinic energy conversion. The energy budget terms and dominant energy pathways in the TC and ET phases are quantified in Fig. 16.\n\n![Figure 15](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f15.jpg)\n\n**Figure 15.** Temporal evolution of EKE tendency (*DK*<sub>E</sub>/*Dt*) and EAPE tendency (*DA*<sub>E</sub>/*Dt*) for TC Hagibis (2019). Red, orange, green, and blue dots indicate the beginning of the cyclone life cycle as a tropical storm, ET onset, ET completion, and the end of the JMA best track record, respectively. The green line and the blue line indicate the TC and ET phases, respectively.\n\n![Figure 16](https://journals.ametsoc.org/view/journals/atsc/83/9/full-JAS-D-26-0015.1-f16.jpg)\n\n**Figure 16.** As in Fig. 1, but for the (top) TC phase and (bottom) ET phase of TC Hagibis (2019). The value inside each box represents the tendency of local eddy energy (W m<sup>−2</sup>), while the arrows denote the energy budget terms (W m<sup>−2</sup>). Blue arrows indicate the main energy pathways, while thick blue arrows highlight the enhanced energy processes during the ET phase compared to the TC phase.\n\nThe major energy terms governing the evolution of EAPE and EKE not only intensify in magnitude but also become more asymmetric during the ET phase. The enhanced and asymmetric EAPE generation results from both diabatic heating associated with asymmetric precipitation under the jet–TC interaction and asymmetric temperature advection. The enhanced meridional eddy heat flux reduces the background temperature gradient, thus enhancing the APE conversion from the background flow to the eddy. Baroclinic energy conversion is enhanced ahead of the storm due to asymmetric temperature anomalies and strong upward motion related to jet–TC interaction. The eddy geopotential flux divergence intensifies along the boundary of the western North Pacific high and is further enhanced by upper-level divergent TC outflow, producing a stronger and more asymmetric EKE boundary flux. Overall, the increase in magnitude and spatial asymmetry of the energy terms during the ET phase largely results from interaction with the midlatitude baroclinic environment.\n\nIt should be noted that the energetics perspective on ET dynamics has also been explored in previous studies. Using EKE diagnostics, Keller et al. (2014) examined why forecast scenarios diverge substantially during ET and how such differences connect to downstream midlatitude flow and storm reintensification. Jung and Lackmann (2021) showed that, in quasi-idealized simulations, future ET involves greater EKE through intensified baroclinic conversion, leading to stronger downstream amplification. These studies suggest that ET can act as an energy source that triggers or modifies midlatitude baroclinic waves (Riemer et al. 2008; Riemer and Jones 2010, 2014), a process closely linked to the concept of downstream development (Orlanski and Katzfey 1991; Orlanski and Chang 1993; Orlanski and Sheldon 1995). Previous studies have also focused on the energetics of the ET process itself. Sun et al. (2012), for instance, analyzed the KE budget during the ET of Typhoon Yagi (2006) using high-resolution numerical model output. More generally, the energetics framework has been applied to understand the behavior of synoptic- and mesoscale cyclones (e.g., Shimada et al. 2014; De Souza et al. 2025, 2026). Building on these studies, the present study provides a more comprehensive diagnosis of the energy cycle during ET. Energetics is evaluated within an effective domain of storm influence using a storm-following coordinate. This framework requires no quasigeostrophic assumptions, allowing the tropical and baroclinic midlatitude environments to be treated under the same diagnostics as the storm moves into the midlatitudes. Furthermore, by encompassing both EAPE and EKE throughout the ET process, this study addresses not only the dynamical evolution of the system but also the role of EAPE as an energy source.\n\nPrevious studies have often employed a PV framework to describe TC–midlatitude interactions (Atallah and Bosart 2003; Agustí-Panareda et al. 2004; Evans and Prater-Mayes 2004; Atallah et al. 2007; Grams et al. 2013a). Agustí-Panareda et al. (2004) proposed a sequence of PV-based stages describing the transition of Hurricane Irene (1999). Similar evolution was also found during the transition of Typhoon Jangmi (2008) (Grams et al. 2013a). The sequence begins as the TC approaches a midlatitude baroclinic zone, where vertical wind shear tilts the PV tower. Depending on the intensity and size of the TC, this shear-induced PV asymmetry may be axisymmetrized, but it can also promote convection on the outer flank of the storm (Davis et al. 2008). The new convective burst appears as a narrow PV tower and induces intense deep ascent, which transitions into isentropic outflow in the upper troposphere. This outflow accelerates near the jet core under a steep vertical potential temperature gradient, intensifying the jet streak. Symmetric instability further contributes to this jet acceleration by enabling moist, low-PV air to undergo slantwise ascent and enhancing the isentropic flow toward the jet core.\n\nThe local energetics framework does not directly match the PV framework but offers complementary perspectives on TC–midlatitude interaction (Teubler and Riemer 2016; Wirth et al. 2018; Keller et al. 2019). Unlike in the PV framework where diabatic heating appears explicitly as diabatic PV production, diabatic heating affects multiple terms in the local energetics framework. Diabatic heating contributes directly to the EAPE generation, modifies the temperature anomalies involved in the APE conversion between background and eddy, and influences the baroclinic energy conversion through diabatically induced ascent. Combining the two frameworks would allow for a more rigorous and physically comprehensive interpretation of the interaction between the TC and the midlatitude baroclinic environment.\n\nThe local energetics framework can be used to interpret the direct and indirect impacts of ET in an energetics perspective. The wind field expansion and associated wind extremes during ET have been attributed to the inward transport of absolute angular momentum and to cooling near the storm center, which together cause the radius of maximum wind to shift outward (Evans and Hart 2008). However, these processes have not been examined through the lens of an energy cycle. Applying the local energetics framework to wind field expansion during ET may help identify which energy terms are most critical in driving the intensification, asymmetry, and outward expansion of high-wind regions. Moreover, evaluating how numerical models represent these key energetic processes would offer a means to diagnose why some models struggle to reproduce wind extremes during ET.\n\nThis study has a clear limitation in that the local energetics framework is applied to only a single ET case. We are currently applying this framework to multiple ET cases in the western North Pacific. This will help evaluate whether the intensified and asymmetric energy fluxes during ET are a consistent feature of TC interaction with the midlatitude baroclinic environment. Another limitation is the presence of nonnegligible residuals in the energy budgets. We expect that composite analyses will help reduce the residuals."
+    },
+    {
+      "heading": "Acknowledgments",
+      "level": 2,
+      "kind": "body",
+      "text": "We are grateful to the three anonymous reviewers for their constructive comments. We also thank Dr. Jaeyeon Lee and Dr. Chanil Park for helping to produce the cyclone phase space diagram. This work was supported by the National Research Foundation of Korea (NRF) grant funded by the Korean government (MSIT) (2023R1A2C3005607)."
+    },
+    {
+      "heading": "Data availability statement",
+      "level": 2,
+      "kind": "data_availability",
+      "text": "The JRA3Q reanalysis data are accessible at https://rda.ucar.edu/datasets/ds640-1/."
+    }
+  ],
+  "references": [
+    {
+      "raw": "Abraham , J. , J. W. Strapp , C. Fogarty , and M. Wolde , 2004 : Extratropical transition of Hurricane Michael: An aircraft investigation . Bull. Amer. Meteor. Soc. , 85 , 1323 – 1340 , https://doi.org/10.1175/BAMS-85-9-1323 .",
+      "doi": "10.1175/bams-85-9-1323",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Agustí-Panareda , A. , C. D. Thorncroft , G. C. Craig , and S. L. Gray , 2004 : The extratropical transition of hurricane Irene (1999): A potential-vorticity perspective . Quart. J. Roy. Meteor. Soc. , 130 , 1047 – 1074 , https://doi.org/10.1256/qj.02.140 .",
+      "doi": "10.1256/qj.02.140",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Archambault , H. M. , L. F. Bosart , D. Keyser , and J. M. Cordeira , 2013 : A climatological analysis of the extratropical flow response to recurving western North Pacific tropical cyclones . Mon. Wea. Rev. , 141 , 2325 – 2346 , https://doi.org/10.1175/MWR-D-12-00257.1 .",
+      "doi": "10.1175/mwr-d-12-00257.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Archambault , H. M. , D. Keyser , L. F. Bosart , C. A. Davis , and J. M. Cordeira , 2015 : A composite perspective of the extratropical flow response to recurving western North Pacific tropical cyclones . Mon. Wea. Rev. , 143 , 1122 – 1141 , https://doi.org/10.1175/MWR-D-14-00270.1 .",
+      "doi": "10.1175/mwr-d-14-00270.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Atallah , E. H. , and L. F. Bosart , 2003 : The extratropical transition and precipitation distribution of Hurricane Floyd (1999) . Mon. Wea. Rev. , 131 , 1063 – 1081 , https://doi.org/10.1175/1520-0493(2003)131<1063:TETAPD>2.0.CO;2 .",
+      "doi": "10.1175/1520-0493(2003)131<1063:tetapd>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Atallah , E. H. , L. F. Bosart , and A. R. Aiyyer , 2007 : Precipitation distribution associated with landfalling tropical cyclones over the eastern United States . Mon. Wea. Rev. , 135 , 2185 – 2206 , https://doi.org/10.1175/MWR3382.1 .",
+      "doi": "10.1175/mwr3382.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Bosart , L. F. , and G. M. Lackmann , 1995 : Postlandfall tropical cyclone reintensification in a weakly baroclinic environment: A case study of Hurricane David (September 1979) . Mon. Wea. Rev. , 123 , 3268 – 3291 , https://doi.org/10.1175/1520-0493(1995)123<3268:PTCRIA>2.0.CO;2 .",
+      "doi": "10.1175/1520-0493(1995)123<3268:ptcria>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Bowyer , P. J. , and A. W. MacAfee , 2005 : The theory of trapped-fetch waves with tropical cyclones—An operational perspective . Wea. Forecasting , 20 , 229 – 244 , https://doi.org/10.1175/WAF849.1 .",
+      "doi": "10.1175/waf849.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Browning , K. A. , 1997 : The dry intrusion perspective of extra-tropical cyclone development . Meteor. Appl. , 4 , 317 – 324 , https://doi.org/10.1017/S1350482797000613 .",
+      "doi": "10.1017/s1350482797000613",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Carlson , T. N. , 1980 : Airflow through midlatitude cyclones and the comma cloud pattern . Mon. Wea. Rev. , 108 , 1498 – 1509 , https://doi.org/10.1175/1520-0493(1980)108<1498:ATMCAT>2.0.CO;2 .",
+      "doi": "10.1175/1520-0493(1980)108<1498:atmcat>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Catto , J. L. , L. C. Shaffrey , and K. I. Hodges , 2010 : Can climate models capture the structure of extratropical cyclones? J. Climate , 23 , 1621 – 1635 , https://doi.org/10.1175/2009JCLI3318.1 .",
+      "doi": "10.1175/2009jcli3318.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Chan , J. C. , and W. M. Gray , 1982 : Tropical cyclone movement and surrounding flow relationships . Mon. Wea. Rev. , 110 , 1354 – 1374 , https://doi.org/10.1175/1520-0493(1982)110<1354:TCMASF>2.0.CO;2 .",
+      "doi": "10.1175/1520-0493(1982)110<1354:tcmasf>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Chen , G. H. , 2011 : A comparison of precipitation distribution of two landfalling tropical cyclones during the extratropical transition . Adv. Atmos. Sci. , 28 , 1390 – 1404 , https://doi.org/10.1007/s00376-011-0148-y .",
+      "doi": "10.1007/s00376-011-0148-y",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Davis , C. A. , S. C. Jones , and M. Riemer , 2008 : Hurricane vortex dynamics during Atlantic extratropical transition . J. Atmos. Sci. , 65 , 714 – 736 , https://doi.org/10.1175/2007JAS2488.1 .",
+      "doi": "10.1175/2007jas2488.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "De Souza , D. C. , P. L. D. Silva Dias , C. B. Gramcianinov , and R. Camargo , 2025 : Lorenz energy cycle climatology for the southwestern Atlantic cyclones . Climate Dyn. , 63 , 426 , https://doi.org/10.1007/s00382-025-07918-y .",
+      "doi": "10.1007/s00382-025-07918-y",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "De Souza , D. C. , V. A. Ranieri , P. L. D. Silva Dias , A. R. Flores , and R. Camargo , 2026 : Revisiting the rare transition of a South Atlantic cyclone to Tropical Storm Akará: Energy cycle and stratosphere-troposphere interaction . Climate Dyn. , 64 , 94 , https://doi.org/10.1007/s00382-026-08062-x .",
+      "doi": "10.1007/s00382-026-08062-x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Evans , C. , and R. E. Hart , 2008 : Analysis of the wind field evolution associated with the extratropical transition of Bonnie (1998) . Mon. Wea. Rev. , 136 , 2047 – 2065 , https://doi.org/10.1175/2007MWR2051.1 .",
+      "doi": "10.1175/2007mwr2051.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Evans , C. , and Coauthors, 2017 : The extratropical transition of tropical cyclones. Part I: Cyclone evolution and direct impacts . Mon. Wea. Rev. , 145 , 4317 – 4344 , https://doi.org/10.1175/MWR-D-17-0027.1 .",
+      "doi": "10.1175/mwr-d-17-0027.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Evans , J. L. , and R. E. Hart , 2003 : Objective indicators of the life cycle evolution of extratropical transition for Atlantic tropical cyclones . Mon. Wea. Rev. , 131 , 909 – 925 , https://doi.org/10.1175/1520-0493(2003)131<0909:OIOTLC>2.0.CO;2 .",
+      "doi": "10.1175/1520-0493(2003)131<0909:oiotlc>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Evans , J. L. , and B. E. Prater-Mayes , 2004 : Factors affecting the posttransition intensification of Hurricane Irene (1999) . Mon. Wea. Rev. , 132 , 1355 – 1368 , https://doi.org/10.1175/1520-0493(2004)132<1355:FATPIO>2.0.CO;2 .",
+      "doi": "10.1175/1520-0493(2004)132<1355:fatpio>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Foley , G. R. , and B. N. Hanstrum , 1994 : The capture of tropical cyclones by cold fronts off the west coast of Australia . Wea. Forecasting , 9 , 577 – 592 , https://doi.org/10.1175/1520-0434(1994)009<0577:TCOTCB>2.0.CO;2 .",
+      "doi": "10.1175/1520-0434(1994)009<0577:tcotcb>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Fu , S.-M. , J.-H. Sun , J. Ling , H.-J. Wang , and Y.-C. Zhang , 2016 : Scale interactions in sustaining persistent torrential rainfall events during the mei-yu season . J. Geophys. Res. Atmos. , 121 , 12 856 – 12 876 , https://doi.org/10.1002/2016JD025446 .",
+      "doi": "10.1002/2016jd025446",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Fu , S.-M. , R.-X. Liu , and J.-H. Sun , 2018 : On the scale interactions that dominate the maintenance of a persistent heavy rainfall event: A piecewise energy analysis . J. Atmos. Sci. , 75 , 907 – 925 , https://doi.org/10.1175/JAS-D-17-0294.1 .",
+      "doi": "10.1175/jas-d-17-0294.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Fujibe , F. , and N. Kitabatake , 2007 : Classification of surface wind fields of tropical cyclones at landfall on the Japan main islands . J. Meteor. Soc. Japan , 85 , 747 – 765 , https://doi.org/10.2151/jmsj.85.747 .",
+      "doi": "10.2151/jmsj.85.747",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Gertler , C. G. , P. A. O’Gorman , and S. Pfahl , 2023 : Moist available potential energy of the mean state of the atmosphere and the thermodynamic potential for warm conveyor belts and convection . Wea. Climate Dyn. , 4 , 361 – 379 , https://doi.org/10.5194/wcd-4-361-2023 .",
+      "doi": "10.5194/wcd-4-361-2023",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Grams , C. M. , and H. M. Archambault , 2016 : The key role of diabatic outflow in amplifying the midlatitude flow: A representative case study of weather systems surrounding western North Pacific extratropical transition . Mon. Wea. Rev. , 144 , 3847 – 3869 , https://doi.org/10.1175/MWR-D-15-0419.1 .",
+      "doi": "10.1175/mwr-d-15-0419.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Grams , C. M. , S. C. Jones , C. A. Davis , P. A. Harr , and M. Weissmann , 2013a : The impact of Typhoon Jangmi (2008) on the midlatitude flow. Part I: Upper-level ridgebuilding and modification of the jet . Quart. J. Roy. Meteor. Soc. , 139 , 2148 – 2164 , https://doi.org/10.1002/qj.2091 .",
+      "doi": "10.1002/qj.2091",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Grams , C. M. , S. C. Jones , and C. A. Davis , 2013b : The impact of Typhoon Jangmi (2008) on the midlatitude flow. Part II: Downstream evolution . Quart. J. Roy. Meteor. Soc. , 139 , 2165 – 2180 , https://doi.org/10.1002/qj.2119 .",
+      "doi": "10.1002/qj.2119",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Harr , P. A. , and R. L. Elsberry , 2000 : Extratropical transition of tropical cyclones over the western North Pacific. Part I: Evolution of structural characteristics during the transition process . Mon. Wea. Rev. , 128 , 2613 – 2633 , https://doi.org/10.1175/1520-0493(2000)128<2613:ETOTCO>2.0.CO;2 .",
+      "doi": "10.1175/1520-0493(2000)128<2613:etotco>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Hart , R. E. , 2003 : A cyclone phase space derived from thermal wind and thermal asymmetry . Mon. Wea. Rev. , 131 , 585 – 616 , https://doi.org/10.1175/1520-0493(2003)131<0585:ACPSDF>2.0.CO;2 .",
+      "doi": "10.1175/1520-0493(2003)131<0585:acpsdf>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Hart , R. E. , and J. L. Evans , 2001 : A climatology of the extratropical transition of Atlantic tropical cyclones . J. Climate , 14 , 546 – 564 , https://doi.org/10.1175/1520-0442(2001)014<0546:ACOTET>2.0.CO;2 .",
+      "doi": "10.1175/1520-0442(2001)014<0546:acotet>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Iizuka , S. , R. Kawamura , H. Nakamura , and T. Miyama , 2021 : Influence of warm SST in the Oyashio region on rainfall distribution of Typhoon Hagibis (2019) . SOLA , 17A , 21 – 28 , https://doi.org/10.2151/sola.17A-004 .",
+      "doi": "10.2151/sola.17a-004",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Ito , K. , and H. Ichikawa , 2021 : Warm ocean accelerating Tropical Cyclone Hagibis (2019) through interaction with a mid-latitude westerly jet . SOLA , 17A , 1 – 6 , https://doi.org/10.2151/sola.17A-001 .",
+      "doi": "10.2151/sola.17a-001",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Jones , S. C. , and Coauthors, 2003 : The extratropical transition of tropical cyclones: Forecast challenges, current understanding, and future directions . Wea. Forecasting , 18 , 1052 – 1092 , https://doi.org/10.1175/1520-0434(2003)018<1052:TETOTC>2.0.CO;2 .",
+      "doi": "10.1175/1520-0434(2003)018<1052:tetotc>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Jung , C. , and G. M. Lackmann , 2021 : The response of extratropical transition of tropical cyclones to climate change: Quasi-idealized numerical experiments . J. Climate , 34 , 4361 – 4381 , https://doi.org/10.1175/JCLI-D-20-0543.1 .",
+      "doi": "10.1175/jcli-d-20-0543.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Keller , J. H. , S. C. Jones , and P. A. Harr , 2014 : An eddy kinetic energy view of physical and dynamical processes in distinct forecast scenarios for the extratropical transition of two tropical cyclones . Mon. Wea. Rev. , 142 , 2751 – 2771 , https://doi.org/10.1175/MWR-D-13-00219.1 .",
+      "doi": "10.1175/mwr-d-13-00219.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Keller , J. H. , and Coauthors, 2019 : The extratropical transition of tropical cyclones. Part II: Interaction with the midlatitude flow, downstream impacts, and implications for predictability . Mon. Wea. Rev. , 147 , 1077 – 1106 , https://doi.org/10.1175/MWR-D-17-0329.1 .",
+      "doi": "10.1175/mwr-d-17-0329.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Kitabatake , N. , 2011 : Climatology of extratropical transition of tropical cyclones in the western North Pacific defined by using cyclone phase space . J. Meteor. Soc. Japan , 89 , 309 – 325 , https://doi.org/10.2151/jmsj.2011-402 .",
+      "doi": "10.2151/jmsj.2011-402",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Klein , P. M. , P. A. Harr , and R. L. Elsberry , 2000 : Extratropical transition of western North Pacific tropical cyclones: An overview and conceptual model of the transformation stage . Wea. Forecasting , 15 , 373 – 395 , https://doi.org/10.1175/1520-0434(2000)015<0373:ETOWNP>2.0.CO;2 .",
+      "doi": "10.1175/1520-0434(2000)015<0373:etownp>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Kosaka , Y. , and Coauthors, 2024 : The JRA-3Q reanalysis . J. Meteor. Soc. Japan , 102 , 49 – 109 , https://doi.org/10.2151/jmsj.2024-004 .",
+      "doi": "10.2151/jmsj.2024-004",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Lackmann , G. M. , 2015 : Midlatitude Synoptic Meteorology: Dynamics, Analysis and Forecasting. Amer. Meteor. Soc ., 345 pp.",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Liu , Q. , T. Li , and W. Zhou , 2018 : Impact of 10–60-day low-frequency steering flows on straight northward-moving typhoon tracks over the western North Pacific . J. Meteor. Res. , 32 , 394 – 409 , https://doi.org/10.1007/s13351-018-7035-8 .",
+      "doi": "10.1007/s13351-018-7035-8",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Lorenz , E. N. , 1955 : Available potential energy and the maintenance of the general circulation . Tellus , 7 ( 2 ), 157 – 167 , https://doi.org/10.1111/j.2153-3490.1955.tb01148.x .",
+      "doi": "10.1111/j.2153-3490.1955.tb01148.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Murakami , S. , 2011 : Atmospheric local energetics and energy interactions between mean and eddy fields. Part I: Theory . J. Atmos. Sci. , 68 , 760 – 768 , https://doi.org/10.1175/2010JAS3664.1 .",
+      "doi": "10.1175/2010jas3664.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Murakami , S. , R. Ohgaito , and A. Abe-Ouchi , 2011 : Atmospheric local energetics and energy interactions between mean and eddy fields. Part II: An example for the last glacial maximum climate . J. Atmos. Sci. , 68 , 533 – 552 , https://doi.org/10.1175/2010JAS3583.1 .",
+      "doi": "10.1175/2010jas3583.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Nayak , S. , and T. Takemi , 2023 : Structural characteristics of Typhoons Jebi (2018), Faxai (2019), and Hagibis (2019) . Meteor. Atmos. Phys. , 135 , 34 , https://doi.org/10.1007/s00703-023-00973-2 .",
+      "doi": "10.1007/s00703-023-00973-2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Novak , L. , and R. Tailleux , 2018 : On the local view of atmospheric available potential energy . J. Atmos. Sci. , 75 , 1891 – 1907 , https://doi.org/10.1175/JAS-D-17-0330.1 .",
+      "doi": "10.1175/jas-d-17-0330.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Orlanski , I. , and J. Katzfey , 1991 : The life cycle of a cyclone wave in the Southern Hemisphere. Part I: Eddy energy budget . J. Atmos. Sci. , 48 , 1972 – 1998 , https://doi.org/10.1175/1520-0469(1991)048<1972:TLCOAC>2.0.CO;2 .",
+      "doi": "10.1175/1520-0469(1991)048<1972:tlcoac>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Orlanski , I. , and E. K. M. Chang , 1993 : Ageostrophic geopotential fluxes in downstream and upstream development of baroclinic waves . J. Atmos. Sci. , 50 , 212 – 225 , https://doi.org/10.1175/1520-0469(1993)050<0212:AGFIDA>2.0.CO;2 .",
+      "doi": "10.1175/1520-0469(1993)050<0212:agfida>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Orlanski , I. , and J. P. Sheldon , 1995 : Stages in the energetics of baroclinic systems . Tellus , 47A , 605 – 628 , https://doi.org/10.3402/tellusa.v47i5.11553 .",
+      "doi": "10.3402/tellusa.v47i5.11553",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Powell , M. D. , 1982 : The transition of the hurricane Frederic boundary-layer wind field from the open Gulf of Mexico to landfall . Mon. Wea. Rev. , 110 , 1912 – 1932 , https://doi.org/10.1175/1520-0493(1982)110<1912:TTOTHF>2.0.CO;2 .",
+      "doi": "10.1175/1520-0493(1982)110<1912:ttothf>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Quinting , J. F. , and S. C. Jones , 2016 : On the impact of tropical cyclones on Rossby wave packets: A climatological perspective . Mon. Wea. Rev. , 144 , 2021 – 2048 , https://doi.org/10.1175/MWR-D-14-00298.1 .",
+      "doi": "10.1175/mwr-d-14-00298.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Riboldi , J. , C. M. Grams , M. Riemer , and H. M. Archambault , 2019 : A phase locking perspective on Rossby wave amplification and atmospheric blocking downstream of recurving western North Pacific tropical cyclones . Mon. Wea. Rev. , 147 , 567 – 589 , https://doi.org/10.1175/MWR-D-18-0271.1 .",
+      "doi": "10.1175/mwr-d-18-0271.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Riemer , M. , and S. C. Jones , 2010 : The downstream impact of tropical cyclones on a developing baroclinic wave in idealized scenarios of extratropical transition . Quart. J. Roy. Meteor. Soc. , 136 , 617 – 637 , https://doi.org/10.1002/qj.605 .",
+      "doi": "10.1002/qj.605",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Riemer , M. , and S. C. Jones , 2014 : Interaction of a tropical cyclone with a high-amplitude, midlatitude wave pattern: Waviness analysis, trough deformation and track bifurcation . Quart. J. Roy. Meteor. Soc. , 140 , 1362 – 1376 , https://doi.org/10.1002/qj.2221 .",
+      "doi": "10.1002/qj.2221",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Riemer , M. , S. C. Jones , and C. A. Davis , 2008 : The impact of extratropical transition on the downstream flow: An idealized modelling study with a straight jet . Quart. J. Roy. Meteor. Soc. , 134 , 69 – 91 , https://doi.org/10.1002/qj.189 .",
+      "doi": "10.1002/qj.189",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Ritchie , E. A. , and R. L. Elsberry , 2001 : Simulations of the transformation stage of the extratropical transition of tropical cyclones . Mon. Wea. Rev. , 129 , 1462 – 1480 , https://doi.org/10.1175/1520-0493(2001)129<1462:SOTTSO>2.0.CO;2 .",
+      "doi": "10.1175/1520-0493(2001)129<1462:sottso>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Ritchie , E. A. , and R. L. Elsberry , 2003 : Simulations of the extratropical transition of tropical cyclones: Contributions by the midlatitude upper-level trough to reintensification . Mon. Wea. Rev. , 131 , 2112 – 2128 , https://doi.org/10.1175/1520-0493(2003)131<2112:SOTETO>2.0.CO;2 .",
+      "doi": "10.1175/1520-0493(2003)131<2112:soteto>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Ritchie , E. A. , and R. L. Elsberry , 2007 : Simulations of the extratropical transition of tropical cyclones: Phasing between the upper-level trough and tropical cyclones . Mon. Wea. Rev. , 135 , 862 – 876 , https://doi.org/10.1175/MWR3303.1 .",
+      "doi": "10.1175/mwr3303.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Rivière , G. , P. Arbogast , and A. Joly , 2015 : Eddy kinetic energy redistribution within windstorms Klaus and Friedhelm . Quart. J. Roy. Meteor. Soc. , 141 , 925 – 938 , https://doi.org/10.1002/qj.2412 .",
+      "doi": "10.1002/qj.2412",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Shimada , U. , A. Wada , K. Yamazaki , and N. Kitabatake , 2014 : Roles of an upper-level cold vortex and low-level baroclinicity in the development of polar lows over the Sea of Japan . Tellus , 66A , 24694 , https://doi.org/10.3402/tellusa.v66.24694 .",
+      "doi": "10.3402/tellusa.v66.24694",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Sinclair , M. R. , 2002 : Extratropical transition of southwest Pacific tropical cyclones. Part I: Climatology and mean structure changes . Mon. Wea. Rev. , 130 , 590 – 609 , https://doi.org/10.1175/1520-0493(2002)130<0590:ETOSPT>2.0.CO;2 .",
+      "doi": "10.1175/1520-0493(2002)130<0590:etospt>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Sun , Y. , Z. Zhong , and Y. Wang , 2012 : Kinetic energy budget of Typhoon Yagi (2006) during its extratropical transition . Meteor. Atmos. Phys. , 118 , 65 – 78 , https://doi.org/10.1007/s00703-012-0200-1 .",
+      "doi": "10.1007/s00703-012-0200-1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Teubler , F. , and M. Riemer , 2016 : Dynamics of Rossby wave packets in a quantitative potential vorticity—Potential temperature framework . J. Atmos. Sci. , 73 , 1063 – 1081 , https://doi.org/10.1175/JAS-D-15-0162.1 .",
+      "doi": "10.1175/jas-d-15-0162.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Wirth , V. , M. Riemer , E. K. M. Chang , and O. Martius , 2018 : Rossby wave packets on the midlatitude waveguide—A review . Mon. Wea. Rev. , 146 , 1965 – 2001 , https://doi.org/10.1175/MWR-D-16-0483.1 .",
+      "doi": "10.1175/mwr-d-16-0483.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Wood , K. M. , and E. A. Ritchie , 2014 : A 40-year climatology of extratropical transition in the eastern North Pacific . J. Climate , 27 , 5999 – 6015 , https://doi.org/10.1175/JCLI-D-13-00645.1 .",
+      "doi": "10.1175/jcli-d-13-00645.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Yanase , W. , K. Araki , A. Wada , U. Shimada , M. Hayashi , and T. Horinouchi , 2022 : Multiple dynamics of precipitation concentrated on the north side of Typhoon Hagibis (2019) during extratropical transition . J. Meteor. Soc. Japan , 100 , 783 – 805 , https://doi.org/10.2151/jmsj.2022-041 .",
+      "doi": "10.2151/jmsj.2022-041",
+      "title": null,
+      "year": null
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 16460,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "Markdown full text was saved to /tmp/paper-fetch-pdf-identity-recheck-20260915/ams/fetch/Kwon_et_al_2026_Local_Energetics_of_Extratropical_Transition_A_Case_Study_of_Typhoon_Hagibis_2019.md."
+    ],
+    "source_trail": [
+      "fulltext:ams_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_ams",
+      "route:signal_publisher_ams",
+      "route:signal_doi_ams",
+      "route:probe_ams_unknown",
+      "route:provider_selected_ams",
+      "route:provider_candidate_ams_metadata_selected_rank_1",
+      "route:provider_candidate_ams_identity_strong",
+      "fulltext:ams_attempt",
+      "download:ams_assets_skipped_profile_none",
+      "fulltext:ams_article_ok",
+      "route:provider_candidate_ams_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 413,
+      "body": 16047,
+      "refs": 3931
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 64021,
+      "word_count": 10452,
+      "body_block_count": 9,
+      "body_heading_count": 9,
+      "body_to_abstract_ratio": 43.91596638655462,
+      "explicit_body_container": true,
+      "post_abstract_body_run": true,
+      "figure_count": 48
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "ams",
+    "route": "browser_html",
+    "representation": "html",
+    "transport": "browser",
+    "fallback_used": false
+  }
+}

@@ -43,7 +43,7 @@ _SILVERCHAIR_FIGURE_PAGE_READY_SELECTOR = (
     "img.content-image[src], img.content-image[data-src]"
 )
 _SILVERCHAIR_FIGURE_PAGE_PROVIDERS = frozenset(
-    {"acs", "annualreviews", "royalsocietypublishing"}
+    {"annualreviews", "royalsocietypublishing"}
 )
 
 
@@ -56,6 +56,8 @@ class BrowserAssetDownloadPlan:
     supplementary_assets: list[dict[str, Any]]
     fetch_policy: AssetFetchPolicy = "direct_then_browser"
     candidate_builder: Any | None = None
+    figure_page_discovery: bool = True
+    preview_fallback: bool = True
 
 
 @dataclass(frozen=True)
@@ -113,6 +115,10 @@ def plan_browser_asset_download(
         body_assets=[dict(asset) for asset in body_assets],
         supplementary_assets=[dict(asset) for asset in supplementary_assets],
         candidate_builder=candidate_builder,
+        figure_page_discovery=bool(
+            getattr(provider_profile, "figure_page_discovery", True)
+        ),
+        preview_fallback=bool(getattr(provider_profile, "preview_fallback", True)),
     )
 
 
@@ -193,6 +199,7 @@ def retry_failed_browser_assets(
     merged = _merge_download_attempt_results(
         _result_mapping(previous),
         _result_mapping(retry_result),
+        provider=recovery.provider,
     )
     return _download_result_from_mapping(merged, deps=deps)
 
@@ -592,6 +599,7 @@ def _run_browser_asset_download_attempt(
     download_settings: Mapping[str, Any],
     deps: BrowserWorkflowDeps,
 ) -> BrowserAssetDownloadResult:
+    merge_results = partial(_merge_download_attempt_results, provider=recovery.provider)
     _raise_if_cancelled(recovery.runtime_context)
     attempt_seed = merge_browser_context_seeds(
         {"browser_cookies": recovery.browser_cookies},
@@ -604,12 +612,16 @@ def _run_browser_asset_download_attempt(
         with attempt_seed_lock:
             return merge_browser_context_seeds(attempt_seed)
 
-    figure_page_fetcher = _build_attempt_figure_page_fetcher(
-        recovery,
-        deps,
-        attempt_seed,
-        attempt_seed_lock,
-        attempt_settings.get("figure_page_fetcher_factory"),
+    figure_page_fetcher = (
+        _build_attempt_figure_page_fetcher(
+            recovery,
+            deps,
+            attempt_seed,
+            attempt_seed_lock,
+            attempt_settings.get("figure_page_fetcher_factory"),
+        )
+        if plan.figure_page_discovery
+        else None
     )
 
     def seed_urls_getter() -> list[str]:
@@ -674,6 +686,12 @@ def _run_browser_asset_download_attempt(
                 plan.candidate_builder
                 or deps._browser_workflow_image_download_candidates
             )
+            if not plan.figure_page_discovery or not plan.preview_fallback:
+                base_candidate_builder = partial(
+                    base_candidate_builder,
+                    allow_figure_page=plan.figure_page_discovery,
+                    allow_preview=plan.preview_fallback,
+                )
             is_ieee_recovery = normalize_text(recovery.provider).lower() == "ieee"
             host_recovery_circuit = AssetHostRecoveryCircuit()
             common_kwargs = {
@@ -764,9 +782,7 @@ def _run_browser_asset_download_attempt(
                     if remaining_body_assets
                     else empty_asset_results()
                 )
-                merged_result = _merge_download_attempt_results(
-                    probe_result, routed_remainder
-                )
+                merged_result = merge_results(probe_result, routed_remainder)
                 eligible_failures = probe_failures
                 browser_failures = [
                     *probe_failures,
@@ -795,9 +811,7 @@ def _run_browser_asset_download_attempt(
                     if remaining_body_assets
                     else empty_asset_results()
                 )
-                direct_result = _merge_download_attempt_results(
-                    probe_result, direct_remainder
-                )
+                direct_result = merge_results(probe_result, direct_remainder)
                 direct_remainder_failures = [
                     dict(failure)
                     for failure in list(direct_remainder.get("asset_failures") or [])
@@ -839,11 +853,12 @@ def _run_browser_asset_download_attempt(
                     browser_result = _annotate_split_browser_recovery(
                         browser_result, eligible_failures
                     )
-                    merged_result = _merge_download_attempt_results(
-                        direct_result, browser_result
-                    )
+                    merged_result = merge_results(direct_result, browser_result)
                 else:
                     browser_failures = probe_failures
+
+            if not plan.preview_fallback:
+                return merged_result
 
             preview_assets = [
                 asset
@@ -892,7 +907,7 @@ def _run_browser_asset_download_attempt(
                     ),
                     provider="wiley" if recovery.provider == "wiley" else "",
                 )
-            return _merge_download_attempt_results(merged_result, preview_result)
+            return merge_results(merged_result, preview_result)
 
         def download_supplementary_assets() -> Mapping[str, Any]:
             _raise_if_cancelled(recovery.runtime_context)
@@ -993,7 +1008,7 @@ def _run_browser_asset_download_attempt(
             browser_result = _annotate_split_browser_recovery(
                 browser_result, eligible_failures
             )
-            return _merge_download_attempt_results(direct_result, browser_result)
+            return merge_results(direct_result, browser_result)
 
         serial_browser_assets = bool(
             attempt_settings.get("serial_browser_assets")

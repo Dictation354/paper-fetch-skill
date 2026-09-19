@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall
+
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
@@ -45,6 +47,7 @@ from ._arxiv_assets import (
     _arxiv_asset_download_concurrency,
     discover_arxiv_ancillary_assets,
     inline_arxiv_source_assets_in_markdown,
+    reconcile_arxiv_body_assets,
 )
 from ._arxiv_asset_strategy import (
     ArxivHtmlAssetDownloadPlan,
@@ -185,6 +188,7 @@ class ArxivClient(ProviderClient):
         except ProviderFailure:
             raise
         except Exception as exc:
+            propagate_paywall(exc)
             error_category = classify_network_error(exc)
             raise ProviderFailure(
                 ERROR,
@@ -227,6 +231,7 @@ class ArxivClient(ProviderClient):
         try:
             return self.fetch_metadata({"arxiv_id": arxiv_id}), []
         except ProviderFailure as exc:
+            propagate_paywall(exc)
             warning = (
                 "arXiv API metadata retrieval failed; using official HTML front matter and derived "
                 f"arXiv URLs from identifier {arxiv_id} ({exc.message})."
@@ -375,6 +380,7 @@ class ArxivClient(ProviderClient):
                 fetcher=fetch_pdf_over_http,
             ).fetch(candidates)
         except PdfFetchFailure as exc:
+            propagate_paywall(exc)
             raise ProviderFailure(NO_RESULT, exc.message) from exc
         final_url = urllib.parse.urljoin(
             pdf_result.source_url or candidates[0], pdf_result.final_url
@@ -609,10 +615,22 @@ class ArxivClient(ProviderClient):
         source: SourceKind = "arxiv_pdf" if route == PDF_FALLBACK else "arxiv_html"
         markdown_text = str(
             (content.markdown_text if content is not None else "") or ""
-        ).strip()
-        markdown_text = inline_arxiv_source_assets_in_markdown(
-            markdown_text, downloaded_assets
         )
+        if route != PDF_FALLBACK:
+            markdown_text = inline_arxiv_source_assets_in_markdown(
+                markdown_text, downloaded_assets
+            )
+            downloaded_assets = list(
+                reconcile_arxiv_body_assets(
+                    markdown_text,
+                    content.extracted_assets if content is not None else [],
+                    downloaded_assets or [],
+                    article_html=content.body.decode("utf-8", errors="replace")
+                    if content
+                    else "",
+                    source_url=content.source_url if content else "",
+                )
+            )
         default_route = PDF_FALLBACK if route == PDF_FALLBACK else "html"
         trace = list(
             raw_payload.trace

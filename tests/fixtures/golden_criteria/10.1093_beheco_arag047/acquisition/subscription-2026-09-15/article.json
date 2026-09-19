@@ -1,0 +1,830 @@
+{
+  "doi": "10.1093/beheco/arag047",
+  "source": "oxfordacademic_html",
+  "metadata": {
+    "title": "The protective value of the size and movement components of deimatic behavior",
+    "authors": [
+      "Liisa Hämäläinen",
+      "Connor M Marsland",
+      "Thomas E White",
+      "Hannah M Rowland",
+      "Kate D L Umbers"
+    ],
+    "abstract": "Abstract",
+    "journal": "Behavioral Ecology",
+    "article_type": null,
+    "published": "2026-5-15",
+    "keywords": [],
+    "license_urls": [
+      "https://creativecommons.org/licenses/by/4.0/"
+    ],
+    "landing_page_url": "https://academic.oup.com/beheco/article/doi/10.1093/beheco/arag047/8665303"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "Abstract"
+    },
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "Deimatic behavior is an antipredator defense such as a sudden movement or sounds performed by prey upon perceiving a threat from a predator. Such behaviors can cause predators to slow or stop their attack, but how different components of deimatic behavior influence predator responses remains untested. We investigated the effect of prey movement, size, and size change on predator attack behavior using a robotic moth and wild Australian magpies (Gymnorhina tibicen) as predators. We first tested birds' responses to a nonmoving control moth and then presented them with a moving moth displaying deimatic behavior. The experiment included 3 different deimatic behavior treatments with the moving prey: a small moth, a large moth, and a moth that increased in size from small to large. We found that all deimatic behavior treatments were more effective at stopping the first approach compared with the nonmoving control moth, and that no treatment was more effective than another. There was no significant difference in attack latency among the treatments, although birds tended to attack the prey more quickly after the display when the moving prey remained small, compared with moving prey that increased in size during the movement. The robotic moth did not include warning colors or chemical defenses. Our results therefore indicate that protective value is conferred by movement alone, supporting the “startle-first” hypothesis that the behavioral component of deimatism can evolve before other defenses."
+    },
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "Download slide"
+    },
+    {
+      "heading": "",
+      "level": 2,
+      "kind": "body",
+      "text": "- PDF\n- Split View\n- Views\nArticle contents\nFigures & tables\nVideo\nAudio\nSupplementary Data\n- Cite\nCite\nLiisa Hämäläinen, Connor M Marsland, Thomas E White, Hannah M Rowland, Kate D L Umbers, The protective value of the size and movement components of deimatic behavior, Behavioral Ecology, Volume 37, Issue 4, July/August 2026, arag047, https://doi.org/10.1093/beheco/arag047\nSelect Format Select format.ris (Mendeley, Papers, Zotero).enw (EndNote).bibtex (BibTex).txt (Medlars, RefWorks) Download citation\nClose\n- Permissions Icon Permissions\n- Share Icon Share\nBluesky\nFacebook\nX\nLinkedIn\nEmail"
+    },
+    {
+      "heading": "Introduction",
+      "level": 2,
+      "kind": "body",
+      "text": "Prey has a diverse range of antipredator defenses (Cott 1940; Ruxton et al. 2018). These defenses include deimatic behaviors that are triggered when the prey perceives a threat from predators (Umbers et al. 2017; Drinkwater et al. 2022). Deimatic behaviors are often multimodal, including visual, auditory, olfactory, gustatory and vibrational modalities, and each modality can also include several components (Rowe and Halpin 2013; Drinkwater et al. 2022). For example, multicomponent visual displays may include a color change (typically a sudden transition from cryptic to conspicuous), a size change (typically an increase in body size), and/or movement (eg Brodie 1977; Martins 1989; Umbers and Mappes 2015; Kang et al. 2017a; O’Hanlon et al. 2018; Chiocchio et al. 2024). Deimatic behaviors were historically suggested to increase prey survival by causing the predator to slow or stop its attack, giving prey time to escape, but this hypothesis has been explored and refined (Drinkwater et al. 2022), and the question of exactly how different aspects of deimatic behaviors protect prey animals is mostly unresolved.\nInvestigating the protective value of different components of deimatic behavior is crucial for understanding its evolution. Umbers et al. (2017) proposed 2 evolutionary pathways to deimatic behavior. The “defense first” hypothesis suggests that initially camouflaged prey first evolves some form of defense, such as toxicity, which then facilitates the evolution of further defenses, such as conspicuous color signals (Umbers et al. 2017). In the defense-first hypothesis the detection cost of conspicuousness is offset by hiding the signal and revealing it only when the prey perceives a threat from predators, leading to deimatic behavior. Alternatively, the “startle first” (or “behavior first”; Drinkwater et al. 2022) hypothesis suggests that behavior, such as movement of wings during the initial phase of escape from predators, can alone increase prey survival, and this effect can be enhanced by further defenses, such as chemical defenses and conspicuous color signals (Umbers et al. 2017). To test the feasibility of these 2 evolutionary pathways, we need to isolate the effects of different components of deimatic behavior on predator deterrence.\nPredator responses to some components of deimatic behavior have been experimentally tested. For example, many insects produce sounds in response to a threat (Low et al. 2021), and predation experiments have shown that the sound alone can slow or stop the attacks from avian (Dookie et al. 2017) and mammalian predators (Olofsson et al. 2012). Another component that has been well studied is color change from cryptic to conspicuous, which increases the protective value of deimatic behaviors in at least some contexts (Kang et al. 2017b; Holmes et al. 2018). Studies involving color change often also include other visual components, such as movement and an increase in size (Kang et al. 2017b; Holmes et al. 2018) which could have interactive effects. The protective effects of movement and size change, however, remain largely unexplored, and their individual and combined impacts on predators are unknown.\nBody size alone can be an important component in the protective value of prey defenses including deimatic behavior (Skelhorn et al. 2016). Kang et al. (2017b) found that both startle responses of avian predators and the survival of prey were higher in larger than in smaller artificial prey performing deimatic behavior. Furthermore, hidden coloration is associated with larger body size in several insect taxa (Kang et al. 2017b; Loeffler-Henry et al. 2019; but see Vidal-García et al. 2020), possibly because larger species are easier to detect and might be under stronger selection pressure for additional defences (Kang et al. 2017b). Deimatic behavior might also be more efficient in larger species because such species look more intimidating (Kang et al. 2017b). The effect of apparent size change resulting from performing the behavior, however, has not been tested even though many deimatic behaviors include a body size increase (eg by opening wings or inflating the body, Drinkwater et al. 2022). Similarly, the effect of movement is understudied, although there is some evidence that continuous movement, also called “rhythmical deimatic behavior” (Blest 1958), can deter predators without the need for any further defenses (Holmes et al. 2018). Holmes et al. (2018) found that domestic chicks (Gallus gallus domesticus) hesitated longer to attack video prey when the forewings of the prey were repeatedly opening and closing at fast speed, but this effect was not significant when prey moved at slow or moderate speed. Furthermore, the study tested for the effect of continuous wing flicking, and while this is observed in some species (eg in a peacock butterfly Inachis io, Vallin et al. 2005), many deimatic behaviors include only one sudden movement, such as when the prey opens its wings and holds that position (e.g. Catocala moths, Schlenoff 1985; a mountain katydid Acripeza reticulata, Umbers and Mappes 2015; a spotted lanternfly, Lycorma delicatula, Kang et al. 2017a). Whether this type of noncontinuous movement can provide protection without further defenses therefore remains untested.\nMost experimental studies on deimatic behavior have tested the responses of predators during their first encounter with the behavior (Drinkwater et al. 2022), but to understand the protective value of different components it is also important to investigate how predator responses change across repeated encounters with prey (Sherratt 2011; Sherratt et al. 2023). Change in response is likely to depend on several factors, such as whether prey possess some form of chemical defense, and how often predators encounter the prey (Drinkwater et al. 2022). For example, Kang et al. (2016) showed that oriental tits (Parus minor) learned to avoid chemically defended prey that revealed conspicuous color patterns during deimatic behavior, and the learning speed was similar to that after the exposure to aposematic prey with constant conspicuous coloration. Conversely, laboratory studies with wild-caught blue jays (Cyanocitta cristata) and artificial moths have shown that birds can habituate to (learn to ignore) deimatic behavior that does not include any chemical defenses (Schlenoff 1985; Ingalls 1993). These studies indicate that the habituation process depends on the number of different color signals in the population of prey that performs deimatic behavior, with a higher signal diversity increasing the habituation time, and that there are consistent individual differences among bird predators in how quickly they habituate (Ingalls 1993). However, habituation to deimatic behavior in laboratory experiments with captive predators and artificial prey may be different to habituation in the wild, where there is more alternative prey and where the encounter rates with prey might be lower. Studies investigating predator habituation in the wild are scarce. Umbers et al. (2019) found that previous experience influenced how wild Australian magpies (Gymnorhina tibicen) responded to the deimatic behavior of mountain katydids, with sympatric predators regularly consuming chemically defended katydids and naïve allopatric predators avoiding them. While this study provided evidence that predators can learn to ignore deimatic behavior in the wild, determining how quickly this happens and which components of the deimatic behavior are important to prevent predator habituation requires further investigation. Finally, the protective value of movement and apparent size change in repeated encounters in the absence of color signals has not been tested.\nHere, we conducted a field experiment with Australian magpies to investigate both predator initial responses and habituation to 2 components of deimatic behavior. We tested how prey movement, size, and increase in size influence predator behavior using an artificial prey, a robotic moth with opening forewings (inspired by Kang et al. 2017b). Because it is already well established that color pattern signals enhance the effect of deimatic behavior (Kang et al. 2017b; Holmes et al. 2018; Riley et al. 2023) and because our study focused on movement, size, and size change, the moth was gray and did not include any typical warning colors. Each bird was presented with a nonmoving control moth and then received one of the 3 deimatic behavior treatments that included different combinations of movement, size, and size change: (i) a small moth with movement but no change in size (small), (ii) a large moth with movement but no change in size (large), and (iii) a moth that increased in size from small to large with movement (small-to-large). The combination of the nonmoving control moth and the 3 treatments allowed us to disentangle the effect of movement with and without size change. Isolating the effect of size change alone without movement is not possible, as the increase in size always includes some movement. Decrease in size was not included in the experiment because this is not typically observed in deimatic behaviors (Drinkwater et al. 2022). In the experiment, magpies were presented with the same deimatic behavior treatment until they either habituated to the movement (ie attacked the prey and showed no aversive behavioral responses), or until they refused to approach the prey again. We predicted that size change would increase the protective value of deimatic behaviors by increasing prey avoidance during the first encounter and by more often preventing predator habituation, leading to refusal to revisit the otherwise rewarding prey. Our experiment also allowed us to investigate if movement alone, without size change, any warning colors, or chemical defenses, would deter predators. If so, this would provide evidence for the startle first (or behavior-first) hypothesis of the evolution of deimatic behavior."
+    },
+    {
+      "heading": "Methods",
+      "level": 2,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "Predators",
+      "level": 3,
+      "kind": "body",
+      "text": "We used wild Australian magpies as predators in this experiment (n = 32). The Australian magpie (Indigenous names: Djarrawunang, Wilbung, Marriyang) is a large passerine bird that is common in urban and suburban areas and is easily habituated to humans (Kaplan 2004). Magpies are generalist feeders that forage on the ground, and they are therefore potential predators for insects displaying deimatic behavior. They live in small family groups in stable territories (∼2 km<sup>2</sup>) that rarely overlap with those of other groups (Kaplan 2004). We conducted the experiment in greater Sydney, Australia in public parks and university campuses. Because our aim was to conduct repeated trials with the same bird, it was essential that we could identify individual magpies. We therefore captured some of the individuals (n = 15) before the experiment using a walk-in trap baited with mozzarella cheese. The captured birds were fitted with individually numbered ABBBS metal bands and plastic colored bands that allowed individual identification. Often magpies could be identified without banding based on their high territoriality and individual plumage markings, and we also included unbanded magpies (n = 17) in the experiment when we could confidently identify them. After the experiment, all magpies were weighed by encouraging them to hop on a scale (Ohaus Valor 7000) by placing pieces of cheese on the tray that they could not resist."
+    },
+    {
+      "heading": "Robotic prey",
+      "level": 3,
+      "kind": "body",
+      "text": "We investigated predator responses to deimatic behavior using a robotic moth with moving forewings. The wings were made of paper, and they were attached to 2 rotating servos (Arduino Compatible 9G Micro Servo Motor) with Blu Tack (Bostik). The movement was controlled with a push button that was connected to an Arduino board (Arduino UNO R3) with >15 m copper wire, which allowed the experimenter to observe the magpie from a distance without disturbing it. In each case, the angle between the initial position of the moth's wings and the position after the movement was 60°, and the time to complete this movement was ∼0.05 s. The robotic moth was presented on top of a wooden box (179 × 120 × 77 mm), and all the electronics were inside the box. Because the mechanical noise of the rotating servos could not be eliminated, the birds were habituated to the noise before the experiment to ensure that it would not influence their responses (see Experimental protocol).\nMoth fore- and hindwings were cut from light gray paper (reflectance 36.09%), so that they resembled the shape of Catocala moth wings. The surface area of each forewing was 350 mm<sup>2</sup> (30 mm from the base to the tip of the wing) and of each hindwing 183 mm<sup>2</sup> (20 mm from the base to the tip), which fell in the size range of butterflies and moths observed in the study area (Zborowski and Edwards 2007). The total wing surface area of the moth was 1,066 mm<sup>2</sup> when both fore- and hindwings were visible, and 700 mm<sup>2</sup> when only forewings were visible (in the small treatment and when forewings were closed, Fig. 1a). The background was a dark gray paper (reflectance 12.93%) that was glued on top of the wooden box where the moth was presented. The difference in reflectance between the moth and the background (∼23%) made the moth detectable to birds even though it did not feature any typical warning colors. Hindwings were attached to the background with Blue Tack (in large and small-to-large treatments, Fig. 1a), and the forewings were attached to the rotating servos. In the experiment, a piece of mozzarella cheese (∼25 mm long) was placed between the wings to simulate a moth body and encourage birds to approach and attack.\n\n![Figure 1](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/m_arag047f1.jpeg?Expires=1791332594&Signature=rsyj9lHg2m7HzpPwSiBA0o1YGVgkcFToPNWco6OOeQQu0VIO~heBi4y0OsgQiRSDnD7wptjMd~2jh9uqUFMmy3ZrodfyGL2FMQk8tiPWv4XQIqr9EY83zSvhIypsyNRIDnhMOr0S7~1BbqC1-9jS75a2K49ukTRALLQq~88NfxWjayqcU7vAJ7s3JK0qR5UOeIAONVIOoo8hMKlUiABqv6PRepE3h2uymAZM4yHzwoxmgWG~VLta9~PwuXrHBRV~6P~BN2ezLKVUR7OnGtjsqGTj~nItgeVpZBREYGzfIrnyPcSG9vBqNd7NLg~57Afgy1Au9NFkhv7MmYmV4nSqTA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 1** Experimental set-up showing a) the 3 deimatic behavior treatments in the experiment: (1) a small moth with movement but no change in size (small), (2) a large moth with movement but no change in size (large), and (3) a moth that increased in size from small to large with movement (small-to-large); b) the experimental arena with dark brown stick perch; and c) a magpie standing on the perch while participating in the experiment."
+    },
+    {
+      "heading": "Experimental arena",
+      "level": 3,
+      "kind": "body",
+      "text": "The robotic moth was presented to birds in a 37 × 25 × 37 cm sized experimental arena that was made of plywood (Fig. 1b). The small box with the robotic moth was placed on a plywood tray inside this arena, so that it could not be seen from the ground. Along the inside of one side of the arena we attached a stick (∼2 cm in diameter) to serve as a perch. To see and attack the moth, birds had to hop onto this perch and lean towards the moth. Around the remaining periphery of the arena, we attached in a vertical position and at ∼2 cm intervals wooden skewers 16 and 7 cm in length, which prevented birds from landing on the arena anywhere other than the perch (Fig. 1b). This was necessary to ensure that birds always approached the prey from the same direction, and to facilitate recording of the moment when birds first saw the moth. The design of the arena also minimized opportunities for social information use as only the bird on the perch could see the moth. However, other birds could still observe the behavioral responses of the bird that participated in the experiment. During the experiment, the arena was placed in the shade to make the lighting as standardized as possible across the arena and the moth. To prevent birds from seeing the prey from above, we also avoided placing the arena directly under the trees where the birds were perching."
+    },
+    {
+      "heading": "Magpie pretraining",
+      "level": 3,
+      "kind": "body",
+      "text": "Before the experiment, birds were trained to associate the arena with a food reward and to hop onto the perch. This was achieved by first offering mozzarella cheese in front of the experimental arena, then inside the experimental arena so that the food reward was visible from the ground (by lifting up the tray inside the arena to make it visible), and finally so that the food reward could be seen only when birds were on the perch (similar to the experimental trials). During the training, the cheese was offered on top of the same wooden box that housed the robot for the experiment but without the gray background paper. Training continued until the bird hopped onto the perch twice in a row and ate the cheese. If several birds from the same family group approached the arena, they could be trained at the same time, but each bird had to individually complete the training (hop onto the perch twice) before testing. Because some birds completed the training more slowly than others (or did not complete it), it was possible that some birds in the group were tested while others were still training. In this case, we used cheese to lure other birds away from the arena, so that they would not affect the experimental trial or acquire social information."
+    },
+    {
+      "heading": "Experimental protocol",
+      "level": 3,
+      "kind": "body",
+      "text": "The experimental trials were conducted from May to July 2023. Each bird was randomly allocated to one of the 3 deimatic behavior treatments with moving prey: (i) small (n = 10), (ii) large (n = 11), and (iii) small-to-large (n = 11, Fig. 1a, see Supplementary Videos). In small and small-to-large treatments the robotic moth was first presented to birds with forewings closed, and the display consisted of the forewings opening (moving upward 60°). In the small-to-large treatment, this movement revealed hidden hindwings, whereas in the small treatment, the moth did not have hindwings, so the display included only movement and no increase in size. In the large treatment, the moth was first presented with forewings open, so that both forewings and hindwings were visible, and the display consisted of the forewings moving upward 60°. This movement was similar to the other 2 treatments, but both fore- and hindwings remained visible throughout the display. The size of the moth in the initial position (before movement) was therefore larger in this treatment compared with small and small-to-large treatments, but there was no size change during the movement.\nBefore birds received a deimatic behavior treatment with moving prey, they were all presented a nonmoving control moth. The control moths were presented in the initial positions of each treatment (top row of Fig. 1a), with forewings closed in the small and small-to-large treatments, and open in the large treatment. This ensured that a nonmoving control moth matched the “before movement” position of the moth for the 3 treatments, and the addition of the movement was the only difference between the control and the experimental trials. Because the mechanical sound of the robot might influence bird responses, the control treatment included the same sound. This was achieved by placing the rotating servos inside the wooden box, so that birds could hear the rotating sound but did not see the moving parts of the robot. This ensured that the birds became habituated to the mechanical sound before the trials with the moving prey, so that any differences in bird behavior between moving and nonmoving moths could not be explained by the sound.\nTo encourage magpies to approach the arena during the experiment, 1 piece of mozzarella cheese was placed on the ground directly in front of the perch. The experiment was started after other birds than the target individual (other magpies or other species such as cockatoos or butcher birds) were lured away from the arena with cheese, so that they would not interfere with testing. The target individual typically ate the cheese in front of the arena first and then hopped onto the perch. To standardize the timing of the robot movement (or sound in the control trials), the robot wings were opened the moment the bird landed on the perch. This was controlled by an experimenter (using a push button) who observed the bird from 2 to 5 m distance. Most of the birds hopped directly onto the perch; however, in some cases the birds first tried to approach the prey from the other sides of the arena but could not land there because of the wooden skewers on the edges (Fig. 1b). In these cases, we waited for the birds to hop onto the perch (Fig. 1c) before presenting them with the display so that all birds perceived the prey behavior from the same angle.\nBefore the experimental trials with the moving prey, all birds had to complete 2 consecutive control trials where they attacked the nonmoving prey (ie ate the cheese) without any observed behavioral responses to the mechanical sound. These behavioral responses included hopping off the perch onto the ground without eating the cheese, hopping up and down on the perch, leaning backwards on the perch and flapping wings, or giving an alarm call. If the bird performed any of these behaviors, the control prey was presented again until birds became habituated to the sound and no longer responded to it. In each trial, we presented the sound only once when birds landed on the perch for the first time, and the trial was completed when the bird ate the cheese. If the bird left the perch without eating the cheese, we waited for 5 min for it to return. If the bird returned, it was allowed to eat the cheese without the sound being presented again to ensure that the bird would get a positive reward and be more likely to return to the arena. If the bird did not return in 5 min, the experiment was paused for at least 10 min before the control prey was presented again for 15 min at a time, until the bird approached and attacked the prey. After the bird had completed the first control trial (ie eaten the cheese), we presented the control prey again with the mechanical sound, and this was continued until the bird attacked the prey in 2 consecutive trials without showing any responses to the sound. Four birds did not return to the arena after the first encounter with the control moth, and they were not used in the experiment.\nAfter the bird had completed 2 control trials without behavioral responses, we started the experimental trials where the birds were presented with the deimatic behavior treatments. We followed the protocol from the control trials, presenting the display only once in each trial, and recorded whether birds remained on the perch and attacked the prey (ate the cheese) immediately after the display. If the bird hopped out of the arena without attacking the prey, the wings were left in the display position (forewings moved upward) and the bird was given 5 min to approach the prey again. The movement was not performed again until the bird had returned and finished the trial (eaten the cheese). We then closed the wings and proceeded to the next trial, in which the same moving display was presented again. This was continued until the bird either (i) attacked the prey in 2 consecutive trials without any observed behavioral responses to the movement (habituation), or (ii) refused to hop back onto the perch in 4 consecutive 15 min long trials (rejection). In the second option, the bird was required to eat the piece of cheese that was placed in front of the arena to show that it was still food-motivated and aware of the availability of food, and 15 min was counted from that time point. If the bird was in the area but did not approach the arena and eat the cheese in front of it, this was not counted as a trial. This meant that if the bird did not hop onto the perch, we could conclude that it was because the bird was hesitant to approach the prey again, rather than not being motivated to forage. Because we conducted the experiment in the wild, standardizing the number of trials conducted on each day was not possible, as this number depended on birds' motivation to forage and weather conditions. Most of the birds (n = 22) completed both control and experimental trials within 3 consecutive days, but in some cases (n = 10), this took 4–9 d. One bird took 17 d to finish the experiment because it was not observed for several days and at times was not motivated to approach the arena.\nAll trials were filmed with an HD camcorder (Sony HXR-NX30P) placed ∼1 m from the arena, and with a GoPro (Hero 4 Silver) attached to the edge of the arena. We quantified from the videos any behavioral responses to the display (see above). In addition, we measured how long it took for birds to attack the prey. If the bird did not attack immediately after the display or approach the prey again during the same trial, we waited for the bird to eat the cheese placed in front of the arena in the following trial and continued to measure the latency to attack the prey from that time point. This confirmed that the birds were in close proximity to the arena and motivated to forage, so any time delays to approach the prey were due to birds' hesitation to approach it again, rather than their lack of motivation."
+    },
+    {
+      "heading": "Statistical analyses",
+      "level": 3,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "Control vs. experimental trials",
+      "level": 4,
+      "kind": "body",
+      "text": "To investigate the effect of movement on prey survival, we compared birds' responses during their first encounter with the nonmoving control prey and during the first presentation of the moving prey in the experimental trials. We used a generalized linear mixed effect model with a binomial error distribution and logit link to analyze whether birds were more likely to attack the control prey compared with the experimental prey (n = 32). The response variable was coded 1/0 depending on if the bird attacked the prey immediately after the first encounter or not. Trial type (control/experimental) was included as a fixed effect and bird identity was included as a random effect to control for repeatable measures from the same individuals. In addition, we compared birds' latencies to attack the control and experimental prey using a mixed-effects Cox proportional hazard model (n = 32). Time (s) to attack the prey after the first encounter was used as a response variable, trial type (control/experimental) was included as a fixed effect and bird identity as a random effect. If the bird did not attack the prey immediately, time to attack was recorded as the time to return to the prey after the first encounter (during the same trial or the following trials). The birds that hopped away after the first moving display and did not approach the prey again during the experiment (n = 5) were right censored with a value of 3,900 s which was the maximum time given for birds to return to the prey, comprising 5 min after the first display followed by 4 × 15 min trials."
+    },
+    {
+      "heading": "First trial with the moving prey",
+      "level": 4,
+      "kind": "body",
+      "text": "We next investigated birds' responses to different deimatic behavior treatments during the experimental trials. We used generalized linear models with a binomial error distribution and logit link to analyze (i) whether birds attacked the prey immediately after the first encounter (n = 32), and (ii) if they approached the prey again within 5 min from the first encounter (if not attacking immediately, n = 22). In both models we specified the response variable as binomial (coded 1/0 depending on if the bird attacked/approached again or not) and included deimatic behavior treatment (small/large/small-to-large) and birds' mass (g) as fixed effects. Birds' mass was included in the models to represent birds' body condition, which could influence their motivation to forage and approach the prey. Because there were no differences among the 3 treatments (see Results), we also ran additional models to further investigate the effect of size change. These models were otherwise similar to the ones described above but instead of treatment, the fixed effect was size change with 2 levels: no size change (combining small and large treatments where prey did not increase in size) and increase in size (small-to-large treatment)."
+    },
+    {
+      "heading": "Predator behavior after the first encounter with the moving prey",
+      "level": 4,
+      "kind": "body",
+      "text": "To analyse whether birds returned to the prey after the first encounter with the moving display (during the same or the following 4 trials), we used a generalized linear model with a binomial error distribution. The response variable was coded 1/0 (returned or did not return), and deimatic behavior treatment and birds' mass were included as fixed effects. This analysis included all birds, regardless of whether they attacked the prey already during the first encounter (n = 32). Again, we also ran a separate model with size change (no size change/increase in size) as a fixed effect, instead of treatment. In addition, we analysed the latency to attack the prey after the first encounter using a Cox proportional hazards model. Time (s) to attack the prey after the first moving display was used as a response variable, and deimatic behavior treatment was included as the explanatory variable. The model included all individuals (n = 32): the birds that attacked the prey immediately after the first moving display (time to attack after the display was presented), as well as those that hopped away after the first display (time to return to the prey after the display). The birds that hopped away and did not approach the prey again during the whole experiment (n = 5) were again right censored with a value of 3,900 s."
+    },
+    {
+      "heading": "Predator habituation",
+      "level": 4,
+      "kind": "body",
+      "text": "We used a generalized linear model with a binomial error distribution to analyse whether birds habituated to the moving display, that is, attacked the prey in 2 consecutive trials without any measurable behavioral responses (coded 1/0 depending on whether birds habituated or not, n = 32). We again ran 2 separate models, with deimatic behavior treatment and birds' mass, or size change and birds' mass as fixed effects. We also counted how many times birds approached the moving prey before either habituating or rejecting it. This included the first encounter with the moving prey and the number of times the bird approached the prey again before reaching the criteria for habituation or rejection. Because the sample sizes for both measures were low (habituation: n = 14, rejection: n = 18), we analyzed differences among treatments using a Kruskal–Wallis test. Finally, we used a Spearman's correlation test to investigate if the number of encounters with the moving prey before habituation was associated with the habituation speed to the robot sound during training (the number of training trials where the bird showed a behavioral response to the nonmoving prey with sound, n = 14).\nAll analyses were conducted in R version 4.4.3 (R Core Team 2025). The GLMs were conducted using the lme4 package (Bates et al. 2015) and the significance of the main effects in the models was tested using the Anova() function in the car package (Fox and Weisberg 2019). Cox proportional hazards models were conducted using coxme (Therneau 2024a) and survival packages (Therneau 2024b). The graphs were made using the ggplot2 (Wickham 2016) and survminer (Kassambara et al. 2025) packages."
+    },
+    {
+      "heading": "Results",
+      "level": 2,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "Control vs. experimental trials",
+      "level": 3,
+      "kind": "body",
+      "text": "Birds were significantly more likely to attack the prey during the first control trial with the nonmoving moth (75% attacking), compared with the first experimental trial with the moving moth (31% attacking, GLMM: the effect of movement = −20.345 ± 4.060, Z = −5.011, P < 0.001, Fig. 2a). Similarly, birds attacked the control prey more quickly than the moving experimental prey (coxme: the effect of movement = −1.278 ± 0.315, Z = −4.06, P < 0.001). Most of the birds did not show any behavioral responses to the robot sound during the first 2 control trials (n = 15) or only performed a small wing flap (n = 7) but remained on the perch to eat the cheese (Fig. 2a). However, 8 birds hopped onto the ground without eating the cheese when presented with the control prey, and the control trials were continued until the birds became habituated to the robot sound, which took 3–10 trials (mean = 6).\n\n![Figure 2](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/m_arag047f2.jpeg?Expires=1791332594&Signature=DpZP9-0kGMJnix3N1b7q2iL9aEc3W~wNUdvdHvUcKc9eIlNQQ4afvKqa~6pWAv9SlyYfqlJASpz9MtJsu71F4WMOQFy10jifVzQq6bqCEW0PgEv7bKe7BrXZPM0roogkXC1d2SGcxksVgF~mcDqyePTjLord3Dcy4Ka923vV2AlneAziMIdKS4zN9CebBJV~P9YOZtEuzYRei5tRxIhgpqti52x65ucpQ6MvXqg3baFFz1jMxuNeXVYM3f~nCERkkyhydsx8opq76bywJ~HnrNjMPu3Vz8-9G1xqvth-JqJYMbCUoJ5J5LA~hOLh36reH-aZdDyQ2lHRvTxBEd~qcQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 2** Birds’ attack decisions when encountering the prey for the first time. a) Birds’ (n = 32) responses to the first presentation of the nonmoving control prey (with the robot sound) and to the first presentation of the same prey in motion. b) Birds’ first responses to the different deimatic behavior treatments of the moving prey (small: n = 10, large: n = 11, small-to-large: n = 11)."
+    },
+    {
+      "heading": "First trial with the moving prey",
+      "level": 3,
+      "kind": "body",
+      "text": "When birds encountered the moving experimental prey for the first time, most hopped away from the perch onto the ground without attacking the prey (Fig. 2a). The proportion of birds that attacked the prey immediately after the movement did not differ among the 3 deimatic behavior treatments (GLM: χ<sup>2</sup> = 1.643, df = 2, P = 0.44, Fig. 2b), and the attack decision was not influenced by the bird's mass (GLM: χ<sup>2</sup> = 0.206, df = 1, P = 0.65). We also found no evidence of the apparent size change influencing birds' attack decisions when analysing it separately (GLM: the effect of size change = −1.157 ± 0.966, Z = −1.198, P = 0.23). Most of the 10 birds that attacked the prey immediately still showed some behavioral responses to the moving display, including flapping their wings (8 birds), performing a small hop on the perch (1 bird) and giving an alarm call (1 bird). If birds did not attack the prey immediately after the movement (n = 22), they were given 5 min to return to eat the food reward. The decision for the birds to approach the prey again within 5 min did not differ among the treatments (GLM: χ<sup>2</sup> = 1.729, df = 2, P = 0.42) and was not influenced by the bird's mass (GLM: χ<sup>2</sup> = 0.335, df = 1, P = 0.56). Similarly, this was not explained by the apparent size change of the prey (GLM: the effect of size change = −1.302 ± 1.062, Z = −1.226, P = 0.22)."
+    },
+    {
+      "heading": "Predator behavior after the first encounter with the moving prey",
+      "level": 3,
+      "kind": "body",
+      "text": "Most of the birds (26 of 32) approached the prey again after the first encounter with the moving display, and this decision to return did not differ among the deimatic behavior treatments (GLM: χ<sup>2</sup> = 1.701, df = 2, P = 0.43) or depend on the bird's mass (GLM: χ<sup>2</sup> = 0.936, df = 1, P = 0.33). Similarly, the apparent size change of the prey did not explain whether birds approached the prey again (GLM: the effect of size change = −1.155 ± 1.022, Z = −1.129, P = 0.26). There was a tendency, although not significant, for birds to attack the prey more quickly when the moving prey was small, compared with the prey that increased in size (coxph: the effect of small-to-large treatment = −0.969 ± 0.497, Z = −1.949, P = 0.051, Fig. 3). There was no significant difference in the latency to attack the prey between the small and large treatments (the effect of large treatment = −0.499 ± 0.474, Z = −1.053, P = 0.29), or between the large and small-to-large treatments (the effect of small-to-large treatment = −0.470 ± 0.489, Z = −0.962, P = 0.34, Fig. 3).\n\n![Figure 3](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/m_arag047f3.jpeg?Expires=1791332594&Signature=dFzUG26oO~x6lTvsMnHDSNpAZp6u7uNhsx~8QW71p9veH5xsFSPIwJ1~w54IVjf64wFeIQsQV5CJPDpEYlS-4BLmVp~q6lMLwkgtqx-XQcKiGGfFzsYIZ0mH-4svI0kzcyukyMj2ppmST7oCDITR1kuWDyR6QpuYRI9LdeUwXrbzy2c0zol05WB6rOXxTi1OrgoaT0Kml6~QsrAnMLQYaAAe4zJjG34~Amy4tMoK-3Be4l-nwKu6B0DOZwehYwy79wPZIPDEFEox~khmhE8aI42bUKDL1TaSr5FugZkD5f3H-p4lc-C8F~PMSHYpPwow66I-EQ1dlZwwZwqjeNIZJA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 3** Prey survival (i.e. time before birds attacked the prey) after the first moving display (small: n = 10, large: n = 11, small-to-large: n = 11). Birds that did not approach the prey again after the first encounter (n = 5) were right censored."
+    },
+    {
+      "heading": "Predator habituation",
+      "level": 3,
+      "kind": "body",
+      "text": "There was no significant difference among the 3 deimatic behavior treatments in habituation to the prey movement (GLM: χ<sup>2</sup> = 4.885, df = 2, P = 0.087). When the apparent size change was analysed separately, there was a tendency for birds to be less likely to habituate to the movement when the prey increased in size but this effect was not statistically significant (GLM: the effect of size change = −1.840 ± 0.999, Z = −1.842, P = 0.066, Fig. 4). We also found a nonsignificant trend for heavier birds to be more likely to habituate to the movement (GLM: χ<sup>2</sup> = 3.825, df = 1, P = 0.050). In addition to the 14 birds that reached our criterion of habituation, there were 4 birds (small: n = 1, large: n = 1, small-to-large: n = 2) that attacked prey in one of the movement trials, but hopped away after the movement in the following trials, or did not approach the prey again, and therefore we did not consider them as habituated.\n\n![Figure 4](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/m_arag047f4.jpeg?Expires=1791332594&Signature=uOoF0xi8L~EwMaO-Mh58VP1tc7uOI-UNqI2TuvWTRimi8nc669-8PzzQTbNZaYMjHsUcg1IoCszEd8izGkzDDamN6hZkYsDRefSqr81YbVgz9J8t3g6JyZvcyeyCNX2uLwQ2vDbXgWM4aOY6YQF9EF0gnZUGkRn03Hdx84ovnGEgE1fHG9LjdZyT61Nwz7dIhUsUuewGX8rWpLO8XmAXy2C4doTNH2Szsi8Tr0Gpx2nhz1ZFwjXdUg0EpSpGhNmf420fFHMPQ399q97BtaCcX~Ywix1tY2ReR4FWb29E577H4hnGwiP4mKdHcKdkOgkAXeaRIQYYCbrljyjwkroTUQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 4** Birds’ habituation to the moving prey during the experiment (small: n = 10, large: n = 11, small to large: n = 11).\nThe number of encounters with the moving prey before birds reached the habituation criteria varied from 0 (no behavioral responses during the first encounter) to 10. We did not find any differences in the habituation speed among the deimatic behavior treatments (Kruskal–Wallis: χ<sup>2</sup> = 0.237, df = 2, P = 0.89, Figure S1a) but our low sample size (n = 14) meant that this analysis had low statistical power. We also found no evidence that the speed of habituation to the moving prey was associated with the speed of habituation to the robot sound during the control trials (Spearman's correlation: rho = 0.045, P = 0.88). For the birds that did not habituate to the movement, the number of encounters with the moving prey before rejection varied from 1 to 5. This did not differ among the treatments (Kruskal–Wallis: χ<sup>2</sup> = 0.057, df = 2, P = 0.97, Figure S1b) but the sample size in the analysis was again low (n = 18)."
+    },
+    {
+      "heading": "Discussion",
+      "level": 2,
+      "kind": "body",
+      "text": "Prey deimatic behaviors often include multiple components that could have interactive effects on predator behavior (Rowe and Halpin 2013; Drinkwater et al. 2022). Using a robot moth baited with cheese and Australian magpies as predators, we found that movement alone, without further defenses such as chemical secretions or warning colors, was enough to significantly reduce predator attacks during the first encounter with the prey. This result provides support for the hypothesis that sudden movement of the prey has protective value against naïve predators, which could allow the evolution of other defenses that further increase the efficacy of deimatic behavior (startle-first hypothesis; Umbers et al. 2017). Whether the moving robotic moth remained small, remained large or increased in size during the encounter, did not have a significant effect on the birds' first responses to the movement. However, an apparent size change might make birds more hesitant to return to the prey after the movement, although these results should be interpreted with caution, as the difference between treatments was not statistically significant. Our results highlight the importance of investigating both initial predator responses and repeated interactions with prey if we are to understand how different components of deimatic behaviors influence prey survival.\nMany deimatic behaviors include sudden movements when prey open their wings or lift their body, legs or a tail (eg Brodie 1977; Martins 1989; Umbers and Mappes 2015; Kang et al. 2017a; O’Hanlon et al. 2018). Our finding of this movement alone stopping a predator attack is similar to the study by Holmes et al. (2018) which demonstrated that prey wing movement increased the attack latency of domestic chicks. However, contrary to their experiment that included continuous wing flicking movement (Holmes et al. 2018), in our study the prey performed only one sudden movement, and even this was enough to deter most of the predators during the first encounter with the prey. One potential confounding factor in our study is the mechanical sound of the robot that we could not exclude, and that could potentially have interactive effects with movement. In other studies, sound alone has been demonstrated to influence predator responses, including caterpillar whistles (Dookie et al. 2017) or hissing sounds and ultrasonic clicks of a peacock butterfly (Olofsson et al. 2012). In our study all birds were pretrained and habituated to the robot sound before the movement trials, and we found during this pretraining that most birds did not show strong behavioral responses to the sound. The robot sound is therefore unlikely to influence our results, but future studies where the sound is eliminated are needed to confirm this.\nAfter being presented with the moving robot, magpies often performed typical startle behaviors that have been observed also in other deimatic behavior studies (Schlenoff 1985; Ingalls 1993; Kang et al. 2017b; Holmes et al. 2018; Umbers et al. 2019), including hopping or leaning away from the prey and flapping wings. The cognitive processes underlying these predator responses to deimatic behavior remain poorly understood (Penacchio et al. 2025). There are several potential sensory and cognitive mechanisms that prey deimatic behavior could exploit (Drinkwater et al. 2022; Penacchio et al. 2025). These include a startle reflex which is an immediate response to a sudden intense stimulus and makes an animal interrupt any ongoing activity (Koch 1999), a looming reflex which is an evasive response to avoid contact with rapidly approaching objects (Yamawaki 2011), and a fear response where a sudden stimulus is classified as a potential threat such as a predator (De Bona et al. 2015). In addition, a rapid onset of sensory information in deimatic behaviors could overwhelm a predator's ability to process this information and lead to sensory overload (Hebets and Papaj 2005). Investigating which of these cognitive mechanisms underlie predator responses to deimatic behavior is important for understanding the protective value of the defense; however, disentangling different mechanisms based on behavioral observations is difficult (Drinkwater et al. 2022; Penacchio et al. 2025).\nWhile we found no effect of prey size or size change on predator initial response, we found a possible trend that apparent size change from small (2 wings visible) to large (4 wings visible) increases the latency to return to the prey after the moving display, although this effect was marginally nonsignificant (P = 0.051). The apparent size change might also be important for preventing predator habituation, but we did not detect statistically significant differences between the treatments, possibly because of our low sample size. Cognitive mechanisms responsible for predator habituation remain unknown. A sudden increase in size could trigger a looming reflex (Yamawaki 2011; Drinkwater et al. 2022) or make the prey look more intimidating, but these ideas need to be experimentally tested. Future work should also investigate individual variation in predator responses and habituation. We found that some individuals attacked the prey immediately or habituated to the display after just 1 encounter, whereas others needed several encounters or did not habituate at all. Similar individual differences in responses to deimatic behavior have been found in blue jays (Ingalls 1993). These could be explained by several factors, such as birds' age, sex, personality and previous experience, but we were not able to investigate these factors in our study because we used free-ranging wild birds that needed many days to complete the experiment, which limited the number of individuals we could test. Furthermore, different predator species are likely to differ in their responses to deimatic behavior (Drinkwater et al. 2022), and more studies with different predator species across a range of taxa is needed to gain a better understanding of the protective value of deimatic behaviors.\nFinally, even though we conducted our experiment in the field with wild predators, 1 limitation of the study is that birds had to hop onto the experimental arena to see the prey. This means that the birds always encountered the prey in the same place, and they could have associated the arena with the moving prey, which could reduce the effect of surprise. This and the frequent encounters with the same prey might have increased the speed of habituation, and it is possible that the birds would have been less likely or slower to habituate to the movement if the prey was presented less frequently and in varying locations to minimize birds' prior expectations. Previous studies on predator habituation with captive predators have similar limitations (Ingalls 1993), and investigating predator habituation in more natural conditions over a longer time scale remains a challenge for future studies.\nAlthough deimatic behaviors are often considered as a textbook example of antipredator defenses, there are still many unresolved questions about their survival value and evolution (Drinkwater et al. 2022). Here, we have shown that sudden movement alone, without typical warning colors, may increase prey survival by preventing or delaying the attack of naïve avian predators. This provides support for the idea that deimatic behaviors can evolve in nonwarningly colored species that avoid predator attacks by rapid movements (startle-first hypothesis, Umbers et al. 2017). We also found that some predators quickly habituated to the moving display, but the likelihood and speed of habituation varied highly among the tested predator individuals, and future studies should aim to identify the mechanisms underlying this variation. Research on predator responses to deimatic behaviors is also still limited to a small number of species with most evidence coming from avian predators (eg Schlenoff 1985; Ingalls 1993; Kang et al. 2017b; Holmes et al. 2018; Umbers et al. 2019; but see Olofsson et al. 2012), and expanding the studies to other predator taxa is crucial for understanding the selection pressures for deimatic behavior in different predator–prey communities."
+    },
+    {
+      "heading": "Acknowledgments",
+      "level": 2,
+      "kind": "body",
+      "text": "The research was conducted on the lands of the Darug and Gundungurra People and we acknowledge that their sovereignty was never ceded. We thank Anthony Hunt and Benjamin Ashton for the help with magpie banding, Amanda Ridley for the advice on banding and experimental set-up, and Ayesha Kelly and Hannah Smart for the help with the fieldwork. The experiment was conducted with the permission from the Animal Care and Ethics Committee of the Western Sydney University (ACEC A13811). The magpies were banded under a permit issued by the Australian Bird and Bat Banding Scheme (Banding Authority Number: 3658)."
+    },
+    {
+      "heading": "Author contributions",
+      "level": 2,
+      "kind": "references",
+      "text": "Liisa Hämäläinen (Conceptualization, Methodology, Project administration, Validation, Writing—review & editing [equal], Data curation, Formal analysis, Investigation, Visualization, Writing—original draft [lead]), Connor Marsland (Conceptualization, Methodology, Writing—review & editing [supporting], Investigation [equal]), Thomas E White (Conceptualization, Data curation, Methodology, Resources, Writing—review & editing [equal], Formal analysis [supporting], Software [lead]), Hannah Rowland (Conceptualization, Methodology, Writing—review & editing [equal]), and Kate Umbers (Conceptualization, Investigation, Methodology, Project administration, Validation, Writing—review & editing [equal], Data curation, Formal analysis [supporting], Funding acquisition, Resources, Supervision [lead])"
+    },
+    {
+      "heading": "Supplementary material",
+      "level": 2,
+      "kind": "references",
+      "text": "Supplementary material is available at Behavioral Ecology online."
+    },
+    {
+      "heading": "Funding",
+      "level": 2,
+      "kind": "body",
+      "text": "The work was supported by an Australian Research Council Discovery Early Career Researcher Award (DE180100026) awarded to K.D.L.U., and 1 to T.E.W. (DE230100087). L.H. is currently funded by the Academy of Finland Research Fellowship (#355869) and a Horizon Europe Marie Sklodowska Curie Actions Fellowship (#101151042)."
+    },
+    {
+      "heading": "Data availability",
+      "level": 2,
+      "kind": "data_availability",
+      "text": "Analyses reported in this article can be reproduced using the data and the code provided by Hämäläinen et al. (2026)."
+    },
+    {
+      "heading": "References",
+      "level": 2,
+      "kind": "references",
+      "text": "Bates D, Mächler M, Bolker B, Walker S.\n2015.\nFitting linear mixed-effects models using lme4.\nJ Stat Softw.\n67:\n1\n–\n48.\n10.18637/jss.v067.i01.\nBlest AD.\n1958.\nSome interactions between flight, protective display, and oviposition behaviour in Callosamia and Rothschildia spp. (Lepidoptera, Saturniidae).\nBehaviour.\n13:\n297\n–\n317.\n10.1163/156853957X00065.\nBrodie ED.\n1977.\nSalamander antipredator postures.\nCopeia.\n1977:\n523\n–\n535.\n10.2307/1443271.\nChiocchio A, Martino G, Bisconti R, Carere C, Canestrelli D.\n2024.\nShock or jump: deimatic behaviour is repeatable and polymorphic in the Apennine yellow-bellied toad,\nBombina pachypus.\nBiol J Linn Soc.\n141:\n323\n–\n331.\n10.1093/biolinnean/blad081.\nCott HB.\n1940.\nAdaptive coloration in animals.\nMethuen.\nDe Bona S, Valkonen JK, López-Sepulcre A, Mappes J.\n2015.\nPredator mimicry, not conspicuousness, explains the efficacy of butterfly eyespots.\nProc Biol Sci.\n282:\n20150202.\n10.1098/rspb.2015.0202.\nDookie AL, Young CA, Lamothe G, Schoenle LA, Yack JE.\n2017.\nWhy do caterpillars whistle at birds? Insect defence sounds startle avian predators.\nBehav Process.\n138:\n58\n–\n66.\n10.1016/j.beproc.2017.02.002.\nDrinkwater E et al.\n2022.\nA synthesis of deimatic behaviour.\nBiol Rev Camb Philos Soc.\n97:\n2237\n–\n2267.\n10.1111/brv.12891.\nFox J, Weisberg S.\n2019.\nAn R companion to applied regression. 3rd ed.\nSage.\nHämäläinen L, Marsland C, White TE, Rowland HM, Umbers KDL.\n2026. Data from: the protective value of the size and movement components of deimatic behavior.\nBehav Ecol.\n10.5281/zenodo.19347558.\nHebets EA, Papaj DR.\n2005.\nComplex signal function: developing a framework of testable hypotheses.\nBehav Ecol Sociobiol.\n57:\n197\n–\n214.\n10.1007/s00265-004-0865-7.\nHolmes GG, Delferrière E, Rowe C, Troscianko J, Skelhorn J.\n2018.\nTesting the feasibility of the startle-first route to deimatism.\nSci Rep.\n8:\n10737.\n10.1038/s41598-018-28565-w.\nIngalls V.\n1993.\nStartle and habituation responses of blue jays (Cyanocitta cristata) in a laboratory simulation of anti-predator defenses of\nCatocala\nmoths (Lepidoptera: Noctuidae).\nBehaviour.\n126:\n77\n–\n95.\n10.1163/156853993X00353.\nKang C, Cho HJ, Lee SI, Jablonski PG.\n2016.\nPost-attack aposematic display in prey facilitates predator avoidance learning.\nFront Ecol Evol.\n4:\n35.\n10.3389/fevo.2016.00035.\nKang C, Moon H, Sherratt TN, Lee SI, Jablonski PG.\n2017a.\nMultiple lines of anti-predator defence in the spotted lanternfly,\nLycorma delicatula\n(Hemiptera: Fulgoridae).\nBiol J Linn Soc.\n120:\n115\n–\n124.\n10.1111/bij.12847.\nKang C, Zahiri R, Sherratt TN.\n2017b.\nBody size affects the evolution of hidden colour signals in moths.\nProc Biol Sci.\n284:20171287.\n10.1098/rspb.2017.1287.\nKaplan G.\n2004.\nAustralian Magpie: biology and behaviour of an unusual songbird.\nCSIRO Publishing.\nKassambara A, Kosinski M, Biecek P.\n2025.\nsurvminer: Drawing Survival Curves using ‘ggplot2\n'. R package version 0.5.1.\nhttps://CRAN.R-project.org/package=survminer\nKoch M.\n1999.\nThe neurobiology of startle.\nProg Neurobiol.\n59:\n107\n–\n128.\n10.1016/S0301-0082(98)00098-7.\nLoeffler-Henry K, Kang C, Sherratt TN.\n2019.\nConsistent associations between body size and hidden contrasting color signals across a range of insect taxa.\nAm Nat.\n194:\n28\n–\n37.\n10.1086/703535.\nLow ML, Naranjo M, Yack JE.\n2021.\nSurvival sounds in insects: diversity, function, and evolution.\nFront Ecol Evol.\n9:\n641740.\n10.3389/fevo.2021.641740.\nMartins M.\n1989.\nDeimatic behavior in\nPleurodema\nbrachyops.\nJ Herpetol.\n23:\n305\n–\n307.\n10.2307/1564457.\nO’Hanlon JC, Rathnayake DN, Barry KL, Umbers KD.\n2018.\nPost-attack defensive displays in three praying mantis species.\nBehav Ecol Sociobiol.\n72:\n176.\n10.1007/s00265-018-2591-6.\nOlofsson M, Jakobsson S, Wiklund C.\n2012.\nAuditory defence in the peacock butterfly (Inachis io) against mice (Apodemus flavicollis\nand\nA. sylvaticus).\nBehav Ecol Sociobiol.\n66:\n209\n–\n215.\n10.1007/s00265-011-1268-1.\nPenacchio O et al.\n2025.\nCognitive ecology of surprise in predator–prey interactions.\nFunct Ecol.\n39:\n664\n–\n680.\n10.1111/1365-2435.14750.\nR Core Team.\n2025.\nR: a language and environment for statistical computing.\nR Foundation for Statistical Computing.\nRiley JL, Haff TM, Ryeland J, Drinkwater E, Umbers KD.\n2023.\nThe protective value of the colour and shape of the mountain katydid's antipredator defence.\nJ Evol Biol.\n36:\n992\n–\n1002.\n10.1111/jeb.14067.\nRowe C, Halpin C.\n2013.\nWhy are warning displays multimodal?\nBehav Ecol Sociobiol.\n67:\n1425\n–\n1439.\n10.1007/s00265-013-1515-8.\nRuxton GD, Allen WL, Sherratt TN, Speed MP.\n2018.\nAvoiding attack: the evolutionary ecology of crypsis, aposematism, and mimicry. 2nd ed.\nOxford University Press.\nSchlenoff DH.\n1985.\nThe startle responses of blue jays to\nCatocala\n(Lepidoptera: Noctuidae) prey models.\nAnim Behav.\n33:\n1057\n–\n1067.\n10.1016/S0003-3472(85)80164-0.\nSherratt TN.\n2011.\nThe optimal sampling strategy for unfamiliar prey.\nEvolution.\n65:\n2014\n–\n2025.\n10.1111/j.1558-5646.2011.01274.x.\nSherratt TN, Dewan I, Skelhorn J.\n2023.\nThe optimal time to approach an unfamiliar object: a Bayesian model.\nBehav Ecol.\n34:\n840\n–\n849.\n10.1093/beheco/arad032.\nSkelhorn J, Halpin CG, Rowe C.\n2016.\nLearning about aposematic prey.\nBehav Ecol.\n27:\n955\n–\n964.\n10.1093/beheco/arw009.\nTherneau TM.\n2024a.\nCoxme: Mixed Effects Cox Models. R package version 2.2–22.\nhttps://CRAN.R-project.org/package=coxme\nTherneau TM.\n2024b.\nA package for survival analysis in R. R package version. 3.8–3.\nhttps://CRAN.R-project.org/package=survival\nUmbers KD et al.\n2017.\nDeimatism: a neglected component of antipredator defence.\nBiol Lett.\n13:\n20160936.\n10.1098/rsbl.2016.0936.\nUmbers KD et al.\n2019.\nThe protective value of a defensive display varies with the experience of wild predators.\nSci Rep.\n9:\n463.\n10.1038/s41598-018-36995-9.\nUmbers KD, Mappes J.\n2015.\nPostattack deimatic display in the mountain katydid,\nAcripeza reticulata.\nAnim Behav.\n100:\n68\n–\n73.\n10.1016/j.anbehav.2014.11.009.\nVallin A, Jakobsson S, Lind J, Wiklund C.\n2005.\nPrey survival by predator intimidation: an experimental study of peacock butterfly defence against blue tits.\nProc Biol Sci.\n272:\n1203\n–\n1207.\n10.1098/rspb.2004.3034.\nVidal-García M, O'Hanlon JC, Svenson GJ, Umbers KD.\n2020.\nThe evolution of startle displays: a case study in praying mantises.\nProc Biol Sci.\n287:\n20201016.\n10.1098/rspb.2020.1016.\nWickham H.\n2016.\nGgplot2: elegant graphics for data analysis.\nSpringer-Verlag.\nYamawaki Y.\n2011.\nDefence behaviours of the praying mantis\nTenodera aridifolia\nin response to looming objects.\nJ Insect Physiol.\n57:\n1510\n–\n1517.\n10.1016/j.jinsphys.2011.08.003.\nZborowski P, Edwards T, editors.\n2007.\nA guide to Australian moths.\nCSIRO Publishing.\n/foreach in Model.Sections"
+    },
+    {
+      "heading": "Author notes",
+      "level": 2,
+      "kind": "body",
+      "text": "Conflicts of interest: None declared.\n© The Author(s) 2026. Published by Oxford University Press in association with the International Society for Behavioral Ecology.\nThis is an Open Access article distributed under the terms of the Creative Commons Attribution License (https://creativecommons.org/licenses/by/4.0/), which permits unrestricted reuse, distribution, and reproduction in any medium, provided the original work is properly cited.\n/foreach\n/.widget-items\n/.module-widget\nSupplementary data"
+    },
+    {
+      "heading": "Supplementary data",
+      "level": 2,
+      "kind": "references",
+      "text": "arag047_Supplementary_Data\n- zip file"
+    },
+    {
+      "heading": "Supplementary Files",
+      "level": 2,
+      "kind": "body",
+      "text": "- arag047_Supplementary_Data - zip file"
+    }
+  ],
+  "references": [
+    {
+      "raw": "1. Bates D, Mächler M, Bolker B, Walker S. 2015. Fitting linear mixed-effects models using lme4. J Stat Softw. 67: 1–48. 10.18637/jss.v067.i01.",
+      "doi": "10.18637/jss.v067.i01",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "2. Blest AD. 1958. Some interactions between flight, protective display, and oviposition behaviour in Callosamia and Rothschildia spp. (Lepidoptera, Saturniidae). Behaviour. 13: 297–317. 10.1163/156853957X00065.",
+      "doi": "10.1163/156853957x00065",
+      "title": null,
+      "year": "1958"
+    },
+    {
+      "raw": "3. Brodie ED. 1977. Salamander antipredator postures. Copeia. 1977: 523–535. 10.2307/1443271.",
+      "doi": "10.2307/1443271",
+      "title": null,
+      "year": "1977"
+    },
+    {
+      "raw": "4. Chiocchio A, Martino G, Bisconti R, Carere C, Canestrelli D. 2024. Shock or jump: deimatic behaviour is repeatable and polymorphic in the Apennine yellow-bellied toad, Bombina pachypus. Biol J Linn Soc. 141: 323–331. 10.1093/biolinnean/blad081.",
+      "doi": "10.1093/biolinnean/blad081",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "5. Cott HB. 1940. Adaptive coloration in animals. Methuen.",
+      "doi": null,
+      "title": null,
+      "year": "1940"
+    },
+    {
+      "raw": "6. De Bona S, Valkonen JK, López-Sepulcre A, Mappes J. 2015. Predator mimicry, not conspicuousness, explains the efficacy of butterfly eyespots. Proc Biol Sci. 282: 20150202. 10.1098/rspb.2015.0202.",
+      "doi": "10.1098/rspb.2015.0202",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "7. Dookie AL, Young CA, Lamothe G, Schoenle LA, Yack JE. 2017. Why do caterpillars whistle at birds? Insect defence sounds startle avian predators. Behav Process. 138: 58–66. 10.1016/j.beproc.2017.02.002.",
+      "doi": "10.1016/j.beproc.2017.02.002",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "8. Drinkwater E et al. 2022. A synthesis of deimatic behaviour. Biol Rev Camb Philos Soc. 97: 2237–2267. 10.1111/brv.12891.",
+      "doi": "10.1111/brv.12891",
+      "title": null,
+      "year": "2022"
+    },
+    {
+      "raw": "9. Fox J, Weisberg S. 2019. An R companion to applied regression. 3rd ed. Sage.",
+      "doi": null,
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "10. Hämäläinen L, Marsland C, White TE, Rowland HM, Umbers KDL. 2026. Data from: the protective value of the size and movement components of deimatic behavior. Behav Ecol. 10.5281/zenodo.19347558.",
+      "doi": "10.5281/zenodo.19347558",
+      "title": null,
+      "year": "2026"
+    },
+    {
+      "raw": "11. Hebets EA, Papaj DR. 2005. Complex signal function: developing a framework of testable hypotheses. Behav Ecol Sociobiol. 57: 197–214. 10.1007/s00265-004-0865-7.",
+      "doi": "10.1007/s00265-004-0865-7",
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "12. Holmes GG, Delferrière E, Rowe C, Troscianko J, Skelhorn J. 2018. Testing the feasibility of the startle-first route to deimatism. Sci Rep. 8: 10737. 10.1038/s41598-018-28565-w.",
+      "doi": "10.1038/s41598-018-28565-w",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "13. Ingalls V. 1993. Startle and habituation responses of blue jays (Cyanocitta cristata) in a laboratory simulation of anti-predator defenses of Catocala moths (Lepidoptera: Noctuidae). Behaviour. 126: 77–95. 10.1163/156853993X00353.",
+      "doi": "10.1163/156853993x00353",
+      "title": null,
+      "year": "1993"
+    },
+    {
+      "raw": "14. Kang C, Cho HJ, Lee SI, Jablonski PG. 2016. Post-attack aposematic display in prey facilitates predator avoidance learning. Front Ecol Evol. 4: 35. 10.3389/fevo.2016.00035.",
+      "doi": "10.3389/fevo.2016.00035",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "15. Kang C, Moon H, Sherratt TN, Lee SI, Jablonski PG. 2017a. Multiple lines of anti-predator defence in the spotted lanternfly, Lycorma delicatula (Hemiptera: Fulgoridae). Biol J Linn Soc. 120: 115–124. 10.1111/bij.12847.",
+      "doi": "10.1111/bij.12847",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "16. Kang C, Zahiri R, Sherratt TN. 2017b. Body size affects the evolution of hidden colour signals in moths. Proc Biol Sci. 284:20171287. 10.1098/rspb.2017.1287.",
+      "doi": "10.1098/rspb.2017.1287",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "17. Kaplan G. 2004. Australian Magpie: biology and behaviour of an unusual songbird. CSIRO Publishing.",
+      "doi": "10.1071/9780643092075",
+      "title": null,
+      "year": "2004"
+    },
+    {
+      "raw": "18. Kassambara A, Kosinski M, Biecek P. 2025. survminer: Drawing Survival Curves using ‘ggplot2 '. R package version 0.5.1. https://CRAN.R-project.org/package=survminer",
+      "doi": null,
+      "title": null,
+      "year": "2025"
+    },
+    {
+      "raw": "19. Koch M. 1999. The neurobiology of startle. Prog Neurobiol. 59: 107–128. 10.1016/S0301-0082(98)00098-7.",
+      "doi": "10.1016/s0301-0082(98)00098-7",
+      "title": null,
+      "year": "1999"
+    },
+    {
+      "raw": "20. Loeffler-Henry K, Kang C, Sherratt TN. 2019. Consistent associations between body size and hidden contrasting color signals across a range of insect taxa. Am Nat. 194: 28–37. 10.1086/703535.",
+      "doi": "10.1086/703535",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "21. Low ML, Naranjo M, Yack JE. 2021. Survival sounds in insects: diversity, function, and evolution. Front Ecol Evol. 9: 641740. 10.3389/fevo.2021.641740.",
+      "doi": "10.3389/fevo.2021.641740",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "22. Martins M. 1989. Deimatic behavior in Pleurodema brachyops. J Herpetol. 23: 305–307. 10.2307/1564457.",
+      "doi": "10.2307/1564457",
+      "title": null,
+      "year": "1989"
+    },
+    {
+      "raw": "23. O’Hanlon JC, Rathnayake DN, Barry KL, Umbers KD. 2018. Post-attack defensive displays in three praying mantis species. Behav Ecol Sociobiol. 72: 176. 10.1007/s00265-018-2591-6.",
+      "doi": "10.1007/s00265-018-2591-6",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "24. Olofsson M, Jakobsson S, Wiklund C. 2012. Auditory defence in the peacock butterfly (Inachis io) against mice (Apodemus flavicollis and A. sylvaticus). Behav Ecol Sociobiol. 66: 209–215. 10.1007/s00265-011-1268-1.",
+      "doi": "10.1007/s00265-011-1268-1",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "25. Penacchio O et al. 2025. Cognitive ecology of surprise in predator–prey interactions. Funct Ecol. 39: 664–680. 10.1111/1365-2435.14750.",
+      "doi": "10.1111/1365-2435.14750",
+      "title": null,
+      "year": "2025"
+    },
+    {
+      "raw": "26. R Core Team. 2025. R: a language and environment for statistical computing. R Foundation for Statistical Computing.",
+      "doi": null,
+      "title": null,
+      "year": "2025"
+    },
+    {
+      "raw": "27. Riley JL, Haff TM, Ryeland J, Drinkwater E, Umbers KD. 2023. The protective value of the colour and shape of the mountain katydid's antipredator defence. J Evol Biol. 36: 992–1002. 10.1111/jeb.14067.",
+      "doi": "10.1111/jeb.14067",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "28. Rowe C, Halpin C. 2013. Why are warning displays multimodal? Behav Ecol Sociobiol. 67: 1425–1439. 10.1007/s00265-013-1515-8.",
+      "doi": "10.1007/s00265-013-1515-8",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "29. Ruxton GD, Allen WL, Sherratt TN, Speed MP. 2018. Avoiding attack: the evolutionary ecology of crypsis, aposematism, and mimicry. 2nd ed. Oxford University Press.",
+      "doi": "10.1093/oso/9780199688678.001.0001",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "30. Schlenoff DH. 1985. The startle responses of blue jays to Catocala (Lepidoptera: Noctuidae) prey models. Anim Behav. 33: 1057–1067. 10.1016/S0003-3472(85)80164-0.",
+      "doi": "10.1016/s0003-3472(85)80164-0",
+      "title": null,
+      "year": "1985"
+    },
+    {
+      "raw": "31. Sherratt TN. 2011. The optimal sampling strategy for unfamiliar prey. Evolution. 65: 2014–2025. 10.1111/j.1558-5646.2011.01274.x.",
+      "doi": "10.1111/j.1558-5646.2011.01274.x",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "32. Sherratt TN, Dewan I, Skelhorn J. 2023. The optimal time to approach an unfamiliar object: a Bayesian model. Behav Ecol. 34: 840–849. 10.1093/beheco/arad032.",
+      "doi": "10.1093/beheco/arad032",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "33. Skelhorn J, Halpin CG, Rowe C. 2016. Learning about aposematic prey. Behav Ecol. 27: 955–964. 10.1093/beheco/arw009.",
+      "doi": "10.1093/beheco/arw009",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "34. Therneau TM. 2024a. Coxme: Mixed Effects Cox Models. R package version 2.2–22. https://CRAN.R-project.org/package=coxme",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "35. Therneau TM. 2024b. A package for survival analysis in R. R package version. 3.8–3. https://CRAN.R-project.org/package=survival",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "36. Umbers KD et al. 2017. Deimatism: a neglected component of antipredator defence. Biol Lett. 13: 20160936. 10.1098/rsbl.2016.0936.",
+      "doi": "10.1098/rsbl.2016.0936",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "37. Umbers KD et al. 2019. The protective value of a defensive display varies with the experience of wild predators. Sci Rep. 9: 463. 10.1038/s41598-018-36995-9.",
+      "doi": "10.1038/s41598-018-36995-9",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "38. Umbers KD, Mappes J. 2015. Postattack deimatic display in the mountain katydid, Acripeza reticulata. Anim Behav. 100: 68–73. 10.1016/j.anbehav.2014.11.009.",
+      "doi": "10.1016/j.anbehav.2014.11.009",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "39. Vallin A, Jakobsson S, Lind J, Wiklund C. 2005. Prey survival by predator intimidation: an experimental study of peacock butterfly defence against blue tits. Proc Biol Sci. 272: 1203–1207. 10.1098/rspb.2004.3034.",
+      "doi": "10.1098/rspb.2004.3034",
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "40. Vidal-García M, O'Hanlon JC, Svenson GJ, Umbers KD. 2020. The evolution of startle displays: a case study in praying mantises. Proc Biol Sci. 287: 20201016. 10.1098/rspb.2020.1016.",
+      "doi": "10.1098/rspb.2020.1016",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "41. Wickham H. 2016. Ggplot2: elegant graphics for data analysis. Springer-Verlag.",
+      "doi": "10.1007/978-3-319-24277-4",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "42. Yamawaki Y. 2011. Defence behaviours of the praying mantis Tenodera aridifolia in response to looming objects. J Insect Physiol. 57: 1510–1517. 10.1016/j.jinsphys.2011.08.003.",
+      "doi": "10.1016/j.jinsphys.2011.08.003",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "43. Zborowski P, Edwards T, editors. 2007. A guide to Australian moths. CSIRO Publishing.",
+      "doi": "10.1071/9780643094642",
+      "title": null,
+      "year": "2007"
+    }
+  ],
+  "assets": [
+    {
+      "kind": "figure",
+      "heading": "Figure 1",
+      "caption": "Experimental set-up showing a) the 3 deimatic behavior treatments in the experiment: (1) a small moth with movement but no change in size (small), (2) a large moth with movement but no change in size (large), and (3) a moth that increased in size from small to large with movement (small-to-large); b) the experimental arena with dark brown stick perch; and c) a magpie standing on the perch while participating in the experiment.",
+      "url": null,
+      "path": null,
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/m_arag047f1.jpeg?Expires=1791332594&Signature=rsyj9lHg2m7HzpPwSiBA0o1YGVgkcFToPNWco6OOeQQu0VIO~heBi4y0OsgQiRSDnD7wptjMd~2jh9uqUFMmy3ZrodfyGL2FMQk8tiPWv4XQIqr9EY83zSvhIypsyNRIDnhMOr0S7~1BbqC1-9jS75a2K49ukTRALLQq~88NfxWjayqcU7vAJ7s3JK0qR5UOeIAONVIOoo8hMKlUiABqv6PRepE3h2uymAZM4yHzwoxmgWG~VLta9~PwuXrHBRV~6P~BN2ezLKVUR7OnGtjsqGTj~nItgeVpZBREYGzfIrnyPcSG9vBqNd7NLg~57Afgy1Au9NFkhv7MmYmV4nSqTA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 2",
+      "caption": "Birds’ attack decisions when encountering the prey for the first time. a) Birds’ ( n = 32) responses to the first presentation of the nonmoving control prey (with the robot sound) and to the first presentation of the same prey in motion. b) Birds’ first responses to the different deimatic behavior treatments of the moving prey (small: n = 10, large: n = 11, small-to-large: n = 11).",
+      "url": null,
+      "path": null,
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/m_arag047f2.jpeg?Expires=1791332594&Signature=DpZP9-0kGMJnix3N1b7q2iL9aEc3W~wNUdvdHvUcKc9eIlNQQ4afvKqa~6pWAv9SlyYfqlJASpz9MtJsu71F4WMOQFy10jifVzQq6bqCEW0PgEv7bKe7BrXZPM0roogkXC1d2SGcxksVgF~mcDqyePTjLord3Dcy4Ka923vV2AlneAziMIdKS4zN9CebBJV~P9YOZtEuzYRei5tRxIhgpqti52x65ucpQ6MvXqg3baFFz1jMxuNeXVYM3f~nCERkkyhydsx8opq76bywJ~HnrNjMPu3Vz8-9G1xqvth-JqJYMbCUoJ5J5LA~hOLh36reH-aZdDyQ2lHRvTxBEd~qcQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 3",
+      "caption": "Prey survival (i.e. time before birds attacked the prey) after the first moving display (small: n = 10, large: n = 11, small-to-large: n = 11). Birds that did not approach the prey again after the first encounter ( n = 5) were right censored.",
+      "url": null,
+      "path": null,
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/m_arag047f3.jpeg?Expires=1791332594&Signature=dFzUG26oO~x6lTvsMnHDSNpAZp6u7uNhsx~8QW71p9veH5xsFSPIwJ1~w54IVjf64wFeIQsQV5CJPDpEYlS-4BLmVp~q6lMLwkgtqx-XQcKiGGfFzsYIZ0mH-4svI0kzcyukyMj2ppmST7oCDITR1kuWDyR6QpuYRI9LdeUwXrbzy2c0zol05WB6rOXxTi1OrgoaT0Kml6~QsrAnMLQYaAAe4zJjG34~Amy4tMoK-3Be4l-nwKu6B0DOZwehYwy79wPZIPDEFEox~khmhE8aI42bUKDL1TaSr5FugZkD5f3H-p4lc-C8F~PMSHYpPwow66I-EQ1dlZwwZwqjeNIZJA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 4",
+      "caption": "Birds’ habituation to the moving prey during the experiment (small: n = 10, large: n = 11, small to large: n = 11).",
+      "url": null,
+      "path": null,
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/m_arag047f4.jpeg?Expires=1791332594&Signature=uOoF0xi8L~EwMaO-Mh58VP1tc7uOI-UNqI2TuvWTRimi8nc669-8PzzQTbNZaYMjHsUcg1IoCszEd8izGkzDDamN6hZkYsDRefSqr81YbVgz9J8t3g6JyZvcyeyCNX2uLwQ2vDbXgWM4aOY6YQF9EF0gnZUGkRn03Hdx84ovnGEgE1fHG9LjdZyT61Nwz7dIhUsUuewGX8rWpLO8XmAXy2C4doTNH2Szsi8Tr0Gpx2nhz1ZFwjXdUg0EpSpGhNmf420fFHMPQ399q97BtaCcX~Ywix1tY2ReR4FWb29E577H4hnGwiP4mKdHcKdkOgkAXeaRIQYYCbrljyjwkroTUQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "supplementary",
+      "heading": "arag047_Supplementary_Data",
+      "caption": null,
+      "url": null,
+      "path": null,
+      "section": "supplementary",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/arag047_supplementary_data.zip?Expires=1792477713&Signature=XPsgpPC1wuYGpeqamPS5YFXpQFPCsLnD9AWI5ULzgsPaN3K5cu4LLd8xN4BrHPPQo8tsxUlhtfBRFku-ZcEDJH5bSMaGHRKcNIgT5q5Rwf4lt7FmCNKzJ~SG5HDYeHRgarZv-GDJBpLrSKp~LxYf-gjBmm-zT8VSHQNtVsWeqaPD0EhRdaIuCo7deYK1K2UM7HAqauxnO7GSTALRz4QPrbroSP4IxBPn5HCr6H1cZH-GyFAEaAYIvAErFQP7dFsk9jjPvCZ0n80sPK7IcdmpBfTHUu9pNN1F5hoVh1id5KOPjavImwfO0-5r-x2rWFdaSfPdX-zh5RoSmWGITcPjAw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    }
+  ],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 12094,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "Markdown full text was saved to /tmp/paper-fetch-paywall-expansion-20260915/oxfordacademic/10.1093_beheco_arag047/fetch/H_m_l_inen_et_al_2026_The_protective_value_of_the_size_and_movement_components_of_deimatic_behavior.md."
+    ],
+    "source_trail": [
+      "fulltext:oxfordacademic_html_ok",
+      "fulltext:oxfordacademic_article_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_oxfordacademic",
+      "route:signal_publisher_oxfordacademic",
+      "route:signal_doi_oxfordacademic",
+      "route:probe_oxfordacademic_unknown",
+      "route:provider_selected_oxfordacademic",
+      "route:provider_candidate_oxfordacademic_metadata_selected_rank_1",
+      "route:provider_candidate_oxfordacademic_identity_strong",
+      "fulltext:oxfordacademic_attempt",
+      "download:oxfordacademic_assets_skipped_profile_none",
+      "fulltext:oxfordacademic_article_ok",
+      "route:provider_candidate_oxfordacademic_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 384,
+      "body": 11710,
+      "refs": 1688
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 46810,
+      "word_count": 7725,
+      "body_block_count": 20,
+      "body_heading_count": 19,
+      "body_to_abstract_ratio": 7725.0,
+      "explicit_body_container": true,
+      "post_abstract_body_run": true,
+      "figure_count": 4
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 5,
+      "attempted": 0,
+      "total": 5,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 5,
+      "not_archived": 0,
+      "remote_link_count": 5,
+      "remote_only_count": 5,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 4,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 4,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 1,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 1,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": [
+        {
+          "request_profile": "none",
+          "kind": "figure",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "none",
+          "kind": "figure",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "none",
+          "kind": "figure",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "none",
+          "kind": "figure",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "none",
+          "kind": "supplement",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        }
+      ]
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "oxfordacademic",
+    "route": "direct_html",
+    "representation": "html",
+    "transport": "http",
+    "fallback_used": false
+  }
+}

@@ -17,5 +17,908 @@
     "tables": 2,
     "references": 41
   },
-  "expected_content_kind": "fulltext"
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.1016_j.jhydrol.2023.130125",
+    "provider": "elsevier",
+    "doi": "10.1016/j.jhydrol.2023.130125",
+    "original": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml",
+    "sha256": "9cf19a1591941497ad32630b55f99ccc43721110714fc07fb00966241c56b399",
+    "format": "xml",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 3,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 41,
+        "scope": "all structured author/title/journal/year/page/e-locator/edition/publisher/comment/web-link/suffix fields and independently decoded DOI in original reference order; plain text references checked in full"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 77,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 13,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 122,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 25,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 45,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "author-group author",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 25,
+      "tex_checked": 0,
+      "mathml_checked": 25,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml",
+      "sha256": "9cf19a1591941497ad32630b55f99ccc43721110714fc07fb00966241c56b399",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": "t0005",
+          "node_sha256": "09b1b4061c38c03e93e642e6dce04e86b0d4e48917f90ca3a1da38bce4d7b499",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              1,
+              [
+                6,
+                7,
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                12,
+                13,
+                14,
+                15,
+                16
+              ]
+            ],
+            [
+              3,
+              [
+                6,
+                17,
+                18,
+                19,
+                20,
+                21
+              ]
+            ],
+            [
+              4,
+              [
+                6,
+                22,
+                23,
+                24,
+                25,
+                26
+              ]
+            ],
+            [
+              5,
+              [
+                6,
+                27,
+                28,
+                29,
+                30,
+                31
+              ]
+            ],
+            [
+              6,
+              [
+                6,
+                32,
+                33,
+                34,
+                35,
+                36
+              ]
+            ],
+            [
+              7,
+              [
+                6,
+                37,
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              8,
+              [
+                6,
+                42,
+                43,
+                44,
+                45,
+                46
+              ]
+            ],
+            [
+              9,
+              [
+                47,
+                48,
+                49,
+                50,
+                51,
+                52
+              ]
+            ],
+            [
+              10,
+              [
+                47,
+                48,
+                53,
+                54,
+                55,
+                56
+              ]
+            ],
+            [
+              11,
+              [
+                47,
+                48,
+                57,
+                58,
+                59,
+                60
+              ]
+            ],
+            [
+              12,
+              [
+                47,
+                61,
+                62,
+                63,
+                64,
+                65
+              ]
+            ],
+            [
+              13,
+              [
+                66,
+                67,
+                68,
+                69,
+                70,
+                71
+              ]
+            ],
+            [
+              14,
+              [
+                66,
+                67,
+                72,
+                73,
+                74,
+                75
+              ]
+            ]
+          ],
+          "cells": [
+            "Data",
+            "Products",
+            "Parameters",
+            "Temporal Coverage",
+            "Spatial Resolution",
+            "Temporal Resolution",
+            "Remote sensing data",
+            "MOD09A1",
+            "Surface reflectance",
+            "2000 to 2020",
+            "500 m",
+            "8-day",
+            "MOD11A2",
+            "LST",
+            "2000 to 2020",
+            "1000 m",
+            "8-day",
+            "GOSIF",
+            "SIF",
+            "2000 to 2020",
+            "0.05°",
+            "8-day",
+            "LT_SIFc",
+            "SIF",
+            "1995 to 2018",
+            "0.05°",
+            "1-month",
+            "SIF_LUE_JJ",
+            "SIF",
+            "2007 to 2018",
+            "0.05°",
+            "8-day",
+            "SIF_LUE_PK",
+            "SIF",
+            "2007 to 2018",
+            "0.05°",
+            "8-day",
+            "SIF005",
+            "SIF",
+            "2002 to 2018",
+            "0.05°",
+            "1-month",
+            "ESA CCI",
+            "Soil moisture",
+            "2000 to 2020",
+            "0.25°",
+            "1-day",
+            "Reanalysis data",
+            "CRA/LAND",
+            "Soil moisture",
+            "2000 to 2020",
+            "0.25°",
+            "1-month",
+            "Precipitation",
+            "1991 to 2020",
+            "0.25",
+            "1-month",
+            "Potential Evapotranspiration",
+            "1991 to 2020",
+            "0.25",
+            "1-month",
+            "SMC dataset",
+            "Soil moisture",
+            "2012 to 2018",
+            "0.05°",
+            "1-month",
+            "In-situ data",
+            "Meteorology Data",
+            "Precipitation",
+            "2000 to 2020",
+            "/",
+            "/",
+            "Temperature",
+            "2000 to 2020",
+            "/",
+            "/"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": "t0010",
+          "node_sha256": "efb7426bfc45d622113f4a328bc5a9ed845400199ea4bc5fe58593035781e5b2",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            [
+              2,
+              [
+                4,
+                8,
+                9,
+                10
+              ]
+            ],
+            [
+              3,
+              [
+                11,
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              4,
+              [
+                11,
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              5,
+              [
+                11,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              6,
+              [
+                21,
+                22,
+                23,
+                24
+              ]
+            ],
+            [
+              7,
+              [
+                25,
+                26,
+                27,
+                28
+              ]
+            ]
+          ],
+          "cells": [
+            "Types",
+            "Indicators",
+            "Correlations",
+            "Equations",
+            "Greenness",
+            "NDVI",
+            "P",
+            "NDVI \n = \n \\frac{\n ( \n \n \n R_{NIR} \n - \n R_{Red} \n \n \n ) \n}{\n ( \n \n \n R_{NIR} \n + \n R_{Red} \n \n \n ) \n}",
+            "EVI",
+            "P",
+            "EVI \n = \n \\frac{\n 2.5 \n × \n \n ( \n \n \n R_{NIR} \n - \n R_{Red} \n \n \n ) \n \n}{\n ( \n \n \n R_{NIR} \n + \n 6 \n × \n R_{Red} \n - \n 7.5 \n × \n R_{Blue} \n + \n 1 \n \n \n ) \n}",
+            "Moisture",
+            "NDIIB6",
+            "P",
+            "NDIIB6 \n = \n \\frac{\n ( \n \n \n R_{\n NIR \n} \n - \n R_{\n S \n W \n I \n R \n 2 \n} \n \n \n ) \n}{\n ( \n \n \n R_{\n NIR \n} \n + \n R_{\n S \n W \n I \n R \n 2 \n} \n \n \n ) \n}",
+            "WET",
+            "P",
+            "WET \n = \n 0.1147 \n × \n R_{Red} \n + \n 0.2489 \n × \n R_{NIR} \n \n \n \n \n \n \n + \n 0.2408 \n × \n R_{Blue} \n + \n 0.3132 \n × \n R_{Green} \n \n \n \n \n \n \n - \n 0.3122 \n × \n R_{SWIR1} \n - \n 0.6416 \n × \n R_{SWIR2} \n \n \n \n \n \n \n - \n 0.5087 \n × \n R_{SWIR3}",
+            "VSDI",
+            "P",
+            "VSDI \n = \n 1 \n - \n \n ( \n \n \n ( \n \n \n R_{SWIR2} \n - \n R_{Blue} \n \n \n ) \n + \n \n ( \n \n \n R_{Red} \n - \n R_{Blue} \n \n \n ) \n \n \n \n )",
+            "Fluorescence",
+            "SIF",
+            "P",
+            "GOSIF, LT_SIFc, SIF_LUE_JJ, SIF_LUE_PK, and SIF005 Products",
+            "Temperature",
+            "LST",
+            "N",
+            "MOD11A2 Products"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "74d62af9f8639f840b5d6a3db0679f2c87db99b8c37d77cb88b3059f9de06eda",
+          "numbers": "",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Z",
+            "i",
+            "j",
+            "x",
+            "i",
+            "j",
+            "μ",
+            "i",
+            "δ",
+            "i"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "c867d67ed306c96305d77de3525f6421c7f20caddbcc0e6996dea6812a737bf6",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Z",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "e01d4a8fbeaa9ae654b175e6345cb135def996eecebf27edf04dff3829eef784",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "i"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "0de33451ed74ddd14d82787b22de66043588f47a100b7b8046f5fe4c2bc1af7c",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "ca2e9953a6479d0fbcd8fdeae9650559118dddfe188498ff37236f511cddc321",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "x",
+            "i",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "fa463d80230870c3e220195baa17bd3910c48aec391749c7cb72402ae3b89377",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "μ",
+            "i"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 6,
+          "id": null,
+          "node_sha256": "374ee117df4b1d1dcbd0be0cf51edf95d02758c3fd7bf18e76a4fda64ca03e5a",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "δ",
+            "i"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 7,
+          "id": null,
+          "node_sha256": "1f279a05d50085cd7d8ddb6837145f6c7cc8dbda312f0e4dfebeec62834d0079",
+          "numbers": "13030",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 2,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "AI",
+            "i",
+            "i",
+            "i"
+          ],
+          "operators": [
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 8,
+          "id": null,
+          "node_sha256": "7b65e0a9a3a531f52c9a0878cd46153ba157979e089ace2d94a08b62462b5cbd",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 2,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a",
+            "b",
+            "a",
+            "b"
+          ],
+          "operators": [
+            "=",
+            "×",
+            "+",
+            "=",
+            "×",
+            "+"
+          ]
+        },
+        {
+          "object_index": 9,
+          "id": null,
+          "node_sha256": "4c854ce214b8231624810e6c781357fb04b2b327c813d76491bf3250eae0b786",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 10,
+          "id": null,
+          "node_sha256": "bac33a025339f4ff0cb466792332b8fdae7aac6bedc862f84e4d3e226098a5fb",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "b"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 11,
+          "id": null,
+          "node_sha256": "43f0b3e511d8a728ac40c1a269b2cc854c90bb58257a6e186cfcddb06bd22e67",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "a"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 12,
+          "id": null,
+          "node_sha256": "8b474a86b00f5c6f6f5997292ac193c0556b822f60c623754ca59e17dbd1c70d",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "b"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 13,
+          "id": null,
+          "node_sha256": "1617e0d90541d3a4f2ae207dd03732d5937f801058769907edc16234af47fdc2",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "i"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 14,
+          "id": null,
+          "node_sha256": "0a2a728a2f0d6ae96ff38b40e137a6ed52224c3bae379b4db373d1078b8e6e3c",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "i"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 15,
+          "id": null,
+          "node_sha256": "868aa29529a3e499a3343c3cde0b5b3a9067a72ecd11b249c208b9167c7f0a72",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 16,
+          "id": null,
+          "node_sha256": "78d33b4162e61de2886aece82662d5ee981ca0160f0dcbf75605d41076a54780",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 17,
+          "id": null,
+          "node_sha256": "67522b6e57cb9cd689802b913331b1c9a7847cb95b63c1c08e35edcb5313d062",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 18,
+          "id": null,
+          "node_sha256": "5ef8f6028d2c273999e1b3e6318109a171e685daa6b50d978c56adc40474eaca",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "μ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 19,
+          "id": null,
+          "node_sha256": "6655d401fda4bcd8c89dc416eb8b091521ed1be02a224680d4c9471b3eb12097",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 20,
+          "id": null,
+          "node_sha256": "27a74ec89b5225b5c50d1ba4a4c6d0161daa2bdda046cd06a65c43d31cc8e265",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "μ",
+            "σ",
+            "j",
+            "o",
+            "r",
+            "j",
+            "μ",
+            "σ"
+          ],
+          "operators": [
+            "-",
+            "≤",
+            "≤",
+            "+"
+          ]
+        },
+        {
+          "object_index": 21,
+          "id": null,
+          "node_sha256": "5507e577a9f10e7915dbaee9a1f7b8e9070055c3adfd16e87a17dcf37a15b6fb",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "μ",
+            "σ"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 22,
+          "id": null,
+          "node_sha256": "0686a0fe1d758a7efb9a50c5d381a88c7646aae64aa268a98244d65a0896c6dc",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "μ",
+            "σ"
+          ],
+          "operators": [
+            "+"
+          ]
+        },
+        {
+          "object_index": 23,
+          "id": null,
+          "node_sha256": "a713ddd4ab81196816101270c93d5cb73171e3b82209085059fdcd4508a189c7",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "i"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 24,
+          "id": null,
+          "node_sha256": "b3a55717adfb3d832966978ac781e6bff0651779888cd14a5a73f7c493b34669",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "i"
+          ],
+          "operators": []
+        }
+      ]
+    }
+  ]
 }

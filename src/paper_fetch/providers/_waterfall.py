@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall
+
 from dataclasses import dataclass, field, replace
 import time
 from typing import Any
@@ -237,6 +239,7 @@ def run_provider_waterfall(
                     doi, metadata or {}, payload
                 )
         except ProviderFailure as exc:
+            propagate_paywall(exc)
             failure = exc.with_updates(
                 provider=exc.provider or provider_name,
                 route=exc.route or route_name,

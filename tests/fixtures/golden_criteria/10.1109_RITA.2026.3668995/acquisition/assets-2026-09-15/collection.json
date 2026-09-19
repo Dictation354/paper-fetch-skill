@@ -1,0 +1,73 @@
+{
+  "provider": "ieee",
+  "doi": "10.1109/RITA.2026.3668995",
+  "sample_id": "10.1109_RITA.2026.3668995",
+  "source_url": "https://ieeexplore.ieee.org/rest/document/11417163/?logAccess=true",
+  "source_input": "tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/original.html",
+  "include_supplementary": true,
+  "include_body": false,
+  "source_sha256": "f58d7af8334c8c178c602425f4b0893307353ccee48045a9d1c523e9c7cb8f7c",
+  "targets": [
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Computational Thinking in Rural Education: Evidence of Gains in Problem-Solving Abilities_supp1-3668995.pdf",
+        "caption": "Como citar este articulo: \"Pensamiento Computacional en la Educacion Rural: Evidencia de Mejoras en las Habilidades de Resolucion de Problemas,\" in IEEE Revista Iberoamericana de Tecnologias del Aprendizaje, doi: 10.1109/RITA.2026.3668995.",
+        "url": "https://ieeexplore.ieee.org/ielx8/6245520/11315891/11417163/supp1-3668995.pdf",
+        "section": "supplementary",
+        "filename_hint": "supp1-3668995.pdf",
+        "media_type": "pdf",
+        "doi": "10.1109/rita.2026.3668995/mm1"
+      },
+      "download_url": "https://ieeexplore.ieee.org/ielx8/6245520/11315891/11417163/supp1-3668995.pdf",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2d6d3d1943df46e8-http-1.bin"
+      ],
+      "file_role": "supplementary",
+      "identity_evidence": "Explicit same-paper supplementary index link; PDF opens without repair; no text conversion quality claim",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "pdf",
+          "pages": 16,
+          "first_page_excerpt": " Resumen—La mayor parte de la investigación sobre \npensamiento computacional se ha llevado a cabo en \ncontextos \nurbanos \no \ntecnológicamente \nfavorecidos, \ndejando en gran medida sin explorar su aplicabilidad en \nentornos rurales. Este estudio aborda ese vacío al evaluar \nla efectividad de una estrategia pedagógica basada en el \npensamiento computacional sobre las habilidades de \nresolución de problemas en estudiantes de décimo grado \nde una institución educativa rural colombiana. Mediante \nun diseño cuasiexperimental con grupo de control y \nmediciones \npretest \ny \npostest, \nse \nevaluaron \ntr",
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "supp1-3668995.pdf",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/ieee-headless-002-http_response_entity.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    }
+  ],
+  "counts": {
+    "discovered_references": 1,
+    "unique_files": 1,
+    "verified_files": 0,
+    "replayed_files": 0,
+    "complete_received_files": 0,
+    "index_only_files": 1
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/acquisition/assets-2026-09-15/collection.json",
+  "outcome": "index_only",
+  "blocking_evidence": [],
+  "index_inputs": [
+    "tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/multimedia.json"
+  ],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 1,
+    "unique_files": 1,
+    "verified_files": 1,
+    "replayed_files": 1,
+    "complete_received_files": 1
+  },
+  "historical_outcome_before_supplementary_removal": "complete",
+  "former_replay_receipt": "tests/fixtures/golden_criteria/10.1109_RITA.2026.3668995/acquisition/assets-2026-09-15/replay-receipt.json"
+}

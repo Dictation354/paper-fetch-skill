@@ -1,0 +1,84 @@
+{
+  "records": [
+    {
+      "doi": "10.1073/pnas.2309123120",
+      "provider": "pnas",
+      "requested_url": "https://api.crossref.org/works/10.1073%2Fpnas.2309123120",
+      "final_url": "https://api.crossref.org/works/10.1073%2Fpnas.2309123120",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:34 GMT",
+        "content-type": "application/json",
+        "content-length": "4349"
+      },
+      "captured_at_utc": "2026-09-18T02:21:34.449455+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 14666,
+      "sha256": "a9fd883a879e22106d000338476e2c8f3619173044e1c895cde8e4936102db4f",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1073/pnas.2309123120",
+      "provider": "pnas",
+      "requested_url": "https://www.pnas.org/doi/full/10.1073/pnas.2309123120",
+      "final_url": "https://www.pnas.org/doi/full/10.1073/pnas.2309123120",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:56 GMT",
+        "content-type": "text/html;charset=UTF-8"
+      },
+      "captured_at_utc": "2026-09-18T02:21:56.296725+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 1716,
+      "sha256": "592774dde1135ce45c1796c68171046621cc585fc897f7f5005f58dac4ae76cf",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1073/pnas.2309123120",
+      "provider": "pnas",
+      "requested_url": "https://pnas.org/doi/10.1073/pnas.2309123120",
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": "2026-09-18T02:27:55.997410+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-service_pdf_artifact.pdf",
+      "size": 2145482,
+      "sha256": "d9f2f880b7fe89f2cd9f570293e8dcbfcb9041cd6afa85991bc2739ae3e8be63",
+      "capture_kind": "existing_service_pdf_artifact",
+      "transport": "Existing paper-fetch browser PDF fallback; raw artifact copied after completed run",
+      "request_url_role": "Article landing URL from fetch metadata; the final PDF request URL and HTTP status were not observed",
+      "acquisition_window": {
+        "started_at_utc": "2026-09-18T02:21:33.685156+00:00",
+        "finished_at_utc": "2026-09-18T02:22:09.260629+00:00"
+      },
+      "runtime_evidence": ".paper-fetch-runs/source-completion-2026-09-18/captures/10.1073_pnas.2309123120/fetch.json",
+      "original_artifact": ".paper-fetch-runs/source-completion-2026-09-18/fetch/10.1073_pnas.2309123120/Butt_et_al_2023_Amazon_deforestation_causes_strong_regional_warming.pdf"
+    },
+    {
+      "doi": "10.1073/pnas.2309123120",
+      "provider": "pnas",
+      "requested_url": "https://www.pnas.org/doi/10.1073/pnas.2309123120",
+      "final_url": "https://www.pnas.org/doi/10.1073/pnas.2309123120",
+      "status_code": 403,
+      "response_headers": {},
+      "capture_kind": "browser_rendered_dom",
+      "captured_at_utc": "2026-09-18T02:35:17.203928+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/003-camoufox-selector-dom.html",
+      "size": 200619,
+      "sha256": "1d9e66f270036a77fab84209cd9bf5d5da3f7a70a5e62fd7af61f1da9b972a3f",
+      "transport": "Existing paper-fetch Camoufox browser runtime; exact returned/diagnostic DOM",
+      "runtime_failure_code": "publisher_access_denied",
+      "access_conditions": "User-requested Camoufox capture; no authentication interaction, challenge bypass or changed access classification",
+      "readiness": {
+        "wait_for_article_body": false,
+        "selector": "#bodymatter, .article-section__body",
+        "require_selector": true,
+        "budget_seconds": 30
+      }
+    }
+  ]
+}

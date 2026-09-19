@@ -31,7 +31,6 @@ from ._arxiv_html import (
     _arxiv_select_one,
     _clean_arxiv_frontmatter_text,
 )
-from ._html_section_markdown import render_heading_text_from_html
 from .base import ProviderFailure
 
 _ARXIV_WATERMARK_PATTERN = re.compile(
@@ -335,49 +334,6 @@ def _extract_arxiv_watermark_metadata(root: Any) -> dict[str, Any]:
     return {}
 
 
-def _arxiv_node_identity_text(node: Any) -> str:
-    if not isinstance(node, Tag):
-        return ""
-    attrs = getattr(node, "attrs", None) or {}
-    parts = [normalize_text(getattr(node, "name", "") or "")]
-    for key in ("id", "aria-label", "aria-labelledby", "data-title"):
-        parts.append(normalize_text(str(attrs.get(key) or "")))
-    class_values = attrs.get("class")
-    if isinstance(class_values, (list, tuple, set)):
-        parts.extend(normalize_text(str(item)) for item in class_values)
-    else:
-        parts.append(normalize_text(str(class_values or "")))
-    return " ".join(part.lower() for part in parts if part)
-
-
-def _select_arxiv_title_node(article: Any) -> Any:
-    title_node = _arxiv_select_one(article, "document_title")
-    if isinstance(title_node, Tag):
-        return title_node
-    return article.find("h1") if isinstance(article, Tag) else None
-
-
-def _select_arxiv_abstract_node(article: Any) -> Any:
-    abstract_node = _arxiv_select_one(article, "abstract")
-    if isinstance(abstract_node, Tag):
-        return abstract_node
-    if not isinstance(article, Tag):
-        return None
-    for candidate in article.find_all(["section", "div"]):
-        if not isinstance(candidate, Tag):
-            continue
-        identity = _arxiv_node_identity_text(candidate)
-        heading_node = candidate.find(SECTION_HEADING_PATTERN)
-        title = normalize_text(
-            render_heading_text_from_html(heading_node)
-            if isinstance(heading_node, Tag)
-            else ""
-        ).lower()
-        if "abstract" in identity or title.strip(" .:") == "abstract":
-            return candidate
-    return None
-
-
 def _extract_arxiv_html_frontmatter(
     soup: Any,
     article: Any,
@@ -393,11 +349,11 @@ def _extract_arxiv_html_frontmatter(
     watermark_metadata = _extract_arxiv_watermark_metadata(soup)
     arxiv_id = normalize_arxiv_id(watermark_metadata.get("arxiv_id")) or arxiv_id
 
-    title_node = _select_arxiv_title_node(article)
+    title_node = _arxiv_select_one(article, "document_title")
     title = (
         _clean_arxiv_frontmatter_text(title_node) if isinstance(title_node, Tag) else ""
     )
-    abstract_node = _select_arxiv_abstract_node(article)
+    abstract_node = _arxiv_select_one(article, "abstract")
     abstract = ""
     if isinstance(abstract_node, Tag):
         abstract_clone = copy.deepcopy(abstract_node)
@@ -479,8 +435,21 @@ def _merge_arxiv_metadata_layers(
     merged["official_provider"] = True
     merged["journal_title"] = normalize_text(merged.get("journal_title")) or "arXiv"
     merged["publisher"] = normalize_text(merged.get("publisher")) or "arXiv"
-    merged["authors"] = dedupe_authors(
-        [str(item) for item in (merged.get("authors") or [])]
+    # A versioned HTML author list is an ordered list, not additive metadata.
+    # Appending API spellings creates duplicate people when initials or spelling
+    # differ from the paper (observed in the Wunder and MoE-Prism originals).
+    html_authors = dedupe_authors(
+        [str(item) for item in (html_metadata or {}).get("authors") or []]
+    )
+    api_authors = dedupe_authors(
+        [str(item) for item in (api_metadata or {}).get("authors") or []]
+    )
+    # LaTeXML can put coauthors in affiliation nodes (GAN). Keep the complete
+    # API list in that case, without concatenating alternate name spellings.
+    merged["authors"] = (
+        api_authors
+        if len(api_authors) > len(html_authors)
+        else html_authors or dedupe_authors(list(merged.get("authors") or []))
     )
     merged["keywords"] = _dedupe_metadata_text_values(
         list(merged.get("keywords") or [])

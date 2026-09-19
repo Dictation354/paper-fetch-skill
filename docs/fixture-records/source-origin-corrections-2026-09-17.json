@@ -1,0 +1,105 @@
+{
+  "date": "2026-09-17",
+  "corrections": [
+    {
+      "sample_id": "10.1007_s13158-025-00473-x",
+      "original_path": "tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html",
+      "legacy_path": "tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/legacy-bilingual.html",
+      "sha256": "99c0e53795630fd6bd839edfe508a7251f4e22f89bad0167de5b704a565119d3",
+      "classification": "synthetic",
+      "replacement_path": "tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html",
+      "evidence": "problems.md P12; actual replacement entity in acquisition/provenance.json"
+    },
+    {
+      "sample_id": "10.1038_d41586-022-01795-9",
+      "original_path": "tests/fixtures/golden_criteria/10.1038_d41586-022-01795-9/original.html",
+      "legacy_path": "tests/fixtures/golden_criteria/10.1038_d41586-022-01795-9/legacy-original.html",
+      "sha256": "1170a7fd277e8208bbb0af33715607ba2a9b3fac0007ad703dd379e1c1b243a2",
+      "classification": "synthetic",
+      "replacement_path": "tests/fixtures/golden_criteria/10.1038_d41586-022-01795-9/original.html",
+      "evidence": "problems.md P12; actual replacement entity in acquisition/provenance.json"
+    },
+    {
+      "sample_id": "10.1038_d41586-023-01829-w",
+      "original_path": "tests/fixtures/golden_criteria/10.1038_d41586-023-01829-w/original.html",
+      "legacy_path": "tests/fixtures/golden_criteria/10.1038_d41586-023-01829-w/legacy-original.html",
+      "sha256": "012562a257d61162183471ef73ecf255adf16ed97896301bc09661363b9a2fee",
+      "classification": "unverified",
+      "replacement_path": "tests/fixtures/golden_criteria/10.1038_d41586-023-01829-w/original.html",
+      "evidence": "problems.md P12; actual replacement entity in acquisition/provenance.json"
+    },
+    {
+      "sample_id": "10.1038_s41561-022-00983-6",
+      "original_path": "tests/fixtures/golden_criteria/10.1038_s41561-022-00983-6/original.html",
+      "legacy_path": "tests/fixtures/golden_criteria/10.1038_s41561-022-00983-6/legacy-original.html",
+      "sha256": "24a381d872dd048a1a08be84a8a306cf424833cb0a28262ae2a2661125f49c87",
+      "classification": "synthetic",
+      "replacement_path": "tests/fixtures/golden_criteria/10.1038_s41561-022-00983-6/original.html",
+      "evidence": "problems.md P12; actual replacement entity in acquisition/provenance.json"
+    },
+    {
+      "sample_id": "10.1111_gcb.16386",
+      "original_path": "tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html",
+      "legacy_path": "tests/fixtures/golden_criteria/10.1111_gcb.16386/legacy-bilingual.html",
+      "sha256": "ce1cff3b0fe95dbc74065de328f78d8e6fe112072efaa044da2a7f4fb29267d4",
+      "classification": "synthetic",
+      "replacement_path": "tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html",
+      "evidence": "problems.md P12; actual replacement entity in acquisition/provenance.json"
+    },
+    {
+      "sample_id": "10.1073_pnas.2317456120",
+      "original_path": "tests/fixtures/golden_criteria/10.1073_pnas.2317456120/commentary.html",
+      "legacy_path": "tests/fixtures/golden_criteria/10.1073_pnas.2317456120/legacy-commentary.html",
+      "sha256": "6e3dac775115ce00f2f0cc21c2ba51f9bf9f43f2f845ac381466432807c342e8",
+      "classification": "synthetic",
+      "replacement_path": "tests/fixtures/golden_criteria/10.1073_pnas.2317456120/commentary.html",
+      "evidence": "Raw publisher DOM recorded via existing project Camoufox diagnostic boundary; DOI and template independently verified; actual HTTP403 and publisher_access_denied retained",
+      "acquired_fulltext_path": "tests/fixtures/golden_criteria/10.1073_pnas.2317456120/acquisition/provenance-camoufox-retry-2026-09-17/downloaded-article.pdf",
+      "replacement_status_code": 403,
+      "replacement_runtime_failure_code": "publisher_access_denied"
+    },
+    {
+      "sample_id": "10.1073_pnas.2406303121",
+      "original_path": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/abstract.html",
+      "legacy_path": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/legacy-abstract.html",
+      "sha256": "721bf39ad7ebfd1cebb65b8f37918aa30ba7770abf73ea7cc5ba70931744c8a4",
+      "classification": "synthetic",
+      "replacement_path": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/abstract.html",
+      "evidence": "Raw publisher DOM recorded via existing project Camoufox diagnostic boundary; DOI and template independently verified; actual HTTP403 and publisher_access_denied retained",
+      "acquired_fulltext_path": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/acquisition/provenance-camoufox-retry-2026-09-17/000-browser_rendered_dom.html",
+      "replacement_status_code": 403,
+      "replacement_runtime_failure_code": "publisher_access_denied"
+    },
+    {
+      "sample_id": "10.1111_cas.16117",
+      "original_path": "tests/fixtures/golden_criteria/10.1111_cas.16117/extracted.md",
+      "legacy_path": "tests/fixtures/golden_criteria/10.1111_cas.16117/extracted.md",
+      "sha256": "e0090183fad63d9dc2a2f71abaa61afb128ac48346ca01c73d9ad29055696b9f",
+      "classification": "synthetic",
+      "replacement_path": "tests/fixtures/golden_criteria/10.1111_cas.16117/original.html",
+      "evidence": "problems.md P12: explicit generated/paraphrased fixture text"
+    },
+    {
+      "sample_id": "10.1016_S1575-1813(18)30261-4",
+      "original_path": "tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml",
+      "legacy_path": "tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml",
+      "sha256": "0182c65b2295bd8574cbcb88a7f67c59dde8571c3d810f6368502842bd2061cd",
+      "classification": "synthetic",
+      "replacement_path": "tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/original.xml",
+      "evidence": "problems.md P12: explicit generated/paraphrased fixture text",
+      "replacement_doi": "10.1016/j.edumed.2018.09.002"
+    },
+    {
+      "sample_id": "10.1345_aph.1M379",
+      "original_path": "tests/fixtures/golden_criteria/10.1345_aph.1M379/bilingual.html",
+      "legacy_path": "docs/fixture-records/retired/10.1345_aph.1M379/bilingual.html",
+      "sha256": "6868aeb634194c81a214a74225193370b3294446f959591343d4f7ebe0a5d737",
+      "classification": "synthetic",
+      "replacement_path": null,
+      "evidence": "problems.md P12: explicit generated/paraphrased fixture text",
+      "retired": true,
+      "retired_reason": "P15: unsupported provider; removed from active fixtures and tests. Historical bytes and rejected hash retained, with no reacquisition pending.",
+      "historical_acquisition_failure": "SAGE abstract/full/canonical navigation failed NS_ERROR_NET_RESET; local DNS contains non-public IPv6. Continued network diagnostics did not establish a usable alternative. No accepted real page replacement; source remains synthetic."
+    }
+  ]
+}

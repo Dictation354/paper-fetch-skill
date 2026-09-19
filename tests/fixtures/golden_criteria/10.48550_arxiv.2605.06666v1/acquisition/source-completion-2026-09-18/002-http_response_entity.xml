@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/95VE9lcjMjSNCWTGnA5MsvOm0jQ</id>
+  <title>arXiv Query: search_query=&amp;id_list=2605.06666v1&amp;start=0&amp;max_results=1</title>
+  <updated>2026-09-18T02:21:28Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=1&amp;id_list=2605.06666v1" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>1</opensearch:itemsPerPage>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2605.06666v1</id>
+    <title>The Kubo-Thermalization Correspondence</title>
+    <updated>2026-05-07T17:59:55Z</updated>
+    <link href="https://arxiv.org/abs/2605.06666v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.06666v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Quantum thermalization describes how interacting quantum systems relax toward thermal equilibrium, a central problem in modern physics. Yet most experimental information on many-body systems comes from short-time transition spectroscopy, typically interpreted within Kubo's linear-response framework. These perspectives - long-time equilibration versus short-time response - seem fundamentally disconnected. Here we establish an exact link between them: the Kubo-Thermalization correspondence, which connects long-time thermalized magnetization under weak driving to short-time linear-response spectra for a spin coupled to a thermal bath. The correspondence holds even when the steady state differs substantially from the initial state and when each regime is individually difficult to describe theoretically. We experimentally confirm the correspondence using effective spin-1/2 impurities realized with ultracold fermions in two internal states coupled to a Fermi sea. Our results provide a rare exact statement about quantum thermalization and offer a novel route to infer thermalization dynamics from equilibrium response measurements in strongly interacting quantum systems, independent of microscopic details of the system-bath coupling.</summary>
+    <category term="cond-mat.quant-gas" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cond-mat.stat-mech" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="physics.atom-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="quant-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-07T17:59:55Z</published>
+    <arxiv:primary_category term="cond-mat.quant-gas"/>
+    <author>
+      <name>Songtao Huang</name>
+    </author>
+    <author>
+      <name>Xingyu Li</name>
+    </author>
+    <author>
+      <name>Jianyi Chen</name>
+    </author>
+    <author>
+      <name>Alan Tsidilkovski</name>
+    </author>
+    <author>
+      <name>Gabriel G. T. Assumpção</name>
+    </author>
+    <author>
+      <name>Pengfei Zhang</name>
+    </author>
+    <author>
+      <name>Hui Zhai</name>
+    </author>
+    <author>
+      <name>Nir Navon</name>
+    </author>
+  </entry>
+</feed>

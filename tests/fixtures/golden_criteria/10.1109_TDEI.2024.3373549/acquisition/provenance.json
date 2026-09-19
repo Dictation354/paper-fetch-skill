@@ -1,0 +1,96 @@
+{
+  "records": [
+    {
+      "doi": "10.1109/TDEI.2024.3373549",
+      "provider": "ieee",
+      "requested_url": "https://api.crossref.org/works/10.1109%2Ftdei.2024.3373549",
+      "final_url": "https://api.crossref.org/works/10.1109%2Ftdei.2024.3373549",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:25:01 GMT",
+        "content-type": "application/json",
+        "content-length": "2003"
+      },
+      "captured_at_utc": "2026-09-18T02:25:00.901150+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 6631,
+      "sha256": "615b84341ad5bfda9f9a158bdc8e0e3b852345aa3c4b6ec97b5e81b4dc4c9765",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1109/TDEI.2024.3373549",
+      "provider": "ieee",
+      "requested_url": "https://ieeexplore.ieee.org/document/10459335/",
+      "final_url": "https://ieeexplore.ieee.org/document/10459335/",
+      "status_code": 202,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:25:01 GMT",
+        "content-length": "2060",
+        "content-type": "text/html; charset=UTF-8"
+      },
+      "captured_at_utc": "2026-09-18T02:25:01.125847+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "size": 2060,
+      "sha256": "ee935d84ddf06c1c1e1a64e898c055e04e2dd1fb96d693da27ad2904c1b83684",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1109/TDEI.2024.3373549",
+      "provider": "ieee",
+      "requested_url": "https://ieeexplore.ieee.org/document/10459335/",
+      "final_url": "https://ieeexplore.ieee.org/document/10459335/",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Fri, 18 Sep 2026 02:25:05 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:25:06.455821+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-browser_rendered_dom.html",
+      "size": 35808,
+      "sha256": "a02203f4ad350088e5b2215444f7d09373046ace1cdd66f2ce6aa65aef0f425b",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1109/TDEI.2024.3373549",
+      "provider": "ieee",
+      "requested_url": "https://ieeexplore.ieee.org/rest/document/10459335/references",
+      "final_url": "https://ieeexplore.ieee.org/rest/document/10459335/references",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:25:08 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:25:07.811145+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/003-http_response_entity.bin",
+      "size": 30881,
+      "sha256": "b4973e57034438a9d4b755307dae2ca35d851901480454ce65218c45501cb8d5",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1109/TDEI.2024.3373549",
+      "provider": "ieee",
+      "requested_url": "https://ieeexplore.ieee.org/rest/document/10459335/",
+      "final_url": "https://ieeexplore.ieee.org/rest/document/10459335/",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=utf-8",
+        "date": "Fri, 18 Sep 2026 02:25:09 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:25:09.080514+00:00",
+      "body_file": "original.html",
+      "size": 73370,
+      "sha256": "1c95137a600f842b667d9844155882210ca2ef5ae0055ac152ccaa764cbb0d69",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes",
+      "original_body_file": "acquisition/source-completion-2026-09-18/004-http_response_entity.bin"
+    }
+  ]
+}

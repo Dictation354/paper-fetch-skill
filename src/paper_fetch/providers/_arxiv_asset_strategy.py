@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -111,6 +111,52 @@ def download_arxiv_html_figure_assets(
     plan: ArxivHtmlAssetDownloadPlan,
 ) -> dict[str, list[dict[str, Any]]]:
     """Prefer official source figures, then retain an audited HTML preview fallback."""
+
+    embedded = [
+        dict(item)
+        for item in plan.extracted_assets
+        if item.get("source_kind") in {"arxiv_inline_svg", "arxiv_html_object"}
+    ]
+    if embedded:
+        from ._arxiv_graphics import save_arxiv_inline_svgs
+
+        result = save_arxiv_inline_svgs(
+            [a for a in embedded if a["source_kind"] == "arxiv_inline_svg"],
+            output_dir=plan.output_dir,
+            article_id=plan.article_id,
+            source_url=plan.source_url,
+            context=plan.runtime_context,
+        )
+        remote = html_assets.download_assets(
+            html_assets.FIGURE_KIND,
+            transport,
+            article_id=plan.article_id,
+            assets=[a for a in embedded if a["source_kind"] == "arxiv_html_object"],
+            output_dir=plan.output_dir,
+            user_agent=plan.user_agent,
+            asset_profile=plan.asset_profile,
+            options=html_assets.AssetDownloadOptions(
+                headers=plan.image_headers,
+                provider_name="arxiv",
+                runtime_context=plan.runtime_context,
+                asset_download_concurrency=_arxiv_asset_download_concurrency(
+                    plan.runtime_context.env
+                ),
+            ),
+        )
+        remaining = [
+            a
+            for a in plan.extracted_assets
+            if a.get("source_kind") not in {"arxiv_inline_svg", "arxiv_html_object"}
+        ]
+        ordinary = (
+            download_arxiv_html_figure_assets(
+                transport, replace(plan, extracted_assets=remaining)
+            )
+            if remaining
+            else {"assets": [], "asset_failures": []}
+        )
+        return {key: [*result[key], *remote[key], *ordinary[key]] for key in result}
 
     extracted_assets = [
         dict(item)

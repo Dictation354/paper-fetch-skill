@@ -1,0 +1,290 @@
+{
+  "doi": "10.1080/01431169308904370",
+  "source": "tandf_pdf",
+  "metadata": {
+    "title": "In vivo spectroscopy and internal optics of leaves as basis for remote sensing of vegetation",
+    "authors": [
+      "C. BUSCHMANN",
+      "E. NAGEL"
+    ],
+    "abstract": null,
+    "journal": "International Journal of Remote Sensing",
+    "article_type": null,
+    "published": "1993-3",
+    "keywords": [],
+    "license_urls": [],
+    "landing_page_url": "https://www.tandfonline.com/doi/full/10.1080/01431169308904370"
+  },
+  "sections": [],
+  "references": [
+    {
+      "raw": "10.2134/agronj1984.00021962007600020029x",
+      "doi": "10.2134/agronj1984.00021962007600020029x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "BUSCHMANN , C. RANG , S. STOBER , F. , and KOCSÁNYI , L. , 1988 , Reflection spectra of leaves and needles as basis for the physiological evaluation of tree damage—1. Measuring setup . In PEF-Report , Volume 35 . edited by the Projekt Europäisches Forschungszen-trum fur MaBnahmen zur Luftreinhaltung ( Karlsruhe Kernforschungszentrum Karlsruhe ), pp. 191 – 196 .",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1146/annurev.pp.15.060164.002315",
+      "doi": "10.1146/annurev.pp.15.060164.002315",
+      "title": null,
+      "year": "1964"
+    },
+    {
+      "raw": "10.2113/gsecongeo.78.4.723",
+      "doi": "10.2113/gsecongeo.78.4.723",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1104/pp.49.3.421",
+      "doi": "10.1104/pp.49.3.421",
+      "title": null,
+      "year": "1972"
+    },
+    {
+      "raw": "10.1364/AO.4.000011",
+      "doi": "10.1364/ao.4.000011",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1364/AO.13.000109",
+      "doi": "10.1364/ao.13.000109",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0076-6879(87)48036-1",
+      "doi": "10.1016/0076-6879(87)48036-1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/978-3-662-13508-2",
+      "doi": "10.1007/978-3-662-13508-2",
+      "title": null,
+      "year": "1981"
+    },
+    {
+      "raw": "10.1097/00010694-195112000-00019",
+      "doi": "10.1097/00010694-195112000-00019",
+      "title": null,
+      "year": "1951"
+    },
+    {
+      "raw": "ROUSE , J. W. HAAS , R. H. SCHELL , J. A. DEERING , D. W. ,HARLAN, J. C. (editors) , 1974 , Monitoring the vernal advancement of retrogradation of natural vegetation . NASA/GSFC, Type III, Final Report , Greenbelt , MD .",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1080/01431168508948283",
+      "doi": "10.1080/01431168508948283",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0034-4257(87)90051-4",
+      "doi": "10.1016/0034-4257(87)90051-4",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/978-94-009-5530-1_4",
+      "doi": "10.1007/978-94-009-5530-1_4",
+      "title": null,
+      "year": "1985"
+    },
+    {
+      "raw": "10.1364/AO.22.000492",
+      "doi": "10.1364/ao.22.000492",
+      "title": null,
+      "year": "1983"
+    },
+    {
+      "raw": "10.1016/0034-4257(79)90013-0",
+      "doi": "10.1016/0034-4257(79)90013-0",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1399-3054.1984.tb06076.x",
+      "doi": "10.1111/j.1399-3054.1984.tb06076.x",
+      "title": null,
+      "year": "1984"
+    },
+    {
+      "raw": "10.1007/978-3-642-98947-6",
+      "doi": "10.1007/978-3-642-98947-6",
+      "title": null,
+      "year": "1918"
+    },
+    {
+      "raw": "10.1104/pp.47.5.656",
+      "doi": "10.1104/pp.47.5.656",
+      "title": null,
+      "year": "1971"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": false,
+    "token_estimate": 0,
+    "content_kind": "metadata_only",
+    "has_abstract": false,
+    "warnings": [
+      "tandf HTML route was not usable (publisher_access_denied); attempting PDF fallback.",
+      "PDF was downloaded but Markdown extraction was not usable.",
+      "Full text was extracted from PDF fallback after the HTML path was not usable.",
+      "tandf retrieval did not produce usable markdown.",
+      "Taylor & Francis Online official full text was downloaded as PDF/binary to /tmp/paper-fetch-paywall-expansion-20260915/tandf/10.1080_01431169308904370/fetch/BUSCHMANN_et_al_1993_In_vivo_spectroscopy_and_internal_optics_of_leaves_as_basis_for_remote_sensing_of_vegetation.pdf.",
+      "Official provider downloaded a PDF, but Markdown full text was not available; returning PDF-only provider result.",
+      "--save-markdown was set but full text was not available; nothing written to disk."
+    ],
+    "source_trail": [
+      "fulltext:tandf_html_fail",
+      "fulltext:tandf_pdf_fallback_ok",
+      "fulltext:tandf_pdf_ok",
+      "fulltext:tandf_parse_fail",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_tandf",
+      "route:signal_publisher_tandf",
+      "route:signal_doi_tandf",
+      "route:probe_tandf_unknown",
+      "route:provider_selected_tandf",
+      "route:provider_candidate_tandf_metadata_selected_rank_1",
+      "route:provider_candidate_tandf_identity_strong",
+      "fulltext:tandf_attempt",
+      "download:tandf_saved",
+      "download:tandf_assets_skipped_profile_none",
+      "route:provider_candidate_tandf_accepted",
+      "download:markdown_skipped_no_fulltext"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 0,
+      "body": 0,
+      "refs": 263
+    },
+    "confidence": "low",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 0,
+      "word_count": 0,
+      "body_block_count": 0,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 0.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "tandf",
+    "route": "browser_pdf",
+    "representation": "pdf",
+    "transport": "browser",
+    "fallback_used": true
+  }
+}

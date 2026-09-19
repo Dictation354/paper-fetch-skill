@@ -1,0 +1,73 @@
+{
+  "doi": "10.3390/math11030657",
+  "source_input": "tests/fixtures/golden_criteria/10.3390_math11030657/original.html",
+  "source_sha256": "c6ac7ce61266c0a16fa597f1e1f78f143b0d5d167f89dcdbf50fbb5cf9a83478",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "f80801c731f0a8b7a2d0d1114f6d544d7210d7db58044ee92d3d61214b5e8fd3",
+  "files": [
+    {
+      "filename": "mathematics-11-00657-g001.png",
+      "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g001.png?1675768951",
+      "source_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g001.png?1675768951",
+      "sha256": "c6b4fbc35307ef694f27487260db4c38077e5c7871a021c3fcea131f78498027",
+      "size": 38778,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2878,
+      "height": 1694,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "mathematics-11-00657-g002.png",
+      "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g002.png?1675768948",
+      "source_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g002.png?1675768948=",
+      "sha256": "da6d9091110116c9c490d6f06316502498ffcd7d5fb77035b225ced30a95d35e",
+      "size": 792387,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2961,
+      "height": 1684,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "mathematics-11-00657-g003.png",
+      "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g003.png?1675768951",
+      "source_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g003.png?1675768951=",
+      "sha256": "9ba07006497cd1563a6c0760472757d73e177c85f57a01ff4d1fa2391fa2c53f",
+      "size": 304317,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2486,
+      "height": 1488,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "mathematics-11-00657-g004.png",
+      "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g004.png?1675768949",
+      "source_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g004.png?1675768949=",
+      "sha256": "65c7850e05a1e1fe27e2b8046a8a049f69a096ba244872b958893a81c49ac141",
+      "size": 584252,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 3040,
+      "height": 1667,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "mathematics-11-00657-g005.png",
+      "download_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g005.png?1675768950",
+      "source_url": "https://pub.mdpi-res.com/mathematics/mathematics-11-00657/article_deploy/html/images/mathematics-11-00657-g005.png?1675768950=",
+      "sha256": "38ed4e3da69cfe26168ae6b4ea8c1138f3da00f61f5fb12453c6181ce0844540",
+      "size": 528165,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 3305,
+      "height": 1763,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.598418+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 0
+}

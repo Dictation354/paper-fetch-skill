@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 import pytest
-
 from paper_fetch.providers._article_markdown_jats import (
     assess_jats_body_availability,
     parse_jats_xml,
@@ -10,7 +8,6 @@ from paper_fetch.quality.reason_codes import (
     STRUCTURED_ARTICLE_NOT_FULLTEXT,
     STRUCTURED_MISSING_BODY_SECTIONS,
 )
-from tests.golden_criteria import golden_criteria_asset
 
 
 def _jats(*, article_type: str = "research-article", body: str = "") -> bytes:
@@ -145,26 +142,6 @@ def test_jats_embedded_blocks_do_not_leak_xml_tail_newlines() -> None:
     assert "Before *value*" in extraction.markdown_text
     assert "- Item" in extraction.markdown_text
     assert "After **block** = done." in extraction.markdown_text
-
-
-def test_shared_jats_renderer_normalizes_real_frontiers_and_copernicus_wrapping() -> (
-    None
-):
-    frontiers = parse_jats_xml(
-        golden_criteria_asset("10.3389/fmars.2023.1101972", "original.xml").read_bytes()
-    )
-    copernicus = parse_jats_xml(
-        golden_criteria_asset("10.5194/acp-1-1-2001", "original.xml").read_bytes()
-    )
-
-    assert frontiers is not None
-    assert copernicus is not None
-    assert "; **Table 2**" in frontiers.markdown_text
-    assert ";\n**Table 2**" not in frontiers.markdown_text
-    assert copernicus.abstract_sections
-    abstract = copernicus.abstract_sections[0]["text"]
-    assert "rate constant for OH + C<sub>3</sub>" in abstract
-    assert "OH\n+ C<sub>3</sub>" not in abstract
 
 
 def test_jats_cals_tgroups_render_as_independent_ordered_grids() -> None:

@@ -1,0 +1,45 @@
+{
+  "records": [
+    {
+      "doi": "10.1371/journal.pone.0126635",
+      "provider": "plos",
+      "requested_url": "https://api.crossref.org/works/10.1371%2Fjournal.pone.0126635",
+      "final_url": "https://api.crossref.org/works/10.1371%2Fjournal.pone.0126635",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:27 GMT",
+        "content-type": "application/json",
+        "content-length": "2996"
+      },
+      "captured_at_utc": "2026-09-18T02:20:27.424773+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 11031,
+      "sha256": "2f57f9405436224a28a477d7dc2c58cdd1b6511127abb06c957863ddf8cc0ef1",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1371/journal.pone.0126635",
+      "provider": "plos",
+      "requested_url": "https://storage.googleapis.com/plos-corpus-prod/10.1371/journal.pone.0126635/1/pone.0126635.xml",
+      "final_url": "https://storage.googleapis.com/plos-corpus-prod/10.1371/journal.pone.0126635/1/pone.0126635.xml",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/xml",
+        "date": "Fri, 18 Sep 2026 02:20:29 GMT",
+        "last-modified": "Mon, 30 Nov 2020 20:26:12 GMT",
+        "etag": "\"bbe964b8064ad55d70070940feedd7de\"",
+        "content-length": "192745"
+      },
+      "captured_at_utc": "2026-09-18T02:20:29.493414+00:00",
+      "body_file": "original.xml",
+      "size": 192745,
+      "sha256": "8a503de5b472d969b73b0929e33c2bbe58b36fd15d7377ae05c68d11cd2c7557",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes",
+      "original_body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.xml"
+    }
+  ]
+}

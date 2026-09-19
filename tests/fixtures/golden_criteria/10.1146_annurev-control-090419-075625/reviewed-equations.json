@@ -1,0 +1,19 @@
+{
+  "review_basis": "Original HTML sec2-1 / m0001 / m0002, and visual reading of the two archived publisher GIFs; not extracted Markdown.",
+  "representation": "equation_image",
+  "equations": [
+    {
+      "id": "m0001",
+      "label": "1.",
+      "asset": "eq-075625-001.gif",
+      "reviewed_latex": "x(k+1)=f_t(x(k),u(k),k,w(k),\\theta_t)"
+    },
+    {
+      "id": "m0002",
+      "label": "2.",
+      "asset": "eq-075625-007.gif",
+      "reviewed_latex": "J_t=\\mathrm{E}\\left(\\sum_{k=0}^{\\bar{N}}l_t(x(k),u(k),k)\\right)"
+    }
+  ],
+  "boundary": "Tests lock numbered equation image identity, link and location in current HTML replay. Transcriptions document visual review; no OCR or image-to-LaTeX support is asserted."
+}

@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import asyncio
 import json
 import threading
@@ -8,9 +7,7 @@ from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
-
 import pytest
-
 from paper_fetch import runtime as runtime_module
 from paper_fetch.http import RequestFailure
 from paper_fetch.mcp import batch_fetch as batch_fetch_module
@@ -23,8 +20,10 @@ from paper_fetch.models import QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION
 from paper_fetch.reason_codes import RATE_LIMITED
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.tracing import TraceContext, trace_event
-
-from ._mcp_support import assert_mcp_tool_omits_output_schema, sample_envelope
+from tests.support._mcp_support import (
+    assert_mcp_tool_omits_output_schema,
+    sample_envelope,
+)
 
 
 class RecordingContext:

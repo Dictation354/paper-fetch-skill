@@ -1,0 +1,262 @@
+{
+  "provider": "wiley",
+  "doi": "10.1111/gcb.16414",
+  "sample_id": "10.1111_gcb.16414",
+  "source_url": "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
+  "source_input": "tests/fixtures/golden_criteria/10.1111_gcb.16414/original.html",
+  "include_supplementary": true,
+  "include_body": true,
+  "source_sha256": "60a9ed1f385dc55acd0e9cc9dd6298627dfc7a64b07c7261ce4df1b73a1a5215",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 1 Open in figure viewer PowerPoint Conceptual diagram of velocity of vege",
+        "caption": "FIGURE 1 Open in figure viewer PowerPoint Conceptual diagram of velocity of vegetation green-up ( V NDVI ) and its interannual change. Green-up period in this study is defined as the period from start of the growing season (SOS) month to peak of growing season (POS) month. V NDVI is calculated as the monthly NDVI increase during this green-up period, with V1 indicating the velocity for the SOS month. Three V NDVI values are extracted in this example. Vegetation greening (right panel) indicates the interannual increase of NDVI, but V NDVI (marked as V1′, V2′, and V3′ after greening) in different months exhibit divergent changes. The diagram shows the scenario that V1 increases (green-up acceleration) while V2 and V3 decreases (green-up deceleration). [Colour figure can be viewed at wileyonlinelibrary.com ]",
+        "url": "https://onlinelibrary.wiley.com/cms/asset/6ec811d9-e77c-4f0b-86f6-b34f4f936ff2/gcb16414-fig-0001-m.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gcb16414-fig-0001",
+        "preview_url": "https://onlinelibrary.wiley.com/cms/asset/38e3c353-6208-4bba-8d5b-f4f36b1a77b0/gcb16414-fig-0001-m.png",
+        "full_size_url": "https://onlinelibrary.wiley.com/cms/asset/6ec811d9-e77c-4f0b-86f6-b34f4f936ff2/gcb16414-fig-0001-m.jpg"
+      },
+      "download_url": "https://onlinelibrary.wiley.com/cms/asset/6ec811d9-e77c-4f0b-86f6-b34f4f936ff2/gcb16414-fig-0001-m.jpg",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/7c750efc33c4db33-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headed-all-002-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headed-all-002-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 2 Open in figure viewer PowerPoint Changes in NDVI from 1982 to 2015. (a)",
+        "caption": "FIGURE 2 Open in figure viewer PowerPoint Changes in NDVI from 1982 to 2015. (a) Seasonal change in monthly NDVI. The NDVI curves are derived from the mean values of all pixels across the study region. (b) Spatial pattern of the trends in annual maximum NDVI. The regions labeled with black dots represent locations with a significant trend in NDVI ( p < .05). [Colour figure can be viewed at wileyonlinelibrary.com ]",
+        "url": "https://onlinelibrary.wiley.com/cms/asset/84c6c598-0580-4d9b-b22d-0a8d4013c2c1/gcb16414-fig-0002-m.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gcb16414-fig-0002",
+        "preview_url": "https://onlinelibrary.wiley.com/cms/asset/e5797a8b-f545-4a1c-b5ae-1f18f459cfa0/gcb16414-fig-0002-m.png",
+        "full_size_url": "https://onlinelibrary.wiley.com/cms/asset/84c6c598-0580-4d9b-b22d-0a8d4013c2c1/gcb16414-fig-0002-m.jpg"
+      },
+      "download_url": "https://onlinelibrary.wiley.com/cms/asset/84c6c598-0580-4d9b-b22d-0a8d4013c2c1/gcb16414-fig-0002-m.jpg",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/b6db5ae6ebda229b-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headed-all-003-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headed-all-003-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 3 Open in figure viewer PowerPoint V NDVI in each month during the green-",
+        "caption": "FIGURE 3 Open in figure viewer PowerPoint V NDVI in each month during the green-up period (GUP) and its interannual dynamics. (a) The multiyear averaged V NDVI . (b) The interannual trends in V NDVI . (c) The relative trends in V NDVI . The relative trend was defined as percentage of trend in V NDVI to the multiyear averaged V NDVI . Data were grouped based on the length of GUP. Median value of each group was shown as the bars. Error bars indicate the standard errors of the spatial variations. [Colour figure can be viewed at wileyonlinelibrary.com ]",
+        "url": "https://onlinelibrary.wiley.com/cms/asset/cf4cf715-cbd5-4955-9b37-8540363d6d13/gcb16414-fig-0003-m.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gcb16414-fig-0003",
+        "preview_url": "https://onlinelibrary.wiley.com/cms/asset/1e48a10d-0be5-49c1-8f40-ea93fd300fe3/gcb16414-fig-0003-m.png",
+        "full_size_url": "https://onlinelibrary.wiley.com/cms/asset/cf4cf715-cbd5-4955-9b37-8540363d6d13/gcb16414-fig-0003-m.jpg"
+      },
+      "download_url": "https://onlinelibrary.wiley.com/cms/asset/cf4cf715-cbd5-4955-9b37-8540363d6d13/gcb16414-fig-0003-m.jpg",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/7521165189465c3f-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headed-all-004-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headed-all-004-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 4 Open in figure viewer PowerPoint Spatial patterns of V NDVI and its tre",
+        "caption": "FIGURE 4 Open in figure viewer PowerPoint Spatial patterns of V NDVI and its trends from March to August. (a–f) Spatial patterns of multiyear average V NDVI . (g–l) Spatial patterns of the trends in V NDVI . (m–r) Spatial patterns of the relative trends in V NDVI . The relative trend was defined as percentage of trend in V NDVI to the multiyear averaged V NDVI . The regions labeled with black dots represent locations with a significant trend in V NDVI ( p < .05). [Colour figure can be viewed at wileyonlinelibrary.com ]",
+        "url": "https://onlinelibrary.wiley.com/cms/asset/751a1251-1db9-4733-bde6-cbded000acdc/gcb16414-fig-0004-m.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gcb16414-fig-0004",
+        "preview_url": "https://onlinelibrary.wiley.com/cms/asset/c9a6432b-f681-4416-b891-51a445de9ce6/gcb16414-fig-0004-m.png",
+        "full_size_url": "https://onlinelibrary.wiley.com/cms/asset/751a1251-1db9-4733-bde6-cbded000acdc/gcb16414-fig-0004-m.jpg"
+      },
+      "download_url": "https://onlinelibrary.wiley.com/cms/asset/751a1251-1db9-4733-bde6-cbded000acdc/gcb16414-fig-0004-m.jpg",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/8fadbeb628724c91-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headed-all-005-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headed-all-005-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 5 Open in figure viewer PowerPoint The effects of climate change on V NDV",
+        "caption": "FIGURE 5 Open in figure viewer PowerPoint The effects of climate change on V NDVI and NDVI. (a–f) The spatial patterns of the partial correlation coefficients between V NDVI and temperature (Tem) after controlling for soil moisture (Sm) and radiation (Ra). (g–l) The spatial patterns of the partial correlation coefficients between V NDVI and Sm after controlling for Tem and Ra. (m–r) The spatial patterns of the partial correlation coefficients between V NDVI and Ra after controlling for Tem and Sm. The regions labeled with black dots represent locations with significant partial correlation coefficients ( p < .05). (s) Partial correlation coefficients between V NDVI and temperature (Tem) after controlling for soil moisture and radiation. Corresponding preseason for the climate factors used in (a–s) were shown in Figure S2 . (t) Partial correlation coefficients between NDVI and temperature (Tem) after controlling for soil moisture and radiation. Mean value of each group was shown as the bars. Panel s shares color bars with (t). Error bars indicate the standard errors. Corresponding preseason for the climate factors used in this panel were shown in Figure S3 . [Colour figure can be viewed at wileyonlinelibrary.com ]",
+        "url": "https://onlinelibrary.wiley.com/cms/asset/e4ec7fae-082e-4e31-afe3-f8153170499e/gcb16414-fig-0005-m.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gcb16414-fig-0005",
+        "preview_url": "https://onlinelibrary.wiley.com/cms/asset/c6586036-e171-42c6-8be5-f643ffd871af/gcb16414-fig-0005-m.png",
+        "full_size_url": "https://onlinelibrary.wiley.com/cms/asset/e4ec7fae-082e-4e31-afe3-f8153170499e/gcb16414-fig-0005-m.jpg"
+      },
+      "download_url": "https://onlinelibrary.wiley.com/cms/asset/e4ec7fae-082e-4e31-afe3-f8153170499e/gcb16414-fig-0005-m.jpg",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/098f10f41e04bc43-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headed-all-006-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headed-all-006-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 6 Open in figure viewer PowerPoint Different types of V NDVI dynamics. (a",
+        "caption": "FIGURE 6 Open in figure viewer PowerPoint Different types of V NDVI dynamics. (a) The spatial distribution of each type. (b) The percentage of pixels for each type. Type “+” indicates V NDVI accelerated (positive interannual trend) in all the months during the green-up period. Type “+ −” indicates V NDVI accelerated in the early green-up period and then decelerated in late green-up period. Type “+ − +” indicates V NDVI accelerated in the early green-up period and then decelerated, but again accelerated in late green-up period. The remaining types were defined similarly (see Section 2 ). (c) Frequency distributions of the trend in annual maximum NDVI (NDVI max ) in different groups. Green bars indicate the group combined from type “+”, “+ −” and “+ − +”, whereas gray bars indicate the group combined from type “−”, “− +” and “− + −”. “***” indicates the significant difference ( p < .001) between two groups based on one-way analysis of variance (ANOVA). The inset shows the comparison between type “+ −” and “- +”. [Colour figure can be viewed at wileyonlinelibrary.com ]",
+        "url": "https://onlinelibrary.wiley.com/cms/asset/b42fa2c3-05e7-423b-8b92-4966eabcf266/gcb16414-fig-0006-m.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gcb16414-fig-0006",
+        "preview_url": "https://onlinelibrary.wiley.com/cms/asset/75662800-2617-4f3d-91cf-9fc122479943/gcb16414-fig-0006-m.png",
+        "full_size_url": "https://onlinelibrary.wiley.com/cms/asset/b42fa2c3-05e7-423b-8b92-4966eabcf266/gcb16414-fig-0006-m.jpg"
+      },
+      "download_url": "https://onlinelibrary.wiley.com/cms/asset/b42fa2c3-05e7-423b-8b92-4966eabcf266/gcb16414-fig-0006-m.jpg",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/51b50d5743a8b8b1-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headed-all-007-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headed-all-007-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "gcb16414-sup-0001-FigureS1.docx",
+        "caption": "",
+        "section": "supplementary",
+        "url": "https://onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1111%2Fgcb.16414&file=gcb16414-sup-0001-FigureS1.docx",
+        "filename_hint": "gcb16414-sup-0001-FigureS1.docx"
+      },
+      "download_url": "https://onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1111%2Fgcb.16414&file=gcb16414-sup-0001-FigureS1.docx",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/7fd7ed83de119c61-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headed-all-008-http_response_entity.bin"
+      ],
+      "file_role": "supplementary",
+      "reason": "HTTP 403; not an expected readable binary",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "historical_capture": {
+        "state": "unavailable",
+        "validation": {
+          "valid": false,
+          "reason": "not an expected readable binary"
+        },
+        "replay_verified": false,
+        "outcome": "blocked",
+        "former_record": "acquisition/assets-2026-09-15/wiley-headed-all-008-http_response_entity.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    }
+  ],
+  "counts": {
+    "discovered_references": 7,
+    "unique_files": 7,
+    "verified_files": 0,
+    "replayed_files": 0,
+    "complete_received_files": 0,
+    "index_only_files": 1
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1111_gcb.16414/acquisition/assets-2026-09-15/collection.json",
+  "outcome": "blocked",
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 7,
+    "unique_files": 7,
+    "verified_files": 0,
+    "replayed_files": 0,
+    "complete_received_files": 0
+  },
+  "historical_outcome_before_supplementary_removal": "blocked",
+  "historical_blocking_evidence": [
+    "acquisition/assets-2026-09-15/7fd7ed83de119c61-http-1.bin",
+    "acquisition/assets-2026-09-15/7c750efc33c4db33-http-1.bin",
+    "acquisition/assets-2026-09-15/b6db5ae6ebda229b-http-1.bin",
+    "acquisition/assets-2026-09-15/7521165189465c3f-http-1.bin",
+    "acquisition/assets-2026-09-15/8fadbeb628724c91-http-1.bin",
+    "acquisition/assets-2026-09-15/098f10f41e04bc43-http-1.bin",
+    "acquisition/assets-2026-09-15/51b50d5743a8b8b1-http-1.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-001-browser_dom.html",
+    "acquisition/assets-2026-09-15/wiley-headed-all-001-browser_dom.html",
+    "acquisition/assets-2026-09-15/wiley-headed-all-002-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headed-all-003-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headed-all-004-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headed-all-005-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headed-all-006-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headed-all-007-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headed-all-008-http_response_entity.bin"
+  ]
+}

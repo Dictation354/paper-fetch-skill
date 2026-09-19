@@ -1,9 +1,7 @@
 from __future__ import annotations
-
 import json
 from pathlib import Path
 from unittest import mock
-
 from paper_fetch.capability_scope import (
     BrowserStateCapabilityUse,
     CapabilityScopeBuilder,
@@ -13,7 +11,7 @@ from paper_fetch.mcp.fetch_cache import FetchCache, PUBLIC_CREDENTIAL_SCOPE
 from paper_fetch.mcp.cache_payloads import list_cached_payload
 from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.runtime import RuntimeContext
-from tests.unit._mcp_support import sample_envelope
+from tests.support._mcp_support import sample_envelope
 
 
 DOI = "10.1000/variant-selection"

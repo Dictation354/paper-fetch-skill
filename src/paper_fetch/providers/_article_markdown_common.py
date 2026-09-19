@@ -65,8 +65,8 @@ __all__ = [
 
 
 def _normalize_xml_character_data(value: str | None) -> str:
-    """Collapse formatting whitespace from XML mixed-content text fragments."""
-    return re.sub(r"[ \t\r\n]+", " ", value or "")
+    """Normalize XML text without letting literal stars become Markdown emphasis."""
+    return re.sub(r"[ \t\r\n]+", " ", value or "").replace("*", r"\*")
 
 
 def _render_xml_tail(child: ET.Element, next_child: ET.Element | None) -> str:

@@ -1,0 +1,85 @@
+{
+  "doi": "10.1146/annurev-control-090419-075625",
+  "title": "Learning-Based Model Predictive Control: Toward Safe Learning in Control",
+  "source_url": "https://www.annualreviews.org/content/journals/10.1146/annurev-control-090419-075625",
+  "retrieved_on": "2026-09-14",
+  "acquisition": {
+    "provider": "annualreviews",
+    "route": "browser_html",
+    "representation": "html",
+    "transport": "browser",
+    "fallback_used": false
+  },
+  "acceptance": {
+    "overall": "complete",
+    "identity": "resolved",
+    "fetch": "ok",
+    "content": "fulltext",
+    "asset": "not_requested",
+    "output": "complete",
+    "provenance": "complete",
+    "acquisition": {
+      "provider": "annualreviews",
+      "route": "browser_html",
+      "representation": "html",
+      "transport": "browser",
+      "fallback_used": false
+    },
+    "has_fulltext": true,
+    "has_abstract": true,
+    "token_estimate": 17468,
+    "asset_summary": {
+      "requested": false,
+      "profile": "none",
+      "audited": true,
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "body_discovered": 0,
+      "body_attempted": 0,
+      "body_local": 0,
+      "body_full_size": 0,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": false,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": false,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "not_requested",
+      "remote_links_preserved": false
+    }
+  },
+  "raw_capture": "AnnualreviewsClient.fetch_raw_fulltext, html route; captured separately because the MCP saved envelope did not retain canonical HTML.",
+  "assets": {
+    "original.html": {
+      "source_url": "https://www.annualreviews.org/content/journals/10.1146/annurev-control-090419-075625",
+      "sha256": "4ea8d65702a56ef8ffec0373e90e5138aac4da28c554406a0d9ab746276b2132"
+    },
+    "eq-075625-001.gif": {
+      "source_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-001.gif",
+      "sha256": "8cf2a126e0075646796b087e8401c436706e39022bd5fe9d2be4c923333594af"
+    },
+    "eq-075625-007.gif": {
+      "source_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-007.gif",
+      "sha256": "9eb74d1b9487b1ac36a6f9afd7bc7fcc1db48a164bf60dfe2ba6e4a78781c5c6"
+    }
+  }
+}

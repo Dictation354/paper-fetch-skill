@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "doi": "10.1088/1748-9326/aa9f73",
+      "provider": "iop",
+      "requested_url": "https://api.crossref.org/works/10.1088%2F1748-9326%2Faa9f73",
+      "final_url": "https://api.crossref.org/works/10.1088%2F1748-9326%2Faa9f73",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:29:46 GMT",
+        "content-type": "application/json",
+        "content-length": "3397"
+      },
+      "captured_at_utc": "2026-09-18T02:29:45.784128+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 13012,
+      "sha256": "51c6f596579bbf8e9b1abf0e1ea017407950064efda727bf3ffec74847ad2cb0",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1088/1748-9326/aa9f73",
+      "provider": "iop",
+      "requested_url": "https://iopscience.iop.org/article/10.1088/1748-9326/aa9f73",
+      "final_url": "https://iopscience.iop.org/article/10.1088/1748-9326/aa9f73",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Fri, 18 Sep 2026 02:29:49 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:29:53.758411+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 249815,
+      "sha256": "09f7d5eebc158b9cb2e99749ca01dfa0bca4c7b528dab98a28d26463add11e16",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

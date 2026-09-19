@@ -1,0 +1,16 @@
+{
+  "query": "10.1109/TCOMM.2024.3395332",
+  "query_kind": "doi",
+  "doi": "10.1109/tcomm.2024.3395332",
+  "landing_url": null,
+  "provider_hint": "ieee",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 10,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "ieee"
+}

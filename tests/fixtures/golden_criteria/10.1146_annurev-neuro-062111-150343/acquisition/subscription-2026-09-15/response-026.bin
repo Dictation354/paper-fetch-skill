@@ -1,0 +1,164 @@
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" class="no-js pb-page" id="mainTemplate"><!--<![endif]--><head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<!-- BEGIN SHAREAHOLIC CODE -->
+<link rel="preload" href="https://cdn.shareaholic.net/assets/pub/shareaholic.js" as="script">
+<meta name="shareaholic:site_id" content="5a02bf1fca9627aa4ef195830cf8e332">
+<script data-cfasync="false" async="" src="https://cdn.shareaholic.net/assets/pub/shareaholic.js"></script>
+<!-- END SHAREAHOLIC CODE -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Active Properties of Neocortical Pyramidal Neuron Dendrites | Annual Reviews</title>
+<script src="https://scholar.google.com/scholar_js/casa.js" async=""></script>
+<link rel="schema.CRAWLER" href="http://labs.ingenta.com/2006/06/16/crawler">
+<meta name="dc.title" content="Active Properties of Neocortical Pyramidal Neuron Dendrites">
+<meta name="dc.publisher" content="Annual Reviews">
+<meta name="dc.type" content="Text">
+<meta name="author" content="Guy Major|Matthew E. Larkum|Jackie Schiller">
+<meta name="dc.creator" content="Guy Major">
+<meta name="dc.creator" content="Matthew E. Larkum">
+<meta name="dc.creator" content="Jackie Schiller">
+<meta name="dc.identifier" content="doi:10.1146/annurev-neuro-062111-150343">
+<meta name="dc.date" content="2013/07/08">
+<meta property="og:title" content="Active Properties of Neocortical Pyramidal Neuron Dendrites">
+<meta property="og:description" content="Dendrites are the main recipients of synaptic inputs and are important sites that determine neurons&amp;apos; input-output functions. This review focuses on thin neocortical dendrites, which receive the vast majority of synaptic inputs in cortex but also have specialized electrogenic properties. We present a simplified working-model biophysical scheme of pyramidal neurons that attempts to capture the essence of their dendritic function, including the ability to behave under plausible conditions as dynamic computational subunits. We emphasize the electrogenic capabilities of NMDA receptors (NMDARs) because these transmitter-gated channels seem to provide the major nonlinear depolarizing drive in thin dendrites, even allowing full-blown NMDA spikes. We show how apparent discrepancies in experimental findings can be reconciled and discuss the current status of dendritic spikes in vivo; a dominant NMDAR contribution would indicate that the input-output relations of thin dendrites are dynamically set by network activity and cannot be fully predicted by purely reductionist approaches.">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://www.annualreviews.org/upload/share/neuro_share.png">
+<meta property="og:image:secure_url" content="https://www.annualreviews.org/upload/share/neuro_share.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="Annual Review of Neuroscience">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343">
+<meta property="og:site_name" content="Annual Reviews">
+<meta property="og:updated_time" content="2024-01-03T18:02:43Z">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@AnnualReviews">
+<meta name="twitter:creator" content="Annual Reviews">
+<meta name="twitter:title" content="Active Properties of Neocortical Pyramidal Neuron Dendrites">
+<meta name="twitter:description" content="Dendrites are the main recipients of synaptic inputs and are important sites that determine neurons&amp;apos; input-output functions. This review focuses on thin neocortical dendrites, which receive the vast majority of synaptic inputs in cortex but also have specialized electrogenic properties. We present a simplified working-model biophysical scheme of pyramidal neurons that attempts to capture the essence of their dendritic function, including the ability to behave under plausible conditions as dynamic computational subunits. We emphasize the electrogenic capabilities of NMDA receptors (NMDARs) because these transmitter-gated channels seem to provide the major nonlinear depolarizing drive in thin dendrites, even allowing full-blown NMDA spikes. We show how apparent discrepancies in experimental findings can be reconciled and discuss the current status of dendritic spikes in vivo; a dominant NMDAR contribution would indicate that the input-output relations of thin dendrites are dynamically set by network activity and cannot be fully predicted by purely reductionist approaches.">
+<meta name="twitter:image" content="https://www.annualreviews.org/upload/share/neuro_share.png">
+<meta name="twitter:image:alt" content="Annual Review of Neuroscience marketing image">
+<meta name="citation_journal_title" content="Annual Review of Neuroscience">
+<meta name="citation_issn" content="0147-006X">
+<meta name="citation_issn" content="1545-4126">
+<meta name="citation_doi" content="10.1146/annurev-neuro-062111-150343">
+<meta name="citation_publication_date" content="2013/07/08">
+<meta name="citation_date" content="2013/07/08">
+<meta name="citation_year" content="2013">
+<meta name="citation_online_date" content="2013/07/08">
+<meta name="citation_title" content="Active Properties of Neocortical Pyramidal Neuron Dendrites">
+<meta name="citation_author" content="Guy Major">
+<meta name="citation_author_institution" content="1School of Biosciences, Cardiff University, Cardiff, CF10 3AX, United Kingdom; email: majorg@cardiff.ac.uk">
+<meta name="citation_author" content="Matthew E. Larkum">
+<meta name="citation_author_institution" content="2Charité University, Neuroscience Research Center (NWFZ), D-10117 Berlin, Germany; email: matthew.larkum@gmail.com">
+<meta name="citation_author" content="Jackie Schiller">
+<meta name="citation_author_institution" content="3Department of Physiology, Technion Medical School, Haifa 31096, Israel; email: jackie@techunix.technion.ac.il">
+<meta name="citation_volume" content="36">
+<meta name="citation_issue" content="Volume 36, 2013">
+<meta name="citation_firstpage" content="1">
+<meta name="citation_lastpage" content="24">
+<meta name="citation_publisher" content="Annual Reviews">
+<meta name="citation_abstract" content="Dendrites are the main recipients of synaptic inputs and are important sites that determine neurons&amp;apos; input-output functions. This review focuses on thin neocortical dendrites, which receive the vast majority of synaptic inputs in cortex but also have specialized electrogenic properties. We present a simplified working-model biophysical scheme of pyramidal neurons that attempts to capture the essence of their dendritic function, including the ability to behave under plausible conditions as dynamic computational subunits. We emphasize the electrogenic capabilities of NMDA receptors (NMDARs) because these transmitter-gated channels seem to provide the major nonlinear depolarizing drive in thin dendrites, even allowing full-blown NMDA spikes. We show how apparent discrepancies in experimental findings can be reconciled and discuss the current status of dendritic spikes in vivo; a dominant NMDAR contribution would indicate that the input-output relations of thin dendrites are dynamically set by network activity and cannot be fully predicted by purely reductionist approaches.">
+<meta name="citation_abstract_html_url" content="https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343">
+<meta name="description" property="og:description" content="Dendrites are the main recipients of synaptic inputs and are important sites that determine neurons&amp;apos; input-output functions. This review focuses on thin neocortical dendrites, which receive the vast majority of synaptic inputs in cortex but also have specialized electrogenic properties. We present a simplified working-model biophysical scheme of pyramidal neurons that attempts to capture the essence of their dendritic function, including the ability to behave under plausible conditions as dynamic computational subunits. We emphasize the electrogenic capabilities of NMDA receptors (NMDARs) because these transmitter-gated channels seem to provide the major nonlinear depolarizing drive in thin dendrites, even allowing full-blown NMDA spikes. We show how apparent discrepancies in experimental findings can be reconciled and discuss the current status of dendritic spikes in vivo; a dominant NMDAR contribution would indicate that the input-output relations of thin dendrites are dynamically set by network activity and cannot be fully predicted by purely reductionist approaches.">
+<meta name="robots" content="NOODP,noarchive">
+<meta name="stats-meta" content="stats" data-logstatisticsurl="/logstatistics.action" data-itemid="/content/journals/10.1146/annurev-neuro-062111-150343" data-baseuri="http://instance.metastore.ingenta.com">
+<link rel="shortcut icon" href="/upload/favicon.ico">
+<link href="/css/v/12.4.0/hybrid/google-fonts.css" rel="stylesheet">
+<link rel="stylesheet" media="screen and (max-width: 844px)" href="/common/v/12.4.0/css/component.css" type="text/css">
+<link rel="stylesheet" href="/css/v/12.4.0/hybrid/site.css" type="text/css">
+<link rel="stylesheet" href="/css/v/12.4.0/hybrid/main-masthead.css" type="text/css">
+<link rel="stylesheet" href="/css/v/12.4.0/hybrid/annualreviews.css" type="text/css">
+<link rel="stylesheet" href="/css/v/12.4.0/contentpreview/preview.css" type="text/css" media="screen, print">
+<link rel="stylesheet" href="/css/v/12.4.0/hybrid/fulltext-html-tab.css" type="text/css" media="screen, print">
+<link rel="stylesheet" href="/common/v/12.4.0/css/jquery.fancybox.css" type="text/css" media="screen, print">
+<link rel="stylesheet" href="/css/v/12.4.0/hybrid/annualreviews-article.css" type="text/css" media="screen, print">
+<link rel="stylesheet" href="/common/v/12.4.0/css/jquery.fancybox.css" type="text/css" media="screen">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/froala-editor/2.8.1/css/froala_style.min.css" rel="stylesheet" type="text/css">
+<style type="text/css">
+#messageBox {
+position: fixed;
+bottom: 20px;
+right: 20px;
+left: auto;
+width: 450px;
+height: 150px;
+background-color: #fff;
+border: 1px solid #ccc;
+box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+z-index: 1000;
+font-family: Arial, sans-serif;
+display: none;
+overflow: hidden;
+padding:0;
+}
+@media (max-width: 459px) {
+#messageBox {
+width: auto;
+right:5px;
+bottom:5px;
+left:5px;
+}
+}
+#closeBtn {
+position: absolute;
+top: 8px;
+right: 12px;
+font-size: 16px;
+font-weight: bold;
+color: #666;
+cursor: pointer;
+z-index: 3;
+border: none;
+background: none;
+}
+.popup-content {
+display: flex;
+height: 100%;
+}
+.popup-image {
+flex: 1;
+background-color: #3b777c; /* Teal background */
+display: flex;
+align-items: center;
+justify-content: center;
+}
+.popup-image img {
+max-height: 80%;
+max-width: 80%;
+padding: 10px 10px 10px 10px;
+margin: 0px !important
+}
+.popup-text {
+flex: 3;
+padding: 20px 15px;
+font-size: 14px;
+color: #333;
+display: flex;
+flex-direction: column;
+justify-content: center;
+}
+.popup-text p {
+margin: 0;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.popup-text a {
+color: #0077cc;
+text-decoration: none;
+font-weight: bold;
+margin-top: 5px;
+}
+.popup-text a span {
+margin-left: 6px;
+}
+.is-blurb-enabled #messageBox .blurb-editor { display: block;
+position: absolute;
+bottom: 0;
+right: 0;
+}
+#messageBox .fr-view { 
+height: 100%; 
+}
+</style>
+<script src="/common/v/12.4.0/js/vendor/modernizer.custom.min.js"></script></head></html>

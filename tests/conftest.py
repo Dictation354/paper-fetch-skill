@@ -10,7 +10,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import shutil
-import subprocess
 import sys
 import tempfile
 from typing import Any
@@ -25,6 +24,9 @@ from tests._environment import (
 )
 
 
+pytest_plugins = ["tests.support.test_evidence"]
+
+
 _REAL_USER_DATA_DIR = Path(user_data_path("paper-fetch", appauthor=False))
 _ISOLATED_ENV_VARS = (
     "XDG_DATA_HOME",
@@ -35,17 +37,6 @@ _ISOLATED_ENV_VARS = (
     "PAPER_FETCH_BROWSER_USER_DATA_DIR",
     "PAPER_FETCH_FORMULA_TOOLS_DIR",
     "PAPER_FETCH_IMAGE_TOOLS_DIR",
-)
-_SAFE_SUBPROCESS_NAMES = frozenset(
-    {
-        Path(sys.executable).name,
-        "bash",
-        "git",
-        "python",
-        "python3",
-        "sh",
-        "zsh",
-    }
 )
 
 
@@ -127,6 +118,9 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "allow_subprocess: test intentionally launches non-allowlisted executables",
     )
+    from tests.support import layer_policy
+
+    layer_policy.install()
     worker = _worker_id(config)
     _preserve_installed_camoufox_executable()
     _preserve_explicit_formula_tools_dir()
@@ -152,63 +146,67 @@ def pytest_configure(config: pytest.Config) -> None:
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     for item in items:
         path = Path(str(item.path))
+        if "unit" in path.parts:
+            for marker in ("browser", "live", "allow_subprocess"):
+                if item.get_closest_marker(marker):
+                    raise pytest.UsageError(
+                        f"unit boundary: {item.nodeid}: forbidden marker {marker}"
+                    )
         if "live" in path.parts:
             item.add_marker(pytest.mark.live)
         if item.get_closest_marker("live") or item.get_closest_marker("browser"):
             item.add_marker(pytest.mark.enable_socket)
 
 
-@pytest.fixture(autouse=True)
-def _paper_fetch_test_safety(
-    request: pytest.FixtureRequest,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Block unsafe process launches for ordinary unit tests."""
+@pytest.hookimpl(wrapper=True)
+def pytest_make_collect_report(collector):
+    from tests.support import layer_policy
 
-    if request.node.get_closest_marker("live") or request.node.get_closest_marker(
-        "browser"
-    ):
-        return
+    previous = layer_policy.UNIT_NODE
+    if "unit" in Path(str(collector.path)).parts:
+        layer_policy.UNIT_NODE = str(collector.nodeid)
+    try:
+        return (yield)
+    finally:
+        layer_policy.UNIT_NODE = previous
+
+
+@pytest.fixture(autouse=True)
+def _paper_fetch_test_safety(request, monkeypatch):
+    """Unit tests cannot opt out of process, replay, or conversion boundaries."""
+    from tests.support import layer_policy
 
     if "unit" not in Path(str(request.node.path)).parts:
+        yield
         return
+    layer_policy.UNIT_NODE = request.node.nodeid
+    from paper_fetch.providers import _playwright_browser, _pdf_common
 
-    if request.node.get_closest_marker("allow_subprocess"):
-        return
+    def blocked(*args: Any, **kwargs: Any) -> None:
+        layer_policy.reject("real browser runtime")
 
-    from paper_fetch.providers import _playwright_browser
+    monkeypatch.setattr(_playwright_browser, "open_browser_context", blocked)
+    original = _pdf_common._call_pdf_renderer_with_tessdata_retry
 
-    def blocked_browser_context(*args: Any, **kwargs: Any) -> None:
-        del args, kwargs
-        raise AssertionError(
-            f"{request.node.nodeid} attempted a real browser runtime. "
-            "Mock open_browser_context or mark the test browser."
-        )
+    def guarded_renderer(renderer, *args, **kwargs):
+        if str(getattr(renderer, "__module__", "")).startswith("pymupdf"):
+            layer_policy.reject("real PDF conversion")
+        return original(renderer, *args, **kwargs)
 
     monkeypatch.setattr(
-        _playwright_browser,
-        "open_browser_context",
-        blocked_browser_context,
+        _pdf_common, "_call_pdf_renderer_with_tessdata_retry", guarded_renderer
     )
+    for name, module in tuple(sys.modules.items()):
+        if name.startswith("pymupdf4llm") and hasattr(module, "to_markdown"):
 
-    real_popen = subprocess.Popen
+            def blocked_converter(*args, **kwargs):
+                layer_policy.reject("real PDF conversion")
 
-    def guarded_popen(*args: Any, **kwargs: Any) -> subprocess.Popen[Any]:
-        command = kwargs.get("args", args[0] if args else None)
-        executable: object | None
-        if isinstance(command, (list, tuple)) and command:
-            executable = command[0]
-        else:
-            executable = command
-        name = Path(os.fspath(executable)).name if executable is not None else ""
-        if name not in _SAFE_SUBPROCESS_NAMES:
-            raise AssertionError(
-                f"{request.node.nodeid} attempted non-allowlisted subprocess: {name!r}. "
-                "Mock the process boundary or mark the test allow_subprocess."
-            )
-        return real_popen(*args, **kwargs)
-
-    monkeypatch.setattr(subprocess, "Popen", guarded_popen)
+            monkeypatch.setattr(module, "to_markdown", blocked_converter)
+    try:
+        yield
+    finally:
+        layer_policy.UNIT_NODE = None
 
 
 def pytest_sessionfinish(

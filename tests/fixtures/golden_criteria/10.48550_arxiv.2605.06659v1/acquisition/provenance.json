@@ -1,0 +1,150 @@
+{
+  "records": [
+    {
+      "doi": "10.48550/arxiv.2605.06659v1",
+      "provider": "arxiv",
+      "body_file": "original.html",
+      "capture_kind": "local_reuse",
+      "source_url": "https://arxiv.org/html/2605.06659v1",
+      "requested_url": null,
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": null,
+      "audited_at_utc": "2026-09-16T05:16:23.153893+00:00",
+      "size": 61561,
+      "sha256": "a6af6fc64dc193095ea901c25ef9a9e67f061376b236cb028fd0f8fcfe373fab",
+      "evidence": "Existing canonical publisher HTML reused unchanged. Original HTTP envelope and capture timestamp were not retained; current audit does not infer them."
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06659v1",
+      "provider": "arxiv",
+      "requested_url": "https://api.crossref.org/works/10.48550%2Farxiv.2605.06659v1",
+      "final_url": "https://api.crossref.org/works/10.48550%2Farxiv.2605.06659v1",
+      "status_code": 404,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:55 GMT",
+        "content-type": "text/plain"
+      },
+      "captured_at_utc": "2026-09-18T02:20:55.156026+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 19,
+      "sha256": "ae8462e3af85ca7577aaa97ff22a194f9dfd7fada58cf4944b53d2fdfa7b1f92",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06659v1",
+      "provider": "arxiv",
+      "requested_url": "https://arxiv.org/html/2605.06659v1",
+      "final_url": "https://arxiv.org/html/2605.06659v1",
+      "status_code": 200,
+      "response_headers": {
+        "content-length": "65118",
+        "etag": "\"CIffk/T0uZYDEAE=\"",
+        "last-modified": "Mon, 24 Aug 2026 18:39:30 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Fri, 18 Sep 2026 02:20:56 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:20:56.498422+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "size": 65118,
+      "sha256": "cc33c87395396bf60cb258d5cea482f21a89dcfcf5bd2b4598fe5a4a5ee455aa",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06659v1",
+      "provider": "arxiv",
+      "requested_url": "https://export.arxiv.org/api/query",
+      "final_url": "https://export.arxiv.org/api/query",
+      "status_code": 200,
+      "response_headers": {
+        "content-length": "2547",
+        "content-type": "application/atom+xml; charset=utf-8",
+        "date": "Fri, 18 Sep 2026 02:20:58 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:20:57.573468+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.xml",
+      "size": 2547,
+      "sha256": "89409deac4b5b955f51d7dbcec15ad0fa0468d8eedb7f78908a9e6dc9bce1da7",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06659v1",
+      "provider": "arxiv",
+      "requested_url": "https://arxiv.org/html/2605.06659v1/fig_combined_binary.svg",
+      "final_url": "https://arxiv.org/html/2605.06659v1/fig_combined_binary.svg",
+      "status_code": 200,
+      "response_headers": {
+        "content-length": "263739",
+        "etag": "\"CNTtl9jkmZYDEAE=\"",
+        "last-modified": "Wed, 12 Aug 2026 00:01:45 GMT",
+        "content-type": "image/svg+xml",
+        "date": "Fri, 18 Sep 2026 08:38:41 GMT"
+      },
+      "captured_at_utc": "2026-09-18T08:38:37.643777+00:00",
+      "size": 263739,
+      "sha256": "4fcae767001be4851e0ff19b307784be5b65abf317bba6f72d69529598a4748f",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/6f96cafc00734b8080.svg"
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06659v1",
+      "provider": "arxiv",
+      "source_url": "https://arxiv.org/html/2605.06659v1/fig_combined_binary.svg",
+      "requested_url": "https://arxiv.org/html/2605.06659v1/fig_combined_binary.svg",
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "official_cli_downloaded_asset",
+      "captured_at_utc": "2026-09-19T02:13:03.161612Z",
+      "capture_time_basis": "CLI terminal timestamp; exact network response timestamp not exposed",
+      "body_file": "acquisition/official-reacquisition-2026-09-19/assets/4fcae767001b-fig_combined_binary.svg",
+      "sha256": "4fcae767001be4851e0ff19b307784be5b65abf317bba6f72d69529598a4748f",
+      "size": 263739,
+      "content_type": "image/svg+xml",
+      "acquisition": {
+        "provider": "arxiv",
+        "route": "official_html",
+        "representation": "html",
+        "transport": "http",
+        "fallback_used": false
+      },
+      "official_cli_record": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06659v1/acquisition/official-reacquisition-2026-09-19/manifest.json",
+      "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06659v1",
+      "provider": "arxiv",
+      "source_url": "https://arxiv.org/html/2605.06659v1",
+      "requested_url": null,
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "official_cli_provider_html",
+      "captured_at_utc": "2026-09-19T02:13:03.161612Z",
+      "capture_time_basis": "CLI terminal timestamp; exact network response timestamp not exposed",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "sha256": "cc33c87395396bf60cb258d5cea482f21a89dcfcf5bd2b4598fe5a4a5ee455aa",
+      "size": 65118,
+      "content_type": null,
+      "acquisition": {
+        "provider": "arxiv",
+        "route": "official_html",
+        "representation": "html",
+        "transport": "http",
+        "fallback_used": false
+      },
+      "official_cli_record": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06659v1/acquisition/official-reacquisition-2026-09-19/manifest.json",
+      "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes.",
+      "original_body_file": "acquisition/official-reacquisition-2026-09-19/raw_sources/cc33c8739539-unknown_unknown_10.48550_arxiv.2605.06659v1_original.html"
+    }
+  ]
+}

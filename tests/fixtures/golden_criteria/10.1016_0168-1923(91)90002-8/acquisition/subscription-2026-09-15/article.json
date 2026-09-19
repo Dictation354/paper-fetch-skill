@@ -1,0 +1,481 @@
+{
+  "doi": "10.1016/0168-1923(91)90002-8",
+  "source": "crossref_meta",
+  "metadata": {
+    "title": "Physiological and environmental regulation of stomatal conductance, photosynthesis and transpiration: a model that includes a laminar boundary layer",
+    "authors": [
+      "G.James Collatz",
+      "J.Timothy Ball",
+      "Cyril Grivet",
+      "Joseph A Berry"
+    ],
+    "abstract": "This paper presents a system of models for the simulation of gas and energy exchange of a leaf of a C3 plant in free air. The physiological processes are simulated by sub-models that: (a) give net photosynthesis (An) as a function of environmental and leaf parameters and stomatal conductance (gs); (b) give g, as a function of the concentration of CO2 and H2O in air at the leaf surface and the current rate of photosynthesis of the leaf. An energy balance and mass transport sub-model is used to couple the physiological processes through a variable boundary layer to the ambient environment. The models are based on theoretical and empirical analysis of gs, and An measured at the leaf level, and tests with intact attached leaves of soybeans show very good agreement between predicted and measured responses of gs and An over a wide range of leaf temperatures (20-35°C), CO2 concentrations (10-90 Pa), air to leaf water vapor deficits (0.5-3.7 kPa) and light intensities (100-2000 μmol m-2s-1). The combined models were used to simulate the responses of latent heat flux (λE) and gs for a soybean canopy for the course of an idealized summer day, using the 'big-leaf' approximation. Appropriate data are not yet available to provide a rigorous test of these simulations, but the response patterns are similar to field observations. These simulations show a pronounced midday depression of λE and gs at low or high values of boundary-layer conductance. Deterioration of plant water relations during midday has often been invoked to explain this common natural phenomenon, but the present models do not consider this possibility. Analysis of the model indicates that the simulated midday depression is, in part, the result of positive feedback mediated by the boundary layer. For example, a change in gs affects An and λE. As a consequence, the temperature, humidity and CO2 concentration of the air in the proximity of the stomata (e.g. the air at the leaf surface) change and these, in turn, affect gs. The simulations illustrate the possible significance of the boundary layer in mediating feedback loops which affect the regulation of stomatal conductance and λE. The simulations also examine the significance of changing the response properties of the photosynthetic component of the model by changing leaf protein content or the CO2 concentration of the atmosphere. © 1991.",
+    "journal": "Agricultural and Forest Meteorology",
+    "article_type": null,
+    "published": "1991-01-01",
+    "keywords": [],
+    "license_urls": [
+      "https://www.elsevier.com/tdm/userlicense/1.0/"
+    ],
+    "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/0168192391900028"
+  },
+  "sections": [],
+  "references": [
+    {
+      "raw": "A model to simulate response of plant stomata to environmental conditions",
+      "doi": "10.1016/0168-1923(85)90051-6",
+      "title": "A model to simulate response of plant stomata to environmental conditions",
+      "year": "1985"
+    },
+    {
+      "raw": "Calculations related to gas exchange",
+      "doi": null,
+      "title": "Calculations related to gas exchange",
+      "year": "1987"
+    },
+    {
+      "raw": "An analysis of stomatal conductance",
+      "doi": null,
+      "title": "An analysis of stomatal conductance",
+      "year": "1988"
+    },
+    {
+      "raw": "The ci/cs ratio: A basis for predicting stomatal control of photosynthesis",
+      "doi": null,
+      "title": "The ci/cs ratio: A basis for predicting stomatal control of photosynthesis",
+      "year": "1982"
+    },
+    {
+      "raw": "An analysis and concise description of stomatal responses to multiple environmental factors",
+      "doi": null,
+      "title": "An analysis and concise description of stomatal responses to multiple environmental factors",
+      "year": "1991"
+    },
+    {
+      "raw": "Responses of macrophytes to temperature",
+      "doi": null,
+      "title": "Responses of macrophytes to temperature",
+      "year": "1981"
+    },
+    {
+      "raw": "Photosynthesis and water relations of the mediterranean evergreen sclerophyll Arbutus unedo L. through out the year at a site in Portugal. I. Diurnal courses of CO2 gas exchange and transpiration under natural conditions",
+      "doi": null,
+      "title": "Photosynthesis and water relations of the mediterranean evergreen sclerophyll Arbutus unedo L. through out the year at a site in Portugal. I. Diurnal courses of CO2 gas exchange and transpiration under natural conditions",
+      "year": "1986"
+    },
+    {
+      "raw": "Response and Adaptation of Photosynthesis to High Temperatures",
+      "doi": null,
+      "title": "Response and Adaptation of Photosynthesis to High Temperatures",
+      "year": "1980"
+    },
+    {
+      "raw": "Effects of temperature on the CO2/O2 specificity of ribulose-1,5 bisphosphate carboxylase/oxygenase and the rate of respiration in the light",
+      "doi": "10.1007/bf00392238",
+      "title": "Effects of temperature on the CO2/O2 specificity of ribulose-1,5 bisphosphate carboxylase/oxygenase and the rate of respiration in the light",
+      "year": "1985"
+    },
+    {
+      "raw": "Energy balance and transpiration from a tussock grassland in New Zealand",
+      "doi": "10.1007/bf00118450",
+      "title": "Energy balance and transpiration from a tussock grassland in New Zealand",
+      "year": "1989"
+    },
+    {
+      "raw": "Implications of stomatal response to saturation deficit for the heat balance of vegetation",
+      "doi": null,
+      "title": "Implications of stomatal response to saturation deficit for the heat balance of vegetation",
+      "year": "1986"
+    },
+    {
+      "raw": "The relationship between the rubisco reaction mechanism and models of photosynthesis",
+      "doi": "10.1111/j.1365-3040.1990.tb01306.x",
+      "title": "The relationship between the rubisco reaction mechanism and models of photosynthesis",
+      "year": "1990"
+    },
+    {
+      "raw": "Stomatal behavior and environment",
+      "doi": "10.1016/s0065-2296(08)60370-5",
+      "title": "Stomatal behavior and environment",
+      "year": "1977"
+    },
+    {
+      "raw": "Stomatal function in relation to leaf metabolism and environment",
+      "doi": null,
+      "title": "Stomatal function in relation to leaf metabolism and environment",
+      "year": "1977"
+    },
+    {
+      "raw": "The allocation of protein nitrogen in the photosynthetic apparatus: costs, consequences and control",
+      "doi": null,
+      "title": "The allocation of protein nitrogen in the photosynthetic apparatus: costs, consequences and control",
+      "year": "1989"
+    },
+    {
+      "raw": "Feedforward response of stomata to humidity",
+      "doi": "10.1071/pp9780787",
+      "title": "Feedforward response of stomata to humidity",
+      "year": "1978"
+    },
+    {
+      "raw": "Stomatal conductance and photosynthesis",
+      "doi": "10.1146/annurev.pp.33.060182.001533",
+      "title": "Stomatal conductance and photosynthesis",
+      "year": "1982"
+    },
+    {
+      "raw": "A biochemical model of photosynthetic CO2 assimilation in leaves of C3 plants",
+      "doi": "10.1007/bf00386231",
+      "title": "A biochemical model of photosynthetic CO2 assimilation in leaves of C3 plants",
+      "year": "1980"
+    },
+    {
+      "raw": "Short term estimation of sorghum evapotranspiration from canopy temperature",
+      "doi": "10.1016/0168-1923(89)90015-4",
+      "title": "Short term estimation of sorghum evapotranspiration from canopy temperature",
+      "year": "1989"
+    },
+    {
+      "raw": "Leaf movement, stress avoidance and photosynthesis in Vitus californicus",
+      "doi": "10.1007/bf00378664",
+      "title": "Leaf movement, stress avoidance and photosynthesis in Vitus californicus",
+      "year": "1989"
+    },
+    {
+      "raw": "Micrometeorological measurements in Les Landes forest during HAPEX-MOBILHY",
+      "doi": "10.1016/0168-1923(89)90117-2",
+      "title": "Micrometeorological measurements in Les Landes forest during HAPEX-MOBILHY",
+      "year": "1989"
+    },
+    {
+      "raw": "Plant-Atmosphere Relationships",
+      "doi": null,
+      "title": "Plant-Atmosphere Relationships",
+      "year": "1983"
+    },
+    {
+      "raw": "An apparent discrepancy between porometry and infared thermometry relative to the dependence of plant stomatal conductance to air vapor pressure deficit",
+      "doi": "10.1016/0168-1923(87)90058-x",
+      "title": "An apparent discrepancy between porometry and infared thermometry relative to the dependence of plant stomatal conductance to air vapor pressure deficit",
+      "year": "1987"
+    },
+    {
+      "raw": "Normalizing the stress-degree-day parameter for environmental variability",
+      "doi": "10.1016/0002-1571(81)90032-7",
+      "title": "Normalizing the stress-degree-day parameter for environmental variability",
+      "year": "1981"
+    },
+    {
+      "raw": "The interpretations of the variation in leaf water potential and stomatal conductance found in canopies in the field",
+      "doi": "10.1098/rstb.1976.0035",
+      "title": "The interpretations of the variation in leaf water potential and stomatal conductance found in canopies in the field",
+      "year": "1976"
+    },
+    {
+      "raw": "Stomatal control of transpiration: scaling up from leaf to region",
+      "doi": "10.1016/s0065-2504(08)60119-1",
+      "title": "Stomatal control of transpiration: scaling up from leaf to region",
+      "year": "1986"
+    },
+    {
+      "raw": "Empirical models of the conductance of leaves in apple orchards",
+      "doi": "10.1111/j.1365-3040.1989.tb01944.x",
+      "title": "Empirical models of the conductance of leaves in apple orchards",
+      "year": "1989"
+    },
+    {
+      "raw": "A sensitive assay procedure for simultaneous determination of ribulose-1,5-bisphosphate carboxylase and oxygenase activities",
+      "doi": "10.1104/pp.67.2.237",
+      "title": "A sensitive assay procedure for simultaneous determination of ribulose-1,5-bisphosphate carboxylase and oxygenase activities",
+      "year": "1981"
+    },
+    {
+      "raw": "Temperature dependence of whole-leaf photosynthesis in Eucalyptus pauciflora",
+      "doi": "10.1071/pp9840519",
+      "title": "Temperature dependence of whole-leaf photosynthesis in Eucalyptus pauciflora",
+      "year": "1984"
+    },
+    {
+      "raw": "Numerical analysis of pine forest evaporation and surface resistance",
+      "doi": "10.1016/0168-1923(86)90050-x",
+      "title": "Numerical analysis of pine forest evaporation and surface resistance",
+      "year": "1986"
+    },
+    {
+      "raw": "Modelling stomatal behavior and photosynthesis of Eucalyptus grandis",
+      "doi": "10.1071/pp9900159",
+      "title": "Modelling stomatal behavior and photosynthesis of Eucalyptus grandis",
+      "year": "1990"
+    },
+    {
+      "raw": "Ionic relations of guard cells",
+      "doi": null,
+      "title": "Ionic relations of guard cells",
+      "year": "1987"
+    },
+    {
+      "raw": "Stomatal responses to humidity in air and Helox",
+      "doi": null,
+      "title": "Stomatal responses to humidity in air and Helox",
+      "year": "1991"
+    },
+    {
+      "raw": "Canopy photosynthesis",
+      "doi": null,
+      "title": "Canopy photosynthesis",
+      "year": "1989"
+    },
+    {
+      "raw": "Estimation of aerodynamic and crop resistance from canopy temperature",
+      "doi": "10.2134/agronj1986.00021962007800020019x",
+      "title": "Estimation of aerodynamic and crop resistance from canopy temperature",
+      "year": "1986"
+    },
+    {
+      "raw": "Mathematical analysis of the operative temperature and energy budget",
+      "doi": "10.1016/0306-4565(87)90009-x",
+      "title": "Mathematical analysis of the operative temperature and energy budget",
+      "year": "1987"
+    },
+    {
+      "raw": "Movements of stomata",
+      "doi": null,
+      "title": "Movements of stomata",
+      "year": "1979"
+    },
+    {
+      "raw": "Single-layer models of evaporation from plant canopies are incorrect but useful whereas multilayer models are correct but useless",
+      "doi": "10.1071/pp9880705",
+      "title": "Single-layer models of evaporation from plant canopies are incorrect but useful whereas multilayer models are correct but useless",
+      "year": "1989"
+    },
+    {
+      "raw": "Effects of implementing the simple biosphere model in a global circulation model",
+      "doi": "10.1175/1520-0469(1989)046<2757:eoitsb>2.0.co;2",
+      "title": "Effects of implementing the simple biosphere model in a global circulation model",
+      "year": "1989"
+    },
+    {
+      "raw": "Modelling surface conductance of pine forests",
+      "doi": "10.1016/0168-1923(88)90003-2",
+      "title": "Modelling surface conductance of pine forests",
+      "year": "1988"
+    },
+    {
+      "raw": "Factors affecting the canopy resistance of a Douglas-Fir Forest",
+      "doi": "10.1007/bf00225866",
+      "title": "Factors affecting the canopy resistance of a Douglas-Fir Forest",
+      "year": "1976"
+    },
+    {
+      "raw": "Plants and high temperature stress",
+      "doi": null,
+      "title": "Plants and high temperature stress",
+      "year": "1988"
+    },
+    {
+      "raw": "Leaf conductance in relation to assimilation in Eucalyptus pauciflora Sieb. ex Spieng: Influence of irradiance and partial pressure of carbon dioxide",
+      "doi": "10.1104/pp.62.4.670",
+      "title": "Leaf conductance in relation to assimilation in Eucalyptus pauciflora Sieb. ex Spieng: Influence of irradiance and partial pressure of carbon dioxide",
+      "year": "1978"
+    },
+    {
+      "raw": "Stomatal conductance correlates with photosynthetic capacity",
+      "doi": "10.1038/282424a0",
+      "title": "Stomatal conductance correlates with photosynthetic capacity",
+      "year": "1979"
+    },
+    {
+      "raw": "Leaf conductance in relation to rate of CO2 assimilation. I. Influence of nitrogen nutrition, phosphorous nutrition, photon flux density and ambient partial pressure of CO2 during ontogeny",
+      "doi": "10.1104/pp.78.4.821",
+      "title": "Leaf conductance in relation to rate of CO2 assimilation. I. Influence of nitrogen nutrition, phosphorous nutrition, photon flux density and ambient partial pressure of CO2 during ontogeny",
+      "year": "1985"
+    },
+    {
+      "raw": "Leaf conductance in relation to rate of CO2 assimilation. II. Effects of short term exposure to different photon flux densities",
+      "doi": "10.1104/pp.78.4.826",
+      "title": "Leaf conductance in relation to rate of CO2 assimilation. II. Effects of short term exposure to different photon flux densities",
+      "year": "1985"
+    },
+    {
+      "raw": "Leaf conductance in relation to rate of CO2 assimilation. III. Influence of water stress and photoinhibition",
+      "doi": "10.1104/pp.78.4.830",
+      "title": "Leaf conductance in relation to rate of CO2 assimilation. III. Influence of water stress and photoinhibition",
+      "year": "1985"
+    },
+    {
+      "raw": "Limitation to CO2 fixation by photosynthetic processes",
+      "doi": null,
+      "title": "Limitation to CO2 fixation by photosynthetic processes",
+      "year": "1989"
+    },
+    {
+      "raw": "Enzymatic regulation of photosynthetic CO2 fixation in C3 plants",
+      "doi": "10.1146/annurev.pp.39.060188.002533",
+      "title": "Enzymatic regulation of photosynthetic CO2 fixation in C3 plants",
+      "year": "1988"
+    },
+    {
+      "raw": "Control of photosynthetic carbon dioxide fixation by the boundary layer, stomata and ribulose-1,5-bisphosphate carboxylase/oxygenase",
+      "doi": "10.1111/j.1365-3040.1990.tb02137.x",
+      "title": "Control of photosynthetic carbon dioxide fixation by the boundary layer, stomata and ribulose-1,5-bisphosphate carboxylase/oxygenase",
+      "year": "1990"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": false,
+    "token_estimate": 596,
+    "content_kind": "abstract_only",
+    "has_abstract": true,
+    "warnings": [
+      "Elsevier official XML route was not usable (HTTP 400 for https://api.elsevier.com/content/article/doi/10.1016%2F0168-1923%2891%2990002-8?view=FULL); attempting Elsevier PII XML fallback.",
+      "Elsevier PII XML fallback was not usable (HTTP 400 for https://api.elsevier.com/content/article/pii/0168192391900028?view=FULL); attempting official PDF fallback.",
+      "xml: HTTP 400 for https://api.elsevier.com/content/article/doi/10.1016%2F0168-1923%2891%2990002-8?view=FULL; pii_xml: HTTP 400 for https://api.elsevier.com/content/article/pii/0168192391900028?view=FULL; pdf: HTTP 400 for https://api.elsevier.com/content/article/doi/10.1016%2F0168-1923%2891%2990002-8?view=FULL",
+      "Full text was not available; returning metadata and abstract only.",
+      "--save-markdown was set but full text was not available; nothing written to disk."
+    ],
+    "source_trail": [
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_elsevier",
+      "route:signal_publisher_elsevier",
+      "route:signal_doi_elsevier",
+      "route:probe_elsevier_positive",
+      "route:provider_selected_elsevier",
+      "metadata:elsevier_ok",
+      "route:provider_candidate_elsevier_metadata_selected_rank_1",
+      "route:provider_candidate_elsevier_identity_strong",
+      "fulltext:elsevier_attempt",
+      "fulltext:elsevier_xml_fail",
+      "fulltext:elsevier_xml_pii_fail",
+      "fulltext:elsevier_pdf_api_fail",
+      "fulltext:elsevier_fail",
+      "route:provider_candidate_elsevier_rejected",
+      "fallback:elsevier_html_managed_by_provider",
+      "fallback:metadata_only",
+      "fulltext:elsevier_pii_xml_fail",
+      "fulltext:elsevier_pdf_fail",
+      "download:markdown_skipped_no_fulltext"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 596,
+      "body": 0,
+      "refs": 991
+    },
+    "confidence": "low",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 0,
+      "word_count": 0,
+      "body_block_count": 0,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 0.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": false,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "crossref",
+    "route": "metadata",
+    "representation": "metadata",
+    "transport": "api",
+    "fallback_used": true
+  }
+}

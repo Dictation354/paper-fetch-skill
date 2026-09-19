@@ -1,0 +1,290 @@
+{
+  "doi": "10.1175/jpo-d-24-0098.1",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/outputs/ae369653aeae-Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "ae369653aeae951202b91a2af6c967b04f38b67cd5330c5b58eb947992aaecb8",
+      "size": 152264
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/outputs/11790143f9e2-Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "11790143f9e20da37164f54b0262f4decde3962f309ce814aed3ae4bfbb2e17a",
+      "size": 110165
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/ams/10.1175_jpo-d-24-0098.1/html-1/diagnostic.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/outputs/1b7d466991df-diagnostic.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "1b7d466991df4b318e69d2f7211fc6c52b0946fdf7d9a0d1490d1a3a16ea78eb",
+      "size": 13417
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/ams/10.1175_jpo-d-24-0098.1/html-1/page-sanitized.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/outputs/cdfe31839d65-page-sanitized.html",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "cdfe31839d65650415d0f771c65bf529b66d592b72fbbccb48cd77e75a9b0077",
+      "size": 1064408
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/ams/10.1175_jpo-d-24-0098.1/html-2/diagnostic.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/outputs/6e887e7a516a-diagnostic.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "6e887e7a516ab8899ae3c09838e488765c146e2648942c5e148d3025786762e2",
+      "size": 16046
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/ams/10.1175_jpo-d-24-0098.1/html-2/page-sanitized.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/outputs/3b45e6f42392-page-sanitized.html",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "3b45e6f423929546760193a4a005d22b3d7fe510f2e91ad45942739e8c046d44",
+      "size": 1068719
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0003-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/c5839287b7d4-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0003-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "c5839287b7d4adb25cf9810f7fa7d939378d815978f8d81e3d1a46fb42591756",
+      "size": 235415
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0004-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/590ee01eb223-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0004-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "590ee01eb2230e23c4de694208f1c87668ec961c9d46bfce42a78de7328f4385",
+      "size": 249844
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0005-07.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/aaf7543c27ee-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0005-07.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "aaf7543c27ee3e46df147e1fecbdf93ac911b08c4ca8304d0b6d13d40ef711b1",
+      "size": 7171
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0006-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/5176d3d19ed4-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0006-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "5176d3d19ed4006472a3d7410eebfcea3fea30e8a2fb8f1a7001ab4914d064bf",
+      "size": 176709
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0007-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/4f97466bab22-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0007-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "4f97466bab22efcd22cfafc404e5094330efe2feefeb2e7d9b0121e0a82de5bb",
+      "size": 574331
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0008-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/32f9dd099a3f-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0008-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "32f9dd099a3fb5a528605d18fed905967d8edf84b7e21f9ca0a86299151ef4ba",
+      "size": 258431
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0009-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/88cbfcf62011-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0009-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "88cbfcf62011cf7020cf461eb475792b2a521041c086cac3d055c3d790253fd4",
+      "size": 577881
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0010-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/e76378ad24a6-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0010-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "e76378ad24a608a14fdc5d11102fd17ae18fdd2aae9fdf9a50bab22e481def02",
+      "size": 265885
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0012-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/63dc8d81ecf3-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0012-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "63dc8d81ecf38515d6d30b60c2da96796dd1e300241121328efa6d68f17c7a40",
+      "size": 1449533
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0013-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/691a71a8a5af-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0013-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "691a71a8a5afbca02717b345773cc46a8433caa6907bb1442e299f9907f606c1",
+      "size": 225465
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0013-10.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/cee2c79e702f-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0013-10.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "cee2c79e702f3148664335671c515223fee96ebe1d6c36e1e272c034acedda89",
+      "size": 13712
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0014-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/d1ca8857f8f5-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0014-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "d1ca8857f8f5c8fab6e1f5ddaabb11ae5707d735601c68e845d744f64db8879c",
+      "size": 381511
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1175_jpo-d-24-0098.1_assets/phoc-JPO-D-24-0098.1-b993d93c15.pdf-0015-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/assets/4db0f2b97c83-phoc-JPO-D-24-0098.1-b993d93c15.pdf-0015-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "4db0f2b97c83a9e1c14f3db7a0c1d277946b208e36383e9d1c749d581afeda43",
+      "size": 120648
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.pdf",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/raw_sources/53651721f249-Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.pdf",
+      "category": "raw_sources",
+      "origin_kind": "real_replay",
+      "sha256": "53651721f249a50b4884bdf68adc2d023f3b10816ee903281066b9f8078ac2ce",
+      "size": 19795849
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "degraded",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1175/jpo-d-24-0098.1",
+      "expected_doi": "10.1175/jpo-d-24-0098.1",
+      "title": "Spectral Features of Internal Waves in the South China Sea",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 22889,
+      "confidence": "low",
+      "flags": [
+        "access_gate_detected",
+        "weak_body_structure"
+      ],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 13,
+      "attempted": 13,
+      "total": 13,
+      "local": 13,
+      "full_size": 13,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 13,
+      "remote_only_count": 0,
+      "body_discovered": 13,
+      "body_attempted": 13,
+      "body_local": 13,
+      "body_full_size": 13,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "complete",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "ams_pdf",
+      "acquisition": {
+        "provider": "ams",
+        "route": "browser_pdf",
+        "representation": "pdf",
+        "transport": "browser",
+        "fallback_used": true
+      },
+      "trace_event_count": 18,
+      "fallback_codes": [
+        "abstract_only"
+      ],
+      "warning_codes": [
+        "access_gate_detected",
+        "weak_body_structure"
+      ],
+      "failure_codes": [
+        "abstract_only"
+      ],
+      "unstructured_warning_count": 4,
+      "acceptance_policy": "validated_pdf",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

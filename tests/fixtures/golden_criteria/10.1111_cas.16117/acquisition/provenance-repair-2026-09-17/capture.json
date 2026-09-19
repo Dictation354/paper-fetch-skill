@@ -1,0 +1,20 @@
+[
+  {
+    "doi": "10.1111/cas.16117",
+    "provider": "wiley",
+    "requested_url": "https://onlinelibrary.wiley.com/doi/10.1111/cas.16117",
+    "final_url": "https://onlinelibrary.wiley.com/doi/10.1111/cas.16117",
+    "status_code": 403,
+    "response_headers": {
+      "date": "Thu, 17 Sep 2026 10:59:29 GMT",
+      "content-type": "text/html; charset=UTF-8"
+    },
+    "captured_at_utc": "2026-09-17T10:59:40.316945+00:00",
+    "body_file": "original.html",
+    "size": 1175661,
+    "sha256": "d7a9c40db1d3b26fbfd13638fa012e1f094aff853b4d58d0ef1e86c2e5b9182d",
+    "capture_kind": "browser_rendered_dom",
+    "transport": "existing paper-fetch provider",
+    "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+  }
+]

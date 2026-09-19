@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ...quality.access_boundary import propagate_paywall
+
+from ...quality.access_boundary import raise_for_paywall
+
 import hashlib
 import logging
 from dataclasses import dataclass, replace
@@ -607,6 +611,7 @@ def _fetch_browser_html_payload(
             **fetch_kwargs,
         )
     except BrowserRuntimeFailure as exc:
+        propagate_paywall(exc)
         failure_details = dict(exc.details or {})
         if prior_state.browser_trace:
             failure_details["trace"] = _merge_browser_runtime_trace_history(
@@ -633,6 +638,12 @@ def _fetch_browser_html_payload(
             if value is not None
         }
         raise
+    raise_for_paywall(
+        html_result.html,
+        metadata=metadata,
+        source_url=html_result.final_url,
+        provider=client.name,
+    )
     html_result = _with_browser_runtime_trace_history(
         html_result,
         prior_state.browser_trace,
@@ -667,6 +678,7 @@ def _fetch_browser_html_payload(
             context=context,
         )
     except HtmlExtractionFailure as exc:
+        propagate_paywall(exc)
         if exc.reason == "article_container_not_found" and is_empty_article_shell(
             html_result.html,
             response_status=html_result.response_status,
@@ -911,6 +923,7 @@ def _fetch_browser_html_payload_with_fast_path(
             ),
         )
     except (BrowserRuntimeFailure, HtmlExtractionFailure) as exc:
+        propagate_paywall(exc)
         if not _should_retry_fast_browser_failure(exc):
             raise
         fast_failure = exc
@@ -983,6 +996,7 @@ def _fetch_browser_html_payload_with_fast_path(
             ),
         )
     except (BrowserRuntimeFailure, HtmlExtractionFailure) as retry_failure:
+        propagate_paywall(retry_failure)
         if (
             fast_failure is not None
             and _preserve_fast_access_failure_after_retry_timeout(

@@ -1,0 +1,16 @@
+{
+  "query": "10.1038/s41586-026-11124-z",
+  "query_kind": "doi",
+  "doi": "10.1038/s41586-026-11124-z",
+  "landing_url": null,
+  "provider_hint": "springer",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 5,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "springer"
+}

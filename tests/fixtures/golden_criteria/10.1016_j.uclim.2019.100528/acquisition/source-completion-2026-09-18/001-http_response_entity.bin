@@ -1,0 +1,132 @@
+{"abstracts-retrieval-response": {
+    "affiliation": {
+        "affiliation-city": "Atlanta",
+        "@id": "60019647",
+        "affilname": "Georgia Institute of Technology",
+        "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60019647",
+        "affiliation-country": "United States"
+    },
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-85071570117",
+        "dc:description": "Extreme temperatures pose a significant risk to human health and are projected to worsen in a warming climate with increased intensity, duration, and frequency of heat waves in the coming decades. To mitigate heat exposure and protect sensitive populations, urban planners are increasingly using heat vulnerability indices (HVIs) to identify high priority areas for intervention and investment. Relative HVI scores help identify which areas are at greatest risk of heat-related morbidity and mortality. Public health researchers are also increasingly using observation-driven exposure-response functions to estimate heat-related mortality. In this paper, we estimate the number and spatial distribution of heat-related deaths in Dallas in 2011 employing an exposure-response function and then assess the performance of different HVI techniques in assigning vulnerability to zones of high heat mortality. Our approach estimates that 112 Dallas residents died from heat-related causes in the summer of 2011 and finds wide variability in the performance of different HVI techniques in assessing heat vulnerability by district. The HVI is found to retain more useful information mapped as separate components of vulnerability than as a single composite score. While the exposure-response function is preferred, the methods can be used in conjunction to assess appropriate heat management strategies.",
+        "prism:coverDate": "2019-12-01",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/85071570117",
+        "subtypeDescription": "Article",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Evan",
+            "preferred-name": {
+                "ce:given-name": "Evan",
+                "ce:initials": "E.",
+                "ce:surname": "Mallen",
+                "ce:indexed-name": "Mallen E."
+            },
+            "@seq": "1",
+            "ce:initials": "E.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60019647",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60019647"
+            },
+            "ce:surname": "Mallen",
+            "@auid": "57210817720",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57210817720",
+            "ce:indexed-name": "Mallen E."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/85071570117"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85071570117&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=85071570117&origin=inward"
+            }
+        ],
+        "prism:publicationName": "Urban Climate",
+        "source-id": "21100220478",
+        "pii": "S2212095518300610",
+        "citedby-count": "112",
+        "prism:volume": "30",
+        "subtype": "ar",
+        "dc:title": "A methodological assessment of extreme heat mortality modeling and heat vulnerability mapping in Dallas, Texas",
+        "openaccess": "0",
+        "openaccessFlag": "false",
+        "prism:doi": "10.1016/j.uclim.2019.100528",
+        "prism:issn": "22120955",
+        "publishercopyright": "© 2019 Elsevier B.V.",
+        "article-number": "100528",
+        "dc:identifier": "SCOPUS_ID:85071570117",
+        "dc:publisher": "Elsevier B.V."
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "Evan",
+            "preferred-name": {
+                "ce:given-name": "Evan",
+                "ce:initials": "E.",
+                "ce:surname": "Mallen",
+                "ce:indexed-name": "Mallen E."
+            },
+            "@seq": "1",
+            "ce:initials": "E.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60019647",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60019647"
+            },
+            "ce:surname": "Mallen",
+            "@auid": "57210817720",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57210817720",
+            "ce:indexed-name": "Mallen E."
+        },
+        {
+            "ce:given-name": "Brian",
+            "preferred-name": {
+                "ce:given-name": "Brian",
+                "ce:initials": "B.",
+                "ce:surname": "Stone",
+                "ce:indexed-name": "Stone B."
+            },
+            "@seq": "2",
+            "ce:initials": "B.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60019647",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60019647"
+            },
+            "ce:surname": "Stone",
+            "@auid": "57212918895",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57212918895",
+            "ce:indexed-name": "Stone B."
+        },
+        {
+            "ce:given-name": "Kevin",
+            "preferred-name": {
+                "ce:given-name": "Kevin",
+                "ce:initials": "K.",
+                "ce:surname": "Lanza",
+                "ce:indexed-name": "Lanza K."
+            },
+            "@seq": "3",
+            "ce:initials": "K.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60019647",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60019647"
+            },
+            "ce:surname": "Lanza",
+            "@auid": "57189309516",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57189309516",
+            "ce:indexed-name": "Lanza K."
+        }
+    ]}
+}}

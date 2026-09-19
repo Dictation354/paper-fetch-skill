@@ -117,7 +117,6 @@ ANNUALREVIEWS_SITE_RULE_OVERRIDES: dict[str, object] = {}
 ANNUALREVIEWS_NOISE_PROFILE = "annualreviews"
 
 _NOISY_LINES = {
-    "top",
     "go to section...",
     "click to view",
     "download as powerpoint",
@@ -309,6 +308,15 @@ def _normalize_section_headings(container: Tag) -> None:
         if title:
             lowest.replace_with(_new_tag_like(lowest, "h3", title))
 
+    # These loaded back-matter dialogs hold article-level glossary/footnotes.
+    # Their h4 is modal styling, not a fourth-level scientific subsection.
+    for heading in container.select(
+        "#viewGlossaryPopup .modal-title, #viewFootnotePopup .modal-title"
+    ):
+        title = _canonical_heading(_node_text(heading))
+        if title in {"Terms And Definitions", "Footnotes"}:
+            heading.replace_with(_new_tag_like(heading, "h2", title))
+
 
 def _remove_noise_nodes(container: Tag) -> None:
     for selector in ANNUALREVIEWS_EXTRACTION_CLEANUP_SELECTORS:
@@ -329,8 +337,11 @@ def _remove_noise_nodes(container: Tag) -> None:
             anchor.decompose()
             continue
         if href.startswith("#"):
+            if lowered == "top" and href in {"#top", "#"}:
+                anchor.decompose()
+                continue
             if text:
-                anchor.replace_with(text)
+                anchor.unwrap()
             else:
                 anchor.decompose()
 
@@ -394,7 +405,8 @@ def _normalize_figures(container: Tag, source_url: str) -> None:
             caption_node.name = "figcaption"
         caption = _figure_caption(figure)
 
-        image = figure.find("img")
+        # Captions can precede the figure and contain inline equation images.
+        image = figure.select_one(".image img") or figure.find("img")
         if not isinstance(image, Tag):
             continue
         media_link = image.find_parent("a", class_="media-link")
@@ -468,6 +480,10 @@ def _normalize_tables(container: Tag) -> None:
             for node in list(caption.select(selector)):
                 if isinstance(node, Tag):
                     node.decompose()
+        for label in list(caption.select(".table-label")):
+            text = _node_text(label)
+            if text:
+                label.replace_with(_new_tag_like(label, "p", f"**{text}**"))
 
     for table_container in list(container.select(".table-container")):
         if not isinstance(table_container, Tag):
@@ -535,6 +551,15 @@ def _cleaned_article_html_from_soup(
     cleaned = copy.deepcopy(selection.node)
     _remove_noise_nodes(cleaned)
     _normalize_section_headings(cleaned)
+    # Annual Reviews supplies body equations as root-relative GIFs. The
+    # provider renderer emits these directly, so retain a usable source link
+    # when the resulting Markdown is opened away from the publisher page.
+    for image in cleaned.select(".disp-formula img[src], img.inline-formula[src]"):
+        image["src"] = urljoin(source_url, str(image["src"]))
+        if "inline-formula" in (image.get("class") or []):
+            # Normalize this publisher's legacy marker to the renderer's
+            # existing inline-equation contract, including figure captions.
+            image["class"] = [*image.get("class", []), "inline-equation"]
     _normalize_figures(cleaned, source_url)
     _normalize_tables(cleaned)
     _normalize_references(cleaned)
@@ -606,12 +631,22 @@ def _render_annualreviews_article_markdown(article_html: str, source_url: str) -
     article = soup.find("article")
     if not isinstance(article, Tag):
         return ""
+    # A caption's equation images belong to its inline text, not to the
+    # figure's image list. Work on this render copy so asset discovery still
+    # sees the original caption subtree and its formula URLs.
+    for figure in article.find_all("figure"):
+        caption = figure.find("figcaption")
+        if isinstance(caption, Tag) and caption.find("img") is not None:
+            text = render_clean_text_from_html(caption)
+            caption.clear()
+            caption.append(text)
     lines: list[str] = []
     render_container_markdown(
         article,
         lines,
         level=2,
         section_content_selectors=(),
+        preserve_heading_levels=True,
     )
     return "\n".join(lines)
 
@@ -748,6 +783,32 @@ def extract_scoped_html_assets(
         supplementary_html_text="",
         noise_profile=ANNUALREVIEWS_NOISE_PROFILE,
     )
+    # Legacy Annual Reviews pages use standalone inline-formula GIFs. The
+    # shared extractor deliberately ignores inline formulas; these images have
+    # no accompanying MathML and must retain their own downloadable bytes.
+    formula_images = BeautifulSoup(body_html, choose_parser()).select(
+        "img.inline-formula[src]"
+    )
+    for image in formula_images:
+        url = urljoin(source_url, str(image.get("src") or ""))
+        parsed = urlsplit(url)
+        if parsed.scheme not in {"http", "https"} or not re.search(
+            r"/eq-[^/]+\.gif$", parsed.path
+        ):
+            continue
+        existing = next((asset for asset in assets if asset.get("url") == url), None)
+        if existing is not None:
+            existing["kind"] = "formula"
+            continue
+        assets.append(
+            {
+                "kind": "formula",
+                "heading": parsed.path.rsplit("/", 1)[-1].removesuffix(".gif"),
+                "section": "body",
+                "url": url,
+                "render_state": "inline",
+            }
+        )
     if asset_profile == "all" and supplementary_html:
         doi = normalize_doi(parse_html_metadata(html_text, source_url).get("doi"))
         if not doi:

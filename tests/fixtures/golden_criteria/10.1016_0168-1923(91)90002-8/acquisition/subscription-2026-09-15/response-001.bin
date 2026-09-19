@@ -1,0 +1,162 @@
+{"abstracts-retrieval-response": {
+    "affiliation": [
+        {
+            "affiliation-city": "Washington, D.C.",
+            "@id": "60024613",
+            "affilname": "Carnegie Institution of Washington",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60024613",
+            "affiliation-country": "United States"
+        },
+        {
+            "affiliation-city": "Reno",
+            "@id": "60023439",
+            "affilname": "Desert Research Institute",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60023439",
+            "affiliation-country": "United States"
+        }
+    ],
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-33847504748",
+        "dc:description": "This paper presents a system of models for the simulation of gas and energy exchange of a leaf of a C3 plant in free air. The physiological processes are simulated by sub-models that: (a) give net photosynthesis (An) as a function of environmental and leaf parameters and stomatal conductance (gs); (b) give g, as a function of the concentration of CO2 and H2O in air at the leaf surface and the current rate of photosynthesis of the leaf. An energy balance and mass transport sub-model is used to couple the physiological processes through a variable boundary layer to the ambient environment. The models are based on theoretical and empirical analysis of gs, and An measured at the leaf level, and tests with intact attached leaves of soybeans show very good agreement between predicted and measured responses of gs and An over a wide range of leaf temperatures (20-35°C), CO2 concentrations (10-90 Pa), air to leaf water vapor deficits (0.5-3.7 kPa) and light intensities (100-2000 μmol m-2s-1). The combined models were used to simulate the responses of latent heat flux (λE) and gs for a soybean canopy for the course of an idealized summer day, using the 'big-leaf' approximation. Appropriate data are not yet available to provide a rigorous test of these simulations, but the response patterns are similar to field observations. These simulations show a pronounced midday depression of λE and gs at low or high values of boundary-layer conductance. Deterioration of plant water relations during midday has often been invoked to explain this common natural phenomenon, but the present models do not consider this possibility. Analysis of the model indicates that the simulated midday depression is, in part, the result of positive feedback mediated by the boundary layer. For example, a change in gs affects An and λE. As a consequence, the temperature, humidity and CO2 concentration of the air in the proximity of the stomata (e.g. the air at the leaf surface) change and these, in turn, affect gs. The simulations illustrate the possible significance of the boundary layer in mediating feedback loops which affect the regulation of stomatal conductance and λE. The simulations also examine the significance of changing the response properties of the photosynthetic component of the model by changing leaf protein content or the CO2 concentration of the atmosphere. © 1991.",
+        "prism:coverDate": "1991-01-01",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/33847504748",
+        "dc:creator": {"author": [{
+            "ce:given-name": "G.James",
+            "preferred-name": {
+                "ce:given-name": "G. James",
+                "ce:initials": "G.J.",
+                "ce:surname": "Collatz",
+                "ce:indexed-name": "Collatz G.J."
+            },
+            "@seq": "1",
+            "ce:initials": "G.J.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60024613",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60024613"
+            },
+            "ce:surname": "Collatz",
+            "@auid": "35511604900",
+            "author-url": "https://api.elsevier.com/content/author/author_id/35511604900",
+            "ce:indexed-name": "Collatz G.J."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/33847504748"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=33847504748&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=33847504748&origin=inward"
+            }
+        ],
+        "source-id": "12067",
+        "pii": "0168-1923(91)90002-8",
+        "citedby-count": "1887",
+        "prism:volume": "54",
+        "subtype": "ar",
+        "dc:title": "Physiological and environmental regulation of stomatal conductance, photosynthesis and transpiration: a model that includes a laminar boundary layer",
+        "openaccess": "0",
+        "prism:issn": "01681923",
+        "prism:issueIdentifier": "2-4",
+        "subtypeDescription": "Article",
+        "prism:publicationName": "Agricultural and Forest Meteorology",
+        "prism:pageRange": "107-136",
+        "prism:endingPage": "136",
+        "openaccessFlag": "false",
+        "prism:doi": "10.1016/0168-1923(91)90002-8",
+        "prism:startingPage": "107",
+        "dc:identifier": "SCOPUS_ID:33847504748"
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "G.James",
+            "preferred-name": {
+                "ce:given-name": "G. James",
+                "ce:initials": "G.J.",
+                "ce:surname": "Collatz",
+                "ce:indexed-name": "Collatz G.J."
+            },
+            "@seq": "1",
+            "ce:initials": "G.J.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60024613",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60024613"
+            },
+            "ce:surname": "Collatz",
+            "@auid": "35511604900",
+            "author-url": "https://api.elsevier.com/content/author/author_id/35511604900",
+            "ce:indexed-name": "Collatz G.J."
+        },
+        {
+            "ce:given-name": "J.Timothy",
+            "preferred-name": {
+                "ce:given-name": "J. Timothy",
+                "ce:initials": "J.T.",
+                "ce:surname": "Ball",
+                "ce:indexed-name": "Ball J.T."
+            },
+            "@seq": "2",
+            "ce:initials": "J.T.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60023439",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60023439"
+            },
+            "ce:surname": "Ball",
+            "@auid": "7401813802",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7401813802",
+            "ce:indexed-name": "Ball J.T."
+        },
+        {
+            "ce:given-name": "Cyril",
+            "preferred-name": {
+                "ce:given-name": "Cyril",
+                "ce:initials": "C.",
+                "ce:surname": "Grivet",
+                "ce:indexed-name": "Grivet C."
+            },
+            "@seq": "3",
+            "ce:initials": "C.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60024613",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60024613"
+            },
+            "ce:surname": "Grivet",
+            "@auid": "6506814065",
+            "author-url": "https://api.elsevier.com/content/author/author_id/6506814065",
+            "ce:indexed-name": "Grivet C."
+        },
+        {
+            "ce:given-name": "Joseph A",
+            "preferred-name": {
+                "ce:given-name": "Joseph A.",
+                "ce:initials": "J.A.",
+                "ce:surname": "Berry",
+                "ce:indexed-name": "Berry J.A."
+            },
+            "@seq": "4",
+            "ce:initials": "J.A.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60024613",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60024613"
+            },
+            "ce:surname": "Berry",
+            "@auid": "7402634357",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7402634357",
+            "ce:indexed-name": "Berry J.A."
+        }
+    ]}
+}}

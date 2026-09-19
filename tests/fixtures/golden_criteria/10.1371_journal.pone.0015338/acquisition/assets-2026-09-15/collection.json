@@ -1,0 +1,938 @@
+{
+  "provider": "plos",
+  "doi": "10.1371/journal.pone.0015338",
+  "sample_id": "10.1371_journal.pone.0015338",
+  "source_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0015338&type=manuscript",
+  "source_input": "tests/fixtures/golden_criteria/10.1371_journal.pone.0015338/original.xml",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "c0b2ae348c5fb7098c4a8c30e85097ba7fbdedd897ce23fe7228e6f957a7f631",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "pone-0015338-g001",
+        "anchor_key": "pone-0015338-g001",
+        "heading": "Figure 1",
+        "caption": "Biomedical figures generally include biomedical named entities (e.g., tissue, species, chemical, and gene or protein names) and functional description (e.g., “DNA binding domain”). Biomedical figure text (i.e., text appearing in a biomedical figure) is important for understanding the meaning of a figure.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "info:doi/10.1371/journal.pone.0015338.g001",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.g001",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.g001",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.g001",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g001"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g001",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.g001.png"
+      ],
+      "record": "body_assets/pone.0015338.g001.png",
+      "validation": {
+        "format": "image/png",
+        "width": 2068,
+        "height": 473,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.g001.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "pone-0015338-g002",
+        "anchor_key": "pone-0015338-g002",
+        "heading": "Figure 2",
+        "caption": "FigTExT has three components: image preprocessing, character recognition, and text correction. Image preprocessing enhances not only text region detection by improving image contrast and determining the gray-level of figure text, but also image quality by up-sampling. FigTExT incorporates an off-the-shelf OCR tool for character recognition. For text correction, FigTExT first corrects misrecognized characters with a figure-specific lexicon and then refines the corrected result to filter out some spurious corrections.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "info:doi/10.1371/journal.pone.0015338.g002",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.g002",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.g002",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.g002",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g002"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g002",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.g002.png"
+      ],
+      "record": "body_assets/pone.0015338.g002.png",
+      "validation": {
+        "format": "image/png",
+        "width": 2068,
+        "height": 470,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.g002.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "pone-0015338-g003",
+        "anchor_key": "pone-0015338-g003",
+        "heading": "Figure 3",
+        "caption": "(A) Conventional contrast stretching transformation may be able to enhance the contrast of non-text regions as well as text regions; therefore, false localization can be anticipated. (B) We focused on only enhancing the contrast of text regions, not non-text regions. Our figure data presented that the gray-level of black text is usually lower than 10, and that of white text is higher than 230 in the 256 gray-level image. Therefore, we modified the contrast-stretching transformation by setting a<sub>1</sub> = 10 and a<sub>2</sub> = 230 to lower and raise the gray-level of black text and white text, respectively, while preserving the contrast of non-text regions.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "info:doi/10.1371/journal.pone.0015338.g003",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.g003",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.g003",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.g003",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g003"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g003",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.g003.png"
+      ],
+      "record": "body_assets/pone.0015338.g003.png",
+      "validation": {
+        "format": "image/png",
+        "width": 2012,
+        "height": 897,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.g003.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "key": "info:doi/10.1371/journal.pone.0015338.e001",
+        "anchor_key": "info:doi/10.1371/journal.pone.0015338.e001",
+        "heading": "Formula (1)",
+        "caption": "",
+        "link": "info:doi/10.1371/journal.pone.0015338.e001",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.e001",
+        "section": "body",
+        "render_state": "inline",
+        "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0015338.e001&type=thumbnail"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0015338.e001&type=thumbnail",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.e001.png"
+      ],
+      "record": "body_assets/pone.0015338.e001.png",
+      "validation": {
+        "format": "image/png",
+        "width": 200,
+        "height": 47,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.e001.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "key": "info:doi/10.1371/journal.pone.0015338.e002",
+        "anchor_key": "info:doi/10.1371/journal.pone.0015338.e002",
+        "heading": "Formula (2)",
+        "caption": "",
+        "link": "info:doi/10.1371/journal.pone.0015338.e002",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.e002",
+        "section": "body",
+        "render_state": "inline",
+        "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0015338.e002&type=thumbnail"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0015338.e002&type=thumbnail",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.e002.png"
+      ],
+      "record": "body_assets/pone.0015338.e002.png",
+      "validation": {
+        "format": "image/png",
+        "width": 247,
+        "height": 41,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.e002.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "pone-0015338-g004",
+        "anchor_key": "pone-0015338-g004",
+        "heading": "Figure 4",
+        "caption": "(A) Input image. (B) Binary image. (C) Foreground objects. (D) Figure text regions.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "info:doi/10.1371/journal.pone.0015338.g004",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.g004",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.g004",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.g004",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g004"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g004",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.g004.png"
+      ],
+      "record": "body_assets/pone.0015338.g004.png",
+      "validation": {
+        "format": "image/png",
+        "width": 1996,
+        "height": 1691,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.g004.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "pone-0015338-g005",
+        "anchor_key": "pone-0015338-g005",
+        "heading": "Figure 5",
+        "caption": "Three edit operations (i.e., two substitutions and one insertion) are required to transform “antlsnze” to “antisense”, while five edit operations (i.e., four substitutions and one insertion) are required to transform “antlsnze” to “antiserum”. Therefore, according to ED, “antisense” has a higher similarity than “antiserum” to the recognized form “antlsnze”.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "info:doi/10.1371/journal.pone.0015338.g005",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.g005",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.g005",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.g005",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g005"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g005",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.g005.png"
+      ],
+      "record": "body_assets/pone.0015338.g005.png",
+      "validation": {
+        "format": "image/png",
+        "width": 2062,
+        "height": 1254,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.g005.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "pone-0015338-g006",
+        "anchor_key": "pone-0015338-g006",
+        "heading": "Figure 6",
+        "caption": "The LCS of the two words (*w* and *c<sub>i</sub>*) is “antsne”, and its similarity is 6, i.e., the length of its LCS (“antsne”), while the LCS of the two words (*w* and *c<sub>j</sub>*) is “ants”, and its similarity is 4. Therefore, LCS suggests that “antisense” rather than “antiserum” is the correct form of “antlsnze.”",
+        "section": "body",
+        "render_state": "inline",
+        "link": "info:doi/10.1371/journal.pone.0015338.g006",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.g006",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.g006",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.g006",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g006"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g006",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.g006.png"
+      ],
+      "record": "body_assets/pone.0015338.g006.png",
+      "validation": {
+        "format": "image/png",
+        "width": 2030,
+        "height": 1003,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.g006.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "key": "info:doi/10.1371/journal.pone.0015338.e003",
+        "anchor_key": "info:doi/10.1371/journal.pone.0015338.e003",
+        "heading": "Formula (3)",
+        "caption": "",
+        "link": "info:doi/10.1371/journal.pone.0015338.e003",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.e003",
+        "section": "body",
+        "render_state": "inline",
+        "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0015338.e003&type=thumbnail"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0015338.e003&type=thumbnail",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.e003.png"
+      ],
+      "record": "body_assets/pone.0015338.e003.png",
+      "validation": {
+        "format": "image/png",
+        "width": 129,
+        "height": 36,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.e003.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "key": "info:doi/10.1371/journal.pone.0015338.e004",
+        "anchor_key": "info:doi/10.1371/journal.pone.0015338.e004",
+        "heading": "Formula (4)",
+        "caption": "",
+        "link": "info:doi/10.1371/journal.pone.0015338.e004",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.e004",
+        "section": "body",
+        "render_state": "inline",
+        "url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0015338.e004&type=thumbnail"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0015338.e004&type=thumbnail",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.e004.png"
+      ],
+      "record": "body_assets/pone.0015338.e004.png",
+      "validation": {
+        "format": "image/png",
+        "width": 172,
+        "height": 41,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.e004.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "table_render_kind": "structured",
+        "key": "pone-0015338-t001",
+        "anchor_key": "pone-0015338-t001",
+        "heading": "Table 1",
+        "caption": "Results of text localization and up-sampling prior to the application of the OCR tool.",
+        "headers": [
+          "",
+          "Precision (%)",
+          "Recall (%)",
+          "F1-score (%)"
+        ],
+        "rows": [
+          [
+            "Off-the-shelf OCR tool",
+            "36.6",
+            "19.3",
+            "25.3"
+          ],
+          [
+            "Applying text localization prior to OCR tool",
+            "36.6",
+            "19.5",
+            "25.4"
+          ],
+          [
+            "Applying image up-sampling prior to OCR tool",
+            "37.3",
+            "31.1",
+            "33.9"
+          ],
+          [
+            "Applying text localization and image up-sampling prior to the OCR tool (baseline system)",
+            "37.2",
+            "55.9",
+            "44.7"
+          ]
+        ],
+        "footnotes": [],
+        "section": "body",
+        "render_state": "inline",
+        "_table_fallback_count": 0,
+        "_table_layout_degraded_count": 0,
+        "link": "info:doi/10.1371/journal.pone.0015338.t001",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.t001",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.t001",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.t001",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": "pone-0015338-t001-1",
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.t001"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.t001",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/354e4182f8ca4d3b-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/354e4182f8ca4d3b-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 4103,
+        "height": 794,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.t001.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "table_render_kind": "structured",
+        "key": "pone-0015338-t002",
+        "anchor_key": "pone-0015338-t002",
+        "heading": "Table 2",
+        "caption": "Performance of FigTExT for four figure-specific lexicons.",
+        "headers": [
+          "",
+          "Figure caption / F1-score (%) (Recall, Precision)",
+          "Associated text / F1-score (%) (Recall, Precision)",
+          "Caption+Associated text / F1-score (%) (Recall, Precision)",
+          "Full-text article / F1-score (%) (Recall, Precision)"
+        ],
+        "rows": [
+          [
+            "ED",
+            "48.2 (40.6, 59.4)",
+            "47.0 (41.8, 53.7)",
+            "56.2 (51.0, 62.5)",
+            "51.6 (56.1, 47.8)"
+          ],
+          [
+            "LCS",
+            "27.4 (28.5, 26.4)",
+            "24.3 (26.4, 22.4)",
+            "30.8 (34.2, 28.0)",
+            "18.7 (24.4, 15.1)"
+          ],
+          [
+            "MSA",
+            "38.1 (37.2, 38.6)",
+            "36.1 (37.7, 34.6)",
+            "42.9 (46.7, 39.6)",
+            "32.1 (41.3, 26.3)"
+          ]
+        ],
+        "footnotes": [],
+        "section": "body",
+        "render_state": "inline",
+        "_table_fallback_count": 0,
+        "_table_layout_degraded_count": 0,
+        "link": "info:doi/10.1371/journal.pone.0015338.t002",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.t002",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.t002",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.t002",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": "pone-0015338-t002-2",
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.t002"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.t002",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/8cac7b35ad3e4939-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/8cac7b35ad3e4939-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 4103,
+        "height": 830,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.t002.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "table_render_kind": "structured",
+        "key": "pone-0015338-t003",
+        "anchor_key": "pone-0015338-t003",
+        "heading": "Table 3",
+        "caption": "Performance of FigTExT for four figure-specific lexicons with refinement.",
+        "headers": [
+          "",
+          "Figure caption / F1-score (%) (Recall, Precision)",
+          "Associated text / F1-score (%) (Recall, Precision)",
+          "Caption+Associated text / F1-score (%) (Recall, Precision)",
+          "Full-text article / F1-score (%) (Recall, Precision)"
+        ],
+        "rows": [
+          [
+            "ED",
+            "47.2 (58.2, 39.8)",
+            "47.7 (58.5, 40.3)",
+            "49.1 (60.6, 41.3)",
+            "49.4 (61.4, 41.3)"
+          ],
+          [
+            "LCS",
+            "45.8 (56.2, 38.6)",
+            "45.2 (55.2, 38.3)",
+            "46.4 (56.9, 39.1)",
+            "44.1 (54.1, 37.2)"
+          ],
+          [
+            "MSA",
+            "46.6 (57.5, 39.2)",
+            "46.7 (57.6, 39.3)",
+            "47.9 (59.3, 40.2)",
+            "46.8 (58.1, 39.1)"
+          ]
+        ],
+        "footnotes": [],
+        "section": "body",
+        "render_state": "inline",
+        "_table_fallback_count": 0,
+        "_table_layout_degraded_count": 0,
+        "link": "info:doi/10.1371/journal.pone.0015338.t003",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.t003",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.t003",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.t003",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": "pone-0015338-t003-3",
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.t003"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.t003",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/8706b418f05fbcec-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/8706b418f05fbcec-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 4103,
+        "height": 831,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.t003.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "pone-0015338-g007",
+        "anchor_key": "pone-0015338-g007",
+        "heading": "Figure 7",
+        "caption": "(A) Overall character accuracy of the baseline system (i.e., No correction) is 79.2% and its variance 0.9%. Our character recognition performed equally well regardless of word length. ED attained 81.7% overall character accuracy, which is 2.5% higher than the baseline system. In contrast to ED, LCS and MSA attained 75.5% and 78.8% overall character accuracies, which is 3.7% and 0.4% lower, respectively, than the baseline system. (B) Term accuracy decreases when the number of characters in a figure text is increased. ED still outperformed both LCS and MSA, and MSA outperformed LCS in all word lengths.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "info:doi/10.1371/journal.pone.0015338.g007",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.g007",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.g007",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.g007",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g007"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g007",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.g007.png"
+      ],
+      "record": "body_assets/pone.0015338.g007.png",
+      "validation": {
+        "format": "image/png",
+        "width": 1779,
+        "height": 2719,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.g007.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "table_render_kind": "structured",
+        "key": "pone-0015338-t004",
+        "anchor_key": "pone-0015338-t004",
+        "heading": "Table 4",
+        "caption": "Inter-rater agreement and its kappa value on important figure text (95% confidence).",
+        "headers": [
+          "Pair of annotators",
+          "Agreement",
+          "Cohen's kappa value"
+        ],
+        "rows": [
+          [
+            "*A* − *B*",
+            "96.5%",
+            "0.911"
+          ],
+          [
+            "*B* − *C*",
+            "98.0%",
+            "0.936"
+          ],
+          [
+            "*A* − *C*",
+            "80.8%",
+            "0.563"
+          ]
+        ],
+        "footnotes": [],
+        "section": "body",
+        "render_state": "inline",
+        "_table_fallback_count": 0,
+        "_table_layout_degraded_count": 0,
+        "link": "info:doi/10.1371/journal.pone.0015338.t004",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.t004",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.t004",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.t004",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": "pone-0015338-t004-4",
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.t004"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.t004",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0f413d26a81703b3-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/0f413d26a81703b3-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 1964,
+        "height": 689,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.t004.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "table_render_kind": "structured",
+        "key": "pone-0015338-t005",
+        "anchor_key": "pone-0015338-t005",
+        "heading": "Table 5",
+        "caption": "Performance of FigTExT on the important figure texts identified by annotators.",
+        "headers": [
+          "",
+          "*A*∩*B*",
+          "*B*∩*C*",
+          "*A*∩*C*",
+          "*A*∪*B*∪*C*",
+          "All figure texts"
+        ],
+        "rows": [
+          [
+            "No. of figure texts",
+            "78",
+            "65",
+            "47",
+            "757",
+            "3,853"
+          ],
+          [
+            "Precision (%)",
+            "37.2",
+            "74.3",
+            "87.3",
+            "73.0",
+            "62.5"
+          ],
+          [
+            "Recall (%)",
+            "44.7",
+            "52.6",
+            "68.8",
+            "62.0",
+            "51.0"
+          ],
+          [
+            "F1-score (%)",
+            "40.6",
+            "61.6",
+            "77.0",
+            "67.1",
+            "56.2"
+          ]
+        ],
+        "footnotes": [],
+        "section": "body",
+        "render_state": "inline",
+        "_table_fallback_count": 0,
+        "_table_layout_degraded_count": 0,
+        "link": "info:doi/10.1371/journal.pone.0015338.t005",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.t005",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.t005",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.t005",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": "pone-0015338-t005-5",
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.t005"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.t005",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/496d121408686a40-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/496d121408686a40-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 1965,
+        "height": 794,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.t005.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "pone-0015338-g008",
+        "anchor_key": "pone-0015338-g008",
+        "heading": "Figure 8",
+        "caption": "(A) Abbreviations and linked terms. (B) Gene sequences.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "info:doi/10.1371/journal.pone.0015338.g008",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.g008",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.g008",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.g008",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g008"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g008",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.g008.png"
+      ],
+      "record": "body_assets/pone.0015338.g008.png",
+      "validation": {
+        "format": "image/png",
+        "width": 1997,
+        "height": 2082,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.g008.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "pone-0015338-g009",
+        "anchor_key": "pone-0015338-g009",
+        "heading": "Figure 9",
+        "caption": "(A) High image complexity. (B) Thick stroke. (C) Low image contrast. (D) Small font size. (E) Non-standard font type.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "info:doi/10.1371/journal.pone.0015338.g009",
+        "original_url": "info:doi/10.1371/journal.pone.0015338.g009",
+        "alternatives": [
+          {
+            "url": "info:doi/10.1371/journal.pone.0015338.g009",
+            "original_url": "info:doi/10.1371/journal.pone.0015338.g009",
+            "content_type": "image",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g009"
+      },
+      "download_url": "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g009",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/pone.0015338.g009.png"
+      ],
+      "record": "body_assets/pone.0015338.g009.png",
+      "validation": {
+        "format": "image/png",
+        "width": 2068,
+        "height": 1336,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pone.0015338.g009.png",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 18,
+    "unique_files": 18,
+    "verified_files": 18,
+    "replayed_files": 18,
+    "complete_received_files": 18,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1371_journal.pone.0015338/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1371_journal.pone.0015338/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 18,
+    "unique_files": 18,
+    "verified_files": 18,
+    "replayed_files": 18,
+    "complete_received_files": 18
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

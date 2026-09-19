@@ -1,0 +1,121 @@
+{
+  "records": [
+    {
+      "captured_at_utc": "2026-09-15T06:21:59.209671+00:00",
+      "timestamp_basis": "Associated CLI completion",
+      "requested_url": null,
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "cli_artifact",
+      "transport": "Current CLI artifact; no HTTP envelope inferred",
+      "capture_scope": "Passive capture index; unrelated third-party challenge/widget documents omitted.",
+      "body_file": "acquisition/subscription-2026-09-15/capture.json",
+      "size": 676,
+      "sha256": "41e2bb5fdf7e29ac18aa7080acd03275bfce8056efd2cbab2ad072febd401a2f",
+      "doi": "10.1038/nature12915",
+      "provider": "springer"
+    },
+    {
+      "captured_at_utc": "2026-09-15T06:21:59.209671+00:00",
+      "timestamp_basis": "Associated CLI completion",
+      "requested_url": null,
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "cli_artifact",
+      "transport": "Current CLI artifact; no HTTP envelope inferred",
+      "capture_scope": "Original CLI manifest including terminal acceptance and original output snapshots. Original absolute paths remain historical; archived files are mapped in the acquisition summary.",
+      "body_file": "acquisition/subscription-2026-09-15/fetch.manifest.json",
+      "size": 18845,
+      "sha256": "71c197a7ae5addbdebae1f0b139aa4196b52cb03f58da76a2318eea0fd421b83",
+      "doi": "10.1038/nature12915",
+      "provider": "springer"
+    },
+    {
+      "captured_at_utc": "2026-09-15T06:21:59.209671+00:00",
+      "timestamp_basis": "Associated CLI completion",
+      "requested_url": null,
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "cli_artifact",
+      "transport": "Current CLI artifact; no HTTP envelope inferred",
+      "capture_scope": "Original current CLI output; PDF identity/file evidence only, no PDF parsing quality claim.",
+      "body_file": "acquisition/subscription-2026-09-15/article.json",
+      "size": 76836,
+      "sha256": "c6390975df5aa84ee75ff68c8a05bfe7c295c969750e942a2ee3b8ede756a9ae",
+      "doi": "10.1038/nature12915",
+      "provider": "springer"
+    },
+    {
+      "captured_at_utc": "2026-09-15T06:21:59.209671+00:00",
+      "timestamp_basis": "Associated CLI completion",
+      "requested_url": null,
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "cli_artifact",
+      "transport": "Current CLI artifact; no HTTP envelope inferred",
+      "capture_scope": "Original current CLI output; PDF identity/file evidence only, no PDF parsing quality claim.",
+      "body_file": "acquisition/subscription-2026-09-15/downloaded.pdf",
+      "size": 2152917,
+      "sha256": "354fa3cf14c1761e46bc24632c4459489a6d5f8bb9fdd50a0d6929f9c6d2fa64",
+      "doi": "10.1038/nature12915",
+      "provider": "springer"
+    },
+    {
+      "captured_at_utc": "2026-09-15T06:21:59.209671+00:00",
+      "timestamp_basis": "Associated CLI completion",
+      "requested_url": null,
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "cli_artifact",
+      "transport": "Current CLI artifact; no HTTP envelope inferred",
+      "capture_scope": "Identity resolved before fetch; DOI resolution alone does not prove publisher access.",
+      "body_file": "acquisition/subscription-2026-09-15/identity.json",
+      "size": 344,
+      "sha256": "41595db9b7cfbcf0455606713340867fdadf559f80a4dd817dc27a02aa6884c2",
+      "doi": "10.1038/nature12915",
+      "provider": "springer"
+    },
+    {
+      "doi": "10.1038/nature12915",
+      "provider": "springer",
+      "requested_url": "https://api.crossref.org/works/10.1038%2Fnature12915",
+      "final_url": "https://api.crossref.org/works/10.1038%2Fnature12915",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:47 GMT",
+        "content-type": "application/json",
+        "content-length": "6877"
+      },
+      "captured_at_utc": "2026-09-18T02:21:46.530625+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 22965,
+      "sha256": "3c46d489e0f92027d3e5b8a32ee5bbc9a28858fb2edc2db980dace6c304caf03",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1038/nature12915",
+      "provider": "springer",
+      "requested_url": "https://www.nature.com/articles/nature12915",
+      "final_url": "https://www.nature.com/articles/nature12915",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html; charset=utf-8",
+        "date": "Fri, 18 Sep 2026 02:21:51 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:21:52.191274+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "size": 460274,
+      "sha256": "bedea018d4b1100b80edf296c5a7241d3b4cf1c3140bc6072a40e0e9882da008",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

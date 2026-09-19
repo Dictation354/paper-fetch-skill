@@ -254,6 +254,7 @@ PROVIDER_BUNDLE = ProviderBundle(
             supplementary_text_tokens=_annualreviews_html.ANNUALREVIEWS_SUPPLEMENTARY_TEXT_TOKENS,
         ),
         availability=AvailabilityPolicy(
+            paywall_gate_selectors=".js-launch-price-overlay",
             name="annualreviews",
             site_rule_overrides=_annualreviews_html.ANNUALREVIEWS_SITE_RULE_OVERRIDES,
         ),

@@ -1,0 +1,25 @@
+{
+  "doi": "10.1109/ACCESS.2024.3352924",
+  "source_input": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/original.html",
+  "source_sha256": "8b0b744803f076bacd83723c166366aad2da9c1531d31916764ddb1bf9e27a1b",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "894eb17217f06d08230a7c68db3f4a3900f931f45653cf896e1a6a9471286fc8",
+  "files": [
+    {
+      "filename": "vieir1-3352924-large.gif",
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir1-3352924-large.gif",
+      "source_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir1-3352924-large.gif",
+      "sha256": "e6fc7d6338f8fa4f6a67775979581c6a7e569de02c4ea570a81769a861b54540",
+      "size": 74773,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 820,
+      "height": 583,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.597517+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 0
+}

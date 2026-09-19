@@ -1,0 +1,13 @@
+{
+  "doi": "10.1080/15481603.2026.2667034",
+  "captured_at_utc": "2026-09-16T05:57:22.184545+00:00",
+  "requested_url": "https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034",
+  "browser_mode": "headless",
+  "backend": "camoufox",
+  "attempt": 1,
+  "user_authorized_browser_retry": true,
+  "outcome": "received_dom",
+  "status_code": 200,
+  "final_url": "https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034",
+  "dom_file": "acquisition/browser-retry-2026-09-16/landing-dom.html"
+}

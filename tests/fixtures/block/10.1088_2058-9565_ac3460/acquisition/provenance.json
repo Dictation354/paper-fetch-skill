@@ -1,0 +1,33 @@
+{
+  "records": [
+    {
+      "doi": "10.1088/2058-9565/ac3460",
+      "provider": "iop",
+      "requested_url": "https://iopscience.iop.org/article/10.1088/2058-9565/ac3460",
+      "final_url": "https://validate.perfdrive.com/fb803c746e9148689b3984a31fccd902/?ssa=b7215486-a468-4d5e-b8b7-369796229cfc&ssb=22295204979&ssc=https%3A%2F%2Fiopscience.iop.org%2Farticle%2F10.1088%2F2058-9565%2Fac3460&ssi=0f0a574f-cnvj-40ea-88d4-2f9afb76527e&ssk=botmanager_support%40radware.com&ssm=47365781393528994103294357412067&ssn=80a6402de99445d11b94ca3a35c04206ca1c58e468f4-1412-494d-84d9ad&sso=df682c6c-d30f4ffeb0a58eb05ea8a09ef17944aa59ada55b0442c067&ssp=78798298621789407023178946639607483&ssq=79916664140170485973141401981391393926203&ssr=MTYyLjEwNS4xOTkuMTM5&sst=paper-fetch-skill%2F6.2.4&ssu=&ssv=&ssw=&ssx=eyJyZCI6ImlvcC5vcmciLCJfX3V6bWYiOiI3ZjkwMDA1OGU0NjhmNC0xNDEyLTQ5NGQtOGM2Yy1kMzBmNGZmZWIwYTUxLTE3ODk0NDE0MDE2MzMwLTAwNDc2ZjllN2IzYjdkZTY3MTcxMCIsInV6bXgiOiI3ZmMwMDAyM2Q1MTYxYS02ZjEzLTQ5ODctOTBkMS1hZmEzYzY2ZDZlNGQxLTE3ODk0NDE0MDE2MzMwLTAwNWJhOGViZTMwMWQxMmIwYzMxMCJ9",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "content-length": "5347",
+        "connection": "keep-alive",
+        "date": "Tue, 15 Sep 2026 03:03:22 GMT",
+        "server": "Apache",
+        "expires": "Thu, 19 Nov 1981 08:52:00 GMT",
+        "cache-control": "no-store, no-cache, must-revalidate",
+        "pragma": "no-cache",
+        "vary": "Accept-Encoding",
+        "content-encoding": "gzip",
+        "via": "1.1 google",
+        "alt-svc": "h3=\":443\"; ma=2592000"
+      },
+      "captured_at_utc": "2026-09-15T03:03:19.919010+00:00",
+      "size": 14375,
+      "sha256": "c9119a038fdbb0d86d6df55b7e6f4ae87094bc3b72b20a776c734fd6d0dd7786",
+      "error": null,
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "attempt": 1,
+      "body_file": "raw.html"
+    }
+  ]
+}

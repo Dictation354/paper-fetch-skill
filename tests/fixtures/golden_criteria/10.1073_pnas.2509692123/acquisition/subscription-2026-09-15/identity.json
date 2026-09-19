@@ -1,0 +1,16 @@
+{
+  "query": "10.1073/pnas.2509692123",
+  "query_kind": "doi",
+  "doi": "10.1073/pnas.2509692123",
+  "landing_url": null,
+  "provider_hint": "pnas",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 16,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "pnas"
+}

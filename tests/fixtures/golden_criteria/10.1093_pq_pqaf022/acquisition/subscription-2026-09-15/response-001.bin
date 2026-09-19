@@ -1,0 +1,2549 @@
+
+
+
+
+<!DOCTYPE html>
+
+<html lang="en" class="no-js">
+
+<head>
+    <!-- charset must appear in the first 1024 bytes of the document -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Embodied Idealism: Merleau-Ponty's Transcendental Philosophy | The Philosophical Quarterly | Oxford Academic</title>
+        
+                
+
+
+        <script type='text/javascript' defer src='//js.trendmd.com/trendmd.min.js' data-trendmdconfig='{"element":"#trendmd-suggestions"}' ></script>
+
+
+
+
+
+    <script src="//oup.silverchair-cdn.com/Themes/Silver/app/js/jquery.3.7.1.min.js" type="text/javascript"></script>
+<script>window.jQuery || document.write('<script src="//oup.silverchair-cdn.com/Themes/Silver/app/js/jquery.3.7.1.min.js" type="text/javascript">\x3C/script>')</script>
+<script src="//oup.silverchair-cdn.com/Themes/Silver/app/vendor/v-639223576511427181/jquery-migrate-1.4.1.min.js" type="text/javascript"></script>
+
+    <script type='text/javascript' src='https://platform-api.sharethis.com/js/sharethis.js#property=643701de45aa460012e1032e&amp;product=sop' async='async' ></script>
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=10" />
+
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <!-- Turn off telephone number detection. -->
+    <meta name="format-detection" content="telephone=no" />
+    
+<!-- Bookmark Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="//oup.silverchair-cdn.com/UI/app/img/v-639223570670684723/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="//oup.silverchair-cdn.com/UI/app/img/v-639223570672069808/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="//oup.silverchair-cdn.com/UI/app/img/v-639223570671619581/favicon-16x16.png" sizes="16x16">
+  <link rel="mask-icon" href="//oup.silverchair-cdn.com/UI/app/img/v-639223570691659471/safari-pinned-tab.svg" color="#001C54">
+  <link rel="icon" href="//oup.silverchair-cdn.com/UI/app/img/v-639223570673180514/favicon.ico" sizes="32x32">
+  <link rel="manifest" href="//oup.silverchair-cdn.com/UI/app/img/v-639223570690178222/manifest.json">
+  <meta name="msapplication-config" content="//oup.silverchair-cdn.com/UI/app/img/v-639223570670734709/browserconfig.xml">
+  <meta name="theme-color" content="#002f65">
+
+
+    
+
+
+
+
+<link rel="stylesheet" type="text/css" href="//oup.silverchair-cdn.com/UI/app/fonts/icons.css" />
+
+<link rel="stylesheet" type="text/css" href="//oup.silverchair-cdn.com/Themes/Client/app/css/v-639237373836398581/site.min.css" />
+
+
+
+
+        <link href="//oup.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/CSS/journals/v-639247210594645925/global.css" rel="stylesheet" type="text/css" />
+            <link href="//oup.silverchair-cdn.com/data/SiteBuilderAssets/Live/CSS/pq/v-638894495154720158/Site.css" rel="stylesheet" type="text/css" />
+
+
+
+    <script>
+        var dataLayer = [{"full_title":"Embodied Idealism: Merleau-Ponty\u0027s Transcendental Philosophy","short_title":"Embodied Idealism: Merleau-Ponty\u0027s Transcendental Philosophy","authors":"Yuhui Li","issue_and_volume":"Volume 76 | Issue 1","type":"book-review","online_publication_date":"2025-03-12","access_type":"Paid","license_type":"publisher-standard","event_type":"full-text","discipline_ot_level_1":"Arts and Humanities","discipline_ot_level_2":"Philosophy","supplier_tag":"SC_Journals","object_type":"Article","taxonomy":"taxId%3a39%7ctaxLabel%3aAcademicSubjects%7cnodeId%3aAHU02720%7cnodeLabel%3aPhilosophy%7cnodeLevel%3a2","siteid":"pq","authentication_method":"IP","authzrequired":"true","account_id":"20009074","account_list":"20009074,20009069,20039220,20210862,20035891,20215226,20035883,20035800,20046794","authnips":"0LqXc0YsxEbIksjrobpEXg==","doi":"10.1093/pq/pqaf022"}];
+        window.gtmDataLayerSettings = { enableUserEvents: false, textTruncateLength: 150, scrollDepthThreshold: 10 };
+    </script>
+            <script>
+                (function (w, d, s, l, i) {
+                    w[l] = w[l] || []; w[l].push({
+                        'gtm.start':
+                            new Date().getTime(), event: 'gtm.js'
+                    }); var f = d.getElementsByTagName(s)[0],
+                        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+                        j.setAttribute('type', 'text/javascript');
+                        j.async = true; j.src =
+                        'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+                })(window, document, 'script', 'dataLayer', 'GTM-W6DD7HV');
+            </script>
+
+    
+
+        <script type="text/javascript">
+            var App = App || {};
+            App.LoginUserInfo = {
+                isInstLoggedIn: 1,
+                isIndividualLoggedIn: 0
+            };
+
+            App.CurrentSubdomain = 'pq';
+            App.SiteURL = 'academic.oup.com/pq';
+            App.EnableAdobeAnalytics = false;
+        </script>
+    
+    
+    <link href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css" media="print" onload="this.onload=null;this.removeAttribute('media');" rel="stylesheet" type="text/css" />
+    <script type="application/ld+json">
+        {"@context":"https://schema.org","@type":"ScholarlyArticle","@id":"https://academic.oup.com/pq/article/76/1/444/8071416","name":"Embodied Idealism: Merleau-Ponty's Transcendental Philosophy","datePublished":"2025-03-12","isPartOf":{"@id":"https://academic.oup.com/pq/issue/76/1","@type":"PublicationIssue","issueNumber":"1","datePublished":"2025-12-03","isPartOf":{"@id":"https://academic.oup.com/pq/pq","@type":"Periodical","name":"The Philosophical Quarterly","issn":["1467-9213"]}},"url":"https://dx.doi.org/10.1093/pq/pqaf022","inLanguage":"en","copyrightHolder":"Scots Philosophical Association and the University of St. Andrews","copyrightYear":"2026","publisher":"Oxford University Press","sameAs":["https://dx.doi.org/10.1093/pq/pqaf022"],"author":[{"name":"Li, Yuhui","affiliation":"Hunan University ,  China","@type":"Person"}],"description":"Maurice Merleau-Ponty's connection to idealism has long been debated in philosophical circles. Although his phenomenology is rooted in embodied subjectivit","pageStart":"444","pageEnd":"448","siteName":"OUP Academic","thumbnailURL":"https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/pq/Issue/76/1/2/m_cover.jpeg?Expires=1851386509&Signature=pqwcrPKTRjUva~430b7GLRxI-8ArTuRbshzrnsVlGHNWspOJAwAaSQMfgSQd2FOSwy7Yir4i5vP2S8EEKztBqN0t8PH3pABdu5LUZra14Fe1jAXqNj330rf8yBy5MI3DW5~PuibCox~oV30gvQ6hOn9~CrYAdavDpP7u~UdPgB1xiT9wbOwnFngOBwqWMOEBvg4AChokRs1ZvVlc9Zgh7qhdvCNXqIdHnC~ZGuG~BvfZIVLPBn6tfF0Kk8szVA-NgnatfTUpa4-PejzF6uJQqbes--bYvZCYMqxpqYyAY52tDbTqw2AQFaa9CFsbkoI1LTc-e0bT~Chm1798Z6VHqA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA","headline":"Embodied Idealism: Merleau-Ponty's Transcendental Philosophy","image":"https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/pq/Issue/76/1/2/m_cover.jpeg?Expires=1851386509&Signature=pqwcrPKTRjUva~430b7GLRxI-8ArTuRbshzrnsVlGHNWspOJAwAaSQMfgSQd2FOSwy7Yir4i5vP2S8EEKztBqN0t8PH3pABdu5LUZra14Fe1jAXqNj330rf8yBy5MI3DW5~PuibCox~oV30gvQ6hOn9~CrYAdavDpP7u~UdPgB1xiT9wbOwnFngOBwqWMOEBvg4AChokRs1ZvVlc9Zgh7qhdvCNXqIdHnC~ZGuG~BvfZIVLPBn6tfF0Kk8szVA-NgnatfTUpa4-PejzF6uJQqbes--bYvZCYMqxpqYyAY52tDbTqw2AQFaa9CFsbkoI1LTc-e0bT~Chm1798Z6VHqA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA","image:alt":"Issue Cover"}
+    </script>
+<meta property="og:site_name" content="OUP Academic" />
+<meta property="og:title" content="Embodied Idealism: Merleau-Ponty's Transcendental Philosophy" />
+<meta property="og:description" content="Maurice Merleau-Ponty's connection to idealism has long been debated in philosophical circles. Although his phenomenology is rooted in embodied subjectivit" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://dx.doi.org/10.1093/pq/pqaf022" />
+<meta property="og:updated_time" content="" />
+<meta property="og:image" content="https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/pq/Issue/76/1/2/m_cover.jpeg?Expires=1851386509&Signature=pqwcrPKTRjUva~430b7GLRxI-8ArTuRbshzrnsVlGHNWspOJAwAaSQMfgSQd2FOSwy7Yir4i5vP2S8EEKztBqN0t8PH3pABdu5LUZra14Fe1jAXqNj330rf8yBy5MI3DW5~PuibCox~oV30gvQ6hOn9~CrYAdavDpP7u~UdPgB1xiT9wbOwnFngOBwqWMOEBvg4AChokRs1ZvVlc9Zgh7qhdvCNXqIdHnC~ZGuG~BvfZIVLPBn6tfF0Kk8szVA-NgnatfTUpa4-PejzF6uJQqbes--bYvZCYMqxpqYyAY52tDbTqw2AQFaa9CFsbkoI1LTc-e0bT~Chm1798Z6VHqA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA" />
+<meta property="og:image:url" content="https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/pq/Issue/76/1/2/m_cover.jpeg?Expires=1851386509&Signature=pqwcrPKTRjUva~430b7GLRxI-8ArTuRbshzrnsVlGHNWspOJAwAaSQMfgSQd2FOSwy7Yir4i5vP2S8EEKztBqN0t8PH3pABdu5LUZra14Fe1jAXqNj330rf8yBy5MI3DW5~PuibCox~oV30gvQ6hOn9~CrYAdavDpP7u~UdPgB1xiT9wbOwnFngOBwqWMOEBvg4AChokRs1ZvVlc9Zgh7qhdvCNXqIdHnC~ZGuG~BvfZIVLPBn6tfF0Kk8szVA-NgnatfTUpa4-PejzF6uJQqbes--bYvZCYMqxpqYyAY52tDbTqw2AQFaa9CFsbkoI1LTc-e0bT~Chm1798Z6VHqA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA" />
+<meta property="og:image:secure_url" content="https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/pq/Issue/76/1/2/m_cover.jpeg?Expires=1851386509&Signature=pqwcrPKTRjUva~430b7GLRxI-8ArTuRbshzrnsVlGHNWspOJAwAaSQMfgSQd2FOSwy7Yir4i5vP2S8EEKztBqN0t8PH3pABdu5LUZra14Fe1jAXqNj330rf8yBy5MI3DW5~PuibCox~oV30gvQ6hOn9~CrYAdavDpP7u~UdPgB1xiT9wbOwnFngOBwqWMOEBvg4AChokRs1ZvVlc9Zgh7qhdvCNXqIdHnC~ZGuG~BvfZIVLPBn6tfF0Kk8szVA-NgnatfTUpa4-PejzF6uJQqbes--bYvZCYMqxpqYyAY52tDbTqw2AQFaa9CFsbkoI1LTc-e0bT~Chm1798Z6VHqA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA" />
+<meta property="og:image:alt" content="Issue Cover" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="citation_author" content="Li, Yuhui" /><meta name="citation_author_institution" content="Hunan University, China" /><meta name="citation_title" content="Embodied Idealism: Merleau-Ponty's Transcendental Philosophy" /><meta name="citation_firstpage" content="444" /><meta name="citation_lastpage" content="448" /><meta name="citation_doi" content="10.1093/pq/pqaf022" /><meta name="citation_journal_title" content="The Philosophical Quarterly" /><meta name="citation_journal_abbrev" content="Philos Q" /><meta name="citation_volume" content="76" /><meta name="citation_issue" content="1" /><meta name="citation_publication_date" content="2025/12/03" /><meta name="citation_issn" content="0031-8094" /><meta name="citation_publisher" content="Oxford Academic" /><meta name="citation_pdf_url" content="https://academic.oup.com/pq/article-pdf/76/1/444/62384252/pqaf022.pdf" /><meta name="description" content="Maurice Merleau-Ponty's connection to idealism has long been debated in philosophical circles. Although his phenomenology is rooted in embodied subjectivit" /><meta name="citation_xml_url" content="https://academic.oup.com/pq/article-xml/76/1/444/8071416" />
+
+
+    <link rel="canonical" href="https://academic.oup.com/pq/article-abstract/76/1/444/8071416" />
+
+
+
+
+
+
+
+    <meta name="publish_image" content="//oup.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/pq/pq_title554464630.svg" />
+
+
+
+    <meta name="product_code" content="J_pq_2026_01_12" />
+    <meta name="product_code" content="J_pq_2026_01_13" />
+    <meta name="product_code" content="J_pq_2025_01_15" />
+    <meta name="product_code" content="J_PQ_1996_01_9999" />
+    <meta name="product_code" content="J_pq_2025_01_13" />
+    <meta name="product_code" content="j_ALLJOURNALS" />
+    <meta name="product_code" content="J_pq_2024_01_27" />
+    <meta name="product_code" content="J_8071416" />
+    <meta name="product_code" content="I_168435" />
+
+    <meta name="tdm-reservation" content="1">
+
+    <meta name="tdm-policy" content="https://academic.oup.com/DocumentLibrary/tdmrep-policy.json">
+
+
+
+
+    
+
+
+
+        <script>
+            var SCM = SCM || {};
+            SCM.pubGradeAdsEnabled = true;
+            SCM.pubGradeJSLibrary = 'https://cdn.pbgrd.com/core-oup-new.js';
+        </script>
+    <script async="async" src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+    <script>
+        var googletag = googletag || {};
+        googletag.cmd = googletag.cmd || [];
+    </script>
+        
+            <script type='text/javascript'>
+            var gptAdSlots = [];
+            googletag.cmd.push(function() {
+                    
+                    var mapping_ad1 = googletag.sizeMapping()
+                        .addSize([1024, 0], [[970, 90], [728, 90]])
+                        .addSize([768, 0], [728, 90])
+                        .addSize([0, 0], [320, 50])
+                        .build();
+                    gptAdSlots["ad1"] = googletag.defineSlot('/116097782/pq/authenticated',
+                            [[970, 90], [728, 90], [320, 50]], 'adBlockHeader')
+                        .defineSizeMapping(mapping_ad1)
+                        .addService(googletag.pubads())
+                        .setTargeting("ad_position", "ad1");
+                    
+
+                    
+                    var mapping_ad2 = googletag.sizeMapping()
+                        .addSize([768, 0], [[300, 250], [300, 600], [160, 600]])
+                        .build();
+                    gptAdSlots["ad2"] = googletag.defineSlot('/116097782/pq/authenticated',
+                            [[300, 250], [160, 600], [300, 600]], 'adBlockMainBodyTop')
+                        .defineSizeMapping(mapping_ad2)
+                        .addService(googletag.pubads())
+                        .setTargeting("ad_position", "ad2");
+                    
+
+                    
+                    var mapping_ad3 = googletag.sizeMapping()
+                        .addSize([768, 0], [[300, 250], [300, 600], [160, 600]])
+                        .build();
+                    gptAdSlots["ad3"] = googletag.defineSlot('/116097782/pq/authenticated',
+                        [[300, 250], [160, 600], [300, 600]], 'adBlockMainBodyBottom')
+                        .defineSizeMapping(mapping_ad3)
+                        .addService(googletag.pubads())
+                        .setTargeting("ad_position", "ad3");
+                    
+
+                    
+                var mapping_ad4 = googletag.sizeMapping()
+                        .addSize([0,0], [320, 50])
+                        .addSize([768, 0], [728, 90])
+                        .build();
+                    gptAdSlots["ad4"] = googletag.defineSlot('/116097782/pq/authenticated',
+                        [728, 90], 'adBlockFooter')
+                        .defineSizeMapping(mapping_ad4)
+                        .addService(googletag.pubads())
+                        .setTargeting("ad_position", "ad4");
+                    
+
+                    
+                var mapping_ad6 = googletag.sizeMapping()
+                        .addSize([1024, 0], [[970, 90], [728, 90]])
+                        .addSize([768, 0], [728, 90])
+                        .addSize([0, 0], [320, 50])
+                        .build();
+                    gptAdSlots["ad6"] = googletag.defineSlot('/116097782/pq/authenticated',
+                        [[728, 90], [970, 90]], 'adBlockStickyFooter')
+                        .defineSizeMapping(mapping_ad6)
+                        .addService(googletag.pubads())
+                        .setTargeting("ad_position", "ad6");
+                    
+
+                    
+                    gptAdSlots["adInterstitial"] = googletag.defineOutOfPageSlot('/116097782/pq/authenticated',
+                        googletag.enums.OutOfPageFormat.INTERSTITIAL)
+                        .addService(googletag.pubads())
+                        .setTargeting("ad_position", "ad5");
+                    
+
+                    
+                var mapping_ad7 = googletag.sizeMapping()
+                        .addSize([1024, 0], [[320, 480], [300, 250], [336, 280]])
+                        .build();
+                gptAdSlots["adPrestitial"] = googletag.defineSlot('/116097782/pq/authenticated',
+                        [[320, 480], [300, 250], [336, 280]], 'adBlockPrestitial')
+                        .defineSizeMapping(mapping_ad7)
+                        .addService(googletag.pubads())
+                        .setTargeting("ad_position", "ad7");
+                    
+
+                googletag.pubads().addEventListener('slotRenderEnded', function (event) {
+                    if (!event.isEmpty) {
+                        $('.js-' + event.slot.getSlotElementId()).each(function () {
+                            if ($(this).find('iframe').length) {
+                                $(this).removeClass('hide');
+                            }
+                        });
+                    }
+                });
+
+                googletag.pubads().addEventListener('impressionViewable', function (event) {
+                    if (!event.isEmpty) {
+                        $('.js-' + event.slot.getSlotElementId()).each(function () {
+                            var $adblockDiv = $(this).find('.js-adblock');
+                            var $adText = $(this).find('.js-adblock-advertisement-text');
+                            if ($adblockDiv && $adblockDiv.is(':visible') && $adblockDiv.find('*').length > 1) {
+                                $adText.removeClass('hide');
+                                App.CenterAdBlock.Init($adblockDiv, $adText);
+                            }
+                            else {
+                                $adText.addClass('hide');
+                            }
+
+                            //Initialize logic for Sticky Footer Ad
+                            var $stickyFooterDiv = $(this).parents('.js-sticky-footer-ad');
+                            if ($stickyFooterDiv && $stickyFooterDiv.is(':visible') && $stickyFooterDiv.find('*').length > 1) {
+                                App.StickyFooterAd.Init();
+                            }
+                        });
+                    }
+                });
+
+                        googletag.pubads().setTargeting("authentication",  "authenticated");
+                        googletag.pubads().setTargeting("doi",  "10.1093/pq/pqaf022");
+                        googletag.pubads().setTargeting("url",  "pq/article/76/1/444/8071416");
+                        googletag.pubads().setTargeting("article_category",  );
+                        googletag.pubads().setTargeting("page_type",  "secondary");
+                        googletag.pubads().setTargeting("jnlsdoi",  "10.1093/pq/pqaf022");
+                        googletag.pubads().setTargeting("jnlsurl",  "pq/article/76/1/444/8071416");
+                        googletag.pubads().setTargeting("jnlspage",  "article");
+
+
+                googletag.pubads().enableSingleRequest();
+                googletag.pubads().disableInitialLoad();
+                googletag.pubads().collapseEmptyDivs();
+                googletag.enableServices();
+            });
+            </script>
+        
+        <input type="hidden"
+               class="hfInterstitial"
+               data-interstitiallinks="pq/issue,pq/advance-articles,pq/advance-article,pq/supplements,pq/article,pq/article-abstract,pq/pages"
+               data-subdomain="pq" />
+    
+    
+
+
+
+
+
+    <script type="text/javascript">
+        window.IQVIA_CONFIG = {"apiKey":"c49aaef5-55d0-49e5-bd13-03f7de80e51c","enabled":true};
+    </script>
+    <script async src="https://aim-tag.hcn.health/js/client.js?dl=aimDataLayer"></script>
+
+    
+
+
+    <script type="text/javascript">
+        var NTPT_PGEXTRA= 'event_type=full-text&discipline_ot_level_1=Arts and Humanities&discipline_ot_level_2=Philosophy&supplier_tag=SC_Journals&object_type=Article&taxonomy=taxId%3a39%7ctaxLabel%3aAcademicSubjects%7cnodeId%3aAHU02720%7cnodeLabel%3aPhilosophy%7cnodeLevel%3a2&siteid=pq&authentication_method=IP&authzrequired=true&account_id=20009074&account_list=20009074,20009069,20039220,20210862,20035891,20215226,20035883,20035800,20046794&authnips=162.105.199.139&doi=10.1093/pq/pqaf022';
+    </script>
+
+
+
+
+    <script src="https://scholar.google.com/scholar_js/casa.js" async></script>
+</head>
+
+<body data-sitename="thephilosophicalquarterly" class="off-canvas pg_Article pg_article   " theme-pq data-sitestyletemplate="Journal" >
+            <noscript>
+                <iframe  src="https://www.googletagmanager.com/ns.html?id=GTM-W6DD7HV"
+                        height="0" width="0" style="display:none;visibility:hidden"></iframe>
+            </noscript>
+            <nav aria-label="Skip navigation">
+                <a href="#skipNav" class="skipnav">Skip to Main Content</a>
+            </nav>
+<input id="hdnSiteID" name="hdnSiteID" type="hidden" value="5498" /><input id="hdnAdDelaySeconds" name="hdnAdDelaySeconds" type="hidden" value="3000" /><input id="hdnAdConfigurationTop" name="hdnAdConfigurationTop" type="hidden" value="default" /><input id="hdnAdConfigurationRightRail" name="hdnAdConfigurationRightRail" type="hidden" value="default" />
+    <div class="ad-banner js-ad-revealer ad-banner-revealer" role="region" aria-label="Advertisement" aria-hidden="true">
+    <div class="widget widget-AdBlock widget-instance-HeaderRevealerAd"
+         data-widget-name="AdBlock"
+         data-widget-instance="HeaderRevealerAd">
+        
+
+    </div>
+
+    </div>
+    
+
+
+
+
+
+
+<div class="master-container js-master-container">
+<section class="master-header row js-master-header vt-site-page-header">
+    <div class="widget widget-SitePageHeader widget-instance-SitePageHeader"
+         data-widget-name="SitePageHeader"
+         data-widget-instance="SitePageHeader">
+        
+
+    <div class="ad-banner js-ad-banner-header">
+    <div class="widget widget-AdBlock widget-instance-HeaderAd"
+         data-widget-name="AdBlock"
+         data-widget-instance="HeaderAd">
+        <div class="js-adBlock-parent-wrap adblock-parent-wrap">
+    <div class="adBlockHeader-wrap js-adBlockHeader hide">
+        <div id="adBlockHeader" class="js-adblock at-adblock"
+             data-lazy-load-margin="150">
+            <script>
+                googletag.cmd.push(function () {
+                    googletag.display('adBlockHeader');
+                });
+            </script>
+        </div>
+            <div class="advertisement-text at-adblock js-adblock-advertisement-text hide">Advertisement</div>
+            </div>
+</div>
+    </div>
+
+    </div>
+
+    <div class="oup-header sigma ">
+        <div class="center-inner-row">
+
+<div class="oup-header-logo">
+
+        <a href="/">
+            <img src="//oup.silverchair-cdn.com/UI/app/svg/umbrella/oxford-academic-logo.svg" alt="Oxford Academic"
+                 class="oup-header-image at-oup-header-image " />
+        </a>
+
+</div>                    <ul class="oup-header-menu account-menu sigma-account-menu ">
+
+            
+            <li class="oup-header-menu-item mobile">
+                <a href="javascript:;" class="mobile-dropdown-toggle mobile-search-toggle">
+                    <i class="icon-menu_search"><span class="screenreader-text">Search Menu</span></i>
+                </a>
+            </li>
+
+                <li class="oup-header-menu-item mobile">
+
+
+                </li>
+                <li class="oup-header-menu-item mobile info-icon-menu-item">
+        <a href="/pages/information" target="_blank" class="at-info-button sigma-info-wrapper">
+            <img class="sigma-info-icon" src="//oup.silverchair-cdn.com/UI/app/svg/i.svg" alt="Information" />
+        </a>
+    </li>
+    <li class="oup-header-menu-item mobile account-icon-menu-item">
+        <a href="javascript:;" class="account-button js-account-button at-account-button "
+           role="button" data-turnawayparams="journal%3dpq"
+           aria-controls="login-box-panel" aria-expanded="false">
+            <img class="sigma-account-icon" src="//oup.silverchair-cdn.com/UI/app/svg/account.svg" alt="Account" />
+        </a>
+    </li>
+
+
+            
+            <li class="oup-header-menu-item mobile">
+                <a href="javascript:;" class="mobile-dropdown-toggle mobile-nav-toggle"
+                   aria-controls="main-nav-menu" aria-expanded="false">
+                    <i class="icon-menu_hamburger"><span class="screenreader-text">Menu</span></i>
+                </a>
+            </li>
+
+            
+
+                <li class="oup-header-menu-item desktop info-icon-menu-item">
+        <a href="/pages/information" target="_blank" class="at-info-button sigma-info-wrapper">
+            <img class="sigma-info-icon" src="//oup.silverchair-cdn.com/UI/app/svg/i.svg" alt="Information" />
+        </a>
+    </li>
+    <li class="oup-header-menu-item desktop account-icon-menu-item">
+        <a href="javascript:;" class="account-button js-account-button at-account-button sigma-logo-wrapper"
+           role="button" data-turnawayparams="journal%3dpq"
+           aria-controls="login-box-panel" aria-expanded="false">
+            <img class="sigma-account-icon" src="//oup.silverchair-cdn.com/UI/app/svg/account.svg" alt="Account" />
+        </a>
+    </li>
+        <li class="oup-header-menu-item desktop account-icon-menu-item">
+    <div class="widget widget-SeamlessAccess widget-instance-SitePageHeader"
+         data-widget-name="SeamlessAccess"
+         data-widget-instance="SitePageHeader">
+            <div class="seamless-access-container">
+        <a href="javascript:;" class="js-shibboleth-action seamless-access-button seamless-button-header button-call-to-action at-institutional-sign-in" rel="nofollow"
+           data-action-type="" data-entity-id="">
+            <span class="seamless-access-text">Sign in through your institution</span>
+            <img class="society-link-icon" src="//oup.silverchair-cdn.com/UI/app/svg/chevron-right-white.svg" alt="Arrow" aria-hidden="true"/>
+
+        </a>
+        <div class="seamless-checkbox-container js-container-header">
+            <span class="ps-checkbox-holder access-header" id="ps-checkbox-holder-header"></span>
+            <label for="ps-checkbox" class="seamless-checkbox-label label-header">Remember my<br />institution</label>
+        </div>
+    </div>
+
+    </div>
+
+        </li>
+
+
+            
+
+        </ul>
+
+            <div id="login-box-panel" class="login-box-placeholder js-login-box-placeholder hide">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+<div class="dropdown-panel-wrap">
+
+    
+    <div class="dropdown-panel mobile-search-dropdown">
+        <div class="mobile-search-inner-wrap">
+
+
+<div class="navbar-search">
+    <search aria-label="Site search">
+        <div class="mobile-microsite-search">
+                <label for="SitePageHeader-mobile-navbar-search-filter" class="screenreader-text js-mobile-navbar-search-filter-label">
+                    Navbar Search Filter
+                </label>
+                <select class="mobile-navbar-search-filter js-mobile-navbar-search-filter at-navbar-search-filter" id="SitePageHeader-mobile-navbar-search-filter">
+
+<option class="navbar-search-filter-option at-navbar-search-filter-option" value="">The Philosophical Quarterly</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Issue">This issue</option>
+                        <optgroup class="navbar-search-optgroup" label="Search across Oxford Academic">
+<option class="navbar-search-filter-option at-navbar-search-filter-option" value="AcademicSubjects/AHU02720">Philosophy</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Books">Books</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Journals">Journals</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Umbrella">Oxford Academic</option>                        </optgroup>
+                </select>
+
+            <label for="SitePageHeader-mobile-microsite-search-term" class="screenreader-text js-mobile-microsite-search-term-label">
+                Mobile Enter search term
+            </label>
+            <input class="mobile-search-input mobile-microsite-search-term js-mobile-microsite-search-term at-microsite-search-term " type="search"
+                   maxlength="255" placeholder="Search" id="SitePageHeader-mobile-microsite-search-term">
+
+            <a href="javascript:;" class="mobile-microsite-search-icon mobile-search-submit icon-menu_search">
+                <span class="screenreader-text">Search</span>
+            </a>
+
+        </div>
+    </search>
+</div>
+
+
+        </div>
+    </div>
+   
+    <div class="dropdown-panel mobile-nav-dropdown">
+
+
+    <ul class="site-menu site-menu-lvl-0 at-site-menu" id="main-nav-menu">
+        <li class="site-menu-item site-menu-lvl-0 at-site-menu-item">
+
+                <a href="/pq/issue" class="nav-link">
+                    Issues
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-0 at-site-menu-item">
+
+                <a href="/pq/advance-articles" class="nav-link">
+                    Advance articles
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-0 at-site-menu-item">
+
+                <a href="javascript:;" class="nav-link js-nav-dropdown at-nav-dropdown" role="button" aria-expanded="false" aria-controls="submenu-1782706">
+                    Submit
+                    <i class="desktop-nav-arrow icon-general-arrow-filled-down arrow-icon"></i>
+                </a>
+                <i class="mobile-nav-arrow icon-general_arrow-down"></i>
+                <ul class="site-menu site-menu-lvl-1 at-site-menu" id="submenu-1782706">
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="/pq/pages/General_Instructions" class="nav-link">
+                    Author Guidelines
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="/pq/pages/General_Instructions" class="nav-link">
+                    Open Access
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="https://academic.oup.com/pq/pages/why-submit" class="nav-link">
+                    Why Publish with PQ?
+                </a>
+            
+        </li>
+            </ul>
+
+        </li>
+        <li class="site-menu-item site-menu-lvl-0 at-site-menu-item">
+
+                <a href="/pq/subscribe" class="nav-link">
+                    Purchase
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-0 at-site-menu-item">
+
+                <a href="/my-account/email-alerts" class="nav-link">
+                    Alerts
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-0 at-site-menu-item">
+
+                <a href="javascript:;" class="nav-link js-nav-dropdown at-nav-dropdown" role="button" aria-expanded="false" aria-controls="submenu-1782707">
+                    About
+                    <i class="desktop-nav-arrow icon-general-arrow-filled-down arrow-icon"></i>
+                </a>
+                <i class="mobile-nav-arrow icon-general_arrow-down"></i>
+                <ul class="site-menu site-menu-lvl-1 at-site-menu" id="submenu-1782707">
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="/pq/pages/About" class="nav-link">
+                    About The Philosophical Quarterly
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="http://www.scotsphil.org.uk/" class="nav-link">
+                    About the Scots Philosophical Association
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="http://www.st-andrews.ac.uk/philosophy/" class="nav-link">
+                    About the University of St. Andrews
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="/pq/pages/Editorial_Board" class="nav-link">
+                    Editorial Board
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="http://www.oupmediainfo.com/" class="nav-link">
+                    Advertising and Corporate Services
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="https://globaljobs-careernetwork.oxfordjournals.org/" class="nav-link">
+                    Journals Career Network
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="https://academic.oup.com/pages/self_archiving_policy_b" class="nav-link">
+                    Self-Archiving Policy
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="http://www.oxfordjournals.org/en/access-purchase/dispatch-dates.html" class="nav-link">
+                    Dispatch Dates
+                </a>
+            
+        </li>
+            </ul>
+
+        </li>
+            </ul>
+    </div>
+
+</div>
+
+    <div class="journal-header journal-bg">
+        <div class="center-inner-row">
+                            <a href="/pq" class="journal-logo-container">
+                    <img id="logo-ThePhilosophicalQuarterly" class="journal-logo" src="//oup.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/pq/pq_title554464630.svg" alt="The Philosophical Quarterly" />
+                </a>
+
+            <div class="society-logo-block">
+                    <div class="society-block-inner-wrap">
+                            <a href="http://www.scotsphil.org.uk/" target="" class="society-logo-container">
+                                <img id="logo-ScotsPhilosophicalAssociation" class="society-logo" src="//oup.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/pq/pq_h1283964783.png" alt="Scots Philosophical Association" />
+                            </a>
+                                                    <a href="http://www.st-andrews.ac.uk/philosophy/" target="" class="society-logo-container">
+                                <img id="logo-UniversityofSt.Andrews" class="society-logo" src="//oup.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/pq/pq_h2-705670944.svg" alt="University of St. Andrews" />
+                            </a>
+                    </div>            </div> 
+        </div>
+    </div>
+<div class="navbar">
+    <div class="center-inner-row">
+        <nav class="navbar-menu">
+
+    <ul class="site-menu site-menu-lvl-0 at-site-menu" id="main-nav-menu">
+        <li class="site-menu-item site-menu-lvl-0 at-site-menu-item">
+
+                <a href="/pq/issue" class="nav-link">
+                    Issues
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-0 at-site-menu-item">
+
+                <a href="/pq/advance-articles" class="nav-link">
+                    Advance articles
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-0 at-site-menu-item">
+
+                <a href="javascript:;" class="nav-link js-nav-dropdown at-nav-dropdown" role="button" aria-expanded="false" aria-controls="submenu-1782706">
+                    Submit
+                    <i class="desktop-nav-arrow icon-general-arrow-filled-down arrow-icon"></i>
+                </a>
+                <i class="mobile-nav-arrow icon-general_arrow-down"></i>
+                <ul class="site-menu site-menu-lvl-1 at-site-menu" id="submenu-1782706">
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="/pq/pages/General_Instructions" class="nav-link">
+                    Author Guidelines
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="/pq/pages/General_Instructions" class="nav-link">
+                    Open Access
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="https://academic.oup.com/pq/pages/why-submit" class="nav-link">
+                    Why Publish with PQ?
+                </a>
+            
+        </li>
+            </ul>
+
+        </li>
+        <li class="site-menu-item site-menu-lvl-0 at-site-menu-item">
+
+                <a href="/pq/subscribe" class="nav-link">
+                    Purchase
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-0 at-site-menu-item">
+
+                <a href="/my-account/email-alerts" class="nav-link">
+                    Alerts
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-0 at-site-menu-item">
+
+                <a href="javascript:;" class="nav-link js-nav-dropdown at-nav-dropdown" role="button" aria-expanded="false" aria-controls="submenu-1782707">
+                    About
+                    <i class="desktop-nav-arrow icon-general-arrow-filled-down arrow-icon"></i>
+                </a>
+                <i class="mobile-nav-arrow icon-general_arrow-down"></i>
+                <ul class="site-menu site-menu-lvl-1 at-site-menu" id="submenu-1782707">
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="/pq/pages/About" class="nav-link">
+                    About The Philosophical Quarterly
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="http://www.scotsphil.org.uk/" class="nav-link">
+                    About the Scots Philosophical Association
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="http://www.st-andrews.ac.uk/philosophy/" class="nav-link">
+                    About the University of St. Andrews
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="/pq/pages/Editorial_Board" class="nav-link">
+                    Editorial Board
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="http://www.oupmediainfo.com/" class="nav-link">
+                    Advertising and Corporate Services
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="https://globaljobs-careernetwork.oxfordjournals.org/" class="nav-link">
+                    Journals Career Network
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="https://academic.oup.com/pages/self_archiving_policy_b" class="nav-link">
+                    Self-Archiving Policy
+                </a>
+            
+        </li>
+        <li class="site-menu-item site-menu-lvl-1 at-site-menu-item">
+
+                <a href="http://www.oxfordjournals.org/en/access-purchase/dispatch-dates.html" class="nav-link">
+                    Dispatch Dates
+                </a>
+            
+        </li>
+            </ul>
+
+        </li>
+            </ul>
+        </nav>
+            <div class="navbar-right-container">
+                <div class="navbar-search-container js-navbar-search-container">
+                    <a href="javascript:;" class="navbar-search-close js_close-navsearch">Close</a>
+
+
+<div class="navbar-search">
+    <search aria-label="Site search">
+        <div class="microsite-search">
+                <label for="SitePageHeader-navbar-search-filter" class="screenreader-text js-navbar-search-filter-label">
+                    Navbar Search Filter
+                </label>
+                <select class="navbar-search-filter js-navbar-search-filter at-navbar-search-filter" id="SitePageHeader-navbar-search-filter">
+
+<option class="navbar-search-filter-option at-navbar-search-filter-option" value="">The Philosophical Quarterly</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Issue">This issue</option>
+                        <optgroup class="navbar-search-optgroup" label="Search across Oxford Academic">
+<option class="navbar-search-filter-option at-navbar-search-filter-option" value="AcademicSubjects/AHU02720">Philosophy</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Books">Books</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Journals">Journals</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Umbrella">Oxford Academic</option>                        </optgroup>
+                </select>
+
+            <label for="SitePageHeader-microsite-search-term" class="screenreader-text js-microsite-search-term-label">
+                Enter search term
+            </label>
+            <input class="navbar-search-input microsite-search-term js-microsite-search-term at-microsite-search-term " type="search"
+                   maxlength="255" placeholder="Search" id="SitePageHeader-microsite-search-term">
+
+            <a href="javascript:;" class="microsite-search-icon navbar-search-submit icon-menu_search">
+                <span class="screenreader-text">Search</span>
+            </a>
+
+        </div>
+    </search>
+</div>
+
+<input id="hfCurrentBookSearch" name="hfCurrentBookSearch" type="hidden" value="" /><input id="hfCurrentBookScope" name="hfCurrentBookScope" type="hidden" value="CurrentBook" /><input id="hfBookSiteScope" name="hfBookSiteScope" type="hidden" value="Books" /><input id="hfSeriesScope" name="hfSeriesScope" type="hidden" value="taxWithOr" /><input id="hfParentSiteName" name="hfParentSiteName" type="hidden" value="Oxford Academic" /><input id="hfParentSiteUrl" name="hfParentSiteUrl" type="hidden" value="academic.oup.com" /><input id="hfSiteID" name="hfSiteID" type="hidden" value="5498" /><input id="hfParentSiteID" name="hfParentSiteID" type="hidden" value="191" /><input id="hfJournalSiteScope" name="hfJournalSiteScope" type="hidden" value="Journals" /><input id="hfParentSiteScope" name="hfParentSiteScope" type="hidden" value="Parent" /><input id="hfDefaultSearchURL" name="hfDefaultSearchURL" type="hidden" value="search-results?page=1&amp;q=" /><input id="hfIssueSearch" name="hfIssueSearch" type="hidden" value="&amp;fl_IssueID=168435" /><input id="hfIssueSiteScope" name="hfIssueSiteScope" type="hidden" value="Issue" /><input id="hfUmbrellaScope" name="hfUmbrellaScope" type="hidden" value="Umbrella" /><input id="hfUmbrellaSiteUrl" name="hfUmbrellaSiteUrl" type="hidden" value="academic.oup.com" /><input id="hfUmbrellaSiteId" name="hfUmbrellaSiteId" type="hidden" value="191" /><input id="hfDefaultAdvancedSearchUrl" name="hfDefaultAdvancedSearchUrl" type="hidden" value="advanced-search?page=1&amp;q=" /><input id="hfTaggedCollectionScope" name="hfTaggedCollectionScope" type="hidden" value="" /><input id="hfApplyLatestEditionSearchFacet" name="hfApplyLatestEditionSearchFacet" type="hidden" value="False" /><input id="hfIsLatestBookEdition" name="hfIsLatestBookEdition" type="hidden" value="False" />
+                    <div class="navbar-search-advanced"><a href="/pq/advanced-search" class="advanced-search js-advanced-search">Advanced Search</a></div>
+                </div>
+                
+                <div class="navbar-search-collapsed"><a href="javascript:;" class="icon-menu_search js_expand-navsearch"><span class="screenreader-text">Search Menu</span></a></div>
+
+
+            </div>
+            </div>
+</div>
+    <input type="hidden" name="searchScope" id="hfSolrJournalID" value="" />
+    <input type="hidden" id="hfSolrJournalName" value="" />
+    <input type="hidden" id="hfSolrMaxAllowSearchChar" value="100" />
+    <input type="hidden" id="hfJournalShortName" value="" />
+    <input type="hidden" id="hfSearchPlaceholder" value="" />
+    <input type="hidden" name="hfGlobalSearchSiteURL" id="hfGlobalSearchSiteURL" value="" />
+    <input type="hidden" name="hfSearchSiteURL" id="hfSiteURL" value="academic.oup.com/pq" />
+    <input type="hidden" name="RedirectSiteUrl" id="RedirectSiteUrl" value="httpszazjzjacademiczwoupzwcom" />
+    <script type="text/javascript">
+        (function () {
+            var hfSiteUrl = document.getElementById('hfSiteURL');
+            var siteUrl = hfSiteUrl.value;
+            var subdomainIndex = siteUrl.indexOf('/');
+
+            hfSiteUrl.value = location.host + (subdomainIndex >= 0 ? siteUrl.substring(subdomainIndex) : '');
+        })();
+    </script>
+<input id="routename" name="RouteName" type="hidden" value="pq" />
+    </div>
+
+</section>
+        <div class="widget widget-SitewideBanner widget-instance-"
+         data-widget-name="SitewideBanner"
+         data-widget-instance="">
+        
+
+
+    </div>
+
+
+    <div id="main" class="content-main js-main ui-base">
+            <section class="master-main row">
+                <div class="center-inner-row no-overflow">
+                    <div id="skipNav" tabindex="-1"></div>
+                    
+
+
+
+<div class="page-column-wrap">
+<div id="InfoColumn" class="page-column page-column--left js-left-nav-col">
+    <div class="mobile-content-topbar hide">
+        <button class="toggle-left-col toggle-left-col__article">Article Navigation</button>
+    </div>
+    <div class="info-inner-wrap js-left-nav">
+        <button class="toggle-left-col__close btn-as-icon icon-general-close">
+            <span class="screenreader-text">Close mobile search navigation</span>
+        </button>
+        <div class="responsive-nav-title">Article Navigation</div>
+        <div class="info-widget-wrap">
+    <div class="widget widget-IssueInfo widget-instance-OUP_IssueInfo_Article"
+         data-widget-name="IssueInfo"
+         data-widget-instance="OUP_IssueInfo_Article">
+        
+
+<div id="issueInfo-OUP_IssueInfo_Article" class="article-info-wrap clearfix">
+    <i class="icon-general-close mobile-nav-btn nav-open"></i>
+    <a class="article-issue-link" href="/pq/issue/76/1">
+        <div class="article-issue-img">
+                <img id="issueImage"
+                     class="fb-featured-image"
+                     src="https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/pq/Issue/76/1/2/m_cover.jpeg?Expires=1792477710&amp;Signature=WXiTwR1C7NIkyud0tytnhmSqkWNunXMUSQ7Rr2gNOj1u2V09~NJ3FukPQJCMpVF~QTUMVG7W~YImDvXXlhpFwC~3HVar7KKCdLx-dRz3cSdJz1VXv-Ptw92kTXSwDxHRdfFgbqcKzaJOOIWEhqDCdsE2z2CPq668gkvXmutExqba~7Xzj0NWEyBzk59qfy6xH~P~QFzeDUtj8eCp1ou8YjtcBgNi2CuW6txlO22KMukjCe0cmhcUbUZwTFqODRRJxIOLhi-LkPOFZ6QVXUfYbMGCDrTUZx5tv5ZvZ8Rx8O9pjTZde2b8~YvISLCeb5R8d~xIWlZXdjwAywHmodOJLA__&amp;Key-Pair-Id=APKAIE5G5CRDK6RD3PGA"
+                     alt="The Philosophical Quarterly Cover Image for Volume 76, Issue 1" />
+        </div>
+        <div class="article-issue-info">
+            <div class="volume-issue__wrap">
+
+                        <div class="volume trailing-comma">Volume 76</div>
+                        <div class="issue">Issue 1</div>
+
+
+
+            </div>
+            <div class="ii-pub-date">
+January 2026            </div>
+            
+        </div>
+    </a>
+</div>
+    </div>
+
+            <div class="content-nav">
+    <div class="widget widget-ArticleJumpLinks widget-instance-OUP_ArticleJumpLinks_Widget"
+         data-widget-name="ArticleJumpLinks"
+         data-widget-instance="OUP_ArticleJumpLinks_Widget">
+        
+
+<h3 class="contents-title" >Article Contents</h3>
+<ul class="jumplink-list js-jumplink-list">
+        <li class="section-jump-link head-1" link-destination="542664750">
+            <div class="section-jump-link__link-wrap">
+
+                <a class="js-jumplink scrollTo" href="#542664750">Part I: Idealism Before <em>Phenomenology of Perception</em></a>
+            </div>
+        </li>
+        <li class="section-jump-link head-1" link-destination="542664756">
+            <div class="section-jump-link__link-wrap">
+
+                <a class="js-jumplink scrollTo" href="#542664756">Part II: Idealism in <em>Phenomenology of Perception</em></a>
+            </div>
+        </li>
+</ul>
+
+    </div>
+
+            </div>
+    <div class="widget widget-ArticleNavLinks widget-instance-OUP_ArticleNavLinks_Article"
+         data-widget-name="ArticleNavLinks"
+         data-widget-instance="OUP_ArticleNavLinks_Article">
+        <ul class="inline-list">
+        <li class="prev arrow">
+            <a href="/pq/article/76/1/441/8089862">&lt; Previous</a>
+        </li>        
+            <li class="next arrow">
+            <a href="/pq/article/76/1/448/7997060">Next &gt;</a>
+        </li>
+</ul>
+    </div>
+
+        </div>
+    </div>
+</div>
+<div class="sticky-toolbar js-sticky-toolbar"></div>
+<div id="ContentColumn" class="page-column page-column--center">
+
+    <div class="article-browse-top article-browse-mobile-nav js-mobile-nav">
+    <div class="article-browse-mobile-nav-inner js-mobile-nav-inner">
+        <button class="toggle-left-col toggle-left-col__article btn-as-link">
+            Article Navigation
+        </button>
+    </div>
+</div>
+<div class="article-browse-top article-browse-mobile-nav mobile-sticky-toolbar js-mobile-nav-sticky">
+    <div class="article-browse-mobile-nav-inner">
+        <button class="toggle-left-col toggle-left-col__article btn-as-link">
+            Article Navigation
+        </button>
+    </div>
+</div>
+
+    <div class="content-inner-wrap">
+    <div class="widget widget-ArticleTopInfo widget-instance-OUP_ArticleTop_Info_Widget"
+         data-widget-name="ArticleTopInfo"
+         data-widget-instance="OUP_ArticleTop_Info_Widget">
+        
+<div class="module-widget article-top-widget">
+
+    
+
+    
+        <div class="access-state-logos all-viewports">
+    <span class="journal-info__format-label">Journal Article</span>
+            </div>
+
+
+    <div class="widget-items">
+                <div class="title-wrap">
+                    <h1 class="wi-article-title article-title-main accessible-content-title at-articleTitle">
+                        Embodied Idealism: Merleau-Ponty's Transcendental Philosophy
+                            <span data-resource-id-access="8071416"><i class="js-access-icon-placeholder"></i></span>
+                    </h1>
+
+                </div>
+<div class="product"><div class="source ">Embodied Idealism: Merleau-Ponty's Transcendental Philosophy</div>. By <div class="name"> <div class="given-names">Joseph C.</div> <div class="surname">Berendzen</div></div>. (<div class="publisher-loc">Oxford</div>:  <div class="publisher-name">Oxford University Press</div>,  <div class="year">2023</div>. Pp.  <div class="fpage">288</div>. Price $95.00 (Hardcover).)</div>                <div class="wi-authors at-ArticleAuthors">
+                    <div class="al-authors-list">
+        <div class="al-author-name js-flyout-wrap" style="display:inline">
+            <a href="javascript:;" class="linked-name js-linked-name-trigger btn-as-link"
+               aria-controls="author-flyout-46299368" aria-expanded="false">Yuhui Li</a>
+            <span id="author-flyout-46299368" class="al-author-info-wrap arrow-up">
+<div class="info-card-author authorInfo_OUP_ArticleTop_Info_Widget">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Yuhui Li
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">Hunan University</div>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/pq/search-results?f_Authors=Yuhui+Li" rel="nofollow">Oxford Academic</a>
+</div>
+
+    <div class="info-card-search info-card-search-google">
+        <a href="http://scholar.google.com/scholar?q=author:%22Li Yuhui%22">Google Scholar</a>
+    </div>
+</div>            </span>
+
+        </div>
+
+
+                    </div>
+                </div>
+<div class="pub-history-wrap clearfix js-history-dropdown-wrap">
+
+        <div class="pub-history-row clearfix">
+            <div class="ww-citation-primary"><em>The Philosophical Quarterly</em>, Volume 76, Issue 1, January 2026, Pages 444–448, <a href='https://doi.org/10.1093/pq/pqaf022'>https://doi.org/10.1093/pq/pqaf022</a></div>
+        </div>
+        <div class="pub-history-row clearfix">
+            <div class="ww-citation-date-wrap">
+                <div class="citation-label">Published:</div>
+                <div class="citation-date">12 March 2025</div>
+            </div>
+                    </div>
+            </div>
+    </div>
+</div>
+
+
+
+
+
+    <script>
+    $(document).ready(function () {
+        $('.article-top-widget').on('click', '.ati-toggle-trigger', function () {
+            $(this).find('.icon-general-add, .icon-minus').toggleClass('icon-minus icon-general-add');
+            $(this).siblings('.ati-toggle-content').toggleClass('hide');
+        });
+
+        // In Chrome, an anchor tag with target="_blank" and a "mailto:" href opens a new tab/window as well as the email client
+        // I suspect this behavior will be corrected in the future
+        // Remove the target="_blank"
+        $('ul.wi-affiliationList').find('a[href^="mailto:"]').each(function () {
+            $(this).removeAttr('target');
+        });
+    });
+</script>
+
+
+    </div>
+    <div class="widget widget-ArticleLinks widget-instance-OUP_Article_Links_Widget"
+         data-widget-name="ArticleLinks"
+         data-widget-instance="OUP_Article_Links_Widget">
+        
+    </div>
+
+
+        <div class="article-body js-content-body">
+            <div class="toolbar-wrap js-toolbar-wrap">
+                <div class="toolbar-outer-wrap">
+                    <div class="toolbar-inner-wrap">
+                        <ul id="Toolbar" role="navigation">
+    <li class="toolbar-item item-pdf js-item-pdf ">
+        <a class="al-link pdf article-pdfLink" data-article-id="8071416" href="/pq/article-pdf/76/1/444/62384252/pqaf022.pdf">
+            <img src=//oup.silverchair-cdn.com/UI/app/svg/pdf.svg alt="pdf" /><span class="pdf-link-text">PDF</span>
+        </a>
+    </li>
+                                                    <li class="toolbar-item item-link item-split-view">
+                                <a href="javascript:;"
+                                   class="split-view js-split-view st-split-view at-split-view"
+                                   target="">
+                                    <i class="icon-menu-split"></i>
+                                    Split View
+                                </a>
+                            </li>
+
+                        <li class="toolbar-item item-with-dropdown item-views">
+                            <a class="at-views-dropdown drop-trigger" href="javascript:;" data-dropdown="FilterDrop" aria-haspopup="true">
+                                <i class="icon-menu_views"></i>
+                                <div class="toolbar-label">
+                                    <div class="toolbar-text">Views</div>
+                                    <i class="icon-general-arrow-filled-down arrow-icon"></i>
+                                </div>
+                            </a>
+                            <ul id="ViewsDrop" class="f-dropdown js-dropdown-content" data-dropdown-content aria-label="submenu">
+                                <div class="arrow-up"></div>
+                                <li class="article-content-filter js-article-content-filter" data-content-filter="article-content">
+                                    <a href="javascript:;"><span>Article contents</span></a>
+                                </li>
+                                <li class="at-figures-tables article-content-filter js-article-content-filter" data-content-filter="figures-tables">
+                                    <a href="javascript:;"><span>Figures &amp; tables</span></a>
+                                </li>
+                                <li class="article-content-filter js-article-content-filter" data-content-filter="video">
+                                    <a href="javascript:;"><span>Video</span></a>
+                                </li>
+                                <li class="article-content-filter js-article-content-filter" data-content-filter="audio">
+                                    <a href="javascript:;"><span>Audio</span></a>
+                                </li>
+                                <li class="article-content-filter js-article-content-filter" data-content-filter="supplementary-data">
+                                    <a href="javascript:;"><span>Supplementary Data</span></a>
+                                </li>
+                            </ul>
+                        </li>
+
+
+                        <li class="toolbar-item item-cite js-item-cite">
+    <div class="widget widget-ToolboxGetCitation widget-instance-OUP_Get_Citation"
+         data-widget-name="ToolboxGetCitation"
+         data-widget-instance="OUP_Get_Citation">
+        <a href="#" class="js-cite-button at-CiteButton" data-reveal-id="getCitation" data-reveal>
+    <i class="icon-read-more"></i>
+    <span>Cite</span>
+</a>
+
+<div id="getCitation" class="reveal-modal js-citation-modal" data-reveal>
+    <h3 class="modal-title">Cite</h3>
+        <div class="oxford-citation-text">
+            <p>Yuhui Li,  Embodied Idealism: Merleau-Ponty's Transcendental Philosophy, <em>The Philosophical Quarterly</em>, Volume 76, Issue 1, January 2026, Pages 444–448, <a href="https://doi.org/10.1093/pq/pqaf022">https://doi.org/10.1093/pq/pqaf022</a></p>
+        </div>
+
+
+    <div class="citation-download-wrap">
+        <form action="/Citation/Download" method="get" id="citationModal">
+            <input type="hidden" name="resourceId" value="8071416" />
+            <input type="hidden" name="resourceType" value="3" />
+            <label for="selectFormat" class="hide js-citation-format-label">Select Format</label>
+            <select required name="citationFormat" class="citation-download-format js-citation-format" id="selectFormat">
+                <option selected disabled >Select format</option>
+                        <option value="0" >.ris (Mendeley, Papers, Zotero)</option>
+                        <option value="1" >.enw (EndNote)</option>
+                        <option value="2" >.bibtex (BibTex)</option>
+                        <option value="3" >.txt (Medlars, RefWorks)</option>
+
+            </select>
+            <button class="btn citation-download-link disabled" type="submit">Download citation</button>
+        </form>
+    </div>
+
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close"></i><span class="screenreader-text">Close</span></a>
+</div>
+
+    </div>
+
+                        </li>
+                        <li class="toolbar-item item-tools">
+    <div class="widget widget-ToolboxPermissions widget-instance-OUP_Get_Permissions"
+         data-widget-name="ToolboxPermissions"
+         data-widget-instance="OUP_Get_Permissions">
+            <div class="module-widget">
+        <a href="https://s100.copyright.com/AppDispatchServlet?publisherName=OUP&amp;publication=1467-9213&amp;title=Embodied%20Idealism%3A%20Merleau-Ponty%26apos%3Bs%20Transcendental%20Philosophy&amp;publicationDate=2025-03-12&amp;volumeNum=76&amp;issueNum=1&amp;author=Li%2C%20Yuhui&amp;startPage=444&amp;endPage=448&amp;contentId=10.1093%2Fpq%2Fpqaf022&amp;oa=&amp;copyright=%C2%A9%20The%20Author%28s%29%202025.%20Published%20by%20Oxford%20University%20Press%20on%20behalf%20of%20The%20Scots%20Philosophical%20Association%20and%20the%20University%20of%20St%20Andrews.&amp;orderBeanReset=True" id="PermissionsLink" class="" target="_blank" rel=nofollow>
+            <i class="icon-menu_permissions">
+                <span class="screenreader-text">Permissions Icon</span>
+            </i>
+            Permissions
+        </a>
+    </div>
+
+    </div>
+
+                        </li>
+
+    <li class="toolbar-item item-with-dropdown item-share">
+        <a href="javascript:;" class="drop-trigger js-toolbar-dropdown at-ShareButton" data-dropdown="ShareDrop" role="button" aria-expanded="false">
+            <i class="icon-menu_share"><span class="screenreader-text">Share Icon</span></i>
+            <span class="toolbar-label">
+                <span class="toolbar-text">Share</span>
+                <i class="arrow-icon icon-general-arrow-filled-down js-toolbar-arrow-icon"></i>
+            </span>
+        </a>
+        <ul id="ShareDrop" class="addthis_toolbox addthis_default_style addthis_20x20_style f-dropdown js-dropdown-content" data-dropdown-content>
+
+    <li>
+        <a class="st-custom-button addthis_button_bluesky js-share-link"
+           data-network="bluesky"
+           data-title="Embodied Idealism: Merleau-Ponty&#39;s Transcendental Philosophy"
+           data-url=" https://academic.oup.com/pq/article-abstract/76/1/444/8071416"
+           data-email-subject="Embodied Idealism: Merleau-Ponty&#39;s Transcendental Philosophy"
+           href="javascript:;"
+           rel=nofollow><span>Bluesky</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_facebook js-share-link"
+           data-network="facebook"
+           data-title="Embodied Idealism: Merleau-Ponty&#39;s Transcendental Philosophy"
+           data-url="https://academic.oup.com/pq/article-abstract/76/1/444/8071416"
+           data-email-subject="Embodied Idealism: Merleau-Ponty&#39;s Transcendental Philosophy"
+           href="javascript:;"
+           rel=nofollow><span>Facebook</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_twitter js-share-link"
+           data-network="twitter"
+           data-title="Embodied Idealism: Merleau-Ponty&#39;s Transcendental Philosophy"
+           data-url="https://academic.oup.com/pq/article-abstract/76/1/444/8071416"
+           data-email-subject="Embodied Idealism: Merleau-Ponty&#39;s Transcendental Philosophy"
+           href="javascript:;"
+           rel=nofollow><span>X</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_linkedin js-share-link"
+           data-network="linkedin"
+           data-title="Embodied Idealism: Merleau-Ponty&#39;s Transcendental Philosophy"
+           data-url="https://academic.oup.com/pq/article-abstract/76/1/444/8071416"
+           data-email-subject="Embodied Idealism: Merleau-Ponty&#39;s Transcendental Philosophy"
+           href="javascript:;"
+           rel=nofollow><span>LinkedIn</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_email js-share-link"
+           data-network="email"
+           data-title="Embodied Idealism: Merleau-Ponty&#39;s Transcendental Philosophy"
+           data-url="https://academic.oup.com/pq/article-abstract/76/1/444/8071416"
+           data-email-subject="Embodied Idealism: Merleau-Ponty&#39;s Transcendental Philosophy"
+           href="javascript:;"
+           rel=nofollow><span>Email</span></a>
+    </li>
+
+
+
+        </ul>
+    </li>
+
+
+                        </ul>
+                    </div>
+                    <div class="toolbar-search">
+    <div class="widget widget-SitePageHeader widget-instance-OUP_ArticleToolbarSearchBox"
+         data-widget-name="SitePageHeader"
+         data-widget-instance="OUP_ArticleToolbarSearchBox">
+        
+
+
+
+<div class="dropdown-panel-wrap">
+
+    
+    <div class="dropdown-panel mobile-search-dropdown">
+        <div class="mobile-search-inner-wrap">
+
+
+<div class="navbar-search">
+    <search aria-label="Site search">
+        <div class="mobile-microsite-search">
+                <label for="OUP_ArticleToolbarSearchBox-mobile-navbar-search-filter" class="screenreader-text js-mobile-navbar-search-filter-label">
+                    Navbar Search Filter
+                </label>
+                <select class="mobile-navbar-search-filter js-mobile-navbar-search-filter at-navbar-search-filter" id="OUP_ArticleToolbarSearchBox-mobile-navbar-search-filter">
+
+<option class="navbar-search-filter-option at-navbar-search-filter-option" value="">The Philosophical Quarterly</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Issue">This issue</option>
+                        <optgroup class="navbar-search-optgroup" label="Search across Oxford Academic">
+<option class="navbar-search-filter-option at-navbar-search-filter-option" value="AcademicSubjects/AHU02720">Philosophy</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Books">Books</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Journals">Journals</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Umbrella">Oxford Academic</option>                        </optgroup>
+                </select>
+
+            <label for="OUP_ArticleToolbarSearchBox-mobile-microsite-search-term" class="screenreader-text js-mobile-microsite-search-term-label">
+                Mobile Enter search term
+            </label>
+            <input class="mobile-search-input mobile-microsite-search-term js-mobile-microsite-search-term at-microsite-search-term " type="search"
+                   maxlength="255" placeholder="Search" id="OUP_ArticleToolbarSearchBox-mobile-microsite-search-term">
+
+            <a href="javascript:;" class="mobile-microsite-search-icon mobile-search-submit icon-menu_search">
+                <span class="screenreader-text">Search</span>
+            </a>
+
+        </div>
+    </search>
+</div>
+
+
+        </div>
+    </div>
+   
+    <div class="dropdown-panel mobile-nav-dropdown">
+
+    </div>
+
+</div>
+
+
+<div class="navbar">
+    <div class="center-inner-row">
+        <nav class="navbar-menu">
+        </nav>
+            <div class="navbar-right-container">
+                <div class="navbar-search-container js-navbar-search-container">
+                    <a href="javascript:;" class="navbar-search-close js_close-navsearch">Close</a>
+
+
+<div class="navbar-search">
+    <search aria-label="Site search">
+        <div class="microsite-search">
+                <label for="OUP_ArticleToolbarSearchBox-navbar-search-filter" class="screenreader-text js-navbar-search-filter-label">
+                    Navbar Search Filter
+                </label>
+                <select class="navbar-search-filter js-navbar-search-filter at-navbar-search-filter" id="OUP_ArticleToolbarSearchBox-navbar-search-filter">
+
+<option class="navbar-search-filter-option at-navbar-search-filter-option" value="">The Philosophical Quarterly</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Issue">This issue</option>
+                        <optgroup class="navbar-search-optgroup" label="Search across Oxford Academic">
+<option class="navbar-search-filter-option at-navbar-search-filter-option" value="AcademicSubjects/AHU02720">Philosophy</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Books">Books</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Journals">Journals</option><option class="navbar-search-filter-option at-navbar-search-filter-option" value="Umbrella">Oxford Academic</option>                        </optgroup>
+                </select>
+
+            <label for="OUP_ArticleToolbarSearchBox-microsite-search-term" class="screenreader-text js-microsite-search-term-label">
+                Enter search term
+            </label>
+            <input class="navbar-search-input microsite-search-term js-microsite-search-term at-microsite-search-term " type="search"
+                   maxlength="255" placeholder="Search" id="OUP_ArticleToolbarSearchBox-microsite-search-term">
+
+            <a href="javascript:;" class="microsite-search-icon navbar-search-submit icon-menu_search">
+                <span class="screenreader-text">Search</span>
+            </a>
+
+        </div>
+    </search>
+</div>
+
+
+                    <div class="navbar-search-advanced"><a href="/pq/advanced-search" class="advanced-search js-advanced-search">Advanced Search</a></div>
+                </div>
+                
+                <div class="navbar-search-collapsed"><a href="javascript:;" class="icon-menu_search js_expand-navsearch"><span class="screenreader-text">Search Menu</span></a></div>
+
+
+            </div>
+            </div>
+</div>
+<input id="routename" name="RouteName" type="hidden" value="pq" />
+    </div>
+
+                    </div>
+                </div>
+            </div>
+            <div id="ContentTab" class="content active">                                                
+    <div class="widget widget-ArticleFulltext widget-instance-OUP_Article_FullText_Widget"
+         data-widget-name="ArticleFulltext"
+         data-widget-instance="OUP_Article_FullText_Widget">
+        <div class="module-widget">
+    <div class="widget-items" data-widgetname="ArticleFulltext">
+
+
+
+
+
+<p class="chapter-para">Maurice Merleau-Ponty's connection to idealism has long been debated in philosophical circles. Although his phenomenology is rooted in embodied subjectivity—the idea that subjectivity, or the self, is always tied to and shaped by bodily experience—it challenges the standard assumptions of the idealist tradition. In <em>Embodied Idealism</em>, Berendzen tackles Merleau-Pontys transcendental idealism, grounded in embodiment, as presented in his early works. The book is divided into two parts: the first focuses on Merleau-Ponty's work before <em>Phenomenology of Perception</em> and the second on <em>Phenomenology of Perception</em> itself; I will consider the contributions and limitations of each in turn.</p>                    <h2 scrollto-destination=542664750 id="542664750" class="section-title js-splitscreen-section-title" data-legacy-id=sec2>Part I: Idealism Before <em>Phenomenology of Perception</em></h2>
+<p class="chapter-para">Berendzen begins with a detailed historical and philosophical context for Merleau-Ponty's engagement with idealism. Merleau-Ponty's earliest critiques appear in <em>The Structure of Behavior</em>, where he confronts earlier iterations of idealism, especially the subjective idealism of Berkeley. While he challenges the notion that reality is determined solely by mind or consciousness, Merleau-Ponty does not simply dismiss the idea that mind helps shape reality. Instead, he emphasizes that perception cannot be reduced to abstract mental constructs: It is always situated in a physical, interactive environment.</p><p class="chapter-para">On Berendzen's view, Merleau-Ponty highlights the body's vital role. Merleau-Ponty insists that perceiving the world involves a living, sensing being in dynamic contact with the things around it; thus, mind and world are not locked in a one-way relationship. The problem with pure subjective idealism, from his perspective, is its tendency to ignore or minimize the constitutive power of bodily engagement. Merleau-Ponty's initial move away from purely mentalistic theories sets the stage for his later exploration of transcendental idealism, now reoriented around lived, embodied perception.</p><p class="chapter-para">Berendzen then examines Merleau-Ponty's idea of “expression” in <em>The Structure of Behavior</em>, wherein Merleau-Ponty distances himself from strict behaviorism. Behaviorism views human beings primarily as bundles of stimulus–response patterns, whereas Merleau-Ponty sees perception as a creative, embodied process. Some passages can appear to reduce perception to a chain of bodily actions, but Berendzen underscores that Merleau-Ponty's real aim is more subtle. Reality is encountered “through” the body, making idealism and realism intersect, because what we call “the real” emerges in the interplay between an active, perceiving subject and its environment.</p><p class="chapter-para">The third chapter details Merleau-Ponty's negotiations with the legacy of Kant and Husserl, two philosophers who profoundly influenced him while also prompting him to depart from their more traditional formulations. Kant's conception of a transcendental subject that structures experience independent of embodiment became, for Merleau-Ponty, too detached from the real conditions of perception. Likewise, Husserl's transcendental phenomenology, though influential, appeared to Merleau-Ponty to over-rely on the reflective ego.</p><p class="chapter-para">Berendzen shows how Merleau-Ponty works to revise these frameworks, forging a “relation-based” or “situated” transcendental idealism that acknowledges perception as an active, bodily engagement with the world. This not only breaks away from classical dualisms but also signals an emerging phenomenology of co-constitution: Mind and world interweave, each shaping the other. For Berendzen, Merleau-Ponty's early development thus heralds a new philosophical landscape, one that prizes dynamic, reciprocal relations over static categories of subject and object.</p>                    <h2 scrollto-destination=542664756 id="542664756" class="section-title js-splitscreen-section-title" data-legacy-id=sec3>Part II: Idealism in <em>Phenomenology of Perception</em></h2>
+<p class="chapter-para">In <em>Phenomenology of Perception</em>, Merleau-Ponty both refutes the rigid Cartesian divide between mind and body and reconceptualizes the role of consciousness in constituting the real. While he does not deny the involvement of consciousness in shaping experience, he insists that consciousness is inherently relational and intertwined with bodily capacities. According to Berendzen, this view avoids both the extremes of pure intellectualism and a reductive neo-Kantian framework. Instead, Merleau-Ponty posits that perception is, prior to all explicit knowledge, serving as the soil from which concepts and judgments later grow.</p><p class="chapter-para">Berendzen explores how <em>Phenomenology of Perception</em> transforms the notion of transcendental idealism by making the lived body central. Far from being simply another material object, the body is the origin of perception and action. Merleau-Ponty's “embodied idealism” holds that reality emerges through the relationship between this living body and the world, rendering pure subjectivism impossible. On Berendzen's view, this effectively turns Merleau-Ponty into an “anti-subjectivist” who values the facticity of experience, yet still acknowledges the subject's co-creative role in constituting the real.</p><p class="chapter-para">Berendzen then clarifies Merleau-Ponty's understanding of transcendental subjectivity. Rather than a detached Cartesian “I think,” Merleau-Ponty's subject is inherently situated and cannot be separated from its sensory, embodied existence. He regards the body as the primary site of experience, inherently connected to the world it perceives. Such a view bridges the gap between idealism and realism by affirming that, although the perceiver helps shape meaning, this is always accomplished through material conditions that the body discloses.</p><p class="chapter-para">Merleau-Ponty's ontology likewise diverges from conventional metaphysical systems, focusing instead on the interplay between subject and environment. Berendzen explains that Merleau-Ponty conceives being as a kind of ongoing movement—a “‘whirling” or shifting exchange from which significance emerges. Traditional Western philosophy often portrays subject and object as distinctly opposed. In contrast, Merleau-Ponty sees their boundaries as permeable, shaped by fluid interactions that neither purely objective nor purely subjective categories can capture. This emphasis on movement and relationality parallels recent discussions of enactivism and embodied cognition.</p><p class="chapter-para">The role of intersubjectivity also features prominently. Berendzen highlights how Merleau-Ponty's transcendental idealism incorporates the presence of other subjects in a way that counters Cartesian and Kantian isolation. Shared experience shapes and enriches individual perception, embedding the subject in a social horizon. However, this intersubjective framework does not fully escape the bounds of subjective idealism, as Merleau-Ponty continues to ground his philosophy in the self. In other words, even though he introduces intersubjectivity and the socialization of perception, his idealism still remains rooted in the self as the starting point. Therefore, despite adopting the theme of intersubjectivity, Merleau-Ponty's idealism cannot completely transcend its subjective idealist foundation.</p><p class="chapter-para">Despite the rich analysis Berendzen offers, he focuses primarily on Merleau-Ponty's early work, notably <em>The Structure of Behavior</em> and <em>Phenomenology of Perception</em>. By doing so, he leaves aside later developments in Merleau-Ponty's thought where certain positions evolve, and earlier assumptions undergo more radical questioning. This omission hints at unresolved tensions. For instance, Merleau-Ponty's increasing skepticism toward any neat system of consciousness might challenge the stability of a “transcendental” perspective. The later works arguably suggest that his project cannot be identified with a form of idealism—even a bodily one—without significant qualifications.</p><p class="chapter-para">A second point of concern revolves around whether a transcendental approach can fully do justice to the deeply pre-reflective and often opaque nature of perception. Merleau-Ponty repeatedly argued that much of our experience is not neatly articulable through conceptual frameworks. Berendzen recognizes this but does not extensively examine how Merleau-Ponty's desire to preserve the primacy of embodied, pre-reflective perception might place limits on any systematic transcendental analysis. The risk, as Merleau-Ponty saw it, was lapsing back into “intellectualism”—the very stance he aimed to dislodge.</p><p class="chapter-para">Ultimately, <em>Embodied Idealism</em> is a significant addition to Merleau-Ponty scholarship. Berendzen engages in deep analysis and provides outstanding material for any reader interested in phenomenology, idealism, or philosophy of embodiment. However, the unresolved tensions between embodiment and transcendental analysis (and especially the later works) suggest that more could be done to lay out the implications of embodied transcendental idealism. Despite these limitations, the book is worthwhile: It sheds light on the development of Merleau-Ponty's thought and invites readers to probe deeper into his evolving philosophy.</p>    <!-- /foreach in Model.Sections -->
+    <div class="widget widget-ArticlePubStateInfo widget-instance-OUP_ArticlePubStateInfo"
+         data-widget-name="ArticlePubStateInfo"
+         data-widget-instance="OUP_ArticlePubStateInfo">
+        
+    </div>
+
+
+
+        <div class="article-metadata-standalone-panel clearfix"></div>
+
+        
+<div class="copyright copyright-statement">© The Author(s) 2025. Published by Oxford University Press on behalf of The Scots Philosophical Association and the University of St Andrews.</div><div class="license"><div class="license-p">This article is published and distributed under the terms of the Oxford University Press, Standard Journals Publication Model (<a class="link link-uri openInAnotherWindow" href="https://academic.oup.com/journals/pages/open_access/funder_policies/chorus/standard_publication_model" target="_blank">https://academic.oup.com/journals/pages/open_access/funder_policies/chorus/standard_publication_model</a>)</div></div><!-- /foreach -->
+
+        <span id="UserHasAccess" data-userHasAccess="True"></span>
+
+    </div><!-- /.widget-items -->
+</div><!-- /.module-widget -->
+
+
+
+
+
+
+    </div>
+    <div class="widget widget-SolrResourceMetadata widget-instance-OUP_Article_ResourceMetadata_Widget"
+         data-widget-name="SolrResourceMetadata"
+         data-widget-instance="OUP_Article_ResourceMetadata_Widget">
+        
+    <div class="article-metadata-panel solr-resource-metadata js-metadata-panel at-ContentMetadata">
+                <div class="article-metadata-tocSections">
+                    <div class="article-metadata-tocSections-title">Issue Section:</div>
+                        <a href="/pq/search-results?f_TocHeadingTitleList=Short+Book+Review">Short Book Review</a>
+                </div>
+
+    </div>
+
+
+
+    </div>
+    <div class="widget widget-EditorInformation widget-instance-OUP_Article_EditorInformation_Widget"
+         data-widget-name="EditorInformation"
+         data-widget-instance="OUP_Article_EditorInformation_Widget">
+        
+
+    </div>
+
+                <div id="ContentTabFilteredView"></div>
+                <div class="downloadImagesppt js-download-images-ppt st-download-images-ppt">
+                    <a id="lnkDownloadAllImages"
+                       class="js-download-all-images-link btn"
+                       href="/DownloadFile/DownloadImage.aspx?image=&amp;PPTtype=SlideSet&amp;ar=8071416&amp;xsltPath=~/UI/app/XSLT&amp;siteId=5498">Download all slides</a>
+                </div>
+                    <div class="widget widget-ArticleDataRepositories widget-instance-Article_DryadLink"
+         data-widget-name="ArticleDataRepositories"
+         data-widget-instance="Article_DryadLink">
+        
+    </div>
+
+                <div class="comments">
+    <div class="widget widget-UserCommentBody widget-instance-UserCommentBody_Article"
+         data-widget-name="UserCommentBody"
+         data-widget-instance="UserCommentBody_Article">
+        
+
+
+    </div>
+    <div class="widget widget-UserComment widget-instance-OUP_UserComment_Article"
+         data-widget-name="UserComment"
+         data-widget-instance="OUP_UserComment_Article">
+        
+    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div id="Sidebar" class="page-column page-column--right">
+    <div class="widget widget-AdBlock widget-instance-ArticlePageTopSidebar"
+         data-widget-name="AdBlock"
+         data-widget-instance="ArticlePageTopSidebar">
+        <div class="js-adBlock-parent-wrap adblock-parent-wrap">
+    <div class="adBlockMainBodyTop-wrap js-adBlockMainBodyTop hide">
+        <div id="adBlockMainBodyTop" class="js-adblock at-adblock"
+             data-lazy-load-margin="150">
+            <script>
+                googletag.cmd.push(function () {
+                    googletag.display('adBlockMainBodyTop');
+                });
+            </script>
+        </div>
+            <div class="advertisement-text at-adblock js-adblock-advertisement-text hide">Advertisement</div>
+            </div>
+</div>
+    </div>
+<div class="widget widget-dynamic " data-count="1"> 
+
+    <div class="widget-dynamic-inner-wrap">
+
+<div class="widget widget-dynamic " data-count="8"> 
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget widget-ArticleLevelMetrics widget-instance-Article_RightRailB0Article_RightRail_ArticleLevelMetrics"
+         data-widget-name="ArticleLevelMetrics"
+         data-widget-instance="Article_RightRailB0Article_RightRail_ArticleLevelMetrics">
+        
+
+
+
+    <div class="artmet-wrapper horizontal-artmet">
+<div class="contentmet-border">
+    <div class="contentmet-wrapper horizontal-contentmet">
+            <div class="contentmet-citations contentmet-badges-wrap js-contentmet-citations hide">
+                <h2 class="contentmet-text">Citations</h2>
+                    <div class="contentmet-item contentmet-dimensions">
+    <div class="widget widget-DimensionsBadge widget-instance-ArticleLevelMetrics_DimensionsBadge"
+         data-widget-name="DimensionsBadge"
+         data-widget-instance="ArticleLevelMetrics_DimensionsBadge">
+        <span class="__dimensions_badge_embed__" 
+      data-doi="10.1093/pq/pqaf022" 
+      data-legend="never" 
+      data-style="small_circle" 
+      data-hide-zero-citations="false"></span>
+<script async src="https://badge.dimensions.ai/badge.js" charset="utf-8"></script>
+
+    </div>
+
+                    </div>
+                            </div>
+                    <div class="contentmet-views contentmet-badges-wrap js-contentmet-views">
+                <h2 class="contentmet-text">Views</h2>
+                <div class="contentmet-item circle-text circle-text-views">
+                    <div class="contentmet-number">135</div>
+                </div>
+            </div>
+                    <div class="contentmet-item contentmet-badges-wrap">
+                    <h2 class="contentmet-text">Altmetric</h2>
+                    <div class="contentmet-item contentmet-altmetric">
+    <div class="widget widget-AltmetricLink widget-instance-ArticleLevelMetrics_AltmetricLinkSummary"
+         data-widget-name="AltmetricLink"
+         data-widget-instance="ArticleLevelMetrics_AltmetricLinkSummary">
+            <!-- Altmetrics -->
+    <div id="altmetricEmbedId"
+         runat="server"
+         class='altmetric-embed'
+         data-badge-type="donut"
+         data-hide-no-mentions="false"
+         data-doi="10.1093/pq/pqaf022"
+
+        
+
+        ></div>
+         <script type='text/javascript' src='https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js'></script>
+
+    </div>
+
+                    </div>
+
+
+            </div>
+                    <div class="contentmet-modal-trigger-wrap clearfix">
+                <button type="button" class="artmet-modal-trigger js-artmet-modal-trigger at-alm-metrics-modal-trigger" data-resource-id="8071416" data-resource-type="3" aria-haspopup="dialog" aria-expanded="false" aria-controls="MetricsModal">
+                    <img class="contentmet-info-icon" src="//oup.silverchair-cdn.com/UI/app/svg/i.svg" alt="Information">
+                    <span class="contentmet-more-info">More metrics information</span>
+                </button>
+            </div>
+    </div>
+</div>
+            <div class="artmet-modal js-artmet-modal" id="MetricsModal" role="dialog" aria-modal="true" aria-hidden="true" aria-live="assertive" aria-labelledby="widget-title-1-id" tabindex="-1">
+                <div class="artmet-modal-contents js-metric-modal-contents at-alm-modal-contents" id="MetricsModalContents">
+
+
+
+
+    <div id="artmet-full-details" class="artmet-full-wrap clearfix js-metric-full-wrap hide" data-autoload-chart="False">
+            <h2 id="widget-title-1-id" class="widget-title-1 artmet-widget-title-1">Metrics</h2>
+
+            <div class="artmet-item artmet-views-wrap">
+                <div class="artmet-views clearfix">
+                    <div class="artmet-total-views">
+                        <span class="artmet-text">Total Views</span>
+                        <span class="artmet-number">135</span>
+                    </div>
+                    <div class="artmet-breakdown-views-wrap">
+                        <div class="artmet-breakdown-view breakdown-border">
+                            <span class="artmet-number">91</span>
+                            <span class="artmet-text">Pageviews</span>
+                        </div>
+                        <div class="artmet-breakdown-view">
+                            <span class="artmet-number">44</span>
+                            <span class="artmet-text">PDF Downloads</span>
+                        </div>
+                                            </div>
+                </div>
+                <div class="artmet-views-since">Since 3/1/2025</div>
+            </div>
+
+            <script>
+                var ChartistData = ChartistData || {};
+
+                ChartistData.data = {
+                    labels: ['Mar 2025', 'Apr 2025', 'May 2025', 'Jun 2025', 'Aug 2025', 'Oct 2025', 'Nov 2025', 'Dec 2025', 'Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026', 'Sep 2026'],
+                    series: [[22, 10, 8, 4, 13, 4, 10, 18, 13, 9, 6, 1, 3, 4, 4, 6]]
+                };
+            </script>
+            <div class="artmet-item artmet-chart">
+                <div class="ct-chart ct-octave js-ct-chart"></div>
+
+                <div class="artmet-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Month:</th>
+                                <th>Total Views:</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                                <tr>
+                                    <td>March 2025</td>
+                                    <td>22</td>
+                                </tr>
+                                <tr>
+                                    <td>April 2025</td>
+                                    <td>10</td>
+                                </tr>
+                                <tr>
+                                    <td>May 2025</td>
+                                    <td>8</td>
+                                </tr>
+                                <tr>
+                                    <td>June 2025</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>August 2025</td>
+                                    <td>13</td>
+                                </tr>
+                                <tr>
+                                    <td>October 2025</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>November 2025</td>
+                                    <td>10</td>
+                                </tr>
+                                <tr>
+                                    <td>December 2025</td>
+                                    <td>18</td>
+                                </tr>
+                                <tr>
+                                    <td>January 2026</td>
+                                    <td>13</td>
+                                </tr>
+                                <tr>
+                                    <td>February 2026</td>
+                                    <td>9</td>
+                                </tr>
+                                <tr>
+                                    <td>March 2026</td>
+                                    <td>6</td>
+                                </tr>
+                                <tr>
+                                    <td>April 2026</td>
+                                    <td>1</td>
+                                </tr>
+                                <tr>
+                                    <td>May 2026</td>
+                                    <td>3</td>
+                                </tr>
+                                <tr>
+                                    <td>June 2026</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>July 2026</td>
+                                    <td>4</td>
+                                </tr>
+                                <tr>
+                                    <td>September 2026</td>
+                                    <td>6</td>
+                                </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+<div class="artmet-stats-wrap clearfix">
+        <div class="artmet-item artmet-citations hide">
+            <h3 class="widget-title-2 artmet-widget-title-2">Citations</h3>
+                <div class="artmet-badges-wrap artmet-dimensions">
+    <div class="widget widget-DimensionsBadge widget-instance-ArticleLevelMetrics_DimensionsBadgeDetails"
+         data-widget-name="DimensionsBadge"
+         data-widget-instance="ArticleLevelMetrics_DimensionsBadgeDetails">
+        <span class="__dimensions_badge_embed__" 
+      data-doi="10.1093/pq/pqaf022" 
+      data-legend="always" 
+      data-style="" 
+      data-hide-zero-citations="false"></span>
+<script async src="https://badge.dimensions.ai/badge.js" charset="utf-8"></script>
+
+    </div>
+
+                    <span class="artmet-dimensions-text">Powered by Dimensions</span>
+                </div>
+                    </div>
+
+
+        <div class="artmet-item artmet-altmetric artmet-position-right js-show-if-unknown">
+            <h3 class="widget-title-2 artmet-widget-title-2">Altmetrics</h3>
+            <div class="artmet-badges-wrap js-artmet-badges">
+
+    <div class="widget widget-AltmetricLink widget-instance-ArticleLevelMetrics_AltmetricLinkDetails"
+         data-widget-name="AltmetricLink"
+         data-widget-instance="ArticleLevelMetrics_AltmetricLinkDetails">
+            <!-- Altmetrics -->
+    <div id="altmetricEmbedId"
+         runat="server"
+         class='altmetric-embed'
+         data-badge-type="donut"
+         data-hide-no-mentions="false"
+         data-doi="10.1093/pq/pqaf022"
+
+        
+            
+                data-badge-details = "right"
+            
+
+        ></div>
+         <script type='text/javascript' src='https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js'></script>
+
+    </div>
+            </div>
+        </div>
+
+</div>
+
+    </div>
+                    <a href="javascript:;" role="button" class="artmet-close-modal js-artmet-close-modal">
+                        <span aria-hidden="true">&#215;</span>
+                        <span class="screenreader-text">Close metrics modal</span>
+                    </a>
+                </div>
+            </div>
+    </div>
+
+
+    </div>
+    <div class="widget widget-OUPEmailAlerts widget-instance-Article_RightRailB0Article_RightRail_OUPEmailAlerts"
+         data-widget-name="OUPEmailAlerts"
+         data-widget-instance="Article_RightRailB0Article_RightRail_OUPEmailAlerts">
+        
+    <div class="alertsWidget js-alerts-widget">
+        <h2>Email alerts</h2>
+            <div class="userAlert alertType-LatestIssue">
+                        <a href="/pq/new-journals-alert"
+                           class="js-my-email-alert email-alert-link">
+                            New journal issues
+                        </a>
+            </div>
+            <div class="userAlert alertType-NewJournalArticles">
+                        <a href="/pq/new-journal-articles-alert"
+                           class="js-my-email-alert email-alert-link">
+                            New journal articles
+                        </a>
+            </div>
+            <div class="userAlert alertType-ContentActivity">
+                        <button type="button"
+                                class="js-activity-alert-button email-alert-link"
+                                data-user-logged-in="False"
+                                data-alert-type="ContentActivity"
+                                data-is-content-page="True"
+                                data-alert-signup-link=""
+                                data-resourceid="8071416"
+                                data-resourcetypeid="Article"
+                                data-reveal-id="activityAlertModal"
+                                aria-expanded="false">
+                            Activity related to this article
+                        </button>
+            </div>
+
+        <div class="userAlert alertType-MarketingLink">
+            <a href="/my-account/communication-preferences">Sign up for marketing</a>
+        </div>
+    </div>
+
+    <div id="journalIssuesAlertModal" class="alert-resources-modal fix-width reveal-modal js-content-alert-modal" role="dialog" aria-modal="true" aria-labelledby="journalsIssuesAlertModalTitle" data-reveal>
+    <div class="widget widget-JournalsIssuesAlert widget-instance-JournalIssuesAlert"
+         data-widget-name="JournalsIssuesAlert"
+         data-widget-instance="JournalIssuesAlert">
+        <div class="alerts-sign-up-wrapper js-journals-alerts-sign-up-wrapper page-column">
+    <div class="modal-head border-bottom">
+        <h2 id="journalsIssuesAlertModalTitle">New journal issues alert</h2>
+    </div>
+
+        <div class="modal-body">
+            <div class="alert-loginbox-wrapper">
+    <div class="widget widget-LoginBoxOnlyUser widget-instance-OUP_IssuesAlert"
+         data-widget-name="LoginBoxOnlyUser"
+         data-widget-instance="OUP_IssuesAlert">
+            <div class="error-message"><p>To set up an email alert, please <a class="js-sign-in-link" data-linkType="user-pass" href="javascript:;">sign in</a> to your personal account, or <a class="js-register-link" href="https://academic.oup.com/my-account/register?siteId=5498&returnUrl=https://academic.oup.com%2fpq%2farticle%2f76%2f1%2f444%2f8071416">register</a></p></div>
+
+<div class="login-box" data-google-interstitial="false">
+    <div class="login-box__main-section-wrap">
+        <div class="login-box__section-wrap login-box_heading">
+            <div class="login-box__main-heading-wrap">
+               <h2>Sign in</h2>
+               
+            </div>
+        </div>
+
+        <div class="login-box__section-wrap cols login-box_sign-in-accounts">
+    <div class="login-box__section column-border login-box_personal-account">
+            <h3 class="login-box__heading">Personal account</h3>
+
+    <ul class="bullets">
+        <li>Sign in with email/username &amp; password</li>
+        <li>Get email alerts</li>
+        <li>Save searches</li>
+        <li>Purchase content</li>
+        <li>Activate your purchase/trial code</li>
+            <li>Add your ORCID iD</li>
+    </ul>
+
+            <div class="login-box__button-row">
+                    <a rel="nofollow" class="button-call-to-action at-personal-sign-in js-sign-in-link" data-linkType="user-pass" href="javascript:;">
+                    <span>Sign in</span>
+                    <img class="society-link-icon" src="//oup.silverchair-cdn.com/UI/app/svg/chevron-right-white.svg" alt="Arrow" aria-hidden="true"/>
+
+                </a>
+                                    <a rel="nofollow" class="at-personal-register-link js-register-link" href="/my-account/register?siteId=5498&amp;returnUrl=http%3a%2f%2facademic.oup.com%2fpq%2farticle%2f76%2f1%2f444%2f8071416">Register</a>
+            </div>
+    </div>
+
+        </div>
+    </div>
+</div>
+
+    </div>
+
+            </div>
+        </div>
+</div>
+    </div>
+
+
+        <button type="button" class="close-reveal-modal js-close-reveal-modal"><i class="icon-general-close" alt="Close modal"></i></button>
+    </div>
+
+    <div id="activityAlertModal" role="dialog" aria-modal="true"
+         class="alert-resources-modal fix-width reveal-modal js-content-alert-modal js-activity-modal" data-reveal>
+        <div class="js-activity-alert-widget">
+    <div class="widget widget-ActivityAlert widget-instance-Article_RightRailB0Article_RightRail_OUPEmailAlerts"
+         data-widget-name="ActivityAlert"
+         data-widget-instance="Article_RightRailB0Article_RightRail_OUPEmailAlerts">
+        <div class="alerts-sign-up-wrapper js-activity-alert-wrapper">
+    <div class="modal-head border-bottom">
+        <h2 aria-labelledby="activityAlertModal">Journal article activity alert</h2>
+    </div>
+
+        <div class="modal-body alert-loginbox-modal-wrapper">
+            <div class="alert-loginbox-wrapper">
+    <div class="widget widget-LoginBoxOnlyUser widget-instance-OUP_IssuesAlert"
+         data-widget-name="LoginBoxOnlyUser"
+         data-widget-instance="OUP_IssuesAlert">
+            <div class="error-message"><p>To set up an email alert, please <a class="js-sign-in-link" data-linkType="user-pass" href="javascript:;">sign in</a> to your personal account, or <a class="js-register-link" href="https://academic.oup.com/my-account/register?siteId=5498&returnUrl=https://academic.oup.com%2fpq%2farticle%2f76%2f1%2f444%2f8071416">register</a></p></div>
+
+<div class="login-box" data-google-interstitial="false">
+    <div class="login-box__main-section-wrap">
+        <div class="login-box__section-wrap login-box_heading">
+            <div class="login-box__main-heading-wrap">
+               <h2>Sign in</h2>
+               
+            </div>
+        </div>
+
+        <div class="login-box__section-wrap cols login-box_sign-in-accounts">
+    <div class="login-box__section column-border login-box_personal-account">
+            <h3 class="login-box__heading">Personal account</h3>
+
+    <ul class="bullets">
+        <li>Sign in with email/username &amp; password</li>
+        <li>Get email alerts</li>
+        <li>Save searches</li>
+        <li>Purchase content</li>
+        <li>Activate your purchase/trial code</li>
+            <li>Add your ORCID iD</li>
+    </ul>
+
+            <div class="login-box__button-row">
+                    <a rel="nofollow" class="button-call-to-action at-personal-sign-in js-sign-in-link" data-linkType="user-pass" href="javascript:;">
+                    <span>Sign in</span>
+                    <img class="society-link-icon" src="//oup.silverchair-cdn.com/UI/app/svg/chevron-right-white.svg" alt="Arrow" aria-hidden="true"/>
+
+                </a>
+                                    <a rel="nofollow" class="at-personal-register-link js-register-link" href="/my-account/register?siteId=5498&amp;returnUrl=http%3a%2f%2facademic.oup.com%2fpq%2farticle%2f76%2f1%2f444%2f8071416">Register</a>
+            </div>
+    </div>
+
+        </div>
+    </div>
+</div>
+
+    </div>
+
+            </div>
+        </div>
+</div>
+
+    </div>
+
+        </div>
+        <button type="button" class="close-reveal-modal js-close-reveal-modal"><i class="icon-general-close" alt="Close modal"></i><span class="screenreader-text">Close Modal</span></button>
+    </div>
+
+    </div>
+    <div class="widget widget-TrendMD widget-instance-Article_RightRailB0trendmd"
+         data-widget-name="TrendMD"
+         data-widget-instance="Article_RightRailB0trendmd">
+        
+<div id="trendmd-suggestions"></div>
+
+<div class="options" data-suppress-if-hum-is-present="True"></div>
+    </div>
+    <div class="widget widget-ArticleCitedBy widget-instance-Article_RightRailB0Article_RightRail_ArticleCitedBy"
+         data-widget-name="ArticleCitedBy"
+         data-widget-instance="Article_RightRailB0Article_RightRail_ArticleCitedBy">
+        <div class="rail-widget_wrap vt-articles-cited-by">
+    <h2 class="article-cited-title">Citing articles via</h2>
+    <div class="widget-links_wrap">
+                    <div class="article-cited-link-wrap google-scholar-url">
+                <a href="http://scholar.google.com/scholar?q=link:https%3A%2F%2Facademic.oup.com%2Fpq%2Farticle%2F76%2F1%2F444%2F8071416" target="_blank" rel="nofollow">Google Scholar</a>
+            </div>
+            </div>
+</div>
+    </div>
+    <div class="widget widget-ArticleListNewAndPopular widget-instance-Article_RightRailB0Article_RightRail_ArticleNewPopularCombined"
+         data-widget-name="ArticleListNewAndPopular"
+         data-widget-instance="Article_RightRailB0Article_RightRail_ArticleNewPopularCombined">
+            <h2 class="screenreader-text">New and popular articles</h2>
+    <ul class="articleListNewAndPopularCombinedView">
+            <li>
+                <button type="button" class="articleListNewAndPopular-mode active" data-mode="MostRecent" aria-pressed="true" aria-label="View Latest articles">Latest</button>
+            </li>
+            <li>
+                <button type="button" class="articleListNewAndPopular-mode " data-mode="MostRead" aria-pressed="false" aria-label="View Most Read articles">Most Read</button>
+            </li>
+            <li>
+                <button type="button" class="articleListNewAndPopular-mode " data-mode="MostCited" aria-pressed="false" aria-label="View Most Cited articles">Most Cited</button>
+            </li>
+    </ul>
+        <section class="articleListNewPopContent articleListNewAndPopular-ContentView-MostRecent hasContent">
+
+
+
+
+<div id="newPopularList-Article_RightRailB0Article_RightRail_ArticleNewPopularCombined" class="fb">
+
+    
+
+
+
+<div class="widget-layout widget-layout--vert ">
+            <div class="widget-columns widget-col-1">
+                    <div class="col">
+
+<div class="widget-dynamic-entry journalArticleItem at-widget-entry-SCL">
+    <span class="hfDoi" data-attribute="10.1093/pq/pqag058" aria-hidden="true"></span>
+
+
+    
+
+
+<a class="journal-link" href="/pq/advance-article/doi/10.1093/pq/pqag058/8793595?searchresult=1">
+        <div class="widget-dynamic-journal-title">
+Deference done with certainty    </div>
+</a>
+
+
+
+
+
+
+
+
+<div class="widget-dynamic-journal-image-synopsis">
+        <div class="widget-dynamic-journal-synopsis">
+            
+        </div>
+</div>
+
+</div>
+<div class="widget-dynamic-entry journalArticleItem at-widget-entry-SCL">
+    <span class="hfDoi" data-attribute="10.1093/pq/pqag065" aria-hidden="true"></span>
+
+
+    
+
+
+<a class="journal-link" href="/pq/advance-article/doi/10.1093/pq/pqag065/8792820?searchresult=1">
+        <div class="widget-dynamic-journal-title">
+Justice in Plato’s Republic: The Lessons of Book 1    </div>
+</a>
+
+
+
+
+
+
+
+
+<div class="widget-dynamic-journal-image-synopsis">
+        <div class="widget-dynamic-journal-synopsis">
+            
+        </div>
+</div>
+
+</div>
+<div class="widget-dynamic-entry journalArticleItem at-widget-entry-SCL">
+    <span class="hfDoi" data-attribute="10.1093/pq/pqag066" aria-hidden="true"></span>
+
+
+    
+
+
+<a class="journal-link" href="/pq/advance-article/doi/10.1093/pq/pqag066/8790355?searchresult=1">
+        <div class="widget-dynamic-journal-title">
+Explanatory Solutions to Skeptical Problems    </div>
+</a>
+
+
+
+
+
+
+
+
+<div class="widget-dynamic-journal-image-synopsis">
+        <div class="widget-dynamic-journal-synopsis">
+            
+        </div>
+</div>
+
+</div>
+<div class="widget-dynamic-entry journalArticleItem at-widget-entry-SCL">
+    <span class="hfDoi" data-attribute="10.1093/pq/pqag059" aria-hidden="true"></span>
+
+
+    
+
+
+<a class="journal-link" href="/pq/advance-article/doi/10.1093/pq/pqag059/8787994?searchresult=1">
+        <div class="widget-dynamic-journal-title">
+Satisficing, maximizing, and bounded rationality    </div>
+</a>
+
+
+
+
+
+
+
+
+<div class="widget-dynamic-journal-image-synopsis">
+        <div class="widget-dynamic-journal-synopsis">
+            
+        </div>
+</div>
+
+</div>
+<div class="widget-dynamic-entry journalArticleItem at-widget-entry-SCL">
+    <span class="hfDoi" data-attribute="10.1093/pq/pqag064" aria-hidden="true"></span>
+
+
+    
+
+
+<a class="journal-link" href="/pq/advance-article/doi/10.1093/pq/pqag064/8786552?searchresult=1">
+        <div class="widget-dynamic-journal-title">
+Principles across distant worlds? A reply to Yoshimura    </div>
+</a>
+
+
+
+
+
+
+
+
+<div class="widget-dynamic-journal-image-synopsis">
+        <div class="widget-dynamic-journal-synopsis">
+            
+        </div>
+</div>
+
+</div>
+                    </div>
+            </div>
+
+</div></div>
+        </section>
+        <section class="articleListNewPopContent articleListNewAndPopular-ContentView-MostRead hide">
+        </section>
+        <section class="articleListNewPopContent articleListNewAndPopular-ContentView-MostCited hide">
+        </section>
+
+    </div>
+    <div class="widget widget-RelatedTaxonomies widget-instance-Article_RightRailB0Article_RightRail_RelatedTaxonomies"
+         data-widget-name="RelatedTaxonomies"
+         data-widget-instance="Article_RightRailB0Article_RightRail_RelatedTaxonomies">
+            <div class="widget-related-taxonomies-wrap vt-related-taxonomies">
+        <h2 class="widget-related-taxonomies_title">More from Oxford Academic</h2>
+            <div class="widget-related-taxonomies">
+                <a id="more-from-oa-AcademicSubjects_AHU00010" class="related-taxonomies-link" href="/search-results?tax=AcademicSubjects/AHU00010">Arts and Humanities</a>
+            </div>
+            <div class="widget-related-taxonomies">
+                <a id="more-from-oa-AcademicSubjects_AHU02720" class="related-taxonomies-link" href="/search-results?tax=AcademicSubjects/AHU02720">Philosophy</a>
+            </div>
+
+            <div class="widget-related-taxonomies">
+                <a id="more-from-oa-format-Books" class="related-taxonomies-link" href="/books/search-results?sort=Title+-+A+to+Z&amp;f_ContentType=Book&amp;fl_SiteID=6283&amp;page=1">Books</a>
+            </div>
+            <div class="widget-related-taxonomies">
+                <a id="more-from-oa-format-Journals" class="related-taxonomies-link" href="/journals/pages/journals_a_to_z">Journals</a>
+            </div>
+    </div>
+
+    </div>
+
+    </div>
+
+</div>
+    </div>
+
+</div>    <div class="widget widget-AdBlock widget-instance-ArticlePageTopMainBodyBottom"
+         data-widget-name="AdBlock"
+         data-widget-instance="ArticlePageTopMainBodyBottom">
+        <div class="js-adBlock-parent-wrap adblock-parent-wrap">
+    <div class="adBlockMainBodyBottom-wrap js-adBlockMainBodyBottom hide">
+        <div id="adBlockMainBodyBottom" class="js-adblock at-adblock js-adblock-lazy-loading"
+             data-lazy-load-margin="150">
+            <script>
+                googletag.cmd.push(function () {
+                    googletag.display('adBlockMainBodyBottom');
+                });
+            </script>
+        </div>
+            <div class="advertisement-text at-adblock js-adblock-advertisement-text hide">Advertisement</div>
+            </div>
+</div>
+    </div>
+
+</div>
+
+</div>
+<input id="hfArticleTitle" name="hfArticleTitle" type="hidden" value="" />
+<input id="hfLeftNavStickyOffset" name="hfLeftNavStickyOffset" type="hidden" value="29" />
+
+    <div class="widget widget-ArticleListAccess widget-instance-Article_AccessIconData"
+         data-widget-name="ArticleListAccess"
+         data-widget-instance="Article_AccessIconData">
+        
+
+    <script type="text/javascript">
+        var SCM = SCM || {};
+        SCM.AccessIcons = SCM.AccessIcons || [];
+        SCM.AccessIcons = SCM.AccessIcons.concat([{"id":8071416,"icon":"icon-availability_unlocked","title":"Purchased"}]);
+
+        SCM.SiteJS.setAccessIcons(SCM.AccessIcons);
+
+    </script>
+
+    </div>
+
+
+
+                </div><!-- /.center-inner-row no-overflow -->
+            </section>
+    </div>
+
+        <div class="mobile-mask">
+        </div>
+
+        <section class="footer_wrap vt-site-footer">
+            
+
+
+    <div class="ad-banner-footer sticky-footer-ad js-sticky-footer-ad">
+    <div class="widget widget-AdBlock widget-instance-StickyFooterAd"
+         data-widget-name="AdBlock"
+         data-widget-instance="StickyFooterAd">
+        <div class="js-adBlock-parent-wrap adblock-parent-wrap">
+    <div class="adBlockStickyFooter-wrap js-adBlockStickyFooter hide">
+        <div id="adBlockStickyFooter" class="js-adblock at-adblock"
+             data-lazy-load-margin="150">
+            <script>
+                googletag.cmd.push(function () {
+                    googletag.display('adBlockStickyFooter');
+                });
+            </script>
+        </div>
+            <div class="advertisement-text at-adblock js-adblock-advertisement-text hide">Advertisement</div>
+                    <button type="button" class="close-footer-ad js-close-footer-ad">
+                <span class="screenreader-text">close advertisement</span>
+            </button>
+    </div>
+</div>
+    </div>
+
+    </div>
+
+    <div class="widget widget-SitePageFooter widget-instance-SitePageFooter"
+         data-widget-name="SitePageFooter"
+         data-widget-instance="SitePageFooter">
+            <div class="ad-banner ad-banner-footer">
+    <div class="widget widget-AdBlock widget-instance-FooterAd"
+         data-widget-name="AdBlock"
+         data-widget-instance="FooterAd">
+        <div class="js-adBlock-parent-wrap adblock-parent-wrap">
+    <div class="adBlockFooter-wrap js-adBlockFooter hide">
+        <div id="adBlockFooter" class="js-adblock at-adblock js-adblock-lazy-loading"
+             data-lazy-load-margin="150">
+            <script>
+                googletag.cmd.push(function () {
+                    googletag.display('adBlockFooter');
+                });
+            </script>
+        </div>
+            <div class="advertisement-text at-adblock js-adblock-advertisement-text hide">Advertisement</div>
+            </div>
+</div>
+    </div>
+
+    </div>
+
+<div class="journal-footer journal-bg">
+    <div class="center-inner-row">
+
+            <div class="journal-footer-menu">
+                <ul>
+                            <li class="link-1">
+                                <a href="/pq/pages/About">About The Philosophical Quarterly</a>
+                            </li>
+                            <li class="link-2">
+                                <a href="/pq/pages/Editorial_Board">Editorial Board</a>
+                            </li>
+                            <li class="link-3">
+                                <a href="/pq/pages/General_Instructions">Author Guidelines</a>
+                            </li>
+                            <li class="link-4">
+                                <a href="http://www.st-andrews.ac.uk/philosophy/">Contact the University of St. Andrews</a>
+                            </li>
+                            <li class="link-5">
+                                <a href="http://www.scotsphil.org.uk/">Contact the Scots Philosophical Association</a>
+                            </li>
+</ul><ul>                            <li class="link-1">
+                                <a href="https://www.facebook.com/OUPAcademic">Facebook</a>
+                            </li>
+                            <li class="link-2">
+                                <a href="https://twitter.com/OUPPhilosophy">X (formerly Twitter)</a>
+                            </li>
+                            <li class="link-3">
+                                <a href="/pq/subscribe">Purchase</a>
+                            </li>
+                            <li class="link-4">
+                                <a href="http://www.oxfordjournals.org/en/library-recommendation-form.html">Recommend to your Library</a>
+                            </li>
+                            <li class="link-5">
+                                <a href="http://www.oupmediainfo.com/">Advertising and Corporate Services</a>
+                            </li>
+</ul><ul>                            <li class="link-1">
+                                <a href="https://globaljobs-careernetwork.oxfordjournals.org/">Journals Career Network</a>
+                            </li>
+
+                </ul>
+
+            </div><!-- /.journal-footer-menu -->
+            <div class="journal-footer-affiliations">
+                <!-- <h3>Affiliations</h3> -->
+                    <a href="https://academic.oup.com/pq" target="">
+                        <img id="footer-logo-ThePhilosophicalQuarterly" class="journal-footer-affiliations-logo" src="//oup.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/pq/pq_f1554464630.svg" alt="The Philosophical Quarterly" />
+                    </a>
+            </div><!-- /.journal-footer-affiliations -->
+
+        <div class="journal-footer-colophon">
+            <ul>
+                    <li>Online ISSN 1467-9213</li>
+                                    <li>Print ISSN 0031-8094</li>
+                <li>Copyright &#169; 2026 Scots Philosophical Association and the University of St. Andrews</li>
+            </ul>
+        </div><!-- /.journal-footer-colophon -->
+    </div><!-- /.center-inner-row -->
+</div><!-- /.journal-footer -->
+    </div>
+
+    <div class="oup-footer">
+        <div class="center-inner-row">
+    <div class="widget widget-SelfServeContent widget-instance-OupUmbrellaFooterSelfServe"
+         data-widget-name="SelfServeContent"
+         data-widget-instance="OupUmbrellaFooterSelfServe">
+        
+
+
+
+    <input type="hidden" class="SelfServeContentId" value="GlobalFooter_Links" />
+    <input type="hidden" class="SelfServeVersionId" value="0" />
+
+<div class="oup-footer-row journal-links">
+<div class="global-footer selfservelinks">
+<ul>
+    <li><a href="/pages/about-oxford-academic">About Oxford Academic</a></li>
+    <li><a href="/pages/about-oxford-academic/publish-journals-with-us">Publish journals with us</a></li>
+    <li><a href="/pages/about-oxford-academic/our-university-press-partners">University press partners</a></li>
+    <li><a href="/pages/what-we-publish">What we publish</a></li>
+    <li><a href="/pages/new-features">New features</a>&nbsp;</li>
+</ul>
+</div>
+<div class="global-footer selfservelinks">
+<ul>
+    <li><a href="/pages/for-authors">For authors</a></li>
+    <li><a href="/pages/open-research/open-access">Open access</a></li>
+    <li><a href="/pages/purchasing">Purchasing</a></li>
+    <li><a href="/pages/institutional-account-management">Institutional account management</a></li>
+    <li><a href="https://academic.oup.com/pages/purchasing/rights-and-permissions">Rights and permissions</a></li>
+</ul>
+</div>
+<div class="global-footer selfservelinks">
+<ul>
+    <li><a href="/pages/get-help-with-access">Get help with access</a></li>
+    <li><a href="/pages/about-oxford-academic/accessibility">Accessibility</a></li>
+    <li><a href="/pages/contact-us">Contact us</a></li>
+    <li><a href="/pages/advertising">Advertising</a></li>
+    <li><a href="/pages/media-enquiries">Media enquiries</a></li>
+</ul>
+</div>
+<div class="global-footer selfservelinks global-footer-external">
+<ul>
+    <li><a href="https://global.oup.com/">Oxford University Press</a></li>
+    <li><a href="https://corp.oup.com/press-office">News</a></li>
+    <li><a href="https://languages.oup.com/">Oxford Languages</a></li>
+    <li><a href="https://www.ox.ac.uk/">University of Oxford</a></li>
+</ul>
+</div>
+<div class="OUP-mission">
+<p>Oxford University Press is a department of the University of Oxford. It furthers the University's objective of excellence in research, scholarship, and education by publishing worldwide</p>
+<img class="journal-footer-logo" src="//oup.silverchair-cdn.com/UI/app/svg/umbrella/oup-logo.svg" alt="Oxford University Press" width="150" height="42" />
+</div>
+</div>
+<div class="oup-footer-row">
+<div class="oup-footer-row-links">
+<ul>
+    <li>Copyright © 2026 Oxford University Press</li>
+    <li><a href="#openCookiePreferences" class="optanon-show-settings">Cookie settings</a></li>
+    <li><a href="https://global.oup.com/cookiepolicy">Cookie policy</a></li>
+    <li><a href="https://global.oup.com/privacy">Privacy policy</a></li>
+    <li><a href="https://academic.oup.com/pages/legal-notice">Legal notice</a></li>
+</ul>
+</div>
+</div>
+<style type="text/css">
+    /* Issue right column fix for tablet/mobile */
+    @media (max-width: 1200px) {
+    .pg_issue .widget-instance-OUP_Issue {
+    width: 100%;
+    }
+    }
+    .sf-facet-list .sf-facet label,
+    .sf-facet-list .taxonomy-label-wrap label {
+    font-size: 0.9375rem;
+    }
+    .issue-pagination-wrap .pagination-container {
+    float: right;
+    }
+</style>
+
+
+
+
+    </div>
+
+        </div>
+    </div>
+    <div class="ss-ui-only">
+
+    </div>
+
+        </section>
+</div>
+
+
+
+
+
+
+    
+
+
+
+    <div class="widget widget-SiteWideModals widget-instance-SiteWideModals"
+         data-widget-name="SiteWideModals"
+         data-widget-instance="SiteWideModals">
+        <div id="revealModal" class="reveal-modal" data-reveal>
+    <div id="revealContent"></div>
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close"></i><span class="screenreader-text">Close</span></a>
+</div>
+
+<div id="globalModalContainer" class="modal-global-container">
+    <div id="globalModalContent">
+        <div class="js-globalModalPlaceholder"></div>
+    </div>
+    <a class="close-modal js-close-modal" href="javascript:;"><i class="icon-general-close"><span class="screenreader-text">Close</span></i></a>
+</div>
+<div id="globalModalOverlay" class="modal-overlay js-modal-overlay"></div>
+
+<div id="NeedSubscription" class="reveal-modal small" data-reveal>
+    <div class="subscription-needed">
+        <h5>This Feature Is Available To Subscribers Only</h5>
+        <p><a href="/sign-in">Sign In</a> or <a href="/my-account/register?siteId=5498&amp;returnUrl=%2fpq%2farticle%2f76%2f1%2f444%2f8071416">Create an Account</a></p>
+    </div>
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close"></i><span class="screenreader-text">Close</span></a>
+</div>
+
+<div id="noAccessReveal" class="reveal-modal tiny" data-reveal>
+    <p>This PDF is available to Subscribers Only</p>
+    <a class="hide-for-article-page" id="articleLinkToPurchase" data-reveal><span>View Article Abstract & Purchase Options</span></a>
+    <div class="issue-purchase-modal">
+        <p>For full access to this pdf, sign in to an existing account, or purchase an annual subscription.</p>
+    </div>
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close"></i><span class="screenreader-text">Close</span></a>
+</div>
+
+<div id="giftAccessModalA" class="gift-access-modal-content">
+    <h4 id="giftAccessModalATitle" class="gift-access-modal-title js-modal-label">Gift article access</h4>
+    <p class="gift-access-modal-text">As a benefit of your subscription, you can share temporary access to restricted articles.</p>
+    <p class="gift-access-modal-text">Each link will stop working after 30 days or 10 uses. You may create up to 10 links in a 30 day period.</p>
+    <p class="gift-access-modal-text">Please sign in to your personal account to gift article access.</p>
+    <div class="gift-access-modal-actions">
+        <a href="javascript:;" class="button-call-to-action js-gift-access-signin js-sign-in-link" data-linktype="user-pass">Sign in <i class="icon-general_arrow-right"></i></a>
+        <a href="/my-account/register" class="gift-access-register-link">Register</a>
+    </div>
+</div>
+
+<div id="giftAccessModalB" class="gift-access-modal-content" swap-content-for-modal="true">
+    <!-- CAPTCHA verification step -->
+    <div class="gift-access-step js-gift-access-captcha-step">
+        <h4 id="giftAccessModalBTitle" class="gift-access-modal-title js-modal-label">Gift article access</h4>
+        <p class="gift-access-modal-text">Please create a link below to share with others. This will provide temporary access to this restricted article.</p>
+        <p class="gift-access-modal-text">The link will stop working after 30 days or 10 uses. You may create up to 10 links in a 30 day period.</p>
+        <p class="gift-access-modal-text gift-articles-remaining">Gift articles remaining: <span class="js-gift-articles-count">--</span></p>
+
+        <div class="gift-access-form js-gift-access-form">
+            <div class="gift-access-recaptcha-container js-gift-recaptcha-container" style="min-height: 78px; margin: 15px 0;" role="group" aria-label="CAPTCHA verification">               
+            </div>
+            <p class="error js-error-message hide"></p>
+
+            <div class="gift-access-modal-actions">
+                <button type="button" class="btn btn-primary js-create-gift-link">Create gift link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Link Generated Success -->
+    <div class="gift-access-step js-gift-access-success-step hide">
+        <h4 class="gift-access-modal-title">Gift article access</h4>
+        <p class="gift-access-modal-text">The link will stop working after 30 days or 10 uses. You may create up to 10 links in a 30 day period.</p>
+        <p class="gift-access-modal-text gift-articles-remaining">Gift articles remaining: <span class="js-gift-articles-count">--</span></p>
+
+        <div class="gift-access-link-container">
+            <p class="js-gift-link-text gift-access-link-text" style="margin-bottom: 15px;"></p>
+            <button type="button" class="btn btn-primary js-copy-gift-link" aria-live="polite">
+                <span class="js-copy-text">Copy link</span>
+                <span class="js-copied-text hide">Copied!</span>
+            </button>
+        </div>
+
+        <!-- Screenreader announcement for copy action -->
+        <div class="screenreader-text js-copy-announcement" aria-live="assertive" aria-atomic="true"></div>
+    </div>
+
+</div>
+
+<div id="giftAccessModalC" class="gift-access-modal-content" swap-content-for-modal="true">
+    <h4 id="giftAccessModalCTitle" class="gift-access-modal-title js-modal-label">Gift article access</h4>
+    <p class="gift-access-modal-text">As a benefit of your subscription, you can share temporary access to restricted articles.</p>
+    <p class="gift-access-modal-text">Each link will stop working after 30 days or 10 uses.</p>
+    <p class="gift-access-modal-text">You have reached the limit of 10 links within a 30 day period</p>
+</div>
+
+<div id="prestitialModal" class="prestitial-modal hide" role="dialog" aria-modal="true" aria-labelledby="prestitialModalHeading" tabindex="-1">
+    <div class="prestitial-modal-content">
+        <div class="prestitial-modal-top-row">
+            <div id="prestitialModalHeading" class="heading">Ad</div>
+            <button class="js-close-prestitial-modal close-prestitial-modal" aria-label="Close advertisement">&times;</button>
+        </div>
+        <div class="prestitial-ad-container">
+            <div id="adBlockPrestitial" class="js-adblock"></div>
+        </div>
+    </div>
+</div>
+
+    </div>
+
+    
+
+
+
+
+
+
+<script type="text/javascript">
+    MathJax = {
+        tex: {
+            inlineMath: [['|$', '$|'], ['\\(', '\\)']]
+        }    };
+</script>
+<script id="MathJax-script" async src="//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+    <!-- CookiePro Default Categories -->
+    <!-- When the Cookie Compliance code loads, if cookies for the associated group have consent...
+         it will dynamically change the tag to: script type=text/JavaScript...
+         the code inside the tags will then be recognized and run as normal. -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script>
+        var NTPT_PGEXTRA = 'event_type=full-text\u0026discipline_ot_level_1=Arts and Humanities\u0026discipline_ot_level_2=Philosophy\u0026supplier_tag=SC_Journals\u0026object_type=Article\u0026taxonomy=taxId%3a39%7ctaxLabel%3aAcademicSubjects%7cnodeId%3aAHU02720%7cnodeLabel%3aPhilosophy%7cnodeLevel%3a2\u0026siteid=pq\u0026authentication_method=IP\u0026authzrequired=true\u0026account_id=20009074\u0026account_list=20009074,20009069,20039220,20210862,20035891,20215226,20035883,20035800,20046794\u0026authnips=162.105.199.139\u0026doi=10.1093/pq/pqaf022';
+    </script>
+    <!-- Copyright 2001-2010, IBM Corporation All rights reserved. -->
+    <script type="text/javascript" src="//ouptag.scholarlyiq.com/ntpagetag.js" ></script>
+        <noscript>
+            <img src="//ouptag.scholarlyiq.com/ntpagetag.gif?js=0" height="1" width="1" border="0" hspace="0" vspace="0" alt="Scholarly IQ" />
+        </noscript>
+
+
+
+
+
+
+
+
+
+
+    <script type="text/javascript" src="//oup.silverchair-cdn.com/Themes/Client/app/jsdist/v-639237374154309250/site.min.js"></script>
+
+
+    
+    
+    
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+
+    <script type="text/javascript" src="//oup.silverchair-cdn.com/Themes/Client/app/jsdist/v-639237374071833334/article-page.min.js"></script>
+
+
+
+    
+
+    
+    
+
+
+
+
+    <div class="ad-banner js-ad-riser ad-banner-riser" role="region" aria-label="Advertisement">
+    <div class="widget widget-AdBlock widget-instance-RiserAd"
+         data-widget-name="AdBlock"
+         data-widget-instance="RiserAd">
+        
+
+    </div>
+
+    </div>
+
+
+
+                    <script src="//oup.silverchair-cdn.com/oup/scm.proxylogging.js"></script>
+
+    <div class="end-of-page-js"></div>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a3b59252889a6aba',t:'MTc4OTQ1MzcwOQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+

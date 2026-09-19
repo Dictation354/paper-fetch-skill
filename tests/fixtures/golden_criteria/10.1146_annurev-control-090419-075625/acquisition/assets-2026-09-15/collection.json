@@ -1,0 +1,3837 @@
+{
+  "provider": "annualreviews",
+  "doi": "10.1146/annurev-control-090419-075625",
+  "sample_id": "10.1146_annurev-control-090419-075625",
+  "source_url": "https://www.annualreviews.org/content/journals/10.1146/annurev-control-090419-075625",
+  "source_input": "tests/fixtures/golden_criteria/10.1146_annurev-control-090419-075625/original.html",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "4ea8d65702a56ef8ffec0373e90e5138aac4da28c554406a0d9ab746276b2132",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 1 Robust and stochastic nonparametric estimation techniques. Noisy measur",
+        "caption": "Figure 1 Robust and stochastic nonparametric estimation techniques. Noisy measurements of the true function ( red ) are shown as crosses; the nominal function estimate is shown in blue. ( a ) Illustration of the robust set-membership technique based on a bound of the noise w ( k ) and the gradient of f , with the resulting bounds shown in gray. ( b ) Gaussian process regression estimate based on a squared exponential kernel function, with the 2-σ confidence bound shown in gray.",
+        "url": "https://www.annualreviews.org/docserver/fulltext/control/3/1/as030269.f1.gif",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "f1",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/as030269.f1_thmb.gif",
+        "full_size_url": "https://www.annualreviews.org/docserver/fulltext/control/3/1/as030269.f1.gif"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/3/1/as030269.f1.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2066d4bb5ee02ebd-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/2066d4bb5ee02ebd-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 2795,
+        "height": 1068,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "as030269.f1.gif",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 2 Gaussian process–based model predictive control for autonomous racing. ",
+        "caption": "Figure 2 Gaussian process–based model predictive control for autonomous racing. ( a ) Application to a full-sized race car ( 90 ), showing the position constraint set ( red ); the predicted trajectory including uncertainty ( gray ), which is used for constraint tightening; and selected data points from previous rounds ( green spheres ). ( b , c ) The resulting trajectories of a similar approach applied to miniature radio-controlled cars ( 86 ), with the initial nominal controller shown in panel b and the improved trajectories after learning shown in panel c . For videos of these experiments, see References 91 and 92 . Panel a is a still from Reference 92 . Panels b and c adapted from Reference 86 with permission.",
+        "url": "https://www.annualreviews.org/docserver/fulltext/control/3/1/as030269.f2.gif",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "f2",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/as030269.f2_thmb.gif",
+        "full_size_url": "https://www.annualreviews.org/docserver/fulltext/control/3/1/as030269.f2.gif"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/3/1/as030269.f2.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/a4197cc4fafda3d5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/a4197cc4fafda3d5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 3358,
+        "height": 2643,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "as030269.f2.gif",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 3 ( a ) The concept of a model predictive safety filter. Based on the cur",
+        "caption": "Figure 3 ( a ) The concept of a model predictive safety filter. Based on the current state x , a learning-based controller provides an input , which is processed by the safety filter and applied to the real system. ( b ) Inner working of a model predictive safety filter. The current system state x ( k ) is shown with a safe backup plan ( brown ) from the solution at time k − 1. An arbitrary learning input is passed through unfiltered if a feasible backup trajectory ( green ) can be obtained from the resulting via the optimization problem represented by Equation 18 . Panel a adapted from Reference 128 ; panel b adapted from Reference 73 .",
+        "url": "https://www.annualreviews.org/docserver/fulltext/control/3/1/as030269.f3.gif",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "f3",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/as030269.f3_thmb.gif",
+        "full_size_url": "https://www.annualreviews.org/docserver/fulltext/control/3/1/as030269.f3.gif"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/3/1/as030269.f3.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/9eac42af671b66da-http-2.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/9eac42af671b66da-http-2.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 3708,
+        "height": 1184,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "as030269.f3.gif",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0001",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-001.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-001.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-001.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "eq-075625-001.gif"
+      ],
+      "record": "eq-075625-001.gif",
+      "validation": {
+        "format": "image/gif",
+        "width": 239,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-001.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 2",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-002.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-002.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-002.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/1291a3e0c01ba76d-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/1291a3e0c01ba76d-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 69,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-002.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 3",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-003.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-003.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-003.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0f77729876e3893b-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/0f77729876e3893b-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 68,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-003.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 4",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-004.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-004.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-004.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/6ed419426c56ab23-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/6ed419426c56ab23-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 52,
+        "height": 17,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-004.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 5",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-005.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-005.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-005.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/406b1f9d89476b52-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/406b1f9d89476b52-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 19,
+        "height": 16,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-005.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 6",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-006.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-006.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-006.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/a521c5f3dc94d695-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/a521c5f3dc94d695-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 12,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-006.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0002",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-007.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-007.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-007.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "eq-075625-007.gif"
+      ],
+      "record": "eq-075625-007.gif",
+      "validation": {
+        "format": "image/gif",
+        "width": 196,
+        "height": 56,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-007.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 8",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-008.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-008.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-008.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/44c2b737d30a0d52-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/44c2b737d30a0d52-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 138,
+        "height": 16,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-008.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 9",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-009.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-009.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-009.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/f18fd98e19884e55-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/f18fd98e19884e55-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 139,
+        "height": 16,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-009.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0003",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-010.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-010.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-010.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ddb47ccf46a9817b-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ddb47ccf46a9817b-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 253,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-010.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0004",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-011.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-011.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-011.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/40fc5c0a32d1ca51-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/40fc5c0a32d1ca51-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 250,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-011.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 12",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-012.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-012.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-012.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/8225ae881234682c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/8225ae881234682c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 114,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-012.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 13",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-013.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-013.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-013.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/98e56f0c5c6b24d8-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/98e56f0c5c6b24d8-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 16,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-013.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0005",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-014.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-014.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-014.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/1b8dffed7e7e0344-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/1b8dffed7e7e0344-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 270,
+        "height": 56,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-014.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0006",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-015.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-015.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-015.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/1241cea6dfadfe61-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/1241cea6dfadfe61-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 325,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-015.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0007",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-016.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-016.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-016.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2ab2289364a2343d-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/2ab2289364a2343d-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 171,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-016.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0008",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-017.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-017.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-017.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/cb54807be57ff760-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/cb54807be57ff760-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 289,
+        "height": 19,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-017.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0009",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-018.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-018.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-018.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/10d84de1a6e5b213-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/10d84de1a6e5b213-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 382,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-018.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0010",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-019.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-019.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-019.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/6432c8ba14b0b905-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/6432c8ba14b0b905-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 407,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-019.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0011",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-020.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-020.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-020.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/fc65d8b61284f44b-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/fc65d8b61284f44b-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 226,
+        "height": 16,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-020.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 21",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-022.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-022.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-022.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/a329e7bc39b4de2f-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/a329e7bc39b4de2f-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 30,
+        "height": 5,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-022.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0012",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-024.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-024.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-024.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2121619cf27c42c6-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/2121619cf27c42c6-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 406,
+        "height": 47,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-024.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0013",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-025.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-025.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-025.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/50f2dd74ffa241d6-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/50f2dd74ffa241d6-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 251,
+        "height": 16,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-025.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0014",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-026.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-026.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-026.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/47dd5d6df31c95c3-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/47dd5d6df31c95c3-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 308,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-026.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0015",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-027.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-027.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-027.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/165ccea55aca6588-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/165ccea55aca6588-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 309,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-027.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0016",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-028.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-028.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-028.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/af28eee6fe28b9e5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/af28eee6fe28b9e5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 70,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-028.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0017",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-029.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-029.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-029.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0d3d980a31429065-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/0d3d980a31429065-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 76,
+        "height": 16,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-029.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 28",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-032.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-032.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-032.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 18,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-032.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 29",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-033.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-033.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-033.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/a521c5f3dc94d695-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/a521c5f3dc94d695-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 12,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-006.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 30",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-034.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-034.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-034.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 18,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-032.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0018",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-035.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-035.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-035.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/5b176dc8cb54c98c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/5b176dc8cb54c98c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 140,
+        "height": 22,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-035.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 32",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-036.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-036.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-036.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/83ae31686b3ff871-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/83ae31686b3ff871-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 23,
+        "height": 19,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-036.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 33",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-037.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-037.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-037.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/e7ae6155f1ffb1f7-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/e7ae6155f1ffb1f7-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 71,
+        "height": 19,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-037.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 34",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-038.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-038.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-038.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/27310b78cc2c9b95-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/27310b78cc2c9b95-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 12,
+        "height": 10,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-038.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 35",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-039.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-039.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-039.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 18,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-032.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 36",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-040.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-040.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-040.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ac9b68ded490afe5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ac9b68ded490afe5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 42,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-040.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 37",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-041.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-041.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-041.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0f1bd8e74dfbbfe3-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/0f1bd8e74dfbbfe3-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 65,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-041.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 38",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-042.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-042.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-042.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/43c50ca1ad7ea1e2-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/43c50ca1ad7ea1e2-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 12,
+        "height": 11,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-042.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 39",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-043.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-043.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-043.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/3dc367051bd0cd3a-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/3dc367051bd0cd3a-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 16,
+        "height": 11,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-043.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0019",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-044.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-044.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-044.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/20a74bae411f9696-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/20a74bae411f9696-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 307,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-044.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 41",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-045.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-045.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-045.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/15935ae47a35c23f-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/15935ae47a35c23f-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 136,
+        "height": 17,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-045.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 42",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-046.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-046.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-046.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/e0562b9738d77fb7-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/e0562b9738d77fb7-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 50,
+        "height": 16,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-046.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "um1",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-047.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-047.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-047.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/f120e8e552efb7f1-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/f120e8e552efb7f1-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 190,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-047.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "um2",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-048.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-048.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-048.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/af37a9a691b1d7c9-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/af37a9a691b1d7c9-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 273,
+        "height": 16,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-048.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 45",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-049.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-049.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-049.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/25e3e4379ac766e7-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/25e3e4379ac766e7-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 11,
+        "height": 10,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-049.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 46",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-051.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-051.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-051.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/15935ae47a35c23f-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/15935ae47a35c23f-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 136,
+        "height": 17,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-045.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 47",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-052.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-052.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-052.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0f1bd8e74dfbbfe3-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/0f1bd8e74dfbbfe3-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 65,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-041.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 48",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-053.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-053.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-053.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 16,
+        "height": 2,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-053.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 49",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-054.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-054.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-054.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 16,
+        "height": 2,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-053.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0020",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-055.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-055.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-055.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/7e7902cde0dbe245-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/7e7902cde0dbe245-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 553,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-055.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0021",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-056.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-056.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-056.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/f94b54f9b9352d11-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/f94b54f9b9352d11-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 494,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-056.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0022",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-057.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-057.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-057.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/191ed6bfb7cb75eb-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/191ed6bfb7cb75eb-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 69,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-057.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 53",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-058.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-058.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-058.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 14,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-058.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 54",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-059.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-059.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-059.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/a18a5fc608e68100-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/a18a5fc608e68100-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 12,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-059.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 55",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-060.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-060.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-060.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 14,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-058.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 56",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-061.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-061.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-061.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 14,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-058.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0023",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-062.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-062.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-062.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2ed83c85dae1b4fa-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/2ed83c85dae1b4fa-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 251,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-062.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 58",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-063.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-063.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-063.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 14,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-058.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 59",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-064.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-064.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-064.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 14,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-058.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 60",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-065.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-065.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-065.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/43c50ca1ad7ea1e2-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/43c50ca1ad7ea1e2-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 12,
+        "height": 11,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-042.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 61",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-066.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-066.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-066.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/43c50ca1ad7ea1e2-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/43c50ca1ad7ea1e2-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 12,
+        "height": 11,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-042.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0024",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-067.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-067.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-067.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/b3e604f96b19483a-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/b3e604f96b19483a-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 194,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-067.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 63",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-068.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-068.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-068.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/a18a5fc608e68100-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/a18a5fc608e68100-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 12,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-059.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 64",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-069.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-069.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-069.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 14,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-058.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 65",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-070.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-070.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-070.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/e22b6b1eb8e0d934-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/e22b6b1eb8e0d934-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 41,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-070.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 66",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-071.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-071.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-071.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/400c9dcefa3207d5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/400c9dcefa3207d5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 64,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-071.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 67",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-072.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-072.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-072.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0f1bd8e74dfbbfe3-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/0f1bd8e74dfbbfe3-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 65,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-041.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "um3",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-075.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-075.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-075.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/1a590fb97ddf63e2-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/1a590fb97ddf63e2-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 606,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-075.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "um4",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-076.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-076.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-076.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/da4026190bd342e9-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/da4026190bd342e9-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 552,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-076.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 70",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-077.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-077.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-077.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/9880c5b18447bf16-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/9880c5b18447bf16-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 10,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-077.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 71",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-079.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-079.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-079.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 14,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-058.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "um5",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-080.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-080.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-080.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/c3bf146ae20cf0fa-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/c3bf146ae20cf0fa-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 134,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-080.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 73",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-081.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-081.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-081.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/14fedcd01a76afc5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 14,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-058.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0025",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-082.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-082.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-082.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/e89437bdbe5877d6-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/e89437bdbe5877d6-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 219,
+        "height": 38,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-082.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0026",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-084.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-084.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-084.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ade1286f2d4710cc-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/ade1286f2d4710cc-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 453,
+        "height": 39,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-084.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 76",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-086.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-086.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-086.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/4a08b59cb7529132-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/4a08b59cb7529132-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 146,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-086.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 77",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-087.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-087.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-087.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/f1c4cb06492b7170-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/f1c4cb06492b7170-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 99,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-087.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 78",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-088.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-088.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-088.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 16,
+        "height": 2,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-053.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 79",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-090.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-090.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-090.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 16,
+        "height": 2,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-053.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 80",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-091.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-091.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-091.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/085f0d1eb9d5a634-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/085f0d1eb9d5a634-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 110,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-091.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 81",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-092.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-092.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-092.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 16,
+        "height": 2,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-053.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "um6",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-093.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-093.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-093.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/f1d0995170e8e2ac-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/f1d0995170e8e2ac-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 325,
+        "height": 38,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-093.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "um7",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-094.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-094.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-094.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/3459d50a01200b13-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/3459d50a01200b13-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 285,
+        "height": 37,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-094.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 84",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-095.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-095.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-095.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/03b346853376412e-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/03b346853376412e-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 16,
+        "height": 22,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-095.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "um8",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-096.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-096.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-096.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/809e5d92e50f510e-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/809e5d92e50f510e-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 230,
+        "height": 17,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-096.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 86",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-099.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-099.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-099.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/80661510a89702f6-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/80661510a89702f6-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 42,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-099.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 87",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-100.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-100.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-100.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/e23e1ad61849062b-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/e23e1ad61849062b-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 39,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-100.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0027",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-101.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-101.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-101.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0e0e9805bee20005-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/0e0e9805bee20005-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 195,
+        "height": 50,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-101.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0028",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-102.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-102.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-102.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/5db764d55ff58495-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/5db764d55ff58495-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 207,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-102.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0029",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-103.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-103.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-103.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/1c9889e51b85fbc5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/1c9889e51b85fbc5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 175,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-103.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0030",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-104.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-104.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-104.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/b56a33f11967f6d8-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/b56a33f11967f6d8-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 178,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-104.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0031",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-105.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-105.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-105.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/d22afd9172ad6e77-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/d22afd9172ad6e77-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 67,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-105.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 93",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-106.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-106.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-106.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/a96992db06e6ccb6-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/a96992db06e6ccb6-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 142,
+        "height": 22,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-106.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 94",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-107.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-107.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-107.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/07a388d4cb28a896-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/07a388d4cb28a896-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 112,
+        "height": 22,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-107.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 95",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-108.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-108.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-108.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 16,
+        "height": 2,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-053.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 96",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-109.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-109.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-109.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 18,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-032.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "um9",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-110.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-110.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-110.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/742c05c6f190645d-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/742c05c6f190645d-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 173,
+        "height": 56,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-110.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 98",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-111.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-111.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-111.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/27310b78cc2c9b95-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/27310b78cc2c9b95-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 12,
+        "height": 10,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-038.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 99",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-112.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-112.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-112.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/c554965440f06140-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/c554965440f06140-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 11,
+        "height": 11,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-112.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 100",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-113.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-113.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-113.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/2a9f5bf0d6ae94e2-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 16,
+        "height": 2,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-053.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 101",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-114.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-114.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-114.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/31e2fc36b356f6e5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/31e2fc36b356f6e5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 17,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-114.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 102",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-115.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-115.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-115.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/be0277914eae1aa5-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/be0277914eae1aa5-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 16,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-115.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0032",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-116.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-116.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-116.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/8fd3d70838bcda1c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/8fd3d70838bcda1c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 142,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-116.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0033",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-117.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-117.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-117.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/fba3405a3ca0490c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/fba3405a3ca0490c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 85,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-117.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0034",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-118.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-118.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-118.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/a1674beb726bd68a-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/a1674beb726bd68a-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 40,
+        "height": 13,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-118.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 106",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-119.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-119.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-119.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/14a0fc532d00f2e2-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/14a0fc532d00f2e2-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 52,
+        "height": 13,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-119.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 107",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-120.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-120.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-120.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/fcc8f8248a20277f-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/fcc8f8248a20277f-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 122,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-120.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 108",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-123.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-123.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-123.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/f37d09a055c31fdf-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/f37d09a055c31fdf-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 42,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-123.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 109",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-124.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-124.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-124.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/4f453ca3558e7341-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/4f453ca3558e7341-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 118,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-124.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 110",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-125.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-125.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-125.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/e626873571545968-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/e626873571545968-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 94,
+        "height": 18,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-125.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 111",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-126.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-126.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-126.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 36,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-126.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 112",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-127.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-127.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-127.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/b67fff7e78452c3e-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/b67fff7e78452c3e-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 94,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-127.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 113",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-128.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-128.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-128.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 36,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-126.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 114",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-130.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-130.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-130.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 18,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-032.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 115",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-131.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-131.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-131.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 36,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-126.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 116",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-132.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-132.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-132.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 36,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-126.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 117",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-133.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-133.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-133.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/209619beaa2f17aa-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/209619beaa2f17aa-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 19,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-133.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "m0035",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-134.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-134.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-134.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/8dfbb04abab93bc8-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/8dfbb04abab93bc8-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 171,
+        "height": 40,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-134.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 119",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-136.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-136.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-136.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 36,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-126.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 120",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-137.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-137.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-137.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/3b3eb204aae21b1d-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/3b3eb204aae21b1d-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 84,
+        "height": 22,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-137.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 121",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-138.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-138.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-138.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 36,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-126.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 122",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-139.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-139.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-139.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/6e63ee52870f8d72-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/6e63ee52870f8d72-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 81,
+        "height": 19,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-139.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 123",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-140.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-140.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-140.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/7760b1e080c8e75c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/7760b1e080c8e75c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 17,
+        "height": 10,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-140.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 124",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-141.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-141.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-141.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/7760b1e080c8e75c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/7760b1e080c8e75c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 17,
+        "height": 10,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-140.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 125",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-142.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-142.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-142.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/c195e7d00704acc9-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/c195e7d00704acc9-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 65,
+        "height": 22,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-142.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 126",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-143.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-143.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-143.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/604c3cd52475fafb-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 36,
+        "height": 14,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-126.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 127",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-144.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-144.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-144.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 18,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-032.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "Formula 128",
+        "caption": "",
+        "url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-145.gif",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-145.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-145.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/122d9b0c952d793c-http-1.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 18,
+        "height": 15,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "formula",
+      "outcome": "complete",
+      "output_filename": "eq-075625-032.gif",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 131,
+    "unique_files": 131,
+    "verified_files": 131,
+    "replayed_files": 131,
+    "complete_received_files": 131,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1146_annurev-control-090419-075625/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1146_annurev-control-090419-075625/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 131,
+    "unique_files": 131,
+    "verified_files": 131,
+    "replayed_files": 131,
+    "complete_received_files": 131
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

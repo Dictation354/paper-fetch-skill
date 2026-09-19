@@ -1,0 +1,89 @@
+{
+  "doi": "10.1126/science.abo2812",
+  "provider": "science",
+  "attempt": 4,
+  "authorization": "Explicit additional retry requested by user after prior observations.",
+  "change_from_previous": "Request the exact previously observed Figure 1 URL over ordinary HTTP before any new browser navigation, then check the same URL in the configured native browser.",
+  "source_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+  "image_url": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+  "no_fault_injection": true,
+  "started_at_utc": "2026-09-16T11:08:05.968020+00:00",
+  "article_responses": [
+    {
+      "url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+      "status_code": 403,
+      "size": 5864,
+      "sha256": "7d68ce30b585d9a9d35762c120cb2f30700fab7fed02ceb6567ddddbaa95960e",
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 11:08:11 GMT",
+        "content-type": "text/html; charset=UTF-8",
+        "cf-mitigated": "challenge"
+      },
+      "observed_at_utc": "2026-09-16T11:08:36.494051+00:00",
+      "body_retained": false
+    },
+    {
+      "url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+      "status_code": 200,
+      "size": 457514,
+      "sha256": "241aa981d0976b8654611e47bfafb03fca2daca9156ada0c805385653c70dff7",
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 11:08:16 GMT",
+        "content-type": "text/html;charset=UTF-8"
+      },
+      "observed_at_utc": "2026-09-16T11:08:36.526400+00:00",
+      "body_file": "acquisition/template-browser-repeat4-2026-09-16/003-1-http_response_entity.html"
+    }
+  ],
+  "direct_image": {
+    "url": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+    "status_code": 200,
+    "size": 870435,
+    "sha256": "6a21e6e7c3477d85f57819cc882e23d6fd0bf86188ed20083cf7854524c4849e",
+    "response_headers": {
+      "date": "Wed, 16 Sep 2026 11:08:08 GMT",
+      "content-type": "image/jpeg;charset=UTF-8",
+      "content-length": "870435"
+    },
+    "observed_at_utc": "2026-09-16T11:08:06.479972+00:00",
+    "dimensions": [
+      4325,
+      2111
+    ],
+    "challenge": false,
+    "body_file": "acquisition/template-browser-repeat4-2026-09-16/000-direct_http.jpg"
+  },
+  "browser_article": {
+    "title": "Satellites reveal widespread decline in global lake water storage | Science",
+    "observed_doi": "10.1126/science.abo2812",
+    "challenge": false,
+    "paywall_diagnostics": {},
+    "final_url": "https://www.science.org/doi/full/10.1126/science.abo2812"
+  },
+  "same_url_article_images": [
+    {
+      "src": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+      "width": 0,
+      "height": 0
+    }
+  ],
+  "canvas_result": {
+    "ok": true,
+    "found": true,
+    "status": 200,
+    "url": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+    "contentType": "image/png",
+    "width": 4325,
+    "height": 2111
+  },
+  "canvas_status_note": "Canvas helper status is not an observed HTTP response; provenance status_code is null.",
+  "canvas_dimensions": [
+    4325,
+    2111
+  ],
+  "canvas_file": "acquisition/template-browser-repeat4-2026-09-16/002-browser_canvas_export.png",
+  "stop_reason": "single_observation_complete",
+  "ended_at_utc": "2026-09-16T11:08:36.741215+00:00",
+  "same_image_challenge_recovery_observed": false,
+  "setup_note": "Local script context-manager TypeError occurred before any network request; corrected before this single provider observation."
+}

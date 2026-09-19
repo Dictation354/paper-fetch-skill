@@ -1,0 +1,16 @@
+{
+  "query": "10.1016/0034-4257(94)90046-9",
+  "query_kind": "doi",
+  "doi": "10.1016/0034-4257(94)90046-9",
+  "landing_url": null,
+  "provider_hint": "elsevier",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 1,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "elsevier"
+}

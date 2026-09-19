@@ -1,0 +1,65 @@
+{
+  "provider": "ams",
+  "doi": "10.1175/jcli-d-23-0738.1",
+  "sample_id": "10.1175_jcli-d-23-0738.1",
+  "source_url": "https://journals.ametsoc.org/view/journals/clim/37/24/JCLI-D-23-0738.1.xml",
+  "source_input": "tests/fixtures/golden_criteria/10.1175_jcli-d-23-0738.1/original.html",
+  "include_supplementary": true,
+  "include_body": false,
+  "source_sha256": "6bdd410809dbf0a9e6778e273d2e3260c29eebc12b3c78f991db3966e5ea1970",
+  "targets": [
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Fig. S1",
+        "caption": "",
+        "section": "supplementary",
+        "url": "https://journals.ametsoc.org/supplemental//journals/clim/37/24/JCLI-D-23-0738.1.xml/10.1175_JCLI-D-23-0738.s1.pdf"
+      },
+      "download_url": "https://journals.ametsoc.org/supplemental//journals/clim/37/24/JCLI-D-23-0738.1.xml/10.1175_JCLI-D-23-0738.s1.pdf",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "identity_evidence": "Explicit same-paper supplementary index link; PDF opens without repair; no text conversion quality claim",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "pdf",
+          "pages": 11,
+          "first_page_excerpt": "Supplemental Material \nJournal of Climate \nA Slower North Equatorial Countercurrent but Faster Equatorial Undercurrent in a Warming \nClimate \nhttps://doi.org/10.1175/JCLI-D-23-0738.1 \n© Copyright 2024 American Meteorological Society (AMS) \nFor permission to reuse any portion of this work, please contact permissions@ametsoc.org. Any \nuse of material in this work that is determined to be “fair use” under Section 107 of the U.S. \nCopyright Act (17 USC §107) or that satisfies the conditions specified in Section 108 of the U.S. \nCopyright Act (17 USC §108) does not require AMS’s permission. Republi",
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "10.1175_JCLI-D-23-0738.s1.pdf",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/ab0dec38b336f60f-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    }
+  ],
+  "counts": {
+    "discovered_references": 1,
+    "unique_files": 1,
+    "verified_files": 0,
+    "replayed_files": 0,
+    "complete_received_files": 0,
+    "index_only_files": 1
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1175_jcli-d-23-0738.1/acquisition/assets-2026-09-15/collection.json",
+  "outcome": "index_only",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 1,
+    "unique_files": 1,
+    "verified_files": 1,
+    "replayed_files": 1,
+    "complete_received_files": 1
+  },
+  "historical_outcome_before_supplementary_removal": "complete",
+  "former_replay_receipt": "tests/fixtures/golden_criteria/10.1175_jcli-d-23-0738.1/acquisition/assets-2026-09-15/replay-receipt.json"
+}

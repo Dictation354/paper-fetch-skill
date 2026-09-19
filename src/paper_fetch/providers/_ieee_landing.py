@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall
+
+from ..quality.access_boundary import raise_for_paywall
+
 import urllib.parse
 from typing import Any
 from collections.abc import Mapping
@@ -10,7 +14,7 @@ from ..extraction.html.landing import LandingRedirectLimitExceeded, fetch_landin
 from ..extraction.html.assets import browser_asset_recovery_allowed
 from ..extraction.html.signals import detect_html_block, summarize_html
 from ..failure import FailureDiagnostics
-from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
+from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure, HttpRequestPolicy
 from ..http.headers import header_value
 from ..publisher_identity import normalize_doi
 from ..reason_codes import ERROR, NO_RESULT, NOT_SUPPORTED
@@ -65,6 +69,16 @@ def fetch_ieee_landing_attempt(
             max_redirects=MAX_IEEE_LANDING_REDIRECTS,
             raise_on_redirect_limit=True,
             retry_on_transient=True,
+            request_policy=HttpRequestPolicy(
+                cooldown_scope="provider:ieee:direct_landing",
+                body_access_provider="ieee",
+            ),
+        )
+        raise_for_paywall(
+            landing_fetch.html_text,
+            metadata={**metadata, "doi": doi},
+            source_url=landing_fetch.final_url,
+            provider=client.name,
         )
         detected = detect_html_block(
             "",
@@ -82,6 +96,12 @@ def fetch_ieee_landing_attempt(
             f"IEEE landing retrieval exceeded {MAX_IEEE_LANDING_REDIRECTS} redirects.",
         )
     except RequestFailure as exc:
+        raise_for_paywall(
+            exc.body,
+            metadata={**metadata, "doi": doi},
+            source_url=str(exc.url or landing_url),
+            provider=client.name,
+        )
         direct_diagnostics = {
             "direct_status": exc.status_code,
             "direct_content_type": header_value(exc.headers, "content-type"),
@@ -97,6 +117,7 @@ def fetch_ieee_landing_attempt(
             raise map_request_failure(exc) from exc
         direct_failure = map_request_failure(exc)
     except ProviderFailure as exc:
+        propagate_paywall(exc)
         direct_diagnostics = {
             "direct_status": (
                 landing_fetch.status_code if landing_fetch is not None else None
@@ -132,6 +153,7 @@ def fetch_ieee_landing_attempt(
                 },
             )
         except ProviderFailure as exc:
+            propagate_paywall(exc)
             direct_diagnostics = {
                 "direct_status": landing_fetch.status_code,
                 "direct_content_type": header_value(
@@ -148,11 +170,6 @@ def fetch_ieee_landing_attempt(
         doi=normalized_doi,
     )
     try:
-        expected_article_number = (
-            ieee_url._article_number_from_metadata(metadata)
-            or ieee_url._article_number_from_url(landing_url)
-            or ""
-        )
         browser_result = browser_runtime.fetch_html_with_browser(
             [landing_url],
             publisher=client.name,
@@ -160,14 +177,17 @@ def fetch_ieee_landing_attempt(
             runtime_context=runtime_context,
             readiness=browser_runtime.BrowserHtmlReadiness(
                 wait_for_article_body=False,
-                selector="#article",
-                selector_text=expected_article_number or None,
+                # Subscription landings expose metadata without #article.
+                # Full-body readiness belongs to the subsequent HTML route.
+                selector="body",
+                selector_text="xplGlobal.document.metadata",
                 require_selector=True,
             ),
             wait_seconds=IEEE_LANDING_BROWSER_READINESS_WAIT_SECONDS,
             disable_media=True,
         )
     except browser_runtime.BrowserRuntimeFailure as exc:
+        propagate_paywall(exc)
         raise ProviderFailure(
             exc.kind,
             (
@@ -183,6 +203,12 @@ def fetch_ieee_landing_attempt(
                 details=dict(exc.details),
             ),
         ) from exc
+    raise_for_paywall(
+        browser_result.html,
+        metadata={**metadata, "doi": doi},
+        source_url=browser_result.final_url,
+        provider=client.name,
+    )
     return build_ieee_landing_attempt(
         client,
         normalized_doi,

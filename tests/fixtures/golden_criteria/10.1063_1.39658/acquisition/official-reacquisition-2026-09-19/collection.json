@@ -1,0 +1,168 @@
+{
+  "doi": "10.1063/1.39658",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Gorenstein_1990_High_throughput_x-ray_astronomy.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1063_1.39658/acquisition/official-reacquisition-2026-09-19/outputs/1ef280da78b9-Gorenstein_1990_High_throughput_x-ray_astronomy.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "1ef280da78b929f6ccef8b9176baefc5aeb96fb599a259212af323c739d8232f",
+      "size": 36059
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Gorenstein_1990_High_throughput_x-ray_astronomy.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1063_1.39658/acquisition/official-reacquisition-2026-09-19/outputs/8a197a40f378-Gorenstein_1990_High_throughput_x-ray_astronomy.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "8a197a40f378bbf088def1412bf9439409bf3a3ea7b2d8fbb828e76011e8713b",
+      "size": 30509
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/aip/10.1063_1.39658/html-1/diagnostic.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1063_1.39658/acquisition/official-reacquisition-2026-09-19/outputs/e1e178feaa84-diagnostic.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "e1e178feaa84253f2192edd15ab54a12f7d61d942c29747f55b8ba6accfc33f5",
+      "size": 12109
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/aip/10.1063_1.39658/html-1/page-sanitized.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1063_1.39658/acquisition/official-reacquisition-2026-09-19/outputs/64750d23f8b0-page-sanitized.html",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "64750d23f8b06866e7a65138e245111386a2620e8b6b4b76543a20617cb5a889",
+      "size": 48890
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Gorenstein_1990_High_throughput_x-ray_astronomy.pdf",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1063_1.39658/acquisition/official-reacquisition-2026-09-19/raw_sources/a0f1266830f3-Gorenstein_1990_High_throughput_x-ray_astronomy.pdf",
+      "category": "raw_sources",
+      "origin_kind": "real_replay",
+      "sha256": "a0f1266830f3e7b16cad54d5c51a61a62d48f2ad0333b03ee5e31d473af07662",
+      "size": 1024724
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "degraded",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1063/1.39658",
+      "expected_doi": "10.1063/1.39658",
+      "title": "High throughput x-ray astronomy",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": false,
+      "token_estimate": 7503,
+      "confidence": "medium",
+      "flags": [
+        "weak_body_structure"
+      ],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "body_discovered": 0,
+      "body_attempted": 0,
+      "body_local": 0,
+      "body_full_size": 0,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": false,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "unknown",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "aip_pdf",
+      "acquisition": {
+        "provider": "aip",
+        "route": "browser_pdf",
+        "representation": "pdf",
+        "transport": "browser",
+        "fallback_used": true
+      },
+      "trace_event_count": 18,
+      "fallback_codes": [
+        "abstract_only"
+      ],
+      "warning_codes": [
+        "weak_body_structure"
+      ],
+      "failure_codes": [
+        "abstract_only"
+      ],
+      "unstructured_warning_count": 4,
+      "acceptance_policy": "validated_pdf",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

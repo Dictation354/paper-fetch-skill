@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall
+
+from ..quality.access_boundary import raise_for_paywall
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from collections.abc import Mapping, Sequence
-from urllib.parse import quote, urljoin
+from urllib.parse import parse_qsl, quote, urljoin, urlparse
 
 from ..config import (
     build_publisher_user_agent,
@@ -98,15 +102,30 @@ class OxfordAcademicArticleAttempt:
     metadata: dict[str, Any]
 
 
+def _oxford_asset_identity(asset: Mapping[str, Any]) -> object:
+    identity = html_asset_identity_key(asset)
+    parsed = urlparse(identity)
+    # Only compare identities here: every request/provenance URL retains its
+    # original signature. Preserve the full path/rendition and other parameters.
+    if asset.get("kind") == "figure" and parsed.hostname == "oup.silverchair-cdn.com":
+        query = tuple(
+            (key, value)
+            for key, value in parse_qsl(parsed.query, keep_blank_values=True)
+            if key.lower() not in {"expires", "signature", "key-pair-id", "policy"}
+        )
+        return (parsed.scheme, parsed.netloc, parsed.path, query)
+    return identity
+
+
 def _merge_oxford_assets(
     extracted_assets: Sequence[Mapping[str, Any]],
     downloaded_assets: Sequence[Mapping[str, Any]],
 ) -> list[dict[str, Any]]:
     merged: list[dict[str, Any]] = []
-    by_identity: dict[str, dict[str, Any]] = {}
+    by_identity: dict[object, dict[str, Any]] = {}
     for item in [*extracted_assets, *downloaded_assets]:
         asset = dict(item)
-        identity = html_asset_identity_key(asset)
+        identity = _oxford_asset_identity(asset)
         existing = by_identity.get(identity) if identity else None
         if existing is not None:
             existing.update(asset)
@@ -211,6 +230,12 @@ class OxfordAcademicClient(ProviderClient):
                     ),
                 )
             except RequestFailure as exc:
+                raise_for_paywall(
+                    exc.body,
+                    metadata={**metadata, "doi": doi},
+                    source_url=str(exc.url or requested_url),
+                    provider=self.name,
+                )
                 last_failure = map_request_failure(exc)
                 continue
             content_type = header_value(landing.headers, "content-type", "text/html")
@@ -249,6 +274,12 @@ class OxfordAcademicClient(ProviderClient):
         context: RuntimeContext | None = None,
     ) -> RawFulltextPayload:
         del context
+        raise_for_paywall(
+            attempt.html_text,
+            metadata=attempt.metadata,
+            source_url=attempt.final_url,
+            provider=self.name,
+        )
         extraction = oxford_html.extract_markdown(
             attempt.html_text,
             attempt.final_url,
@@ -285,6 +316,7 @@ class OxfordAcademicClient(ProviderClient):
                 "extraction": {
                     "abstract_sections": extraction.abstract_sections,
                     "section_hints": extraction.section_hints,
+                    "source_mathml_error_count": extraction.source_mathml_error_count,
                 },
             },
             reason="Downloaded full text from the Oxford Academic public article HTML route.",
@@ -376,6 +408,7 @@ class OxfordAcademicClient(ProviderClient):
                 )
                 continue
             except PdfFetchFailure as exc:
+                propagate_paywall(exc)
                 last_failure = exc
                 continue
 
@@ -438,6 +471,7 @@ class OxfordAcademicClient(ProviderClient):
         try:
             article_attempt = self._fetch_article_attempt(normalized_doi, metadata)
         except ProviderFailure as exc:
+            propagate_paywall(exc)
             article_fetch_failure = exc
 
         def run_article_html(_state: ProviderWaterfallState) -> RawFulltextPayload:
@@ -556,6 +590,7 @@ class OxfordAcademicClient(ProviderClient):
         return extraction.markdown_text, {
             "abstract_sections": extraction.abstract_sections,
             "section_hints": extraction.section_hints,
+            "source_mathml_error_count": extraction.source_mathml_error_count,
             "extracted_assets": extraction.extracted_assets,
         }
 
@@ -582,8 +617,8 @@ class OxfordAcademicClient(ProviderClient):
             or metadata
             or {}
         )
-        markdown_text = normalize_text(
-            content.markdown_text if content is not None else ""
+        markdown_text = str(
+            (content.markdown_text if content is not None else "") or ""
         )
         if not markdown_text:
             return metadata_only_article(
@@ -613,7 +648,12 @@ class OxfordAcademicClient(ProviderClient):
             abstract_sections=list(extraction.get("abstract_sections") or []),
             section_hints=list(extraction.get("section_hints") or []),
             assets=assets,
-            warnings=list(raw_payload.warnings),
+            warnings=[
+                *list(raw_payload.warnings),
+                *oxford_html.source_mathml_warnings(
+                    int(extraction.get("source_mathml_error_count") or 0)
+                ),
+            ],
             trace=raw_payload.trace,
             availability_diagnostics=availability
             if isinstance(availability, Mapping)

@@ -1,0 +1,58 @@
+<!DOCTYPE html><html data-locale="en" lang="en" class="no-js"><head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# article: http://ogp.me/ns/article#"><script>window.dataLayer = window.dataLayer || [];dataLayer.push({
+  "pf:selectedLanguage" : "English",
+  "pf:licenseType" : "free",
+  "pf:sitegenUUid" : "44595435006693760",
+  "pf:contentCategory" : "nlm-article",
+  "pf:associatedContentSets" : "0022-3670,all,ALL,JPO,JPO-2021,phoc,JPO-2020,PHOC",
+  "pf:authorized" : "authorized",
+  "pf:contentName" : "Spectral Features of Internal Waves in the South China Sea",
+  "pf:titleParentIdentifier" : "0022-3670",
+  "pf:authenticationStatus" : "not-logged-in",
+  "pf:chunkIdentifier" : "10.1175/JPO-D-24-0098.1",
+  "pf:contentParentName" : "Journal of Physical Oceanography",
+  "pf:authAccountNumber" : "-"
+});</script><script type="text/javascript">function runOnDomLoaded(f) {
+
+	if (!!document.domLoaded) {
+		setTimeout(f, 0);
+	}
+	else {
+
+		window.addEventListener('DOMContentLoaded', f);
+	}
+}</script><link href="https://journals.ametsoc.org/view/journals/phoc/55/6/JPO-D-24-0098.1.xml" rel="canonical">
+			
+				<title>Spectral Features of Internal Waves in the South China Sea in: Journal of Physical Oceanography Volume 55 Issue 6 (2025) </title>
+			
+            
+            
+			
+	
+		
+	
+
+			<script type="text/x-mathjax-config">
+	
+	if (MathJax.Hub.Browser.isMSIE) {
+		window.onload = function () {MathJax.Hub.Queue(["Typeset",MathJax.Hub])}
+	}
+	
+	MathJax.Hub.Config({
+		extensions: ["MMLorHTML.js"],
+		jax: ["input/MathML","output/CommonHTML","output/NativeMML"],
+		extensions: ["mml2jax.js","MathMenu.js","MathZoom.js"]
+	});
+
+  hasMathjax = true;
+  mathjaxComplete = false;
+
+  MathJax.Hub.signal.Interest(
+    function (message) {
+      if ('End Process' == message[0]) {
+        mathjaxComplete = true;
+      }
+    }
+  );
+
+</script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=default"></script></head></html>

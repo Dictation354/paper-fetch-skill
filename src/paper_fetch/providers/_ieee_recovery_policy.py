@@ -17,6 +17,11 @@ def pdf_browser_recovery_allowed(failure: PdfFetchFailure) -> bool:
         status = int(status_value) if status_value is not None else None
     except (TypeError, ValueError):
         status = None
+    # The official stamp endpoint can return Bad Gateway while the same
+    # article's visible PDF control still works. Enter the existing browser
+    # route so its same-article click/identity checks can run.
+    if status == 502 and failure.kind == "pdf_download_failed":
+        return True
     return browser_asset_recovery_allowed(
         status=status,
         content_type=normalize_text(str(details.get("content_type") or "")),

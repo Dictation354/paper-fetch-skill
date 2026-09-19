@@ -1,21 +1,2291 @@
 {
+  "has": {
+    "title": true,
+    "authors": true,
+    "abstract": true,
+    "body": true,
+    "figures": false,
+    "references": true,
+    "data_availability": true,
+    "code_availability": false
+  },
   "counts": {
+    "sections": 11,
     "abstract_sections": 1,
     "body_sections": 9,
     "figures": 0,
-    "references": 24,
-    "sections": 10,
-    "tables": 0
+    "tables": 0,
+    "references": 24
   },
   "expected_content_kind": "fulltext",
-  "has": {
-    "abstract": true,
-    "authors": true,
-    "body": true,
-    "code_availability": false,
-    "data_availability": false,
-    "figures": false,
-    "references": true,
-    "title": true
-  }
+  "source_review": {
+    "sample_id": "10.3390_rs16010010",
+    "provider": "mdpi",
+    "doi": "10.3390/rs16010010",
+    "original": "tests/fixtures/golden_criteria/10.3390_rs16010010/original.html",
+    "sha256": "735d0c3ba42a64acd9073995b759dfb3721ed9e0a8a8958cbd2d33458c512444",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 4,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 24,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 82,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 11,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 0,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 1,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 85,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 25,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 85,
+      "tex_checked": 0,
+      "mathml_checked": 85,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.3390_rs16010010/original.html",
+      "sha256": "735d0c3ba42a64acd9073995b759dfb3721ed9e0a8a8958cbd2d33458c512444",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "6388c7bc0294d6d55a1ecc10d9809e1b4dd8f775a836610db6c458acce217758",
+          "numbers": "",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "TIC",
+            "A",
+            "A",
+            "S",
+            "d",
+            "Z",
+            "S",
+            "d",
+            "S",
+            "A",
+            "d",
+            "Z",
+            "A",
+            "S",
+            "A"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "+",
+            "+",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "0c08a857a1bf491ed87d51b5437de6ae3e2134a26bf26b3de7560c7671603a8f",
+          "numbers": "",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "TIC",
+            "S",
+            "S",
+            "A",
+            "d",
+            "T",
+            "A",
+            "d",
+            "A",
+            "S",
+            "d",
+            "Z",
+            "S",
+            "S",
+            "S"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "+",
+            "+",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "7511ea4a24bbfc2eb35a0d65c4d1fbd8a86b21b9ec2e8c602f942c480a1f176b",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "TIC",
+            "A"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "074f104a12a81d912b1a1a22376a5eba7030f9250b0e59a6fbccd8831e6e464e",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "TIC",
+            "S"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "ca052f7a74a494ca1d6bca905e9e69b056303ca82a7c1f29f9420a9a92dc439d",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "TIC",
+            "S"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "fc132e694f45917022e520f64471f1b7c6ba92d2f086dee4b500a7a2b90d211f",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "x",
+            "x"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 6,
+          "id": null,
+          "node_sha256": "9eff8c83c7ba14f7be2d8223ba3a4d6284d5110ce4ab493ea1424b50d9871959",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "S",
+            "A"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 7,
+          "id": null,
+          "node_sha256": "02f1ad1481f52f5573e258cc2f1fe57fa0a577914d41bbf2ce18a763572c3e1c",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "S",
+            "S"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 8,
+          "id": null,
+          "node_sha256": "734a4035d319e4b139cede177cf2de767fe260406c7613a4b5e047b687eab03e",
+          "numbers": "22222",
+          "minimum": {
+            "_": 8,
+            "^": 0,
+            "\\frac": 5,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "S",
+            "TIC",
+            "A",
+            "TIC",
+            "S",
+            "d",
+            "T",
+            "A",
+            "d",
+            "R",
+            "A",
+            "d",
+            "T",
+            "S",
+            "d",
+            "R",
+            "S",
+            "S",
+            "A",
+            "S",
+            "S",
+            "d",
+            "A",
+            "S",
+            "d",
+            "S",
+            "A"
+          ],
+          "operators": [
+            "-",
+            "=",
+            "-",
+            "+",
+            "-",
+            "-",
+            "-",
+            "+",
+            "-",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 9,
+          "id": null,
+          "node_sha256": "b9ef45f6a15fc70fbbae1f64ac1e3142ce4c2466e0aca6213f4d96c1bc7cfb1a",
+          "numbers": "2222",
+          "minimum": {
+            "_": 6,
+            "^": 0,
+            "\\frac": 4,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "S",
+            "TIC",
+            "A",
+            "TIC",
+            "S",
+            "d",
+            "T",
+            "A",
+            "d",
+            "R",
+            "A",
+            "d",
+            "T",
+            "S",
+            "d",
+            "R",
+            "S",
+            "S",
+            "A",
+            "S",
+            "S"
+          ],
+          "operators": [
+            "-",
+            "=",
+            "-",
+            "+",
+            "-",
+            "-",
+            "-",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 10,
+          "id": null,
+          "node_sha256": "817eeb53b57df53407d5989ce8543ccce8c8b9ead98af73d6f08cda7c33665b6",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 11,
+          "id": null,
+          "node_sha256": "4de8c2bc7575cf4f8980f750f6260d0847b6649f89d2ac033af3287c81f07251",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "t"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 12,
+          "id": null,
+          "node_sha256": "dddf9fb3d4f977b3de21d717b70cecb2e16770aa57a4c5bc2eb24b5c8b2e8d3a",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 13,
+          "id": null,
+          "node_sha256": "f4abeb12cf7ecfc5d57d38f6eef7a53bd8a70d9cd585f1987e8a41d559fba7bc",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 14,
+          "id": null,
+          "node_sha256": "621b6f333aaa6cd93baea194e3359970f54de134af66d28c0791ac981fbcabc6",
+          "numbers": "12",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "T"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 15,
+          "id": null,
+          "node_sha256": "8d2e6303cd19ca508b04c4dbf28f868ce11aa5c51544d3997a36f635463229c1",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "B"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 16,
+          "id": null,
+          "node_sha256": "bd4dab5ce3a75704e4461759a5b3d2b61e21520f9e6a592dd275282329340962",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "S",
+            "B"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 17,
+          "id": null,
+          "node_sha256": "e5673174574f549afb41e8ddc4f4b97cfab15a0ec8be45bb42eecc1bd58f2325",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "B",
+            "A"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 18,
+          "id": null,
+          "node_sha256": "1266e8429f50546dfdee5209d2caeb3f5e4c621bd50d1678c0231dd5217b9958",
+          "numbers": "22222",
+          "minimum": {
+            "_": 10,
+            "^": 0,
+            "\\frac": 5,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "S",
+            "TIC",
+            "A",
+            "TIC",
+            "S",
+            "d",
+            "T",
+            "A",
+            "d",
+            "R",
+            "A",
+            "d",
+            "T",
+            "S",
+            "d",
+            "R",
+            "S",
+            "S",
+            "A",
+            "S",
+            "S",
+            "d",
+            "A",
+            "S",
+            "d",
+            "S",
+            "B",
+            "d",
+            "B",
+            "d",
+            "B",
+            "A"
+          ],
+          "operators": [
+            "-",
+            "=",
+            "-",
+            "+",
+            "-",
+            "-",
+            "-",
+            "+",
+            "-",
+            "+",
+            "-",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 19,
+          "id": null,
+          "node_sha256": "6d4b8de5a76611ef9d17d0f8b6781ffbb51ed9232d8b3c892aca8fc6e99b21a6",
+          "numbers": "",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "AS",
+            "d",
+            "SB",
+            "d",
+            "B",
+            "d",
+            "BA"
+          ],
+          "operators": [
+            "-",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 20,
+          "id": null,
+          "node_sha256": "9d4b2351798c8123dfc7f91b7148c5893e56ec772c11ff19af5b0e51a435eb9b",
+          "numbers": "201220",
+          "minimum": {
+            "_": 5,
+            "^": 0,
+            "\\frac": 2,
+            "\\sqrt": 1
+          },
+          "identifiers": [
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "B",
+            "L",
+            "C",
+            "N",
+            "D",
+            "D",
+            "T",
+            "coh",
+            "C",
+            "N"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 21,
+          "id": null,
+          "node_sha256": "7634438c83abddf4c6397da3b939a3aff2c880ab91334274a793c71ade6caff1",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "L"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 22,
+          "id": null,
+          "node_sha256": "204cb9fa66c23726f1c036720ee36fa0056cd1fba846c01d2632df80dd5dd654",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "coh"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 23,
+          "id": null,
+          "node_sha256": "d66297d1de8b5c1fef79d933c725635f0d9dbe62eb44ba313d57418588efda81",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "D"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 24,
+          "id": null,
+          "node_sha256": "9e4ad2dc1c9f660de3ef8a96eafb6419916bdede2103deebc8c8268af1605b9e",
+          "numbers": "0",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "N"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 25,
+          "id": null,
+          "node_sha256": "4663bfb6fbad88a97a0f66733652b084efeca28b9bda1c86ddbfd211e1daea71",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "C"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 26,
+          "id": null,
+          "node_sha256": "019156beb93d986772435f1d6290c872f2c815106d8e5c05dcb8d4f52bc1e60c",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "t",
+            "i",
+            "m",
+            "e"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 27,
+          "id": null,
+          "node_sha256": "1169b2bf169f31ebeaef6416ae7842b07887d5d8a5b3ab599c17dde7d5133634",
+          "numbers": "",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "t",
+            "i",
+            "m",
+            "e",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "T",
+            "C"
+          ],
+          "operators": [
+            "=",
+            "×"
+          ]
+        },
+        {
+          "object_index": 28,
+          "id": null,
+          "node_sha256": "8a7002a69870e8e8d07653369507289af270d07849ec511ddda4e0a5cd25a9fa",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "L"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 29,
+          "id": null,
+          "node_sha256": "4bafe5a4c4b468929ff154cd786b860aa614dd4d09c0be05b961091645853dcc",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "coh"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 30,
+          "id": null,
+          "node_sha256": "120d66180e685843faaf698756768eb2bbf84a045574b6f3c36a24a62da7c845",
+          "numbers": "1",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "D"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 31,
+          "id": null,
+          "node_sha256": "25b5fb275acc354f64a6b58ac2f57be628a61279b1f472693ba5699b89d032da",
+          "numbers": "04060",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 32,
+          "id": null,
+          "node_sha256": "24d4f3dc3325a96ddca17f2c1366972310847217d4efce7e4171f9b5ad9d914a",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "TIC",
+            "A"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 33,
+          "id": null,
+          "node_sha256": "177859d804354d8e3bc9b46e9c75bbb7cff8fbcfdc089470011b0fd8c6e034f9",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "TIC",
+            "S"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 34,
+          "id": null,
+          "node_sha256": "24acd2cecf43e4242487d93a7c5b4e083bd5f6f430b8724c0f3518b3cce48a4e",
+          "numbers": "022022",
+          "minimum": {
+            "_": 4,
+            "^": 4,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "TIC",
+            "A",
+            "N",
+            "T",
+            "C",
+            "A",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "A",
+            "TIC",
+            "S",
+            "N",
+            "T",
+            "C",
+            "S",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 35,
+          "id": null,
+          "node_sha256": "5cf1ff84b493ff7f328ef4f599b4e751338c598363c7c68c7c4198595ff2f1e6",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "C",
+            "A"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 36,
+          "id": null,
+          "node_sha256": "7d36321868ba3df03ea610b39943afb2dbe166600a5ffbb2173da0f9f5778db0",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "A"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 37,
+          "id": null,
+          "node_sha256": "bdbbc26316e739e13f1ca3c72c680042c327d5bb2ad2097fe5a5b1159068fc8b",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "C",
+            "S"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 38,
+          "id": null,
+          "node_sha256": "2d771c26e7a18bea7e4eddbd613532328b9784c93eca7d08604edb03f85d33c3",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 39,
+          "id": null,
+          "node_sha256": "ac2f2408a37b1c339b2262e1da812a29862c659cc44ac63a391c83ff75f1c508",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 40,
+          "id": null,
+          "node_sha256": "9105ef05c841ba7bc590a4b3798b3b0d7cb30dbbbe133fdd87dbd1490b0b70e6",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 41,
+          "id": null,
+          "node_sha256": "fba4b6ace7bd0f75d61f5f391667382485379482291950bdaff03d58ad2825bf",
+          "numbers": "2222",
+          "minimum": {
+            "_": 4,
+            "^": 4,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "N",
+            "T",
+            "T",
+            "C",
+            "A",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "A",
+            "T",
+            "C",
+            "S",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S"
+          ],
+          "operators": [
+            "+"
+          ]
+        },
+        {
+          "object_index": 42,
+          "id": null,
+          "node_sha256": "69d609fed6d7b3ac0497ba304c363a7565ff5131b7e145be55eeb68dac8019b3",
+          "numbers": "1222222222",
+          "minimum": {
+            "_": 10,
+            "^": 8,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "N",
+            "T",
+            "T",
+            "C",
+            "A",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "A",
+            "T",
+            "C",
+            "S",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S",
+            "T",
+            "N",
+            "T",
+            "T",
+            "C",
+            "A",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "A",
+            "T",
+            "C",
+            "S",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S"
+          ],
+          "operators": [
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 43,
+          "id": null,
+          "node_sha256": "6a94ca3c7d16625d8d4612ab4841c94ad538f11031a2ca43db0718e215901342",
+          "numbers": "12",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "outh",
+            "T",
+            "T"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 44,
+          "id": null,
+          "node_sha256": "cce5e329360b7617884c0fef4ad752e61e05391408469a3284871d63a78eb371",
+          "numbers": "10222222",
+          "minimum": {
+            "_": 6,
+            "^": 4,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H",
+            "R",
+            "outh",
+            "N",
+            "T",
+            "C",
+            "A",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "A",
+            "T",
+            "C",
+            "S",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S"
+          ],
+          "operators": [
+            "+"
+          ]
+        },
+        {
+          "object_index": 45,
+          "id": null,
+          "node_sha256": "73e2cade97ae4655e3f29e263a9c7ccd74ada161b23a5c9aa28bde0342d1350f",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "delay"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 46,
+          "id": null,
+          "node_sha256": "4552cc799c2848de1f42ce6a192e97f7d8f16a5c183dbdb7ac6466746b3e0b36",
+          "numbers": "2",
+          "minimum": {
+            "_": 5,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "delay",
+            "d",
+            "A",
+            "S",
+            "d",
+            "S",
+            "B",
+            "d",
+            "B",
+            "d",
+            "B",
+            "A"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 47,
+          "id": null,
+          "node_sha256": "7d3472a531b1dbbd9cefca4ef7016b8d9ffc2d0173fd82361014de11ddf06d42",
+          "numbers": "112222222222",
+          "minimum": {
+            "_": 12,
+            "^": 8,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "N",
+            "T",
+            "T",
+            "delay",
+            "T",
+            "C",
+            "A",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "A",
+            "T",
+            "C",
+            "S",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S",
+            "T",
+            "N",
+            "T",
+            "T",
+            "delay",
+            "T",
+            "C",
+            "A",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "A",
+            "T",
+            "C",
+            "S",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S"
+          ],
+          "operators": [
+            "+",
+            "+",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 48,
+          "id": null,
+          "node_sha256": "9f6b8b2f140af2d25ef943d315a66a4d74a0eeab9b96311133c3d7782d6038d5",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "delay"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 49,
+          "id": null,
+          "node_sha256": "b28ccf4a8fce68ea7c0815a66edc9357ccc9ee355bc1b82443f0bd381fe4d984",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "delay"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 50,
+          "id": null,
+          "node_sha256": "54ffe6c37707c96613d0f4fd4907a29c84da5f03c15da63b400f45292e0323a8",
+          "numbers": "0222222",
+          "minimum": {
+            "_": 7,
+            "^": 4,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H",
+            "R",
+            "outh",
+            "N",
+            "T",
+            "delay",
+            "T",
+            "C",
+            "A",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "A",
+            "T",
+            "C",
+            "S",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S"
+          ],
+          "operators": [
+            "+"
+          ]
+        },
+        {
+          "object_index": 51,
+          "id": null,
+          "node_sha256": "98137ae9b386917dc94072a8ad50b8c11d86f65806ec8ae1adf2625e1822c154",
+          "numbers": "12",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "delay",
+            "T",
+            "delay",
+            "T",
+            "delay"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 52,
+          "id": null,
+          "node_sha256": "49d90dad051c82f309803ceb573b1b8b40ae904320beefde6637e1a7d7d3b1d4",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "delay"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 53,
+          "id": null,
+          "node_sha256": "909e9051706396559dc800fcee0baf36bf2d73cd562cd3f9e97fd64a1b5581c0",
+          "numbers": "22211221212",
+          "minimum": {
+            "_": 13,
+            "^": 0,
+            "\\frac": 3,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "delay",
+            "d",
+            "AS",
+            "d",
+            "SB",
+            "d",
+            "B",
+            "d",
+            "BA",
+            "d",
+            "AS",
+            "d",
+            "SB",
+            "d",
+            "B",
+            "d",
+            "BA",
+            "d",
+            "AS",
+            "d",
+            "AS",
+            "d",
+            "SB",
+            "d",
+            "SB"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "+",
+            "+",
+            "-",
+            "-",
+            "+",
+            "+",
+            "=",
+            "-",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 54,
+          "id": null,
+          "node_sha256": "47603fe4d253cabd26fbc57ad48e5cf8cfebd47d0ea590dae5f6f3f5b100bead",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "AS"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 55,
+          "id": null,
+          "node_sha256": "67b7b579cc7b0abef19be44410629a03ce99b77e6658d4a3136abec0f919c735",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "SB"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 56,
+          "id": null,
+          "node_sha256": "e6e8e840966e2a6c512138a39b2ee7c06f4a8681448e97cc8fe9b6397eebbd1b",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "AS"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 57,
+          "id": null,
+          "node_sha256": "c7ad8755033a48063f6234780edc77ca337ea095543dbd7b0e5e91142b313943",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "SB"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 58,
+          "id": null,
+          "node_sha256": "288c59e02e530c0bb63923b8436fec12c58e7cf22363bef483f09d4d01ea793a",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 59,
+          "id": null,
+          "node_sha256": "a88524e1f27c6ba641fbd86d528a014febc25742ff8e8a82fbd5e91135c0d47c",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "h"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 60,
+          "id": null,
+          "node_sha256": "55722e6b1fc92c22396372e8b9c096097f8283d13945f10813471e45f50fa080",
+          "numbers": "11212221121211902222222222222290",
+          "minimum": {
+            "_": 16,
+            "^": 12,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "c",
+            "d",
+            "AS",
+            "H",
+            "sin",
+            "θ",
+            "c",
+            "d",
+            "AS",
+            "h",
+            "h",
+            "c",
+            "d",
+            "AS",
+            "cos",
+            "β",
+            "c",
+            "d",
+            "SB",
+            "θ",
+            "β",
+            "c",
+            "d",
+            "AS",
+            "H",
+            "sin",
+            "θ",
+            "c",
+            "d",
+            "AS",
+            "h",
+            "h",
+            "c",
+            "d",
+            "AS",
+            "cos",
+            "β",
+            "c",
+            "d",
+            "SB",
+            "θ",
+            "β"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "-",
+            "=",
+            "+",
+            "=",
+            "=",
+            "+",
+            "-",
+            "=",
+            "+",
+            "="
+          ]
+        },
+        {
+          "object_index": 61,
+          "id": null,
+          "node_sha256": "cb2532926e635bb55953cd1292af4dda503d816451ea87f8b1e25cf85aa1a814",
+          "numbers": "212222212222",
+          "minimum": {
+            "_": 5,
+            "^": 4,
+            "\\frac": 6,
+            "\\sqrt": 2
+          },
+          "identifiers": [
+            "T",
+            "delay",
+            "H",
+            "sin",
+            "θ",
+            "H",
+            "sin",
+            "θ",
+            "c",
+            "H",
+            "sin",
+            "θ",
+            "h",
+            "H",
+            "h",
+            "H",
+            "sin",
+            "θ",
+            "h",
+            "H",
+            "h",
+            "c"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "-",
+            "+",
+            "-",
+            "-",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 62,
+          "id": null,
+          "node_sha256": "c69ef9f449ec4c64ff5473139f6a39fa29dd62d48f57662258cec6056e44d467",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "delay"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 63,
+          "id": null,
+          "node_sha256": "03e362b3f52f352ab6ca682d73f9200f5c96a06b4b18a21b1c412d55f6c25fd8",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "θ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 64,
+          "id": null,
+          "node_sha256": "76d366bbc334fc610af341e8adbd09c6ecc4148970a519ca8d46a0393eadaac4",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "θ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 65,
+          "id": null,
+          "node_sha256": "6c17202e743e0f28c123cd990312f02fb4a9372dda214e6e81230452e8f43d98",
+          "numbers": "130",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "θ",
+            "o"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 66,
+          "id": null,
+          "node_sha256": "e8feba26c53a654b2367238c05bd1516e669a918b0c67b390fffe58210d5d882",
+          "numbers": "290",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "θ",
+            "o"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 67,
+          "id": null,
+          "node_sha256": "d0b6988ef8855803f8448391e8c37da9f913c44ec21e83defa845f4551d5f399",
+          "numbers": "190",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "θ",
+            "o"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 68,
+          "id": null,
+          "node_sha256": "33d8d9209bf41008612c59308495298abae993023f3a8ac621ca13404b5fcd72",
+          "numbers": "230",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "θ",
+            "o"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 69,
+          "id": null,
+          "node_sha256": "666573c3e046a8f2161922a48654ec77454397f291a8ab0d8666f5d6df4a330c",
+          "numbers": "242222",
+          "minimum": {
+            "_": 1,
+            "^": 2,
+            "\\frac": 1,
+            "\\sqrt": 1
+          },
+          "identifiers": [
+            "T",
+            "delay",
+            "H",
+            "H",
+            "h",
+            "H",
+            "h",
+            "h",
+            "c"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "+",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 70,
+          "id": null,
+          "node_sha256": "da0c765e07a43e55db9a1e6cb60047cd70da37410a7721f93888f744f884db96",
+          "numbers": "4.16102221.2210158.341079.48102022.7710131.28105",
+          "minimum": {
+            "_": 1,
+            "^": 8,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "delay",
+            "h",
+            "U",
+            "h",
+            "h",
+            "h",
+            "h"
+          ],
+          "operators": [
+            "×",
+            "-",
+            "-",
+            "×",
+            "-",
+            "+",
+            "×",
+            "-",
+            "×",
+            "-",
+            "-",
+            "×",
+            "-",
+            "+",
+            "×",
+            "-"
+          ]
+        },
+        {
+          "object_index": 71,
+          "id": null,
+          "node_sha256": "70fc8d3d330e9515e1df5146811c1193cd336f96af29864e5fa82a5fcd066307",
+          "numbers": "0222222",
+          "minimum": {
+            "_": 7,
+            "^": 4,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H",
+            "R",
+            "outh",
+            "N",
+            "min",
+            "T",
+            "delay",
+            "T",
+            "C",
+            "A",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "A",
+            "T",
+            "C",
+            "S",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S"
+          ],
+          "operators": [
+            "+"
+          ]
+        },
+        {
+          "object_index": 72,
+          "id": null,
+          "node_sha256": "8218b3c72d3c676e3266fc482944322710a56f50d0262527aee2e5d1dbac0703",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "min",
+            "T",
+            "delay"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 73,
+          "id": null,
+          "node_sha256": "c5b6910075fc1a025cdbdca415967f92e6110803ba518e9ca733cc2dcdb119e1",
+          "numbers": "4.1610222",
+          "minimum": {
+            "_": 0,
+            "^": 2,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "h"
+          ],
+          "operators": [
+            "×",
+            "-"
+          ]
+        },
+        {
+          "object_index": 74,
+          "id": null,
+          "node_sha256": "5d6da1cfc5bf8a71db5daefa0cbc3ea5aee89cc39504db8c4435e91cc120eb4e",
+          "numbers": "1.221015",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "h"
+          ],
+          "operators": [
+            "×",
+            "-"
+          ]
+        },
+        {
+          "object_index": 75,
+          "id": null,
+          "node_sha256": "08b1cc648e8be770dd867639b283464ccd907217d190f449c143b067f107904c",
+          "numbers": "8.34107",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": [
+            "×",
+            "-"
+          ]
+        },
+        {
+          "object_index": 76,
+          "id": null,
+          "node_sha256": "584d59a7520d6faa90bd12787a3f8ac39c9eddd6a02d22d6e5ef6b9cbb97e6de",
+          "numbers": "022222210222222",
+          "minimum": {
+            "_": 13,
+            "^": 8,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H",
+            "R",
+            "outh",
+            "N",
+            "min",
+            "T",
+            "delay",
+            "T",
+            "C",
+            "A",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "A",
+            "T",
+            "C",
+            "S",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S",
+            "H",
+            "R",
+            "outh",
+            "N",
+            "T",
+            "C",
+            "A",
+            "σ",
+            "t",
+            "D",
+            "I",
+            "L",
+            "A",
+            "T",
+            "C",
+            "S",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S"
+          ],
+          "operators": [
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 77,
+          "id": null,
+          "node_sha256": "0ff127c7b799a8c8127ef69aaae71fb9b7e729bb000b1af74ab3571bf7c1e28c",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "th"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 78,
+          "id": null,
+          "node_sha256": "bd7ef23584634d45d1a4e5728326c12f268cbdba724ad9f65ab0d45a5ceee7b7",
+          "numbers": "2222221",
+          "minimum": {
+            "_": 8,
+            "^": 5,
+            "\\frac": 0,
+            "\\sqrt": 1
+          },
+          "identifiers": [
+            "R",
+            "th",
+            "P",
+            "F",
+            "A",
+            "min",
+            "T",
+            "delay",
+            "T",
+            "C",
+            "A",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "A",
+            "T",
+            "C",
+            "S",
+            "σ",
+            "t",
+            "D",
+            "L",
+            "L",
+            "S",
+            "Q",
+            "P",
+            "F",
+            "A"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 79,
+          "id": null,
+          "node_sha256": "19ce67fa23a082376de595e102325cc76cf942fdd440ddd97f1a321906033bac",
+          "numbers": "12122",
+          "minimum": {
+            "_": 1,
+            "^": 2,
+            "\\frac": 2,
+            "\\sqrt": 1
+          },
+          "identifiers": [
+            "Q",
+            "x",
+            "x",
+            "π",
+            "exp",
+            "t",
+            "d",
+            "t"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 80,
+          "id": null,
+          "node_sha256": "ff975daaa78e287c1ee7c0803d0c609b3515e89da8421a9dd2ea237f5da600c7",
+          "numbers": "1201",
+          "minimum": {
+            "_": 12,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "outh",
+            "T",
+            "T",
+            "f",
+            "detect",
+            "H",
+            "R",
+            "outh",
+            "R",
+            "t",
+            "h",
+            "P",
+            "F",
+            "A",
+            "H",
+            "R",
+            "outh",
+            "R",
+            "th",
+            "P",
+            "F",
+            "A"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "=",
+            ">",
+            "≤"
+          ]
+        },
+        {
+          "object_index": 81,
+          "id": null,
+          "node_sha256": "a465eb4766ef32d2fb1d29f3cac8792f1faf222429bfa1bb13bc43c029e3e778",
+          "numbers": "1000",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H",
+            "km"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 82,
+          "id": null,
+          "node_sha256": "7f52ed942ca3be66916441f5a97eb769670855939cc76ac15f55dbb60507cd46",
+          "numbers": "10",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "h",
+            "km"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 83,
+          "id": null,
+          "node_sha256": "af3f7c4e93cbe08e16759fe5626ea36ed5e8eb23be2fe02db46d5101d9713db5",
+          "numbers": "500",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H",
+            "km"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 84,
+          "id": null,
+          "node_sha256": "5f08d69293102c3c37d6ff2b7b2d7da8c4ac28a7ee73f6560fbaa51072f3ac3d",
+          "numbers": "15",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "h",
+            "km"
+          ],
+          "operators": [
+            "="
+          ]
+        }
+      ]
+    }
+  ]
 }

@@ -1,0 +1,16 @@
+{
+  "query": "10.1146/annurev-neuro-062111-150343",
+  "query_kind": "doi",
+  "doi": "10.1146/annurev-neuro-062111-150343",
+  "landing_url": null,
+  "provider_hint": "annualreviews",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 5,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "annualreviews"
+}

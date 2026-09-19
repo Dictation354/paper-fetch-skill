@@ -1,0 +1,149 @@
+{
+  "records": [
+    {
+      "doi": "10.1126/science.abo2812",
+      "provider": "science",
+      "body_file": "acquisition/template-browser-2026-09-16/000-browser_rendered_dom.html",
+      "size": 277601,
+      "sha256": "573b9c9e14fd9eecafe7390b292054ed44ce624a413a7e99740ba24bb4474b8a",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "native Camoufox",
+      "requested_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+      "final_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": "2026-09-16T09:29:15.240393+00:00"
+    },
+    {
+      "doi": "10.1126/science.abo2812",
+      "provider": "science",
+      "body_file": "acquisition/template-browser-user-retry-2026-09-16/000-browser_rendered_dom.html",
+      "size": 429887,
+      "sha256": "38f925bc8e87bdec0347f8c17a5837e5fc256e5c928d9064af70d5863fb8755c",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "native Camoufox",
+      "requested_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+      "final_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": "2026-09-16T10:07:12.242450+00:00"
+    },
+    {
+      "doi": "10.1126/science.abo2812",
+      "provider": "science",
+      "body_file": "acquisition/template-browser-repeat4-2026-09-16/000-direct_http.jpg",
+      "size": 870435,
+      "sha256": "6a21e6e7c3477d85f57819cc882e23d6fd0bf86188ed20083cf7854524c4849e",
+      "capture_kind": "direct_http",
+      "transport": "HttpTransport",
+      "requested_url": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+      "final_url": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 10:07:27 GMT",
+        "content-type": "image/jpeg;charset=UTF-8",
+        "content-length": "870435"
+      },
+      "captured_at_utc": "2026-09-16T10:07:25.003044+00:00",
+      "original_body_file": "acquisition/template-browser-user-retry-2026-09-16/001-direct_http.jpg"
+    },
+    {
+      "doi": "10.1126/science.abo2812",
+      "provider": "science",
+      "body_file": "acquisition/template-browser-user-retry-2026-09-16/002-browser_canvas_export.png",
+      "size": 3376611,
+      "sha256": "fe88c217fcb903f376e619766bfbffdf655cf01c1b21119ca3d4d7185f52edef",
+      "capture_kind": "browser_canvas_export",
+      "transport": "native Camoufox",
+      "requested_url": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+      "final_url": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+      "status_code": null,
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at_utc": "2026-09-16T10:07:25.394369+00:00"
+    },
+    {
+      "doi": "10.1126/science.abo2812",
+      "provider": "science",
+      "body_file": "acquisition/template-browser-user-retry-2026-09-16/004-http_response_entity.html",
+      "size": 457512,
+      "sha256": "62ae1f2c2ffc9b8225acb1116ef2993bca862ae913f93307c7c1b86af5626240",
+      "capture_kind": "http_response_entity",
+      "transport": "native Camoufox",
+      "requested_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+      "final_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 10:07:02 GMT",
+        "content-type": "text/html;charset=UTF-8"
+      },
+      "captured_at_utc": "2026-09-16T10:07:25.436808+00:00"
+    },
+    {
+      "doi": "10.1126/science.abo2812",
+      "provider": "science",
+      "body_file": "acquisition/template-browser-repeat4-2026-09-16/000-direct_http.jpg",
+      "capture_kind": "direct_http",
+      "transport": "HttpTransport",
+      "requested_url": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+      "final_url": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+      "captured_at_utc": "2026-09-16T11:08:06.480425+00:00",
+      "status_code": 200,
+      "size": 870435,
+      "sha256": "6a21e6e7c3477d85f57819cc882e23d6fd0bf86188ed20083cf7854524c4849e",
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 11:08:08 GMT",
+        "content-type": "image/jpeg;charset=UTF-8",
+        "content-length": "870435"
+      }
+    },
+    {
+      "doi": "10.1126/science.abo2812",
+      "provider": "science",
+      "body_file": "acquisition/template-browser-repeat4-2026-09-16/001-browser_rendered_dom.html",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "native Camoufox",
+      "requested_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+      "final_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+      "captured_at_utc": "2026-09-16T11:08:24.804704+00:00",
+      "status_code": null,
+      "size": 277789,
+      "sha256": "d30f3493b2bc8fceedcf8f1ade6630e45e701552e356491f94d8e14e08b59ae7",
+      "response_headers": {}
+    },
+    {
+      "doi": "10.1126/science.abo2812",
+      "provider": "science",
+      "body_file": "acquisition/template-browser-repeat4-2026-09-16/002-browser_canvas_export.png",
+      "capture_kind": "browser_canvas_export",
+      "transport": "native Camoufox",
+      "requested_url": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+      "final_url": "https://www.science.org/cms/10.1126/science.abo2812/asset/3be916a1-936a-4c99-a53f-c587f45fbfa8/assets/images/large/science.abo2812-f1.jpg",
+      "captured_at_utc": "2026-09-16T11:08:36.489420+00:00",
+      "status_code": null,
+      "size": 3376611,
+      "sha256": "5a1d0c15ae12b17c23a4c3ba719528d361255cb936f1fc45612650c15f7ba369",
+      "response_headers": {
+        "content-type": "image/png"
+      }
+    },
+    {
+      "doi": "10.1126/science.abo2812",
+      "provider": "science",
+      "body_file": "acquisition/template-browser-repeat4-2026-09-16/003-1-http_response_entity.html",
+      "capture_kind": "http_response_entity",
+      "transport": "native Camoufox",
+      "requested_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+      "final_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+      "captured_at_utc": "2026-09-16T11:08:36.547645+00:00",
+      "status_code": 200,
+      "size": 457514,
+      "sha256": "241aa981d0976b8654611e47bfafb03fca2daca9156ada0c805385653c70dff7",
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 11:08:16 GMT",
+        "content-type": "text/html;charset=UTF-8"
+      }
+    }
+  ]
+}

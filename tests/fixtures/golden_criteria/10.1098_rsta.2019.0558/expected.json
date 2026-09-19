@@ -17,5 +17,394 @@
     "figures": true,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1098_rsta.2019.0558",
+    "provider": "royalsocietypublishing",
+    "doi": "10.1098/rsta.2019.0558",
+    "original": "tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/original.html",
+    "sha256": "fcc7a408b9d6e7950e3fceffe1f789e0cf61b848594b42c606a93c360f736160",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 15,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 102,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 90,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 2,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 90,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 1,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 1,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": "tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/acquisition/provenance.json",
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 1,
+      "tex_checked": 0,
+      "mathml_checked": 1,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/original.html",
+      "sha256": "fcc7a408b9d6e7950e3fceffe1f789e0cf61b848594b42c606a93c360f736160",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "a2cecfbe7d366d9ed039ce7684fe4c3033e0f066355c152b6f0feac5a52907ed",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4
+              ]
+            ],
+            [
+              1,
+              [
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            ],
+            [
+              2,
+              [
+                10,
+                11,
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              3,
+              [
+                15,
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              4,
+              [
+                20,
+                21,
+                22,
+                23,
+                24
+              ]
+            ],
+            [
+              5,
+              [
+                25,
+                26,
+                27,
+                28,
+                29
+              ]
+            ],
+            [
+              6,
+              [
+                30,
+                31,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              7,
+              [
+                35,
+                36,
+                37,
+                38,
+                39
+              ]
+            ],
+            [
+              8,
+              [
+                40,
+                41,
+                42,
+                43,
+                44
+              ]
+            ],
+            [
+              9,
+              [
+                45,
+                46,
+                47,
+                48,
+                49
+              ]
+            ],
+            [
+              10,
+              [
+                50,
+                51,
+                52,
+                53,
+                54
+              ]
+            ],
+            [
+              11,
+              [
+                55,
+                56,
+                57,
+                58,
+                59
+              ]
+            ],
+            [
+              12,
+              [
+                60,
+                61,
+                62,
+                63,
+                64
+              ]
+            ],
+            [
+              13,
+              [
+                65,
+                66,
+                67,
+                68,
+                69
+              ]
+            ],
+            [
+              14,
+              [
+                70,
+                71,
+                72,
+                73,
+                74
+              ]
+            ],
+            [
+              15,
+              [
+                75,
+                76,
+                77,
+                78,
+                79
+              ]
+            ],
+            [
+              16,
+              [
+                80,
+                81,
+                82,
+                83,
+                84
+              ]
+            ],
+            [
+              17,
+              [
+                85,
+                86,
+                87,
+                88,
+                89
+              ]
+            ]
+          ],
+          "cells": [
+            "reference",
+            "number of patients",
+            "goal of the study",
+            "type of model",
+            "strategy",
+            "[ 9 ]",
+            "35 samples from ex vivo RAA",
+            "atrial model calibration",
+            "0D",
+            "RVAC",
+            "[ 10 ]",
+            "4 CRT upgrade; 14 de novo implantation",
+            "predicting activation with CRT devices",
+            "BV",
+            "1:1",
+            "[ 11 ]",
+            "24 ICM",
+            "mechanisms for arrhythmia risk with CRT",
+            "LV",
+            "1:1",
+            "[ 12 ]",
+            "46 HF",
+            "building personalized models",
+            "BV + T",
+            "1:1",
+            "[ 13 ]",
+            "7 clinical cases with ICD",
+            "building personalized models",
+            "LV",
+            "1:1",
+            "[ 14 ]",
+            "7 PAF cases",
+            "building personalized models",
+            "LA",
+            "1:1",
+            "[ 15 ]",
+            "5 CT cases with torso",
+            "calculating a shock efficiency metric",
+            "BV + T",
+            "1:1",
+            "[ 5 ]",
+            "RS: 5 swine; 21 humans (5 with ICD) PS: 5 humans",
+            "guiding the ablation of infarct-related ventricular tachycardia",
+            "BV",
+            "1:1",
+            "[ 16 ]",
+            "4 PAF; 16 PsAF",
+            "simulating different ablation strategies",
+            "LA",
+            "1:1",
+            "[ 17 ]",
+            "12 PsAF",
+            "simulating ablation of inter-atrial connections",
+            "LA",
+            "1:1",
+            "[ 18 ]",
+            "7 PAF, 5 PsAF",
+            "simulating AF pre- and post ablation",
+            "LA",
+            "1:1",
+            "[ 19 ]",
+            "108 PsAF",
+            "simulating empirical versus computer-guided ablation",
+            "LA",
+            "1:1",
+            "[ 6 ]",
+            "4 PAF; 6 PsAF",
+            "computationally guided personalized ablation",
+            "BA",
+            "1:1",
+            "[ 20 ]",
+            "118 PsAF",
+            "computationally guided personalized ablation",
+            "LA",
+            "1:1",
+            "[ 21 ]",
+            "5 AF patients",
+            "stroke risk assessment in AF (CFD)",
+            "LA",
+            "1:1",
+            "[ 22 ]",
+            "70   (training) + 60   (test) + 3   ( 12   k   samples )",
+            "shape uncertainty",
+            "LA",
+            "SID",
+            "[ 23 , 24 ]",
+            "5 PsAF",
+            "patient-specific modelling of atrial action potentials",
+            "",
+            "1:1"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "44d7e55f2f6c342f0b51b9fee4904f74f3d16380382aba2838e02b759b1deea8",
+          "numbers": "7060312",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "k"
+          ],
+          "operators": [
+            "+",
+            "+"
+          ]
+        }
+      ]
+    }
+  ]
 }

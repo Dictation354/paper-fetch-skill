@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/3Dan6fKH+wVZIhiIR3u6Rdk4Hzw</id>
+  <title>arXiv Query: search_query=&amp;id_list=2605.06659v1&amp;start=0&amp;max_results=1</title>
+  <updated>2026-09-18T02:20:57Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=1&amp;id_list=2605.06659v1" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>1</opensearch:itemsPerPage>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2605.06659v1</id>
+    <title>The Pulsar Radial Acceleration Relation</title>
+    <updated>2026-05-07T17:58:27Z</updated>
+    <link href="https://arxiv.org/abs/2605.06659v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.06659v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>The radial acceleration relation (RAR) links observed and baryonic accelerations, and is best established in rotation curves of late-type galaxies. Pulsar timing, which measures line-of-sight (LOS) differential accelerations between the Sun and pulsars, provides a novel probe of this relation, including along directions outside the Galactic disc. By combining these pulsar differential accelerations with the acceleration at the Sun, we test whether current pulsar timing data carry information on a vector generalisation of the RAR, ${g}_{\rm obs}=ν(|{g}_{\rm bar}|){g}_{\rm bar}$. Comparing the measured SPARC RAR (generalised to 3D) to 26 binary-system pulsars with literature accelerations, we find a reduced $χ^2$ of 3.58, compared with 10.86 for Newtonian baryonic gravity alone. However, setting all accelerations to that of the Sun gives a reduced $χ^2$ of 3.75, showing that this vector RAR test is dominated by the Solar acceleration with current data.</summary>
+    <category term="astro-ph.GA" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="astro-ph.CO" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="astro-ph.HE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-07T17:58:27Z</published>
+    <arxiv:comment>3 pages; submitted to RNAAS</arxiv:comment>
+    <arxiv:primary_category term="astro-ph.GA"/>
+    <author>
+      <name>Tariq Yasin</name>
+    </author>
+    <author>
+      <name>Harry Desmond</name>
+    </author>
+  </entry>
+</feed>

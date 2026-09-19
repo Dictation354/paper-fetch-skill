@@ -7,6 +7,7 @@ from copy import deepcopy
 import csv
 from functools import partial
 import io
+import json
 import re
 import time
 from typing import Any
@@ -17,6 +18,7 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 from ..extraction.html.parsing import choose_parser
 from ..models import normalize_markdown_text
 from ..provider_catalog import host_matches_domain
+from ._reference_doi import reference_doi
 from ..reason_codes import OFFICIAL_FULL_SIZE_NOT_EXPOSED
 from ..utils import normalize_text
 from ._html_authors import (
@@ -155,10 +157,6 @@ _TANDF_MAX_TABLE_COLUMNS = 100
 _TANDF_MAX_TABLE_CSV_CHARS = 2_000_000
 _TANDF_TABLE_FETCH_MS = 2_000
 _TANDF_TABLE_FETCH_CONCURRENCY = 4
-_TANDF_ADJACENT_SENTENCE_RE = re.compile(
-    r"(?P<prefix>(?:^|(?<=[.!?])\s+))"
-    r"(?P<sentence>[^.!?\n]{40,}[.!?])\s+(?P=sentence)(?=\s|$)"
-)
 _TANDF_READ_EMBEDDED_TABLES_SCRIPT = r"""
 ({ start, batchSize, maxRows, maxColumns, maxChars }) => {
   const source = window.tandf && window.tandf.tfviewerdata;
@@ -580,60 +578,124 @@ def _decompose_matching(container: Any) -> None:
             node.decompose()
 
 
-def _drop_duplicate_highlights(container: Any) -> None:
+def prepare_source_images(container: Any, source_url: str) -> None:
+    """Recover explicit formula image sources before rendering/asset discovery."""
     if not isinstance(container, Tag):
         return
-    for node in list(container.select(".hlFld-Abstract")):
-        heading = node.find(re.compile(r"^h[1-6]$", flags=re.IGNORECASE))
-        heading_text = (
-            normalize_text(
-                heading.get_text(" ", strip=True) if isinstance(heading, Tag) else ""
-            )
-            .rstrip(".:")
-            .casefold()
+    for image in list(container.select("img[data-formula-source]")):
+        wrapper = image.find_parent(
+            class_=lambda value: value in {"NLM_disp-formula", "NLM_disp-formula-image"}
         )
-        if heading_text in {"article highlights", "highlights"}:
-            node.decompose()
-
-
-def _drop_adjacent_duplicate_tandf_sentences(container: Any) -> None:
-    if not isinstance(container, Tag):
-        return
-    for paragraph in container.find_all(["p", "li"]):
-        if paragraph.find_parent("math") is not None:
+        if wrapper is None:
             continue
-        for text_node in list(paragraph.find_all(string=True, recursive=False)):
-            text = str(text_node)
-            while True:
-                cleaned = _TANDF_ADJACENT_SENTENCE_RE.sub(
-                    lambda match: f"{match.group('prefix')}{match.group('sentence')}",
-                    text,
+        try:
+            data = json.loads(str(image["data-formula-source"]))
+        except (TypeError, ValueError):
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        raw = str(data.get("src") or "") if data.get("type") == "image" else ""
+        url = urljoin(source_url, raw) if raw else ""
+        parsed = urlparse(url)
+        valid = bool(raw) and (
+            (
+                parsed.scheme in {"http", "https"}
+                and host_matches_domain(parsed.hostname or "", "tandfonline.com")
+            )
+            or (not source_url and raw.startswith("/cms/asset/"))
+        )
+        if valid:
+            image["src"] = url
+            image["class"] = [*image.get("class", []), "inline-equation"]
+            del image["data-formula-source"]
+        elif image.get("src") == "//:0":
+            wrapper["data-tandf-formula-placeholder"] = "true"
+            image.decompose()
+    # Keep actual TeX data through this provider's script/chrome cleanup.
+    from ..extraction.markdown_render.formulas import html_formula_latex_from_node
+
+    for wrapper in container.select(".NLM_disp-formula"):
+        for script in list(wrapper.select('script[type^="math/tex"]')):
+            latex = html_formula_latex_from_node(script)
+            if latex:
+                source = BeautifulSoup("<tex-math></tex-math>", choose_parser()).find(
+                    "tex-math"
                 )
-                if cleaned == text:
-                    break
-                text = cleaned
-            if text != str(text_node):
-                text_node.replace_with(text)
+                source.string = latex
+                script.replace_with(source)
 
 
 def _prefer_mathml_over_formula_placeholders(container: Any) -> None:
-    """Drop T&F's duplicate lazy images when the paired MathML is available."""
+    """Assign each adjacent image/MathJax pair one formula representation."""
 
     if not isinstance(container, Tag):
         return
+    from .atypon_browser_workflow.formulas import _structured_latex_from_math_node
+
     for image_fallback in list(container.select(".NLM_disp-formula-image")):
-        sibling = image_fallback.find_next_sibling()
+        sibling = image_fallback.next_sibling
+        while isinstance(sibling, NavigableString) and not str(sibling).strip():
+            sibling = sibling.next_sibling
         sibling_classes = (
             set(sibling.get("class") or ()) if isinstance(sibling, Tag) else set()
         )
-        if (
-            isinstance(sibling, Tag)
-            and "NLM_disp-formula" in sibling_classes
-            and sibling.find("math") is not None
-        ):
+        if isinstance(sibling, Tag) and "NLM_disp-formula" in sibling_classes:
+            latex = _structured_latex_from_math_node(
+                sibling, display_mode="disp-formula" in sibling_classes
+            )
+            if not latex:
+                image = image_fallback.find("img", src=True)
+                # CHTML glyph order is a display implementation, not source
+                # MathML/TeX. Use the paired publisher bitmap when available.
+                label = sibling.select_one(".disp_formula_label_div")
+                if label is not None:
+                    label.extract()
+                if image is not None and image.get("src") != "//:0":
+                    image.extract()
+                else:
+                    image = BeautifulSoup("<math></math>", choose_parser()).math
+                sibling.clear()
+                if label is not None:
+                    sibling.append(label)
+                sibling.append(image)
+            else:
+                for rendered in list(sibling.select("mjx-container")):
+                    if rendered.find("math") is None:
+                        rendered.decompose()
+                if (
+                    "disp-formula" not in sibling_classes
+                    and sibling.find("math") is None
+                ):
+                    from ..extraction.markdown_render.formulas import (
+                        render_inline_latex_markdown,
+                    )
+
+                    sibling.clear()
+                    sibling.append(render_inline_latex_markdown(latex))
+                    sibling.attrs.pop("data-tandf-formula-placeholder", None)
             image_fallback.decompose()
 
-    for math_container in container.select(".NLM_disp-formula"):
+    for math_container in container.select(
+        ".NLM_disp-formula, .NLM_disp-formula-image"
+    ):
+        if (
+            (
+                math_container.find("mjx-container") is not None
+                or math_container.get("data-tandf-formula-placeholder")
+            )
+            and not _structured_latex_from_math_node(math_container, display_mode=False)
+            and math_container.find("img", src=True) is None
+        ):
+            # A visual MathJax tree alone is not recoverable formula source.
+            for rendered in list(math_container.select("mjx-container")):
+                rendered.decompose()
+            if math_container.find("math") is None:
+                math_container.append(
+                    BeautifulSoup("<math></math>", choose_parser()).math
+                )
+        # This marker describes the input image, not the rendered formula.
+        # Consume it before shared normalization replaces MathML with Markdown.
+        math_container.attrs.pop("data-tandf-formula-placeholder", None)
         if math_container.find("math") is None:
             continue
         for placeholder in list(math_container.select('img[src="//:0"]')):
@@ -876,12 +938,23 @@ def _normalize_tandf_subitem_headings(container: Tag) -> None:
 
 
 def tandf_before_block_normalization(container: Any) -> None:
+    prepare_source_images(container, "")
     _drop_tandf_formula_previews(container)
     _normalize_tandf_subitem_headings(container)
+    from ._html_section_markdown import render_retained_text_from_html
+
+    for table in list(container.select("table.listgroup")):
+        wrapper = BeautifulSoup("<div></div>", choose_parser()).div
+        for row in table.find_all("tr"):
+            paragraph = BeautifulSoup("<p></p>", choose_parser()).p
+            paragraph.string = " ".join(
+                render_retained_text_from_html(cell)
+                for cell in row.find_all(["td", "th"], recursive=False)
+            )
+            wrapper.append(paragraph)
+        table.replace_with(wrapper)
     _normalize_tandf_reference_controls(container)
     _decompose_matching(container)
-    _drop_duplicate_highlights(container)
-    _drop_adjacent_duplicate_tandf_sentences(container)
     _normalize_tandf_formula_containers(container)
     _separate_tandf_inline_formula_punctuation(container)
     _prefer_mathml_over_formula_placeholders(container)
@@ -894,6 +967,7 @@ def tandf_body_container(container: Any) -> None:
 
 
 def tandf_asset_body_container(container: Any) -> None:
+    prepare_source_images(container, "")
     _decompose_matching(container)
     _prefer_mathml_over_formula_placeholders(container)
     _normalize_tandf_figure_containers(container)
@@ -1320,7 +1394,34 @@ def extract_references(html_text: str) -> list[dict[str, str | None]]:
             if first_text is not None:
                 cleaned = re.sub(rf"^\s*{index}\s+", "", str(first_text), count=1)
                 first_text.replace_with(cleaned)
-    return extract_numbered_references_from_soup(soup)
+    references = extract_numbered_references_from_soup(soup)
+    # T&F linkouts use the current article's `doi` alongside a distinct
+    # `refDoi`/`doiOfLink` for the cited work. Only the latter identify references.
+    from ._html_references import _reference_doi
+
+    reference_dois: dict[str, str] = {}
+    direct_dois: dict[str, str | None] = {}
+    for index, node in enumerate(reference_nodes, start=1):
+        direct_dois[f"{index}."] = _reference_doi(node, include_text=False)
+        candidates = [
+            str(target.get("data-target") or "")
+            for target in node.select(".getFTR[data-target]")
+        ]
+        for anchor in node.select("a[href]"):
+            query = parse_qs(urlparse(str(anchor.get("href") or "")).query)
+            for key in ("refDoi", "doiOfLink"):
+                candidates.extend(query.get(key, []))
+        for candidate in candidates:
+            doi = reference_doi(candidate)
+            if doi:
+                reference_dois[f"{index}."] = doi
+                break
+    for reference in references:
+        label = str(reference.get("label") or "")
+        reference["doi"] = (
+            direct_dois.get(label) or reference_dois.get(label) or reference.get("doi")
+        )
+    return references
 
 
 def _normalize_tandf_section_hints(section_hints: Any) -> list[dict[str, Any]]:

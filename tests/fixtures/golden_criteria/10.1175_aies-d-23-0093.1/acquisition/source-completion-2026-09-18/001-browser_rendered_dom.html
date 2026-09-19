@@ -1,0 +1,357 @@
+<!DOCTYPE html><html data-locale="en" lang="en" class="no-js"><head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# article: http://ogp.me/ns/article#"><script>window.dataLayer = window.dataLayer || [];dataLayer.push({
+  "pf:selectedLanguage" : "English",
+  "pf:sitegenUUid" : "44595435006693760",
+  "pf:accountNumber" : "1885",
+  "pf:associatedContentSets" : "2769-7525,all,ALL,AIES,aies",
+  "pf:authorized" : "authorized",
+  "pf:contentName" : "Evidential Deep Learning: Enhancing Predictive Uncertainty Estimation for Earth System Science Applications",
+  "pf:authAccountNumber" : "1885",
+  "pf:licenseType" : "oa",
+  "pf:contentCategory" : "nlm-article",
+  "pf:titleParentIdentifier" : "2769-7525",
+  "pf:authenticationStatus" : "logged-in",
+  "pf:chunkIdentifier" : "10.1175/AIES-D-23-0093.1",
+  "pf:contentParentName" : "Artificial Intelligence for the Earth Systems"
+});</script><script type="text/javascript">function runOnDomLoaded(f) {
+
+	if (!!document.domLoaded) {
+		setTimeout(f, 0);
+	}
+	else {
+
+		window.addEventListener('DOMContentLoaded', f);
+	}
+}</script><link href="https://journals.ametsoc.org/view/journals/aies/3/4/AIES-D-23-0093.1.xml" rel="canonical">
+			
+				<title>Evidential Deep Learning: Enhancing Predictive Uncertainty Estimation for Earth System Science Applications in: Artificial Intelligence for the Earth Systems Volume 3 Issue 4 (2024) </title>
+			
+            
+            
+			
+	
+		
+	
+
+			<script type="text/x-mathjax-config;executed=true">
+	
+	if (MathJax.Hub.Browser.isMSIE) {
+		window.onload = function () {MathJax.Hub.Queue(["Typeset",MathJax.Hub])}
+	}
+	
+	MathJax.Hub.Config({
+		extensions: ["MMLorHTML.js"],
+		jax: ["input/MathML","output/CommonHTML","output/NativeMML"],
+		extensions: ["mml2jax.js","MathMenu.js","MathZoom.js"]
+	});
+
+  hasMathjax = true;
+  mathjaxComplete = false;
+
+  MathJax.Hub.signal.Interest(
+    function (message) {
+      if ('End Process' == message[0]) {
+        mathjaxComplete = true;
+      }
+    }
+  );
+
+</script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=default"></script>
+<!--BEGIN: Scholarly iQ Tag - Parameters--><script id="siqenabled" language="Javascript"> var NTPT_PGEXTRA = '';  var NTPT_NOINITIALTAG = true; </script><!--END: Scholarly iQ Tag - Parameters--><!--BEGIN: Scholarly iQ Tag - Page Tag--><noscript id="page_tag"><img alt="" vspace="0" hspace="0" border="0" width="1" height="1" language="//pftag.scholarlyiq.com/siqpagetag.gif?js=0"/></noscript><!--END: Scholarly iQ Tag - Page Tag--><meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+			
+    <!-- Open Graph Metadata -->
+	
+		
+		<meta content="https://journals.ametsoc.org/view/journals/aies/3/4/AIES-D-23-0093.1.xml" property="og:url">
+	
+		
+		<meta content="AMETSOC" property="og:site_name">
+	
+		
+		<meta content="article" property="og:type">
+	
+		
+		<meta content="Evidential Deep Learning: Enhancing Predictive Uncertainty Estimation for Earth System Science Applications" property="og:title">
+	
+		
+		<meta content="Abstract Robust quantification of predictive uncertainty is a critical addition needed for machine learning applied to weather and climate problems to improve the understanding of what is driving prediction sensitivity. Ensembles of machine learning models provide predictive uncertainty estimates in a conceptually simple way but require multiple models for training and prediction, increasing computational cost and latency. Parametric deep learning can estimate uncertainty with one model by predicting the parameters of a probability distribution but does not account for epistemic uncertainty. Evidential deep learning, a technique that extends parametric deep learning to higher-order distributions, can account for both aleatoric and epistemic uncertainties with one model. This study compares the uncertainty derived from evidential neural networks to that obtained from ensembles. Through applications of the classification of winter precipitation type and regression of surface-layer fluxes, we show evidential deep learning models attaining predictive accuracy rivaling standard methods while robustly quantifying both sources of uncertainty. We evaluate the uncertainty in terms of how well the predictions are calibrated and how well the uncertainty correlates with prediction error. Analyses of uncertainty in the context of the inputs reveal sensitivities to underlying meteorological processes, facilitating interpretation of the models. The conceptual simplicity, interpretability, and computational efficiency of evidential neural networks make them highly extensible, offering a promising approach for reliable and practical uncertainty quantification in Earth system science modeling. To encourage broader adoption of evidential deep learning, we have developed a new Python package, Machine Integration and Learning for Earth Systems (MILES) group Generalized Uncertainty for Earth System Science (GUESS) (MILES-GUESS) (https://github.com/ai2es/miles-guess), that enables users to train and evaluate both evidential and ensemble deep learning. Significance Statement This study demonstrates a new technique, evidential deep learning, for robust and computationally efficient uncertainty quantification in modeling the Earth system. The method integrates probabilistic principles into deep neural networks, enabling the estimation of both aleatoric uncertainty from noisy data and epistemic uncertainty from model limitations using a single model. Our analyses reveal how decomposing these uncertainties provides valuable insights into reliability, accuracy, and model shortcomings. We show that the approach can rival standard methods in classification and regression tasks within atmospheric science while offering practical advantages such as computational efficiency. With further advances, evidential networks have the potential to enhance risk assessment and decision-making across meteorology by improving uncertainty quantification, a longstanding challenge. This work establishes a strong foundation and motivation for the broader adoption of evidential learning, where properly quantifying uncertainties is critical yet lacking." property="og:description">
+	
+		
+		<meta content="Abstract Robust quantification of predictive uncertainty is a critical addition needed for machine learning applied to weather and climate problems to improve the understanding of what is driving prediction sensitivity. Ensembles of machine learning models provide predictive uncertainty estimates in a conceptually simple way but require multiple models for training and prediction, increasing computational cost and latency. Parametric deep learning can estimate uncertainty with one model by predicting the parameters of a probability distribution but does not account for epistemic uncertainty. Evidential deep learning, a technique that extends parametric deep learning to higher-order distributions, can account for both aleatoric and epistemic uncertainties with one model. This study compares the uncertainty derived from evidential neural networks to that obtained from ensembles. Through applications of the classification of winter precipitation type and regression of surface-layer fluxes, we show evidential deep learning models attaining predictive accuracy rivaling standard methods while robustly quantifying both sources of uncertainty. We evaluate the uncertainty in terms of how well the predictions are calibrated and how well the uncertainty correlates with prediction error. Analyses of uncertainty in the context of the inputs reveal sensitivities to underlying meteorological processes, facilitating interpretation of the models. The conceptual simplicity, interpretability, and computational efficiency of evidential neural networks make them highly extensible, offering a promising approach for reliable and practical uncertainty quantification in Earth system science modeling. To encourage broader adoption of evidential deep learning, we have developed a new Python package, Machine Integration and Learning for Earth Systems (MILES) group Generalized Uncertainty for Earth System Science (GUESS) (MILES-GUESS) (https://github.com/ai2es/miles-guess), that enables users to train and evaluate both evidential and ensemble deep learning. Significance Statement This study demonstrates a new technique, evidential deep learning, for robust and computationally efficient uncertainty quantification in modeling the Earth system. The method integrates probabilistic principles into deep neural networks, enabling the estimation of both aleatoric uncertainty from noisy data and epistemic uncertainty from model limitations using a single model. Our analyses reveal how decomposing these uncertainties provides valuable insights into reliability, accuracy, and model shortcomings. We show that the approach can rival standard methods in classification and regression tasks within atmospheric science while offering practical advantages such as computational efficiency. With further advances, evidential networks have the potential to enhance risk assessment and decision-making across meteorology by improving uncertainty quantification, a longstanding challenge. This work establishes a strong foundation and motivation for the broader adoption of evidential learning, where properly quantifying uncertainties is critical yet lacking." name="description">
+	
+		
+		<meta content="https://journals.ametsoc.org/cover/journals/aies/aies_cover.jpg" property="og:image">
+	
+		
+		<meta content="en_US" property="og:locale">
+	
+		
+		<meta content="John S. Schreck" property="article:author">
+	
+		
+		<meta content="David John Gagne II" property="article:author">
+	
+		
+		<meta content="Charlie Becker" property="article:author">
+	
+		
+		<meta content="William E. Chapman" property="article:author">
+	
+		
+		<meta content="Kim Elmore" property="article:author">
+	
+		
+		<meta content="Da Fan" property="article:author">
+	
+		
+		<meta content="Gabrielle Gantos" property="article:author">
+	
+		
+		<meta content="Eliot Kim" property="article:author">
+	
+		
+		<meta content="Dhamma Kimpara" property="article:author">
+	
+		
+		<meta content="Thomas Martin" property="article:author">
+	
+		
+		<meta content="Maria J. Molina" property="article:author">
+	
+		
+		<meta content="Vanessa M. Przybylo" property="article:author">
+	
+		
+		<meta content="Jacob Radford" property="article:author">
+	
+		
+		<meta content="Belen Saavedra" property="article:author">
+	
+		
+		<meta content="Justin Willson" property="article:author">
+	
+		
+		<meta content="Christopher Wirz" property="article:author">
+	
+		
+		<meta content="2024-12-11" property="article:published_time">
+	
+		
+		<meta content="Uncertainty" property="article:tag">
+	
+		
+		<meta content="Classification" property="article:tag">
+	
+		
+		<meta content="Data science" property="article:tag">
+	
+		
+		<meta content="Machine learning" property="article:tag">
+	
+		
+		<meta content="Neural networks" property="article:tag">
+	
+		
+		<meta content="Regression" property="article:tag">
+	
+		
+		<meta content="Artificial Intelligence for the Earth Systems" property="article:section">
+	
+		
+		<meta content="summary_large_image" name="twitter:card">
+	
+		
+		<meta content="Evidential Deep Learning: Enhancing Predictive Uncertainty Estimation for Earth System Science Applications" name="twitter:title">
+	
+		
+		<meta content="Abstract Robust quantification of predictive uncertainty is a critical addition needed for machine learning applied to weather and climate problems to improve the understanding of what is driving prediction sensitivity. Ensembles of machine learning models provide predictive uncertainty estimates in a conceptually simple way but require multiple models for training and prediction, increasing computational cost and latency. Parametric deep learning can estimate uncertainty with one model by predicting the parameters of a probability distribution but does not account for epistemic uncertainty. Evidential deep learning, a technique that extends parametric deep learning to higher-order distributions, can account for both aleatoric and epistemic uncertainties with one model. This study compares the uncertainty derived from evidential neural networks to that obtained from ensembles. Through applications of the classification of winter precipitation type and regression of surface-layer fluxes, we show evidential deep learning models attaining predictive accuracy rivaling standard methods while robustly quantifying both sources of uncertainty. We evaluate the uncertainty in terms of how well the predictions are calibrated and how well the uncertainty correlates with prediction error. Analyses of uncertainty in the context of the inputs reveal sensitivities to underlying meteorological processes, facilitating interpretation of the models. The conceptual simplicity, interpretability, and computational efficiency of evidential neural networks make them highly extensible, offering a promising approach for reliable and practical uncertainty quantification in Earth system science modeling. To encourage broader adoption of evidential deep learning, we have developed a new Python package, Machine Integration and Learning for Earth Systems (MILES) group Generalized Uncertainty for Earth System Science (GUESS) (MILES-GUESS) (https://github.com/ai2es/miles-guess), that enables users to train and evaluate both evidential and ensemble deep learning. Significance Statement This study demonstrates a new technique, evidential deep learning, for robust and computationally efficient uncertainty quantification in modeling the Earth system. The method integrates probabilistic principles into deep neural networks, enabling the estimation of both aleatoric uncertainty from noisy data and epistemic uncertainty from model limitations using a single model. Our analyses reveal how decomposing these uncertainties provides valuable insights into reliability, accuracy, and model shortcomings. We show that the approach can rival standard methods in classification and regression tasks within atmospheric science while offering practical advantages such as computational efficiency. With further advances, evidential networks have the potential to enhance risk assessment and decision-making across meteorology by improving uncertainty quantification, a longstanding challenge. This work establishes a strong foundation and motivation for the broader adoption of evidential learning, where properly quantifying uncertainties is critical yet lacking." name="twitter:description">
+	
+		
+		<meta content="10.1175/AIES-D-23-0093.1" name="dc.identifier">
+	
+    <!-- Open Graph Metadata -->
+
+			
+				<meta content="unsafe-url" name="referrer">
+			
+
+			
+		<meta content="IE=Edge" http-equiv="X-UA-Compatible">
+    
+        <meta content="width=device-width, minimum-scale=1.0, initial-scale=1.0" name="viewport" id="viewportMeta">
+    
+	
+	
+		<!-- Google Scholar Citation Details -->
+		<meta name="citation_reference" content="Abdar, M., and Coauthors, 2021: A review of uncertainty quantification in deep learning: Techniques, applications and challenges. Inf. Fusion, 76, 243–297, https://doi.org/10.1016/j.inffus.2021.05.008.">
+		<meta name="citation_reference" content="Amini, A., W. Schwarting, A. Soleimany, and D. Rus, 2020: Deep evidential regression. NIPS’20: Proceedings of the 34th International Conference on Neural Information Processing Systems, Curran Associates Inc., 14 927–14 937, https://dl.acm.org/doi/abs/10.5555/3495724.3496975.">
+		<meta name="citation_reference" content="Angelopoulos, A. N., and S. Bates, 2022: A gentle introduction to conformal prediction and distribution-free uncertainty quantification. arXiv, 2107.07511v6, https://doi.org/10.48550/arXiv.2107.07511.">
+		<meta name="citation_reference" content="Barnes, E. A., and R. J. Barnes, 2021: Controlled abstention neural networks for identifying skillful predictions for regression problems. J. Adv. Model. Earth Syst., 13, e2021MS002575, https://doi.org/10.1029/2021MS002575.">
+		<meta name="citation_reference" content="Bauer, P., A. Thorpe, and G. Brunet, 2015: The quiet revolution of numerical weather prediction. Nature, 525, 47–55, https://doi.org/10.1038/nature14956.">
+		<meta name="citation_reference" content="Bosveld, F. C., P. Baas, A. C. M. Beljaars, A. A. M. Holtslag, J. V.-G. de Arellano, and B. J. H. van de Wiel, 2020: Fifty years of atmospheric boundary-layer research at Cabauw serving weather, air quality and climate. Bound.-Layer Meteor., 177, 583–612, https://doi.org/10.1007/s10546-020-00541-w.">
+		<meta name="citation_reference" content="Breiman, L., 1996: Bagging predictors. Mach. Learn., 24, 123–140, https://doi.org/10.1007/BF00058655.">
+		<meta name="citation_reference" content="Bremnes, J. B., 2020: Ensemble postprocessing using quantile function regression based on neural networks and Bernstein polynomials. Mon. Wea. Rev., 148, 403–414, https://doi.org/10.1175/MWR-D-19-0227.1.">
+		<meta name="citation_reference" content="Brier, G. W., 1950: Verification of forecasts expressed in terms of probability. Mon. Wea. Rev., 78 (1), 1–3, https://doi.org/10.1175/1520-0493(1950)078&amp;lt;0001:VOFEIT&amp;gt;2.0.CO;2.">
+		<meta name="citation_reference" content="Casella, G., and R. L. Berger, 2002: Statistical Inference. 2nd ed. Duxbury Press, 686 pp.">
+		<meta name="citation_reference" content="Chapman, W. E., L. Delle Monache, S. Alessandrini, A. C. Subramanian, F. M. Ralph, S.-P. Xie, S. Lerch, and N. Hayatbini, 2022: Probabilistic predictions from deterministic atmospheric river forecasts with deep learning. Mon. Wea. Rev., 150, 215–234, https://doi.org/10.1175/MWR-D-21-0106.1.">
+		<meta name="citation_reference" content="Computational and Information Systems Laboratory, 2020: Cheyenne: HPE/SGI ICE XA System (NCAR Community Computing). NCAR, https://doi.org/10.5065/D6RX99HX.">
+		<meta name="citation_reference" content="Delaunay, A., and H. M. Christensen, 2022: Interpretable deep learning for probabilistic MJO prediction. Geophys. Res. Lett., 49, e2022GL098566, https://doi.org/10.1029/2022GL098566.">
+		<meta name="citation_reference" content="Dempster, A. P., 1968: A generalization of Bayesian inference. J. Roy. Stat. Soc., 30B, 205–232, https://doi.org/10.1111/j.2517-6161.1968.tb00722.x.">
+		<meta name="citation_reference" content="Dietterich, T. G., 2000: Ensemble methods in machine learning. MCS ’00: Proceedings of the First International Workshop on Multiple Classifier Systems, Springer-Verlag, 1–15, https://dl.acm.org/doi/10.5555/648054.743935.">
+		<meta name="citation_reference" content="Foster, D., D. J. Gagne II, and D. B. Whitt, 2021: Probabilistic machine learning estimation of ocean mixed layer depth from dense satellite and sparse in situ observations. J. Adv. Model. Earth Syst., 13, e2021MS002474, https://doi.org/10.1029/2021MS002474.">
+		<meta name="citation_reference" content="Gal, Y., and Z. Ghahramani, 2016: Dropout as a Bayesian approximation: Representing model uncertainty in deep learning. Proc. 33rd Int. Conf. on Machine Learning, New York, NY, JMLR.org, 1050–1059, https://dl.acm.org/doi/10.5555/3045390.3045502.">
+		<meta name="citation_reference" content="Gelman, A., J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D. B. Rubin, 2013: Bayesian Data Analysis. Vol. 2. Chapman and Hall/CRC, 552 pp.">
+		<meta name="citation_reference" content="Ghazvinian, M., Y. Zhang, D.-J. Seo, M. He, and N. Fernando, 2021: A novel hybrid artificial neural network–Parametric scheme for postprocessing medium-range precipitation forecasts. Adv. Water Resour., 151, 103907, https://doi.org/10.1016/j.advwatres.2021.103907.">
+		<meta name="citation_reference" content="Gneiting, T., A. E. Raftery, A. H. Westveld III, and T. Goldman, 2005: Calibrated probabilistic forecasting using ensemble model output statistics and minimum CRPS estimation. Mon. Wea. Rev., 133, 1098–1118, https://doi.org/10.1175/MWR2904.1.">
+		<meta name="citation_reference" content="Gneiting, T., F. Balabdaoui, and A. E. Raftery, 2007: Probabilistic forecasts, calibration and sharpness. J. Roy. Stat. Soc., 69B, 243–268, https://doi.org/10.1111/j.1467-9868.2007.00587.x.">
+		<meta name="citation_reference" content="Gordon, E. M., and E. A. Barnes, 2022: Incorporating uncertainty into a regression neural network enables identification of decadal state-dependent predictability in CESM2. Geophys. Res. Lett., 49, e2022GL098635, https://doi.org/10.1029/2022GL098635.">
+		<meta name="citation_reference" content="Guillaumin, A. P., and L. Zanna, 2021: Stochastic-deep learning parameterization of ocean momentum forcing. J. Adv. Model. Earth Syst., 13, e2021MS002534, https://doi.org/10.1029/2021MS002534.">
+		<meta name="citation_reference" content="Hamill, T. M., 2001: Interpretation of rank histograms for verifying ensemble forecasts. Mon. Wea. Rev., 129, 550–560, https://doi.org/10.1175/1520-0493(2001)129&amp;lt;0550:IORHFV&amp;gt;2.0.CO;2.">
+		<meta name="citation_reference" content="Haupt, S. E., W. Chapman, S. V. Adams, C. Kirkwood, J. S. Hosking, N. H. Robinson, S. Lerch, and A. C. Subramanian, 2021: Towards implementing artificial intelligence post-processing in weather and climate: Proposed actions from the Oxford 2019 workshop. Philos. Trans. Roy. Soc., A379, 20200091, https://doi.org/10.1098/rsta.2020.0091.">
+		<meta name="citation_reference" content="Haynes, K., R. Lagerquist, M. McGraw, K. Musgrave, and I. Ebert-Uphoff, 2023: Creating and evaluating uncertainty estimates with neural networks for environmental-science applications. Artif. Intell. Earth Syst., 2, 220061, https://doi.org/10.1175/AIES-D-22-0061.1.">
+		<meta name="citation_reference" content="Herman, G. R., and R. S. Schumacher, 2018: Money doesn’t grow on trees, but forecasts do: Forecasting extreme precipitation with random forests. Mon. Wea. Rev., 146, 1571–1600, https://doi.org/10.1175/MWR-D-17-0250.1.">
+		<meta name="citation_reference" content="Hoffman, M. D., D. M. Blei, C. Wang, and J. Paisley, 2013: Stochastic variational inference. J. Mach. Learn. Res., 14, 1303–1347.">
+		<meta name="citation_reference" content="Jøsang, A., 2018: Subjective Logic: A Formalism for Reasoning Under Uncertainty. Springer, 337 pp.">
+		<meta name="citation_reference" content="Karpatne, A., and Coauthors, 2017: Theory-guided data science: A new paradigm for scientific discovery from data. IEEE Trans. Knowl. Data Eng., 29, 2318–2331, https://doi.org/10.1109/TKDE.2017.2720168.">
+		<meta name="citation_reference" content="Kendall, A., and Y. Gal, 2017: What uncertainties do we need in Bayesian deep learning for computer vision? NIPS’17: Proceedings of the 31st International Conference on Neural Information Processing Systems, Curran Associates Inc., 5580–5590, https://dl.acm.org/doi/10.5555/3295222.3295309.">
+		<meta name="citation_reference" content="Koenker, R., 2005: Quantile Regression. Cambridge University Press, 368 pp.">
+		<meta name="citation_reference" content="Kotz, S., N. Balakrishnan, and N. L. Johnson, 2004: Continuous Multivariate Distributions. Vol. 1, Models and Applications. John Wiley and Sons, 753 pp.">
+		<meta name="citation_reference" content="Lakshminarayanan, B., A. Pritzel, and C. Blundell, 2017: Simple and scalable predictive uncertainty estimation using deep ensembles. NIPS’17: Proceedings of the 31st International Conference on Neural Information Processing Systems, Curran Associates Inc., 6405–6416, https://dl.acm.org/doi/10.5555/3295222.3295387.">
+		<meta name="citation_reference" content="Leith, C. E., 1974: Theoretical skill of Monte Carlo forecasts. Mon. Wea. Rev., 102, 409–418, https://doi.org/10.1175/1520-0493(1974)102&amp;lt;0409:TSOMCF&amp;gt;2.0.CO;2.">
+		<meta name="citation_reference" content="Liu, J. Z., Z. Lin, S. Padhy, D. Tran, T. Bedrax-Weiss, and B. Lakshminarayanan, 2020: Simple and principled uncertainty estimation with deterministic deep learning via distance awareness. NIPS’20: Proceedings of the 34th International Conference on Neural Information Processing Systems, Curran Associates Inc., 7498–7512, https://dl.acm.org/doi/10.5555/3495724.3496353.">
+		<meta name="citation_reference" content="MacKay, D. J., 2003: Information Theory, Inference and Learning Algorithms. Cambridge University Press, 628 pp.">
+		<meta name="citation_reference" content="McCandless, T., D. J. Gagne, B. Kosović, S. E. Haupt, B. Yang, C. Becker, and J. Schreck, 2022: Machine learning for improving surface-layer-flux estimates. Bound.-Layer Meteor., 185, 199–228, https://doi.org/10.1007/s10546-022-00727-4.">
+		<meta name="citation_reference" content="McGovern, A., K. L. Elmore, D. J. Gagne II, S. E. Haupt, C. D. Karstens, R. Lagerquist, T. Smith, and J. K. Williams, 2017: Using artificial intelligence to improve real-time decision-making for high-impact weather. Bull. Amer. Meteor. Soc., 98, 2073–2090, https://doi.org/10.1175/BAMS-D-16-0123.1.">
+		<meta name="citation_reference" content="Meinert, N., and A. Lavin, 2021: Multivariate deep evidential regression. arXiv, 2104.06135v4, https://doi.org/10.48550/arXiv.2104.06135.">
+		<meta name="citation_reference" content="Meinert, N., J. Gawlikowski, and A. Lavin, 2023: The unreasonable effectiveness of deep evidential regression. Proc. AAAI Conf. Artif. Intell., 37, 9134–9142, https://doi.org/10.1609/aaai.v37i8.26096.">
+		<meta name="citation_reference" content="Muñoz-Esparza, D., C. Becker, J. A. Sauer, D. J. Gagne II, J. Schreck, and B. Kosović, 2022: On the application of an observations-based machine learning parameterization of surface layer fluxes within an atmospheric large-eddy simulation model. J. Geophys. Res. Atmos., 127, e2021JD036214, https://doi.org/10.1029/2021JD036214.">
+		<meta name="citation_reference" content="Murphy, A. H., 1973: A new vector partition of the probability score. J. Appl. Meteor., 12, 595–600, https://doi.org/10.1175/1520-0450(1973)012&amp;lt;0595:ANVPOT&amp;gt;2.0.CO;2.">
+		<meta name="citation_reference" content="Murphy, K. P., 2007: Conjugate Bayesian Analysis of the Gaussian Distribution. University of British Columbia, 29 pp.">
+		<meta name="citation_reference" content="Nadav-Greenberg, L., and S. L. Joslyn, 2009: Uncertainty forecasts improve decision making among nonexperts. J. Cognit. Eng. Decis. Making, 3, 209–227, https://doi.org/10.1518/155534309X474460.">
+		<meta name="citation_reference" content="Neal, R. M., 2012: Bayesian Learning for Neural Networks. Lecture Notes in Statistics, Vol. 118. Springer, 204 pp.">
+		<meta name="citation_reference" content="Nix, D. A., and A. S. Weigend, 1994: Estimating the mean and variance of the target probability distribution. Proc. 1994 IEEE Int. Conf. on Neural Networks (ICNN’94), Orlando, FL, Institute of Electrical and Electronics Engineers, 55–60, https://ieeexplore.ieee.org/document/374138.">
+		<meta name="citation_reference" content="Oh, D., and B. Shin, 2022: Improving evidential deep learning via multi-task learning. Proc. AAAI Conf. Artif. Intell., 36, 7895–7903, https://doi.org/10.1609/aaai.v36i7.20759.">
+		<meta name="citation_reference" content="Ovadia, Y., and Coauthors, 2019: Can you trust your model’s uncertainty? Evaluating predictive uncertainty under dataset shift. Proceedings of the 33rd International Conference on Neural Information Processing Systems, Curran Associates Inc., 14 003–14 014, https://dl.acm.org/doi/abs/10.5555/3454287.3455541.">
+		<meta name="citation_reference" content="Raftery, A. E., T. Gneiting, F. Balabdaoui, and M. Polakowski, 2005: Using Bayesian model averaging to calibrate forecast ensembles. Mon. Wea. Rev., 133, 1155–1174, https://doi.org/10.1175/MWR2906.1.">
+		<meta name="citation_reference" content="Rasmussen, C. E., and C. K. I. Williams, 2006: Gaussian Processes for Machine Learning. The MIT Press, 248 pp.">
+		<meta name="citation_reference" content="Rasp, S., and S. Lerch, 2018: Neural networks for postprocessing ensemble weather forecasts. Mon. Wea. Rev., 146, 3885–3900, https://doi.org/10.1175/MWR-D-18-0187.1.">
+		<meta name="citation_reference" content="Romano, Y., E. Patterson, and E. J. Candes, 2019: Conformalized quantile regression. Proceedings of the 33rd International Conference on Neural Information Processing Systems, Curran Associates Inc., 3543–3553, https://dl.acm.org/doi/10.5555/3454287.3454605.">
+		<meta name="citation_reference" content="Scheuerer, M., M. B. Switanek, R. P. Worsnop, and T. M. Hamill, 2020: Using artificial neural networks for generating probabilistic subseasonal precipitation forecasts over California. Mon. Wea. Rev., 148, 3489–3506, https://doi.org/10.1175/MWR-D-20-0096.1.">
+		<meta name="citation_reference" content="Schulz, B., and S. Lerch, 2022: Machine learning methods for postprocessing ensemble forecasts of wind gusts: A systematic comparison. Mon. Wea. Rev., 150, 235–257, https://doi.org/10.1175/MWR-D-21-0150.1.">
+		<meta name="citation_reference" content="Sensoy, M., L. Kaplan, and M. Kandemir, 2018: Evidential deep learning to quantify classification uncertainty. NIPS’18: Proceedings of the 32nd International Conference on Neural Information Processing Systems, Curran Associates Inc., 3183–3193, https://dl.acm.org/doi/10.5555/3327144.3327239.">
+		<meta name="citation_reference" content="Sensoy, M., V. Deli’c, and L. Kaplan, 2020: A review of uncertainty quantification in deep learning: Techniques, applications and challenges. arXiv, 2011.06225v4, https://doi.org/10.48550/arXiv.2011.06225.">
+		<meta name="citation_reference" content="Shaker, M. H., and E. Hüllermeier, 2020: Aleatoric and epistemic uncertainty with random forests. Advances in Intelligent Data Analysis XVIII: 18th International Symposium on Intelligent Data Analysis, IDA 2020, Konstanz, Germany, April 27–29, 2020, Proceedings, Springer-Verlag, 444–456, https://dl.acm.org/doi/10.1007/978-3-030-44584-3_35.">
+		<meta name="citation_reference" content="Shepherd, J. G., 2009: Geoengineering the climate: Science, governance and uncertainty. 98 pp., https://royalsociety.org/-/media/policy/publications/2009/8693.pdf.">
+		<meta name="citation_reference" content="Soleimany, A. P., A. Amini, S. Goldman, D. Rus, S. N. Bhatia, and C. W. Coley, 2021: Evidential deep learning for guided molecular property prediction and discovery. ACS Cent. Sci., 7, 1356–1367, https://doi.org/10.1021/acscentsci.1c00546.">
+		<meta name="citation_reference" content="Srivastava, N., G. Hinton, A. Krizhevsky, I. Sutskever, and R. Salakhutdinov, 2014: Dropout: A simple way to prevent neural networks from overfitting. J. Mach. Learn. Res., 15, 1929–1958.">
+		<meta name="citation_reference" content="Stankeviciute, K., A. M. Alaa, and M. van der Schaar, 2021: Conformal time-series forecasting. Advances in Neural Information Processing Systems 34, M. Ranzato et al., Eds., Curran Associates, Inc., 6216–6228, https://proceedings.neurips.cc/paper/2021/hash/312f1ba2a72318edaaa995a67835fad5-Abstract.html.">
+		<meta name="citation_reference" content="Ulmer, D., C. Hardmeier, and J. Frellsen, 2021: Prior and posterior networks: A Survey on evidential deep learning methods for uncertainty estimation. Trans. Mach. Learn. Res., 2023, 1–48.">
+		<meta name="citation_reference" content="Vannitsem, S., D. S. Wilks, and J. Messner, 2018: Statistical Postprocessing of Ensemble Forecasts. 1st ed. Elsevier, 362 pp.">
+		<meta name="citation_reference" content="Vannitsem, S., and Coauthors, 2021: Statistical postprocessing for weather forecasts: Review, challenges, and avenues in a big data world. Bull. Amer. Meteor. Soc., 102, E681–E699, https://doi.org/10.1175/BAMS-D-19-0308.1.">
+		<meta name="citation_issue" content="4">
+		<meta name="citation_language" content="EN">
+		<meta name="citation_fulltext_world_readable" content="">
+		<meta name="citation_title" content="Evidential Deep Learning: Enhancing Predictive Uncertainty Estimation for Earth System Science Applications">
+		<meta name="citation_xml_url" content="https://journals.ametsoc.org/doc/journals/aies/3/4/AIES-D-23-0093.1.xml">
+		<meta name="citation_volume" content="3">
+		<meta name="citation_pdf_url" content="https://journals.ametsoc.org/downloadpdf/view/journals/aies/3/4/AIES-D-23-0093.1.pdf">
+		<meta name="citation_issn" content="2769-7525">
+		<meta name="citation_publisher" content="American Meteorological Society">
+		<meta name="citation_journal_title" content="Artificial Intelligence for the Earth Systems">
+		<meta name="citation_publication_date" content="2024/12/11">
+		<meta name="citation_author" content="John S. Schreck">
+		<meta name="citation_author" content="David John Gagne">
+		<meta name="citation_author" content="Charlie Becker">
+		<meta name="citation_author" content="William E. Chapman">
+		<meta name="citation_author" content="Kim Elmore">
+		<meta name="citation_author" content="Da Fan">
+		<meta name="citation_author" content="Gabrielle Gantos">
+		<meta name="citation_author" content="Eliot Kim">
+		<meta name="citation_author" content="Dhamma Kimpara">
+		<meta name="citation_author" content="Thomas Martin">
+		<meta name="citation_author" content="Maria J. Molina">
+		<meta name="citation_author" content="Vanessa M. Przybylo">
+		<meta name="citation_author" content="Jacob Radford">
+		<meta name="citation_author" content="Belen Saavedra">
+		<meta name="citation_author" content="Justin Willson">
+		<meta name="citation_author" content="Christopher Wirz">
+		<meta name="citation_doi" content="10.1175/AIES-D-23-0093.1">
+		
+		<!-- End Google Scholar Citation -->
+	
+
+	
+	
+		<link href="/newsrss" title="News (RSS 2.0)" type="application/rss+xml" rel="alternate">
+	
+	
+
+
+			
+  
+
+
+			
+			
+
+			
+
+			
+				<link type="image/x-icon" href="/skin/710ad8a6b2413221890b4b07720ada0d29d8e951/favicon.ico" rel="shortcut icon">
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+			
+				<link media="all" href="/skin/710ad8a6b2413221890b4b07720ada0d29d8e951/css/normalize.css" type="text/css" rel="stylesheet">
+			
+			
+			
+				<link media="all" href="/skin/710ad8a6b2413221890b4b07720ada0d29d8e951-1FC62929ED8C6DD76256E0629C1183EB/css/style.css" type="text/css" rel="stylesheet">
+			
+			
+	
+	
+	
+
+
+			
+
+			
+  
+  
+  
+	
+  
+  
+	
+  
+  
+	  
+  
+  
+
+
+			
+	
+		<script class="doNotMove" src="/assets/vendor/e4eb129f/respond.min.js"></script>
+	
+
+  
+
+  
+
+
+
+		<!--[if IE 9]><style type="text/css">.pageloading-mask{opacity:0.25;}</style><![endif]--><!--[if lt IE 9]><style type="text/css">.pageloading-mask{filter:alpha(opacity=25);}</style><![endif]--><link type="text/css" rel="stylesheet" href="/assets/meta/zee34e021/tapestry5/font_awesome/css/font-awesome.css"><link type="text/css" rel="stylesheet" href="/assets/css/zbb83c97/default.css"><link type="text/css" rel="stylesheet" href="/assets/vendor/ze5c2e950/splide/splide.min.css"><link type="text/css" rel="stylesheet" href="/assets/vendor/zcb91ae9f/font-awesome/css/brands.min.css"><link type="text/css" rel="stylesheet" href="/assets/vendor/z50dfce42/jquery-ui/jquery-ui.min.css"><link type="text/css" rel="stylesheet" href="/assets/vendor/zd21b6c25/dropdown/jquery.jui_dropdown.css"><link type="text/css" rel="stylesheet" href="/assets/applib/z99749d88/mixins/default.css"><link type="text/css" rel="stylesheet" href="/skin/710ad8a6b2413221890b4b07720ada0d29d8e951-1FC62929ED8C6DD76256E0629C1183EB/languageFonts.css"><link as="script" rel="preload" href="//pftag.scholarlyiq.com/siqpagetag.js"><script type="text/javascript">console.debug('Loading 5 libraries synchronously in head');</script><script type="text/javascript">console.debug('Loading library /assets/vendor/zaa95d746/micromodal.js/micromodal.min.js synchronously in head');</script><script class="doNotMove" src="/assets/vendor/zaa95d746/micromodal.js/micromodal.min.js" type="text/javascript"></script><script type="text/javascript">console.debug('Loading library /assets/shared/z96255596/js/dist/shareLink.js synchronously in head');</script><script class="doNotMove" src="/assets/shared/z96255596/js/dist/shareLink.js" type="text/javascript"></script><script type="text/javascript">console.debug('Loading library /assets/shared/z50f546a3/js/lightbox/lightbox.js synchronously in head');</script><script class="doNotMove" src="/assets/shared/z50f546a3/js/lightbox/lightbox.js" type="text/javascript"></script><script type="text/javascript">console.debug('Loading library /assets/app/z615bfb46/pages/Cite.js synchronously in head');</script><script class="doNotMove" src="/assets/app/z615bfb46/pages/Cite.js" type="text/javascript"></script><script type="text/javascript">console.debug('Loading library //platform-api.sharethis.com/js/sharethis.js#property=64ac08de0f9156001a2918be&amp;product=custom-share-buttons synchronously in head');</script><script class="doNotMove" src="//platform-api.sharethis.com/js/sharethis.js#property=64ac08de0f9156001a2918be&amp;product=custom-share-buttons" type="text/javascript"></script><style type="text/css">.MathJax_Preview {color: #888; display: contents}
+#MathJax_Message {position: fixed; left: 1px; bottom: 2px; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@2/extensions/mml2jax.js?V=2.7.9"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@2/extensions/MathMenu.js?V=2.7.9"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mathjax@2/extensions/MathZoom.js?V=2.7.9"></script></head></html>

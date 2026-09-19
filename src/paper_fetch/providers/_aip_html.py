@@ -30,6 +30,7 @@ AIP_JSONLD_ARTICLE_TYPES = frozenset({"article", "scholarlyarticle"})
 # SITE_UI_COPY_REGRESSION_MARKER: AIP article chrome selectors owned by provider cleanup policy.
 # STRUCTURAL_UI_COPY_HOOK: provider cleanup removes these only from AIP article HTML.
 AIP_DOM_CHROME_SELECTORS = (
+    ".fig-modal",
     ".article-metrics",
     ".article-tools",
     ".articleTool",

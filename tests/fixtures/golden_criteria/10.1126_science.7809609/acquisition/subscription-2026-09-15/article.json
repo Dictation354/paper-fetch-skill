@@ -1,0 +1,356 @@
+{
+  "doi": "10.1126/science.7809609",
+  "source": "crossref_meta",
+  "metadata": {
+    "title": "Single Cells as Biosensors for Chemical Separations",
+    "authors": [
+      "Jason B. Shear",
+      "Harvey A. Fishman",
+      "Nancy L. Allbritton",
+      "Delia Garigan",
+      "Richard N. Zare",
+      "Richard H. Scheller"
+    ],
+    "abstract": "A biosensor system based on the response of living cells was demonstrated that can detect specific components of a complex mixture fractionated by a microcolumn separation technique. This system uses ligand-receptor binding and signal-transduction pathways to biochemically amplify the presence of an analyte after electrophoretic separation. The transduced signal was measured by means of two approaches: (i) fluorescence determination of intracellular calcium concentrations in one or more rat PC-12 cells and (ii) measurement of transmembrane current in a Xenopus laevis oocyte microinjected with messenger RNA that encodes a specific receptor. This analysis system has the potential to identify biologically active ligands present in a complex mixture with exceptional sensitivity and selectivity.",
+    "journal": "Science",
+    "article_type": null,
+    "published": "1995-1-6",
+    "keywords": [],
+    "license_urls": [],
+    "landing_page_url": "https://www.science.org/doi/10.1126/science.7809609"
+  },
+  "sections": [],
+  "references": [
+    {
+      "raw": "ABDELLATIF, M.S., ENZYME-BASED FIBER OPTIC SENSOR FOR GLUCOSE DETERMINATION, ANALYTICAL LETTERS 21: 943 (1988).",
+      "doi": "10.1080/00032718808071922",
+      "title": null,
+      "year": "1988"
+    },
+    {
+      "raw": "BRIGGS, C.A., ACTIVATION OF THE 5-HT1C RECEPTOR EXPRESSED IN XENOPUS OOCYTES BY THE BENZAZEPINES SCH-23390 AND SKF-38393, BRITISH JOURNAL OF PHARMACOLOGY 104: 1038 (1991).",
+      "doi": "10.1111/j.1476-5381.1991.tb12546.x",
+      "title": null,
+      "year": "1991"
+    },
+    {
+      "raw": "BUSH, A.B., NERVE GROWTH-FACTOR POTENTIATES BRADYKININ-INDUCED CALCIUM INFLUX AND RELEASE IN PC12 CELLS, JOURNAL OF NEUROCHEMISTRY 57: 562 (1991).",
+      "doi": "10.1111/j.1471-4159.1991.tb03787.x",
+      "title": null,
+      "year": "1991"
+    },
+    {
+      "raw": "Cooper J. R. The Biochemical Basis of Neuropharmacology 5 173 (1986).",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "DELORME, E.M., EFFECTS OF PROLONGED DEPOLARIZATION ON THE NICOTINIC ACETYLCHOLINE-RECEPTORS OF PC12 CELLS, JOURNAL OF NEUROCHEMISTRY 50: 1248 (1988).",
+      "doi": "10.1111/j.1471-4159.1988.tb10601.x",
+      "title": null,
+      "year": "1988"
+    },
+    {
+      "raw": "FASOLATO, C, RECEPTOR-MEDIATED CALCIUM INFLUX IN PC12 CELLS - ATP AND BRADYKININ ACTIVATE 2 INDEPENDENT PATHWAYS, JOURNAL OF BIOLOGICAL CHEMISTRY 265: 20351 (1990).",
+      "doi": "10.1016/s0021-9258(17)30510-0",
+      "title": null,
+      "year": "1990"
+    },
+    {
+      "raw": "FISHMAN, H.A., SPONTANEOUS INJECTION IN MICROCOLUMN SEPARATIONS, ANALYTICAL CHEMISTRY 66: 2318 (1994).",
+      "doi": "10.1021/ac00086a018",
+      "title": null,
+      "year": "1994"
+    },
+    {
+      "raw": "GANDHI, C.R., HEPATIC-EFFECTS OF ENDOTHELIN - RECEPTOR CHARACTERIZATION AND ENDOTHELIN-INDUCED SIGNAL TRANSDUCTION IN HEPATOCYTES, BIOCHEMICAL JOURNAL 287: 897 (1992).",
+      "doi": "10.1042/bj2870897",
+      "title": null,
+      "year": "1992"
+    },
+    {
+      "raw": "GIAEVER, I, ANTIBODY-ANTIGEN REACTION - VISUAL OBSERVATION, JOURNAL OF IMMUNOLOGY 110: 1424 (1973).",
+      "doi": "10.4049/jimmunol.110.5.1424",
+      "title": null,
+      "year": "1973"
+    },
+    {
+      "raw": "GREANEY, M.D., IMPROVED METHOD FOR THE ROUTINE ANALYSIS OF ACETYLCHOLINE-RELEASE IN-VIVO - QUANTITATION IN THE PRESENCE AND ABSENCE OF ESTERASE INHIBITOR, JOURNAL OF CHROMATOGRAPHY-BIOMEDICAL APPLICATIONS 622: 125 (1993).",
+      "doi": "10.1016/0378-4347(93)80258-6",
+      "title": null,
+      "year": "1993"
+    },
+    {
+      "raw": "Greene, L. A., Culturing Nerve Cells: 207 (1991).",
+      "doi": null,
+      "title": null,
+      "year": "1991"
+    },
+    {
+      "raw": "GREENE, L.A., SYNTHESIS, STORAGE AND RELEASE OF ACETYLCHOLINE BY A NORADRENERGIC PHEOCHROMOCYTOMA CELL LINE, NATURE 268: 349 (1977).",
+      "doi": "10.1038/268349a0",
+      "title": null,
+      "year": "1977"
+    },
+    {
+      "raw": "JACKSON, T, STRUCTURE AND FUNCTION OF G-PROTEIN COUPLED RECEPTORS, PHARMACOLOGY & THERAPEUTICS 50: 425 (1991).",
+      "doi": "10.1016/0163-7258(91)90052-n",
+      "title": null,
+      "year": "1991"
+    },
+    {
+      "raw": "KIST, TBL, CAPILLARY ZONE ELECTROPHORESIS SEPARATION OF KININS USING A NOVEL LASER FLUORESCENCE DETECTOR, BRAZILIAN JOURNAL OF MEDICAL AND BIOLOGICAL RESEARCH 27: 11 (1994).",
+      "doi": null,
+      "title": null,
+      "year": "1994"
+    },
+    {
+      "raw": "MONNIG, C.A., CAPILLARY ELECTROPHORESIS, ANALYTICAL CHEMISTRY 66: R280 (1994).",
+      "doi": null,
+      "title": null,
+      "year": "1994"
+    },
+    {
+      "raw": "MORI, M, STRUCTURE OF CCF10, A PEPTIDE SEX-PHEROMONE WHICH INDUCES CONJUGATIVE TRANSFER OF THE STREPTOCOCCUS-FAECALIS TETRACYCLINE RESISTANCE PLASMID, PCF10, JOURNAL OF BIOLOGICAL CHEMISTRY 263: 14574 (1988).",
+      "doi": "10.1016/s0021-9258(18)68258-4",
+      "title": null,
+      "year": "1988"
+    },
+    {
+      "raw": "NIE S unpublished data.",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "OATES, M.D., QUANTITATIVE AMINO-ACID-ANALYSIS OF INDIVIDUAL SNAIL NEURONS BY OPEN TUBULAR LIQUID-CHROMATOGRAPHY, ANALYTICAL CHEMISTRY 62: 1573 (1990).",
+      "doi": "10.1021/ac00214a006",
+      "title": null,
+      "year": "1990"
+    },
+    {
+      "raw": "OLEFIROWICZ, T.M., CAPILLARY ELECTROPHORESIS IN 2-MU-M AND 5-MU-M DIAMETER CAPILLARIES - APPLICATION TO CYTOPLASMIC ANALYSIS, ANALYTICAL CHEMISTRY 62: 1872 (1990).",
+      "doi": "10.1021/ac00216a026",
+      "title": null,
+      "year": "1990"
+    },
+    {
+      "raw": "10.1126/science.2799384",
+      "doi": "10.1126/science.2799384",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "POZZAN, T, ACTIVATION OF MUSCARINIC RECEPTORS IN PC12 CELLS STIMULATION OF CA-2+ INFLUX AND REDISTRIBUTION, BIOCHEMICAL JOURNAL 234: 547 (1986).",
+      "doi": "10.1042/bj2340547",
+      "title": null,
+      "year": "1986"
+    },
+    {
+      "raw": "ROGERS, K.R., ACETYLCHOLINE-RECEPTOR FIBER-OPTIC EVANESCENT FLUOROSENSOR, ANALYTICAL BIOCHEMISTRY 182: 353 (1989).",
+      "doi": "10.1016/0003-2697(89)90607-6",
+      "title": null,
+      "year": "1989"
+    },
+    {
+      "raw": "ROUNDS, M.A., ANION-EXCHANGE HIGH-PERFORMANCE LIQUID-CHROMATOGRAPHY WITH POSTCOLUMN DETECTION FOR THE ANALYSIS OF PHYTIC ACID AND OTHER INOSITOL PHOSPHATES, JOURNAL OF CHROMATOGRAPHY A 653: 148 (1993).",
+      "doi": "10.1016/0021-9673(93)80404-v",
+      "title": null,
+      "year": "1993"
+    },
+    {
+      "raw": "SANDS, S.B., CALCIUM PERMEABILITY OF NEURONAL NICOTINIC ACETYLCHOLINE-RECEPTOR CHANNELS IN PC12 CELLS, BRAIN RESEARCH 560: 38 (1991).",
+      "doi": "10.1016/0006-8993(91)91211-i",
+      "title": null,
+      "year": "1991"
+    },
+    {
+      "raw": "SMITH, R. D., ANALYTICAL CHEMISTRY 65: A574 (1993).",
+      "doi": "10.1021/ac00061a717",
+      "title": null,
+      "year": "1993"
+    },
+    {
+      "raw": "SUGAO, N, NA+/D-GLUCOSE COTRANSPORTER BASED BILAYER LIPID-MEMBRANE SENSOR FOR D-GLUCOSE, ANALYTICAL CHEMISTRY 65: 363 (1993).",
+      "doi": "10.1021/ac00052a009",
+      "title": null,
+      "year": "1993"
+    },
+    {
+      "raw": "SUZUKI, H, AN AMPEROMETRIC SENSOR FOR CARBON-DIOXIDE BASED ON IMMOBILIZED BACTERIA UTILIZING CARBON-DIOXIDE, ANALYTICA CHIMICA ACTA 199: 85 (1987).",
+      "doi": "10.1016/s0003-2670(00)82799-3",
+      "title": null,
+      "year": "1987"
+    },
+    {
+      "raw": "Turner A. P. F. Advances in Biosensors (1991).",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "UPDIKE, S.J., ENZYME ELECTRODE, NATURE 214: 986 (1967).",
+      "doi": "10.1038/214986a0",
+      "title": null,
+      "year": "1967"
+    },
+    {
+      "raw": "YAMAMOTO, K, J CHROMATOGR 588: 327 (1991).",
+      "doi": "10.1016/0021-9673(91)85041-d",
+      "title": null,
+      "year": "1991"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": false,
+    "token_estimate": 201,
+    "content_kind": "abstract_only",
+    "has_abstract": true,
+    "warnings": [
+      "science HTML route was not usable (abstract_only); attempting PDF fallback.",
+      "pdf: science full text could not be retrieved via HTML or PDF fallback. HTML failure: Publisher HTML only exposed abstract-level content without article body text. PDF failure: PDF fallback request deadline was exhausted.",
+      "Full text was not available; returning metadata and abstract only.",
+      "--save-markdown was set but full text was not available; nothing written to disk."
+    ],
+    "source_trail": [
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_science",
+      "route:signal_doi_science",
+      "route:probe_science_unknown",
+      "route:provider_selected_science",
+      "route:provider_candidate_science_metadata_selected_rank_1",
+      "route:provider_candidate_science_identity_strong",
+      "fulltext:science_attempt",
+      "fulltext:science_html_fail",
+      "fulltext:science_fail",
+      "route:provider_candidate_science_rejected",
+      "fallback:science_html_managed_by_provider",
+      "fallback:metadata_only",
+      "fulltext:science_pdf_transport_fail",
+      "fulltext:science_pdf_fail",
+      "download:markdown_skipped_no_fulltext"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 201,
+      "body": 0,
+      "refs": 899
+    },
+    "confidence": "low",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 0,
+      "word_count": 0,
+      "body_block_count": 0,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 0.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": false,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "crossref",
+    "route": "metadata",
+    "representation": "metadata",
+    "transport": "api",
+    "fallback_used": true
+  }
+}

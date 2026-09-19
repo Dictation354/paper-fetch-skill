@@ -1,0 +1,109 @@
+{
+  "doi": "10.5194/acp-24-1-2024",
+  "source_input": "tests/fixtures/golden_criteria/10.5194_acp-24-1-2024/original.xml",
+  "source_sha256": "2e09362f85ed86d144e0ddbefbd3b2f3208efd51560b10dbd2d9f053661dc33c",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "354b89628d90260b5cd6d00437c72966609e4b3275058c2a2ea4376f24551891",
+  "files": [
+    {
+      "filename": "acp-24-1-2024-f01.png",
+      "download_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f01.png",
+      "source_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f01.png",
+      "sha256": "8fed80d1dfd0ad39ce878edc9b40d1c3e871ba2c8ad9fe1afbf8c64727d3e03d",
+      "size": 345896,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2067,
+      "height": 1479,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "acp-24-1-2024-f02.png",
+      "download_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f02.png",
+      "source_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f02.png",
+      "sha256": "12343c228cb529859c8d8e1c6e7a3200c0be927807f55ba13a7c9f6b7d34c6e5",
+      "size": 345025,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2067,
+      "height": 1572,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "acp-24-1-2024-f03.png",
+      "download_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f03.png",
+      "source_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f03.png",
+      "sha256": "f23c35dac4a7285d81099d15d8321a6c1ea766c8f5f1eb6acc33cd4b8282f4ba",
+      "size": 304632,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2067,
+      "height": 1590,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "acp-24-1-2024-f04.png",
+      "download_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f04.png",
+      "source_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f04.png",
+      "sha256": "34c57cea7296224c408ca1829aae79d8110e2b6e14f915359ae5a9b02970046a",
+      "size": 507053,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2067,
+      "height": 3188,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "acp-24-1-2024-f05.png",
+      "download_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f05.png",
+      "source_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f05.png",
+      "sha256": "8c5daa39f4e9c9d2fc4585504fca782efb116acb5fb4d51a6122ba02f4903671",
+      "size": 528991,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2067,
+      "height": 1523,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "acp-24-1-2024-f06.png",
+      "download_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f06.png",
+      "source_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f06.png",
+      "sha256": "e6ded4864173e86e8456e2965b6b024d7ceb8f91142f610844566e89e04e7342",
+      "size": 201339,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2067,
+      "height": 1512,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "acp-24-1-2024-f07.png",
+      "download_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f07.png",
+      "source_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f07.png",
+      "sha256": "92ebfa657caa98814658fb20357d02205f81698d2cfc9f756638fd518b62e843",
+      "size": 395840,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2067,
+      "height": 1561,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "acp-24-1-2024-f08.png",
+      "download_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f08.png",
+      "source_url": "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024-f08.png",
+      "sha256": "04b64a19d02a60d78b532ce346eb6ba2a7eb0d84a672127c19ec0e6bdeaa6f12",
+      "size": 233894,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2067,
+      "height": 1396,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.595131+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 1
+}

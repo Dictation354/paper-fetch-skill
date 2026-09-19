@@ -1,0 +1,267 @@
+{
+  "schema_version": 2,
+  "provider": "aip",
+  "route": "html",
+  "failure_code": "abstract_only",
+  "stage": "html_extraction",
+  "backend": "camoufox",
+  "attempt": 1,
+  "target": {
+    "url": "https://pubs.aip.org/aip/acp/article/211/1/297-313/745585",
+    "host": "pubs.aip.org",
+    "path": "/aip/acp/article/211/1/297-313/745585",
+    "url_sha256": "01ce3c1b70caa2d2ece911652ba24de127caef72cedcd687ff2e510a54d94a3e"
+  },
+  "final": {
+    "url": "https://pubs.aip.org/aip/acp/article/211/1/297/745585/High-throughput-x-ray-astronomy",
+    "host": "pubs.aip.org",
+    "path": "/aip/acp/article/211/1/297/745585/High-throughput-x-ray-astronomy",
+    "url_sha256": "8808fc5171f53408fa89fef9b6db35c66254aabbc2466c5f0c2cb41ee056f904"
+  },
+  "response_status": 200,
+  "title_summary": "High throughput x‐ray astronomy | AIP Conference Proceedings | AIP Publishing",
+  "page_summary": "High throughput x‐ray astronomy | AIP Conference Proceedings | AIP Publishing Opens in a new window Opens an external website Opens an external website in a new window To improve your experience, we (and our partners) store and/or access information on your terminal (cookie or equivalent) with your consent for all our websites and applications, on your connected terminals. Our website may use these cookies to: Measure the audience of the advertising on our website, without profiling Display personalized ads based on your navigation and your profile Personalize our editorial content based on your navigation Allow you to share content on social networks or platforms present on our website Send you advertising based on your location Privacy Policy Manage Preferences Accept All Reject All Storage Preferences <!----><!----> Skip to Main Content Open Menu Close Publishers Open Menu AIP Publishing Physics Today Open External Link Acoustical Society of America American Association of Physics T",
+  "page": {
+    "page_state": {
+      "route": "browser_html",
+      "page_sha256": "5674752b8a821bdd93e14ff35d50cc156f1c9ba66b0775b8e45df54448b5240f"
+    },
+    "browser_runtime": {
+      "backend": "camoufox",
+      "media_blocking": false,
+      "timeout_budget_ms": 119579,
+      "browser_connect_seconds": 1.463,
+      "duration_seconds": 96.261,
+      "remaining_ms": 23318,
+      "browser_context_seed": {
+        "provided": false,
+        "cookie_count": 0,
+        "applied": false,
+        "user_agent_reused": false,
+        "reason": "no_compatible_cookies"
+      },
+      "storage_state_save": {
+        "attempted": false,
+        "staged": false,
+        "saved": false,
+        "path": null,
+        "reason": "storage_state_write_disabled"
+      },
+      "page_events": {
+        "document_requests": [
+          {
+            "url": "https://pubs.aip.org/aip/acp/article/211/1/297-313/745585",
+            "host": "pubs.aip.org",
+            "path": "/aip/acp/article/211/1/297-313/745585",
+            "url_sha256": "01ce3c1b70caa2d2ece911652ba24de127caef72cedcd687ff2e510a54d94a3e",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 827.824,
+            "status": 301,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 828.05
+          },
+          {
+            "url": "https://pubs.aip.org/aip/acp/article/211/1/297/745585/High-throughput-x-ray-astronomy",
+            "host": "pubs.aip.org",
+            "path": "/aip/acp/article/211/1/297/745585/High-throughput-x-ray-astronomy",
+            "url_sha256": "8808fc5171f53408fa89fef9b6db35c66254aabbc2466c5f0c2cb41ee056f904",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 2850.149,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 2853.313
+          },
+          {
+            "url": "https://cmp.osano.com/",
+            "host": "cmp.osano.com",
+            "path": "/",
+            "url_sha256": "3a63ad5089977483c3e923d126fc1f8951672b129de26f92c920e1324a1d9fd5",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 125.647,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 197.883
+          },
+          {
+            "url": "https://cmp.osano.com/",
+            "host": "cmp.osano.com",
+            "path": "/",
+            "url_sha256": "3a63ad5089977483c3e923d126fc1f8951672b129de26f92c920e1324a1d9fd5",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 1.187,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 76.102
+          }
+        ],
+        "failed_requests": [
+          {
+            "url": "https://static.adzerk.net/ados.js",
+            "host": "static.adzerk.net",
+            "path": "/ados.js",
+            "url_sha256": "bcc10a6081feab9d96a9e1e45542ce63154f20eeb445ca7bcf5c9654c6312ca9",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.adzerk.net/ados.js",
+            "host": "static.adzerk.net",
+            "path": "/ados.js",
+            "url_sha256": "bcc10a6081feab9d96a9e1e45542ce63154f20eeb445ca7bcf5c9654c6312ca9",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://api.altmetric.com/v1/internal-556fdf0f/doi/10.1063/1.39658",
+            "host": "api.altmetric.com",
+            "path": "/v1/internal-556fdf0f/doi/10.1063/1.39658",
+            "url_sha256": "ee897efc7f2a56e34d4b1eba91352a79c8537d78b8bf9fef6ede0f8c17536d1f",
+            "resource_type": "script",
+            "error": "NS_ERROR_CORRUPTED_CONTENT"
+          }
+        ],
+        "failed_scripts": [
+          {
+            "url": "https://static.adzerk.net/ados.js",
+            "host": "static.adzerk.net",
+            "path": "/ados.js",
+            "url_sha256": "bcc10a6081feab9d96a9e1e45542ce63154f20eeb445ca7bcf5c9654c6312ca9",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.adzerk.net/ados.js",
+            "host": "static.adzerk.net",
+            "path": "/ados.js",
+            "url_sha256": "bcc10a6081feab9d96a9e1e45542ce63154f20eeb445ca7bcf5c9654c6312ca9",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://api.altmetric.com/v1/internal-556fdf0f/doi/10.1063/1.39658",
+            "host": "api.altmetric.com",
+            "path": "/v1/internal-556fdf0f/doi/10.1063/1.39658",
+            "url_sha256": "ee897efc7f2a56e34d4b1eba91352a79c8537d78b8bf9fef6ede0f8c17536d1f",
+            "resource_type": "script",
+            "error": "NS_ERROR_CORRUPTED_CONTENT"
+          }
+        ],
+        "console_errors": [
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"The resource from “https://api.altmetric.com/v1/internal-556fdf0f/doi/10.1063/1.39658?[redacted] was blocked due to MIME type (“text/plain”) mismatch (X-Content-Type-Options: nosniff).\" {file: \"https://pubs.aip.org/aip/acp/article/211/1/297/745585/High-throughput-x-ray-astronomy\" line: 0}]"
+          }
+        ],
+        "page_errors": [
+          {
+            "error_type": "Error",
+            "message": "can't access property \"setAccessIcons\", SCM.SiteJS is undefined"
+          }
+        ]
+      },
+      "candidates": [
+        {
+          "url": "https://pubs.aip.org/aip/acp/article/211/1/297-313/745585",
+          "url_sha256": "01ce3c1b70caa2d2ece911652ba24de127caef72cedcd687ff2e510a54d94a3e",
+          "final_url": "https://pubs.aip.org/aip/acp/article/211/1/297/745585/High-throughput-x-ray-astronomy",
+          "final_url_sha256": "8808fc5171f53408fa89fef9b6db35c66254aabbc2466c5f0c2cb41ee056f904",
+          "status": 200,
+          "main_document_response": {
+            "url": "https://pubs.aip.org/aip/acp/article/211/1/297/745585/High-throughput-x-ray-astronomy",
+            "host": "pubs.aip.org",
+            "path": "/aip/acp/article/211/1/297/745585/High-throughput-x-ray-astronomy",
+            "url_sha256": "8808fc5171f53408fa89fef9b6db35c66254aabbc2466c5f0c2cb41ee056f904",
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "captured_html_bytes": 948270,
+            "navigation_timing": {
+              "available": true,
+              "document_ready_state": "complete",
+              "navigation_entry_present": true,
+              "response_start_ms": 3670,
+              "response_end_ms": 3670,
+              "dom_interactive_ms": 5857,
+              "dom_content_loaded_event_end_ms": 5894,
+              "load_event_end_ms": 6631,
+              "duration_ms": 6631,
+              "transfer_size_bytes": 22485,
+              "encoded_body_size_bytes": 22185,
+              "decoded_body_size_bytes": 104658,
+              "navigation_type": "navigate",
+              "next_hop_protocol": "h2",
+              "response_completed": true,
+              "dom_content_loaded_completed": true,
+              "load_event_completed": true
+            },
+            "request_lifecycle": {
+              "response_received_observed": true,
+              "response_received_ms": 2850.149,
+              "request_finished_observed": true,
+              "request_finished_ms": 2853.313,
+              "request_failed_observed": false,
+              "observed_ms": 93194.491
+            }
+          },
+          "navigation_seconds": 3.702,
+          "dom_readiness_seconds": 90.041,
+          "dom_readiness_attempted": true,
+          "dom_readiness_ready": false,
+          "dom_readiness_selector": ".article-body .widget-ArticleFulltext",
+          "dom_readiness_text_length": 1040,
+          "dom_readiness_paragraph_count": 1,
+          "dom_readiness_heading_count": 0,
+          "dom_readiness_fingerprint_present": true,
+          "duration_seconds": 94.37,
+          "result": "success"
+        }
+      ]
+    },
+    "html_shape": {
+      "byte_count": 948270,
+      "has_html": true,
+      "has_head": true,
+      "has_body": true,
+      "body_text_length": 6627,
+      "body_element_count": 929,
+      "article_container_count": 1
+    }
+  },
+  "raw_html": {
+    "byte_count": 948270,
+    "sha256": "5674752b8a821bdd93e14ff35d50cc156f1c9ba66b0775b8e45df54448b5240f"
+  },
+  "sanitized_html": {
+    "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/aip/10.1063_1.39658/html-1/page-sanitized.html",
+    "byte_count": 48890,
+    "sha256": "64750d23f8b06866e7a65138e245111386a2620e8b6b4b76543a20617cb5a889",
+    "truncated": false
+  },
+  "diagnostic_path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/aip/10.1063_1.39658/html-1/diagnostic.json"
+}

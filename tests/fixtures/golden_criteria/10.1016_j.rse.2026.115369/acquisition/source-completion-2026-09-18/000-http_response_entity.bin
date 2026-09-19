@@ -1,0 +1,109 @@
+{"abstracts-retrieval-response": {
+    "affiliation": {
+        "affiliation-city": "Lyngby",
+        "@id": "60011373",
+        "affilname": "Technical University of Denmark",
+        "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60011373",
+        "affiliation-country": "Denmark"
+    },
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-105034763886",
+        "dc:description": "This review presents Sentinel-1 (S-1) SAR wind products that are being used in the offshore wind energy sector, motivated by the unique properties of SAR mapping ocean winds with high spatial detail. High spatial detail is significant as offshore wind farms operate in coastal zones with high spatial wind variability. The SAR products reviewed include wind speeds at 10 m height, wind farm wakes, wind resources, and the identification of wind turbine locations. Main findings from the literature indicate that the thoroughly tested scatterometer-based geophysical model functions (GMFs) for SAR wind speed, compared to buoys, have an RMSE of approximately 1.5 m/s and a bias of around ±0.5 m/s. CMOD5.N shows better statistics compared to other scatterometer-based GMFs and is applied in near-real-time SAR-based ocean wind mapping by Copernicus and DTU Wind. One recent SAR-calibrated model, called OPEN, outperforms CMOD5.N; however, OPEN has not been tested by other researchers. The literature review on SAR for wind energy applications reveals that SAR can detect wind farms and cluster wakes extending over 100 km. SAR winds contain greater spatial detail than mesoscale models. For offshore wind resource assessment based on SAR, the reviewed literature indicates that the required extrapolation of winds from 10 m to hub height using stability information from mesoscale models is accurate within a few percent. The limitations due to coverage and revisit times of S-1 are negligible according to the reviewed literature for wind energy applications in the studied regions; however, these limitations are unknown in other regions. The lack of common databases on offshore wind turbine locations, combined with the rapid growth in numbers, has prompted interest in using S-1 data hard-target identification methods. A standardized global coverage turbine location database has been achieved based on S-1. A key challenge and limitation of assessing wind resource performance based on S-1 is the limited number of comparison results for hub-height wind resource data. It is recommended to conduct systematic comparisons of wind resource assessment and wind farm wake to enhance trust, benefit, and future use of S-1 data within the offshore wind energy sector in the years ahead.",
+        "prism:coverDate": "2026-06-01",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/105034763886",
+        "subtypeDescription": "Article",
+        "dc:creator": {"author": [{
+            "preferred-name": {
+                "ce:given-name": "C. B.",
+                "ce:initials": "C.B.",
+                "ce:surname": "Hasager",
+                "ce:indexed-name": "Hasager C.B."
+            },
+            "@seq": "1",
+            "ce:initials": "C.B.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60011373",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60011373"
+            },
+            "ce:surname": "Hasager",
+            "@auid": "6602529491",
+            "author-url": "https://api.elsevier.com/content/author/author_id/6602529491",
+            "ce:indexed-name": "Hasager C.B."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/105034763886"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=105034763886&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=105034763886&origin=inward"
+            }
+        ],
+        "prism:publicationName": "Remote Sensing of Environment",
+        "source-id": "12503",
+        "pii": "S0034425726001392",
+        "citedby-count": "1",
+        "prism:volume": "339",
+        "subtype": "ar",
+        "dc:title": "Sentinel-1 for offshore wind energy application",
+        "openaccess": "1",
+        "openaccessFlag": "true",
+        "prism:doi": "10.1016/j.rse.2026.115369",
+        "prism:issn": "00344257",
+        "publishercopyright": "© 2026 The Authors. Published by Elsevier Inc. This is an open access article under the CC BY license. http://creativecommons.org/licenses/by/4.0/",
+        "article-number": "115369",
+        "dc:identifier": "SCOPUS_ID:105034763886",
+        "dc:publisher": "Elsevier Inc."
+    },
+    "authors": {"author": [
+        {
+            "preferred-name": {
+                "ce:given-name": "C. B.",
+                "ce:initials": "C.B.",
+                "ce:surname": "Hasager",
+                "ce:indexed-name": "Hasager C.B."
+            },
+            "@seq": "1",
+            "ce:initials": "C.B.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60011373",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60011373"
+            },
+            "ce:surname": "Hasager",
+            "@auid": "6602529491",
+            "author-url": "https://api.elsevier.com/content/author/author_id/6602529491",
+            "ce:indexed-name": "Hasager C.B."
+        },
+        {
+            "preferred-name": {
+                "ce:given-name": "K.",
+                "ce:initials": "K.",
+                "ce:surname": "Dimitriadou",
+                "ce:indexed-name": "Dimitriadou K."
+            },
+            "@seq": "2",
+            "ce:initials": "K.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60011373",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60011373"
+            },
+            "ce:surname": "Dimitriadou",
+            "@auid": "57204612402",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57204612402",
+            "ce:indexed-name": "Dimitriadou K."
+        }
+    ]}
+}}

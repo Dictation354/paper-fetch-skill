@@ -1,0 +1,23 @@
+{
+  "records": [
+    {
+      "doi": "10.1016/j.edumed.2018.09.002",
+      "provider": "elsevier",
+      "requested_url": "https://api.elsevier.com/content/article/pii/S1575181318302614",
+      "final_url": "https://api.elsevier.com/content/article/pii/S1575181318302614?view=FULL",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Thu, 17 Sep 2026 11:02:25 GMT",
+        "content-type": "text/xml;charset=UTF-8"
+      },
+      "capture_kind": "http_response_entity",
+      "captured_at_utc": "2026-09-17T11:02:25.288011+00:00",
+      "body_file": "original.xml",
+      "size": 117281,
+      "sha256": "1123fdb7680e94b0ad5b6cd184c97cecb1028c42bfc5cc97352e1b83539c4a8f",
+      "transport": "HttpTransport; ElsevierClient official PII route",
+      "access_conditions": "Existing configured Elsevier API credential; no authentication interaction",
+      "original_body_file": "acquisition/provenance-extra-2026-09-17/000-original.xml"
+    }
+  ]
+}

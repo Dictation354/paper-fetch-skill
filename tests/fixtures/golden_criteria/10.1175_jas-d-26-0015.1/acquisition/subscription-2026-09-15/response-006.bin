@@ -1,0 +1,58 @@
+<!DOCTYPE html><html data-locale="en" lang="en" class="no-js"><head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# article: http://ogp.me/ns/article#"><script>window.dataLayer = window.dataLayer || [];dataLayer.push({
+  "pf:selectedLanguage" : "English",
+  "pf:licenseType" : "controlled",
+  "pf:sitegenUUid" : "44595435006693760",
+  "pf:contentCategory" : "nlm-article",
+  "pf:associatedContentSets" : "all,0022-4928,ALL,JAS-2021,JAS-2020,JAS,ATSC,atsc",
+  "pf:authorized" : "not-authorized",
+  "pf:contentName" : "Local Energetics of Extratropical Transition: A Case Study of Typhoon Hagibis (2019)",
+  "pf:titleParentIdentifier" : "0022-4928",
+  "pf:authenticationStatus" : "not-logged-in",
+  "pf:chunkIdentifier" : "10.1175/JAS-D-26-0015.1",
+  "pf:contentParentName" : "Journal of the Atmospheric Sciences",
+  "pf:authAccountNumber" : "-"
+});</script><script type="text/javascript">function runOnDomLoaded(f) {
+
+	if (!!document.domLoaded) {
+		setTimeout(f, 0);
+	}
+	else {
+
+		window.addEventListener('DOMContentLoaded', f);
+	}
+}</script><link href="https://journals.ametsoc.org/view/journals/atsc/83/9/JAS-D-26-0015.1.xml" rel="canonical">
+			
+				<title>Local Energetics of Extratropical Transition: A Case Study of Typhoon Hagibis (2019) in: Journal of the Atmospheric Sciences Volume 83 Issue 9 (2026) </title>
+			
+            
+            
+			
+	
+		
+	
+
+			<script type="text/x-mathjax-config">
+	
+	if (MathJax.Hub.Browser.isMSIE) {
+		window.onload = function () {MathJax.Hub.Queue(["Typeset",MathJax.Hub])}
+	}
+	
+	MathJax.Hub.Config({
+		extensions: ["MMLorHTML.js"],
+		jax: ["input/MathML","output/CommonHTML","output/NativeMML"],
+		extensions: ["mml2jax.js","MathMenu.js","MathZoom.js"]
+	});
+
+  hasMathjax = true;
+  mathjaxComplete = false;
+
+  MathJax.Hub.signal.Interest(
+    function (message) {
+      if ('End Process' == message[0]) {
+        mathjaxComplete = true;
+      }
+    }
+  );
+
+</script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=default"></script></head></html>

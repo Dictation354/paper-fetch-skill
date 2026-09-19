@@ -1,23 +1,19 @@
-# ruff: noqa: F403,F405
 from __future__ import annotations
-
-import base64
-
-from paper_fetch.providers import _playwright_browser
 from paper_fetch.providers.browser_workflow import fetchers as browser_fetchers
-
-from ._atypon_browser_workflow_provider_support import *
+from tests.support._atypon_browser_workflow_provider_support import *
+# ruff: noqa: F403,F405
 
 
 class AtyponBrowserWorkflowProviderAssetFailureTests(
     AtyponBrowserWorkflowProviderTestCase
 ):
-    def test_science_provider_replay_for_adz3492_saves_svg_body_asset(self) -> None:
+    def test_science_svg_payload_storage_contract(self) -> None:
         svg_url = (
             "https://www.science.org/cms/10.1126/science.adz3492/asset/"
             "5b0bd6a0-ee3b-43af-aff8-6d8423ba4e21/assets/graphic/science.adz3492-f1.svg"
         )
-        svg_body = SCIENCE_ADZ3492_SVG_ASSET.read_bytes()
+        # Small protocol input; the original SVG now has its own golden replay.
+        svg_body = b'<svg xmlns="http://www.w3.org/2000/svg" width="696" height="1069"><rect width="1" height="1"/></svg>'
         self.assertEqual(image_mime_type_from_bytes(svg_body), "image/svg+xml")
 
         asset = {
@@ -223,99 +219,3 @@ class AtyponBrowserWorkflowProviderAssetFailureTests(
         assert failure is not None
         self.assertEqual(failure["reason"], "cloudflare_challenge")
         self.assertNotIn("recovery_attempts", failure)
-
-    def test_pnas_provider_downloads_preview_through_shared_browser_when_no_full_size_candidate(
-        self,
-    ) -> None:
-        figure_page_url = "https://www.pnas.org/figures/figure-1"
-        preview_url = "https://www.pnas.org/images/preview/figure1.png"
-        html = f"""
-<article>
-  <figure>
-    <a href="{figure_page_url}">View figure</a>
-    <img src="{preview_url}" alt="Preview figure" />
-    <figcaption>Figure 1 caption</figcaption>
-  </figure>
-</article>
-"""
-        transport = AssetTransport({})
-        client = pnas_provider.PnasClient(transport=transport, env={})
-        seed = {
-            "browser_cookies": [
-                {
-                    "name": "cf_clearance",
-                    "value": "secret",
-                    "domain": ".pnas.org",
-                    "path": "/",
-                }
-            ],
-            "browser_user_agent": "Mozilla/5.0",
-            "browser_final_url": PNAS_SAMPLE.landing_url,
-        }
-        shared_fetcher = mock.Mock(
-            return_value={
-                "status_code": 200,
-                "headers": {"content-type": "image/png"},
-                "body": png_header(320, 240),
-                "url": preview_url,
-            }
-        )
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
-            raw_payload = _typed_raw_payload(
-                provider="pnas",
-                source_url=PNAS_SAMPLE.landing_url,
-                content_type="text/html",
-                body=html.encode("utf-8"),
-                route="html",
-                markdown_text=f"# {PNAS_SAMPLE.title}\n\n## Results\n\n"
-                + ("Body text " * 120),
-                browser_context_seed=seed,
-            )
-            mocked_builder = mock.Mock(return_value=shared_fetcher)
-            install_browser_workflow_deps(
-                client,
-                load_runtime_config=mock.Mock(return_value=runtime),
-                ensure_runtime_ready=mock.Mock(),
-                fetch_html_with_browser=mock.Mock(
-                    return_value=_playwright_browser.BrowserFetchedHtml(
-                        source_url=figure_page_url,
-                        final_url=figure_page_url,
-                        html="<html><body><p>Figure page without direct full-size URL.</p></body></html>",
-                        response_status=200,
-                        response_headers={"content-type": "text/html"},
-                        title="Figure page",
-                        summary="Figure page summary",
-                        browser_context_seed=seed,
-                        image_payload={
-                            "bodyB64": base64.b64encode(png_header(320, 240)).decode(
-                                "ascii"
-                            ),
-                            "contentType": "image/png",
-                            "url": preview_url,
-                            "status": 200,
-                            "width": 320,
-                            "height": 240,
-                        },
-                    )
-                ),
-                _build_shared_browser_image_fetcher=mocked_builder,
-            )
-            result = client.download_related_assets(
-                PNAS_SAMPLE.doi,
-                {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
-                raw_payload,
-                Path(tmpdir),
-                asset_profile="body",
-            )
-            saved_bytes = Path(result["assets"][0]["path"]).read_bytes()
-
-        mocked_builder.assert_called_once()
-        self.assert_direct_asset_attempted(transport)
-        shared_fetcher.assert_called_once()
-        self.assertEqual(shared_fetcher.call_args.args[0], preview_url)
-        self.assertEqual(result["assets"][0]["download_tier"], "preview")
-        self.assertEqual(result["assets"][0]["width"], 320)
-        self.assertEqual(result["assets"][0]["height"], 240)
-        self.assertEqual(saved_bytes, png_header(320, 240))

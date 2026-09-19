@@ -1,7 +1,7 @@
 {
   "counts": {
     "abstract_sections": 1,
-    "body_sections": 13,
+    "body_sections": 15,
     "figures": 4,
     "references": 74,
     "sections": 17,
@@ -17,5 +17,1077 @@
     "figures": true,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.3389_fmars.2023.1101972",
+    "provider": "frontiers",
+    "doi": "10.3389/fmars.2023.1101972",
+    "original": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/original.xml",
+    "sha256": "54be5357383c7c3973289613058ebb3c2a9ac432ac65db82e5c15add0e171ac7",
+    "format": "xml",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 4,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 74,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 37,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 4,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 270,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 3,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 10,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 90,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence."
+    ],
+    "author_source": "article-meta contrib-group contrib[contrib-type=\"author\"]",
+    "provenance": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/acquisition/provenance.json",
+    "captured_image_files": [
+      {
+        "path": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/acquisition/assets-2026-09-15/8eb9bb6dea88064e-http-1.bin",
+        "sha256": "97e641c52dbe280a446ec4bd4228afe9f3c46d8fcb9324ff89995b4b87e0d195",
+        "bytes": 223240
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/acquisition/assets-2026-09-15/4a9f5f4074b48662-http-1.bin",
+        "sha256": "5b16cecd65e9858291ba2aa44d82470570d1b13972f07848cbbb65b0bf668de8",
+        "bytes": 95972
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/acquisition/assets-2026-09-15/6e8c7bb099c3b846-http-1.bin",
+        "sha256": "962f7d6c1033b85cd281bd2b7787e1fae2d3fbc0adecad7a1000974e032fee46",
+        "bytes": 223630
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/acquisition/assets-2026-09-15/fedad6eef708ae37-http-1.bin",
+        "sha256": "b2fc2375026eab45cca88d248f2cf0b8cd307b7148231a8a596160e020b23ad1",
+        "bytes": 268300
+      }
+    ],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 10,
+      "tex_checked": 0,
+      "mathml_checked": 10,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/original.xml",
+      "sha256": "54be5357383c7c3973289613058ebb3c2a9ac432ac65db82e5c15add0e171ac7",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "b18cbe4a2e6d9c9e8b793a7f3433eccc9417ca3d70bbf80ba485e154b39242d3",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            ],
+            [
+              1,
+              [
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            ],
+            [
+              3,
+              [
+                11,
+                12,
+                13,
+                14,
+                15
+              ]
+            ],
+            [
+              4,
+              [
+                16,
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              5,
+              [
+                21,
+                22,
+                23,
+                24,
+                25
+              ]
+            ],
+            [
+              6,
+              [
+                26,
+                27,
+                28,
+                29,
+                30
+              ]
+            ],
+            [
+              7,
+              [
+                31,
+                32,
+                33,
+                34,
+                35
+              ]
+            ],
+            [
+              8,
+              [
+                36,
+                37,
+                38,
+                39,
+                40
+              ]
+            ],
+            [
+              9,
+              [
+                41,
+                42,
+                43,
+                44,
+                45
+              ]
+            ],
+            [
+              10,
+              [
+                46,
+                47,
+                48,
+                49,
+                50
+              ]
+            ],
+            [
+              11,
+              [
+                51,
+                51,
+                51,
+                51,
+                51
+              ]
+            ],
+            [
+              12,
+              [
+                52,
+                53,
+                54,
+                55,
+                56
+              ]
+            ],
+            [
+              13,
+              [
+                57,
+                58,
+                59,
+                60,
+                61
+              ]
+            ],
+            [
+              14,
+              [
+                62,
+                63,
+                64,
+                65,
+                66
+              ]
+            ],
+            [
+              15,
+              [
+                67,
+                68,
+                69,
+                70,
+                71
+              ]
+            ],
+            [
+              16,
+              [
+                72,
+                73,
+                74,
+                75,
+                76
+              ]
+            ],
+            [
+              17,
+              [
+                77,
+                78,
+                79,
+                80,
+                81
+              ]
+            ],
+            [
+              18,
+              [
+                82,
+                83,
+                84,
+                85,
+                86
+              ]
+            ],
+            [
+              19,
+              [
+                87,
+                88,
+                89,
+                90,
+                91
+              ]
+            ],
+            [
+              20,
+              [
+                92,
+                93,
+                94,
+                95,
+                96
+              ]
+            ]
+          ],
+          "cells": [
+            "Lanice conchilega",
+            "Treatment",
+            "Control",
+            "Acidification",
+            "Temperature",
+            "Climate Change",
+            "Temperature (° C)",
+            "18.3 ± 0.8",
+            "19.4 ± 0.9",
+            "21.1 ± 0.9",
+            "21.9 ± 1.4",
+            "pH _{T}",
+            "8.1 ± 0.2",
+            "7.7 ± 0.3",
+            "8.1 ± 0.2",
+            "7.7 ± 0.2",
+            "Salinity",
+            "37.1 ± 1.4",
+            "37.4 ± 1.9",
+            "37.4 ± 1.7",
+            "37.9 ± 1.7",
+            "pCO _{2} (μatm)",
+            "496.3 ± 65.0",
+            "1515.7 ± 420.5",
+            "488.4 ± 67.8",
+            "1297.2 ± 195.2",
+            "TA (μmol kg ^{-1} )",
+            "2608.8 ± 3.4",
+            "2608.6 ± 4.3",
+            "2607.8 ± 4.1",
+            "2606.7 ± 3.0",
+            "HCO \n_{3}^{−} (μmol kg ^{-1} )",
+            "2094.5 ± 163.8",
+            "2326.3 ± 42.9",
+            "2039.7 ± 173.3",
+            "2315.2 ± 34.4",
+            "CO \n_{3}^{\n 2 \n − \n} (μmol kg ^{-1} )",
+            "210.5 ± 19.5",
+            "115.3 ± 17.4",
+            "232.9 ± 20.6",
+            "119.0 ± 14.2",
+            "Ωar",
+            "3.2 ± 1.1",
+            "1.8 ± 0.8",
+            "3.6 ± 1.1",
+            "1.8 ± 0.8",
+            "Ωc",
+            "4.7 ± 1.5",
+            "2.6 ± 1.2",
+            "5.2 ± 1.7",
+            "2.7 ± 1.1",
+            "Abra alba",
+            "Temperature (° C)",
+            "19.3 ± 0.5",
+            "19.4 ± 0.4",
+            "22.1 ± 0.8",
+            "22.4 ± 0.7",
+            "pH _{T}",
+            "8.2 ± 0.03",
+            "7.9 ± 0.08",
+            "8.2 ± 0.8",
+            "7.9 ± 0.07",
+            "Salinity",
+            "34.2 ± 0.9",
+            "34.0 ± 0.8",
+            "34.7 ± 1.3",
+            "35.0 ± 1.5",
+            "pCO _{2} (μatm)",
+            "316.9 ± 21.9",
+            "632.9 ± 126.5",
+            "285.5 ± 21.7",
+            "611.4 ± 105.6",
+            "TA (μmol kg ^{-1} )",
+            "2605 ± 1.3",
+            "2605.8 ± 0.9",
+            "2604.5 ± 2.8",
+            "2603.8 ± 0.5",
+            "HCO \n_{3}^{−} (μmol kg ^{-1} )",
+            "1986 ± 30.6",
+            "2210.4 ± 57.5",
+            "1889.7 ± 41.3",
+            "2153.3 ± 61.2",
+            "CO \n_{3}^{\n 2 \n − \n} (μmol kg ^{-1} )",
+            "257.2 ± 13.2",
+            "164.2 ± 24.5",
+            "297.4 ± 17.2",
+            "187.0 ± 25.6",
+            "Ωar",
+            "3.9 ± 0.2",
+            "2.5 ± 0.4",
+            "4.5 ± 0.3",
+            "2.9 ± 0.4",
+            "Ωca",
+            "5.7 ± 0.3",
+            "3.6 ± 0.5",
+            "6.6 ± 0.4",
+            "4.1 ± 0.6"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "22f3a1f8c92ec31d53d9ccb26d4aefd2d6e5fb62d3999923604eec5c56955527",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4
+              ]
+            ],
+            [
+              1,
+              [
+                5,
+                5,
+                5,
+                5,
+                5
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            ],
+            [
+              3,
+              [
+                11,
+                11,
+                11,
+                11,
+                11
+              ]
+            ],
+            [
+              4,
+              [
+                12,
+                13,
+                14,
+                15,
+                16
+              ]
+            ],
+            [
+              5,
+              [
+                17,
+                18,
+                19,
+                20,
+                21
+              ]
+            ],
+            [
+              6,
+              [
+                22,
+                22,
+                22,
+                22,
+                22
+              ]
+            ],
+            [
+              7,
+              [
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              8,
+              [
+                28,
+                29,
+                30,
+                31,
+                32
+              ]
+            ],
+            [
+              9,
+              [
+                33,
+                34,
+                35,
+                36,
+                37
+              ]
+            ],
+            [
+              10,
+              [
+                38,
+                38,
+                38,
+                38,
+                38
+              ]
+            ],
+            [
+              11,
+              [
+                39,
+                40,
+                41,
+                42,
+                43
+              ]
+            ],
+            [
+              12,
+              [
+                44,
+                45,
+                46,
+                47,
+                48
+              ]
+            ],
+            [
+              13,
+              [
+                49,
+                50,
+                51,
+                52,
+                53
+              ]
+            ],
+            [
+              14,
+              [
+                54,
+                55,
+                56,
+                57,
+                58
+              ]
+            ],
+            [
+              15,
+              [
+                59,
+                59,
+                59,
+                59,
+                59
+              ]
+            ],
+            [
+              16,
+              [
+                60,
+                61,
+                62,
+                63,
+                64
+              ]
+            ],
+            [
+              17,
+              [
+                65,
+                66,
+                67,
+                68,
+                69
+              ]
+            ],
+            [
+              18,
+              [
+                70,
+                71,
+                72,
+                73,
+                74
+              ]
+            ],
+            [
+              19,
+              [
+                75,
+                76,
+                77,
+                78,
+                79
+              ]
+            ]
+          ],
+          "cells": [
+            "",
+            "NDF",
+            "DDF",
+            "F value",
+            "p-value",
+            "Survival",
+            "OW",
+            "1",
+            "12",
+            "9.527",
+            "0.00942",
+            "OPD",
+            "OA : OW",
+            "1",
+            "12",
+            "5.6471",
+            "0.03499",
+            "Organism",
+            "1",
+            "15",
+            "53.4393",
+            "0.001",
+            "SCOC",
+            "OA : Organism",
+            "1",
+            "37.453",
+            "4.5313",
+            "0.039920",
+            "Time",
+            "1",
+            "37.479",
+            "12.6190",
+            "0.01051",
+            "Organism",
+            "1",
+            "37.453",
+            "19.1636",
+            "0.001",
+            "Nitrifrication",
+            "OA : OW:Organism",
+            "1",
+            "29.07",
+            "4.826",
+            "0.03616",
+            "OA : Organism",
+            "1",
+            "29.07",
+            "1.3098",
+            "0.0196",
+            "Time",
+            "1",
+            "30.735",
+            "29.4607",
+            "0.001",
+            "Organism",
+            "1",
+            "29.07",
+            "31.5985",
+            "0.001",
+            "Denitrification",
+            "OA : OW:Organism",
+            "1",
+            "37.619",
+            "9.9398",
+            "0.00322",
+            "Time",
+            "1",
+            "37.619",
+            "5.5406",
+            "0.023909",
+            "OW",
+            "1",
+            "28.954",
+            "4.1962",
+            "0.049678",
+            "Organism",
+            "1",
+            "37.619",
+            "6.1005",
+            "0.018168"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "4ecc36501e27513168b703577fa1333c3e001f3296c7668f608fd8cb06550dba",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4
+              ]
+            ],
+            [
+              1,
+              [
+                5,
+                5,
+                5,
+                5,
+                5
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            ],
+            [
+              3,
+              [
+                11,
+                11,
+                11,
+                11,
+                11
+              ]
+            ],
+            [
+              4,
+              [
+                12,
+                13,
+                14,
+                15,
+                16
+              ]
+            ],
+            [
+              5,
+              [
+                17,
+                18,
+                19,
+                20,
+                21
+              ]
+            ],
+            [
+              6,
+              [
+                22,
+                23,
+                24,
+                25,
+                26
+              ]
+            ],
+            [
+              7,
+              [
+                27,
+                27,
+                27,
+                27,
+                27
+              ]
+            ],
+            [
+              8,
+              [
+                28,
+                29,
+                30,
+                31,
+                32
+              ]
+            ],
+            [
+              9,
+              [
+                33,
+                34,
+                35,
+                36,
+                37
+              ]
+            ],
+            [
+              10,
+              [
+                38,
+                38,
+                38,
+                38,
+                38
+              ]
+            ],
+            [
+              11,
+              [
+                39,
+                40,
+                41,
+                42,
+                43
+              ]
+            ],
+            [
+              12,
+              [
+                44,
+                45,
+                46,
+                47,
+                48
+              ]
+            ]
+          ],
+          "cells": [
+            "",
+            "NDF",
+            "DDF",
+            "F value",
+            "p-value",
+            "OPD",
+            "Organism",
+            "1",
+            "13",
+            "37.7055",
+            "0.001",
+            "SCOC",
+            "OA : Organism",
+            "1",
+            "40.367",
+            "6.4167",
+            "0.015291",
+            "OA",
+            "1",
+            "46.814",
+            "10.0819",
+            "0.002648",
+            "Organism",
+            "1",
+            "41.515",
+            "43.7920",
+            "0.001",
+            "Nitrifrication",
+            "OA : Organism",
+            "1",
+            "50.342",
+            "6.4009",
+            "0.01458",
+            "Organism",
+            "1",
+            "41.763",
+            "18.5983",
+            "0.001",
+            "Denitrification",
+            "OA : Organism",
+            "1",
+            "48.271",
+            "5.7905",
+            "0.019989",
+            "Organism",
+            "1",
+            "40.012",
+            "18.4244",
+            "0.0001"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": "im1",
+          "node_sha256": "3a0e39024f76e015cdf86594e036268e614f875d934d4a00c5cba0a137e1d2ec",
+          "numbers": "3",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": "im2",
+          "node_sha256": "e80685d51c066edffbb8259b922e53a58ec2dccbce1919f3414ec689a723a99a",
+          "numbers": "32",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": "im3",
+          "node_sha256": "11768bec647a3f8e352044a5f69521427664b3b4218722357666ef68ab20de14",
+          "numbers": "3",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 3,
+          "id": "im4",
+          "node_sha256": "452c6fd801797b3e5a44cc7b56bc1cd67977dd5a5612e1aa7713dacc669e4224",
+          "numbers": "32",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 4,
+          "id": "im5",
+          "node_sha256": "c9f7098f70c9672ebfd879af04cfafc966026f5b02b29b6b77bdf73d7f2ba2b5",
+          "numbers": "3",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 5,
+          "id": "im6",
+          "node_sha256": "e1a23351e1d64416484435eae80cb472cc88985012c765619fa85571e432fc8a",
+          "numbers": "32",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 6,
+          "id": "im7",
+          "node_sha256": "cc62262e4d98763b6aa935effa0f457f2b18c5fa4d241c7c732bc79b4ea726ee",
+          "numbers": "3",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 7,
+          "id": "im8",
+          "node_sha256": "dcf2a38af7abdf915ac8dc58c8e86a874dbf02e2067ff933b4e020ece26eb6cb",
+          "numbers": "32",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 8,
+          "id": "M1",
+          "node_sha256": "c7257c6c3bdb4cca4dd8c18ab60eca9cf439e1506086a644bcae64aead959b91",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 2,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "C",
+            "d",
+            "t",
+            "V",
+            "A"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 9,
+          "id": "im9",
+          "node_sha256": "85439aefa0e622808d51951e3419f5db2ff57bf4679b12b4c52bee8ba7ed1b0e",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "C",
+            "d",
+            "t"
+          ],
+          "operators": []
+        }
+      ]
+    }
+  ]
 }

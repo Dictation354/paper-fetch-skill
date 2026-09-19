@@ -1,0 +1,58 @@
+{
+  "doi": "10.1126/sciadv.abf8021",
+  "provider": "science",
+  "attempt": 1,
+  "change_from_previous": "User-requested project fetch_pdf_with_browser fallback, replacing simple page-navigation observation.",
+  "source_url": "https://www.science.org/doi/pdf/10.1126/sciadv.abf8021",
+  "helper": "paper_fetch.providers._pdf_fallback.fetch_pdf_with_browser",
+  "candidates": [
+    "https://www.science.org/doi/pdf/10.1126/sciadv.abf8021"
+  ],
+  "capture_started_utc": "2026-09-16T06:54:40.966383+00:00",
+  "historical_records_unchanged": true,
+  "outcome": "pdf_obtained",
+  "result_file": "acquisition/project-pdf-fallback-2026-09-16/001-http_response_entity.pdf",
+  "size": 17082873,
+  "sha256": "b2bab33e562af288e08307d11b4e870db77342f29c7cd0f11746ff6d76462d96",
+  "final_url": "https://www.science.org/doi/pdf/10.1126/sciadv.abf8021",
+  "validation": {
+    "pages": 12,
+    "is_repaired": false,
+    "encrypted": 0,
+    "valid_eof": true,
+    "identity": {
+      "title": "Increasing precipitation variability on daily-to-multiyear time scales in a warmer world"
+    },
+    "all_page_objects_readable": true,
+    "doi_evidence": {
+      "doi": "10.1126/sciadv.abf8021",
+      "printed_on_pdf_pages": [
+        11,
+        12
+      ],
+      "scope": "identity only; no conversion-quality assertions"
+    }
+  },
+  "http_response_records": [
+    "acquisition/project-pdf-fallback-2026-09-16/001-http_response_entity.pdf"
+  ],
+  "diagnostics": {
+    "pdf_sha256": "b2bab33e562af288e08307d11b4e870db77342f29c7cd0f11746ff6d76462d96",
+    "pdf_bytes": 17082873,
+    "pdf_pages": 12,
+    "identity": {
+      "status": "match",
+      "method": "title",
+      "confidence": "medium",
+      "expected_doi": "10.1126/sciadv.abf8021",
+      "title_score": 100.0
+    },
+    "pdf_markdown_cache": {
+      "status": "miss"
+    },
+    "timeout_budget_ms": 90000,
+    "elapsed_ms": 154089.658,
+    "remaining_ms": 0
+  },
+  "warnings": []
+}

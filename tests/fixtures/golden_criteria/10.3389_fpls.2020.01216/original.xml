@@ -1,0 +1,2847 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD Journal Publishing DTD v2.3 20070202//EN" "journalpublishing.dtd">
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" article-type="research-article" dtd-version="2.3">
+<front>
+<journal-meta>
+<journal-id journal-id-type="publisher-id">Front. Plant Sci.</journal-id>
+<journal-title>Frontiers in Plant Science</journal-title>
+<abbrev-journal-title abbrev-type="pubmed">Front. Plant Sci.</abbrev-journal-title>
+<issn pub-type="epub">1664-462X</issn>
+<publisher>
+<publisher-name>Frontiers Media S.A.</publisher-name>
+</publisher>
+</journal-meta>
+<article-meta>
+<article-id pub-id-type="doi">10.3389/fpls.2020.01216</article-id>
+<article-categories>
+<subj-group subj-group-type="heading">
+<subject>Plant Science</subject>
+<subj-group>
+<subject>Original Research</subject>
+</subj-group>
+</subj-group>
+</article-categories>
+<title-group>
+<article-title>Concurrent Increases in Leaf Temperature With Light Accelerate Photosynthetic Induction in Tropical Tree Seedlings</article-title>
+</title-group>
+<contrib-group>
+<contrib contrib-type="author">
+<name>
+<surname>Kang</surname>
+<given-names>Hui-Xing</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+<uri xlink:href="https://loop.frontiersin.org/people/939418"/>
+</contrib>
+<contrib contrib-type="author">
+<name>
+<surname>Zhu</surname>
+<given-names>Xin-Guang</given-names>
+</name>
+<xref ref-type="aff" rid="aff2">
+<sup>2</sup>
+</xref>
+<uri xlink:href="https://loop.frontiersin.org/people/13067"/>
+</contrib>
+<contrib contrib-type="author">
+<name>
+<surname>Yamori</surname>
+<given-names>Wataru</given-names>
+</name>
+<xref ref-type="aff" rid="aff3">
+<sup>3</sup>
+</xref>
+<uri xlink:href="https://loop.frontiersin.org/people/145293"/>
+</contrib>
+<contrib contrib-type="author" corresp="yes">
+<name>
+<surname>Tang</surname>
+<given-names>Yan-Hong</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+<xref ref-type="author-notes" rid="fn001">
+<sup>*</sup>
+</xref>
+<uri xlink:href="https://loop.frontiersin.org/people/1051849"/>
+</contrib>
+</contrib-group>
+<aff id="aff1">
+<sup>1</sup>
+<institution>Institute of Ecology, College of Urban and Environmental Sciences and Key Laboratory for Earth Surface Processes of Ministry of Education, Peking University</institution>, <addr-line>Beijing</addr-line>, <country>China</country>
+</aff>
+<aff id="aff2">
+<sup>2</sup>
+<institution>Center of Excellence for Molecular Plant Sciences and State Key Laboratory of Plant Molecular Genetics, Chinese Academy of Sciences</institution>, <addr-line>Shanghai</addr-line>, <country>China</country>
+</aff>
+<aff id="aff3">
+<sup>3</sup>
+<institution>Institute for Sustainable Agro-Ecosystem Services, Graduate School of Agricultural and Life Sciences, The University of Tokyo</institution>, <addr-line>Tokyo</addr-line>, <country>Japan</country>
+</aff>
+<author-notes>
+<fn fn-type="edited-by">
+<p>Edited by: Jeremy Harbinson, Wageningen University and Research, Netherlands</p>
+</fn>
+<fn fn-type="edited-by">
+<p>Reviewed by: Elias Kaiser, Wageningen University and Research, Netherlands; Tao Li, Institute of Environment and Sustainable Development in Agriculture (CAAS), China</p>
+</fn>
+<fn fn-type="corresp" id="fn001">
+<p>*Correspondence: Yan-Hong Tang, <email xlink:href="mailto:tangyh@pku.edu.cn">tangyh@pku.edu.cn</email>
+</p>
+</fn>
+<fn fn-type="other" id="fn002">
+<p>This article was submitted to Plant Abiotic Stress, a section of the journal Frontiers in Plant Science</p>
+</fn>
+</author-notes>
+<pub-date pub-type="epub">
+<day>07</day>
+<month>08</month>
+<year>2020</year>
+</pub-date>
+<pub-date pub-type="collection">
+<year>2020</year>
+</pub-date>
+<volume>11</volume>
+<elocation-id>1216</elocation-id>
+<history>
+<date date-type="received">
+<day>04</day>
+<month>06</month>
+<year>2020</year>
+</date>
+<date date-type="accepted">
+<day>27</day>
+<month>07</month>
+<year>2020</year>
+</date>
+</history>
+<permissions>
+<copyright-statement>Copyright &#xa9; 2020 Kang, Zhu, Yamori and Tang</copyright-statement>
+<copyright-year>2020</copyright-year>
+<copyright-holder>Kang, Zhu, Yamori and Tang</copyright-holder>
+<license xlink:href="http://creativecommons.org/licenses/by/4.0/">
+<p>This is an open-access article distributed under the terms of the Creative Commons Attribution License (CC BY). The use, distribution or reproduction in other forums is permitted, provided the original author(s) and the copyright owner(s) are credited and that the original publication in this journal is cited, in accordance with accepted academic practice. No use, distribution or reproduction is permitted which does not comply with these terms.</p>
+</license>
+</permissions>
+<abstract>
+<p>Leaf temperature changes with incident light intensity, but it is unclear how the concurrent changes influence leaf photosynthesis. We examined the time courses of CO<sub>2</sub> gas exchanges and chlorophyll fluorescence of seedling leaves in four tropical tree species in response to lightflecks under three different temperature conditions. The three conditions were two constant temperatures at 30&#xb0;C (<italic>T</italic>
+<sub>30</sub>) and 40&#xb0;C (<italic>T</italic>
+<sub>40</sub>), and a simulated gradually changing temperature from 30 to 40&#xb0;C (<italic>T</italic>
+<sub>dyn</sub>). The time required to reach 50% of the full photosynthetic induction under <italic>T</italic>
+<sub>40</sub> was similar to, or even larger than, that under <italic>T</italic>
+<sub>30</sub>. However, the induction of assimilation rate (<italic>A</italic>) and electron transport rate of photosystem II (ETR II) and Rubisco activation process were generally accelerated under <italic>T</italic>
+<sub>dyn</sub> compared to those at either <italic>T</italic>
+<sub>30</sub> or <italic>T</italic>
+<sub>40</sub>. The acceleration in photosynthetic induction under <italic>T</italic>
+<sub>dyn</sub> was significantly greater in the shade-tolerant species than in the shade-intolerant species. A modified photosynthetic limitation analysis indicated that the acceleration was likely to be mainly due to ETR II at the early stage of photosynthetic induction. The study suggests that concurrent increases in leaf temperature with light may increase leaf carbon gain under highly fluctuating light in tropical tree seedlings, particularly in shade-tolerant species.</p>
+</abstract>
+<kwd-group>
+<kwd>dynamic photosynthesis</kwd>
+<kwd>photosynthetic induction</kwd>
+<kwd>Rubisco</kwd>
+<kwd>shade tolerance</kwd>
+<kwd>sunflecks</kwd>
+<kwd>temperature</kwd>
+</kwd-group>
+<contract-sponsor id="cn001">Peking University<named-content content-type="fundref-id">10.13039/501100007937</named-content>
+</contract-sponsor>
+<counts>
+<fig-count count="5"/>
+<table-count count="3"/>
+<equation-count count="8"/>
+<ref-count count="56"/>
+<page-count count="11"/>
+<word-count count="7216"/>
+</counts>
+</article-meta>
+</front>
+<body>
+<sec id="s1" sec-type="intro">
+<title>Introduction</title>
+<p>Most of our understanding on plant photosynthesis so far is almost completely based on the measurements made under so-called steady-state or temporally constant environments. However, photosynthesis in nature rarely or even never occurs under constant environments, but under fluctuating light, and changing temperature and other environmental variables. Field observations showed considerable variation in photosynthetically active radiation (PAR) at different temporal scales from seconds to days under tropical forest canopies (<xref ref-type="bibr" rid="B24">Pearcy, 1983</xref>; <xref ref-type="bibr" rid="B36">Tang et&#xa0;al., 1999</xref>). Efficient utilization of temporally variable light has been considered to be critical for leaf carbon gain (<xref ref-type="bibr" rid="B25">Pearcy, 1990</xref>; <xref ref-type="bibr" rid="B15">Kaiser et&#xa0;al., 2015</xref>; <xref ref-type="bibr" rid="B42">Tomimatsu and Tang, 2016</xref>; <xref ref-type="bibr" rid="B56">Yamori, 2016</xref>).</p>
+<p>Temporal changes in PAR under forest canopies are often accompanied with changes in leaf temperature (<italic>T</italic>
+<sub>leaf</sub>; <xref ref-type="bibr" rid="B31">Singsaas and Sharkey, 1998</xref>; <xref ref-type="bibr" rid="B50">Wise et&#xa0;al., 2004</xref>). Changes in <italic>T</italic>
+<sub>leaf</sub> can be closely associated with changes of PAR. For example, leaf temperature increased from 32 to 39&#xb0;C within several min due to sunflecks (<xref ref-type="bibr" rid="B18">Leakey et&#xa0;al., 2003</xref>). Despite of a limited number of observations indicating a close relationship between changes in <italic>T</italic>
+<sub>leaf</sub> and changes in light intensity, there is no detailed quantitative description, within our knowledge, for <italic>T</italic>
+<sub>leaf</sub> changes in response to a step change in light intensity. Nonetheless, such associated changes in temperature with light are expected to influence photosynthesis in nature because leaf photosynthesis is a highly temperature-dependent process (<xref ref-type="bibr" rid="B3">Berry and Bj&#xf6;rkman, 1980</xref>). Recent studies further suggest that photosynthetic induction in response to an increase in PAR varied at different constant temperatures (<xref ref-type="bibr" rid="B18">Leakey et&#xa0;al., 2003</xref>; <xref ref-type="bibr" rid="B16">Kaiser et&#xa0;al., 2017</xref>; <xref ref-type="bibr" rid="B47">Wachendorf and K&#xfc;ppers, 2017</xref>). Moreover, thermal responses of photosynthesis are highly species specific (<xref ref-type="bibr" rid="B34">Slot et&#xa0;al., 2016</xref>; <xref ref-type="bibr" rid="B32">Slot and Winter, 2017a</xref>; <xref ref-type="bibr" rid="B33">Slot and Winter, 2017b</xref>; <xref ref-type="bibr" rid="B14">Fauset et&#xa0;al., 2018</xref>). However, very little knowledge has been accumulated regarding concurrent changes in leaf temperature with light on dynamic photosynthesis, despite the fact that the changes may be potentially important for leaf carbon gain under fluctuating light and temperature conditions in nature.</p>
+<p>In this study, we characterized induction kinetics in four lowland tropical tree species under two constant temperatures and a simulated dynamic temperature condition, aiming to address (1) how the concurrent changes in leaf temperature with light affect the photosynthetic induction process, (2) if and how major physiological and biochemical processes contribute to the effect(s), and (3) whether there are any differences in the effect(s) between shade-tolerant and shade-intolerant tree species in tropical rain forests.</p>
+</sec>
+<sec id="s2" sec-type="materials|methods">
+<title>Materials and Methods</title>
+<sec id="s2_1">
+<title>Study Site and Plant Species</title>
+<p>The study was conducted in a lowland tropical rain forest in Pasoh Forest Reserve (2&#xb0;59&#x2032;N, 102&#xb0;08&#x2032;E), Malaysia. This is a primary Dipterocarp forest with an averaged leaf area index estimated as 6.52 in the core area of the reserve (<xref ref-type="bibr" rid="B38">Tani et&#xa0;al., 2003b</xref>). The annual rainfall of the normal years, i.e., no El Ni&#xf1;o years, observed by the meteorological station within the reserve averaged 1809&#xa0;mm during the period from 1983 to 1990. Most rainfall was observed during the rainy season from March to May and from October to December. Mean annual temperature at 52&#xa0;m above the forest floor was 25.6&#xb0;C, ranging from 22.6 to 29.9&#xb0;C (<xref ref-type="bibr" rid="B37">Tani et&#xa0;al., 2003a</xref>).</p>
+<p>The study species were two shade-intolerant species, <italic>Croton argyratus</italic> Blume and <italic>Shorea leprosula</italic> Miq., and two shade-tolerant species, <italic>Neobalanocarpus heimii</italic> (King) Ashton and <italic>Lepisanthes senegalensis</italic> (Poir.) Leenh, which are all native to lowland forests (<xref ref-type="bibr" rid="B40">Thomas et&#xa0;al., 2003</xref>). Five to six seedlings from different light regimes were selected for each species. Light regime was characterized as averaged daily light integral (DLI) of 60 days prior to the experiment (unit mol m<sup>-2</sup> d<sup>-1</sup>), which was estimated from hemispherical photographs using SOLARCALC 7.0 (<xref ref-type="bibr" rid="B19">Mailly et&#xa0;al., 2013</xref>). All field measurements were conducted between August and October 2018.</p>
+</sec>
+<sec id="s2_2">
+<title>Leaf Gas Exchange and Chlorophyll Fluorescence</title>
+<p>Photosynthetic induction responses were measured using a LI-6800 (LI-COR, Lincoln NE, USA) fitted with a LI-6800-01 fluorometer (90% red and 10% blue) on a fully expanded and healthy leaf in each selected seedling. Leaves were first acclimated to the irradiance at 50 &#x3bc;mol m<sup>-2</sup> s<sup>-1</sup> for at least 20&#xa0;min until steady-state assimilation rate (<italic>A</italic>) and stomatal conductance for H<sub>2</sub>O (<italic>g</italic>
+<sub>sw</sub>) were visibly reached, after which light was raised to 1000 &#x3bc;mol m<sup>-2</sup> s<sup>-1</sup> for 32&#xa0;min. <italic>A</italic>, <italic>g</italic>
+<sub>sw</sub>, and intercellular CO<sub>2</sub> concentration (<italic>C</italic>
+<sub>i</sub>) were logged every second. To avoid any artefacts from correctional changes in temperature or relative humidity, temperature of the heat exchanger (<italic>T</italic>
+<sub>exchg</sub>) was controlled. Photosynthetic induction was measured under three different temperature conditions, i.e., two constant temperature conditions with 30&#xb0;C (<italic>T</italic>
+<sub>30</sub>) and 40&#xb0;C (<italic>T</italic>
+<sub>40</sub>), and a simulated dynamic temperature condition (<italic>T</italic>
+<sub>dyn</sub>). For the two constant temperatures, <italic>T</italic>
+<sub>leaf</sub> reached a constant value around 30.7&#xb0;C under <italic>T</italic>
+<sub>30</sub> and 36.6&#xb0;C under <italic>T</italic>
+<sub>40</sub> prior to the increase in light. Under the <italic>T</italic>
+<sub>dyn</sub> condition, <italic>T</italic>
+<sub>exchg</sub> was kept at 30&#xb0;C before the increase in light and then set to an expected value of 40&#xb0;C at the same time when light increased. The warming speed of leaf temperature was similar to our observation within the same forest (<xref ref-type="supplementary-material" rid="SM1">
+<bold>Figure S1</bold>
+</xref>). Prior to the induction, leaf-to-air vapor-pressure deficit (VPD) was kept steady around 1 kPa under <italic>T</italic>
+<sub>dyn</sub> and <italic>T</italic>
+<sub>30</sub> and 2.3 kPa under <italic>T</italic>
+<sub>40</sub> to mimic the natural levels at each temperature, according to our records of within-canopy microenvironments (see <xref ref-type="supplementary-material" rid="SM1">
+<bold>Figure S2</bold>
+</xref>). Reference CO<sub>2</sub> concentration was maintained at 400 &#x3bc;mol mol<sup>-1</sup>. Photosynthetic CO<sub>2</sub> response curves were generated with a LI-6400XT equipped with a LI-6400-02B LED light source on the same leaves at a block temperature of 30 and 40&#xb0;C. Leaves were first fully induced under 400 &#x3bc;mol mol<sup>-1</sup> and 1000 &#x3bc;mol m<sup>-2</sup> s<sup>-1</sup>. Then, the reference CO<sub>2</sub> concentration was reduced to 50 &#x3bc;mol mol<sup>-1</sup> in a stepwise manner, after which it returned to the starting level. When steady-state <italic>A</italic> was again reached, the CO<sub>2</sub> concentration was increased to 1500 &#x3bc;mol mol<sup>-1</sup> in several steps. Flow rate was maintained at 350 &#x3bc;mol s<sup>-1</sup>, and relative humidity was controlled at 70%, which yield a VPD similar to that reached at the end of induction.</p>
+<p>All measurements were repeated with the same environmental settings as the measurement of photosynthetic induction course to produce the time courses of chlorophyll fluorescence signals using the same LI-6800. Hence, we obtained two sets of induction curves, one with gas exchange only and the other with both gas exchange and chlorophyll fluorescence. Leaf samples were placed in dark for at least 2&#xa0;h. Then, light was increased to 50 &#x3bc;mol m<sup>-2</sup> s<sup>-1</sup> until gas exchange parameters reached steady state, which typically took 20&#xa0;min, followed by 30&#xa0;min of induction. However, due to weather and insufficient time, some chlorophyll fluorescence measurements under <italic>T</italic>
+<sub>dyn</sub> started from a light intensity of 50 &#x3bc;mol m<sup>-2</sup> s<sup>-1</sup> directly without dark adaptation. For these measurements, less time (~10 min) was required to reach steady state under low light. Gas exchange parameters were recorded every 5 s, and chlorophyll fluorescence was recorded every minute. Recorded chlorophyll fluorescence signals include <italic>F</italic>
+<sub>o</sub> and <italic>F</italic>
+<sub>M</sub>, if leaves were dark adapted, <italic>F</italic>
+<sub>s</sub>, <italic>F</italic>
+<sub>M</sub>&#x2019;, and <italic>F</italic>
+<sub>o</sub>&#x2019; by turning off the actinic light and then applying far-red light. We used the multi-phase flash (MPF) protocol of the fluorometer for measuring <italic>F</italic>
+<sub>M</sub> and <italic>F</italic>
+<sub>M</sub>&#x2019;. MPF settings were as factory default, including 8000 &#x3bc;mol m<sup>-2</sup> s<sup>-1</sup> for flash beam intensity, 40% ramp reduction during the 2<sup>nd</sup> phase of the MPF, and 0.3 s duration of each flash phase. The quantum yields of photosystem II [<italic>Y</italic>(II)] were calculated after <xref ref-type="bibr" rid="B54">Yamori et&#xa0;al. (2012)</xref>. The electron transport rates of photosystem II (ETR II) were calculated using the following equation: ETR II = 0.5 &#xd7; <italic>&#x3b1;</italic> &#xd7; <italic>I</italic> &#xd7; <italic>Y</italic>(II), where 0.5 is the fraction of absorbed light allocated to photosystems II, <italic>&#x3b1;</italic> is leaf light absorptance (see below), and <italic>I</italic> is light intensity. The quantum yields of photochemical quenching based on the puddle (qP) and the lake model (qL) and non-photochemical quenching (NPQ) were calculated as described by <xref ref-type="bibr" rid="B17">Kalaji et&#xa0;al. (2017)</xref>. Data obtained without dark adaptation were excluded from NPQ calculation.</p>
+</sec>
+<sec id="s2_3">
+<title>Light Absorptance</title>
+<p>Leaf light absorptance was calculated from measured reflectance and transmittance. For each species, four to six branches from seedlings other than those for photosynthesis measurements were sampled around 18:00 h, with the cut end submerged in water immediately. Samples were kept in dark and then measured within 6&#xa0;h using a Maya-2000-Pro spectrometer (Ocean Optics, Dunedin, FL, USA). Four to six healthy, fully expanded leaves in each sampled branch and three to four discs per leaf were measured. Light absorptance was calculated with respect to the irradiance spectrum of the LI-6800-01 fluorometer, which was also measured with the same spectrometer. This yield leaf light absorptance of 0.88, 0.87, 0.90, and 0.92 for <italic>N. heimii</italic>, <italic>L. senegalensis</italic>, <italic>C. argyratus</italic>, and <italic>S. leprosula</italic>, respectively.</p>
+</sec>
+<sec id="s2_4">
+<title>Data Analysis</title>
+<p>For those measurements made under <italic>T</italic>
+<sub>dyn</sub>, the time course of H<sub>2</sub>O concentration in the sample cell (H<sub>2</sub>O<sub>s</sub>) exhibited an unusually steep peak within the first minute, since the LI-6800 started to elevate <italic>T<sub>e</sub>
+</italic>
+<sub>xchg</sub>. As a result, stomatal conductance doubled and <italic>C</italic>
+<sub>i</sub> increased during the first minute since LED light and <italic>T</italic>
+<sub>exchg</sub> concurrently changed. After excluding the possibility of a contaminated leaf chamber by repeating the same measurement settings with a brand new LI-6800 later, we suspected that such errors were induced by the heat exchanger itself. We matched the LI-6800 only immediately before each measurement, and the differences in match adjustment factor between two consecutive measurements were small compared to the differences in water concentrations result from foliar transpiration. Thus, we proposed an empirical method to sequentially correct H<sub>2</sub>O<sub>s</sub>, transpiration rate, <italic>A</italic>, <italic>g</italic>
+<sub>sw</sub>, and <italic>C</italic>
+<sub>i</sub> (for detailed information, see <xref ref-type="supplementary-material" rid="SM1">
+<bold>Supplementary File S1</bold>
+</xref>).</p>
+<p>To determine the maximum rate of increase in <inline-formula>
+<mml:math display="inline" id="im1">
+<mml:mrow>
+<mml:mi>A</mml:mi>
+<mml:mtext>&#xa0;</mml:mtext>
+<mml:mrow>
+<mml:mo>(</mml:mo>
+<mml:mrow>
+<mml:msub>
+<mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>A</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>max</mml:mi>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+<mml:mo>)</mml:mo>
+</mml:mrow>
+</mml:mrow>
+</mml:math>
+</inline-formula>, the time courses of <italic>A</italic> during induction (gas exchange only) were fitted to the Boltzmann sigmoidal model proposed by <xref ref-type="bibr" rid="B11">Drake et&#xa0;al. (2013)</xref>:</p>
+<disp-formula>
+<label>(1)</label>
+<mml:math display="block" id="M1">
+<mml:mrow>
+<mml:mi>A</mml:mi>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>=</mml:mo>
+<mml:mfrac>
+<mml:mrow>
+<mml:msub>
+<mml:mi>a</mml:mi>
+<mml:mn>1</mml:mn>
+</mml:msub>
+<mml:mo>&#x2212;</mml:mo>
+<mml:msub>
+<mml:mi>a</mml:mi>
+<mml:mn>2</mml:mn>
+</mml:msub>
+</mml:mrow>
+<mml:mrow>
+<mml:mn>1</mml:mn>
+<mml:mo>+</mml:mo>
+<mml:msup>
+<mml:mi>e</mml:mi>
+<mml:mrow>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo>&#x2212;</mml:mo>
+<mml:msub>
+<mml:mi>t</mml:mi>
+<mml:mn>0</mml:mn>
+</mml:msub>
+<mml:mo stretchy="false">)</mml:mo>
+</mml:mrow>
+</mml:msup>
+<mml:mo stretchy="false">/</mml:mo>
+<mml:mi>&#x394;</mml:mi>
+<mml:msub>
+<mml:mi>t</mml:mi>
+<mml:mi>A</mml:mi>
+</mml:msub>
+</mml:mrow>
+</mml:mfrac>
+<mml:mo>+</mml:mo>
+<mml:msub>
+<mml:mi>a</mml:mi>
+<mml:mn>2</mml:mn>
+</mml:msub>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<p>where <italic>a</italic>
+<sub>1</sub> and <italic>a</italic>
+<sub>2</sub> are the left and right horizontal asymptotes, respectively, <italic>t</italic>
+<sub>0</sub> is the point of inflection, and &#x394;<italic>t<sub>A</sub>
+</italic> describes the steepness of the curve. The maximum rate of increase is the value of the derivative of Equation (1), where <italic>t</italic> = <italic>t</italic>
+<sub>0</sub>. The maximum rate of increase in <inline-formula>
+<mml:math display="inline" id="im3">
+<mml:mrow>
+<mml:msub>
+<mml:mi>g</mml:mi>
+<mml:mrow>
+<mml:mi>s</mml:mi>
+<mml:mi>w</mml:mi>
+</mml:mrow>
+</mml:msub>
+<mml:mrow>
+<mml:mo>(</mml:mo>
+<mml:mrow>
+<mml:msub>
+<mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>g</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>max</mml:mi>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+<mml:mo>)</mml:mo>
+</mml:mrow>
+</mml:mrow>
+</mml:math>
+</inline-formula> was calculated in the same way.</p>
+<p>To assess if sunfleck utilization was improved or inhibited under <italic>T</italic>
+<sub>dyn</sub> and <italic>T</italic>
+<sub>40</sub>, induction carbon gain (ICG) at time <italic>t</italic> was calculated after <xref ref-type="bibr" rid="B5">Chazdon and Pearcy (1986a)</xref>:</p>
+<disp-formula>
+<label>(2)</label>
+<mml:math display="block" id="M2">
+<mml:mrow>
+<mml:mtext>ICG</mml:mtext>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>=</mml:mo>
+<mml:mstyle displaystyle="true">
+<mml:mrow>
+<mml:msubsup>
+<mml:mo>&#x222b;</mml:mo>
+<mml:mn>0</mml:mn>
+<mml:mi>t</mml:mi>
+</mml:msubsup>
+<mml:mrow>
+<mml:mi>A</mml:mi>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+<mml:mo>&#x2212;</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo>&#x2217;</mml:mo>
+<mml:msub>
+<mml:mi>A</mml:mi>
+<mml:mrow>
+<mml:mtext>ini</mml:mtext>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+</mml:mrow>
+</mml:mstyle>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<p>where <italic>A</italic>
+<sub>ini</sub> is the steady-state <italic>A</italic> prior to the induction.</p>
+<p>To identify the transition point between Rubisco and RuBP regeneration limitation (<italic>C</italic>
+<sub>i,trans</sub>) at high temperature, photosynthetic CO<sub>2</sub> response curves were fitted after <xref ref-type="bibr" rid="B1">Bellasio et&#xa0;al. (2016)</xref>, assuming a constant <italic>R</italic>
+<sub>L</sub> <italic>: R</italic>
+<sub>d</sub> ratio of 60% (<xref ref-type="bibr" rid="B49">Way et&#xa0;al., 2019</xref>). <italic>R</italic>
+<sub>d</sub> was calculated by averaging the readings over the last minute in the dark period during chlorophyll fluorescence measurements. <italic>C</italic>
+<sub>i,trans</sub> was determined as:</p>
+<disp-formula>
+<label>(3)</label>
+<mml:math display="block" id="M3">
+<mml:mrow>
+<mml:msub>
+<mml:mi>C</mml:mi>
+<mml:mrow>
+<mml:mtext>i,trans</mml:mtext>
+</mml:mrow>
+</mml:msub>
+<mml:mo>=</mml:mo>
+<mml:mfrac>
+<mml:mrow>
+<mml:mn>8</mml:mn>
+<mml:msup>
+<mml:mi>&#x393;</mml:mi>
+<mml:mo>&#x2217;</mml:mo>
+</mml:msup>
+<mml:msub>
+<mml:mi>V</mml:mi>
+<mml:mrow>
+<mml:mtext>c,max</mml:mtext>
+</mml:mrow>
+</mml:msub>
+<mml:mo>&#x2212;</mml:mo>
+<mml:msub>
+<mml:mi>K</mml:mi>
+<mml:mi>m</mml:mi>
+</mml:msub>
+<mml:msub>
+<mml:mi>J</mml:mi>
+<mml:mrow>
+<mml:mn>1000</mml:mn>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+<mml:mrow>
+<mml:msub>
+<mml:mi>J</mml:mi>
+<mml:mrow>
+<mml:mn>1000</mml:mn>
+</mml:mrow>
+</mml:msub>
+<mml:mo>&#x2212;</mml:mo>
+<mml:mn>4</mml:mn>
+<mml:msub>
+<mml:mi>V</mml:mi>
+<mml:mrow>
+<mml:mtext>c,max</mml:mtext>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<p>where <italic>V</italic>
+<sub>c,max</sub> is the apparent maximum carboxylation rate of Rubisco, <italic>J</italic>
+<sub>1000</sub> is the potential electron transport rate under 1000 &#x3bc;mol m<sup>-2</sup> s<sup>-1</sup>, &#x413;<sup>*</sup> is the CO<sub>2</sub> photocompensation point, and <italic>K</italic>
+<sub>m</sub> is the effective Michaelis-Menten constant for Rubisco after <xref ref-type="bibr" rid="B2">Bernacchi et&#xa0;al. (2001)</xref>.</p>
+<p>To obtain the apparent time constant of Rubisco activation (&#x3c4;<sub>Rubisco</sub>), transient <italic>A</italic>, recorded during chlorophyll fluorescence measurements, was corrected to steady-state <italic>C</italic>
+<sub>i</sub> reached at the end of induction (<italic>C</italic>
+<sub>i,f</sub>) with respect to transient <italic>T</italic>
+<sub>leaf</sub> after <xref ref-type="bibr" rid="B44">Urban et&#xa0;al. (2007)</xref> and then fitted to the exponential function proposed by <xref ref-type="bibr" rid="B51">Woodrow and Mott (1989)</xref>:</p>
+<disp-formula>
+<label>(4)</label>
+<mml:math display="block" id="M4">
+<mml:mrow>
+<mml:msup>
+<mml:mi>A</mml:mi>
+<mml:mo>&#x2217;</mml:mo>
+</mml:msup>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>=</mml:mo>
+<mml:msubsup>
+<mml:mi>A</mml:mi>
+<mml:mi>f</mml:mi>
+<mml:mo>&#x2217;</mml:mo>
+</mml:msubsup>
+<mml:mo>&#x2212;</mml:mo>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:msubsup>
+<mml:mi>A</mml:mi>
+<mml:mi>f</mml:mi>
+<mml:mo>&#x2217;</mml:mo>
+</mml:msubsup>
+<mml:mo>&#x2212;</mml:mo>
+<mml:msub>
+<mml:mi>A</mml:mi>
+<mml:mi>i</mml:mi>
+</mml:msub>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>&#x2217;</mml:mo>
+<mml:mi>exp</mml:mi>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mo>&#x2212;</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">/</mml:mo>
+<mml:msub>
+<mml:mi>&#x3c4;</mml:mi>
+<mml:mrow>
+<mml:mtext>Rubisco</mml:mtext>
+</mml:mrow>
+</mml:msub>
+<mml:mo stretchy="false">)</mml:mo>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<p>where <inline-formula>
+<mml:math display="inline" id="im4">
+<mml:mrow>
+<mml:msubsup>
+<mml:mi>A</mml:mi>
+<mml:mi>f</mml:mi>
+<mml:mo>&#x2217;</mml:mo>
+</mml:msubsup>
+</mml:mrow>
+</mml:math>
+</inline-formula> is the final corrected <italic>A</italic> and <italic>A<sub>i</sub>
+</italic> is the estimated initial <italic>A</italic> prior to the induction. For modeling convenience, we assumed that Rubisco is a one-phase process and used the data from whole induction curves for fitting. In the prior test, we found that fitting the whole curves yield higher <italic>R</italic>
+<sup>2</sup> and smaller confidence intervals than only fitting the data from minute 2 to 10 after the light increase in 25 among 30 cases. We also acknowledge that using the data from whole curve could underestimate <italic>&#x3c4;</italic>
+<sub>Rubisco</sub>. Using transient <italic>C</italic>
+<sub>i</sub> recorded during chlorophyll fluorescence measurements, we calculated the potential <italic>A</italic> supported by transient ETR II (<italic>A</italic>
+<sub>j</sub>) and that supported by transient carboxylation rate with respect to transient <italic>T</italic>
+<sub>leaf</sub> (<italic>A</italic>
+<sub>c</sub>):</p>
+<disp-formula>
+<label>(5)</label>
+<mml:math display="block" id="M5">
+<mml:mrow>
+<mml:msub>
+<mml:mi>A</mml:mi>
+<mml:mi>j</mml:mi>
+</mml:msub>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>=</mml:mo>
+<mml:mtext>ETR</mml:mtext>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mfrac>
+<mml:mrow>
+<mml:msub>
+<mml:mi>C</mml:mi>
+<mml:mi>i</mml:mi>
+</mml:msub>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>&#x2212;</mml:mo>
+<mml:msup>
+<mml:mi>&#x393;</mml:mi>
+<mml:mo>&#x2217;</mml:mo>
+</mml:msup>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>T</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+</mml:mrow>
+<mml:mrow>
+<mml:mn>4</mml:mn>
+<mml:msub>
+<mml:mi>C</mml:mi>
+<mml:mi>i</mml:mi>
+</mml:msub>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>+</mml:mo>
+<mml:mn>8</mml:mn>
+<mml:msup>
+<mml:mi>&#x393;</mml:mi>
+<mml:mo>&#x2217;</mml:mo>
+</mml:msup>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>T</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+</mml:mrow>
+</mml:mfrac>
+<mml:mo>&#x2212;</mml:mo>
+<mml:msub>
+<mml:mi>R</mml:mi>
+<mml:mi>L</mml:mi>
+</mml:msub>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>T</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<disp-formula>
+<label>(6)</label>
+<mml:math display="block" id="M6">
+<mml:mrow>
+<mml:msub>
+<mml:mi>A</mml:mi>
+<mml:mi>c</mml:mi>
+</mml:msub>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>=</mml:mo>
+<mml:msub>
+<mml:mi>V</mml:mi>
+<mml:mi>c</mml:mi>
+</mml:msub>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mfrac>
+<mml:mrow>
+<mml:msub>
+<mml:mi>C</mml:mi>
+<mml:mi>i</mml:mi>
+</mml:msub>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>&#x2212;</mml:mo>
+<mml:msup>
+<mml:mi>&#x393;</mml:mi>
+<mml:mo>&#x2217;</mml:mo>
+</mml:msup>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>T</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+</mml:mrow>
+<mml:mrow>
+<mml:msub>
+<mml:mi>C</mml:mi>
+<mml:mi>i</mml:mi>
+</mml:msub>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>+</mml:mo>
+<mml:msub>
+<mml:mi>K</mml:mi>
+<mml:mi>m</mml:mi>
+</mml:msub>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>T</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+</mml:mrow>
+</mml:mfrac>
+<mml:mo>&#x2212;</mml:mo>
+<mml:msub>
+<mml:mi>R</mml:mi>
+<mml:mi>L</mml:mi>
+</mml:msub>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>T</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<p>The temperature response of <italic>R</italic>
+<sub>d</sub> was described for each leaf studied using an exponential model with <italic>Q</italic>
+<sub>10</sub> (<xref ref-type="bibr" rid="B46">Vanderwel et&#xa0;al., 2015</xref>). The temperature dependency of &#x413;<sup>*</sup> for each leaf was described by the Arrhenius function using the CO<sub>2</sub> response curves:</p>
+<disp-formula>
+<label>(7)</label>
+<mml:math display="block" id="M7">
+<mml:mrow>
+<mml:msup>
+<mml:mi>&#x393;</mml:mi>
+<mml:mo>&#x2217;</mml:mo>
+</mml:msup>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>T</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>=</mml:mo>
+<mml:msup>
+<mml:mi>&#x393;</mml:mi>
+<mml:mo>&#x2217;</mml:mo>
+</mml:msup>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mn>25</mml:mn>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>&#x2217;</mml:mo>
+<mml:mi>exp</mml:mi>
+<mml:mrow>
+<mml:mo>[</mml:mo> <mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:msub>
+<mml:mi>E</mml:mi>
+<mml:mi>a</mml:mi>
+</mml:msub>
+<mml:mo>&#x2217;</mml:mo>
+<mml:msup>
+<mml:mrow>
+<mml:mn>10</mml:mn>
+</mml:mrow>
+<mml:mn>3</mml:mn>
+</mml:msup>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>T</mml:mi>
+<mml:mo>&#x2212;</mml:mo>
+<mml:mn>298.15</mml:mn>
+<mml:mo stretchy="false">)</mml:mo>
+</mml:mrow>
+<mml:mrow>
+<mml:mn>298.15</mml:mn>
+<mml:mo>&#x2217;</mml:mo>
+<mml:mi>R</mml:mi>
+<mml:mo>&#x2217;</mml:mo>
+<mml:mi>T</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow> <mml:mo>]</mml:mo>
+</mml:mrow>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<p>where &#x413;<sup>*</sup>(25) is &#x413;<sup>*</sup> at 25&#xb0;C and <italic>E<sub>a</sub>
+</italic> is the activation energy term. <italic>R</italic> is the molar gas constant. For simplicity, we assume that <italic>R</italic>
+<sub>L</sub>, <italic>K</italic>
+<sub>m</sub>, and &#x413;<sup>*</sup>, which respond to fluctuations in temperature instantaneously, and components of ETR II, i.e., fraction of absorbed light allocated to photosystems II and leaf light absorptance, remain constant during induction. Considerations of these assumptions are described in detail in Discussion. Transient carboxylation rate (<italic>V</italic>
+<sub>c</sub>) was estimated in analogy to Eqn. (1):</p>
+<disp-formula>
+<label>(8)</label>
+<mml:math display="block" id="M8">
+<mml:mrow>
+<mml:msub>
+<mml:mi>V</mml:mi>
+<mml:mi>c</mml:mi>
+</mml:msub>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>=</mml:mo>
+<mml:msub>
+<mml:mi>V</mml:mi>
+<mml:mrow>
+<mml:mtext>c,f</mml:mtext>
+</mml:mrow>
+</mml:msub>
+<mml:mo>&#x2212;</mml:mo>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:msub>
+<mml:mi>V</mml:mi>
+<mml:mrow>
+<mml:mtext>c,f</mml:mtext>
+</mml:mrow>
+</mml:msub>
+<mml:mo>&#x2212;</mml:mo>
+<mml:msub>
+<mml:mi>V</mml:mi>
+<mml:mrow>
+<mml:mtext>c,ini</mml:mtext>
+</mml:mrow>
+</mml:msub>
+<mml:mo stretchy="false">)</mml:mo>
+<mml:mo>&#x2217;</mml:mo>
+<mml:mi>exp</mml:mi>
+<mml:mo stretchy="false">(</mml:mo>
+<mml:mo>&#x2212;</mml:mo>
+<mml:mi>t</mml:mi>
+<mml:mo stretchy="false">/</mml:mo>
+<mml:msub>
+<mml:mi>&#x3c4;</mml:mi>
+<mml:mrow>
+<mml:mtext>Rubisco</mml:mtext>
+</mml:mrow>
+</mml:msub>
+<mml:mo stretchy="false">)</mml:mo>
+</mml:mrow>
+</mml:math>
+</disp-formula>
+<p>
+<italic>V</italic>
+<sub>c,f</sub> and <italic>V</italic>
+<sub>c,ini</sub> were estimated from the so-called one-point method (<xref ref-type="bibr" rid="B9">De Kauwe et&#xa0;al., 2016</xref>) using data recorded before and at the end of induction, respectively. Assimilation rate decreased during induction in some measurements made under <italic>T</italic>
+<sub>dyn</sub>.</p>
+<p>ETR II obtained under photorespiratory condition was likely to deviate from true linear electron transport rate, leading to incorrect <italic>A</italic>
+<sub>j</sub>. Considerations on how to model the midway decrease in <italic>A</italic> during induction and necessary calibration of ETR II are described in detail in <xref ref-type="supplementary-material" rid="SM1">
+<bold>Supplementary File S2</bold>
+</xref>. We compared <italic>A</italic>
+<sub>c</sub>(<italic>t</italic>) against <italic>A</italic>
+<sub>j</sub>(<italic>t</italic>) to determine whether photosynthetic rate was limited by Rubisco carboxylation or RuBP regeneration at time <italic>t</italic>.</p>
+</sec>
+<sec id="s2_5">
+<title>Statistical Analysis</title>
+<p>To determine the effects of measurement temperature condition, data were compared by one-way ANOVA test. Data were log-transformed to meet the assumptions of normality and homogeneity of variances when necessary. Otherwise, a non-parametric Kruskal-Wallis test was used. All tests were conducted using SPSS Statistics Version 20.0 (IBM Corp., New York, USA). To examine whether the variances in the induction responses between <italic>T</italic>
+<sub>30</sub> and <italic>T</italic>
+<sub>dyn</sub> were related to species-specific shade tolerance (<italic>S</italic>) and DLI, we performed a two-way ANOVA analysis using <italic>S</italic> and DLI as the main factors and <italic>S</italic> &#xd7; DLI as the interaction factor. The differences in induction responses were represented as the percentage change of a parameter. These tests were carried out in R version 3.5.0 (<xref ref-type="bibr" rid="B26">R Core Team, 2018</xref>).</p>
+</sec>
+</sec>
+<sec id="s3" sec-type="results">
+<title>Results</title>
+<sec id="s3_1">
+<title>Photosynthetic Induction Response</title>
+<p>Time courses of photosynthetic induction under three different temperature conditions are shown in <xref ref-type="fig" rid="f1">
+<bold>Figure 1</bold>
+</xref>. After full acclimation under <italic>T</italic>
+<sub>40</sub>, both initial photosynthetic rate (<italic>A</italic>
+<sub>ini</sub>) and final steady-state photosynthetic rate (<italic>A</italic>
+<sub>f</sub>) were significantly smaller than those under <italic>T</italic>
+<sub>30</sub> (<xref ref-type="table" rid="T1">
+<bold>Table 1</bold>
+</xref>). The maximum rate of increase in <inline-formula>
+<mml:math display="inline" id="im9">
+<mml:mrow>
+<mml:mi>A</mml:mi>
+<mml:mrow>
+<mml:mo>(</mml:mo>
+<mml:mrow>
+<mml:msub>
+<mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>A</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>max</mml:mi>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+<mml:mo>)</mml:mo>
+</mml:mrow>
+</mml:mrow>
+</mml:math>
+</inline-formula> under <italic>T</italic>
+<sub>40</sub> decreased by 31&#x2013;64% compared to that under <italic>T</italic>
+<sub>30</sub>.</p>
+<fig id="f1" position="float">
+<label>Figure 1</label>
+<caption>
+<p>Time courses of <italic>A</italic> <bold>(A&#x2013;D)</bold>, <italic>g</italic>
+<sub>sw</sub> <bold>(E&#x2013;H)</bold>, <italic>C</italic>
+<sub>i</sub> <bold>(I&#x2013;L)</bold>, <italic>T</italic>
+<sub>leaf</sub> <bold>(M&#x2013;P)</bold>, and VPD <bold>(Q&#x2013;T)</bold> during photosynthetic induction in <italic>N. heimii</italic> <bold>(A, E, I, M, Q)</bold>, <italic>L. senegalensis</italic> <bold>(B, F, J, N, R)</bold>, <italic>C. argyratus</italic> <bold>(C, G, K, O, S)</bold>, and <italic>S. leprosula</italic> <bold>(D, H, L, P, T)</bold>. Shown are the data recorded during gas exchange only measurements under constant 30&#xb0;C (<italic>T</italic>
+<sub>30</sub>) and 40&#xb0;C (<italic>T</italic>
+<sub>40</sub>) and simulated dynamic temperature condition (<italic>T</italic>
+<sub>dyn</sub>). Values are the means ( &#xb1; SE) of five to six individual seedlings for each species. <italic>A</italic>, assimilation rate; <italic>g</italic>
+<sub>sw</sub>, stomatal conductance for H<sub>2</sub>O; <italic>C</italic>
+<sub>i</sub>, intercellular CO<sub>2</sub> concentration; <italic>T</italic>
+<sub>leaf</sub>, leaf temperature; VPD, leaf-to-air vapor pressure deficit.</p>
+</caption>
+<graphic mimetype="image" mime-subtype="tiff" xlink:href="fpls-11-01216-g001.tif"/>
+</fig>
+<table-wrap id="T1" position="float">
+<label>Table 1</label>
+<caption>
+<p>Parameters of photosynthetic induction since the increase in irradiance from 50 to 1000 &#x3bc;mol m<sup>-2</sup> s<sup>-1</sup> in four tropical woody species under constant 30&#xb0;C (<italic>T</italic>
+<sub>30</sub>), 40&#xb0;C (<italic>T</italic>
+<sub>40</sub>), and simulated dynamic temperature condition (<italic>T</italic>
+<sub>dyn</sub>). <italic>A</italic>
+<sub>ini</sub>, <italic>A</italic>
+<sub>f</sub>, <italic>g</italic>
+<sub>sw,ini</sub>, <italic>g</italic>
+<sub>sw,f</sub>, <italic>C</italic>
+<sub>i,ini</sub>, and <italic>C</italic>
+<sub>i,f</sub> were <italic>A</italic>, <italic>g</italic>
+<sub>sw</sub>, and <italic>C</italic>
+<sub>i</sub> reached before and at the end of photosynthetic induction, respectively, calculated by averaging single values over the last minute of each period; IT<sub>f50%</sub>, the time required to reach 50% of the difference between <italic>A</italic>
+<sub>ini</sub> and <italic>A</italic>
+<sub>f</sub>; <inline-formula>
+<mml:math display="inline" id="im5">
+<mml:mrow>
+<mml:msub>
+<mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>A</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>max</mml:mi>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+</mml:math>
+</inline-formula> and <inline-formula>
+<mml:math display="inline" id="im6">
+<mml:mrow>
+<mml:msub>
+<mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>g</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>max</mml:mi>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+</mml:math>
+</inline-formula> were the maximum increasing rate of <italic>A</italic> and <italic>g</italic>
+<sub>sw</sub>, respectively.</p>
+</caption>
+<table frame="hsides">
+<thead>
+<tr>
+<th valign="top" align="left">Species</th>
+<th valign="top" align="center">Temperature</th>
+<th valign="top" align="center">
+<italic>A</italic>
+<sub>ini</sub>
+</th>
+<th valign="top" align="center">
+<italic>A</italic>
+<sub>f</sub>
+</th>
+<th valign="top" align="center">
+<italic>g</italic>
+<sub>sw,ini</sub>
+</th>
+<th valign="top" align="center">
+<italic>g</italic>
+<sub>sw,f</sub>
+</th>
+<th valign="top" align="center">
+<italic>C</italic>
+<sub>i,ini</sub>
+</th>
+<th valign="top" align="center">
+<italic>C</italic>
+<sub>i,f</sub>
+</th>
+<th valign="top" align="center">IT<sub>f50%</sub>
+</th>
+<th valign="top" align="center">
+<inline-formula>
+<mml:math display="inline" id="im7">
+<mml:mrow>
+<mml:msub>
+<mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>A</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>max</mml:mi>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+</mml:math>
+</inline-formula>
+</th>
+<th valign="top" align="center">
+<inline-formula>
+<mml:math display="inline" id="im8">
+<mml:mrow>
+<mml:msub>
+<mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>g</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>max</mml:mi>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+</mml:math>
+</inline-formula>
+</th>
+</tr>
+<tr>
+<th valign="top" align="left">Abbreviation</th>
+<th valign="top" align="center">Condition</th>
+<th valign="top" colspan="2" align="center">(&#x3bc;mol m<sup>-2</sup> s<sup>-1</sup>)</th>
+<th valign="top" colspan="2" align="center">(mmol m<sup>-2</sup> s<sup>-1</sup>)</th>
+<th valign="top" colspan="2" align="center">(&#x3bc;mol mol<sup>-1</sup>)</th>
+<th valign="top" align="center">(s)</th>
+<th valign="top" align="center">(&#x3bc;mol m<sup>-2</sup> s<sup>-2</sup>)</th>
+<th valign="top" align="center">(mmol m<sup>-2</sup> s<sup>-2</sup>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td valign="top" align="left">
+<italic>C. argyratus</italic>
+</td>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>30</sub>
+</td>
+<td valign="top" align="center">1.99 &#xb1; 0.03a</td>
+<td valign="top" align="center">5.09 &#xb1; 0.60a</td>
+<td valign="top" align="center">32.0 &#xb1; 1.9a</td>
+<td valign="top" align="center">73.1 &#xb1; 4.0a</td>
+<td valign="top" align="center">288 &#xb1; 4</td>
+<td valign="top" align="center">267 &#xb1; 9</td>
+<td valign="top" align="center">80.0 &#xb1; 13.9a</td>
+<td valign="top" align="center">0.035 &#xb1; 0.002a</td>
+<td valign="top" align="center">0.560 &#xb1; 0.259a</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>dyn</sub>
+</td>
+<td valign="top" align="center">2.18 &#xb1; 0.08a</td>
+<td valign="top" align="center">3.63 &#xb1; 0.38b</td>
+<td valign="top" align="center">28.7 &#xb1; 3.7ab</td>
+<td valign="top" align="center">45.5 &#xb1; 4.9b</td>
+<td valign="top" align="center">271 &#xb1; 13</td>
+<td valign="top" align="center">241 &#xb1; 13</td>
+<td valign="top" align="center">24.9 &#xb1; 14.4b</td>
+<td valign="top" align="center">0.046 &#xb1; 0.005a</td>
+<td valign="top" align="center">0.281 &#xb1; 0.026ab</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>40</sub>
+</td>
+<td valign="top" align="center">1.40 &#xb1; 0.12b</td>
+<td valign="top" align="center">3.50 &#xb1; 0.44b</td>
+<td valign="top" align="center">21.0 &#xb1; 4.1b</td>
+<td valign="top" align="center">42.7 &#xb1; 5.5b</td>
+<td valign="top" align="center">268 &#xb1; 12</td>
+<td valign="top" align="center">241 &#xb1; 11</td>
+<td valign="top" align="center">91.9 &#xb1; 17.6a</td>
+<td valign="top" align="center">0.017 &#xb1; 0.005b</td>
+<td valign="top" align="center">0.195 &#xb1; 0.034b</td>
+</tr>
+<tr>
+<td valign="top" align="left">
+<italic>S. leprosula</italic>
+</td>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>30</sub>
+</td>
+<td valign="top" align="center">2.20 &#xb1; 0.07a</td>
+<td valign="top" align="center">8.51 &#xb1; 0.57a</td>
+<td valign="top" align="center">58.6 &#xb1; 8.9a</td>
+<td valign="top" align="center">146.0 &#xb1; 14.0a</td>
+<td valign="top" align="center">323 &#xb1; 10a</td>
+<td valign="top" align="center">279 &#xb1; 8a</td>
+<td valign="top" align="center">130.5 &#xb1; 22.3a</td>
+<td valign="top" align="center">0.065 &#xb1; 0.004a</td>
+<td valign="top" align="center">0.270 &#xb1; 0.036</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>dyn</sub>
+</td>
+<td valign="top" align="center">2.16 &#xb1; 0.17a</td>
+<td valign="top" align="center">5.45 &#xb1; 0.56b</td>
+<td valign="top" align="center">55.4 &#xb1; 8.6a</td>
+<td valign="top" align="center">72.2 &#xb1; 16.8b</td>
+<td valign="top" align="center">323 &#xb1; 12a</td>
+<td valign="top" align="center">237 &#xb1; 14b</td>
+<td valign="top" align="center">29.7 &#xb1; 5.3b</td>
+<td valign="top" align="center">0.074 &#xb1; 0.008a</td>
+<td valign="top" align="center">0.189 &#xb1; 0.037</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>40</sub>
+</td>
+<td valign="top" align="center">1.27 &#xb1; 0.20b</td>
+<td valign="top" align="center">5.35 &#xb1; 0.53b</td>
+<td valign="top" align="center">23.2 &#xb1; 4.5b</td>
+<td valign="top" align="center">65.1 &#xb1; 11.3b</td>
+<td valign="top" align="center">288 &#xb1; 6b</td>
+<td valign="top" align="center">234 &#xb1; 13b</td>
+<td valign="top" align="center">233.1 &#xb1; 15.7c</td>
+<td valign="top" align="center">0.023 &#xb1; 0.004b</td>
+<td valign="top" align="center">0.275 &#xb1; 0.135</td>
+</tr>
+<tr>
+<td valign="top" align="left">
+<italic>N. heimii</italic>
+</td>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>30</sub>
+</td>
+<td valign="top" align="center">1.70 &#xb1; 0.14a</td>
+<td valign="top" align="center">3.90 &#xb1; 0.45a</td>
+<td valign="top" align="center">23.7 &#xb1; 3.0</td>
+<td valign="top" align="center">49.9 &#xb1; 5.0a</td>
+<td valign="top" align="center">274 &#xb1; 10</td>
+<td valign="top" align="center">257 &#xb1; 5a</td>
+<td valign="top" align="center">203.3 &#xb1; 65.2ab<sup>&#x2020;</sup>
+</td>
+<td valign="top" align="center">0.032 &#xb1; 0.007a</td>
+<td valign="top" align="center">0.158 &#xb1; 0.053</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>dyn</sub>
+</td>
+<td valign="top" align="center">1.96 &#xb1; 0.10a</td>
+<td valign="top" align="center">2.91 &#xb1; 0.30ab</td>
+<td valign="top" align="center">23.5 &#xb1; 4.6</td>
+<td valign="top" align="center">31.0 &#xb1; 2.7b</td>
+<td valign="top" align="center">257 &#xb1; 18</td>
+<td valign="top" align="center">226 &#xb1; 7b</td>
+<td valign="top" align="center">33.8 &#xb1; 27.2a<sup>&#x2020;</sup>
+</td>
+<td valign="top" align="center">0.060 &#xb1; 0.007b</td>
+<td valign="top" align="center">0.516 &#xb1; 0.401</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>40</sub>
+</td>
+<td valign="top" align="center">1.18 &#xb1; 0.13b</td>
+<td valign="top" align="center">2.74 &#xb1; 0.27b</td>
+<td valign="top" align="center">16.7 &#xb1; 2.0</td>
+<td valign="top" align="center">28.0 &#xb1; 3.0b</td>
+<td valign="top" align="center">264 &#xb1; 16</td>
+<td valign="top" align="center">219 &#xb1; 5b</td>
+<td valign="top" align="center">174.1 &#xb1; 20.3b<sup>&#x2020;</sup>
+</td>
+<td valign="top" align="center">0.022 &#xb1; 0.009a</td>
+<td valign="top" align="center">0.078 &#xb1; 0.024</td>
+</tr>
+<tr>
+<td valign="top" align="left">
+<italic>L.&#xa0;senegalensis</italic>
+</td>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>30</sub>
+</td>
+<td valign="top" align="center">1.90 &#xb1; 0.06a</td>
+<td valign="top" align="center">4.83 &#xb1; 0.43</td>
+<td valign="top" align="center">34.7 &#xb1; 7.9</td>
+<td valign="top" align="center">63.9 &#xb1; 8.8</td>
+<td valign="top" align="center">284 &#xb1; 17</td>
+<td valign="top" align="center">255 &#xb1; 9</td>
+<td valign="top" align="center">106.3 &#xb1; 20.3a<sup>&#x2020;</sup>
+</td>
+<td valign="top" align="center">0.046 &#xb1; 0.005a</td>
+<td valign="top" align="center">0.120 &#xb1; 0.029</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>dyn</sub>
+</td>
+<td valign="top" align="center">2.07 &#xb1; 0.08a</td>
+<td valign="top" align="center">3.91 &#xb1; 0.48</td>
+<td valign="top" align="center">38.2 &#xb1; 9.3</td>
+<td valign="top" align="center">45.8 &#xb1; 9.1</td>
+<td valign="top" align="center">290 &#xb1; 16</td>
+<td valign="top" align="center">227 &#xb1; 11</td>
+<td valign="top" align="center">15.0 &#xb1; 2.7b<sup>&#x2020;</sup>
+</td>
+<td valign="top" align="center">0.069 &#xb1; 0.008b</td>
+<td valign="top" align="center">0.096 &#xb1; 0.021</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>40</sub>
+</td>
+<td valign="top" align="center">1.42 &#xb1; 0.10b</td>
+<td valign="top" align="center">3.78 &#xb1; 0.40</td>
+<td valign="top" align="center">20.5 &#xb1; 3.7</td>
+<td valign="top" align="center">46.6 &#xb1; 8.9</td>
+<td valign="top" align="center">264 &#xb1; 10</td>
+<td valign="top" align="center">235 &#xb1; 11</td>
+<td valign="top" align="center">137.7 &#xb1; 3.0a<sup>&#x2020;</sup>
+</td>
+<td valign="top" align="center">0.022 &#xb1; 0.004c</td>
+<td valign="top" align="center">0.114 &#xb1; 0.017</td>
+</tr>
+</tbody>
+</table>
+<table-wrap-foot>
+<p>Shown are data recorded during gas exchange only measurements. Values are the means of five to six individual seedlings for each species ( &#xb1; standard error). Different letters following means indicate significant difference across different temperature conditions within each species, according to a LSD test conducted at P = 0.05 level. Absence of letters denotes absence of significant difference.</p>
+<p>
+<sup>&#x2020;</sup>Statistical analysis using one-way ANOVA and Dunnett&#x2019;s T3 test.</p>
+</table-wrap-foot>
+</table-wrap>
+<p>Photosynthetic rate increased faster under <italic>T</italic>
+<sub>dyn</sub> than either <italic>T</italic>
+<sub>30</sub> or <italic>T</italic>
+<sub>40</sub> and showed an overshoot within 10&#xa0;min after light intensity increased. <italic>A</italic>
+<sub>f</sub> under <italic>T</italic>
+<sub>dyn</sub> was similar to that under <italic>T</italic>
+<sub>40</sub>. The time required to reach 50% of full photosynthetic induction (IT<sub>f50%</sub>) under <italic>T</italic>
+<sub>dyn</sub> was 69&#x2013;86% lower and 73&#x2013;89% lower than that under <italic>T</italic>
+<sub>30</sub> and <italic>T</italic>
+<sub>40</sub>, respectively (<xref ref-type="table" rid="T1">
+<bold>Table 1</bold>
+</xref>). The difference in <inline-formula>
+<mml:math display="inline" id="im10">
+<mml:mrow>
+<mml:msub>
+<mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>A</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>max</mml:mi>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+</mml:math>
+</inline-formula> between <italic>T</italic>
+<sub>30</sub> and <italic>T</italic>
+<sub>dyn</sub> was significant in the shade-tolerant species.</p>
+<p>Stomatal conductance before and at the end of induction decreased in all species under <italic>T</italic>
+<sub>40</sub> compared to those under <italic>T</italic>
+<sub>30</sub> (<xref ref-type="table" rid="T1">
+<bold>Table 1</bold>
+</xref>). The maximum rate of increase in <italic>
+<underline>g</underline>
+</italic>
+<sub>sw</sub> was larger under <italic>T</italic>
+<sub>30</sub> than <italic>T</italic>
+<sub>dyn</sub>, except for <italic>N. heimii</italic>. A larger depletion in <italic>C</italic>
+<sub>i</sub> during induction was observed under <italic>T</italic>
+<sub>dyn</sub> than <italic>T</italic>
+<sub>30</sub> and <italic>T</italic>
+<sub>40</sub> in all species (<xref ref-type="fig" rid="f1">
+<bold>Figure 1</bold>
+</xref>).</p>
+</sec>
+<sec id="s3_2">
+<title>Photosynthetic Sub-Processes Under Different Temperature Conditions</title>
+<p>The time required for ETR II to reach 50% of full induction (ETR<sub>50%</sub>) was 17&#x2013;44% lower under <italic>T</italic>
+<sub>dyn</sub> than <italic>T</italic>
+<sub>30</sub> (<xref ref-type="table" rid="T2">
+<bold>Table 2</bold>
+</xref>). ETR II reached a maximum within 10&#xa0;min and decreased afterward under <italic>T</italic>
+<sub>dyn</sub> (<xref ref-type="fig" rid="f2">
+<bold>Figure 2</bold>
+</xref>). The dynamics of qP and qL were similar among the three temperature conditions. In comparison with <italic>T</italic>
+<sub>30</sub>, NPQ increased faster under <italic>T</italic>
+<sub>40</sub> in all species and under <italic>T</italic>
+<sub>dyn</sub> in <italic>N. heimii</italic> and <italic>C. argyratus</italic>.</p>
+<table-wrap id="T2" position="float">
+<label>Table 2</label>
+<caption>
+<p>Parameters of the time courses of ETR II and <italic>V</italic>
+<sub>c</sub> during photosynthetic induction since the increase in irradiance from 50 to 1000 &#x3bc;mol m<sup>-2</sup> s<sup>-1</sup> in four tropical woody species under constant 30&#xb0;C (<italic>T</italic>
+<sub>30</sub>), 40&#xb0;C (<italic>T</italic>
+<sub>40</sub>), and dynamic temperature condition (<italic>T</italic>
+<sub>dyn</sub>).</p>
+</caption>
+<table frame="hsides">
+<thead>
+<tr>
+<th valign="top" align="left">Species abbreviation</th>
+<th valign="top" align="center">Temperature condition</th>
+<th valign="top" align="center">ETR<sub>f</sub> (&#x3bc;mol m<sup>-2</sup> s<sup>-1</sup>)</th>
+<th valign="top" align="center">ETR<sub>m</sub> (&#x3bc;mol m<sup>-2</sup> s<sup>-1</sup>)</th>
+<th valign="top" align="center">
+<italic>V</italic>
+<sub>c</sub>,<sub>f</sub> (&#x3bc;mol m<sup>-2</sup> s<sup>-1</sup>)</th>
+<th valign="top" align="center">ETR<sub>50%</sub>(s)</th>
+<th valign="top" align="center">&#x3c4;<sub>Rubisco</sub>(s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td valign="top" align="left">
+<italic>C. argyratus</italic>
+</td>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>30</sub>
+</td>
+<td valign="top" align="center">38.5 &#xb1; 3.1</td>
+<td valign="top" align="center">39.8 &#xb1; 3.3</td>
+<td valign="top" align="center">34.3 &#xb1; 3.0a</td>
+<td valign="top" align="center">78.2 &#xb1; 9.4</td>
+<td valign="top" align="center">73.2 &#xb1; 7.2</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>dyn</sub>
+</td>
+<td valign="top" align="center">36.9 &#xb1; 3.6</td>
+<td valign="top" align="center">40.7 &#xb1; 3.8</td>
+<td valign="top" align="center">45.0 &#xb1; 3.3b</td>
+<td valign="top" align="center">64.7 &#xb1; 2.4</td>
+<td valign="top" align="center">87.8 &#xb1; 9.7</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>40</sub>
+</td>
+<td valign="top" align="center">32.1 &#xb1; 2.3</td>
+<td valign="top" align="center">36.6 &#xb1; 2.7</td>
+<td valign="top" align="center">43.5 &#xb1; 2.1b</td>
+<td valign="top" align="center">75.5 &#xb1; 10.5</td>
+<td valign="top" align="center">114.4 &#xb1; 21.1</td>
+</tr>
+<tr>
+<td valign="top" align="left">
+<italic>S. leprosula</italic>
+</td>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>30</sub>
+</td>
+<td valign="top" align="center">72.4 &#xb1; 7.1</td>
+<td valign="top" align="center">72.7 &#xb1; 7.1</td>
+<td valign="top" align="center">51.8 &#xb1; 4.4</td>
+<td valign="top" align="center">92.6 &#xb1; 16.9 <sup>&#x2020;</sup>
+</td>
+<td valign="top" align="center">139.6 &#xb1; 20.6ab</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>dyn</sub>
+</td>
+<td valign="top" align="center">61.9 &#xb1; 8.4</td>
+<td valign="top" align="center">69.7 &#xb1; 7.9</td>
+<td valign="top" align="center">57.2 &#xb1; 9.0</td>
+<td valign="top" align="center">72.9 &#xb1; 5.2 <sup>&#x2020;</sup>
+</td>
+<td valign="top" align="center">117.9 &#xb1; 13.5a</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>40</sub>
+</td>
+<td valign="top" align="center">53.1 &#xb1; 8.9</td>
+<td valign="top" align="center">54.5 &#xb1; 8.7</td>
+<td valign="top" align="center">57.2 &#xb1; 9.3</td>
+<td valign="top" align="center">78.8 &#xb1; 32.4 <sup>&#x2020;</sup>
+</td>
+<td valign="top" align="center">253.1 &#xb1; 68.2b</td>
+</tr>
+<tr>
+<td valign="top" align="left">
+<italic>N. heimii</italic>
+</td>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>30</sub>
+</td>
+<td valign="top" align="center">46.6 &#xb1; 6.5</td>
+<td valign="top" align="center">47.4 &#xb1; 6.4</td>
+<td valign="top" align="center">37.2 &#xb1; 4.5</td>
+<td valign="top" align="center">107.5 &#xb1; 17.9a</td>
+<td valign="top" align="center">248.9 &#xb1; 48.9</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>dyn</sub>
+</td>
+<td valign="top" align="center">39.4 &#xb1; 3.9</td>
+<td valign="top" align="center">43.5 &#xb1; 4.0</td>
+<td valign="top" align="center">44.2 &#xb1; 5.5</td>
+<td valign="top" align="center">60.1 &#xb1; 4.1b</td>
+<td valign="top" align="center">170.6 &#xb1; 10.3</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>40</sub>
+</td>
+<td valign="top" align="center">34.2 &#xb1; 4.4</td>
+<td valign="top" align="center">35.9 &#xb1; 4.5</td>
+<td valign="top" align="center">37.6 &#xb1; 4.8</td>
+<td valign="top" align="center">43.3 &#xb1; 9.0b</td>
+<td valign="top" align="center">232.1 &#xb1; 30.4</td>
+</tr>
+<tr>
+<td valign="top" align="left">
+<italic>L. senegalensis</italic>
+</td>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>30</sub>
+</td>
+<td valign="top" align="center">48.6 &#xb1; 6.9</td>
+<td valign="top" align="center">49.6 &#xb1; 7.0</td>
+<td valign="top" align="center">45.8 &#xb1; 5.2</td>
+<td valign="top" align="center">120.9 &#xb1; 11.0a</td>
+<td valign="top" align="center">150.2 &#xb1; 25.7ab <sup>&#x2020;</sup>
+</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>dyn</sub>
+</td>
+<td valign="top" align="center">48.4 &#xb1; 7.5</td>
+<td valign="top" align="center">49.0 &#xb1; 7.5</td>
+<td valign="top" align="center">63.7 &#xb1; 8.4</td>
+<td valign="top" align="center">80.6 &#xb1; 2.0b</td>
+<td valign="top" align="center">111.6 &#xb1; 3.2a <sup>&#x2020;</sup>
+</td>
+</tr>
+<tr>
+<td valign="top" align="left"/>
+<td valign="top" align="left">
+<italic>T</italic>
+<sub>40</sub>
+</td>
+<td valign="top" align="center">47.0 &#xb1; 4.3</td>
+<td valign="top" align="center">47.7 &#xb1; 4.5</td>
+<td valign="top" align="center">61.3 &#xb1; 4.5</td>
+<td valign="top" align="center">123.7 &#xb1; 8.9a</td>
+<td valign="top" align="center">214.0 &#xb1; 18.3b <sup>&#x2020;</sup>
+</td>
+</tr>
+</tbody>
+</table>
+<table-wrap-foot>
+<p>ETR<sub>f</sub> and V<sub>c,f</sub>, ETR II and V<sub>c</sub> reached at the end of photosynthetic induction, respectively; ETR<sub>m</sub>, maximum ETR II reached during photosynthetic induction; ETR<sub>50%</sub>, the time required for ETR II to reach 50% of full induction; &#x3c4;<sub>Rubisco</sub>, the apparent time constant of Rubisco activation. Estimation was based on data recorded during chlorophyll flourescence measurements. Values are means of four to six individual seedlings for each species ( &#xb1; standard error). Different letters following means indicate significant difference across different temperature conditions within each species, according to a LSD test conducted at P = 0.05 level. Absence of letters denotes absence of significant difference.</p>
+<p>
+<sup>&#x2020;</sup>Statistical analysis using one-way ANOVA and Dunnett&#x2019;s T3 test.</p>
+</table-wrap-foot>
+</table-wrap>
+<fig id="f2" position="float">
+<label>Figure 2</label>
+<caption>
+<p>Time courses of ETR II <bold>(A&#x2013;D)</bold>, qP <bold>(E&#x2013;H)</bold>, qL <bold>(I&#x2013;L)</bold>, and NPQ <bold>(M&#x2013;P)</bold> during photosynthetic induction in <italic>N. heimii</italic> <bold>(A, E, I, M)</bold>, <italic>L. senegalensis</italic> <bold>(B, F, J, N)</bold>, <italic>C. argyratus</italic> <bold>(C, G, K, O)</bold>, and <italic>S. leprosula</italic> <bold>(D, H, L, P)</bold>. Values are the means ( &#xb1; SE) of three to six individual seedlings for each species under constant 30&#xb0;C (<italic>T</italic>
+<sub>30</sub>) and 40&#xb0;C (<italic>T</italic>
+<sub>40</sub>) and dynamic temperature condition (<italic>T</italic>
+<sub>dyn</sub>). NPQ in <italic>L. senegalensis</italic> and <italic>S. leprosula</italic> was not shown due to insufficient replicates (n &lt; 3, see <italic>Materials and Methods</italic>). ETR II, electron transport rate of photosystem II; qP and qL are photochemical quenching based on the puddle and the lake model, respectively; NPQ, non-photochemical quenching.</p>
+</caption>
+<graphic mimetype="image" mime-subtype="tiff" xlink:href="fpls-11-01216-g002.tif"/>
+</fig>
+<p>Steady-state <italic>V</italic>
+<sub>c</sub> reached at the end of induction was higher under <italic>T</italic>
+<sub>dyn</sub> and <italic>T</italic>
+<sub>40</sub> than that under <italic>T</italic>
+<sub>30</sub> (<xref ref-type="table" rid="T2">
+<bold>Table 2</bold>
+</xref>). The time constants of Rubisco activation were larger under <italic>T</italic>
+<sub>40</sub> in all species, except for a small decrease in <italic>N. heimii</italic>. In comparison with <italic>T</italic>
+<sub>30</sub>, &#x3c4;<sub>Rubisco</sub> decreased under <italic>T</italic>
+<sub>dyn</sub> in all species, except for a small increase in <italic>C. argyratus</italic>.</p>
+</sec>
+<sec id="s3_3">
+<title>Primary Limiting Factor During Photosynthetic Induction</title>
+<p>As shown in <xref ref-type="fig" rid="f3">
+<bold>Figure 3</bold>
+</xref>, estimated <italic>A</italic>
+<sub>c</sub> matched the time course of measured <italic>A</italic>. We noted that <italic>A</italic> was limited by <italic>A</italic>
+<sub>j</sub> only for the first several min (<xref ref-type="supplementary-material" rid="SM1">
+<bold>Figure S3</bold>
+</xref>), after which <italic>A</italic> was limited by <italic>A</italic>
+<sub>c</sub> instead. The averaged time length of <italic>A</italic>
+<sub>j</sub> limitation ranged from 1.4 to 2.7&#xa0;min under <italic>T</italic>
+<sub>30</sub>, while the rest of photosynthetic induction was occupied by <italic>A</italic>
+<sub>c</sub> limitation. Limitation from <italic>A</italic>
+<sub>c</sub> almost dominated the entire induction process under <italic>T</italic>
+<sub>40</sub> (<xref ref-type="supplementary-material" rid="SM1">
+<bold>Figure S3</bold>
+</xref>). This was consistent with CO<sub>2</sub> response curves obtained at <italic>T</italic>
+<sub>40</sub>, as the transition point between Rubisco and RuBP regeneration limitation was much higher than transient <italic>C</italic>
+<sub>i</sub> during induction in all species (<xref ref-type="fig" rid="f4">
+<bold>Figure 4</bold>
+</xref>).</p>
+<fig id="f3" position="float">
+<label>Figure 3</label>
+<caption>
+<p>Representative time courses of measured <italic>A</italic> (open symbols), estimated <italic>A</italic>
+<sub>c</sub> (red solid line), and estimated <italic>A</italic>
+<sub>j</sub> (orange symbols with solid line) during photosynthetic induction in <italic>N. heimii</italic> <bold>(A, E, I)</bold>, <italic>L. senegalensis</italic> <bold>(B, F, J)</bold>, <italic>C. argyratus</italic> <bold>(C, G, K)</bold>, and <italic>S. leprosula</italic> <bold>(D, H, L)</bold> under constant 30&#xb0;C [<italic>T</italic>
+<sub>30</sub> <bold>(A&#x2013;D)</bold>] simulated dynamic temperature [<italic>T</italic>
+<sub>dyn</sub> <bold>(E&#x2013;H)</bold>] and constant 40&#xb0;C condition [<italic>T</italic>
+<sub>40</sub> <bold>(I&#x2013;L)</bold>], respectively. Measured <italic>A</italic> were those simultaneously recorded during chlorophyll fluorescence measurements. Estimated <italic>A</italic>
+<sub>c</sub> and <italic>A</italic>
+<sub>j</sub> were the potential <italic>A</italic> supported by <italic>V</italic>
+<sub>c</sub> and ETR II, respectively. Periodic oscillations of <italic>A</italic> were inevitable due to the periodic dark pulses necessary for determining fluorescence yield.</p>
+</caption>
+<graphic mimetype="image" mime-subtype="tiff" xlink:href="fpls-11-01216-g003.tif"/>
+</fig>
+<fig id="f4" position="float">
+<label>Figure 4</label>
+<caption>
+<p>Photosynthetic CO<sub>2</sub> response curve at high temperature (<italic>T</italic>
+<sub>40</sub>) in <italic>N. heimii</italic> <bold>(A)</bold>, <italic>L. senegalensis</italic> <bold>(B)</bold>, <italic>C. argyratus</italic> <bold>(C)</bold>, and <italic>S. leprosula</italic> <bold>(D)</bold>. Assimilation rate (<italic>A</italic>) was recorded under 1000 &#x3bc;mol m<sup>-2</sup> s<sup>-1</sup> at an average leaf temperature of 36.7&#xb0;C.The <italic>x</italic>-intercept of vertical dotted lines represents the averaged transition CO<sub>2</sub> concentration in each species, above which the primary limitation imposed on photosynthesis switched from <italic>A</italic>
+<sub>c</sub> to <italic>A</italic>
+<sub>j</sub>. Values are the means ( &#xb1; SE) of five to six individual seedlings for each species. <italic>A</italic>, assimilation rate; <italic>C</italic>
+<sub>i</sub>, intercellular CO<sub>2</sub> concentration.</p>
+</caption>
+<graphic mimetype="image" mime-subtype="tiff" xlink:href="fpls-11-01216-g004.tif"/>
+</fig>
+</sec>
+<sec id="s3_4">
+<title>Carbon Gain</title>
+<p>ICG within the first 5&#xa0;min under <italic>T</italic>
+<sub>40</sub> was 45&#x2013;83% of that under <italic>T</italic>
+<sub>30</sub> (<xref ref-type="fig" rid="f5">
+<bold>Figure 5</bold>
+</xref>). However, ICG within the first minute increased by 38&#x2013;153% under <italic>T</italic>
+<sub>dyn</sub> compared to that under <italic>T</italic>
+<sub>30</sub>. The differences in ICG between <italic>T</italic>
+<sub>dyn</sub> and <italic>T</italic>
+<sub>30</sub> decreased as the integration interval increased. ICG over 30&#xa0;min (ICG<sub>30min</sub>) was 20&#x2013;38% lower under <italic>T</italic>
+<sub>dyn</sub> than that under <italic>T</italic>
+<sub>30</sub>. The shade-tolerant species showed larger increments in ICG under <italic>T</italic>
+<sub>dyn</sub> and smaller decreases under both <italic>T</italic>
+<sub>dyn</sub> and <italic>T</italic>
+<sub>40</sub> than the shade-intolerant species.</p>
+<fig id="f5" position="float">
+<label>Figure 5</label>
+<caption>
+<p>ICG under simulated dynamic temperature condition [<italic>T</italic>
+<sub>dyn</sub> <bold>(A)</bold>] and under constant 40&#xb0;C [<italic>T</italic>
+<sub>40</sub> <bold>(B)</bold>] relative to that under constant 30&#xb0;C (<italic>T</italic>
+<sub>30</sub>) as a function of the time since light increased in tree seedlings of four tropical woody species. Shown are data recorded during gas exchange only measurements. The dotted lines indicate equal amount of ICG between two temperature conditions. Open and closed symbols represent data from shade-intolerant and shade-tolerant species, respectively. Values are the means ( &#xb1; SE) of five to six individual seedlings for each species. No significant differences were found across species at <italic>P</italic> = 0.05 level.</p>
+</caption>
+<graphic mimetype="image" mime-subtype="tiff" xlink:href="fpls-11-01216-g005.tif"/>
+</fig>
+</sec>
+<sec id="s3_5">
+<title>The Effects of Species-Specific Shade Tolerance and Growth Light Environment</title>
+<p>In comparison with <italic>T</italic>
+<sub>30</sub>, increments in <inline-formula>
+<mml:math display="inline" id="im11">
+<mml:mrow>
+<mml:msub>
+<mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>A</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>max</mml:mi>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+</mml:math>
+</inline-formula> and ICG<sub>1min</sub> under <italic>T</italic>
+<sub>dyn</sub> were significantly related to species-specific shade tolerance (<xref ref-type="table" rid="T3">
+<bold>Table 3</bold>
+</xref>). The decrease in IT<sub>f50%</sub> was related to individual averaged DLI, as seedlings with low DLI showed greater reduction in ETR<sub>f</sub> than those with high DLI (<xref ref-type="supplementary-material" rid="SM1">
+<bold>Figure S4</bold>
+</xref>).</p>
+<table-wrap id="T3" position="float">
+<label>Table 3</label>
+<caption>
+<p>The influences of species-specific shade tolerance (<italic>S</italic>) and average DLI on the differences in induction responses between <italic>T</italic>
+<sub>30</sub> and <italic>T</italic>
+<sub>dyn</sub>.</p>
+</caption>
+<table frame="hsides">
+<thead>
+<tr>
+<th valign="top" align="left"/>
+<th valign="top" colspan="3" align="center">Factors</th>
+</tr>
+<tr>
+<th valign="top" align="left"/>
+<th valign="top" align="center">Species-specific shade tolerance (<italic>S</italic>)</th>
+<th valign="top" align="center">Average daily light integral (DLI)</th>
+<th valign="top" align="center">
+<italic>S</italic> &#xd7; DLI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td valign="top" align="left">IT<sub>f50%</sub>
+</td>
+<td valign="top" align="center">1.399</td>
+<td valign="top" align="center">1.600</td>
+<td valign="top" align="center">2.664</td>
+</tr>
+<tr>
+<td valign="top" align="left">
+<inline-formula>
+<mml:math display="inline" id="im12">
+<mml:mrow>
+<mml:msub>
+<mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>A</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>max</mml:mi>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+</mml:math>
+</inline-formula>
+</td>
+<td valign="top" align="center">5.731*</td>
+<td valign="top" align="center">0.073</td>
+<td valign="top" align="center">0.334</td>
+</tr>
+<tr>
+<td valign="top" align="left">ETR<sub>50%</sub>
+</td>
+<td valign="top" align="center">4.032</td>
+<td valign="top" align="center">3.698</td>
+<td valign="top" align="center">4.812*</td>
+</tr>
+<tr>
+<td valign="top" align="left">
+<italic>&#x3c4;</italic>
+<sub>Rubisco</sub>
+</td>
+<td valign="top" align="center">0.054</td>
+<td valign="top" align="center">0.012</td>
+<td valign="top" align="center">0.533</td>
+</tr>
+<tr>
+<td valign="top" align="left">ICG<sub>1min</sub>
+</td>
+<td valign="top" align="center">5.455*</td>
+<td valign="top" align="center">0.444</td>
+<td valign="top" align="center">0.006</td>
+</tr>
+<tr>
+<td valign="top" align="left">
+<italic>A</italic>
+<sub>f</sub>
+</td>
+<td valign="top" align="center">1.799</td>
+<td valign="top" align="center">0.484</td>
+<td valign="top" align="center">1.311</td>
+</tr>
+<tr>
+<td valign="top" align="left">
+<italic>g</italic>
+<sub>sw,f</sub>
+</td>
+<td valign="top" align="center">1.217</td>
+<td valign="top" align="center">0.804</td>
+<td valign="top" align="center">1.044</td>
+</tr>
+<tr>
+<td valign="top" align="left">ETR<sub>f</sub>
+</td>
+<td valign="top" align="center">0.141</td>
+<td valign="top" align="center">14.052**</td>
+<td valign="top" align="center">0.329</td>
+</tr>
+<tr>
+<td valign="top" align="left">ICG<sub>30min</sub>
+</td>
+<td valign="top" align="center">0.922</td>
+<td valign="top" align="center">0.041</td>
+<td valign="top" align="center">0.241</td>
+</tr>
+</tbody>
+</table>
+<table-wrap-foot>
+<p>The differences in induction responses were represented as the percentage change of a parameter. Shown are F statistics followed by significance symbols, which are *P &lt; 0.05 and **P &lt; 0.01 respectively.</p>
+</table-wrap-foot>
+</table-wrap>
+</sec>
+</sec>
+<sec id="s4" sec-type="discussion">
+<title>Discussion</title>
+<sec id="s4_1">
+<title>A Gradual Increase in Leaf Temperature Affects Photosynthetic Induction Process</title>
+<p>Photosynthesis consists of a number of temperature-dependent biochemical processes (<xref ref-type="bibr" rid="B3">Berry and Bj&#xf6;rkman, 1980</xref>), and the induction process of photosynthesis thus depends on temperature. Recent studies showed that photosynthetic induction can be greatly altered by steady-state environmental temperature (<xref ref-type="bibr" rid="B16">Kaiser et&#xa0;al., 2017</xref>; <xref ref-type="bibr" rid="B47">Wachendorf and K&#xfc;ppers, 2017</xref>). It is however important to know how changing leaf temperature, accompanied with light changes, would affect photosynthetic induction rate. By comparing gradually increasing leaf temperature with two constant leaf temperatures after an increase in light, it is evident that an elevating leaf temperature from 30 to 40&#xb0;C accelerates photosynthetic rate at the early-stage induction more than the two extreme constant temperatures of 30 and 40&#xb0;C (<xref ref-type="fig" rid="f1">
+<bold>Figure 1</bold>
+</xref>). This conclusion can be confirmed by the smaller IT<sub>f50%</sub> and larger <inline-formula>
+<mml:math display="inline" id="im13">
+<mml:mrow>
+<mml:msub>
+<mml:mrow>
+<mml:mfrac>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>A</mml:mi>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>d</mml:mi>
+<mml:mi>t</mml:mi>
+</mml:mrow>
+</mml:mfrac>
+</mml:mrow>
+<mml:mrow>
+<mml:mi>max</mml:mi>
+</mml:mrow>
+</mml:msub>
+</mml:mrow>
+</mml:math>
+</inline-formula> (<xref ref-type="table" rid="T1">
+<bold>Table 1</bold>
+</xref>). The increase in simulated ETR at the early stage of the induction response also supports the conclusion (<xref ref-type="fig" rid="f2">
+<bold>Figure 2</bold>
+</xref>). It should be also noticed that photosynthetic rate reached the steady-state much faster under the gradual increasing leaf temperature than either constant leaf temperatures, particularly in the shade-tolerant species (<xref ref-type="fig" rid="f1">
+<bold>Figure 1</bold>
+</xref>). A full induction state of photosynthetic rate was achieved (within 2&#x2013;3 min often) even before the leaf temperature reached its steady-state (about 10&#xa0;min). This fact may indicate that a combined effect of changing leaf temperature, associated with an increase in light, on photosynthetic induction could include some different thermal processes rather than only under constant temperature conditions, which, to our knowledge, is being observed for the first time and deserves further clarification.</p>
+</sec>
+<sec id="s4_2">
+<title>Factors Involved in the Induction Process Under Different Temperature Conditions</title>
+<p>During the first several min after an increase in light intensity, the increase in photosynthetic rate is often constrained by RuBP regeneration, which is further limited by ETR, light activation of Rubisco, and stomatal opening (<xref ref-type="bibr" rid="B48">Way and Pearcy, 2012</xref>; <xref ref-type="bibr" rid="B15">Kaiser et&#xa0;al., 2015</xref>; <xref ref-type="bibr" rid="B55">Yamori et&#xa0;al., 2020</xref>). All these factors are thermal sensitive, but the time constants of temperature and light stimulations could be considerably different (<xref ref-type="bibr" rid="B18">Leakey et&#xa0;al., 2003</xref>; <xref ref-type="bibr" rid="B16">Kaiser et&#xa0;al., 2017</xref>; <xref ref-type="bibr" rid="B47">Wachendorf and K&#xfc;ppers, 2017</xref>). It is difficult to elucidate individual effects of these factors only based on the gas change and chlorophyll fluorescence observations in this study. We tried to address how these factors contribute to photosynthetic induction under <italic>T</italic>
+<sub>dyn</sub> using photosynthetic limitation analysis.</p>
+<p>The acceleration of linear electron transport between photosystem II and I plays an evident role in the acceleration of early-stage induction of photosynthetic rate after increase of light, particularly in the shade-intolerant species (<xref ref-type="table" rid="T2">
+<bold>Table 2</bold>
+</xref>). In this study, the limitation of <italic>A</italic>
+<sub>j</sub> dominates over the first 4&#x2013;5 min under <italic>T</italic>
+<sub>30</sub> (<xref ref-type="fig" rid="f3">
+<bold>Figure 3</bold>
+</xref> and <xref ref-type="supplementary-material" rid="SM1">
+<bold>Figure S3</bold>
+</xref>), which was longer than those reported for soybean before (<xref ref-type="bibr" rid="B29">Sassenrath-Cole and Pearcy, 1992</xref>; <xref ref-type="bibr" rid="B48">Way and Pearcy, 2012</xref>). Crop plants grown under controlled environments may have higher RuBP concentration and/or higher activation rate of RuBP regeneration in comparison with plants growing within tropical forests. Decreased ETR<sub>50%</sub> under <italic>T</italic>
+<sub>dyn</sub> also indicated that accelerated induction of ETR was related to faster photosynthetic induction at the early stage under <italic>T</italic>
+<sub>dyn</sub>. Constant temperatures strongly affect RuBP regeneration during photosynthetic induction process (<xref ref-type="bibr" rid="B16">Kaiser et&#xa0;al., 2017</xref>). Thus, accelerated induction of ETR II is expected to benefit faster relaxation of limitation through RuBP regeneration process.</p>
+<p>An increase in leaf temperature will result in increases in VPD in natural environment. Changes in VPD will affect photosynthetic induction by itself. For example, an increase in VPD reduced <italic>g</italic>
+<sub>sw</sub> and thus increased diffusional limitation (<xref ref-type="bibr" rid="B16">Kaiser et&#xa0;al., 2017</xref>). On the other hand, when VPD was held constant, <italic>g</italic>
+<sub>sw</sub> and <italic>C</italic>
+<sub>i</sub> would increase with increasing <italic>T</italic>
+<sub>leaf</sub> (<xref ref-type="bibr" rid="B45">Urban et&#xa0;al., 2017</xref>). In our study, if we assume that <italic>g</italic>
+<sub>sw</sub> and <italic>C</italic>
+<sub>i</sub> should remain the same as those reached under <italic>T</italic>
+<sub>30</sub>, then <italic>A</italic>
+<sub>f</sub> under <italic>T</italic>
+<sub>dyn</sub> would increase by 16% on average. If we focus on the early-stage of induction, then effects of changes in VPD can be neglected since stomatal opening and photosynthetic induction didn&#x2019;t change much by VPD at this stage (<xref ref-type="bibr" rid="B41">Tinoco-Ojanguren and Pearcy, 1993</xref>; <xref ref-type="bibr" rid="B16">Kaiser et&#xa0;al., 2017</xref>). Therefore, concurrent increases in VPD with rising <italic>T</italic>
+<sub>leaf</sub> will not significantly change our current conclusion in this study.</p>
+<p>The overshoots during photosynthetic induction under <italic>T</italic>
+<sub>dyn</sub> may be due to inhibition of some physiological processes by high VPD and <italic>T</italic>
+<sub>leaf</sub>. At the early-stage of induction when VPD and <italic>T</italic>
+<sub>leaf</sub> were not so high, Rubisco was activated and stomata gradually opened. As VPD and <italic>T</italic>
+<sub>leaf</sub> rose over a critical point, <italic>g</italic>
+<sub>sw</sub> (<xref ref-type="fig" rid="f1">
+<bold>Figures 1E&#x2013;H</bold>
+</xref>), ETR II (<xref ref-type="fig" rid="f2">
+<bold>Figures 2A&#x2013;D</bold>
+</xref>), and possibly activation state of Rubisco (<xref ref-type="bibr" rid="B53">Yamori et&#xa0;al., 2006</xref>; <xref ref-type="bibr" rid="B30">Scafaro et&#xa0;al., 2016</xref>; <xref ref-type="bibr" rid="B4">Busch and Sage, 2017</xref>) decreased and thus <italic>A</italic> decreased. Nonetheless, the overshoots need to be clarified in the future.</p>
+</sec>
+<sec id="s4_3">
+<title>Photosynthetic Limitation Analysis</title>
+<p>As discussed above, we determined the limiting process imposed on photosynthetic induction by comparing <italic>A</italic>
+<sub>c</sub> and <italic>A</italic>
+<sub>j</sub> after <xref ref-type="bibr" rid="B13">Farquhar et&#xa0;al. (1980)</xref>. The classic photosynthetic limitation analysis defines photosynthetic limitation as a reduction in actual transient <italic>A</italic> compared with that estimated if biochemical or diffusional limitation was removed in one step. On the contrary, a stepwise method, which compares previous and subsequent photosynthesis state, produces smaller error than the one-step method, especially when time intervals between two states are small enough (<xref ref-type="bibr" rid="B10">Deans et&#xa0;al., 2019</xref>). The limitation analysis developed in this study is a stepwise method. Dynamic <italic>A</italic>-<italic>C</italic>
+<sub>i</sub> analyses use high time-resolution dynamics of <italic>V</italic>
+<sub>c</sub> and <italic>J</italic> by constructing induction curves at a wide range of different CO<sub>2</sub> concentrations (<xref ref-type="bibr" rid="B35">Soleh et&#xa0;al., 2016</xref>; <xref ref-type="bibr" rid="B39">Taylor and Long, 2017</xref>; <xref ref-type="bibr" rid="B28">Salter et&#xa0;al., 2019</xref>). This method is time-consuming and risky due to the dependency of Rubisco activation state on CO<sub>2</sub> concentration (<xref ref-type="bibr" rid="B22">Mott and Woodrow, 1993</xref>; <xref ref-type="bibr" rid="B52">Woodrow et&#xa0;al., 1996</xref>; <xref ref-type="bibr" rid="B43">Tomimatsu et&#xa0;al., 2019</xref>). Our method provides a compromise between convenience and accuracy and can be promoted with higher time-resolution fluorescence signals for both PSI and PSII.</p>
+<p>Our observations showed that <italic>T</italic>
+<sub>leaf</sub> changed by &lt;0.2&#xb0;C/s for the first min and &lt;0.05&#xb0;C/s for the rest of induction (<xref ref-type="fig" rid="f1">
+<bold>Figure 1</bold>
+</xref>). Such changes in <italic>T</italic>
+<sub>leaf</sub> should result in small changes in the steady-state <italic>R</italic>
+<sub>L</sub> and &#x413;<sup>*</sup>. Thus, assuming instantaneous response of both parameters imposed little influence (&lt;0.1%) on estimated <italic>A</italic>
+<sub>c</sub> or <italic>A</italic>
+<sub>j</sub>. The effect of a time lag in <italic>K</italic>
+<sub>m</sub> response is also limited. If <italic>K</italic>
+<sub>m</sub> changes by 50% of difference between two consecutive steady-states, <italic>A</italic>
+<sub>c</sub> under <italic>T</italic>
+<sub>dyn</sub> changes by less than 5%, in comparison with that assuming instantaneous response of <italic>K</italic>
+<sub>m</sub>. A decrease in leaf absorptance and/or fraction of absorbed light allocation to PSII is likely to occur when a shaded leaf is exposed to high light for long (<xref ref-type="bibr" rid="B8">Davis et&#xa0;al., 2011</xref>; <xref ref-type="bibr" rid="B12">Dutta et&#xa0;al., 2015</xref>; <xref ref-type="bibr" rid="B20">Mekala et&#xa0;al., 2015</xref>). A survey from 24 species indicates that leaf absorptance of PAR decreased by ~5% after 2&#xa0;h exposure to high light (<xref ref-type="bibr" rid="B8">Davis et&#xa0;al., 2011</xref>), which alone may lead to an overestimation of <italic>A</italic>
+<sub>j</sub> by ~5% and hence underestimation of <italic>A</italic>
+<sub>j</sub> limitation. Simulation from <xref ref-type="bibr" rid="B21">Morales et&#xa0;al. (2018)</xref> also indicate small influences on <italic>A</italic> from changes in leaf absorptance. If allocation fraction should be 0.45 from the very beginning of induction, then <italic>A</italic>
+<sub>j</sub> decreased by ~10%. This would increase the duration of <italic>A</italic>
+<sub>j</sub> limitation, thus the dominant role of <italic>A</italic>
+<sub>j</sub> over the early-stage of induction still holds.</p>
+</sec>
+<sec id="s4_4">
+<title>Ecological Consequences of Changing Leaf Temperature With PAR</title>
+<p>Concurrent change of leaf temperature with PAR may play an important role in leaf carbon uptake and energy balance under temporally variable light environments. <xref ref-type="bibr" rid="B18">Leakey et&#xa0;al. (2003)</xref> reported a decrease in ICG in <italic>S. leprosula</italic> seedlings at elevated constant temperature. In this study, we demonstrate that leaf carbon gain is enhanced within the first several min under <italic>T</italic>
+<sub>dyn</sub>, although photosynthetic rate was depressed at the steady-state under 40&#xb0;C (<xref ref-type="table" rid="T1">
+<bold>Table 1</bold>
+</xref>). Since most sunflecks occurring under dense forest canopies last only a few min (<xref ref-type="bibr" rid="B24">Pearcy, 1983</xref>; <xref ref-type="bibr" rid="B6">Chazdon and Pearcy, 1986b</xref>), the acceleration of photosynthetic rate accompanied with the increase in leaf temperature at the early stage of the induction suggests that short sunflecks may contribute more leaf carbon gain than previously estimated under constant temperature.</p>
+<p>Moreover, it is still debated whether shade-tolerant species can use sunflecks more efficiently than shade-intolerant species (<xref ref-type="bibr" rid="B23">Naumburg and Ellsworth, 2000</xref>; <xref ref-type="bibr" rid="B27">Rijkers et&#xa0;al., 2000</xref>; <xref ref-type="bibr" rid="B48">Way and Pearcy, 2012</xref>). However, the argument is based on the knowledge obtained only under single constant temperature. When taking variation of leaf temperature into account, more leaf carbon gain may be achieved for shade-tolerant species because these species showed higher acceleration of photosynthetic rate than the shade-intolerant species under the changing leaf temperature in this study.</p>
+<p>ecent studies suggest that shade-intolerant species from tropical regions have higher photosynthetic temperature optimum, lower <italic>T</italic>
+<sub>leaf</sub>, and a wider temperature range for photosynthesis (<xref ref-type="bibr" rid="B7">Cheesman and Winter, 2013</xref>; <xref ref-type="bibr" rid="B32">Slot and Winter, 2017a</xref>; <xref ref-type="bibr" rid="B33">Slot and Winter, 2017b</xref>) and thus seem more competitive than shade-tolerant species in a warming world. A less strong reduction in ICG found in the shade-tolerant species under <italic>T</italic>
+<sub>dyn</sub> and <italic>T</italic>
+<sub>40</sub> (<xref ref-type="fig" rid="f5">
+<bold>Figure 5</bold>
+</xref>), however, provides some contrasting evidence. Detailed assessments on photosynthetic response and energy balance under dynamic environments, particularly under changing light and temperature conditions, are urgently needed to understand the effect of climate change on plants in tropical forests.</p>
+</sec>
+</sec>
+<sec id="s5">
+<title>Conclusion</title>
+<p>We provide the first evidence that increase in leaf temperature, associated with increase in light, accelerates photosynthetic rate at the early stage of induction process. We further demonstrated that the acceleration is likely to be mainly due to accelerated induction of ETR II. These results extend our understanding of dynamic photosynthesis to cover the effects of concurrent changes in leaf temperature and light. However, there are a number of limitations in this preliminary study, and further studies are needed to understand physiological controls of the concurrent changes, particularly in relation to leaf energy budget.</p>
+</sec>
+<sec id="s6">
+<title>Data Availability Statement</title>
+<p>The raw data supporting the conclusions of this article will be made available by the authors, without undue reservation.</p>
+</sec>
+<sec id="s7">
+<title>Author Contributions</title>
+<p>H-XK and Y-HT contributed to conception and design of the study. H-XK performed the experiments and the statistical analysis. H-XK wrote the manuscript. X-GZ, WY, and Y-HT provided editorial and scientific advice. All authors contributed to the article and approved the submitted version.</p>
+</sec>
+<sec id="s8">
+<title>Funding</title>
+<p>This study was funded by the Key Research of Plant Functional Ecology Program of Peking University (no. 7101302307). This work was supported in part by JSPS KAKENHI (grant numbers JP16H06552, JP18H02185 and JP18KK0170 to W.Y).</p>
+</sec>
+<sec id="s9">
+<title>Conflict of Interest</title>
+<p>The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest.</p>
+</sec>
+</body>
+<back>
+<ack>
+<title>Acknowledgments</title>
+<p>We thank Kouki Hikosaka for his constructive comments and stimulating discussion. We thank Azizi Ripin for identifying plant species. Our thanks are also due to Yao Tze-Leong and other staff at the Pasoh Forest Reserve for their generous help.</p>
+</ack>
+<sec id="s10" sec-type="supplementary-material">
+<title>Supplementary Material</title>
+<p>The Supplementary Material for this article can be found online at: <ext-link ext-link-type="uri" xlink:href="https://www.frontiersin.org/articles/10.3389/fpls.2020.01216/full#supplementary-material">https://www.frontiersin.org/articles/10.3389/fpls.2020.01216/full#supplementary-material</ext-link>
+</p>
+<supplementary-material xlink:href="Table_1.docx" id="SM1" mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
+<supplementary-material xlink:href="Table_2.docx" id="SM2" mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
+<supplementary-material xlink:href="Table_3.docx" id="SM3" mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
+<supplementary-material xlink:href="Table_4.docx" id="SM4" mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
+<supplementary-material xlink:href="Table_5.docx" id="SM5" mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
+<supplementary-material xlink:href="Table_6.docx" id="SM6" mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"/>
+</sec>
+<ref-list>
+<title>References</title>
+<ref id="B1">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Bellasio</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Beerling</surname> <given-names>D. J.</given-names>
+</name>
+<name>
+<surname>Griffiths</surname> <given-names>H.</given-names>
+</name>
+</person-group> (<year>2016</year>). <article-title>An Excel tool for deriving key photosynthetic parameters from combined gas exchange and chlorophyll fluorescence: theory and practice</article-title>. <source>Plant Cell Environ.</source> <volume>39</volume> (<issue>6</issue>), <fpage>1180</fpage>&#x2013;<lpage>1197</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/pce.12560</pub-id>
+</citation>
+</ref>
+<ref id="B2">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Bernacchi</surname> <given-names>C. J.</given-names>
+</name>
+<name>
+<surname>Singsaas</surname> <given-names>E. L.</given-names>
+</name>
+<name>
+<surname>Pimentel</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Portis</surname> <given-names>A. R.</given-names>
+</name>
+<name>
+<surname>Long</surname> <given-names>S. P.</given-names>
+</name>
+</person-group> (<year>2001</year>). <article-title>Improved temperature response functions for models of Rubisco-limited photosynthesis</article-title>. <source>Plant Cell Environ.</source> <volume>24</volume>, <fpage>253</fpage>&#x2013;<lpage>259</lpage>. doi: <pub-id pub-id-type="doi">10.1111/j.1365-3040.2001.00668.x</pub-id>
+</citation>
+</ref>
+<ref id="B3">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Berry</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Bj&#xf6;rkman</surname> <given-names>O.</given-names>
+</name>
+</person-group> (<year>1980</year>). <article-title>Photosynthetic response and adaptation to temperature in higher plants</article-title>. <source>Annu. Rev. Plant Biol.</source> <volume>31</volume>, <fpage>491</fpage>&#x2013;<lpage>543</lpage>. doi: <pub-id pub-id-type="doi">10.1146/annurev.pp.31.060180.002423</pub-id>
+</citation>
+</ref>
+<ref id="B4">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Busch</surname> <given-names>F. A.</given-names>
+</name>
+<name>
+<surname>Sage</surname> <given-names>R. F.</given-names>
+</name>
+</person-group> (<year>2017</year>). <article-title>The sensitivity of photosynthesis to O<sub>2</sub> and CO<sub>2</sub> concentration identifies strong Rubisco control above the thermal optimum</article-title>. <source>New Phytol.</source> <volume>213</volume> (<issue>3</issue>), <fpage>1036</fpage>&#x2013;<lpage>1051</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/nph.14258</pub-id>
+</citation>
+</ref>
+<ref id="B5">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Chazdon</surname> <given-names>R. L.</given-names>
+</name>
+<name>
+<surname>Pearcy</surname> <given-names>R. W.</given-names>
+</name>
+</person-group> (<year>1986</year>a). <article-title>Photosynthetic responses to light variation in rainforest species II. Carbon gain and photosynthetic efficiency during lightflecks</article-title>. <source>Oecologia</source> <volume>69</volume>, <fpage>524</fpage>&#x2013;<lpage>531</lpage>. doi: <pub-id pub-id-type="doi">10.1007/BF00410358</pub-id>
+</citation>
+</ref>
+<ref id="B6">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Chazdon</surname> <given-names>R. L.</given-names>
+</name>
+<name>
+<surname>Pearcy</surname> <given-names>R. W.</given-names>
+</name>
+</person-group> (<year>1986</year>b). <article-title>Photosynthetic responses to light variation in rainforest species: I. Induction under constant and fluctuating light conditions</article-title>. <source>Oecologia</source> <volume>69</volume>, <fpage>517</fpage>&#x2013;<lpage>523</lpage>. doi: <pub-id pub-id-type="doi">10.1007/BF00410357</pub-id>
+</citation>
+</ref>
+<ref id="B7">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Cheesman</surname> <given-names>A. W.</given-names>
+</name>
+<name>
+<surname>Winter</surname> <given-names>K.</given-names>
+</name>
+</person-group> (<year>2013</year>). <article-title>Growth response and acclimation of CO<sub>2</sub> exchange characteristics to elevated temperatures in tropical tree seedlings</article-title>. <source>J. Exp. Bot.</source> <volume>64</volume> (<issue>12</issue>), <fpage>3817</fpage>&#x2013;<lpage>3828</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1093/jxb/ert211</pub-id>
+</citation>
+</ref>
+<ref id="B8">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Davis</surname> <given-names>P. A.</given-names>
+</name>
+<name>
+<surname>Caylor</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Whippo</surname> <given-names>C. W.</given-names>
+</name>
+<name>
+<surname>Hangarter</surname> <given-names>R. P.</given-names>
+</name>
+</person-group> (<year>2011</year>). <article-title>Changes in leaf optical properties associated with light-dependent chloroplast movements</article-title>. <source>Plant Cell Environ.</source> <volume>34</volume> (<issue>12</issue>), <fpage>2047</fpage>&#x2013;<lpage>2059</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/j.1365-3040.2011.02402.x</pub-id>
+</citation>
+</ref>
+<ref id="B9">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>De Kauwe</surname> <given-names>M. G.</given-names>
+</name>
+<name>
+<surname>Lin</surname> <given-names>Y. S.</given-names>
+</name>
+<name>
+<surname>Wright</surname> <given-names>I. J.</given-names>
+</name>
+<name>
+<surname>Medlyn</surname> <given-names>B. E.</given-names>
+</name>
+<name>
+<surname>Crous</surname> <given-names>K. Y.</given-names>
+</name>
+<name>
+<surname>Ellsworth</surname> <given-names>D. S.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2016</year>). <article-title>A test of the &#x2018;one-point method&#x2019; for estimating maximum carboxylation capacity from field-measured, light-saturated photosynthesis</article-title>. <source>New Phytol.</source> <volume>210</volume> (<issue>3</issue>), <fpage>1130</fpage>&#x2013;<lpage>1144</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/nph.13815</pub-id>
+</citation>
+</ref>
+<ref id="B10">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Deans</surname> <given-names>R. M.</given-names>
+</name>
+<name>
+<surname>Farquhar</surname> <given-names>G. D.</given-names>
+</name>
+<name>
+<surname>Busch</surname> <given-names>F. A.</given-names>
+</name>
+</person-group> (<year>2019</year>). <article-title>Estimating stomatal and biochemical limitations during photosynthetic induction</article-title>. <source>Plant Cell Environ.</source> <volume>42</volume> (<issue>12</issue>), <fpage>3227</fpage>&#x2013;<lpage>3240</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/pce.13622</pub-id>
+</citation>
+</ref>
+<ref id="B11">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Drake</surname> <given-names>P. L.</given-names>
+</name>
+<name>
+<surname>Froend</surname> <given-names>R. H.</given-names>
+</name>
+<name>
+<surname>Franks</surname> <given-names>P. J.</given-names>
+</name>
+</person-group> (<year>2013</year>). <article-title>Smaller, faster stomata: scaling of stomatal size, rate of response, and stomatal conductance</article-title>. <source>J. Exp. Bot.</source> <volume>64</volume> (<issue>2</issue>), <fpage>495</fpage>&#x2013;<lpage>505</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1093/jxb/ers347</pub-id>
+</citation>
+</ref>
+<ref id="B12">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Dutta</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Cruz</surname> <given-names>J. A.</given-names>
+</name>
+<name>
+<surname>Jiao</surname> <given-names>Y.</given-names>
+</name>
+<name>
+<surname>Chen</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Kramer</surname> <given-names>D. M.</given-names>
+</name>
+<name>
+<surname>Osteryoung</surname> <given-names>K. W.</given-names>
+</name>
+</person-group> (<year>2015</year>). <article-title>Non-invasive, whole-plant imaging of chloroplast movement and chlorophyll fluorescence reveals photosynthetic phenotypes independent of chloroplast photorelocation defects in chloroplast division mutants</article-title>. <source>Plant J.</source> <volume>84</volume> (<issue>2</issue>), <fpage>428</fpage>&#x2013;<lpage>442</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/tpj.13009</pub-id>
+</citation>
+</ref>
+<ref id="B13">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Farquhar</surname> <given-names>G. D.</given-names>
+</name>
+<name>
+<surname>von Caemmerer</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Berry</surname> <given-names>J. A.</given-names>
+</name>
+</person-group> (<year>1980</year>). <article-title>A biochemical model of photosynthetic CO<sub>2</sub> assimilation in leaves of C<sub>3</sub> species</article-title>. <source>Planta</source> <volume>149</volume>, <fpage>78</fpage>&#x2013;<lpage>90</lpage>. doi: <pub-id pub-id-type="doi">10.1007/BF00386231</pub-id>
+</citation>
+</ref>
+<ref id="B14">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Fauset</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Freitas</surname> <given-names>H. C.</given-names>
+</name>
+<name>
+<surname>Galbraith</surname> <given-names>D. R.</given-names>
+</name>
+<name>
+<surname>Sullivan</surname> <given-names>M. J. P.</given-names>
+</name>
+<name>
+<surname>Aidar</surname> <given-names>M. P. M.</given-names>
+</name>
+<name>
+<surname>Joly</surname> <given-names>C. A.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2018</year>). <article-title>Differences in leaf thermoregulation and water use strategies between three co-occurring Atlantic forest tree species</article-title>. <source>Plant Cell Environ.</source> <volume>41</volume> (<issue>7</issue>), <fpage>1618</fpage>&#x2013;<lpage>1631</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/pce.13208</pub-id>
+</citation>
+</ref>
+<ref id="B15">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Kaiser</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Morales</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Harbinson</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Kromdijk</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Heuvelink</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Marcelis</surname> <given-names>L. F.</given-names>
+</name>
+</person-group> (<year>2015</year>). <article-title>Dynamic photosynthesis in different environmental conditions</article-title>. <source>J. Exp. Bot.</source> <volume>66</volume> (<issue>9</issue>), <fpage>2415</fpage>&#x2013;<lpage>2426</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1093/jxb/eru406</pub-id>
+</citation>
+</ref>
+<ref id="B16">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Kaiser</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Kromdijk</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Harbinson</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Heuvelink</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Marcelis</surname> <given-names>L. F.</given-names>
+</name>
+</person-group> (<year>2017</year>). <article-title>Photosynthetic induction and its diffusional, carboxylation and electron transport processes as affected by CO<sub>2</sub> partial pressure, temperature, air humidity and blue irradiance</article-title>. <source>Ann. Bot.</source> <volume>119</volume> (<issue>1</issue>), <fpage>191</fpage>&#x2013;<lpage>205</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1093/aob/mcw226</pub-id>
+</citation>
+</ref>
+<ref id="B17">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Kalaji</surname> <given-names>H. M.</given-names>
+</name>
+<name>
+<surname>Schansker</surname> <given-names>G.</given-names>
+</name>
+<name>
+<surname>Brestic</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Bussotti</surname> <given-names>F.</given-names>
+</name>
+<name>
+<surname>Calatayud</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Ferroni</surname> <given-names>L.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2017</year>). <article-title>Frequently asked questions about chlorophyll fluorescence, the sequel</article-title>. <source>Photosynth. Res.</source> <volume>132</volume> (<issue>1</issue>), <fpage>13</fpage>&#x2013;<lpage>66</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1007/s11120-016-0318-y</pub-id>
+</citation>
+</ref>
+<ref id="B18">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Leakey</surname> <given-names>A. D.</given-names>
+</name>
+<name>
+<surname>Press</surname> <given-names>M. C.</given-names>
+</name>
+<name>
+<surname>Scholes</surname> <given-names>J. D.</given-names>
+</name>
+</person-group> (<year>2003</year>). <article-title>High-temperature inhibition of photosynthesis is greater under sunflecks than uniform irradiance in a tropical rain forest tree seedling</article-title>. <source>Plant Cell Environ.</source> <volume>26</volume>, <fpage>1681</fpage>&#x2013;<lpage>1690</lpage>. doi: <pub-id pub-id-type="doi">10.1046/j.1365-3040.2003.01086.x</pub-id>
+</citation>
+</ref>
+<ref id="B19">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Mailly</surname> <given-names>D.</given-names>
+</name>
+<name>
+<surname>Turbis</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Chazdon</surname> <given-names>R. L.</given-names>
+</name>
+</person-group> (<year>2013</year>). <article-title>solarcalc 7.0: An enhanced version of a program for the analysis of hemispherical canopy photographs</article-title>. <source>Comput. Electron. Agric.</source> <volume>97</volume>, <fpage>15</fpage>&#x2013;<lpage>20</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1016/j.compag.2013.06.004</pub-id>
+</citation>
+</ref>
+<ref id="B20">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Mekala</surname> <given-names>N. R.</given-names>
+</name>
+<name>
+<surname>Suorsa</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Rantala</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Aro</surname> <given-names>E. M.</given-names>
+</name>
+<name>
+<surname>Tikkanen</surname> <given-names>M.</given-names>
+</name>
+</person-group> (<year>2015</year>). <article-title>Plants Actively Avoid State Transitions upon Changes in Light Intensity: Role of Light-Harvesting Complex II Protein Dephosphorylation in High Light</article-title>. <source>Plant Physiol.</source> <volume>168</volume> (<issue>2</issue>), <fpage>721</fpage>&#x2013;<lpage>734</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1104/pp.15.00488</pub-id>
+</citation>
+</ref>
+<ref id="B21">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Morales</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Kaiser</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Yin</surname> <given-names>X.</given-names>
+</name>
+<name>
+<surname>Harbinson</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Molenaar</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Driever</surname> <given-names>S. M.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2018</year>). <article-title>Dynamic modelling of limitations on improving leaf CO<sub>2</sub> assimilation under fluctuating irradiance</article-title>. <source>Plant Cell Environ.</source> <volume>41</volume> (<issue>3</issue>), <fpage>589</fpage>&#x2013;<lpage>604</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/pce.13119</pub-id>
+</citation>
+</ref>
+<ref id="B22">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Mott</surname> <given-names>K. A.</given-names>
+</name>
+<name>
+<surname>Woodrow</surname> <given-names>I. E.</given-names>
+</name>
+</person-group> (<year>1993</year>). <article-title>Effects of O<sub>2</sub> and CO<sub>2</sub> on nonsteady-state photosynthesis. Further evidence for ribulose-l,5-bisphosphate carboxylase/oxygenase limitation</article-title>. <source>Plant Physiol.</source> <volume>102</volume>, <fpage>859</fpage>&#x2013;<lpage>866</lpage>. doi: <pub-id pub-id-type="doi">10.1104/pp.102.3.859</pub-id>
+</citation>
+</ref>
+<ref id="B23">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Naumburg</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Ellsworth</surname> <given-names>D. S.</given-names>
+</name>
+</person-group> (<year>2000</year>). <article-title>Photosynthetic sunfleck utilization potential of understory saplings growing under elevated CO<sub>2</sub> in FACE</article-title>. <source>Oecologia</source> <volume>122</volume>, <fpage>163</fpage>&#x2013;<lpage>174</lpage>. doi: <pub-id pub-id-type="doi">10.1007/PL00008844</pub-id>
+</citation>
+</ref>
+<ref id="B24">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Pearcy</surname> <given-names>R. W.</given-names>
+</name>
+</person-group> (<year>1983</year>). <article-title>The light environment and growth of C<sub>3</sub> and C<sub>4</sub> tree species in the understory of a Hawaiian forest</article-title>. <source>Oecologia</source> <volume>58</volume>, <fpage>19</fpage>&#x2013;<lpage>25</lpage>. doi: <pub-id pub-id-type="doi">10.1007/BF00384537</pub-id>
+</citation>
+</ref>
+<ref id="B25">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Pearcy</surname> <given-names>R. W.</given-names>
+</name>
+</person-group> (<year>1990</year>). <article-title>Sunflecks and photosynthesis in plant canopies</article-title>. <source>Annu. Rev. Plant Physiol. Plant Mol. Biol.</source> <volume>41</volume>, <fpage>421</fpage>&#x2013;<lpage>453</lpage>. doi: <pub-id pub-id-type="doi">10.1146/annurev.pp.41.060190.002225</pub-id>
+</citation>
+</ref>
+<ref id="B26">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<collab>R Core Team</collab>
+</person-group>. (<year>2018</year>). <article-title>R: A language and environment for statistical computing</article-title>. (<publisher-loc>Vienna, Austria</publisher-loc>: <publisher-name>R Foundation</publisher-name>). <uri xlink:href="https://www.r-project.org/">https://www.r-project.org/</uri>
+</citation>
+</ref>
+<ref id="B27">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Rijkers</surname> <given-names>T.</given-names>
+</name>
+<name>
+<surname>de Vries</surname> <given-names>P. J.</given-names>
+</name>
+<name>
+<surname>Pons</surname> <given-names>T. L.</given-names>
+</name>
+<name>
+<surname>Bongers</surname> <given-names>F.</given-names>
+</name>
+</person-group> (<year>2000</year>). <article-title>Photosynthetic induction in saplings of three shade-tolerant tree species: comparing understorey and gap habitats in a French Guiana rain forest</article-title>. <source>Oecologia</source> <volume>125</volume> (<issue>3</issue>), <fpage>331</fpage>&#x2013;<lpage>340</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1007/s004420000459</pub-id>
+</citation>
+</ref>
+<ref id="B28">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Salter</surname> <given-names>W. T.</given-names>
+</name>
+<name>
+<surname>Merchant</surname> <given-names>A. M.</given-names>
+</name>
+<name>
+<surname>Richards</surname> <given-names>R. A.</given-names>
+</name>
+<name>
+<surname>Trethowan</surname> <given-names>R.</given-names>
+</name>
+<name>
+<surname>Buckley</surname> <given-names>T. N.</given-names>
+</name>
+</person-group> (<year>2019</year>). <article-title>Rate of photosynthetic induction in fluctuating light varies widely among genotypes of wheat</article-title>. <source>J. Exp. Bot.</source> <volume>70</volume> (<issue>10</issue>), <fpage>2787</fpage>&#x2013;<lpage>2796</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1093/jxb/erz100</pub-id>
+</citation>
+</ref>
+<ref id="B29">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Sassenrath-Cole</surname> <given-names>G. F.</given-names>
+</name>
+<name>
+<surname>Pearcy</surname> <given-names>R. W.</given-names>
+</name>
+</person-group> (<year>1992</year>). <article-title>The role of Ribulose-1,5-Bisphosphate regeneration in the induction requirement of photosynthetic CO<sub>2</sub> exchange under transient light conditions</article-title>. <source>Plant Physiol.</source> <volume>99</volume>, <fpage>227</fpage>&#x2013;<lpage>234</lpage>. doi: <pub-id pub-id-type="doi">10.1104/pp.99.1.227</pub-id>
+</citation>
+</ref>
+<ref id="B30">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Scafaro</surname> <given-names>A. P.</given-names>
+</name>
+<name>
+<surname>Galle</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Van Rie</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Carmo-Silva</surname> <given-names>E.</given-names>
+</name>
+<name>
+<surname>Salvucci</surname> <given-names>M. E.</given-names>
+</name>
+<name>
+<surname>Atwell</surname> <given-names>B. J.</given-names>
+</name>
+</person-group> (<year>2016</year>). <article-title>Heat tolerance in a wild <italic>Oryza</italic> species is attributed to maintenance of Rubisco activation by a thermally stable Rubisco activase ortholog</article-title>. <source>New Phytol.</source> <volume>211</volume> (<issue>3</issue>), <fpage>899</fpage>&#x2013;<lpage>911</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/nph.13963</pub-id>
+</citation>
+</ref>
+<ref id="B31">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Singsaas</surname> <given-names>E. L.</given-names>
+</name>
+<name>
+<surname>Sharkey</surname> <given-names>T. D.</given-names>
+</name>
+</person-group> (<year>1998</year>). <article-title>The regulation of isoprene emission responses to rapid leaf temperature fluctuations</article-title>. <source>Plant Cell Environ.</source> <volume>21</volume>, <fpage>1181</fpage>&#x2013;<lpage>1188</lpage>. doi: <pub-id pub-id-type="doi">10.1046/j.1365-3040.1998.00380.x</pub-id>
+</citation>
+</ref>
+<ref id="B32">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Slot</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Winter</surname> <given-names>K.</given-names>
+</name>
+</person-group> (<year>2017</year>a). <article-title>In situ temperature relationships of biochemical and stomatal controls of photosynthesis in four lowland tropical tree species</article-title>. <source>Plant Cell Environ.</source> <volume>40</volume> (<issue>12</issue>), <fpage>3055</fpage>&#x2013;<lpage>3068</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/pce.13071</pub-id>
+</citation>
+</ref>
+<ref id="B33">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Slot</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Winter</surname> <given-names>K.</given-names>
+</name>
+</person-group> (<year>2017</year>b). <article-title>Photosynthetic acclimation to warming in tropical forest tree seedlings</article-title>. <source>J. Exp. Bot.</source> <volume>68</volume> (<issue>9</issue>), <fpage>2275</fpage>&#x2013;<lpage>2284</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1093/jxb/erx071</pub-id>
+</citation>
+</ref>
+<ref id="B34">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Slot</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Garcia</surname> <given-names>M. N.</given-names>
+</name>
+<name>
+<surname>Winter</surname> <given-names>K.</given-names>
+</name>
+</person-group> (<year>2016</year>). <article-title>Temperature response of CO<sub>2</sub> exchange in three tropical tree species</article-title>. <source>Funct. Plant Biol.</source> <volume>43</volume> (<issue>5</issue>), 468-478. doi:&#xa0;<pub-id pub-id-type="doi">10.1071/fp15320</pub-id>
+</citation>
+</ref>
+<ref id="B35">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Soleh</surname> <given-names>M. A.</given-names>
+</name>
+<name>
+<surname>Tanaka</surname> <given-names>Y.</given-names>
+</name>
+<name>
+<surname>Nomoto</surname> <given-names>Y.</given-names>
+</name>
+<name>
+<surname>Iwahashi</surname> <given-names>Y.</given-names>
+</name>
+<name>
+<surname>Nakashima</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Fukuda</surname> <given-names>Y.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2016</year>). <article-title>Factors underlying genotypic differences in the induction of photosynthesis in soybean [<italic>Glycine max</italic> (L.) Merr]</article-title>. <source>Plant Cell Environ.</source> <volume>39</volume> (<issue>3</issue>), <fpage>685</fpage>&#x2013;<lpage>693</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/pce.12674</pub-id>
+</citation>
+</ref>
+<ref id="B36">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Tang</surname> <given-names>Y. H.</given-names>
+</name>
+<name>
+<surname>Kachi</surname> <given-names>N.</given-names>
+</name>
+<name>
+<surname>Furukawa</surname> <given-names>A.</given-names>
+</name>
+<name>
+<surname>Awang</surname> <given-names>M. B.</given-names>
+</name>
+</person-group> (<year>1999</year>). <article-title>Heterogeneity of light availability and its effects on simulated carbon gain of tree leaves in a small gap and the understory in a tropical rain forest</article-title>. <source>Biotropica</source> <volume>31</volume> (<issue>2</issue>), <fpage>268</fpage>&#x2013;<lpage>278</lpage>. doi: <pub-id pub-id-type="doi">10.1111/j.1744-7429.1999.tb00138.x</pub-id>
+</citation>
+</ref>
+<ref id="B37">
+<citation citation-type="book">
+<person-group person-group-type="author">
+<name>
+<surname>Tani</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Nik</surname> <given-names>A. R.</given-names>
+</name>
+<name>
+<surname>Ohtani</surname> <given-names>Y.</given-names>
+</name>
+<name>
+<surname>Yasuda</surname> <given-names>Y.</given-names>
+</name>
+<name>
+<surname>Sahat</surname> <given-names>M. M.</given-names>
+</name>
+<name>
+<surname>Kasran</surname> <given-names>B.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2003</year>a). &#x201c;<article-title>Characteristics of energy exchanges and surface conductance of a tropical rain forest in Peninsular Malaysia</article-title>,&#x201d; in <source>Pasoh: Ecology of a Lowland Rain Forest in Southeast Asia</source>. Eds. <person-group person-group-type="editor">
+<name>
+<surname>Okuda</surname> <given-names>T.</given-names>
+</name>
+<name>
+<surname>Manokaran</surname> <given-names>N.</given-names>
+</name>
+<name>
+<surname>Matsumoto</surname> <given-names>Y.</given-names>
+</name>
+<name>
+<surname>Niiyama</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Thomas</surname> <given-names>S. C.</given-names>
+</name>
+<name>
+<surname>Ashton</surname> <given-names>P. S.</given-names>
+</name>
+</person-group> (<publisher-loc>Tokyo, Japan</publisher-loc>: <publisher-name>Springer</publisher-name>), <fpage>73</fpage>&#x2013;<lpage>89</lpage>.</citation>
+</ref>
+<ref id="B38">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Tani</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Nik</surname> <given-names>A. R.</given-names>
+</name>
+<name>
+<surname>Yasuda</surname> <given-names>Y.</given-names>
+</name>
+<name>
+<surname>Noguchi</surname> <given-names>S.</given-names>
+</name>
+<name>
+<surname>Shamsuddin</surname> <given-names>S. A.</given-names>
+</name>
+<name>
+<surname>Sahat</surname> <given-names>M. M.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2003</year>b). <article-title>&#x201c;Long-term estimation of evapotranspiration from a tropical rain forest in Peninsular Malaysia,&#x201d;</article-title> in <source>Water Resource Systems - Water Availablity and Global Change</source>. Eds. S. Franks, G. Bloschl, M. Kumagai, K. Musiake and D. Rosbjerg (IAHS Publication), <volume>280</volume>, <fpage>267</fpage>&#x2013;<lpage>274</lpage>.</citation>
+</ref>
+<ref id="B39">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Taylor</surname> <given-names>S. H.</given-names>
+</name>
+<name>
+<surname>Long</surname> <given-names>S. P.</given-names>
+</name>
+</person-group> (<year>2017</year>). <article-title>Slow induction of photosynthesis on shade to sun transitions in wheat may cost at least 21% of productivity</article-title>. <source>Philos. Trans. R. Soc. B: Biol. Sci.</source> <volume>372</volume> (<issue>1730</issue>), 1&#x2013;9. doi:&#xa0;<pub-id pub-id-type="doi">10.1098/rstb.2016.0543</pub-id>
+</citation>
+</ref>
+<ref id="B40">
+<citation citation-type="book">
+<person-group person-group-type="author">
+<name>
+<surname>Thomas</surname> <given-names>S. C.</given-names>
+</name>
+<name>
+<surname>Noor</surname> <given-names>N. S. M.</given-names>
+</name>
+<name>
+<surname>Mansor</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Nadarajan</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Cheng</surname> <given-names>K. A.</given-names>
+</name>
+<name>
+<surname>Ishida</surname> <given-names>A.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2003</year>). <source>Part III. Plant population and functional biology</source> (<publisher-loc>Tokyo</publisher-loc>: <publisher-name>Springer-Verlag</publisher-name>).</citation>
+</ref>
+<ref id="B41">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Tinoco-Ojanguren</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Pearcy</surname> <given-names>R. W.</given-names>
+</name>
+</person-group> (<year>1993</year>). <article-title>Stomatal dynamics and its importance to carbon gain in two rainforest <italic>Piper</italic> species I. VPD effects on the transient stomatal response to lightflecks</article-title>. <source>Oecologia</source> <volume>94</volume>, <fpage>388</fpage>&#x2013;<lpage>394</lpage>. doi: <pub-id pub-id-type="doi">10.1007/BF00317115</pub-id>
+</citation>
+</ref>
+<ref id="B42">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Tomimatsu</surname> <given-names>H.</given-names>
+</name>
+<name>
+<surname>Tang</surname> <given-names>Y.</given-names>
+</name>
+</person-group> (<year>2016</year>). <article-title>Effects of high CO<sub>2</sub> levels on dynamic photosynthesis: carbon gain, mechanisms, and environmental interactions</article-title>. <source>J.&#xa0;Plant Res.</source> <volume>129</volume> (<issue>3</issue>), <fpage>365</fpage>&#x2013;<lpage>377</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1007/s10265-016-0817-0</pub-id>
+</citation>
+</ref>
+<ref id="B43">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Tomimatsu</surname> <given-names>H.</given-names>
+</name>
+<name>
+<surname>Sakata</surname> <given-names>T.</given-names>
+</name>
+<name>
+<surname>Fukayama</surname> <given-names>H.</given-names>
+</name>
+<name>
+<surname>Tang</surname> <given-names>Y.</given-names>
+</name>
+</person-group> (<year>2019</year>). <article-title>Short-term effects of high CO<sub>2</sub> accelerate photosynthetic induction in <italic>Populus koreana</italic> x <italic>trichocarpa</italic> with always-open stomata regardless of phenotypic changes in high CO<sub>2</sub> growth conditions</article-title>. <source>Tree Physiol.</source> <volume>39</volume> (<issue>3</issue>), <fpage>474</fpage>&#x2013;<lpage>483</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1093/treephys/tpy078</pub-id>
+</citation>
+</ref>
+<ref id="B44">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Urban</surname> <given-names>O.</given-names>
+</name>
+<name>
+<surname>Ko&#x161;vancov&#xe1;</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Marek</surname> <given-names>M. V.</given-names>
+</name>
+<name>
+<surname>Lichtenthaler</surname> <given-names>H. K.</given-names>
+</name>
+</person-group> (<year>2007</year>). <article-title>Induction of photosynthesis and importance of limitations during the induction phase in sun and shade leaves of five ecologically contrasting tree species from the temperate zone</article-title>. <source>Tree Physiol.</source> <volume>27</volume>, <fpage>1207</fpage>&#x2013;<lpage>1215</lpage>. doi: <pub-id pub-id-type="doi">10.1093/treephys/27.8.1207</pub-id>
+</citation>
+</ref>
+<ref id="B45">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Urban</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Ingwers</surname> <given-names>M. W.</given-names>
+</name>
+<name>
+<surname>McGuire</surname> <given-names>M. A.</given-names>
+</name>
+<name>
+<surname>Teskey</surname> <given-names>R. O.</given-names>
+</name>
+</person-group> (<year>2017</year>). <article-title>Increase in leaf temperature opens stomata and decouples net photosynthesis from stomatal conductance in <italic>Pinus taeda</italic> and <italic>Populus deltoides x nigra</italic>
+</article-title>. <source>J. Exp. Bot.</source> <volume>68</volume> (<issue>7</issue>), <fpage>1757</fpage>&#x2013;<lpage>1767</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1093/jxb/erx052</pub-id>
+</citation>
+</ref>
+<ref id="B46">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Vanderwel</surname> <given-names>M. C.</given-names>
+</name>
+<name>
+<surname>Slot</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Lichstein</surname> <given-names>J. W.</given-names>
+</name>
+<name>
+<surname>Reich</surname> <given-names>P. B.</given-names>
+</name>
+<name>
+<surname>Kattge</surname> <given-names>J.</given-names>
+</name>
+<name>
+<surname>Atkin</surname> <given-names>O. K.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2015</year>). <article-title>Global convergence in leaf respiration from estimates of thermal acclimation across time and space</article-title>. <source>New Phytol.</source> <volume>207</volume> (<issue>4</issue>), <fpage>1026</fpage>&#x2013;<lpage>1037</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/nph.13417</pub-id>
+</citation>
+</ref>
+<ref id="B47">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Wachendorf</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>K&#xfc;ppers</surname> <given-names>M.</given-names>
+</name>
+</person-group> (<year>2017</year>). <article-title>Effects of leaf temperature on initial stomatal opening and their roles in overall and biochemical photosynthetic induction</article-title>. <source>Trees</source> <volume>31</volume> (<issue>5</issue>), <fpage>1667</fpage>&#x2013;<lpage>1681</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1007/s00468-017-1577-8</pub-id>
+</citation>
+</ref>
+<ref id="B48">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Way</surname> <given-names>D. A.</given-names>
+</name>
+<name>
+<surname>Pearcy</surname> <given-names>R. W.</given-names>
+</name>
+</person-group> (<year>2012</year>). <article-title>Sunflecks in trees and forests: from photosynthetic physiology to global change biology</article-title>. <source>Tree Physiol.</source> <volume>32</volume> (<issue>9</issue>), <fpage>1066</fpage>&#x2013;<lpage>1081</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1093/treephys/tps064</pub-id>
+</citation>
+</ref>
+<ref id="B49">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Way</surname> <given-names>D. A.</given-names>
+</name>
+<name>
+<surname>Aspinwall</surname> <given-names>M. J.</given-names>
+</name>
+<name>
+<surname>Drake</surname> <given-names>J. E.</given-names>
+</name>
+<name>
+<surname>Crous</surname> <given-names>K. Y.</given-names>
+</name>
+<name>
+<surname>Campany</surname> <given-names>C. E.</given-names>
+</name>
+<name>
+<surname>Ghannoum</surname> <given-names>O.</given-names>
+</name>
+<etal/>
+</person-group>. (<year>2019</year>). <article-title>Responses of respiration in the light to warming in field-grown trees: a comparison of the thermal sensitivity of the Kok and Laisk methods</article-title>. <source>New Phytol.</source> <volume>222</volume> (<issue>1</issue>), <fpage>132</fpage>&#x2013;<lpage>143</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/nph.15566</pub-id>
+</citation>
+</ref>
+<ref id="B50">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Wise</surname> <given-names>R. R.</given-names>
+</name>
+<name>
+<surname>Olson</surname> <given-names>A. J.</given-names>
+</name>
+<name>
+<surname>Schrader</surname> <given-names>S. M.</given-names>
+</name>
+<name>
+<surname>Sharkey</surname> <given-names>T. D.</given-names>
+</name>
+</person-group> (<year>2004</year>). <article-title>Electron transport is the functional limitation of photosynthesis in field-grown Pima cotton plants at high temperature</article-title>. <source>Plant Cell Environ.</source> <volume>27</volume>, <fpage>717</fpage>&#x2013;<lpage>724</lpage>. doi: <pub-id pub-id-type="doi">10.1111/j.1365-3040.2004.01171.x</pub-id>
+</citation>
+</ref>
+<ref id="B51">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Woodrow</surname> <given-names>I. E.</given-names>
+</name>
+<name>
+<surname>Mott</surname> <given-names>K. A.</given-names>
+</name>
+</person-group> (<year>1989</year>). <article-title>Rate limitation of non-steady-state photosynthesis by ribulose-1,5-bisphosphate carboxylase in spinach</article-title>. <source>Aust. J. Plant Physiol.</source> <volume>16</volume>, <fpage>487</fpage>&#x2013;<lpage>500</lpage>. doi: <pub-id pub-id-type="doi">10.1071/PP9890487</pub-id>
+</citation>
+</ref>
+<ref id="B52">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Woodrow</surname> <given-names>I. E.</given-names>
+</name>
+<name>
+<surname>Kelly</surname> <given-names>C. K.</given-names>
+</name>
+<name>
+<surname>Mott</surname> <given-names>K. A.</given-names>
+</name>
+</person-group> (<year>1996</year>). <article-title>Limitation of the rate of ribulosebisphosphate carboxylase activation by carbamylation and ribulosebisphosphate carboxylase activase activity: development and tests of a mechanistic model</article-title>. <source>Aust. J. Plant Physiol.</source> <volume>23</volume>, <fpage>141</fpage>&#x2013;<lpage>149</lpage>. doi: <pub-id pub-id-type="doi">10.1071/PP9960141</pub-id>
+</citation>
+</ref>
+<ref id="B53">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Yamori</surname> <given-names>W.</given-names>
+</name>
+<name>
+<surname>Suzuki</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Noguchi</surname> <given-names>K. O.</given-names>
+</name>
+<name>
+<surname>Nakai</surname> <given-names>M.</given-names>
+</name>
+<name>
+<surname>Terashima</surname> <given-names>I.</given-names>
+</name>
+</person-group> (<year>2006</year>). <article-title>Effects of Rubisco kinetics and Rubisco activation state on the temperature dependence of the photosynthetic rate in spinach leaves from contrasting growth temperatures</article-title>. <source>Plant Cell Environ.</source> <volume>29</volume> (<issue>8</issue>), <fpage>1659</fpage>&#x2013;<lpage>1670</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/j.1365-3040.2006.01550.x</pub-id>
+</citation>
+</ref>
+<ref id="B54">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Yamori</surname> <given-names>W.</given-names>
+</name>
+<name>
+<surname>Masumoto</surname> <given-names>C.</given-names>
+</name>
+<name>
+<surname>Fukayama</surname> <given-names>H.</given-names>
+</name>
+<name>
+<surname>Makino</surname> <given-names>A.</given-names>
+</name>
+</person-group> (<year>2012</year>). <article-title>Rubisco activase is a key regulator of non-steady-state photosynthesis at any leaf temperature and, to a lesser extent, of steady-state photosynthesis at high temperature</article-title>. <source>Plant J.</source> <volume>71</volume> (<issue>6</issue>), <fpage>871</fpage>&#x2013;<lpage>880</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/j.1365-313X.2012.05041.x</pub-id>
+</citation>
+</ref>
+<ref id="B55">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Yamori</surname> <given-names>W.</given-names>
+</name>
+<name>
+<surname>Kusumi</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Iba</surname> <given-names>K.</given-names>
+</name>
+<name>
+<surname>Terashima</surname> <given-names>I.</given-names>
+</name>
+</person-group> (<year>2020</year>). <article-title>Increased stomatal conductance induces rapid changes to photosynthetic rate in response to naturally fluctuating light conditions in rice</article-title>. <source>Plant Cell Environ</source>. 43, 1230&#x2013;1240. doi:&#xa0;<pub-id pub-id-type="doi">10.1111/pce.13725</pub-id>
+</citation>
+</ref>
+<ref id="B56">
+<citation citation-type="journal">
+<person-group person-group-type="author">
+<name>
+<surname>Yamori</surname> <given-names>W.</given-names>
+</name>
+</person-group> (<year>2016</year>). <article-title>Photosynthetic response to fluctuating environments and photoprotective strategies under abiotic stress</article-title>. <source>J. Plant Res.</source> <volume>129</volume> (<issue>3</issue>), <fpage>379</fpage>&#x2013;<lpage>395</lpage>. doi:&#xa0;<pub-id pub-id-type="doi">10.1007/s10265-016-0816-1</pub-id>
+</citation>
+</ref>
+</ref-list>
+</back>
+</article>

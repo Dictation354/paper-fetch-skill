@@ -1,0 +1,416 @@
+{
+  "provider": "tandf",
+  "doi": "10.1080/17538947.2022.2137254",
+  "sample_id": "10.1080_17538947.2022.2137254",
+  "source_url": "https://www.tandfonline.com/doi/full/10.1080/17538947.2022.2137254",
+  "source_input": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/original.html",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "a55f8af5a905d806bbb34e6b7a6fb29c7132ac70b19acb819c84ed9509b0addd",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 1. The geographic location of the study area and data loggers specificall",
+        "caption": "Figure 1. The geographic location of the study area and data loggers specifically measuring the soil temperature.",
+        "url": "https://www.tandfonline.com/cms/asset/be72b11a-59f0-4568-89b2-86103c7d6953/tjde_a_2137254_f0001_oc.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "image_id": "d1e342",
+        "preview_url": "https://www.tandfonline.com/cms/asset/7c085eae-75e0-4ccb-96fa-2b1cb1f35450/tjde_a_2137254_f0001_oc.jpg",
+        "full_size_url": "https://www.tandfonline.com/cms/asset/be72b11a-59f0-4568-89b2-86103c7d6953/tjde_a_2137254_f0001_oc.jpg",
+        "preview_accepted": "true"
+      },
+      "download_url": "https://www.tandfonline.com/cms/asset/be72b11a-59f0-4568-89b2-86103c7d6953/tjde_a_2137254_f0001_oc.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0001_oc.jpg"
+      ],
+      "record": "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0001_oc.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 1030,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "tjde_a_2137254_f0001_oc.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 2. The proposed conceptual model for LST normalization.",
+        "caption": "Figure 2. The proposed conceptual model for LST normalization.",
+        "url": "https://www.tandfonline.com/cms/asset/3eb40468-4dd1-4d1d-83de-9b03067fd963/tjde_a_2137254_f0002_oc.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "image_id": "d1e470",
+        "preview_url": "https://www.tandfonline.com/cms/asset/d019a1ff-f502-4d07-9371-ab8bc365f975/tjde_a_2137254_f0002_oc.jpg",
+        "full_size_url": "https://www.tandfonline.com/cms/asset/3eb40468-4dd1-4d1d-83de-9b03067fd963/tjde_a_2137254_f0002_oc.jpg",
+        "preview_accepted": "true"
+      },
+      "download_url": "https://www.tandfonline.com/cms/asset/3eb40468-4dd1-4d1d-83de-9b03067fd963/tjde_a_2137254_f0002_oc.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0002_oc.jpg"
+      ],
+      "record": "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0002_oc.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 1486,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "tjde_a_2137254_f0002_oc.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 3. The maps of the various environmental variables (a) DEM, (b) Slope, (c",
+        "caption": "Figure 3. The maps of the various environmental variables (a) DEM, (b) Slope, (c) Aspect, (d) Wetness, (e) NDVI, and (f) Albedo.",
+        "url": "https://www.tandfonline.com/cms/asset/dfae2c17-73b7-4ef9-8f5b-a4fbc3e629a5/tjde_a_2137254_f0003_oc.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "image_id": "d1e3066",
+        "preview_url": "https://www.tandfonline.com/cms/asset/9ccf4a8d-1ee4-4e56-be34-6355df9078a4/tjde_a_2137254_f0003_oc.jpg",
+        "full_size_url": "https://www.tandfonline.com/cms/asset/dfae2c17-73b7-4ef9-8f5b-a4fbc3e629a5/tjde_a_2137254_f0003_oc.jpg",
+        "preview_accepted": "true"
+      },
+      "download_url": "https://www.tandfonline.com/cms/asset/dfae2c17-73b7-4ef9-8f5b-a4fbc3e629a5/tjde_a_2137254_f0003_oc.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0003_oc.jpg"
+      ],
+      "record": "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0003_oc.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 851,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "tjde_a_2137254_f0003_oc.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 4. The accuracy of LST obtained from different algorithms.",
+        "caption": "Figure 4. The accuracy of LST obtained from different algorithms.",
+        "url": "https://www.tandfonline.com/cms/asset/38a1c809-dae0-47d7-9ce6-371ff9f051ca/tjde_a_2137254_f0004_oc.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "image_id": "d1e3083",
+        "preview_url": "https://www.tandfonline.com/cms/asset/fa1645f6-cbfa-4ed8-a25c-238380eeb320/tjde_a_2137254_f0004_oc.jpg",
+        "full_size_url": "https://www.tandfonline.com/cms/asset/38a1c809-dae0-47d7-9ce6-371ff9f051ca/tjde_a_2137254_f0004_oc.jpg",
+        "preview_accepted": "true"
+      },
+      "download_url": "https://www.tandfonline.com/cms/asset/38a1c809-dae0-47d7-9ce6-371ff9f051ca/tjde_a_2137254_f0004_oc.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0004_oc.jpg"
+      ],
+      "record": "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0004_oc.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 1830,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "tjde_a_2137254_f0004_oc.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 5. Optimal LST maps (°C) and effective cumulative solar irradiance (W m −",
+        "caption": "Figure 5. Optimal LST maps (°C) and effective cumulative solar irradiance (W m −2 ).",
+        "url": "https://www.tandfonline.com/cms/asset/0439e202-a6ef-4d12-9130-445ae0fcf609/tjde_a_2137254_f0005_oc.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "image_id": "d1e3099",
+        "preview_url": "https://www.tandfonline.com/cms/asset/8db4324a-93a5-4d62-ba39-ad0f5f3a9880/tjde_a_2137254_f0005_oc.jpg",
+        "full_size_url": "https://www.tandfonline.com/cms/asset/0439e202-a6ef-4d12-9130-445ae0fcf609/tjde_a_2137254_f0005_oc.jpg",
+        "preview_accepted": "true"
+      },
+      "download_url": "https://www.tandfonline.com/cms/asset/0439e202-a6ef-4d12-9130-445ae0fcf609/tjde_a_2137254_f0005_oc.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0005_oc.jpg"
+      ],
+      "record": "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0005_oc.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 2362,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "tjde_a_2137254_f0005_oc.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 6. RMSE and coefficient of determination between the modeled LST and sate",
+        "caption": "Figure 6. RMSE and coefficient of determination between the modeled LST and satellite image-derived LST and standard deviation of the normalized LST with the addition of each environmental variable to the normalization model.",
+        "url": "https://www.tandfonline.com/cms/asset/7b78b5a9-84b0-4959-97cb-0a0a6dee6483/tjde_a_2137254_f0006_oc.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "image_id": "d1e3125",
+        "preview_url": "https://www.tandfonline.com/cms/asset/88672ca0-71d7-4a50-8389-d963e37ebbd6/tjde_a_2137254_f0006_oc.jpg",
+        "full_size_url": "https://www.tandfonline.com/cms/asset/7b78b5a9-84b0-4959-97cb-0a0a6dee6483/tjde_a_2137254_f0006_oc.jpg",
+        "preview_accepted": "true"
+      },
+      "download_url": "https://www.tandfonline.com/cms/asset/7b78b5a9-84b0-4959-97cb-0a0a6dee6483/tjde_a_2137254_f0006_oc.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0006_oc.jpg"
+      ],
+      "record": "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0006_oc.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 2278,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "tjde_a_2137254_f0006_oc.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 7. The variable importance of each of the environmental variables in mode",
+        "caption": "Figure 7. The variable importance of each of the environmental variables in modeling LST.",
+        "url": "https://www.tandfonline.com/cms/asset/8190e43b-4698-452c-b05d-2ad710f8d642/tjde_a_2137254_f0007_oc.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "image_id": "d1e3139",
+        "preview_url": "https://www.tandfonline.com/cms/asset/041be45a-8c66-4db9-abac-b73e16f3bb3d/tjde_a_2137254_f0007_oc.jpg",
+        "full_size_url": "https://www.tandfonline.com/cms/asset/8190e43b-4698-452c-b05d-2ad710f8d642/tjde_a_2137254_f0007_oc.jpg",
+        "preview_accepted": "true"
+      },
+      "download_url": "https://www.tandfonline.com/cms/asset/8190e43b-4698-452c-b05d-2ad710f8d642/tjde_a_2137254_f0007_oc.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0007_oc.jpg"
+      ],
+      "record": "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0007_oc.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 633,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "tjde_a_2137254_f0007_oc.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 8. The original LST and modeled LST (°C) maps based on PLSR and RFR with ",
+        "caption": "Figure 8. The original LST and modeled LST (°C) maps based on PLSR and RFR with global and local optimization strategies.",
+        "url": "https://www.tandfonline.com/cms/asset/fbe51409-4637-433c-aa45-eed9efede36f/tjde_a_2137254_f0008_oc.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "image_id": "d1e3157",
+        "preview_url": "https://www.tandfonline.com/cms/asset/ef53e8ef-09c3-4dbb-8b41-a3726edf41cb/tjde_a_2137254_f0008_oc.jpg",
+        "full_size_url": "https://www.tandfonline.com/cms/asset/fbe51409-4637-433c-aa45-eed9efede36f/tjde_a_2137254_f0008_oc.jpg",
+        "preview_accepted": "true"
+      },
+      "download_url": "https://www.tandfonline.com/cms/asset/fbe51409-4637-433c-aa45-eed9efede36f/tjde_a_2137254_f0008_oc.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0008_oc.jpg"
+      ],
+      "record": "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0008_oc.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 1268,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "tjde_a_2137254_f0008_oc.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 9. Normalized LST (°C) relative to the environmental variables based on P",
+        "caption": "Figure 9. Normalized LST (°C) relative to the environmental variables based on PLSR and RFR with global and local optimization strategies.",
+        "url": "https://www.tandfonline.com/cms/asset/e82b56ca-141a-49bc-a914-b4c9d84eb862/tjde_a_2137254_f0009_oc.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "image_id": "d1e3250",
+        "preview_url": "https://www.tandfonline.com/cms/asset/83041a9b-b08d-4819-adf4-33f2adb3b9ae/tjde_a_2137254_f0009_oc.jpg",
+        "full_size_url": "https://www.tandfonline.com/cms/asset/e82b56ca-141a-49bc-a914-b4c9d84eb862/tjde_a_2137254_f0009_oc.jpg",
+        "preview_accepted": "true"
+      },
+      "download_url": "https://www.tandfonline.com/cms/asset/e82b56ca-141a-49bc-a914-b4c9d84eb862/tjde_a_2137254_f0009_oc.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0009_oc.jpg"
+      ],
+      "record": "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0009_oc.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 1251,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "tjde_a_2137254_f0009_oc.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 10. The standard deviation and histogram of normalized LST values based o",
+        "caption": "Figure 10. The standard deviation and histogram of normalized LST values based on PLSR and RFR with global and local optimization strategies.",
+        "url": "https://www.tandfonline.com/cms/asset/cdb24607-45e7-410a-a8e7-129f6e49fdd4/tjde_a_2137254_f0010_oc.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "image_id": "d1e3264",
+        "preview_url": "https://www.tandfonline.com/cms/asset/87ba751e-71bb-41a9-aa38-1136b7e456c3/tjde_a_2137254_f0010_oc.jpg",
+        "full_size_url": "https://www.tandfonline.com/cms/asset/cdb24607-45e7-410a-a8e7-129f6e49fdd4/tjde_a_2137254_f0010_oc.jpg",
+        "preview_accepted": "true"
+      },
+      "download_url": "https://www.tandfonline.com/cms/asset/cdb24607-45e7-410a-a8e7-129f6e49fdd4/tjde_a_2137254_f0010_oc.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0010_oc.jpg"
+      ],
+      "record": "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0010_oc.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 1276,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "tjde_a_2137254_f0010_oc.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 11. The RMSE (°C) and coefficient of determination between modeled LST an",
+        "caption": "Figure 11. The RMSE (°C) and coefficient of determination between modeled LST and ground device-derived LST.",
+        "url": "https://www.tandfonline.com/cms/asset/f31d7c5f-2914-4752-983f-793e7ede27fb/tjde_a_2137254_f0011_oc.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "image_id": "d1e3492",
+        "preview_url": "https://www.tandfonline.com/cms/asset/d97d353b-86bf-4550-ad3d-beac6a58c99d/tjde_a_2137254_f0011_oc.jpg",
+        "full_size_url": "https://www.tandfonline.com/cms/asset/f31d7c5f-2914-4752-983f-793e7ede27fb/tjde_a_2137254_f0011_oc.jpg",
+        "preview_accepted": "true"
+      },
+      "download_url": "https://www.tandfonline.com/cms/asset/f31d7c5f-2914-4752-983f-793e7ede27fb/tjde_a_2137254_f0011_oc.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0011_oc.jpg"
+      ],
+      "record": "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0011_oc.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 1508,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "tjde_a_2137254_f0011_oc.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 12. The standard deviation of ground device-derived LST and normalized LS",
+        "caption": "Figure 12. The standard deviation of ground device-derived LST and normalized LST in location of ground devices.",
+        "url": "https://www.tandfonline.com/cms/asset/015b796c-226e-425a-8f25-25ad0e1e982b/tjde_a_2137254_f0012_oc.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "image_id": "d1e3508",
+        "preview_url": "https://www.tandfonline.com/cms/asset/edf375f9-22f6-48e4-871d-6388364e5b17/tjde_a_2137254_f0012_oc.jpg",
+        "full_size_url": "https://www.tandfonline.com/cms/asset/015b796c-226e-425a-8f25-25ad0e1e982b/tjde_a_2137254_f0012_oc.jpg",
+        "preview_accepted": "true"
+      },
+      "download_url": "https://www.tandfonline.com/cms/asset/015b796c-226e-425a-8f25-25ad0e1e982b/tjde_a_2137254_f0012_oc.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0012_oc.jpg"
+      ],
+      "record": "acquisition/network-repair/raw-body-assets/tjde_a_2137254_f0012_oc.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 690,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "tjde_a_2137254_f0012_oc.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 12,
+    "unique_files": 12,
+    "verified_files": 12,
+    "replayed_files": 12,
+    "complete_received_files": 12,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 12,
+    "unique_files": 12,
+    "verified_files": 12,
+    "replayed_files": 12,
+    "complete_received_files": 12
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

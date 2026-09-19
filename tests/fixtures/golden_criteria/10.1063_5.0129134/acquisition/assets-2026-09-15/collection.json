@@ -1,0 +1,198 @@
+{
+  "provider": "aip",
+  "doi": "10.1063/5.0129134",
+  "sample_id": "10.1063_5.0129134",
+  "source_url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+  "source_input": "tests/fixtures/golden_criteria/10.1063_5.0129134/acquisition/assets-2026-09-15/c9638575685d0f24-http-1.bin",
+  "include_supplementary": true,
+  "include_body": true,
+  "source_sha256": "b4a276dfa5b4daa8a2956616fdf10d91668ab7eabd5610077a70bcc5f765870a",
+  "targets": [
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "supplementary material",
+        "caption": "",
+        "section": "supplementary",
+        "url": "https://pubs.aip.org/adv/article-supplement/2820011/zip/125205_1_epaps/",
+        "filename_hint": "125205_1_epaps.zip"
+      },
+      "download_url": "https://pubs.aip.org/adv/article-supplement/2820011/zip/125205_1_epaps/",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "Supplementary_Material_V2.docx"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "125205_1_epaps.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/9dc88992a38fc0c6-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIG. 1. (a) Image of the ion pump with the adapter. Scale bar—1 cm. (b) Image of the device and adapter in a six-well plate. Scale bar—1.5 cm. (c) Schematic of the ion pump. (d) Reactions taking place at the working electrode.",
+        "caption": "FIG. 1. (a) Image of the ion pump with the adapter. Scale bar—1 cm. (b) Image of the device and adapter in a six-well plate. Scale bar—1.5 cm. (c) Schematic of the ion pump. (d) Reactions taking place at the working electrode.",
+        "url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f1.jpeg?Expires=1791347585&Signature=4hONfeyvrYyyLD4UEdYmfsfZFQcbI7HHmDm7UEetnrz6kIubQtqFoMtFjwbPiJ3Odq0QQfuQB77rgib~X7hZIBVVW~YrT~2PFjXybEst612MrYCDrAYibzy-XypEuvMhoozbelPoPCUwQ3ot~uI2mHMIakWHrYR2A5xbydynXCf7o5IdBNMc-s~FbyviOCNR51dJzAENi~hLg8FcMOf5UcDgdU0RVFrhUXGPlDCXkFzzxTcutTIQoUiWTnrOoJ-okiuHyseiSLp9NVxqxVYJ0wIjStS-Xvl7QeONzxXczQHlA9RrkLPoRQ5mGAkQZyHAJkOQVvtDBJCtG3JLWih8sA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "f1",
+        "preview_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f1.jpeg?Expires=1791347585&Signature=4hONfeyvrYyyLD4UEdYmfsfZFQcbI7HHmDm7UEetnrz6kIubQtqFoMtFjwbPiJ3Odq0QQfuQB77rgib~X7hZIBVVW~YrT~2PFjXybEst612MrYCDrAYibzy-XypEuvMhoozbelPoPCUwQ3ot~uI2mHMIakWHrYR2A5xbydynXCf7o5IdBNMc-s~FbyviOCNR51dJzAENi~hLg8FcMOf5UcDgdU0RVFrhUXGPlDCXkFzzxTcutTIQoUiWTnrOoJ-okiuHyseiSLp9NVxqxVYJ0wIjStS-Xvl7QeONzxXczQHlA9RrkLPoRQ5mGAkQZyHAJkOQVvtDBJCtG3JLWih8sA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "provenance": [
+          "official_full_size_not_exposed"
+        ]
+      },
+      "download_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f1.jpeg?Expires=1791347585&Signature=4hONfeyvrYyyLD4UEdYmfsfZFQcbI7HHmDm7UEetnrz6kIubQtqFoMtFjwbPiJ3Odq0QQfuQB77rgib~X7hZIBVVW~YrT~2PFjXybEst612MrYCDrAYibzy-XypEuvMhoozbelPoPCUwQ3ot~uI2mHMIakWHrYR2A5xbydynXCf7o5IdBNMc-s~FbyviOCNR51dJzAENi~hLg8FcMOf5UcDgdU0RVFrhUXGPlDCXkFzzxTcutTIQoUiWTnrOoJ-okiuHyseiSLp9NVxqxVYJ0wIjStS-Xvl7QeONzxXczQHlA9RrkLPoRQ5mGAkQZyHAJkOQVvtDBJCtG3JLWih8sA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/m_125205_1_f1.jpeg"
+      ],
+      "record": "body_assets/m_125205_1_f1.jpeg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 520,
+        "height": 382,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "m_125205_1_f1.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIG. 2. (a) Experimental setup of the ion pump. The ion pump is inserted in a six-well cell culture plate containing fluorescent dyes as the target and is placed under a fluorescence microscope for real-time imaging during actuation. Scale bar—3.5 cm. (b) Fluorescence microscope image of the target area with working and reference electrodes. Scale bar—100 µm. (c) Current response of the device to an applied voltage. (d) Fluorescence response of the device to an applied voltage. (e) Current response of the device to a series of applied voltages. The reservoir contains 1M KCl. (f) Current response of the device to a series of applied voltages. The reservoir contains 100 mM KCl.",
+        "caption": "FIG. 2. (a) Experimental setup of the ion pump. The ion pump is inserted in a six-well cell culture plate containing fluorescent dyes as the target and is placed under a fluorescence microscope for real-time imaging during actuation. Scale bar—3.5 cm. (b) Fluorescence microscope image of the target area with working and reference electrodes. Scale bar—100 µm. (c) Current response of the device to an applied voltage. (d) Fluorescence response of the device to an applied voltage. (e) Current response of the device to a series of applied voltages. The reservoir contains 1M KCl. (f) Current response of the device to a series of applied voltages. The reservoir contains 100 mM KCl.",
+        "url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f2.jpeg?Expires=1791347585&Signature=QecZedpi2Cn4YyhY2f-cuuXb4ar-sb3Uv3Yc1dRtS5c8nWMbEpZfV4kf8czXM8nUPi2l5D4qn2fWUKicKWkx2ta4dBnEXpD6Nuqnr8u9b3mSXeM1~28gO-e~NIZ-ysxlxnIR1Z5iiVee-4R9zpEzWT~nkh2Cqd7m82lHmMU90Qt82O0OZOFW2F9NUt4xF2pQ2FRJvzlU7CNkXk2J3h18Q~NPFisUs7typQPNxoDte~0Kx44rmlZZTXzy02gAyUAdJSkHgu4bq4prlg7dW9J4t95JUCrbkcg~6bbsMZH4LST6eUp3C3HUlNToVA4khgivIemteVyH542360vV-tbj9Q__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "f2",
+        "preview_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f2.jpeg?Expires=1791347585&Signature=QecZedpi2Cn4YyhY2f-cuuXb4ar-sb3Uv3Yc1dRtS5c8nWMbEpZfV4kf8czXM8nUPi2l5D4qn2fWUKicKWkx2ta4dBnEXpD6Nuqnr8u9b3mSXeM1~28gO-e~NIZ-ysxlxnIR1Z5iiVee-4R9zpEzWT~nkh2Cqd7m82lHmMU90Qt82O0OZOFW2F9NUt4xF2pQ2FRJvzlU7CNkXk2J3h18Q~NPFisUs7typQPNxoDte~0Kx44rmlZZTXzy02gAyUAdJSkHgu4bq4prlg7dW9J4t95JUCrbkcg~6bbsMZH4LST6eUp3C3HUlNToVA4khgivIemteVyH542360vV-tbj9Q__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "provenance": [
+          "official_full_size_not_exposed"
+        ]
+      },
+      "download_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f2.jpeg?Expires=1791347585&Signature=QecZedpi2Cn4YyhY2f-cuuXb4ar-sb3Uv3Yc1dRtS5c8nWMbEpZfV4kf8czXM8nUPi2l5D4qn2fWUKicKWkx2ta4dBnEXpD6Nuqnr8u9b3mSXeM1~28gO-e~NIZ-ysxlxnIR1Z5iiVee-4R9zpEzWT~nkh2Cqd7m82lHmMU90Qt82O0OZOFW2F9NUt4xF2pQ2FRJvzlU7CNkXk2J3h18Q~NPFisUs7typQPNxoDte~0Kx44rmlZZTXzy02gAyUAdJSkHgu4bq4prlg7dW9J4t95JUCrbkcg~6bbsMZH4LST6eUp3C3HUlNToVA4khgivIemteVyH542360vV-tbj9Q__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/m_125205_1_f2.jpeg"
+      ],
+      "record": "body_assets/m_125205_1_f2.jpeg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 520,
+        "height": 553,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "m_125205_1_f2.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIG. 3. (a) Image of the device. Scale bar—5 mm. (b) Schematic of the ion pump. (c) Current response of the device to an applied voltage pulse. (d) Fluorescence response of the device to an applied voltage pulse. (e) COMSOL simulation result showing the change in concentration after 100 ms of delivery. (f) COMSOL simulation result showing the change in concentration after 10 s of delivery.",
+        "caption": "FIG. 3. (a) Image of the device. Scale bar—5 mm. (b) Schematic of the ion pump. (c) Current response of the device to an applied voltage pulse. (d) Fluorescence response of the device to an applied voltage pulse. (e) COMSOL simulation result showing the change in concentration after 100 ms of delivery. (f) COMSOL simulation result showing the change in concentration after 10 s of delivery.",
+        "url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f3.jpeg?Expires=1791347585&Signature=JynA3sIovR3nK9z7gfu3CAZ7Bcc7tYGMJoR4sMd~Je~QZPA~ovTgGZ-D59C9gKgsUzZG~zfcCGFHBgAGhGmquj-~l-Io-e~MgN5n4CECmO~HPQQUGpKjh~0KCzoMKpEyu6n4lB~dzjiU219ufFGKpgtskqwH-f~M4TuJvi0t~H9kR3iaKY2yblbhh4ZfdyInZ43m2fbtpYrYCJ1WuoCYzggngTwnXRGAelgubzy9LLehOYGVBYxFsNrQK55vWWJZDunlCN7qq-HLk9cG0QRc4e4EuZiOqtTMb9D6uwCbW6i-JYWq1yLaNUQ-MuLBWFkvtoXm7XMyVBeiDPmfZ434eA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "f3",
+        "preview_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f3.jpeg?Expires=1791347585&Signature=JynA3sIovR3nK9z7gfu3CAZ7Bcc7tYGMJoR4sMd~Je~QZPA~ovTgGZ-D59C9gKgsUzZG~zfcCGFHBgAGhGmquj-~l-Io-e~MgN5n4CECmO~HPQQUGpKjh~0KCzoMKpEyu6n4lB~dzjiU219ufFGKpgtskqwH-f~M4TuJvi0t~H9kR3iaKY2yblbhh4ZfdyInZ43m2fbtpYrYCJ1WuoCYzggngTwnXRGAelgubzy9LLehOYGVBYxFsNrQK55vWWJZDunlCN7qq-HLk9cG0QRc4e4EuZiOqtTMb9D6uwCbW6i-JYWq1yLaNUQ-MuLBWFkvtoXm7XMyVBeiDPmfZ434eA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "provenance": [
+          "official_full_size_not_exposed"
+        ]
+      },
+      "download_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f3.jpeg?Expires=1791347585&Signature=JynA3sIovR3nK9z7gfu3CAZ7Bcc7tYGMJoR4sMd~Je~QZPA~ovTgGZ-D59C9gKgsUzZG~zfcCGFHBgAGhGmquj-~l-Io-e~MgN5n4CECmO~HPQQUGpKjh~0KCzoMKpEyu6n4lB~dzjiU219ufFGKpgtskqwH-f~M4TuJvi0t~H9kR3iaKY2yblbhh4ZfdyInZ43m2fbtpYrYCJ1WuoCYzggngTwnXRGAelgubzy9LLehOYGVBYxFsNrQK55vWWJZDunlCN7qq-HLk9cG0QRc4e4EuZiOqtTMb9D6uwCbW6i-JYWq1yLaNUQ-MuLBWFkvtoXm7XMyVBeiDPmfZ434eA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/m_125205_1_f3.jpeg"
+      ],
+      "record": "body_assets/m_125205_1_f3.jpeg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 520,
+        "height": 551,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "m_125205_1_f3.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIG. 4. (a) Fluorescence microscope image of the cells over the device before actuation (t = 0 s). Scale bar—150 µm. (b) Fluorescence microscope image of the cells over device after actuation (t = 150 min). Scale bar—150 µm. (c) Plot of change in fluorescence intensity of the cells over time. (d) Schematic of closed-loop control integrated with the device. (e) Plot of the device tracking a given sine wave using the control algorithm.",
+        "caption": "FIG. 4. (a) Fluorescence microscope image of the cells over the device before actuation (t = 0 s). Scale bar—150 µm. (b) Fluorescence microscope image of the cells over device after actuation (t = 150 min). Scale bar—150 µm. (c) Plot of change in fluorescence intensity of the cells over time. (d) Schematic of closed-loop control integrated with the device. (e) Plot of the device tracking a given sine wave using the control algorithm.",
+        "url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f4.jpeg?Expires=1791347585&Signature=uCKL5QoRWfhqd64vw9GkoxpQIfaVeeIzO4aB7CmybnzQaqEh1s0DmUvH2kycO3sBpYSuvvveyYxKrLgAMpYw0unhBKtSpKF9gSts9mBqnBMuRq0m3WKMcqyiEzMgCG7ngK8aeKzHejnDYww1QNceym4H0sXjzJNFQFFmsFvNphZmpthB0w91zNdDC6AadhEIR6XKNYoZe0qTbWQoMK4Bwb6JJUAHfgajZMtKD-QB5Z7Q3nGGBY-7vfTjero7WQrxTA4B7JmlyY-~iMbvIZ2NFMKFK0B8sKI5DRy9kAVe36LZFnIKkq4wV2EeGUYkHkhZDyq8A~WvtrSeONbkNb-MwQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "f4",
+        "preview_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f4.jpeg?Expires=1791347585&Signature=uCKL5QoRWfhqd64vw9GkoxpQIfaVeeIzO4aB7CmybnzQaqEh1s0DmUvH2kycO3sBpYSuvvveyYxKrLgAMpYw0unhBKtSpKF9gSts9mBqnBMuRq0m3WKMcqyiEzMgCG7ngK8aeKzHejnDYww1QNceym4H0sXjzJNFQFFmsFvNphZmpthB0w91zNdDC6AadhEIR6XKNYoZe0qTbWQoMK4Bwb6JJUAHfgajZMtKD-QB5Z7Q3nGGBY-7vfTjero7WQrxTA4B7JmlyY-~iMbvIZ2NFMKFK0B8sKI5DRy9kAVe36LZFnIKkq4wV2EeGUYkHkhZDyq8A~WvtrSeONbkNb-MwQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "provenance": [
+          "official_full_size_not_exposed"
+        ]
+      },
+      "download_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f4.jpeg?Expires=1791347585&Signature=uCKL5QoRWfhqd64vw9GkoxpQIfaVeeIzO4aB7CmybnzQaqEh1s0DmUvH2kycO3sBpYSuvvveyYxKrLgAMpYw0unhBKtSpKF9gSts9mBqnBMuRq0m3WKMcqyiEzMgCG7ngK8aeKzHejnDYww1QNceym4H0sXjzJNFQFFmsFvNphZmpthB0w91zNdDC6AadhEIR6XKNYoZe0qTbWQoMK4Bwb6JJUAHfgajZMtKD-QB5Z7Q3nGGBY-7vfTjero7WQrxTA4B7JmlyY-~iMbvIZ2NFMKFK0B8sKI5DRy9kAVe36LZFnIKkq4wV2EeGUYkHkhZDyq8A~WvtrSeONbkNb-MwQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/m_125205_1_f4.jpeg"
+      ],
+      "record": "body_assets/m_125205_1_f4.jpeg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 520,
+        "height": 287,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "m_125205_1_f4.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 4,
+    "replayed_files": 4,
+    "complete_received_files": 4,
+    "index_only_files": 1
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1063_5.0129134/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1063_5.0129134/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 5,
+    "replayed_files": 5,
+    "complete_received_files": 5
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

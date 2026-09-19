@@ -1,0 +1,37 @@
+{
+  "doi": "10.1088/2058-9565/ac3460",
+  "source_input": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/original.html",
+  "source_sha256": "b4d33737095af6dde7748f723f48c6d4030b421ac2f0c4ab4978d84ecb6b9597",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "c79f870d203033260afb7cad2a49869bbca3e447105d010753000d940010c0d8",
+  "files": [
+    {
+      "filename": "qstac3460f1_hr.jpg",
+      "download_url": "https://content.cld.iop.org/journals/2058-9565/7/1/015010/revision3/qstac3460f1_hr.jpg",
+      "source_url": "https://content.cld.iop.org/journals/2058-9565/7/1/015010/revision3/qstac3460f1_hr.jpg",
+      "sha256": "22a492858b0debabc713dcff1377813bcb2c84c9a2388384b31c9d7718853f90",
+      "size": 122036,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 834,
+      "height": 422,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "qstac3460f2_hr.jpg",
+      "download_url": "https://content.cld.iop.org/journals/2058-9565/7/1/015010/revision3/qstac3460f2_hr.jpg",
+      "source_url": "https://content.cld.iop.org/journals/2058-9565/7/1/015010/revision3/qstac3460f2_hr.jpg",
+      "sha256": "3ef0a38fb83d2e2455100dfffeb7f0a485c4ed569fd1244aa94032abd111d804",
+      "size": 126878,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 833,
+      "height": 403,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:25.021463+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 0
+}

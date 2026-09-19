@@ -1,0 +1,249 @@
+{
+  "doi": "10.1109/pgec.1967.264619",
+  "source": "ieee_html",
+  "metadata": {
+    "title": "A Note on State Minimization of Asynchronous Sequential Functions",
+    "authors": [
+      "M. C. Paull",
+      "G. Waldbaum"
+    ],
+    "abstract": "A procedure is described for minimizing the number of states in an asynchronous sequential function when the restriction exists that the input cannot change while the sequential function is in an unstable state. Furthermore, a procedure is described for minimizing the number of states in a sequential function when the restriction also exists that each output can change at most once during the time required for a transition from one stable state to another.",
+    "journal": "IEEE Transactions on Electronic Computers",
+    "article_type": null,
+    "published": "February 1967",
+    "keywords": [
+      "Sequential circuits",
+      "Associate members",
+      "Tellurium",
+      "Minimization methods",
+      "Stable State",
+      "Unstable Conditions",
+      "Output Sequence",
+      "Minimization Procedure",
+      "Table Entries",
+      "Finite Sequence",
+      "State Table",
+      "Input Sequence",
+      "Regular Grid",
+      "Changes In Output",
+      "Circuit Board",
+      "Application Of Procedure",
+      "Empty Cells",
+      "{'name': 'Computing and Processing'}"
+    ],
+    "license_urls": [
+      "https://ieeexplore.ieee.org/Xplorehelp/downloads/license-information/IEEE.html"
+    ],
+    "landing_page_url": "https://ieeexplore.ieee.org/document/4038993/"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "A procedure is described for minimizing the number of states in an asynchronous sequential function when the restriction exists that the input cannot change while the sequential function is in an unstable state. Furthermore, a procedure is described for minimizing the number of states in a sequential function when the restriction also exists that each output can change at most once during the time required for a transition from one stable state to another."
+    }
+  ],
+  "references": [
+    {
+      "raw": "1. S. Ginsburg, \"A technique for the reduction of a given machine to a minimal-state machine,\" IRE Trans. on Electronic Computers, vol. EC-8, pp. 441-449, September 1959.",
+      "doi": "10.1109/tec.1959.5222696",
+      "title": "A technique for the reduction of a given machine to a minimal-state machine",
+      "year": null
+    },
+    {
+      "raw": "2. M. C. Paull and S. H. Unger, \"Minimizing the number of states in incompletely specified sequential functions,\" IRE Trans. on Electronic Computers, vol. EC-8, pp. 356-367, September 1959.",
+      "doi": "10.1109/tec.1959.5222697",
+      "title": "Minimizing the number of states in incompletely specified sequential functions",
+      "year": null
+    },
+    {
+      "raw": "3. A. Grasselli and F. Luccio, \"A method for minimizing the number of internal states in completely specified sequential networks,\" IEEE Trans. on Electronic Computers, vol. EC-14, pp. 350-366, June 1965.",
+      "doi": "10.1109/pgec.1965.264140",
+      "title": "A method for minimizing the number of internal states in completely specified sequential networks",
+      "year": null
+    },
+    {
+      "raw": "4. M. C. Paull, \"The minimization of the number of states of a completely specified sequential function having restrictions on its allowable input sequences—I,\" (unpublished).",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "5. E. J. McCluskey, \"Fundamental mode and pulse mode operations of sequential circuits,\" Information Processing 1962, Proc. IFIP Congress 62, pp. 725-730.",
+      "doi": null,
+      "title": "Fundamental mode and pulse mode operations of sequential circuits",
+      "year": null
+    },
+    {
+      "raw": "6. —, Introduction to the Theory of Switching Circuits. New York: McGraw-Hill, 1965, page 199.",
+      "doi": null,
+      "title": "Introduction to the Theory of Switching Circuits",
+      "year": null
+    },
+    {
+      "raw": "7. I. S. Reed, \"Some remarks on state reduction of asynchronous circuits by the Paull-Unger method,\" IEEE Trans. on Electronic Computers (Short Note), vol. EC-14, pp. 262-265, April 1965.",
+      "doi": "10.1109/pgec.1965.264260",
+      "title": "Some remarks on state reduction of asynchronous circuits by the Paull-Unger method",
+      "year": null
+    },
+    {
+      "raw": "8. S. H. Unger, \"Hazards and delays in asynchronous sequential switching circuits,\" IRE Trans. on Circuit Theory, vol. CT-6, pp. 12-25, March 1959.",
+      "doi": "10.1109/tct.1959.1086527",
+      "title": "Hazards and delays in asynchronous sequential switching circuits",
+      "year": null
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": false,
+    "token_estimate": 115,
+    "content_kind": "abstract_only",
+    "has_abstract": true,
+    "warnings": [
+      "IEEE dynamic HTML route was not usable (IEEE dynamic HTML endpoint returned an empty #article shell.); attempting selected-browser HTML fallback.",
+      "IEEE browser HTML fallback was not usable (IEEE browser HTML fallback did not capture valid REST full-text HTML or #article DOM.); attempting PDF fallback.",
+      "IEEE PDF fallback was not usable (Failed to download PDF fallback candidate: HTTP 502 for https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=4038993).",
+      "Official full text only contained abstract-level content; returning abstract-only provider result.",
+      "--save-markdown was set but full text was not available; nothing written to disk."
+    ],
+    "source_trail": [
+      "fulltext:ieee_html_fail",
+      "fulltext:ieee_browser_html_fail",
+      "fulltext:ieee_pdf_fail",
+      "fulltext:ieee_abstract_only",
+      "fulltext:ieee_abstract_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_ieee",
+      "route:signal_doi_ieee",
+      "route:probe_ieee_unknown",
+      "route:provider_selected_ieee",
+      "route:provider_candidate_ieee_metadata_selected_rank_1",
+      "route:provider_candidate_ieee_identity_strong",
+      "fulltext:ieee_attempt",
+      "download:ieee_assets_skipped_profile_none",
+      "route:provider_candidate_ieee_accepted",
+      "download:markdown_skipped_no_fulltext"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 115,
+      "body": 0,
+      "refs": 332
+    },
+    "confidence": "low",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 0,
+      "word_count": 0,
+      "body_block_count": 0,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 0.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "ieee",
+    "route": "browser_landing",
+    "representation": "html",
+    "transport": "browser",
+    "fallback_used": true
+  }
+}

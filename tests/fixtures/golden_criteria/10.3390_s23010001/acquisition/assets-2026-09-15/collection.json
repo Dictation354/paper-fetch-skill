@@ -1,0 +1,69 @@
+{
+  "provider": "mdpi",
+  "doi": "10.3390/s23010001",
+  "sample_id": "10.3390_s23010001",
+  "source_url": "https://www.mdpi.com/1424-8220/23/1/1",
+  "source_input": "tests/fixtures/golden_criteria/10.3390_s23010001/original.html",
+  "include_supplementary": true,
+  "include_body": false,
+  "source_sha256": "a58d4c22ec97d2d787854222b47770bca33ae442cbe6cadd04ee9b1c233deadd",
+  "targets": [
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "https://www.mdpi.com/article/10.3390/s23010001/s1",
+        "caption": "Supplementary Materials The following are available online at https://www.mdpi.com/article/10.3390/s23010001/s1 , Table S1: Sources used in SLR.",
+        "section": "supplementary",
+        "url": "https://www.mdpi.com/article/10.3390/s23010001/s1"
+      },
+      "download_url": "https://www.mdpi.com/article/10.3390/s23010001/s1",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/018a1c59931d5e0d-http-1.bin"
+      ],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "sensors-2080372-supplementary.xlsx"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "sensors-23-00001-s001.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/mdpi-headless-003-http_response_entity.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    }
+  ],
+  "counts": {
+    "discovered_references": 1,
+    "unique_files": 1,
+    "verified_files": 0,
+    "replayed_files": 0,
+    "complete_received_files": 0,
+    "index_only_files": 1
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.3390_s23010001/acquisition/assets-2026-09-15/collection.json",
+  "outcome": "index_only",
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 1,
+    "unique_files": 1,
+    "verified_files": 1,
+    "replayed_files": 1,
+    "complete_received_files": 1
+  },
+  "historical_outcome_before_supplementary_removal": "complete",
+  "historical_blocking_evidence": [
+    "acquisition/assets-2026-09-15/018a1c59931d5e0d-http-1.bin"
+  ],
+  "former_replay_receipt": "tests/fixtures/golden_criteria/10.3390_s23010001/acquisition/assets-2026-09-15/replay-receipt.json"
+}

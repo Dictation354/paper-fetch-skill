@@ -10,7 +10,7 @@ from typing import Any
 from collections.abc import Mapping
 
 from ..common_patterns import EXTENDED_DATA_FIGURE_LABEL
-from ..markdown.images import render_markdown_image
+from ..markdown.images import render_markdown_image, short_image_alt
 from ..utils import normalize_text, safe_text
 from .markdown import (
     NATURE_TABLE_LIKE_FIGURE_ASSET_PATTERN,
@@ -129,6 +129,7 @@ def _build_article_header_block(article: ArticleModel) -> RenderedBlock:
     for key, value in front_matter_fields:
         normalized_value = normalize_inline_html_text(value)
         if normalized_value:
+            normalized_value = normalized_value.replace("\\", "\\\\")
             lines.append(f'{key}: "{normalized_value.replace(chr(34), chr(39))}"')
     display_title = (
         normalize_inline_html_text(article.metadata.title) or "Untitled Article"
@@ -289,6 +290,7 @@ def _append_sections_with_budget(
     level_shift: int,
     context: RenderContext,
     preserve_source_order: bool = False,
+    preserve_text: bool = False,
 ) -> None:
     selected_sections: list[tuple[int, RenderedBlock]] = []
     indexed_sections = list(enumerate(sections))
@@ -301,11 +303,27 @@ def _append_sections_with_budget(
         )
     )
     for index, section in ordered_sections:
-        section_block = render_section_block(section, level_shift=level_shift)
+        section_block = (
+            build_rendered_block([section.text, ""], normalized_text=section.text)
+            if preserve_text
+            else render_section_block(section, level_shift=level_shift)
+        )
         if section_block.token_estimate <= context.remaining_budget:
             selected_sections.append((index, section_block))
             context.remaining_budget -= section_block.token_estimate
             continue
+        if preserve_text:
+            if context.remaining_budget > 0:
+                clipped = section.text[: int(context.remaining_budget) * 4]
+                selected_sections.append(
+                    (
+                        index,
+                        build_rendered_block([clipped, ""], normalized_text=clipped),
+                    )
+                )
+                context.remaining_budget = 0
+            context.mark_truncated()
+            break
         if not math.isinf(context.remaining_budget) and context.remaining_budget > 64:
             truncated_text = truncate_text_to_tokens(
                 section.text,
@@ -401,7 +419,8 @@ def _asset_image_markdown(
     replacement_path: str,
 ) -> str:
     kind = _asset_link_field(asset, "kind") or ""
-    heading = _asset_link_field(asset, "heading") or image_alt
+    # A file can occur under different figure numbers in the same article.
+    heading = short_image_alt(kind, image_alt, _asset_link_field(asset, "heading"))
     return render_markdown_image(kind, heading, replacement_path)
 
 

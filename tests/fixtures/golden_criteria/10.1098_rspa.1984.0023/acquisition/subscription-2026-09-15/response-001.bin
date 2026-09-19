@@ -1,0 +1,2969 @@
+
+
+
+
+<!DOCTYPE html>
+
+<html lang="en" class="no-js">
+
+<head>
+    <!-- charset must appear in the first 1024 bytes of the document -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Quantal phase factors accompanying adiabatic changes | Proceedings A | The Royal Society</title>
+        
+
+
+
+        <script src="https://cookie-cdn.cookiepro.com/scripttemplates/otSDKStub.js" type="text/javascript" charset="UTF-8" data-domain-script="01980ead-9999-7ec5-8307-69ac7b4ebd59" class="cookiepro-otsdkstub"></script>
+    <script type="text/javascript">
+        function OptanonWrapper() {
+            // Get initial OnetrustActiveGroups ids
+            if (typeof OptanonWrapperCount == "undefined") {
+                otGetInitialGrps();
+            }
+
+            //Delete cookies
+            otDeleteCookie(otIniGrps);
+
+            // Assign OnetrustActiveGroups to custom variable
+            function otGetInitialGrps() {
+                OptanonWrapperCount = '';
+                otIniGrps = OnetrustActiveGroups;
+            }
+
+            function otDeleteCookie(iniOptGrpId) {
+                var otDomainGrps = JSON.parse(JSON.stringify(Optanon.GetDomainData().Groups));
+                var otDeletedGrpIds = otGetInactiveId(iniOptGrpId, OnetrustActiveGroups);
+                if (otDeletedGrpIds.length != 0 && otDomainGrps.length != 0) {
+                    for (var i = 0; i < otDomainGrps.length; i++) {
+                        //Check if CustomGroupId matches
+                        if (otDomainGrps[i]['CustomGroupId'] != '' && otDeletedGrpIds.includes(otDomainGrps[i]['CustomGroupId'])) {
+                            for (var j = 0; j < otDomainGrps[i]['Cookies'].length; j++) {
+                                // console.log("otDeleteCookie",otDomainGrps[i]['Cookies'][j]['Name'])
+                                //Delete cookie
+                                eraseCookie(otDomainGrps[i]['Cookies'][j]['Name']);
+                            }
+                        }
+
+                        //Check if Hostid matches
+                        if (otDomainGrps[i]['Hosts'].length != 0) {
+                            for (var j = 0; j < otDomainGrps[i]['Hosts'].length; j++) {
+                                //Check if HostId presents in the deleted list and cookie array is not blank
+                                if (otDeletedGrpIds.includes(otDomainGrps[i]['Hosts'][j]['HostId']) && otDomainGrps[i]['Hosts'][j]['Cookies'].length != 0) {
+                                    for (var k = 0; k < otDomainGrps[i]['Hosts'][j]['Cookies'].length; k++) {
+                                        //Delete cookie
+                                        eraseCookie(otDomainGrps[i]['Hosts'][j]['Cookies'][k]['Name']);
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+                otGetInitialGrps(); //Reassign new group ids
+            }
+
+            //Get inactive ids
+            function otGetInactiveId(customIniId, otActiveGrp) {
+                //Initial OnetrustActiveGroups
+                // console.log("otGetInactiveId",customIniId)
+                customIniId = customIniId.split(",");
+                customIniId = customIniId.filter(Boolean);
+
+                //After action OnetrustActiveGroups
+                otActiveGrp = otActiveGrp.split(",");
+                otActiveGrp = otActiveGrp.filter(Boolean);
+
+                var result = [];
+                for (var i = 0; i < customIniId.length; i++) {
+                    if (otActiveGrp.indexOf(customIniId[i]) <= -1) {
+                        result.push(customIniId[i]);
+                    }
+                }
+                return result;
+            }
+
+            //Delete cookie
+            function eraseCookie(name) {
+                //Delete root path cookies
+                domainName = window.location.hostname;
+                document.cookie = name + '=; Max-Age=-99999999; Path=/;Domain=' + domainName;
+                document.cookie = name + '=; Max-Age=-99999999; Path=/;';
+
+                //Delete LSO incase LSO being used, cna be commented out.
+                localStorage.removeItem(name);
+
+                //Check for the current path of the page
+                pathArray = window.location.pathname.split('/');
+                //Loop through path hierarchy and delete potential cookies at each path.
+                for (var i = 0; i < pathArray.length; i++) {
+                    if (pathArray[i]) {
+                        //Build the path string from the Path Array e.g /site/login
+                        var currentPath = pathArray.slice(0, i + 1).join('/');
+                        document.cookie = name + '=; Max-Age=-99999999; Path=' + currentPath + ';Domain=' + domainName;
+                        document.cookie = name + '=; Max-Age=-99999999; Path=' + currentPath + ';';
+                        //Maybe path has a trailing slash!
+                        document.cookie = name + '=; Max-Age=-99999999; Path=' + currentPath + '/;Domain=' + domainName;
+                        document.cookie = name + '=; Max-Age=-99999999; Path=' + currentPath + '/;';
+
+
+                    }
+                }
+
+            }
+        }
+    </script>
+                
+
+
+        <script type='text/plain' defer src='//js.trendmd.com/trendmd.min.js' data-trendmdconfig='{"journal_id":"1000011","element":"#trendmd-suggestions"}' class='optanon-category-C0002'></script>
+
+
+
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" type="text/javascript"></script>
+<script>window.jQuery || document.write('<script src="//trs.silverchair-cdn.com/Themes/Silver/app/js/jquery.3.4.1.min.js" type="text/javascript">\x3C/script>')</script>
+<script src="//trs.silverchair-cdn.com/Themes/Silver/app/vendor/v-639223665058021011/jquery-migrate-3.1.0.min.js" type="text/javascript"></script>
+
+    <script type='text/plain' src='https://platform-api.sharethis.com/js/sharethis.js#property=688926d6a958a8ebfcf6dac0&amp;product=sop' async='async' class='optanon-category-C0004'></script>
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=10" />
+
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <!-- Turn off telephone number detection. -->
+    <meta name="format-detection" content="telephone=no" />
+    
+<!-- Bookmark Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="//trs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223659843641354/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="//trs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223659843691380/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" href="//trs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223659843691380/favicon.ico" sizes="32x32">
+  <link rel="icon" type="image/svg+xml" href="//trs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223659844103271/favicon.svg">
+  <link rel="manifest" href="//trs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223659844153300/site.webmanifest">
+  <meta name="theme-color" content="#002f65">
+
+
+    
+
+
+  <link rel="stylesheet" type="text/css" href="//trs.silverchair-cdn.com/Themes/Client/app/css/v-639237411204728053/site.min.css" />
+  <link rel="stylesheet" type="text/css" href="//trs.silverchair-cdn.com/Themes/Silver/app/icons/v-639223664792286301/style.css" />
+  <link rel="stylesheet" type="text/css" href="//trs.silverchair-cdn.com/Themes/Client/app/css/v-639223659840185357/bg_img.css" />
+
+<link rel="stylesheet" href="https://use.typekit.net/tyr3hmc.css">
+
+
+            <link href="//trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/CSS/rspa/v-638979397389014622/site.css" rel="stylesheet" type="text/css" />
+
+
+
+    <script>
+        var dataLayer = [{}];
+        window.gtmDataLayerSettings = { enableUserEvents: false, textTruncateLength: 150, scrollDepthThreshold: 10 };
+    </script>
+            <script>
+                (function (w, d, s, l, i) {
+                    w[l] = w[l] || []; w[l].push({
+                        'gtm.start':
+                            new Date().getTime(), event: 'gtm.js'
+                    }); var f = d.getElementsByTagName(s)[0],
+                        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+                        j.setAttribute('type', 'text/plain');
+                            j.setAttribute('class', 'optanon-category-C0002');
+                        j.async = true; j.src =
+                        'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+                })(window, document, 'script', 'dataLayer', 'GTM-TFQX55T7');
+            </script>
+
+    
+
+        <script type="text/javascript">
+            var App = App || {};
+            App.LoginUserInfo = {
+                isInstLoggedIn: 0,
+                isIndividualLoggedIn: 0
+            };
+
+            App.CurrentSubdomain = 'rspa';
+            App.SiteURL = 'royalsocietypublishing.org/rspa';
+            App.EnableAdobeAnalytics = false;
+        </script>
+    
+    
+    
+    <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+
+    <meta name="citation_author" content="Berry, Michael Victor" /><meta name="citation_author_institution" content="H. H. Wills Physics Laboratory, University of Bristol, Tyndall Avenue, Bristol BS8 1TL, U. K." /><meta name="citation_title" content="Quantal phase factors accompanying adiabatic changes" /><meta name="citation_firstpage" content="45" /><meta name="citation_lastpage" content="57" /><meta name="citation_doi" content="10.1098/rspa.1984.0023" /><meta name="citation_journal_title" content="Proceedings of the Royal Society of London. A. Mathematical and Physical Sciences" /><meta name="citation_journal_abbrev" content="Proc. R. Soc. A" /><meta name="citation_volume" content="392" /><meta name="citation_issue" content="1802" /><meta name="citation_publication_date" content="1984/03/01" /><meta name="citation_issn" content="0080-4630" /><meta name="citation_publisher" content="The Royal Society" /><meta name="citation_pdf_url" content="https://royalsocietypublishing.org/rspa/article-pdf/392/1802/45/65511/rspa.1984.0023.pdf" /><meta name="description" content="Abstract. A quantal system in an eigenstate, slowly transported round a circuit C by varying parameters R in its Hamiltonian Ĥ(R), will acquire a geometric" />
+
+<meta name="citation_xml_url" content="https://royalsocietypublishing.org/rspa/article-xml/392/1802/45/15579" />
+
+
+    <link rel="canonical" href="https://royalsocietypublishing.org/rspa/article/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic" />
+
+
+
+
+
+
+    <meta name="publish_date" content="1984-03-08" />
+
+    <meta name="publish_image" content="//trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/ProceedingsA-401091085.png" />
+
+
+
+
+    <script type="application/ld+json">
+        {"@context":"https://schema.org","@type":"ScholarlyArticle","@id":"https://royalsocietypublishing.org/rspa/article/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic","name":"Quantal phase factors accompanying adiabatic changes","datePublished":"1984-03-08","isPartOf":{"@id":"https://royalsocietypublishing.org/rspa/issue/392/1802","@type":"PublicationIssue","issueNumber":"1802","datePublished":"1984-03-01","isPartOf":{"@id":"https://royalsocietypublishing.org/rspa","@type":"Periodical","name":"Proceedings of the Royal Society of London. A. Mathematical and Physical Sciences","issn":["2053-9169"]}},"url":"https://dx.doi.org/10.1098/rspa.1984.0023","inLanguage":"en","copyrightHolder":"The Royal Society","copyrightYear":"2026","publisher":"","sameAs":["https://dx.doi.org/10.1098/rspa.1984.0023"],"author":[{"name":"Berry, Michael Victor","affiliation":"H. H. Wills Physics Laboratory, University of Bristol, Tyndall Avenue, Bristol BS8 1TL, U. K.","@type":"Person"}],"description":"Abstract. A quantal system in an eigenstate, slowly transported round a circuit C by varying parameters R in its Hamiltonian Ĥ(R), will acquire a geometric","pageStart":"45","pageEnd":"57","siteName":"The Royal Society","thumbnailURL":"//trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/RSPA_CoverImage68097636.jpg","headline":"Quantal phase factors accompanying adiabatic changes","image":"//trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/RSPA_CoverImage68097636.jpg","image:alt":""}
+    </script>
+<meta property="og:site_name" content="The Royal Society" />
+<meta property="og:title" content="Quantal phase factors accompanying adiabatic changes" />
+<meta property="og:description" content="Abstract. A quantal system in an eigenstate, slowly transported round a circuit C by varying parameters R in its Hamiltonian Ĥ(R), will acquire a geometric" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://dx.doi.org/10.1098/rspa.1984.0023" />
+<meta property="og:updated_time" content="" />
+<meta property="og:image" content="https://trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/RSPA_CoverImage68097636.jpg" />
+<meta property="og:image:url" content="https://trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/RSPA_CoverImage68097636.jpg" />
+<meta property="og:image:secure_url" content="https://trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/RSPA_CoverImage68097636.jpg" />
+<meta property="og:image:alt" content="" />
+
+
+
+
+    
+
+
+
+    <script type="text/plain" async="async" src="https://securepubads.g.doubleclick.net/tag/js/gpt.js" class='optanon-category-C0004'></script>
+
+    <script>
+        var SCM = SCM || {};
+        SCM.pubGradeAdsEnabled = false;
+    </script>
+
+
+<script>
+    var googletag = googletag || {};
+    googletag.cmd = googletag.cmd || [];
+
+    googletag.cmd.push(function () {
+    googletag.setConfig({ disableInitialLoad: true });
+
+    
+
+    });
+</script>
+    
+
+            <script src="https://widgets.figshare.com/static/figshare.js" ></script>
+
+    
+
+
+
+
+
+
+    <script src="https://scholar.google.com/scholar_js/casa.js" async></script>
+</head>
+
+<body data-sitename="proceedingsa" class="off-canvas pg_Article pg_article   " theme-rspa data-sitestyletemplate="Journal" >
+            <noscript>
+                <iframe  src="https://www.googletagmanager.com/ns.html?id=GTM-TFQX55T7"
+                        height="0" width="0" style="display:none;visibility:hidden"></iframe>
+            </noscript>
+            <nav aria-label="Skip navigation">
+                <a href="#skipNav" class="skipnav">Skip to Main Content</a>
+            </nav>
+<input id="hdnSiteID" name="hdnSiteID" type="hidden" value="1000011" /><input id="hdnAdDelaySeconds" name="hdnAdDelaySeconds" type="hidden" value="3000" /><input id="hdnAdConfigurationTop" name="hdnAdConfigurationTop" type="hidden" value="basic" /><input id="hdnAdConfigurationRightRail" name="hdnAdConfigurationRightRail" type="hidden" value="basic" />
+    <div class="ad-banner js-ad-revealer ad-banner-revealer" role="region" aria-label="Advertisement" aria-hidden="true">
+    <div class="widget-AdBlock widget-instance-HeaderRevealerAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="HeaderRevealerAd">
+        
+ 
+    </div>
+
+    </div>
+    
+
+
+
+
+<section class="master-header row vt-site-header" role="banner">
+
+    <div class="ad-banner js-ad-banner">
+    <div class="widget-AdBlock widget-instance-HeaderAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="HeaderAd">
+        
+ 
+    </div>
+
+    </div>
+
+    <div class="widget-SitePageHeader widget-instance-SitePageHeader" 
+         data-widget-name="SitePageHeader" 
+         data-widget-instance="SitePageHeader">
+            <div class="site-theme-header">
+        <div class="site-theme-header_contents global-nav-base">
+
+
+
+<div class="global-nav">
+            <a class="js-dropdown-trigger global-nav-trigger" href="javascript:;">
+            <picture>
+                    <source media="(max-width: 600px)" srcset="//trs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/TRS-logo-256x256-1.png">
+                <source media="(min-width: 601px)" srcset="//trs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/TRS-logo-256x256-1.png">
+                <img class="logo-ProceedingsA site-theme-header-image" src="//trs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/TRS-logo-256x256-1.png" alt="The Royal Society" />
+            </picture>
+                <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+        </a>
+        <nav class="navbar-menu global-nav-dropdown js-dropdown" aria-label="Primary navigation">
+            <div class="site-theme-header-logo">
+                <a href="/" class="site-theme-header-image-wrap">
+                        <picture>
+                                <source media="(max-width: 600px)" srcset="//trs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/TRS-logo-256x256-1.png">
+                            <source media="(min-width: 601px)" srcset="//trs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/TRS-logo-256x256-1.png">
+                            <img class="logo-ProceedingsA site-theme-header-image" src="//trs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/TRS-logo-256x256-1.png" alt="The Royal Society" />
+                        </picture>
+                </a>
+                <a href="javascript:;" class="icon-general-close menu-close js-menu-close"><span class="screenreader-text">Close</span></a>
+            </div>
+                    <ul class="site-menu site-menu-lvl-0 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-The-Royal-Society " id="site-menu-item-24496">
+                        <a href="https://royalsociety.org/journals" class="nav-link" target=&quot;_blank&quot;>The Royal Society <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Journals " id="site-menu-item-24491">
+                        <a href="javascript:;" class="nav-link js-theme-dropdown-trigger" aria-expanded="false">Journals <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></a>
+
+                            <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Biographical-Memoirs " id="site-menu-item-24497">
+                        <a href="/rsbm" class="nav-link" >Biographical Memoirs                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Biology-Letters " id="site-menu-item-24498">
+                        <a href="/rsbl" class="nav-link" >Biology Letters                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Interface " id="site-menu-item-24499">
+                        <a href="/rsif" class="nav-link" >Interface                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Interface-Focus " id="site-menu-item-24500">
+                        <a href="/rsfs" class="nav-link" >Interface Focus                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Notes-and-Records " id="site-menu-item-24501">
+                        <a href="/rsnr" class="nav-link" >Notes and Records                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Open-Biology " id="site-menu-item-24502">
+                        <a href="/rsob" class="nav-link" >Open Biology                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Philosophical-Transactions-A " id="site-menu-item-24503">
+                        <a href="/rsta" class="nav-link" >Philosophical Transactions A                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Philosophical-Transactions-B " id="site-menu-item-24504">
+                        <a href="/rstb" class="nav-link" >Philosophical Transactions B                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Proceedings-A " id="site-menu-item-24505">
+                        <a href="/rspa" class="nav-link" >Proceedings A                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Proceedings-B " id="site-menu-item-24506">
+                        <a href="/rspb" class="nav-link" >Proceedings B                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Royal-Society-Open-Science " id="site-menu-item-24507">
+                        <a href="/rsos" class="nav-link" >Royal Society Open Science                      </a>
+
+                    
+                </li>
+        </ul>
+
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Related-content " id="site-menu-item-24492">
+                        <a href="javascript:;" class="nav-link js-theme-dropdown-trigger" aria-expanded="false">Related content <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></a>
+
+                            <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Collections " id="site-menu-item-24508">
+                        <a href="/collections" class="nav-link" >Collections                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Journals-archive " id="site-menu-item-24509">
+                        <a href="https://royalsocietypublishing.org/pages/archive" class="nav-link" >Journals archive                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Blog-posts " id="site-menu-item-24510">
+                        <a href="https://royalsociety.org/blog/blogcategorylistings/?tab=publishing" class="nav-link" target=&quot;_blank&quot;>Blog posts <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Videos " id="site-menu-item-24511">
+                        <a href="https://www.youtube.com/playlist?list=PLg7f-TkW11iXs1ziBbxsD-HS9WV0Uh6nj" class="nav-link" target=&quot;_blank&quot;>Videos <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Seminars " id="site-menu-item-24512">
+                        <a href="https://cassyni.com/c/royal-society-seminars/seminars" class="nav-link" target=&quot;_blank&quot;>Seminars <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Sign-up-for-alerts " id="site-menu-item-24513">
+                        <a href="/my-account/alerts" class="nav-link" >Sign up for alerts                      </a>
+
+                    
+                </li>
+        </ul>
+
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Information-for " id="site-menu-item-24493">
+                        <a href="javascript:;" class="nav-link js-theme-dropdown-trigger" aria-expanded="false">Information for <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></a>
+
+                            <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Authors " id="site-menu-item-24514">
+                        <a href="https://royalsociety.org/journals/authors" class="nav-link" target=&quot;_blank&quot;>Authors <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Reviewers " id="site-menu-item-24515">
+                        <a href="https://royalsociety.org/journals/reviewers" class="nav-link" target=&quot;_blank&quot;>Reviewers <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Librarians " id="site-menu-item-24516">
+                        <a href="https://royalsociety.org/journals/librarians" class="nav-link" target=&quot;_blank&quot;>Librarians <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Readers " id="site-menu-item-24517">
+                        <a href="/pages/information-for-readers" class="nav-link" >Readers                      </a>
+
+                    
+                </li>
+        </ul>
+
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Open-Access " id="site-menu-item-24494">
+                        <a href="javascript:;" class="nav-link js-theme-dropdown-trigger" aria-expanded="false">Open Access <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></a>
+
+                            <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Open-access " id="site-menu-item-24518">
+                        <a href="https://royalsociety.org/journals/open-access" class="nav-link" target=&quot;_blank&quot;>Open access <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Read-&amp;-Publish " id="site-menu-item-24519">
+                        <a href="https://royalsociety.org/journals/open-access/read-publish-agreements/" class="nav-link" target=&quot;_blank&quot;>Read &amp; Publish <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Subscribe-to-Open-(S2O) " id="site-menu-item-24520">
+                        <a href="https://royalsociety.org/journals/librarians/purchasing/subscribe-to-open/" class="nav-link" target=&quot;_blank&quot;>Subscribe to Open (S2O) <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Open-Access-Membership " id="site-menu-item-24521">
+                        <a href="https://royalsociety.org/journals/authors/open-access-membership/" class="nav-link" target=&quot;_blank&quot;>Open Access Membership <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item--Open-Access-Equity " id="site-menu-item-24522">
+                        <a href="https://royalsociety.org/journals/open-access/open-access-equity/" class="nav-link" target=&quot;_blank&quot;> Open Access Equity <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+        </ul>
+
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-About-us " id="site-menu-item-24495">
+                        <a href="javascript:;" class="nav-link js-theme-dropdown-trigger" aria-expanded="false">About us <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></a>
+
+                            <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-About-the-Royal-Society " id="site-menu-item-24523">
+                        <a href="https://royalsociety.org" class="nav-link" target=&quot;_blank&quot;>About the Royal Society <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-About-our-journals " id="site-menu-item-24524">
+                        <a href="https://royalsociety.org/journals/publishing-activities" class="nav-link" target=&quot;_blank&quot;>About our journals <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Journal-policies " id="site-menu-item-24525">
+                        <a href="https://royalsociety.org/journals/ethics-policies" class="nav-link" target=&quot;_blank&quot;>Journal policies <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Publishing-metrics " id="site-menu-item-24526">
+                        <a href="https://royalsociety.org/journals/publishing-metrics" class="nav-link" target=&quot;_blank&quot;>Publishing metrics <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Conferences " id="site-menu-item-24527">
+                        <a href="https://royalsocietypublishing.org/pages/conference-attendance" class="nav-link" >Conferences                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item--Contact-us " id="site-menu-item-24528">
+                        <a href="https://royalsociety.org/journals/publishing-activities/journals-contacts/" class="nav-link" target=&quot;_blank&quot;> Contact us <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+        </ul>
+
+                </li>
+        </ul>
+
+        </nav>
+    
+</div>
+
+
+
+    <input type="hidden" class="hfEnableEnhancedAutoSuggest" value="false" name="searchScope" aria-hidden="true" />
+        <div class="mobile-menu-trigger_wrap mobile-search_wrap">
+            <button type="button"
+                    class="mobile-search_toggle at-search-toggle"
+                    aria-expanded="false"
+                    data-theme-dropdown-trigger="search-dropdown"><i class="icon-menu_search" aria-hidden="true"></i><span class="screenreader-text">Search Dropdown Menu</span></button>
+        </div>
+    <div class="navbar-search-container mobile-dropdown search-dropdown" data-theme-dropdown="search-dropdown">
+        <div class="navbar-search">
+            <form class="microsite-search js-MicrositeSearch" aria-label="header search" role="search">
+                <fieldset class="searchbar-fieldset">
+                    <legend><span class="screenreader-text">header search</span></legend>
+                    <div class="navbar-search-input_wrap">
+                        
+                        <input class="navbar-search-input microsite-search-term at-microsite-search-term search-term-autosuggest"
+                               data-autosuggest-hint="micrositeSearchTermInputHint-SitePageHeader"
+                               data-autosuggest-results="micrositeAutoCompleteResults-SitePageHeader"
+                               data-autosuggest-id="MicrositeSearchTerm-SitePageHeader"
+                               data-searchfilter="search-filter-SitePageHeader"
+                               placeholder="Search..."
+                               aria-label="Search..."
+                               type="text" maxlength="255"
+                                 autocomplete="off"                                 id="MicrositeSearchTerm-SitePageHeader">
+                        
+                        <input type="hidden" name="hfAutoCompleteMaxResults" class="hfAutoCompleteMaxResults" value="6" aria-hidden="true" />
+                        <input type="hidden" name="hfSolrAutoSuggestMinimumCharactersLength" class="hfSolrAutoSuggestMinimumCharactersLength" value="2" aria-hidden="true" />
+                        <input type="hidden" name="hfSolrJournalName" class="hfSolrJournalName" value="" aria-hidden="true" />
+                        <input type="hidden" name="hfSolrJournalID" class="hfSolrJournalID" value="" aria-hidden="true" />
+                        <label for="micrositeSearchTermInputHint-SitePageHeader" aria-hidden="true">
+                            <span class="screenreader-text">Search input auto suggest</span>
+                        </label>
+                        <input type="text"
+                               id="micrositeSearchTermInputHint-SitePageHeader"
+                               data-autosuggest-id="micrositeSearchTermInputHint-SitePageHeader"
+                               class="microsite-search-term-input-hint"
+                               autocomplete="off"
+                               tabindex="-1"
+                               aria-hidden="true"
+                               disabled />
+                        <ul data-autosuggest-id="micrositeAutoCompleteResults-SitePageHeader" class="term-list hidden"></ul>
+                    </div>
+                        <div class="navbar-search-filter_wrap">
+                            <label for="navbar-search-filter-site-SitePageHeader">
+                                <span class="screenreader-text">filter your search</span>
+                            </label>
+                            <select class="navbar-search-filter navbar-search-filter-site at-navbar-search-filter" id="navbar-search-filter-site-SitePageHeader" data-autosuggest-id="search-filter-SitePageHeader">
+<option class="header-search-bar-filters-item" value="/search-results?page=1&q={searchQuery}" data-siteid="0" >All content</option><option class="header-search-bar-filters-item selected" value="/rspa/search-results?page=1&q={searchQuery}&fl_SiteID=1000011" data-siteid="1000011" selected>Proceedings A</option>                            </select>
+                        </div>
+                    <div class="navbar-search-submit_wrap">
+                        
+                        <button type="button" class="microsite-search-icon navbar-search-submit icon-menu_search"><span class="screenreader-text">Search</span></button>
+                    </div>
+                </fieldset>
+            </form><!-- /#MicrositeSearch -->
+        </div><!-- /.navbar-search -->
+<div class="navbar-search-advanced">
+    <a href="/advanced-search" class="advanced-search">Advanced Search</a>
+</div>    </div><!-- /.navbar-search-container -->
+
+<input type="hidden" name="parentSiteName" class="hfParentSiteName" value="The Royal Society" aria-hidden="true" />
+<input type="hidden" class="hfSolrMaxAllowSearchChar" value="100" aria-hidden="true" />
+<input type="hidden" class="hfJournalShortName" value="" aria-hidden="true" />
+<input type="hidden" class="hfSearchPlaceholder" value="" aria-hidden="true" />
+<input type="hidden" name="hfGlobalSearchSiteURL" class="hfGlobalSearchSiteURL" value="" aria-hidden="true" />
+<input type="hidden" name="hfSearchSiteURL" id="hfSiteURL" value="royalsocietypublishing.org/rspa" aria-hidden="true" />
+<input type="hidden" class="hfQuickSearchUrl" value="/rspa/search-results?page=1&amp;q={searchQuery}&amp;fl_SiteID=1000011" aria-hidden="true" />
+<script type="text/javascript">
+    (function () {
+        var hfSiteUrl = document.getElementById('hfSiteURL');
+        var siteUrl = hfSiteUrl.value;
+        var subdomainIndex = siteUrl.indexOf('/');
+
+        hfSiteUrl.value = location.host + (subdomainIndex >= 0 ? siteUrl.substring(subdomainIndex) : '');
+    })();
+</script>
+
+                <div class="tablet-menu-trigger_wrap">
+        <!-- MOBILE SHOPPING CART ICON -->
+        <button type="button"
+           class="btn-reset tablet-sign-in"
+           data-theme-dropdown-trigger="tablet-user-dropdown"
+           aria-controls="tablet-user-dropdown"
+           aria-expanded="false"><i class="icon-menu_account"><span class="screenreader-text">User Tools Dropdown</span></i></button>
+    </div>
+<div class="site-theme-header-menu-item_wrap tablet-menu" id="tablet-user-dropdown" data-theme-dropdown="tablet-user-dropdown">
+    <!-- DESKTOP SHOPPING CART ICON -->
+
+    <!-- DESKTOP REGISTRATION -->
+        <div class="site-theme-header-menu-item"><a href="/my-account/register?siteId=1000011&amp;returnUrl=%2frspa%2farticle-abstract%2f392%2f1802%2f45%2f15579%2fQuantal-phase-factors-accompanying-adiabatic%3fredirectedFrom%3dfulltext" class="register at-register js-register-user-modals">Register</a></div>
+
+    <!-- ACCESS THROUGH INSTITUTION -->
+
+    <!-- DESKTOP INSTITUTIONS -->
+
+        <!-- DESKTOP SIGN IN -->
+        <div class="site-theme-header-menu-item not-authenicated">
+                <button type="button"
+                    class="btn-reset dropdown-toggle signin at-signin-dropdown at-signin-username"
+                    id="header-account-info-user-fullname"
+                    data-login-location="/SignIn/LoginForm/LoginFormPopup?returnUrl="
+                    data-theme-dropdown-trigger="sign-in-dropdown"
+                    aria-controls="sign-in-dropdown"
+                    aria-expanded="false"
+                    rel=nofollow>
+                    
+Sign in                    <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+                </button>
+                <div class="dropdown-panel dropdown-panel-signin dropdown-panel-form at-signin-dropdown-panel" id="sign-in-dropdown" data-theme-dropdown="sign-in-dropdown">
+                    <div class="spinner"></div>
+                </div><!-- /.dropdown-panel -->
+        </div>
+
+</div>
+        </div><!-- /.site-theme-header_content -->
+    </div><!-- /.site-theme-header- -->
+
+
+    <div class="journal-header journal-bg">
+        <div class="journal-header_content ">
+
+    <div class="journal-logo_wrap">
+        <a href="//royalsocietypublishing.org/rspa" class="journal-logo-link">
+            <picture>
+                <source media="(min-width: 601px)" srcset="//trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/ProceedingsA-401091085.png">
+                <img class="logo-ProceedingsA journal-logo" src="//trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/ProceedingsA-401091085.png" alt="RSPA Journal Logo" />
+            </picture>
+        </a>
+    </div>
+
+            
+
+
+<div class="navbar-menu_wrap">
+            <a class="mobile-site-menu-toggle" data-theme-dropdown-trigger="microsite-nav-menu" aria-controls="microsite-nav-menu" aria-expanded="false" href="javascript:;"><i class="icon-menu_hamburger"><span class="screenreader-text">Toggle Menu</span></i><span class="tablet-menu-label">Menu</span></a>
+            <nav class="navbar-menu" id="microsite-nav-menu" data-theme-dropdown="microsite-nav-menu" aria-label="Primary navigation">
+                    <ul class="site-menu site-menu-lvl-0 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-24062">
+        <a href="https://royalsociety.org/journals" class="nav-link" target=&quot;_blank&quot;>The Royal Society<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-24058">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">Other journals<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24063">
+        <a href="/rsbm" class="nav-link" >Biographical Memoirs</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24064">
+        <a href="/rsbl" class="nav-link" >Biology Letters</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24065">
+        <a href="/rsif" class="nav-link" >Interface</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24066">
+        <a href="/rsfs" class="nav-link" >Interface Focus</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24067">
+        <a href="/rsnr" class="nav-link" >Notes and Records</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24068">
+        <a href="/rsob" class="nav-link" >Open Biology</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24069">
+        <a href="/rsta" class="nav-link" >Philosophical Transactions A</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24070">
+        <a href="/rstb" class="nav-link" >Philosophical Transactions B</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24071">
+        <a href="/rspa" class="nav-link" >Proceedings A</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24072">
+        <a href="/rspb" class="nav-link" >Proceedings B</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24073">
+        <a href="/rsos" class="nav-link" >Royal Society Open Science</a>
+    </li>     </ul>
+ </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-24059">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">Content<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24074">
+        <a href="/rspa/issue" class="nav-link" >Latest issue</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24075">
+        <a href="/rspa/issue-covers" class="nav-link" >All content</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24076">
+        <a href="/rspa/pages/subjects" class="nav-link" >Subject collections</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24077">
+        <a href="/rspa/pages/special-features" class="nav-link" >Special features</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24078">
+        <a href="/collection/123/Proceedings-A-Reviews-and-Perspectives" class="nav-link" >Reviews and perspectives</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24079">
+        <a href="https://cassyni.com/s/fluid-mechanics" class="nav-link" target=&quot;_blank&quot;>Fluid mechanics seminar series<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24080">
+        <a href="https://royalsociety.org/blog/blogcategorylistings/?tab=publishing" class="nav-link" target=&quot;_blank&quot;>Blog posts<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24081">
+        <a href="https://royalsocietypublishing.org/my-account/alerts" class="nav-link" >Sign up for alerts</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24082">
+        <a href="/rss/site_1000011/1000008.xml" class="nav-link" >RSS feed: current issue only</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24083">
+        <a href="/rss/site_1000011/LatestOpenIssueArticles_1000008.xml" class="nav-link" >RSS feed: open issues</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24084">
+        <a href="/citation-manager" class="nav-link" >Citation manager</a>
+    </li>     </ul>
+ </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-24060">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">Information for<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24085">
+        <a href="/rspa/pages/for-authors" class="nav-link" >Authors</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24086">
+        <a href="/rspa/pages/for-reviewers" class="nav-link" >Reviewers</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24087">
+        <a href="/pages/information-for-readers" class="nav-link" >Readers</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24088">
+        <a href="https://royalsociety.org/journals/librarians/" class="nav-link" target=&quot;_blank&quot;>Institutions<span class="screenreader-text">Open External Link</span></a>
+    </li>     </ul>
+ </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-24061">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">About us<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24089">
+        <a href="/rspa/pages/About" class="nav-link" >About the journal</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24090">
+        <a href="/rspa/pages/Editorial_Board" class="nav-link" >Editorial board</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24091">
+        <a href="/rspa/pages/author-benefits" class="nav-link" >Author benefits</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24092">
+        <a href="https://royalsociety.org/journals/ethics-policies" class="nav-link" target=&quot;_blank&quot;>Policies<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24093">
+        <a href="/rspa/pages/citation-metrics" class="nav-link" >Journal metrics</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24094">
+        <a href="https://royalsociety.org/journals/authors/benefits/publishing-times/" class="nav-link" target=&quot;_blank&quot;>Publication times<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-24095">
+        <a href="https://royalsociety.org/journals/open-access" class="nav-link" target=&quot;_blank&quot;>Open access<span class="screenreader-text">Open External Link</span></a>
+    </li>     </ul>
+ </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-24096">
+        <a href="/rspa/pages/submit" class="nav-link" >Submit</a>
+    </li>     </ul>
+ 
+            </nav>
+</div><!-- /.navbar -->
+
+        </div><!-- /.center-inner-row -->
+
+    </div><!-- /.journal-header -->
+
+
+<input id="routename" name="RouteName" type="hidden" value="rspa" />
+
+ 
+    </div>
+
+</section>
+
+<div id="main" class="content-main js-main ui-base" role="main">
+    <section class="master-main row">
+        <div class="content-main_content">
+            <span id="skipNav" tabindex="-1"></span>
+            
+
+
+
+
+
+<div class="page-column-wrap article-browse_content ">
+<div id="InfoColumn" class="page-column page-column--left">
+
+    <div class="info-inner-wrap can-stick empty">
+
+        <button type="button" class="btn-as-icon toggle-left-col__close icon-general-close">
+            <span class="screenreader-text">Close navigation menu</span>
+        </button>
+        <div class="responsive-nav-title">Article navigation</div>
+
+        <div class="info-widget-wrap">
+    <div class="widget-IssueInfo widget-instance-IssueInfo_Article" 
+         data-widget-name="IssueInfo" 
+         data-widget-instance="IssueInfo_Article">
+        
+
+<div id="issueInfo-IssueInfo_Article" class="article-info-wrap clearfix ">
+<div class="article-issue-info">
+    <div class="volume-issue__wrap">
+            <a href="/rspa/issue/392/1802">
+
+            <span class="volume issue">Volume 392, Issue 1802</span>
+
+            </a>
+    </div>
+
+    <div class="ii-pub-date">
+March 1984    </div>
+
+        <div class="issue-historical-title-wrap">
+            <div class="issue-old-title-label">This content was originally published in </div>
+            <div class="issue-old-title-journalName">Proceedings of the Royal Society of London. A. Mathematical and Physical Sciences</div>
+        </div>
+
+    
+
+</div>
+<div class="article-issue-img">
+            <a href="/rspa/issue/392/1802">
+        <img id="issueFallbackImage" class="fb-featured-image at-coverimage" src="//trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/RSPA_CoverImage68097636.jpg" alt="Issue Cover" />
+            </a>
+</div>
+
+    
+
+</div>
+ 
+    </div>
+                <div class="widget-ArticleNavLinks widget-instance-ArticleNavLinks_Article" 
+         data-widget-name="ArticleNavLinks" 
+         data-widget-instance="ArticleNavLinks_Article">
+        <ul class="inline-list">
+        <li class="prev arrow">
+            <a href="/rspa/article/392/1802/15/15585/Diabolical-points-in-the-spectra-of-triangles"><i class="icon-general_arrow-left"></i>Previous <span>Article</span></a>
+        </li>
+            <li class="next arrow">
+            <a href="/rspa/article/392/1802/59/15574/Angle-dependence-of-ion-kinetic-energy-spectra">Next <span>Article</span><i class="icon-general_arrow-right"></i></a>
+        </li>
+</ul>
+ 
+    </div>
+
+            
+    <div class="widget-ArticleJumpLinks widget-instance-ArticleJumpLinks_Widget" 
+         data-widget-name="ArticleJumpLinks" 
+         data-widget-instance="ArticleJumpLinks_Widget">
+        <div class="content-nav">
+        <div class="jumplink-title">Article contents</div>
+    <ul class="jumplink-list">
+                <li class="section-jump-link js-article-jump-link head-1 abstract-section-jumplink" link-destination="19312523">
+                <div class="section-jump-link__link-wrap">
+
+                    <a class="jumplink scrollTo" href="#19312523">Abstract</a>
+                </div>
+            </li>
+    </ul>
+</div>
+ 
+    </div>
+
+
+
+        </div>
+    </div>
+</div> 
+        
+
+    <div id="ContentColumn" class="page-column page-column--center center-content can-stick">
+        <div class="article-browse_content-wrap js-content-standard">
+                <div class="widget-ArticleMainView widget-instance-Article_ArticleMainViewWrapper" 
+         data-widget-name="ArticleMainView" 
+         data-widget-instance="Article_ArticleMainViewWrapper">
+        <div class="article-browse-top article-browse-mobile-nav empty">
+    <div class="article-browse-mobile-nav-inner">
+        <button type="button" class="btn toggle-left-col toggle-left-col__article">Article Navigation</button>
+    </div>
+</div>
+
+<div class="content-inner-wrap">
+    
+
+    <div class="widget-ArticleTopInfo widget-instance-ArticleTopInfo" 
+         data-widget-name="ArticleTopInfo" 
+         data-widget-instance="ArticleTopInfo">
+        <div class="module-widget article-top-widget content-metadata_wrap">
+
+
+<div class="article-groups left-flag">
+        <span class="article-client_type">article</span><span class="pipe">|</span>
+        <span class="article-date">08 Mar 1984</span>
+
+</div>
+
+
+    <div class="widget-items">
+    <h1 class="wi-article-title article-title-main" id="aria15579">
+
+        Quantal phase factors accompanying adiabatic changes
+
+    <span data-resource-id-access="15579"><i class="js-access-icon-placeholder"></i></span>
+    </h1>
+
+
+<div class="wi-authors">
+    <div class="al-authors-list">
+
+        <input type="hidden" id="js-hdn-enable-corresponding-author-icon" value="True" />
+                <div class="al-author-name">
+
+                                    <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-1576783">Michael Victor Berry, F. R. S.</a>
+
+                    <div id="author-info-1576783" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Michael Victor Berry, F. R. S.">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Michael Victor Berry, F. R. S.</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Michael Victor Berry, F. R. S.
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff">H. H. Wills Physics Laboratory, University of Bristol, Tyndall Avenue, Bristol BS8 1TL, U. K.</div>
+    </div>
+
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/rspa/search-results?f_AllAuthors=Michael+Victor+Berry" rel="nofollow">This site</a>
+</div>
+
+    <div class="info-card-search info-card-search-pubmed">
+        <a href="http://www.ncbi.nlm.nih.gov/pubmed?cmd=search&amp;term=Michael Victor Berry, F. R. S.">PubMed</a>
+    </div>
+    <div class="info-card-search info-card-search-google">
+        <a href="http://scholar.google.com/scholar?q=author:\&quot;Michael Victor Berry\&quot;">Google Scholar</a>
+    </div>
+</div>                    </div>
+                </div>
+    </div>
+</div>
+
+
+    <div class="js-author-expand-collapse-metadata-wrap author-expand-collapse-metadata-wrap stats-article-metadata-trigger-wrap">
+        <a href="javascript:;" class="js-expand-collapse-metadata author-expand-collapse-metadata stats-article-metadata-trigger" aria-expanded="false">
+            <i class="js-metadata-toggle-icon icon-general-add"></i>Author &amp; article information
+        </a>
+    </div>
+<div class="js-metadata-wrap metadata">
+            <div class="wi-footnotes">
+                    <div>
+                        <div class="article-footnote">
+                            <div class="fn" id="" content-id=""><p>This text was harvested from a scanned image of the original document using optical character recognition (OCR) software. As such, it may contain errors. Please contact the Royal Society if you find an error you would like to see corrected. Mathematical notations produced through Infty OCR.</p></div>
+                        </div>
+                    </div>
+            </div>
+            <div class="metadata-publisher">
+                Publisher: The Royal Society
+            </div>
+            <div class="metadata-pubhistory">
+                    <div class="pubhistory-entry">
+                        <span class="pubhistory-state">Received:</span>
+                        <span class="pubhistory-date">13 Jun 1983</span>
+                    </div>
+                    <div class="pubhistory-entry">
+                        <span class="pubhistory-state">Published online:</span>
+                        <span class="pubhistory-date">08 Mar 1984</span>
+                    </div>
+
+            </div>
+            <div class="metadata-issn">
+                    <div class="metadata-issn-online">Online ISSN: 2053-9169</div>
+                                    <div class="metadata-issn-print">Print ISSN: 0080-4630</div>
+            </div>
+
+</div>
+
+
+<div class="pub-history-wrap clearfix">
+
+            <div class="pub-history-row clearfix">
+            <div class="ww-citation-primary"><em>Proc. R. Soc. A</em> (1984) 392 (1802): 45–57 .</div>
+        </div>
+        <div class="pub-history-row citation-wrap-row clearfix">
+                <div class="ww-citation-wrap-doi">
+                    <div class="citation-doi">
+                        <a href="https://doi.org/10.1098/rspa.1984.0023">https://doi.org/10.1098/rspa.1984.0023</a>
+                    </div>
+                </div>
+
+                <div class="ww-citation-history-wrap js-history-dropdown-wrap">
+                    <a href="javascript:;" class="history-label js-history-dropdown-trigger">
+                        <span>Article history</span><i class="icon-history-small"></i>
+                    </a>
+
+                    <div class="ww-history js-history-entries-wrap">
+                            <div class="history-entry">
+                                <div class="wi-state">Received:</div>
+                                <div class="wi-date">13 Jun 1983</div>
+                            </div>
+                            <div class="history-entry">
+                                <div class="wi-state">Published online:</div>
+                                <div class="wi-date">08 Mar 1984</div>
+                            </div>
+                    </div>
+                </div>
+        </div>
+
+</div>
+
+
+
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.article-top-widget').on('click', '.ati-toggle-trigger', function () {
+            $(this).find('.icon-general-add, .icon-minus').toggleClass('icon-minus icon-general-add');
+            $(this).siblings('.ati-toggle-content').toggleClass('hide');
+        });
+
+        // In Chrome, an anchor tag with target="_blank" and a "mailto:" href opens a new tab/window as well as the email client
+        // I suspect this behavior will be corrected in the future
+        // Remove the target="_blank"
+        $('ul.wi-affiliationList').find('a[href^="mailto:"]').each(function () {
+            $(this).removeAttr('target');
+        });
+    });
+</script>
+
+ 
+    </div>
+    <div class="widget-ArticleLinks widget-instance-ArticleLinks" 
+         data-widget-name="ArticleLinks" 
+         data-widget-instance="ArticleLinks">
+         
+    </div>
+
+
+    <div class="widget-ArticleMainView widget-instance-ArticleMainView_Abstract" 
+         data-widget-name="ArticleMainView" 
+         data-widget-instance="ArticleMainView_Abstract">
+        
+
+
+<div class="toolbar-wrap vt-toolbar-wrap" role="navigation">
+    <div class="toolbar-inner-wrap">
+<div class="toolbar-inner-wrap ">
+    <ul id="Toolbar" class="debug js-toolbar toolbar">
+
+<li class="toolbar-item item-with-dropdown item-views js-item-views hide">
+  <a href="javascript:;" class="js-toolbar-dropdown" data-dropdown="FilterDrop" role="button" aria-expanded="false">
+    <i class="icon-menu_views"><span class="screenreader-text">Views Icon</span></i>
+    <span class="toolbar-label">
+      <span class="toolbar-text">Views</span>
+      <i class="icon-general_arrow-down arrow-icon js-toolbar-arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+    </span>
+  </a>
+  <ul id="ViewsDrop" class="f-dropdown js-dropdown-content" data-dropdown-content>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="article-content"><a href="javascript:;" rel=nofollow><span>Article contents</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="figures-tables"><a href="javascript:;" rel=nofollow><span>Figures &amp; tables</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="video"><a href="javascript:;" rel=nofollow><span>Video</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="audio"><a href="javascript:;" rel=nofollow><span>Audio</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="supplementary-data"><a href="javascript:;" rel=nofollow><span>Supplementary Material</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="peer-review"><a href="javascript:;" rel=nofollow><span>Peer Review</span></a></li>
+  </ul>
+</li>
+
+
+    <li class="toolbar-item item-with-dropdown item-share">
+        <a href="javascript:;" class="drop-trigger js-toolbar-dropdown at-ShareButton" data-dropdown="ShareDrop" role="button" aria-expanded="false">
+            <i class="icon-menu_share"><span class="screenreader-text">Share Icon</span></i>
+            <span class="toolbar-label">
+                <span class="toolbar-text">Share</span>
+                <i class="arrow-icon icon-general_arrow-down js-toolbar-arrow-icon"></i>
+            </span>
+        </a>
+        <ul id="ShareDrop" class="addthis_toolbox addthis_default_style addthis_20x20_style f-dropdown js-dropdown-content" data-dropdown-content>
+
+    <li>
+        <a class="st-custom-button addthis_button_bluesky js-share-link"
+           data-network="bluesky"
+           data-title="Quantal phase factors accompanying adiabatic changes"
+           data-url=" https://royalsocietypublishing.org/rspa/article-abstract/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic"
+           data-email-subject="Quantal phase factors accompanying adiabatic changes"
+           href="javascript:;"
+           rel=nofollow><span>Bluesky</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_facebook js-share-link"
+           data-network="facebook"
+           data-title="Quantal phase factors accompanying adiabatic changes"
+           data-url="https://royalsocietypublishing.org/rspa/article-abstract/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic"
+           data-email-subject="Quantal phase factors accompanying adiabatic changes"
+           href="javascript:;"
+           rel=nofollow><span>Facebook</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_twitter js-share-link"
+           data-network="twitter"
+           data-title="Quantal phase factors accompanying adiabatic changes"
+           data-url="https://royalsocietypublishing.org/rspa/article-abstract/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic"
+           data-email-subject="Quantal phase factors accompanying adiabatic changes"
+           href="javascript:;"
+           rel=nofollow><span>X</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_linkedin js-share-link"
+           data-network="linkedin"
+           data-title="Quantal phase factors accompanying adiabatic changes"
+           data-url="https://royalsocietypublishing.org/rspa/article-abstract/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic"
+           data-email-subject="Quantal phase factors accompanying adiabatic changes"
+           href="javascript:;"
+           rel=nofollow><span>LinkedIn</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_wechat js-share-link"
+           data-network="wechat"
+           data-title="Quantal phase factors accompanying adiabatic changes"
+           data-url="https://royalsocietypublishing.org/rspa/article-abstract/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic"
+           data-email-subject="Quantal phase factors accompanying adiabatic changes"
+           href="javascript:;"
+           rel=nofollow><span>WeChat</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_reddit js-share-link"
+           data-network="reddit"
+           data-title="Quantal phase factors accompanying adiabatic changes"
+           data-url="https://royalsocietypublishing.org/rspa/article-abstract/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic"
+           data-email-subject="Quantal phase factors accompanying adiabatic changes"
+           href="javascript:;"
+           rel=nofollow><span>Reddit</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_email js-share-link"
+           data-network="email"
+           data-title="Quantal phase factors accompanying adiabatic changes"
+           data-url="https://royalsocietypublishing.org/rspa/article-abstract/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic"
+           data-email-subject="Quantal phase factors accompanying adiabatic changes"
+           href="javascript:;"
+           rel=nofollow><span>Email</span></a>
+    </li>
+
+
+
+        </ul>
+    </li>
+<li class="toolbar-item item-with-dropdown item-tools last">
+      <a href="javascript:;" class="js-toolbar-dropdown" data-dropdown="ToolsDrop" role="button" aria-expanded="false">
+        <i class="icon-menu_tools"><span class="screenreader-text">Tools Icon</span></i>
+        <span class="toolbar-label">
+          <span class="toolbar-text">Tools</span>
+          <i class="icon-general_arrow-down arrow-icon js-toolbar-arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+        </span>
+      </a>
+      <ul id="ToolsDrop" class="f-dropdown mobile js-dropdown-content" data-dropdown-content>
+<li class="toolbar-item item-tools">
+    <div class="widget-ToolboxPermissions widget-instance-ToolboxPermissions_Abstract" 
+         data-widget-name="ToolboxPermissions" 
+         data-widget-instance="ToolboxPermissions_Abstract">
+            <div class="module-widget">
+        <a href="https://marketplace.copyright.com/rs-ui-web/mp/search/all/10.1098%2Frspa.1984.0023" id="PermissionsLink" role="button" rel=nofollow>
+            <span class="toolbar-label text">
+                <span class="toolbar-text normalize permission">Get permissions</span>
+            </span>
+        </a>
+    </div>
+ 
+    </div>
+
+</li>
+      </ul>
+  
+</li>
+
+<li class="search-dropdown-trigger_wrap toolbar-item">
+    <a href="javascript:;" data-theme-dropdown-trigger="toolbar-search-dropdown" aria-controls="toolbar-search-dropdown" aria-expanded="false">
+        <i class="icon-menu_search"></i>
+        <span class="site-search-text">Search Site</span>
+    </a>
+</li>
+
+<li class="toolbar-item item-with-dropdown item-cite">
+<a href="javascript:;" class="js-toolbar-dropdown" data-dropdown="CiteDrop" role="button" aria-expanded="false">
+    <i class="icon-cite"></i>
+    <span class="toolbar-label">
+        <span class="toolbar-text">Cite</span>
+        <i class="icon-general_arrow-down arrow-icon js-toolbar-arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+    </span>
+</a>
+<ul id="CiteDrop" class="f-dropdown js-dropdown-content" data-dropdown-content>
+    <li>
+        <a class="stats-get-citation at-CiteButton" href="javascript:;" data-modal-source-id="toolbox-get-citation" rel=nofollow>View this citation</a>
+    </li>
+    <li>
+
+<a id="aria15579citation"
+   href="javascript:;" class="js-add-to-citation-download-manager"
+   data-resource-id="15579"
+   data-resource-type-id="3"
+   aria-labelledby="aria15579citation"
+   role="button"
+   rel="nofollow">Add to citation manager <span class="screenreader-text">for </span></a>
+
+    </li>
+</ul>
+    </li>
+
+    </ul>
+</div>
+
+<div id="getCitation" data-content-id="toolbox-get-citation" class="modal-only-content vt-citation-modal">
+  <div class="modal-title">Citation</div>
+  <p>Michael Victor Berry; Quantal phase factors accompanying adiabatic changes. <em><em>Proc. R. Soc. A</em></em> 1 March 1984; 392 (1802): 45–57. <a href="https://doi.org/10.1098/rspa.1984.0023">https://doi.org/10.1098/rspa.1984.0023</a></p>
+  <p class="citation-label">Download citation file:</p>
+  <ul>
+      <li><a href="/Citation/Download?resourceId=15579&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Ris (Zotero)</a></li>
+          <li><a href="/Citation/Download?resourceId=15579&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Reference Manager</a></li>
+          <li><a href="/Citation/Download?resourceId=15579&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">EasyBib</a></li>
+          <li><a href="/Citation/Download?resourceId=15579&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Bookends</a></li>
+
+      <li><a href="/Citation/Download?resourceId=15579&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Mendeley</a></li>
+
+      <li><a href="/Citation/Download?resourceId=15579&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Papers</a></li>
+
+      <li><a href="/Citation/Download?resourceId=15579&amp;resourceType=3&amp;citationFormat=1" rel="nofollow">EndNote</a></li>
+          <li><a href="/Citation/Download?resourceId=15579&amp;resourceType=3&amp;citationFormat=3" rel="nofollow">RefWorks</a></li>
+          <li><a href="/Citation/Download?resourceId=15579&amp;resourceType=3&amp;citationFormat=2" rel="nofollow">BibTex</a></li>
+          </ul>
+</div>
+
+
+        <div class="toolbar-search" id="toolbar-search-dropdown" data-theme-dropdown="toolbar-search-dropdown">
+            <fieldset>
+                <legend class="screenreader-text">toolbar search</legend>
+
+    <div class="widget-SitePageHeader widget-instance-SiteSearch_ArticleMainView_Abstract" 
+         data-widget-name="SitePageHeader" 
+         data-widget-instance="SiteSearch_ArticleMainView_Abstract">
+        
+
+    <input type="hidden" class="hfEnableEnhancedAutoSuggest" value="false" name="searchScope" aria-hidden="true" />
+        <div class="mobile-menu-trigger_wrap mobile-search_wrap">
+            <button type="button"
+                    class="mobile-search_toggle at-search-toggle"
+                    aria-expanded="false"
+                    data-theme-dropdown-trigger="search-dropdown"><i class="icon-menu_search" aria-hidden="true"></i><span class="screenreader-text">Search Dropdown Menu</span></button>
+        </div>
+    <div class="navbar-search-container mobile-dropdown search-dropdown" data-theme-dropdown="search-dropdown">
+        <div class="navbar-search">
+            <form class="microsite-search js-MicrositeSearch" aria-label="toolbar search" role="search">
+                <fieldset class="searchbar-fieldset">
+                    <legend><span class="screenreader-text">toolbar search</span></legend>
+                    <div class="navbar-search-input_wrap">
+                        
+                        <input class="navbar-search-input microsite-search-term at-microsite-search-term search-term-autosuggest"
+                               data-autosuggest-hint="micrositeSearchTermInputHint-SiteSearch_ArticleMainView_Abstract"
+                               data-autosuggest-results="micrositeAutoCompleteResults-SiteSearch_ArticleMainView_Abstract"
+                               data-autosuggest-id="MicrositeSearchTerm-SiteSearch_ArticleMainView_Abstract"
+                               data-searchfilter="search-filter-SiteSearch_ArticleMainView_Abstract"
+                               placeholder="Search..."
+                               aria-label="Search..."
+                               type="text" maxlength="255"
+                                 autocomplete="off"                                 id="MicrositeSearchTerm-SiteSearch_ArticleMainView_Abstract">
+                        
+                        <input type="hidden" name="hfAutoCompleteMaxResults" class="hfAutoCompleteMaxResults" value="6" aria-hidden="true" />
+                        <input type="hidden" name="hfSolrAutoSuggestMinimumCharactersLength" class="hfSolrAutoSuggestMinimumCharactersLength" value="2" aria-hidden="true" />
+                        <input type="hidden" name="hfSolrJournalName" class="hfSolrJournalName" value="" aria-hidden="true" />
+                        <input type="hidden" name="hfSolrJournalID" class="hfSolrJournalID" value="" aria-hidden="true" />
+                        <label for="micrositeSearchTermInputHint-SiteSearch_ArticleMainView_Abstract" aria-hidden="true">
+                            <span class="screenreader-text">Search input auto suggest</span>
+                        </label>
+                        <input type="text"
+                               id="micrositeSearchTermInputHint-SiteSearch_ArticleMainView_Abstract"
+                               data-autosuggest-id="micrositeSearchTermInputHint-SiteSearch_ArticleMainView_Abstract"
+                               class="microsite-search-term-input-hint"
+                               autocomplete="off"
+                               tabindex="-1"
+                               aria-hidden="true"
+                               disabled />
+                        <ul data-autosuggest-id="micrositeAutoCompleteResults-SiteSearch_ArticleMainView_Abstract" class="term-list hidden"></ul>
+                    </div>
+                        <div class="navbar-search-filter_wrap">
+                            <label for="navbar-search-filter-site-SiteSearch_ArticleMainView_Abstract">
+                                <span class="screenreader-text">filter your search</span>
+                            </label>
+                            <select class="navbar-search-filter navbar-search-filter-site at-navbar-search-filter" id="navbar-search-filter-site-SiteSearch_ArticleMainView_Abstract" data-autosuggest-id="search-filter-SiteSearch_ArticleMainView_Abstract">
+<option class="header-search-bar-filters-item" value="/search-results?page=1&q={searchQuery}" data-siteid="0" >All content</option><option class="header-search-bar-filters-item selected" value="/rspa/search-results?page=1&q={searchQuery}&fl_SiteID=1000011" data-siteid="1000011" selected>Proceedings A</option>                            </select>
+                        </div>
+                    <div class="navbar-search-submit_wrap">
+                        
+                        <button type="button" class="microsite-search-icon navbar-search-submit icon-menu_search"><span class="screenreader-text">Search</span></button>
+                    </div>
+                </fieldset>
+            </form><!-- /#MicrositeSearch -->
+        </div><!-- /.navbar-search -->
+<div class="navbar-search-advanced">
+    <a href="/advanced-search" class="advanced-search">Advanced Search</a>
+</div>    </div><!-- /.navbar-search-container -->
+
+ 
+    </div>
+
+            </fieldset>
+        </div>
+    </div><!-- /.toolbar-inner-wrap -->
+</div><!-- /.toolbar-wrap -->
+
+<div class="article-body">
+    <div id="articleMainView-articleId" class="js-articleMainView-articleId" data-articleid="15579" style="display: none;"></div>
+    <div id="ContentTab" class="content active">
+    <div class="widget-ArticleFulltext widget-instance-ArticleFulltext_Abstract" 
+         data-widget-name="ArticleFulltext" 
+         data-widget-instance="ArticleFulltext_Abstract">
+        <input type="hidden" name="js-hfArticleLinksReferencesDoiRegex" id="js-hfArticleLinksReferencesDoiRegex" value="" />
+
+<div class="module-widget">
+    <div class="widget-items" data-widgetname="ArticleFulltext">
+        <span id="sr-fig-viewer-action" hidden="">Open figure viewer</span>
+        
+
+
+
+
+
+                <h2 scrollto-destination="19312523"  id="19312523" data-section-title="Abstract" class="abstract-title jumplink-heading">Abstract</h2>
+                <div  class="">
+                <div id="19312523-content" class="article-section-wrapper js-article-section js-content-section  " data-section-parent-id="0">
+                    
+                    <section class="abstract" aria-label="Main abstract"><p>A quantal system in an eigenstate, slowly transported round a circuit C by varying parameters R in its Hamiltonian Ĥ(R), will acquire a geometrical phase factor exp{iγ(C)} in addition to the familiar dynamical phase factor. An explicit general formula for γ(C) is derived in terms of the spectrum and eigenstates of Ĥ(R) over a surface spanning C. If C lies near a degeneracy of Ĥ, γ(C) takes a simple form which includes as a special case the sign change of eigenfunctions of real symmetric matrices round a degeneracy. As an illustration γ(C) is calculated for spinning particles in slowly-changing magnetic fields; although the sign reversal of spinors on rotation is a special case, the effect is predicted to occur for bosons as well as fermions, and a method for observing it is proposed. It is shown that the Aharonov-Bohm effect can be interpreted as a geometrical phase factor.</p></section>
+                </div>
+                    <div class="article-metadata-panel clearfix rs_skip">
+    <div class="widget-SolrResourceMetadata widget-instance-ContentMetadata_ArticleFulltext_Article" 
+         data-widget-name="SolrResourceMetadata" 
+         data-widget-instance="ContentMetadata_ArticleFulltext_Article">
+        
+
+
+ 
+    </div>
+
+                    </div>
+        <!-- /foreach -->
+        </div> 
+
+
+            <div class="article-metadata-standalone-panel clearfix"></div>
+
+                <div class="pdf-notice">
+                    This content is only available via PDF.
+                </div>
+
+<div id="articlefulltext_figshare"
+     class="figshare-wrapper"
+     data-widgetname="filesViewerGeneric"
+     data-showstats="True"
+     data-showpageinfo="False"
+     data-showsharebutton="True"
+     data-showfiledetails="False"
+     data-loaddoisbycollection="False">
+</div>
+
+        
+
+
+        <div class="permissionstatement-section-wrapper ">
+            
+            <div class="copyright copyright-statement">Scanned images copyright © 2017, Royal Society</div><div class="copyright copyright-year">2017</div><div class="copyright copyright-holder">Royal Society</div>
+        </div>
+<!-- /foreach -->
+
+
+        <span id="UserHasAccess" data-userHasAccess="False"></span>
+
+    </div><!-- /.widget-items -->
+    </div><!-- /.module-widget --> 
+    </div>
+                <div class="article-top-info-user-restricted-options">You do not currently have access to this content.</div>
+
+        <div id="ContentTabFilteredView"></div>
+
+    </div>
+</div>
+
+ 
+    </div>
+
+
+</div>
+ 
+    </div>
+<div class="user-comments-wrap js-userComments">
+    <div class="widget-UserCommentBody widget-instance-UserCommentBody" 
+         data-widget-name="UserCommentBody" 
+         data-widget-instance="UserCommentBody">
+         
+    </div>
+    <div class="widget-UserComment widget-instance-UserComment" 
+         data-widget-name="UserComment" 
+         data-widget-instance="UserComment">
+         
+    </div>
+
+</div>
+
+            <div>    <a id="FullTextLink"></a></div>
+
+<div id="unauth" class="unauth-wrap">
+                <div class="unauth-row clearfix">
+                <h2 class="unauth-signin-title">Sign in</h2>
+    <div class="register-ribbon-wrap">
+        <div class="register-ribbon-text">
+            Don&#39;t already have an account? <a class="register-ribbon-link" href="/my-account/register?siteId=1000011&amp;returnUrl=https%3a%2f%2froyalsocietypublishing.org%2frspa%2farticle-abstract%2f392%2f1802%2f45%2f15579%2fQuantal-phase-factors-accompanying-adiabatic%3fredirectedFrom%3dfulltext">Register</a>
+        </div>
+    </div>
+            <!-- /.register-ribbon-wrap -->
+        <div class="unauth-column-wrap">
+                <div class="unauth-column">
+    <div class="widget-LoginForm widget-instance-ArticlePage_LoginForm" 
+         data-widget-name="LoginForm" 
+         data-widget-instance="ArticlePage_LoginForm">
+            <div class="signin-form">
+
+        <div class="preloader-wrap hide">
+            <div class="preloader">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        
+        <div class="login-form__section-wrap">
+                <form class="login-form__section">
+                    <div class="login-form__heading">
+                        <h3>Client account</h3>
+                    </div>
+                    <!-- Errors -->
+                    <div id="LoginErrorMessage" class="error at-error" data-default-message="You could not be signed in. Please check your email address / username and password and try again.">
+                    </div>
+                    <div class="login-form__row">
+                        <label for="user_ArticlePage_LoginForm" class="login-form__label">
+                            <span class="login-form__label-text">Email address / username</span>
+                            <a class="question-icon" href="#" data-reveal-id="modalSignInEmail"><span>?</span></a>
+                        </label>
+                        <input id="user_ArticlePage_LoginForm" type="text" class="username at-username" autocomplete="username"
+                               aria-required="true" aria-describedby="LoginErrorMessage"/>
+                    </div>
+                    <div class="login-form__row">
+                        <label for="pass_ArticlePage_LoginForm" class="login-form__label-text">Password</label>
+                        <input id="pass_ArticlePage_LoginForm" type="password" class="password at-password" autocomplete="current-password" 
+                               aria-required="true" aria-describedby="LoginErrorMessage" />
+                    </div>
+                    
+                    <input type="hidden" id="enableReCaptcha" name="enableReCaptcha" value="True" />
+                        <div class="login-form__row">
+                            <div class="login-form-captcha">
+    <div class="widget-ReCaptcha widget-instance-login-form-captcha" 
+         data-widget-name="ReCaptcha" 
+         data-widget-instance="login-form-captcha">
+                <div class="js-recaptcha-wrap">
+            <p class="screenreader-text">This verification must be submitted within 1 minute of completing it.</p>
+            <div id="captcha" data-captchakey="6LcU010rAAAAAA_bkM5LIs5JRieKbOEmiVY8wpFT" data-fallback-captcha-key=""
+                 data-token-lifetime-seconds="60"
+                 data-expiry-warning-lead-seconds="20"></div>
+            <div class="captchaAlert" style="color: #c60f13; display: none">
+                Could not validate captcha.  Please try again.
+            </div>
+            <div class="js-captcha-expiry-warning captcha-timing-message hide" role="alert" aria-live="polite">
+                <span>Your verification will expire soon. Select refresh to keep going.</span>
+                <button type="button" class="js-captcha-refresh-button">Refresh verification</button>
+            </div>
+            <div class="js-captcha-expired-message captcha-timing-message hide" role="alert" aria-live="polite">
+                <span>Your verification has expired. Please verify again.</span>
+                <button type="button" class="js-captcha-refresh-button">Refresh verification</button>
+            </div>
+        </div>
+            <script type="text/javascript">
+                var onloadCallback = function() {
+                    SCM.Captcha.Init('6LcU010rAAAAAA_bkM5LIs5JRieKbOEmiVY8wpFT');
+                };
+            </script>
+            <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit&hl=en"
+                    async defer>
+            </script>
+    <input type="hidden" id="recaptchaWidgetInstance" value="login-form-captcha" />
+    <input type="hidden" id="recaptchaUseV3" value="False" />
+ 
+    </div>
+
+                            </div>
+                        </div>
+
+                    <div class="login-form__row">
+                        <button type="button" class="signin-button btn at-signin-button">Sign in</button>
+                        <div class="login-form__link-wrap">
+                            <a class="logged-out-link at-reset-link" href="/my-account/reset-password" rel=nofollow>Reset password</a>
+                        </div>
+                        <div class="login-form__link-wrap">
+                            <a class="logged-out-link at-register-link js-register-user-modals" href="/my-account/register?siteId=1000011&amp;returnUrl=https%3a%2f%2froyalsocietypublishing.org%2frspa%2farticle-abstract%2f392%2f1802%2f45%2f15579%2fQuantal-phase-factors-accompanying-adiabatic%3fredirectedFrom%3dfulltext" data-target="register" rel=nofollow>Register</a>
+                        </div>
+                    </div>
+
+                    <!-- /.login-form-section -->
+                </form>
+
+
+                    <div class="login-form__section login-form__row--lower">
+                            <h3 class="login-form__heading">Sign in via your institution</h3>
+
+                        <a class="logged-out-link institutional-login-link at-institutional-login-link" href="/institutional-login?returnUrl=https%3a%2f%2froyalsocietypublishing.org%2frspa%2farticle-abstract%2f392%2f1802%2f45%2f15579%2fQuantal-phase-factors-accompanying-adiabatic%3fredirectedFrom%3dfulltext" rel=nofollow>Sign in via your institution</a>
+                    </div>
+
+
+
+        </div>
+    </div>
+ 
+    </div>
+
+                </div>
+    <div class="widget-RestoreGuestAccess widget-instance-ArticlePage_RestoreGuestAccess" 
+         data-widget-name="RestoreGuestAccess" 
+         data-widget-instance="ArticlePage_RestoreGuestAccess">
+         
+    </div>
+                    <input type="hidden" id="resourceId" value="15579" />
+                    <input type="hidden" id="resourceTypeId" value="3" />
+                <!-- /.unauth-column -->
+                            <div class="unauth-column entities">
+                        <div class="unauth-society-row">
+
+                        </div>
+                                    </div><!-- /.unauth-column -->
+
+        </div><!-- /.unauth-signin-col-wrap -->
+        </div>
+    <div class="product-type_wrap">
+    <div class="widget-BuyThisResourceLink widget-instance-ArticlePage_BuyThisResourceLink" 
+         data-widget-name="BuyThisResourceLink" 
+         data-widget-instance="ArticlePage_BuyThisResourceLink">
+                <div id="dvPurchaseButton" class="ppv-wrap">
+                            <div class="ppv_price_wrap">
+                        <div class="price_left_text">Pay-per-view access</div>
+                                            <div class="display_price_buy_resource">$24.00</div>
+                </div>
+                            <div id="buyThisResourceLink" class="buyThisResourceLink ppv box">
+    <a class="store-link js-add-to-cart" href="https://royalsocietypublishing.org/store/add/15579/3" rel="nofollow"
+       data-article-doi="10.1098/rspa.1984.0023"
+       data-article-title="Quantal phase factors accompanying adiabatic changes"
+       data-article-type="research-article"
+       data-journal-short-name="rspa"
+       data-currency="USD"
+       data-price="24.00">
+        <i class="icon-availability_cart"></i> <span>Buy this Article</span>
+    </a>
+    <div class="widget-ExternalProductLink widget-instance-BuyThisResource" 
+         data-widget-name="ExternalProductLink" 
+         data-widget-instance="BuyThisResource">
+          
+    </div>
+
+                </div>
+
+        </div>
+
+
+ 
+    </div>
+            </div>
+    <div class="widget-BuyOrUseTokensLink widget-instance-ArticlePage_BuyOrUseTokensLink" 
+         data-widget-name="BuyOrUseTokensLink" 
+         data-widget-instance="ArticlePage_BuyOrUseTokensLink">
+         
+    </div>
+</div><!-- /.unauth-wrap -->
+
+            
+        </div>
+    </div> 
+    <div id="Sidebar" class="page-column page-column--right">
+        <input type="hidden" class="js-sidebar-stick-only-last-ad" value=true>
+
+    <div class="widget-AdBlock widget-instance-ArticlePageTopSidebar" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="ArticlePageTopSidebar">
+        
+ 
+    </div>
+
+
+        <div class="sidebar-widget_wrap">
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRail" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRail">
+        <div class="widget widget-dynamic " data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0">
+        <div class="widget widget-dynamic right-rail" data-count="26">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B0" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B0">
+        <div class="widget widget-dynamic article-article-level-metrics article-level-metrics" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-ArticleLevelMetrics widget-instance-Article_RightRailB0B0article-article-level-metrics" 
+         data-widget-name="ArticleLevelMetrics" 
+         data-widget-instance="Article_RightRailB0B0article-article-level-metrics">
+        
+
+
+
+    <div class="artmet-wrapper ">
+
+
+
+
+    <div id="artmet-full-details" class="artmet-full-wrap clearfix js-metric-full-wrap " data-autoload-chart="True">
+            <h2 id="widget-title-1-id" class="widget-title-1 artmet-widget-title-1">Metrics</h2>
+
+            <div class="artmet-item artmet-views-wrap">
+                <div class="artmet-views clearfix">
+                    <div class="artmet-total-views">
+                        <span class="artmet-text">Total Views</span>
+                        <span class="artmet-number">19,860</span>
+                    </div>
+                    <div class="artmet-breakdown-views-wrap">
+                        <div class="artmet-breakdown-view breakdown-border">
+                            <span class="artmet-number">193</span>
+                            <span class="artmet-text">Pageviews</span>
+                        </div>
+                        <div class="artmet-breakdown-view">
+                            <span class="artmet-number">19,667</span>
+                            <span class="artmet-text">PDF Downloads</span>
+                        </div>
+                                            </div>
+                </div>
+                <div class="artmet-views-since">Since 12/1/2018</div>
+            </div>
+
+            <script>
+                var ChartistData = ChartistData || {};
+
+                ChartistData.data = {
+                    labels: ['Dec 2018', 'Jan 2019', 'Feb 2019', 'Mar 2019', 'Apr 2019', 'May 2019', 'Jun 2019', 'Jul 2019', 'Aug 2019', 'Sep 2019', 'Oct 2019', 'Nov 2019', 'Dec 2019', 'Jan 2020', 'Feb 2020', 'Mar 2020', 'Apr 2020', 'May 2020', 'Jun 2020', 'Jul 2020', 'Aug 2020', 'Sep 2020', 'Oct 2020', 'Nov 2020', 'Dec 2020', 'Jan 2021', 'Feb 2021', 'Mar 2021', 'Apr 2021', 'May 2021', 'Jun 2021', 'Jul 2021', 'Aug 2021', 'Sep 2021', 'Oct 2021', 'Nov 2021', 'Dec 2021', 'Jan 2022', 'Feb 2022', 'Mar 2022', 'Apr 2022', 'May 2022', 'Jun 2022', 'Jul 2022', 'Aug 2022', 'Sep 2022', 'Oct 2022', 'Nov 2022', 'Dec 2022', 'Jan 2023', 'Feb 2023', 'Mar 2023', 'Apr 2023', 'May 2023', 'Jun 2023', 'Jul 2023', 'Aug 2023', 'Sep 2023', 'Oct 2023', 'Nov 2023', 'Dec 2023', 'Jan 2024', 'Feb 2024', 'Mar 2024', 'Apr 2024', 'May 2024', 'Jun 2024', 'Jul 2024', 'Aug 2024', 'Sep 2024', 'Oct 2024', 'Nov 2024', 'Dec 2024', 'Jan 2025', 'Feb 2025', 'Mar 2025', 'Apr 2025', 'May 2025', 'Jun 2025', 'Jul 2025', 'Aug 2025', 'Sep 2025', 'Oct 2025', 'Nov 2025', 'Dec 2025', 'Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026', 'Aug 2026', 'Sep 2026'],
+                    series: [[215, 326, 345, 292, 264, 185, 151, 114, 91, 124, 230, 215, 162, 294, 196, 255, 355, 348, 310, 319, 245, 93, 207, 125, 187, 356, 223, 141, 128, 118, 110, 106, 95, 112, 235, 157, 136, 358, 356, 191, 186, 186, 137, 136, 149, 164, 275, 189, 106, 411, 428, 225, 183, 183, 135, 118, 127, 139, 247, 163, 373, 427, 350, 464, 164, 153, 126, 123, 101, 128, 202, 152, 132, 433, 434, 203, 174, 158, 173, 155, 101, 144, 236, 159, 260, 331, 344, 318, 246, 230, 192, 146, 117, 54]]
+                };
+            </script>
+            <div class="artmet-item artmet-chart">
+                <div class="ct-chart ct-octave js-ct-chart"></div>
+
+                <div class="artmet-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Month:</th>
+                                <th>Total Views:</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                                <tr>
+                                    <td>December 2018</td>
+                                    <td>215</td>
+                                </tr>
+                                <tr>
+                                    <td>January 2019</td>
+                                    <td>326</td>
+                                </tr>
+                                <tr>
+                                    <td>February 2019</td>
+                                    <td>345</td>
+                                </tr>
+                                <tr>
+                                    <td>March 2019</td>
+                                    <td>292</td>
+                                </tr>
+                                <tr>
+                                    <td>April 2019</td>
+                                    <td>264</td>
+                                </tr>
+                                <tr>
+                                    <td>May 2019</td>
+                                    <td>185</td>
+                                </tr>
+                                <tr>
+                                    <td>June 2019</td>
+                                    <td>151</td>
+                                </tr>
+                                <tr>
+                                    <td>July 2019</td>
+                                    <td>114</td>
+                                </tr>
+                                <tr>
+                                    <td>August 2019</td>
+                                    <td>91</td>
+                                </tr>
+                                <tr>
+                                    <td>September 2019</td>
+                                    <td>124</td>
+                                </tr>
+                                <tr>
+                                    <td>October 2019</td>
+                                    <td>230</td>
+                                </tr>
+                                <tr>
+                                    <td>November 2019</td>
+                                    <td>215</td>
+                                </tr>
+                                <tr>
+                                    <td>December 2019</td>
+                                    <td>162</td>
+                                </tr>
+                                <tr>
+                                    <td>January 2020</td>
+                                    <td>294</td>
+                                </tr>
+                                <tr>
+                                    <td>February 2020</td>
+                                    <td>196</td>
+                                </tr>
+                                <tr>
+                                    <td>March 2020</td>
+                                    <td>255</td>
+                                </tr>
+                                <tr>
+                                    <td>April 2020</td>
+                                    <td>355</td>
+                                </tr>
+                                <tr>
+                                    <td>May 2020</td>
+                                    <td>348</td>
+                                </tr>
+                                <tr>
+                                    <td>June 2020</td>
+                                    <td>310</td>
+                                </tr>
+                                <tr>
+                                    <td>July 2020</td>
+                                    <td>319</td>
+                                </tr>
+                                <tr>
+                                    <td>August 2020</td>
+                                    <td>245</td>
+                                </tr>
+                                <tr>
+                                    <td>September 2020</td>
+                                    <td>93</td>
+                                </tr>
+                                <tr>
+                                    <td>October 2020</td>
+                                    <td>207</td>
+                                </tr>
+                                <tr>
+                                    <td>November 2020</td>
+                                    <td>125</td>
+                                </tr>
+                                <tr>
+                                    <td>December 2020</td>
+                                    <td>187</td>
+                                </tr>
+                                <tr>
+                                    <td>January 2021</td>
+                                    <td>356</td>
+                                </tr>
+                                <tr>
+                                    <td>February 2021</td>
+                                    <td>223</td>
+                                </tr>
+                                <tr>
+                                    <td>March 2021</td>
+                                    <td>141</td>
+                                </tr>
+                                <tr>
+                                    <td>April 2021</td>
+                                    <td>128</td>
+                                </tr>
+                                <tr>
+                                    <td>May 2021</td>
+                                    <td>118</td>
+                                </tr>
+                                <tr>
+                                    <td>June 2021</td>
+                                    <td>110</td>
+                                </tr>
+                                <tr>
+                                    <td>July 2021</td>
+                                    <td>106</td>
+                                </tr>
+                                <tr>
+                                    <td>August 2021</td>
+                                    <td>95</td>
+                                </tr>
+                                <tr>
+                                    <td>September 2021</td>
+                                    <td>112</td>
+                                </tr>
+                                <tr>
+                                    <td>October 2021</td>
+                                    <td>235</td>
+                                </tr>
+                                <tr>
+                                    <td>November 2021</td>
+                                    <td>157</td>
+                                </tr>
+                                <tr>
+                                    <td>December 2021</td>
+                                    <td>136</td>
+                                </tr>
+                                <tr>
+                                    <td>January 2022</td>
+                                    <td>358</td>
+                                </tr>
+                                <tr>
+                                    <td>February 2022</td>
+                                    <td>356</td>
+                                </tr>
+                                <tr>
+                                    <td>March 2022</td>
+                                    <td>191</td>
+                                </tr>
+                                <tr>
+                                    <td>April 2022</td>
+                                    <td>186</td>
+                                </tr>
+                                <tr>
+                                    <td>May 2022</td>
+                                    <td>186</td>
+                                </tr>
+                                <tr>
+                                    <td>June 2022</td>
+                                    <td>137</td>
+                                </tr>
+                                <tr>
+                                    <td>July 2022</td>
+                                    <td>136</td>
+                                </tr>
+                                <tr>
+                                    <td>August 2022</td>
+                                    <td>149</td>
+                                </tr>
+                                <tr>
+                                    <td>September 2022</td>
+                                    <td>164</td>
+                                </tr>
+                                <tr>
+                                    <td>October 2022</td>
+                                    <td>275</td>
+                                </tr>
+                                <tr>
+                                    <td>November 2022</td>
+                                    <td>189</td>
+                                </tr>
+                                <tr>
+                                    <td>December 2022</td>
+                                    <td>106</td>
+                                </tr>
+                                <tr>
+                                    <td>January 2023</td>
+                                    <td>411</td>
+                                </tr>
+                                <tr>
+                                    <td>February 2023</td>
+                                    <td>428</td>
+                                </tr>
+                                <tr>
+                                    <td>March 2023</td>
+                                    <td>225</td>
+                                </tr>
+                                <tr>
+                                    <td>April 2023</td>
+                                    <td>183</td>
+                                </tr>
+                                <tr>
+                                    <td>May 2023</td>
+                                    <td>183</td>
+                                </tr>
+                                <tr>
+                                    <td>June 2023</td>
+                                    <td>135</td>
+                                </tr>
+                                <tr>
+                                    <td>July 2023</td>
+                                    <td>118</td>
+                                </tr>
+                                <tr>
+                                    <td>August 2023</td>
+                                    <td>127</td>
+                                </tr>
+                                <tr>
+                                    <td>September 2023</td>
+                                    <td>139</td>
+                                </tr>
+                                <tr>
+                                    <td>October 2023</td>
+                                    <td>247</td>
+                                </tr>
+                                <tr>
+                                    <td>November 2023</td>
+                                    <td>163</td>
+                                </tr>
+                                <tr>
+                                    <td>December 2023</td>
+                                    <td>373</td>
+                                </tr>
+                                <tr>
+                                    <td>January 2024</td>
+                                    <td>427</td>
+                                </tr>
+                                <tr>
+                                    <td>February 2024</td>
+                                    <td>350</td>
+                                </tr>
+                                <tr>
+                                    <td>March 2024</td>
+                                    <td>464</td>
+                                </tr>
+                                <tr>
+                                    <td>April 2024</td>
+                                    <td>164</td>
+                                </tr>
+                                <tr>
+                                    <td>May 2024</td>
+                                    <td>153</td>
+                                </tr>
+                                <tr>
+                                    <td>June 2024</td>
+                                    <td>126</td>
+                                </tr>
+                                <tr>
+                                    <td>July 2024</td>
+                                    <td>123</td>
+                                </tr>
+                                <tr>
+                                    <td>August 2024</td>
+                                    <td>101</td>
+                                </tr>
+                                <tr>
+                                    <td>September 2024</td>
+                                    <td>128</td>
+                                </tr>
+                                <tr>
+                                    <td>October 2024</td>
+                                    <td>202</td>
+                                </tr>
+                                <tr>
+                                    <td>November 2024</td>
+                                    <td>152</td>
+                                </tr>
+                                <tr>
+                                    <td>December 2024</td>
+                                    <td>132</td>
+                                </tr>
+                                <tr>
+                                    <td>January 2025</td>
+                                    <td>433</td>
+                                </tr>
+                                <tr>
+                                    <td>February 2025</td>
+                                    <td>434</td>
+                                </tr>
+                                <tr>
+                                    <td>March 2025</td>
+                                    <td>203</td>
+                                </tr>
+                                <tr>
+                                    <td>April 2025</td>
+                                    <td>174</td>
+                                </tr>
+                                <tr>
+                                    <td>May 2025</td>
+                                    <td>158</td>
+                                </tr>
+                                <tr>
+                                    <td>June 2025</td>
+                                    <td>173</td>
+                                </tr>
+                                <tr>
+                                    <td>July 2025</td>
+                                    <td>155</td>
+                                </tr>
+                                <tr>
+                                    <td>August 2025</td>
+                                    <td>101</td>
+                                </tr>
+                                <tr>
+                                    <td>September 2025</td>
+                                    <td>144</td>
+                                </tr>
+                                <tr>
+                                    <td>October 2025</td>
+                                    <td>236</td>
+                                </tr>
+                                <tr>
+                                    <td>November 2025</td>
+                                    <td>159</td>
+                                </tr>
+                                <tr>
+                                    <td>December 2025</td>
+                                    <td>260</td>
+                                </tr>
+                                <tr>
+                                    <td>January 2026</td>
+                                    <td>331</td>
+                                </tr>
+                                <tr>
+                                    <td>February 2026</td>
+                                    <td>344</td>
+                                </tr>
+                                <tr>
+                                    <td>March 2026</td>
+                                    <td>318</td>
+                                </tr>
+                                <tr>
+                                    <td>April 2026</td>
+                                    <td>246</td>
+                                </tr>
+                                <tr>
+                                    <td>May 2026</td>
+                                    <td>230</td>
+                                </tr>
+                                <tr>
+                                    <td>June 2026</td>
+                                    <td>192</td>
+                                </tr>
+                                <tr>
+                                    <td>July 2026</td>
+                                    <td>146</td>
+                                </tr>
+                                <tr>
+                                    <td>August 2026</td>
+                                    <td>117</td>
+                                </tr>
+                                <tr>
+                                    <td>September 2026</td>
+                                    <td>54</td>
+                                </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+<div class="artmet-condensed-wrap clearfix">
+    <div class="artmet-condensed-stats clearfix">
+            <div class="artmet-item artmet-views">
+                <span class="artmet-number">19,860</span>
+                <span class="artmet-text">Total Views</span>
+            </div>
+
+                <div class="artmet-item artmet-citations">
+                    <span class="artmet-number">
+                            <a href="https://www.webofscience.com/api/gateway?GWVersion=2&amp;SrcApp=silverchair&amp;SrcAuth=WosAPI&amp;KeyUT=WOS:A1984SH66200003&amp;DestLinkType=CitingArticles&amp;DestApp=WOS_CPL" target="_blank" rel=nofollow>8,640</a>
+                    </span>
+                    <span class="artmet-text">Web of Science</span>
+                </div>
+
+            <div class="artmet-item artmet-badges-wrap">
+                    <div class="artmet-item artmet-altmetric">
+    <div class="widget-AltmetricLink widget-instance-ArticleLevelMetrics_AltmetricLinkSummary" 
+         data-widget-name="AltmetricLink" 
+         data-widget-instance="ArticleLevelMetrics_AltmetricLinkSummary">
+            <!-- Altmetrics -->
+    <div id="altmetricEmbedId"
+         runat="server"
+         class='altmetric-embed'
+         data-badge-type="donut"
+         data-hide-no-mentions="false"
+         data-doi="10.1098/rspa.1984.0023"
+
+                    
+                data-link-target="_blank"
+            
+
+
+        ></div>
+         <script type='text/javascript' src='https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js'></script>
+ 
+    </div>
+
+                    </div>
+
+            </div>
+    </div>
+        <div class="artmet-modal-trigger-wrap clearfix">
+            <a href="javascript:;" role="button" class="artmet-modal-trigger js-artmet-modal-trigger at-alm-metrics-modal-trigger" data-article-id="15579" aria-haspopup="dialog" aria-expanded="false" aria-controls="MetricsModal" rel=nofollow><i class="icon-metrics"></i><span>View Metrics</span></a>
+        </div>
+</div>
+
+
+    </div>
+
+            <div class="artmet-modal js-artmet-modal" id="MetricsModal" role="dialog" aria-modal="true" aria-hidden="true" aria-live="assertive" aria-labelledby="widget-title-1-id" tabindex="-1">
+                <div class="artmet-modal-contents js-metric-modal-contents at-alm-modal-contents" id="MetricsModalContents">
+                    <a href="javascript:;" role="button" class="artmet-close-modal js-artmet-close-modal">
+                        <span aria-hidden="true">&#215;</span>
+                        <span class="screenreader-text">Close metrics modal</span>
+                    </a>
+                </div>
+            </div>
+    </div>
+
+ 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B1" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B1">
+        <div class="widget widget-dynamic article-scite-badge scite-widget" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-SciteBadge widget-instance-Article_RightRailB0B1article-scite-badge" 
+         data-widget-name="SciteBadge" 
+         data-widget-instance="Article_RightRailB0B1article-scite-badge">
+        <div class="scite-badge" tabindex="0" data-doi="10.1098/rspa.1984.0023" data-layout="horizontal" 
+     data-show-zero="false" data-show-labels="false"
+     data-tooltip-placement="auto">
+</div> 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B2" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B2">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B3" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B3">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B4" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B4">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B5" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B5">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B6" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B6">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B7" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B7">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B8" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B8">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B9" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B9">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B10" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B10">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B11" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B11">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B12" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B12">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B13" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B13">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B14" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B14">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B15" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B15">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B16" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B16">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B17" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B17">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B18" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B18">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B19" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B19">
+        <div class="widget widget-dynamic issue-top-self-serve-byissuevolume" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B20" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B20">
+        <div class="widget widget-dynamic article-self-serve-content-ad-top self-serve-content-ad-top self-serve-content-ad" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-SelfServeContent widget-instance-rspa_article-self-serve-content-ad-top" 
+         data-widget-name="SelfServeContent" 
+         data-widget-instance="rspa_article-self-serve-content-ad-top">
+        
+
+
+
+    <input type="hidden" class="SelfServeContentId" value="article-self-serve-content-ad-top" />
+    <input type="hidden" class="SelfServeVersionId" value="0" />
+
+<a href="https://royalsociety.org/journals/authors/subscribe-to-open-for-authors/" target="_blank"><img alt="" src="https://trs.silverchair-cdn.com/ImageLibrary/RSPASelfServe/Article-advert/PublishingSubscribetoopenpillowadvert.jpg?versionId=3740" /></a>
+
+
+
+ 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B21" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B21">
+        <div class="widget widget-dynamic article-see-also see-also" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B22" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B22">
+        <div class="widget widget-dynamic article-article-cited-by article-cited-by" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-ArticleCitedBy widget-instance-Article_RightRailB0B22article-article-cited-by" 
+         data-widget-name="ArticleCitedBy" 
+         data-widget-instance="Article_RightRailB0B22article-article-cited-by">
+        <div class="rail-widget_wrap vt-articles-cited-by">
+    <h2 class="article-cited-title">Cited by</h2>
+    <div class="widget-links_wrap">
+            <div class="article-cited-link-wrap web-of-science">
+                <a href="https://www.webofscience.com/api/gateway?GWVersion=2&SrcApp=silverchair&SrcAuth=WosAPI&KeyUT=WOS:A1984SH66200003&DestLinkType=CitingArticles&DestApp=WOS_CPL" target="_blank" rel="nofollow">Web Of Science (8640)</a>
+            </div>
+                    <div class="article-cited-link-wrap google-scholar-url">
+                <a href="http://scholar.google.com/scholar?q=link:https%3A%2F%2Froyalsocietypublishing.org%2Frspa%2Farticle%2F392%2F1802%2F45%2F15579" target="_blank" rel="nofollow">Google Scholar</a>
+            </div>
+            </div>
+</div> 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B23" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B23">
+        <div class="widget widget-dynamic article-alerts alerts" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-Alerts widget-instance-Article_RightRailB0B23article-alerts" 
+         data-widget-name="Alerts" 
+         data-widget-instance="Article_RightRailB0B23article-alerts">
+            <div id="alerts" class="widget widget-alerts rail-widget_wrap vt-widget-alerts">
+        <h2 class="alerts-widget-header">Email alerts</h2>
+        <div class="widget-links_wrap">
+                    <div class="userAlert alertType-1">
+                            <a href="javascript:;"
+                               class="js-open-alert-modal"
+                               role="button"
+                               aria-haspopup="dialog"
+                               data-user-logged-in="False"
+                               data-alert-type="1"
+                               data-eissn=""
+                               rel=nofollow>Article Activity Alert</a>
+                    </div>
+                    <div class="userAlert alertType-23">
+                            <a href="javascript:;"
+                               class="js-open-alert-modal"
+                               role="button"
+                               aria-haspopup="dialog"
+                               data-user-logged-in="False"
+                               data-alert-type="23"
+                               data-eissn=""
+                               rel=nofollow>Latest Issue Alert</a>
+                    </div>
+                    <div class="userAlert alertType-30">
+                            <a href="javascript:;"
+                               class="js-open-alert-modal"
+                               role="button"
+                               aria-haspopup="dialog"
+                               data-user-logged-in="False"
+                               data-alert-type="30"
+                               data-eissn=""
+                               rel=nofollow>Latest Articles Alert</a>
+                    </div>
+                                    <div class="userAlertSignUpModal reveal-modal small"
+     data-bypass-confirmation="false"
+     data-enable-guest-signup="false"
+     data-reveal
+     role="dialog"
+     aria-modal="true"
+     aria-hidden="true"
+     aria-live="assertive"
+     aria-label="Alert sign-up">
+    <div class="userAlertSignUp"></div>
+    <a href="javascript:;" role="button" class="close-reveal-modal js-close-modal">
+        <i class="icon-general-close" aria-hidden="true"></i>
+        <span class="screenreader-text">Close alert sign-up modal</span>
+    </a>
+</div>
+
+        </div>
+    </div>
+ 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B24" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B24">
+        <div class="widget widget-dynamic " data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-TrendMD widget-instance-Article_RightRailB0B24trendmd" 
+         data-widget-name="TrendMD" 
+         data-widget-instance="Article_RightRailB0B24trendmd">
+        
+<div id="trendmd-suggestions"></div>
+
+<div class="options" data-suppress-if-hum-is-present="True"></div> 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B25" 
+         data-widget-name="DynamicWidgetLayout" 
+         data-widget-instance="Article_RightRailB0B25">
+        <div class="widget widget-dynamic article-self-serve-content-ad-bottom self-serve-content-ad-bottom self-serve-content-ad" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+
+        </div>
+
+    <div class="widget-AdBlock widget-instance-ArticlePageTopMainBodyBottom" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="ArticlePageTopMainBodyBottom">
+        
+ 
+    </div>
+
+
+
+
+    </div> 
+</div>
+
+
+
+    <div class="widget-Lockss widget-instance-Article_Lockss" 
+         data-widget-name="Lockss" 
+         data-widget-instance="Article_Lockss">
+         
+    </div>
+
+
+
+
+    <div class="widget-VideoListAccess widget-instance-Article_VideoListAccess" 
+         data-widget-name="VideoListAccess" 
+         data-widget-instance="Article_VideoListAccess">
+         
+    </div>
+
+
+    <div class="widget-ArticleListAccess widget-instance-Article_AccessIconData" 
+         data-widget-name="ArticleListAccess" 
+         data-widget-instance="Article_AccessIconData">
+        
+
+    <script type="text/javascript">
+        var SCM = SCM || {};
+        SCM.AccessIcons = SCM.AccessIcons || [];
+        SCM.AccessIcons = SCM.AccessIcons.concat([{"id":15579,"icon":"icon-availability_cart","title":"Available to Purchase"}]);
+
+        SCM.SiteJS.setAccessIcons(SCM.AccessIcons);
+
+    </script>
+ 
+    </div>
+
+
+
+        </div><!-- /.content-main_content -->
+    </section>
+</div>
+<div class="mobile-mask">
+</div>
+<section class="footer_wrap vt-site-footer" role="contentinfo">
+    
+
+
+<div class="ad-banner js-ad-banner ad-banner-footer">
+    <div class="widget-AdBlock widget-instance-FooterAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="FooterAd">
+        
+ 
+    </div>
+
+</div>
+
+<div class="sticky-footer-ad js-sticky-footer-ad">
+    <div class="widget-AdBlock widget-instance-StickyAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="StickyAd">
+        
+ 
+    </div>
+
+</div>
+
+
+    <div class="widget-SitePageFooter widget-instance-SitePageFooter" 
+         data-widget-name="SitePageFooter" 
+         data-widget-instance="SitePageFooter">
+            <div class="journal-footer journal-bg">
+        <div class="journal-footer_content clearfix foot-left">
+        </div>
+    </div>
+ 
+    </div>
+
+
+
+<div class="site-theme-footer">
+        <div class="site-theme-footer_content">
+    <div class="widget-SelfServeContent widget-instance-UmbrellaFooterSelfServe" 
+         data-widget-name="SelfServeContent" 
+         data-widget-instance="UmbrellaFooterSelfServe">
+        
+
+
+
+    <input type="hidden" class="SelfServeContentId" value="GlobalFooter_Links" />
+    <input type="hidden" class="SelfServeVersionId" value="0" />
+
+<div class="theme-footer">
+<div class="flex-row">
+<div class="col-5 footer-branding">
+<div class="footer-logo-wrap">
+<!-- If there are multiple logos, duplicate div.footer-logo -->
+<div class="footer-logo">
+<a href="https://royalsociety.org"><img alt="TRS logo" src="/imagelibrary/TRS-logo-association.png" /></a></div>
+<p>The Royal Society is a Fellowship of many of the world's most eminent scientists and is the oldest scientific academy in continuous existence.</p>
+<p>&nbsp;</p>
+</div>
+<div class="social-icons-wrap">
+<ul class="social-icons-list">
+    <li>
+    <h4 class="footer-header">Follow us</h4>
+    </li>
+    <!-- Bluesky -->
+    <li>
+    <a class="social-link" href="https://bsky.app/profile/royalsocietypublishing.org" target="_blank"><span class="icon-social-bluesky"></span><span class="screenreader-text">Bluesky</span></a>
+    </li>
+    <!-- Facebook -->
+    <li>
+    <a class="social-link" href="https://www.facebook.com/RoyalSocietyPublishing" target="_blank"><span class="icon-social-facebook"></span><span class="screenreader-text">Facebook</span></a>
+    </li>
+    <!-- WeChat -->
+    <li>
+    <a class="social-link" href="https://royalsocietypublishing.org/pages/wechat" target="_blank"><span class="icon-social-wechat"></span><span class="screenreader-text">WeChat</span></a>
+    </li>
+    <!-- LinkedIn -->
+    <li><a class="social-link" href="https://www.linkedin.com/showcase/royal-society-publishing/posts/?feedView=all" target="_blank"><span class="icon-social-linkedin"></span><span class="screenreader-text">LinkedIn</span></a></li>
+    <!-- Cassyni -->
+    <li>
+    <a class="social-link" href="https://cassyni.com/c/royal-society-seminars/seminars" target="_blank"><span class="icon-play_circle_outline"></span><span class="screenreader-text">Cassyni</span></a>
+    </li>
+    <!-- YouTube -->
+    <li>
+    <a class="social-link" href="https://www.youtube.com/royalsociety" target="_blank"><span class="icon-social-youtube"></span><span class="screenreader-text">YouTube</span></a>
+    </li>
+</ul>
+</div>
+</div>
+<div class="col-7 footer-nav">
+<div class="flex-row">
+<div class="col-3">
+<div class="footer-links-group with-header">
+<h3 class="footer-links-header">Royal Society Publishing</h3>
+<ul class="list-lvl-0">
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/journals/authors/">Authors</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/journals/librarians/">Librarians</a>&nbsp;</li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/journals/open-access/">Open Access</a>&nbsp;&nbsp;</li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/journals/ethics-policies/">Publishing policies</a>&nbsp;</li>
+    <li class="list-lvl-0">
+    <a href="https://royalsocietypublishing.org/pages/accessibility">Accessibility</a>&nbsp;</li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/journals/permissions/">Permissions</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://royalsocietypublishing.org/pages/conference-attendance">Conferences</a>&nbsp;</li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/about-us/terms-conditions-policies/publishing-terms-conditions/">Terms and conditions</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/about-us/terms-conditions-policies/privacy-policy/">Privacy policy</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/about-us/terms-conditions-policies/cookies/">Cookies</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/journals/publishing-activities/journals-contacts/">Contact us</a>
+    </li>
+</ul>
+</div>
+</div>
+<!-- close .col-3-->
+<div class="col-3">
+<div class="footer-links-group with-header">
+<h3 class="footer-links-header">The Royal Society</h3>
+<ul class="list-lvl-0">
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/about-us/">About us</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/about-us/contact-us/">Contact us</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/fellows-directory/">Fellows</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/science-events-and-lectures/">Events</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/grants/">Grants at the Royal Society</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/current-topics/">Current topics</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/about-us/what-we-do/collections/">Collections</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://royalsociety.org/venue-hire-central-london/">Venue hire</a>
+    </li>
+</ul>
+</div>
+</div>
+<!-- close .col-3-->
+</div>
+</div>
+</div>
+<!-- close .flex-row -->
+<div class="copyright">© 2025 The Royal Society. All rights reserved. Registered charity number 207043</div>
+</div>
+<!-- close .theme-footer -->
+
+
+
+ 
+    </div>
+
+
+
+        </div><!-- /.center-inner-row -->
+</div><!-- /.site-theme-footer -->
+<div class="ss-ui-only">
+
+
+</div>
+
+<div class="ad-banner js-ad-interstitial">
+    <div class="widget-AdBlock widget-instance-Interstitial" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="Interstitial">
+        
+ 
+    </div>
+
+</div>
+</section>
+
+
+
+
+
+    
+
+
+
+    <div class="widget-SiteWideModals widget-instance-SiteWideModals" 
+         data-widget-name="SiteWideModals" 
+         data-widget-instance="SiteWideModals">
+        <div id="revealModal" class="reveal-modal" data-reveal aria-hidden="true" aria-live="assertive" tabindex="-1">
+    <div id="revealContent"></div>
+    
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close dialog</span></a>
+</div>
+
+<div id="globalModalContainer" class="modal-global-container"
+     role="dialog"
+     aria-hidden="true"
+     aria-live="assertive"
+     tabindex="-1">
+    <div id="globalModalContent">
+        <div class="js-globalModalPlaceholder"></div>
+    </div>
+    
+    <a href="javascript:;" class="close-modal js-close-modal" role="button">
+        <i class="icon-general-close" aria-hidden="true"></i>
+        <span class="screenreader-text">Close dialog</span>
+    </a>
+</div>
+<div id="globalModalOverlay" class="modal-overlay js-modal-overlay"></div>
+
+    <div id="NeedSubscription" class="reveal-modal small" data-reveal>
+            <div class="subscription-needed">
+                <div class="modal-heading">This feature is available to subscribers only</div>
+                <p><a class="btn modal-sign_in-btn" href="/sign-in?returnUrl=%2frspa%2farticle-abstract%2f392%2f1802%2f45%2f15579%2fQuantal-phase-factors-accompanying-adiabatic%3fredirectedFrom%3dfulltext">Sign in</a> or <a class="modal-register-link" href="/my-account/register?siteId=1000011&amp;returnUrl=%2frspa%2farticle-abstract%2f392%2f1802%2f45%2f15579%2fQuantal-phase-factors-accompanying-adiabatic%3fredirectedFrom%3dfulltext">Create an account</a></p>
+            </div>
+
+
+        <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close subscription notice</span></a>
+    </div>
+
+
+<div id="noAccessReveal" class="reveal-modal tiny" data-reveal>
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close access options</span></a>
+    <div id="noAccessForm">
+        <div class="spinner"></div>
+    </div>
+</div>
+
+
+<div id="cookieShareModal" class="cookie-share-modal-content" hidden>
+    <h2 id="cookieShareModalTitle" class="js-modal-label">Sharing Unavailable</h2>
+    <p>Sharing content requires targeting cookies to be enabled. Please update your cookie preferences to use this feature.</p>
+    <div class="cookie-share-modal__actions">
+        <button type="button" class="btn btn-primary js-share-cookie-prefs-btn">Update Cookie Preferences</button>
+        <button type="button" class="btn js-close-modal">Cancel</button>
+    </div>
+</div> 
+    </div>
+
+    
+
+
+
+
+
+
+<script type="text/javascript">
+    MathJax = {
+        tex: {
+            inlineMath: [['|$', '$|'], ['\\(', '\\)']]
+        }    };
+</script>
+<script id="MathJax-script" async src="//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+    <!-- CookiePro Default Categories -->
+    <!-- When the Cookie Compliance code loads, if cookies for the associated group have consent...
+         it will dynamically change the tag to: script type=text/JavaScript...
+         the code inside the tags will then be recognized and run as normal. -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script type="text/javascript" src="//trs.silverchair-cdn.com/Themes/Client/app/jsdist/v-639237411556568308/site.min.js"></script>
+
+
+    
+    
+    <script defer src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+
+
+            <link rel="stylesheet" type="text/css" href="https://cdn.scite.ai/badge/scite-badge-latest.min.css">
+            <script async type="application/javascript" src="https://cdn.scite.ai/badge/scite-badge-latest.min.js">
+            </script>
+
+
+
+
+    
+
+        <script type="text/javascript">
+        $(document).ready(function () {
+            App.SearchAutoComplete.init(["Keywords"]);
+        });
+        </script>
+    
+    
+
+
+
+
+    <div class="ad-banner js-ad-riser ad-banner-riser" role="region" aria-label="Advertisement">
+    <div class="widget-AdBlock widget-instance-RiserAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="RiserAd">
+        
+ 
+    </div>
+
+    </div>
+
+
+
+            <input id="hdnSelfServeClassForDatalayerClickEvent" type="hidden" value="trs-ad-track">
+        
+    <div class="end-of-page-js"></div>
+</body>
+</html>
+

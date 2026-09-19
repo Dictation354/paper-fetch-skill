@@ -1,8 +1,6 @@
 from __future__ import annotations
-
 from pathlib import Path
 from unittest import mock
-
 from paper_fetch import publisher_identity
 from paper_fetch.provider_catalog import (
     PROVIDER_CATALOG,
@@ -22,7 +20,7 @@ from paper_fetch.providers._registry import provider_bundle
 from paper_fetch.providers.aip import AipClient
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.browser_workflow import BrowserWorkflowClient
-from tests.unit._browser_workflow_deps import install_browser_workflow_deps
+from tests.support._browser_workflow_deps import install_browser_workflow_deps
 
 
 AIP_STRUCTURE_DOI = "10.1063/5.0129134"
@@ -393,6 +391,21 @@ def test_aip_markdown_cleanup_handles_unlabeled_bold_caption_after_image() -> No
 
     assert markdown.count("Room temperature thermal conductivities") == 1
     assert "Though the inherent characteristics" in markdown
+
+
+def test_aip_dom_cleanup_removes_only_figure_modal_copy():
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(
+        '<article><div class="fig-section">Original caption</div>'
+        '<div class="fig-modal">Original caption</div>'
+        "<p>Original caption is discussed in the body.</p></article>",
+        "lxml",
+    )
+    _aip_html.aip_before_block_normalization(soup.article)
+    assert soup.select_one(".fig-section").get_text() == "Original caption"
+    assert soup.select_one(".fig-modal") is None
+    assert soup.p.get_text() == "Original caption is discussed in the body."
 
 
 def test_aip_markdown_cleanup_handles_formula_variant_caption_duplicates() -> None:

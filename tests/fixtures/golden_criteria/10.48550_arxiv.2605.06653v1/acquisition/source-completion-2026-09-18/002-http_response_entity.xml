@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/zMK1wrW04A3GVTki+Tw/pTZ4o0E</id>
+  <title>arXiv Query: search_query=&amp;id_list=2605.06653v1&amp;start=0&amp;max_results=1</title>
+  <updated>2026-09-18T02:20:53Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=1&amp;id_list=2605.06653v1" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>1</opensearch:itemsPerPage>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2605.06653v1</id>
+    <title>From Baby Universes to Narain Moduli: Topological Boundary Averaging in SymTFTs</title>
+    <updated>2026-05-07T17:56:48Z</updated>
+    <link href="https://arxiv.org/abs/2605.06653v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.06653v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We propose a SymTFT interpretation of ensemble averaging in low-dimensional holography. The central operation is to keep fixed both the SymTFT and the physical boundary condition, while averaging over topological boundary conditions at the other end of the SymTFT slab. Each such boundary condition gives an absolute completion of the same relative theory, so the ensemble is interpreted as an average over topological completions rather than over arbitrary local dynamics. We formulate this construction in terms of cap functionals and their natural groupoid or Haar-type measures, and illustrate it in two examples. In the closed-string sector of the Marolf--Maxfield model, topological boundary conditions are labelled by finite sets, and the groupoid sum reproduces the Poisson/Bell-polynomial moments. In the Narain case, compact topological boundary conditions of an $\mathbb{R}$-valued BF SymTFT are identified with maximal isotropic subgroups, so that topological-boundary averaging becomes the usual Narain moduli average with Zamolodchikov measure. We also discuss possible extensions to JT gravity, random matrix theory, Virasoro T(Q)FT, and 3D gravity.</summary>
+    <category term="hep-th" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-07T17:56:48Z</published>
+    <arxiv:comment>53 pages</arxiv:comment>
+    <arxiv:primary_category term="hep-th"/>
+    <author>
+      <name>Xingyang Yu</name>
+    </author>
+  </entry>
+</feed>

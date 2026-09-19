@@ -1,0 +1,16 @@
+{
+  "query": "10.1175/JPO-D-24-0098.1",
+  "query_kind": "doi",
+  "doi": "10.1175/jpo-d-24-0098.1",
+  "landing_url": null,
+  "provider_hint": "ams",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 18,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "ams"
+}

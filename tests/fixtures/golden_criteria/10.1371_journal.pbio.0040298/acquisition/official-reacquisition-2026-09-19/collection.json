@@ -1,0 +1,216 @@
+{
+  "doi": "10.1371/journal.pbio.0040298",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Forero_et_al_2006_Uncoiling_Mechanics_of_Escherichia_coli_Type_I_Fimbriae_Are_Optimized_for_Catch_Bonds.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/outputs/e90f2925a311-Forero_et_al_2006_Uncoiling_Mechanics_of_Escherichia_coli_Type_I_Fimbriae_Are_Optimized_for_Catch_Bonds.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "e90f2925a3119f5095af325936d02c52a16d58c41e527c242141e9feb2c247d9",
+      "size": 96242
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Forero_et_al_2006_Uncoiling_Mechanics_of_Escherichia_coli_Type_I_Fimbriae_Are_Optimized_for_Catch_Bonds.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/outputs/5c75d054d659-Forero_et_al_2006_Uncoiling_Mechanics_of_Escherichia_coli_Type_I_Fimbriae_Are_Optimized_for_Catch_Bonds.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "5c75d054d6594c1691e2d1dec440356e60e2113ed662ff0891cb543a133efe96",
+      "size": 49571
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1371_journal.pbio.0040298_assets/pbio.0040298.g001.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/assets/6de1826d35bb-pbio.0040298.g001.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "6de1826d35bb5d8fd97c3bd5dc871c93a9c9639af5c0297956ea601862a4d583",
+      "size": 44419
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1371_journal.pbio.0040298_assets/pbio.0040298.g002.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/assets/f76fc95d72c8-pbio.0040298.g002.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "f76fc95d72c8fc411faaeb00ca1f890c05370b2237db1bda148e59606778ad21",
+      "size": 25772
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1371_journal.pbio.0040298_assets/pbio.0040298.g003.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/assets/1e405045c570-pbio.0040298.g003.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "1e405045c570b0614203f56d9e7264c8f420c3c78d2e41ee748ebc770c8e29cd",
+      "size": 771349
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1371_journal.pbio.0040298_assets/pbio.0040298.g004.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/assets/70028bfa1426-pbio.0040298.g004.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "70028bfa142643405eeb26ee1aaa059856572021094a044aaae2e99125a0faab",
+      "size": 39546
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1371_journal.pbio.0040298_assets/pbio.0040298.g005.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/assets/b3d63cb948ca-pbio.0040298.g005.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "b3d63cb948caf30dc56f9c2006e4a8e7f8915e72cf1679369eea4998ff0e7f4a",
+      "size": 17129
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1371_journal.pbio.0040298_assets/pbio.0040298.e001.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/assets/fcb1287d4da9-pbio.0040298.e001.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "fcb1287d4da91f754436739dfbbefe139276004181112dad144ba1d58ff44e6a",
+      "size": 2753
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1371_journal.pbio.0040298_assets/pbio.0040298.e002.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/assets/f43f483d3adf-pbio.0040298.e002.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "f43f483d3adf2445af98b8537839a54893b0a69fa9537e17e197179f4ab7ca59",
+      "size": 3761
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1371_journal.pbio.0040298_assets/pbio.0040298.e003.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/assets/13d7f086ed1f-pbio.0040298.e003.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "13d7f086ed1fc61348491e12b64af9543a100ba53a7e68ca4def5563762affaa",
+      "size": 3590
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1371_journal.pbio.0040298_assets/pbio.0040298.ex001.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/assets/633243ec9bb6-pbio.0040298.ex001.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "633243ec9bb68f7ee2660e3272304930f4e50bb92e85b8d0f0f368ad0b1767a2",
+      "size": 379
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "degraded",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1371/journal.pbio.0040298",
+      "expected_doi": "10.1371/journal.pbio.0040298",
+      "title": "Uncoiling Mechanics of Escherichia coli Type I Fimbriae Are Optimized for Catch Bonds",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 10599,
+      "confidence": "medium",
+      "flags": [
+        "formula_fallback_present"
+      ],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 4,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 11,
+      "attempted": 9,
+      "total": 11,
+      "local": 9,
+      "full_size": 8,
+      "preview": 1,
+      "accepted_preview": 0,
+      "fallback_preview": 1,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 9,
+      "remote_only_count": 0,
+      "body_discovered": 9,
+      "body_attempted": 9,
+      "body_local": 9,
+      "body_full_size": 8,
+      "body_preview": 1,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": false,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [
+        "asset_fidelity_degraded"
+      ],
+      "status": "degraded",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "plos_xml",
+      "acquisition": {
+        "provider": "plos",
+        "route": "xml",
+        "representation": "xml",
+        "transport": "http",
+        "fallback_used": false
+      },
+      "trace_event_count": 16,
+      "fallback_codes": [],
+      "warning_codes": [
+        "asset_fidelity_degraded",
+        "formula_fallback",
+        "formula_fallback_present"
+      ],
+      "failure_codes": [],
+      "unstructured_warning_count": 3,
+      "acceptance_policy": "structured_xml_body",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

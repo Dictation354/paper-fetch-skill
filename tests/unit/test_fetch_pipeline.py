@@ -1,12 +1,9 @@
 from __future__ import annotations
-
 import unittest
-
 from paper_fetch.models import RenderOptions
 from paper_fetch.workflow.pipeline import FetchPipeline, FetchPipelineRequest
 from paper_fetch.workflow.types import FetchStrategy
-
-from ._paper_fetch_support import build_envelope, sample_article
+from tests.support._paper_fetch_support import build_envelope, sample_article
 
 
 class FetchPipelineTests(unittest.TestCase):

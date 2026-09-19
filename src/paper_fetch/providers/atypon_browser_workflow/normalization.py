@@ -612,7 +612,9 @@ def _table_placeholder(index: int) -> str:
     return table_placeholder(index)
 
 
-def _normalize_table_blocks(container: Tag) -> list[dict[str, str]]:
+def _normalize_table_blocks(
+    container: Tag, publisher: str = ""
+) -> list[dict[str, str]]:
     soup = _soup_root(container)
     if soup is None:
         return []
@@ -623,7 +625,17 @@ def _normalize_table_blocks(container: Tag) -> list[dict[str, str]]:
             continue
         label = _caption_label(node, kind="Table")
         caption = _table_caption_text(node, label)
-        rendered_markdown = _render_table_markdown(node, label=label, caption=caption)
+        rendered_markdown = None
+        if normalize_text(publisher).lower() == "science":
+            from .._science_html import render_table_with_missing_trailing_cells
+
+            rendered_markdown = render_table_with_missing_trailing_cells(
+                node, label=label, caption=caption
+            )
+        if rendered_markdown is None:
+            rendered_markdown = _render_table_markdown(
+                node, label=label, caption=caption
+            )
         if not rendered_markdown:
             rendered_markdown = _render_table_image_markdown(
                 node,
@@ -674,7 +686,7 @@ def _normalize_special_blocks(
     _normalize_inline_math_nodes(container, losses)
     _normalize_inline_formula_image_nodes(container, losses)
     _normalize_boxed_text_blocks(container)
-    table_entries = _normalize_table_blocks(container)
+    table_entries = _normalize_table_blocks(container, publisher)
     _normalize_figure_blocks(container, publisher)
     _normalize_non_table_inline_blocks(container)
     hook = profile.dom_hooks.after_block_normalization

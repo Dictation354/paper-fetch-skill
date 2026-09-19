@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+from copy import deepcopy
+from urllib.parse import urljoin
 from typing import Any
 
 from ..common_patterns import HEADING_TAG_PATTERN, INLINE_WHITESPACE_PATTERN
@@ -120,6 +122,7 @@ def render_section_markdown(
     level: int,
     force_heading: str | None = None,
     section_content_selectors: tuple[str, ...] = ("div.c-article-section__content",),
+    preserve_heading_levels: bool = False,
 ) -> None:
     heading = force_heading or extract_section_title(section)
     content_root = _select_first(section, section_content_selectors) or section
@@ -130,6 +133,7 @@ def render_section_markdown(
         level=level + 1,
         skip_first_heading=heading or None,
         section_content_selectors=section_content_selectors,
+        preserve_heading_levels=preserve_heading_levels,
     )
     if not rendered_content:
         return
@@ -145,6 +149,7 @@ def render_container_markdown(
     level: int,
     skip_first_heading: str | None = None,
     section_content_selectors: tuple[str, ...] = ("div.c-article-section__content",),
+    preserve_heading_levels: bool = False,
 ) -> None:
     if node is None:
         return
@@ -167,6 +172,7 @@ def render_container_markdown(
                 lines,
                 level=level,
                 section_content_selectors=section_content_selectors,
+                preserve_heading_levels=preserve_heading_levels,
             )
             continue
         if _is_div_section_container(child):
@@ -175,6 +181,7 @@ def render_container_markdown(
                 lines,
                 level=level,
                 section_content_selectors=section_content_selectors,
+                preserve_heading_levels=preserve_heading_levels,
             )
             continue
         if child.name and HEADING_TAG_PATTERN.match(child.name):
@@ -184,7 +191,10 @@ def render_container_markdown(
             ) == normalize_section_title(skip_first_heading):
                 continue
             if heading_text:
-                lines.extend([f"{'#' * max(2, min(level, 6))} {heading_text}", ""])
+                heading_level = int(child.name[1]) if preserve_heading_levels else level
+                lines.extend(
+                    [f"{'#' * max(2, min(heading_level, 6))} {heading_text}", ""]
+                )
             continue
         if child.name in {"p", "blockquote"}:
             text = render_clean_text_from_html(child, collapse_prose_line_breaks=True)
@@ -234,6 +244,7 @@ def render_container_markdown(
                 level=level,
                 skip_first_heading=skip_first_heading,
                 section_content_selectors=section_content_selectors,
+                preserve_heading_levels=preserve_heading_levels,
             )
             continue
         text = render_clean_text_from_html(child)
@@ -311,6 +322,55 @@ def render_clean_text_from_html(
     if collapse_prose_line_breaks:
         rendered = normalize_prose_markdown_line_breaks(rendered)
     return normalize_text(rendered)
+
+
+def render_retained_text_from_html(node: Any, *, source_url: str = "") -> str:
+    """Opt in to links and emphasis for publisher-selected retained content.
+
+    Keep the ordinary block/formula renderer and never mutate the source DOM.
+    Publishers remain responsible for removing UI and selecting the section.
+    """
+    clone = deepcopy(node)
+    if not isinstance(clone, Tag):
+        return render_clean_text_from_html(clone)
+
+    def raw_inline(child: Any) -> str | None:
+        if isinstance(child, Tag) and child.name == "a" and child.get("href"):
+            label = render_inline_tokens(
+                html_inline_tokens_for_children(child), break_render="\n"
+            )
+            return f"[{label}]({urljoin(source_url, str(child['href']))})"
+        return _raw_inline_markdown_from_node(child)
+
+    def html_inline_tokens_for_children(parent: Tag) -> list[InlineToken]:
+        return [
+            token
+            for child in parent.children
+            for token in html_inline_tokens(
+                child, raw_markdown_from_node=raw_inline, drop_node=_drop_inline_node
+            )
+        ]
+
+    # Replacing an outer inline node already handles nested links/styles once.
+    for child in list(clone.select("a[href], em, i, strong, b")):
+        if child.parent is None:
+            continue
+        if any(
+            parent.name in {"a", "em", "i", "strong", "b"}
+            for parent in child.parents
+            if parent is not clone
+        ):
+            continue
+        child.replace_with(
+            render_html_inline_node(
+                child,
+                raw_markdown_from_node=raw_inline,
+                drop_node=_drop_inline_node,
+                render_text_styles=True,
+                break_render="\n",
+            )
+        )
+    return render_clean_text_from_html(clone, collapse_prose_line_breaks=True)
 
 
 def render_clean_html_node(node: Any) -> str:

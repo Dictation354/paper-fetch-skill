@@ -1,0 +1,220 @@
+{
+  "provider": "elsevier",
+  "doi": "10.1016/j.envres.2018.12.059",
+  "sample_id": "10.1016_j.envres.2018.12.059",
+  "source_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.envres.2018.12.059?view=FULL&httpAccept=text%2Fxml",
+  "source_input": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/original.xml",
+  "include_supplementary": true,
+  "include_body": true,
+  "source_sha256": "10a0412ae55960c749a17685417b3da6dce8cf59d75b7f830f6daeafd25d07e1",
+  "targets": [
+    {
+      "asset": {
+        "asset_type": "image",
+        "source_kind": "object",
+        "source_ref": "gr1",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr1_lrg.jpg?httpAccept=%2A%2F%2A",
+        "content_type": "image/jpeg",
+        "filename_hint": "1-s2.0-S0013935118306947-gr1_lrg.jpg",
+        "object_type": "IMAGE-HIGH-RES",
+        "category": "high",
+        "kind": "figure",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr1_lrg.jpg?httpAccept=%2A%2F%2A",
+        "section": "body"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr1_lrg.jpg?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/figure-1-2026-09-15.jpg"
+      ],
+      "record": "acquisition/figure-1-2026-09-15.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2500,
+        "height": 2182,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S0013935118306947-gr1_lrg.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "asset_type": "image",
+        "source_kind": "object",
+        "source_ref": "gr2",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr2_lrg.jpg?httpAccept=%2A%2F%2A",
+        "content_type": "image/jpeg",
+        "filename_hint": "1-s2.0-S0013935118306947-gr2_lrg.jpg",
+        "object_type": "IMAGE-HIGH-RES",
+        "category": "high",
+        "kind": "figure",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr2_lrg.jpg?httpAccept=%2A%2F%2A",
+        "section": "body"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr2_lrg.jpg?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/f80188df3b2bd978-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/f80188df3b2bd978-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1500,
+        "height": 3759,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S0013935118306947-gr2_lrg.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "asset_type": "image",
+        "source_kind": "object",
+        "source_ref": "gr3",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr3_lrg.jpg?httpAccept=%2A%2F%2A",
+        "content_type": "image/jpeg",
+        "filename_hint": "1-s2.0-S0013935118306947-gr3_lrg.jpg",
+        "object_type": "IMAGE-HIGH-RES",
+        "category": "high",
+        "kind": "figure",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr3_lrg.jpg?httpAccept=%2A%2F%2A",
+        "section": "body"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr3_lrg.jpg?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/78232313ec8e2847-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/78232313ec8e2847-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1708,
+        "height": 4402,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S0013935118306947-gr3_lrg.jpg",
+      "download_tier": "preview",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "asset_type": "supplementary",
+        "source_kind": "object",
+        "source_ref": "mmc1",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-mmc1.docx?httpAccept=%2A%2F%2A",
+        "content_type": "application/word",
+        "filename_hint": "1-s2.0-S0013935118306947-mmc1.docx",
+        "object_type": "APPLICATION",
+        "category": "standard",
+        "kind": "supplementary",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-mmc1.docx?httpAccept=%2A%2F%2A",
+        "section": "supplementary"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-mmc1.docx?httpAccept=%2A%2F%2A",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "[Content_Types].xml",
+            "_rels/.rels",
+            "word/_rels/document.xml.rels",
+            "word/document.xml",
+            "word/footnotes.xml",
+            "word/endnotes.xml",
+            "word/theme/theme1.xml",
+            "word/media/image1.tiff",
+            "word/media/image2.tiff",
+            "word/settings.xml",
+            "word/webSettings.xml",
+            "word/styles.xml",
+            "word/numbering.xml",
+            "docProps/core.xml",
+            "word/fontTable.xml",
+            "docProps/app.xml",
+            "word/stylesWithEffects.xml"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "1-s2.0-S0013935118306947-mmc1.docx",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/dd8dde5d1bc08845-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "asset_type": "supplementary",
+        "source_kind": "object",
+        "source_ref": "am",
+        "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-am.pdf?httpAccept=%2A%2F%2A",
+        "content_type": "application/pdf",
+        "filename_hint": "1-s2.0-S0013935118306947-am.pdf",
+        "object_type": "AAM-PDF",
+        "category": "standard",
+        "kind": "supplementary",
+        "url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-am.pdf?httpAccept=%2A%2F%2A",
+        "section": "supplementary"
+      },
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-am.pdf?httpAccept=%2A%2F%2A",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/878a9873a0df2818-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/878a9873a0df2818-http-1.bin",
+      "validation": {
+        "format": "pdf",
+        "pages": 34,
+        "first_page_excerpt": "New approach to identifying proper thresholds for a heat warning system using \nhealth risk increments \nYu-Ting Cheng1, Shih-Chun Candice Lung1,2,3*, Jing-Shiang Hwang4* \n \n1Research Center for Environmental Changes, Academia Sinica, Taipei, Taiwan 115. \n2Department of Atmospheric Sciences, National Taiwan University, Taipei, Taiwan. \n3Institute of Environmental Health, National Taiwan University, Taipei, Taiwan. \n4Institute of Statistical Science, Academia Sinica, Taipei, Taiwan. \n*Corresponding author, Shih-Chun Candice Lung, Research Center for Environmental \nChanges, Academia Sinica, No. 12",
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "accepted_manuscript_object",
+      "identity_evidence": "Explicit same-paper supplementary index link; PDF opens without repair; no text conversion quality claim",
+      "outcome": "complete",
+      "output_filename": "1-s2.0-S0013935118306947-am.pdf",
+      "download_tier": "supplementary_file",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 4,
+    "replayed_files": 4,
+    "complete_received_files": 4,
+    "index_only_files": 1
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 5,
+    "replayed_files": 5,
+    "complete_received_files": 5
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

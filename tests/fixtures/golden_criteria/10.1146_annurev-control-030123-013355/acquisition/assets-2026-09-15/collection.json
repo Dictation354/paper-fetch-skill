@@ -1,0 +1,187 @@
+{
+  "provider": "annualreviews",
+  "doi": "10.1146/annurev-control-030123-013355",
+  "sample_id": "10.1146_annurev-control-030123-013355",
+  "source_url": "https://www.annualreviews.org/content/journals/10.1146/annurev-control-030123-013355",
+  "source_input": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/original.html",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "3350e0536c236034f2aa97c8182ca2e2c9490635a96765c7a29a294aefa1093a",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 1 Illustration of the vision of general shape-changing robots. These robo",
+        "caption": "Figure 1 Illustration of the vision of general shape-changing robots. These robots will know their own shape, have onboard control over their shape, and be able to morph into nearly any shape on demand. Illustration created by Fernanda Nevitiv da Costa.",
+        "url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f1.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "f1",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/8/1/as801.f1_thmb.png",
+        "full_size_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f1.png"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f1.png",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/6af632b0c6b08e78-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/6af632b0c6b08e78-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 3045,
+        "height": 1490,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "as801.f1.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 2 Today's soft and hybrid shape-changing robots. ( a ) A soft robot that ",
+        "caption": "Figure 2 Today's soft and hybrid shape-changing robots. ( a ) A soft robot that uses an internal bladder to change its shape and locomote in different environments. ( Left ) The inner bladder expanding in simulation and expanded in real hardware. ( Right ) The robot inching up an incline with a deflated internal bladder. Panel adapted from Reference 9 . ( b ) A soft robot that goes from an inching to rolling gait using shape change. () The robot inching. ( Bottom ) The robot using a ballistic rolling gait. Panel adapted with permission from Reference 24 . ( c ) A hybrid rigid–soft robot that switches between a low-profile crawling gait and a walking gait to traverse different environments. This example achieves closed-loop control over its shape. Panel adapted from Reference 25 ( CC BY 4.0 ). ( d ) A hybrid rigid–soft robot that can morph its limb shape to swim in water ( top left ), walk on land ( top right ), and transition between environments ( bottom ). Panel adapted from Reference 26 .",
+        "url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f2.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "f2",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/8/1/as801.f2_thmb.png",
+        "full_size_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f2.png"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f2.png",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/b64cbaddb9fa5983-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/b64cbaddb9fa5983-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 3787,
+        "height": 1806,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "as801.f2.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 3 Robot-agnostic shape sensing. ( a ) A flexible array of IMUs and microc",
+        "caption": "Figure 3 Robot-agnostic shape sensing. ( a ) A flexible array of IMUs and microcomputers. Image reproduced with permission from Reference 53 ; copyright 2008 SICE. ( b ) A flexible fabric sheet for shape reconstruction, showing the sheet hardware () and the reconstruction ( bottom ). Images reproduced with permission from Reference 54 . ( c ) A customized grid of IMUs for wearable shape sensing, showing the real motions () and the reconstruction ( bottom ). Images reproduced with permission from Reference 55 . ( d ) Algorithm to use distances and orientations along a surface to reconstruct shape using an external sensing system, showing the data collection scheme ( left ) and the reconstruction process ( right ). Images reproduced with permission from Reference 56 . ( e ) A stretchable ribbon of orientation and stretch sensors to reconstruct shape, showing the stretch ( left ) and the reconstruction ( right ). Panel adapted from Reference 57 ( CC BY 4.0 ). Abbreviation: IMU, inertial measurement unit.",
+        "url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f3.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "f3",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/8/1/as801.f3_thmb.png",
+        "full_size_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f3.png"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f3.png",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/be7473b2ffe5996f-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/be7473b2ffe5996f-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 3781,
+        "height": 2793,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "as801.f3.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 4 Stretchable and embedded electronics for onboard computing. ( a ) Two P",
+        "caption": "Figure 4 Stretchable and embedded electronics for onboard computing. ( a ) Two PDMS-based stretchable electronic circuits being strained to failure using a mechanical testing device [an accelerometer () or an IMU and temperature circuit ( bottom )]. Panel adapted with permission from Reference 100 . ( b ) Wearable demonstrations of stretchable circuits with integrated computation and sensing. Images reproduced with permission from Reference 104 . ( c ) A stretchable circuit embedded in a soft robotic gripper. The circuit is shown ( top left ), along with the gripper ( top right ) and the integration of the two ( bottom ). Panel adapted with permission from Reference 97 . ( d ) A stretchable circuit with computational processing, Bluetooth, and sensing integrated into an octopus tentacle, showing the circuit before integration () and integrated into the gripper ( bottom ). Panel adapted from Reference 101 with permission from AAAS. ( e ) A stretchable Arduino Pro Mini being tested using a mechanical testing device at low and high strains ( left ) and embedded into the stretching portion of a soft robot ( right ). Panel adapted with permission from Reference 102 . Abbreviations: EL, elongation; EP, expansion; FFC, flat flexible cable; IMU, inertial measurement unit; PDMS, polydimethylsiloxane; SMA, shape memory alloy; ToF, time-of-flight range chip.",
+        "url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f4.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "f4",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/8/1/as801.f4_thmb.png",
+        "full_size_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f4.png"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f4.png",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/d6425b03561038b0-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/d6425b03561038b0-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 4680,
+        "height": 3390,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "as801.f4.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 5 Plot of the maximum strain of the most complex circuit presented in sev",
+        "caption": "Figure 5 Plot of the maximum strain of the most complex circuit presented in several papers on stretchable electronics versus the complexity number (the number of rigid–soft interfaces divided by the number of rigid components in the circuit). If the circuit's performance during strain was not quantified or shown, we plotted it as zero. The number of rigid–soft interfaces was calculated by adding the number of times a rigid component (resistor, LED, integrated circuit, etc.) contacted a soft conductive trace; for example, a circuit with a single LED would have 2 interfaces, and a circuit with a 32-pin integrated circuit component with 10 traces connecting to 10 pads would have 10 interfaces (not 32). The number of microelectronic components is counted as the total number of integrated circuits, resistors, capacitors, diodes, and so on in the circuit; for example, a circuit with three resistors, one LED, and a microprocessor integrated circuit would have a total of five components. Note that because these numbers and the information from the rest of the table were derived only from the material available in the papers and supporting information, the information may be imperfect. However, if the numbers are not entirely correct, they are close, and they are reported here in an effort to summarize the trajectory of the field. Reference 101 is marked half pink and half blue because the circuit that was characterized (and plotted here) is not the one embedded in the robot.",
+        "url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f5.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "f5",
+        "preview_url": "https://www.annualreviews.org/docserver/ahah/fulltext/control/8/1/as801.f5_thmb.png",
+        "full_size_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f5.png"
+      },
+      "download_url": "https://www.annualreviews.org/docserver/fulltext/control/8/1/as801.f5.png",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/c4c1be12e4f2c87c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/c4c1be12e4f2c87c-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 3039,
+        "height": 1410,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "as801.f5.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 5,
+    "replayed_files": 5,
+    "complete_received_files": 5,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 5,
+    "replayed_files": 5,
+    "complete_received_files": 5
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

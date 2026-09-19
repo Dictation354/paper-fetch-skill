@@ -8,7 +8,7 @@ import re
 from typing import Any
 from collections.abc import Mapping
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, NavigableString, Tag
 
 from ..extraction.html.parsing import choose_parser
 from ..utils import normalize_text
@@ -99,6 +99,42 @@ def acs_before_block_normalization(container: Any) -> None:
 
     _decompose_matching(container, ACS_DOM_CHROME_SELECTORS)
     _drop_promotional_blocks(container, promo_block_tokens=_promo_block_tokens("acs"))
+    # Publisher source wrapping is whitespace inside a heading, not a Markdown
+    # block boundary. Preserve inline tags while joining its source text lines.
+    for heading in container.select("h1, h2, h3, h4, h5, h6"):
+        for text in list(heading.descendants):
+            if isinstance(text, NavigableString):
+                text.replace_with(re.sub(r"\s+", " ", str(text)))
+    # Silverchair can split one labelled table into several visible tables,
+    # each accompanied by a hidden accessibility copy. Keep every distinct
+    # visible part available to the existing single-table block renderer.
+    for wrapper in list(container.select(".table-wrap")):
+        from ._html_section_markdown import render_retained_text_from_html
+
+        note_blocks = []
+        for note in wrapper.select(".table-wrap-foot"):
+            paragraph = BeautifulSoup("", choose_parser()).new_tag("p")
+            paragraph.string = render_retained_text_from_html(note)
+            note_blocks.append(paragraph)
+            note.decompose()
+        tables = [
+            table
+            for table in wrapper.find_all("table")
+            if not any(
+                parent.get("aria-hidden") == "true"
+                for parent in [table, *table.parents]
+            )
+        ]
+        anchor = wrapper
+        for table in tables[1:]:
+            continuation = BeautifulSoup("", choose_parser()).new_tag("div")
+            continuation["class"] = ["table-wrap"]
+            continuation.append(table.extract())
+            anchor.insert_after(continuation)
+            anchor = continuation
+        for note in note_blocks:
+            anchor.insert_after(note)
+            anchor = note
 
 
 def acs_body_container(container: Any) -> None:
@@ -307,13 +343,38 @@ def scoped_asset_extractor(
     from ._html_asset_engine import merge_assets_by_identity
     from .atypon_browser_workflow.asset_scopes import extract_scoped_html_assets
 
-    return merge_assets_by_identity(
+    # Silverchair also embeds chemical graphics in table wrappers, outside
+    # .fig-section. Expose those nodes only in the asset-discovery copy; the
+    # article's table markup and signed image URLs remain unchanged.
+    soup = BeautifulSoup(body_html_text, choose_parser())
+    table_graphics: dict[str, tuple[str, str]] = {}
+    for graphic in soup.select(".table-wrap .fig-graphic[id]"):
+        if graphic.find_parent(class_="table-modal") is None:
+            wrapper = graphic.find_parent(class_="table-wrap")
+            label = wrapper.select_one(".table-wrap-title .label")
+            caption = wrapper.select_one(".table-wrap-title .caption")
+            heading = label.get_text(" ", strip=True).rstrip(".") if label else ""
+            if not heading or len(wrapper.select(".fig-graphic[id]")) > 1:
+                heading = f"{heading or 'Table graphic'} ({graphic['id']})"
+            table_graphics[str(graphic["id"])] = (
+                heading,
+                caption.get_text(" ", strip=True) if caption else heading,
+            )
+            graphic.name = "figure"
+
+    assets = merge_assets_by_identity(
         extract_scoped_html_assets(
-            promote_silverchair_srcset_originals(body_html_text),
+            promote_silverchair_srcset_originals(str(soup)),
             source_url,
             **kwargs,
         )
     )
+    # Generic image alt text is shared across chemical graphics. Use their
+    # owning table labels so download-result merging cannot collapse them.
+    for asset in assets:
+        if table_info := table_graphics.get(asset.get("dom_id", "")):
+            asset["heading"], asset["caption"] = table_info
+    return assets
 
 
 __all__ = [

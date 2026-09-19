@@ -1,0 +1,20 @@
+[
+  {
+    "doi": "10.1038/d41586-023-01829-w",
+    "provider": "springer",
+    "requested_url": "https://www.nature.com/articles/d41586-023-01829-w",
+    "final_url": "https://www.nature.com/articles/d41586-023-01829-w",
+    "status_code": 200,
+    "response_headers": {
+      "content-type": "text/html; charset=utf-8",
+      "date": "Thu, 17 Sep 2026 10:58:54 GMT"
+    },
+    "captured_at_utc": "2026-09-17T10:58:55.172946+00:00",
+    "body_file": "original.html",
+    "size": 226695,
+    "sha256": "a95f4bf6fd36a6137d6c1b7aac333c158828bed75c55e5cd4ef871610964c762",
+    "capture_kind": "http_response_entity",
+    "transport": "existing paper-fetch provider",
+    "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+  }
+]

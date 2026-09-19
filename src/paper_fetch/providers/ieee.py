@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall, raise_for_paywall
+
 from pathlib import Path
 import tempfile
 from typing import Any
@@ -22,6 +24,7 @@ from ..extraction.html.provider_rules import (
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     HttpTransport,
+    HttpRequestPolicy,
     PDF_MIME_TYPE,
     RequestFailure,
     redact_url_for_diagnostics,
@@ -271,8 +274,18 @@ class IeeeClient(ProviderClient):
                 headers=self._rest_headers(document_url),
                 timeout=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
                 retry_on_transient=True,
+                request_policy=HttpRequestPolicy(
+                    cooldown_scope="provider:ieee:rest_html",
+                    body_access_provider="ieee",
+                ),
             )
         except RequestFailure as exc:
+            raise_for_paywall(
+                exc.body,
+                metadata=landing_attempt.merged_metadata,
+                source_url=str(exc.url or rest_url),
+                provider=self.name,
+            )
             raise map_request_failure(exc) from exc
         response_url = ieee_url._absolute_ieee_url(
             str(response.get("url") or rest_url), rest_url
@@ -281,6 +294,12 @@ class IeeeClient(ProviderClient):
         html_text = decode_html(
             body,
             content_type=header_value(response.get("headers"), "content-type"),
+        )
+        raise_for_paywall(
+            html_text,
+            metadata=landing_attempt.merged_metadata,
+            source_url=response_url,
+            provider=self.name,
         )
         extraction = ieee_html._extract_ieee_html(
             html_text,
@@ -400,6 +419,7 @@ class IeeeClient(ProviderClient):
             ).fetch(candidates)
             fetcher = "direct_http"
         except PdfFetchFailure as exc:
+            propagate_paywall(exc)
             direct_failure = exc
             if not _ieee_pdf_browser_recovery_allowed(exc):
                 raise
@@ -436,6 +456,7 @@ class IeeeClient(ProviderClient):
                     request=PdfRequestContext(
                         expected_identity={"doi": landing_attempt.normalized_doi},
                         runtime=context,
+                        provider_name="ieee",
                     ),
                     browser_config=runtime_config,
                 )
@@ -450,6 +471,7 @@ class IeeeClient(ProviderClient):
                     pdf_result = run_browser_pdf(artifact_dir)
                 fetcher = "camoufox_browser"
             except PdfFetchFailure as browser_exc:
+                propagate_paywall(browser_exc)
                 raise PdfFetchFailure(
                     browser_exc.kind,
                     (
@@ -466,6 +488,7 @@ class IeeeClient(ProviderClient):
                     },
                 ) from browser_exc
         pdf_diagnostics = {
+            **dict(pdf_result.diagnostics),
             "fetcher": fetcher,
             "candidates": [redact_url_for_diagnostics(item) for item in candidates],
             "direct_failure": _pdf_failure_diagnostics(direct_failure),
@@ -578,6 +601,7 @@ class IeeeClient(ProviderClient):
                     html_trace_markers=state.source_trail,
                 )
             except PdfFetchFailure as exc:
+                propagate_paywall(exc)
                 pdf_failure_diagnostics = _pdf_failure_diagnostics(exc)
                 raise ProviderFailure(NO_RESULT, exc.message) from exc
 
@@ -828,6 +852,7 @@ PROVIDER_BUNDLE = ProviderBundle(
             access_block_text_tokens=IEEE_ACCESS_BLOCK_TEXT_TOKENS,
         ),
         availability=AvailabilityPolicy(
+            paywall_gate_selectors=".stats-document-banner-purchaseOrSignIn",
             name="ieee",
             site_rule_overrides=IEEE_SITE_RULE_OVERRIDES,
             text_marker_signal_set=IEEE_TEXT_MARKER_SIGNAL_SET,

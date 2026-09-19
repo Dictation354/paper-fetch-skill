@@ -1,0 +1,180 @@
+{
+  "provider": "springer",
+  "doi": "10.1038/s41561-022-00912-7",
+  "sample_id": "10.1038_s41561-022-00912-7",
+  "source_url": "https://www.nature.com/articles/s41561-022-00912-7?error=cookies_not_supported&code=8bd4e815-f1ef-42f5-b359-ac6504182eb6",
+  "source_input": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/original.html",
+  "include_supplementary": true,
+  "include_body": false,
+  "source_sha256": "9b1c2c6dd07b2fdaf87ee2f5c9fe08110162fbae2fc273f995494bc02b8493ad",
+  "targets": [
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Supplementary Information",
+        "caption": "",
+        "section": "supplementary",
+        "url": "https://static-content.springer.com/esm/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_MOESM1_ESM.pdf"
+      },
+      "download_url": "https://static-content.springer.com/esm/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_MOESM1_ESM.pdf",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "identity_evidence": "Explicit same-paper supplementary index link; PDF opens without repair; no text conversion quality claim",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "pdf",
+          "pages": 7,
+          "first_page_excerpt": "Drought self-propagation in drylands due \nto land–atmosphere feedbacks\nIn the format provided by the \nauthors and unedited\nSupplementary information\nhttps://doi.org/10.1038/s41561-022-00912-7\n",
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "41561_2022_912_MOESM1_ESM.pdf",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/b01a7d9861a10535-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Source Data Fig. 1 (download ZIP )",
+        "caption": "",
+        "section": "supplementary",
+        "url": "https://static-content.springer.com/esm/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_MOESM2_ESM.zip",
+        "asset_kind": "source_data"
+      },
+      "download_url": "https://static-content.springer.com/esm/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_MOESM2_ESM.zip",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "Fig1/",
+            "Fig1/Fig1d_event01.csv",
+            "Fig1/Fig1d_event11.csv",
+            "Fig1/Fig1d_event13.csv",
+            "Fig1/Fig1d_event20.csv",
+            "Fig1/Fig1d_event23.csv",
+            "Fig1/Fig1d_event26.csv"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "41561_2022_912_MOESM2_ESM.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/2bb56f042a9ead26-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Source Data Fig. 2 (download ZIP )",
+        "caption": "",
+        "section": "supplementary",
+        "url": "https://static-content.springer.com/esm/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_MOESM3_ESM.zip",
+        "asset_kind": "source_data"
+      },
+      "download_url": "https://static-content.springer.com/esm/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_MOESM3_ESM.zip",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "zip",
+          "members": [
+            "Fig2/",
+            "Fig2/Fig2_event01.csv",
+            "Fig2/Fig2_event11.csv",
+            "Fig2/Fig2_event13.csv",
+            "Fig2/Fig2_event20.csv",
+            "Fig2/Fig2_event23.csv",
+            "Fig2/Fig2_event26.csv"
+          ],
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "41561_2022_912_MOESM3_ESM.zip",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/393c5efca4810314-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Source Data Fig. 3 (download CSV )",
+        "caption": "",
+        "section": "supplementary",
+        "url": "https://static-content.springer.com/esm/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_MOESM4_ESM.csv",
+        "asset_kind": "source_data"
+      },
+      "download_url": "https://static-content.springer.com/esm/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_MOESM4_ESM.csv",
+      "attempt_records": [],
+      "file_role": "supplementary",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "valid": true,
+          "format": "csv",
+          "rows": 41,
+          "columns": 6
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "41561_2022_912_MOESM4_ESM.csv",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/eccfad0822fb09ff-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    }
+  ],
+  "counts": {
+    "discovered_references": 4,
+    "unique_files": 4,
+    "verified_files": 0,
+    "replayed_files": 0,
+    "complete_received_files": 0,
+    "index_only_files": 4
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/acquisition/assets-2026-09-15/collection.json",
+  "outcome": "index_only",
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 4,
+    "unique_files": 4,
+    "verified_files": 4,
+    "replayed_files": 4,
+    "complete_received_files": 4
+  },
+  "historical_outcome_before_supplementary_removal": "complete",
+  "historical_blocking_evidence": [
+    "acquisition/assets-2026-09-15/springer-headed-all-001-browser_dom.html"
+  ],
+  "former_replay_receipt": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/acquisition/assets-2026-09-15/replay-receipt.json"
+}

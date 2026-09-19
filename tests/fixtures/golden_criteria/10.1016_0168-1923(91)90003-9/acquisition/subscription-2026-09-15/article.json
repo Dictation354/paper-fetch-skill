@@ -1,0 +1,682 @@
+{
+  "doi": "10.1016/0168-1923(91)90003-9",
+  "source": "crossref_meta",
+  "metadata": {
+    "title": "Measurement and influence of environmental and plant factors on stomatal conductance in the field",
+    "authors": [
+      "Neil C. Turner"
+    ],
+    "abstract": "This paper reviews the development of portable porometers for the measurement of stomatal conductance in the field. Precautions in the use of such porometers are highlighted. The response of stomata to environmental variables such as quantum flux density, leaf-to-air water vapour concentration difference (relative humidity), temperature, carbon dioxide concentration and soil water status are reviewed, but the responses to atmospheric pollutants are only referred to in passing. The effects of plant factors such as leaf development and ageing, leaf water status and phytohormones on stomatal conductance are discussed. Finally, the implications of environmental and plant factors on the measured values of stomatal conductance, and the use of these values in calculating canopy transpiration, are discussed. © 1991.",
+    "journal": "Agricultural and Forest Meteorology",
+    "article_type": null,
+    "published": "1991-01-01",
+    "keywords": [],
+    "license_urls": [
+      "https://www.elsevier.com/tdm/userlicense/1.0/"
+    ],
+    "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/0168192391900039"
+  },
+  "sections": [],
+  "references": [
+    {
+      "raw": "A new type of porometer for measuring stomatal opening and its use in irrigation studies",
+      "doi": null,
+      "title": "A new type of porometer for measuring stomatal opening and its use in irrigation studies",
+      "year": "1965"
+    },
+    {
+      "raw": "Stomatal mechanics",
+      "doi": "10.2307/2441103",
+      "title": "Stomatal mechanics",
+      "year": "1973"
+    },
+    {
+      "raw": "An analysis of stomatal conductance",
+      "doi": null,
+      "title": "An analysis of stomatal conductance",
+      "year": "1988"
+    },
+    {
+      "raw": "A model predicting stomatal conductance and its contribution to the control of photosynthesis under different environmental conditions",
+      "doi": null,
+      "title": "A model predicting stomatal conductance and its contribution to the control of photosynthesis under different environmental conditions",
+      "year": "1987"
+    },
+    {
+      "raw": "Critical water potential for stomatal closure in Sitka spruce",
+      "doi": "10.1111/j.1399-3054.1978.tb01585.x",
+      "title": "Critical water potential for stomatal closure in Sitka spruce",
+      "year": "1978"
+    },
+    {
+      "raw": "Water relations",
+      "doi": null,
+      "title": "Water relations",
+      "year": "1985"
+    },
+    {
+      "raw": "A null-balance diffusion porometer suitable for use with leaves of many shapes",
+      "doi": "10.2307/2401897",
+      "title": "A null-balance diffusion porometer suitable for use with leaves of many shapes",
+      "year": "1972"
+    },
+    {
+      "raw": "A porometer for field and laboratory operation",
+      "doi": "10.1093/jxb/16.1.182",
+      "title": "A porometer for field and laboratory operation",
+      "year": "1965"
+    },
+    {
+      "raw": "A portable temperature controlled, steady-state porometer for field measurements of transpiration and photosynthesis",
+      "doi": null,
+      "title": "A portable temperature controlled, steady-state porometer for field measurements of transpiration and photosynthesis",
+      "year": "1977"
+    },
+    {
+      "raw": "Stomatal behavior and water relations of waterlogged tomato plants",
+      "doi": "10.1104/pp.70.5.1508",
+      "title": "Stomatal behavior and water relations of waterlogged tomato plants",
+      "year": "1982"
+    },
+    {
+      "raw": "An aspirated diffusion porometer",
+      "doi": "10.1016/0002-1571(70)90005-1",
+      "title": "An aspirated diffusion porometer",
+      "year": "1970"
+    },
+    {
+      "raw": "Observations on stomata",
+      "doi": "10.1098/rstb.1898.0009",
+      "title": "Observations on stomata",
+      "year": "1898"
+    },
+    {
+      "raw": "Plant growth substances and the regulation of growth under drought",
+      "doi": null,
+      "title": "Plant growth substances and the regulation of growth under drought",
+      "year": "1986"
+    },
+    {
+      "raw": "Stomatal closure fully accounts for the inhibition of photosynthesis by abscisic acid",
+      "doi": "10.1111/j.1469-8137.1988.tb04161.x",
+      "title": "Stomatal closure fully accounts for the inhibition of photosynthesis by abscisic acid",
+      "year": "1988"
+    },
+    {
+      "raw": "An empirical model of stomatal conductance",
+      "doi": "10.1071/pp9840191",
+      "title": "An empirical model of stomatal conductance",
+      "year": "1984"
+    },
+    {
+      "raw": "Stomatal conductance: measurement and significance",
+      "doi": null,
+      "title": "Stomatal conductance: measurement and significance",
+      "year": "1989"
+    },
+    {
+      "raw": "Integrated stomatal opening as an indicator of water stress in Zea",
+      "doi": "10.2135/cropsci1984.0011183x002400020009x",
+      "title": "Integrated stomatal opening as an indicator of water stress in Zea",
+      "year": "1984"
+    },
+    {
+      "raw": "The responses of stomata and leaf gas exchange to vapour pressure deficits and soil water content. III. In the sclerophyllous woody species Nerium oleander",
+      "doi": "10.1007/bf00378909",
+      "title": "The responses of stomata and leaf gas exchange to vapour pressure deficits and soil water content. III. In the sclerophyllous woody species Nerium oleander",
+      "year": "1985"
+    },
+    {
+      "raw": "Soil water status affects the stomatal conductance of fully turgid wheat and sunflower leaves",
+      "doi": "10.1071/pp9860459",
+      "title": "Soil water status affects the stomatal conductance of fully turgid wheat and sunflower leaves",
+      "year": "1986"
+    },
+    {
+      "raw": "A null balance carbon dioxide and water vapour porometer",
+      "doi": "10.1093/jxb/32.6.1157",
+      "title": "A null balance carbon dioxide and water vapour porometer",
+      "year": "1981"
+    },
+    {
+      "raw": "Leaf gas exchange and water relations of lupins and wheat. I. Shoot responses to soil water deficits",
+      "doi": "10.1071/pp9890401",
+      "title": "Leaf gas exchange and water relations of lupins and wheat. I. Shoot responses to soil water deficits",
+      "year": "1989"
+    },
+    {
+      "raw": "Leaf gas exchange and water relations of lupins and wheat. III. Abscisic acid and drought-induced stomatal closure",
+      "doi": "10.1071/pp9890429",
+      "title": "Leaf gas exchange and water relations of lupins and wheat. III. Abscisic acid and drought-induced stomatal closure",
+      "year": "1989"
+    },
+    {
+      "raw": "Influence of leaf age and light environment on the gas exchange of lupins and wheat",
+      "doi": "10.1111/j.1399-3054.1990.tb05860.x",
+      "title": "Influence of leaf age and light environment on the gas exchange of lupins and wheat",
+      "year": "1990"
+    },
+    {
+      "raw": "Mass flow porometers",
+      "doi": null,
+      "title": "Mass flow porometers",
+      "year": "1975"
+    },
+    {
+      "raw": "An apparent discrepancy between porometry and infrared thermometry relative to the dependence of plant stomatal conductance on air vapor pressure deficit",
+      "doi": "10.1016/0168-1923(87)90058-x",
+      "title": "An apparent discrepancy between porometry and infrared thermometry relative to the dependence of plant stomatal conductance on air vapor pressure deficit",
+      "year": "1987"
+    },
+    {
+      "raw": "Stomatal response to humidity as inferred by porometer and infrared thermometry",
+      "doi": "10.1016/0168-1923(90)90049-c",
+      "title": "Stomatal response to humidity as inferred by porometer and infrared thermometry",
+      "year": "1990"
+    },
+    {
+      "raw": "Problems with porometry: measuring stomatal conductances of potentially transpiring plants",
+      "doi": "10.1016/0168-1923(88)90005-6",
+      "title": "Problems with porometry: measuring stomatal conductances of potentially transpiring plants",
+      "year": "1988"
+    },
+    {
+      "raw": "Stomatal control of transpiration",
+      "doi": "10.1016/s0065-2504(08)60119-1",
+      "title": "Stomatal control of transpiration",
+      "year": "1985"
+    },
+    {
+      "raw": "The control of transpiration and photosynthesis by the stomata",
+      "doi": null,
+      "title": "The control of transpiration and photosynthesis by the stomata",
+      "year": "1981"
+    },
+    {
+      "raw": "An experimental and theoretical comparison of viscous and diffusive resistances to gas flow through amphistomatous leaves",
+      "doi": "10.1016/0002-1571(67)90015-5",
+      "title": "An experimental and theoretical comparison of viscous and diffusive resistances to gas flow through amphistomatous leaves",
+      "year": "1967"
+    },
+    {
+      "raw": "Leaf gas exchange and water relations of lupins and wheat. II. Root and shoot water relations of lupin during drought-induced stomatal closure",
+      "doi": "10.1071/pp9890415",
+      "title": "Leaf gas exchange and water relations of lupins and wheat. II. Root and shoot water relations of lupin during drought-induced stomatal closure",
+      "year": "1989"
+    },
+    {
+      "raw": "Influence of rate of development of leaf water deficits upon photosynthesis, leaf conductance, water use efficiency, and osmotic potential in sorghum",
+      "doi": "10.1111/j.1399-3054.1979.tb01672.x",
+      "title": "Influence of rate of development of leaf water deficits upon photosynthesis, leaf conductance, water use efficiency, and osmotic potential in sorghum",
+      "year": "1979"
+    },
+    {
+      "raw": "The design, calibration and field use of a stomatal diffusion porometer",
+      "doi": "10.1104/pp.44.6.881",
+      "title": "The design, calibration and field use of a stomatal diffusion porometer",
+      "year": "1969"
+    },
+    {
+      "raw": "Maximum leaf diffusive conductance in vascular plants",
+      "doi": null,
+      "title": "Maximum leaf diffusive conductance in vascular plants",
+      "year": "1979"
+    },
+    {
+      "raw": "Changing concepts regarding plant water relations",
+      "doi": "10.1111/j.1365-3040.1988.tb01796.x",
+      "title": "Changing concepts regarding plant water relations",
+      "year": "1988"
+    },
+    {
+      "raw": "Water vapour and carbon dioxide exchange of leaves as affected by different environmental conditions",
+      "doi": "10.17660/actahortic.1988.229.8",
+      "title": "Water vapour and carbon dioxide exchange of leaves as affected by different environmental conditions",
+      "year": "1988"
+    },
+    {
+      "raw": "Systematic spatial variations of stomatal conductance in a Sitka spruce plantation",
+      "doi": "10.2307/2403286",
+      "title": "Systematic spatial variations of stomatal conductance in a Sitka spruce plantation",
+      "year": "1982"
+    },
+    {
+      "raw": "Stomatal adjustment to water deficits in three tropical grasses and a tropical legume grown in controlled conditions and in the field",
+      "doi": "10.1071/pp9850131",
+      "title": "Stomatal adjustment to water deficits in three tropical grasses and a tropical legume grown in controlled conditions and in the field",
+      "year": "1985"
+    },
+    {
+      "raw": "The effect of soil strength on the growth of young wheat plants",
+      "doi": "10.1071/pp9870643",
+      "title": "The effect of soil strength on the growth of young wheat plants",
+      "year": "1987"
+    },
+    {
+      "raw": "Measurements of stomatal aperture and responses to stimuli",
+      "doi": null,
+      "title": "Measurements of stomatal aperture and responses to stimuli",
+      "year": "1981"
+    },
+    {
+      "raw": "Errors in field measurement of leaf diffusive conductance associated with leaf temperature",
+      "doi": "10.1016/0168-1923(85)90065-6",
+      "title": "Errors in field measurement of leaf diffusive conductance associated with leaf temperature",
+      "year": "1985"
+    },
+    {
+      "raw": "Porometry and baseline analysis: the case for compatibility",
+      "doi": "10.1016/0168-1923(90)90048-b",
+      "title": "Porometry and baseline analysis: the case for compatibility",
+      "year": "1990"
+    },
+    {
+      "raw": "A field porometer. II. Theory, calibration and performance",
+      "doi": "10.2307/2401985",
+      "title": "A field porometer. II. Theory, calibration and performance",
+      "year": "1970"
+    },
+    {
+      "raw": "Theory and performance of a dynamic diffusion porometer",
+      "doi": "10.1016/0168-1923(88)90031-7",
+      "title": "Theory and performance of a dynamic diffusion porometer",
+      "year": "1988"
+    },
+    {
+      "raw": "Leaf resistance measurements with diffusion porometers: precautions in calibration and use",
+      "doi": "10.1016/0002-1571(71)90110-5",
+      "title": "Leaf resistance measurements with diffusion porometers: precautions in calibration and use",
+      "year": "1971"
+    },
+    {
+      "raw": "Leaf temperature effects on measurement of diffusive resistance to water vapor transfer",
+      "doi": "10.1104/pp.47.4.559",
+      "title": "Leaf temperature effects on measurement of diffusive resistance to water vapor transfer",
+      "year": "1971"
+    },
+    {
+      "raw": "Does leaf turgor determine leaf expansion rates in dry or saline soils?",
+      "doi": null,
+      "title": "Does leaf turgor determine leaf expansion rates in dry or saline soils?",
+      "year": "1987"
+    },
+    {
+      "raw": "Photosynthesis in Sitka spruce (Picea sitchensis (Bong.) Carr.). VI. Response of stomata to temperature",
+      "doi": "10.2307/2402096",
+      "title": "Photosynthesis in Sitka spruce (Picea sitchensis (Bong.) Carr.). VI. Response of stomata to temperature",
+      "year": "1975"
+    },
+    {
+      "raw": "Porometry",
+      "doi": null,
+      "title": "Porometry",
+      "year": "1985"
+    },
+    {
+      "raw": "Photosynthetic responses to dynamic light environments by Hawaiian trees — time course of CO2 uptake and carbon gain during sunflecks",
+      "doi": "10.1104/pp.79.3.896",
+      "title": "Photosynthetic responses to dynamic light environments by Hawaiian trees — time course of CO2 uptake and carbon gain during sunflecks",
+      "year": "1985"
+    },
+    {
+      "raw": "Temperature dependence of CO2 assimilation and stomatal aperture in leaf sections of Zea mays",
+      "doi": "10.1007/bf00387507",
+      "title": "Temperature dependence of CO2 assimilation and stomatal aperture in leaf sections of Zea mays",
+      "year": "1970"
+    },
+    {
+      "raw": "Portable leaf porometer",
+      "doi": null,
+      "title": "Portable leaf porometer",
+      "year": "1964"
+    },
+    {
+      "raw": "Variation in response of five identical steady state porometers",
+      "doi": "10.1111/j.1365-3040.1988.tb01163.x",
+      "title": "Variation in response of five identical steady state porometers",
+      "year": "1988"
+    },
+    {
+      "raw": "Importance of moisture on stomatal behaviour of plants subjected to ozone",
+      "doi": null,
+      "title": "Importance of moisture on stomatal behaviour of plants subjected to ozone",
+      "year": "1972"
+    },
+    {
+      "raw": "Carbon dioxide and water exchange in response to drought in the atmosphere and in the soil",
+      "doi": "10.1146/annurev.pp.37.060186.001335",
+      "title": "Carbon dioxide and water exchange in response to drought in the atmosphere and in the soil",
+      "year": "1986"
+    },
+    {
+      "raw": "A portable steady-state porometer for measuring the carbon dioxide and water vapour exchanges of leaves under natural conditions",
+      "doi": "10.1007/bf00545656",
+      "title": "A portable steady-state porometer for measuring the carbon dioxide and water vapour exchanges of leaves under natural conditions",
+      "year": "1982"
+    },
+    {
+      "raw": "In situ measurement of epidermal cell turgor, leaf water potential, and gas exchange in Tradescantia virginiana L",
+      "doi": "10.1104/pp.78.1.66",
+      "title": "In situ measurement of epidermal cell turgor, leaf water potential, and gas exchange in Tradescantia virginiana L",
+      "year": "1985"
+    },
+    {
+      "raw": "Adaxial and abaxial stomatal resistance of cotton in the field",
+      "doi": "10.2134/agronj1973.00021962006500040014x",
+      "title": "Adaxial and abaxial stomatal resistance of cotton in the field",
+      "year": "1973"
+    },
+    {
+      "raw": "In situ measurement of stomatal resistance",
+      "doi": null,
+      "title": "In situ measurement of stomatal resistance",
+      "year": "1967"
+    },
+    {
+      "raw": "A diffusive resistance porometer for field use. I. Construction",
+      "doi": "10.2307/2401984",
+      "title": "A diffusive resistance porometer for field use. I. Construction",
+      "year": "1970"
+    },
+    {
+      "raw": "Response of adaxial and abaxial stomata to light",
+      "doi": "10.1111/j.1469-8137.1970.tb02452.x",
+      "title": "Response of adaxial and abaxial stomata to light",
+      "year": "1970"
+    },
+    {
+      "raw": "Stomatal response to light and water under field conditions",
+      "doi": null,
+      "title": "Stomatal response to light and water under field conditions",
+      "year": "1974"
+    },
+    {
+      "raw": "Concurrent comparisons of stomatal behavior, water status, and evaporation of maize in soil at high or low water potential",
+      "doi": "10.1104/pp.55.5.932",
+      "title": "Concurrent comparisons of stomatal behavior, water status, and evaporation of maize in soil at high or low water potential",
+      "year": "1975"
+    },
+    {
+      "raw": "Differences in response of adaxial and abaxial stomata to environmental variables",
+      "doi": null,
+      "title": "Differences in response of adaxial and abaxial stomata to environmental variables",
+      "year": "1979"
+    },
+    {
+      "raw": "Adaptation to water deficits: a changing perspective",
+      "doi": "10.1071/pp9860175",
+      "title": "Adaptation to water deficits: a changing perspective",
+      "year": "1986"
+    },
+    {
+      "raw": "Crop water deficits: a decade of progress",
+      "doi": "10.1016/s0065-2113(08)60464-2",
+      "title": "Crop water deficits: a decade of progress",
+      "year": "1986"
+    },
+    {
+      "raw": "Stomatal development and seasonal changes in diffusive resistance of primary and regrowth foliage of red oak (Quercus rubra L.) and red maple (Acer rubrum L.)",
+      "doi": "10.1111/j.1469-8137.1977.tb01544.x",
+      "title": "Stomatal development and seasonal changes in diffusive resistance of primary and regrowth foliage of red oak (Quercus rubra L.) and red maple (Acer rubrum L.)",
+      "year": "1977"
+    },
+    {
+      "raw": "Comparative water relations and gas exchange of wheat and lupins in the field",
+      "doi": null,
+      "title": "Comparative water relations and gas exchange of wheat and lupins in the field",
+      "year": "1989"
+    },
+    {
+      "raw": "Photosynthesis in Sitka spruce (Picea sitchensis (Bong.) Carr.). IV. Responses to soil temperature",
+      "doi": "10.2307/2402174",
+      "title": "Photosynthesis in Sitka spruce (Picea sitchensis (Bong.) Carr.). IV. Responses to soil temperature",
+      "year": "1975"
+    },
+    {
+      "raw": "Turgor maintenance by osmotic adjustment: a review and evaluation",
+      "doi": null,
+      "title": "Turgor maintenance by osmotic adjustment: a review and evaluation",
+      "year": "1980"
+    },
+    {
+      "raw": "Analysis of operation and calibration of ventilated diffusion porometer",
+      "doi": "10.1104/pp.46.1.175",
+      "title": "Analysis of operation and calibration of ventilated diffusion porometer",
+      "year": "1970"
+    },
+    {
+      "raw": "An aspirated diffusion porometer for field use",
+      "doi": null,
+      "title": "An aspirated diffusion porometer for field use",
+      "year": "1969"
+    },
+    {
+      "raw": "The responses of stomata and leaf gas exchange to vapour pressure deficits and soil water content. I. Species comparisons at high soil water contents",
+      "doi": "10.1007/bf00390662",
+      "title": "The responses of stomata and leaf gas exchange to vapour pressure deficits and soil water content. I. Species comparisons at high soil water contents",
+      "year": "1984"
+    },
+    {
+      "raw": "The responses of stomata and leaf gas exchange to vapour pressure deficits and soil water content. II. In the mesophytic herbaceous species Helianthus annuus",
+      "doi": "10.1007/bf00378908",
+      "title": "The responses of stomata and leaf gas exchange to vapour pressure deficits and soil water content. II. In the mesophytic herbaceous species Helianthus annuus",
+      "year": "1985"
+    },
+    {
+      "raw": "Cotton (Gossypium hirsutum L.): physiological and morphological responses to water deficits and their relationship to yield",
+      "doi": "10.1016/0378-4290(86)90054-7",
+      "title": "Cotton (Gossypium hirsutum L.): physiological and morphological responses to water deficits and their relationship to yield",
+      "year": "1986"
+    },
+    {
+      "raw": "Stomatal responses to pollutants",
+      "doi": null,
+      "title": "Stomatal responses to pollutants",
+      "year": "1981"
+    },
+    {
+      "raw": "Measuring transpiration resistance of leaves",
+      "doi": "10.1104/pp.40.3.535",
+      "title": "Measuring transpiration resistance of leaves",
+      "year": "1965"
+    },
+    {
+      "raw": "Calibration of a porometer in terms of diffusive resistance",
+      "doi": "10.1016/0002-1571(65)90025-7",
+      "title": "Calibration of a porometer in terms of diffusive resistance",
+      "year": "1965"
+    },
+    {
+      "raw": "Simulation of the temperature, humidity and evaporation profiles in a leaf canopy",
+      "doi": "10.1175/1520-0450(1968)007<0400:sottha>2.0.co;2",
+      "title": "Simulation of the temperature, humidity and evaporation profiles in a leaf canopy",
+      "year": "1968"
+    },
+    {
+      "raw": "Transpiration and its control by stomata in a pine forest",
+      "doi": null,
+      "title": "Transpiration and its control by stomata in a pine forest",
+      "year": "1971"
+    },
+    {
+      "raw": "Comparison of simulated and actual evaporation from maize and soil in a lysimeter",
+      "doi": "10.1016/0002-1571(72)90012-x",
+      "title": "Comparison of simulated and actual evaporation from maize and soil in a lysimeter",
+      "year": "1972"
+    },
+    {
+      "raw": "Modification and use of an electric hygrometer for estimating relative stomatal apertures",
+      "doi": "10.1104/pp.39.1.86",
+      "title": "Modification and use of an electric hygrometer for estimating relative stomatal apertures",
+      "year": "1964"
+    },
+    {
+      "raw": "Stomatal response to changing light by four tree species of varying shade tolerance",
+      "doi": "10.1111/j.1469-8137.1971.tb02512.x",
+      "title": "Stomatal response to changing light by four tree species of varying shade tolerance",
+      "year": "1971"
+    },
+    {
+      "raw": "Control of stomatal behaviour by abscisic acid which apparently originates in the roots",
+      "doi": "10.1093/jxb/38.7.1174",
+      "title": "Control of stomatal behaviour by abscisic acid which apparently originates in the roots",
+      "year": "1987"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": false,
+    "token_estimate": 205,
+    "content_kind": "abstract_only",
+    "has_abstract": true,
+    "warnings": [
+      "Elsevier official XML route was not usable (HTTP 400 for https://api.elsevier.com/content/article/doi/10.1016%2F0168-1923%2891%2990003-9?view=FULL); attempting Elsevier PII XML fallback.",
+      "Elsevier PII XML fallback was not usable (HTTP 400 for https://api.elsevier.com/content/article/pii/0168192391900039?view=FULL); attempting official PDF fallback.",
+      "xml: HTTP 400 for https://api.elsevier.com/content/article/doi/10.1016%2F0168-1923%2891%2990003-9?view=FULL; pii_xml: HTTP 400 for https://api.elsevier.com/content/article/pii/0168192391900039?view=FULL; pdf: HTTP 400 for https://api.elsevier.com/content/article/doi/10.1016%2F0168-1923%2891%2990003-9?view=FULL",
+      "Full text was not available; returning metadata and abstract only.",
+      "--save-markdown was set but full text was not available; nothing written to disk."
+    ],
+    "source_trail": [
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_elsevier",
+      "route:signal_publisher_elsevier",
+      "route:signal_doi_elsevier",
+      "route:probe_elsevier_positive",
+      "route:provider_selected_elsevier",
+      "metadata:elsevier_ok",
+      "route:provider_candidate_elsevier_metadata_selected_rank_1",
+      "route:provider_candidate_elsevier_identity_strong",
+      "fulltext:elsevier_attempt",
+      "fulltext:elsevier_xml_fail",
+      "fulltext:elsevier_xml_pii_fail",
+      "fulltext:elsevier_pdf_api_fail",
+      "fulltext:elsevier_fail",
+      "route:provider_candidate_elsevier_rejected",
+      "fallback:elsevier_html_managed_by_provider",
+      "fallback:metadata_only",
+      "fulltext:elsevier_pii_xml_fail",
+      "fulltext:elsevier_pdf_fail",
+      "download:markdown_skipped_no_fulltext"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 205,
+      "body": 0,
+      "refs": 1657
+    },
+    "confidence": "low",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 0,
+      "word_count": 0,
+      "body_block_count": 0,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 0.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": false,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "crossref",
+    "route": "metadata",
+    "representation": "metadata",
+    "transport": "api",
+    "fallback_used": true
+  }
+}

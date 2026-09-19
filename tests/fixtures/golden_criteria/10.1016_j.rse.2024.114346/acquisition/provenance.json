@@ -1,0 +1,61 @@
+{
+  "records": [
+    {
+      "doi": "10.1016/j.rse.2024.114346",
+      "provider": "elsevier",
+      "requested_url": "https://api.crossref.org/works/10.1016%2Fj.rse.2024.114346",
+      "final_url": "https://api.crossref.org/works/10.1016%2Fj.rse.2024.114346",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:41 GMT",
+        "content-type": "application/json",
+        "content-length": "6919"
+      },
+      "captured_at_utc": "2026-09-18T02:20:40.696175+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 26831,
+      "sha256": "d2cfa3cf85ff3644ce1bc722584811f6385535a1531e412da72c6d641ef52bf9",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1016/j.rse.2024.114346",
+      "provider": "elsevier",
+      "requested_url": "https://api.elsevier.com/content/abstract/doi/10.1016%2Fj.rse.2024.114346",
+      "final_url": "https://api.elsevier.com/content/abstract/doi/10.1016%2Fj.rse.2024.114346",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:41 GMT",
+        "content-type": "application/json;charset=UTF-8",
+        "last-modified": "Sun, 15 Mar 2026 08:27:21 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:20:40.758702+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
+      "size": 5979,
+      "sha256": "5655a5209f5f68ddc0b9e0393962e18d7e4ef13d68e04ac493ca24ed8c856962",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1016/j.rse.2024.114346",
+      "provider": "elsevier",
+      "requested_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2024.114346",
+      "final_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2024.114346",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:42 GMT",
+        "content-type": "text/xml;charset=UTF-8",
+        "last-modified": "Tue, 28 Apr 2026 19:20:28 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:20:41.496003+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.xml",
+      "size": 377106,
+      "sha256": "2fe876dbd6778c08caf865bfc2c228b20a6b940a7bf2d5b337375e30e6a35a20",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

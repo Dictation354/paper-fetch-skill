@@ -17,5 +17,4336 @@
     "figures": false,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1080_08839514.2024.2375110",
+    "provider": "tandf",
+    "doi": "10.1080/08839514.2024.2375110",
+    "original": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html",
+    "sha256": "6c484caa7a8bbdebdb1230396c340c1215fe66edb1f4634ee42072b21e398801",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 4,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 52,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 126,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 5,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 93,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 1,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 166,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"dc.Creator\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 166,
+      "tex_checked": 0,
+      "mathml_checked": 166,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/original.html",
+      "sha256": "6c484caa7a8bbdebdb1230396c340c1215fe66edb1f4634ee42072b21e398801",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "348ce4940eec2e4e2716935d82d9123dede2fa261b1c30bf1fb4c5d78a485be5",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1
+              ]
+            ],
+            [
+              1,
+              [
+                2,
+                3
+              ]
+            ],
+            [
+              2,
+              [
+                4,
+                5
+              ]
+            ],
+            [
+              3,
+              [
+                6,
+                7
+              ]
+            ],
+            [
+              4,
+              [
+                8,
+                9
+              ]
+            ]
+          ],
+          "cells": [
+            "Categorial Criteria",
+            "Relevant Sub Criteria",
+            "Technical Criteria",
+            "Site Gradient; Ground Conditions (soil/rocks); Accessibility; Cost related to site purchase; Existing infrastructure and availability of services",
+            "Site Quality Criteria",
+            "Heritage considerations; Environmental considerations; Site area; Site orientation; Site shape",
+            "Location Criteria",
+            "Proximity to public transport; Traffic routs; Future population and prominence; Flexibility of land for expansion",
+            "Miscellaneous Criteria",
+            "Pollution free; Population density; Government policies; Socio-demographics of service area"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "154b6cab4ee8ed0c9c0dd9bcd0b5dd311771b7461c229680785c186deebbcb8c",
+          "grid": [
+            [
+              0,
+              [
+                0
+              ]
+            ],
+            [
+              1,
+              [
+                1
+              ]
+            ],
+            [
+              2,
+              [
+                2
+              ]
+            ],
+            [
+              3,
+              [
+                3
+              ]
+            ],
+            [
+              4,
+              [
+                4
+              ]
+            ]
+          ],
+          "cells": [
+            "Algorithm: Hospital site selection using aggregations of csvNSS",
+            "(1) Firstly create a complex single valued neutrosophic soft set (csvNSS) tailored to the specific problem under study. This set should encompass the elements denoted as \\widetilde{ℏ}_{i} (where i = 1 , 2 , … , m ) and the parameters represented by \\widetilde{e}_{j} (with j = 1 , 2 , … , n ) that are pertinent to the problem at hand. In the context of this particular illustration, we will utilize the universal set denoted as \\widetilde{ℏ} , the set of parameters identified as \\widetilde{ℋ} , and reference the csvNSS labeled as \\widetilde{N}_{1} , as outlined in example 3.2.",
+            "(2) For the second stage, establish a comparative matrix and calculate the values of c_{ij} for every \\widetilde{ℏ}_{i} element and its corresponding parameter \\widetilde{e}_{j} by applying the formula specified in Definition 3.9.",
+            "(3) In this step, calculate the scores \\breve{d}_{i} for each individual element \\widetilde{ℏ}_{i} (where i = 1 , 2 , … , m ) by applying Definition 3.10.",
+            "(4) In the concluding phase of the discussion, the scores derived from the score function are evaluated, and the top-scoring element is designated as the optimal selection. In the case where several elements share the same highest score, any of these elements may be picked as the preferred alternative."
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "9b1c002973f535c8277e7c03ea78fb7d8e0664eb2d13bd05251e1de6ebf3ae88",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              1,
+              [
+                6,
+                7,
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              2,
+              [
+                12,
+                13,
+                14,
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              3,
+              [
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              4,
+              [
+                24,
+                25,
+                26,
+                27,
+                28,
+                29
+              ]
+            ],
+            [
+              5,
+              [
+                30,
+                31,
+                32,
+                33,
+                34,
+                35
+              ]
+            ],
+            [
+              6,
+              [
+                36,
+                37,
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              7,
+              [
+                42,
+                43,
+                44,
+                45,
+                46,
+                47
+              ]
+            ]
+          ],
+          "cells": [
+            "References",
+            "Uncertainty management",
+            "Indeterminacy management",
+            "Vagueness management",
+            "Hospital sites ranking",
+            "MADM",
+            "Şahin, Ocak, and Top ( 2019 )",
+            "Deficient",
+            "Deficient",
+            "Deficient",
+            "Ample",
+            "Deficient",
+            "Pinar and Antmen ( 2019 )",
+            "Ample",
+            "Deficient",
+            "Deficient",
+            "Ample",
+            "Deficient",
+            "Chatterjee ( 2014 )",
+            "Ample",
+            "Deficient",
+            "Deficient",
+            "Ample",
+            "Deficient",
+            "Yucesan and Gul ( 2020 )",
+            "Ample",
+            "Deficient",
+            "Deficient",
+            "Ample",
+            "Deficient",
+            "Gul and Guneri, ( 2021 )",
+            "Deficient",
+            "Deficient",
+            "Deficient",
+            "Ample",
+            "Deficient",
+            "Soltani and Marandi ( 2011 )",
+            "Ample",
+            "Deficient",
+            "Deficient",
+            "Ample",
+            "Ample",
+            "Presented Approach",
+            "Ample",
+            "Ample",
+            "Ample",
+            "Ample",
+            "Ample"
+          ]
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "6cf3548e76794aba5ea61d4c3f31f7c8a4762d04e8c6213e98e4c340b51c1242",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              1,
+              [
+                6,
+                7,
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              2,
+              [
+                12,
+                13,
+                14,
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              3,
+              [
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              4,
+              [
+                24,
+                25,
+                26,
+                27,
+                28,
+                29
+              ]
+            ]
+          ],
+          "cells": [
+            "Statistical Tool",
+            "\\widetilde{ℏ}_{1}",
+            "\\widetilde{ℏ}_{2}",
+            "\\widetilde{ℏ}_{3}",
+            "\\widetilde{ℏ}_{4}",
+            "Ranking",
+            "Arithmetic Mean",
+            "0.6792",
+            "0.9408",
+            "1.1287",
+            "1.0644",
+            "\\widetilde{ℏ}_{3} > \\widetilde{ℏ}_{4} > \\widetilde{ℏ}_{2} > \\widetilde{ℏ}_{1}",
+            "Geometric Mean",
+            "0.6048",
+            "0.8697",
+            "1.1260",
+            "1.0327",
+            "\\widetilde{ℏ}_{3} > \\widetilde{ℏ}_{4} > \\widetilde{ℏ}_{2} > \\widetilde{ℏ}_{1}",
+            "Harmonic Mean",
+            "0.5415",
+            "0.8112",
+            "1.1237",
+            "1.0000",
+            "\\widetilde{ℏ}_{3} > \\widetilde{ℏ}_{4} > \\widetilde{ℏ}_{2} > \\widetilde{ℏ}_{1}",
+            "Standard Deviation",
+            "0.3250",
+            "0.3852",
+            "0.0716",
+            "0.2519",
+            "\\widetilde{ℏ}_{2} > \\widetilde{ℏ}_{1} > \\widetilde{ℏ}_{4} > \\widetilde{ℏ}_{3}"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "f302296ec5b11cc8eee59264d2853ad576c3f6c054d81b6f38a7c24df9b6a8fc",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "G"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "83a5732550144062e73f653403b2278f83610439482176db1d324a10311752b4",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "K"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "e38dc1cc4c8adac2a6292e6ba63ca78381695fccb8ccc1a1beb604f8633fe25f",
+          "numbers": "01",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "5b2d8442195a76fd6e231f23b18acc9e3d7b2eb85c42c334a77569d1548dee15",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "aaaec0166aa4a5548f38231fb4bbc37ca2823856370cb5d1c5af2f22abac875f",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "G"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "a49ebe5d1e117e17fa8a6550809023a70d384ce886a3ed830a7fdfa0a840c4c8",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 6,
+          "id": null,
+          "node_sha256": "cea5db02360e6f8b1ec68a9c0b57a71d3ed308e06462027e76400962645eae96",
+          "numbers": "",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "ħ",
+            "Q",
+            "P",
+            "ħ",
+            "Q",
+            "N",
+            "e",
+            "ħ",
+            "Q",
+            "N",
+            "ħ",
+            "ħ",
+            "G"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 7,
+          "id": null,
+          "node_sha256": "58f4b2ebd44cc5203e997fa3db6106a8c09b3ac4aca64a97082402491186b82c",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "P",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 8,
+          "id": null,
+          "node_sha256": "50b2c9f0759e4b922a600bbc163c443dc72f2bbaccb5c542066d78f0b5cd77b6",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "N",
+            "e",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 9,
+          "id": null,
+          "node_sha256": "803b2db9c2318ed902667c18ad97b7ec1ec062c43a4f31f40aa18c85146ca37a",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "N",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 10,
+          "id": null,
+          "node_sha256": "4852888c955cad59ee8f82a001969f2497cc943531e4d3d83d4b4f9e6469e583",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 11,
+          "id": null,
+          "node_sha256": "a17f11707466f7a9250febb06308c0c7b3d213cd676517d5fd1264f5da0b51fe",
+          "numbers": "",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "P",
+            "Q",
+            "N",
+            "e",
+            "Q",
+            "N",
+            "G"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 12,
+          "id": null,
+          "node_sha256": "c546a99ee4cb7ef972e0d9678252311a4415b0f862ff731c50d83dd1eace017a",
+          "numbers": "03",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 13,
+          "id": null,
+          "node_sha256": "3c36ee9e200420ec6e42d527f530edd8f364ec62b9cded412bb57241d46766c5",
+          "numbers": "",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "ħ",
+            "Q",
+            "P",
+            "ħ",
+            "Q",
+            "N",
+            "e",
+            "ħ",
+            "Q",
+            "N",
+            "ħ",
+            "ħ",
+            "G"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 14,
+          "id": null,
+          "node_sha256": "d45f4011ec22f0409b5fde4b025470fa4b88d20b41cbad2f07490bfdb6d92042",
+          "numbers": "01",
+          "minimum": {
+            "_": 3,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "P",
+            "Q",
+            "N",
+            "e",
+            "Q",
+            "N",
+            "G",
+            "I"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 15,
+          "id": null,
+          "node_sha256": "d1024aeb5da5391bc544015772416ade5b9bbd002ba8fcbfb9b3b2cd0a1b47be",
+          "numbers": "03",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "P",
+            "ħ",
+            "Q",
+            "N",
+            "e",
+            "ħ",
+            "Q",
+            "N",
+            "ħ"
+          ],
+          "operators": [
+            "≤",
+            "+",
+            "+",
+            "≤"
+          ]
+        },
+        {
+          "object_index": 16,
+          "id": null,
+          "node_sha256": "f21081939a4a7597eb341adc9e06aa7203f676b965352964c8ddd04fd8a4ff57",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "H"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 17,
+          "id": null,
+          "node_sha256": "871c35963baa847d548b5e904f6003571527dfb5ff153a76d66b27bdee3589b7",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "H",
+            "P",
+            "G"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 18,
+          "id": null,
+          "node_sha256": "725498bd5963a6a57696bf6fa56b9ed171be9cb8d1013570050b0d2356e5ce4e",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 19,
+          "id": null,
+          "node_sha256": "07c9fb4405d1000971e30c3fa35149933a0ac8ea40593b80441fed25d7881436",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "D"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 20,
+          "id": null,
+          "node_sha256": "9ed8a12d9da4cd643d06ebcb124d23f4898c7b9b632893b00007ca83da5140e6",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "H"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 21,
+          "id": null,
+          "node_sha256": "f505c80aaa4e5eab6d3cd07996f37f90d82ae53d87a3d1bf2d30d11eac48cc59",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "H",
+            "NS",
+            "G"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 22,
+          "id": null,
+          "node_sha256": "9e1aa78de632581a46f98eedd5c7f813d6cfb185add6b4d9cb3c0051d64d95da",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "NS",
+            "G"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 23,
+          "id": null,
+          "node_sha256": "296f4a5d2af1fe174ae86f14fab73a3e7b4db1a1a0c97d0417063b1421583af9",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "u",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 24,
+          "id": null,
+          "node_sha256": "63c258083f4214932b422b3a067f55bcacbe93f02a744759937bfb1316bfba42",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "d",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 25,
+          "id": null,
+          "node_sha256": "349ebb65ababd981561059a463c5e852a74ebc9568b88f679d6df4833d53ce30",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "l",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 26,
+          "id": null,
+          "node_sha256": "a884bee815c14dd77e4f2ca073bcf46c6f3bfd2707663fb660f04d3c219cafd8",
+          "numbers": "",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Q",
+            "u",
+            "ħ",
+            "Q",
+            "d",
+            "ħ",
+            "Q",
+            "l",
+            "ħ",
+            "ħ",
+            "H"
+          ],
+          "operators": [
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 27,
+          "id": null,
+          "node_sha256": "333549ddb83e63ffbfef65a9dfa1aa72e0df1fef999d4ff836547142b3374102",
+          "numbers": "",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "u",
+            "Q",
+            "d",
+            "Q",
+            "l",
+            "H",
+            "cNSS",
+            "G"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 28,
+          "id": null,
+          "node_sha256": "c90eb47f34ecaa3bab4bcefd8464a0e8bb3b1970e609bbba9bd70b6b9d374500",
+          "numbers": "",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "u",
+            "ħ",
+            "L",
+            "u",
+            "ħ",
+            "expj",
+            "Ψ",
+            "u",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 29,
+          "id": null,
+          "node_sha256": "7a8fb5edc5c33ac333312731a4a5e32d004d858d5946e2a007ef890926b02d5b",
+          "numbers": "",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "d",
+            "ħ",
+            "L",
+            "d",
+            "ħ",
+            "expj",
+            "Ψ",
+            "d",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 30,
+          "id": null,
+          "node_sha256": "7ba724d7f5f8fb93364d5e2970ccd13dc38bdca8f3a94c4d4d66ad096018a202",
+          "numbers": "",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "l",
+            "ħ",
+            "L",
+            "l",
+            "ħ",
+            "expj",
+            "Ψ",
+            "l",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 31,
+          "id": null,
+          "node_sha256": "e842c58ee854474bbb7520dd932940b4b0fb3c043e699aabef7e100c8437a3d8",
+          "numbers": "03",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "L",
+            "u",
+            "ħ",
+            "L",
+            "d",
+            "ħ",
+            "L",
+            "l",
+            "ħ"
+          ],
+          "operators": [
+            "≤",
+            "+",
+            "+",
+            "≤"
+          ]
+        },
+        {
+          "object_index": 32,
+          "id": null,
+          "node_sha256": "5766cf458797008cacb2b9ee01525e4fe8d9cf30537522662b03017cb51f4dc1",
+          "numbers": "02",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Ψ",
+            "u",
+            "ħ",
+            "Ψ",
+            "d",
+            "ħ",
+            "Ψ",
+            "l",
+            "ħ",
+            "π"
+          ],
+          "operators": [
+            "<",
+            "+",
+            "+",
+            "≤"
+          ]
+        },
+        {
+          "object_index": 33,
+          "id": null,
+          "node_sha256": "9c7c77a5611587653d45ace9d938b7f4eea499af69af2a8b91a4cc359f60c027",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "L",
+            "u",
+            "ħ",
+            "L",
+            "d",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 34,
+          "id": null,
+          "node_sha256": "715bfb15b0a899c60c566671bb63daa9e052a3d0473aeab3b91d68ddd219f761",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "L",
+            "l",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 35,
+          "id": null,
+          "node_sha256": "20b03e39536455f3513e5c6651c83b2369cf0a30bce55448bdce2c7939d66d88",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Ψ",
+            "u",
+            "ħ",
+            "Ψ",
+            "d",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 36,
+          "id": null,
+          "node_sha256": "188e07590e8c47a21701e8f195e24a25b69e3aa384a8868d3d3b48007a65bd05",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Ψ",
+            "l",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 37,
+          "id": null,
+          "node_sha256": "3ebd62cd9241ac63ec109ff122b49d290ce993f849c75883c871714e37788544",
+          "numbers": "12",
+          "minimum": {
+            "_": 7,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "R",
+            "ħ",
+            "L",
+            "u",
+            "ħ",
+            "L",
+            "d",
+            "ħ",
+            "L",
+            "l",
+            "ħ",
+            "ex",
+            "p",
+            "j",
+            "π",
+            "Ψ",
+            "u",
+            "ħ",
+            "Ψ",
+            "d",
+            "ħ",
+            "Ψ",
+            "l",
+            "ħ"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "-",
+            "-",
+            "-",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 38,
+          "id": null,
+          "node_sha256": "39f131d9373853b5dfa8f9c03bf3876b22fb1d4d87ae9409275eb747c47bdd70",
+          "numbers": "01",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 39,
+          "id": null,
+          "node_sha256": "8e8563cb47487f85d6545973d7014b79f52a11db4d9a461871fdd40a1582d7c9",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 40,
+          "id": null,
+          "node_sha256": "f490085f963331c052f5efdff5fbdc817e3c25a6d23dcd1b955b874a9577acba",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "E"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 41,
+          "id": null,
+          "node_sha256": "832d0445bd8dfa64a6cbd18f042bf0928ed307ab68e3d7779728284e738151a9",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "u",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 42,
+          "id": null,
+          "node_sha256": "43e768942eaf14e77440ad5ff47d5e330943df8fa6d72fbb36bc8e17a168585b",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "l",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 43,
+          "id": null,
+          "node_sha256": "2e10d65ce23752151f559555070a625d9b0c35035f7f368a5e7dae8103702d36",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 44,
+          "id": null,
+          "node_sha256": "1af8e2314f987a5986867d7f12654957d05dac3984d2f603fb55566e15074a2b",
+          "numbers": "",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Q",
+            "u",
+            "ħ",
+            "Q",
+            "d",
+            "ħ",
+            "Q",
+            "l",
+            "ħ",
+            "ħ",
+            "H"
+          ],
+          "operators": [
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 45,
+          "id": null,
+          "node_sha256": "c5dda77efa68fa45213484a83c8ab43c8a9a66f10b8ab71bc18771ab500abc3c",
+          "numbers": "",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "u",
+            "Q",
+            "d",
+            "Q",
+            "l",
+            "H",
+            "csvNSS",
+            "G"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 46,
+          "id": null,
+          "node_sha256": "3666c02ba3589183fdc6b1578d6cd85b4220e28b4629229bdd2a2deb5f7f54ed",
+          "numbers": "02",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Ψ",
+            "u",
+            "ħ",
+            "Ψ",
+            "d",
+            "ħ",
+            "Ψ",
+            "l",
+            "ħ",
+            "π"
+          ],
+          "operators": [
+            "≤",
+            "+",
+            "+",
+            "≤"
+          ]
+        },
+        {
+          "object_index": 47,
+          "id": null,
+          "node_sha256": "28518ec1200064fa84e52768d86759b00e960903d48b49c80f460956c2a1080a",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "L",
+            "l",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 48,
+          "id": null,
+          "node_sha256": "f00fed60811395e8f44a9211cf2e25709ca22e92dd5d59b63e77d37758fda24b",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "R",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 49,
+          "id": null,
+          "node_sha256": "63c41ecbe3e6e484105e5e48a3e6a73913838e52d2c9584398c90990e4d77cf0",
+          "numbers": "",
+          "minimum": {
+            "_": 6,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "L",
+            "u",
+            "ħ",
+            "expj",
+            "Ψ",
+            "u",
+            "ħ",
+            "L",
+            "d",
+            "ħ",
+            "expj",
+            "Ψ",
+            "d",
+            "ħ",
+            "L",
+            "l",
+            "ħ",
+            "expj",
+            "Ψ",
+            "l",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 50,
+          "id": null,
+          "node_sha256": "9d4b107152578a60539d67dd2c3768b7f24f09b010b75307822257b311a8bb03",
+          "numbers": "1234",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "G",
+            "n",
+            "n",
+            "n",
+            "n"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 51,
+          "id": null,
+          "node_sha256": "94eb1649b4d6c1965d73dcf1cded9548b72bba0efa04c0545515473c0157ca8b",
+          "numbers": "123456",
+          "minimum": {
+            "_": 6,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "E",
+            "ħ",
+            "ħ",
+            "ħ",
+            "ħ",
+            "ħ",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 52,
+          "id": null,
+          "node_sha256": "75a8654bdf4d6bfc583da0289d0e5c5738ff906666b56139fedc6a6e6b860cb2",
+          "numbers": "1256",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H",
+            "ħ",
+            "ħ",
+            "ħ",
+            "ħ",
+            "E"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 53,
+          "id": null,
+          "node_sha256": "4b5d2dc7884901bdb6bacb971d628186de51fa752062629ee8d3a57c8741798c",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 54,
+          "id": null,
+          "node_sha256": "9bd2a706f8693a6c6721a7c07277b939e14877ffd455ea39bb0cb6fd70babd14",
+          "numbers": "110.5120.220.6520.310.9220.1520.9320.180.4520.210.5920.2230.9920.250.7520.300.4020.4540.9520.300.9120.450.4320.60",
+          "minimum": {
+            "_": 5,
+            "^": 12,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Θ",
+            "ħ",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 55,
+          "id": null,
+          "node_sha256": "f61f5d78841ed43bc1726c1abc78b4782fc358e6054843c95934597759ce03c9",
+          "numbers": "210.8220.240.7620.300.8520.4020.9220.310.8520.340.7820.3730.6320.320.9620.350.7920.3840.9420.330.7720.360.5620.39",
+          "minimum": {
+            "_": 5,
+            "^": 12,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Θ",
+            "ħ",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 56,
+          "id": null,
+          "node_sha256": "c08c163829ff4880cf1e42be71feaa2e9b4b7f6cc5bf5f68acab1cc2dd5d16b6",
+          "numbers": "510.9020.410.7220.310.7020.5120.9920.300.9120.330.6720.3630.8320.310.6520.340.9820.3740.9320.320.9620.350.6920.38",
+          "minimum": {
+            "_": 5,
+            "^": 12,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Θ",
+            "ħ",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 57,
+          "id": null,
+          "node_sha256": "dd790de9521e8d14bcdbca34672d62caadb3e98263edac3aae0c2e521a915b70",
+          "numbers": "610.8620.440.9420.550.8920.6620.7820.180.8820.210.9120.2430.9620.190.6920.220.8220.2540.7720.200.9020.230.5320.26",
+          "minimum": {
+            "_": 5,
+            "^": 12,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Θ",
+            "ħ",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "n",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π",
+            "ex",
+            "p",
+            "i",
+            "π"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 58,
+          "id": null,
+          "node_sha256": "90442ed0e7b787606945778d9578f4db04a5e72588fa0e2bee13e56b1e7afcfa",
+          "numbers": "1111212515616",
+          "minimum": {
+            "_": 13,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 59,
+          "id": null,
+          "node_sha256": "ade82cb8fce77f585ba8c870a79aa1056ebe4b57ed1c35b87d7435a0a0dae507",
+          "numbers": "10.510.220.650.310.920.150.930.180.450.210.590.220.990.250.750.300.400.450.950.300.910.450.430.600.120.820.760.300.850.400.920.310.850.340.780.370.630.320.960.350.790.380.940.330.770.360.560.390.900.410.720.310.700.510.990.300.910.330.670.360.830.310.650.340.980.37930.320.960.350.690.380.860.440.940.550.890.660.780.180.880.210.910.240.960.190.690.220.820.250.770.200.900.230.530.26",
+          "minimum": {
+            "_": 1,
+            "^": 48,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 60,
+          "id": null,
+          "node_sha256": "29380ed04bfbab45be6910846a34d3dc01c982713693da500ce3e399e07d5d42",
+          "numbers": "2121323424626",
+          "minimum": {
+            "_": 13,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 61,
+          "id": null,
+          "node_sha256": "aca4fe09a6a2cdf02410952debb1a1719e12e3d68861a42279a91bf3fe0b2bc5",
+          "numbers": "20.620.120.760.210.900.350.930.120.650.250.890.210.900.140.780.310.510.420.910.280.510.130.440.190.720.320.710.250.850.370.920.110.550.240.880.470.430.220.990.150.690.410.980.140.870.260.670.520.930.210.620.320.650.460.890.320.900.410.640.260.920.110.850.240.940.470.930.190.960.450.730.290.960.350.940.350.490.360.880.240.690.320.560.130.960.220.490.320.250.360.900.200.680.330.430.32",
+          "minimum": {
+            "_": 1,
+            "^": 48,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 62,
+          "id": null,
+          "node_sha256": "54829f1e4371b2ae9eb70e54765111d5330d761a85f82939170354818cc1ec65",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "∅"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 63,
+          "id": null,
+          "node_sha256": "3bdf7e642e0c9e6cd580adb2973375adad3861c1922ea85e7b71414aaa34f49a",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "x",
+            "G"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 64,
+          "id": null,
+          "node_sha256": "1b868acba5a0a0af6d83283f0e8d53ab052690e9984fdab4ccd72c90780e0ed7",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "x"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 65,
+          "id": null,
+          "node_sha256": "3012f339a5cc3b497604dffcdeaac6341d716175cb8362f3f8c375768d924cf7",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 66,
+          "id": null,
+          "node_sha256": "4f7cb170668fa0a821d2d547948c51335e65456e2ee4937737b3380ee831bbcf",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 67,
+          "id": null,
+          "node_sha256": "c044f5d6b2dbbffb5fba0076dec0a469dbd13ad3687eca68dcf336b5feeb3466",
+          "numbers": "12",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "N"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 68,
+          "id": null,
+          "node_sha256": "8eb2b87dbeca2e628cdae2c67e484bdfdfab56bab23e5298d5394eac1e8fcd9a",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Θ",
+            "v"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 69,
+          "id": null,
+          "node_sha256": "aefdde45e1b456bce54783caad1ababb0c651a17284954efde419f2539fc83a7",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Θ",
+            "v"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 70,
+          "id": null,
+          "node_sha256": "36e051ffad22d0377259bb01b307f8479e43de8b3938ed726d2a2985ac3c7173",
+          "numbers": "121212",
+          "minimum": {
+            "_": 12,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "L",
+            "u",
+            "v",
+            "L",
+            "u",
+            "v",
+            "L",
+            "d",
+            "v",
+            "L",
+            "d",
+            "v",
+            "L",
+            "l",
+            "v",
+            "L",
+            "l",
+            "v"
+          ],
+          "operators": [
+            "≤",
+            "≤",
+            "≤"
+          ]
+        },
+        {
+          "object_index": 71,
+          "id": null,
+          "node_sha256": "07fafe929de2260aa52d66ae7460311fb654b454e6d137b4446bed23adad2f0a",
+          "numbers": "121212",
+          "minimum": {
+            "_": 12,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Ψ",
+            "u",
+            "v",
+            "Ψ",
+            "u",
+            "v",
+            "Ψ",
+            "d",
+            "v",
+            "Ψ",
+            "d",
+            "v",
+            "Ψ",
+            "l",
+            "v",
+            "Ψ",
+            "l",
+            "v"
+          ],
+          "operators": [
+            "≤",
+            "≤",
+            "≤"
+          ]
+        },
+        {
+          "object_index": 72,
+          "id": null,
+          "node_sha256": "152792e249c51be2a7ffe1786719f8a26d98fabe7a2a44f8b93d1bf5fc413d8a",
+          "numbers": "12",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 73,
+          "id": null,
+          "node_sha256": "65a15a2aa2c7334932a2f3366238311414222f1bd3eeaa1e2dd5faab98cfa4b4",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "x",
+            "ħ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 74,
+          "id": null,
+          "node_sha256": "2746157459d8b51d1b2d5e586733f8a1f15923291a6759fcc0920832ccc565fb",
+          "numbers": "121212",
+          "minimum": {
+            "_": 12,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "L",
+            "u",
+            "v",
+            "L",
+            "u",
+            "v",
+            "L",
+            "d",
+            "v",
+            "L",
+            "d",
+            "v",
+            "L",
+            "l",
+            "v",
+            "L",
+            "l",
+            "v"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 75,
+          "id": null,
+          "node_sha256": "a135f3a7d88ab027d548ea11178d1609dd3336db1a8143436bca379d873cbb7d",
+          "numbers": "121212",
+          "minimum": {
+            "_": 12,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Ψ",
+            "u",
+            "v",
+            "Ψ",
+            "u",
+            "v",
+            "Ψ",
+            "d",
+            "v",
+            "Ψ",
+            "d",
+            "v",
+            "Ψ",
+            "l",
+            "v",
+            "Ψ",
+            "l",
+            "v"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 76,
+          "id": null,
+          "node_sha256": "111072ebc83077edb89963f63a36576d772b4fe562e16465f008faa417a7717f",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "c"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 77,
+          "id": null,
+          "node_sha256": "b86a6164c23b494595e945ad2206b1f3d36d60ded2cf9b7fcc5360822253a327",
+          "numbers": "11",
+          "minimum": {
+            "_": 2,
+            "^": 2,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "c",
+            "x",
+            "Θ",
+            "c",
+            "x",
+            "x",
+            "G"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 78,
+          "id": null,
+          "node_sha256": "4689c7ce5b95d5bb43364e5c61726cf1e7c9b56b572e6bca97c0077ef4b0bdfc",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Θ",
+            "c",
+            "x"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 79,
+          "id": null,
+          "node_sha256": "a3e5d8781904226780ddce7a5253853f5ee02d90ea964379f2545ca8df59b46b",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Θ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 80,
+          "id": null,
+          "node_sha256": "cc4d53b9aad7e622f3a2ad672dc40ec1e49085883865718ef63bab0d637c0848",
+          "numbers": "111121516",
+          "minimum": {
+            "_": 9,
+            "^": 5,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "c",
+            "Θ",
+            "c",
+            "ħ",
+            "Θ",
+            "c",
+            "ħ",
+            "Θ",
+            "c",
+            "ħ",
+            "Θ",
+            "c",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 81,
+          "id": null,
+          "node_sha256": "3c3c58b6f28d792f39ba672a1ac1de87269ba8ba6f628eea03724d82c0de53c3",
+          "numbers": "10.920.150.350.310.510.220.590.220.550.210.930.180.400.450.250.300.990.250.430.600.090.450.950.300.850.400.240.300.120.820.780.370.150.340.920.310.790.380.040.350.630.320.560.390.330.360.940.330.700.510.280.310.900.410.670.360.090.330.990.300.980.370.350.340.830.310.690.380.040.350.930.320.890.660.060.550.860.440.910.240.120.210.780.180.820.250.310.220.960.190.530.260.100.230.770.20",
+          "minimum": {
+            "_": 1,
+            "^": 49,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "c"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 82,
+          "id": null,
+          "node_sha256": "b5c685c88d4944f1596683546ef128a4a3df3fb4b951716406e7b540e5b6edb4",
+          "numbers": "12",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "N"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 83,
+          "id": null,
+          "node_sha256": "1927cfa236b3d83fa47d9dec3322d4e8626a2aabf259780378c51dd9d6e222e2",
+          "numbers": "1212",
+          "minimum": {
+            "_": 5,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "χ",
+            "C",
+            "N",
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "G"
+          ],
+          "operators": [
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 84,
+          "id": null,
+          "node_sha256": "af1226d1a4c577f1616d8ebdae57e17b28e16d8353debf85db9762de6b244ed6",
+          "numbers": "1122211212",
+          "minimum": {
+            "_": 11,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "δ",
+            "U",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "if",
+            "ħ",
+            "N",
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "if",
+            "ħ",
+            "N",
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "if",
+            "ħ",
+            "N",
+            "N"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 85,
+          "id": null,
+          "node_sha256": "1e3d7bc330bcc5561644a9ef9f7c598fc84c0c900b8611fd6301c69d52d4410a",
+          "numbers": "12",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "N",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 86,
+          "id": null,
+          "node_sha256": "4c3e3f9a0cde5156f865f6542bb804129aff628f669871f48dc8d7824c0449e5",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ħ",
+            "G"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 87,
+          "id": null,
+          "node_sha256": "d7df55391e1fa60270ca5ca38c9e8f95d6918d00a13db97d2992758eaa5e39e4",
+          "numbers": "12121212121212",
+          "minimum": {
+            "_": 26,
+            "^": 3,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Θ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "L",
+            "T",
+            "ħ",
+            "L",
+            "T",
+            "ħ",
+            "e",
+            "i",
+            "Ψ",
+            "T",
+            "ħ",
+            "Ψ",
+            "T",
+            "ħ",
+            "L",
+            "I",
+            "ħ",
+            "L",
+            "I",
+            "ħ",
+            "e",
+            "i",
+            "Ψ",
+            "I",
+            "ħ",
+            "Ψ",
+            "I",
+            "ħ",
+            "L",
+            "F",
+            "ħ",
+            "L",
+            "F",
+            "ħ",
+            "e",
+            "i",
+            "Ψ",
+            "F",
+            "ħ",
+            "Ψ",
+            "F",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 88,
+          "id": null,
+          "node_sha256": "d4ee35dff2e5b6a25c46fb59083f74f5885c867481199bb7538f73f117a10b4d",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 89,
+          "id": null,
+          "node_sha256": "40bfc5c13a16c3d118da3d5f09ee9b6a7230de803289b7af242f54b67f2c8744",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 90,
+          "id": null,
+          "node_sha256": "ed3db3c76b3f4812de4659e94e9f486ea02445a4296a5d45d4bd47a654b7a2b4",
+          "numbers": "02",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "π"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 91,
+          "id": null,
+          "node_sha256": "ec4cef752513badcf831f807a485f8c5b790537ccdb4044642e42f4adccd3ec3",
+          "numbers": "1212",
+          "minimum": {
+            "_": 7,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "μ",
+            "T",
+            "T",
+            "ħ",
+            "Ψ",
+            "T",
+            "ħ",
+            "Ψ",
+            "T",
+            "ħ"
+          ],
+          "operators": [
+            "=",
+            "+"
+          ]
+        },
+        {
+          "object_index": 92,
+          "id": null,
+          "node_sha256": "5bf7ddf4e24863fa5ed7c969dbacdd3c78830f747525f689e3d23328b134297f",
+          "numbers": "1212",
+          "minimum": {
+            "_": 7,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ν",
+            "I",
+            "I",
+            "ħ",
+            "Ψ",
+            "I",
+            "ħ",
+            "Ψ",
+            "I",
+            "ħ"
+          ],
+          "operators": [
+            "=",
+            "+"
+          ]
+        },
+        {
+          "object_index": 93,
+          "id": null,
+          "node_sha256": "a74b3664341dddf910dae21b62db9b70e5711f080eded9fd4b42d7ffd60f7e8c",
+          "numbers": "1212",
+          "minimum": {
+            "_": 7,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ω",
+            "F",
+            "F",
+            "ħ",
+            "Ψ",
+            "F",
+            "ħ",
+            "Ψ",
+            "F",
+            "ħ"
+          ],
+          "operators": [
+            "=",
+            "+"
+          ]
+        },
+        {
+          "object_index": 94,
+          "id": null,
+          "node_sha256": "996607700ac7bcb8636cacba449f319d4ce7903721f8bc4e4e483a16a028e1d3",
+          "numbers": "1212",
+          "minimum": {
+            "_": 7,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "μ",
+            "T",
+            "T",
+            "ħ",
+            "max",
+            "Ψ",
+            "T",
+            "ħ",
+            "Ψ",
+            "T",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 95,
+          "id": null,
+          "node_sha256": "7961c78eecb258f732740d537a627566196ffa2452519ae7c57315834beb6afe",
+          "numbers": "1212",
+          "minimum": {
+            "_": 7,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ν",
+            "I",
+            "I",
+            "ħ",
+            "max",
+            "Ψ",
+            "I",
+            "ħ",
+            "Ψ",
+            "I",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 96,
+          "id": null,
+          "node_sha256": "e4cce70115a999324921e9d56ce9be5c461516bd9e186f5f7dde15196ba46ac7",
+          "numbers": "1212",
+          "minimum": {
+            "_": 7,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ω",
+            "F",
+            "F",
+            "ħ",
+            "max",
+            "Ψ",
+            "F",
+            "ħ",
+            "Ψ",
+            "T",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 97,
+          "id": null,
+          "node_sha256": "b5237982cec1aebcd57b2be9fc56c790364ddaa0dc0a023f9a5a9d664f1a4177",
+          "numbers": "1212",
+          "minimum": {
+            "_": 7,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "μ",
+            "T",
+            "T",
+            "ħ",
+            "min",
+            "Ψ",
+            "T",
+            "ħ",
+            "Ψ",
+            "T",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 98,
+          "id": null,
+          "node_sha256": "e825d40d86e114d37a4b7e2322123e8be1e2c1a0b4c80c65798f6c27800e24ac",
+          "numbers": "1212",
+          "minimum": {
+            "_": 7,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ν",
+            "I",
+            "I",
+            "ħ",
+            "min",
+            "Ψ",
+            "I",
+            "ħ",
+            "Ψ",
+            "I",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 99,
+          "id": null,
+          "node_sha256": "962920040ed71a860dcb8cc4b7a23f69b8904e0b66c042fad27d1521a9a6ad22",
+          "numbers": "1212",
+          "minimum": {
+            "_": 7,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ω",
+            "F",
+            "F",
+            "ħ",
+            "min",
+            "Ψ",
+            "F",
+            "ħ",
+            "Ψ",
+            "T",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 100,
+          "id": null,
+          "node_sha256": "77e0bcf1eed9dfe53374a801f4a0f8ef9d8b3beef4ddf3adf5c8ed934235df3f",
+          "numbers": "12112221",
+          "minimum": {
+            "_": 15,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "μ",
+            "N",
+            "N",
+            "ħ",
+            "Ψ",
+            "T",
+            "ħ",
+            "if",
+            "L",
+            "T",
+            "ħ",
+            "L",
+            "T",
+            "ħ",
+            "Ψ",
+            "T",
+            "ħ",
+            "if",
+            "L",
+            "T",
+            "ħ",
+            "L",
+            "T",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 101,
+          "id": null,
+          "node_sha256": "45f9b8e1559e8c3f8b32aaadbc9e429bff247e06b78b77014bd7b5e953a70122",
+          "numbers": "12112221",
+          "minimum": {
+            "_": 15,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ν",
+            "N",
+            "N",
+            "ħ",
+            "Ψ",
+            "I",
+            "ħ",
+            "if",
+            "L",
+            "I",
+            "ħ",
+            "L",
+            "I",
+            "ħ",
+            "Ψ",
+            "I",
+            "ħ",
+            "if",
+            "L",
+            "I",
+            "ħ",
+            "L",
+            "I",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 102,
+          "id": null,
+          "node_sha256": "c1e1e75b3186aedbb114bf03c39e1dae6a4ce0287985d2fed10f8c8c5d540218",
+          "numbers": "12112221",
+          "minimum": {
+            "_": 15,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ω",
+            "N",
+            "N",
+            "ħ",
+            "Ψ",
+            "F",
+            "ħ",
+            "if",
+            "L",
+            "F",
+            "ħ",
+            "L",
+            "F",
+            "ħ",
+            "Ψ",
+            "F",
+            "ħ",
+            "if",
+            "L",
+            "F",
+            "ħ",
+            "L",
+            "F",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 103,
+          "id": null,
+          "node_sha256": "7d8edeb9b35ac92605d3ce3f75a3374809dece8ed015103ec7fdf6817046f9a7",
+          "numbers": "12",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "N"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 104,
+          "id": null,
+          "node_sha256": "d4d0d57a822658360a0b469983fa296d0f17fc24abf0c075ecd82be4ec81d3ae",
+          "numbers": "1212",
+          "minimum": {
+            "_": 5,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "χ",
+            "D",
+            "N",
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "G"
+          ],
+          "operators": [
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 105,
+          "id": null,
+          "node_sha256": "5461c3abc3014e15a436206cf35c833423149b1b37e13fda17c741c158d88f8d",
+          "numbers": "1122211212",
+          "minimum": {
+            "_": 11,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "χ",
+            "D",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "if",
+            "ħ",
+            "N",
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "if",
+            "ħ",
+            "N",
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "if",
+            "ħ",
+            "N",
+            "N"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 106,
+          "id": null,
+          "node_sha256": "5431206622ba8c388ff6d4fad7f50f6fbf7c5b07f4c85876e64b26d2c316ebd0",
+          "numbers": "12",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "D",
+            "N",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 107,
+          "id": null,
+          "node_sha256": "2dd4897647a335bec253a9bab19d8a609a2ff56af15a992919afa09a22a39f78",
+          "numbers": "12121212121212",
+          "minimum": {
+            "_": 26,
+            "^": 3,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Θ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "L",
+            "T",
+            "ħ",
+            "L",
+            "T",
+            "ħ",
+            "e",
+            "i",
+            "Ψ",
+            "T",
+            "ħ",
+            "Ψ",
+            "T",
+            "ħ",
+            "L",
+            "I",
+            "ħ",
+            "L",
+            "I",
+            "ħ",
+            "e",
+            "i",
+            "Ψ",
+            "I",
+            "ħ",
+            "Ψ",
+            "I",
+            "ħ",
+            "L",
+            "F",
+            "ħ",
+            "L",
+            "F",
+            "ħ",
+            "e",
+            "i",
+            "Ψ",
+            "F",
+            "ħ",
+            "Ψ",
+            "F",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 108,
+          "id": null,
+          "node_sha256": "8e5eef9809fdd23bf3eb52f872f547bede3a16dd0cfb736150f4ecb437dab170",
+          "numbers": "10.510.220.650.310.920.150.930.180.450.210.590.220.990.250.750.300.400.450.950.300.910.450.430.600.120.820.760.300.850.400.920.310.850.340.780.370.630.320.960.350.790.380.940.330.770.360.560.390.900.410.720.310.700.510.990.300.910.330.670.360.830.310.650.340.980.370.930.320.960.350.690.380.860.440.940.550.890.660.780.180.880.210.910.240.960.190.690.220.820.250.770.200.900.230.530.26",
+          "minimum": {
+            "_": 1,
+            "^": 48,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 109,
+          "id": null,
+          "node_sha256": "e7607e023d5c607f0280f5826a9655d6aa37c37059a822d5bb367f2036a87c0c",
+          "numbers": "2121323424626",
+          "minimum": {
+            "_": 13,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 110,
+          "id": null,
+          "node_sha256": "243f71ceeba5427a623d6139938a7edabf8f32457a8e88e7bc716968c089e3a9",
+          "numbers": "20.620.120.760.210.900.350.930.120.650.250.890.210.900.140.780.310.510.420.910.280.510.130.440.190.720.320.710.250.850.370.920.110.550.240.880.470.430.220.990.150.690.410.980.140.870.260.670.520.930.210.620.320.650.460.890.320.900.410.640.260.920.110.850.240.940.470.930.190.960.450.730.290.960.350.940.350.490.360.880.240.690.320.560.130.960.220.490.320.250.360.900.200.680.330.430.32",
+          "minimum": {
+            "_": 1,
+            "^": 48,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 111,
+          "id": null,
+          "node_sha256": "2314477cf110cd7afae9ae1d1fe3d184313fdd3be114130f3cf38f63cd180b11",
+          "numbers": "121112121232342451561626",
+          "minimum": {
+            "_": 24,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "Θ",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 112,
+          "id": null,
+          "node_sha256": "c60063c06eea9b9ef052e32e4490f2f0bbabd75fdea759ba2659fb96c9dd9441",
+          "numbers": "120.620.220.760.310.920.350.930.180.650.250.890.220.990.250.780.310.510.450.950.300.910.450.440.190.120.820.760.300.850.400.920.310.850.340.780.370.630.320.960.350.790.380.940.330.770.360.560.390.720.320.710.250.850.370.920.110.550.240.880.470.430.220.990.150.690.410.980.140.870.260.670.520.930.210.620.320.650.460.890.320.900.410.640.260.920.110.850.240.940.470.930.190.960.450.730.290.900.410.720.310.700.510.990.300.910.330.670.360.830.310.650.340.980.370.930.320.960.350.690.380.960.440.940.550.890.660.880.240.880.320.910.240.960.220.690.320.820.360.900.200.900.330.530.32",
+          "minimum": {
+            "_": 2,
+            "^": 72,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 113,
+          "id": null,
+          "node_sha256": "64be150c016a7a0eac90acc48c166fe0c21db9856871c67a7f49c825b174f579",
+          "numbers": "121112121232342451561626",
+          "minimum": {
+            "_": 24,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "N",
+            "ħ",
+            "Θ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "ħ",
+            "Θ",
+            "ħ",
+            "Θ",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 114,
+          "id": null,
+          "node_sha256": "3b166508c7b8aedbaa08beaa6064b8dc5f86618404bc16b4bb96bc04b556519a",
+          "numbers": "120.510.220.650.310.900.350.930.180.450.250.590.220.900.250.750.310.400.450.910.300.510.450.430.190.120.820.760.300.850.400.920.310.850.340.780.370.630.320.960.350.790.380.940.330.770.360.560.390.720.320.710.250.850.370.920.110.550.240.880.470.430.220.990.150.690.410.980.140.870.260.670.520.930.210.620.320.650.460.890.320.900.410.640.260.920.110.850.240.940.470.930.190.960.450.730.290.900.410.720.310.700.510.990.300.910.330.670.360.830.310.650.340.980.370.930.320.960.350.690.380.860.440.940.550.490.660.780.240.690.320.560.240.960.220.490.320.250.360.770.200.680.330.430.32",
+          "minimum": {
+            "_": 2,
+            "^": 72,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 115,
+          "id": null,
+          "node_sha256": "a35ecfa6b8d7e24f10b796a212ec4cc412e90e93f559adc2ee4e2218554906fb",
+          "numbers": "12",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "G",
+            "u",
+            "u",
+            "u",
+            "m"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 116,
+          "id": null,
+          "node_sha256": "d1ff12bb0cdcc6977130179636a7423fcdde22d05d82cef605faa695d68c0d84",
+          "numbers": "12",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "E",
+            "e",
+            "e",
+            "e",
+            "n"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 117,
+          "id": null,
+          "node_sha256": "340d0cc7ecb32c27ac719b6558b8d6b2124b4c9a96965ca53143dc74ab15f673",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "c",
+            "ij"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 118,
+          "id": null,
+          "node_sha256": "44345eb3554583065949021654a5508be3015390c8d86b0a6c4baaae4143be94",
+          "numbers": "",
+          "minimum": {
+            "_": 7,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "c",
+            "ij",
+            "L",
+            "amp",
+            "Ψ",
+            "amp",
+            "γ",
+            "amp",
+            "L",
+            "phase",
+            "Ψ",
+            "phase",
+            "γ",
+            "phase"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "-",
+            "+",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 119,
+          "id": null,
+          "node_sha256": "ec5ca864415c8d3684c5bb178b3288c814b39c4a458a433495086c525e9135c0",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "b",
+            "κ",
+            "G"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 120,
+          "id": null,
+          "node_sha256": "6e4cd0acc0c39a27cda2fc4b86d4c83c6cdad8a333fdd7e6c70fd1bf7d40c31b",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "b",
+            "i",
+            "b",
+            "κ"
+          ],
+          "operators": [
+            "≠"
+          ]
+        },
+        {
+          "object_index": 121,
+          "id": null,
+          "node_sha256": "f26612831ff852d76fc73be4d9745ac251cd1a372b6dcc8ad091f59ce3002b6d",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "L",
+            "amp"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 122,
+          "id": null,
+          "node_sha256": "cb040c8a85901585c455beff9b0df0f786a6b009e61a378782b6a8e4e734766e",
+          "numbers": "",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "u",
+            "b",
+            "i",
+            "e",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 123,
+          "id": null,
+          "node_sha256": "0c889b2aa83b0bc119422dbfb5648299201b6d9e33b72b035292b10e77dafca6",
+          "numbers": "",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "u",
+            "b",
+            "k",
+            "e",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 124,
+          "id": null,
+          "node_sha256": "6016234b029a27cc4f138b051273d7a865d66da370ff734989bbc1ab76821de4",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Ψ",
+            "amp"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 125,
+          "id": null,
+          "node_sha256": "99b1dd4e523d81dc9e2748a852c39f5f75057dc1afd0b90cff803415c862bb0d",
+          "numbers": "",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "d",
+            "b",
+            "i",
+            "e",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 126,
+          "id": null,
+          "node_sha256": "ce0f25d7747f425e506b66b28e1cc1db8a46a967a91f57accbb597e6ebb2b451",
+          "numbers": "",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "d",
+            "b",
+            "k",
+            "e",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 127,
+          "id": null,
+          "node_sha256": "432064ff177abf0f2866a40bf5f15514cf346f24132e44bc0389daec2124cbda",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "γ",
+            "amp"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 128,
+          "id": null,
+          "node_sha256": "bd2d26de207f5dfccbfc060f8ac7f73e09a0ea1d80f748d2af76f6c0517bf57a",
+          "numbers": "",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "l",
+            "b",
+            "i",
+            "e",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 129,
+          "id": null,
+          "node_sha256": "f66d0e974aa438f664085122a920f06e58cd425445d3399b89d80e11b3cc3422",
+          "numbers": "",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "l",
+            "b",
+            "k",
+            "e",
+            "j"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 130,
+          "id": null,
+          "node_sha256": "96cacec596eeed28b38964f7f00adcca99f81dff3a5a6bc24288292d580b5bb8",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "L",
+            "phase"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 131,
+          "id": null,
+          "node_sha256": "388ab28b7c85ba0c2b7cb0a8b11dd2eaf4a246f8c6b4ecd817ad70380ec20c57",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Ψ",
+            "phase"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 132,
+          "id": null,
+          "node_sha256": "cdc45a3d29165e49f995d78a3212a1290e28e64cf98cbacac8ba1fdd052369b5",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "γ",
+            "phase"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 133,
+          "id": null,
+          "node_sha256": "edc3aa14744053fe41a3871c02aaa0b98189bc7a44b183181154d777686d06ce",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ħ",
+            "i"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 134,
+          "id": null,
+          "node_sha256": "899e1e4acc9bf07d3cb96b57a9367996ede90bbec5720fda3de625df602836fb",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "d",
+            "i"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 135,
+          "id": null,
+          "node_sha256": "08861bcce6156835818154973a7e3fbb411ba925f3f3c7120dd0316cfe9daa5b",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "j",
+            "cij"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 136,
+          "id": null,
+          "node_sha256": "669fe2e9ac989e7eb1b26ade2e669ee084d901e2c7343e52007d293cd98b4ef3",
+          "numbers": "0",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 137,
+          "id": null,
+          "node_sha256": "59e2862c7f36f161df0328bdf3798ec1371b6931908d5b7333e438a87da15515",
+          "numbers": "2",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "π"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 138,
+          "id": null,
+          "node_sha256": "f8962824936c877d137b7aa4d3a70f35bcdcba403aa1e79059db1cdb851b98fd",
+          "numbers": "34",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "π"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 139,
+          "id": null,
+          "node_sha256": "90f86c84812102044e1591e3c169d8b27e33427315d0efa025432c83e3ad2ba9",
+          "numbers": "3",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "π"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 140,
+          "id": null,
+          "node_sha256": "6ed827303e021436299094043f1d23220eedebb814473dfbda6623a12d623fc5",
+          "numbers": "2",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "π"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 141,
+          "id": null,
+          "node_sha256": "fc93e1bf2b691f9ed7f4e619f5968895900defa43bac6f5b00616e078268e134",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "b",
+            "ij"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 142,
+          "id": null,
+          "node_sha256": "24de1b4c0b9b105ffb8e733ca9d51b1ff1e68572e64fbb5cbfed0e6fb9d627fa",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "b",
+            "κj"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 143,
+          "id": null,
+          "node_sha256": "428b1b7b28ee0d4253f5aa1aca777eee6a1dde8355f686dc4de5f5816c5fbd09",
+          "numbers": "1234",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H",
+            "ħ",
+            "ħ",
+            "ħ",
+            "ħ"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 144,
+          "id": null,
+          "node_sha256": "353b56bf33b5a8d11b07a83634ac544b6a3053e94b27ae6124167fed46aac626",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "D"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 145,
+          "id": null,
+          "node_sha256": "f169287d6087be89a9cd6601c2f4a4d90d1a1c209c74e2b3adeebdbf841f9dff",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "D"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 146,
+          "id": null,
+          "node_sha256": "71b86d001e06b2cc7bd48592acfcaa1878e45012137fce315f320cac1c367f34",
+          "numbers": "3",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "D"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 147,
+          "id": null,
+          "node_sha256": "bc22c7f10022b8d6102c5e95ebd7efb189219af5e87340eee7d230d0a23b2594",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "b"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 148,
+          "id": null,
+          "node_sha256": "2b79c4a7e18f8c8db353e1adbd117baf8801003b493d7eae138a47dc411d0d92",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "b"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 149,
+          "id": null,
+          "node_sha256": "50a6eef57bac493f65004f4ddc940fb94860cf0a0d1b628bf0985f5188fd90e5",
+          "numbers": "3",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "b"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 150,
+          "id": null,
+          "node_sha256": "71dac3336d963d50fecfe921f6217c608be23935763929cf01826765f58385a9",
+          "numbers": "4",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "b"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 151,
+          "id": null,
+          "node_sha256": "ab2b7d23f180cea79f16c4cfaa4bbd3d138ff8dc7d0500f6ed21aeaafe5ce035",
+          "numbers": "11",
+          "minimum": {
+            "_": 3,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "M",
+            "D",
+            "N"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 152,
+          "id": null,
+          "node_sha256": "fa4bcc30f45001b44d1e156ca104519c8b7ad27cae676d9de6a476ee6f379aa7",
+          "numbers": "0.510.220.650.310.920.150.930.180.450.210.590.220.990.250.750.300.400.450.950.300.910.450.430.600.120.820.760.300.850.400.920.310.850.340.780.370.630.320.960.350.790.380.940.330.770.360.560.390.900.410.720.310.700.510.990.300.910.330.670.360.830.310.650.340.980.370.930.320.960.350.690.380.860.440.940.550.890.660.780.180.880.210.910.240.960.190.690.220.820.250.770.200.900.230.530.26",
+          "minimum": {
+            "_": 0,
+            "^": 48,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 153,
+          "id": null,
+          "node_sha256": "e1555627005f3d6301763927681f1fb1139d7f4e2158d82dcc7ebaa1603effbc",
+          "numbers": "110.240.380.790.171.340.11.430.150.020.720.990.280.81.051.150.30.920.211.230.270.50.281.20.290.910.330.750.150.830.161.140.17",
+          "minimum": {
+            "_": 3,
+            "^": 17,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "D",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 154,
+          "id": null,
+          "node_sha256": "6521acd1307fe11e268e0c8285fb8f3f65a0fef255f39786703bd165f48df238",
+          "numbers": "110.09120.13430.1340.21450.01440.27720.840.3450.19320.33210.140.3480.30030.11250.13280.1938",
+          "minimum": {
+            "_": 3,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "D",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 155,
+          "id": null,
+          "node_sha256": "5bb0c61c605f00b4486d31008af4292afd928497d53bc7d8240d58d9310df172",
+          "numbers": "22",
+          "minimum": {
+            "_": 3,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "M",
+            "D",
+            "N"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 156,
+          "id": null,
+          "node_sha256": "55c86c21d63ea0db976da0a8ed4ce3896e45d9068fe5e43210755903afd8aff6",
+          "numbers": "0.620.320.780.290.520.240.860.290.560.320.590.190.890.310.770.350.560.290.990.290.810.330.580.400.780.220.660.160.670.290.860.290.770.270.590.290.770.360.860.250.640.280.870.230.690.260.680.410.880.320.790.260.650.420.790.270.990.270.780.260.910.410.820.420.790.510.830.420.910.270.780.290.990.340.860.490.780.530.880.150.970.510.700.350.990.290.780.250.720.350.470.450.590.230.630.16",
+          "minimum": {
+            "_": 0,
+            "^": 48,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 157,
+          "id": null,
+          "node_sha256": "2fea9e48b38b7e9f957ccf9b78401b52c35ff381570b370b76013df5d0332730",
+          "numbers": "220.880.370.820.211.10.371.430.150.770.091.040.270.990.331.020.081.020.1610.281.220.320.960.401.070.301.150.311.050.190.430.52",
+          "minimum": {
+            "_": 3,
+            "^": 17,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "D",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 158,
+          "id": null,
+          "node_sha256": "426da794143f6231821ecf65dd6d02c4400bef5e695ce753ffb5db303feea6ee",
+          "numbers": "220.32560.17220.4070.21450.06930.28080.32670.08160.16320.280.39040.3840.3210.35650.19950.2236",
+          "minimum": {
+            "_": 3,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "D",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 159,
+          "id": null,
+          "node_sha256": "ae9ff245a61922a9bf12340f7cef3f4b9080a47291b8ca3e489f728ae2f534dd",
+          "numbers": "33",
+          "minimum": {
+            "_": 3,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "M",
+            "D",
+            "N"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 160,
+          "id": null,
+          "node_sha256": "b24fd6f0dbde71b3093cc7d97969c0ca146300823f6340df88394cc685f5a115",
+          "numbers": "0.620.220.760.210.900.350.930.120.650.250.890.210.900.140.780.310.510.420.910.280.510.130.440.190.720.320.710.250.850.370.920.110.550.240.880.170.430.320.990.250.690.410.980.140.870.260.670.220.930.210.620.320.650.460.890.320.900.410.640.260.920.110.850.240.940.270.930.190.960.450.730.290.960.350.940.350.490.360.880.240.690.320.560.130.860.220.490.320.250.360.900.200.680.330.430.32",
+          "minimum": {
+            "_": 0,
+            "^": 48,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 161,
+          "id": null,
+          "node_sha256": "c9629acd8e2da180e8cc628f2175d38afa4d5be084e65b8b4ab062deab4e9e26",
+          "numbers": "330.480.080.690.081.170.030.980.220.580.200.790.180.730.161.180.181.10.071.150.470.830.081.260.351.410.341.010.431.10.181.150.21",
+          "minimum": {
+            "_": 3,
+            "^": 17,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "A",
+            "D",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 162,
+          "id": null,
+          "node_sha256": "dac1b08255af9f2aaaf3df19e1c70084e423a5275f88859a3a1ce763a7fadb11",
+          "numbers": "330.03840.05520.03510.21560.1160.14220.11680.21240.0770.54050.06640.4410.47940.43430.1980.2415",
+          "minimum": {
+            "_": 3,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "D",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 163,
+          "id": null,
+          "node_sha256": "9c4bb6b55846341ccc227f091cb501648b0b07bcb82ba6e47091f507790dc7bd",
+          "numbers": "110.5741.47661.04230.7394221.11930.75841.21761.1006330.34430.58741.12491.3532",
+          "minimum": {
+            "_": 9,
+            "^": 3,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "S",
+            "D",
+            "N",
+            "S",
+            "D",
+            "N",
+            "S",
+            "D",
+            "N"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "="
+          ]
+        },
+        {
+          "object_index": 164,
+          "id": null,
+          "node_sha256": "85508cb1a2dec533909fb5500986b3c5b5835f505bc5a626145031e487fc5485",
+          "numbers": "330.67920.94081.12871.0644",
+          "minimum": {
+            "_": 3,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "V",
+            "D",
+            "N"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 165,
+          "id": null,
+          "node_sha256": "9fc3931afab4f7712e70db559bdc640cea4c26f250052a92eecda2ad88dd0658",
+          "numbers": "1.1287",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        }
+      ]
+    }
+  ]
 }

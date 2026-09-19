@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+from collections.abc import Callable
 import urllib.parse
 import xml.etree.ElementTree as ET
 
@@ -101,7 +102,7 @@ def _render_paragraph_texts(parent: ET.Element | None) -> list[str]:
 
 
 def _heading_text(section: ET.Element) -> str:
-    title = normalize_text(child_text(section, "title"))
+    title = normalize_text(render_inline_text(first_child(section, "title")))
     label = normalize_text(child_text(section, "label"))
     if title and label:
         return normalize_text(f"{label} {title}")
@@ -114,7 +115,13 @@ def _caption_text(container: ET.Element | None) -> str:
         return ""
     paragraphs = _render_paragraph_texts(caption)
     if paragraphs:
-        return normalize_text("\n\n".join(paragraphs))
+        title = first_child(caption, "title")
+        title_text = (
+            normalize_text(render_inline_text(title)) if title is not None else ""
+        )
+        return normalize_text(
+            "\n\n".join([*([title_text] if title_text else []), *paragraphs])
+        )
     return normalize_text(render_inline_text(caption))
 
 
@@ -212,11 +219,12 @@ def _render_parsed_structured_table(
 def _render_structured_table_groups(
     table: ET.Element,
 ) -> list[_JatsTableRenderResult]:
+    def render_cell(cell: ET.Element) -> str:
+        return normalize_table_cell_text(render_inline_text(cell))
+
     parsed_groups = parse_xml_table_groups(
         table,
-        render_cell_text=lambda cell: normalize_table_cell_text(
-            render_inline_text(cell)
-        ),
+        render_cell_text=render_cell,
     )
     return [_render_parsed_structured_table(parsed) for parsed in parsed_groups]
 
@@ -405,10 +413,20 @@ def _supplementary_entries(root: ET.Element, source_url: str) -> list[dict[str, 
     return entries
 
 
-def _render_list(node: ET.Element, *, ordered: bool) -> list[str]:
+def _render_list(
+    node: ET.Element,
+    *,
+    ordered: bool,
+    render_item: Callable[[ET.Element], list[str]] | None = None,
+) -> list[str]:
     items = [
         normalize_text(
-            " ".join(_render_paragraph_texts(item)) or render_inline_text(item)
+            (
+                "\n".join(render_item(item))
+                if render_item
+                else " ".join(_render_paragraph_texts(item))
+            )
+            or render_inline_text(item)
         )
         for item in iter_children(node, "list-item")
     ]

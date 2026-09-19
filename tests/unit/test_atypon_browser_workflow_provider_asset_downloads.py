@@ -1,8 +1,7 @@
-# ruff: noqa: F403,F405
 from __future__ import annotations
-
-from ._atypon_browser_workflow_provider_support import *
+from tests.support._atypon_browser_workflow_provider_support import *
 from paper_fetch.runtime import RuntimeContext
+# ruff: noqa: F403,F405
 
 
 class _ProviderFakePage:
@@ -160,7 +159,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
       <a class="fig-view-orig" href="{figure_page_url}">
         View Large Image
       </a>
-      <img src="{preview_url}" alt="Benzimidazole-based drug molecules." />
+      <img src="{preview_url}" data-hi-res-src="{figure_url}" alt="Benzimidazole-based drug molecules." />
       <div class="caption">
         <p>Figure 1. Benzimidazole-based drug molecules.</p>
       </div>
@@ -238,16 +237,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                 asset_profile="body", max_tokens="full_text"
             )
 
-        mocked_fetch.assert_called_once()
-        self.assertEqual(mocked_fetch.call_args.args[0], [figure_page_url])
-        readiness = mocked_fetch.call_args.kwargs["readiness"]
-        self.assertFalse(readiness.wait_for_article_body)
-        self.assertEqual(
-            readiness.selector,
-            "img.content-image[src], img.content-image[data-src]",
-        )
-        self.assertEqual(mocked_fetch.call_args.kwargs["wait_seconds"], 2)
-        self.assertTrue(mocked_fetch.call_args.kwargs["options"].reuse_runtime_page)
+        mocked_fetch.assert_not_called()
         mocked_builder.assert_called_once()
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], figure_url)
@@ -526,119 +516,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         self.assertTrue(all(context.route_calls == [] for context in private_contexts))
         self.assertTrue(all(context.closed for context in private_contexts))
 
-    def test_pnas_provider_download_related_assets_uses_figure_page_and_falls_back_to_preview(
-        self,
-    ) -> None:
-        figure_page_url = "https://www.pnas.org/figures/figure-1"
-        preview_url = "https://www.pnas.org/images/preview/figure1.png"
-        full_size_url = "https://www.pnas.org/images/original/figure1.png"
-        html = f"""
-<article>
-  <figure>
-    <a href="{figure_page_url}">View figure</a>
-    <img src="{preview_url}" alt="Preview figure" />
-    <figcaption>Figure 1 caption</figcaption>
-  </figure>
-</article>
-"""
-        transport = AssetTransport({})
-        client = pnas_provider.PnasClient(transport=transport, env={})
-        initial_seed = {
-            "browser_cookies": [
-                {
-                    "name": "cf_clearance",
-                    "value": "secret",
-                    "domain": ".pnas.org",
-                    "path": "/",
-                }
-            ],
-            "browser_user_agent": "Mozilla/5.0",
-            "browser_final_url": PNAS_SAMPLE.landing_url,
-        }
-        warmed_seed = {
-            "browser_cookies": [
-                {
-                    "name": "sessionid",
-                    "value": "warm",
-                    "domain": ".pnas.org",
-                    "path": "/",
-                }
-            ],
-            "browser_user_agent": "Mozilla/5.0",
-            "browser_final_url": figure_page_url,
-        }
-        shared_fetcher = mock.Mock(
-            side_effect=[
-                None,
-                {
-                    "status_code": 200,
-                    "headers": {"content-type": "image/png"},
-                    "body": png_header(320, 240),
-                    "url": preview_url,
-                },
-            ],
-        )
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runtime = self._runtime_config(tmpdir, "pnas", PNAS_SAMPLE.doi)
-            raw_payload = _typed_raw_payload(
-                provider="pnas",
-                source_url=PNAS_SAMPLE.landing_url,
-                content_type="text/html",
-                body=html.encode("utf-8"),
-                route="html",
-                markdown_text=f"# {PNAS_SAMPLE.title}\n\n## Results\n\n"
-                + ("Body text " * 120),
-                browser_context_seed=initial_seed,
-            )
-            mocked_fetch = mock.Mock(
-                return_value=browser_runtime.BrowserFetchedHtml(
-                    source_url=figure_page_url,
-                    final_url=figure_page_url,
-                    html=(
-                        "<html><head>"
-                        f"<meta property='og:image' content='{full_size_url}' />"
-                        "</head><body></body></html>"
-                    ),
-                    response_status=200,
-                    response_headers={"content-type": "text/html"},
-                    title="Figure page",
-                    summary="Figure page summary",
-                    browser_context_seed=warmed_seed,
-                )
-            )
-            mocked_builder = mock.Mock(return_value=shared_fetcher)
-            install_browser_workflow_deps(
-                client,
-                load_runtime_config=mock.Mock(return_value=runtime),
-                ensure_runtime_ready=mock.Mock(),
-                fetch_html_with_browser=mocked_fetch,
-                _build_shared_browser_image_fetcher=mocked_builder,
-            )
-            result = client.download_related_assets(
-                PNAS_SAMPLE.doi,
-                {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
-                raw_payload,
-                Path(tmpdir),
-                asset_profile="body",
-            )
-            saved_path = Path(result["assets"][0]["path"])
-            saved_bytes = saved_path.read_bytes()
-
-        mocked_fetch.assert_called_once()
-        self.assertEqual(mocked_fetch.call_args.args[0], [figure_page_url])
-        mocked_builder.assert_called_once()
-        self.assert_direct_asset_attempted(transport)
-        self.assertEqual(
-            [call.args[0] for call in shared_fetcher.call_args_list],
-            [full_size_url, preview_url],
-        )
-        self.assertEqual(len(result["assets"]), 1)
-        self.assertEqual(result["asset_failures"], [])
-        self.assertEqual(result["assets"][0]["download_tier"], "preview")
-        self.assertEqual(saved_bytes, png_header(320, 240))
-
-    def test_pnas_provider_download_related_assets_uses_shared_browser_primary_path_before_preview(
+    def test_pnas_provider_download_related_assets_recovers_original_through_shared_browser(
         self,
     ) -> None:
         """asset-download-contract: provider=pnas"""

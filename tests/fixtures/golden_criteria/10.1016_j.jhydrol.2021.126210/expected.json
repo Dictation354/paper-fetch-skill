@@ -17,5 +17,457 @@
     "figures": true,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1016_j.jhydrol.2021.126210",
+    "provider": "elsevier",
+    "doi": "10.1016/j.jhydrol.2021.126210",
+    "original": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml",
+    "sha256": "a621b56d090faf66ed56ffe64759554e3194fcedce8b9d3ce964e56f6c3c5373",
+    "format": "xml",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 6,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 59,
+        "scope": "all structured author/title/journal/year/page/e-locator/edition/publisher/comment/web-link/suffix fields and independently decoded DOI in original reference order; plain text references checked in full"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 57,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 7,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 104,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 5,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 29,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "author-group author",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 5,
+      "tex_checked": 0,
+      "mathml_checked": 5,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml",
+      "sha256": "a621b56d090faf66ed56ffe64759554e3194fcedce8b9d3ce964e56f6c3c5373",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": "t0005",
+          "node_sha256": "d39874c4dc01500ef1224d8d85f020c8827cfca52ed35f7b09eedd0df9626361",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            [
+              1,
+              [
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+              ]
+            ],
+            [
+              2,
+              [
+                8,
+                9,
+                16,
+                17,
+                18,
+                19,
+                20,
+                15
+              ]
+            ],
+            [
+              3,
+              [
+                8,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              4,
+              [
+                8,
+                21,
+                28,
+                29,
+                30,
+                31,
+                32,
+                27
+              ]
+            ],
+            [
+              5,
+              [
+                8,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39
+              ]
+            ],
+            [
+              6,
+              [
+                8,
+                33,
+                40,
+                41,
+                42,
+                43,
+                44,
+                39
+              ]
+            ],
+            [
+              7,
+              [
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52
+              ]
+            ],
+            [
+              8,
+              [
+                45,
+                46,
+                53,
+                48,
+                54,
+                55,
+                56,
+                52
+              ]
+            ],
+            [
+              9,
+              [
+                45,
+                57,
+                58,
+                48,
+                59,
+                60,
+                61,
+                62
+              ]
+            ],
+            [
+              10,
+              [
+                45,
+                57,
+                63,
+                48,
+                64,
+                65,
+                66,
+                62
+              ]
+            ],
+            [
+              11,
+              [
+                45,
+                67,
+                68,
+                48,
+                69,
+                70,
+                71,
+                72
+              ]
+            ],
+            [
+              12,
+              [
+                45,
+                67,
+                73,
+                48,
+                74,
+                75,
+                76,
+                72
+              ]
+            ]
+          ],
+          "cells": [
+            "Type",
+            "Location",
+            "Station",
+            "Catchment area (km ^{2} )",
+            "Time series",
+            "Latitude",
+            "Longitude",
+            "Sources",
+            "Hydrometric",
+            "China",
+            "Yuecheng",
+            "531",
+            "1960–2006",
+            "24°03′35″N",
+            "114°09′36″E",
+            "Water Conservancy and Electric Power Bureau, Guangdong Province, China",
+            "Jiuzhou",
+            "385",
+            "1960–2006",
+            "23°04′12″N",
+            "114°35′24″E",
+            "USA",
+            "USGS 02,372,250",
+            "1144",
+            "1974–2018",
+            "31°35′46″N",
+            "86°24′20″W",
+            "U.S. Geological Survey, USA",
+            "USGS 02,361,000",
+            "1776",
+            "1936–2017",
+            "31°20′34″N",
+            "85°36′38″W",
+            "Australia",
+            "ID 419,005",
+            "2510",
+            "1931–2014",
+            "30°40′44″S",
+            "150°46′40″E",
+            "WaterNSW, Australia",
+            "ID 419,016",
+            "907",
+            "1958–2015",
+            "31°03′37″S",
+            "151°07′34″E",
+            "Meteorological",
+            "China",
+            "Yuecheng",
+            "Null",
+            "1960–2006",
+            "24°03′35″N",
+            "114°09′36″E",
+            "Water Conservancy and Electric Power Bureau, Guangdong Province, China",
+            "Jiuzhou",
+            "1960–2006",
+            "23°04′12″N",
+            "114°35′24″E",
+            "USA",
+            "Crenshaw County",
+            "1895–2019",
+            "31°43′53″N",
+            "86°18′48″W",
+            "PRISM Climate Group,Oregon State University, USA",
+            "Dale County",
+            "1895–2019",
+            "31°25′54″N",
+            "85°36′39″W",
+            "Australia",
+            "ID 55,031",
+            "1883–2016",
+            "30°45′00″S",
+            "150°43′12″E",
+            "Australia Bureau of Meteorology",
+            "ID 55,143",
+            "1958–2015",
+            "31°01′12″S",
+            "151°04′12″E"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "001dba11dbb6d41207957687f5b8231265d7acb74732770c282bc206673db248",
+          "numbers": "122100",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Cp",
+            "λ",
+            "λ",
+            "λ"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "×"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "09e909889b0a6acce6d6bc4dd8a423c2e78a61757a54f908da48e70a4a0818d3",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "λ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "dda008e29b38484f2dae985ffb8fa1d9d15548004e4cfd9f019f32402f7aef62",
+          "numbers": "2",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "λ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "d3fe602d8be85c854f42215c16177db8dc119d17f8ead5c84bdcefce4df4919c",
+          "numbers": "10011000100",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 3,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ESPR",
+            "Δ",
+            "R",
+            "D",
+            "j",
+            "P",
+            "j",
+            "P",
+            "j",
+            "W",
+            "F"
+          ],
+          "operators": [
+            "=",
+            "×",
+            "=",
+            "×",
+            "×"
+          ]
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "61e5176453c93302c6cfa959b26d71f8a24c588b96a845e1b75510898ce457de",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Δ"
+          ],
+          "operators": [
+            "=",
+            "×"
+          ]
+        }
+      ]
+    }
+  ]
 }

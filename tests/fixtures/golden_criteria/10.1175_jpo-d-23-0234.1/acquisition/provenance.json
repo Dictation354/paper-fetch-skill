@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "doi": "10.1175/jpo-d-23-0234.1",
+      "provider": "ams",
+      "requested_url": "https://api.crossref.org/works/10.1175%2Fjpo-d-23-0234.1",
+      "final_url": "https://api.crossref.org/works/10.1175%2Fjpo-d-23-0234.1",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:27:42 GMT",
+        "content-type": "application/json",
+        "content-length": "7169"
+      },
+      "captured_at_utc": "2026-09-18T02:27:42.295437+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 26233,
+      "sha256": "30892720f6c72ae535e3bc30833ba9a7e258f3b27fca82b4a27491ebb025617b",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1175/jpo-d-23-0234.1",
+      "provider": "ams",
+      "requested_url": "https://journals.ametsoc.org/view/journals/phoc/54/12/JPO-D-23-0234.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/phoc/54/12/JPO-D-23-0234.1.xml",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Fri, 18 Sep 2026 02:27:46 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:27:52.656193+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 1577556,
+      "sha256": "10099e40bdded47ecbcdb46cccbe792f06974780d94830d18bd99eebf2ca4c4b",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

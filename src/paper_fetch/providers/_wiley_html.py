@@ -10,6 +10,10 @@ from collections.abc import Mapping
 
 from ..common_patterns import HEADING_TAG_PATTERN
 from ..extraction.html.parsing import choose_parser
+from ..extraction.html.formula_rules import (
+    FORMULA_IMAGE_ATTRS,
+    looks_like_formula_image,
+)
 from ..extraction.html.provider_rules import provider_html_rules
 from ..extraction.html.semantics import (
     BACK_MATTER_TOKENS,
@@ -41,7 +45,47 @@ from ._html_asset_engine import (
 )
 from ._html_references import extract_numbered_references_from_html
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, NavigableString, Tag
+
+
+def prepare_source_images(container: Any, source_url: str) -> None:
+    """Bind official Wiley images before formula rendering or asset discovery."""
+    for fallback in container.select(".fallback__mathEquation[data-altimg]"):
+        value = str(fallback.get("data-altimg") or "")
+        if value.startswith("/cms/asset/"):
+            value = urllib.parse.urljoin(source_url, value)
+            fallback["data-altimg"] = value
+        # The fallback precedes native MathML or its rendered MathJax wrapper.
+        # Bind only this adjacent pair; a paragraph may contain many formulas.
+        sibling = fallback.next_sibling
+        while isinstance(sibling, NavigableString) and not sibling.strip():
+            sibling = sibling.next_sibling
+        if not isinstance(sibling, Tag):
+            continue
+        if sibling.name == "math":
+            math_nodes = [sibling]
+        elif sibling.name == "mjx-container":
+            math_nodes = sibling.find_all("math")
+        else:
+            continue
+        if len(math_nodes) != 1 or not value or math_nodes[0].get("data-altimg"):
+            continue
+        math = math_nodes[0]
+        location = str(math.get("location") or "")
+        if location:
+            location_name = urllib.parse.urlsplit(location).path.rsplit("/", 1)[-1]
+            image_name = urllib.parse.urlsplit(value).path.rsplit("/", 1)[-1]
+            if location_name != image_name:
+                continue
+        math["data-altimg"] = value
+    for image in container.find_all("img"):
+        if not looks_like_formula_image(image):
+            continue
+        for attr in FORMULA_IMAGE_ATTRS:
+            value = str(image.get(attr) or "")
+            if value.startswith("/cms/asset/"):
+                image[attr] = urllib.parse.urljoin(source_url, value)
+
 
 NUMBERED_SECTION_HEADING_PATTERN = re.compile(r"^\d+(?:\.\d+)*\s+\S")
 WILEY_AUTHOR_NOISE_TEXT = {
@@ -311,9 +355,16 @@ def move_wiley_abbreviations_to_end(container: Tag) -> None:
     if not _short_text(parent):
         parent.decompose()
 
-    insert_before: Tag | None = None
+    insert_before = _wiley_back_matter_boundary(target_parent)
+    if insert_before is not None:
+        insert_before.insert_before(appendix)
+    else:
+        target_parent.append(appendix)
+
+
+def _wiley_back_matter_boundary(target_parent: Tag) -> Tag | None:
     for child in target_parent.find_all(recursive=False):
-        if child is appendix or not isinstance(child, Tag):
+        if not isinstance(child, Tag):
             continue
         child_heading = child.find(HEADING_TAG_PATTERN)
         child_heading_text = (
@@ -323,13 +374,48 @@ def move_wiley_abbreviations_to_end(container: Tag) -> None:
             any(token in node_identity_text(child) for token in BACK_MATTER_TOKENS)
             or heading_category("h2", child_heading_text) == "references_or_back_matter"
         ):
-            insert_before = child
-            break
+            return child
+    return None
 
-    if insert_before is not None:
-        insert_before.insert_before(appendix)
-    else:
-        target_parent.append(appendix)
+
+def move_wiley_appendices_before_back_matter(container: Tag) -> None:
+    """Keep publisher-labelled scientific appendices inside the body scan."""
+    parents = list(container.select("section.article-section__full"))
+    if "article-section__full" in container.get("class", []):
+        parents.insert(0, container)
+    for parent in parents:
+        boundary = _wiley_back_matter_boundary(parent)
+        if boundary is None:
+            continue
+        after_boundary = False
+        for child in list(parent.find_all(recursive=False)):
+            if child is boundary:
+                after_boundary = True
+                continue
+            if not after_boundary or child.name not in {"div", "section"}:
+                continue
+            if "article-section__sub-content" not in child.get("class", []):
+                continue
+            if not re.search(r"-app-\d+$", str(child.get("id", ""))):
+                continue
+            if child.has_attr("hidden") or child.get("aria-hidden") == "true":
+                continue
+            style = re.sub(r"\s+", "", str(child.get("style", ""))).lower()
+            if "display:none" in style or "visibility:hidden" in style:
+                continue
+            heading = child.find(HEADING_TAG_PATTERN, recursive=False)
+            if heading is None or not re.match(
+                r"^appendix(?:\s|$)", _short_text(heading), re.IGNORECASE
+            ):
+                continue
+            content = child.find(
+                "section", class_="article-section__content", recursive=False
+            )
+            if content is not None:
+                # Body scopes select the inner content section; keep its title
+                # with it, as for Wiley's post-body abbreviations section.
+                content.insert(0, heading.extract())
+                boundary.insert_before(child.extract())
 
 
 def _drop_abstract_sections_from_body_container(container: Any) -> None:
@@ -341,6 +427,13 @@ def _drop_abstract_sections_from_body_container(container: Any) -> None:
 
 
 def wiley_before_block_normalization(container: Any) -> None:
+    from ._html_section_markdown import render_heading_text_from_html
+
+    for heading in container.select("h2, h3, h4, h5, h6"):
+        if heading.find(["sup", "sub"]) is not None:
+            text = render_heading_text_from_html(heading)
+            heading.clear()
+            heading.append(text)
     # Wiley calls numbered display layouts "inline-equation". Map that
     # publisher convention before the shared nearest-container classifier.
     for node in container.select("div.inline-equation"):
@@ -352,11 +445,13 @@ def wiley_before_block_normalization(container: Any) -> None:
 
 def wiley_after_block_normalization(container: Any) -> None:
     move_wiley_abbreviations_to_end(container)
+    move_wiley_appendices_before_back_matter(container)
 
 
 def wiley_body_container(container: Any) -> None:
     _drop_abstract_sections_from_body_container(container)
     move_wiley_abbreviations_to_end(container)
+    move_wiley_appendices_before_back_matter(container)
 
 
 def wiley_asset_body_container(container: Any) -> None:
@@ -453,8 +548,20 @@ def finalize_extraction(
     extracted_authors = extract_authors(html_text)
     if extracted_authors:
         finalized["extracted_authors"] = extracted_authors
-    extracted_references = extract_numbered_references_from_html(html_text)
+    soup = BeautifulSoup(html_text, choose_parser())
+    # Wiley's bullet is a display label, separate from the citation text.
+    for bullet in soup.select("li[data-bib-id] > .bullet"):
+        bullet.decompose()
+    extracted_references = extract_numbered_references_from_html(str(soup))
     if extracted_references:
+        from ._reference_doi import reference_doi
+
+        nodes = soup.select(".article-section__references li[data-bib-id]")
+        if len(nodes) == len(extracted_references):
+            for node, reference in zip(nodes, extracted_references, strict=True):
+                target = node.select_one(".extra-links .data-doi")
+                if not reference.get("doi") and target is not None:
+                    reference["doi"] = reference_doi(target.get_text(" ", strip=True))
         finalized["references"] = extracted_references
     return markdown_text, finalized
 
@@ -588,8 +695,10 @@ def extract_supplementary_assets(
 
 
 def extract_formula_assets(html_text: str, source_url: str) -> list[dict[str, str]]:
+    soup = BeautifulSoup(html_text, choose_parser())
+    prepare_source_images(soup, source_url)
     return extract_generic_formula_assets(
-        html_text,
+        str(soup),
         source_url,
         noise_profile=provider_html_rules("wiley").noise_profile,
     )

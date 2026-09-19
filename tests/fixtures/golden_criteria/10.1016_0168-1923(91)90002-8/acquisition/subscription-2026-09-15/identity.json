@@ -1,0 +1,16 @@
+{
+  "query": "10.1016/0168-1923(91)90002-8",
+  "query_kind": "doi",
+  "doi": "10.1016/0168-1923(91)90002-8",
+  "landing_url": null,
+  "provider_hint": "elsevier",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 4,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "elsevier"
+}

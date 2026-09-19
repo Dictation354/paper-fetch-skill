@@ -25,6 +25,10 @@ Provider 必须返回现有 typed payload，并让统一 acceptance 决定最终
 
 访问受限、challenge、正文不足、非 PDF wrapper 和身份不匹配必须 fail closed。敏感 header、cookie、token、带签名 URL 和本地凭据路径不得写入 fixture、artifact 或诊断文本。
 
+正文请求的 `HttpRequestPolicy.body_access_provider` 默认为 `None`，由既有请求策略编译器为 HTML/XML/PDF route 赋值；手写正文策略需显式设置。它在 HTTP 失败重试前启用访问检查，不从 cooldown 字符串推断 provider，资产及 metadata 请求保持默认。付费墙选择器与信号放在 provider 的 `AvailabilityPolicy`，检测只产生证据；受限结果由现有 provider 结果层组装。正文检测输入不变时复用检查，组装后新增 diagnostics 仍必须验证。
+
+`ProviderRenderPolicy.rewrite_asset_links` 默认为 `None`，沿用通用资产链接匹配。需要精确对象身份的 provider 可提供 `(markdown_text, assets, doi) -> str` 函数，在现有 builder 内直接改写；PLOS 以论文 DOI 和对象 ID 绑定本地路径或官方远程 URL。该 callable 不进入公开序列化结果。
+
 ## 验证
 
 先运行 provider-local 测试和相关 golden replay，再运行 catalog/identity 与 integration 验证：
@@ -32,7 +36,7 @@ Provider 必须返回现有 typed payload，并让统一 acceptance 决定最终
 ```bash
 PYTHONPATH=src uv run python -m pytest tests/unit/test_<provider>_provider.py -q
 PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_bundle_registration.py tests/unit/test_provider_catalog.py -q
-PAPER_FETCH_RUN_FULL_GOLDEN=1 PYTHONPATH=src uv run python -m pytest tests/integration/test_golden_corpus.py -q
+PYTHONPATH=src uv run python -m pytest tests/golden -q
 ```
 
 真实 publisher live smoke 只在具备合法访问条件时显式运行，不能替代 committed fixture regression。新增 provider 的完成条件是 runtime bundle、provider-local 行为、代表性 golden replay 和必要用户文档一致；不要求 review artifact、hash signoff、drift report 或文档反向索引。

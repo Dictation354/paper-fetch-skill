@@ -6,7 +6,6 @@ import copy
 from typing import Any
 import re
 
-from ..extraction.html.semantics import SECTION_HEADING_PATTERN
 from ..extraction.html.tables import render_table_markdown, table_placeholder
 from ..models.markdown import normalize_markdown_text
 from ..utils import normalize_text
@@ -20,8 +19,9 @@ from ._arxiv_html import (
     _arxiv_select_one,
 )
 from ._html_section_markdown import (
+    INLINE_FIGURE_ALT_ATTR,
+    INLINE_FIGURE_SRC_ATTR,
     render_clean_text_from_html,
-    render_heading_text_from_html,
 )
 from ._reference_doi import reference_doi_match as _reference_doi_match
 
@@ -110,54 +110,14 @@ def _arxiv_reference_text(node: Any) -> str:
     return _normalize_reference_text(clone.get_text(" ", strip=True))
 
 
-def _candidate_arxiv_bibliography_containers(root: Any) -> list[Any]:
-    if not isinstance(root, Tag):
-        return []
-    containers: list[Any] = []
-    seen: set[int] = set()
-    for selector in _arxiv_ar5iv_selectors("bibliography_containers"):
-        for container in root.select(selector):
-            if isinstance(container, Tag) and id(container) not in seen:
-                seen.add(id(container))
-                containers.append(container)
-    if containers:
-        return containers
-    for candidate in root.find_all(["section", "div"]):
-        if not isinstance(candidate, Tag):
-            continue
-        heading = candidate.find(SECTION_HEADING_PATTERN)
-        if not isinstance(heading, Tag):
-            continue
-        title = (
-            normalize_text(render_heading_text_from_html(heading)).lower().strip(" .:")
-        )
-        if title in {"references", "bibliography"} and id(candidate) not in seen:
-            seen.add(id(candidate))
-            containers.append(candidate)
-    return containers
-
-
 def _candidate_arxiv_bibitems(root: Any) -> list[Any]:
     if not isinstance(root, Tag):
         return []
-    containers = _candidate_arxiv_bibliography_containers(root)
-    scopes = containers or [root]
-
-    items: list[Any] = []
-    seen_items: set[int] = set()
-    for scope in scopes:
-        for selector in _arxiv_ar5iv_selectors("bibliography_items"):
-            for item in scope.select(selector):
-                if isinstance(item, Tag) and id(item) not in seen_items:
-                    seen_items.add(id(item))
-                    items.append(item)
-        if items:
-            continue
-        for item in scope.find_all("li"):
-            if isinstance(item, Tag) and id(item) not in seen_items:
-                seen_items.add(id(item))
-                items.append(item)
-    return items
+    return [
+        item
+        for item in _arxiv_select(root, "bibliography_items")
+        if isinstance(item, Tag)
+    ]
 
 
 def _extract_arxiv_html_references(root: Any) -> list[dict[str, str | None]]:
@@ -251,9 +211,6 @@ def _replace_arxiv_semantic_node_with_placeholder(
     if not isinstance(node, Tag):
         return
     placeholder_node = soup.new_string(f"\n\n{placeholder}\n\n")
-    if node.name == "figure":
-        node.replace_with(placeholder_node)
-        return
     figure_anchor = _arxiv_topmost_figure_ancestor(node, article)
     if isinstance(figure_anchor, Tag):
         figure_anchor.insert_before(placeholder_node)
@@ -324,6 +281,21 @@ def _arxiv_table_markdown_is_key_value_fallback(markdown_text: str) -> bool:
     )
 
 
+def _render_arxiv_table_cell(node: Any) -> str:
+    from ..markdown.images import render_markdown_image
+
+    cell = copy.deepcopy(node)
+    for image in cell.find_all("img"):
+        url = str(image.get(INLINE_FIGURE_SRC_ATTR) or image.get("src") or "")
+        if url:
+            image.replace_with(
+                render_markdown_image(
+                    "figure", image.get(INLINE_FIGURE_ALT_ATTR) or image.get("alt"), url
+                )
+            )
+    return render_clean_text_from_html(cell)
+
+
 def _render_arxiv_table_block(node: Any) -> tuple[str, bool, bool]:
     if not isinstance(node, Tag):
         return "", False, False
@@ -334,7 +306,7 @@ def _render_arxiv_table_block(node: Any) -> tuple[str, bool, bool]:
         node,
         label=label,
         caption=caption,
-        render_inline_text=render_clean_text_from_html,
+        render_inline_text=_render_arxiv_table_cell,
     )
     rendered = _arxiv_table_markdown_has_body(markdown)
     return (

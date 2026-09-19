@@ -1,0 +1,296 @@
+{
+  "provider": "acs",
+  "doi": "10.1021/acsomega.3c06992",
+  "sample_id": "10.1021_acsomega.3c06992",
+  "source_url": "https://pubs.acs.org/acsodf/article/8/51/49088/341563/General-Equation-to-Estimate-the-Physicochemical",
+  "source_input": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/acquisition/assets-2026-09-15/39300ebb5abb6d6d-http-1.bin",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "4ea1b15ff21dbbedb329108f1f8ea19da02b36beadcfb0adfacfb42fc730a221",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 1",
+        "caption": "Ideal QSPR model",
+        "url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0001.svg?Expires=1791347250&Signature=1stF6ilP0avMZoPpOydrLHq467pIpidHs-vZG~BcTeHc~JiFuI7ESAXBjFs4UCJqT~hYX8UkLyWorJ~~ddqT9EY-EakfFjzNokl1myBSphvWL5oRWY-HqxfcyXAumzFKUerAJpIXQYBUwuytx-nt0lJ6xTZD0KCgGEgdt~pT1LEdw94CEqyOpxWGOOUg5ChRbBMRWftD1YvYkyq~rGrnFZ7OaTGtANW~1QvAATp-OyHGIIVjmC8O6IAizHSKzUjsSsUdxX7WwCygfPr81k3al3Jz7a8cN9fgswd7-zGPLHub-GY5dUh4CHrgRPLTWnnSG1d2IO9rJlW70iqvWjGiyA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "fig1",
+        "preview_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/m_ao3c06992_0001.svg?Expires=1791347250&Signature=sVY3c6aySZZvXweUyrd10lVRxUR00mzrr6En4aPc7ytSES~9RXkN8cch1FxTu7-pweZzCEaX5cWIP~WS1KI~L5lOG7CpLrqP7wn3khi91829kM0i0WSxY1RBaf8HCZxs3TMa4onqUF8jHoiIfYHD55DnRN3foek4aQ-nlmnWGRlPKw37ngbliZvagCls4Wk3-T2Brf5paIKZKXdmNP63jPvONMqojRTtB8z6rzxq7p02RpNx2MF4Wry6EIt9WeJg7L5R91jhuuabl27ARpFZvDgz1T79qYD~U4GhmSD6QZBW2g3OWT15yzNFmQhBffOvZFBDkmgMDC~H2eLjyVkS9A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0001.svg?Expires=1791347250&Signature=1stF6ilP0avMZoPpOydrLHq467pIpidHs-vZG~BcTeHc~JiFuI7ESAXBjFs4UCJqT~hYX8UkLyWorJ~~ddqT9EY-EakfFjzNokl1myBSphvWL5oRWY-HqxfcyXAumzFKUerAJpIXQYBUwuytx-nt0lJ6xTZD0KCgGEgdt~pT1LEdw94CEqyOpxWGOOUg5ChRbBMRWftD1YvYkyq~rGrnFZ7OaTGtANW~1QvAATp-OyHGIIVjmC8O6IAizHSKzUjsSsUdxX7WwCygfPr81k3al3Jz7a8cN9fgswd7-zGPLHub-GY5dUh4CHrgRPLTWnnSG1d2IO9rJlW70iqvWjGiyA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://pubs.acs.org/view-large/figure/164934599/ao3c06992_0001.svg"
+      },
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0001.svg?Expires=1791347250&Signature=1stF6ilP0avMZoPpOydrLHq467pIpidHs-vZG~BcTeHc~JiFuI7ESAXBjFs4UCJqT~hYX8UkLyWorJ~~ddqT9EY-EakfFjzNokl1myBSphvWL5oRWY-HqxfcyXAumzFKUerAJpIXQYBUwuytx-nt0lJ6xTZD0KCgGEgdt~pT1LEdw94CEqyOpxWGOOUg5ChRbBMRWftD1YvYkyq~rGrnFZ7OaTGtANW~1QvAATp-OyHGIIVjmC8O6IAizHSKzUjsSsUdxX7WwCygfPr81k3al3Jz7a8cN9fgswd7-zGPLHub-GY5dUh4CHrgRPLTWnnSG1d2IO9rJlW70iqvWjGiyA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/figure-1.svg"
+      ],
+      "record": "acquisition/figure-1.svg",
+      "validation": {
+        "format": "svg",
+        "width": "301.36pt",
+        "height": "89.22pt",
+        "viewBox": "0 0 301.36 89.22",
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "ao3c06992_0001.svg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 2",
+        "caption": "Comparison of the molecular structure of C 3 H 8 versus C 3 H 9 N: (a) propane, (b) propylamine,\n(c) 2-propylamine, (d) N -methyl-ethylamine, and (e)\ntrimethylamine.",
+        "url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0002.svg?Expires=1791347250&Signature=XMtLdn2CcRm7Fh3YnxYGVOkIPqC8DSwJt3fjMCEOTtlhoXhCwXRh0Vo8Nq-q~SCkRygFnbHGLZmUMiBUjv2sqVCUHQ~c6tPqEMx-2~x30DJPNTJU-1KRYn4ZiIPgbmXBXBFf-ne1BZ699ewdj5adI8APvNQZw1JnJN0svZueNiHYCZF6uFvmJauRgaEkAtbAvPy5S6141Z6CRBi2Yl~qfV0bB-rjoHkKsa7ZZ3xw3xfVjAXHkHKOXmjLx~-PNYRebhV56YTRp4dFHg0ubVK0Tp5P9a6mLqS73LPswKKWQvG26siNaZimkDy1tUzGKXdQtZcewjVhrO4hD0kU5Lvm7Q__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "fig2",
+        "preview_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/m_ao3c06992_0002.svg?Expires=1791347250&Signature=Qh~uFJ71NJIg2sckwUD1L64QddsIZ3rIJMe9X9gYrZW1fJ1OF0qonB1RvIStMfrRp7vKTA6RSKemMjrxd6TdwcJWRGR0jrC8NqN0pY~hWGx~RLKISGtMdcRLyV~7xApGrhxDnMvCkvPrz9MsrrbCsWs~8kdDbYUm0Qd6pta7ATsxJzwJ4a8aIwlB7jHc34LJeL26ziO2raTSSkxzInm5turTAIoanpUi3pw-c0k82q4eHxOhcyLD6NXXhTY~6k6Zm4mJkYFKIipKo-XuUR~SCfZL3SLYR6hddW9JkwHcdgyKGkIVxXA7MVTgcgpgl~PO1s-nl5pxMmaZYPTrt8Js5A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0002.svg?Expires=1791347250&Signature=XMtLdn2CcRm7Fh3YnxYGVOkIPqC8DSwJt3fjMCEOTtlhoXhCwXRh0Vo8Nq-q~SCkRygFnbHGLZmUMiBUjv2sqVCUHQ~c6tPqEMx-2~x30DJPNTJU-1KRYn4ZiIPgbmXBXBFf-ne1BZ699ewdj5adI8APvNQZw1JnJN0svZueNiHYCZF6uFvmJauRgaEkAtbAvPy5S6141Z6CRBi2Yl~qfV0bB-rjoHkKsa7ZZ3xw3xfVjAXHkHKOXmjLx~-PNYRebhV56YTRp4dFHg0ubVK0Tp5P9a6mLqS73LPswKKWQvG26siNaZimkDy1tUzGKXdQtZcewjVhrO4hD0kU5Lvm7Q__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://pubs.acs.org/view-large/figure/164934608/ao3c06992_0002.svg"
+      },
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0002.svg?Expires=1791347250&Signature=XMtLdn2CcRm7Fh3YnxYGVOkIPqC8DSwJt3fjMCEOTtlhoXhCwXRh0Vo8Nq-q~SCkRygFnbHGLZmUMiBUjv2sqVCUHQ~c6tPqEMx-2~x30DJPNTJU-1KRYn4ZiIPgbmXBXBFf-ne1BZ699ewdj5adI8APvNQZw1JnJN0svZueNiHYCZF6uFvmJauRgaEkAtbAvPy5S6141Z6CRBi2Yl~qfV0bB-rjoHkKsa7ZZ3xw3xfVjAXHkHKOXmjLx~-PNYRebhV56YTRp4dFHg0ubVK0Tp5P9a6mLqS73LPswKKWQvG26siNaZimkDy1tUzGKXdQtZcewjVhrO4hD0kU5Lvm7Q__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/591806acc18dd07f-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/591806acc18dd07f-http-1.bin",
+      "validation": {
+        "format": "svg",
+        "width": "480",
+        "height": "59.853333",
+        "viewBox": "0 0 480 59.853333",
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "ao3c06992_0002.svg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 3",
+        "caption": "Molecular skeleton diagram of (a) butylamine,\n(b) 2-methyl-1-propylamine,\nand (c) trimethylamine (numbers indicate the numbering of atoms).\nMolecular graphs of (d) butylamine, (e) 2-methyl-1-propylamine, and\n(f) trimethylamine (numbers indicate the numbering of vertexes).",
+        "url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0003.svg?Expires=1791347250&Signature=WpZiA4k6HVTclXvNkJMUNS8iFORTzx0dpZ2~4rB5kKODw8QoqFO9sFB-fWsYsUVkYT4R~jdpXQcFiSHRwFjnKheobiYnuUvc1aA8~VcLiMggKmXPGiJCuo232wL4F0~ToVNpoW~LUuIvN52lKB4UAZTOTBP3MKNmKqvg3ym8fuigx1u67iM5RuQmwtHn0aub6ovIdlvFVcj-LpPy1Q5E7cfJTY~WmifI5cX3O1YUCcQzuYAKPSUkp97C~krnJ4A5QfsVFSEXi-X49H7HhOBs3n~EO~twhRVkzm-pZj2FiTdSxmVp2BvLLxTyJ-31cwV0FiV8gN1opqMGQWAcMJUNCw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "fig3",
+        "preview_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/m_ao3c06992_0003.svg?Expires=1791347250&Signature=TcpnBH5ACSxAlP3dpdqliW1uMx6fW~VOG00hXe3DuBcjZZWt3qnFe4e7p1OWkADsVsitJvVPvvQrqx0nvFS9JmjFZJWWI9SLK2Fvd7UgbbdqZ9O16lHfvh96rkO5E8Y6IuiT58jY5I1Wb1YFx5BmsCuBy7zc4-PfY~AsEd8byqMq3Y8VOK2uQrrbMD5Pcs-w5gcxTD6dJzT8AwpYEpavkkGctu659zmNvQJ-IimaqlIb0ixJCu8JqGpcJz5fnT4eGAcOaWN3EgYhpoEy4Y8zvURy75lgL5xudFAjE34hQM9u8Tk7ICdXYeIiqwBO6H3RKDaHojaESvWoUtZKNn8JqA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0003.svg?Expires=1791347250&Signature=WpZiA4k6HVTclXvNkJMUNS8iFORTzx0dpZ2~4rB5kKODw8QoqFO9sFB-fWsYsUVkYT4R~jdpXQcFiSHRwFjnKheobiYnuUvc1aA8~VcLiMggKmXPGiJCuo232wL4F0~ToVNpoW~LUuIvN52lKB4UAZTOTBP3MKNmKqvg3ym8fuigx1u67iM5RuQmwtHn0aub6ovIdlvFVcj-LpPy1Q5E7cfJTY~WmifI5cX3O1YUCcQzuYAKPSUkp97C~krnJ4A5QfsVFSEXi-X49H7HhOBs3n~EO~twhRVkzm-pZj2FiTdSxmVp2BvLLxTyJ-31cwV0FiV8gN1opqMGQWAcMJUNCw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://pubs.acs.org/view-large/figure/164934616/ao3c06992_0003.svg"
+      },
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0003.svg?Expires=1791347250&Signature=WpZiA4k6HVTclXvNkJMUNS8iFORTzx0dpZ2~4rB5kKODw8QoqFO9sFB-fWsYsUVkYT4R~jdpXQcFiSHRwFjnKheobiYnuUvc1aA8~VcLiMggKmXPGiJCuo232wL4F0~ToVNpoW~LUuIvN52lKB4UAZTOTBP3MKNmKqvg3ym8fuigx1u67iM5RuQmwtHn0aub6ovIdlvFVcj-LpPy1Q5E7cfJTY~WmifI5cX3O1YUCcQzuYAKPSUkp97C~krnJ4A5QfsVFSEXi-X49H7HhOBs3n~EO~twhRVkzm-pZj2FiTdSxmVp2BvLLxTyJ-31cwV0FiV8gN1opqMGQWAcMJUNCw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/d3f16fe6ad91522c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/d3f16fe6ad91522c-http-1.bin",
+      "validation": {
+        "format": "svg",
+        "width": "402.20001",
+        "height": "229.84",
+        "viewBox": "0 0 402.20001 229.84",
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "ao3c06992_0003.svg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 4",
+        "caption": "Plot of experimental T b,exp versus\ncalculated T b,cal values of aliphatic\namines.",
+        "url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0004.svg?Expires=1791347250&Signature=uR0~dm6cdTMkcoRSTB2nPIT1gpAEg-fWadhjo-W8T8ITS2NRjdDMb1l4vqYYYPnRNyIttZLWnKOKfpaQFIz4Sbyw~rKO6Nyr4wP5rptiDcENxAWiapsNYIJjzWtNyviZEIOSjHKMTNADSAkxUw~5vlApJyKgRvtFcxmlVJFTsrqbmz~zT9T8YCy4wn3IgdnI1gVvmkn5Vr16KzJU2b9eNGcDHl1HWQzKRNCCi5PkkvSoIJLA9of~f2Ou8wr7MNH0tdwdhzUhH3JyLzz309RXzHnODKqZ5uKMBlP2blBwuiPhUFYxSDc4B9lZjl1g7xE8Ree8qcDG1GOd~l099RVloQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "fig4",
+        "preview_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/m_ao3c06992_0004.svg?Expires=1791347250&Signature=be-2Fha-RxgqtSes1lzboxTentnCIJSHezi-aZcvwxs0N0UbOcVZwxbiqksprxXvjBGEf-oQ7bDwt-i9paQcVpDf6xGcYcIh2glE5IJnyrmt-iSrS~HpE-4Fkg4rhnTcolN9nv5jOQRuMZV-QH4IyZrjC1zlzrWWI353FRUVZ578uZTuBMfKEvY0j2JK8M5nQscp06AvOTdPQSH0IJE4n-CGvL5rvvTIHSXvjCjnViI6Vi1wrY6faKFr0kGHiV~MnNCVqNm6e0wPrtffJqyk0ea6bnHlX50LgSu667o1uVcoabO~fHzx4ZBYU4j41PlkkiWTGMjZKjDI4Jpg5XQ-6w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0004.svg?Expires=1791347250&Signature=uR0~dm6cdTMkcoRSTB2nPIT1gpAEg-fWadhjo-W8T8ITS2NRjdDMb1l4vqYYYPnRNyIttZLWnKOKfpaQFIz4Sbyw~rKO6Nyr4wP5rptiDcENxAWiapsNYIJjzWtNyviZEIOSjHKMTNADSAkxUw~5vlApJyKgRvtFcxmlVJFTsrqbmz~zT9T8YCy4wn3IgdnI1gVvmkn5Vr16KzJU2b9eNGcDHl1HWQzKRNCCi5PkkvSoIJLA9of~f2Ou8wr7MNH0tdwdhzUhH3JyLzz309RXzHnODKqZ5uKMBlP2blBwuiPhUFYxSDc4B9lZjl1g7xE8Ree8qcDG1GOd~l099RVloQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://pubs.acs.org/view-large/figure/164934647/ao3c06992_0004.svg"
+      },
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0004.svg?Expires=1791347250&Signature=uR0~dm6cdTMkcoRSTB2nPIT1gpAEg-fWadhjo-W8T8ITS2NRjdDMb1l4vqYYYPnRNyIttZLWnKOKfpaQFIz4Sbyw~rKO6Nyr4wP5rptiDcENxAWiapsNYIJjzWtNyviZEIOSjHKMTNADSAkxUw~5vlApJyKgRvtFcxmlVJFTsrqbmz~zT9T8YCy4wn3IgdnI1gVvmkn5Vr16KzJU2b9eNGcDHl1HWQzKRNCCi5PkkvSoIJLA9of~f2Ou8wr7MNH0tdwdhzUhH3JyLzz309RXzHnODKqZ5uKMBlP2blBwuiPhUFYxSDc4B9lZjl1g7xE8Ree8qcDG1GOd~l099RVloQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/9d5acf039b677f24-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/9d5acf039b677f24-http-1.bin",
+      "validation": {
+        "format": "svg",
+        "width": "401.33334",
+        "height": "224.24001",
+        "viewBox": "0 0 401.33334 224.24001",
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "ao3c06992_0004.svg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 5",
+        "caption": "Plot of experimental H f,exp versus\ncalculated H f,cal values of aliphatic\namines.",
+        "url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0005.svg?Expires=1791347250&Signature=1kz48C0ojOewuscqh4wKegK8CyM683OQBl7KyGmTVmg7SabplHIvZUHRtXYCKpWHTwES9FZznJBKvbF5BtPFpoGr0dedzy6fJRNC2emuppJtSnpNjOw3Pun6a2Amy9Uxph63M-iycjrpkwyoPgsldeKziwiyksbYSFtvTOdtsSWX0e5-4SYa9WNrNq6eCcfpZY1EE1hAZr9j4aBDKMVmkRDfjVNlTPl8xBccvR32wySXLL6qQ--q7mU5Cs9-hfGngGk9Xy74dW~cWBRmQygCNnlBjBytTVuYdIjX4FzEKeuNOKlMMd6YJ6zcXimQHg~RkviKY5RkaF53Ef624Cemuw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "fig5",
+        "preview_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/m_ao3c06992_0005.svg?Expires=1791347250&Signature=sJvJdKjDLASAC6esDP-VrKjcqNH76OdLUhv2pnpMt7rNDnUs1tI9lsBiTD3ck1GIh5zN7hVuI8CxBD5P2zCmVHQT3gcxLzwZkh7s03Rk9P2biW9GSLan~bsAcKVJwo2wgjtHSibgICTBPmQOlwbWaDr91Fkm4odh4akbGXKm9prCJBXGPm5spGUiubDIo6qDhOWwOcII9hbPhDf5jOp4Hd2uvfGi1uBNaBJn90r04HqO908CVmambghTLTE05U7oTTAYaYf-ZKH1ZaetHwd9FOBQY68OdBtVaAPYWY~lK9P7TzA~v80Q4urqwb731AaQSn~ScWNyIlz6uFkRcizuAg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0005.svg?Expires=1791347250&Signature=1kz48C0ojOewuscqh4wKegK8CyM683OQBl7KyGmTVmg7SabplHIvZUHRtXYCKpWHTwES9FZznJBKvbF5BtPFpoGr0dedzy6fJRNC2emuppJtSnpNjOw3Pun6a2Amy9Uxph63M-iycjrpkwyoPgsldeKziwiyksbYSFtvTOdtsSWX0e5-4SYa9WNrNq6eCcfpZY1EE1hAZr9j4aBDKMVmkRDfjVNlTPl8xBccvR32wySXLL6qQ--q7mU5Cs9-hfGngGk9Xy74dW~cWBRmQygCNnlBjBytTVuYdIjX4FzEKeuNOKlMMd6YJ6zcXimQHg~RkviKY5RkaF53Ef624Cemuw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://pubs.acs.org/view-large/figure/164934648/ao3c06992_0005.svg"
+      },
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0005.svg?Expires=1791347250&Signature=1kz48C0ojOewuscqh4wKegK8CyM683OQBl7KyGmTVmg7SabplHIvZUHRtXYCKpWHTwES9FZznJBKvbF5BtPFpoGr0dedzy6fJRNC2emuppJtSnpNjOw3Pun6a2Amy9Uxph63M-iycjrpkwyoPgsldeKziwiyksbYSFtvTOdtsSWX0e5-4SYa9WNrNq6eCcfpZY1EE1hAZr9j4aBDKMVmkRDfjVNlTPl8xBccvR32wySXLL6qQ--q7mU5Cs9-hfGngGk9Xy74dW~cWBRmQygCNnlBjBytTVuYdIjX4FzEKeuNOKlMMd6YJ6zcXimQHg~RkviKY5RkaF53Ef624Cemuw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/3bff247467b80e71-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/3bff247467b80e71-http-1.bin",
+      "validation": {
+        "format": "svg",
+        "width": "401.33334",
+        "height": "231.03999",
+        "viewBox": "0 0 401.33334 231.03999",
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "ao3c06992_0005.svg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 6",
+        "caption": "Plot of experimental boiling points T b of 32 primary amines (RNH 2 ) versus\nthat of 32 aliphatic\nalcohols (ROH) (carbon atom number range C 4 –C 20 ).",
+        "url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0006.svg?Expires=1791347250&Signature=idpshbm-7J~tRzF5aiEzk-QY4r6EzNK1b2oeCYR4ctPAOgLX~EymiZLsVCT9jLYkyQoiUeDegdxeyg6Z5ZjJNxpuPfv4j67shPorjfkeLKaqlizpfBWV6LSsCsoYLv3dlszghXPvpREokjw1uqkAXWlgCFwtEeAqyfYacsxGjdoXJhHekORCK8P-mtiBzt5wxQZmkqAEp4~bW8juC7X6LAeKFU6mX0nmpYgPve8AyO73N5PgfH46X3vAoWY3EYDqZLh2KQf~28~HdDBEOmI9BEg~3NdzpV7ado5WuPY1niFg8wA7s-kBfbsCynwMxepAnbn5bCMYbWmj31U1vPsyjw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "fig6",
+        "preview_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/m_ao3c06992_0006.svg?Expires=1791347250&Signature=bOvZRYJ9ANWpjly9kVTnWZWGiCuxpuyfTh9YofgSYZ1MJR3etWLp89VLfj3QuVgHQxuCOED3lzALtGQWzo~qsLk7IM7MvJRknv-hsmabFHHdMJQKMF-rBygE-R4h3UKGJyqxh~b0Z4JGiY6vmKDBtdMe-1JbE7O5tANNlqz0YdOWogUFZeGWYYdKxeN6yXFyyt0GJPF6EOhJs10CeokjcTW15dIMHRo0pQH5m-Yv03gGCQCS8~u4OMXw5w88JUlVJP9UKxBLg-6VZE3AUZK9V0srN5zDmoXGnVSF8sjxJORSwWXZheJO9kDSL5Wg3SK2BeRP3Ar93btpNZqGhJHLjA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0006.svg?Expires=1791347250&Signature=idpshbm-7J~tRzF5aiEzk-QY4r6EzNK1b2oeCYR4ctPAOgLX~EymiZLsVCT9jLYkyQoiUeDegdxeyg6Z5ZjJNxpuPfv4j67shPorjfkeLKaqlizpfBWV6LSsCsoYLv3dlszghXPvpREokjw1uqkAXWlgCFwtEeAqyfYacsxGjdoXJhHekORCK8P-mtiBzt5wxQZmkqAEp4~bW8juC7X6LAeKFU6mX0nmpYgPve8AyO73N5PgfH46X3vAoWY3EYDqZLh2KQf~28~HdDBEOmI9BEg~3NdzpV7ado5WuPY1niFg8wA7s-kBfbsCynwMxepAnbn5bCMYbWmj31U1vPsyjw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://pubs.acs.org/view-large/figure/164934665/ao3c06992_0006.svg"
+      },
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0006.svg?Expires=1791347250&Signature=idpshbm-7J~tRzF5aiEzk-QY4r6EzNK1b2oeCYR4ctPAOgLX~EymiZLsVCT9jLYkyQoiUeDegdxeyg6Z5ZjJNxpuPfv4j67shPorjfkeLKaqlizpfBWV6LSsCsoYLv3dlszghXPvpREokjw1uqkAXWlgCFwtEeAqyfYacsxGjdoXJhHekORCK8P-mtiBzt5wxQZmkqAEp4~bW8juC7X6LAeKFU6mX0nmpYgPve8AyO73N5PgfH46X3vAoWY3EYDqZLh2KQf~28~HdDBEOmI9BEg~3NdzpV7ado5WuPY1niFg8wA7s-kBfbsCynwMxepAnbn5bCMYbWmj31U1vPsyjw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/6f1050682c331da7-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/6f1050682c331da7-http-1.bin",
+      "validation": {
+        "format": "svg",
+        "width": "401.33334",
+        "height": "235.39999",
+        "viewBox": "0 0 401.33334 235.39999",
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "ao3c06992_0006.svg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 7",
+        "caption": "Plot of predicted boiling\npoints T b, pred of primary amines\n(RNH 2 ) versus experimental boiling\npoints T b,exp of aliphatic alcohols (ROH)\n(carbon atom number range C 4 –C 20 ).",
+        "url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0007.svg?Expires=1791347250&Signature=wTx0sx5H7A1Z6-pBMkmEZesuA0T~rDMoUPKOydJ81EQ7LlgZ8HsL1tgyas3Va0w6zx1AoCLd9ZxbBYaUFCoOkKxOq8X92o6RCsaGqVO-Qcz-IxiuX37mf0OhSLXp93The2O9I~nqkIemt9LOT6eal0XK-uxzZuwm6vNll8ZZt-uHk4x6rTdFKSn7MdBKmoQUc7KPXBNkfXYVV3lXdGVewz0BnPB1OVqMM~39EOZ6a9wKo7wLVYjpwo6DlEYZ9XSG79KfH037sQGRcPJJYYBK~EckKVR2VOmrEXNIus7CjQsSDPJT2fEwd8ffDp5XA1X1zMMTh3DvhZgy-WWZPL6Rog__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "fig7",
+        "preview_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/m_ao3c06992_0007.svg?Expires=1791347250&Signature=FMxSOipdQiPbVWOatj4uZrtrjOvWByhtAnZ0oNu0lj7XkRiRFZBRT5pobLKTxWc6De-AZhrfBeWvHoEG6~i15EmPEt4WeYhP6t4PIvuvpL7VsDWfjLe73yT61iinmTvRtrYnZ~T-lwiOhVoXNBz1wsa4u6ckWZ1-0z9pjo1iVvfB4F7Mx7Zwm2t09Q~8O~2l1Nz49axkAUcLrPe1IhQYf2jHe9QC82Ybyxl~5PzU287RtrgZa48yrcphoCzRP4PmUp1DwOi-cCG3B3-V0SKJcDxVAQgKiY1hOBQNF32kjhaj4gUyCpIV7K4K7jr6G8yfzzhSQCClmoZbZRMzZ0XKIA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0007.svg?Expires=1791347250&Signature=wTx0sx5H7A1Z6-pBMkmEZesuA0T~rDMoUPKOydJ81EQ7LlgZ8HsL1tgyas3Va0w6zx1AoCLd9ZxbBYaUFCoOkKxOq8X92o6RCsaGqVO-Qcz-IxiuX37mf0OhSLXp93The2O9I~nqkIemt9LOT6eal0XK-uxzZuwm6vNll8ZZt-uHk4x6rTdFKSn7MdBKmoQUc7KPXBNkfXYVV3lXdGVewz0BnPB1OVqMM~39EOZ6a9wKo7wLVYjpwo6DlEYZ9XSG79KfH037sQGRcPJJYYBK~EckKVR2VOmrEXNIus7CjQsSDPJT2fEwd8ffDp5XA1X1zMMTh3DvhZgy-WWZPL6Rog__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://pubs.acs.org/view-large/figure/164934667/ao3c06992_0007.svg"
+      },
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0007.svg?Expires=1791347250&Signature=wTx0sx5H7A1Z6-pBMkmEZesuA0T~rDMoUPKOydJ81EQ7LlgZ8HsL1tgyas3Va0w6zx1AoCLd9ZxbBYaUFCoOkKxOq8X92o6RCsaGqVO-Qcz-IxiuX37mf0OhSLXp93The2O9I~nqkIemt9LOT6eal0XK-uxzZuwm6vNll8ZZt-uHk4x6rTdFKSn7MdBKmoQUc7KPXBNkfXYVV3lXdGVewz0BnPB1OVqMM~39EOZ6a9wKo7wLVYjpwo6DlEYZ9XSG79KfH037sQGRcPJJYYBK~EckKVR2VOmrEXNIus7CjQsSDPJT2fEwd8ffDp5XA1X1zMMTh3DvhZgy-WWZPL6Rog__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/a5075da4a524b675-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/a5075da4a524b675-http-1.bin",
+      "validation": {
+        "format": "svg",
+        "width": "401.33334",
+        "height": "230.33333",
+        "viewBox": "0 0 401.33334 230.33333",
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "ao3c06992_0007.svg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 8",
+        "caption": "Plot of densities versus\ncarbon atom number of n -alkyl primary amines (O represents\nthe experimental value, and Δ\nrepresents the calculated value).",
+        "url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0008.svg?Expires=1791347250&Signature=fh-xzQhyTSlP1gGL6hmLJ322KLcnFoBDZ~J4oKKMcmKBsV1BHUM~-HFrJgMrOmL6GRkpiOU25jxNoU0PmWETGlxH4B9RHU8Tao0Lh6k0kLzDZ87SiNh7QFSNLX05ZWA4BvG7qd3WbmoXPrW7ye6nH4JKGb1lNn3jlaXsCxfi7aDVX2C8fgLaPzNGe5DllenWLIb1ouuoKTvorMqnEiP12ILBGDP9xyimwsGE~s5nhnXnP6OKno~gHmQu~lOrtpbkUPRJCK2rtOygEDJz4M~7vMb4mtuwDgloC995OVnRCVlL2kI~HYGnrDWYDT9BKInDFU~dDhBMadbDB~KsTtyurQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "fig8",
+        "preview_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/m_ao3c06992_0008.svg?Expires=1791347250&Signature=y9w0uO09tLakiBI~LZIWdOR4KIS3VZVEefdzgEqPGawYlnyiisWiemFeUZUA5w6ADbQuwCqVfzMgq6TlZedp0Kaivr~wJhzFrPScrmkGX99IPIcTRPHHeX5SfoD8rz9bYYUpb4EM5ePW6~WIq3EVaVyhrs5BijkaIbTJG6fUvdaCp111l~2oYXycqJjhBNyJfd3Wu7EyBWkXdHjuDrtvYmPagDMvMHv-iQmCMgbQrrYbfuSGYRKAtuPoFpXFANsOtFUhQ-DxfPRF1~oQ~i2YSBGScL3CW3z8uw-C1wc1ICGEowXaqC~0GwUZx5KgSfVQXqR38Ki6lD2NJKgk72gPHA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0008.svg?Expires=1791347250&Signature=fh-xzQhyTSlP1gGL6hmLJ322KLcnFoBDZ~J4oKKMcmKBsV1BHUM~-HFrJgMrOmL6GRkpiOU25jxNoU0PmWETGlxH4B9RHU8Tao0Lh6k0kLzDZ87SiNh7QFSNLX05ZWA4BvG7qd3WbmoXPrW7ye6nH4JKGb1lNn3jlaXsCxfi7aDVX2C8fgLaPzNGe5DllenWLIb1ouuoKTvorMqnEiP12ILBGDP9xyimwsGE~s5nhnXnP6OKno~gHmQu~lOrtpbkUPRJCK2rtOygEDJz4M~7vMb4mtuwDgloC995OVnRCVlL2kI~HYGnrDWYDT9BKInDFU~dDhBMadbDB~KsTtyurQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "figure_page_url": "https://pubs.acs.org/view-large/figure/164934670/ao3c06992_0008.svg"
+      },
+      "download_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/ao3c06992_0008.svg?Expires=1791347250&Signature=fh-xzQhyTSlP1gGL6hmLJ322KLcnFoBDZ~J4oKKMcmKBsV1BHUM~-HFrJgMrOmL6GRkpiOU25jxNoU0PmWETGlxH4B9RHU8Tao0Lh6k0kLzDZ87SiNh7QFSNLX05ZWA4BvG7qd3WbmoXPrW7ye6nH4JKGb1lNn3jlaXsCxfi7aDVX2C8fgLaPzNGe5DllenWLIb1ouuoKTvorMqnEiP12ILBGDP9xyimwsGE~s5nhnXnP6OKno~gHmQu~lOrtpbkUPRJCK2rtOygEDJz4M~7vMb4mtuwDgloC995OVnRCVlL2kI~HYGnrDWYDT9BKInDFU~dDhBMadbDB~KsTtyurQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/f1713b6bde14be52-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/f1713b6bde14be52-http-1.bin",
+      "validation": {
+        "format": "svg",
+        "width": "401.33334",
+        "height": "236.06667",
+        "viewBox": "0 0 401.33334 236.06667",
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "ao3c06992_0008.svg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 8,
+    "unique_files": 8,
+    "verified_files": 8,
+    "replayed_files": 8,
+    "complete_received_files": 8,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 8,
+    "unique_files": 8,
+    "verified_files": 8,
+    "replayed_files": 8,
+    "complete_received_files": 8
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

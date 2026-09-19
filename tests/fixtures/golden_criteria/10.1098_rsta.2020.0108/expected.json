@@ -1,21 +1,56 @@
 {
-  "counts": {
-    "abstract_sections": 0,
-    "body_sections": 29,
-    "figures": 0,
-    "references": 0,
-    "sections": 30,
-    "tables": 0
-  },
-  "expected_content_kind": "fulltext",
   "has": {
-    "abstract": false,
+    "title": true,
     "authors": false,
+    "abstract": false,
     "body": true,
-    "code_availability": false,
-    "data_availability": false,
     "figures": false,
     "references": false,
-    "title": true
+    "data_availability": false,
+    "code_availability": false
+  },
+  "counts": {
+    "sections": 1,
+    "abstract_sections": 0,
+    "body_sections": 1,
+    "figures": 0,
+    "tables": 0,
+    "references": 0
+  },
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.1098_rsta.2020.0108",
+    "provider": "royalsocietypublishing",
+    "doi": "10.1098/rsta.2020.0108",
+    "original": "tests/fixtures/golden_criteria/10.1098_rsta.2020.0108/original.pdf",
+    "sha256": "90df7e7a9669fc9a3987b16f0844f651a3fbe0a8d890678e6e13f2804abf2505",
+    "format": "pdf",
+    "review_method": "original PDF identity and role validation; complete readable file; real converter return value compared unchanged through provider assembly",
+    "dimensions": {
+      "pdf": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_pdf_identity_and_converter_passthrough",
+        "source_count": 1,
+        "scope": "target identity; readable complete PDF; provider assembly; exact converter payload retained"
+      }
+    },
+    "limitations": [
+      "PDF conversion layout, references, formulas, tables and OCR are excluded.",
+      "The existing converter is invoked and its returned text is treated as opaque; comparisons do not rate pymupdf4llm conversion quality.",
+      "Unknown historical HTTP status/final URL remain unknown in acquisition/provenance.json.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "pdf": {
+      "pages": 18,
+      "encrypted": false,
+      "repaired": false,
+      "role": "main_article",
+      "role_evidence": "canonical pdf_fallback target identity and complete document; preview/supplementary rejection is covered separately"
+    },
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ]
   }
 }

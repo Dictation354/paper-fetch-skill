@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall
+
+from ..quality.access_boundary import raise_for_api_entitlement, raise_for_paywall
+
 from dataclasses import replace
 import mimetypes
 import urllib.parse
@@ -24,6 +28,7 @@ from ..http import (
     provider_request_policy,
 )
 from ..elsevier_identifiers import extract_elsevier_pii_from_url, normalize_elsevier_pii
+from ..http.headers import header_value
 from ..metadata.types import ProviderMetadata
 from ..models import (
     AssetProfile,
@@ -748,6 +753,12 @@ class ElsevierClient(ProviderClient):
                 request_policy=provider_request_policy("elsevier", "xml_api"),
             )
         except RequestFailure as exc:
+            raise_for_api_entitlement(
+                exc.body,
+                source_url=str(exc.url or url),
+                provider=self.name,
+                headers=exc.headers,
+            )
             raise map_request_failure(
                 exc,
                 no_result_status_codes=frozenset({404, 406, 415}),
@@ -757,6 +768,13 @@ class ElsevierClient(ProviderClient):
                 },
             ) from exc
 
+        raise_for_api_entitlement(
+            response["body"],
+            source_url=url,
+            provider=self.name,
+            headers=response.get("headers"),
+        )
+        raise_for_paywall(response["body"], source_url=url, provider=self.name)
         content_type = str(
             (response.get("headers") or {}).get("content-type") or "text/xml"
         )
@@ -821,6 +839,12 @@ class ElsevierClient(ProviderClient):
                 ),
             )
         except RequestFailure as exc:
+            raise_for_api_entitlement(
+                exc.body,
+                source_url=str(exc.url or url),
+                provider=self.name,
+                headers=exc.headers,
+            )
             raise map_request_failure(
                 exc,
                 no_result_status_codes=frozenset({404, 406, 415}),
@@ -829,6 +853,19 @@ class ElsevierClient(ProviderClient):
                     415: "Elsevier official PDF representation is not available for this article.",
                 },
             ) from exc
+
+        raise_for_api_entitlement(
+            response["body"],
+            source_url=url,
+            provider=self.name,
+            headers=response.get("headers"),
+        )
+        access_status = header_value(response.get("headers"), "x-els-status", "")
+        if "limited to first page" in access_status.casefold():
+            raise ProviderFailure(
+                NO_ACCESS,
+                "Elsevier official PDF response is limited to the first page; full-text entitlement is required.",
+            )
 
         final_url = str(response.get("url") or url)
         try:
@@ -846,6 +883,7 @@ class ElsevierClient(ProviderClient):
                 expected_identity={"doi": doi},
             )
         except PdfFetchFailure as exc:
+            propagate_paywall(exc)
             message = (
                 str(exc)
                 if str(exc).strip()
@@ -952,6 +990,12 @@ class ElsevierClient(ProviderClient):
                 request_policy=provider_request_policy("elsevier", "metadata_api"),
             )
         except RequestFailure as exc:
+            raise_for_api_entitlement(
+                exc.body,
+                source_url=str(exc.url or url),
+                provider=self.name,
+                headers=exc.headers,
+            )
             raise map_request_failure(exc) from exc
 
         try:
@@ -977,6 +1021,12 @@ class ElsevierClient(ProviderClient):
                     error_category="response_schema_mismatch",
                 )
         except RequestFailure as exc:
+            raise_for_api_entitlement(
+                exc.body,
+                source_url=str(exc.url or url),
+                provider=self.name,
+                headers=exc.headers,
+            )
             raise map_request_failure(exc) from exc
         metadata: ProviderMetadata = {
             "status": "ok",
@@ -1090,6 +1140,7 @@ class ElsevierClient(ProviderClient):
                 try:
                     xml_payload = self._fetch_official_pii_xml_payload(pii)
                 except ProviderFailure as exc:
+                    propagate_paywall(exc)
                     last_failure = exc
                     continue
                 if self._official_payload_is_usable(
@@ -1193,7 +1244,7 @@ class ElsevierClient(ProviderClient):
         if route == PDF_FALLBACK:
             markdown_text = str(
                 (content.markdown_text if content is not None else "") or ""
-            ).strip()
+            )
             if not markdown_text:
                 warnings.append(
                     "Elsevier official PDF fallback did not produce usable Markdown."

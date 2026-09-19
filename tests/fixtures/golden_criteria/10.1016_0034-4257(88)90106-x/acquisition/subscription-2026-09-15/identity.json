@@ -1,0 +1,16 @@
+{
+  "query": "10.1016/0034-4257(88)90106-X",
+  "query_kind": "doi",
+  "doi": "10.1016/0034-4257(88)90106-x",
+  "landing_url": null,
+  "provider_hint": "elsevier",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 2,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "elsevier"
+}

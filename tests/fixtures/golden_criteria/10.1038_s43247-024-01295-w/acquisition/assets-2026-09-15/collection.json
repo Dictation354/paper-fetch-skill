@@ -1,0 +1,187 @@
+{
+  "provider": "springer",
+  "doi": "10.1038/s43247-024-01295-w",
+  "sample_id": "10.1038_s43247-024-01295-w",
+  "source_url": "https://www.nature.com/articles/s43247-024-01295-w?error=cookies_not_supported&code=7f269c99-5e6f-461f-a869-d74c8cfb969e",
+  "source_input": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/original.html",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "4ea374d45a3a8785be19dc6405657950ac20bb7899b9e7839103cb4382284e11",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 1",
+        "caption": "Variability of correlation value between SPI-x and SSI-1 (blue color) and SPI-x and SGI-1 (yellow color). The lower box shows the 25 percentile, the middle line shows median, and the upper box shows the 75 percentile. The whiskers show the maximum and minimum correlations.",
+        "url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig1_HTML.png",
+        "section": "body",
+        "preview_url": "https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig1_HTML.png",
+        "full_size_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig1_HTML.png",
+        "figure_page_url": "https://www.nature.com/articles/s43247-024-01295-w/figures/1"
+      },
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig1_HTML.png",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/61236004dafccae0-http-1.bin",
+        "acquisition/assets-2026-09-15/springer-headed-all-004-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/springer-headed-all-004-http_response_entity.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 1350,
+        "height": 954,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "43247_2024_1295_Fig1_HTML.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 2",
+        "caption": "a Lag time between SPI-6 and SSI-1. b Lag time between SPI-12 and SSI-1. c Lag time between SPI-6 and SGI-1. d Lag time between SPI-12 and SGI-1.",
+        "url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig2_HTML.png",
+        "section": "body",
+        "preview_url": "https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig2_HTML.png",
+        "full_size_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig2_HTML.png",
+        "figure_page_url": "https://www.nature.com/articles/s43247-024-01295-w/figures/2"
+      },
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig2_HTML.png",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/359b0318c07efb90-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/359b0318c07efb90-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 2000,
+        "height": 1275,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "43247_2024_1295_Fig2_HTML.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 3",
+        "caption": "a The performance of median SPI-6 to identify streamflow drought (SSI-1) with a lead time of 1-month. b The performance of median SPI-6 to identify groundwater drought (SGI-1) with a lead time of 1-month. Bluish colors indicate high forecast performance and vice versa for reddish colors.",
+        "url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig3_HTML.png",
+        "section": "body",
+        "preview_url": "https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig3_HTML.png",
+        "full_size_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig3_HTML.png",
+        "figure_page_url": "https://www.nature.com/articles/s43247-024-01295-w/figures/3"
+      },
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig3_HTML.png",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/61236004dafccae0-http-1.bin",
+        "acquisition/assets-2026-09-15/springer-headed-all-005-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/springer-headed-all-005-http_response_entity.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 2000,
+        "height": 589,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "43247_2024_1295_Fig3_HTML.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 4",
+        "caption": "a The performance of SPI-6 to identify streamflow drought (SSI-1 SPI−6 ) for each season. b The performance of SPI-6 to identify streamflow drought (SSI-1 SPI−6 ) for different lead times. c The performance of SPI-6 to identify streamflow drought (SSI-1 SPI−6 ) for each European region. d The performance of SPI-6 to identify groundwater drought (SGI-1 SPI−6 ) for each season. e The performance of SPI-6 to identify groundwater drought (SGI-1 SPI−6 ) for different lead times. f The performance of SPI-6 to identify groundwater drought (SGI-1 SPI−6 ) for each European region. WE West Europe, CE Central Europe, EE East Europe, NE North Europe, SE South Europe.",
+        "url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig4_HTML.png",
+        "section": "body",
+        "preview_url": "https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig4_HTML.png",
+        "full_size_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig4_HTML.png",
+        "figure_page_url": "https://www.nature.com/articles/s43247-024-01295-w/figures/4"
+      },
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig4_HTML.png",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0b98d8c5445fca04-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/0b98d8c5445fca04-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 2000,
+        "height": 1047,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "43247_2024_1295_Fig4_HTML.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 5",
+        "caption": "a Comparison of Brier Score (BS) values between SSI-1 forecasted using SPI-6 (SSI-1 SPI−6 ) and SSI-1 forecast for different seasons. b Comparison of BS values between SGI-1 forecasted using SPI-6 (SGI-1 SPI−6 ) and SGI-1 forecast for different seasons. c Comparison of BS values between SSI-1 forecasted using SPI-6 (SSI-1 SPI−6 ) and SSI-1 forecast for each region. d Comparison of BS values between SGI-1 forecasted using SPI-6 (SGI-1 SPI−6 ) and SGI-1 forecast for each region.",
+        "url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig5_HTML.png",
+        "section": "body",
+        "preview_url": "https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig5_HTML.png",
+        "full_size_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig5_HTML.png",
+        "figure_page_url": "https://www.nature.com/articles/s43247-024-01295-w/figures/5"
+      },
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig5_HTML.png",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/43b03df609ddc879-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/43b03df609ddc879-http-1.bin",
+      "validation": {
+        "format": "image/png",
+        "width": 1750,
+        "height": 1486,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "43247_2024_1295_Fig5_HTML.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 5,
+    "replayed_files": 5,
+    "complete_received_files": 5,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 5,
+    "unique_files": 5,
+    "verified_files": 5,
+    "replayed_files": 5,
+    "complete_received_files": 5
+  },
+  "historical_outcome_before_supplementary_removal": "complete",
+  "historical_blocking_evidence": [
+    "acquisition/assets-2026-09-15/springer-headless-body-001-browser_dom.html",
+    "acquisition/assets-2026-09-15/springer-headed-all-003-browser_dom.html"
+  ]
+}

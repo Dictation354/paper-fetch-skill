@@ -1,11 +1,10 @@
 from __future__ import annotations
-
 import json
+import xml.etree.ElementTree as ET
+from paper_fetch.provider_catalog import provider_for_xml_source
 from typing import get_args
 import unittest
 from unittest import mock
-import xml.etree.ElementTree as ET
-
 from paper_fetch import publisher_identity
 from paper_fetch.provider_catalog import (
     DEFAULT_BODY_TEXT_THRESHOLDS,
@@ -29,7 +28,6 @@ from paper_fetch.provider_catalog import (
     provider_domain_matches,
     provider_emits_html_managed_marker,
     provider_for_source,
-    provider_for_xml_source,
     provider_html_path_templates,
     provider_managed_abstract_only_names,
     provider_metadata_probe_short_circuit,
@@ -413,76 +411,6 @@ class ProviderCatalogTests(unittest.TestCase):
         self.assertFalse(provider_persists_provider_html("wiley"))
         self.assertFalse(provider_persists_provider_html(None))
 
-    def test_xml_source_provider_inference_is_catalog_derived(self) -> None:
-        self.assertEqual(
-            provider_for_xml_source(
-                "full-text-retrieval-response",
-                "/tmp/10.1016_example/original.xml",
-            ),
-            "elsevier",
-        )
-        self.assertEqual(
-            provider_for_xml_source(
-                "article",
-                "/tmp/10.5194_acp-24-1-2024/original.xml",
-            ),
-            "copernicus",
-        )
-        self.assertEqual(
-            provider_for_xml_source("article", "/tmp/10.1038_example/original.xml"),
-            "springer",
-        )
-        self.assertEqual(
-            provider_for_xml_source("unknown-root", "/tmp/payload.xml"),
-            "unknown",
-        )
-        neutral = ET.fromstring("<article />")
-        self.assertEqual(
-            provider_for_xml_source(
-                "article",
-                "/tmp/payload.xml",
-                xml_root=neutral,
-            ),
-            "unknown",
-        )
-        for doi, publisher, expected in (
-            ("10.1038/example", "Springer Nature", "springer"),
-            ("10.5194/example", "Copernicus Publications", "copernicus"),
-            ("10.1371/example", "Public Library of Science", "plos"),
-            ("10.3389/example", "Frontiers Media S.A.", "frontiers"),
-        ):
-            with self.subTest(doi=doi):
-                root = ET.fromstring(
-                    "<article><front><journal-meta>"
-                    f"<publisher><publisher-name>{publisher}</publisher-name></publisher>"
-                    "</journal-meta><article-meta>"
-                    f'<article-id pub-id-type="doi">{doi}</article-id>'
-                    "</article-meta></front></article>"
-                )
-                self.assertEqual(
-                    provider_for_xml_source(
-                        "article",
-                        "/tmp/payload.xml",
-                        xml_root=root,
-                    ),
-                    expected,
-                )
-        conflict = ET.fromstring(
-            "<article><front><journal-meta><publisher>"
-            "<publisher-name>Frontiers Media S.A.</publisher-name>"
-            "</publisher></journal-meta><article-meta>"
-            '<article-id pub-id-type="doi">10.1371/conflict</article-id>'
-            "</article-meta></front></article>"
-        )
-        self.assertEqual(
-            provider_for_xml_source(
-                "article",
-                "/tmp/payload.xml",
-                xml_root=conflict,
-            ),
-            "unknown",
-        )
-
     def test_provider_fallback_and_body_thresholds_are_catalog_derived(self) -> None:
         self.assertFalse(provider_emits_html_managed_marker("crossref"))
         self.assertFalse(provider_emits_html_managed_marker("copernicus"))
@@ -650,6 +578,76 @@ class ProviderCatalogTests(unittest.TestCase):
                 doi="10.1111/example",
             ),
             [("elsevier", "domain"), ("springer", "publisher"), ("wiley", "doi")],
+        )
+
+    def test_xml_source_provider_inference_is_catalog_derived(self) -> None:
+        self.assertEqual(
+            provider_for_xml_source(
+                "full-text-retrieval-response",
+                "/tmp/10.1016_example/original.xml",
+            ),
+            "elsevier",
+        )
+        self.assertEqual(
+            provider_for_xml_source(
+                "article",
+                "/tmp/10.5194_acp-24-1-2024/original.xml",
+            ),
+            "copernicus",
+        )
+        self.assertEqual(
+            provider_for_xml_source("article", "/tmp/10.1038_example/original.xml"),
+            "springer",
+        )
+        self.assertEqual(
+            provider_for_xml_source("unknown-root", "/tmp/payload.xml"),
+            "unknown",
+        )
+        neutral = ET.fromstring("<article />")
+        self.assertEqual(
+            provider_for_xml_source(
+                "article",
+                "/tmp/payload.xml",
+                xml_root=neutral,
+            ),
+            "unknown",
+        )
+        for doi, publisher, expected in (
+            ("10.1038/example", "Springer Nature", "springer"),
+            ("10.5194/example", "Copernicus Publications", "copernicus"),
+            ("10.1371/example", "Public Library of Science", "plos"),
+            ("10.3389/example", "Frontiers Media S.A.", "frontiers"),
+        ):
+            with self.subTest(doi=doi):
+                root = ET.fromstring(
+                    "<article><front><journal-meta>"
+                    f"<publisher><publisher-name>{publisher}</publisher-name></publisher>"
+                    "</journal-meta><article-meta>"
+                    f'<article-id pub-id-type="doi">{doi}</article-id>'
+                    "</article-meta></front></article>"
+                )
+                self.assertEqual(
+                    provider_for_xml_source(
+                        "article",
+                        "/tmp/payload.xml",
+                        xml_root=root,
+                    ),
+                    expected,
+                )
+        conflict = ET.fromstring(
+            "<article><front><journal-meta><publisher>"
+            "<publisher-name>Frontiers Media S.A.</publisher-name>"
+            "</publisher></journal-meta><article-meta>"
+            '<article-id pub-id-type="doi">10.1371/conflict</article-id>'
+            "</article-meta></front></article>"
+        )
+        self.assertEqual(
+            provider_for_xml_source(
+                "article",
+                "/tmp/payload.xml",
+                xml_root=conflict,
+            ),
+            "unknown",
         )
 
 

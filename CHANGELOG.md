@@ -6,6 +6,25 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.0.0 - 2026-09-19
+
+### Upgrade behavior
+
+- Confirmed same-article paywalls and official full-text API entitlement denials now stop subsequent candidates, retries, PDF recovery, and asset downloads. When fallback is allowed, received abstracts and metadata retain their source and access diagnostics. Hidden notices, other-article notices, ordinary 403 responses, and individual asset denials do not establish a body restriction.
+- PDF body content now follows the existing `pymupdf4llm` output without project-level formatting cleanup or content repair. Consumers should not depend on the previous adjustments to headings, whitespace, references, or tables. Supported local asset-path rewriting remains available.
+- Extraction revision advances from 5 to 6. Results cached by 6.2.4 or older revisions no longer count as current extraction results; the first request after upgrade may fetch the paper again. Existing files are not proactively deleted. See the [7.0 migration guide](docs/migration-v7.md).
+
+### Article and asset fixes
+
+- Preserve HTML/XML inline semantics, headings, references, figures, tables, formulas, and back matter across supported publishers, fixing lost, duplicated, or misplaced content while retaining source identity and order. PLOS binds downloaded objects by article DOI and object ID; undownloaded objects retain official remote URLs, and partial downloads do not reduce the acceptance denominator.
+- Tighten provider-local recovery for IEEE PDF wrappers, PNAS body readiness, Science reference expansion, and publisher image candidates within existing request budgets, access boundaries, and provenance contracts.
+
+### Maintenance and compatibility
+
+- Existing CLI/MCP parameters, five presets, and public result formats remain supported. The major-version behavior changes concern access termination, PDF output, and cache upgrades.
+- Separate unit, integration, and golden responsibilities while retaining automatic evidence audits and cache/worker evidence propagation. Source-bound fixed expectations replace complex test parsers; duplicate entities share storage while capture events remain separate, and dated reports are no longer executable test inputs.
+- Simplify documentation navigation, duplicated deployment/release instructions, and repetitive extraction-rule maintenance notes. Full golden verification remains an explicit local release prerequisite; existing native platform gates continue to verify installation packages.
+
 ## 6.2.4 - 2026-09-13
 
 ### Added — optional offline setup

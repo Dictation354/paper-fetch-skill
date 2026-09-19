@@ -1,0 +1,25 @@
+{
+  "doi": "10.1109/TBME.2024.3434477",
+  "provider": "ieee",
+  "source_url": "https://ieeexplore.ieee.org/rest/document/10612240/?logAccess=true",
+  "attempt": 2,
+  "change_from_previous": "Official REST route; no article gate in current landing DOM",
+  "transport": "Camoufox with configured provider state",
+  "capture_started_utc": "2026-09-16T06:30:40.982473+00:00",
+  "historical_records_unchanged": true,
+  "responses": [
+    {
+      "url": "https://ieeexplore.ieee.org/rest/document/10612240/?logAccess=true",
+      "status_code": 200,
+      "record": "acquisition/known-gaps-rest-2026-09-16/001-http_response_entity.bin"
+    }
+  ],
+  "dom_file": "acquisition/known-gaps-rest-2026-09-16/000-browser_rendered_dom.html",
+  "final_url": "https://ieeexplore.ieee.org/rest/document/10612240/?logAccess=true",
+  "title": "",
+  "observed_doi": null,
+  "confirmed_paywall": false,
+  "paywall_diagnostics": {},
+  "challenge": false,
+  "stop_reason": "single_observation_completed"
+}

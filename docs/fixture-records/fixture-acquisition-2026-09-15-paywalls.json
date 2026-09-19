@@ -1,0 +1,207 @@
+{
+  "scope": "Paywall-focused acquisition. No new challenge blocks. Existing API credentials retained; Elsevier browser observations excluded from provider evidence. Headed main-frame responses and final DOM are distinct from a full provider fetch.",
+  "browser_candidates": [
+    {
+      "provider": "annualreviews",
+      "doi": "10.1146/annurev-neuro-062111-150343",
+      "requested_url": "https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343",
+      "captured_at_utc": "2026-09-15T05:22:57.222121+00:00",
+      "completed_at_utc": "2026-09-15T05:23:15.348369+00:00",
+      "human_assistance": null,
+      "observed_reason": "publisher_paywall",
+      "headless": false,
+      "result": "paywall_abstract_only",
+      "canonical_block": "tests/fixtures/block/10.1146_annurev-neuro-062111-150343/raw.html",
+      "provenance": "tests/fixtures/block/10.1146_annurev-neuro-062111-150343/acquisition/provenance.json"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/19455224.2025.2547671",
+      "requested_url": "https://www.tandfonline.com/doi/full/10.1080/19455224.2025.2547671",
+      "captured_at_utc": "2026-09-15T05:23:15.348648+00:00",
+      "completed_at_utc": "2026-09-15T05:23:29.959972+00:00",
+      "human_assistance": null,
+      "observed_reason": null,
+      "headless": false,
+      "response": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/acquisition/paywall-2026-09-15/article-response.html",
+      "dom": "tests/fixtures/golden_criteria/10.1080_19455224.2025.2547671/acquisition/paywall-2026-09-15/final.dom.html",
+      "result": "http403_error_page_not_paywall"
+    },
+    {
+      "provider": "springer",
+      "doi": "10.1038/nature12915",
+      "requested_url": "https://www.nature.com/articles/nature12915",
+      "captured_at_utc": "2026-09-15T05:23:29.960194+00:00",
+      "completed_at_utc": "2026-09-15T05:23:45.425944+00:00",
+      "human_assistance": null,
+      "observed_reason": "publisher_paywall",
+      "headless": false,
+      "result": "paywall_abstract_only",
+      "canonical_block": "tests/fixtures/block/10.1038_nature12915/raw.html",
+      "provenance": "tests/fixtures/block/10.1038_nature12915/acquisition/provenance.json"
+    },
+    {
+      "provider": "ieee",
+      "doi": "10.1109/TBME.2024.3434477",
+      "requested_url": "https://ieeexplore.ieee.org/document/10612240",
+      "captured_at_utc": "2026-09-15T05:24:20.798906+00:00",
+      "completed_at_utc": "2026-09-15T05:24:39.667279+00:00",
+      "human_assistance": null,
+      "observed_reason": null,
+      "headless": false,
+      "response": "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/acquisition/paywall-2026-09-15/article-response.html",
+      "dom": "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/acquisition/paywall-2026-09-15/final.dom.html",
+      "result": "paywall_landing_with_abstract_and_purchase_options"
+    }
+  ],
+  "api_runs": [
+    {
+      "provider": "elsevier",
+      "doi": "10.1016/j.agrformet.2024.109975",
+      "acceptance": {
+        "schema_version": 2,
+        "minimum_reader_schema_version": 2,
+        "overall": "complete",
+        "identity": {
+          "status": "resolved",
+          "doi": "10.1016/j.agrformet.2024.109975",
+          "expected_doi": "10.1016/j.agrformet.2024.109975",
+          "title": "Optimal representation of spring phenology on photosynthetic productivity across the northern hemisphere forests",
+          "candidate_count": 0,
+          "canonical_landing_url": null,
+          "canonical_landing_verified": false,
+          "canonical_landing_unique": false,
+          "codes": []
+        },
+        "fetch": {
+          "status": "ok",
+          "completed": true,
+          "code": null
+        },
+        "content": {
+          "status": "fulltext",
+          "has_fulltext": true,
+          "has_abstract": true,
+          "token_estimate": 11926,
+          "confidence": "high",
+          "flags": [],
+          "tables": {
+            "fallback_count": 0,
+            "layout_degraded_count": 0,
+            "semantic_loss_count": 0
+          },
+          "formulas": {
+            "fallback_count": 0,
+            "missing_count": 0
+          }
+        },
+        "asset": {
+          "requested": false,
+          "profile": "none",
+          "audited": true,
+          "expected": null,
+          "discovered": 6,
+          "attempted": 0,
+          "total": 6,
+          "local": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_archived": 0,
+          "remote_link_count": 5,
+          "remote_only_count": 5,
+          "body_discovered": 0,
+          "body_attempted": 0,
+          "body_local": 0,
+          "body_full_size": 0,
+          "body_preview": 0,
+          "body_failed": 0,
+          "body_not_archived": 0,
+          "body_remote_only_count": 0,
+          "require_local_body_assets": false,
+          "require_full_size_body_assets": false,
+          "has_local_body_assets": false,
+          "all_body_assets_local": true,
+          "all_body_assets_full_size": true,
+          "local_body_assets_satisfied": true,
+          "full_size_body_assets_satisfied": true,
+          "failure_codes": [],
+          "issue_codes": [],
+          "status": "not_requested",
+          "remote_links_preserved": true
+        },
+        "output": {
+          "status": "complete",
+          "requested": [
+            "article",
+            "markdown"
+          ],
+          "available": [
+            "article",
+            "markdown"
+          ],
+          "missing": []
+        },
+        "provenance": {
+          "status": "complete",
+          "source": "elsevier_xml",
+          "acquisition": {
+            "provider": "elsevier",
+            "route": "xml_api",
+            "representation": "xml",
+            "transport": "api",
+            "fallback_used": false
+          },
+          "trace_event_count": 17,
+          "fallback_codes": [],
+          "warning_codes": [],
+          "failure_codes": [],
+          "unstructured_warning_count": 1,
+          "acceptance_policy": "structured_xml_body",
+          "acceptance_policy_satisfied": true
+        }
+      },
+      "acquisition": {
+        "provider": "elsevier",
+        "route": "xml_api",
+        "representation": "xml",
+        "transport": "api",
+        "fallback_used": false
+      },
+      "relocations": {
+        "elsevier/response-1.bin": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/paywall-2026-09-15/api-response-1.bin",
+        "elsevier/response-2.bin": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/paywall-2026-09-15/api-response-2.bin",
+        "/tmp/paper-fetch-0915-headed/restricted/elsevier/fetch.manifest.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/paywall-2026-09-15/api-fetch.manifest.json",
+        "/tmp/paper-fetch-0915-headed/restricted/elsevier/fetch/Fang_et_al_2024_Optimal_representation_of_spring_phenology_on_photosynthetic_productivity_across_the_northern_hemisphere_forests.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/paywall-2026-09-15/api-fetch.json",
+        "/tmp/paper-fetch-0915-headed/restricted/elsevier/fetch/Fang_et_al_2024_Optimal_representation_of_spring_phenology_on_photosynthetic_productivity_across_the_northern_hemisphere_forests.md": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/paywall-2026-09-15/api-fetch.md"
+      },
+      "result": "fulltext_available_with_existing_api_key"
+    }
+  ],
+  "ieee_followup": {
+    "record": "docs/fixture-content-coverage.md#ieee-flow",
+    "landing_fix": "Wait for xplGlobal.document.metadata instead of requiring #article on subscription landings.",
+    "live_acceptance": "complete",
+    "live_content": "fulltext",
+    "live_acquisition": {
+      "provider": "ieee",
+      "route": "rest_html",
+      "representation": "html",
+      "transport": "api",
+      "fallback_used": false
+    },
+    "live_pdf_attempted": false,
+    "offline_injected_failure_order": [
+      "REST HTTP403",
+      "browser HTML missing article body",
+      "direct PDF failure",
+      "browser PDF failure",
+      "abstract_only"
+    ],
+    "canonical_block_added": false
+  },
+  "supplementary_retention_note": "Existing supplementary payloads, partial files and archives containing ancillary material were deleted at user request. Historical acquisition statements and former file paths below do not assert current file availability. See supplementary-removal-2026-09-15.json; indexes, links and capture metadata remain."
+}

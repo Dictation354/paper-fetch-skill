@@ -1,0 +1,24 @@
+{
+  "doi": "10.1093/bioinformatics/btaa823",
+  "provider": "oxfordacademic",
+  "source_url": "https://academic.oup.com/bioinformatics/article/37/4/497/5909988",
+  "attempt": 1,
+  "transport": "Camoufox with configured provider state",
+  "capture_started_utc": "2026-09-16T06:27:36.130145+00:00",
+  "historical_records_unchanged": true,
+  "responses": [
+    {
+      "url": "https://academic.oup.com/bioinformatics/article/37/4/497/5909988",
+      "status_code": 200,
+      "record": "acquisition/known-gaps-2026-09-16/001-http_response_entity.bin"
+    }
+  ],
+  "dom_file": "acquisition/known-gaps-2026-09-16/000-browser_rendered_dom.html",
+  "final_url": "https://academic.oup.com/bioinformatics/article/37/4/497/5909988",
+  "title": "Text mining for modeling of protein complexes enhanced by machine learning | Bioinformatics | Oxford Academic",
+  "observed_doi": "10.1093/bioinformatics/btaa823",
+  "confirmed_paywall": false,
+  "paywall_diagnostics": {},
+  "challenge": false,
+  "stop_reason": "single_observation_completed"
+}

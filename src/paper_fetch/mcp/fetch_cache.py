@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..acquisition import PDF_RENDER_REVISION, is_pdf_article
+
 import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
@@ -159,6 +161,7 @@ class _FetchEnvelopeSidecarSchema(BaseModel):
 
     version: int
     extraction_revision: int
+    pdf_render_revision: int | None = None
     request_fingerprint: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     credential_scope: str = PUBLIC_CREDENTIAL_SCOPE
     request: _CacheRequestSchema
@@ -972,6 +975,8 @@ class FetchCache:
                 ),
             ),
         }
+        if is_pdf_article(envelope):
+            payload["pdf_render_revision"] = PDF_RENDER_REVISION
         with cache_file_lock(fetch_envelope_lock_path(self.download_dir, doi)):
             self._artifact_store.write_json_file(
                 variant_path,
@@ -1239,6 +1244,16 @@ class FetchCache:
                 "invalid",
                 "cache_sidecar_payload_invalid",
                 "The fetch-envelope payload could not be reconstructed.",
+                updates=request_updates,
+            )
+        if (
+            is_pdf_article(envelope)
+            and cache_payload.get("pdf_render_revision") != PDF_RENDER_REVISION
+        ):
+            return finish(
+                "extraction_revision_mismatch",
+                "cache_sidecar_pdf_render_revision_mismatch",
+                "The cached PDF rendering predates verbatim converter output.",
                 updates=request_updates,
             )
         if not cached_envelope_assets_are_scoped(envelope, self.download_dir):

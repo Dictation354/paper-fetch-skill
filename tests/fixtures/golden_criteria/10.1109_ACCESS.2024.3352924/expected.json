@@ -17,5 +17,209 @@
     "figures": true,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1109_ACCESS.2024.3352924",
+    "provider": "ieee",
+    "doi": "10.1109/ACCESS.2024.3352924",
+    "original": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/original.html",
+    "sha256": "8b0b744803f076bacd83723c166366aad2da9c1531d31916764ddb1bf9e27a1b",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 4,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 60,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 108,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 23,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 0,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 3,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence."
+    ],
+    "author_source": "landing.html:embedded authors",
+    "provenance": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/provenance.json",
+    "captured_image_files": [
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/figure-1.gif",
+        "sha256": "e6fc7d6338f8fa4f6a67775979581c6a7e569de02c4ea570a81769a861b54540",
+        "bytes": 74773
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/3ede4b8521c486-browser.bin",
+        "sha256": "a686420d43b57fc2af3c23cd1f4f460ae77dc7e6052e9d81dcf72a768ff20f8b",
+        "bytes": 43702
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/0dfdf42992e1c7-browser.bin",
+        "sha256": "5ae7ac5e06f1bb023fd4b6f6d95f199885c94b350b8d9449e24d1ec1da347304",
+        "bytes": 71427
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/19cefefec42433-browser.bin",
+        "sha256": "051107d7528966c85aa04757f41d41e2606e9c925268dc923c10c0ec10503208",
+        "bytes": 59093
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/7c5b42ef980b3c-browser.bin",
+        "sha256": "b4d56925c109d18308a835bb84744c3c6c9a8f1aef0d61d412271a1d8f2e4e4c",
+        "bytes": 42284
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/e55bb999d151cb-browser.bin",
+        "sha256": "38128f52a20ba7137097420761c59c1c1690758665d1593a05bbca9ba8f70f4f",
+        "bytes": 91020
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/5346e9f91c5e61-browser.bin",
+        "sha256": "64ea64cd0cb2866aba52c98d92fa441395c82b13f0dce06f0891cd240e3851c1",
+        "bytes": 65094
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/cd7c345c611ef7-browser.bin",
+        "sha256": "97447b1a1d0e230d5d05d79830ede67aae31b914e8b56199a7f5ab9df72c79fc",
+        "bytes": 90711
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/f88a26e45114ac-browser.bin",
+        "sha256": "2bbd09f6aa0d376ae061d9784e73e0d32793af605f5938553f6cef40bd887e17",
+        "bytes": 71474
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/b574b96b2e33f8-browser.bin",
+        "sha256": "9ad1d919c97a9ccb24b3f49bde9fb0a038b2373a246767b2f7fdf08bc886fa25",
+        "bytes": 59418
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/8d865a27f8f2da-browser.bin",
+        "sha256": "1f851e9ca6b316c01c856f2fd5e6032fc0c814a59c47f5d9bec8ad94d24b3ad9",
+        "bytes": 52992
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/8b1f7f434665a9-browser.bin",
+        "sha256": "53e17942cfadce702772c3a8f98faaf3548ee4274171dcc9e3ac092d3c5c1ea4",
+        "bytes": 37686
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/3a8d7e06111b7e-browser.bin",
+        "sha256": "a0eea1885bd8227fbdf6f834f2473b5597edd2bbaf945cc832bc1d1b903b1c46",
+        "bytes": 48216
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/9025c9960992db-browser.bin",
+        "sha256": "44bed044e8fddc799bf52e76327f8ef8d57d19241299b2d4e2d69f4170530c5c",
+        "bytes": 29596
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/1e6f1ad8cca930-browser.bin",
+        "sha256": "a76d8d00784496494e7a14c95558047eea9ac65d0153904cedea4fc2a36222b9",
+        "bytes": 63338
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/7f567de279f078-browser.bin",
+        "sha256": "ce853a8860de1dac403d1df6392460f2c90928f1116d9bc5ef0e65d8dfd63aa7",
+        "bytes": 74407
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/6b1ecd1f113afb-browser.bin",
+        "sha256": "69c36d7b350e5d39432621ec712ef41a4bf560b45e2cb60890895dbaa5d2c0bc",
+        "bytes": 30746
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/d8fc93c60dc243-browser.bin",
+        "sha256": "6d6e3d6702db970560e8dd0ab93f37a0ba8dcab9dfcbcc4d22f03da6c144f4da",
+        "bytes": 89625
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/0f8b35f0c8803c-browser.bin",
+        "sha256": "4a74767972de8162828773a24b0ecc57ebf76875ff51ff57bdefe8e0bdf66b2f",
+        "bytes": 52455
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/12804dad6256dc-browser.bin",
+        "sha256": "5e26717638855ba9e5a64aad431edf850d36b5871faacc2b379aed75d0c2e409",
+        "bytes": 98472
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/18d06f32b7ac04-browser.bin",
+        "sha256": "259b3ee05ede3c8f9c540a3a76f3d93da1c4cc5fb541a132959dbcf6db2ef1a2",
+        "bytes": 52876
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/a3c31f0f9e1c95-browser.bin",
+        "sha256": "15a373c120d71ed4077790965e4604dd166afc09f523bb62bb3f3b2d428e77c4",
+        "bytes": 39016
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/3cc77a39f0f25f-browser.bin",
+        "sha256": "da7e3c6517a2f0e012114eca37f08f3ba626d2e6e0adcfb9fcccdae70a1bef25",
+        "bytes": 74740
+      }
+    ],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 3,
+      "tex_checked": 3,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/original.html",
+      "sha256": "8b0b744803f076bacd83723c166366aad2da9c1531d31916764ddb1bf9e27a1b",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [],
+      "mathml": []
+    }
+  ]
 }

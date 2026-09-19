@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/uRqp8V7WO/39d4ZY4kxeiIUvVTE</id>
+  <title>arXiv Query: search_query=&amp;id_list=2605.06598v1&amp;start=0&amp;max_results=1</title>
+  <updated>2026-09-18T02:20:46Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=1&amp;id_list=2605.06598v1" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>1</opensearch:itemsPerPage>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2605.06598v1</id>
+    <title>Mathematical Modeling of Early Embryonic Cell Cycles of Drosophila melanogaster</title>
+    <updated>2026-05-07T17:22:18Z</updated>
+    <link href="https://arxiv.org/abs/2605.06598v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.06598v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>In the early stages of development, Drosophila melanogaster embryos possess very fast and well-coordinated cell cycles. In the cell cycle, CDK activity is essentially regulated by binding CDK and CycB to form an active complex and by phosphorylating CDK via CDC25 and dephosphorylating it via Wee1. We develop a mathematical model for the embryonic cell cycle which is biochemically sound and which can be rigorously analysed after a model reduction. We show that there exists a region in the parameter space where the model describes oscillations. We then focus on the role of two parameters: the CycB synthesis and the activation coefficient of APC. Our main biological hypothesis is that the first one is responsible for the period lengthening over the first 14 cycles which can be experimentally observed and this hypothesis is supported by numerical simulations of our model: if the CycB synthesis is made time-dependent with a prescribed dynamics, then our simulations show qualitatively a very similar behavior to experimental data reported in the literature.</summary>
+    <category term="q-bio.QM" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="q-bio.CB" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-07T17:22:18Z</published>
+    <arxiv:comment>20 pages, 7 figures</arxiv:comment>
+    <arxiv:primary_category term="q-bio.QM"/>
+    <author>
+      <name>Meskerem Abebaw Mebratie</name>
+    </author>
+    <author>
+      <name>Benedikt Drebes</name>
+    </author>
+    <author>
+      <name>Katja Kapp</name>
+    </author>
+    <author>
+      <name>Arno Müller</name>
+    </author>
+    <author>
+      <name>Werner M. Seiler</name>
+    </author>
+  </entry>
+</feed>

@@ -1,0 +1,268 @@
+{"abstracts-retrieval-response": {
+    "affiliation": [
+        {
+            "affiliation-city": "Beijing",
+            "@id": "60014966",
+            "affilname": "Peking University",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60014966",
+            "affiliation-country": "China"
+        },
+        {
+            "affiliation-city": "Singapore City",
+            "@id": "60017161",
+            "affilname": "National University of Singapore",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60017161",
+            "affiliation-country": "Singapore"
+        },
+        {
+            "affiliation-city": "Chiba",
+            "@id": "60002787",
+            "affilname": "Chiba University",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60002787",
+            "affiliation-country": "Japan"
+        },
+        {
+            "affiliation-city": "Moffett Field",
+            "@id": "60004179",
+            "affilname": "NASA Ames Research Center",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60004179",
+            "affiliation-country": "United States"
+        },
+        {
+            "affiliation-city": "Brookings",
+            "@id": "60014826",
+            "affilname": "South Dakota State University",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60014826",
+            "affiliation-country": "United States"
+        }
+    ],
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-85217704641",
+        "dc:description": "Tropical forests in the Amazon are characterized by a dry-season green-up, indicating a light-dominated regime in the seasonal variation of ecosystem functions. Southeast Asia, which hosts some of the most carbon-dense and diverse ecosystems in the world, is also expected to green up in dry seasons, however, recent in-situ evidence suggests otherwise. Here, we utilized high-frequency observations from the Himawari-8 geostationary satellite to examine the seasonality of vegetation greenness across Southeast Asia and to investigate potential factors driving this seasonality. We found that evergreen forests in maritime Southeast Asia green up in dry seasons, which is linked to positive anomaly in incoming radiation, similar to the Amazon forests. However, deciduous forests, croplands, and evergreen forests in continental Southeast Asia tend to green up in wet seasons, which is associated with the changes in climate sensitivities of vegetation greenness between dry and wet seasons. Our study highlights seasonal differences in tropical vegetation across biomes and sheds light on the underlying mechanisms of climate-vegetation interactions in Southeast Asia.",
+        "prism:coverDate": "2025-03-15",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/85217704641",
+        "subtypeDescription": "Article",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Jiaqi",
+            "preferred-name": {
+                "ce:given-name": "Jiaqi",
+                "ce:initials": "J.",
+                "ce:surname": "Tian",
+                "ce:indexed-name": "Tian J."
+            },
+            "@seq": "1",
+            "ce:initials": "J.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60017161",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60017161"
+            },
+            "ce:surname": "Tian",
+            "@auid": "57201734900",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57201734900",
+            "ce:indexed-name": "Tian J."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/85217704641"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85217704641&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=85217704641&origin=inward"
+            }
+        ],
+        "prism:publicationName": "Remote Sensing of Environment",
+        "source-id": "12503",
+        "pii": "S0034425725000525",
+        "citedby-count": "5",
+        "prism:volume": "319",
+        "subtype": "ar",
+        "dc:title": "Seasonality of vegetation greenness in Southeast Asia unveiled by geostationary satellite observations",
+        "openaccess": "1",
+        "openaccessFlag": "true",
+        "prism:doi": "10.1016/j.rse.2025.114648",
+        "prism:issn": "00344257",
+        "publishercopyright": "© 2025 The Authors",
+        "article-number": "114648",
+        "dc:identifier": "SCOPUS_ID:85217704641",
+        "dc:publisher": "Elsevier Inc."
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "Jiaqi",
+            "preferred-name": {
+                "ce:given-name": "Jiaqi",
+                "ce:initials": "J.",
+                "ce:surname": "Tian",
+                "ce:indexed-name": "Tian J."
+            },
+            "@seq": "1",
+            "ce:initials": "J.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60017161",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60017161"
+            },
+            "ce:surname": "Tian",
+            "@auid": "57201734900",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57201734900",
+            "ce:indexed-name": "Tian J."
+        },
+        {
+            "ce:given-name": "Xiangzhong",
+            "preferred-name": {
+                "ce:given-name": "Xiangzhong",
+                "ce:initials": "X.",
+                "ce:surname": "Luo",
+                "ce:indexed-name": "Luo X."
+            },
+            "@seq": "2",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60017161",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60017161"
+                },
+                {
+                    "@id": "60017161",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60017161"
+                }
+            ],
+            "ce:surname": "Luo",
+            "@auid": "55587378000",
+            "author-url": "https://api.elsevier.com/content/author/author_id/55587378000",
+            "ce:indexed-name": "Luo X."
+        },
+        {
+            "ce:given-name": "Weile",
+            "preferred-name": {
+                "ce:given-name": "Weile",
+                "ce:initials": "W.",
+                "ce:surname": "Wang",
+                "ce:indexed-name": "Wang W."
+            },
+            "@seq": "3",
+            "ce:initials": "W.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60004179",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60004179"
+            },
+            "ce:surname": "Wang",
+            "@auid": "16641272900",
+            "author-url": "https://api.elsevier.com/content/author/author_id/16641272900",
+            "ce:indexed-name": "Wang W."
+        },
+        {
+            "ce:given-name": "Liyao",
+            "preferred-name": {
+                "ce:given-name": "Liyao",
+                "ce:initials": "L.",
+                "ce:surname": "Yu",
+                "ce:indexed-name": "Yu L."
+            },
+            "@seq": "4",
+            "ce:initials": "L.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60017161",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60017161"
+            },
+            "ce:surname": "Yu",
+            "@auid": "57418006500",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57418006500",
+            "ce:indexed-name": "Yu L."
+        },
+        {
+            "ce:given-name": "Diane Tan Ting",
+            "preferred-name": {
+                "ce:given-name": "Diane Tan Ting",
+                "ce:initials": "D.T.T.",
+                "ce:surname": "Ng",
+                "ce:indexed-name": "Ng D.T.T."
+            },
+            "@seq": "5",
+            "ce:initials": "D.T.T.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60017161",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60017161"
+            },
+            "ce:surname": "Ng",
+            "@auid": "59554056200",
+            "author-url": "https://api.elsevier.com/content/author/author_id/59554056200",
+            "ce:indexed-name": "Ng D.T.T."
+        },
+        {
+            "ce:given-name": "Kazuhito",
+            "preferred-name": {
+                "ce:given-name": "Kazuhito",
+                "ce:initials": "K.",
+                "ce:surname": "Ichii",
+                "ce:indexed-name": "Ichii K."
+            },
+            "@seq": "6",
+            "ce:initials": "K.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60002787",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60002787"
+            },
+            "ce:surname": "Ichii",
+            "@auid": "7003280188",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7003280188",
+            "ce:indexed-name": "Ichii K."
+        },
+        {
+            "ce:given-name": "Yao",
+            "preferred-name": {
+                "ce:given-name": "Yao",
+                "ce:initials": "Y.",
+                "ce:surname": "Zhang",
+                "ce:indexed-name": "Zhang Y."
+            },
+            "@seq": "7",
+            "ce:initials": "Y.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60014966",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60014966"
+            },
+            "ce:surname": "Zhang",
+            "@auid": "57203829057",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57203829057",
+            "ce:indexed-name": "Zhang Y."
+        },
+        {
+            "ce:given-name": "Xiaoyang",
+            "preferred-name": {
+                "ce:given-name": "Xiaoyang",
+                "ce:initials": "X.",
+                "ce:surname": "Zhang",
+                "ce:indexed-name": "Zhang X."
+            },
+            "@seq": "8",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60014826",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60014826"
+            },
+            "ce:surname": "Zhang",
+            "@auid": "57197840312",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57197840312",
+            "ce:indexed-name": "Zhang X."
+        }
+    ]}
+}}

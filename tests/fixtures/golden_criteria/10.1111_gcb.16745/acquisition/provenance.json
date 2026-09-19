@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "doi": "10.1111/gcb.16745",
+      "provider": "wiley",
+      "requested_url": "https://api.crossref.org/works/10.1111%2Fgcb.16745",
+      "final_url": "https://api.crossref.org/works/10.1111%2Fgcb.16745",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:27:02 GMT",
+        "content-type": "application/json",
+        "content-length": "4726"
+      },
+      "captured_at_utc": "2026-09-18T02:27:02.179371+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 18111,
+      "sha256": "0122d925bcf75c4870ba5aa6f12526edbe884f5c3ccd5551069cd84dc5f9b409",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1111/gcb.16745",
+      "provider": "wiley",
+      "requested_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16745",
+      "final_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16745",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:27:05 GMT",
+        "content-type": "text/html;charset=UTF-8"
+      },
+      "captured_at_utc": "2026-09-18T02:27:08.040852+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 1320069,
+      "sha256": "0de9fdd84e114b16808a7b51b91c49a58d4f1093561b26384759ddf2884c99d8",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

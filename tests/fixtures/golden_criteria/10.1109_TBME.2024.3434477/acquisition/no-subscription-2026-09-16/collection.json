@@ -1,0 +1,126 @@
+{
+  "doi": "10.1109/TBME.2024.3434477",
+  "provider": "ieee",
+  "source_url": "https://ieeexplore.ieee.org/document/10612240/",
+  "attempt": 1,
+  "change_from_previous": "User reports switch to unsubscribed network; configured browser state and credentials preserved",
+  "reported_environment": "no_subscription",
+  "explicit_followup_requests": [],
+  "transport": "Camoufox with configured provider state",
+  "capture_started_utc": "2026-09-16T07:11:40.820865+00:00",
+  "historical_records_unchanged": true,
+  "responses": [
+    {
+      "url": "https://ieeexplore.ieee.org/document/10612240/",
+      "status_code": 200,
+      "record": "acquisition/no-subscription-2026-09-16/001-http_response_entity.bin"
+    },
+    {
+      "url": "https://ieeexplore.ieee.org/rest/document/10612240/toc",
+      "status_code": 200,
+      "record": "acquisition/no-subscription-2026-09-16/002-http_response_entity.bin"
+    },
+    {
+      "url": "https://ieeexplore.ieee.org/rest/document/10612240/similar",
+      "status_code": 200,
+      "record": "acquisition/no-subscription-2026-09-16/003-http_response_entity.bin"
+    },
+    {
+      "url": "https://ieeexplore.ieee.org/rest/document/10612240/snippet",
+      "status_code": 200,
+      "record": "acquisition/no-subscription-2026-09-16/004-http_response_entity.bin"
+    }
+  ],
+  "browser_requests": [
+    {
+      "method": "GET",
+      "url": "https://ieeexplore.ieee.org/document/10612240/",
+      "resource_type": "document"
+    },
+    {
+      "method": "GET",
+      "url": "https://ieeexplore.ieee.org/rest/document/10612240/toc",
+      "resource_type": "xhr"
+    },
+    {
+      "method": "GET",
+      "url": "https://ieeexplore.ieee.org/rest/document/10612240/similar",
+      "resource_type": "xhr"
+    },
+    {
+      "method": "GET",
+      "url": "https://ieeexplore.ieee.org/rest/document/10612240/snippet",
+      "resource_type": "xhr"
+    },
+    {
+      "method": "GET",
+      "url": "https://ieeexplore.ieee.org/assets/img/document/toc-icon.png",
+      "resource_type": "image"
+    },
+    {
+      "method": "GET",
+      "url": "https://ieeexplore.ieee.org/assets/img/document/ads/ft-subscription.png",
+      "resource_type": "image"
+    }
+  ],
+  "dom_file": "acquisition/no-subscription-2026-09-16/000-browser_rendered_dom.html",
+  "final_url": "https://ieeexplore.ieee.org/document/10612240",
+  "title": "Paediatric Prosthetic Knee Design: The Technical Requirements of a Swing Phase Control Mechanism Are Correlated With Parameters of Childhood Growth | IEEE Journals & Magazine | IEEE Xplore",
+  "observed_doi": null,
+  "confirmed_paywall": true,
+  "paywall_diagnostics": {
+    "confirmed_article_paywall": {
+      "confirmed": true,
+      "provider": "ieee",
+      "source_url": "https://ieeexplore.ieee.org/document/10612240",
+      "doi": "10.1109/tbme.2024.3434477",
+      "basis": "Sign In or Purchase",
+      "identity": "citation_doi"
+    },
+    "accepted": false,
+    "reason": "publisher_paywall",
+    "content_kind": "abstract_only",
+    "blocking_fallback_signals": [
+      "publisher_paywall"
+    ],
+    "received_metadata": {
+      "title": "Paediatric Prosthetic Knee Design: The Technical Requirements of a Swing Phase Control Mechanism Are Correlated With Parameters of Childhood Growth",
+      "authors": [
+        {
+          "name": "Caitlin E. Edgar",
+          "affiliation": [
+            "Centre for Paediatric Blast Injury Research in the Department of Bioengineering, Imperial College London, London, U.K."
+          ],
+          "firstName": "Caitlin E.",
+          "lastName": "Edgar",
+          "orcid": "0000-0002-5575-6097",
+          "id": "466474065071585"
+        },
+        {
+          "name": "Richard K. Jones",
+          "affiliation": [
+            "School of Healthy and Society, University of Salford, U.K."
+          ],
+          "firstName": "Richard K.",
+          "lastName": "Jones",
+          "id": "934741251064677"
+        },
+        {
+          "name": "Anthony M. J. Bull",
+          "affiliation": [
+            "Centre for Paediatric Blast Injury Research in the Department of Bioengineering, Imperial College London, U.K."
+          ],
+          "firstName": "Anthony M. J.",
+          "lastName": "Bull",
+          "orcid": "0000-0002-4473-8264",
+          "id": "37551685600"
+        }
+      ],
+      "abstract": "<italic xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">Objective</i>: There is a lack of innovation in affordable prosthetic knee joints for children. One significant reason is the absence of technical requirements which consider the foundation of childhood: growth. This study aims to develop and use a modelling tool to determine the technical requirements throughout childhood growth for one prosthetic knee design feature, a swing phase control mechanism (SPCM). <italic xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">Methods:</i> 3D gait data of 31 non-disabled children across a range of physical maturities were analyzed. For each participant 2 models were created from a validated paediatric non-disabled musculoskeletal model. The model was first linearly scaled, then a corresponding unilateral right knee-disarticulation amputation model produced by removing segments below the knee and replacing with prosthetic componentry. Long established low-cost prosthetic componentry and a novel polycentric knee were implemented. For each participant, inverse dynamics were conducted and the SPCM torque requirements defined. <italic xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">Results:</i> Prosthetic knee SPCM torque requirements were significantly less than the non-disabled knee to emulate non-disabled gait at free speed: 17.9% (± 10.2) and 66.3% (± 17.0) reduction in maximum extension and flexion torque, respectively. Maximum knee extension torque showed the strongest negative correlation with intact body mass (ρ = −0.6251) whereas flexion torque showed the strongest correlation with height (ρ = 0.6611). Corresponding linear regression fits produced RMSE of 1.91and 1.73 Nm, respectively. Results were also determined for slow and fast speeds. <italic xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">Conclusion:</i> The torque requirements of an affordable paediatric prosthetic knee SPCM are defined and found to strongly correlate with parameters of childhood growth (body mass, height, and age). <italic xmlns:mml=\"http://www.w3.org/1998/Math/MathML\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">Significance:</i> Current results recommend low-cost paediatric prosthetic SPCM designs can be tailored to accommodate growth. The creation of musculoskeletal models facilitate multiple future studies.",
+      "doi": "10.1109/tbme.2024.3434477",
+      "landing_page_url": "https://ieeexplore.ieee.org/document/10612240"
+    }
+  },
+  "challenge": false,
+  "stop_reason": "confirmed_article_paywall"
+}

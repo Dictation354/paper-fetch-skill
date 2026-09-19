@@ -1,0 +1,641 @@
+{
+  "doi": "10.1093/bioinformatics/btaa161",
+  "source": "oxfordacademic_html",
+  "metadata": {
+    "title": "Unified methods for feature selection in large-scale genomic studies with censored survival outcomes",
+    "authors": [
+      "Lauren Spirko-Burns",
+      "Karthik Devarajan"
+    ],
+    "abstract": "Abstract",
+    "journal": "Bioinformatics",
+    "article_type": null,
+    "published": "2020-6-1",
+    "keywords": [],
+    "license_urls": [
+      "https://academic.oup.com/journals/pages/open_access/funder_policies/chorus/standard_publication_model"
+    ],
+    "landing_page_url": "https://academic.oup.com/bioinformatics/article/36/11/3409/5802463"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "Abstract"
+    },
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "One of the major goals in large-scale genomic studies is to identify genes with a prognostic impact on time-to-event outcomes which provide insight into the disease process. With rapid developments in high-throughput genomic technologies in the past two decades, the scientific community is able to monitor the expression levels of tens of thousands of genes and proteins resulting in enormous datasets where the number of genomic features is far greater than the number of subjects. Methods based on univariate Cox regression are often used to select genomic features related to survival outcome; however, the Cox model assumes proportional hazards (PH), which is unlikely to hold for each feature. When applied to genomic features exhibiting some form of non-proportional hazards (NPH), these methods could lead to an under- or over-estimation of the effects. We propose a broad array of marginal screening techniques that aid in feature ranking and selection by accommodating various forms of NPH. First, we develop an approach based on Kullback–Leibler information divergence and the Yang–Prentice model that includes methods for the PH and proportional odds (PO) models as special cases. Next, we propose R 2 measures for the PH and PO models that can be interpreted in terms of explained randomness. Lastly, we propose a generalized pseudo- R 2 index that includes PH, PO, crossing hazards and crossing odds models as special cases and can be interpreted as the percentage of separability between subjects experiencing the event and not experiencing the event according to feature measurements.\nWe evaluate the performance of our measures using extensive simulation studies and publicly available datasets in cancer genomics. We demonstrate that the proposed methods successfully address the issue of NPH in genomic feature selection and outperform existing methods.\nR code for the proposed methods is available at github.com/lburns27/Feature-Selection.\n[email protected]\nSupplementary data are available at Bioinformatics online."
+    },
+    {
+      "heading": "1 Introduction",
+      "level": 2,
+      "kind": "body",
+      "text": "There have been significant developments in high-throughput genomic and related technologies in the past two decades. Examples include microarray technology to measure mRNA and microRNA expression, methylation arrays to quantify DNA methylation, SNP arrays to measure allele-specific expression and DNA copy number variation, next-generation sequencing technologies such as RNA-Seq, ChIP-Seq, etc. for the measurement of digital gene expression as well as mass spectroscopy and nuclear magnetic resonance spectroscopy for the measurement of protein and metabolite expression. With the wealth of data available from large-scale genomic studies, researchers can now attempt to understand and estimate the effects of specific genomic features on various diseases and characteristics associated with those diseases. A genomic feature may represent a gene that codes for a protein or a non-gene-centric element such as a microRNA, CpG site or a particular genomic region of interest. Our use of the terms feature measurement, feature value and feature is broad in scope and includes gene or protein expression, DNA methylation and copy number variation. One specific area of interest is in studying the relationship between genomic features and time to death or recurrence of some disease, often referred to as ‘survival time’. Let Y and C denote, respectively, the survival and censoring times, and let $\\delta = I(Y \\leq C)$ be the indicator of whether the event has been observed. Because of censoring, it is not possible to observe all true survival times, so we let $T = \\min(Y,C)$ be the observed survival time. In this study, we will deal with p features measured for each of n subjects, where $p \\gg n$⁠. We let Z denote the n × p matrix of features and z represent the p-vector of features for a subject.\nThese high-dimensional datasets offer some explicit challenges when applying standard statistical methods. One of the most commonly used models in survival analysis is the Cox proportional hazards (PH) regression model (Cox, 1972) which postulates that the risk (or hazard) of death of an individual, given their feature measurement, is simply proportional to their baseline risk in the absence of the feature. It is a multiplicative hazards model that implies constant hazard ratio (HR). In a high-throughput genomic study, for instance, the PH assumption would imply a constant effect of features on survival over the entire period of follow-up in a study. However, this assumption cannot be verified for each feature and it is also unlikely that PH will actually hold for each feature. Moreover, there is empirical evidence indicating that some features may not have a multiplicative effect on the hazard and that non-proportional hazards (NPH) can occur when feature effect increases or decreases over time leading to converging or diverging hazards (CoH or DH); in some studies, features with DH are found more often than features with CoH (Bhattacharjee et al., 2001; Dunkler et al., 2010; Rouam et al., 2011; Xu et al., 2005). It is, therefore, unreasonable to expect the many thousands of features to exhibit PH. In a review of survival analyses published in cancer journals, it was revealed that only 5% of all studies using the Cox PH model actually checked the PH assumption (Altman et al., 1995). Applying the PH model to data that do not support the underlying assumptions may result in inaccurate and sometimes erroneous conclusions. For instance, it could lead to under- or over-estimation of effects for a considerable number of features. Consequently, some features are falsely declared as important in predicting survival and other relevant features are completely missed. Furthermore, if some features exhibit NPH then their HRs, estimated by ignoring their time-dependence, are not comparable to those of features with PH or of features exhibiting different patterns of NPH. Although NPH typically arises from time-dependent effects of features on survival, it could also result from model mis-specification such as from omitting relevant clinical covariates like age at diagnosis and stage of disease. Feature selection methods involving univariate analyses are particularly prone to this problem. Testing the time-varying effect of features, in addition to significance testing, is important in the presence of such covariates and for small sample sizes given that in many genomic studies, typically $n \\ll p$ (Anderson and Fleming, 1995; Li et al., 1996; Struthers and Kalbfleisch, 1986). It is also important to be aware of the potential effects of dichotomization of features which may have a bearing on the results and interpretation. The goal of this study is to discuss alternative models and methods that can be used to link large-scale genomic data to a survival outcome, with the ultimate goal of feature selection under different types of hazards that may be present.\nThis article is organized as follows. In Section 2, we survey a variety of well-known survival models, many of which are designed to handle NPH, and provide an overview of marginal screening methods that currently exist in the literature. In Section 3, we use real-life genomic data to motivate the need for these models. Through this analysis, we identify specific models that fit a large proportion of genomic features and allow for NPH. Then in Section 4, we propose several feature selection methods that do not rely on the PH assumption and, instead, are developed from models capable of handling NPH. These methods are evaluated using extensive simulations and publicly available large-scale datasets in cancer genomics in Sections 5 and 6. Finally, Section 7 provides a summary and some concluding remarks."
+    },
+    {
+      "heading": "2 A brief survey of survival models and existing methods",
+      "level": 2,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "2.1 The PH model and its generalization",
+      "level": 3,
+      "kind": "body",
+      "text": "The Cox PH model is a semi-parametric regression model proposed by Cox (1972). The hazard rate, $\\left. \\lambda(t \\middle| \\mathbf{z}) \\right.$⁠, is defined as the instantaneous risk of an event at time t for covariate vector z, with $\\left. \\Lambda(t \\middle| \\mathbf{z}) \\right.$ representing the cumulative hazard function. The model is given by\n$$\n\\left. \\lambda(t \\middle| \\mathbf{z}) = \\lambda_{o}(t)\\,\\text{exp}(\\mathbf{\\beta}'\\mathbf{z})\\,\\,\\text{and}\\,\\,\\,\\Lambda(t \\middle| \\mathbf{z}) = \\Lambda_{o}(t)\\,\\text{exp}(\\mathbf{\\beta}'\\mathbf{z}), \\right.\n$$\n(1)\nwhere t > 0, $\\lambda_{o}(t)$ and $\\Lambda_{o}(t)$ are the baseline hazard and cumulative hazards functions, and $\\mathbf{\\beta}$ is a vector of regression coefficients. Estimation for the coefficient $\\mathbf{\\beta}$ can be done by maximizing the log partial likelihood $l(\\mathbf{\\beta}) = \\sum\\limits_{i = 1}^{n}\\delta_{i}\\left\\{{\\mathbf{z}'_{i}\\mathbf{\\beta} - \\text{log}\\,\\left\\lbrack {\\sum\\limits_{j \\in R(t_{i})}{\\,\\text{exp}\\,}(\\mathbf{z}'_{j}\\mathbf{\\beta})} \\right\\rbrack} \\right\\}$⁠, where t<sub>i</sub> is the survival time for subject i, δ<sub>i</sub> is the censoring indicator, and $R(t_{i})$ is the risk set, the individuals who have yet to experience the event at time t<sub>i</sub>. The HR corresponding to two different feature vectors z and $\\mathbf{z}^{*}$⁠, given by $\\frac{\\left. \\lambda(t \\middle| \\mathbf{z}) \\right.}{\\left. \\lambda(t \\middle| \\mathbf{z}^{*}) \\right.} = \\text{exp}\\lbrack\\mathbf{\\beta}'(\\mathbf{z} - \\mathbf{z}^{*})\\rbrack$⁠, depends only on the features and not on time. This fundamental assumption is unlikely to hold for all p features in the genomic setting. A semi-parametric generalization of the PH model which allows crossing hazards (CH) is described in Devarajan and Ebrahimi (2011). Its cumulative hazard and survival functions are,\n$$\n\\left. \\Lambda(t \\middle| \\mathbf{z}) = e^{\\mathbf{\\beta}'\\mathbf{z}}\\left\\{\\Lambda_{0}(t) \\right\\}^{e^{\\mathbf{\\gamma}'\\mathbf{z}}}\\,\\text{and}\\,\\, S(t \\middle| \\mathbf{z}) = \\text{exp}\\,\\left\\{- e^{\\mathbf{\\beta}'\\mathbf{z}}{\\lbrack - \\text{log}\\, S_{0}(t)\\rbrack}^{e^{\\mathbf{\\gamma}'\\mathbf{z}}} \\right\\}, \\right.\n$$\n(2)\nrespectively. This model has a more flexible, general form, but retains the Cox PH model as a special case when $\\mathbf{\\gamma} = 0$⁠. Since the partial likelihood approach cannot be applied, Devarajan and Ebrahimi (2011) utilize a flexible parametric approach via a cubic B-spline approximation for the baseline hazard to estimate the model parameters. Rouam et al. (2011) considered the special case obtained by setting $\\mathbf{\\beta} = 0$ and proposed a pseudo-R<sup>2</sup> measure for genomic feature selection. In this article, we refer to this special case as the CH model."
+    },
+    {
+      "heading": "2.2 The proportional odds model and its generalization",
+      "level": 3,
+      "kind": "body",
+      "text": "The proportional odds (PO) model is an alternative to the PH model, and does not require the assumption of PH. It allows some forms of NPH and, instead, assumes that the effect of covariates will proportionately increase or decrease the odds of dying or recurrence at time t (Bennett, 1983). The PO model is given by\n$$\n\\frac{\\left. 1 - S(t \\middle| \\mathbf{z}) \\right.}{\\left. S(t \\middle| \\mathbf{z}) \\right.} = \\frac{1 - S_{o}(t)}{S_{o}(t)}\\text{exp}(\\mathbf{\\beta}'\\mathbf{z}),\n$$\n(3)\nwhere $S_{o}(t)$ and $\\psi_{0}(t) = \\frac{1 - S_{o}(t)}{S_{o}(t)}$ are the baseline survival and odds functions, respectively, at time t. The multiplier $\\text{exp}(\\mathbf{\\beta}'\\mathbf{z})$ quantifies the amount of proportionate increase or decrease in the odds associated with covariate z. A semi-parametric generalization of the PO model can be specified as\n$$\n\\frac{\\left. 1 - S(t \\middle| \\mathbf{z}) \\right.}{\\left. S(t \\middle| \\mathbf{z}) \\right.} = \\left\\lbrack \\frac{1 - S_{0}(t)}{S_{0}(t)} \\right\\rbrack^{\\,\\text{exp}(\\mathbf{\\gamma}'\\mathbf{z})}\\,\\text{exp}(\\mathbf{\\beta}'\\mathbf{z}),\n$$\n(4)\nwhere $\\mathbf{\\gamma} = 0$ results in the PO model. This model allows for both CH and crossing odds (CO). Later, we consider the special case where $\\mathbf{\\gamma} = \\mathbf{\\beta}$ and refer to it as the CO model."
+    },
+    {
+      "heading": "2.3 Yang–Prentice model",
+      "level": 3,
+      "kind": "body",
+      "text": "Yang and Prentice (2005) proposed the Yang–Prentice (YP) model as a generalization of both the PH and PO models. Its survival function is given by\n$$\n\\left. S(t \\middle| \\mathbf{z}) = \\left(\\frac{S_{0}(t)\\,\\text{exp}(\\gamma'\\mathbf{z})}{\\,\\text{exp}(\\beta'\\mathbf{z}) - S_{0}(t)\\,\\text{exp}(\\beta'\\mathbf{z}) + S_{0}(t)\\,\\text{exp}(\\gamma'\\mathbf{z})} \\right)^{\\,\\text{exp}(\\gamma'\\mathbf{z})}. \\right.\n$$\n(5)\nNote that when $\\mathbf{\\gamma} = \\mathbf{\\beta}$⁠, it becomes the PH model, and when $\\mathbf{\\gamma} = 0$⁠, it becomes the PO model. Thus, it is a versatile and useful model that encompasses both the PH and PO models, as well as a host of other models, and allows for time-varying hazards."
+    },
+    {
+      "heading": "2.4 Existing methods for feature selection",
+      "level": 3,
+      "kind": "body",
+      "text": "Few specific methods are currently available in the literature for the purpose of feature selection when the PH assumption is violated. Dunkler et al. (2010) proposed concordance regression (CON), using a generalized concordance probability as a measure of the effect size, to select genes in microarray studies that are related to survival irrespective of the type of hazard. The basic concordance probability is $c = P(T_{1} < T_{0})$⁠, where T<sub>1</sub> is a randomly chosen survival time from group 1 and T<sub>0</sub> is a randomly chosen survival time from group 0, and is independent of the PH assumption. This is generalized to continuous data which has the form $c' = \\frac{\\,\\text{exp}(\\gamma)}{1 + \\text{exp}(\\gamma)}$⁠, where γ are the log odds that the survival time decreases if the gene expression is doubled. Genes are ranked based on the absolute effect size estimate $\\left. \\hat{c}'_{+} = 0.5 + \\middle| \\hat{c}' - 0.5 \\right|$⁠. Using simulated and microarray data, Dunkler et al. (2010) showed that when some genes showed a time-dependent effect on survival, CON produced the least biased and most stable estimates compared to methods based on Cox regression. Rouam et al. (2010, 2011) developed pseudo-R<sup>2</sup> measures for genomic feature selection based on the PH and CH models which rely on the partial likelihood of the respective model."
+    },
+    {
+      "heading": "3 Motivating examples",
+      "level": 2,
+      "kind": "body",
+      "text": "We motivate our problem using five datasets from large-scale studies in cancer utilizing a variety of high-throughput genomic technologies. Datasets 1 and 2 consist of DNA methylation and microRNA expression profiles, respectively, measured on glioblastoma samples while dataset 3 consists of digital gene expression profiles obtained using RNA sequencing from subjects with head and neck squamous cell carcinoma (HNSCC) [The Cancer Genome Atlas (TCGA), http://cancergenome.nih.gov]. Datasets 4 and 5 consist of gene expression data obtained using Affymetrix and HG 1.ST microarrays, respectively, from patients with ovarian and oral cancer (Tothill et al., 2008; Saintigny et al., 2011). Raw data were pre-processed using standard methods for each dataset as described in the Supplementary Section 8.1, and relevant characteristics of these datasets are displayed in Tables 1 and 2. We describe a comprehensive analysis of these datasets using the PH, PO and YP models to test for the goodness-of-fit (GOF) of each model using the methods outlined in Grambsch and Therneau (1994), Martinussen and Scheike (2006) and Yang and Zhao (2012), respectively (see Supplementary Section 8.3, for details on this analysis and GOF tests). All analyses were performed at the genomic feature level, the purpose of which is to identify features that exhibit some form of NPH and to demonstrate the need for alternatives to the PH model. Wherever possible, clinical covariates such as age at diagnosis and stage of cancer were adjusted for in the analysis (datasets 3–5, Table 1). The currently available method for the YP model is only capable of handling a single dichotomized covariate (Yang and Prentice, 2005), and, hence, we utilized dichotomized genomic features and did not adjust for age and stage in analyses reported in Table 2. Thus, the PH, PO and YP model fits in Table 2 utilize only dichotomized features. The q-value approach was employed to estimate the false discovery rate (FDR) and to evaluate the effect of testing multiple hypotheses (Storey and Tibshirani, 2003). In summary, GOF results based on quantitative features for the PH and PO models (Table 1) and dichotomized features for the PH, PO and YP models (Table 2) are presented. All resulted reported are based on p-value $\\leq 0.05$ and cases that satisfy q-value $\\leq 0.25$ at this threshold are indicated in the footnotes. It should be noted that different GOF tests cannot be directly compared with each other but their intended purpose is as stated above.\n**Table 1** Summary of model fits: quantitative features.\n| Dataset. | 1. | 2. | 3. | 4. | 5. |\n| ----------------- | ------------------ | ------------------ | ------------------ | ------------------ | ------------------ |\n| *p* | 9452 | 454 | 19 341 | 24 739 | 12 776 |\n| *n* | 280 | 416 | 221 | 276 | 86 |\n| % Censored | 26 | 19 | 62 | 32 | 59 |\n| A: lack of PH fit | 217 | 130 | 752 | 3881 | 1810 |\n| (%) | (2) | (29)<sup>*a*</sup> | (4) | (16)<sup>*a*</sup> | (14)<sup>*a*</sup> |\n| B: good PO fit | 8708 | 385 | 17 349 | 22 424 | 11 544 |\n| (%) | (92)<sup>*a*</sup> | (85)<sup>*a*</sup> | (90)<sup>*a*</sup> | (91)<sup>*a*</sup> | (90)<sup>*a*</sup> |\n| A ∩ B | 170 | 85 | 288 | 2513 | 947 |\n| A ∩ B′ | 47 | 45 | 464 | 1368 | 863 |\n**Table 2** Summary of model fits: dichotomized features\n| Dataset. | 1. | 2. | 3. | 4. | 5. |\n| ----------------- | ---------------- | ---------------- | --------- | ---------------- | ---------------- |\n| A: lack of PH fit | 941 | 82 | 934 | 3366 | 1294 |\n| (%) | (10)<sup>a</sup> | (18)<sup>a</sup> | (5) | (14)<sup>a</sup> | (10) |\n| B: good PO fit | 8880 | 426 | 17 743 | 22 628 | 11 755 |\n| (%) | (94) | (94)<sup>a</sup> | (92) | (91) | (92)<sup>a</sup> |\n| C: good YP fit | 9038 | 441 | 18 614 | 22 796 | 11 609 |\n| (%) | (96) | (97) | (96) | (92) | (91) |\n| A ∩ B | 854 | 72 | 471 | 2325 | 598 |\n| A ∩ C | 896 | 80 | 879 | 3051 | 1045 |\n| A ∩ B′ (⁠∩ C) | 87 (82) | 10 (9) | 463 (428) | 1041 (926) | 696 (537) |\nThe results shown in Tables 1 and 2 motivate the development of methods based on the PO and YP models because of their ability to fit not only a large number of genomic features in general, but specifically features for which the PH assumption is violated. These models provide flexible alternatives for handling various forms of NPH for quantitative as well as dichotomized features. Further details are provided in Supplementary Section 8.3."
+    },
+    {
+      "heading": "4 Proposed methods for feature selection and ranking",
+      "level": 2,
+      "kind": "body",
+      "text": "In Section 3, we demonstrated the need for alternative methods to the PH model that can handle various types of NPH. We also showed in Tables 1 and 2 that there are many features for which the PH model does not fit but the PO or YP model does; and for some features, we observed that both the PH and PO models do not fit thereby suggesting the need for more complex models such as the YP or CO. In this section, we construct several marginal screening approaches based on the PO, CO and YP models. First, we adopt an information-theoretic approach and develop a test for genomic feature effect under the YP model using Kullback–Leibler (KL) information divergence. This approach includes tests as well as R<sup>2</sup> measures for its two important special cases—the PO and PH models. Following this, we propose a unified framework to compute pseudo-R<sup>2</sup> measures for a wide range of survival models that allow different types of NPH. It includes the PH, CH, PO and CO models and generalizes prior work (Rouam et al., 2010, 2011). The utility of these methods is demonstrated using simulated and real-life genomic datasets and by comparison to existing methods."
+    },
+    {
+      "heading": "4.1 Methods based on information divergence",
+      "level": 3,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "4.1.1 Test for genomic feature effect under the YP model",
+      "level": 4,
+      "kind": "body",
+      "text": "Within the framework of the YP model, we would like to test the null hypothesis $\\left. H_{0}:\\Lambda(t \\middle| z) = \\Lambda_{0}(t) \\right.$ against the alternative $\\left. H_{1}:\\Lambda(t \\middle| z) = {\\int\\limits_{0}^{t}\\lambda}(t \\middle| z)dt \\right.$⁠, where $\\left. \\lambda(t \\middle| z) = - \\frac{\\left. d\\,\\text{log}(S(t \\middle| z)) \\right.}{dt} \\right.$ from equation (5). These hypotheses can be rewritten as $H_{0}:\\beta = 0\\,\\,\\text{and}\\,\\,\\gamma = 0\\,\\,\\,\\text{vs}.\\,\\, H_{1}:\\beta \\neq 0\\,\\,\\,\\text{or}\\,\\,\\gamma \\neq 0$⁠, i.e., we are interested in testing whether a particular genomic feature has an effect on survival time according to the YP model. To this end, we utilize KL information divergence and construct a test statistic. Let $f_{0}(t)$ and $\\left. f(t \\middle| z) \\right.$ denote the densities of T under H<sub>0</sub> and H<sub>1</sub>, respectively, and let F<sub>0</sub> and F be the corresponding distribution functions. Then KL information divergence is defined as\n$$\n\\left. I(F_{0}:F \\middle| z) = {\\int\\limits_{0}^{\\infty}f_{0}}(t)\\,\\text{log}\\,\\left\\{\\frac{f_{0}(t)}{\\left. f(t \\middle| z) \\right.} \\right\\} dt, \\right.\n$$\n(6)\nand is the directed divergence that measures the discrepancy between F<sub>0</sub> and F. Equation (6) quantifies the divergence between the null and alternative hypotheses and can be viewed as a weighted log-likelihood ratio, i.e., $I(F_{0}:F) = E_{f_{0}}\\left({\\text{log}\\,\\left\\{\\frac{f_{0}(t)}{\\left. f(t \\middle| z) \\right.} \\right\\}} \\right)$⁠. Feature-specific KL information divergence for the YP model has the form\n$$\n\\begin{matrix} \\left. I_{\\text{YP}}(F_{0}:F \\middle| z) = \\frac{\\,\\text{exp}(\\beta z)\\left\\lbrack {\\beta z\\,\\text{exp}(\\gamma z) - \\gamma z - 2} \\right\\rbrack}{\\,\\text{exp}(\\beta z) - \\text{exp}(\\gamma z)} - \\right. \\\\ {\\frac{\\,\\text{exp}(\\gamma z)\\left\\lbrack {\\gamma z\\,\\text{exp}(\\beta z) - \\beta z - 2} \\right\\rbrack}{\\,\\text{exp}(\\beta z) - \\text{exp}(\\gamma z)}.} \\end{matrix}\n$$\n(7)\nwhich we denote by $I_{\\text{YP}}(\\beta,\\gamma;z)$⁠. Let z<sub>ij</sub> represent the measurement for individual i and feature j, where $i = 1,\\ldots,n$ and $j = 1,\\ldots,p$⁠. We estimate this measure by replacing β and γ with $\\hat{\\beta}$ and $\\hat{\\gamma}$⁠, the pseudo maximum likelihood estimates obtained using the approach in Yang and Prentice (2005), and by summing over the n individuals in a study. Thus, we obtain the following estimator of $I_{\\text{YP}}^{j}$ for feature j,\n$$\n{\\hat{I}}_{\\text{YP}}^{j} = \\sum\\limits_{i = 1}^{n}I_{\\text{YP}}(\\hat{\\beta},\\hat{\\gamma};z_{ij})\n$$\n(8)\nFrom Theorem 1 (see Supplementary Section 9.1 for details on I<sub>YP</sub>), it can be seen that ${\\hat{I}}_{\\text{YP}}$ is a maximum likelihood estimator and is asymptotically normal with mean $I_{\\text{YP}}$⁠. Despite the complexity of the YP model, ${\\hat{I}}_{\\text{YP}}$ has the computational advantage of not requiring an estimate of the baseline. In addition, it combines feature effects quantified by the two model parameters β and γ into a single measure and provides a simpler interpretation of feature effect. However, a practical limitation of the currently available estimation method for this model is that it requires dichotomized features (Yang and Prentice, 2005). Therefore, we propose ${\\hat{I}}_{\\text{YP}}$ as a measure for ranking feature effect. In our applications, we compute ${\\hat{I}}_{\\text{YP}}$ using $\\hat{\\beta}$ and $\\hat{\\gamma}$ obtained by fitting the YP model to features dichotomized by the median."
+    },
+    {
+      "heading": "4.1.2 Tests for genomic feature effect under the PO and PH models",
+      "level": 4,
+      "kind": "body",
+      "text": "As outlined earlier, the YP model contains the PO and PH models as special cases. In equation (5), setting $\\gamma = \\beta$ results in the PH model and setting γ = 0 results in the PO model. In each model there is a single parameter β and we are interested in evaluating feature effect under the respective model by testing the null hypothesis $H_{0}:\\beta = 0$ against the alternative $H_{1}:\\beta \\neq 0$⁠. The test statistic for feature j under the PO model is obtained by setting γ = 0 in equation (7) and using equation (8) which simplifies to\n$$\n{\\hat{I}}_{\\text{PO}}^{j} = \\sum\\limits_{i = 1}^{n}\\frac{\\hat{\\beta}z_{ij}\\,\\text{exp}(\\hat{\\beta}z_{ij}) - 2\\,\\text{exp}(\\hat{\\beta}z_{ij}) + \\hat{\\beta}z_{ij} + 2}{\\,\\text{exp}(\\hat{\\beta}z_{ij}) - 1},\n$$\n(9)\nwhere $\\hat{\\beta}$ is the modified partial likelihood estimator (Martinussen and Scheike, 2006). From Theorem 2 (see Supplementary Section 9.2 for details on I<sub>PO</sub>), it can be seen that ${\\hat{I}}_{\\text{PO}}$ is a maximum likelihood estimator and is asymptotically normal with mean I<sub>PO</sub>. The variance of ${\\hat{I}}_{\\text{PO}}$ can be estimated using the delta method and Taylor series expansion as\n$$\n\\text{Var}({\\hat{I}}_{\\text{PO}}) \\approx \\sum\\limits_{i = 1}^{n}{\\sum\\limits_{i' = 1}^{n}\\frac{1}{18}}z_{i}^{2}z_{i'}^{2}\\sigma^{4},\n$$\n(10)\nwhere σ is the variance under H<sub>0</sub>. Using equation (10), we can reject H<sub>0</sub> if\n$$\n{\\hat{\\chi}}_{\\text{PO}}^{2} = \\frac{{\\hat{I}}_{\\text{PO}}^{2}}{\\hat{\\text{Var}}({\\hat{I}}_{\\text{PO}})} > \\chi_{1}^{2}.\n$$\n(11)\nThe test statistic for feature j under the PH model, ${\\hat{I}}_{\\text{PH}}$⁠, is obtained in the limit as $\\left. \\gamma\\rightarrow\\beta \\right.$ in equation (7) resulting in a test similar to that outlined above for the PO model. However, it would potentially over- or under-estimate feature effects when the PH assumption is violated. In that regard, the proposed methods based on YP and PO models benefit from the simplicity of this approach while addressing the issue of NPH. Furthermore, our prior studies of information divergence measures for the PH and generalized CH (equation (2)) models indicate that the proposed methods will have good small sample performance in terms of power and consistency (Devarajan and Ebrahimi, 2002, 2009)."
+    },
+    {
+      "heading": "4.1.3 Feature ranking and selection",
+      "level": 4,
+      "kind": "body",
+      "text": "Since $\\hat{I}$ quantifies the effect of a genomic feature according to the particular model of interest, it can be directly used to serve as a measure for feature ranking. Both ${\\hat{I}}_{\\text{PO}}$ and ${\\hat{I}}_{\\text{YP}}$ can be calculated for each feature in a dataset where a higher $\\hat{I}$ indicates a larger effect on survival based on the particular model chosen. Similarly, the test statistic in equation (11) based on the PO model can be used to compute a p-value for each feature and features can be selected by controlling the FDR, at a pre-determined level such as 5% (Benjamini and Hochberg, 1995). A similar approach can be used for feature selection and ranking using ${\\hat{I}}_{\\text{PH}}$ under the PH model. It is straightforward to account for potential confounders (such as age and stage of disease) by utilizing the model parameter estimate from the adjusted model in the computation of ${\\hat{I}}_{\\text{PO}}$ and ${\\hat{I}}_{\\text{PH}}$ and their respective test statistics. Multiple GOF tests at the feature level to determine which measure to use would have implications on the Type I Error and would miss features with small to moderate effects; however, since the PO accommodates forms of NPH while also allowing PH under certain conditions, a practical strategy would be to use ${\\hat{I}}_{\\text{PO}}$ and ${\\hat{\\chi}}_{\\text{PO}}^{2}$⁠. An added benefit is that these methods can handle quantitative or dichotomized features as well as account for confounders."
+    },
+    {
+      "heading": "4.2 Measures of explained randomness",
+      "level": 3,
+      "kind": "body",
+      "text": "We provide a brief overview of existing measures of explained randomness (ER), explained variation (EV) and predictive accuracy (PA) for censored survival data. While most of the measures require the PH assumption to hold, there are a few measures that are relevant to other survival models or do not assume a specific working model. A comprehensive review on this topic is provided in Choodari-Oskooei et al. (2012a, b). Several R<sup>2</sup> measures of ER for the PH model have been developed based on the likelihood ratio (LR), $\\text{log}\\,\\frac{L(\\hat{\\beta})}{L(0)}$⁠, where L(0) and $L(\\hat{\\beta})$ denote the partial likelihood for the PH model under the null and alternative hypotheses, respectively, and $\\hat{\\beta}$ is the maximum partial likelihood estimator of β. For example, Allison’s index (Allison, 1995) has the form $R_{\\text{LR},A}^{2} = 1 - \\text{exp}\\,\\left({- \\frac{2}{N}\\left\\lbrack {\\text{log}\\,\\frac{L(\\hat{\\beta})}{L(0)}} \\right\\rbrack} \\right)$ where N is the number of subjects. O’Quigley et al. (2005) proposed a modified version of $R_{\\text{LR},A}^{2}$ where N is replaced by k, the number of failures, which is an approximation of the measure in Xu and O’Quigley (1999). It is less sensitive to censoring which is beneficial in our application due to the observed high fraction of censored observations and is given by $R_{\\text{LR}}^{2} = 1 - \\text{exp}\\,\\left({- \\frac{2}{k}\\left\\lbrack {\\text{log}\\,\\frac{L(\\hat{\\beta})}{L(0)}} \\right\\rbrack} \\right)$⁠. Another modified version of $R_{\\text{LR},A}^{2}$ was proposed by Nagelkerke (1991) and has the form $R_{\\text{LR},N}^{2} = \\frac{R_{\\text{LR},A}^{2}}{R_{\\text{max}}^{2}}$ where $R_{\\text{max}}^{2} = 1 - \\text{exp}\\,\\left({\\frac{2}{N}\\text{log}\\, L(0)} \\right)$⁠. Kent and O’Quigley (1988), O’Quigley and Flandre (1994) and Royston (2006) defined measures of EV for the PH model while Royston and Sauerbrei (2004) proposed similar measures for PH, PO and lognormal models. Schemper and Henderson (2000) developed a measure of PA, $R_{\\text{SH}}^{2}$⁠, based on absolute deviation of prediction under the PH assumption. Graf et al. (1999) proposed a model independent measure of PA, $R_{G}^{2}$⁠, based on the mean squared error of prediction by weighted averages of time-dependent residuals, and Gerds and Schumacher (2006) extended it using regression models for the censoring distribution. $R_{G}^{2}$ can be used for both PH and PO models."
+    },
+    {
+      "heading": "4.2.1 *R*<sup>2</sup> measures based on information divergence",
+      "level": 4,
+      "kind": "body",
+      "text": "We utilize tests for genomic feature effect proposed in Section 4.1.2 to develop R<sup>2</sup> measures, that quantify ER, for the PO and PH models. These indices take values on the $\\lbrack 0,1\\rbrack$ scale and are easy to interpret. From equation (7), feature-specific KL information divergence for the PO model can be obtained by setting γ = 0 and expressed as\n$$\n\\left. I_{\\text{PO}}(F_{0}:F \\middle| z) = \\beta z - 2 + \\frac{2\\beta z}{\\,\\text{exp}(\\beta z) - 1}, \\right.\n$$\n(12)\nwhere z represents the feature. Similarly, feature-specific KL information divergence for the PH model can be written as\n$$\n\\left. I_{\\text{PH}}(F_{0}:F \\middle| z) = \\text{exp}(\\beta z) - \\beta z - 1, \\right.\n$$\n(13)\nwhich is obtained in the limit as $\\left. \\gamma\\rightarrow\\beta \\right.$ in equation (7). In Sections 4.1.1 and 4.1.2, we derived tests for feature effect in the YP, PO and PH models using the respective $\\hat{I}$ by summing over n individuals in a dataset. This approach accounts for the feature measurement of each individual in the study. Here, we propose an alternative, but more robust, approach by integrating over the covariate distribution; in this case, the distribution of feature measurements. A normalizing transformation stabilizes the variance and can be applied to a variety of large-scale genomic data for this purpose. Examples include the logarithmic transformation for mRNA and miRNA gene expression, the $\\text{log}(x + 1)$ transformation for digital gene expression and the logit transformation for DNA methylation (measured using beta values) while copy number variation is expressed as log-ratios. These transformations are described in Smyth (2004), Irizarry et al. (2003), Du et al. (2010), Ritchie et al. (2015) and Wineinger et al. (2008). In addition, if we standardize (the measurements for) each feature to have zero mean and unit standard deviation, then $Z \\equiv z_{ij}\\overset{\\text{iid}}{\\sim}$ Normal(0, 1), where $i = 1,\\ldots,n$ and $j = 1,\\ldots,p$⁠. We define $\\widetilde{I}$ as the expectation of $I(F_{0}:F)$ with respect to the marginal distribution of Z,\n$$\n\\left. \\widetilde{I} = \\mathbf{E}_{Z}\\lbrack I(F_{0}:F)\\rbrack = {\\int_{- \\infty}^{\\infty}I}(F_{0}:F \\middle| z)\\phi_{Z}(z)dz, \\right.\n$$\n(14)\nwhere $\\phi_{Z}(z)$ is the standard normal density. $\\widetilde{I}$ is computed for the PO and PH models using $\\left. I(F_{0}:F \\middle| z) \\right.$ in equations (12) and (13), respectively. An R<sup>2</sup>-type measure is then defined as $R_{\\widetilde{I}}^{2} = 1 - \\exp(- 2\\hat{\\widetilde{I}})$ (Soofi et al., 1995). For the PO model, ${\\widetilde{I}}_{\\text{PO}}$ is calculated using Taylor series expansion as\n$$\n{\\widetilde{I}}_{\\text{PO}} = {\\int_{- \\infty}^{\\infty}I_{PO}}(\\beta;z)\\phi_{Z}(z)dz \\approx \\frac{1}{6}\\beta^{2},\n$$\n(15)\nand, hence, $R_{{\\widetilde{I}}_{\\text{PO}}}^{2} = 1 - \\text{exp}(- 2{\\hat{\\widetilde{I}}}_{\\text{PO}}) = 1 - \\text{exp}(- \\frac{1}{3}{\\hat{\\beta}}^{2})$⁠, where $\\hat{\\beta}$ is the modified partial likelihood estimator of β in the PO model obtained using the standardized feature (Martinussen and Scheike, 2006). For the PH model, we calculate $\\widetilde{I}$ directly using I<sub>PH</sub> as\n$$\n{\\widetilde{I}}_{\\text{PH}} = {\\int_{- \\infty}^{\\infty}I_{\\text{PH}}}(\\beta;z)\\phi_{Z}(z)\\text{dz} = \\text{exp}\\,\\left({\\frac{1}{2}\\beta^{2}} \\right) - 1.\n$$\n(16)\nHence, $R_{{\\widetilde{I}}_{\\text{PH}}}^{2} = 1 - \\text{exp}(- 2{\\hat{\\widetilde{I}}}_{\\text{PH}})$⁠, where $\\hat{\\beta}$ is the partial likelihood estimator of β in the PH model obtained using the standardized feature (Cox, 1972). Details regarding the derivation of ${\\widetilde{I}}_{\\text{PO}}$ and ${\\widetilde{I}}_{\\text{PH}}$ are provided in Supplementary Section 9.3. Both $R_{{\\widetilde{I}}_{\\text{PO}}}^{2}$ and $R_{{\\widetilde{I}}_{\\text{PH}}}^{2}$ can be easily seen to fall in the $\\lbrack 0,1\\rbrack$ range and can be used for feature ranking and selection where genomic features with larger R<sup>2</sup> values can be interpreted as exhibiting larger effects on survival under the respective models. These measures have an information-theoretic foundation and are easy to compute; from equations (15) and (16), we observe that both measures are simple functions of the respective model parameter β which contains the required information if features can be normalized to follow the standard normal model."
+    },
+    {
+      "heading": "4.2.2 *R*<sup>2</sup> measures based on the LR",
+      "level": 4,
+      "kind": "body",
+      "text": "We propose three different R<sup>2</sup> measures of ER for the PO model based on LR, $\\text{log}\\,\\frac{L(\\hat{\\beta})}{L(0)}$⁠, where L(0) and $L(\\hat{\\beta})$ denote the modified partial likelihood for the PO model under the null and alternative hypotheses, respectively, and the parameter β is estimated using the approach outlined in Martinussen and Scheike (2006) (see Supplementary Section 9.4 for the modified partial likelihood). These measures parallel corresponding R<sup>2</sup> measures for the PH model—$R_{\\text{LR},A}^{2},\\, R_{\\text{LR}}^{2}$ and $R_{\\text{LR},N}^{2}$ described in Section 4.2—and can be interpreted as the proportion of ER by the PO model."
+    },
+    {
+      "heading": "4.3 A generalized pseudo-*R*<sup>2</sup> index",
+      "level": 3,
+      "kind": "body",
+      "text": "We develop pseudo-R<sup>2</sup> measures for the PO and CO models, denoted by $R_{\\text{PO}}^{2}$ and $R_{\\text{CO}}^{2}$⁠, as well as a generalized pseudo-R<sup>2</sup> index that embeds such measures for the PH, CH, PO and CO models. The proposed approach utilizes the partial likelihood of the respective models and does not require an estimate of the parameter β in these models. It generalizes the work of Rouam et al. (2010, 2011) where measures for the PH and CH models, which we denote by $R_{\\text{PH}}^{2}$ and $R_{\\text{CH}}^{2}$⁠, respectively, were proposed. These pseudo-R<sup>2</sup> measures can be interpreted in terms of the difference in the values of a genomic feature between subjects experiencing and not experiencing the event of interest, and can be used as tools for feature ranking and selection under a variety of scenarios involving NPH. An obvious disadvantage of $R_{\\text{PH}}^{2}$ is that it is based on the PH model. In the CH model, the HR between two individuals with feature values z and $z^{*}$ cross over time (Rouam et al., 2011). Thus, while $R_{\\text{CH}}^{2}$ does address the inherent problem with $R_{\\text{PH}}^{2}$⁠, it forces CH. On the other hand, the PO model is more generally applicable to the variety of hazard structures observed in genomic data as seen in Tables 1 and 2. The CO model generalizes the PO model in the same manner as the CH model generalizes the PH model and, thus, has a more versatile form. For our purposes, we will use the special case $\\gamma = \\beta$ in equation (4). Hence, the measures $R_{\\text{PO}}^{2}$ and $R_{\\text{CO}}^{2}$ based on these models offer significant advantages and flexibility that is not afforded by currently available measures.\nThe generalized pseudo-R<sup>2</sup> index can then be expressed as $R^{2} = \\frac{1}{k}\\frac{\\left({\\sum\\limits_{i = 1}^{n}{\\hat{W}}_{i}} \\right)^{2}}{\\sum\\limits_{i = 1}^{n}{\\hat{W}}_{i}^{2}}$⁠, where $\\hat{W_{i}} = \\delta_{i}\\hat{w}(t_{i})\\left({z_{i} - \\frac{\\sum\\limits_{j = 1}^{n}Y_{j}(t_{i})z_{j}}{\\sum\\limits_{j = 1}^{n}Y_{j}(t_{i})}} \\right) -$$\\sum\\limits_{j = 1}^{n}\\frac{\\delta_{j}\\hat{w}(t_{j})Y_{i}(t_{j})}{\\sum\\limits_{r = 1}^{n}Y_{r}(t_{j})}\\left({z_{i} - \\frac{\\sum\\limits_{r = 1}^{n}Y_{r}(t_{j})z_{r}}{\\sum\\limits_{r = 1}^{n}Y_{r}(t_{j})}} \\right)$⁠, z<sub>i</sub> is the value of a given feature for subject i, k is the number of uncensored failure times and $\\overline{Y} = \\sum\\limits_{j = 1}^{n}Y_{j}$ is the number of subjects at risk at time t<sub>i</sub>. This index can be seen as the robust score statistic divided by the number of distinct uncensored failure times, a quantity that falls between 0 and 1 and can be interpreted in terms of the percentage of separability between subjects experiencing and not experiencing the event in relation to the value of a genomic feature. Thus, R<sup>2</sup> indices corresponding to the PH, CH, PO and CO models based on model-specific choice of the weight, w(t), determined by the respective partial likelihood can be obtained. The estimated weight, $\\hat{w}(t)$⁠, for each special case is shown in Supplementary Table 6 and Supplementary Section 9.4, and can be interpreted as the derivative of the log HR for the corresponding model with respect to the predictor η=βz evaluated at η = 0. In Supplementary Table 6, $\\Lambda_{0}(t)$ is estimated by the left-continuous version of Nelson’s estimator and $S_{0}(t)$ is estimated using the Kaplan–Meier estimator. We note that $R_{\\text{PH}}^{2}$ and $R_{\\text{CH}}^{2}$ are the measures described in Rouam et al. (2010, 2011) while $R_{\\text{PO}}^{2}$ and $R_{\\text{CO}}^{2}$ are our newly proposed measures that allow for various types of NPH as well as PH. In order to avoid numerical issues, we applied empirical corrections in the computation of $R_{\\text{CH}}^{2}$ (which we refer to as $R_{\\widetilde{\\text{CH}}}^{2}$ henceforth) and $R_{\\text{CO}}^{2}$ (see Supplementary Section 9.4 for details)."
+    },
+    {
+      "heading": "5 Application to simulated data",
+      "level": 2,
+      "kind": "body",
+      "text": "In this section, we evaluate our newly proposed ranking methods, ${\\hat{I}}_{\\text{PO}},\\,{\\hat{I}}_{\\text{YP}},\\, R_{{\\widetilde{I}}_{\\text{PO}}}^{2},\\, R_{{\\widetilde{I}}_{\\text{PH}}}^{2},\\, R_{\\text{PO}}^{2},\\, R_{\\text{CO}}^{2},\\, R_{\\widetilde{\\text{CH}}}^{2}$ and $R_{\\text{LR}}^{2}$ using simulated datasets under a variety of scenarios and compare their performance to existing methods, $R_{\\text{PH}}^{2},\\, R_{\\text{CH}}^{2}$ and ${\\hat{c\\prime}}_{+}$ (Dunkler et al., 2010; Rouam et al., 2010, 2011) and measures of PA, $R_{G}^{2}$ and $R_{\\text{SH}}^{2}$⁠, described in Section 4.2. The goal of this study is to assess the performance of these methods in selecting features that are truly associated with survival in the high-dimensional setting."
+    },
+    {
+      "heading": "5.1 Simulation schemes",
+      "level": 3,
+      "kind": "body",
+      "text": "We considered two different simulation schemes to generate artificial survival and genomic datasets based on the approach outlined in Dunkler et al. (2010). In order to account for various types of hazards, survival times $Y_{i},i = 1,\\ldots,n$⁠, were generated from each of five different models specified as follows: standard log-normal LN (μ = 0, σ = 1); log-logistic LL1 (⁠$\\alpha_{1} = 2,\\lambda_{1} = 2,\\lambda_{2} = 4$⁠) and LL2 (⁠$\\alpha_{1} = 3,\\alpha_{2} = 4,\\lambda_{1} = 1,\\lambda_{2} = 2$⁠); and Weibull W1 (⁠$\\alpha_{1} = 1,\\lambda_{1} = \\frac{1}{2}$⁠) and W2 (⁠$\\alpha_{1} = 3,\\alpha_{2} = 2,\\lambda_{1} = 1,\\lambda_{2} = \\frac{1}{2}$⁠), where LL1 and W1 refer to the respective models where the shape parameters are the same but the scale parameters differ, and LL2 and W2 refer to the respective models where both the shape and scale parameters differ. In the LN model, μ and σ are the location and scale parameters, respectively. We use a more informed approach that is broader in scope compared to that of Dunkler et al. (2010), who only considered W1 in their simulations. Here, LN, LL2 and W2 cases are of particular interest because of their ability to simulate CH. To simulate censoring, we drew random samples with uniform follow-up times C from $U(0,\\tau)$ and defined the observed survival time as $T = \\min(Y,C)$ with censoring indicator $\\delta = I(T = Y)$⁠. We chose τ to get censoring proportions of 0, 33 and 67%. For each model, we simulated censored survival times and genomic data for N = 200 subjects and p = 5000 mock features that are linked to survival time based on the logarithm of the HR $(\\text{HR}(t))$⁠, $\\beta_{g}(t) = \\beta_{0}\\,\\text{log}(\\text{HR}(t))$⁠. Genomic data were generated from the standard normal model which covers a variety of features seen in large-scale genomic studies. Following Klein and Moeschberger (2003), $\\text{log}(\\text{HR}(t))$ was calculated based on the respective model of interest. For LN, we used $\\beta_{g}(t) = \\beta_{0}(t^{2} - 1)$ to simulate CH similar to what was done in Dunkler et al. (2010). Then, β<sub>0</sub> was chosen so that only the first 400 features were assumed to have an effect on survival time, with 200 having a large effect and 200 having a small effect. In Scheme 1, we adopt a univariate approach where each feature is separately linked to survival, and in Scheme 2, we adopt a multivariate approach that incorporates correlations between features. Under each scenario, 200 datasets were generated and the ranking methods were assessed using mean AUC (area under the receiver operating characteristic curve) and Youden index (Youden, 1950). More details can be found in Dunkler et al. (2010) and Supplementary Section 10."
+    },
+    {
+      "heading": "5.2 Simulation results",
+      "level": 3,
+      "kind": "body",
+      "text": "Overall, under different data generating models and censoring proportions, the proposed methods outperformed and, in some cases, performed as well as existing methods. In most cases, we noticed some form of improvement. Selected results under different NPH model assumptions are highlighted in Table 3 while detailed simulation results under various scenarios outlined above are provided in Supplementary Sections 10.3, 10.4 and Tables 7–11. Since $R_{\\text{LR},A}^{2},\\, R_{\\text{LR}}^{2}$⁠, and $R_{\\text{LR},N}^{2}$ resulted in the same feature rankings, we only report results for $R_{\\text{LR}}^{2}$⁠. Our PO model-based methods (all R<sup>2</sup> measures and ${\\hat{I}}_{\\text{PO}}$⁠) performed strongly overall and ${\\hat{I}}_{\\text{YP}}$ performed particularly well for lower censoring (0% and 33%). $R_{\\text{CO}}^{2}$ outperformed $R_{\\text{CH}}^{2}$ in many cases where NPH was present, across censoring levels and simulations schemes; but it is important to note that our modified version, $R_{\\widetilde{\\text{CH}}}^{2}$⁠, performed better than $R_{\\text{CH}}^{2}$ in most cases and similarly to it in other cases. Overall, depending on the simulation scheme and type of NPH present, we can identify the benefits of utilizing each of our measures. Most importantly, the proposed feature selection methods are more flexible and generalize existing methods.\n**Table 3** Comparison of methods (AUC): simulation schemes 1 and 2.\n| Censoring. / Measure. | Scheme 1, 33%. / LN. | Scheme 1, 33%. / LL2. | Scheme 1, 33%. / W2. | Scheme 1, 67%. / LN. | Scheme 1, 67%. / LL2. | Scheme 1, 67%. / W2. | Scheme 2, 33%. / LN. | Scheme 2, 33%. / LL2. | Scheme 2, 33%. / W2. | Scheme 2, 67%. / LN. | Scheme 2, 67%. / LL2. | Scheme 2, 67%. / W2. |\n| ----------------------- | ---------------------- | ----------------------- | ---------------------- | ---------------------- | ----------------------- | ---------------------- | ---------------------- | ----------------------- | ---------------------- | ---------------------- | ----------------------- | ---------------------- |\n| *I* <sub>PO</sub> | 0.89 | 0.77 | 1.00 | 0.93 | 0.81 | 0.95 | 0.87 | 0.62 | 0.90 | 0.89 | 0.80 | 0.86 |\n| *I* <sub>YP</sub> | 0.96 | 0.75 | 1.00 | 0.83 | 0.58 | 0.93 | 0.84 | 0.82 | 0.86 | 0.69 | 0.68 | 0.68 |\n| c^′+ | 0.82 | 0.71 | 1.00 | 0.88 | 0.71 | 0.98 | 0.80 | 0.50 | 0.90 | 0.84 | 0.53 | 0.87 |\n| R I˜ PO 2 | 0.88 | 0.78 | 1.00 | 0.93 | 0.81 | 0.95 | 0.86 | 0.64 | 0.90 | 0.88 | 0.80 | 0.89 |\n| R PO 2 | 0.89 | 0.77 | 0.99 | 0.93 | 0.81 | 0.95 | 0.87 | 0.63 | 0.89 | 0.89 | 0.81 | 0.84 |\n| R CO 2 | 0.82 | 0.80 | 0.87 | 0.68 | 0.74 | 0.89 | 0.59 | 0.87 | 0.88 | 0.56 | 0.71 | 0.87 |\n| R CH˜ 2 | 0.97 | 0.87 | 0.82 | 0.87 | 0.84 | 0.71 | 0.88 | 0.89 | 0.74 | 0.81 | 0.87 | 0.55 |\n| R PH 2 | 0.77 | 0.61 | 1.00 | 0.92 | 0.78 | 0.97 | 0.75 | 0.54 | 0.89 | 0.89 | 0.71 | 0.87 |"
+    },
+    {
+      "heading": "6 Application to genomic data",
+      "level": 2,
+      "kind": "body",
+      "text": "In this section, we compare the performance of the proposed methods using several datasets representing a broad spectrum of high-throughput genomic technologies. In addition to datasets 1–5 described in Section 3, we utilized the following datasets. Dataset 6 consists of microarray gene expression profiles measured on the same set of glioblastoma samples used in datasets 1 and 2, while datasets 7 and 8 consist of DNA methylation and copy number variation profiles, respectively, from subjects with HNSCC (see Supplementary Section 8.1). Since we do not have prior knowledge on the number of genomic features significantly associated with survival in real data, this approach will differ from that of the simulations. Here, we will rank features based on each method and compare them using a pre-selected number of top features across methods. Whenever possible, parameter estimates required for computing certain I and R<sup>2</sup> measures were obtained from respective models adjusted for potential confounders such as age and stage of disease. These measures include ${\\hat{I}}_{\\text{PO}},\\, R_{\\text{LR}}^{2},\\, R_{{\\widetilde{I}}_{\\text{PO}}}^{2},\\, R_{{\\widetilde{I}}_{\\text{PH}}}^{2}$ and the absolute effect size estimate, ${\\hat{c\\prime}}_{+}$⁠, from CON. In addition to quantitative features, dichotomized features were utilized for ${\\hat{I}}_{\\text{PO}}$ and ${\\hat{c\\prime}}_{+}$ and no adjustment for confounders was done for analyses involving dichotomized data in order to enable direct comparison of results to ${\\hat{I}}_{\\text{YP}}$ which accommodates only a single dichotomized covariate as explained earlier.\nWe begin by focusing attention on the application of our proposed I measures—${\\hat{I}}_{\\text{PO}}$ and ${\\hat{I}}_{\\text{YP}}$—and ${\\hat{c\\prime}}_{+}$⁠, selecting the top 500 features based on each measure. We observe that there are few features commonly selected by all three measures, as evidenced in the Venn diagrams presented in Supplementary Figures 1–3. These results are captured in Table 5 which summarizes the fraction of features that are identified in common by different measures (for quantitative features). This is not surprising given that these measures are based on different model assumptions. More details can be found in Supplementary Material. Using the test statistic for ${\\hat{I}}_{\\text{PO}}$ in equation (11), we computed a p-value for each feature and selected features by controlling the FDR at 5% (Benjamini and Hochberg, 1995); for comparison, we applied the test from CON (Section 2.4) using the same threshold. It should be noted that this approach can also be used to rank features and to compare different measures. Table 4 summarizes the results of this analysis for quantitative and dichotomized features for various datasets. In almost all cases, ${\\hat{\\chi}}_{\\text{PO}}^{2}$ selects a much larger number of features compared to CON which does not select many features at all in the first place. This limitation is recognized in Dunkler et al. (2010), and it renders CON as a tool for feature ranking only (based on ${\\hat{c\\prime}}_{+}$⁠) rather than feature selection, unlike ${\\hat{\\chi}}_{\\text{PO}}^{2}$ which can be used for ranking as well as selecting features based on a pre-specified p-value or FDR threshold. Even though some overlap is observed in features selected by ${\\hat{I}}_{\\text{PO}}$ and ${\\hat{c\\prime}}_{+}$ when used purely as ranking measures (as seen in Table 5), significant improvement is observed in the performance of the proposed statistical test based on ${\\hat{I}}_{\\text{PO}},\\,{\\hat{\\chi}}_{\\text{PO}}^{2}$⁠, as evident from Table 4. In addition, ${\\hat{\\chi}}_{\\text{PO}}^{2}$ enables better enrichment of selected feature sets as demonstrated in Supplementary Section 11, where we also outline an exploratory approach to evaluate and visualize the combined effect of selected features on survival. Overall, we recommend the use of ${\\hat{I}}_{\\text{PO}},\\,{\\hat{\\chi}}_{\\text{PO}}^{2}$ or ${\\hat{I}}_{\\text{YP}}$ because of their inherent versatility.\n**Table 4** Number of features selected by ${\\hat{\\chi}}_{\\text{PO}}^{2}$ and CON\n| Data type. / Dataset. | Quantitative. / χ^ PO 2. | Quantitative. / CON. | Dichotomous. / χ^ PO 2. | Dichotomous. / CON. |\n| ----------------------- | -------------------------- | ---------------------- | ------------------------- | --------------------- |\n| 1 | 1097 | 99 | 318 | 0 |\n| 2 | 33 | 0 | 17 | 0 |\n| 3 | 1580 | 7 | 1963 | 2 |\n| 4 | 4784 | 17 | 6057 | 0 |\n| 5 | 758 | 1473 | 4099 | 323 |\n| 6 | 310 | 0 | 0 | 0 |\n| 7 | 5799 | 0 | 3885 | 21 |\n| 8 | 464 | 0 | 64 | 0 |\n**Table 5** Fraction (%) of common features selected by different measures.\n| Datasets. | I^ YP and I^ PO. | I^ YP and c^′+. | I^ P O and c^′+. | I^ YP⁠, I^ PO and c^′+. | R PO 2 and R CH˜ 2. | R CO 2 and R CH˜ 2. | R PO 2 and R CO 2. | R PO 2⁠, R CO 2⁠, and R CH˜ 2. |\n| ---------- | ----------------- | ---------------- | ----------------- | ------------------------ | -------------------- | -------------------- | ------------------- | ------------------------------- |\n| 1 | 11 | 14 | 62 | 7 | 7 | 45 | 38 | 6 |\n| 2 | 34 | 36 | 88 | 32 | 40 | 42 | 12 | 8 |\n| 3 | 7 | 11 | 48 | 5 | 14 | 18 | 6 | 0 |\n| 4 | 5 | 6 | 42 | 3 | 18 | 9 | 11 | 0 |\n| 5 | 10 | 23 | 39 | 7 | 27 | 3 | 8 | <1 |\n| 6 | 16 | 15 | 75 | 14 | 11 | 37 | 5 | 0 |\n| 7 | 1 | <1 | 62 | <1 | 19 | 9 | 1 | 0 |\n| 8 | 6 | 16 | 53 | 4 | 21 | 57 | 7 | 0 |\nNext, we examine the differences between genomic features selected by various R<sup>2</sup> measures, once again selecting the top 500 features in each case. Supplementary Figure 4 shows the overlaps between PO-based R<sup>2</sup> measures—$R_{\\text{PO}}^{2},\\, R_{\\text{LR}}^{2}$ and $R_{{\\widetilde{I}}_{\\text{PO}}}^{2}$—for the glioblastoma datasets (1, 2 and 6). Since dataset 2 contained a small number of features (454), the top 50 selected features were compared. The results are, however, consistent across these datasets where we observe a large fraction of common features selected by different measures. In all three datasets, a large fraction of features (⁠$> 80\\%$⁠) are common to all three measures as well as between any pair of measures. Similar observations can be made for the HNSCC (3, 7 and 8), ovarian (4) and oral (5) datasets shown in Supplementary Figure 5.\nVenn diagrams corresponding to $R_{\\text{PO}}^{2},\\, R_{\\text{CO}}^{2}$ and $R_{\\widetilde{\\text{CH}}}^{2}$ are shown in Supplementary Figures 6 and 7, and the size of each intersecting feature set is shown in Table 5. We observe that there are only minor overlaps between different measures across all datasets, with the largest overlaps occurring between $R_{\\text{PO}}^{2}$ and $R_{\\widetilde{\\text{CH}}}^{2}$ for datasets 5 and 8 and between $R_{\\text{CO}}^{2}$ and $R_{\\widetilde{\\text{CH}}}^{2}$ for datasets 1, 6 and 8. There are also no features common to all three measures in datasets 3, 4, 6, 7 and 8, and only a very small number of common features in the remaining datasets. Overall, these results are not surprising since each of these methods is based on a different model, so we would expect them to select different features; however, the results also indicate that PO and CO model-based measures can identify various forms of NPH. The differences observed in selected features across the three measures indicate the presence of various types of NPH in a given dataset. Thus, the appropriate measure can be chosen based on the goal of feature selection and type of hazards present or expected. We emphasize that our proposed measures provide a more versatile and general framework that allows for inclusion of various types of hazards."
+    },
+    {
+      "heading": "7 Discussion and conclusion",
+      "level": 2,
+      "kind": "body",
+      "text": "In this article, we proposed unified methods for feature selection in large-scale genomic data in the presence of censored survival outcomes. We illustrated the utility of these methods using real-life studies in cancer genomics; in particular, we demonstrated their ability to handle the challenges due to various forms of NPH. The proposed methods are based on models that relax the PH assumption and are able to identify genomic features with a time-varying effect with increased specificity and sensitivity.\nOur methods are flexible and generalize existing methods for feature selection by casting them within unifying frameworks. First, we proposed a general framework to test for the effect of a genomic feature under the YP model using KL information divergence by developing the measure ${\\hat{I}}_{\\text{YP}}$ which quantifies this effect. ${\\hat{I}}_{\\text{YP}}$ includes measures for the PO and PH models—${\\hat{I}}_{\\text{PO}}$ and ${\\hat{I}}_{\\text{PH}}$⁠, respectively—as special cases. An advantage of these measures is that they do not require an estimate of the baseline hazard and, instead, are simple functions of respective model parameter estimates. Using these measures, we developed a statistical test (⁠${\\hat{\\chi}}_{\\text{PO}}^{2}$⁠) for genomic feature effect in the PO model where the test statistic or p-value could be used for feature selection; in addition, we developed R<sup>2</sup> measures of ER for the PO and PH models that only rely on the respective model parameter estimate or the LR. Finally, we proposed a generalized pseudo-R<sup>2</sup> index that embeds measures for the PO, CO, PH and CH models as special cases. These measures do not require an estimate of the model parameter and can be easily interpreted as the percentage of separability between subjects in the event and non-event groups according to feature values. Since $R_{\\text{PO}}^{2},\\, R_{\\text{CO}}^{2}$ and $R_{\\widetilde{\\text{CH}}}^{2}$ select fairly independent subsets of features, each set can be used for further exploration and study. PO model-based measures demonstrated their ability to handle PH and various forms of NPH while $R_{\\widetilde{\\text{CH}}}^{2}$ only performed well in detecting certain types of CH; moreover, $R_{\\text{CO}}^{2}$ offers a useful alternative and is better suited for handling particular forms of NPH. Thus, each measure provides useful information specific to a particular model of interest while PO model-based R<sup>2</sup> measures provide overall flexibility relative to other measures.\nAll proposed R<sup>2</sup> measures can be applied to quantitative (continuous, count or ordered categorical) features and I measures are applicable to quantitative or dichotomized features; however, ${\\hat{I}}_{\\text{YP}}$ is currently usable only on dichotomized features. Use of (appropriately variance stabilized and normalized) quantitative features aids in robust estimation of time-varying effects and interpretability while dichotomized features facilitate visualization of results. However, it is important to be aware of the potential effect of dichotomization—using the median split or any other arbitrary cut-off—on the PH assumption. This is evidenced by the results in Tables 1 and 2 for datasets 1 and 2 where dichotomization has a negative and positive effect, respectively, on GOF. The proposed I measures are useful for feature ranking in general and, in particular, when the distribution of feature measurements or a normalizing transformation for it is unknown. Furthermore, ${\\hat{I}}_{\\text{PO}},\\, R_{{\\widetilde{I}}_{\\text{PO}}}^{2},\\, R_{{\\widetilde{I}}_{\\text{PH}}}^{2}$ and $R_{\\text{LR}}^{2}$ can accommodate potential confounders such as age and stage of disease directly or indirectly in their computation (as illustrated in our examples) as well as a group of pre-selected features depending on the application of interest. While ${\\hat{I}}_{\\text{YP}}$ offers an approach for feature ranking using a flexible survival model for dichotomized features, ${\\hat{\\chi}}_{\\text{PO}}^{2}$ provides a method for feature ranking as well as selection for both quantitative and dichotomized features. Typically, ${\\hat{\\chi}}_{\\text{PO}}^{2}$ selects more features at the same significance threshold and, thus, provides a more lenient approach for feature discovery relative to standard methods and CON as evidenced in Table 4. Moreover, our results demonstrate that it includes a significant fraction of features identified by CON. This is a desirable property of any feature selection method and it enables appropriate correction for multiple testing through use of FDR based not only on the Benjamini–Hochberg approach which assumes independent hypotheses but also on more stringent methods that account for dependence amongst hypotheses. Such flexibility is not possible with currently available methods for feature selection and ranking especially within a broad framework that includes the YP, PO and PH models.\nOur extensive simulation studies demonstrated that there were a variety of scenarios where our proposed measures outperformed currently available methods. An important consideration is that when marginal screening methods are utilized for the purpose of feature ranking and selection, the issue of multiple testing becomes less important in comparison to adjusting for potential confounders when considering different models and measures. The proposed methods demonstrated their ability to correctly select genomic features associated with survival in the presence of different types of time-varying effects in real genomic data, after adjusting for potential confounders and for multiple testing, as well as in simulated data. As genomic technologies continue to advance and as more clinical, demographic and genomic data are generated and stored in repositories such as TCGA, Gene Expression Omnibus (https://www.ncbi.nlm.nih.gov/geo/) etc., feature selection methods will become increasingly important as we attempt to identify genomic features with a prognostic impact on patient survival. Although we focused on genomic feature selection in this article, it should be noted that the proposed methods are directly applicable to a broad array of high-throughput ‘omics’ studies such as those involving genome-wide association, proteomics, metabolomics, transcriptomics and radiomics. In particular, radiomics is a rapidly developing area where there has been considerable interest in correlating intra-tumor heterogeneity based on textural features to survival endpoints."
+    },
+    {
+      "heading": "Acknowledgements",
+      "level": 2,
+      "kind": "body",
+      "text": "The authors would like to thank the reviewers for thoughtful comments that helped improve the presentation in this article."
+    },
+    {
+      "heading": "Funding",
+      "level": 3,
+      "kind": "body",
+      "text": "This work was partially supported by the National Institutes of Health/National Cancer Institute [P30 CA006927 to K.D.]; the National Science Foundation [625061]; and US Army grant [W911NF-16-2-0189] (Temple University’s HPC resources).\nConflict of Interest: none declared."
+    },
+    {
+      "heading": "References",
+      "level": 2,
+      "kind": "references",
+      "text": "Allison P.D. (1995).\nSurvival Analysis Using SAS: A Practical Guide.\nSAS Publishing, Cary, North Carolina.\nAltman D.G. et al. (1995)\nReview of survival analysis published in cancer journals.\nBr. J. Cancer,\n72,\n511\n–\n518.\nAnderson G.A., Fleming T.R. (1995)\nModel misspecification in proportional hazards regression.\nBiometrika,\n82,\n527\n–\n541.\nBenjamini Y., Hochberg Y. (1995)\nControlling the false discovery rate: a practical and powerful approach to multiple testing.\nJ. R. Stat. Soc.,\n57,\n289\n–\n300.\nBennett S. (1983)\nAnalysis of survival data by the proportional odds model.\nStat. Med.,\n2,\n273\n–\n277.\nBhattacharjee A. et al. (2001)\nClassification of human lung carcinomas by mRNA expression profiling reveals distinct adenocarcinoma subclasses.\nProc. Natl. Acad. Sci. USA,\n98,\n13790\n–\n13795.\nChoodari-Oskooei B. et al. (2012a)\nA simulation study of predictive ability measures in a survival model I: explained variation measures.\nStat. Med.,\n31,\n2627\n–\n2643.\nChoodari-Oskooei B. et al. (2012b)\nA simulation study of predictive ability measures in a survival model II: explained randomness and predictive accuracy.\nStat. Med.,\n31,\n2644\n–\n2659.\nCox D.R. (1972)\nRegression models and life-tables.\nJ. R. Stat. Soc.,\n34,\n187\n–\n220.\nDevarajan K., Ebrahimi N. (2002). Goodness-of-fit testing for the Cox proportional hazards model. In: Huber-Carol, C., et al. (eds)\nGoodness-of-Fit Tests and Model Validity. Statistics for Industry and Technology.\nBirkhauser,\nBoston, Massachusetts, pp.\n237\n–\n254.\nDevarajan K., Ebrahimi N. (2009)\nTesting for covariate effect in the cox proportional hazards regression model.\nCommun. Stat.,\n38,\n2333\n–\n2347.\nDevarajan K., Ebrahimi N. (2011)\nA semi-parametric generalization of the Cox proportional hazards regression model: inference and applications.\nComput. Stat. Data Anal.,\n55,\n667\n–\n676.\nDu P. et al. (2010)\nComparison of beta-value and M-value methods for quantifying methylation levels by microarray analysis.\nBMC Bioinformatics,\n11,\n587.\nDunkler D. et al. (2010)\nGene selection in microarray survival studies under possibly non-proportional hazards.\nBioinformatics,\n26,\n784\n–\n790.\nGerds T.A., Schumacher M. (2006)\nConsistent estimation of the expected Brier score in general survival models with right-censored event times.\nBiometric. J.,\n48,\n1029\n–\n1040.\nGraf E. et al. (1999)\nAssessment and comparison of prognostic classification schemes for survival data.\nStat. Med.,\n18,\n2529\n–\n2545.\nGrambsch P., Therneau T. (1994)\nProportional hazards tests and diagnostics based on weighted residuals.\nBiometrika,\n81,\n515\n–\n526.\nIrizarry R.A. et al. (2003)\nExploration, normalization, and summaries of high density oligonucleotide array probe level data.\nBiostatistics,\n4,\n249\n–\n264.\nKent J.T., O'Quigley J. (1988)\nMeasures of dependence for censored survival data.\nBiometrika,\n75,\n525\n–\n534.\nKlein J.P., Moeschberger M.L. (2003).\nSurvival Analysis: Techniques for Censored and Truncated Data.\nSpringer,\nNew York.\nLi Y.-H. et al. (1996)\nEffects of model misspecification in estimating covariate effects in survival analysis for small sample sizes.\nComput. Stat. Data Anal.,\n22,\n177\n–\n192.\nMartinussen T., Scheike T.H. (2006).\nDynamic Regression Models for Survival Data. Statistics for Biology and Health, Springer, New York.\nNagelkerke N. (1991)\nA note on a general definition of the coefficient of determination.\nBiometrika,\n78,\n691\n–\n692.\nO’Quigley J., Flandre P. (1994)\nPredictive capability of proportional hazards regression.\nProc. Natl. Acad. Sci. USA,\n91,\n2310\n–\n2314.\nO’Quigley J. et al. (2005)\nExplained randomness in proportional hazards models.\nStat. Med.,\n24,\n479\n–\n489.\nRitchie M.E. et al. (2015)\nlimma\npowers differential expression analyses for RNA-sequencing and microarray studies.\nNucleic Acids Res.,\n43,\ne47.\nRouam S. et al. (2010)\nIdentifying common prognostic factors in genomic cancer studies: a novel index for censored outcomes.\nBMC Bioinformatics,\n11.\nRouam S. et al. (2011)\nA pseudo-R\n<sup>2</sup>\nmeasure for selecting genomic markers with crossing hazards functions.\nBMC Med. Res. Methodol.,\n11,\n28.\nRoyston P. (2006)\nExplained variation for survival models.\nStata J.,\n6,\n83\n–\n14.\nRoyston P., Sauerbrei W. (2004)\nA new measure of prognostic separation in survival data.\nStat. Med.,\n23,\n723\n–\n748.\nSaintigny P. et al. (2011)\nGene expression profiling predicts the development of oral cancer.\nCancer Prev. Res. (Phila),\n4,\n218\n–\n229.\nSchemper M., Henderson R. (2000)\nPredictive accuracy and explained variation in Cox regression.\nBiometrics,\n56,\n249\n–\n255.\nSmyth G.K. (2004)\nLinear models and empirical Bayes methods for assessing differential expression in microarray experiments.\nStat. Appl. Genet. Mol. Biol.,\n3,\n1\n–\n25.\nSoofi E.S. et al. (1995)\nInformation distinguishability with application to analysis of failure data.\nJ. Am. Stat. Assoc.,\n90,\n657\n–\n668.\nStorey J.D., Tibshirani R.J. (2003)\nStatistical significance for genomewide studies.\nProc. Natl. Acad. Sci. USA,\n100,\n9440\n–\n9445.\nStruthers C.A., Kalbfleisch J.D. (1986)\nMisspecified proportional hazard models.\nBiometrika,\n73,\n363\n–\n369.\nTothill R.W. et al. (2008)\nNovel molecular subtypes of serous and endometroid ovarian cancer linked to clinical outcome.\nClin. Cancer Res.,\n14,\n5198\n–\n5208.\nWineinger N.E. et al. (2008)\nStatistical issues in the analysis of DNA copy number variations.\nInt. J. Comput. Biol. Drug Des.,\n1,\n368\n–\n395.\nXu R., O’Quigley J. (1999)\nA measure of dependence for proportional hazards models.\nJ. Nonparametric Stat.,\n12,\n83\n–\n107.\nXu J. et al. (2005)\nSurvival analysis of microarray expression data by transformation models.\nComput. Biol. Chem.,\n29,\n91\n–\n94.\nYang S., Prentice R. (2005)\nSemiparametric analysis of short-term and long-term hazard ratios with two-sample survival data.\nBiometrika,\n92,\n1\n–\n17.\nYang S., Zhao Y. (2012)\nChecking the short-term and long-term hazard ratio model for survival data.\nScand. J. Stat.,\n39,\n554\n–\n567.\nYouden W.J. (1950)\nIndex for rating diagnostic tests.\nCancer,\n3,\n32\n–\n35.\n/foreach in Model.Sections\n© The Author(s) 2020. Published by Oxford University Press. All rights reserved. For permissions, please e-mail:\n[email protected]\nThis article is published and distributed under the terms of the Oxford University Press, Standard Journals Publication Model (https://academic.oup.com/journals/pages/open_access/funder_policies/chorus/standard_publication_model)\n/foreach\n/.widget-items\n/.module-widget\nSupplementary data"
+    },
+    {
+      "heading": "Supplementary data",
+      "level": 2,
+      "kind": "references",
+      "text": "btaa161_Supplementary_Materials\n- pdf file"
+    },
+    {
+      "heading": "Supplementary Files",
+      "level": 2,
+      "kind": "body",
+      "text": "- btaa161_Supplementary_Materials - pdf file"
+    }
+  ],
+  "references": [
+    {
+      "raw": "1. Allison P.D. (1995). Survival Analysis Using SAS: A Practical Guide. SAS Publishing, Cary, North Carolina.",
+      "doi": null,
+      "title": null,
+      "year": "1995"
+    },
+    {
+      "raw": "2. Altman D.G. et al. (1995) Review of survival analysis published in cancer journals. Br. J. Cancer, 72, 511–518.",
+      "doi": "10.1038/bjc.1995.364",
+      "title": null,
+      "year": "1995"
+    },
+    {
+      "raw": "3. Anderson G.A., Fleming T.R. (1995) Model misspecification in proportional hazards regression. Biometrika, 82, 527–541.",
+      "doi": "10.1093/biomet/82.3.527",
+      "title": null,
+      "year": "1995"
+    },
+    {
+      "raw": "4. Benjamini Y., Hochberg Y. (1995) Controlling the false discovery rate: a practical and powerful approach to multiple testing. J. R. Stat. Soc., 57, 289–300.",
+      "doi": null,
+      "title": null,
+      "year": "1995"
+    },
+    {
+      "raw": "5. Bennett S. (1983) Analysis of survival data by the proportional odds model. Stat. Med., 2, 273–277.",
+      "doi": null,
+      "title": null,
+      "year": "1983"
+    },
+    {
+      "raw": "6. Bhattacharjee A. et al. (2001) Classification of human lung carcinomas by mRNA expression profiling reveals distinct adenocarcinoma subclasses. Proc. Natl. Acad. Sci. USA, 98, 13790–13795.",
+      "doi": "10.1073/pnas.191502998",
+      "title": null,
+      "year": "2001"
+    },
+    {
+      "raw": "7. Choodari-Oskooei B. et al. (2012a) A simulation study of predictive ability measures in a survival model I: explained variation measures. Stat. Med., 31, 2627–2643.",
+      "doi": "10.1002/sim.4242",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "8. Choodari-Oskooei B. et al. (2012b) A simulation study of predictive ability measures in a survival model II: explained randomness and predictive accuracy. Stat. Med., 31, 2644–2659.",
+      "doi": "10.1002/sim.5460",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "9. Cox D.R. (1972) Regression models and life-tables. J. R. Stat. Soc., 34, 187–220.",
+      "doi": null,
+      "title": null,
+      "year": "1972"
+    },
+    {
+      "raw": "10. Devarajan K., Ebrahimi N. (2002). Goodness-of-fit testing for the Cox proportional hazards model. In: Huber-Carol, C., et al. (eds) Goodness-of-Fit Tests and Model Validity. Statistics for Industry and Technology. Birkhauser, Boston, Massachusetts, pp. 237–254.",
+      "doi": "10.1007/978-1-4612-0103-8",
+      "title": null,
+      "year": "2002"
+    },
+    {
+      "raw": "11. Devarajan K., Ebrahimi N. (2009) Testing for covariate effect in the cox proportional hazards regression model. Commun. Stat., 38, 2333–2347.",
+      "doi": "10.1080/03610920802536958",
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "12. Devarajan K., Ebrahimi N. (2011) A semi-parametric generalization of the Cox proportional hazards regression model: inference and applications. Comput. Stat. Data Anal., 55, 667–676.",
+      "doi": "10.1016/j.csda.2010.06.010",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "13. Du P. et al. (2010) Comparison of beta-value and M-value methods for quantifying methylation levels by microarray analysis. BMC Bioinformatics, 11, 587.",
+      "doi": "10.1186/1471-2105-11-587",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "14. Dunkler D. et al. (2010) Gene selection in microarray survival studies under possibly non-proportional hazards. Bioinformatics, 26, 784–790.",
+      "doi": "10.1093/bioinformatics/btq035",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "15. Gerds T.A., Schumacher M. (2006) Consistent estimation of the expected Brier score in general survival models with right-censored event times. Biometric. J., 48, 1029–1040.",
+      "doi": null,
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "16. Graf E. et al. (1999) Assessment and comparison of prognostic classification schemes for survival data. Stat. Med., 18, 2529–2545.",
+      "doi": null,
+      "title": null,
+      "year": "1999"
+    },
+    {
+      "raw": "17. Grambsch P., Therneau T. (1994) Proportional hazards tests and diagnostics based on weighted residuals. Biometrika, 81, 515–526.",
+      "doi": "10.1093/biomet/81.3.515",
+      "title": null,
+      "year": "1994"
+    },
+    {
+      "raw": "18. Irizarry R.A. et al. (2003) Exploration, normalization, and summaries of high density oligonucleotide array probe level data. Biostatistics, 4, 249–264.",
+      "doi": "10.1093/biostatistics/4.2.249",
+      "title": null,
+      "year": "2003"
+    },
+    {
+      "raw": "19. Kent J.T., O'Quigley J. (1988) Measures of dependence for censored survival data. Biometrika, 75, 525–534.",
+      "doi": "10.1093/biomet/75.3.525",
+      "title": null,
+      "year": "1988"
+    },
+    {
+      "raw": "20. Klein J.P., Moeschberger M.L. (2003). Survival Analysis: Techniques for Censored and Truncated Data. Springer, New York.",
+      "doi": "10.1007/b97377",
+      "title": null,
+      "year": "2003"
+    },
+    {
+      "raw": "21. Li Y.-H. et al. (1996) Effects of model misspecification in estimating covariate effects in survival analysis for small sample sizes. Comput. Stat. Data Anal., 22, 177–192.",
+      "doi": "10.1016/0167-9473(96)88029-7",
+      "title": null,
+      "year": "1996"
+    },
+    {
+      "raw": "22. Martinussen T., Scheike T.H. (2006). Dynamic Regression Models for Survival Data. Statistics for Biology and Health, Springer, New York.",
+      "doi": null,
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "23. Nagelkerke N. (1991) A note on a general definition of the coefficient of determination. Biometrika, 78, 691–692.",
+      "doi": "10.1093/biomet/78.3.691",
+      "title": null,
+      "year": "1991"
+    },
+    {
+      "raw": "24. O’Quigley J., Flandre P. (1994) Predictive capability of proportional hazards regression. Proc. Natl. Acad. Sci. USA, 91, 2310–2314.",
+      "doi": "10.1073/pnas.91.6.2310",
+      "title": null,
+      "year": "1994"
+    },
+    {
+      "raw": "25. O’Quigley J. et al. (2005) Explained randomness in proportional hazards models. Stat. Med., 24, 479–489.",
+      "doi": null,
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "26. Ritchie M.E. et al. (2015) limma powers differential expression analyses for RNA-sequencing and microarray studies. Nucleic Acids Res., 43, e47.",
+      "doi": "10.1093/nar/gkv007",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "27. Rouam S. et al. (2010) Identifying common prognostic factors in genomic cancer studies: a novel index for censored outcomes. BMC Bioinformatics, 11.",
+      "doi": null,
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "28. Rouam S. et al. (2011) A pseudo-R 2 measure for selecting genomic markers with crossing hazards functions. BMC Med. Res. Methodol., 11, 28.",
+      "doi": "10.1186/1471-2288-11-28",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "29. Royston P. (2006) Explained variation for survival models. Stata J., 6, 83–14.",
+      "doi": "10.1177/1536867x0600600105",
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "30. Royston P., Sauerbrei W. (2004) A new measure of prognostic separation in survival data. Stat. Med., 23, 723–748.",
+      "doi": null,
+      "title": null,
+      "year": "2004"
+    },
+    {
+      "raw": "31. Saintigny P. et al. (2011) Gene expression profiling predicts the development of oral cancer. Cancer Prev. Res. (Phila), 4, 218–229.",
+      "doi": "10.1158/1940-6207.capr-10-0155",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "32. Schemper M., Henderson R. (2000) Predictive accuracy and explained variation in Cox regression. Biometrics, 56, 249–255.",
+      "doi": "10.1111/j.0006-341x.2000.00249.x",
+      "title": null,
+      "year": "2000"
+    },
+    {
+      "raw": "33. Smyth G.K. (2004) Linear models and empirical Bayes methods for assessing differential expression in microarray experiments. Stat. Appl. Genet. Mol. Biol., 3, 1–25.",
+      "doi": "10.2202/1544-6115.1027",
+      "title": null,
+      "year": "2004"
+    },
+    {
+      "raw": "34. Soofi E.S. et al. (1995) Information distinguishability with application to analysis of failure data. J. Am. Stat. Assoc., 90, 657–668.",
+      "doi": "10.1080/01621459.1995.10476560",
+      "title": null,
+      "year": "1995"
+    },
+    {
+      "raw": "35. Storey J.D., Tibshirani R.J. (2003) Statistical significance for genomewide studies. Proc. Natl. Acad. Sci. USA, 100, 9440–9445.",
+      "doi": "10.1073/pnas.1530509100",
+      "title": null,
+      "year": "2003"
+    },
+    {
+      "raw": "36. Struthers C.A., Kalbfleisch J.D. (1986) Misspecified proportional hazard models. Biometrika, 73, 363–369.",
+      "doi": "10.1093/biomet/73.2.363",
+      "title": null,
+      "year": "1986"
+    },
+    {
+      "raw": "37. Tothill R.W. et al. (2008) Novel molecular subtypes of serous and endometroid ovarian cancer linked to clinical outcome. Clin. Cancer Res., 14, 5198–5208.",
+      "doi": "10.1158/1078-0432.ccr-08-0196",
+      "title": null,
+      "year": "2008"
+    },
+    {
+      "raw": "38. Wineinger N.E. et al. (2008) Statistical issues in the analysis of DNA copy number variations. Int. J. Comput. Biol. Drug Des., 1, 368–395.",
+      "doi": "10.1504/ijcbdd.2008.022208",
+      "title": null,
+      "year": "2008"
+    },
+    {
+      "raw": "39. Xu R., O’Quigley J. (1999) A measure of dependence for proportional hazards models. J. Nonparametric Stat., 12, 83–107.",
+      "doi": null,
+      "title": null,
+      "year": "1999"
+    },
+    {
+      "raw": "40. Xu J. et al. (2005) Survival analysis of microarray expression data by transformation models. Comput. Biol. Chem., 29, 91–94.",
+      "doi": "10.1016/j.compbiolchem.2005.02.001",
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "41. Yang S., Prentice R. (2005) Semiparametric analysis of short-term and long-term hazard ratios with two-sample survival data. Biometrika, 92, 1–17.",
+      "doi": "10.1093/biomet/92.1.1",
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "42. Yang S., Zhao Y. (2012) Checking the short-term and long-term hazard ratio model for survival data. Scand. J. Stat., 39, 554–567.",
+      "doi": "10.1111/sjos.2012.39.issue-3",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "43. Youden W.J. (1950) Index for rating diagnostic tests. Cancer, 3, 32–35.",
+      "doi": null,
+      "title": null,
+      "year": "1950"
+    }
+  ],
+  "assets": [
+    {
+      "kind": "supplementary",
+      "heading": "btaa161_Supplementary_Materials",
+      "caption": null,
+      "url": null,
+      "path": null,
+      "section": "supplementary",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/36/11/10.1093_bioinformatics_btaa161/6/bioinformatics_36_11_3409_s1.pdf?Expires=1792477626&Signature=3Pl4yn9aLcKZ5YxhYkkmSQq9CCiqrkDEqxVHrgcD4eIuFKHCNXAtUDoo0bsqaYAuSV6Cbd4R2NoQwgQiZMr5mKGa95maxNIeEhHQX-6f9D-3SDkL55SEv7ToukYkNT~AewEPBXxk7pKqYFsUTwmYl57PxQWZ9xnfVKtHsp9RNJpKcnA6L0vq898xS9BZoGbpl47F43M8cUM-5GJsD1ZRk5bamL4XavBmwRNBQF2P4WeZ22SFNgRze93VPSwi3LaSTfnYikLO7BMkppJ675lc2nahaoXMljWKOI1lYTAk8BuLAuCto5jocCjEpPHpXRr4St1eKJy-5o6hAVxkqs3E6w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    }
+  ],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 14830,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "Markdown full text was saved to /tmp/paper-fetch-paywall-expansion-20260915/oxfordacademic/10.1093_bioinformatics_btaa161/fetch/Spirko-Burns_et_al_2020_Unified_methods_for_feature_selection_in_large-scale_genomic_studies_with_censored_survival_outcomes.md."
+    ],
+    "source_trail": [
+      "fulltext:oxfordacademic_html_ok",
+      "fulltext:oxfordacademic_article_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_oxfordacademic",
+      "route:signal_publisher_oxfordacademic",
+      "route:signal_doi_oxfordacademic",
+      "route:probe_oxfordacademic_unknown",
+      "route:provider_selected_oxfordacademic",
+      "route:provider_candidate_oxfordacademic_metadata_selected_rank_1",
+      "route:provider_candidate_oxfordacademic_identity_strong",
+      "fulltext:oxfordacademic_attempt",
+      "download:oxfordacademic_assets_skipped_profile_none",
+      "fulltext:oxfordacademic_article_ok",
+      "route:provider_candidate_oxfordacademic_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 512,
+      "body": 14318,
+      "refs": 1510
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 57251,
+      "word_count": 9631,
+      "body_block_count": 22,
+      "body_heading_count": 22,
+      "body_to_abstract_ratio": 9631.0,
+      "explicit_body_container": true,
+      "post_abstract_body_run": true,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 1,
+      "attempted": 0,
+      "total": 1,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 1,
+      "not_archived": 0,
+      "remote_link_count": 1,
+      "remote_only_count": 1,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 1,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 1,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": [
+        {
+          "request_profile": "none",
+          "kind": "supplement",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        }
+      ]
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "oxfordacademic",
+    "route": "direct_html",
+    "representation": "html",
+    "transport": "http",
+    "fallback_used": false
+  }
+}

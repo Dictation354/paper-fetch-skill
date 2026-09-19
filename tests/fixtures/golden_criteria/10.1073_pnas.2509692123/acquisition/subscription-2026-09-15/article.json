@@ -1,0 +1,566 @@
+{
+  "doi": "10.1073/pnas.2509692123",
+  "source": "pnas",
+  "metadata": {
+    "title": "A discrete serotonergic circuit involved in the generation of tinnitus behavior",
+    "authors": [
+      "Meng-Ting Yu",
+      "Zhen-Yu Dai",
+      "Si-Xin Wang",
+      "Ke-Jian Wang",
+      "Chun-Hui Qin",
+      "Yi-Mei Zhou",
+      "Xiao-Tao Guo",
+      "Chun-Chen Pan",
+      "Jia-Qiang Sun",
+      "Jing-Wu Sun",
+      "Wei-Heng Chen",
+      "Yan Jin",
+      "Qin-Wei Wu",
+      "Laurence O. Trussell",
+      "Zheng-Quan Tang"
+    ],
+    "abstract": "Although dysregulated serotonergic neurotransmission has been implicated in the pathophysiology of tinnitus, the precise neural circuit mechanisms underlying this complex sensory neurological disorder remain elusive. In the current study, we investigated whether a serotonergic input from the dorsal raphe nucleus (DRN) to the dorsal cochlear nucleus (DCN), a key auditory brain region whose hyperactivity is associated with tinnitus, modulates behaviors in mice consistent with the presence of tinnitus. Using neural tracing and viral-genetic methods, we identified an anatomically and functionally defined serotonergic subpopulation in the DRN that projects to the DCN (5-HT DRN→DCN neurons). Optogenetic activation of 5-HT DRN→DCN circuit increased spike activity in DCN fusiform cells, exhibiting characteristics consistent with tinnitus-like electrical hyperactivity. Chemogenetic activation of 5-HT DRN→DCN circuit induced tinnitus-related behaviors in mice, which was largely reversed by blocking 5-HT 2A receptors. Additionally, we found that noise exposure increased 5-HT levels in the DCN and the activity of 5-HT DRN→DCN neurons in mice with noise-induced tinnitus-related behaviors. Importantly, chemogenetic inhibition of 5-HT DRN→DCN circuit ameliorated significantly noise-induced tinnitus–related behavior in mice. These results reveal that activation of 5-HT DRN→DCN circuit induces hyperactivity in the DCN sufficient for the perceptual generation and modulation of tinnitus. These findings provide direct evidence that 5-HT neurons in the DRN play an important role in tinnitus and facilitate our understanding of the circuit mechanisms of pathophysiology in sensory neurological disorders.",
+    "journal": "Proceedings of the National Academy of Sciences",
+    "article_type": null,
+    "published": "2026-4-28",
+    "keywords": [],
+    "license_urls": [
+      "https://creativecommons.org/licenses/by-nc-nd/4.0/"
+    ],
+    "landing_page_url": "https://pnas.org/doi/10.1073/pnas.2509692123"
+  },
+  "sections": [
+    {
+      "heading": "",
+      "level": 2,
+      "kind": "body",
+      "text": "**RESEARCH ARTICLE |** NEUROSCIENCE"
+    },
+    {
+      "heading": "**A discrete serotonergic circuit involved in the generation of tinnitus behavior**",
+      "level": 1,
+      "kind": "body",
+      "text": "Meng - Ting Yu<sup>a,b,1</sup>, Zhen - Yu Dai<sup>a,b,1</sup>, Si - Xin Wang<sup>a,b,1</sup>, Ke - Jian Wang<sup>a,b</sup>, Chun - Hui Qin<sup>a,b</sup>, Yi - Mei Zhou<sup>a,b</sup>, Xiao - Tao Guo<sup>c</sup>, Chun - Chen Pan<sup>c</sup>, Jia - Qiang Sun<sup>c</sup>, Jing - Wu Sun<sup>c</sup>, Wei - Heng Chen<sup>d</sup>, Yan Jin<sup>d</sup>, Qin - Wei Wu<sup>a,b,2</sup>, Laurence O. Trussell<sup>e,2</sup>, and Zheng - Quan Tang<sup>a,b,2</sup>\n\nEdited by Moses V. Chao, New York University Langone Medical Center, New York, NY; received May 1, 2025; accepted February 13, 2026\n\n**Although dysregulated serotonergic neurotransmission has been implicated in the pathophysiology of tinnitus, the precise neural circuit mechanisms underlying this complex sensory neurological disorder remain elusive. In the current study, we investigated whether a serotonergic input from the dorsal raphe nucleus (DRN) to the dorsal cochlear nucleus (DCN), a key auditory brain region whose hyperactivity is associated with tinnitus, modulates behaviors in mice consistent with the presence of tinnitus. Using neural tracing and viral** - **genetic methods, we identified an anatomically and functionally defined serotonergic subpopulation in the DRN that projects to the DCN (5** - **HT**<sup>**DRN**→</sup><sup>**DCN**</sup> **neurons). Optogenetic activation of 5** - **HT**<sup>**DRN**→</sup><sup>**DCN**</sup> **circuit increased spike activity in DCN fusiform cells, exhibiting characteristics consistent with tinnitus** - **like electrical hyperactivity. Chemogenetic activation of 5** - **HT**<sup>**DRN**→</sup><sup>**DCN**</sup> **circuit induced tinnitus** - **related behaviors in mice, which was largely reversed by blocking 5** - **HT2A receptors. Additionally, we found that noise exposure increased 5** - **HT levels in the DCN and the activity of 5** - **HT**<sup>**DRN**→</sup><sup>**DCN**</sup> **neurons in mice with noise** - **induced tinnitus** - **related behaviors. Importantly, chemogenetic inhibition of 5** - **HT**<sup>**DRN**→</sup><sup>**DCN**</sup> **circuit ameliorated significantly noise** - **induced tinnitus–related behavior in mice. These results reveal that activation of 5** - **HT**<sup>**DRN**→</sup><sup>**DCN**</sup> **circuit induces hyperactivity in the DCN sufficient for the perceptual generation and modulation of tinnitus. These findings provide direct evidence that 5** - **HT neurons in the DRN play an important role in tinnitus and facilitate our understanding of the circuit mechanisms of pathophysiology in sensory neurological disorders.**"
+    },
+    {
+      "heading": "**Significance**",
+      "level": 2,
+      "kind": "body",
+      "text": "Tinnitus, a prevalent hearing disorder linked to dysregulated serotonergic system, has poorly understood neural circuits. Using cutting - edge neuroscience tools, our study reveals a discrete 5 - HT<sup>DRN→DCN</sup> circuit driving tinnitus in hyperserotonergic states. These findings highlight serotonin’s role in modulating sensory brain regions and identify circuit - level mechanisms of neurological disorders. Our work advances understanding of tinnitus and suggests targeted interventions.\n\ndorsal raphe nucleus | dorsal cochlear nucleus | 5 - HT | tinnitus behavior | hyperactivity\n\nTinnitus, a perception of a phantom sound, is a common hearing disorder that affects approximately 10 to 15% of the global population (1). It is frequently accompanied by psychological symptoms, such as anxiety and depression (2, 3). Despite its high prevalence and significant impact on quality of life (4), the underlying mechanisms of tinnitus remain poorly understood.\n\nSerotonin (5-hydroxytryptamine or 5-HT), a major neuromodulator widely distributed in the central nervous system (CNS), plays a key role in regulating a variety of essential neuronal functions, including emotional responses, sleep, cognitive processes, and sensory perception in the brain (5–8). Dysfunction of 5-HT signaling in the CNS is implicated in a wide range of psychiatric and neurological disorders, such as anxiety, depression, autism, pain, and migraine (9–11). While serotonergic pathways from the raphe nucleus to the limbic system have been extensively investigated for their roles in psychiatric diseases (6, 8, 10, 12–16), the functions of sensory-projecting 5-HT neural circuits and their potential contributions to the pathology of neurological disorders remain elusive.\n\nMultiple lines of evidence implicate the 5-HT system in tinnitus (17–19). In clinical and preclinical studies, antidepressants such as selective serotonin reuptake inhibitors (SSRIs) have been explored as treatments for tinnitus in patients with and without depression (20–22). However, the success of such treatments is inconsistent, with some patients reporting the onset or exacerbation of tinnitus (23, 24). Moreover, evidence from animal studies suggests that dysregulated 5-HT signaling in the central auditory system is associated with tinnitus (19, 25, 26). For example, 5-HT neurons are activated during salicylate-induced tinnitus in gerbils (19). Loud noise exposure, which can cause tinnitus, may upregulate extracellular 5-HT levels and decrease serotonin transporter (SERT) expression in the central auditory system (25, 26). Together, these observations suggest that dysfunction of 5-HT signaling in the central auditory system is closely linked to the generation and perception of tinnitus. However, the underlying circuitry mechanisms by which 5-HT dysfunction contributes to the pathogenesis of tinnitus remain unclear.\n\nAuthor affiliations:<sup>a</sup> School of Life Sciences and Medical Engineering, Anhui University, Hefei 230601, China; bKey Laboratory of Human Microenvironment and Precision Medicine of Anhui Higher Education Institutes, Anhui University, Hefei 230601, China;<sup>c</sup> Department of Otolaryngology Head and Neck Surgery, The First Affiliated Hospital of University of Science and Technology of China, Division of Life Sciences and Medicine, University of Science and Technology of China, Hefei, Anhui 230001, China;<sup>d</sup> Division of Life Sciences and Medicine, University of Science and Technology of China, Hefei 230027, China; and eOregon Hearing Research Center and Vollum Institute, Oregon Health and Science University, Portland, OR 97239\n\nAuthor contributions: Q. - W.W., L.O.T., and Z. - Q.T. designed research; M. - T.Y., Z. - Y.D., S. - X.W., K. - J.W., C. - H.Q., Y. - M.Z., X. - T.G., and C. - C.P. performed research; J. - Q.S., J. - W.S., W. - H.C., and Y.J. contributed new reagents/analytic tools; M. - T.Y., Z. - Y.D., S. - X.W., K. - J.W., C. - H.Q., Y. - M.Z., X. - T.G., and C. - C.P. analyzed data; and M. - T.Y., Z. - Y.D., S. - X.W., Q. - W.W., L.O.T., and Z. - Q.T. wrote the paper.\n\nThe authors declare no competing interest. This article is a PNAS Direct Submission.\n\nCopyright © 2026 the Author(s). Published by PNAS. This article is distributed under Creative Commons Attribution - NonCommercial - NoDerivatives License 4.0 (CC BY - NC - ND). 1M. - T.Y., Z. - Y.D., and S. - X.W. contributed equally to this work.\n\n2To whom correspondence may be addressed. Email: qwwu@ahu.edu.cn, trussell@ohsu.edu, or zqtang@ahu. edu.cn.\n\nThis article contains supporting information online at https://www.pnas.org/lookup/suppl/doi:10.1073/pnas. 2509692123/-/DCSupplemental. Published April 20, 2026.\n\nhttps://doi.org/10.1073/pnas.2509692123 **1 of 12**\n\n**PNAS** 2026 Vol. 123 No. 17 e2509692123\n\nThe dorsal cochlear nucleus (DCN) is a brain region involved in sound localization and has been strongly implicated in the triggering and modulation of tinnitus (4, 27–33). It receives dense serotonergic inputs primarily from the dorsal raphe nuclei (DRN) (26, 34–40). In addition to serotonergic innervation, several subtypes of 5-HT receptors, including 5-HT2A receptor, are found in the cochlear nucleus (CN) (36). Our previous stud­ ies have shown that 5-HT directly excites fusiform cells, the principal output neurons of the DCN, leading to electrical hyperactivity (increased spontaneous firing rates, a tinnitus-like electrical behavior) in the DCN (40, 41). Furthermore, several studies suggest that noise exposure upregulates extracellular 5-HT levels in the DCN (25), and downregulates SERT expres­ sion (26), indicating a dysfunction of 5-HT signaling in the DCN. Given that both dysfunctions of the 5-HT system and the DCN are implicated in tinnitus generation or perception, we hypothesize that the dysfunction of DRN→DCN seroton­ ergic (5-HT<sup>DRN→DCN</sup>) circuit may play a role in the mechanisms underlying tinnitus.\n\nWe tested this hypothesis by using circuit tracing, viral-genetic tools, fiber photometry, electrophysiology, behavioral testing, and optogenetic/chemogenetic manipulations to systematically dissect the 5-HT<sup>DRN→DCN</sup> circuit and elucidate its role in regulating neu­ ronal activity of the DCN fusiform cells and driving behavior in mice indicative of tinnitus."
+    },
+    {
+      "heading": "**Results**",
+      "level": 2,
+      "kind": "body",
+      "text": "**Defining Connections of 5 - HT**<sup>**DRN**→</sup><sup>**DCN**</sup> **Circuit in Mice.** The CN is extensively innervated by serotonergic fibers in a variety of species, including rats and guinea pigs (37, 42), and this serotonergic innervation originates predominantly in the DRN (35, 37, 38). The DRN can be divided into several distinct subregions based on anatomy, connectivity, and functional topography, including the rostral, dorsal, ventral, ventrolateral, interfascicular, and caudal parts (6). However, the specific source of serotonergic projections to the DCN in mice has not yet been delineated at the subregional level within the DCN. By combining retrograde tracing with immunofluorescence staining for tryptophan hydroxylase 2 (TPH2), we aimed to identify the sources of serotonergic innervation in the DCN of mice. Green retrobeads were stereotaxically injected into the DCN, either unilaterally or bilaterally (Fig. 1, _SI Appendix,_ Fig. S1, and Dataset S1 _A_ and _G_), resulting in retrograde labeling of neurons in several raphe nuclei (Fig. 1 _B_ and _C_). The majority of the bead-containing neurons were also labeled for TPH2 and were found in the caudal DRN (DRc), interfascicular DRN (DRi), dorsal DRN (DRd), ventral DRN (DRv), and median raphe nucleus (MnR) (Fig. 1 _C_). The highest number of double-labeled neurons projecting to the DCN was found in the DRc. The double-labeled neurons in the DRc accounted for an average of 66.5% of the serotonergic neurons projecting to the DCN. The remaining serotonergic neurons were distributed as follows: 11.8% in the DRi, 14.6% in the DRd, 1.9% in the DRv, and 5.2% in the MnR (Fig. 1 _E_).\n\nTo further confirm the 5-HT<sup>DRN→DCN</sup> circuit, we injected AAV-DIO-EGFP virus into the DRN of Pet1-Cre transgenic mice, which express Cre recombinase driven by the PET1 enhancer element in the raphe nuclei (43). Three weeks after the viral injec­ tion, we observed EGFP-labeled neurons in the DRN (Fig. 1 _G_ and _H_). The majority of these EGFP-labeled neurons in the DRN were also labeled for TPH2 (Fig. 1 _H_), confirming successful viral infection leading to expression of EGFP in serotonergic neurons. Importantly, EGFP-labeled fibers were densely distributed across all three subregions of the DCN (Fig. 1 _G_), confirming that the\n\nDCN receives direct projections from serotonergic neurons in the DRN.\n\nIn order to determine if serotonergic fibers terminate near glu­ tamatergic DCN fusiform cells, we injected AAV-DIO-mCherry virus into the DCN of Vglut2-Cre mice and conducted immu­ nostaining for SERT (Fig. 1 _I_ and _J_). mCherry-labeled neurons were indeed surrounded by SERT-positive fibers and varicosities (Fig. 1 _K_). Our results revealed that serotonergic fibers likely form synaptic sites near glutamatergic neurons, which are most likely the fusiform principal cells in the DCN.\n\nTaken together, our retrograde and anterograde double-labeling experiments demonstrated that a subpopulation of serotonergic neurons in the DRN is the primary source of serotonergic afferents to the DCN (Fig. 1 _L_).\n\n**Activation of 5 - HT**<sup>**DRN**→</sup><sup>**DCN**</sup> **Circuit Evokes Hyperactivity of Fusiform Cells.** Our previous study showed that exogenous 5-HT, or 5-HT release, can directly increase the excitability of fusiform cells, as demonstrated using brain-slice patch-clamp recordings (40, 41). To investigate whether activation of the 5-HT<sup>DRN→DCN</sup> circuit affects the function of fusiform cells, both in vitro and in vivo analyses, we injected Cre-dependent AAV expressing the ChR2-tdtomato into the DRN of Pet1Cre mice (Fig. 2 _A_). This optogenetic approach enabled the selective expression of ChR2-tdTomato in serotonergic neurons within the DRN, allowing for precise photostimulation of these neurons. Using immunohistochemical staining, we observed robust ChR2-tdTomato expression in the DRN (Fig. 2 _B_). Additionally, we confirmed that Cre activity in Pet1-Cre mice was selectively restricted to serotonergic neurons, as identified by TPH2 immunoreactivity (Fig. 2 _B_). To confirm the functional expression of ChR2 in 5-HT neurons in ChR2-tdTomato mice, we performed electrophysiological recordings of ChR2tdTomato-expressing neurons in the DRN using acute brain slices. Serotonergic neurons were identified based on their characteristic large polymorphic somata, location, and tdTomato expression in soma (Fig. 2 _C_ and _D_). Under voltage clamp recording, we observed photostimulation-induced currents in the tdTomato expressing neurons (Fig. 2 _E_ and _SI Appendix,_ Fig. S2). Trains of blue light evoked reliably firing of action potentials in DRN 5-HT neurons at frequencies up to 20 Hz, as demonstrated under current-clamp recordings (Fig. 2 _E_ and _F_, _SI Appendix,_ Fig. S2, and Dataset S1 _B_). These results confirm the functional ChR2 selectively expressed in 5-HT neurons. We observed hyperactivity, characterized by a tinnitus-like electrical activity in fusiform cells, induced by applied 5-HT (Fig. 2 _G_). This finding aligns with our previous studies (40, 41), further supporting the role of 5-HT in promoting neural hyperactivity associated with tinnitus-like phenomena.\n\nTo determine whether this 5-HT<sup>DRN→DCN</sup> circuit modulates the function of fusiform cells in vivo, we implanted a fiber optic cannula above the DRN and conducted extracellular single-unit recordings from putative fusiform cells in awake, behaving Pet1-Cre::ChR2<sup>DRN→DCN</sup> mice (Fig. 2 _H_). Histological analysis revealed the viral injection and expression sites, as well as the trajectory of the optical fiber tract positioned above the DRN (Fig. 2 _I_). Putative fusiform cells were identified based on their distinct physiological characteristics, including single-unit record­ ings that exhibited build-up poststimulus time histograms (PSTH), nonmonotonic rate-intensity functions at characteristic frequency (CF), and responses to broadband noise (44) (Fig. 2 _J_ – _L_). We applied photostimulation (473 nm, 20 Hz) to the DRN and assessed the effects of optogenetic stimulation of 5-HT<sup>DRN→DCN</sup> circuit on the firing activity of fusiform cells. Blue light\n\n**2 of 12** https://doi.org/10.1073/pnas.2509692123\n\npnas.org\n\n**Fig. 1.** Dissection of the 5 - HT<sup>DRN→DCN</sup> circuit. (_A_) Schematic illustrating the injection site of retrobeads in the DCN. (_B_) Representative images showing retrobeads expression in the DCN and DRN, respectively. (Scale bars: _Left_, 1,600 μ m; _Right_, 100 μ m.) (_C_) Representative images showing coexpression of retrobeads and TPH2 in different subregions of the DRN. (Scale bar: 200 μ m.) (_D_) Pie chart depicting the percentage of retrobeads - positive (RB<sup>+</sup>) cells coexpressing TPH2 (RB<sup>+</sup> / TPH2<sup>+</sup>) and those not coexpressing TPH2 (RB<sup>+</sup> /TPH2<sup>−</sup>). (_E_) Quantitative analysis of retrobeads expression in different subregions of the DRN (_n_ = 6, *** _P_ < 0.0001, one - way ANOVA). (_F_) Schematic illustrating the injection site of the virus in the DRN of Pet1 - Cre mice. (_G_) Representative images showing virus expression in the DCN and DRN, respectively. (Scale bar: 100 μ m.) (_H_) Representative images showing coexpression of EGFP and TPH2 in the DRN. (Scale bar: 200 μ m.) (_I_) Representative images comparing SERT expression between the DCN and VCN. (Scale bars: _Left_, 200 μ m; _Right_, 20 μ m.) (_J_) Schematic illustrating the injection site of AAV - DIO - mCherry in the DRN of Vglut2 - Cre mice. (_K_) Representative images showing coexpression of mCherry and SERT in the DRN. (Scale bar: 50 μ m.) (_L_) Schematic model of the 5 - HT<sup>DRN→DCN</sup> neural circuit.\n\nhttps://doi.org/10.1073/pnas.2509692123 **3 of 12**\n\n**PNAS** 2026 Vol. 123 No. 17 e2509692123\n\n**Fig. 2.** Optogenetic activation of the 5 - HT<sup>DRN→DCN</sup> circuit triggers hyperactivity in putative fusiform cells. (_A_) Schematic representation of viral injection in Pet1 - Cre mice. (_B_) Representative images showing coexpression of ChR2 and TPH2 in the DRN. (_C_ and _D_) Schematic representation of the recording configuration in acute brain slices. (_E_, _Left_) Sustained light pulses (0.5 s) elicited a strong inward current in the voltage - clamp mode (_Upper_) and injection of +200 pA current evoked action potential firing in the current - clamp mode (_Lower_). (_E, Right_) Spike firing evoked by trains of brief light pulses (2 ms duration) in the current - clamp mode. (_F_) The mean ratio of successful spike generation in relationship to light stimulation at different frequencies (_n_ = 8). (_G_) Applied 5 - HT evoked a hyperactivity (increased spontaneous spike firing) of fusiform cells in the current - clamp mode. (_H_) Schematic diagram illustrating the positions of optic fiber implantation in the DRN and glass micropipettes in the DCN. (_I_) Outline of optical fiber and the expression of ChR2 - tdTomato in the DRN. (_J_) Extracellular single - unit recording of a putative fusiform cell in response to 20 dB SPL 21 kHz pure tone. (_K_ and _L_) Physiological responses of a fusiform cell to sound exhibit “build - up” poststimulus time histograms (PSTH, _Left_) and nonmonotonic rate - intensity functions at characteristic frequency (CF, _Right_). (_M_) Representative traces (_Top_) and the raster plots (_Bottom_) for spontaneous spike activity recorded in a putative fusiform cell before, during, and after light stimuli.\n\nstimulation at 20 Hz clearly increased the rate of spontaneous spike firing (Fig. 2 _M_).\n\nConsistent with the observation in brain slice recordings (40), our in vivo physiological recordings suggest that the activation of 5-HT<sup>DRN→DCN</sup> neurons induces hyperactivity, a tinnitus-like phys­ iological response in fusiform cells of the DCN.\n\n**Activation of 5 - HT**<sup>**DRN**→</sup><sup>**DCN**</sup> **Circuit Induces Tinnitus - Related Behaviors in Mice.** Given that the electrical hyperactivity of fusiform cells in the DCN is strongly correlated with behavioral evidence of tinnitus (4, 27–33), the above observation that activation of 5-HT<sup>DRN→DCN</sup> circuit directly induces hyperactivity in fusiform cells led to the hypothesis that activation of this circuit may contribute to the generation or modulation of behaviors consistent with the presence of tinnitus (“tinnitusrelated behaviors”). To test this hypothesis, we expressed the hM3Dq chemogenetic activator (6, 45, 46) in 5-HT<sup>DRN→DCN</sup> circuit by bilateral microinjections of a retrograde-tracer virus rAAV(retro)-DIO-FLP into the DCN of Pet1-Cre mice, followed by injections of either rAAV-fDIO-hM3Dq-EGFP or control AAV virus (rAAV-fDIO-EGFP) into the DRN (Fig. 3 _A_). Four weeks after the viral injection, immunohistofluorescence analysis confirmed the expression of hM3Dq-EGFP or control vectors in DRN serotonergic neurons (Fig. 3 _B_ and _C_). Consistent with our retrograde and anterograde double-labeling experiments, which identified a subpopulation of 5-HT neurons in the DRN as the primary source of serotonergic afferents to the DCN (Fig. 1),\n\nwe observed hM3Dq-EGFP-labeled 5-HT neurons (colocalized with TPH2) in the DRN. To confirm DREADD-based activation of serotonergic neuronal activity, we evaluated the expression of c-fos, an immediately-early gene indicative of in vivo neuronal activation, in the DRN using immunostaining following injection of the DREADD ligand clozapine N-oxide (CNO) (Fig. 3 _D_). Coronal sections of brain slices from rAAV-fDIO-hM3Dq-EGFPor rAAV-fDIO-EGFP-injected Pet1-Cre mice, which received a single intraperitoneal (i.p.) injection of CNO 30 min before they were killed, were analyzed. As shown in Fig. 3 _D_, robust c-fos immunoreactivity was observed in the DRN of Pet1-Cre mice injected with rAAV-fDIO-hM3Dq-EGFP following CNO injection, validating the functionality of hM3Dq expressed in 5-HT neurons. In contrast, only minimal c-fos immunoreactivity was detected in the DRN of Pet1-Cre mice injected with rAAVfDIO-EGFP 30 min after CNO injection (Fig. 3 _E_).\n\nSeveral behavioral paradigms were used to assess whether mice were perceiving a subjective sound while at the same time control for confounding factors affecting hearing responsiveness. Gap detection, assessed through the gap-prepulse inhibition of the acoustic startle reflex (GPIAS) is a widely used behavioral test for evaluating possible tinnitus in rodents (22, 47, 48) (Fig. 3 _F_) as it directly assesses the perception of silence (28, 31, 32). In a second paradigm, prepulse inhibition (PPI), the acoustic startle reflex was inhibited by a weak, nonstartling prepulse stimulus presented shortly before the startling sound (Fig. 3 _F_). Normal PPI, even in mice with a GPIAS deficit, indicates normal hearing, suggesting\n\n**4 of 12** https://doi.org/10.1073/pnas.2509692123\n\npnas.org\n\n**Fig. 3.** Chemogenetic activation of the 5 - HT<sup>DRN→DCN</sup> circuit induces tinnitus - related behavior in mice. (_A_) Schematic diagram showing the injection sites of the chemogenetic virus rAAV - nEF1a - fDIO - hM3D(Gq) - EGFP - WPRE - PA or rAAV - nEF1 α- fDIO - EGFP - WPRE - hGH polyA and a retrograde - tracing virus rAAV(retro) - DIO - FLP in the DRN and DCN of Pet1 - Cre mice. (_B_ and _C_) Representative images illustrating viral expression of hM3Dq - EGFP in the DCN and coexpression of hM3Dq - EGFP and TPH2 in the DRN. (Scale bar: 200 μ m.) (_D_ and _E_) Representative images demonstrating coexpression of hM3Dq - EGFP and c - fos in the DRN and coexpression of EGFP and c - fos in the DRN. (Scale bar: 20 μ m.) (_F_, _Top Left_) Schematic of gap and no - gap trials in the gap detection behavioral assay. (_Top Right_) Representative startle responses in no - gap (gray) and gap trials (purple) for control and tinnitus mice. AU: Arbitrary units. (_Bottom Left_) Schematic of startle - only and prepulse trials in the PPI behavioral assay. (_Bottom Right_) Representative startle responses in startle - only (gray) and prepulse trials (purple) for control and tinnitus mice. (_G_) Representative raw traces of auditory brainstem response (ABR) to 24 kHz tone at varying intensities (dB SPL). (_H_) GPI ratio (response to gap trial/response to no - gap trial, with 8 to 32 kHz background noise) before (purple) and 7 d after CNO injection (gray) in hM3Dq - EGFP - expressing mice (_n_ = 4 to 6; 8 kHz: _P_ = 0.9790; 12 kHz: _P_ > 0.9999; 16 kHz: _P_ = 0.7222; 20 kHz: _P_ < 0.01; 24 kHz: _P_ < 0.001; 32 kHz: _P_ < 0.05; two - way ANOVA). (_I_) Prepulse inhibition ratio (PPI ratio, response to prepulse trial/response to startle - only trial, with 8 to 32 kHz prepulse) before (purple) and 8 d after CNO injection (gray) in hM3Dq - EGFP - expressing mice (_n_ = 5 to 6; 8 kHz: _P_ = 0.9454; 12 kHz: _P_ > 0.9999; 16 kHz: _P_ = 0.9999; 20 kHz: _P_ = 0.9964; 24 kHz: _P_ = 0.8997; 32 kHz: _P_ = 0.9800; two - way ANOVA). (_J_) Group hearing thresholds for each tested frequency before (purple line) and 8 d after (gray line) CNO injection in hM3Dq - EGFP - expressing mice (_n_ = 6; _NS_, two - way ANOVA). (_K_) GPI ratio before (purple) and 7 d after CNO injection (gray) in EGFP - expressing mice (_n_ = 3 to 4; 8 kHz: _P_ = 0.1774; 12 kHz: _P_ = 0.9878; 16 kHz: _P_ = 0.9994; 20 kHz: _P_ = 0.7807; 24 kHz: _P_ = 0.9904; 32 kHz: _P_ = 0.3774; two - way ANOVA). (_L_) PPI ratio before (purple) and 8 d after CNO injection (gray) in EGFP - expressing mice (_n_ = 4; 8 kHz: _P_ = 0.3580; 12 kHz: _P_ = 0.9945; 16 kHz: _P_ > 0.9999; 20 kHz: _P_ > 0.9999; 24 kHz: _P_ = 0.1289; 32 kHz: _P_ = 0.9857; two - way ANOVA). (_M_) Group hearing thresholds for each tested frequency before (purple line) and 8 d after (gray line) CNO injection in EGFP - expressing mice (_n_ = 4; _NS_, two - way ANOVA).\n\nhttps://doi.org/10.1073/pnas.2509692123 **5 of 12**\n\n**PNAS** 2026 Vol. 123 No. 17 e2509692123\n\na GPIAS deficit is not due to hearing loss or general sensorimotor gating deficits. In addition, auditory brainstem response (ABR) was performed to rule out peripheral hearing loss. Gap detection performance can exhibit variability both among individual animals and across different groups. To account for this variability and ensure a more accurate assessment, we compared GPIAS before and after the injection of CNO within the same group (47, 49). One week of CNO treatment in hM3Dq-EGFP-expressing mice resulted in significantly impaired gap detection performance, as demonstrated by an increase in the GPI ratio (Fig. 3 _H_ and _SI Appendix,_ Fig. S3). This deficit was reversible: following CNO withdrawal, the impairment showed significant recovery at 24 kHz within 1 d and was fully reversed across tested frequencies (16, 20, and 24 kHz) by day 3 (_SI Appendix,_ Fig. S3 _D_). By contrast, 1 wk of CNO treatment (1 mg/kg, i.p.) in hM3DqEGFP-expressing mice did not alter PPI or hearing thresholds as measured with ABR (Fig. 3 _I_ and _J_, _SI Appendix,_ Fig. S3, and Dataset S1 _C_ and _H_). Moreover, in control experiments, CNO injection alone did not alter GPIAS, PPI performance, or hearing thresholds (Fig. 3 _K_ – _M_), consistent with previous stud­ ies (47). Together, these results indicate that activation of 5-HT<sup>DRN→DCN</sup> circuit is sufficient to induce tinnitus-related behaviors in mice.\n\n**5 - HT2A Receptors Are Implicated in Tinnitus - Related Behaviors in Mice Caused by Activation of 5 - HT**<sup>**DRN**→</sup><sup>**DCN**</sup> **Circuit.** Although multiple types of 5-HT receptors are expressed in the CN (36, 40)\n\nand play a role in modulating the integration of auditory and nonauditory inputs, our previous studies indicated that the 5-HT2A receptor primarily mediates the 5-HT-induced responses in fusiform cells of the DCN (41). To test whether 5-HT2A receptors play a role in the tinnitus-related behavioral responses induced by activation of the 5-HT<sup>DRN→DCN</sup> circuit, MDL11939 (1 mg/kg, i.p.), a selective 5-HT2A receptor antagonist, was administered to hM3Dq-EGFP-expressing mice before CNO injection (1 mg/kg, i.p.) and continued once daily for 7 consecutive days (Fig. 4 and Dataset S1 _D_). Our results revealed that CNO treatment, followed by treatment with MDL-11939 in hM3Dq-EGFP-expressing mice, did not alter the GPI ratio (_SI Appendix_, Fig. S4 and Dataset S1 _I_). This result suggests that inhibition of 5-HT2A receptors attenuates the development of tinnitus caused by activation of the 5-HT<sup>DRN→DCN</sup> circuit. Indeed, compared with hM3Dq-EGFP-expressing mice treated with CNO alone, treatment with MDL-11939 after CNO, but not vehicle, significantly reduced the percentage of hM3Dq-EGFP-expressing mice that developed GPI ratios suggestive of tinnitus down to a level comparable to that of control mice (Fig. 4 _G_, control: 25.0%, CNO treatment: 83.3%, MDL-11939 + CNO treatment: 16.7%). Neither the drugs nor the viruses had any detectable effect on baseline auditory function, as measured by ABR thresholds, or on sensorimotor gating, as assessed by PPI performance (Fig. 4 _B_, _C_, _E_, and _F_). These results indicate that activation of 5-HT<sup>DRN→DCN</sup> circuits induces tinnitus-related behavior primarily mediated through 5-HT2A receptors, supporting the hypothesis that the\n\n**Fig. 4.** The 5 - HT2A receptor antagonist reduces the incidence of tinnitus - related behavior induced by chemogenetic activation of the 5 - HT<sup>DRN→DCN</sup> circuit. (_A_) Representative startle responses in no - gap trials (gray) and gap trials (purple) for EGFP -, hM3Dq -, and hM3Dq+MDL - 11939 - injected mice. AU: Arbitrary units. (_B_) Representative startle responses in startle - only trials (gray) and prepulse trials (purple) for EGFP -, hM3Dq -, and hM3Dq+MDL - 11939 - injected mice. (_C_) Representative raw traces of ABR to 20 kHz stimuli at varying intensities (dB SPL) for EGFP -, hM3Dq -, and hM3Dq+MDL - 11939 - injected mice. (_D_) Summary graphs of GPI ratio for high - frequency background sounds (20 to 32 kHz; EGFP: _n_ = 4, hM3Dq: _n_ = 6, hM3Dq+MDL - 11939: _n_ = 6) 7 d after CNO or CNO + MDL - 11939 injection (EGFP vs. hM3Dq: _P_ < 0.001; hM3Dq vs. hM3Dq+MDL - 11939: _P_ < 0.001; two - way ANOVA). (_E_) Summary graphs of prepulse startle ratio (response to prepulse and startle stimulus/response to startle stimulus alone) for high - frequency prepulse sounds (20 to 32 kHz; EGFP: _n_ = 4, hM3Dq: _n_ = 6, hM3Dq+MDL - 11939: _n_ = 6). (_F_) ABR thresholds at test frequencies (8 to 32 kHz; EGFP: _n_ = 4, hM3Dq: _n_ = 6, hM3Dq+MDL - 11939: _n_ = 6). (_G_) Percentage of mice developing tinnitus (EGFP: 25%; hM3Dq: 83.33%; hM3Dq+MDL - 11939: 16.67%).\n\n**6 of 12** https://doi.org/10.1073/pnas.2509692123\n\npnas.org\n\n5-HT<sup>DRN→DCN</sup> circuit plays a pivotal role in the underlying mechanisms of tinnitus.\n\n**The 5 - HT**<sup>**DRN**→</sup><sup>**DCN**</sup> **Circuit Is Activated in a Mouse Model of Noise - Induced Tinnitus.** It is well established that exposure to loud noise can lead to the development of tinnitus in humans and tinnitus-related behaviors in animal models (28, 31, 32). Previous research has identified the DCN as a key brain region implicated in noise-induced tinnitus (27–29, 31, 32). Additionally, dysfunction of serotoninergic system has been strongly associated with the generation or perception of tinnitus following acoustic trauma (17, 37). Notably, noise exposure, besides being a known trigger for tinnitus, also increases extracellular 5-HT levels in DCN (25). Therefore, we proposed that abnormal activity in 5-HT<sup>DRN→DCN</sup> circuit may contribute to the development of noise-induced tinnitus. To test this possibility, we expressed a 5-HT sensor (5-HT3.0) in the DCN and performed fiber photometry-mediated fluorescence recording to directly measure the dynamics of serotonergic activity within the DCN of freely moving mice. This approach allowed us to compare serotonergic activity under quiet vs. noisy conditions (116 dB SPL white noise) (50), in mice with and without GPI ratios indicating tinnitus (Fig. 5 _A_ – _F_ and Dataset S1 _E_). The noise exposure paradigm employed in this study has been previously demonstrated to induce tinnitus-related behavior in mice (28, 31, 32). Mice were exposed monaurally to either noise (116 dB SPL, 16 kHz, 2 h) or sham conditions, and tinnitus behavior was assessed using the GPIAS paradigm. We unilaterally injected rAAVhSyn-5-HT3.0 or control AAV virus (rAAV-hSyn-EGFP) into the DCN region of C57BL/6 mice to express 5-HT3.0 for monitoring 5-HT signals. One week later, optic fibers were implanted above the viral injection site and a fiber photometry system was used to record the fluorescence responses of the 5-HT sensor when 5-HT is locally elevated (Fig. 5 _A_). Four weeks after the viral injection, immunofluorescence analysis confirmed the expression of 5-HT3.0 or control vectors in the DCN (Fig. 5 _B_). Coronal brain sections revealed the viral injection and expression sites, along with an optical fiber tract positioned above the DCN. We observed a dramatic increase in the fluorescence signal within the DCN after loud noise exposure (Fig. 5 _C_ – _E_), indicating that 5-HT levels remained dramatically elevated. Importantly, the increase in 5-HT levels within the DCN of noise-exposed mice was accompanied by the emergence of tinnitus-related behavior (Fig. 5 _C_ – _F_, _SI Appendix_, Fig. S5 _A_, and Dataset S1 _J_). In contrast, no detectable change in fluorescence signal was observed in mice expressing EGFP in the DCN during noise exposure (Fig. 5 _C_, _SI Appendix_, Fig. S5 _B_ and _C_, and Dataset S1 _J_).\n\nTo further assess the neural activity of 5-HT<sup>DRN→DCN</sup> neurons in mice exhibiting tinnitus-related behaviors, we recorded realtime calcium dynamics via fiber photometry recording in DRN of freely moving mice expressing genetically encoded fluorescent Ca<sup>2+</sup> indicator GCaMP6f in 5-HT<sup>DRN→DCN</sup> neurons (51). We performed bilateral microinjections of a retrograde-tracing virus rAAV(retro)-DIO-FLP into the DCN of Pet1-Cre mice, followed by injections of either rAAV-fDIO-GCaMP6f or control AAV virus (rAAV-fDIO-EGFP) into the DRN, to selectively express the cal­ cium sensor GCaMP6f in 5-HT<sup>DRN→DCN</sup> neurons (Fig. 5 _G_). An optic fiber was implanted to target the DRN 1 wk after the viral injection, which allowed in vivo monitoring of 5-HT<sup>DRN→DCN</sup> pop­ ulation neural activity in noise induced-tinnitus mice (6, 52). Post hoc histological analysis confirmed the selective expression of GCaMP6f in 5-HT<sup>DRN→DCN</sup> neurons (Fig. 5 _H_ and _I_). Coronal brain sections at the Bregma levels revealed viral injection and expression sites (Fig. 5 _I_). We observed a significant increase in the\n\nfluorescence signal within the DRN after noise exposure (Fig. 5 _J_ – _L_), indicating that the activity of 5-HT<sup>DRN→DCN</sup> neurons remained elevated. Moreover, the increased activity in 5-HT<sup>DRN→DCN</sup> neurons of noise-exposed mice was accompanied by the emergence of tinnitus-related behavior (Fig. 5 _J_ – _M_ and _SI Appendix_, Fig. S5 _D_). In contrast, no significant change in fluorescence signals was observed in 5-HT<sup>DRN→DCN</sup> neurons of EGFP-expressing control mice with tinnitus (Fig. 5 _J_ and _SI Appendix,_ Fig _. S5 E_ and _F_), con­ firming that the GCaMP6f signals reliably and accurately reflected neuronal activity. The results demonstrated that the increased activ­ ity in 5-HT<sup>DRN→DCN</sup> neuron is closely associated with the presence of tinnitus-related behavior.\n\nAdditionally, we assessed changes in the expression of c-fos as a marker of in vivo neuronal activity. Using immunohistochemical microscopy, we analyzed noise exposure-induced changes in the overall signal intensity of c-fos staining within the DRN of mice. We found that, at 2 h, 3 d, and 7 d after noise exposure, the overall intensity of c-fos staining was increased compared to seroton ergic neurons under sham conditions (_SI Appendix_, Fig. S6 and Dataset S1 _K_). It is note­ worthy that the c-fos expression was predominantly increased in TPH2-expressing neurons but was also elevated in some TPH2negative neurons within DRN, suggesting that nonserotonergic neurons may also be activated by noise exposure.\n\nIn summary, our findings demonstrate that both 5-HT release and 5-HT<sup>DRN→DCN</sup> neuronal activity in tinnitus mice are signifi­ cantly elevated compared to control mice, suggesting that hyper­ activity of the 5-HT<sup>DRN→DCN</sup> circuit is strongly associated with noise-induced tinnitus in mice.\n\n**Inhibition of 5 - HT**<sup>**DRN**→</sup><sup>**DCN**</sup> **Circuit Ameliorates Noise - Induced Tinnitus - Related Behavior in Mice.** Given the above observations implicating dysfunction of 5-HT<sup>DRN→DCN</sup> circuit in the perception of noise-induced tinnitus, we aimed to determine whether silencing 5-HT<sup>DRN→DCN</sup> circuit modulates the perception of noise-induced tinnitus in mice. We therefore chemogenetically inhibited the 5-HT<sup>DRN→DCN</sup> circuit and evaluated its effect on noise-induced tinnitus-related behavior in mice (Fig. 6 and Dataset S1 _F_). To selectively inhibit 5-HT<sup>DRN→DCN</sup> circuit in vivo, we performed bilateral microinjections of a retrograde-tracing virus rAAV(retro)DIO-FLP into the DCN of Pet1-Cre mice, followed by injections of either rAAV -fDIO-hM4D(Gi)-EGFP or control AAV virus (rAAV-DIO-EGFP) into the DRN (Fig. 6 _A_). The hM4Di, a Gi/o-coupled DREADD, has proven effective for suppressing neuronal activity and chemogenetically silencing serotonergic circuits in awake, behaving animals (53, 54). Four weeks after the viral injection, immunohistofluorescence analysis confirmed the expression of hM4D(Gi)-EGFP or control vectors (EGFP) in DRN serotonergic neurons (Fig. 6 _B_ and _C_). Pet1-Cre animals expressing hM4D(Gi)-EGFP or EGFP (control AAV virus) with tinnitusrelated behavior were administered CNO through daily injections (1 mg/kg, i.p.), followed by assessment of tinnitus responses. As expected, we found that inhibition of 5-HT<sup>DRN→DCN</sup> circuit in hM4D(Gi)-EGFP expressing mice via CNO injection significantly reduced the GPI ratio, without affecting PPI performance or ABR threshold (Fig. 6 _D_, _SI Appendix_, Fig. S7 _A_, and Dataset S1 _L_). In contrast, CNO administration in EGFP-expressing mice failed to reverse noise-induced GPI ratio changes or alter PPI and ABR threshold (Fig. 6 _E_, _SI Appendix_, Fig. S7 _B_, and Dataset S1 _L_). These results suggest that inhibition of 5-HT<sup>DRN→DCN</sup> circuit partially reverses noise-induced impairments in gap detection, without affecting baseline gap detection or prepulse inhibition behavior. Overall, compared with EGFP-expressing mice, treatment with CNO in hM4Di-EGFP-expressing mice reduced significantly\n\nhttps://doi.org/10.1073/pnas.2509692123 **7 of 12**\n\n**PNAS** 2026 Vol. 123 No. 17 e2509692123\n\n**Fig. 5.** Fiber photometry recording of 5 - HT release in the DCN and 5 - HT<sup>DRN→DCN</sup> neural activity of mice before and after noise exposure (post - NE). (_A_) Schematic diagram of virus injection and recording sites (DCN). (_B_) Histological verification of 5 - HT3.0 expression in the DCN. (_C_) Representative traces of 5 - HT3.0 and EGFP fluorescence changes before and post - NE. (_D_) Average peak Δ F/F of 5 - HT signals before and 6 d post - NE (_n_ = 12; _P_ < 0.01; paired _t_ test). (_E_) Frequency of 5 - HT signal events before and 6 d post - NE (_n_ = 12; _P_ < 0.001; paired _t_ test). (_F_) GPI ratio in 5 - HT3.0 - expressing mice before and 7 d post - NE (_n_ = 10 to 12, 24 kHz: _P_ < 0.01, two - way ANOVA). (_G_) Schematic diagram of virus injection sites (DCN and DRN) and recording site (DRN). (_H_ and _I_) Representative images showing viral expression of GCaMP6f in the DCN and coexpression of GCaMP6f and TPH2 in the DRN. (Scale bar: 200 μ m.) (_J_) Representative traces of GCaMP6f and EGFP fluorescence changes before and post - NE. (_K_) Average peak Δ F/F of calcium signals before and 6 d post - NE (_n_ = 6, _P_ < 0.05; paired _t_ test). (_L_) Frequency of calcium signal events before and 6 d post - NE (_n_ = 6, _P_ < 0.05; paired _t_ test). (_M_) GPI ratio in GCaMP6f - expressing mice before and 7 d post - NE (_n_ = 5 to 6, 20 kHz: _P_ < 0.05, two - way ANOVA).\n\nthe percentage of mice showing tinnitus behavior (_SI Appendix_, Fig. S7 _C_, hM4Di-EGFP with CNO treatment, 42.86% of control, n = 7; EGFP with CNO treatment, 100.0% of control, n = 5).\n\nTaken together, these results reveal that aberrant activity of 5-HT<sup>DRN→DCN</sup> circuit contributes to the pathology of noise-induced tinnitus (_SI Appendix_, Fig. S7 _D_)."
+    },
+    {
+      "heading": "**Discussion**",
+      "level": 2,
+      "kind": "body",
+      "text": "Dysregulation of serotonergic neurotransmission has long been implicated in the pathophysiology of tinnitus. However, direct evidence linking the serotonergic circuit to the generation and modulation of tinnitus remains lacking. In this study, we identified a subpopulation of DRN neurons projecting to the DCN using\n\n**8 of 12** https://doi.org/10.1073/pnas.2509692123\n\npnas.org\n\n**Fig. 6.** Chemogenetic inhibition of the 5 - HT<sup>DRN→DCN</sup> circuit alleviates tinnitus - related behavior induced by noise exposure (NE). (_A_) Schematic diagram showing the injection sites of the chemogenetic virus rAAV - nEF1a - fDIO - hM4D(Gi) - EGFP - WPRE - hGH pA or rAAV - nEF1 α- fDIO - EGFP - WPRE - hGH polyA and a retrograde - tracing virus rAAV(retro) - DIO - FLP in the DRN and DCN. (_B_ and _C_) Representative images showing viral expression in the DCN and coexpression of hM4Di - EGFP and TPH2 in the DRN. (Scale bar: 200 μ m.) (_D_, _Left_) GPI ratio before (purple), 7 d after NE (gray), and after CNO injection (pink) in hM4Di - EGFP - expressing mice. Comparisons between NE and baseline: _n_ = 5 to 7; 8 kHz: _P_ = 0.3063; 12 kHz: _P_ < 0.05; 16 kHz: _P_ = 0.1823; 20 kHz: _P_ < 0.05; 24 kHz: _P_ = 0.0649; 32 kHz: _P_ = 0.6664; two - way ANOVA. Comparisons between NE and CNO injection: _n_ = 5 to 7, 8 kHz: _P_ < 0.01; 12 kHz: _P_ < 0.05; 16 kHz: _P_ < 0.05; 20 kHz: _P_ < 0. 01; 24 kHz: _P_ < 0.05; 32 kHz: _P_ = 0.2853; two - way ANOVA. (_D_, _Right_) PPI ratio before (purple) and after CNO injection (gray) in hM4Di - EGFP mice (_n_ = 5 to 7; 8 kHz: _P_ = 0.7920; 12 kHz: _P_ = 0.9510; 16 kHz: _P_ = 0.9986; 20 kHz: _P_ = 0.6016; 24 kHz: _P_ = 0.9960; 32 kHz: _P_ = 0.9929; two - way ANOVA). (_E_, _Left_) GPI ratio before (purple), 7 d after noise exposure (pink), and after CNO injection (gray) in EGFP - expressing mice. Comparisons between NE and baseline: _n_ = 4 to 5; 8 kHz: _P_ = 0.2495; 12 kHz: _P_ = 0.0726; 16 kHz: _P_ < 0.05; 20 kHz: _P_ = 0.0728; 24 kHz: _P_ < 0.01; 32 kHz: _P_ = 0.2057; two - way ANOVA. Comparisons between NE and CNO injection: no significant differences, two - way ANOVA. (_E_, _Right_) PPI ratio before (purple) and after CNO injection (gray) in EGFP - expressing mice (_n_ = 4 to 5; 8 kHz: _P_ = 0.7920; 12 kHz: _P_ = 0.9510; 16 kHz: _P_ = 0.9986; 20 kHz: _P_ = 0.6016; 24 kHz: _P_ = 0.9960; 32 kHz: _P_ = 0.9929; two - way ANOVA).\n\ncircuit tracing and viral-genetic approaches. We found that activation of the 5-HT<sup>DRN→DCN</sup> circuit produced a hyperactivity of fusiform cells, a tinnitus-like physiological activity, as demonstrated through optogenetics and in vitro & in vivo physio­ logical recordings (40). Remarkably, chemogenetic activation of 5-HT<sup>DRN→DCN</sup> circuit was sufficient to reversibly induce behavior in mice that were consistent with a tinnitus percept. Furthermore, using fiber photometry recordings, we observed increased 5-HT release within the DCN and increased activity of 5-HT<sup>DRN→DCN</sup> neurons in a noise-induced tinnitus mice model. Importantly, chemogenetic silencing of 5-HT<sup>DRN→DCN</sup> circuit alleviated noiseinduced tinnitus-related behavior in mice. Taken together, these findings provide compelling evidence that the 5-HT<sup>DRN→DCN</sup> circuit regulates the excitability of the DCN and plays a critical role in the generation and modulation of tinnitus.\n\nGiven that the DRN consists of several distinct subpopulations of 5-HT neurons (6), identifying the specific source of 5-HT projections to the DCN is necessary for understanding seroton­ ergic modulation of auditory function. Using neural tracing com­ bined with viral-genetic methods, we identified a subpopulation of serotonergic neurons within the DRN that exhibit robust axonal projections to the DCN in mice (Fig. 1), confirming and extending previous studies in other species, such as cat and rat, which established the DRN as the major source of serotonergic inputs to the DCN (26, 34–40, 42). Consistent with previous anatomical studies, serotonergic fibers exhibit denser innervation of the DCN compared to the VCN or other auditory nuclei across multiple species (Fig. 1 _I_), reflecting a conserved organizational pattern (26, 35, 37, 38). The strong and preferential serotonergic innervation of the DCN suggests that 5-HT<sup>DRN→DCN</sup> circuit plays\n\nhttps://doi.org/10.1073/pnas.2509692123 **9 of 12**\n\n**PNAS** 2026 Vol. 123 No. 17 e2509692123\n\na fundamental role in modulating DCN circuitry. Our immuno­ histochemical analysis further revealed that serotonergic fibers localize preferentially near fusiform cells within the DCN, sug­ gesting direct synaptic contacts (Fig. 1 _J_ and _K_). However, the extensive serotonergic innervation throughout all DCN layers revealed by our viral tracing and SERT staining contrasts with the more restricted pattern observed in our previous study (40). This discrepancy likely arises from methodological sensitivity that viral tracing robustly labels complete axonal arbors and detects sparse terminals that were not captured by anti-GFP immunohistochem­ istry in Tph2-ChR2-YFP mice. Overall, our findings align with previous studies in guinea pigs and rats, which similarly identified serotonergic fiber apposition to fusiform cells, implying that ser­ otonergic afferents may directly modulate fusiform cell activity in the DCN (36, 37, 42). Indeed, our in vitro and in vivo physio­ logical experiments demonstrated that optogenetic activation of serotonergic terminals or 5-HT<sup>DRN→DCN</sup> circuit robustly increases the spontaneous spike rate of fusiform cells, effectively a tinnituslike hyperactivity in neurons conveying sound information to higher brain regions. This effect was reversed upon cessation of light stimulation and was mediated largely by the 5-HT2A receptor (Fig. 2 and _SI Appendix_, Fig. S2). Similarly, in vitro brain slice electrophysiology demonstrated that both exogenous 5-HT and evoked 5-HT release robustly enhance DCN circuit excitability, with a pronounced hyperactivity of fusiform cells (41). It is well established that the hyperactivity in fusiform cells of the DCN is strongly associated with tinnitus (4, 27–33). Therefore, the hyper­ activity of fusiform cells induced by 5-HT<sup>DRN→DCN</sup> circuit most likely represents a tinnitus-like phenomenon.\n\nOur results revealed that the chemogenetic activation of 5-HT<sup>DRN→DCN</sup> circuit induces a mid- to high-frequency tinnitus phenotype, as evidenced by gap detection deficit (Fig. 3). We pro­ pose two mechanisms for the frequency-specific effect. First, 5-HT engages tonotopically organized inhibitory interneurons (55), and our data show this enhances inhibition of fusiform cells, dispro­ portionately suppressing low-frequency regions (_SI Appendix_, Fig. S8). Second, the excitatory drive engages frequency-tuned intrinsic properties like HCN channels. This interplay shapes a broad signal into a specific output. Although multiple 5-HT receptors are expressed in the CN, as previously reported (36), we found that the gap detection deficits induced by activation of the 5-HT<sup>DRN→DCN</sup> circuit were largely attenuated by pretreatment with MDL-11939, a selective antagonist for the 5-HT2A receptor. These results suggest that blocking 5-HT2A receptor partially reverses tinnitus-related behavior induced by activation of 5-HT<sup>DRN→DCN</sup> circuit. These findings are consistent with our electrophysiological recordings (Fig. 2) and extend our previous finding demonstrating that ketanserin (a 5-HT2A receptor antag­ onist) blocks 5-HT-evoked inward currents in the DCN (40), further supporting the involvement of 5-HT2A receptors in this pathway. Although our data indicate that 5-HT2A receptor is required for expression of tinnitus induced by the 5-HT<sup>DRN→DCN</sup> circuit, the potential contribution of other 5-HT receptors cannot be ruled out. These results strongly suggest that hyperactivity within the 5-HT<sup>DRN→DCN</sup> circuit represents a key mechanism underlying the generation of tinnitus.\n\nAlthough SSRIs have been explored as a treatment for the neg­ ative quality-of-life associated with the tinnitus percept, some stud­ ies indicated that some patients report enhanced tinnitus after beginning SSRI regimen. However, there is a fundamental gap in our understanding how acute administration of SSRIs affects the activity of the auditory system at the cellular and system level. Based on our previous study (40) and the observation that acute citalo­ pram administration induces tinnitus-related behavior in mice\n\n(_SI Appendix_, Fig. S9 and Dataset S1 _M_), we postulated that short-term SSRIs treatment results in hyperactivity in 5-HT<sup>DRN→DCN</sup> circuit, subsequently triggering a tinnitus-related behavior. Such an explanation could help clarify the relationship between tinnitus and the clinical side effects of acute SSRIs treatment.\n\nSeveral lines of evidence suggest that the aberrant activity within the 5-HT<sup>DRN→DCN</sup> circuit is implicated in the perception of noise-induced tinnitus. The recent development of advanced ser­ otonin biosensors, such as the G protein-coupled receptor activation-based (GRAB) 5-HT sensor, enables high-specificity, subsecond-resolution detection of extracellular 5-HT release in freely moving animals (50, 56). Utilizing the optimized GRAB 5-HT sensor (50), which exhibits enhanced sensitivity and spati­ otemporal resolution compared to earlier GFP-based tools, we provide direct evidence that 5-HT release is enhanced in the DCN of noise-exposed mice with tinnitus-related behavior (Fig. 5). The observed increase in 5-HT levels within the DCN may at least partially result from the enhanced activity of 5-HT<sup>DRN→DCN</sup> neu­ rons. Consistent with this, GCaMP6f-based fiber photometry further demonstrated increased activity in 5-HT<sup>DRN→DCN</sup> neurons of noise-exposed mice exhibiting tinnitus-related behavior (Fig. 5). These results indicate that hyperactivity in DRN serotonergic neu­ rons projecting to the DCN drives the 5-HT dysregulation impli­ cated in tinnitus-related behaviors. In addition, our histological analysis of c-fos expression demonstrated activation of 5-HT neu­ rons in the DRN of noise-exposed mice exhibiting behavioral evidence of tinnitus (_SI Appendix_, Fig. S6). All these results suggest that hyperactivity of the 5-HT<sup>DRN→DCN</sup> circuit is associated with noise-induced tinnitus in mice. More importantly, chemogenetic silencing 5-HT<sup>DRN→DCN</sup> circuit significantly ameliorates the tinnitus-related behavior in mice (Fig. 6 and _SI Appendix,_ Fig. S7), directly linking hyperactivity of 5-HT<sup>DRN→DCN</sup> circuit to the behavioral manifestations of noise-induced tinnitus. Collectively, our results support the hypothesis that the 5-HT<sup>DRN→DCN</sup> circuit plays a critical role in the modulation of noise-induced tinnitus perception.\n\nIn support of our hypothesis, Cransac et al. (1998) have shown that noise exposure in rats produces elevations in 5-HT and its metabolite 5-hydroxyindoleacetic acid (5-HIAA) within the CN (25). Furthermore, our previous study has demonstrated that loud noise exposure reduces SERT expression in the DCN of mice, which could produce prolonged 5-HT availability in the DCN, subsequently increase neural hyperactivity, and further highlights the potential role of 5-HT in modulating tinnitus-related behavior (26). Notably, upregulation of 5-HT levels within the central auditory system and activation of DRN 5-HT neurons also occur in another reversible type of tinnitus, specifically that induced by high doses of sodium salicylate (57). Taken together with previous studies (25, 26, 57), our data suggest that noise-induced tinnitus in mice is at least partially mediated by 5-HT release from 5-HT<sup>DRN→DCN</sup> neurons. These findings extend our understanding of how noise-induced cochlear deafferentation drives homeostatic plasticity in the DCN. This plasticity appears to result from a combination of increased intrinsic excitability of fusiform cells and a decrease in inhibitory neurotransmission in the DCN (4).\n\nTogether, the induction of tinnitus through chemogenetic acti­ vation of the 5-HT<sup>DRN→DCN</sup> circuit, coupled with the partial reversal of noise-induced tinnitus by inhibition of this circuit, underscores the critical role of hyperactivity within the 5-HT<sup>DRN→DCN</sup> circuit as a key mechanism underlying tinnitus. This parallels established mechanisms in the central amygdala (CeA), where elevated 5-HT levels (hyperserotonergic states) and specific activation of 5-HT<sup>DRN→CeA</sup> neurons, certain subpopula­ tions of serotonergic neurons in the DRN, promote anxiety-like\n\n**10 of 12** https://doi.org/10.1073/pnas.2509692123\n\npnas.org\n\nbehaviors (6, 12). We propose that noise exposure may contribute to hyperactivity in the DCN through a similar serotonergic mech­ anism: stress- or trauma-induced 5-HT release from some sub­ populations of serotonergic neurons in the DRN could amplify neural excitability in the DCN, mirroring the CeA’s role in anxiety. It would be interesting to investigate whether these subpopulations of serotonergic neurons also project to CeA. This convergence suggests a broader principle whereby hyperserotonergic states in distinct brain circuits mediate diverse neurobehavioral outcomes, e.g., anxiety in the CeA and tinnitus in the DCN.\n\nIn conclusion, our findings demonstrate that activating the 5-HT<sup>DRN→DCN</sup> neural circuit reversibly drives DCN hyperexcita­ bility and tinnitus-related behavior via a mechanism of dynamic circuit plasticity, rather than permanent pathology. This effect is largely mediated by 5-HT2A receptor activation, which disrupts local excitation-inhibition balance through short-term adaptation. This indicates that certain forms of tinnitus reflect a neuromodulatortriggered, dynamic state, in which 5-HT acts as a plastic trigger, reconfiguring auditory circuits into a hyperexcitable mode that gen­ erates or sustains the tinnitus percept. This work identifies a discrete serotonergic circuit underlying tinnitus in hyperserotonergic states and establishes a circuit-based foundation for targeted therapies addressing sensory processing disorders.\n\n1. A. J. Heller, Classification and epidemiology of tinnitus. _Otolaryngol. Clin. North Am._ 36, 239–248 (2003).\n\n2. Y. C. Kumbul, Ü. Işik, F. Kiliç, M. E. Sivrice, V. Akin, Evaluation of anxiety sensitivity, anxiety, depression, and attention deficit hyperactivity disorder in patients with tinnitus. _Noise Health_ 24, 13–19 (2022).\n\n3. B. Hackenberg _et al._, Tinnitus and its relation to depression, anxiety, and stress-a population-based cohort study. _J. Clin. Med._ 12, 1169 (2023).\n\n4. A. Henton, T. Tzounopoulos, What’s the buzz? The neuroscience and the treatment of tinnitus. _Physiol. Rev._ 101, 1609–1632 (2021).\n\n5. A. Teissier _et al._, Activity of raphé serotonergic neurons controls emotional behaviors. _Cell Rep._ 13, 1965–1976 (2015).\n\n6. J. Ren _et al._, Anatomically defined and functionally distinct dorsal raphe serotonin sub-systems. _Cell_ 175, 472–487.e20 (2018).\n\n7. C. M. Teixeira _et al._, Hippocampal 5-HT input regulates memory formation and Schaffer collateral excitation. _Neuron_ 98, 992–1004.e4 (2018).\n\n8. W.-J. Zou _et al._, A discrete serotonergic circuit regulates vulnerability to social stress. _Nat. Commun._ 11, 4218 (2020).\n\n9. K. W. Huang _et al._, Molecular and anatomical organization of the dorsal raphe nucleus. _Elife_ 8, e46464 (2019).\n\n10. W. Zhou _et al._, A neural circuit for comorbid depressive symptoms in chronic pain. _Nat. Neurosci._ 22, 1649–1658 (2019).\n\n11. L. Tikker _et al._, Inactivation of the GATA cofactor ZFPM1 results in abnormal development of dorsal raphe serotonergic neuron subtypes and increased anxiety-like behavior. _J. Neurosci._ 40, 8669–8682 (2020).\n\n12. C. A. Marcinkiewcz _et al._, Serotonin engages an anxiety and fear-promoting circuit in the extended amygdala. _Nature_ 537, 97–101 (2016).\n\n13. A. Sengupta, A. Holmes, A discrete dorsal raphe to basal amygdala 5-HT circuit calibrates aversive memory. _Neuron_ 103, 489–505.e7 (2019).\n\n14. Z. Liu, R. Lin, M. Luo, Reward contributions to serotonergic functions. _Annu. Rev. Neurosci._ 43, 141–162 (2020).\n\n15. C. Morel _et al._, Midbrain projection to the basolateral amygdala encodes anxiety-like but not depression-like behaviors. _Nat. Commun._ 13, 1532 (2022).\n\n16. R. Ogelman _et al._, Serotonin modulates excitatory synapse maturation in the developing prefrontal cortex. _Nat. Commun._ 15, 1368 (2024).\n\n17. J. J. Simpson, W. E. Davies, A review of evidence in support of a role for 5-HT in the perception of tinnitus. _Hear. Res._ 145, 1–7 (2000).\n\n18. F. Salvinelli, M. Casale, F. Paparo, A. M. Persico, C. Zini, Subjective tinnitus, temporomandibular joint dysfunction, and serotonin modulation of neural plasticity: Causal or casual triad? _Med. Hypotheses_ 61, 446–448 (2003).\n\n19. K. K. Caperton, A. M. Thompson, Activation of serotonergic neurons during salicylate-induced tinnitus. _Otol. Neurotol._ 32, 301–307 (2011).\n\n20. P. Baldo, C. Doree, P. Molin, D. McFerran, S. Cecco, Antidepressants for patients with tinnitus. _Cochrane Database Syst. Rev._ 2012, CD003853 (2012).\n\n21. J. Magagnoli, T. H. Cummings, J. W. Hardin, S. S. Sutton, J. Ambati, Fluoxetine, fluvoxamine, and hearing loss or tinnitus after cisplatin treatment: A retrospective cohort study. _J. Investig._ 72, 579–586 (2024).\n\n22. C. W. T. Miller, Development of tinnitus at a low dose of sertraline: Clinical course and proposed mechanisms. _Case Rep. Psychiatry_ 2016, 1790692 (2016).\n\n23. A. P. Wand, Transient citalopram-induced auditory hallucinations in a patient with Parkinson’s disease and depression. _Aust. N. Z. J. Psychiatry_ 46, 178 (2012).\n\n24. H. Ağır, F. Coşkun, Citalopram associated with the development of tinnitus in an adolescent girl: A case report. _J. Clin. Psychopharmacol._ 45, 57–58 (2025)."
+    },
+    {
+      "heading": "**Materials and Methods**",
+      "level": 2,
+      "kind": "body",
+      "text": "Detailed materials and methods are provided in _SI Appendix_. Briefly, tinnitus was assessed in mice using the Gap Pre-Pulse Inhibition of the Acoustic Startle (GPIAS) paradigm, which measures the detection of a silent gap within background sounds of varying frequencies. To dissect the underlying neural circuitry, we employed retrograde and anterograde viral tracing, fiber photometry, and optogenetic/chemogenetic manipulations to selectively target and modulate the 5-HT<sup>DRN→DCN</sup> neural circuit. The functional impact of this circuit on neuronal activity was validated through in vivo extracellular single-unit recordings and brain slice electrophysiology in DCN neurons. Control experiments, including auditory brainstem response (ABR) tests and prepulse inhibition (PPI), were conducted to rule out hearing loss and confirm the specificity of the observed behavioral deficits.\n\n**Data, Materials, and Software Availability.** All study data are included in the article and/or supporting information.\n\n**ACKNOWLEDGMENTS.** We thank Professor Stephen V. David for his technical assistance with extracellular single-unit recordings and Wen-Jun An and Yan-Lin Wu for their support with ABR testing. This work was supported by the Natural Science Foundation of China (Grants 32271059 and 82071061), NIH grant RO1DC004450, Anhui Province Clinical Medicine Research and Transformation Special Project (202304295107020125), Anhui Provincial Natural Science Foundation (2408085QH277), and by Natural Science Research Project of Anhui Educational Committee (2024AH050075).\n\n25. H. Cransac, J. M. Cottet-Emard, S. Hellström, L. Peyrin, Specific sound-induced noradrenergic and serotonergic activation in central auditory structures. _Hear. Res._ 118, 151–156 (1998).\n\n26. L.-Q. Cheng, F.-Q. Shu, M. Zhang, Y.-Z. Kai, Z.-Q. Tang, Resveratrol prevents hearing loss and a subregion specific- reduction of serotonin reuptake transporter induced by noise exposure in the central auditory system. _Front. Neurosci._ 17, 1134153 (2023).\n\n27. T. J. Brozoski, C. A. Bauer, D. M. Caspary, Elevated fusiform cell activity in the dorsal cochlear nucleus of chinchillas with psychophysical evidence of tinnitus. _J. Neurosci._ 22, 2383–2390 (2002).\n\n28. J. W. Middleton _et al._, Mice with behavioral evidence of tinnitus exhibit dorsal cochlear nucleus hyperactivity because of decreased GABAergic inhibition. _Proc. Natl. Acad. Sci. U.S.A._ 108, 7601–7606 (2011).\n\n29. S. Dehmel, S. Pradhan, S. Koehler, S. Bledsoe, S. Shore, Noise overexposure alters long-term somatosensory-auditory processing in the dorsal cochlear nucleus–possible basis for tinnitusrelated hyperactivity? _J. Neurosci._ 32, 1660–1671 (2012).\n\n30. S. D. Koehler, S. E. Shore, Stimulus timing-dependent plasticity in dorsal cochlear nucleus is altered in tinnitus. _J. Neurosci._ 33, 19647–19656 (2013).\n\n31. S. Li, V. Choi, T. Tzounopoulos, Pathogenic plasticity of Kv7.2/3 channel activity is essential for the induction of tinnitus. _Proc. Natl. Acad. Sci. U.S.A._ 110, 9980–9985 (2013).\n\n32. S. Li, B. I. Kalappa, T. Tzounopoulos, Noise-induced plasticity of KCNQ2/3 and HCN channels underlies vulnerability and resilience to tinnitus. _Elife_ 4, e07242 (2015).\n\n33. C. Wu, D. T. Martel, S. E. Shore, Increased synchrony and bursting of dorsal cochlear nucleus fusiform cells correlate with tinnitus. _J. Neurosci._ 36, 2068–2073 (2016).\n\n34. F. H. Willard, R. H. Ho, G. F. Martin, The neuronal types and the distribution of 5-hydroxytryptamine and enkephalin-like immunoreactive fibers in the dorsal cochlear nucleus of the North American opossum. _Brain Res. Bull._ 12, 253–266 (1984).\n\n35. A. Klepper, H. Herbert, Distribution and origin of noradrenergic and serotonergic fibers in the cochlear nucleus and inferior colliculus of the rat. _Brain Res._ 557, 190–201 (1991).\n\n36. G. C. Thompson, A. M. Thompson, K. M. Garrett, B. H. Britton, Serotonin and serotonin receptors in the central auditory system. _Otolaryngol. Head Neck Surg._ 110, 93–102 (1994).\n\n37. A. M. Thompson, K. R. Moore, G. C. Thompson, Distribution and origin of serotoninergic afferents to guinea pig cochlear nucleus. _J. Comp. Neurol._ 351, 104–116 (1995).\n\n38. T. Am, T. Gc, Serotonin projection patterns to the cochlear nucleus. _Brain Res._ 907, 195–207 (2001).\n\n39. L. M. Hurley, A. M. Thompson, Serotonergic innervation of the auditory brainstem of the Mexican free-tailed bat, Tadarida brasiliensis. _J. Comp. Neurol._ 435, 78–88 (2001).\n\n40. Z.-Q. Tang, L. O. Trussell, Serotonergic regulation of excitability of principal cells of the dorsal cochlear nucleus. _J. Neurosci._ 35, 4540–4551 (2015).\n\n41. Z.-Q. Tang, L. O. Trussell, Serotonergic modulation of sensory representation in a central multisensory circuit is pathway specific. _Cell Rep._ 20, 1844–1854 (2017).\n\n42. H. W. Steinbusch, Distribution of serotonin-immunoreactivity in the central nervous system of the rat-cell bodies and terminals. _Neuroscience_ 6, 557–618 (1981).\n\n43. M. M. Scott, K. C. Krueger, E. S. Deneris, A differentially autoregulated Pet-1 enhancer region is a critical target of the transcriptional cascade that governs serotonin neuron development. _J. Neurosci._ 25, 2628–2636 (2005).\n\n44. D. Oertel, S. H. Wu, Morphology and physiology of cells in slice preparations of the dorsal cochlear nucleus of mice. _J. Comp. Neurol._ 283, 228–247 (1989).\n\n45. B. N. Armbruster, X. Li, M. H. Pausch, S. Herlitze, B. L. Roth, Evolving the lock to fit the key to create a family of G protein-coupled receptors potently activated by an inert ligand. _Proc. Natl. Acad. Sci. U.S.A._ 104, 5163–5168 (2007).\n\n46. V. C. Torres Irizarry _et al._, Estrogen signaling in the dorsal raphe regulates binge-like drinking in mice. _Transl. Psychiatry_ 14, 122 (2024).\n\n47. S. Masri _et al._, Chemogenetic activation of cortical parvalbumin-positive interneurons reverses noise-induced impairments in gap detection. _J. Neurosci._ 41, 8848–8857 (2021).\n\nhttps://doi.org/10.1073/pnas.2509692123 **11 of 12**\n\n**PNAS** 2026 Vol. 123 No. 17 e2509692123\n\n48. M. Rezapour, M. Farrahizadeh, M. Akbari, Effectiveness of transcutaneous vagus nerve stimulation (tVNS) on salicylate-induced tinnitus. _Neurosci. Lett._ 822, 137639 (2024).\n\n49. W. Wang _et al._, Neuroinflammation mediates noise-induced synaptic imbalance and tinnitus in rodent models. _PLoS Biol._ 17, e3000307 (2019).\n\n50. F. Deng _et al._, Improved green and red GRAB sensors for monitoring spatiotemporal serotonin release _in vivo_. _Nat. Methods_ 21, 692–702 (2024).\n\n51. T.-W. Chen _et al._, Ultrasensitive fluorescent proteins for imaging neuronal activity. _Nature_ 499, 295–300 (2013).\n\n52. W. E. Allen _et al._, Thirst-associated preoptic neurons encode an aversive motivational drive. _Science_ 357, 1149–1155 (2017).\n\n53. L. Li _et al._, Dorsal raphe nucleus to anterior cingulate cortex 5-HTergic neural circuit modulates consolation and sociability. _Elife_ 10, e67638 (2021).\n\n54. A. Belmer, R. Depoortere, K. Beecher, A. Newman-Tancredi, S. E. Bartlett, Neural serotonergic circuits for controlling long-term voluntary alcohol consumption in mice. _Mol. Psychiatry_ 27, 4599–4610 (2022).\n\n55. M. A. Muniak, D. K. Ryugo, Tonotopic organization of vertical cells in the dorsal cochlear nucleus of the CBA/J mouse. _J. Comp. Neurol._ 522, 937–949 (2014).\n\n56. J. Wan _et al._, A genetically encoded sensor for measuring serotonin dynamics. _Nat. Neurosci._ 24, 746–752 (2021).\n\n57. J. Liu _et al._, Effects of salicylate on serotoninergic activities in rat inferior colliculus and auditory cortex. _Hear. Res._ 175, 45–53 (2003).\n\n**12 of 12** https://doi.org/10.1073/pnas.2509692123\n\npnas.org"
+    }
+  ],
+  "references": [
+    {
+      "raw": "10.1016/S0030-6665(02)00160-3",
+      "doi": "10.1016/s0030-6665(02)00160-3",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.4103/nah.nah_75_21",
+      "doi": "10.4103/nah.nah_75_21",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.3390/jcm12031169",
+      "doi": "10.3390/jcm12031169",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1152/physrev.00029.2020",
+      "doi": "10.1152/physrev.00029.2020",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.celrep.2015.10.061",
+      "doi": "10.1016/j.celrep.2015.10.061",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.cell.2018.07.043",
+      "doi": "10.1016/j.cell.2018.07.043",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.neuron.2018.04.030",
+      "doi": "10.1016/j.neuron.2018.04.030",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41467-020-18010-w",
+      "doi": "10.1038/s41467-020-18010-w",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.7554/eLife.46464",
+      "doi": "10.7554/elife.46464",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41593-019-0468-2",
+      "doi": "10.1038/s41593-019-0468-2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.2252-19.2020",
+      "doi": "10.1523/jneurosci.2252-19.2020",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature19318",
+      "doi": "10.1038/nature19318",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.neuron.2019.05.029",
+      "doi": "10.1016/j.neuron.2019.05.029",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1146/annurev-neuro-093019-112252",
+      "doi": "10.1146/annurev-neuro-093019-112252",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41467-022-29155-1",
+      "doi": "10.1038/s41467-022-29155-1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41467-024-45734-w",
+      "doi": "10.1038/s41467-024-45734-w",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0378-5955(00)00093-9",
+      "doi": "10.1016/s0378-5955(00)00093-9",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0306-9877(03)00194-4",
+      "doi": "10.1016/s0306-9877(03)00194-4",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1097/MAO.0b013e3182009d46",
+      "doi": "10.1097/mao.0b013e3182009d46",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "P. Baldo, C. Doree, P. Molin, D. McFerran, S. Cecco, Antidepressants for patients with tinnitus. Cochrane Database Syst. Rev. 2012, CD003853 (2012).",
+      "doi": null,
+      "title": "Antidepressants for patients with tinnitus",
+      "year": "2012"
+    },
+    {
+      "raw": "10.1177/10815589241247796",
+      "doi": "10.1177/10815589241247796",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "C. W. T. Miller, Development of tinnitus at a low dose of sertraline: Clinical course and proposed mechanisms. Case Rep. Psychiatry 2016, 1790692 (2016).",
+      "doi": null,
+      "title": "Development of tinnitus at a low dose of sertraline: Clinical course and proposed mechanisms",
+      "year": "2016"
+    },
+    {
+      "raw": "10.1177/0004867411433221",
+      "doi": "10.1177/0004867411433221",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "H. Ağır, F. Coşkun, Citalopram associated with the development of tinnitus in an adolescent girl: A case report. J. Clin. Psychopharmacol. 45, 57–58 (2025).",
+      "doi": null,
+      "title": "Citalopram associated with the development of tinnitus in an adolescent girl: A case report",
+      "year": "2025"
+    },
+    {
+      "raw": "10.1016/S0378-5955(98)00031-8",
+      "doi": "10.1016/s0378-5955(98)00031-8",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.3389/fnins.2023.1134153",
+      "doi": "10.3389/fnins.2023.1134153",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.22-06-02383.2002",
+      "doi": "10.1523/jneurosci.22-06-02383.2002",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.1100223108",
+      "doi": "10.1073/pnas.1100223108",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.4608-11.2012",
+      "doi": "10.1523/jneurosci.4608-11.2012",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.2788-13.2013",
+      "doi": "10.1523/jneurosci.2788-13.2013",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.1302770110",
+      "doi": "10.1073/pnas.1302770110",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.7554/eLife.07242",
+      "doi": "10.7554/elife.07242",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.3960-15.2016",
+      "doi": "10.1523/jneurosci.3960-15.2016",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0361-9230(84)90053-4",
+      "doi": "10.1016/0361-9230(84)90053-4",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0006-8993(91)90134-H",
+      "doi": "10.1016/0006-8993(91)90134-h",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1177/019459989411000111",
+      "doi": "10.1177/019459989411000111",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/cne.903510110",
+      "doi": "10.1002/cne.903510110",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0006-8993(01)02483-0",
+      "doi": "10.1016/s0006-8993(01)02483-0",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/cne.1194",
+      "doi": "10.1002/cne.1194",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.4825-14.2015",
+      "doi": "10.1523/jneurosci.4825-14.2015",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.celrep.2017.07.079",
+      "doi": "10.1016/j.celrep.2017.07.079",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0306-4522(81)90146-9",
+      "doi": "10.1016/0306-4522(81)90146-9",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.4979-04.2005",
+      "doi": "10.1523/jneurosci.4979-04.2005",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/cne.902830206",
+      "doi": "10.1002/cne.902830206",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.0700293104",
+      "doi": "10.1073/pnas.0700293104",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41398-024-02821-2",
+      "doi": "10.1038/s41398-024-02821-2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.2687-19.2021",
+      "doi": "10.1523/jneurosci.2687-19.2021",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.neulet.2024.137639",
+      "doi": "10.1016/j.neulet.2024.137639",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1371/journal.pbio.3000307",
+      "doi": "10.1371/journal.pbio.3000307",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41592-024-02188-8",
+      "doi": "10.1038/s41592-024-02188-8",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature12354",
+      "doi": "10.1038/nature12354",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.aan6747",
+      "doi": "10.1126/science.aan6747",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.7554/eLife.67638",
+      "doi": "10.7554/elife.67638",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41380-022-01789-z",
+      "doi": "10.1038/s41380-022-01789-z",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/cne.23454",
+      "doi": "10.1002/cne.23454",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41593-021-00823-7",
+      "doi": "10.1038/s41593-021-00823-7",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0378-5955(02)00708-6",
+      "doi": "10.1016/s0378-5955(02)00708-6",
+      "title": null,
+      "year": null
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 16787,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "pnas HTML route was not usable (empty_article_shell); attempting PDF fallback.",
+      "Full text was extracted from PDF fallback after the HTML path was not usable.",
+      "PNAS official full text was downloaded as PDF/binary to /tmp/paper-fetch-paywall-expansion-20260915/pnas/10.1073_pnas.2509692123/fetch/Yu_et_al_2026_A_discrete_serotonergic_circuit_involved_in_the_generation_of_tinnitus_behavior.pdf.",
+      "Markdown full text was saved to /tmp/paper-fetch-paywall-expansion-20260915/pnas/10.1073_pnas.2509692123/fetch/Yu_et_al_2026_A_discrete_serotonergic_circuit_involved_in_the_generation_of_tinnitus_behavior.md."
+    ],
+    "source_trail": [
+      "fulltext:pnas_html_fail",
+      "fulltext:pnas_pdf_fallback_ok",
+      "fulltext:pnas_pdf_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_pnas",
+      "route:signal_doi_pnas",
+      "route:probe_pnas_unknown",
+      "route:provider_selected_pnas",
+      "route:provider_candidate_pnas_metadata_selected_rank_1",
+      "route:provider_candidate_pnas_identity_strong",
+      "fulltext:pnas_attempt",
+      "download:pnas_saved",
+      "download:pnas_assets_skipped_profile_none",
+      "fulltext:pnas_article_ok",
+      "route:provider_candidate_pnas_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 428,
+      "body": 16359,
+      "refs": 477
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 65294,
+      "word_count": 10512,
+      "body_block_count": 6,
+      "body_heading_count": 5,
+      "body_to_abstract_ratio": 42.21686746987952,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "pnas",
+    "route": "browser_pdf",
+    "representation": "pdf",
+    "transport": "browser",
+    "fallback_used": true
+  }
+}

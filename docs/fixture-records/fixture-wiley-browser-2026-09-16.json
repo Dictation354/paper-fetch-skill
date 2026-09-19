@@ -1,0 +1,62 @@
+{
+  "captured_at_utc": "2026-09-16T05:54:18.270430+00:00",
+  "scope": "User explicitly requested browser retry for the two Wiley papers after direct HTTP challenge. Existing headless Camoufox state, provider downloader and official article links were used.",
+  "targets": [
+    {
+      "doi": "10.1111/gcb.16414",
+      "browser_mode": "headless",
+      "backend": "camoufox",
+      "page_response_status": 200,
+      "final_dom_has_same_article_body": true,
+      "new_downloaded_files": 6,
+      "new_full_size_files": 6,
+      "new_preview_files": 0,
+      "new_file_http_status": 200,
+      "collection": "tests/fixtures/golden_criteria/10.1111_gcb.16414/acquisition/browser-retry-2026-09-16/collection.json",
+      "provenance": "tests/fixtures/golden_criteria/10.1111_gcb.16414/acquisition/provenance.json",
+      "previous_evidence_preserved": true
+    },
+    {
+      "doi": "10.1029/2004gb002273",
+      "browser_mode": "headless",
+      "backend": "camoufox",
+      "page_response_status": 403,
+      "final_dom_has_same_article_body": true,
+      "new_downloaded_files": 14,
+      "new_full_size_files": 13,
+      "new_preview_files": 1,
+      "new_file_http_status": 200,
+      "collection": "tests/fixtures/golden_criteria/10.1029_2004gb002273/acquisition/browser-retry-2026-09-16/collection.json",
+      "provenance": "tests/fixtures/golden_criteria/10.1029_2004gb002273/acquisition/provenance.json",
+      "previous_evidence_preserved": true
+    }
+  ],
+  "counts": {
+    "requested_missing_files": 20,
+    "new_downloaded_files": 20,
+    "new_full_size_files": 19,
+    "new_preview_files": 1,
+    "remaining_original_size_gap": 1,
+    "original_42_full_size_recovered_cumulative": 41,
+    "original_42_preview_only": 1,
+    "body_collection_full_size_requirement_verified_cumulative": 323,
+    "body_collection_required": 332,
+    "body_collection_preview_only": 1,
+    "body_collection_missing_bytes": 8,
+    "tandf_deferred": 8
+  },
+  "evidence_limits": [
+    "The AGU landing navigation reports HTTP403 while its final browser DOM contains the identified article; neither its status nor its DOM is rewritten. All 14 new asset responses are actual HTTP200.",
+    "gbc1137-math-0001.gif is the sole formula URL in the captured official DOM (384x17). Existing provider marks it preview. It is decoded and replayed but does not erase an original-size requirement.",
+    "The six GCB figures and thirteen AGU figures are full_size; no thumbnail or PDF export substitutes were used."
+  ],
+  "validation": {
+    "image_decode": "Camoufox Image.decode and canvas RGBA pixel readback, dimensions, SHA-256",
+    "offline_replay": "2 passed in 5.52s; source discovery, provider candidate selection, captured-byte download and final article links",
+    "parallelism": "Default pyproject.toml pytest configuration; no serial override",
+    "production_code_changed": false,
+    "source_manifest_secret_audit": "5 passed, 1251 subtests passed in 3.54s",
+    "ruff": "Passed for new golden test",
+    "diff_check": "Passed"
+  }
+}

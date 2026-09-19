@@ -534,10 +534,10 @@ def build_ieee_article_model(
         merged_metadata if isinstance(merged_metadata, Mapping) else metadata
     )
     doi = normalize_doi(str(article_metadata.get("doi") or metadata.get("doi") or ""))
-    markdown_text = str(
-        (content.markdown_text if content is not None else "") or ""
-    ).strip()
     route = normalize_text(content.route_kind if content is not None else "").lower()
+    markdown_text = str((content.markdown_text if content is not None else "") or "")
+    if route != PDF_FALLBACK:
+        markdown_text = markdown_text.strip()
     source: SourceKind = "ieee_pdf" if route == PDF_FALLBACK else "ieee_html"
     trace = list(
         raw_payload.trace

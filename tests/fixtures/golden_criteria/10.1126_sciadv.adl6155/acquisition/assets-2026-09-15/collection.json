@@ -1,0 +1,316 @@
+{
+  "provider": "science",
+  "doi": "10.1126/sciadv.adl6155",
+  "sample_id": "10.1126_sciadv.adl6155",
+  "source_url": "https://www.science.org/doi/full/10.1126/sciadv.adl6155",
+  "source_input": "tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html",
+  "include_supplementary": true,
+  "include_body": true,
+  "source_sha256": "b231828115e0f5d9203e0c5046eaf601075f4d7f19b0e79b6df839bf53d8fa0b",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 1 . Sensitivity of AGR to tropical MAT over 25-year moving windows (see Mat",
+        "caption": "Fig. 1 . Sensitivity of AGR to tropical MAT over 25-year moving windows (see Materials and Methods) between 1959 and 2020 (γ T ). The lines show trends in γ T based on atmospheric CO 2 measurements at Mauna Loa (MLO, black dotted line), as in ( 8 ), and global mean AGR derived from multiple sites in the Global Carbon Budget 2021 (GCB, black filled line). We compare these with γ T based on global land and ocean CO 2 fluxes estimated by the Jena CarboScope atmospheric inversion using the stations Barrow, Mauna Loa, and South Pole covering the 1959 to 2020 period (CS57 Land+ocean , solid teal), and an inversion based on further stations available since at least 1976 (CS76 Land+ocean , solid light green). In addition, we show γ T calculated only on the basis of the land flux estimates by the two inversions CS57 Land and CS76 Land , (dash-dot lines of respective color). The doubling sensitivity period is derived on the basis of Mauna Loa AGR and ranges from 1972 to 1994 as central years of the 25-year moving window (two vertical gray dashed lines).",
+        "url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/59e2d1ae-aa39-4434-9f87-1d4ec3484813/assets/images/large/sciadv.adl6155-f1.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F1",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/59e2d1ae-aa39-4434-9f87-1d4ec3484813/assets/images/large/sciadv.adl6155-f1.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/59e2d1ae-aa39-4434-9f87-1d4ec3484813/assets/images/large/sciadv.adl6155-f1.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/59e2d1ae-aa39-4434-9f87-1d4ec3484813/assets/images/large/sciadv.adl6155-f1.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/sciadv.adl6155-f1.jpg"
+      ],
+      "record": "body_assets/sciadv.adl6155-f1.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2040,
+        "height": 1087,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.adl6155-f1.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 2 . The sensitivity of net land carbon sink NBP to tropical MAT based on in",
+        "caption": "Fig. 2 . The sensitivity of net land carbon sink NBP to tropical MAT based on individual realizations from five ESM large ensembles (individual panels) in the period 1851 to 2014 (gray lines), over 25-year moving windows. The historic doubling sensitivity event period 1972 to 1994 is plotted between the two vertical dashed lines. The number of simulations included and the number of selected events of each ESM are listed after the model name in the legend. As in Fig. 1 , the year in the x axis is the center of each 25-year interval. The ensemble mean sensitivity of each model is shown in a thick gray line. The doubling sensitivity events in individual members are emphasized by red lines. For sign consistency with AGR, NBP is multiplied by −1 in the calculation of γ T .",
+        "url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/e11fc57c-de62-40e8-a947-5627afb805c6/assets/images/large/sciadv.adl6155-f2.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F2",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/e11fc57c-de62-40e8-a947-5627afb805c6/assets/images/large/sciadv.adl6155-f2.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/e11fc57c-de62-40e8-a947-5627afb805c6/assets/images/large/sciadv.adl6155-f2.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/e11fc57c-de62-40e8-a947-5627afb805c6/assets/images/large/sciadv.adl6155-f2.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/e475936cd3c48aae-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/e475936cd3c48aae-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 4200,
+        "height": 4400,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.adl6155-f2.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 3 . Comparison of seasonal SOI time series trend in observation (NOAA) and ",
+        "caption": "Fig. 3 . Comparison of seasonal SOI time series trend in observation (NOAA) and 16 selected events in CESM2-LE. ( A ) Seasonal SOI time series from NOAA observation in a 25-year moving window. DJF is dark blue above zero and dark red below zero, MAM is in light blue above zero and light red below zero. ( B and C ) compares the trend of SOI time series in DJF and MAM separately. During the doubling sensitivity period, we calculate the mean, minimum, maximum, standard deviation, and Nino phase [mean(SOI) if SOI < 0] of SOI time series (corresponding to mean, min, max, σ, and Nino in the x axis). We calculate the above metrics for the first and second half period of each doubling sensitivity event, corresponding to the two boxplots (distribution across 16 events in CESM2-LE) and two black squares (SOI NOAA) shown for each metric. For the observations, the first (1960 to 1982) and second (1983 to 2006) halves correspond to the two periods in the beginning and the end of the doubling sensitivity event (1960 to 2006; Fig. 1 ). For the CESM2-LE time series, we perform the same split but considering the period covered by each individual event in each model realization. We then use a paired Wilcoxon signed-rank test to evaluate whether the medians of SOI metrics in the second half of each event differ from the corresponding first half (red stars, 1 star for P < 0.1 and 2 stars for P < 0.05).",
+        "url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/edcc0ad1-2097-407e-8390-49571f42bfaa/assets/images/large/sciadv.adl6155-f3.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F3",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/edcc0ad1-2097-407e-8390-49571f42bfaa/assets/images/large/sciadv.adl6155-f3.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/edcc0ad1-2097-407e-8390-49571f42bfaa/assets/images/large/sciadv.adl6155-f3.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/edcc0ad1-2097-407e-8390-49571f42bfaa/assets/images/large/sciadv.adl6155-f3.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/sciadv.adl6155-f3.jpg"
+      ],
+      "record": "body_assets/sciadv.adl6155-f3.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 4200,
+        "height": 3555,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.adl6155-f3.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 4 . Statistical analysis of doubling sensitivity of Mauna Loa AGR (MLO, bla",
+        "caption": "Fig. 4 . Statistical analysis of doubling sensitivity of Mauna Loa AGR (MLO, black lines), Jena CarboScope CS57 land sink (CS57 Land , red lines), and selected similar events from five ESM large ensembles (colored lines and corresponding shades), over 25-year moving windows. ( A ) The doubling sensitivity and all the similar events from the five ESMs are plotted. The statistical analysis includes the standard deviation of AGR and tropical MAT, represented by std ( AGR ) and std ( MAT ), respectively ( B and C ); relative variation std ( AGR )/ std ( MAT ) ( D ); and correlation cor ( AGR , MAT ) ( E ). The selected events from the ESM large ensembles are represented by median and 5 to 95% quantile (colored lines and corresponding shades). The number of selected events is listed behind each model name in the legend. Note that in ESM large ensembles, we use NBP instead of AGR, and NBP has been multiplied by −1 for sign consistency to AGR. The year in the x axis is the center of each 25-year moving window. The selected events in ESM large ensembles arise at random times and are not synchronized with the doubling sensitivity in Mauna Loa ( Fig. 2 , red lines).",
+        "url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/dc406466-9421-445f-92e8-94cdc99bbe7f/assets/images/large/sciadv.adl6155-f4.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F4",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/dc406466-9421-445f-92e8-94cdc99bbe7f/assets/images/large/sciadv.adl6155-f4.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/dc406466-9421-445f-92e8-94cdc99bbe7f/assets/images/large/sciadv.adl6155-f4.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/dc406466-9421-445f-92e8-94cdc99bbe7f/assets/images/large/sciadv.adl6155-f4.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/sciadv.adl6155-f4.jpg"
+      ],
+      "record": "body_assets/sciadv.adl6155-f4.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 4200,
+        "height": 2438,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.adl6155-f4.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 5 . Standard deviation variation of AGR from Mauna Loa in 25-year moving wi",
+        "caption": "Fig. 5 . Standard deviation variation of AGR from Mauna Loa in 25-year moving windows when removing different strong El Niño years. Note that “excl.1983” means that 1983 was removed from the time series, and “excl. 1983, 1992” means that the years 1983 and 1992 were removed from the time series at the same time.",
+        "url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/12203f1d-9c26-4849-ac85-a9a1dabd203c/assets/images/large/sciadv.adl6155-f5.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F5",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/12203f1d-9c26-4849-ac85-a9a1dabd203c/assets/images/large/sciadv.adl6155-f5.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/12203f1d-9c26-4849-ac85-a9a1dabd203c/assets/images/large/sciadv.adl6155-f5.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/12203f1d-9c26-4849-ac85-a9a1dabd203c/assets/images/large/sciadv.adl6155-f5.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/40915a1680c624c9-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/40915a1680c624c9-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2040,
+        "height": 1232,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.adl6155-f5.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 6 . Variance decomposition of global land sink (land to atmosphere) from Je",
+        "caption": "Fig. 6 . Variance decomposition of global land sink (land to atmosphere) from Jena CarboScope (CS57 Land ) over 25-year moving windows. ( A ) Global land sink variance decomposed to different spatial domains: Northern Hemisphere (NH), Tropics (Tro), and Southern Hemisphere (SH). ( B ) The fraction contributed by each component in (A) to the global land sink variance change. On the basis of the variance change of each component in the doubling sensitivity period (variance at the end of the event minus variance at the start of the event, see Materials and Methods). The doubling sensitivity period is 1972 to 1994 (two vertical dashed lines). The variance is represented as “Var” and covariance as “Cov.”",
+        "url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/454e320c-4d17-4e64-b54e-34b17ca5c748/assets/images/large/sciadv.adl6155-f6.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F6",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/454e320c-4d17-4e64-b54e-34b17ca5c748/assets/images/large/sciadv.adl6155-f6.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/454e320c-4d17-4e64-b54e-34b17ca5c748/assets/images/large/sciadv.adl6155-f6.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/454e320c-4d17-4e64-b54e-34b17ca5c748/assets/images/large/sciadv.adl6155-f6.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/sciadv.adl6155-f6.jpg"
+      ],
+      "record": "body_assets/sciadv.adl6155-f6.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 4177,
+        "height": 1840,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.adl6155-f6.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 7 . Contribution of each spatial domain (NH, Tro, and SH) to the variance c",
+        "caption": "Fig. 7 . Contribution of each spatial domain (NH, Tro, and SH) to the variance change of global land sink during the doubling sensitivity period. We compare the contribution of each domain in Jena CarboScope CS57 (CS57 Land black cross) and ESMs, calculated from the same values as in Fig. 4B with selected doubling events in five ESM large ensembles (colored boxes).",
+        "url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/b550dd99-f87b-42dc-9141-dd0e32743f51/assets/images/large/sciadv.adl6155-f7.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F7",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/b550dd99-f87b-42dc-9141-dd0e32743f51/assets/images/large/sciadv.adl6155-f7.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/b550dd99-f87b-42dc-9141-dd0e32743f51/assets/images/large/sciadv.adl6155-f7.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/b550dd99-f87b-42dc-9141-dd0e32743f51/assets/images/large/sciadv.adl6155-f7.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/sciadv.adl6155-f7.jpg"
+      ],
+      "record": "body_assets/sciadv.adl6155-f7.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 4200,
+        "height": 2050,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.adl6155-f7.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 8 . Schematic process to define the doubling sensitivity event. ( A ). Time",
+        "caption": "Fig. 8 . Schematic process to define the doubling sensitivity event. ( A ). Time series of AGR from MLO and tropical MAT from CRU. ( B ). We select a 25-year interval from the time-series of AGR and tropical MAT and calculate the simple linear regression slope dAGR / dMAT , and we use γ to represent the linear slope. Then, we plot all the calculated linear slopes in a 25-year moving window (top). Then, we select the event in the period 1972 to 1994 that shows a doubling sensitivity (bottom, two vertical dashed lines).",
+        "url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/cd3152f4-5e17-4182-b574-e524f7072e71/assets/images/large/sciadv.adl6155-f8.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "F8",
+        "preview_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/cd3152f4-5e17-4182-b574-e524f7072e71/assets/images/large/sciadv.adl6155-f8.jpg",
+        "full_size_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/cd3152f4-5e17-4182-b574-e524f7072e71/assets/images/large/sciadv.adl6155-f8.jpg"
+      },
+      "download_url": "https://www.science.org/cms/10.1126/sciadv.adl6155/asset/cd3152f4-5e17-4182-b574-e524f7072e71/assets/images/large/sciadv.adl6155-f8.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "body_assets/sciadv.adl6155-f8.jpg"
+      ],
+      "record": "body_assets/sciadv.adl6155-f8.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2040,
+        "height": 2642,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "sciadv.adl6155-f8.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "Download",
+        "caption": "",
+        "section": "supplementary",
+        "url": "https://www.science.org/doi/suppl/10.1126/sciadv.adl6155/suppl_file/sciadv.adl6155_sm.pdf"
+      },
+      "download_url": "https://www.science.org/doi/suppl/10.1126/sciadv.adl6155/suppl_file/sciadv.adl6155_sm.pdf",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/bc926d6fb4ac53d4-http-1.bin"
+      ],
+      "file_role": "supplementary",
+      "reason": "HTTP 403; not an expected readable binary",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "historical_capture": {
+        "state": "unavailable",
+        "validation": {
+          "valid": false,
+          "reason": "not an expected readable binary"
+        },
+        "replay_verified": false,
+        "outcome": "blocked",
+        "former_record": "acquisition/assets-2026-09-15/bc926d6fb4ac53d4-http-1.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    }
+  ],
+  "counts": {
+    "discovered_references": 9,
+    "unique_files": 9,
+    "verified_files": 8,
+    "replayed_files": 8,
+    "complete_received_files": 8,
+    "index_only_files": 1
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 9,
+    "unique_files": 9,
+    "verified_files": 8,
+    "replayed_files": 8,
+    "complete_received_files": 8
+  },
+  "historical_outcome_before_supplementary_removal": "partial",
+  "historical_blocking_evidence": [
+    "acquisition/assets-2026-09-15/bc926d6fb4ac53d4-http-1.bin",
+    "acquisition/assets-2026-09-15/science-headless-000-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/science-headless-001-browser_dom.html"
+  ]
+}

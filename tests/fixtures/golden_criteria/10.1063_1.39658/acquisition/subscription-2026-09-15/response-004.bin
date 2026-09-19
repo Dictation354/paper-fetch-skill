@@ -1,0 +1,98 @@
+<html>
+    <head>
+        <script>
+            if (window !== window.top) {
+                var GET_STORAGE = 'GET_STORAGE';
+                var CLEAR_STORAGE = 'CLEAR_STORAGE';
+                var RECEIVE_STORAGE = 'RECEIVE_STORAGE';
+                var UPDATE_STORAGE = 'UPDATE_STORAGE';
+                var VALIDATE_IFRAME = 'VALIDATE_IFRAME';
+                var VALIDATE_IFRAME_RESPONSE = 'VALIDATE_IFRAME_RESPONSE';
+
+                window.addEventListener(
+                    'message',
+                    function (event) {
+                        var expDate = undefined;
+                        var data = event.data;
+                        if (typeof data !== 'string') {
+                            return;
+                        }
+                        (origin = event.origin),
+                            (source = event.source),
+                            (splitData = data.split('|'));
+                        try {
+                            j = JSON.parse(data);
+                            expDate = j.expDate;
+                            splitData = [
+                                j.storeKey,
+                                j.configId,
+                                j.eventName,
+                                '_',
+                                j.consent && typeof j.consent !== 'string'
+                                    ? JSON.stringify(j.consent)
+                                    : j.consent || '',
+                            ];
+                        } catch (e) {
+                            // message was not json
+                        }
+                        var storeKey = splitData[0],
+                            configId = splitData[1],
+                            eventName = splitData[2],
+                            key = splitData[3],
+                            value = splitData[4];
+
+                        if (storeKey === 'osano_consentmanager') {
+                            switch (eventName) {
+                                case GET_STORAGE:
+                                    var message =
+                                        localStorage.getItem(storeKey + '_' + configId) +
+                                        '|' +
+                                        localStorage.getItem(
+                                            storeKey + '_' + configId + '_expdate'
+                                        );
+                                    source.postMessage(
+                                        storeKey + '|' + RECEIVE_STORAGE + '|' + message,
+                                        origin
+                                    );
+                                    break;
+                                case CLEAR_STORAGE:
+                                    localStorage.removeItem(storeKey + '_' + configId);
+                                    localStorage.removeItem(storeKey + '_' + configId + '_expdate');
+                                    source.postMessage(
+                                        storeKey + '|' + VALIDATE_IFRAME_RESPONSE,
+                                        origin
+                                    );
+                                    break;
+                                case UPDATE_STORAGE:
+                                    localStorage.setItem(
+                                        storeKey + '_' + configId + (key === '_' ? '' : '_' + key),
+                                        value
+                                    );
+                                    if (expDate) {
+                                        localStorage.setItem(
+                                            storeKey + '_' + configId + '_expdate',
+                                            expDate
+                                        );
+                                    }
+                                    source.postMessage(
+                                        storeKey + '|' + VALIDATE_IFRAME_RESPONSE,
+                                        origin
+                                    );
+                                    break;
+                                case VALIDATE_IFRAME:
+                                    source.postMessage(
+                                        storeKey + '|' + VALIDATE_IFRAME_RESPONSE,
+                                        origin
+                                    );
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    },
+                    false
+                );
+            }
+        </script>
+    </head>
+</html>

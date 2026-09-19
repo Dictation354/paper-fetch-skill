@@ -1,12 +1,10 @@
 from __future__ import annotations
-
 import asyncio
 import logging
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
-
 from paper_fetch.mcp.fetch_cache import FetchCache
 from paper_fetch.mcp.fetch_tool import (
     _inline_image_contents,
@@ -22,8 +20,7 @@ from paper_fetch.mcp.log_bridge import (
 from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.models import Asset, FetchEnvelope
 from paper_fetch.runtime import RuntimeContext
-
-from ._mcp_support import (
+from tests.support._mcp_support import (
     create_cached_fetch_envelope,
     mcp_test_deps,
     sample_article,

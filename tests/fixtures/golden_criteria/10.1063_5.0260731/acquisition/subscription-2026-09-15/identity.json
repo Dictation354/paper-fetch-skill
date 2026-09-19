@@ -1,0 +1,16 @@
+{
+  "query": "10.1063/5.0260731",
+  "query_kind": "doi",
+  "doi": "10.1063/5.0260731",
+  "landing_url": null,
+  "provider_hint": "aip",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 9,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "aip"
+}

@@ -11,6 +11,8 @@ Element and asset classification rules live in [`src/paper_fetch/providers/_else
 
 ## Element Mapping
 
+- All `ce:abstract` elements are rendered in source order, including parallel `xml:lang` variants; their structured subsection headings and paragraphs keep their original language and order.
+- A `class="graphical"` abstract can contain textual `Highlights`; preserve those paragraphs under their source heading. The class alone does not imply an empty or duplicate image abstract.
 - `ce:sections`, `ce:appendices`, `ce:appendix`: container only, recurse into children
 - `ce:section`, `ce:abstract-sec`: render heading from `ce:section-title` or `title`, then recurse
 - `ce:para`, `ce:simple-para`: render paragraph text, then render nested display blocks

@@ -1,0 +1,25 @@
+{
+  "doi": "10.1080/15481603.2026.2667034",
+  "source_input": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/original.html",
+  "source_sha256": "94d3d5902be4edc8071d9bf9755a77fb86a04bef5251cc36c4ca78d6b9855a10",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "3a03bafba59afba0575fdf88e4ce5ec85c9e5448959a3c71fa2b0a063b3a8bfc",
+  "files": [
+    {
+      "filename": "tgrs_a_2667034_f0001_c.jpg",
+      "download_url": "https://www.tandfonline.com/cms/asset/2330a6f2-d28c-421f-bbdd-f618a6fd564c/tgrs_a_2667034_f0001_c.jpg",
+      "source_url": "https://www.tandfonline.com/cms/asset/2330a6f2-d28c-421f-bbdd-f618a6fd564c/tgrs_a_2667034_f0001_c.jpg",
+      "sha256": "bd2cae8184d2613aed06f356bf7b7e2fd97f1e2a24bde4a17e2c2d5db74b3d60",
+      "size": 203747,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 500,
+      "height": 257,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.980380+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 0
+}

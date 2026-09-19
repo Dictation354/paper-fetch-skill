@@ -1,22 +1,31 @@
 from __future__ import annotations
-
+import pytest
+from tests.golden_criteria import golden_criteria_asset
+from paper_fetch.providers.atypon_browser_workflow import (
+    asset_scopes as atypon_browser_workflow_asset_scopes,
+)
+import paper_fetch.providers._wiley_html as wiley_html
+from paper_fetch.providers import _springer_html as springer_html
+from paper_fetch.http import HttpTransport
+from paper_fetch.extraction.html import assets as html_assets
+from bs4 import BeautifulSoup
+from pathlib import Path
+import unittest
 import tempfile
+from tests.golden_criteria import golden_criteria_scenario_asset
+from paper_fetch.extraction.html.formula_rules import (
+    looks_like_formula_image,
+)
+from paper_fetch.extraction.html import _metadata as html_metadata
 import threading
 import time
-import unittest
-from pathlib import Path
 from unittest import mock
-
-from bs4 import BeautifulSoup
-
 from paper_fetch.common_patterns import (
     FIGURE_LABEL_PATTERN,
     TABLE_LABEL_PATTERN,
     is_extended_data_prefix,
     table_label_prefix_for_match,
 )
-from paper_fetch.extraction.html import assets as html_assets
-from paper_fetch.extraction.html import _metadata as html_metadata
 from paper_fetch.extraction.html import _runtime as html_runtime
 from paper_fetch.extraction.html import shared as html_shared
 from paper_fetch.extraction.html.assets.figures import _tag_class_tokens
@@ -26,9 +35,6 @@ from paper_fetch.extraction.html.formula_rules import (
     GENERIC_DISPLAY_FORMULA_SELECTORS,
     _class_tokens as _formula_class_tokens,
     formula_heading_for_image,
-    formula_image_url_from_node,
-    is_display_formula_node,
-    looks_like_formula_image,
 )
 from paper_fetch.extraction.html.provider_rules import (
     availability_rules_for_provider,
@@ -49,23 +55,15 @@ from paper_fetch.extraction.markdown_render.figures import (
     is_html_figure_container,
 )
 from paper_fetch.extraction.html.tables import render_table_markdown
-from paper_fetch.http import HttpTransport
 from paper_fetch.image_tools import ImageConversionFailure, SourceImageConversion
 from paper_fetch.providers._html_section_markdown import (
     render_clean_text_from_html,
     render_container_markdown,
     render_heading_text_from_html,
 )
-from paper_fetch.providers import _springer_html as springer_html
-import paper_fetch.providers._wiley_html as wiley_html
-from paper_fetch.providers.atypon_browser_workflow import (
-    asset_scopes as atypon_browser_workflow_asset_scopes,
-)
 from paper_fetch.providers.atypon_browser_workflow import (
     profile as atypon_browser_workflow_profile,
 )
-from tests.block_fixtures import block_asset
-from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
 
 
 class _DelayedAssetTransport(HttpTransport):
@@ -209,36 +207,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertEqual(metadata["doi"], "10.1234/example")
         self.assertEqual(metadata["journal_title"], "Journal of HTML")
         self.assertEqual(metadata["published"], "2026-01-15")
-
-    def test_parse_html_metadata_does_not_treat_generic_description_as_abstract(
-        self,
-    ) -> None:
-        html = golden_criteria_scenario_asset(
-            "generic_metadata_boundaries", "generic_description.html"
-        ).read_text(encoding="utf-8")
-
-        metadata = html_metadata.parse_html_metadata(
-            html, "https://www.pnas.org/doi/full/10.1073/pnas.2317456120"
-        )
-
-        self.assertIsNone(metadata["abstract"])
-
-    def test_parse_html_metadata_uses_redirect_stub_lookup_title(self) -> None:
-        html = golden_criteria_scenario_asset(
-            "generic_metadata_boundaries", "redirect_stub.html"
-        ).read_text(encoding="utf-8")
-
-        metadata = html_metadata.parse_html_metadata(
-            html, "https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525"
-        )
-
-        self.assertEqual(metadata["title"], "Stub Article Title")
-        self.assertEqual(metadata["lookup_title"], "Stub Article Title")
-        self.assertEqual(
-            metadata["lookup_redirect_url"],
-            "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
-        )
-        self.assertEqual(metadata["identifier_value"], "S0034425725000525")
 
     def test_extract_figure_assets_reads_generic_figure_blocks(self) -> None:
         html = """
@@ -848,60 +816,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
             )
         )
 
-    def test_wiley_real_fixture_supporting_information_only_yields_true_supplementary_asset(
-        self,
-    ) -> None:
-        source_url = "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414"
-        html_text = golden_criteria_asset(
-            "10.1111/gcb.16414", "original.html"
-        ).read_text(encoding="utf-8")
-
-        body_html, supplementary_html = (
-            atypon_browser_workflow_asset_scopes.extract_browser_workflow_asset_html_scopes(
-                html_text,
-                source_url,
-                "wiley",
-            )
-        )
-        assets = wiley_html.extract_scoped_html_assets(
-            body_html,
-            source_url,
-            asset_profile="all",
-            supplementary_html_text=supplementary_html,
-        )
-        figure_assets = [asset for asset in assets if asset["kind"] == "figure"]
-        supplementary_assets = [
-            asset for asset in assets if asset["kind"] == "supplementary"
-        ]
-
-        self.assertEqual(
-            [asset["heading"] for asset in supplementary_assets],
-            ["gcb16414-sup-0001-FigureS1.docx"],
-        )
-        self.assertEqual(
-            [asset["url"] for asset in supplementary_assets],
-            [
-                "https://onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1111%2Fgcb.16414&file=gcb16414-sup-0001-FigureS1.docx"
-            ],
-        )
-        self.assertEqual(
-            [asset["filename_hint"] for asset in supplementary_assets],
-            ["gcb16414-sup-0001-FigureS1.docx"],
-        )
-        self.assertTrue(
-            any(
-                "gcb16414-fig-0001-m.jpg" in asset.get("url", "")
-                for asset in figure_assets
-            )
-        )
-        self.assertFalse(
-            any(
-                "gcb16414-fig-" in asset.get("url", "")
-                for asset in supplementary_assets
-            )
-        )
-        self.assertNotIn("gcb16414-sup-0001-FigureS1.docx", body_html)
-
     def test_download_assets_supplementary_kind_uses_wiley_filename_hint_for_octet_stream(
         self,
     ) -> None:
@@ -1120,81 +1034,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
 
         self.assertFalse(any(asset["kind"] == "supplementary" for asset in assets))
 
-    def test_science_real_fixture_supplementary_comes_only_from_supplementary_section(
-        self,
-    ) -> None:
-        source_url = "https://www.science.org/doi/full/10.1126/sciadv.adl6155"
-        html_text = golden_criteria_asset(
-            "10.1126/sciadv.adl6155", "original.html"
-        ).read_text(
-            encoding="utf-8",
-            errors="ignore",
-        )
-
-        body_html, supplementary_html = (
-            atypon_browser_workflow_asset_scopes.extract_browser_workflow_asset_html_scopes(
-                html_text,
-                source_url,
-                "science",
-            )
-        )
-        assets = atypon_browser_workflow_asset_scopes.extract_scoped_html_assets(
-            body_html,
-            source_url,
-            asset_profile="all",
-            supplementary_html_text=supplementary_html,
-        )
-        supplementary_assets = [
-            asset for asset in assets if asset["kind"] == "supplementary"
-        ]
-
-        self.assertIn("co2_gr_mlo.txt", body_html)
-        self.assertNotIn("co2_gr_mlo.txt", supplementary_html)
-        self.assertIn("sciadv.adl6155_sm.pdf", supplementary_html)
-        self.assertEqual(
-            [asset["url"] for asset in supplementary_assets],
-            [
-                "https://www.science.org/doi/suppl/10.1126/sciadv.adl6155/suppl_file/sciadv.adl6155_sm.pdf"
-            ],
-        )
-
-    def test_pnas_real_fixture_supplementary_ignores_body_anchor_to_section(
-        self,
-    ) -> None:
-        source_url = "https://www.pnas.org/doi/full/10.1073/pnas.2509692123"
-        html_text = block_asset("10.1073/pnas.2509692123", "raw.html").read_text(
-            encoding="utf-8",
-            errors="ignore",
-        )
-
-        body_html, supplementary_html = (
-            atypon_browser_workflow_asset_scopes.extract_browser_workflow_asset_html_scopes(
-                html_text,
-                source_url,
-                "pnas",
-            )
-        )
-        assets = atypon_browser_workflow_asset_scopes.extract_scoped_html_assets(
-            body_html,
-            source_url,
-            asset_profile="all",
-            supplementary_html_text=supplementary_html,
-        )
-        supplementary_assets = [
-            asset for asset in assets if asset["kind"] == "supplementary"
-        ]
-
-        self.assertIn("#supplementary-materials", body_html)
-        self.assertNotIn("#supplementary-materials", supplementary_html)
-        self.assertIn("pnas.2509692123.sapp.pdf", supplementary_html)
-        self.assertEqual(
-            [asset["url"] for asset in supplementary_assets],
-            [
-                "https://www.pnas.org/doi/suppl/10.1073/pnas.2509692123/suppl_file/pnas.2509692123.sapp.pdf",
-                "https://www.pnas.org/doi/suppl/10.1073/pnas.2509692123/suppl_file/pnas.2509692123.sd01.xlsx",
-            ],
-        )
-
     def test_supplementary_response_block_reason_detects_challenge_html(self) -> None:
         body = b"<html><head><title>Just a moment...</title></head><body>Checking your browser before accessing</body></html>"
 
@@ -1225,50 +1064,6 @@ class SharedHtmlHelperTests(unittest.TestCase):
         )
 
         self.assertEqual(candidates[0], "https://example.test/full.png")
-
-    def test_formula_bitmap_download_is_an_accepted_preview(self) -> None:
-        formula_url = "https://example.test/cms/example-math-0001.png"
-        formula_body = golden_criteria_asset(
-            "10.1371/journal.pone.0015338",
-            "body_assets/pone.0015338.e003.png",
-        ).read_bytes()
-        transport = _StaticAssetTransport(
-            {
-                ("GET", formula_url): {
-                    "status_code": 200,
-                    "headers": {"content-type": "image/png"},
-                    "body": formula_body,
-                    "url": formula_url,
-                }
-            }
-        )
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            result = html_assets.download_assets(
-                html_assets.FIGURE_KIND,
-                transport,
-                article_id="10.5555/formula-preview",
-                assets=[
-                    {
-                        "kind": "formula",
-                        "heading": "Formula 1",
-                        "caption": "",
-                        "url": formula_url,
-                        "preview_url": formula_url,
-                        "preview_accepted": "true",
-                        "section": "body",
-                    }
-                ],
-                output_dir=Path(tmpdir),
-                user_agent="paper-fetch-test",
-                asset_profile="body",
-            )
-
-        self.assertEqual(result["asset_failures"], [])
-        self.assertEqual(len(result["assets"]), 1)
-        self.assertEqual(result["assets"][0]["kind"], "formula")
-        self.assertEqual(result["assets"][0]["download_tier"], "preview")
-        self.assertTrue(result["assets"][0]["preview_accepted"])
 
     def test_download_assets_figure_kind_converts_eps_source_to_png_and_keeps_original(
         self,
@@ -2148,43 +1943,6 @@ Learn more
         self.assertIn("First body paragraph.", metrics["text"])
         self.assertIn("By Alice Example", metrics["text"])
 
-    def test_real_nature_fixture_keeps_source_data_without_chrome_sections(
-        self,
-    ) -> None:
-        source_data_html = golden_criteria_asset(
-            "10.1038/s41561-022-00912-7", "original.html"
-        ).read_text(
-            encoding="utf-8",
-            errors="ignore",
-        )
-        self.assertTrue("source data fig." in source_data_html.casefold())
-
-        source_data_markdown = springer_html.extract_html_payload(
-            source_data_html,
-            "https://www.nature.com/articles/s41561-022-00912-7",
-        )["markdown_text"]
-
-        self.assertIn("Source data", source_data_markdown)
-
-        chrome_html = golden_criteria_asset(
-            "10.1038/nature13376", "original.html"
-        ).read_text(
-            encoding="utf-8",
-            errors="ignore",
-        )
-        chrome_html_text = chrome_html.casefold()
-        self.assertTrue("rights and permissions" in chrome_html_text)
-        self.assertTrue("open access" in chrome_html_text)
-
-        chrome_markdown = springer_html.extract_html_payload(
-            chrome_html,
-            "https://www.nature.com/articles/nature13376",
-        )["markdown_text"]
-
-        self.assertNotIn("## Permissions", chrome_markdown)
-        self.assertNotIn("## Open Access", chrome_markdown)
-        self.assertNotIn("## Rights and permissions", chrome_markdown)
-
     def test_inline_normalization_is_shared_for_body_heading_and_table_text(
         self,
     ) -> None:
@@ -2453,39 +2211,6 @@ Learn more
 
         self.assertEqual(body_text, "Let $x+y$ stay inline.")
 
-    def test_formula_rules_detect_real_formula_image_urls(self) -> None:
-        wiley_html = golden_criteria_asset(
-            "10.1111/gcb.15322", "original.html"
-        ).read_text(
-            encoding="utf-8",
-            errors="ignore",
-        )
-        nature_html = golden_criteria_asset(
-            "10.1038/nature12915", "original.html"
-        ).read_text(
-            encoding="utf-8",
-            errors="ignore",
-        )
-        wiley_soup = BeautifulSoup(wiley_html, "html.parser")
-        nature_soup = BeautifulSoup(nature_html, "html.parser")
-        image = wiley_soup.select_one(".inline-equation img")
-        nature_display = nature_soup.select_one(".c-article-equation")
-        nature_image = nature_soup.select_one("img[src*='_Equ1_HTML']")
-        figure_image = nature_soup.select_one("img[src*='Fig1_HTML']")
-
-        self.assertIn("gcb15322-math-0001.png", formula_image_url_from_node(image))
-        self.assertTrue(looks_like_formula_image(image))
-        self.assertFalse(is_display_formula_node(nature_display))
-        self.assertTrue(
-            is_display_formula_node(
-                nature_display,
-                noise_profile="springer_nature",
-            )
-        )
-        self.assertIn("_Equ1_HTML.jpg", formula_image_url_from_node(nature_image))
-        self.assertTrue(looks_like_formula_image(nature_image))
-        self.assertFalse(looks_like_formula_image(figure_image))
-
     def test_formula_publisher_tokens_are_registered_as_provider_extensions(
         self,
     ) -> None:
@@ -2522,34 +2247,6 @@ Learn more
             ),
             "EqCustom",
         )
-
-    def test_extract_formula_assets_reuses_shared_formula_rules(self) -> None:
-        html = golden_criteria_asset("10.1038/nature12915", "original.html").read_text(
-            encoding="utf-8",
-            errors="ignore",
-        )
-
-        assets = html_assets.extract_formula_assets(
-            html,
-            "https://www.nature.com/articles/nature12915",
-            noise_profile="springer_nature",
-        )
-
-        self.assertGreaterEqual(len(assets), 2)
-        self.assertTrue(all(asset["kind"] == "formula" for asset in assets))
-        self.assertTrue(
-            any(
-                asset["heading"] == "Equ1" and "_Equ1_HTML.jpg" in asset["url"]
-                for asset in assets
-            )
-        )
-        self.assertTrue(
-            any(
-                asset["heading"] == "Equ2" and "_Equ2_HTML.jpg" in asset["url"]
-                for asset in assets
-            )
-        )
-        self.assertFalse(any("Fig1_HTML" in asset["url"] for asset in assets))
 
     def test_wiley_formula_asset_extractor_accepts_altimg_fallback_span(self) -> None:
         html = """
@@ -2630,3 +2327,100 @@ Important body text.
 
         self.assertIn("Sign up for alerts", generic_cleaned)
         self.assertNotIn("Sign up for alerts", springer_cleaned)
+
+    def test_formula_bitmap_download_is_an_accepted_preview(self) -> None:
+        formula_url = "https://example.test/cms/example-math-0001.png"
+        formula_body = golden_criteria_asset(
+            "10.1371/journal.pone.0015338",
+            "body_assets/pone.0015338.e003.png",
+        ).read_bytes()
+        transport = _StaticAssetTransport(
+            {
+                ("GET", formula_url): {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/png"},
+                    "body": formula_body,
+                    "url": formula_url,
+                }
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = html_assets.download_assets(
+                html_assets.FIGURE_KIND,
+                transport,
+                article_id="10.5555/formula-preview",
+                assets=[
+                    {
+                        "kind": "formula",
+                        "heading": "Formula 1",
+                        "caption": "",
+                        "url": formula_url,
+                        "preview_url": formula_url,
+                        "preview_accepted": "true",
+                        "section": "body",
+                    }
+                ],
+                output_dir=Path(tmpdir),
+                user_agent="paper-fetch-test",
+                asset_profile="body",
+            )
+
+        self.assertEqual(result["asset_failures"], [])
+        self.assertEqual(len(result["assets"]), 1)
+        self.assertEqual(result["assets"][0]["kind"], "formula")
+        self.assertEqual(result["assets"][0]["download_tier"], "preview")
+        self.assertTrue(result["assets"][0]["preview_accepted"])
+
+    def test_parse_html_metadata_does_not_treat_generic_description_as_abstract(
+        self,
+    ) -> None:
+        html = golden_criteria_scenario_asset(
+            "generic_metadata_boundaries", "generic_description.html"
+        ).read_text(encoding="utf-8")
+
+        metadata = html_metadata.parse_html_metadata(
+            html, "https://www.pnas.org/doi/full/10.1073/pnas.2317456120"
+        )
+
+        self.assertIsNone(metadata["abstract"])
+
+    def test_parse_html_metadata_uses_redirect_stub_lookup_title(self) -> None:
+        html = golden_criteria_scenario_asset(
+            "generic_metadata_boundaries", "redirect_stub.html"
+        ).read_text(encoding="utf-8")
+
+        metadata = html_metadata.parse_html_metadata(
+            html, "https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525"
+        )
+
+        self.assertEqual(metadata["title"], "Stub Article Title")
+        self.assertEqual(metadata["lookup_title"], "Stub Article Title")
+        self.assertEqual(
+            metadata["lookup_redirect_url"],
+            "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+        )
+        self.assertEqual(metadata["identifier_value"], "S0034425725000525")
+
+
+@pytest.mark.parametrize(
+    "candidate,expected",
+    [
+        ("000256264000009:ISI", None),
+        ("A1995RX53500008:ISI", None),
+        ("", None),
+        ("https://doi.org/10.1000/normal", "10.1000/normal"),
+        (
+            "https://doi.org/10.1002/(SICI)1097-0142(19970401)79:7<1234::AID-CNCR1>3.0.CO;2-5",
+            "10.1002/(sici)1097-0142(19970401)79:7<1234::aid-cncr1>3.0.co;2-5",
+        ),
+        (
+            "https://doi.org/10.1002%2F%28SICI%291097-0142%2819970401%2979%3A7%3C1234%3A%3AAID-CNCR1%3E3.0.CO%3B2-5",
+            "10.1002/(sici)1097-0142(19970401)79:7<1234::aid-cncr1>3.0.co;2-5",
+        ),
+    ],
+)
+def test_reference_candidates_require_doi_and_preserve_sici(candidate, expected):
+    from paper_fetch.providers._reference_doi import reference_doi
+
+    assert reference_doi(candidate) == expected

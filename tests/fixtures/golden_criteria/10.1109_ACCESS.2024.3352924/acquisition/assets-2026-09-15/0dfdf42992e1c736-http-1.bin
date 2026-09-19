@@ -1,0 +1,523 @@
+<script>	var MEMBER_PROFILE_CHANGE_USERNAMEPASS_LINK = 'https://www.ieee.org/profile/changeusrpwd/showChangeUsrPwdPage.html?refSite=https://ieeexplore.ieee.org&refSiteName=IEEE Xplore'; var MEMBER_PROFILE_PAYMENTINFO_LINK = 'https://www.ieee.org/profile/payment/showPaymentHome.html?refSite=https://ieeexplore.ieee.org&refSiteName=IEEE Xplore'; var MEMBER_USER_COMMUNICATION_LINK = 'https://www.ieee.org/ieee-privacyportal/app/ibp?refSite=https://ieeexplore.ieee.org&refSiteName=IEEE Xplore'; var MEMBER_EDUCATIONAL_PROFILE_LINK = 'https://www.ieee.org/profile/profedu/getProfEduInformation.html?refSite=https://ieeexplore.ieee.org&refSiteName=IEEE Xplore'; var MEMBER_TECHNICAL_INTERESTS_LINK = 'https://www.ieee.org/profile/tips/getTipsInfo.html?refSite=https://ieeexplore.ieee.org&refSiteName=IEEE Xplore'; document.addEventListener("DOMContentLoaded", () => { document.getElementById("changeUsernamePasswordLink").href = window.MEMBER_PROFILE_CHANGE_USERNAMEPASS_LINK; document.getElementById("paymentOptions").href = window.MEMBER_PROFILE_PAYMENTINFO_LINK; document.getElementById("communicationsPreferences").href = window.MEMBER_USER_COMMUNICATION_LINK; document.getElementById("professionAndEducation").href = window.MEMBER_EDUCATIONAL_PROFILE_LINK; document.getElementById("technicalInterests").href = window.MEMBER_TECHNICAL_INTERESTS_LINK; });</script>
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+		<style type="text/css">
+			.metanav-container {
+				display: flex;
+				justify-content: center;
+				font-family: sans-serif;
+				width: 100%;
+				background-color: #000101;
+
+				.xplore-meta-nav {
+					display: flex;
+					width: 100%;
+					padding: .35rem 1rem;
+					max-width: 1680px;
+
+					.meta-nav-menu {
+						display: flex;
+						padding-left: 0;
+						margin: .25rem 0;
+					}
+
+					.meta-nav-item {
+						list-style: none;
+						font-size: 14px;
+						padding-right: .75rem;
+
+						&:not(:last-child) {
+							border-right: 1px solid white;
+						}
+
+						&:not(:first-child) {
+							padding-left: .75rem;
+						}
+
+						a{
+							text-decoration: none;
+						}
+					}
+
+					a {
+						color: #fff;
+					}
+
+					.ieee-xplore {
+						color: #E4A42C;
+					}
+				}
+			}
+
+			.root-container {
+				width: -webkit-fill-available;
+
+				@media (max-width: 900px) {
+					width: fit-content;
+				}
+			}
+
+			.header {
+				width: 100%;
+				display: flex;
+				justify-content: center;
+				background-color: #14303e;
+
+				.navbar-container {
+					max-width: 1680px;
+					padding: 1rem;
+					width: 100%;
+					background-color: #14303e;
+					display: flex;
+
+					.left-side-container {
+						.xplore-logo {
+							width: 175px;
+						}
+					}
+
+					.right-side-container {
+						margin-left: auto;
+
+						.ieee-logo-wrapper {
+							display: flex;
+
+							.ieee-logo {
+								margin-left: auto;
+								width: 125px;
+								@media screen and (max-width: 420px) {
+									margin-right: 0.3rem;
+								}
+							}
+						}
+					}
+				}
+			}
+
+			.container {
+				width: 100%;
+				display: flex;
+				justify-content: center;
+
+				.body-text {
+					max-width: 1680px;
+					width: 100%;
+					min-height: calc(100vh - 470px);
+					display: flex;
+					color: #1f252b;
+					padding: 2.75rem 3.25rem;
+				}
+
+				.content {
+					width: 100%;
+					max-width: 900px;
+					font-family: 'Helvetica Neue Bold', Arial, sans-serif;
+					.title {
+						font-size: 48px;
+						line-height: 1.15;
+						color: #0663a1;
+						margin-bottom: 1rem;
+					}
+
+					.description {
+						font-size: 20px;
+						line-height: 1.2;
+					}
+
+					.divider {
+						height: 2px;
+						background: #2f8abf;
+						margin-bottom: 1rem;
+						margin-top: 1rem;
+					}
+
+					.help-text {
+						font-size: 16px;
+						line-height: 1.4;
+					}
+				}
+
+				.image {
+					width: 140px;
+					height: 140px;
+					margin-top: 4rem;
+				}
+
+				@media screen and (max-width: 767px) {
+					.body-text {
+						flex-direction: row;
+						align-items: flex-start;
+						padding: 2rem 1rem;
+						min-height: auto;
+					}
+					.content {
+						.title {
+							font-size: 38px;
+						}
+						.description {
+							font-size: 28px;
+						}
+						.help-text {
+							font-size: 18px;
+						}
+					}
+				}
+			}
+
+			body,
+			h1,
+			p {
+				margin: 0;
+			}
+
+			a {
+				color: #069;
+				text-decoration: none;
+				&:hover {
+					text-decoration: underline;
+				}
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			.footer-new {
+				display: flex;
+				background-color: #17445a;
+				padding-top: 3rem;
+				color: #fff;
+
+				.footer-wrapper {
+					padding-bottom: 2rem;
+				}
+
+				h2 {
+					font-family: Arial, sans-serif;
+					font-weight: 700;
+				}
+			}
+
+			.footer-new .text-base-md {
+				font-size: 18px !important;
+			}
+
+			.footer-new .text-base-md-lh {
+				font-size: 18px !important;
+				line-height: 30px !important;
+			}
+
+			.footer-new ul {
+				list-style-type: none;
+				padding-left: 0;
+			}
+
+			.footer-new li {
+				padding: .35rem 0;
+				text-transform: uppercase;
+			}
+
+			.footer-new a {
+				width: 100%;
+				text-decoration: none;
+				color: #fff;
+			}
+
+			.footer-new a:hover {
+				color: #E4A42C;
+			}
+
+			.footer-new .follow ul {
+				display: flex;
+			}
+
+			.footer-new .follow ul li {
+				padding: 0.5rem;
+			}
+
+			.footer-new .follow ul li:first-child {
+				padding-left: 0;
+			}
+
+			.footer-new .footer-wrapper {
+				flex-grow: 1;
+				max-width: 1680px;
+				margin: 0 auto;
+			}
+
+			.footer-new .flexible-row-col {
+				display: flex;
+				padding-bottom: 3rem;
+			}
+
+			.footer-new .footer-col {
+				flex-grow: 1;
+				padding-left: 2rem;
+			}
+
+			.footer-new .footer-bottom-section p {
+				margin: 0;
+				padding-left: 2rem;
+				padding-right: 2rem;
+			}
+
+			.footer-new .footer-bottom-section p:last-child {
+				padding-top: 1rem;
+			}
+
+			.footer-new .footer-bottom-section p .ethics-reporting-link i {
+				padding-left: 0.25rem;
+			}
+
+			.footer-new .nowrap {
+				white-space: nowrap;
+			}
+
+			.footer-new .text-base-md h2 {
+				font-weight: 300;
+			}
+
+			footer p {
+				font-size: 15px;
+				font-family: HelveticaNeue Regular, sans-serif;
+			}
+
+			@media only screen and (min-width: 768px) {
+				.footer-new .text-base-md-lh {
+					font-size: 18px !important;
+					line-height: 30px !important;
+				}
+			}
+
+			.text-sm-md-lh {
+				font-family: HelveticaNeue Regular, sans-serif;
+			}
+
+			@media only screen and (min-width: 768px) {
+				.footer-new .text-sm-md-lh {
+					font-size: 15px;
+					line-height: 20px !important;
+				}
+			}
+
+			@media only screen and (min-width: 768px) {
+				.icon-size-md {
+					font-size: 25px;
+				}
+			}
+
+			.fab {
+				font-family: "Font Awesome 5 Brands";
+				font-weight: 400;
+			}
+
+			.x-logo-svg {
+				display: inline-block;
+				width: 18px;
+				height: 18px;
+			}
+
+			@media screen and (max-width: 767px) {
+				.icon-size-md {
+					font-size: 20px;
+				}
+			}
+
+			@media screen and (max-width: 767px) {
+				.footer-new .footer-bottom-section p {
+					line-height: 1.8 !important;
+					margin-bottom: 1rem !important;
+				}
+			}
+
+			@media screen and (max-width: 767px) {
+				.footer-new {
+					padding-top: 0.1rem;
+				}
+
+				.footer-new .flexible-row-col {
+					padding-bottom: 0.1rem;
+					flex-direction: column;
+				}
+
+				.footer-new .footer-col {
+					padding-top: 1rem;
+				}
+
+				.footer-new .footer-col:first-child {
+					padding-top: 2rem;
+				}
+
+				.footer-new .footer-col:last-child {
+					padding-bottom: 0.25rem;
+				}
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="root" class="root-container">
+			<div class="metanav-container">
+				<div class="stats-metanav xplore-meta-nav" data-analytics_identifier="metanav">
+					<div class="meta-nav-ieee-links hide-mobile">
+						<ul class="meta-nav-menu ">
+							<li class="meta-nav-item stats-extLink stats-Unav_exit_aaa" data-analytics_identifier="external_link"><a href="http://www.ieee.org/" id="u-home" class="ieeeorg">IEEE.org</a></li>
+							<li class="meta-nav-item stats-extLink ieee-xplore" data-analytics_identifier="external_link"> IEEE <em>Xplore</em></li>
+							<li class="meta-nav-item stats-extLink" data-analytics_identifier="external_link"><a href="http://standards.ieee.org/" id="u-standards" class="exitstandardsorg">IEEE-SA</a></li>
+							<li class="meta-nav-item stats-extLink" data-analytics_identifier="external_link"><a href="http://spectrum.ieee.org/" id="u-spectrum" class="exitspectrum">IEEE Spectrum</a></li>
+							<li class="meta-nav-item stats-extLink" data-analytics_identifier="external_link"><a href="http://www.ieee.org/sitemap.html" id="u-more" class="exitmoreieeesites">More Sites</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<div class="header">
+				<div class="navbar-container">
+					<div class="left-side-container">
+						<div class="left-side-content">
+							<div class="xplore-logo-wrapper">
+								<a href="/">
+									<img class="xplore-logo" src="https://ieeeshutpages.s3-us-west-2.amazonaws.com/xplore/assets/img/xplore_logo_white.svg">
+								</a>
+							</div>
+							<div class="primary-menu hide-mobile"></div>
+						</div>
+					</div>
+					<div class="right-side-container">
+						<div class="ieee-logo-wrapper">
+							<img class="ieee-logo" src="https://ieeeshutpages.s3-us-west-2.amazonaws.com/xplore/assets/img/ieee_logo_white.svg">
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="container">
+				<section class="body-text">
+					<div class="content">
+						<h1 class="title">IEEE <em>Xplore</em> is temporarily unavailable</h1>
+						<div class="description">
+							<div>We are working to restore service as soon as possible. Please try again</div>
+							<div>later or email questions to <a href="mailto:onlinesupport@ieee.org">onlinesupport@ieee.org</a>.</div>
+						</div>
+						<div class="divider"></div>
+						<div class="help-text">We apologize for the inconvenience and appreciate your patience.</div>
+					</div>
+					<div class="image" aria-hidden="true">
+						<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 131.87 131.87">
+							<defs>
+								<style>
+									.cls-1 {
+										fill: #02679a;
+									}
+								</style>
+							</defs>
+							<path class="cls-1" d="M126.6.9l-15.38,15.38-1.42-1.42c-1.2-1.2-3.16-1.2-4.36,0l-2.4,2.4-7.31-7.31c-1.2-1.2-3.16-1.2-4.36,0l-22.84,22.84-1.5-1.5c-1.2-1.2-3.16-1.2-4.36,0s-1.2,3.16,0,4.36l7.22,7.22-15.32,15.32c-1.2,1.2-1.2,3.16,0,4.36s3.16,1.2,4.36,0l15.32-15.32,10.36,10.36-15.32,15.32c-1.2,1.2-1.2,3.16,0,4.36,1.2,1.2,3.16,1.2,4.36,0l15.32-15.32,7.22,7.22c1.2,1.2,3.16,1.21,4.36,0s1.2-3.16,0-4.36l-1.5-1.5,22.84-22.84c1.2-1.2,1.2-3.16,0-4.36l-7.31-7.31,2.4-2.4c1.2-1.2,1.2-3.16,0-4.36l-1.42-1.42,15.38-15.38c1.2-1.2,1.2-3.16,0-4.36-1.2-1.2-3.16-1.2-4.36,0Z" />
+							<path class="cls-1" d="M31.3,62.67c-1.2,1.2-1.2,3.16,0,4.36l1.5,1.5-22.84,22.84c-1.2,1.2-1.2,3.16,0,4.36l7.31,7.31-2.4,2.4c-1.2,1.2-1.2,3.16,0,4.36l1.42,1.42L.9,126.6c-1.21,1.2-1.2,3.16,0,4.36,1.2,1.2,3.16,1.21,4.36,0l15.38-15.38,1.42,1.42c1.2,1.2,3.16,1.2,4.36,0l2.4-2.4,7.31,7.31c1.21,1.21,3.16,1.2,4.36,0l22.84-22.84,1.5,1.5c1.2,1.2,3.16,1.2,4.36,0,1.2-1.21,1.2-3.16,0-4.36l-7.22-7.22-4.36-4.36-10.36-10.36-4.36-4.36-7.22-7.22c-1.2-1.2-3.16-1.21-4.36,0Z" /></svg>
+					</div>
+				</section>
+			</div>
+			<footer class="copy-right">
+				<div class="stats-footer footer-new" id="xplore-footer" data-analytics_identifier="footer">
+					<div class="footer-wrapper">
+						<div class="flexible-row-col">
+							<div class="footer-col">
+								<h2 class="text-base-md-lh">IEEE Personal Account</h2>
+								<ul class="text-sm-md-lh mt-3">
+									<li><a target="_blank" id="changeUsernamePasswordLink">Change username/password</a></li>
+								</ul>
+							</div>
+							<div class="footer-col">
+								<h2 class="text-base-md-lh">Purchase Details</h2>
+								<ul class="text-sm-md-lh mt-3">
+									<li><a target="_blank" id="paymentOptions">Payment Options</a></li>
+									<li><a target="_blank" href="/articleSale/purchaseHistory.jsp">View Purchased Documents</a></li>
+								</ul>
+							</div>
+							<div class="footer-col">
+								<h2 class="text-base-md-lh">Profile Information</h2>
+								<ul class="text-sm-md-lh mt-3">
+									<li><a target="_blank" id="communicationsPreferences">Communications Preferences</a></li>
+									<li><a target="_blank" id="professionAndEducation">Profession and Education</a></li>
+									<li><a target="_blank" id="technicalInterests">Technical interests</a></li>
+								</ul>
+							</div>
+							<div class="footer-col need-help">
+								<h2 class="text-base-md-lh">Need Help?</h2>
+								<ul class="text-sm-md-lh mt-3">
+									<li><a href="tel:+1-800-678-4333"> US & Canada: +1 800 678 4333 </a></li>
+									<li><a href="tel:+1-732-981-0060"> Worldwide: +1 732 981 0060 </a></li>
+									<li><a target="_self" href="/xpl/contact"> Contact & Support </a></li>
+								</ul>
+							</div>
+							<div class="footer-col follow">
+								<h2 class="text-base-md-lh">Follow</h2>
+								<ul class="icon-size-md mt-3">
+									<li>
+										<a target="_blank" href="https://www.facebook.com/IEEEXploreDigitalLibrary/" aria-label="Follow us on Facebook" title="Follow IEEE Xplore on Facebook, opens in a new tab">
+											<i class="fab fa-facebook-f" aria-hidden="true"></i>
+										</a>
+									</li>
+									<li>
+										<a href="https://www.instagram.com/ieeexplore_org" aria-label="Follow us on Instagram" title="Follow IEEE Xplore on Instagram, opens in a new tab" target="_blank">
+											<i class="fab fa-instagram" aria-hidden="true"></i>
+										</a>
+									</li>
+									<li>
+										<a target="_blank" href="https://www.linkedin.com/showcase/ieee-xplore" aria-label="Follow us on LinkedIn" title="Follow IEEE Xplore on LinkedIn, opens in a new tab">
+											<i class="fab fa-linkedin-in" aria-hidden="true"></i>
+										</a>
+									</li>
+									<li>
+										<a href="https://www.youtube.com/ieeexplore" aria-label="Follow us on Youtube" title="Follow IEEE Xplore on Youtube , opens in a new tab" target="_blank">
+											<i class="fab fa-youtube" aria-hidden="true"></i>
+										</a>
+									</li>
+									<li class="d-flex">
+										<a class="d-flex align-items-center" target="_blank" href="https://twitter.com/IEEEXplore?ref_src=twsrc%5Egoogle%7Ctwcamp%5Eserp%7Ctwgr%5Eauthor" aria-label="Follow us on Twitter" title="Follow IEEE Xplore on Twitter, opens in a new tab">
+											<svg class="x-logo-svg" aria-hidden="true" width="1200" height="1227" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg">
+												<path
+													d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z"
+													fill="currentColor"
+												/>
+											</svg>
+										</a>
+									</li>
+								</ul>
+							</div>
+						</div>
+						<div class="footer-bottom-section ps-3">
+							<p class="text-sm-md-lh"><span><a target="_self"
+										href="/Xplorehelp/overview-of-ieee-xplore/about-ieee-xplore">About IEEE
+										<em>Xplore</em></a></span> | <span><a target="_self" href="/xpl/contact">Contact
+										Us</a></span> | <span><a target="_self" href="/Xplorehelp">Help</a></span> |
+								<span><a target="_self"
+										href="/Xplorehelp/overview-of-ieee-xplore/accessibility-statement">Accessibility</a></span>
+								| <span><a target="_self" href="/Xplorehelp/overview-of-ieee-xplore/terms-of-use">Terms of
+										Use</a></span> | <span><a target="_self"
+										href="http://www.ieee.org/web/aboutus/whatis/policies/p9-26.html">Nondiscrimination
+										Policy</a></span> | <span class="ethics-reporting-link"><a target="_blank"
+										href=" http://www.ieee-ethics-reporting.org/">IEEE Ethics Reporting<i
+											class="fa fa-external-link-alt"></i></a></span> | <span><a target="_self"
+										href="/Xplorehelp/overview-of-ieee-xplore/ieee-xplore-sitemap">Sitemap</a></span> |
+								<span class="nowrap"><a target="_self"
+										href="http://www.ieee.org/about/help/security_privacy.html">IEEE Privacy
+										Policy</a></span>
+							</p>
+							<p> A public charity, IEEE is the world's largest technical professional organization dedicated
+								to advancing technology for the benefit of humanity. </p>
+							<footer class="copy-right">
+								<p><span>&copy;</span> Copyright
+									<script type="text/javascript"> document.write(new Date().getFullYear());</script> IEEE
+									- All rights reserved, including rights for text and data mining and training of
+									artificial intelligence and similar technologies.
+								</p>
+							</footer>
+						</div>
+					</div>
+				</div>
+			</footer>
+		</div>
+	</body>
+</html>

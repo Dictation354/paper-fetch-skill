@@ -1,0 +1,61 @@
+{
+  "records": [
+    {
+      "doi": "10.1007/s10584-011-0143-4",
+      "provider": "springer",
+      "requested_url": "https://api.crossref.org/works/10.1007%2Fs10584-011-0143-4",
+      "final_url": "https://api.crossref.org/works/10.1007%2Fs10584-011-0143-4",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:34 GMT",
+        "content-type": "application/json",
+        "content-length": "5072"
+      },
+      "captured_at_utc": "2026-09-18T02:21:34.419057+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 15304,
+      "sha256": "5cdf5e2600a84f1ab598c3e01729748e9f79501cb95f5597e1f5fe02b5556d4a",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1007/s10584-011-0143-4",
+      "provider": "springer",
+      "requested_url": "http://link.springer.com/10.1007/s10584-011-0143-4",
+      "final_url": "https://link.springer.com/article/10.1007/s10584-011-0143-4",
+      "status_code": 200,
+      "response_headers": {
+        "etag": "W/\"582e220cc5d0fcab405f666a96efbd07\"",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Fri, 18 Sep 2026 02:21:38 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:21:39.331464+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "size": 372115,
+      "sha256": "57d6ef8d0c33b63fde692bfc7026d923735a01566be0716b62bd45bdc9ba8d66",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1007/s10584-011-0143-4",
+      "provider": "springer",
+      "requested_url": "https://link.springer.com/article/10.1007/s10584-011-0143-4/tables/1",
+      "final_url": "https://link.springer.com/article/10.1007/s10584-011-0143-4/tables/1",
+      "status_code": 200,
+      "response_headers": {
+        "etag": "W/\"9565407da46cb838a1a2b502e3bb6417\"",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Fri, 18 Sep 2026 02:21:43 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:21:43.725475+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.html",
+      "size": 210494,
+      "sha256": "2ade32c42d885a08088ce10c6e837f4217b95dce67cd036591f4f075c5d1261f",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

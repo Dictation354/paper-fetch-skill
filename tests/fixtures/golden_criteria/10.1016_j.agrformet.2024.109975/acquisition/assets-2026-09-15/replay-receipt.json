@@ -1,0 +1,85 @@
+{
+  "doi": "10.1016/j.agrformet.2024.109975",
+  "source_input": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/original.xml",
+  "source_sha256": "c37ca8cc94f18bf076c7862107ecdff69259609604c92c32ed27506fb5383087",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "671bd5d92b44fd396917c859349500f67804342e2785c3c9c8652239a0472d85",
+  "files": [
+    {
+      "filename": "1-s2.0-S016819232400090X-gr5_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-gr5_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-gr5_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "958d0e6f63f841aa3f97ce87575ebe9cbf9bd7d8c21f9ac41d1e497117bed091",
+      "size": 832881,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 3583,
+      "height": 1666,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S016819232400090X-gr2_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-gr2_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-gr2_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "cd2c5224a2c0caf00d5716cad99361ee4dc4a9a2106861253d544172f5c84a65",
+      "size": 2565833,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 3583,
+      "height": 3249,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S016819232400090X-gr1_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-gr1_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-gr1_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "19f1a76fd6305cfe8aa4e523e4362a9b12250c754a9612ab18aec129c424579d",
+      "size": 1439115,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 3583,
+      "height": 1984,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S016819232400090X-gr4_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-gr4_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-gr4_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "4a2892e11adfc5f237191127a4494ac92a1ad4e0cfedcd80e57a994efd601503",
+      "size": 1643785,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 3583,
+      "height": 1833,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S016819232400090X-gr3_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-gr3_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-gr3_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "913f9d348f0abc6e6108dbe0bfe2ff891ba14162c017a268746d2c34fee2f935",
+      "size": 1550846,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 3583,
+      "height": 1622,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S016819232400090X-am.pdf",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-am.pdf?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-am.pdf?httpAccept=%2A%2F%2A",
+      "sha256": "c8987700ad556772c4a57e11bcdecd261dd3270aa59ba62c98f7536453fcc4c2",
+      "size": 2572962,
+      "kind": "supplementary",
+      "download_tier": "supplementary_file",
+      "width": null,
+      "height": null,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.596439+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 1
+}

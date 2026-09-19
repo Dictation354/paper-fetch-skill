@@ -1,0 +1,16 @@
+{
+  "query": "10.1088/1681-7575/ae1dfc",
+  "query_kind": "doi",
+  "doi": "10.1088/1681-7575/ae1dfc",
+  "landing_url": null,
+  "provider_hint": "iop",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 1,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "iop"
+}

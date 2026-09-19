@@ -1,0 +1,192 @@
+{
+  "doi": "10.1186/s40359-026-04991-8",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/outputs/fbc55e65e5c4-Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "fbc55e65e5c4ca29d1603935418877caded61a07895fb42547f9a1e6bcd6cab9",
+      "size": 57091
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/outputs/020a81af0261-Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "020a81af026137b4292dcf97dfb6f222d2bfe76611b2110bb5507daa128adcb9",
+      "size": 45681
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/springer/10.1186_s40359-026-04991-8/html-1/diagnostic.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/outputs/5724da332366-diagnostic.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "5724da3323660942ad7e5cd7a6cbd763ea9dc14b5bf0b14f1fa7c475acd23a71",
+      "size": 5751
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/springer/10.1186_s40359-026-04991-8/html-1/page-sanitized.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/outputs/1cc4ddcaba9d-page-sanitized.html",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "1cc4ddcaba9dd6babd9b2032c26d7f78e1f7b9a0523389b77858dc311089e010",
+      "size": 63521
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1186_s40359-026-04991-8_assets/s40359-026-04991-8_reference-f475db51b0.pdf-0001-05.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/assets/72a4d539ff9b-s40359-026-04991-8_reference-f475db51b0.pdf-0001-05.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "72a4d539ff9b45898a1a00b07478e9ebd629bd9e1d3db0939ee7c61ddd948ea0",
+      "size": 3585
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1186_s40359-026-04991-8_assets/s40359-026-04991-8_reference-f475db51b0.pdf-0027-01.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/assets/8662b2323892-s40359-026-04991-8_reference-f475db51b0.pdf-0027-01.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "8662b23238920f7bfb6774ecb82d14ab310815569557898ea8dd7455c9b04bd1",
+      "size": 10719
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1186_s40359-026-04991-8_assets/s40359-026-04991-8_reference-f475db51b0.pdf-0027-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/assets/8f905585fb83-s40359-026-04991-8_reference-f475db51b0.pdf-0027-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "8f905585fb83e49f64cb7772a75d3ce018475638f4909c97ba2925ff8e7efe71",
+      "size": 42948
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.pdf",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/raw_sources/c865aa6e439f-Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.pdf",
+      "category": "raw_sources",
+      "origin_kind": "real_replay",
+      "sha256": "c865aa6e439f29a8a53e83a6b338d70bb42123c304f5527476ea9bffdabccdb6",
+      "size": 1234733
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "degraded",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1186/s40359-026-04991-8",
+      "expected_doi": "10.1186/s40359-026-04991-8",
+      "title": "Phubbing in pregnancy as a predictor of postpartum depressive symptoms: preliminary results",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 11080,
+      "confidence": "medium",
+      "flags": [
+        "weak_body_structure"
+      ],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 3,
+      "attempted": 3,
+      "total": 3,
+      "local": 3,
+      "full_size": 3,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 3,
+      "remote_only_count": 0,
+      "body_discovered": 3,
+      "body_attempted": 3,
+      "body_local": 3,
+      "body_full_size": 3,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "complete",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "springer_pdf",
+      "acquisition": {
+        "provider": "springer",
+        "route": "direct_pdf",
+        "representation": "pdf",
+        "transport": "http",
+        "fallback_used": true
+      },
+      "trace_event_count": 18,
+      "fallback_codes": [
+        "fulltext:springer_html:fail"
+      ],
+      "warning_codes": [
+        "weak_body_structure"
+      ],
+      "failure_codes": [
+        "fulltext:springer_html:fail"
+      ],
+      "unstructured_warning_count": 4,
+      "acceptance_policy": "validated_pdf",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

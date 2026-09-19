@@ -1,0 +1,63 @@
+{
+  "records": [
+    {
+      "doi": "10.1073/pnas.2322622121",
+      "provider": "pnas",
+      "requested_url": "https://api.crossref.org/works/10.1073%2Fpnas.2322622121",
+      "final_url": "https://api.crossref.org/works/10.1073%2Fpnas.2322622121",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:28:25 GMT",
+        "content-type": "application/json",
+        "content-length": "4546"
+      },
+      "captured_at_utc": "2026-09-18T02:28:25.222856+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 15313,
+      "sha256": "bb95f58ba161052f31ecac1ea8ebba0658430f5b47f3a4616eaf50322b099a93",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1073/pnas.2322622121",
+      "provider": "pnas",
+      "requested_url": "https://www.pnas.org/doi/10.1073/pnas.2322622121",
+      "final_url": "https://www.pnas.org/doi/10.1073/pnas.2322622121",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:28:28 GMT",
+        "content-type": "text/html;charset=UTF-8"
+      },
+      "captured_at_utc": "2026-09-18T02:29:00.847182+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 402007,
+      "sha256": "48020b615979f90521dc6f15dfa563a937c6d9c6ba105a5a9b465ab34dad3d34",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1073/pnas.2322622121",
+      "provider": "pnas",
+      "requested_url": "https://www.pnas.org/doi/10.1073/pnas.2322622121",
+      "final_url": "https://www.pnas.org/doi/10.1073/pnas.2322622121",
+      "status_code": 403,
+      "response_headers": {},
+      "capture_kind": "browser_rendered_dom",
+      "captured_at_utc": "2026-09-18T02:37:27.265774+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-camoufox-selector-dom.html",
+      "size": 318770,
+      "sha256": "74d0d35dfae6e1e3e11a234c1bb3fef29af44b025a866f238e43aa464646e21b",
+      "transport": "Existing paper-fetch Camoufox browser runtime; exact returned/diagnostic DOM",
+      "runtime_failure_code": "publisher_access_denied",
+      "access_conditions": "User-requested Camoufox capture; no authentication interaction, challenge bypass or changed access classification",
+      "readiness": {
+        "wait_for_article_body": false,
+        "selector": "#bodymatter, .article-section__body",
+        "require_selector": true,
+        "budget_seconds": 30
+      }
+    }
+  ]
+}

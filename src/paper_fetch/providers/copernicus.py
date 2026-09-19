@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall
+
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
@@ -56,6 +58,7 @@ from ..utils import (
     empty_asset_results,
     extend_unique,
     normalize_text,
+    strip_html_tags,
 )
 from ..xml_security import XmlParseFailure, parse_xml
 from ._article_markdown_common import (
@@ -319,6 +322,7 @@ class CopernicusClient(ProviderClient):
         try:
             landing = self._fetch_landing(landing_url)
         except ProviderFailure as exc:
+            propagate_paywall(exc)
             return self._doi_derived_landing_attempt(
                 normalized_doi,
                 metadata,
@@ -502,6 +506,7 @@ class CopernicusClient(ProviderClient):
                     warnings=list(attempt.warnings or []),
                 )
             except ProviderFailure as exc:
+                propagate_paywall(exc)
                 failures.append((candidate, exc))
                 continue
         if failures:
@@ -546,12 +551,13 @@ class CopernicusClient(ProviderClient):
                 ),
                 expected_identity={
                     "doi": attempt.normalized_doi,
-                    "title": attempt.merged_metadata.get("title"),
+                    "title": strip_html_tags(attempt.merged_metadata.get("title")),
                 },
                 context=context,
                 fetcher=fetch_pdf_over_http,
             ).fetch(attempt.pdf_candidates)
         except PdfFetchFailure as exc:
+            propagate_paywall(exc)
             raise ProviderFailure(NO_RESULT, exc.message) from exc
         final_url = urllib.parse.urljoin(
             pdf_result.source_url or attempt.response_url, pdf_result.final_url
@@ -798,7 +804,7 @@ class CopernicusClient(ProviderClient):
         if route == "xml":
             markdown_text = str(
                 (content.markdown_text if content is not None else "") or ""
-            ).strip()
+            )
             if not markdown_text:
                 warnings.append(
                     "Copernicus XML retrieval did not produce usable Markdown."
@@ -849,7 +855,7 @@ class CopernicusClient(ProviderClient):
 
         markdown_text = str(
             (content.markdown_text if content is not None else "") or ""
-        ).strip()
+        )
         if not markdown_text:
             warnings.append("Copernicus retrieval did not produce usable Markdown.")
             return metadata_only_article(

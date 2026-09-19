@@ -1,0 +1,9 @@
+[1;34m==>[0m Detected WSL development environment
+[1;34m==>[0m Validating the machine-readable macOS adaptation contract
+macOS adaptation contract OK: paper-fetch/macos; 4 native package targets
+[1;34m==>[0m Running portable WSL/Linux macOS contract tests
+bringing up nodes...
+bringing up nodes...
+
+......                                                                   [100%]
+6 passed in 1.41s

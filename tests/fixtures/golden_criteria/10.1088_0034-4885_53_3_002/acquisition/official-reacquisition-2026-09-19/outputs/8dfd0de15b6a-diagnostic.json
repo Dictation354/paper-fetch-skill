@@ -1,0 +1,249 @@
+{
+  "schema_version": 2,
+  "provider": "iop",
+  "route": "html",
+  "failure_code": "abstract_only",
+  "stage": "html_extraction",
+  "backend": "camoufox",
+  "attempt": 1,
+  "target": {
+    "url": "https://iopscience.iop.org/article/10.1088/0034-4885/53/3/002",
+    "host": "iopscience.iop.org",
+    "path": "/article/10.1088/0034-4885/53/3/002",
+    "url_sha256": "dc3d5ae46be2cfac3a5dab52216895b2b415753d44db8f0c5e237ec7fabe0a36"
+  },
+  "final": {
+    "url": "https://iopscience.iop.org/article/10.1088/0034-4885/53/3/002",
+    "host": "iopscience.iop.org",
+    "path": "/article/10.1088/0034-4885/53/3/002",
+    "url_sha256": "dc3d5ae46be2cfac3a5dab52216895b2b415753d44db8f0c5e237ec7fabe0a36"
+  },
+  "response_status": 200,
+  "title_summary": "The structure of micelles and microemulsions - IOPscience",
+  "page_summary": "The structure of micelles and microemulsions - IOPscience Skip to content IOP Science home Accessibility Help Search Search all IOPscience content Search Article Lookup Journals Journals list Browse more than 100 science journal titles Subject collections Read the very best research published in IOP journals Publishing partners Partner organisations and publications Open access IOP Publishing open access policy guide IOP Conference Series Read open access proceedings from science conferences worldwide Books Publishing Support Login IOPscience login / Sign Up Purpose-led Publishing is a coalition of three not-for-profit publishers in the field of physical sciences: AIP Publishing, the American Physical Society and IOP Publishing. Together, as publishers that will always put purpose above profit, we have defined a set of industry standards that underpin high-quality, ethical scholarly communications. We are proudly declaring that science is our only shareholder. The structure of micelles",
+  "page": {
+    "page_state": {
+      "route": "browser_html",
+      "page_sha256": "d760e2a36fb432d6cbb88779cc463a8878be4fd5d11f2c7d108468c12f84431f"
+    },
+    "browser_runtime": {
+      "backend": "camoufox",
+      "media_blocking": true,
+      "timeout_budget_ms": 15000,
+      "browser_connect_seconds": 1.551,
+      "duration_seconds": 5.834,
+      "remaining_ms": 9166,
+      "browser_context_seed": {
+        "provided": false,
+        "cookie_count": 0,
+        "applied": false,
+        "user_agent_reused": false,
+        "reason": "no_compatible_cookies"
+      },
+      "storage_state_save": {
+        "attempted": true,
+        "staged": true,
+        "saved": false,
+        "path": "/home/dictation/.local/share/paper-fetch/publisher-browser-profiles/iop-camoufox/storage-state.json",
+        "filtered": true,
+        "borrowed_context": false,
+        "cookie_count": 17,
+        "reason": "awaiting_provider_acceptance"
+      },
+      "page_events": {
+        "document_requests": [
+          {
+            "url": "https://iopscience.iop.org/article/10.1088/0034-4885/53/3/002",
+            "host": "iopscience.iop.org",
+            "path": "/article/10.1088/0034-4885/53/3/002",
+            "url_sha256": "dc3d5ae46be2cfac3a5dab52216895b2b415753d44db8f0c5e237ec7fabe0a36",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 1424.779,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 1684.41
+          }
+        ],
+        "failed_requests": [
+          {
+            "url": "https://hit.uptrendsdata.com/rum.min.js",
+            "host": "hit.uptrendsdata.com",
+            "path": "/rum.min.js",
+            "url_sha256": "51fd238a7d2ea26108fa67639c9c514a75d8d2112c41c16904673d3d82a57e08",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://cms.iopscience.org/6dc205b3-3aa9-11ee-9dd8-11d48c4dc733/ROPP%20graphic%20iopscience_header.jpg",
+            "host": "cms.iopscience.org",
+            "path": "/6dc205b3-3aa9-11ee-9dd8-11d48c4dc733/ROPP%20graphic%20iopscience_header.jpg",
+            "url_sha256": "0bb9a5131ccb70f30c543a0648d18d60026f699ff882213345c64d60883f1ded",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://cms.iopscience.org/762443bf-0586-11f0-b937-3326ea8a2a36/PLP-Logo-2.png",
+            "host": "cms.iopscience.org",
+            "path": "/762443bf-0586-11f0-b937-3326ea8a2a36/PLP-Logo-2.png",
+            "url_sha256": "954b59c6f42398b766b9ea7c9dae8f54442b3e0a376626bde1364f90cc7fd1bd",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://cms.iopscience.org/6dc205b3-3aa9-11ee-9dd8-11d48c4dc733/ROPP%20graphic%20iopscience_header.jpg",
+            "host": "cms.iopscience.org",
+            "path": "/6dc205b3-3aa9-11ee-9dd8-11d48c4dc733/ROPP%20graphic%20iopscience_header.jpg",
+            "url_sha256": "0bb9a5131ccb70f30c543a0648d18d60026f699ff882213345c64d60883f1ded",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://cms.iopscience.org/762443bf-0586-11f0-b937-3326ea8a2a36/PLP-Logo-2.png",
+            "host": "cms.iopscience.org",
+            "path": "/762443bf-0586-11f0-b937-3326ea8a2a36/PLP-Logo-2.png",
+            "url_sha256": "954b59c6f42398b766b9ea7c9dae8f54442b3e0a376626bde1364f90cc7fd1bd",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://g9706132415.co/gp",
+            "host": "g9706132415.co",
+            "path": "/gp",
+            "url_sha256": "bfb72f72ba13ed99db8fdeea9c83e773400abc8a7eff8eba93ee07343f72400f",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://g1584674684.co/gc",
+            "host": "g1584674684.co",
+            "path": "/gc",
+            "url_sha256": "6627f8fcf01cf5496d1e0809c1d23d78efb2adea43058d6b389a78b46ae3ab40",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://badges.altmetric.com/",
+            "host": "badges.altmetric.com",
+            "path": "/",
+            "url_sha256": "b842856a709bcd8a780c8de1c2f3d4f76559ba96a035f0e18575e90e3a3facde",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          }
+        ],
+        "failed_scripts": [
+          {
+            "url": "https://hit.uptrendsdata.com/rum.min.js",
+            "host": "hit.uptrendsdata.com",
+            "path": "/rum.min.js",
+            "url_sha256": "51fd238a7d2ea26108fa67639c9c514a75d8d2112c41c16904673d3d82a57e08",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://g9706132415.co/gp",
+            "host": "g9706132415.co",
+            "path": "/gp",
+            "url_sha256": "bfb72f72ba13ed99db8fdeea9c83e773400abc8a7eff8eba93ee07343f72400f",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://g1584674684.co/gc",
+            "host": "g1584674684.co",
+            "path": "/gc",
+            "url_sha256": "6627f8fcf01cf5496d1e0809c1d23d78efb2adea43058d6b389a78b46ae3ab40",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          }
+        ],
+        "console_errors": [],
+        "page_errors": []
+      },
+      "candidates": [
+        {
+          "url": "https://iopscience.iop.org/article/10.1088/0034-4885/53/3/002",
+          "url_sha256": "dc3d5ae46be2cfac3a5dab52216895b2b415753d44db8f0c5e237ec7fabe0a36",
+          "final_url": "https://iopscience.iop.org/article/10.1088/0034-4885/53/3/002",
+          "final_url_sha256": "dc3d5ae46be2cfac3a5dab52216895b2b415753d44db8f0c5e237ec7fabe0a36",
+          "status": 200,
+          "main_document_response": {
+            "url": "https://iopscience.iop.org/article/10.1088/0034-4885/53/3/002",
+            "host": "iopscience.iop.org",
+            "path": "/article/10.1088/0034-4885/53/3/002",
+            "url_sha256": "dc3d5ae46be2cfac3a5dab52216895b2b415753d44db8f0c5e237ec7fabe0a36",
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "captured_html_bytes": 270183,
+            "navigation_timing": {
+              "available": true,
+              "document_ready_state": "interactive",
+              "navigation_entry_present": true,
+              "response_start_ms": 1424,
+              "response_end_ms": 1424,
+              "dom_interactive_ms": 2246,
+              "dom_content_loaded_event_end_ms": 2276,
+              "load_event_end_ms": 0,
+              "duration_ms": 0,
+              "transfer_size_bytes": 51939,
+              "encoded_body_size_bytes": 51639,
+              "decoded_body_size_bytes": 254118,
+              "navigation_type": "navigate",
+              "next_hop_protocol": "h2",
+              "response_completed": true,
+              "dom_content_loaded_completed": true,
+              "load_event_completed": false
+            },
+            "request_lifecycle": {
+              "response_received_observed": true,
+              "response_received_ms": 1424.779,
+              "request_finished_observed": true,
+              "request_finished_ms": 1684.41,
+              "request_failed_observed": false,
+              "observed_ms": 3883.212
+            }
+          },
+          "navigation_seconds": 1.464,
+          "dom_readiness_seconds": 2.274,
+          "dom_readiness_attempted": true,
+          "dom_readiness_ready": true,
+          "dom_readiness_selector": ".article-content",
+          "dom_readiness_text_length": 851,
+          "dom_readiness_paragraph_count": 2,
+          "dom_readiness_heading_count": 2,
+          "dom_readiness_fingerprint_present": true,
+          "duration_seconds": 4.063,
+          "result": "success"
+        }
+      ]
+    },
+    "html_shape": {
+      "byte_count": 270183,
+      "has_html": true,
+      "has_head": true,
+      "has_body": true,
+      "body_text_length": 5104,
+      "body_element_count": 606,
+      "article_container_count": 1
+    }
+  },
+  "raw_html": {
+    "byte_count": 270183,
+    "sha256": "d760e2a36fb432d6cbb88779cc463a8878be4fd5d11f2c7d108468c12f84431f"
+  },
+  "sanitized_html": {
+    "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/iop/10.1088_0034-4885_53_3_002/html-1/page-sanitized.html",
+    "byte_count": 49903,
+    "sha256": "a80e27919193892f34d7d353feffac2a36dab7d517172551ba7904b0022e1eab",
+    "truncated": false
+  },
+  "diagnostic_path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/iop/10.1088_0034-4885_53_3_002/html-1/diagnostic.json"
+}

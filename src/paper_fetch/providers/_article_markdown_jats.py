@@ -358,7 +358,18 @@ def _append_embedded_block(
     if local_name == "list":
         list_type = normalize_text(str(node.get("list-type") or "")).lower()
         lines.extend(
-            _render_list(node, ordered=list_type in {"order", "ordered", "decimal"})
+            _render_list(
+                node,
+                ordered=list_type in {"order", "ordered", "decimal"},
+                render_item=lambda item: _render_blocks(
+                    item,
+                    heading_level=2,
+                    source_url=source_url,
+                    assets=assets,
+                    table_entries=table_entries,
+                    formula_renders=formula_renders,
+                ),
+            )
         )
         return True
     return False
@@ -485,7 +496,16 @@ def _render_blocks(
             list_type = normalize_text(str(child.get("list-type") or "")).lower()
             lines.extend(
                 _render_list(
-                    child, ordered=list_type in {"order", "ordered", "decimal"}
+                    child,
+                    ordered=list_type in {"order", "ordered", "decimal"},
+                    render_item=lambda item: _render_blocks(
+                        item,
+                        heading_level=heading_level,
+                        source_url=source_url,
+                        assets=assets,
+                        table_entries=table_entries,
+                        formula_renders=formula_renders,
+                    ),
                 )
             )
             continue

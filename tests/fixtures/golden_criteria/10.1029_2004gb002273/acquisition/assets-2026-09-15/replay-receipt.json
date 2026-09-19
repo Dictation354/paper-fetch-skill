@@ -1,0 +1,25 @@
+{
+  "doi": "10.1029/2004gb002273",
+  "source_input": "tests/fixtures/golden_criteria/10.1029_2004gb002273/original.html",
+  "source_sha256": "904da548a8212efbc5d9c9e792fa61b1924234dd6eafc71985efd8465cebf215",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "9195f9d5b9cf086bfb6c90d55cb901ee15d2a698f12bea137ffe472db93649c9",
+  "files": [
+    {
+      "filename": "gbc1137-fig-0001.png",
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/2e14f46c-385a-423d-9c53-2184778731d1/gbc1137-fig-0001.png",
+      "source_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/2e14f46c-385a-423d-9c53-2184778731d1/gbc1137-fig-0001.png",
+      "sha256": "ab62d8ee6461219272ec1c81c76863c0bce0dad7bf515453930c8cd68003295e",
+      "size": 107685,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 570,
+      "height": 268,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:25.020490+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 0
+}

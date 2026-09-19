@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: scripts/dev-preflight.sh [--fast] [--skip-integration] [--skip-typecheck]
+Usage: scripts/dev-preflight.sh [--fast] [--skip-integration] [--skip-typecheck] [--with-golden]
 
 Runs the local preflight gate:
   - ruff format check
@@ -14,6 +14,7 @@ Runs the local preflight gate:
   - integration tests
 
 Options:
+  --with-golden     Run all three layers (required before release).
   --fast              Run ruff, mypy, and unit tests only.
   --skip-integration Skip integration tests.
   --skip-typecheck   Skip mypy.
@@ -23,9 +24,13 @@ USAGE
 
 run_integration=1
 run_typecheck=1
+run_golden=0
 
 while (($#)); do
   case "$1" in
+    --with-golden)
+      run_golden=1
+      ;;
     --fast)
       run_integration=0
       ;;
@@ -47,6 +52,11 @@ while (($#)); do
   esac
   shift
 done
+
+if [[ "$run_golden" == "1" && "$run_integration" == "0" ]]; then
+  echo "--with-golden conflicts with --fast / --skip-integration" >&2
+  exit 2
+fi
 
 if [[ -z "${PYTHON_BIN:-}" ]]; then
   if [[ -x ".venv/bin/python" ]]; then
@@ -85,4 +95,8 @@ PYTHONPATH=src "$PYTHON_BIN" -m pytest tests/unit -q --durations=30
 
 if [[ "$run_integration" == "1" ]]; then
   PYTHONPATH=src "$PYTHON_BIN" -m pytest tests/integration -q --durations=30
+fi
+
+if [[ "$run_golden" == "1" ]]; then
+  PYTHONPATH=src "$PYTHON_BIN" -m pytest tests/golden -q --durations=30
 fi

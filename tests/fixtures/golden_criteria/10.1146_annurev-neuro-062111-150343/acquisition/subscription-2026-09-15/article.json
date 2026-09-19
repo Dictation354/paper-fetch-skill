@@ -1,0 +1,1051 @@
+{
+  "doi": "10.1146/annurev-neuro-062111-150343",
+  "source": "crossref_meta",
+  "metadata": {
+    "title": "Active Properties of Neocortical Pyramidal Neuron Dendrites",
+    "authors": [
+      "Guy Major",
+      "Matthew E. Larkum",
+      "Jackie Schiller"
+    ],
+    "abstract": "Dendrites are the main recipients of synaptic inputs and are important sites that determine neurons' input-output functions. This review focuses on thin neocortical dendrites, which receive the vast majority of synaptic inputs in cortex but also have specialized electrogenic properties. We present a simplified working-model biophysical scheme of pyramidal neurons that attempts to capture the essence of their dendritic function, including the ability to behave under plausible conditions as dynamic computational subunits. We emphasize the electrogenic capabilities of NMDA receptors (NMDARs) because these transmitter-gated channels seem to provide the major nonlinear depolarizing drive in thin dendrites, even allowing full-blown NMDA spikes. We show how apparent discrepancies in experimental findings can be reconciled and discuss the current status of dendritic spikes in vivo; a dominant NMDAR contribution would indicate that the input-output relations of thin dendrites are dynamically set by network activity and cannot be fully predicted by purely reductionist approaches.",
+    "journal": "Annual Review of Neuroscience",
+    "article_type": null,
+    "published": "2013-7-8",
+    "keywords": [],
+    "license_urls": [],
+    "landing_page_url": "https://www.annualreviews.org/doi/10.1146/annurev-neuro-062111-150343"
+  },
+  "sections": [],
+  "references": [
+    {
+      "raw": "10.1152/jn.1993.70.5.2066",
+      "doi": "10.1152/jn.1993.70.5.2066",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1093/cercor/3.1.26",
+      "doi": "10.1093/cercor/3.1.26",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/jnr.22444",
+      "doi": "10.1002/jnr.22444",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/71125",
+      "doi": "10.1038/71125",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.23-21-07750.2003",
+      "doi": "10.1523/jneurosci.23-21-07750.2003",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.130200797",
+      "doi": "10.1073/pnas.130200797",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1371/journal.pcbi.1002599",
+      "doi": "10.1371/journal.pcbi.1002599",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1152/jn.2001.85.2.855",
+      "doi": "10.1152/jn.2001.85.2.855",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1093/cercor/13.3.274",
+      "doi": "10.1093/cercor/13.3.274",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.1400-04.2004",
+      "doi": "10.1523/jneurosci.1400-04.2004",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.89.9.4139",
+      "doi": "10.1073/pnas.89.9.4139",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1189664",
+      "doi": "10.1126/science.1189664",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.conb.2010.07.009",
+      "doi": "10.1016/j.conb.2010.07.009",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.neuron.2011.02.006",
+      "doi": "10.1016/j.neuron.2011.02.006",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1093/cercor/bhh154",
+      "doi": "10.1093/cercor/bhh154",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1113/jphysiol.1979.sp012694",
+      "doi": "10.1113/jphysiol.1979.sp012694",
+      "title": null,
+      "year": "1979"
+    },
+    {
+      "raw": "10.1016/j.neuron.2004.09.026",
+      "doi": "10.1016/j.neuron.2004.09.026",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0896-6273(00)81098-3",
+      "doi": "10.1016/s0896-6273(00)81098-3",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.14-02-00751.1994",
+      "doi": "10.1523/jneurosci.14-02-00751.1994",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.neuron.2010.03.012",
+      "doi": "10.1016/j.neuron.2010.03.012",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature10193",
+      "doi": "10.1038/nature10193",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1196/annals.1300.020",
+      "doi": "10.1196/annals.1300.020",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1152/jn.00118.2003",
+      "doi": "10.1152/jn.00118.2003",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1460-9568.1994.tb00309.x",
+      "doi": "10.1111/j.1460-9568.1994.tb00309.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/76656",
+      "doi": "10.1038/76656",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1146/annurev.ne.16.030193.001231",
+      "doi": "10.1146/annurev.ne.16.030193.001231",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1113/jphysiol.2006.124321",
+      "doi": "10.1113/jphysiol.2006.124321",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.0242-05.2005",
+      "doi": "10.1523/jneurosci.0242-05.2005",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.16-13-04129.1996",
+      "doi": "10.1523/jneurosci.16-13-04129.1996",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1113/jphysiol.1996.sp021255",
+      "doi": "10.1113/jphysiol.1996.sp021255",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.21-18-07428.2001",
+      "doi": "10.1523/jneurosci.21-18-07428.2001",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nn.3051",
+      "doi": "10.1038/nn.3051",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.3502-06.2006",
+      "doi": "10.1523/jneurosci.3502-06.2006",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/neu.20144",
+      "doi": "10.1002/neu.20144",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.3244-09.2010",
+      "doi": "10.1523/jneurosci.3244-09.2010",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0959-4388(03)00075-8",
+      "doi": "10.1016/s0959-4388(03)00075-8",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.290.5492.739",
+      "doi": "10.1126/science.290.5492.739",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1127240",
+      "doi": "10.1126/science.1127240",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1371/journal.pcbi.1002550",
+      "doi": "10.1371/journal.pcbi.1002550",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.8266083",
+      "doi": "10.1126/science.8266083",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.90.24.11573",
+      "doi": "10.1073/pnas.90.24.11573",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature08947",
+      "doi": "10.1038/nature08947",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1146/annurev.ne.19.030196.001121",
+      "doi": "10.1146/annurev.ne.19.030196.001121",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.neuron.2006.04.011",
+      "doi": "10.1016/j.neuron.2006.04.011",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1113/jphysiol.2003.058842",
+      "doi": "10.1113/jphysiol.2003.058842",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1124/mol.61.3.533",
+      "doi": "10.1124/mol.61.3.533",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.neuron.2011.10.015",
+      "doi": "10.1016/j.neuron.2011.10.015",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.80.9.2799",
+      "doi": "10.1073/pnas.80.9.2799",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/81444",
+      "doi": "10.1038/81444",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.3664-05.2006",
+      "doi": "10.1523/jneurosci.3664-05.2006",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nn.2203",
+      "doi": "10.1038/nn.2203",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.neuroscience.2009.10.058",
+      "doi": "10.1016/j.neuroscience.2009.10.058",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/cne.903060209",
+      "doi": "10.1002/cne.903060209",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/cne.903230202",
+      "doi": "10.1002/cne.903230202",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.tins.2012.11.006",
+      "doi": "10.1016/j.tins.2012.11.006",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.conb.2008.08.013",
+      "doi": "10.1016/j.conb.2008.08.013",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1171958",
+      "doi": "10.1126/science.1171958",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.22-16-06991.2002",
+      "doi": "10.1523/jneurosci.22-16-06991.2002",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/18686",
+      "doi": "10.1038/18686",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1469-7793.2001.0447a.x",
+      "doi": "10.1111/j.1469-7793.2001.0447a.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature11451",
+      "doi": "10.1038/nature11451",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1221489",
+      "doi": "10.1126/science.1221489",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/1086",
+      "doi": "10.1038/1086",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nn1206",
+      "doi": "10.1038/nn1206",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.160.3832.1132",
+      "doi": "10.1126/science.160.3832.1132",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1146/annurev.neuro.28.061604.135703",
+      "doi": "10.1146/annurev.neuro.28.061604.135703",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s00422-008-0268-3",
+      "doi": "10.1007/s00422-008-0268-3",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.neuron.2006.03.016",
+      "doi": "10.1016/j.neuron.2006.03.016",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s00429-007-0144-2",
+      "doi": "10.1007/s00429-007-0144-2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/35044552",
+      "doi": "10.1038/35044552",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Major G. 1992. The physiology, morphology and modelling of cortical pyramidal neurones . PhD thesis. Oxford Univ., Oxford, UK",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.14-08-04613.1994",
+      "doi": "10.1523/jneurosci.14-08-04613.1994",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1152/jn.00011.2008",
+      "doi": "10.1152/jn.00011.2008",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.conb.2004.10.017",
+      "doi": "10.1016/j.conb.2004.10.017",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature05523",
+      "doi": "10.1038/nature05523",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1152/jn.1993.70.3.1086",
+      "doi": "10.1152/jn.1993.70.3.1086",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1162/neco.1994.6.6.1031",
+      "doi": "10.1162/neco.1994.6.6.1031",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nrn810",
+      "doi": "10.1038/nrn810",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.5314-04.2005",
+      "doi": "10.1523/jneurosci.5314-04.2005",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1113/jphysiol.2004.061416",
+      "doi": "10.1113/jphysiol.2004.061416",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s00232-005-0827-7",
+      "doi": "10.1007/s00232-005-0827-7",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1113/jphysiol.2007.142315",
+      "doi": "10.1113/jphysiol.2007.142315",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0165-0270(98)00049-1",
+      "doi": "10.1016/s0165-0270(98)00049-1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1152/jn.00070.2003",
+      "doi": "10.1152/jn.00070.2003",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nn1826",
+      "doi": "10.1038/nn1826",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nn1449",
+      "doi": "10.1038/nn1449",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.5066-03.2004",
+      "doi": "10.1523/jneurosci.5066-03.2004",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1217276",
+      "doi": "10.1126/science.1217276",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1460-9568.2011.07628.x",
+      "doi": "10.1111/j.1460-9568.2011.07628.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.10-07-02385.1990",
+      "doi": "10.1523/jneurosci.10-07-02385.1990",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature07709",
+      "doi": "10.1038/nature07709",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1371/journal.pcbi.1001129",
+      "doi": "10.1371/journal.pcbi.1001129",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0896-6273(03)00149-1",
+      "doi": "10.1016/s0896-6273(03)00149-1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.5250-08.2009",
+      "doi": "10.1523/jneurosci.5250-08.2009",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nn1253",
+      "doi": "10.1038/nn1253",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature02775",
+      "doi": "10.1038/nature02775",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1113/jphysiol.2006.123612",
+      "doi": "10.1113/jphysiol.2006.123612",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/4641290b",
+      "doi": "10.1038/4641290b",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.93.21.11985",
+      "doi": "10.1073/pnas.93.21.11985",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.3791-05.2006",
+      "doi": "10.1523/jneurosci.3791-05.2006",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/978-1-4615-4903-1_3",
+      "doi": "10.1007/978-1-4615-4903-1_3",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1469-7793.2001.00167.x",
+      "doi": "10.1111/j.1469-7793.2001.00167.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0006-3495(74)85948-5",
+      "doi": "10.1016/s0006-3495(74)85948-5",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.1854-12.2013",
+      "doi": "10.1523/jneurosci.1854-12.2013",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1152/jn.00046.2003",
+      "doi": "10.1152/jn.00046.2003",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/35005094",
+      "doi": "10.1038/35005094",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0959-4388(00)00217-8",
+      "doi": "10.1016/s0959-4388(00)00217-8",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1469-7793.1997.605ba.x",
+      "doi": "10.1111/j.1469-7793.1997.605ba.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0896-6273(93)90277-X",
+      "doi": "10.1016/0896-6273(93)90277-x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.21-10-03580.2001",
+      "doi": "10.1523/jneurosci.21-10-03580.2001",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1152/jn.1999.81.3.1341",
+      "doi": "10.1152/jn.1999.81.3.1341",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1152/jn.1997.77.5.2466",
+      "doi": "10.1152/jn.1997.77.5.2466",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.1119527109",
+      "doi": "10.1073/pnas.1119527109",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature04720",
+      "doi": "10.1038/nature04720",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.neuron.2006.11.016",
+      "doi": "10.1016/j.neuron.2006.11.016",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nrn2286",
+      "doi": "10.1038/nrn2286",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0166-2236(94)90094-9",
+      "doi": "10.1016/0166-2236(94)90094-9",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1113/jphysiol.1995.sp020521",
+      "doi": "10.1113/jphysiol.1995.sp020521",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.7716524",
+      "doi": "10.1126/science.7716524",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1152/jn.1984.52.2.278",
+      "doi": "10.1152/jn.1984.52.2.278",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1113/jphysiol.1992.sp019085",
+      "doi": "10.1113/jphysiol.1992.sp019085",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0079-6123(08)61248-0",
+      "doi": "10.1016/s0079-6123(08)61248-0",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.18-10-03501.1998",
+      "doi": "10.1523/jneurosci.18-10-03501.1998",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0166-2236(96)10075-8",
+      "doi": "10.1016/s0166-2236(96)10075-8",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/367069a0",
+      "doi": "10.1038/367069a0",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1460-9568.2008.06324.x",
+      "doi": "10.1111/j.1460-9568.2008.06324.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1210362",
+      "doi": "10.1126/science.1210362",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1152/jn.00109.2004",
+      "doi": "10.1152/jn.00109.2004",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0896-6273(89)90034-2",
+      "doi": "10.1016/0896-6273(89)90034-2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.1112355108",
+      "doi": "10.1073/pnas.1112355108",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1113/jphysiol.1990.sp018214",
+      "doi": "10.1113/jphysiol.1990.sp018214",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.2152-06.2006",
+      "doi": "10.1523/jneurosci.2152-06.2006",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1061198",
+      "doi": "10.1126/science.1061198",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.4906-04.2005",
+      "doi": "10.1523/jneurosci.4906-04.2005",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nn1305",
+      "doi": "10.1038/nn1305",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1469-7793.1999.00467.x",
+      "doi": "10.1111/j.1469-7793.1999.00467.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1152/jn.2000.83.5.3177",
+      "doi": "10.1152/jn.2000.83.5.3177",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.1067903",
+      "doi": "10.1126/science.1067903",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0166-2236(03)00035-3",
+      "doi": "10.1016/s0166-2236(03)00035-3",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.76.2.986",
+      "doi": "10.1073/pnas.76.2.986",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature11601",
+      "doi": "10.1038/nature11601",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1523/JNEUROSCI.1613-08.2008",
+      "doi": "10.1523/jneurosci.1613-08.2008",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/978-0-387-77232-5_11",
+      "doi": "10.1007/978-0-387-77232-5_11",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0896-6273(94)90457-X",
+      "doi": "10.1016/0896-6273(94)90457-x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1113/jphysiol.1994.sp020346",
+      "doi": "10.1113/jphysiol.1994.sp020346",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1469-7793.2000.00571.x",
+      "doi": "10.1111/j.1469-7793.2000.00571.x",
+      "title": null,
+      "year": null
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": false,
+    "token_estimate": 272,
+    "content_kind": "abstract_only",
+    "has_abstract": true,
+    "warnings": [
+      "annualreviews HTML route was not usable (publisher_paywall); attempting PDF fallback.",
+      "pdf: annualreviews full text could not be retrieved via HTML or PDF fallback. HTML failure: block_detection: Publisher paywall or access gate detected on the page. PDF failure: PDF fallback request deadline was exhausted.",
+      "Full text was not available; returning metadata and abstract only.",
+      "--save-markdown was set but full text was not available; nothing written to disk."
+    ],
+    "source_trail": [
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_annualreviews",
+      "route:signal_publisher_annualreviews",
+      "route:signal_doi_annualreviews",
+      "route:probe_annualreviews_unknown",
+      "route:provider_selected_annualreviews",
+      "route:provider_candidate_annualreviews_metadata_selected_rank_1",
+      "route:provider_candidate_annualreviews_identity_strong",
+      "fulltext:annualreviews_attempt",
+      "fulltext:annualreviews_html_fail",
+      "fulltext:annualreviews_fail",
+      "route:provider_candidate_annualreviews_rejected",
+      "route:provider_candidate_annualreviews_access_boundary_stop",
+      "fallback:annualreviews_html_managed_by_provider",
+      "fallback:metadata_only",
+      "fulltext:annualreviews_pdf_transport_fail",
+      "fulltext:annualreviews_pdf_fail",
+      "download:markdown_skipped_no_fulltext"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 272,
+      "body": 0,
+      "refs": 985
+    },
+    "confidence": "low",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 0,
+      "word_count": 0,
+      "body_block_count": 0,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 0.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": false,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "crossref",
+    "route": "metadata",
+    "representation": "metadata",
+    "transport": "api",
+    "fallback_used": true
+  }
+}

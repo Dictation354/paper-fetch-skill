@@ -1,0 +1,502 @@
+<!DOCTYPE html><html lang="en-US"><head><script src="https://stream.cadmore.media/Scripts/Embed.js"></script><script type="text/javascript" src="https://ieeexplore.ieee.org/xploreAssets/MathJax-274/config/default.js?V=2.7.4"></script></head><body class="body-resp"><apm_do_not_touch>
+
+<script async="" type="text/javascript" src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script><script type="text/javascript">
+(function(){
+window.TIQ=!!window.TIQ;try{(function(){(function(){var _=-1,_={ii:++_,os:"false"[_],i:++_,sl:"false"[_],si:++_,Lli:"[object Object]"[_],oo:(_[_]+"")[_],_l:++_,Lo:"true"[_],li:++_,iI:++_,Os:"[object Object]"[_],Z:++_,oI:++_,ZJI:++_,zJI:++_};try{_.Zl=(_.Zl=_+"")[_.iI]+(_.sJ=_.Zl[_.i])+(_.Ls=(_.ZJ+"")[_.i])+(!_+"")[_._l]+(_.SJ=_.Zl[_.Z])+(_.ZJ="true"[_.i])+(_.zo="true"[_.si])+_.Zl[_.iI]+_.SJ+_.sJ+_.ZJ,_.Ls=_.ZJ+"true"[_._l]+_.SJ+_.zo+_.ZJ+_.Ls,_.ZJ=_.ii[_.Zl][_.Zl],_.ZJ(_.ZJ(_.Ls+'"\\'+_.i+_.iI+_.i+_.os+"\\"+_.li+_.ii+"("+_.SJ+"\\"+_.i+_.oI+
+_.i+"\\"+_.i+_.Z+_.ii+_.Lo+_.sJ+_.os+"\\"+_.li+_.ii+"\\"+_.i+_.Z+_.oI+"\\"+_.i+_.iI+_.i+"\\"+_.i+_.iI+_.Z+_.oo+_.sJ+"\\"+_.i+_.Z+_.oI+"['\\"+_.i+_.Z+_.ii+_.sl+"\\"+_.i+_.oI+_.i+"false"[_.si]+_.sJ+_.sl+_.oo+"']\\"+_.li+_.ii+"===\\"+_.li+_.ii+"'\\"+_.i+_.Z+_._l+_.SJ+"\\"+_.i+_.Z+_.si+"\\"+_.i+_.iI+_.i+"\\"+_.i+_.iI+_.Z+"\\"+_.i+_.li+_.oI+"')\\"+_.li+_.ii+"{\\"+_.i+_.si+"\\"+_.i+_.i+"\\"+_.i+_.Z+_.Z+_.sl+"\\"+_.i+_.Z+_.si+"\\"+_.li+_.ii+_.Lo+_.oo+"\\"+_.i+_.Z+_.Z+_.Os+"\\"+_.i+_.oI+_.i+_.zo+"\\"+_.i+
+_.iI+_.si+"\\"+_.i+_.iI+_._l+"\\"+_.i+_.Z+_.ii+"\\"+_.li+_.ii+"=\\"+_.li+_.ii+"\\"+_.i+_.Z+_.oI+"\\"+_.i+_.iI+_.i+"\\"+_.i+_.iI+_.Z+_.oo+_.sJ+"\\"+_.i+_.Z+_.oI+"['\\"+_.i+_.Z+_.ii+_.sl+"\\"+_.i+_.oI+_.i+"false"[_.si]+_.sJ+_.sl+_.oo+"'].\\"+_.i+_.Z+_.si+_.Lo+"\\"+_.i+_.Z+_.ii+"false"[_.si]+_.sl+_.Os+_.Lo+"(/.{"+_.i+","+_.li+"}/\\"+_.i+_.li+_.oI+",\\"+_.li+_.ii+_.os+_.zo+"\\"+_.i+_.iI+_.Z+_.Os+_.SJ+"\\"+_.i+_.iI+_.i+_.sJ+"\\"+_.i+_.iI+_.Z+"\\"+_.li+_.ii+"(\\"+_.i+_.oI+_.ii+")\\"+_.li+_.ii+"{\\"+_.i+
+_.si+"\\"+_.i+_.i+"\\"+_.i+_.i+"\\"+_.i+_.i+"\\"+_.i+_.Z+_.si+_.Lo+_.SJ+_.zo+"\\"+_.i+_.Z+_.si+"\\"+_.i+_.iI+_.Z+"\\"+_.li+_.ii+"(\\"+_.i+_.oI+_.ii+"\\"+_.li+_.ii+"+\\"+_.li+_.ii+"\\"+_.i+_.oI+_.ii+").\\"+_.i+_.Z+_._l+_.zo+_.Lli+"\\"+_.i+_.Z+_._l+_.SJ+"\\"+_.i+_.Z+_.si+"("+_.si+",\\"+_.li+_.ii+_.li+")\\"+_.i+_.si+"\\"+_.i+_.i+"\\"+_.i+_.i+"});\\"+_.i+_.si+"}\\"+_.i+_.si+'"')())()}catch(J){_%=5}})();var I_=46;
+try{var j_,o_,O_=I(288)?1:0,S_=I(948)?0:1;for(var _i=(I(647),0);_i<o_;++_i)O_+=(I(809),2),S_+=I(87)?3:1;j_=O_+S_;window.Oo===j_&&(window.Oo=++j_)}catch(ji){window.Oo=j_}var Ji=!0;function l(_){var J=arguments.length,L=[],Z=1;while(Z<J)L[Z-1]=arguments[Z++]-_;return String.fromCharCode.apply(String,L)}
+function Oi(_){var J=46;!_||document[O(J,164,151,161,151,144,151,154,151,162,167,129,162,143,162,147)]&&document[O(J,164,151,161,151,144,151,154,151,162,167,129,162,143,162,147)]!==O(J,164,151,161,151,144,154,147)||(Ji=!1);return Ji}function O(_){var J=arguments.length,L=[];for(var Z=1;Z<J;++Z)L.push(arguments[Z]-_);return String.fromCharCode.apply(String,L)}function z(_,J){_+=J;return _.toString(36)}function Zi(){}Oi(window[Zi[z(1086808,I_)]]===Zi);Oi(typeof ie9rgb4!==z(1242178186153,I_));
+Oi(RegExp("\x3c")[z(1372159,I_)](function(){return"\x3c"})&!RegExp(z(42843,I_))[O(I_,162,147,161,162)](function(){return"'x3'+'d';"}));
+var si=window[O(I_,143,162,162,143,145,150,115,164,147,156,162)]||RegExp(O(I_,155,157,144,151,170,143,156,146,160,157,151,146),z(-28,I_))[z(1372159,I_)](window["\x6e\x61vi\x67a\x74\x6f\x72"]["\x75\x73e\x72A\x67\x65\x6et"]),_I=+new Date+(I(471)?6E5:455684),iI,jI,JI,LI=window[O(I_,161,147,162,130,151,155,147,157,163,162)],OI=si?I(520)?3E4:29185:I(244)?6E3:5784;
+document[O(I_,143,146,146,115,164,147,156,162,122,151,161,162,147,156,147,160)]&&document[O(I_,143,146,146,115,164,147,156,162,122,151,161,162,147,156,147,160)](O(I_,164,151,161,151,144,151,154,151,162,167,145,150,143,156,149,147),function(_){var J=61;document[l(J,179,166,176,166,159,166,169,166,177,182,144,177,158,177,162)]&&(document[O(J,179,166,176,166,159,166,169,166,177,182,144,177,158,177,162)]===z(1058781922,J)&&_[l(J,166,176,145,175,178,176,177,162,161)]?JI=!0:document[l(J,179,166,176,166,
+159,166,169,166,177,182,144,177,158,177,162)]===l(J,179,166,176,166,159,169,162)&&(iI=+new Date,JI=!1,zI()))});function zI(){if(!document[O(80,193,197,181,194,201,163,181,188,181,179,196,191,194)])return!0;var _=+new Date;if(_>_I&&(I(562)?6E5:859389)>_-iI)return Oi(!1);var J=Oi(jI&&!JI&&iI+OI<_);iI=_;jI||(jI=!0,LI(function(){jI=!1},I(544)?1:0));return J}zI();var _j=[I(387)?17795081:18864005,I(295)?27611931586:2147483647,I(636)?1558153217:1314179205];
+function ij(_){var J=3;_=typeof _===z(1743045673,J)?_:_[O(J,119,114,86,119,117,108,113,106)](I(758)?36:44);var L=window[_];if(!L||!L[O(J,119,114,86,119,117,108,113,106)])return;var Z=""+L;window[_]=function(_,J){jI=!1;return L(_,J)};window[_][O(J,119,114,86,119,117,108,113,106)]=function(){return Z}}for(var Ij=(I(366),0);Ij<_j[z(1294399159,I_)];++Ij)ij(_j[Ij]);Oi(!1!==window[l(I_,130,119,127)]);window.OL=window.OL||{};window.OL.JS="083996a08a1940002bed8773a593ad3044188fc88d9765e00de25cd1208c3f1cab785157f19e7bcc994fce161b7f060aed34ab59d5d3c592eacbc776f3aa4fe44646e545439704d8";
+function Jj(_){var J=+new Date,L;!document[O(45,158,162,146,159,166,128,146,153,146,144,161,156,159,110,153,153)]||J>_I&&(I(716)?6E5:461601)>J-iI?L=Oi(!1):(L=Oi(jI&&!JI&&iI+OI<J),iI=J,jI||(jI=!0,LI(function(){jI=!1},I(91)?1:0)));return!(arguments[_]^L)}function I(_){return 846>_}(function(_){_||setTimeout(function(){var _=setTimeout(function(){},250);for(var L=0;L<=_;++L)clearTimeout(L)},500)})(!0);})();}catch(x){}finally{ie9rgb4=void(0);};function ie9rgb4(a,b){return a>>b>>0};
+
+})();
+
+</script>
+</apm_do_not_touch>
+
+<script type="text/javascript" src="/TSPD/0807dc117eab20003a5e4976edcab7d264143216a6ae16801ce70067e15790ccca4616773bec4468?type=9"></script>
+<script type="text/javascript">
+
+var home = {	
+			metadata:{
+				searchCount: '7,414,460',
+				logoRelPath: '/xploreAssets/images/customer_logos/',
+				thirdParthAuth: false,
+				currentPage:  'document',
+				xploreVirtual:'https://ieeexplore.ieee.org',
+				isWebAccount: false,
+				isProvisioned: false,				
+				globalNotification:{},
+				cart: {
+						count: 0
+				}
+			}						
+		};
+		
+
+
+
+
+
+		
+</script>
+
+
+	
+		<link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
+	    <meta name="google-site-verification" content="qibYCgIKpiVF_VVjPYutgStwKn-0-KBB6Gw4Fc57FZg">
+					
+						
+				
+					
+			 
+			
+				
+		<meta name="Description" id="meta-description" content="A procedure is described for minimizing the number of states in an asynchronous sequential function when the restriction exists that the input cannot change whi">
+		
+		<link rel="canonical" href="https://ieeexplore.ieee.org/document/4038993/"> 
+		
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		
+		<!-- Disable "click" touch event 300ms delay for Chrome/Firefox on Android -->
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		
+		<title>A Note on State Minimization of Asynchronous Sequential Functions | IEEE Journals &amp; Magazine | IEEE Xplore</title>
+		
+    <meta name="bingbot" content="nocache"> 
+	
+	    
+		
+  		
+  		    <meta property="og:image" content="https://ieeexplore.ieee.org/assets/img/ieee_logo_smedia_200X200.png">
+			<meta name="twitter:card" content="summary">			
+ 			<meta property="twitter:image" content="https://ieeexplore.ieee.org/assets/img/ieee_logo_smedia_200X200.png">			
+  		
+					
+		
+			<meta property="twitter:title" content="A Note on State Minimization of Asynchronous Sequential Functions">
+			<meta property="og:title" content="A Note on State Minimization of Asynchronous Sequential Functions">
+		
+		
+			<meta property="twitter:description" content="A procedure is described for minimizing the number of states in an asynchronous sequential function when the restriction exists that the input cannot change while the sequential function is in an unstable state. Furthermore, a procedure is described for minimizing the number of states in a sequential function when the restriction also exists that each output can change at most once during the time required for a transition from one stable state to another.">
+			<meta property="og:description" content="A procedure is described for minimizing the number of states in an asynchronous sequential function when the restriction exists that the input cannot change while the sequential function is in an unstable state. Furthermore, a procedure is described for minimizing the number of states in a sequential function when the restriction also exists that each output can change at most once during the time required for a transition from one stable state to another.">
+							 	
+	
+	
+
+		
+
+
+
+
+
+
+	<script type="text/javascript" src="https://config.datas3ntinel.com/tag/js-web-sdk/latest/init.min.js"></script>
+	<script type="text/javascript" src="https://assets.adobedtm.com/e5c8ba88cef8/7fd951921a72/launch-384a38e91473.min.js" async=""></script>
+
+
+		
+
+
+
+
+
+	
+		<script src="https://cmp.osano.com/AzyzptTmRlqVd2LRf/6fda1518-2a1e-4b5b-a049-da0bef71dcab/osano.js"></script><iframe style="display: none;" name="__uspapiLocator"></iframe>
+		<link rel="stylesheet" href="https://ieeexplore.ieee.org/assets/css/osano-cookie-consent-xplore.css" type="text/css">
+	
+	
+
+		
+
+
+
+
+
+ 
+
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+	
+
+	
+
+	
+	
+	
+
+	
+
+	
+
+	
+	
+	
+	
+	
+	
+
+	
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+		
+	
+
+	
+
+	
+
+	
+		
+	
+		
+		
+			
+			
+	
+
+
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+
+
+
+
+
+
+<g:compress>
+	<link rel="stylesheet" href="/assets/css/simplePassMeter.min.css?cv=20260901_00000">
+	<link rel="stylesheet" type="text/css" media="screen, print" href="/assets/dist/ng-new/styles.css?cv=20260901_00000">
+	<link rel="stylesheet" type="text/css" media="screen, print" href="/assets/dist/ng-new/customStyles.css?cv=20260901_00000">
+	<link rel="stylesheet" href="/assets/vendor/swiper/dist/idangerous.swiper.css?cv=20260901_00000">
+	<link rel="stylesheet" type="text/css" media="screen, print" href="/assets/css/jquery-ui-1.8.19.custom.css?cv=20260901_00000">
+</g:compress>
+
+
+
+
+		
+
+	<script type="text/javascript">
+		var googletag = googletag || {};
+		googletag.cmd = googletag.cmd || [];
+		(function() {
+		var gads = document.createElement('script');
+		gads.async = true;
+		gads.type = 'text/javascript';
+		var useSSL = 'https:' == document.location.protocol;
+		gads.src = (useSSL ? 'https:' : 'http:') + 
+		'//securepubads.g.doubleclick.net/tag/js/gpt.js';
+		var node = document.getElementsByTagName('script')[0];
+		node.parentNode.insertBefore(gads, node);
+		})();
+	</script>
+
+		<script type="text/javascript" src="/assets/vendor/jquery/jquery-3.5.1.min.js?cv=20260901_00000" charset="utf-8"></script>
+		
+	
+	
+
+		<div id="global-notification" class="row stats-global-notification">
+			<div class="hide u-hide-important col Notification Notification--global Notification--fixed">
+				<a href="" class="Notification-close js-close" aria-label="close message button"><i class="fa fa-close"></i></a>
+				<div class="Notification-header"></div>
+				<div class="Notification-text"></div>
+			</div>
+		</div>
+
+		<div id="LayoutWrapper">
+				<div class="row">
+					<div class="col">
+						
+
+
+
+
+
+
+
+<div class="Header" id="xplore-header" data-service="true" data-inst="false" data-web="false" style="display:none"></div>
+
+
+
+						<div id="global-alert-message"></div>
+						
+
+
+
+
+
+<div style="width: 0px; height: 0px"><a href="/rest/api/hpdata" tabindex="-1" aria-hidden="true"></a></div>
+<meta name="cToken" content="eyJhbGciOiJIUzUxMiIsInppcCI6IkRFRiJ9.eNqqVkosKFCyUoooyMkvSlXSUcosLgZyK2Dc1AqgrKG5haWJqYmRpRlQPrEEJmBsbGlWCwAAAP__.1JymEXicUj_vQANTMOSR4mdapLVic0dgXr0hlnLlOPvDNJZGDqIl8xtUTa3CKYUOqrWebEzGfbsBWhm7cNY9WQ">
+
+<script type="text/javascript">
+	
+	
+	
+	document.write('<base href="/document/" />');
+	
+	
+</script><base href="/document/">
+
+<!-- XPL-21560-Added as part of Universal CASA-Dev -->
+<script type="text/javascript" src="https://scholar.google.com/scholar_js/casa.js" async=""></script>
+
+<script type="text/javascript" src="https://app.cadmoremedia.com/Scripts/Embed.js"></script>
+<!--- This is a picture popup embed for mobilew view.  -->
+<script type="text/javascript" src="https://app.cadmoremedia.com/Scripts/PicturePop.js"></script>
+
+
+
+
+
+
+
+<script type="text/javascript">
+var body_rightsLink ="", body_publisher = "";
+var recordId = "";
+
+
+var AUTHOR_PROFILE = 'ON';
+if (AUTHOR_PROFILE.toUpperCase() == "OFF"){
+	var AUTHOR_PROFILE_ENABLED = false;
+}else{
+	var AUTHOR_PROFILE_ENABLED = true;
+}
+
+var xplGlobal = {
+	document: {
+		disqus:{
+			remote_auth_s3 : '',
+			public_api_key:'1lxKgMbpNIbQvfk2tqLcWeSVloE8rgIY2CV1tCu3Vp641oL4eEITYBbkViJJGNYY',
+			short_name:'ieeexplore',
+			client_url:'https://ieeexplore.ieee.org',
+			sso_enabled:'{$sessionProfile.provisioned}'
+		},
+
+		fullTextAccess: false,
+		isISAuthorized: false,
+		isAccessFromInstitution: false
+		
+	}
+};
+	
+	xplGlobal.document.metadata={"userInfo":{"institute":false,"member":false,"individual":false,"guest":false,"subscribedContent":false,"fileCabinetContent":false,"fileCabinetUser":false,"dtrDeleteCookieOnLogout":false,"institutionalFileCabinetUser":false,"dtrCookieExpirationDays":0,"showPatentCitations":true,"showGet802Link":false,"showOpenUrlLink":false,"tracked":false,"institutionUserId":0,"delegatedAdmin":false,"desktop":false,"isInstitutionDashboardEnabled":false,"isInstitutionProfileEnabled":false,"isRoamingEnabled":false,"isDelegatedAdmin":false,"isMdl":false,"isCwg":false,"isReadAndPublish":false,"isAcademic":false,"isIel":false},"authors":[{"name":"M. C. Paull","affiliation":["David Sarnoff Research Laboratory, RCA, Princeton, NJ, USA"],"firstName":"M. C.","lastName":"Paull","id":"37427748000"},{"name":"G. Waldbaum","affiliation":["Bell Telephone Laboratories, Inc., Holmdel, NJ, USA","T. J. Watson Research Center, IBM, Yorktown Heights, NY, USA"],"firstName":"G.","lastName":"Waldbaum","id":"37829916000"}],"issn":[{"format":"Print ISSN","value":"0367-7508"}],"articleNumber":"4038993","dbTime":"1 ms","metrics":{"wosCitationCount":0,"citationCountPaper":4,"citationCountPatent":0,"totalDownloads":51},"purchaseOptions":{"showOtherFormatPricingTab":false,"showPdfFormatPricingTab":true,"pdfPricingInfoAvailable":true,"otherPricingInfoAvailable":false,"mandatoryBundle":false,"optionalBundle":false,"displayTextWhenOtherFormatPricingNotAvailable":"The purchase and pricing options for this item are unavailable. Select items are only available as part of a subscription package. You may try again later or <a href='https://ieeexplore.ieee.org/xpl/contact' target='_blank'>contact us</a> for more information.","pdfPricingInfo":[{"memberPrice":"$16.00","nonMemberPrice":"$36.00","partNumber":"4038993","type":"PDF"}]},"getProgramTermsAccepted":false,"sections":{"abstract":"true","authors":"true","disclaimer":"false","figures":"false","multimedia":"false","references":"true","citedby":"true","keywords":"true","definitions":"false","algorithm":"false","dataset":"false","cadmore":"false","footnotes":"false","relatedContent":"false","metrics":"true"},"displayPublicationTitle":"IEEE Transactions on Electronic Computers","abstract":"A procedure is described for minimizing the number of states in an asynchronous sequential function when the restriction exists that the input cannot change while the sequential function is in an unstable state. Furthermore, a procedure is described for minimizing the number of states in a sequential function when the restriction also exists that each output can change at most once during the time required for a transition from one stable state to another.","publicationDate":"February 1967","publicationYear":"1967","pdfPath":"/iel5/4037753/4038972/04038993.pdf","pdfUrl":"/stamp/stamp.jsp?tp=&arnumber=4038993","publicationTitle":"IEEE Transactions on Electronic Computers","startPage":"94","endPage":"97","formulaStrippedArticleTitle":"A Note on State Minimization of Asynchronous Sequential Functions","keywords":[{"type":"IEEE Keywords","kwd":["Sequential circuits","Associate members","Tellurium","Minimization methods"]},{"type":"Index Terms","kwd":["Stable State","Unstable Conditions","Output Sequence","Minimization Procedure","Table Entries","Finite Sequence","State Table","Input Sequence","Regular Grid","Changes In Output","Circuit Board","Application Of Procedure","Empty Cells"]}],"allowComments":false,"pubLink":"/xpl/RecentIssue.jsp?punumber=4037753","doiLink":"https://doi.org/10.1109/PGEC.1967.264619","authorNames":"M. C. Paull;G. Waldbaum","dateOfInsertion":"26 December 2006","articleCopyRight":"2006 IEEE","rightsLink":"http://s100.copyright.com/AppDispatchServlet?publisherName=ieee&publication=4037753&title=A+Note+on+State+Minimization+of+Asynchronous+Sequential+Functions&isbn=&publicationDate=February+1967&author=M.+C.+Paull&ContentID=10.1109/PGEC.1967.264619&orderBeanReset=true&startPage=94&endPage=97&volumeNum=EC-16&issueNum=1","displayPublicationDate":"28 February 1967","issueLink":"/xpl/tocresult.jsp?isnumber=4038972&punumber=4037753","isGetAddressInfoCaptured":false,"isMarketingOptIn":false,"pubTopics":[{"name":"Computing and Processing"}],"publisher":"IEEE","isOpenAccess":false,"isEphemera":false,"isConference":false,"xploreDocumentType":"Journals & Magazine","isBook":false,"isTutorial":false,"isPromo":false,"volume":"EC-16","issue":"1","isFreeDocument":false,"isBookWithoutChapters":false,"isDynamicHtml":false,"isSpringer":false,"isJournal":true,"isStandard":false,"isOnlineOnly":false,"isProduct":false,"isEarlyAccess":false,"isChapter":false,"isCustomDenial":false,"isGiveaway":false,"htmlAbstractLink":"/document/4038993/","isSMPTE":false,"isLatestStandard":false,"isNow":false,"isTranslation":false,"isSAE":false,"isOUP":false,"isDegruyter":false,"persistentLink":"https://ieeexplore.ieee.org/servlet/opac?punumber=4037753","hasStandardVersions":false,"displayDocTitle":"A Note on State Minimization of Asynchronous Sequential Functions","startPage":"94","articleCopyRight":"2006 IEEE","openAccessFlag":"F","insertDate":"26 December 2006","ephemeraFlag":"false","title":"A Note on State Minimization of Asynchronous Sequential Functions","html_flag":"false","ml_html_flag":"false","sourcePdf":"T-ELCOMP-vEC-16-n1-21.pdf","displayPublicationDate":"28 February 1967","mlTime":"PT0.016384S","pdfPath":"/iel5/4037753/4038972/04038993.pdf","isNumber":"4038972","rightsLinkFlag":"1","contentType":"periodicals","publicationDate":"February 1967","publicationNumber":"4037753","citationCount":"4","issue":"1","articleId":"4038993","publicationTitle":"IEEE Transactions on Electronic Computers","sections":{"abstract":"true","authors":"true","disclaimer":"false","figures":"false","multimedia":"false","references":"true","citedby":"true","keywords":"true","definitions":"false","algorithm":"false","dataset":"false","cadmore":"false","footnotes":"false","relatedContent":"false","metrics":"true"},"volume":"EC-16","contentTypeDisplay":"Journals","referenceCount":8,"publicationYear":"1967","subType":"IEEE Transaction","_value":"IEEE","lastupdate":"2026-09-05","endPage":"97","displayPublicationTitle":"IEEE Transactions on Electronic Computers","doi":"10.1109/PGEC.1967.264619"};
+
+
+
+
+
+
+
+
+</script>
+
+
+
+<div class="ng2-app">
+	
+	
+		<!-- <xpl-searchbar show-count="false"></xpl-searchbar> -->
+	
+	<div class="global-content-wrapper">
+		<xpl-root>
+			<div class="Spinner"></div>
+		</xpl-root>
+	</div>
+	
+	<!-- START: Angular 2+ Migration: Due to Angualr2+ migration AngualrJs router place holder commented -->
+<!-- 	<div ng-show="stateIsLoading" class="Spinner"></div>
+	<div ui-view class="{{stateIsLoading ? 'loading': ''}}"
+		autoscroll="false"></div>
+ -->	<!-- END: Angular 2+ Migration-->
+</div>
+
+						
+
+
+
+
+<section id="xploreFooter">
+	
+	<div class="Footer stats-footer hide-mobile" data-analytics_identifier="footer">
+		<div class="pure-g Footer-sections">
+			<div class="pure-u-1-4">
+				<h3 class="Footer-header">IEEE Account</h3>
+				<ul class="Footer-list">
+					<li><a href="https://www.ieee.org/profile/changeusrpwd/showChangeUsrPwdPage.html?refSite=https://ieeexplore.ieee.org&amp;refSiteName=IEEE Xplore">Change Username/Password</a></li>
+					<li><a href="https://www.ieee.org/profile/address/getAddrInfoPage.html?refSite=https://ieeexplore.ieee.org&amp;refSiteName=IEEE Xplore">Update Address</a></li>
+				</ul>
+			</div>
+			<div class="pure-u-1-4">
+				<h3 class="Footer-header">Purchase Details</h3>
+				<ul class="Footer-list">
+					<li><a href="https://www.ieee.org/profile/payment/showPaymentHome.html?refSite=https://ieeexplore.ieee.org&amp;refSiteName=IEEE Xplore">Payment Options</a></li>
+					<li><a href="https://www.ieee.org/profile/vieworder/showOrderHistory.html?refSite=https://ieeexplore.ieee.org&amp;refSiteName=IEEE Xplore">Order History</a></li>
+					<li><a href="/articleSale/purchaseHistory.jsp">View Purchased Documents</a></li>
+				</ul>
+			</div>
+			<div class="pure-u-1-4">
+				<h3 class="Footer-header">Profile Information</h3>
+				<ul class="Footer-list">
+					<li><a href="https://www.ieee.org/ieee-privacyportal/app/ibp?refSite=https://ieeexplore.ieee.org&amp;refSiteName=IEEE Xplore">Communications Preferences</a></li>
+					<li><a href="https://www.ieee.org/profile/profedu/getProfEduInformation.html?refSite=https://ieeexplore.ieee.org&amp;refSiteName=IEEE Xplore">Profession and Education</a></li>
+					<li><a href="https://www.ieee.org/profile/tips/getTipsInfo.html?refSite=https://ieeexplore.ieee.org&amp;refSiteName=IEEE Xplore">Technical Interests</a></li>
+				</ul>
+			</div>
+			<div class="pure-u-1-4">
+				<h3 class="Footer-header">Need Help?</h3>
+				<ul class="Footer-list">
+					<li><strong>US &amp; Canada:</strong> +1 800 678 4333</li>
+					<li><strong>Worldwide: </strong> +1 732 981 0060<br>
+					</li>
+					<li><a href="/xpl/contact">Contact &amp; Support</a></li>
+				</ul>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-12 Footer-bottom" data-analytics_identifier="footer_bottom">
+				<div class="Footer-bottom-inner-div row">
+					<div class="col">
+						<ul class="Menu Menu--horizontal Menu--dividers u-mb-1">
+							<li class="Menu-item"><a href="/Xplorehelp/overview-of-ieee-xplore/about-ieee-xplore">About IEEE <em>Xplore</em></a></li>
+							<li class="Menu-item"><a href="/xpl/contact">Contact Us</a></li>
+							<li class="Menu-item"><a href="/Xplorehelp" target="blank">Help</a></li>
+							<li class="Menu-item"><a href="/Xplorehelp/overview-of-ieee-xplore/accessibility-statement" target="blank">Accessibility</a></li> 
+							<li class="Menu-item"><a href="/Xplorehelp/overview-of-ieee-xplore/terms-of-use" target="_blank">Terms of Use</a></li>
+							<li class="Menu-item"><a href="http://www.ieee.org/web/aboutus/whatis/policies/p9-26.html">Nondiscrimination Policy</a></li>
+							<li class="Menu-item"><a href="/xpl/sitemap.jsp">Sitemap</a></li>
+							<li class="Menu-item"><a href="http://www.ieee.org/about/help/security_privacy.html" target="blank">Privacy &amp; Opting Out of Cookies</a></li>
+						</ul>
+						<p class="Footer-bottom-terms">
+							A not-for-profit organization, IEEE is the world's largest technical professional organization dedicated to advancing technology for the benefit of humanity.<br>© Copyright 2026 IEEE - All rights reserved. Use of this web site signifies your agreement to the terms and conditions.
+						</p>
+					</div>
+
+					<div><i class="logo-ieee-white"></i></div>
+				</div>
+				
+			</div>
+		</div>
+	</div>
+
+	
+	
+</section>
+
+						<!-- BEGIN: tealium in v2/common/template.jsp. We need to include tealiumAnalytics.js here since Angular 2+ app load if you load after commnon.js then tealium value will not be available in angular 2+ app  -->
+						
+
+
+
+
+
+
+		<!-- BEGIN: TealiumAnalytics.jsp -->
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+			
+				
+			
+			
+			
+			
+		
+		
+		
+		
+		
+		
+
+			<script type="text/javascript">
+ 				// tealium config vars
+				var TEALIUM_CONFIG_TAGGING_ENABLED = true;		
+				var TEALIUM_CONFIG_CDN_URL = '//tags.tiqcdn.com/utag/';
+				var TEALIUM_CONFIG_ACCOUNT_PROFILE_ENV = 'ieeexplore/main/prod';
+				
+				// tealium utag_data values for user 
+				var TEALIUM_userType = 'Anonymous';
+				var TEALIUM_userInstitutionId = '';
+				var TEALIUM_userId = '';
+				var TEALIUM_user_third_party = '';
+				
+				var TEALIUM_products = '';
+			</script>
+
+			<script type="text/javascript" src="/assets/dist/js/analytics/tealiumTagsData.js?cv=20260901_00000"></script>
+			<script type="text/javascript" src="/assets/dist/js/analytics/tealiumAnalytics.js?cv=20260901_00000"></script>
+
+
+		
+ 		
+		<!-- END: TealiumAnalytics.jsp -->
+			 
+
+						<!-- END: tealium in v2/common/template.jsp -->
+						
+
+
+
+
+
+
+	
+	
+
+<script type="text/javascript" src="/xploreAssets/MathJax-274/MathJax.js?config=default"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel="stylesheet" href="/assets/css/ie7Sniffer.css?cv=20260901_00000">
+<script type="text/javascript" src="/assets/vendor/js-cookie/src/js.cookie.js?cv=20260901_00000"></script></div></div></div></body></html>

@@ -1,0 +1,172 @@
+{
+  "sample_id": "10.1111_cas.16117",
+  "doi": "10.1111/cas.16117",
+  "identity": {
+    "query": "10.1111/cas.16117",
+    "query_kind": "doi",
+    "doi": "10.1111/cas.16117",
+    "landing_url": null,
+    "provider_hint": "wiley",
+    "confidence": 1.0,
+    "candidates": [],
+    "title": null,
+    "provider_identifiers": {}
+  },
+  "status": "returned",
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 6840,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [],
+    "source_trail": [
+      "fulltext:wiley_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "route:crossref_signal_ok",
+      "route:signal_domain_wiley",
+      "route:signal_publisher_wiley",
+      "route:signal_doi_wiley",
+      "route:probe_wiley_unknown",
+      "route:provider_selected_wiley",
+      "route:provider_candidate_wiley_metadata_selected_rank_1",
+      "route:provider_candidate_wiley_identity_strong",
+      "fulltext:wiley_attempt",
+      "download:wiley_assets_skipped_profile_none",
+      "fulltext:wiley_article_ok",
+      "route:provider_candidate_wiley_accepted"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 337,
+      "body": 6503,
+      "refs": 2474
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 25987,
+      "word_count": 3982,
+      "body_block_count": 7,
+      "body_heading_count": 7,
+      "body_to_abstract_ratio": 20.957894736842107,
+      "explicit_body_container": false,
+      "post_abstract_body_run": true,
+      "figure_count": 5
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acceptance": null,
+  "records": [
+    {
+      "doi": "10.1111/cas.16117",
+      "provider": "wiley",
+      "requested_url": "https://onlinelibrary.wiley.com/doi/10.1111/cas.16117",
+      "final_url": "https://onlinelibrary.wiley.com/doi/10.1111/cas.16117",
+      "status_code": 403,
+      "response_headers": {
+        "date": "Thu, 17 Sep 2026 10:59:29 GMT",
+        "content-type": "text/html; charset=UTF-8"
+      },
+      "captured_at_utc": "2026-09-17T10:59:40.316945+00:00",
+      "body_file": "original.html",
+      "size": 1175661,
+      "sha256": "d7a9c40db1d3b26fbfd13638fa012e1f094aff853b4d58d0ef1e86c2e5b9182d",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider",
+      "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+    }
+  ]
+}

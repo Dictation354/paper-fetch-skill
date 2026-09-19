@@ -20,6 +20,7 @@ from ..provider_catalog import (
     provider_pdf_source_path_templates,
 )
 from ..utils import normalize_text
+from ._pdf_document import non_article_pdf_reason
 
 from bs4 import BeautifulSoup
 
@@ -56,6 +57,8 @@ def _append_candidate(
         normalized = urllib.parse.urljoin(source_url, normalized)
     parsed = urllib.parse.urlparse(normalized)
     if parsed.scheme not in {"http", "https"} or not normalize_text(parsed.netloc):
+        return
+    if non_article_pdf_reason(normalized):
         return
     if normalized not in candidates:
         candidates.append(normalized)
@@ -163,6 +166,24 @@ def extract_pdf_candidate_urls_from_html(html_text: str, source_url: str) -> lis
             )
 
     for node in soup.find_all(["a", "link", "iframe", "embed", "object"]):
+        # References and site footers can link to other papers or user manuals.
+        if any(
+            ancestor.name == "footer"
+            or ancestor.get("role") in {"doc-bibliography", "contentinfo"}
+            or set(ancestor.get("class") or ())
+            & {
+                "ref-list",
+                "ref-body",
+                "ref-content",
+                "mixed-citation",
+                "references",
+                "theme-footer",
+                "footer-nav",
+            }
+            for ancestor in node.parents
+            if getattr(ancestor, "attrs", None)
+        ):
+            continue
         target = normalize_text(node.get("href") or node.get("src") or node.get("data"))
         if not target:
             continue
@@ -180,6 +201,8 @@ def extract_pdf_candidate_urls_from_html(html_text: str, source_url: str) -> lis
                 )
             )
         ).lower()
+        if non_article_pdf_reason(target, label=label):
+            continue
         if (
             any(token in lowered_href for token in PDF_HREF_TOKENS)
             or any(token in label for token in PDF_LINK_TEXT_TOKENS)

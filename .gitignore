@@ -35,6 +35,7 @@ rollout-*.jsonl
 live-downloads/
 .paper-fetch/
 .paper-fetch-runs/
+/papers/
 figures/.paper-fetch-mcp-cache.json
 # Ad-hoc batch debugging output (never referenced by code/tests/docs)
 failures/

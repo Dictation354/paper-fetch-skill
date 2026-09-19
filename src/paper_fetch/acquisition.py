@@ -11,6 +11,8 @@ from .utils import normalize_text
 AcquisitionRepresentation = Literal["metadata", "html", "xml", "pdf"]
 AcquisitionTransport = Literal["api", "browser", "http"]
 
+PDF_RENDER_REVISION = 1
+
 _ACQUISITION_REPRESENTATIONS = frozenset({"metadata", "html", "xml", "pdf"})
 _ACQUISITION_TRANSPORTS = frozenset({"api", "browser", "http"})
 
@@ -74,6 +76,14 @@ def coerce_acquisition_provenance(value: Any) -> AcquisitionProvenance | None:
         )
     except (TypeError, ValueError):
         return None
+
+
+def is_pdf_article(article: Any) -> bool:
+    acquisition = getattr(article, "acquisition", None)
+    return bool(
+        (acquisition is not None and acquisition.representation == "pdf")
+        or str(getattr(article, "source", "")).endswith("_pdf")
+    )
 
 
 __all__ = [

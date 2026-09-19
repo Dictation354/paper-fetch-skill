@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "doi": "10.1175/jcli-d-25-0547.1",
+      "provider": "ams",
+      "requested_url": "https://api.crossref.org/works/10.1175%2Fjcli-d-25-0547.1",
+      "final_url": "https://api.crossref.org/works/10.1175%2Fjcli-d-25-0547.1",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:30:40 GMT",
+        "content-type": "application/json",
+        "content-length": "2152"
+      },
+      "captured_at_utc": "2026-09-18T02:30:39.782950+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 9037,
+      "sha256": "8eee5a362fb2e8c8ab86f967775910e1ef5bfbb08005dc5d21eb281e4426947e",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1175/jcli-d-25-0547.1",
+      "provider": "ams",
+      "requested_url": "https://journals.ametsoc.org/view/journals/clim/39/10/JCLI-D-25-0547.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/clim/39/10/JCLI-D-25-0547.1.xml",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Fri, 18 Sep 2026 02:30:43 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:30:46.708568+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 700807,
+      "sha256": "9ebe3f6013774df42dd879137586454c8bcc2aa17e10180121e346bb31f08425",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

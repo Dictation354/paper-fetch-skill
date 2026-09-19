@@ -1,0 +1,91 @@
+{"abstracts-retrieval-response": {
+    "affiliation": {
+        "affiliation-city": "Tucson",
+        "@id": "60010065",
+        "affilname": "The University of Arizona",
+        "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60010065",
+        "affiliation-country": "United States"
+    },
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-0024165401",
+        "dc:description": "A transformation technique is presented to minimize soil brightness influences from spectral vegetation indices involving red and near-infrared (NIR) wavelengths. Graphically, the transformation involves a shifting of the origin of reflectance spectra plotted in NIR-red wavelength space to account for first-order soil-vegetation interactions and differential red and NIR flux extinction through vegetated canopies. For cotton (Gossypium hirsutum L. var DPI-70) and range grass (Eragrostics lehmanniana Nees) canopies, underlain with different soil backgrounds, the transformation nearly eliminated soil-induced variations in vegetation indices. A physical basis for the soil-adjusted vegetation index (SAVI) is subsequently presented. The SAVI was found to be an important step toward the establishment of simple °lobal\" that can describe dynamic soil-vegetation systems from remotely sensed data. © 1988.",
+        "prism:coverDate": "1988-01-01",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/0024165401",
+        "dc:creator": {"author": [{
+            "ce:given-name": "A.R",
+            "preferred-name": {
+                "ce:given-name": "A. R.",
+                "ce:initials": "A.R.",
+                "ce:surname": "Huete",
+                "ce:indexed-name": "Huete A.R."
+            },
+            "@seq": "1",
+            "ce:initials": "A.R.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60010065",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60010065"
+            },
+            "ce:surname": "Huete",
+            "@auid": "7006114701",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7006114701",
+            "ce:indexed-name": "Huete A.R."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/0024165401"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=0024165401&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=0024165401&origin=inward"
+            }
+        ],
+        "source-id": "12503",
+        "pii": "0034-4257(88)90106-X",
+        "citedby-count": "7343",
+        "prism:volume": "25",
+        "subtype": "ar",
+        "dc:title": "A soil-adjusted vegetation index (SAVI)",
+        "openaccess": "0",
+        "prism:issn": "00344257",
+        "prism:issueIdentifier": "3",
+        "subtypeDescription": "Article",
+        "prism:publicationName": "Remote Sensing of Environment",
+        "prism:pageRange": "295-309",
+        "prism:endingPage": "309",
+        "openaccessFlag": "false",
+        "prism:doi": "10.1016/0034-4257(88)90106-X",
+        "prism:startingPage": "295",
+        "dc:identifier": "SCOPUS_ID:0024165401"
+    },
+    "authors": {"author": [{
+        "ce:given-name": "A.R",
+        "preferred-name": {
+            "ce:given-name": "A. R.",
+            "ce:initials": "A.R.",
+            "ce:surname": "Huete",
+            "ce:indexed-name": "Huete A.R."
+        },
+        "@seq": "1",
+        "ce:initials": "A.R.",
+        "@_fa": "true",
+        "affiliation": {
+            "@id": "60010065",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60010065"
+        },
+        "ce:surname": "Huete",
+        "@auid": "7006114701",
+        "author-url": "https://api.elsevier.com/content/author/author_id/7006114701",
+        "ce:indexed-name": "Huete A.R."
+    }]}
+}}

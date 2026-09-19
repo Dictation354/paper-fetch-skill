@@ -1,21 +1,128 @@
 {
+  "has": {
+    "title": true,
+    "authors": true,
+    "abstract": true,
+    "body": true,
+    "figures": true,
+    "references": true,
+    "data_availability": false,
+    "code_availability": false
+  },
   "counts": {
+    "sections": 22,
     "abstract_sections": 1,
-    "body_sections": 19,
-    "figures": 0,
-    "references": 151,
-    "sections": 21,
-    "tables": 0
+    "body_sections": 20,
+    "figures": 4,
+    "tables": 0,
+    "references": 151
   },
   "expected_content_kind": "fulltext",
-  "has": {
-    "abstract": true,
-    "authors": true,
-    "body": true,
-    "code_availability": false,
-    "data_availability": false,
-    "figures": false,
-    "references": true,
-    "title": true
-  }
+  "source_review": {
+    "sample_id": "10.1146_annurev-neuro-062111-150343",
+    "provider": "annualreviews",
+    "doi": "10.1146/annurev-neuro-062111-150343",
+    "original": "tests/fixtures/golden_criteria/10.1146_annurev-neuro-062111-150343/original.html",
+    "sha256": "4b7f71f629c516494d342c260c982e3182a4bd8bc27f2fc4856d915436342df4",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 3,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 151,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 55,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 4,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 1,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "No structured formula in the selected original; bitmap/externally loaded formulas have only captured index/link evidence.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": "tests/fixtures/golden_criteria/10.1146_annurev-neuro-062111-150343/acquisition/provenance.json",
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 0,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1146_annurev-neuro-062111-150343/original.html",
+      "sha256": "4b7f71f629c516494d342c260c982e3182a4bd8bc27f2fc4856d915436342df4",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": "b1",
+          "node_sha256": "e094e366439c6fd46938d0b79559ab4e5e2caffd5cd859f1adba58204793f6cb",
+          "grid": [
+            [
+              0,
+              [
+                0
+              ]
+            ]
+          ],
+          "cells": [
+            "Terms These only partially overlap and are not synonymous. Regenerative event: a self-driven event (waveform) involving a positive feedback loop, e.g., between voltage and current (or calcium and voltage, or calcium-induced calcium release). Spike: a voltage transient; in the wider world, many shapes and sizes; generally agreed it must go up then down (or vice versa, i.e. be self-terminating). In neuroscience, by convention, a spike usually has a threshold of some kind across which the response jumps qualitatively/substantially in size/shape, in a biologically/computationally significant manner. Threshold can be voltage or an input variable such as glutamate, or indeed it can be multidimensional. Threshold does not need to be fixed (e.g., strength-duration trade-offs, relative refractory periods) and may need to be teased out: It may not be apparent in all input-output (I-O) relations, even though the voltage waveform is spike-like and very similar to a supra-threshold waveform from another I-O relation that does exhibit a clear threshold (see section on Sharpness of Threshold and Spike-Sigmoid Duality below). Action potential (AP): a membrane-voltage transient that normally results in some distinct biological action (e.g., a muscle contraction or release of neurotransmitter); usually, but not necessarily, all-or-none. The term action potential has a broader meaning than many neuroscientists may assume: for example, cardiac action potential = slow spike + plateau; Nitella (algae) chloride-mediated action potential; negative-going action potentials in Ascaris (roundworm) pharyngeal muscle ( Byerly & Masuda 1979 ). All-or-none: an event that, once started (i.e., by some threshold being exceeded), proceeds by itself to completion; if not started (i.e., threshold not reached), a substantially different (smaller/briefer) event results. However, all-or-none does not mean completely stereotyped in size and shape (or threshold). Electrogenic: causing an electrical change. Includes positive feedback, negative feedback (such as sag, undershoot, after-hyperpolarizations), and delayed combinations of the two (e.g., oscillations, pacemaking)."
+          ]
+        }
+      ],
+      "mathml": []
+    }
+  ]
 }

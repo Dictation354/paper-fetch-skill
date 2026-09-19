@@ -1,0 +1,61 @@
+{
+  "doi": "10.1063/5.0129134",
+  "source_input": "tests/fixtures/golden_criteria/10.1063_5.0129134/acquisition/assets-2026-09-15/c9638575685d0f24-http-1.bin",
+  "source_sha256": "b4a276dfa5b4daa8a2956616fdf10d91668ab7eabd5610077a70bcc5f765870a",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "854fa4c93ac23c3e49b3342b1b67eed8d43d8a82f17920cbb76c793c184664fa",
+  "files": [
+    {
+      "filename": "m_125205_1_f1.jpg",
+      "download_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f1.jpeg?Expires=1791347585&Signature=4hONfeyvrYyyLD4UEdYmfsfZFQcbI7HHmDm7UEetnrz6kIubQtqFoMtFjwbPiJ3Odq0QQfuQB77rgib~X7hZIBVVW~YrT~2PFjXybEst612MrYCDrAYibzy-XypEuvMhoozbelPoPCUwQ3ot~uI2mHMIakWHrYR2A5xbydynXCf7o5IdBNMc-s~FbyviOCNR51dJzAENi~hLg8FcMOf5UcDgdU0RVFrhUXGPlDCXkFzzxTcutTIQoUiWTnrOoJ-okiuHyseiSLp9NVxqxVYJ0wIjStS-Xvl7QeONzxXczQHlA9RrkLPoRQ5mGAkQZyHAJkOQVvtDBJCtG3JLWih8sA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f1.jpeg?Expires=1791347585&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "e49e9bc939029488b2c676c6a08ee33b84d9bbd2b2d0880a8cfb2d8bcc2a4456",
+      "size": 27996,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 520,
+      "height": 382,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "m_125205_1_f2.jpg",
+      "download_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f2.jpeg?Expires=1791347585&Signature=QecZedpi2Cn4YyhY2f-cuuXb4ar-sb3Uv3Yc1dRtS5c8nWMbEpZfV4kf8czXM8nUPi2l5D4qn2fWUKicKWkx2ta4dBnEXpD6Nuqnr8u9b3mSXeM1~28gO-e~NIZ-ysxlxnIR1Z5iiVee-4R9zpEzWT~nkh2Cqd7m82lHmMU90Qt82O0OZOFW2F9NUt4xF2pQ2FRJvzlU7CNkXk2J3h18Q~NPFisUs7typQPNxoDte~0Kx44rmlZZTXzy02gAyUAdJSkHgu4bq4prlg7dW9J4t95JUCrbkcg~6bbsMZH4LST6eUp3C3HUlNToVA4khgivIemteVyH542360vV-tbj9Q__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f2.jpeg?Expires=1791347585&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "a1d29d448e1aad6141210cedbc4d93edb79a4fa92b03809810dc490848fe0239",
+      "size": 39984,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 520,
+      "height": 553,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "m_125205_1_f3.jpg",
+      "download_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f3.jpeg?Expires=1791347585&Signature=JynA3sIovR3nK9z7gfu3CAZ7Bcc7tYGMJoR4sMd~Je~QZPA~ovTgGZ-D59C9gKgsUzZG~zfcCGFHBgAGhGmquj-~l-Io-e~MgN5n4CECmO~HPQQUGpKjh~0KCzoMKpEyu6n4lB~dzjiU219ufFGKpgtskqwH-f~M4TuJvi0t~H9kR3iaKY2yblbhh4ZfdyInZ43m2fbtpYrYCJ1WuoCYzggngTwnXRGAelgubzy9LLehOYGVBYxFsNrQK55vWWJZDunlCN7qq-HLk9cG0QRc4e4EuZiOqtTMb9D6uwCbW6i-JYWq1yLaNUQ-MuLBWFkvtoXm7XMyVBeiDPmfZ434eA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f3.jpeg?Expires=1791347585&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "baa5ef32b61fb5d58f57e0cbd662c0ec0850c438692ce2fe547712e365441cd9",
+      "size": 37921,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 520,
+      "height": 551,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "m_125205_1_f4.jpg",
+      "download_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f4.jpeg?Expires=1791347585&Signature=uCKL5QoRWfhqd64vw9GkoxpQIfaVeeIzO4aB7CmybnzQaqEh1s0DmUvH2kycO3sBpYSuvvveyYxKrLgAMpYw0unhBKtSpKF9gSts9mBqnBMuRq0m3WKMcqyiEzMgCG7ngK8aeKzHejnDYww1QNceym4H0sXjzJNFQFFmsFvNphZmpthB0w91zNdDC6AadhEIR6XKNYoZe0qTbWQoMK4Bwb6JJUAHfgajZMtKD-QB5Z7Q3nGGBY-7vfTjero7WQrxTA4B7JmlyY-~iMbvIZ2NFMKFK0B8sKI5DRy9kAVe36LZFnIKkq4wV2EeGUYkHkhZDyq8A~WvtrSeONbkNb-MwQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://aipp.silverchair-cdn.com/aipp/content_public/journal/adv/12/12/10.1063_5.0129134/2/m_125205_1_f4.jpeg?Expires=1791347585&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "5963e8e7feb36f245b6f9642c790fa0b38ee9c6b320fe38607905639022085ba",
+      "size": 19778,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 520,
+      "height": 287,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.511401+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 1
+}

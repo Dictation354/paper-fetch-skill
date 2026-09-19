@@ -1,0 +1,55 @@
+{
+  "records": [
+    {
+      "body_file": "raw.html",
+      "size": 92254,
+      "sha256": "88fa48899d297605ca47a7d651aad805b36d0bd807d27ae760a75e9e114d06a7",
+      "capture_kind": "http_response_entity",
+      "requested_url": "https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343",
+      "final_url": "https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Tue, 15 Sep 2026 05:23:03 GMT",
+        "content-type": "text/html;charset=UTF-8",
+        "server": "cloudflare",
+        "strict-transport-security": "max-age=2592000",
+        "cache-control": "no-cache",
+        "pragma": "no-cache",
+        "content-language": "en-US",
+        "vary": "Accept-Encoding",
+        "cf-cache-status": "DYNAMIC",
+        "content-encoding": "gzip",
+        "cf-ray": "a3b532741efca3ac-TPE",
+        "x-firefox-spdy": "h2"
+      },
+      "captured_at_utc": "2026-09-15T05:23:02.274114+00:00",
+      "doi": "10.1146/annurev-neuro-062111-150343",
+      "provider": "annualreviews",
+      "transport": "Headed Camoufox main-frame navigation; original response.body() entity",
+      "headless": false,
+      "network_context": "User reports switching to an IP without subscription access; not independently verified. Existing provider storage state reused.",
+      "human_assistance": null,
+      "human_assistance_note": "No manual assistance confirmation received for this provider; no scripted CAPTCHA or login interaction.",
+      "capture_scope": "HTTP200 publisher page exposes abstract and explicit purchase/subscription controls without primary article body. Input rejection is replayed through current provider/service; browser response and PDF failure are injected in offline replay. This is not proof that a live full fetch exhausts every fallback."
+    },
+    {
+      "body_file": "acquisition/final.dom.html",
+      "size": 205491,
+      "sha256": "c8ae591630aae5a1a25e82670b6aedd6a3465382d740709e2a39ab1744a02831",
+      "capture_kind": "browser_dom",
+      "final_url": "https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343",
+      "title": "Active Properties of Neocortical Pyramidal Neuron Dendrites | Annual Reviews",
+      "observed_reason": "publisher_paywall",
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": "2026-09-15T05:23:15.146873+00:00",
+      "doi": "10.1146/annurev-neuro-062111-150343",
+      "provider": "annualreviews",
+      "requested_url": "https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343",
+      "transport": "Headed Camoufox page.content()",
+      "headless": false,
+      "human_assistance": null,
+      "capture_scope": "Final browser DOM after navigation. Its HTTP status is unknown; exact HTTP200 entity is separately recorded as raw.html."
+    }
+  ]
+}

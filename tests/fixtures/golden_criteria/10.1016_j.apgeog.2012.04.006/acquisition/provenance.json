@@ -1,0 +1,61 @@
+{
+  "records": [
+    {
+      "doi": "10.1016/j.apgeog.2012.04.006",
+      "provider": "elsevier",
+      "requested_url": "https://api.crossref.org/works/10.1016%2Fj.apgeog.2012.04.006",
+      "final_url": "https://api.crossref.org/works/10.1016%2Fj.apgeog.2012.04.006",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:54 GMT",
+        "content-type": "application/json",
+        "content-length": "7390"
+      },
+      "captured_at_utc": "2026-09-18T02:20:54.304090+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 29386,
+      "sha256": "ab2e8f98a7a3536af10db9473d20a83f913805ba654ce029aef2a1b8b8c64271",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1016/j.apgeog.2012.04.006",
+      "provider": "elsevier",
+      "requested_url": "https://api.elsevier.com/content/abstract/doi/10.1016%2Fj.apgeog.2012.04.006",
+      "final_url": "https://api.elsevier.com/content/abstract/doi/10.1016%2Fj.apgeog.2012.04.006",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:54 GMT",
+        "content-type": "application/json;charset=UTF-8",
+        "last-modified": "Fri, 21 Mar 2025 11:01:34 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:20:54.353645+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
+      "size": 7634,
+      "sha256": "9a9545f3f32249f21e740bf872a1e081f3e71ca66fac427b9040373abf58cbba",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1016/j.apgeog.2012.04.006",
+      "provider": "elsevier",
+      "requested_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.apgeog.2012.04.006",
+      "final_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.apgeog.2012.04.006",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:55 GMT",
+        "content-type": "text/xml;charset=UTF-8",
+        "last-modified": "Mon, 01 Jan 2024 13:47:08 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:20:55.006724+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.xml",
+      "size": 297572,
+      "sha256": "92c0271ee9eb552ae20281c34b048f683efb399aaae8bdd7cf5745747ca8d068",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

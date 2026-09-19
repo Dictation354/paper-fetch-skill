@@ -1,0 +1,73 @@
+{
+  "doi": "10.1038/s43247-024-01295-w",
+  "source_input": "tests/fixtures/golden_criteria/10.1038_s43247-024-01295-w/original.html",
+  "source_sha256": "4ea374d45a3a8785be19dc6405657950ac20bb7899b9e7839103cb4382284e11",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "68f811113178f65c8b6e0729dd92557ca2fbdb485dfaeede8b31077b2380ba01",
+  "files": [
+    {
+      "filename": "43247_2024_1295_Fig1_HTML.png",
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig1_HTML.png",
+      "source_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig1_HTML.png",
+      "sha256": "8d4b334d7a32980732350dcd1a233db9fe04fe8d8e2618ba0cd8de5920489bb8",
+      "size": 80566,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1350,
+      "height": 954,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "43247_2024_1295_Fig2_HTML.png",
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig2_HTML.png",
+      "source_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig2_HTML.png",
+      "sha256": "1ebb6760326f439970de1ddd7cdc64067bf0220d150250af1ded2c738d081330",
+      "size": 2168555,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2000,
+      "height": 1275,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "43247_2024_1295_Fig3_HTML.png",
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig3_HTML.png",
+      "source_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig3_HTML.png",
+      "sha256": "1d6142270ee44edec0413e320a6ea9bf79e9f0a6927e60ed2fc27d58e352bfab",
+      "size": 1147816,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2000,
+      "height": 589,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "43247_2024_1295_Fig4_HTML.png",
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig4_HTML.png",
+      "source_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig4_HTML.png",
+      "sha256": "213ade0a6bd7ffe252ec3aabb9b50436306db4368a29da232467b9c40a5b19f0",
+      "size": 189722,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 2000,
+      "height": 1047,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "43247_2024_1295_Fig5_HTML.png",
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig5_HTML.png",
+      "source_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs43247-024-01295-w/MediaObjects/43247_2024_1295_Fig5_HTML.png",
+      "sha256": "212a6e1cc5a69b50f231fdeddc2192bdb46fd69f37c0ef16cb522e61a25ae60d",
+      "size": 804048,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1750,
+      "height": 1486,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.979839+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 0
+}

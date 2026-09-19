@@ -1,0 +1,176 @@
+unformatted: File would be reformatted
+   --> src/paper_fetch/providers/_pdf_common.py:717:43
+    |
+716 |             )
+    -         return replace_markdown_image_url(image, _pdf_image_relative_url(path, image_dir))
+717 +         return replace_markdown_image_url(
+718 +             image, _pdf_image_relative_url(path, image_dir)
+719 +         )
+720 |
+--------------------------------------------------------------------------------
+820 |     if not pdf_bytes.startswith(b"%PDF-"):
+    -         raise_for_paywall(pdf_bytes, metadata=expected_identity, source_url=resolved_final_url)
+821 +         raise_for_paywall(
+822 +             pdf_bytes, metadata=expected_identity, source_url=resolved_final_url
+823 +         )
+824 |     if not isinstance(raw_body, (bytes, bytearray)) or not looks_like_pdf_payload(
+    |
+
+unformatted: File would be reformatted
+    --> src/paper_fetch/providers/_pdf_fallback.py:1027:35
+     |
+1026 |                 html = page.content()
+     -                 raise_for_paywall(html, metadata=active_request.expected_identity, source_url=page.url, provider=active_request.provider_name)
+1027 +                 raise_for_paywall(
+1028 +                     html,
+1029 +                     metadata=active_request.expected_identity,
+1030 +                     source_url=page.url,
+1031 +                     provider=active_request.provider_name,
+1032 +                 )
+1033 |                 current_url = normalize_text(page.url)
+--------------------------------------------------------------------------------
+1356 |         except RequestFailure as exc:
+     -             raise_for_api_entitlement(exc.body, source_url=str(exc.url or url), provider=request.provider_name or "", headers=exc.headers)
+     -             raise_for_paywall(exc.body, metadata=request.expected_identity, source_url=str(exc.url or url), provider=request.provider_name)
+1357 +             raise_for_api_entitlement(
+1358 +                 exc.body,
+1359 +                 source_url=str(exc.url or url),
+1360 +                 provider=request.provider_name or "",
+1361 +                 headers=exc.headers,
+1362 +             )
+1363 +             raise_for_paywall(
+1364 +                 exc.body,
+1365 +                 metadata=request.expected_identity,
+1366 +                 source_url=str(exc.url or url),
+1367 +                 provider=request.provider_name,
+1368 +             )
+1369 |             details = _pdf_failure_details_from_response(
+--------------------------------------------------------------------------------
+1411 |         if not bytes(response.get("body") or b"").startswith(b"%PDF-"):
+     -             raise_for_api_entitlement(response.get("body") or b"", source_url=final_url, provider=request.provider_name or "", headers=response.get("headers"))
+     -             raise_for_paywall(response.get("body") or b"", metadata=request.expected_identity, source_url=final_url, provider=request.provider_name)
+1412 +             raise_for_api_entitlement(
+1413 +                 response.get("body") or b"",
+1414 +                 source_url=final_url,
+1415 +                 provider=request.provider_name or "",
+1416 +                 headers=response.get("headers"),
+1417 +             )
+1418 +             raise_for_paywall(
+1419 +                 response.get("body") or b"",
+1420 +                 metadata=request.expected_identity,
+1421 +                 source_url=final_url,
+1422 +                 provider=request.provider_name,
+1423 +             )
+1424 |         response_headers = response.get("headers") or {}
+     |
+
+unformatted: File would be reformatted
+    --> src/paper_fetch/providers/_playwright_browser.py:2160:26
+     |
+2159 |                 raise_for_paywall(
+     -                     html, metadata={"doi": config.doi}, source_url=final_url, provider=publisher
+2160 +                     html,
+2161 +                     metadata={"doi": config.doi},
+2162 +                     source_url=final_url,
+2163 +                     provider=publisher,
+2164 |                 )
+     |
+
+unformatted: File would be reformatted
+   --> src/paper_fetch/providers/browser_workflow/html_extraction.py:642:26
+    |
+641 |     raise_for_paywall(
+    -         html_result.html, metadata=metadata, source_url=html_result.final_url, provider=client.name
+642 +         html_result.html,
+643 +         metadata=metadata,
+644 +         source_url=html_result.final_url,
+645 +         provider=client.name,
+646 |     )
+    |
+
+unformatted: File would be reformatted
+    --> src/paper_fetch/providers/elsevier.py:756:39
+     |
+755  |         except RequestFailure as exc:
+     -             raise_for_api_entitlement(exc.body, source_url=str(exc.url or url), provider=self.name, headers=exc.headers)
+756  +             raise_for_api_entitlement(
+757  +                 exc.body,
+758  +                 source_url=str(exc.url or url),
+759  +                 provider=self.name,
+760  +                 headers=exc.headers,
+761  +             )
+762  |             raise map_request_failure(
+--------------------------------------------------------------------------------
+770  |
+     -         raise_for_api_entitlement(response["body"], source_url=url, provider=self.name, headers=response.get("headers"))
+771  +         raise_for_api_entitlement(
+772  +             response["body"],
+773  +             source_url=url,
+774  +             provider=self.name,
+775  +             headers=response.get("headers"),
+776  +         )
+777  |         raise_for_paywall(response["body"], source_url=url, provider=self.name)
+--------------------------------------------------------------------------------
+841  |         except RequestFailure as exc:
+     -             raise_for_api_entitlement(exc.body, source_url=str(exc.url or url), provider=self.name, headers=exc.headers)
+842  +             raise_for_api_entitlement(
+843  +                 exc.body,
+844  +                 source_url=str(exc.url or url),
+845  +                 provider=self.name,
+846  +                 headers=exc.headers,
+847  +             )
+848  |             raise map_request_failure(
+--------------------------------------------------------------------------------
+856  |
+     -         raise_for_api_entitlement(response["body"], source_url=url, provider=self.name, headers=response.get("headers"))
+857  +         raise_for_api_entitlement(
+858  +             response["body"],
+859  +             source_url=url,
+860  +             provider=self.name,
+861  +             headers=response.get("headers"),
+862  +         )
+863  |         access_status = header_value(response.get("headers"), "x-els-status", "")
+--------------------------------------------------------------------------------
+992  |         except RequestFailure as exc:
+     -             raise_for_api_entitlement(exc.body, source_url=str(exc.url or url), provider=self.name, headers=exc.headers)
+993  +             raise_for_api_entitlement(
+994  +                 exc.body,
+995  +                 source_url=str(exc.url or url),
+996  +                 provider=self.name,
+997  +                 headers=exc.headers,
+998  +             )
+999  |             raise map_request_failure(exc) from exc
+--------------------------------------------------------------------------------
+1023 |         except RequestFailure as exc:
+     -             raise_for_api_entitlement(exc.body, source_url=str(exc.url or url), provider=self.name, headers=exc.headers)
+1024 +             raise_for_api_entitlement(
+1025 +                 exc.body,
+1026 +                 source_url=str(exc.url or url),
+1027 +                 provider=self.name,
+1028 +                 headers=exc.headers,
+1029 +             )
+1030 |             raise map_request_failure(exc) from exc
+     |
+
+unformatted: File would be reformatted
+    --> src/paper_fetch/quality/html_availability.py:1311:41
+     |
+1310 |     metadata_map = dict(metadata or {})
+     -     boundary = html_paywall_diagnostics(html_text or "", metadata=metadata_map, source_url=final_url or requested_url or "", provider=provider)
+1311 +     boundary = html_paywall_diagnostics(
+1312 +         html_text or "",
+1313 +         metadata=metadata_map,
+1314 +         source_url=final_url or requested_url or "",
+1315 +         provider=provider,
+1316 +     )
+1317 |     normalized_title = normalize_text(title or metadata_map.get("title") or "") or None
+--------------------------------------------------------------------------------
+1529 |         reason = ABSTRACT_ONLY if content_kind == ABSTRACT_ONLY else PUBLISHER_PAYWALL
+     -         blocking_fallback_signals = _dedupe_signals([*blocking_fallback_signals, PUBLISHER_PAYWALL])
+1530 +         blocking_fallback_signals = _dedupe_signals(
+1531 +             [*blocking_fallback_signals, PUBLISHER_PAYWALL]
+1532 +         )
+1533 |     return FulltextAvailabilityDiagnostics(
+     |
+
+6 files would be reformatted, 739 files already formatted

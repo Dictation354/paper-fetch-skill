@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ...quality.access_boundary import propagate_paywall
+
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any, cast
 from collections.abc import Callable, Mapping
@@ -141,9 +143,7 @@ def browser_workflow_article_from_payload(
 ):
     context = client._runtime_context(context)
     content = raw_payload.content
-    markdown_text = str(
-        (content.markdown_text if content is not None else "") or ""
-    ).strip()
+    markdown_text = str((content.markdown_text if content is not None else "") or "")
     warnings = list(raw_payload.warnings)
     trace = list(raw_payload.trace)
     doi = normalize_doi(metadata.get("doi"))
@@ -172,6 +172,7 @@ def browser_workflow_article_from_payload(
                     context=context,
                 )
             except HtmlExtractionFailure as exc:
+                propagate_paywall(exc)
                 warnings.append(
                     f"{client.name} HTML content was not usable ({exc.message})."
                 )
@@ -209,7 +210,7 @@ def browser_workflow_article_from_payload(
         warnings.append(
             f"{client.name} related assets were only partially downloaded ({len(asset_failures)} failed)."
         )
-    if assets and markdown_text:
+    if route != PDF_FALLBACK and assets and markdown_text:
         markdown_text = rewrite_inline_figure_links(
             markdown_text,
             figure_assets=assets,
@@ -221,6 +222,8 @@ def browser_workflow_article_from_payload(
         content.diagnostics.get("extraction") if content is not None else None
     )
     _merge_extracted_title(article_metadata, extraction_payload, doi)
+    if route != PDF_FALLBACK and article_metadata.get("title"):
+        article_metadata["title"] = " ".join(str(article_metadata["title"]).split())
     extracted_abstract = normalize_text(
         extraction_payload.get("abstract_text")
         if isinstance(extraction_payload, Mapping)
@@ -248,7 +251,7 @@ def browser_workflow_article_from_payload(
     )
     if extracted_references:
         article_metadata["references"] = extracted_references
-    if extracted_abstract:
+    if route != PDF_FALLBACK and extracted_abstract:
         lead_body = _leading_body_after_abstract(
             normalize_text(str(article_metadata.get("abstract") or "")) or None,
             extracted_abstract,
@@ -282,6 +285,7 @@ def browser_workflow_article_from_payload(
 
     article = article_from_markdown(
         source=source_kind,
+        pdf_representation=route == PDF_FALLBACK,
         metadata=article_metadata,
         doi=doi or None,
         markdown_text=markdown_text,
@@ -291,11 +295,22 @@ def browser_workflow_article_from_payload(
         if isinstance(extraction_payload, Mapping)
         else None,
         assets=assets,
-        warnings=warnings,
+        warnings=[*warnings, *extraction_payload.get("warnings", [])]
+        if isinstance(extraction_payload, Mapping)
+        else warnings,
+        quality_flags=extraction_payload.get("quality_flags")
+        if isinstance(extraction_payload, Mapping)
+        else None,
         trace=trace,
         availability_diagnostics=availability_diagnostics,
         allow_downgrade_from_diagnostics=True,
     )
+    if content.route_name:
+        from ...provider_catalog import acquisition_for_provider_route
+
+        article.acquisition = acquisition_for_provider_route(
+            client.name, content.route_name
+        )
     article.quality.asset_failures = coerce_asset_failure_diagnostics(asset_failures)
     return article
 

@@ -1,0 +1,1244 @@
+{
+  "doi": "10.1073/pnas.2406303121",
+  "source": "pnas",
+  "has_fulltext": true,
+  "content_kind": "fulltext",
+  "has_abstract": true,
+  "warnings": [
+    "pnas HTML route was not usable (empty_article_shell); attempting PDF fallback.",
+    "Full text was extracted from PDF fallback after the HTML path was not usable.",
+    "PNAS official full text was downloaded as PDF/binary to /home/dictation/paper-fetch-skill/.paper-fetch-runs/provenance-repair-2026-09-17/fetch/10.1073_pnas.2406303121/Iyaniwura_et_al_2024_The_kinetics_of_SARS-CoV-2_infection_based_on_a_human_challenge_study.pdf."
+  ],
+  "source_trail": [
+    "fulltext:pnas_html_fail",
+    "fulltext:pnas_pdf_fallback_ok",
+    "fulltext:pnas_pdf_ok",
+    "resolve:doi",
+    "resolve:doi_selected",
+    "route:crossref_signal_ok",
+    "route:signal_domain_pnas",
+    "route:signal_doi_pnas",
+    "route:probe_pnas_unknown",
+    "route:provider_selected_pnas",
+    "route:provider_candidate_pnas_metadata_selected_rank_1",
+    "route:provider_candidate_pnas_identity_strong",
+    "fulltext:pnas_attempt",
+    "download:pnas_saved",
+    "download:pnas_assets_skipped_profile_none",
+    "fulltext:pnas_article_ok",
+    "route:provider_candidate_pnas_accepted"
+  ],
+  "trace": [
+    {
+      "stage": "resolve",
+      "component": "doi",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "resolve",
+      "component": "doi_selected",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "crossref_signal",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "signal_domain_pnas",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "signal_doi_pnas",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "probe_pnas",
+      "outcome": "unknown",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "provider_selected_pnas",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "provider_candidate_pnas_metadata_selected_rank_1",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "provider_candidate_pnas_identity_strong",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "fulltext",
+      "component": "pnas",
+      "outcome": "attempt",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "download",
+      "component": "pnas",
+      "outcome": "saved",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "download",
+      "component": "pnas_assets_skipped_profile_none",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "fulltext",
+      "component": "pnas_html",
+      "outcome": "fail",
+      "code": "empty_article_shell",
+      "message": "Publisher HTML returned an empty article shell without a body DOM.",
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "fulltext",
+      "component": "pnas_pdf_fallback",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "fulltext",
+      "component": "pnas_pdf",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": "pnas",
+      "route": "browser_pdf",
+      "span_id": "pnas:pdf:1",
+      "attempt_id": "pnas:pdf:1",
+      "parent_span_id": null,
+      "attempt": 1,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": 1789642770.7111242,
+      "finished_at": 1789642786.0263548,
+      "duration_ms": 15315.231
+    },
+    {
+      "stage": "fulltext",
+      "component": "pnas_article",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "provider_candidate_pnas_accepted",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    }
+  ],
+  "token_estimate": 16315,
+  "token_estimate_breakdown": {
+    "abstract": 407,
+    "body": 15908,
+    "refs": 793
+  },
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 16315,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "pnas HTML route was not usable (empty_article_shell); attempting PDF fallback.",
+      "Full text was extracted from PDF fallback after the HTML path was not usable.",
+      "PNAS official full text was downloaded as PDF/binary to /home/dictation/paper-fetch-skill/.paper-fetch-runs/provenance-repair-2026-09-17/fetch/10.1073_pnas.2406303121/Iyaniwura_et_al_2024_The_kinetics_of_SARS-CoV-2_infection_based_on_a_human_challenge_study.pdf."
+    ],
+    "source_trail": [
+      "fulltext:pnas_html_fail",
+      "fulltext:pnas_pdf_fallback_ok",
+      "fulltext:pnas_pdf_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "route:crossref_signal_ok",
+      "route:signal_domain_pnas",
+      "route:signal_doi_pnas",
+      "route:probe_pnas_unknown",
+      "route:provider_selected_pnas",
+      "route:provider_candidate_pnas_metadata_selected_rank_1",
+      "route:provider_candidate_pnas_identity_strong",
+      "fulltext:pnas_attempt",
+      "download:pnas_saved",
+      "download:pnas_assets_skipped_profile_none",
+      "fulltext:pnas_article_ok",
+      "route:provider_candidate_pnas_accepted"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 407,
+      "body": 15908,
+      "refs": 793
+    },
+    "confidence": "medium",
+    "flags": [
+      "weak_body_structure"
+    ],
+    "body_metrics": {
+      "char_count": 63436,
+      "word_count": 10471,
+      "body_block_count": 1,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 40.27307692307692,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "article": {
+    "doi": "10.1073/pnas.2406303121",
+    "source": "pnas",
+    "metadata": {
+      "title": "The kinetics of SARS-CoV-2 infection based on a human challenge study",
+      "authors": [
+        "Sarafa A. Iyaniwura",
+        "Ruy M. Ribeiro",
+        "Carolin Zitzmann",
+        "Tin Phan",
+        "Ruian Ke",
+        "Alan S. Perelson"
+      ],
+      "abstract": "Studying the early events that occur after viral infection in humans is difficult unless one intentionally infects volunteers in a human challenge study. Here, we use data about severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) in such a study in combination with mathematical modeling to gain insights into the relationship between the amount of virus in the upper respiratory tract and the immune response it generates. We propose a set of dynamic models of increasing complexity to dissect the roles of target cell limitation, innate immunity, and adaptive immunity in determining the observed viral kinetics. We introduce an approach for modeling the effect of humoral immunity that describes a decline in infectious virus after immune activation. We fit our models to viral load and infectious titer data from all the untreated infected participants in the study simultaneously. We found that a power-law with a power h < 1 describes the relationship between infectious virus and viral load. Viral replication at the early stage of infection is rapid, with a doubling time of ~2 h for viral RNA and ~3 h for infectious virus. We estimate that adaptive immunity is initiated ~7 to 10 d postinfection and appears to contribute to a multiphasic viral decline experienced by some participants; the viral rebound experienced by other participants is consistent with a decline in the interferon response. Altogether, we quantified the kinetics of SARS-CoV-2 infection, shedding light on the early dynamics of the virus and the potential role of innate and adaptive immunity in promoting viral decline during infection.",
+      "journal": "Proceedings of the National Academy of Sciences",
+      "article_type": null,
+      "published": "2024-11-12",
+      "keywords": [],
+      "license_urls": [
+        "https://creativecommons.org/licenses/by-nc-nd/4.0/"
+      ],
+      "landing_page_url": "https://pnas.org/doi/10.1073/pnas.2406303121"
+    },
+    "sections": [
+      {
+        "heading": "",
+        "level": 2,
+        "kind": "body",
+        "text": "**RESEARCH ARTICLE |** PHYSICS<sup>MEDICAL SCIENCES</sup> \n\n**OPEN ACCESS** \n\n\n\n# **The kinetics of SARS- CoV- 2 infection based on a human challenge study** \n\nSarafa A. Iyaniwura<sup>a,1</sup> , Ruy M. Ribeiro<sup>a</sup> , Carolin Zitzmann<sup>a</sup> , Tin Phan<sup>a</sup> , Ruian Ke<sup>a</sup> , and Alan S. Perelson<sup>a,2</sup> Affiliations are included on p. 9. \n\nEdited by Marcus Feldman, Stanford University, Stanford, CA; received March 28, 2024; accepted October 9, 2024 \n\n**Studying the early events that occur after viral infection in humans is difficult unless one intentionally infects volunteers in a human challenge study. Here, we use data about severe acute respiratory syndrome coronavirus 2 (SARS** - **CoV** - **2) in such a study in combination with mathematical modeling to gain insights into the relationship between the amount of virus in the upper respiratory tract and the immune response it generates. We propose a set of dynamic models of increasing complexity to dissect the roles of target cell limitation, innate immunity, and adaptive immunity in determining the observed viral kinetics. We introduce an approach for modeling the effect of humoral immunity that describes a decline in infectious virus after immune activation. We fit our models to viral load and infectious titer data from all the untreated infected participants in the study simultaneously. We found that a power** - **law with a power** **_h_ < 1 describes the relationship between infectious virus and viral load. Viral replication at the early stage of infection is rapid, with a doubling time of** ~ **2 h for viral RNA and** ~ **3 h for infectious virus. We estimate that adaptive immunity is initiated** ~ **7 to 10 d postinfection and appears to contribute to a multiphasic viral decline experienced by some participants; the viral rebound experienced by other participants is consistent with a decline in the interferon response. Altogether, we quantified the kinetics of SARS** - **CoV** - **2 infection, shedding light on the early dynamics of the virus and the potential role of innate and adaptive immunity in promoting viral decline during infection.** \n\nSARS- CoV- 2 | viral dynamics | human challenge study | infectious disease modeling | mathematical modeling \n\nSevere acute respiratory syndrome coronavirus 2 (SARS-CoV-2) continues to spread worldwide, with over 776 million reported cases and 7 million deaths as of August 14, 2024 ( 1 ). SARS-CoV-2 is a highly contagious virus that primarily infects cells in the respiratory tract and lungs and is the causal agent of COVID-19 ( 2 – 5 ) that was first detected in Wuhan, China, in December 2019 ( 6 ). \n\nDuring acute infection, SARS-CoV-2 viral load, measured by the qPCR in samples from nose (or throat) swabs, increases rapidly, reaches a peak, and then declines ( 7 – 9 ). However, qPCR does not measure virus infectivity, which is critical to define an individual’s infectiousness. We and others have previously studied viral infectivity as a function of viral RNA measured by qPCR ( 10 – 13 ). Understanding the initial acute dynamics of the virus and how total viral RNA relates to infectious virus during infection can help provide insight into the pathogenesis of the disease and the window of infectiousness of an individual. To this end, many studies used viral dynamic models to analyze the within-host kinetics of SARS-CoV-2 ( 10 ,  14 – 23 ). These models typically describe the RNA dynamics during infection; however, they provide limited information about the infectiousness of the virus. Some studies have incorporated both viral RNA and infectious virus in their models ( 10 – 13 ,  24 – 29 ), and except for refs.  10 and  12 , these models assume a linear relationship between the two viral quantities. Moreover, many of the datasets used to study the in vivo dynamics of SARS-CoV-2 were obtained after the onset of symptoms, without knowledge of the infection date and information on the viral dynamics during the early stages of infection ( 5 ,  20 ,  30 ). This lack of information makes studying the virus’s initial growth phase and early dynamics challenging. \n\nHere, we aim to understand better the in vivo kinetics of the virus during infection using mathematical modeling. We used longitudinal nasal viral RNA and infectious virus measurements taken every 12 h from 12 individuals in a unique SARS-CoV-2 human challenge study ( 8 ). An advantage of using this dataset is the availability of the infection date and twice daily viral RNA and quantitative infectious virus measurements for each participant. This high-resolution dataset allows us to quantify precisely how \n\n## **Significance** \n\nStudying the early dynamics of severe acute respiratory syndrome coronavirus 2 (SARSCoV-2) infection in humans is difficult. Here, we take advantage of a detailed dataset from a human challenge study to fit dynamic models that include innate and adaptive immune responses to longitudinal changes in both infectious and total virus. We uncovered a nonlinear relationship between total virus and infectious virus. We found that viral replication, after a short delay, is rapid, with a doubling time of ~2 h for viral RNA and ~3 h for infectious virus. We also found that innate immunity wanes as virus is brought under control, which together with adaptive immunity, initiated ~7 to 10 d postinfection, contributes to a multiphasic viral decline experienced by some participants. \n\nAuthor contributions: S.A.I., R.M.R., R.K., and A.S.P. designed research; S.A.I., R.M.R., C.Z., T.P., R.K., and A.S.P. performed research; S.A.I., R.M.R., and A.S.P. analyzed data; A.S.P. obtained funding for research; and S.A.I., R.M.R., C.Z., T.P., R.K., and A.S.P. wrote the paper. \n\nThe authors declare no competing interest. \n\nThis article is a PNAS Direct Submission. \n\nCopyright © 2024 the Author(s). Published by PNAS. This open access article is distributed under Creative Commons Attribution- NonCommercial- NoDerivatives License 4.0 (CC BY- NC- ND). \n\n1Present address: Biostatistics, Bioinformatics, and Epidemiology Program, Vaccine and Infectious Disease Division, Fred Hutchinson Cancer Center, Seattle, WA 98109. 2To whom correspondence may be addressed. Email: asp@lanl.gov. \n\nThis article contains supporting information online at https://www.pnas.org/lookup/suppl/doi:10.1073/pnas. 2406303121/- /DCSupplemental. Published November 7, 2024. \n\nhttps://doi.org/10.1073/pnas.2406303121 **1 of 10** \n\n**PNAS** 2024  Vol. 121  No. 46 e2406303121 \n\nthe infectious virus relates to the viral RNA during infection and the in vivo kinetics of the two quantities throughout the course of infection. \n\n## **Methods** \n\n**Data.** We digitized, using WebPlotDigitizer software v4.6 (31), the longitudinal viral RNA and infectious virus measurements for the participants of a SARS- CoV- 2 human challenge study (extended figure 5 from ref. 8), an open, nonrandomized clinical trial NCT04865237 (8). The data were recently published (32), after our study was completed, but we confirmed that the digitized data are nearly identical to the published data. In the study, thirty- six healthy unvaccinated individuals, aged 18 to 29 y with no evidence of previous SARS- CoV- 2 infection, were challenged intranasally with 10 Tissue Culture Infectious Doses (TCID50) of a wild- type SARS- CoV- 2 (SARS- CoV- 2/human/GBR/484861/2020). Viral RNA was quantified in nose swabs using qPCR and at the same time, infectious virus was quantified in terms of focus forming units (FFU) using a focus- forming assay. Here, we analyze the data from the 12 participants in the study, who developed an infection and were not treated with remdesivir or other antivirals (8). \n\nFig. 1 shows the 12 participants’ longitudinal nasal viral RNA (in log10 copies/ mL, black) and infectious virus (in log10 FFU/mL, red) measurements throughout the infection. Notice that there is a delay postinoculation in detecting both viral quantities, although the viral RNA was detected earlier than the infectious virus. An average delay of approximately 2 d was reported for viral RNA (8). Furthermore, the infectious virus level is lower than the viral RNA’s, becoming undetectable much earlier than the viral RNA, which itself becomes undetectable by day 20 postinoculation for most participants. The lower limit of quantification (LLOQ) for viral RNA was 3 log10 copies/mL and the lower limit of detection (LLOD) was indicated as 0 log10 copies/mL (8). Similarly, the LLOQ for infectious virus was 1.27 log10 FFU/mL and the LLOD was 0 log10 FFU/mL (8). \n\n## **Mathematical Models** \n\n**The Relationship between Total and Infectious Virus.** We studied the relationship between total viral RNA ( _V_ ) and infectious virus ( _Vi_ ) during SARS- CoV- 2 infection using a power- law model (PLM), given by \n\n\n\n\n\nwhere _B_ and _h_ are constants to be estimated from the data. This equation is more general than the linear relationship, i.e., _h_ = 1, that has frequently been used ( 13 ,  24 – 29 ) and thus allows us to test whether this nonlinear model is more compatible with the data. We incorporate this model into our viral dynamic models to link the viral RNA and infectious virus kinetics during infection. As done previously ( 10 ), we also studied a saturation model, where _f_ ( _V_ ) is a Hill function ( _SI Appendix_ , S1 ), but that model and the linear model were not as good at describing the data. \n\n**Model of Viral Dynamics.** Next, we studied the in vivo kinetics of the virus using viral dynamics models. We started with a simple target- cell limited (TCL) model (3, 10, 12, 18, 21, 33–37), which was later extended to include innate and adaptive immune responses. Our best performing model incorporates both forms of immune responses to viral infection. \n\nOur TCL model keeps track of the total number of target cells ( _T_ ), cells in the eclipse phase ( _E_ ), and productively infected cells ( _I_ ). We also keep track of the viral RNA representing total virus ( _V_ ) and infectious virus ( _Vi_ ) and assume that only the infectious virus can infect target cells ( Fig. 2 and _SI Appendix_ , S2 ). Note that \n\n\n\n**Fig. 1.** Digitized nasal viral RNA and infectious virus from a SARS- CoV- 2 human challenge study (from extended figure 5 of ref. 8). Longitudinal viral RNA (black dots) and infectious virus (red dots) measurements for the 12 infected, untreated participants in the human challenge study (we use the original ID numbers). Solid lines are used to connect data. The horizontal dashed lines are the LLOQ, 3 log10 copies/mL for viral RNA (black) and 1.27 log10 FFU/mL for infectious virus (red). Open circles represent measurements below the LLOQ. \n\n**2 of 10** https://doi.org/10.1073/pnas.2406303121 \n\npnas.org \n\n_V_ includes both infectious virus and noninfectious virus, the latter of which we do not track separately. This model was extended to include an innate immune response. Specifically, we consider the action of type-I and type-III interferons (IFN) that put target cells into an antiviral state, refractory to viral infection ( 38 – 40 ). IFNs are produced both by infected cells and by innate cells such as plasmacytoid dendritic cells, which are recruited in response to cell infection. However, we do not explicitly model the IFN concentration but rather assume that the concentration is proportional to the number of infected cells as has been done previously ( 10 ,  41 ) ( _SI Appendix_ , S3 ). In addition to the dynamics captured by the TCL model, this model keeps track of cells in the refractory state (R). We refer to this model as the refractory cell model (RCM) ( Fig. 2 ). The model equations are \n\n\n\nwhere _f_ ( _V_ ) is the power-law function given by Eq. **1** . The model parameters are defined in the caption to  Fig. 2 . \n\nDue to the action of IFN, target cells transition to a refractory state at per capita rate _ϕ_ and refractory cells transition back to the target cell state at rate _ρ_ . We considered a scenario where the transition of refractory cells to target cells occurs at a constant rate ( _ρ_ is constant throughout infection) and another where the return depends on the density of productively infected cells (since we assume that the concentration of IFN is proportional to infected cells), i.e., _ρ_ ≡ _ρ_ ( _I_ ). The return from the refractory state is not \n\n\n\n**Fig. 2.** Schematic illustration of the dynamic models. The TCL model (light green rectangle), RCM (rectangle with dashed border), and the RCM with humoral immune response (entire diagram). Target cells ( _T_ ) are infected by infectious virus ( _Vi_ ) at rate _β_ and transition through an eclipse phase ( _E_ ) before becoming productively infected at per capita rate _k_ . Productively infected cells ( _I_ ) die at the per capita rate _δ_ and produce virus ( _V_ ), at constant rate _π_ , which is then cleared at per capita rate _c_ . The virus population includes both infectious virus ( _Vi,_ colored red) and noninfectious virus (colored blue). For the RCM, target cells also become refractory to infection due to the actions of type- I and type- III IFNs at rate ϕ, and refractory cells transition to back to the target state at rate _ρ_ . Neutralizing antibodies bind infectious viruses, thereby preventing them from infecting target cells. Diagram created with BioRender.com. \n\nexpected to occur when _I_ is large and IFN levels are high ( 42 ). To allow this transition to occur mainly once _I_ falls below a threshold value, we chose to use the following Hill function, \n\n\n\nwhere _휌_ 0 is the baseline rate at which cells in refractory state transition to target cells once the infection is cleared, _I_ is the number of infected cells, _Kρ_ is the number of infected cells required to achieve half of the baseline rate _휌_ 0 , and _n_ is the Hill coefficient ( 43 ). \n\nAlthough 10 TCID50 of the virus was inoculated into each participant, only 53% of the participants became infected ( 8 ). Thus, the exact number of virions that initiated infection is unknown. Therefore, as has been done previously ( 10 ,  11 ), we assume that infection was initiated by one infected cell in the eclipse phase. Note that essentially this means we are modeling infection from the time the observed exponential growth of virus starts, and there could be a delay (e.g., local stochastic infection and extinction) before this growth starts. Thus, we incorporate a delay of length _td_ days between inoculation and the start of an exponential growth of the virus. That is, we set _E_ = 1 cell at a time _td_ , to be estimated. In addition, we assume that there are no cells in the refractory state at the onset of infection. Note that when I ≫ _Kρ_ , _ρ_ ( _I_ ) ∼ 0 and cells remain in the refractory state. However, as the infection is resolved and _I_ decreases, cells lose their refractory state. \n\nFurthermore, we incorporate the effects of an adaptive immune response into our dynamic models. We consider cell-mediated and humoral immune responses. Cell-mediated immune response involves the killing of productively infected cells by effector cells such as antigen-specific CD8+ T cells. We incorporate the effect of this immune response into our model by increasing the death rate of productively infected cells ( _SI Appendix_ , S4 ). Humoral immune response is driven by B cells producing antigen-specific antibodies that bind to infectious virus, reducing their ability to infect target cells. Due to the lack of data on the neutralizing antibody concentration during infection, we model the effect of this response as a change in the relationship between viral RNA ( _V_ ) and infectious virus ( _Vi_ ). We assume that the humoral response starts at a time _ta_ (to be estimated), and leads to a decline in available infectious virus by decreasing the value of _h_ in Eq. **1** according to the following \n\n\n\nwhere _h_ 0 is the baseline value of _h_ ( _t_ ) before humoral immunity activation, and _σh_ is the exponential decay rate of _h_ 0 after immune response activation. The formulation in Eq. **4** is an empirical approach to model the effect of neutralizing antibodies, and its implementation requires the availability of infectious virus measurements. \n\n**Data Fitting and Parameter Estimation.** We fit our models to the longitudinal data (in logarithm scale) using a nonlinear mixedeffects modeling framework with Monolix version 2021R1 (44) ( _SI Appendix_ , S5). First, we estimated the initial growth rate of viral RNA and infectious virus including only the participants with at least two quantified measurements of _V_ or _Vi_ , before the peak viral level, since this is the minimum data providing information on the growth rate. Next, we fitted the power- law \n\nhttps://doi.org/10.1073/pnas.2406303121 **3 of 10** \n\n**PNAS** 2024  Vol. 121  No. 46 e2406303121 \n\nand saturation models to the data to find the relationship between viral RNA and infectious virus. To this end, we excluded infectious virus measurements below the LLOQ of 1.27 (log10 FFU/mL) and the concomitant viral RNA measurements, because they do not provide any information regarding the relationship between _V_ and _Vi_ , and in fact would distort it. \n\nFinally, we fit our dynamic models to the time course of viral RNA and infectious virus simultaneously. Here, detectable viral RNA and infectious virus measurements below the respective LLOQ of 3 log10 copies/mL and 1.27 log10 FFU/mL, were interval-censored at the LLOQ and LLOD values. In contrast, those measurements with undetectable virus were left-censored at the respective LLOD. In addition, we excluded a few measurements below the LLOQ that occurred between the first and last quantifiable viral measurements. i.e., in the middle of the viral load curve (shown in  Fig. 1 ). We believe the failure to quantify viruses at these time points is likely due to sampling or measurement errors since high levels of virus were detectable before and after. Furthermore, we kept only the first viral measurement below the LLOQ after the last quantifiable viral measurement for both the viral RNA and infectious virus, excluding the multiple later measurements below the LLOQ as these measurements below the LLOQ may reflect the cessation of viral shedding. \n\nWe compared model fits based on the goodness of fit by negative log-likelihood and the corrected Bayesian information criteria (BICc) ( 45 ). We quantify the uncertainty in our parameter estimates using the relative SE (RSE), which is calculated by dividing the SE by the estimated parameter value. In some cases, it was not possible to evaluate the uncertainty in the estimation of a parameter, and its RSE is specified as NaN. Note that NaN does not affect the maximum likelihood estimation ( _SI Appendix_ , S5 ). \n\nBased on prior studies, we fixed the rate at which cells in the eclipse phase become productively infected, _k_ = 4/d ( 10 ,  46 ,  47 ), and the clearance rate of viral RNA at _c_ = 10/d ( 10 ,  20 ,  37 ). We also assume that there are _T_ 0 = 8 × 10<sup>7</sup> target cells at the beginning of infection ( 10 ,  11 ,  17 ). \n\n## **Results** \n\n**Relationship between Total Viral RNA and Infectious Virus.** As shown in Fig. 1, the viral RNA quickly rises to a peak level (median time of 6.5 d postinoculation) and then decays until it becomes undetectable (median time of 16.5 d postinoculation). In three individuals (IDs 13, 14, and 15), there is a secondary viral peak before the virus ultimately decays to an undetectable level. Using a mixed- effects approach, we estimated the initial growth rate of the viral RNA across all individuals to be 7.86/d (SD = 0.28) and that of infectious virus as 5.36/d (SD = 0.17). This corresponds to a doubling time of ∼2 h for viral RNA and ∼3 h for infectious virus ( _SI Appendix_ , S6 and Fig. S1), suggesting that viral RNA grows ∼1.5 times faster than infectious virus during the early stage of infection. The data in Fig. 1 show a delay in detecting both the viral RNA and infectious virus. \n\nTo better understand the relationship between the viral RNA ( _V_ ) and infectious virus ( _Vi_ ), we quantitatively analyzed the relationship between the two variables using different models ( _Methods_ and _SI Appendix_ , S1 ). We found that a PLM, _Vi_ = _BV_<sup>_h_</sup> , with B = 2.63 × 10<sup>−3</sup> (SD = 0.22) and _h_ = 0.68 (SD = 0.084) ranked best based on BICc ( _SI Appendix_ , S1 ). Using the PLM and the exponential growth functions used to determine the growth rate of the viral RNA and infectious virus, we derived that the exponent ( _h_ ) in the PLM is the ratio of the growth rate of infectious virus to that of viral RNA. Furthermore, using the estimated growth rates for the two viral quantities gives _h_ ~ 0.68, \n\nwhich is the same as obtained by fitting the PLM to the entire dataset ( _SI Appendix_ , S7 ). \n\nThe fits in  Fig. 3 show that the PLM (Eq. **1** ) provides an excellent description of the relationship between the viral RNA and infectious virus throughout SARS-CoV-2 infection. Nevertheless, we tried other possibilities, such as having different parameters for the PLM during the growth and decline phases of the virus or describing the relationship with a linear or saturation model. We did not find statistical support for these alternatives ( _SI Appendix_ , S1 ). These results suggest a nonlinear relationship between the total viral RNA and infectious virus during SARS-CoV-2 infection, where the infectious virus increases sublinearly (since _h_ < 1) as the viral RNA increases. \n\n**Early Infection Dynamics.** We used a TCL model (3, 10, 11, 14, 37) of SARS- CoV- 2 infection (Fig. 2) and its extension with an innate immune response, which we refer to as the RCM (Fig. 2 and Eq. **2** ), to analyze the virus dynamics. We used the PLM to describe the relationship between viral RNA and infectious virus in the dynamic models. Initially, we fixed this relationship with the parameters found above ( _B_ = 2.63 × 10<sup>−3</sup> and _h_ = 0.68) but the fits obtained were poor ( _SI Appendix_ , Figs. S2 and S3). A comparison of model fits is given in _SI Appendix_ , Table S1. The best- fit model parameters are given in _SI Appendix_ , Tables S2 and S3. It is possible that this is because in the dynamical model, we used the full dataset, including censored data below the limit of quantification that were not used to determine the power law parameters ( _Methods_ ). Thus, we imposed the power- law relationship, but reestimated the parameters when fitting the viral dynamic models. Below we discuss and justify this further. \n\nIn fitting the models, we allowed for a delay _td_ after challenge, before infection takes hold ( _SI Appendix_ , S2 ). This delay, estimated at _td_ ~ 1 d improved the model description of the viral load data substantially (ΔBICc ~ 40 units) ( _SI Appendix_ , Figs. S4–S7 and Tables S4–S7 ). Overall, we found that a model with a delay of ~1 d between inoculum and the start of the exponential growth of the virus and incorporating an innate response that put cells in a refractory state for infection (RCM) described the data well. Based on this and the biological relevance of the innate immune response mechanisms involved, we adopt the RCM for further analyses. \n\n**Postpeak Viral Dynamics Predicted by Infectious Virus.** In some participants, the viral decline appears to be multiphasic, with some participants having viral rebounds toward the end of their infection (IDs 13, 14, and 15). Another common feature is a sudden and sharp decline in the viral RNA, which often coincides with the infectious virus becoming undetectable. \n\nTo understand possible mechanisms involved in the viral decline postpeak, we extended our RCM to include an adaptive immune response. We considered both _humoral_ and _cell-mediated_ immune mechanisms. We assume that the former involves the production of neutralizing antibodies, which bind to the virus, reducing its ability to infect target cells. We incorporated this effect by assuming that the exponent _h_ in the PLM decreases with the advent of humoral immunity ( _Methods_ ). This models the decrease in infectivity due to antibodies in a phenomenological way. We assume that the cell-mediated immune response involves killing of productively infected cells by immune cells. We incorporate this effect by increasing the death rate of infected cells after the onset of cellular immunity ( _SI Appendix_ , S4 ). \n\nWe analyzed separately both forms of adaptive immunity in the RCM, fitting each model separately to our dataset. Both models describe the viral RNA and infectious virus dynamics well for most participants ( _SI Appendix_ , Figs. S8 and S9 and Tables S8 and S9 ). \n\n**4 of 10** https://doi.org/10.1073/pnas.2406303121 \n\npnas.org \n\n\n\n**Fig. 3.** Fits using mixed- effects of the PLM to viral RNA and infectious virus. Blue triangles and green dots are for data obtained before the viral RNA peak and postpeak, respectively. Peak viral measurements are plotted together with the prepeak data except for participant 12, who does not have prepeak measurements. The solid black line is the model prediction. The horizontal red dashed line is the LLOQ of infectious virus (1.27 log10 FFU/mL). Data below the limit of quantification were not used in this analysis as there is no proper way to include them. \n\nThese extended models describe the rapid decline of virus near the end of infection better than the simpler models. The effects of adaptive immunity are estimated to start ∼7 d postchallenge. It is interesting to note that the adaptive immune response is predicted to start around the second peak for those participants with a viral rebound. Although incorporating adaptive immune response into the RCM increases the number of parameters in the model, these mechanisms improved the goodness of fit to the viral dynamics, with the humoral response improving the BICc score by 11 points (BICc = 1,457), and the cell-mediated response improving it by seven points (BICc = 1,461). \n\nUsing the humoral immune response model, we reestimated the parameters of the power-law relationship between viral RNA and infectious virus and found that the baseline _h_ 0 = 0.84, which then declines starting at _ta_ = 7.3 d postinoculation with rate _σh_ = 0.09/d. If we use these estimates to calculate the average _h_ over the 20 d of infection (typical duration in our fits), we find average _h_ = 0.62, which is very close to _h_ = 0.68 obtained in the PLM fit to the viral data directly in  Fig. 3 . This suggests that the initial estimate in  Fig. 3 is an average and not constant, which explains why fixing the power-law parameters from  Fig. 3 in our viral dynamics model results in poor fits ( _SI Appendix_ , Figs. S2 and S3 ). \n\n**Modeling Viral Rebound.** Incorporating adaptive immune response into our RCM improved the quality of the model fits. However, the viral rebound after the peak viral load experienced by some participants is still difficult to capture. It is likely that these rebounds require more target cells for the virus to infect, which the \n\nadaptive immunity models do not provide (48). One possibility is that refractory cells transition back to target cells faster after the peak, which the constant rate of transition does not capture. Therefore, we further extend the models by assuming that the rate at which refractory cells transition back into target cells depends on the density of infected cells ( _Methods_ ) and, thus, becomes faster as infected cells decline after the peak. In our model, we assume that the level of IFN is proportional to the level of infected cells, so the transition rate out of the refractory state reflects not only the decline in infected cells but also the decline of IFN (24, 49, 50). We refer to this model as the density- dependent RCM (DDRCM) ( _SI Appendix_ , S3). While this model fit the data slightly better than the RCM without density dependence, it was not favored because the extra parameters lead to an increase in the BICc of 15.3 points ( _SI Appendix_ , Table S1) The fit and best- fit parameters are given in _SI Appendix_ , Fig. S10 and Table S10. \n\nHowever, the DDRCM with either form of adaptive immune response improved the fit compared with the model without an adaptive immune response ( _SI Appendix_ , Table S1 ), with special effect in those individuals with a viral rebound ( Fig. 4 and _SI Appendix_ , Fig. S11 ). In these models, the estimated adaptive immune response activation time is ∼9 d postinoculation for the humoral response, and ∼10 d for the cell-mediated response ( Table 1 and _SI Appendix_ , Table S11 ). The DDRCM with a humoral immune response has a lower BICc score (1,461) than the model with a cell-mediated response (BICc = 1,469) and captures the viral rebound for the participants better. Note, however, that these BICc scores are not improved over the simpler RCMs \n\nhttps://doi.org/10.1073/pnas.2406303121 **5 of 10** \n\n**PNAS** 2024  Vol. 121  No. 46 e2406303121 \n\n\n\n**Fig. 4.** Fits of the DDRCM with humoral immunity. Measured viral RNA in log10 copies/mL (black dots) and infectious virus in log10 FFU/mL (red dots). Solid lines are model fits; horizontal dashed lines are the LLOQ, 3 log10 copies/mL for viral RNA (black) and 1.27 log10 FFU/mL for the infectious virus (red). Vertical dashed blue lines are the estimated time of humoral immunity activation. Open circles represent measurements below the LLOQ. Estimated population parameters are shown in Table 1. \n\nwith adaptive immunity. This may be because the extra parameters needed to capture the rebound are not justified when only a few participants show this rebound. In addition, the DDRCM with no adaptive immunity does not capture the different phases of viral decline and the viral rebounds well ( _SI Appendix_ , Fig. S10 ). In the DDRCM with humoral immunity, we estimated _B_ = 8.1 × 10<sup>−5</sup> , _h_ 0 = 0.86, _t_ a = 9.04 d, and _σh_ = 0.4/d for the power-law relationship between viral RNA and infectious virus ( Table 1 ). This indicates that most of the virus quickly becomes noninfectious after day 9 and may help explain why infectious virus is very difficult to recover after day 10 or so ( Fig. 4 ). We estimated the death rate of productively infected cells to be _δ_ = 2.17/d, implying that infected cells produce and secrete viruses for an average of ~11 h during their lifespan. Since cells transition from the eclipse phase to productive infection at rate _k_ = 4/d, they spend an average of 0.25 d (6 h) in the eclipse phase, and hence we estimate an average lifespan of infected cells of ~17 h. See  Table 1 for the remaining estimated population parameters for this model. Using these parameters, we obtained a within-host basic reproduction number of _R_ 0 = 22, where _R_ 0 is the number of cells a single infected cell will infect at the beginning of infection when there is no target cell limitation ( _SI Appendix_ , S8 ). \n\n## **Discussion** \n\nHere, we used multiple mathematical models to study in detail and quantitatively the dynamics of SARS-CoV-2 and the biological process involved in this acute infection. Two aspects of the data make our analyses unique. First, although other studies have viral load data obtained during both the upslope and downslope \n\nof infection ( 9 ,  51 ), the actual time of infection is generally not known, and very few, if any, other studies provide the 12 h sampling frequency possible in this human challenge study ( 8 ). We have recently shown that knowing the time of infection increases the fidelity of modeling acute infections ( 52 ). Second, the dataset includes both viral RNA and infectious virus levels at the same 12 h sampling frequency throughout the course of infection. \n\nAlthough the simplest, TCL model describes the data reasonably well, this rich dataset supported the inclusion of additional biological mechanisms in the model. Including an innate immune response that protects cells from infection (i.e., puts them into an antiviral state that makes them refractory to infection), improved the model fits, as has been seen before in SARS-CoV-2 ( 10 ,  11 , 19 – 21 ,  29 ) and other acute infection models ( 3 ,  33 ,  53 ). A recent analysis of the human challenge study data using single cell RNAseq showed that IFN induced genes were the dominant induced gene subset in individuals with sustained infection and that IFN signaling was strongly activated in every cell type in both blood and the nasopharynx ( 54 ), consistent with our inclusion of an IFN type response in our model. An advantage of knowing the time of challenge is that we found that we needed to include a delay (average ~1 d) between the inoculation and the time the virus starts to grow exponentially. This delay could involve stochastic processes such as the infectious virions in the inoculum finding the appropriate target cell and starting a chain of infections that does not go extinct ( 23 ,  55 ). In many of the participants, this chain of infections must have gone extinct since only 53% of the participants became infected after challenge ( 8 ). Note that we do not claim that there are no cell infections before the delay time, only that the events that initiate the exponential increase in virus \n\n**6 of 10** https://doi.org/10.1073/pnas.2406303121 \n\npnas.org \n\n**Table 1.   Estimated population parameters for the DDRCM with humoral immune response** \n\n|Parameter|Description|Fixed Effects (R.S.E., %)|\n|---|---|---|\n|_β_(mL/FFU/d)|Virus infection rate|8.3 × 10<sup>–4</sup>(22.2)|\n|_δ_(/d)|Death rate of productively infected cells|2.17 (24.0)|\n|_π_(RNA copies/mL/cell/d)|Product of virus production rate and fraction of virus<br>sampled on a swab (see ref. 10)|467.7 (16.7)|\n|_ϕ_(/cell/d)|Rate constant for conversion of target cells to refracto-<br>ry cells|1.1 × 10<sup>–7</sup>(19.1)|\n|_ρ_0(/d)|Baseline rate at which refractory cells transition back<br>into target cells|9.8 (NaN)|\n|_n_|Hill coefficient for the density-dependent rate at which<br>refractory cells transition back into target cells|4.88 (159)|\n|_Kρ _(cells)|Number of infected cells required to achieve half the<br>baseline rate_ρ_0|1.3 × 10<sup>–3</sup>(19.0)|\n|_td _(d)|Initial delay in target cell infection|0.87 (30.9)|\n|_ta _(d)|Humoral immunity activation time|9.04 (17.4)|\n|_B_|Proportionality constant in the PLM|8.1 × 10<sup>–5</sup>(13.7)|\n|_h_0|Baseline exponent of viral RNA in the PLM before hu-<br>moral immunity activation|0.86 (5.93)|\n|_σh _(/d)|Decay rate of_h_due to humoral immunity|0.4 (71.4)|\n\n\n\nNote: NaN is specified for RSE when there is too much uncertainty in the parameter estimation. The uncertainty and NaN do not affect the maximum likelihood estimation. \n\n(and ultimately lead to full-blown infection) have this delay. Furthermore, we found that the emergence of adaptive immune mechanisms, between days 7 and 11 postinfection, was important to improve the description of viral decline after the peak. Although inclusion of these mechanisms has been proposed before ( 3 ,  41 ,  56 ), here, we implemented humoral immune response as reducing viral infectious titers, which is a plausible mechanistic effect as neutralizing antibodies have been shown to arise starting about a week post symptom onset ( 57 ). This model with refractory cells and humoral immunity was the statistically best supported model for the dataset. Our estimate for the onset of humoral immunity in the model, 7 to 11 d after challenge, is consistent with previous reports that have suggested that the effect of adaptive immune response starts ~6 to 10 d after infection ( 32 ,  58 ) and it is known that natural existing polyreactive IgM antibodies can function to neutralize viruses early in infection ( 32 ,  59 ). Further, measurements of nasal and plasma virus-specific antibody concentrations against the SARS-CoV-2 spike protein in the infected volunteers showed elevated levels started to appear around day 10 after inoculation ( 32 ), consistent with our modeling predictions. \n\nIn our model, infected cells produce virus at the same rate during the phases of rising and falling viral loads, which is measured as total viral RNA, but antibodies neutralize some of this virus, effectively reducing infectious viral particles. This could explain why it has been so difficult to recover infectious virus past day 10 or so, as found here and in other studies ( 5 ,  7 ,  11 ). A model that used a cell-mediated immune response, starting ~9 to 11 d postinoculation, instead of a humoral response, fit the data almost as well ( _SI Appendix_ , Table S1 ). Analysis of the immune response data obtained during the human challenge suggests that CD8<sup>+</sup> T cell expansion started ~7 d postinoculation and peaking around day 14 ( 32 ,  54 ). Our models thus support a role for both humoral and cell-mediated responses. We also fitted a model that had both a humoral and cell-mediated response to the data (not shown). This added two additional parameters to the models with only one of these responses and not surprisingly found that the parameters were not identifiable most likely because the two responses acted similarly with the humoral response decreasing the amount of infectious virus and hence the number of infected cells and the \n\ncell-mediated response killing infected cells and thus also reducing their number. \n\nWe found that infectious virus is not a constant fraction of the total virus, but rather scales sublinearly with the total virus, and a PLM with an exponent less than one fits this relation well. The estimated PLM parameters are slightly different when we fitted the PLM directly to the viral RNA and infectious virus data compared to when we estimated the parameters together with other parameters in our dynamical models. However, we showed that the estimated power-law exponents in both instances are very similar when we averaged _h_ over the course of infection in the dynamic model (RCM with humoral response). The sublinear relationship between the total viral RNA and infectious virus has been documented before in cross-sectional measurements ( 10 ), but here, we were able to fine-tune this relation from serial measurements throughout acute infection. This relationship means that as the virus grows to the peak, a smaller fraction is infectious. In fact, fitting the exponential increase in virus toward its peak, we found that the amount of total virus doubled every 2 h, while the amount of infectious virus doubled every 3 h, consistent with our estimate of _h_ being approximately 2/3. For other viral infections, it has been noticed that an “infectious unit’’ can correspond to multiple viral particles ( 60 ,  61 ). If the number of viruses that comprise an infectious unit depends on viral density in a nonlinear manner a power law might result, with different growth rates for total virus and infectious units. Furthermore, Hatton et al. ( 62 ) provide empirical evidence from time-series analysis that many populations of mammals, birds, fish, and insects exhibit sublinear growth according to a power law with an exponent <1, often ranging between 2/3 and 3/4, but give no mechanistic explanation. As viruses grow and compete for resources, e.g., target cells, ecosystem laws should also apply to them. \n\nAs the total virus decays postpeak, if the same power-law (i.e., with the same constant exponent, _h_ 0 ) is operational, then the fraction of infectious virus would increase at late times. Although this may seem counterintuitive, at late times, the total virus is lower, and a power-law with _Vi_ = _BV_<sup>_h_</sup> implies a higher fraction of infectious virus at a lower total virus. An increase in the fraction of infectious virus late in infection does not seem to make \n\nhttps://doi.org/10.1073/pnas.2406303121 **7 of 10** \n\n**PNAS** 2024  Vol. 121  No. 46 e2406303121 \n\nbiological sense, and thus it is not surprising (at least a posteriori) that we found that the power-law had to change late in the infection, invoking an adaptive humoral response to generate this effect. We also note that this change in the exponent was suggested by the model fits, since initially we tried to enforce a constant exponent, which provided fits of inferior quality. It is interesting that when we average the exponent h throughout the course of infection, we recover approximately the value that we found using “static” data ( Fig. 3 ). \n\nTwice daily viral measurements in the early part of infection allowed a detailed view into the viral growth before peak. Our estimates of a doubling time of ~2 h for the total virus and ~3 h for infectious virus suggest the virus can expand exceedingly rapidly. Although longer doubling times have been estimated previously, ~6 h for total virus in primary human epithelial cell organoids ( 63 ) and ~7.3 h for infectious virus in ferrets ( 29 ), our estimate of the growth rate of total virus in vivo agrees well with the estimates of ~3.1 h by Gunawardana et al. ( 64 ) and ~2 and ~4 h by Ke et al. ( 10 ) from saliva and nasal samples, respectively. The twice daily measurements also revealed that the decay dynamics were complex. Therefore, we explored what mechanisms could improve the fits and found that adaptive immunity effects, either reducing viral infectiousness or increasing the death rate of infected cells, helped explain the fast decay of virus, particularly, the sudden decline in virus observed for some of the participants. This idea of an adaptive immune response being necessary to clear the virus in late stages of an acute infection has been proposed before ( 58 ,  65 ,  66 ), and here, we confirm it. Another interesting observation was that in some participants a viral rebound seems evident during the postpeak viral decay phase. Such rebounds have been clearly seen in people on treatment ( 67 – 71 ), but also in untreated cases although in smaller numbers ( 51 ,  68 ,  72 ,  73 ). It is possible that more frequent follow-up, as in the human challenge study, would show that these rebounds are more common. In any case, we explored the mechanisms that could generate these rebounds during the decay of virus. In the model, this rebound required the existence of target cells for the virus to infect and replicate in, which could be generated by the loss of the refractory state. However, a constant transition rate of refractory to target cells ( _ρ_ ) throughout infection was unable to generate enough target cells late in infection to describe the rebound. Accordingly, we proposed a transition rate that is dependent on the concentration of infected cells, which we take as a proxy for type-I and type-III IFN maintaining the antiviral state ( _SI Appendix_ , S5 ). In the model, as the number of infected cells decreases more and more refractory cells lose this state and become targets. This mechanism was able to quantitatively describe the rebound in the participants that show such dynamics. Since only a small number of participants had clear rebounds, overall, at the population level, this model did not lead to a statistically improved fit. However, given its biological plausibility and ability to explain rebounds, which is absent in the simpler model, we think that this is a preferred model for this complex and extended dataset. \n\nThere have been many previous studies analyzing the dynamics of SARS-CoV-2 infection ( 10 – 14 ,  17 – 19 ,  21 ,  22 ,  27 ,  29 ,  74 ,  75 ), but to our knowledge, only a few of these studies analyzed this human challenge dataset ( 14 ,  74 ,  75 ). Carruthers et al. ( 14 ) used a model similar to our TCL model, which included target cells, cells in the eclipse phase, infected cells, infectious virus, and total virus, but added an effector cell population that expands as a saturating function of total virus and that kills infected cells via a mass-action law. In addition, they modeled the dynamics of total viral RNA and infectious virus separately, with different production and clearance rate parameters, so that there was no link \n\nbetween these two viral populations. They did not consider the innate or humoral immune responses. They fit data from 16 participants and found that for only six individuals was there strong evidence to include the effector cell response in their model, a result quite different from ours. Xu et al. ( 73 ) use very simplified models involving either one or two equations that allow them to fit the upward and downward trends in the viral kinetics but none of the nuances in the data. Grebennikov et al. ( 74 ) go to the opposite extreme and introduce a model with 15 equations and over 50 parameters. Here, we introduced models that allowed us to explore different biological mechanisms to describe the infection, the immune response to it, and the relationship between infectious virus and total virus. Our model has a different structure than these other models and led to conclusions about the importance of both the innate and adaptive immune responses in all participants and time-dependent changes in viral infectivity during the course of infection. \n\nOne of the limitations of our study is that the participants were a highly selected set of young, healthy individuals between the ages of 18 to 29 y, who were given a specific dose of the virus and kept in a designated controlled environment. Clearly, these are not representative of the whole population, nor of the population with a higher chance of severe disease. Another limitation is that the variant of SARS-CoV-2 used is now of mostly historical interest, and most people are now vaccinated and may have access to antiviral therapies such as Paxlovid. However, the goal of the human challenge study was to elucidate information on the natural history of untreated infection in unvaccinated individuals. Nowadays a large fraction of the population has been vaccinated or infected (at least once) before, and most infections occur in the context of leaky immunity (i.e., immunity that is not sufficient to prevent infection), and dynamics may be somewhat different. Still, it is very likely that the different mechanisms that we explored, initial delay, refractory cells, neutralizing antibodies, a time-dependent infected cell death rate are also valid for other variants, although the rate parameters could be different. Also, our modeling approach can be applied to compare the dynamics of infection in the presence or absence of vaccination or to predict the effects of therapy ( 37 ,  41 ,  48 ). \n\nThere are also some limitations from the modeling perspective. For example, the exact initial conditions (e.g., how many virions start the exponential growth of infection, or how many target cells each person harbors) are unknown. To deal with the limited information on the initial number of virions, we instead assumed that the exponential phase of viral growth was initiated by one infected cell in the eclipse phase. Previously, we showed that our results were not sensitive to the exact number of initially infected cells if the number was small ( 10 ). We have also previously shown that in acute infection models the initial number of target cells, _T_ 0 , and the rate of viral production from infected cells, π, trade-off against one another so that only their product is identifiable ( 76 – 78 ). Moreover, we have no spatial information on viral spread and did not include this, assuming that the airway that is lined with fluid is a sufficiently well-mixed system for our modeling purposes. That the model provides such a good description of the data, partially supports this assumption. We also had to make specific choices, such as the power-law relation between total virus and infectious viruses, or the saturating Hill function for the term of describing the rate cells return from the refractory state. When developing a mathematical model to interpret experiments assumptions must be made. We tested several of our modeling assumptions with alternatives ( _SI Appendix_ ), and in addition, we started from a well-tested framework for viral infections (including the dynamics of infected cells, virus, and refractory cells), which has been shown multiple \n\n**8 of 10** https://doi.org/10.1073/pnas.2406303121 \n\npnas.org \n\ntimes in the literature to describe acute viral respiratory infections well, and which is grounded in biological knowledge of the system. Nonetheless, we have no direct experimental evidence that IFN acted to make some target cells refractory to infection, although both type I and III IFNs were detected in nasal lining fluid and plasma ( 32 ), and strong IFN responses were detected in individuals in our study ( 54 ). Further, our choice of preferring a humoral response over a cell-mediated response was based solely on model selection theory in which the model with the lowest BICc value is preferred. However, both types of responses play a role and may help prevent the virus from escaping the overall immune response. In summary, we quantified the in vivo dynamics of SARSCoV-2 infection from onset to virus clearance, shedding light on the early dynamics of the virus and the potential role of innate and adaptive immune responses in promoting viral decline during infection. Understanding these dynamics has implications both for our \n\n1. World Health Organization (WHO), Number of COVID- 19 deaths reported to WHO. _WHO_ (2024). https://data.who.int/dashboards/covid19/cases?n=c. Accessed 14 March 2024. \n\n2. Y.- C. Li, W.- Z. Bai, T. Hashikawa, The neuroinvasive potential of SARS- CoV2 may play a role in the respiratory failure of COVID- 19 patients. _J. Med. Virol._ 92, 552–555 (2020). \n\n3. P. Baccam, C. Beauchemin, C. A. Macken, F. G. Hayden, A. S. Perelson, Kinetics of influenza A virus infection in humans. _J. Virol._ 80, 7590–7599 (2006). \n\n4. N. J. Matheson, P. J. Lehner, How does SARS- CoV- 2 cause COVID- 19? _Science_ 369, 510–511 (2020). 5. R. Wölfel _et al._ , Virological assessment of hospitalized patients with COVID- 2019. _Nature_ 581, 465–469 (2020). \n\n6. World Health Organization (WHO), Timeline: WHO’s COVID- 19 response. _WHO_ (2023). https://www. who.int/emergencies/diseases/novel- coronavirus- 2019/interactive- timeline. Accessed 14 March 2024. \n\n7. S. Hakki _et al._ , Onset and window of SARS- CoV- 2 infectiousness and temporal correlation with symptom onset: A prospective, longitudinal, community cohort study. _Lancet Respir. Med._ 10, 1061–1073 (2022). \n\n8. B. Killingley _et al._ , Safety, tolerability and viral kinetics during SARS- CoV- 2 human challenge in young adults. _Nat. Med._ 28, 1031–1041 (2022). \n\n9. S. M. Kissler _et al._ , Viral dynamics of acute SARS- CoV- 2 infection and applications to diagnostic and public health strategies. _PLoS Biol._ 19, e3001333 (2021). \n\n10. R. Ke, C. Zitzmann, D. D. Ho, R. M. Ribeiro, A. S. Perelson, In vivo kinetics of SARS- CoV- 2 infection and its relationship with a person’s infectiousness. _Proc. Nat. Acad. Sci. U.S.A._ 118, e2111477118 (2021). \n\n11. R. Ke _et al._ , Daily longitudinal sampling of SARS- CoV- 2 infection reveals substantial heterogeneity in infectiousness. _Nat. Microbiol._ 7, 640–652 (2022). \n\n12. N. Heitzman- Breen, S. M. Ciupe, Modeling within- host and aerosol dynamics of SARS- CoV- 2: The relationship with infectiousness. _PLoS Comput. Biol._ 18, e1009997 (2022). \n\n13. A. Marc _et al._ , Quantifying the relationship between SARS- CoV- 2 viral load and infectiousness. _Elife_ 10, e69302 (2021). \n\n14. J. Carruthers, J. Xu, T. Finnie, I. Hall, A within- host model of SARS- CoV- 2 infection. medRxiv \n\n   - [Preprint] (2022). https://doi.org/10.1101/2022.04.22.22274137v1 (Accessed 18 January 2024). \n\n15. J. D. Challenger _et al._ , Modelling upper respiratory viral load dynamics of SARS- CoV- 2. _BMC Med._ 20, 25 (2022). \n\n16. B. Chatterjee, H. S. Sandhu, N. M. Dixit, Modeling recapitulates the heterogeneous outcomes of SARS- CoV- 2 infection and quantifies the differences in the innate immune and CD8 T- cell responses between patients experiencing mild and severe symptoms. _PLoS Pathog._ 18, e1010630 (2022). \n\n17. A. Goyal, E. F. Cardozo- Ojeda, J. T. Schiffer, Potency and timing of antiviral therapy as determinants of duration of SARS- CoV- 2 shedding and intensity of inflammatory response. _Sci. Adv._ 6, eabc7112 (2020). \n\n18. A. Goyal, D. B. Reeves, E. F. Cardozo- Ojeda, J. T. Schiffer, B. T. Mayer, Viral load and contact heterogeneity predict SARS- CoV- 2 transmission and super- spreading events. _Elife_ 10, e63537 (2021). \n\n19. A. Goyal, E. R. Duke, E. F. Cardozo- Ojeda, J. T. Schiffer, Modeling explains prolonged SARS- CoV- 2 nasal shedding relative to lung shedding in remdesivir- treated rhesus macaques. _iScience_ 25, 104448 (2022). \n\n20. N. Néant _et al._ , Modeling SARS- CoV- 2 viral kinetics and association with mortality in hospitalized patients from the French COVID cohort. _Proc. Natl. Acad. Sci. U.S.A._ 118, e2017962118 (2021). \n\n21. A. S. Perelson, R. Ke, Mechanistic modeling of SARS- CoV- 2 and other infectious diseases and the effects of therapeutics. _Clin. Pharmacol. Ther._ 109, 829–840 (2021). \n\n22. S. Wang _et al._ , Modeling the viral dynamics of SARS- CoV- 2 infection. _Math. Biosci._ 328, 108438 (2020). \n\n23. P. Czuppon _et al._ , Success of prophylactic antiviral therapy for SARS- CoV- 2: Predicted critical efficacies and impact of different drug- specific mechanisms of action. _PLoS Comput. Biol._ 17, e1008752 (2021). \n\n24. M. Alexandre _et al._ , Modelling the response to vaccine in non- human primates to define SARSCoV- 2 mechanistic correlates of protection. _Elife_ 11, e75427 (2022). \n\n25. A. Gonçalves _et al._ , SARS- CoV- 2 viral dynamics in non- human primates. _PLoS Comput. Biol._ 17, e1008785 (2021). \n\n26. G. Lingas _et al._ , Effect of remdesivir on viral dynamics in COVID- 19 hospitalized patients: A modelling analysis of the randomized, controlled, open- label DisCoVeRy trial. _J. Antimicrob Chemother._ 77, 1404–1412 (2022). \n\nknowledge about acute infections and for developing more sophisticated models of infection transmission, including the impact of pharmaceuticals ( 48 ) and nonpharmaceutical interventions. \n\n**Data, Materials, and Software Availability.** Previously published data were used for this work (8). \n\n**ACKNOWLEDGMENTS.** We thank Benny Chain for helpful discussions about the human challenge study and his comments on an earlier version of this paper. This work was performed under the auspices of the US Dept. of Energy under contract 9233218CNA000001 and supported by NIH grant U54- HL143541 and Los Alamos National Laboratory - Laboratory Directed Research and Development grants 20200743ER, 20200695ER, and 20210730ER. It was also performed in part at the Aspen Center for Physics, which is supported by NSF grant PHY- 2210452. \n\nAuthor affiliations:<sup>a</sup> Theoretical Division, Theoretical Biology and Biophysics, Los Alamos National Laboratory, Los Alamos, NM 87545 \n\n27. G. Lingas _et al._ , Modelling the association between neutralizing antibody levels and SARS- CoV- 2 viral dynamics: Implications to define correlates of protection against infection. medRxiv [Preprint] (2023). https://doi.org/10.1101/2023.03.05.23286816. \n\n28. A. Marc _et al._ , Impact of variants of concern on SARS- CoV- 2 viral dynamics in non- human primates. _PLoS Comput. Biol._ 19, e1010721 (2023). \n\n29. N. K. Vaidya, A. Bloomquist, A. S. Perelson, Modeling within- host dynamics of SARS- CoV- 2 infection: A case study in ferrets. _Viruses_ 13, 1635 (2021). \n\n30. S. Iwanami _et al._ , Detection of significant antiviral drug effects on COVID- 19 with reasonable sample sizes in randomized controlled trials: A modeling study. _PLoS Med._ 18, e1003660 (2021). \n\n31. A. Rohatgi, WebPlotDigitizer–Copyright 2010–2022 Ankit Rohatgi. Automeris.io (2022). https:// apps.automeris.io/wpd/. Accessed 24 February 2023. \n\n32. H. R. Wagstaffe _et al._ , Mucosal and systemic immune correlates of viral control after SARS- CoV- 2 infection challenge in seronegative adults. _Sci. Immunol._ 9, eadj9285 (2024). \n\n33. K. Best, A. S. Perelson, Mathematical modeling of within- host Zika virus dynamics. _Immunol. Rev._ 285, 81–96 (2018). \n\n34. A. U. Neumann _et al._ , Hepatitis C viral dynamics in vivo and the antiviral efficacy of interferon- alpha therapy. _Science_ 282, 103–107 (1998). \n\n35. A. S. Perelson, Modelling viral and immune system dynamics. _Nat. Rev. Immunol._ 2, 28–36 (2002). 36. R. J. De Boer, A. S. Perelson, Target cell limited and immune control models of HIV infection: A comparison. _J. Theor. Biol._ 190, 201–214 (1998). \n\n37. A. Gonçalves _et al._ , Timing of antiviral treatment initiation is critical to reduce SARS- CoV- 2 viral load. _CPT Pharmacometrics Syst. Pharmacol._ 9, 509–514 (2020). \n\n38. A. García- Sastre, C. A. Biron, Type 1 interferons and the virus- host relationship: A lesson in détente. _Science_ 312, 879–882 (2006). \n\n39. M. Sa Ribero, N. Jouvenet, M. Dreux, S. Nisole, Interplay between SARS- CoV- 2 and the type I interferon response. _PLoS Pathog._ 16, e1008737 (2020). \n\n40. C. E. Samuel, Antiviral actions of interferons. _Clin. Microbiol. Rev._ 14, 778–809 (2001). \n\n41. T. Phan _et al._ , Modeling the emergence of viral resistance for SARS- CoV- 2 during treatment with an anti- spike monoclonal antibody. _PLoS Pathog._ 20, e1011680 (2024). \n\n42. C. E. Samuel, G. S. Knutson, Mechanism of interferon action. Kinetics of decay of the antiviral state and protein phosphorylation in mouse fibroblasts treated with natural and cloned interferons. _J. Biol. Chem._ 257, 11796–11801 (1982). \n\n43. P. R. Somvanshi, K. V. Venkatesh, “Hill equation” in _Encyclopedia of Systems Biology_ , W. Dubitzky, O. Wolkenhauer, K.- H. Cho, H. Yokota, Eds. (Springer, 2013), pp. 892–895. \n\n44. S. A. S. Lixoft, Monolix|Lixoft. Lixoft (2015). https://lixoft.com/products/monolix/. Accessed 20 January 2023. \n\n45. K. P. Burnham, D. R. Anderson, “Practical use of the Information- theoretic approach” in _Model Selection and Inference: A Practical Information- Theoretic Approach_ , K. P. Burnham, D. R. Anderson, Eds. (Springer, 1998), pp. 75–117. \n\n46. Y. J. Hou _et al._ , SARS- CoV- 2 reverse genetics reveals a variable infection gradient in the respiratory tract. _Cell_ 182, 429–446.e14 (2020). \n\n47. N. S. Ogando _et al._ , SARS- coronavirus- 2 replication in Vero E6 cells: Replication kinetics, rapid adaptation and cytopathology. _J. Gen. Virol._ 101, 925–940 (2020). \n\n48. A. S. Perelson, R. M. Ribeiro, T. Phan, An explanation for SARS- CoV- 2 rebound after Paxlovid treatment. medRxiv [Preprint] (2023). https://www.medrxiv.org/content/ (Accessed 15 February 2024). \n\n49. E. A. Voigt, A. Swick, J. Yin, Rapid induction and persistence of paracrine- induced cellular antiviral states arrest viral infection spread in A549 cells. _Virology_ 496, 59–66 (2016). \n\n50. N. Ulker, X. Zhang, C. E. Samuel, Mechanism of interferon action. I. Characterization of a 54- kDa protein induced by gamma interferon with properties similar to a cytoskeletal component. _J. Biol. Chem._ 262, 16798–16803 (1987). \n\n51. J. A. Hay _et al._ , Quantifying the impact of immune history and variant on SARS- CoV- 2 viral kinetics and infection rebound: A retrospective cohort study. _Elife_ 11, e81849 (2022). \n\n52. C. Zitzmann, R. Ke, R. M. Ribeiro, A. S. Perelson, How robust are estimates of key parameters in standard viral dynamic models? _PLoS Comput. Biol._ 20, e1011437 (2024). \n\n53. R. A. Saenz _et al._ , Dynamics of influenza virus infection and pathology. _J. Virol._ 84, 3974–3983 (2010). \n\n54. R. G. H. Lindeboom _et al._ , Human SARS- CoV- 2 challenge uncovers local and systemic response dynamics. _Nature_ 631, 189–198 (2024). \n\n55. J. E. Pearson, P. Krapivsky, A. S. Perelson, Stochastic theory of early viral infection: Continuous versus burst production of virions. _PLoS Comput. Biol._ 7, e1001058 (2011). \n\nhttps://doi.org/10.1073/pnas.2406303121 **9 of 10** \n\n**PNAS** 2024  Vol. 121  No. 46 e2406303121 \n\n56. S. Q. Du, W. Yuan, Mathematical modeling of interaction between innate and adaptive immune responses in COVID- 19 and implications for viral pathogenesis. _J. Med. Virol._ 92, 1615–1628 (2020). \n\n57. B. Borremans _et al._ , Quantifying antibody kinetics and RNA detection during early- phase SARSCoV- 2 infection by time since symptom onset. _Elife_ 9, 1–27 (2020). \n\n58. A. Sette, S. Crotty, Adaptive immunity to SARS- CoV- 2 and COVID- 19. _Cell_ 184, 861–880 (2021). \n\n59. S. Panda, J. L. Ding, Natural antibodies bridge innate and adaptive immunity. _J. Immunol._ 194, 13–20 (2015). \n\n60. R. Sanjuán, Collective infectious units in viruses. _Trends Microbiol._ 25, 402–412 (2017). \n\n61. J. M. Cuevas, M. Durán- Moreno, R. Sanjuán, Multi- virion infectious units arise from free viral particles in an enveloped virus. _Nat. Microbiol._ 2, 1–7 (2017). \n\n62. I. A. Hatton, O. Mazzarisi, A. Altieri, M. Smerlak, Diversity begets stability: Sublinear growth and competitive coexistence across ecosystems. _Science_ 383, eadg8488 (2024). \n\n63. N. R. Cheemarla _et al._ , Dynamic innate immune response determines susceptibility to SARS- CoV- 2 infection and early replication kinetics. _J. Exp. Med._ 218, e20210583 (2021). \n\n64. M. Gunawardana _et al._ , Early SARS- CoV- 2 dynamics and immune responses in unvaccinated participants of an intensely sampled longitudinal surveillance study. _Commun. Med. (Lond.)_ 2, 129 (2022). \n\n65. B. Israelow _et al._ , Adaptive immune determinants of viral clearance and protection in mouse models of SARS- CoV- 2. _Sci. Immunol._ 6, eabl4509 (2021). \n\n66. P. Moss, The T cell immune response against SARS- CoV- 2. _Nat. Immunol._ 23, 186–193 (2022). \n\n67. M. C. Choudhary _et al._ , Emergence of SARS- CoV- 2 escape mutations during Bamlanivimab therapy in a phase II randomized clinical trial. _Nat. Microbiol._ 7, 1906–1917 (2022). \n\n68. R. Deo _et al._ , Symptom and viral rebound in untreated SARS- CoV- 2 infection. _Ann. Intern. Med._ 176, 348–354 (2023). \n\n69. B. Jensen _et al._ , Emergence of the E484K mutation in SARS- COV- 2- infected immunocompromised patients treated with bamlanivimab in Germany. _The Lancet Regional Health. Europe_ 8, 100164 (2021). \n\n70. N. Peiffer- Smadja _et al._ , Emergence of E484K mutation following bamlanivimab monotherapy among high- risk patients infected with the alpha variant of SARS- CoV- 2. _Viruses_ 13, 1642 (2021). \n\n71. G. E. Edelstein _et al._ , SARS- CoV- 2 virologic rebound with nirmatrelvir- ritonavir therapy. _Ann. Intern. Med._ 176, 1577–1585 (2023). \n\n72. A. S. Anderson, P. Caubel, J. M. Rusnak; EPIC- HR Trial Investigators, Nirmatrelvir- ritonavir and viral load rebound in Covid- 19. _N. Engl. J. Med._ 387, 1047–1049 (2022). \n\n73. N. Petrosillo, SARS- CoV- 2 rebound with and without antivirals. _Lancet Infect. Dis._ 23, 637–639 (2023). \n\n74. J. Xu, J. Carruthers, T. Finnie, I. Hall, Simplified within- host and dose- response models of SARSCoV- 2. _J. Theor. Biol._ 565, 111447 (2023). \n\n75. D. Grebennikov _et al._ , Predicting the kinetic coordination of immune response dynamics in SARSCoV- 2 infection: Implications for disease pathogenesis. _Mathematics_ 10, 3154 (2022). \n\n76. M. A. Stafford _et al._ , Modeling plasma virus concentration during primary HIV infection. _J. Theor. Biol._ 203, 285–301 (2000). \n\n77. S. M. Ciupe, N. Tuncer, Identifiability of parameters in mathematical models of SARS- CoV- 2 \n\n   - infections in humans. _Sci. Rep._ 12, 1–14 (2022). \n\n78. H. Miao, X. Xia, A. S. Perelson, H. Wu, On identifiability of nonlinear ODE models and applications in viral dynamics. _SIAM Rev. Soc. Ind. Appl. Math._ 53, 3–39 (2011), 10.1137/090757009. \n\n**10 of 10** https://doi.org/10.1073/pnas.2406303121 \n\npnas.org \n\n"
+      }
+    ],
+    "references": [
+      {
+        "raw": "World Health Organization (WHO) Number of COVID-19 deaths reported to WHO. WHO (2024). https://data.who.int/dashboards/covid19/cases?n=c. Accessed 14 March 2024.",
+        "doi": null,
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1002/jmv.25728",
+        "doi": "10.1002/jmv.25728",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1128/JVI.01623-05",
+        "doi": "10.1128/jvi.01623-05",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1126/science.abc6156",
+        "doi": "10.1126/science.abc6156",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1038/s41586-020-2196-x",
+        "doi": "10.1038/s41586-020-2196-x",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "World Health Organization (WHO) Timeline: WHO’s COVID-19 response. WHO (2023). https://www.who.int/emergencies/diseases/novel-coronavirus-2019/interactive-timeline. Accessed 14 March 2024.",
+        "doi": null,
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1016/S2213-2600(22)00226-0",
+        "doi": "10.1016/s2213-2600(22)00226-0",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1038/s41591-022-01780-9",
+        "doi": "10.1038/s41591-022-01780-9",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1371/journal.pbio.3001333",
+        "doi": "10.1371/journal.pbio.3001333",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1073/pnas.2111477118",
+        "doi": "10.1073/pnas.2111477118",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1038/s41564-022-01105-z",
+        "doi": "10.1038/s41564-022-01105-z",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1371/journal.pcbi.1009997",
+        "doi": "10.1371/journal.pcbi.1009997",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.7554/eLife.69302",
+        "doi": "10.7554/elife.69302",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "J. Carruthers J. Xu T. Finnie I. Hall A within-host model of SARS-CoV-2 infection. medRxiv [Preprint] (2022). https://doi.org/10.1101/2022.04.22.22274137v1 (Accessed 18 January 2024).",
+        "doi": "10.1101/2022.04.22.22274137",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1186/s12916-021-02220-0",
+        "doi": "10.1186/s12916-021-02220-0",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1371/journal.ppat.1010630",
+        "doi": "10.1371/journal.ppat.1010630",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1126/sciadv.abc7112",
+        "doi": "10.1126/sciadv.abc7112",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.7554/eLife.63537",
+        "doi": "10.7554/elife.63537",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1016/j.isci.2022.104448",
+        "doi": "10.1016/j.isci.2022.104448",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1073/pnas.2017962118",
+        "doi": "10.1073/pnas.2017962118",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1002/cpt.2160",
+        "doi": "10.1002/cpt.2160",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1016/j.mbs.2020.108438",
+        "doi": "10.1016/j.mbs.2020.108438",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1371/journal.pcbi.1008752",
+        "doi": "10.1371/journal.pcbi.1008752",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.7554/eLife.75427",
+        "doi": "10.7554/elife.75427",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1371/journal.pcbi.1008785",
+        "doi": "10.1371/journal.pcbi.1008785",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1093/jac/dkac048",
+        "doi": "10.1093/jac/dkac048",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "G. Lingas Modelling the association between neutralizing antibody levels and SARS-CoV-2 viral dynamics: Implications to define correlates of protection against infection. medRxiv [Preprint] (2023). https://doi.org/10.1101/2023.03.05.23286816.",
+        "doi": "10.1101/2023.03.05.23286816",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1371/journal.pcbi.1010721",
+        "doi": "10.1371/journal.pcbi.1010721",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.3390/v13081635",
+        "doi": "10.3390/v13081635",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1371/journal.pmed.1003660",
+        "doi": "10.1371/journal.pmed.1003660",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "A. Rohatgi WebPlotDigitizer–Copyright 2010–2022 Ankit Rohatgi. Automeris.io (2022). https://apps.automeris.io/wpd/. Accessed 24 February 2023.",
+        "doi": null,
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1126/sciimmunol.adj9285",
+        "doi": "10.1126/sciimmunol.adj9285",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1111/imr.12687",
+        "doi": "10.1111/imr.12687",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1126/science.282.5386.103",
+        "doi": "10.1126/science.282.5386.103",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1038/nri700",
+        "doi": "10.1038/nri700",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1006/jtbi.1997.0548",
+        "doi": "10.1006/jtbi.1997.0548",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1002/psp4.12543",
+        "doi": "10.1002/psp4.12543",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1126/science.1125676",
+        "doi": "10.1126/science.1125676",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1371/journal.ppat.1008737",
+        "doi": "10.1371/journal.ppat.1008737",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "C. E. Samuel Antiviral actions of interferons. Clin. Microbiol. Rev. 14 778–809 (2001).",
+        "doi": "10.1128/cmr.14.4.778-809.2001",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1371/journal.ppat.1011680",
+        "doi": "10.1371/journal.ppat.1011680",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1016/S0021-9258(18)33834-1",
+        "doi": "10.1016/s0021-9258(18)33834-1",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1007/978-1-4419-9863-7_946",
+        "doi": "10.1007/978-1-4419-9863-7_946",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "S. A. S. Lixoft Monolix|Lixoft. Lixoft (2015). https://lixoft.com/products/monolix/. Accessed 20 January 2023.",
+        "doi": null,
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1007/978-1-4757-2917-7_3",
+        "doi": "10.1007/978-1-4757-2917-7_3",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1016/j.cell.2020.05.042",
+        "doi": "10.1016/j.cell.2020.05.042",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1099/jgv.0.001453",
+        "doi": "10.1099/jgv.0.001453",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "A. S. Perelson R. M. Ribeiro T. Phan An explanation for SARS-CoV-2 rebound after Paxlovid treatment. medRxiv [Preprint] (2023). https://www.medrxiv.org/content/ (Accessed 15 February 2024).",
+        "doi": "10.1101/2023.05.30.23290747",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1016/j.virol.2016.05.019",
+        "doi": "10.1016/j.virol.2016.05.019",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1016/S0021-9258(18)45454-3",
+        "doi": "10.1016/s0021-9258(18)45454-3",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.7554/eLife.81849",
+        "doi": "10.7554/elife.81849",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1371/journal.pcbi.1011437",
+        "doi": "10.1371/journal.pcbi.1011437",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1128/JVI.02078-09",
+        "doi": "10.1128/jvi.02078-09",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1038/s41586-024-07575-x",
+        "doi": "10.1038/s41586-024-07575-x",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1371/journal.pcbi.1001058",
+        "doi": "10.1371/journal.pcbi.1001058",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1002/jmv.25866",
+        "doi": "10.1002/jmv.25866",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.7554/eLife.60122",
+        "doi": "10.7554/elife.60122",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1016/j.cell.2021.01.007",
+        "doi": "10.1016/j.cell.2021.01.007",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.4049/jimmunol.1400844",
+        "doi": "10.4049/jimmunol.1400844",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1016/j.tim.2017.02.003",
+        "doi": "10.1016/j.tim.2017.02.003",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1038/nmicrobiol.2017.78",
+        "doi": "10.1038/nmicrobiol.2017.78",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1126/science.adg8488",
+        "doi": "10.1126/science.adg8488",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "N. R. Cheemarla Dynamic innate immune response determines susceptibility to SARS-CoV-2 infection and early replication kinetics. J. Exp. Med. 218 e20210583 (2021).",
+        "doi": "10.1084/jem.20210583",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1038/s43856-022-00195-4",
+        "doi": "10.1038/s43856-022-00195-4",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1126/sciimmunol.abl4509",
+        "doi": "10.1126/sciimmunol.abl4509",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1038/s41590-021-01122-w",
+        "doi": "10.1038/s41590-021-01122-w",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1038/s41564-022-01254-1",
+        "doi": "10.1038/s41564-022-01254-1",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.7326/M22-2381",
+        "doi": "10.7326/m22-2381",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1016/j.lanepe.2021.100164",
+        "doi": "10.1016/j.lanepe.2021.100164",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.3390/v13081642",
+        "doi": "10.3390/v13081642",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.7326/M23-1756",
+        "doi": "10.7326/m23-1756",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1056/NEJMc2205944",
+        "doi": "10.1056/nejmc2205944",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1016/S1473-3099(23)00063-4",
+        "doi": "10.1016/s1473-3099(23)00063-4",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1016/j.jtbi.2023.111447",
+        "doi": "10.1016/j.jtbi.2023.111447",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.3390/math10173154",
+        "doi": "10.3390/math10173154",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1006/jtbi.2000.1076",
+        "doi": "10.1006/jtbi.2000.1076",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1038/s41598-022-18683-x",
+        "doi": "10.1038/s41598-022-18683-x",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10.1137/090757009",
+        "doi": "10.1137/090757009",
+        "title": null,
+        "year": null
+      }
+    ],
+    "assets": [],
+    "quality": {
+      "has_fulltext": true,
+      "token_estimate": 16315,
+      "content_kind": "fulltext",
+      "has_abstract": true,
+      "warnings": [
+        "pnas HTML route was not usable (empty_article_shell); attempting PDF fallback.",
+        "Full text was extracted from PDF fallback after the HTML path was not usable.",
+        "PNAS official full text was downloaded as PDF/binary to /home/dictation/paper-fetch-skill/.paper-fetch-runs/provenance-repair-2026-09-17/fetch/10.1073_pnas.2406303121/Iyaniwura_et_al_2024_The_kinetics_of_SARS-CoV-2_infection_based_on_a_human_challenge_study.pdf."
+      ],
+      "source_trail": [
+        "fulltext:pnas_html_fail",
+        "fulltext:pnas_pdf_fallback_ok",
+        "fulltext:pnas_pdf_ok",
+        "resolve:doi",
+        "resolve:doi_selected",
+        "route:crossref_signal_ok",
+        "route:signal_domain_pnas",
+        "route:signal_doi_pnas",
+        "route:probe_pnas_unknown",
+        "route:provider_selected_pnas",
+        "route:provider_candidate_pnas_metadata_selected_rank_1",
+        "route:provider_candidate_pnas_identity_strong",
+        "fulltext:pnas_attempt",
+        "download:pnas_saved",
+        "download:pnas_assets_skipped_profile_none",
+        "fulltext:pnas_article_ok",
+        "route:provider_candidate_pnas_accepted"
+      ],
+      "token_estimate_breakdown": {
+        "abstract": 407,
+        "body": 15908,
+        "refs": 793
+      },
+      "confidence": "medium",
+      "flags": [
+        "weak_body_structure"
+      ],
+      "body_metrics": {
+        "char_count": 63436,
+        "word_count": 10471,
+        "body_block_count": 1,
+        "body_heading_count": 0,
+        "body_to_abstract_ratio": 40.27307692307692,
+        "explicit_body_container": false,
+        "post_abstract_body_run": false,
+        "figure_count": 0
+      },
+      "semantic_losses": {
+        "table_fallback_count": 0,
+        "table_layout_degraded_count": 0,
+        "table_semantic_loss_count": 0,
+        "formula_fallback_count": 0,
+        "formula_missing_count": 0
+      },
+      "asset_failures": [],
+      "asset_summary": {
+        "audited": true,
+        "requested": false,
+        "profile": "none",
+        "expected": null,
+        "discovered": 0,
+        "attempted": 0,
+        "total": 0,
+        "local": 0,
+        "full_size": 0,
+        "preview": 0,
+        "accepted_preview": 0,
+        "fallback_preview": 0,
+        "failed": 0,
+        "placeholder_suspected": 0,
+        "not_requested": 0,
+        "not_archived": 0,
+        "remote_link_count": 0,
+        "remote_only_count": 0,
+        "failure_codes": [],
+        "issue_codes": [],
+        "by_kind": {
+          "figure": {
+            "total": 0,
+            "requested": 0,
+            "full_size": 0,
+            "preview": 0,
+            "accepted_preview": 0,
+            "fallback_preview": 0,
+            "failed": 0,
+            "placeholder_suspected": 0,
+            "not_requested": 0,
+            "not_archived": 0
+          },
+          "formula": {
+            "total": 0,
+            "requested": 0,
+            "full_size": 0,
+            "preview": 0,
+            "accepted_preview": 0,
+            "fallback_preview": 0,
+            "failed": 0,
+            "placeholder_suspected": 0,
+            "not_requested": 0,
+            "not_archived": 0
+          },
+          "table": {
+            "total": 0,
+            "requested": 0,
+            "full_size": 0,
+            "preview": 0,
+            "accepted_preview": 0,
+            "fallback_preview": 0,
+            "failed": 0,
+            "placeholder_suspected": 0,
+            "not_requested": 0,
+            "not_archived": 0
+          },
+          "supplement": {
+            "total": 0,
+            "requested": 0,
+            "full_size": 0,
+            "preview": 0,
+            "accepted_preview": 0,
+            "fallback_preview": 0,
+            "failed": 0,
+            "placeholder_suspected": 0,
+            "not_requested": 0,
+            "not_archived": 0
+          },
+          "decoration": {
+            "total": 0,
+            "requested": 0,
+            "full_size": 0,
+            "preview": 0,
+            "accepted_preview": 0,
+            "fallback_preview": 0,
+            "failed": 0,
+            "placeholder_suspected": 0,
+            "not_requested": 0,
+            "not_archived": 0
+          }
+        },
+        "diagnostics": []
+      },
+      "extraction_revision": 5
+    },
+    "acquisition": {
+      "provider": "pnas",
+      "route": "browser_pdf",
+      "representation": "pdf",
+      "transport": "browser",
+      "fallback_used": true
+    }
+  },
+  "markdown": "---\ntitle: \"The kinetics of SARS-CoV-2 infection based on a human challenge study\"\nauthors: \"Sarafa A. Iyaniwura, Ruy M. Ribeiro, Carolin Zitzmann, Tin Phan, Ruian Ke, Alan S. Perelson\"\njournal: \"Proceedings of the National Academy of Sciences\"\ndoi: \"10.1073/pnas.2406303121\"\npublished: \"2024-11-12\"\nsource: \"pnas\"\nacquisition:\n  provider: \"pnas\"\n  route: \"browser_pdf\"\n  representation: \"pdf\"\n  transport: \"browser\"\n  fallback_used: true\nhas_fulltext: true\ncontent_kind: \"fulltext\"\nhas_abstract: true\ntoken_estimate: 16315\n---\n\n# The kinetics of SARS-CoV-2 infection based on a human challenge study\n\n**Abstract.** Studying the early events that occur after viral infection in humans is difficult unless one intentionally infects volunteers in a human challenge study. Here, we use data about severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2) in such a study in combination with mathematical modeling to gain insights into the relationship between the amount of virus in the upper respiratory tract and the immune response it generates. We propose a set of dynamic models of increasing complexity to dissect the roles of target cell limitation, innate immunity, and adaptive immunity in determining the observed viral kinetics. We introduce an approach for modeling the effect of humoral immunity that describes a decline in infectious virus after immune activation. We fit our models to viral load and infectious titer data from all the untreated infected participants in the study simultaneously. We found that a power-law with a power h < 1 describes the relationship between infectious virus and viral load. Viral replication at the early stage of infection is rapid, with a doubling time of ~2 h for viral RNA and ~3 h for infectious virus. We estimate that adaptive immunity is initiated ~7 to 10 d postinfection and appears to contribute to a multiphasic viral decline experienced by some participants; the viral rebound experienced by other participants is consistent with a decline in the interferon response. Altogether, we quantified the kinetics of SARS-CoV-2 infection, shedding light on the early dynamics of the virus and the potential role of innate and adaptive immunity in promoting viral decline during infection.\n\n**RESEARCH ARTICLE |** PHYSICS<sup>MEDICAL SCIENCES</sup> \n\n**OPEN ACCESS** \n\n\n\n# **The kinetics of SARS- CoV- 2 infection based on a human challenge study** \n\nSarafa A. Iyaniwura<sup>a,1</sup> , Ruy M. Ribeiro<sup>a</sup> , Carolin Zitzmann<sup>a</sup> , Tin Phan<sup>a</sup> , Ruian Ke<sup>a</sup> , and Alan S. Perelson<sup>a,2</sup> Affiliations are included on p. 9. \n\nEdited by Marcus Feldman, Stanford University, Stanford, CA; received March 28, 2024; accepted October 9, 2024 \n\n**Studying the early events that occur after viral infection in humans is difficult unless one intentionally infects volunteers in a human challenge study. Here, we use data about severe acute respiratory syndrome coronavirus 2 (SARS** - **CoV** - **2) in such a study in combination with mathematical modeling to gain insights into the relationship between the amount of virus in the upper respiratory tract and the immune response it generates. We propose a set of dynamic models of increasing complexity to dissect the roles of target cell limitation, innate immunity, and adaptive immunity in determining the observed viral kinetics. We introduce an approach for modeling the effect of humoral immunity that describes a decline in infectious virus after immune activation. We fit our models to viral load and infectious titer data from all the untreated infected participants in the study simultaneously. We found that a power** - **law with a power** **_h_ < 1 describes the relationship between infectious virus and viral load. Viral replication at the early stage of infection is rapid, with a doubling time of** ~ **2 h for viral RNA and** ~ **3 h for infectious virus. We estimate that adaptive immunity is initiated** ~ **7 to 10 d postinfection and appears to contribute to a multiphasic viral decline experienced by some participants; the viral rebound experienced by other participants is consistent with a decline in the interferon response. Altogether, we quantified the kinetics of SARS** - **CoV** - **2 infection, shedding light on the early dynamics of the virus and the potential role of innate and adaptive immunity in promoting viral decline during infection.** \n\nSARS- CoV- 2 | viral dynamics | human challenge study | infectious disease modeling | mathematical modeling \n\nSevere acute respiratory syndrome coronavirus 2 (SARS-CoV-2) continues to spread worldwide, with over 776 million reported cases and 7 million deaths as of August 14, 2024 ( 1 ). SARS-CoV-2 is a highly contagious virus that primarily infects cells in the respiratory tract and lungs and is the causal agent of COVID-19 ( 2 – 5 ) that was first detected in Wuhan, China, in December 2019 ( 6 ). \n\nDuring acute infection, SARS-CoV-2 viral load, measured by the qPCR in samples from nose (or throat) swabs, increases rapidly, reaches a peak, and then declines ( 7 – 9 ). However, qPCR does not measure virus infectivity, which is critical to define an individual’s infectiousness. We and others have previously studied viral infectivity as a function of viral RNA measured by qPCR ( 10 – 13 ). Understanding the initial acute dynamics of the virus and how total viral RNA relates to infectious virus during infection can help provide insight into the pathogenesis of the disease and the window of infectiousness of an individual. To this end, many studies used viral dynamic models to analyze the within-host kinetics of SARS-CoV-2 ( 10 ,  14 – 23 ). These models typically describe the RNA dynamics during infection; however, they provide limited information about the infectiousness of the virus. Some studies have incorporated both viral RNA and infectious virus in their models ( 10 – 13 ,  24 – 29 ), and except for refs.  10 and  12 , these models assume a linear relationship between the two viral quantities. Moreover, many of the datasets used to study the in vivo dynamics of SARS-CoV-2 were obtained after the onset of symptoms, without knowledge of the infection date and information on the viral dynamics during the early stages of infection ( 5 ,  20 ,  30 ). This lack of information makes studying the virus’s initial growth phase and early dynamics challenging. \n\nHere, we aim to understand better the in vivo kinetics of the virus during infection using mathematical modeling. We used longitudinal nasal viral RNA and infectious virus measurements taken every 12 h from 12 individuals in a unique SARS-CoV-2 human challenge study ( 8 ). An advantage of using this dataset is the availability of the infection date and twice daily viral RNA and quantitative infectious virus measurements for each participant. This high-resolution dataset allows us to quantify precisely how \n\n## **Significance** \n\nStudying the early dynamics of severe acute respiratory syndrome coronavirus 2 (SARSCoV-2) infection in humans is difficult. Here, we take advantage of a detailed dataset from a human challenge study to fit dynamic models that include innate and adaptive immune responses to longitudinal changes in both infectious and total virus. We uncovered a nonlinear relationship between total virus and infectious virus. We found that viral replication, after a short delay, is rapid, with a doubling time of ~2 h for viral RNA and ~3 h for infectious virus. We also found that innate immunity wanes as virus is brought under control, which together with adaptive immunity, initiated ~7 to 10 d postinfection, contributes to a multiphasic viral decline experienced by some participants. \n\nAuthor contributions: S.A.I., R.M.R., R.K., and A.S.P. designed research; S.A.I., R.M.R., C.Z., T.P., R.K., and A.S.P. performed research; S.A.I., R.M.R., and A.S.P. analyzed data; A.S.P. obtained funding for research; and S.A.I., R.M.R., C.Z., T.P., R.K., and A.S.P. wrote the paper. \n\nThe authors declare no competing interest. \n\nThis article is a PNAS Direct Submission. \n\nCopyright © 2024 the Author(s). Published by PNAS. This open access article is distributed under Creative Commons Attribution- NonCommercial- NoDerivatives License 4.0 (CC BY- NC- ND). \n\n1Present address: Biostatistics, Bioinformatics, and Epidemiology Program, Vaccine and Infectious Disease Division, Fred Hutchinson Cancer Center, Seattle, WA 98109. 2To whom correspondence may be addressed. Email: asp@lanl.gov. \n\nThis article contains supporting information online at https://www.pnas.org/lookup/suppl/doi:10.1073/pnas. 2406303121/- /DCSupplemental. Published November 7, 2024. \n\nhttps://doi.org/10.1073/pnas.2406303121 **1 of 10** \n\n**PNAS** 2024  Vol. 121  No. 46 e2406303121 \n\nthe infectious virus relates to the viral RNA during infection and the in vivo kinetics of the two quantities throughout the course of infection. \n\n## **Methods** \n\n**Data.** We digitized, using WebPlotDigitizer software v4.6 (31), the longitudinal viral RNA and infectious virus measurements for the participants of a SARS- CoV- 2 human challenge study (extended figure 5 from ref. 8), an open, nonrandomized clinical trial NCT04865237 (8). The data were recently published (32), after our study was completed, but we confirmed that the digitized data are nearly identical to the published data. In the study, thirty- six healthy unvaccinated individuals, aged 18 to 29 y with no evidence of previous SARS- CoV- 2 infection, were challenged intranasally with 10 Tissue Culture Infectious Doses (TCID50) of a wild- type SARS- CoV- 2 (SARS- CoV- 2/human/GBR/484861/2020). Viral RNA was quantified in nose swabs using qPCR and at the same time, infectious virus was quantified in terms of focus forming units (FFU) using a focus- forming assay. Here, we analyze the data from the 12 participants in the study, who developed an infection and were not treated with remdesivir or other antivirals (8). \n\nFig. 1 shows the 12 participants’ longitudinal nasal viral RNA (in log10 copies/ mL, black) and infectious virus (in log10 FFU/mL, red) measurements throughout the infection. Notice that there is a delay postinoculation in detecting both viral quantities, although the viral RNA was detected earlier than the infectious virus. An average delay of approximately 2 d was reported for viral RNA (8). Furthermore, the infectious virus level is lower than the viral RNA’s, becoming undetectable much earlier than the viral RNA, which itself becomes undetectable by day 20 postinoculation for most participants. The lower limit of quantification (LLOQ) for viral RNA was 3 log10 copies/mL and the lower limit of detection (LLOD) was indicated as 0 log10 copies/mL (8). Similarly, the LLOQ for infectious virus was 1.27 log10 FFU/mL and the LLOD was 0 log10 FFU/mL (8). \n\n## **Mathematical Models** \n\n**The Relationship between Total and Infectious Virus.** We studied the relationship between total viral RNA ( _V_ ) and infectious virus ( _Vi_ ) during SARS- CoV- 2 infection using a power- law model (PLM), given by \n\n\n\n\n\nwhere _B_ and _h_ are constants to be estimated from the data. This equation is more general than the linear relationship, i.e., _h_ = 1, that has frequently been used ( 13 ,  24 – 29 ) and thus allows us to test whether this nonlinear model is more compatible with the data. We incorporate this model into our viral dynamic models to link the viral RNA and infectious virus kinetics during infection. As done previously ( 10 ), we also studied a saturation model, where _f_ ( _V_ ) is a Hill function ( _SI Appendix_ , S1 ), but that model and the linear model were not as good at describing the data. \n\n**Model of Viral Dynamics.** Next, we studied the in vivo kinetics of the virus using viral dynamics models. We started with a simple target- cell limited (TCL) model (3, 10, 12, 18, 21, 33–37), which was later extended to include innate and adaptive immune responses. Our best performing model incorporates both forms of immune responses to viral infection. \n\nOur TCL model keeps track of the total number of target cells ( _T_ ), cells in the eclipse phase ( _E_ ), and productively infected cells ( _I_ ). We also keep track of the viral RNA representing total virus ( _V_ ) and infectious virus ( _Vi_ ) and assume that only the infectious virus can infect target cells ( Fig. 2 and _SI Appendix_ , S2 ). Note that \n\n\n\n**Fig. 1.** Digitized nasal viral RNA and infectious virus from a SARS- CoV- 2 human challenge study (from extended figure 5 of ref. 8). Longitudinal viral RNA (black dots) and infectious virus (red dots) measurements for the 12 infected, untreated participants in the human challenge study (we use the original ID numbers). Solid lines are used to connect data. The horizontal dashed lines are the LLOQ, 3 log10 copies/mL for viral RNA (black) and 1.27 log10 FFU/mL for infectious virus (red). Open circles represent measurements below the LLOQ. \n\n**2 of 10** https://doi.org/10.1073/pnas.2406303121 \n\npnas.org \n\n_V_ includes both infectious virus and noninfectious virus, the latter of which we do not track separately. This model was extended to include an innate immune response. Specifically, we consider the action of type-I and type-III interferons (IFN) that put target cells into an antiviral state, refractory to viral infection ( 38 – 40 ). IFNs are produced both by infected cells and by innate cells such as plasmacytoid dendritic cells, which are recruited in response to cell infection. However, we do not explicitly model the IFN concentration but rather assume that the concentration is proportional to the number of infected cells as has been done previously ( 10 ,  41 ) ( _SI Appendix_ , S3 ). In addition to the dynamics captured by the TCL model, this model keeps track of cells in the refractory state (R). We refer to this model as the refractory cell model (RCM) ( Fig. 2 ). The model equations are \n\n\n\nwhere _f_ ( _V_ ) is the power-law function given by Eq. **1** . The model parameters are defined in the caption to  Fig. 2 . \n\nDue to the action of IFN, target cells transition to a refractory state at per capita rate _ϕ_ and refractory cells transition back to the target cell state at rate _ρ_ . We considered a scenario where the transition of refractory cells to target cells occurs at a constant rate ( _ρ_ is constant throughout infection) and another where the return depends on the density of productively infected cells (since we assume that the concentration of IFN is proportional to infected cells), i.e., _ρ_ ≡ _ρ_ ( _I_ ). The return from the refractory state is not \n\n\n\n**Fig. 2.** Schematic illustration of the dynamic models. The TCL model (light green rectangle), RCM (rectangle with dashed border), and the RCM with humoral immune response (entire diagram). Target cells ( _T_ ) are infected by infectious virus ( _Vi_ ) at rate _β_ and transition through an eclipse phase ( _E_ ) before becoming productively infected at per capita rate _k_ . Productively infected cells ( _I_ ) die at the per capita rate _δ_ and produce virus ( _V_ ), at constant rate _π_ , which is then cleared at per capita rate _c_ . The virus population includes both infectious virus ( _Vi,_ colored red) and noninfectious virus (colored blue). For the RCM, target cells also become refractory to infection due to the actions of type- I and type- III IFNs at rate ϕ, and refractory cells transition to back to the target state at rate _ρ_ . Neutralizing antibodies bind infectious viruses, thereby preventing them from infecting target cells. Diagram created with BioRender.com. \n\nexpected to occur when _I_ is large and IFN levels are high ( 42 ). To allow this transition to occur mainly once _I_ falls below a threshold value, we chose to use the following Hill function, \n\n\n\nwhere _휌_ 0 is the baseline rate at which cells in refractory state transition to target cells once the infection is cleared, _I_ is the number of infected cells, _Kρ_ is the number of infected cells required to achieve half of the baseline rate _휌_ 0 , and _n_ is the Hill coefficient ( 43 ). \n\nAlthough 10 TCID50 of the virus was inoculated into each participant, only 53% of the participants became infected ( 8 ). Thus, the exact number of virions that initiated infection is unknown. Therefore, as has been done previously ( 10 ,  11 ), we assume that infection was initiated by one infected cell in the eclipse phase. Note that essentially this means we are modeling infection from the time the observed exponential growth of virus starts, and there could be a delay (e.g., local stochastic infection and extinction) before this growth starts. Thus, we incorporate a delay of length _td_ days between inoculation and the start of an exponential growth of the virus. That is, we set _E_ = 1 cell at a time _td_ , to be estimated. In addition, we assume that there are no cells in the refractory state at the onset of infection. Note that when I ≫ _Kρ_ , _ρ_ ( _I_ ) ∼ 0 and cells remain in the refractory state. However, as the infection is resolved and _I_ decreases, cells lose their refractory state. \n\nFurthermore, we incorporate the effects of an adaptive immune response into our dynamic models. We consider cell-mediated and humoral immune responses. Cell-mediated immune response involves the killing of productively infected cells by effector cells such as antigen-specific CD8+ T cells. We incorporate the effect of this immune response into our model by increasing the death rate of productively infected cells ( _SI Appendix_ , S4 ). Humoral immune response is driven by B cells producing antigen-specific antibodies that bind to infectious virus, reducing their ability to infect target cells. Due to the lack of data on the neutralizing antibody concentration during infection, we model the effect of this response as a change in the relationship between viral RNA ( _V_ ) and infectious virus ( _Vi_ ). We assume that the humoral response starts at a time _ta_ (to be estimated), and leads to a decline in available infectious virus by decreasing the value of _h_ in Eq. **1** according to the following \n\n\n\nwhere _h_ 0 is the baseline value of _h_ ( _t_ ) before humoral immunity activation, and _σh_ is the exponential decay rate of _h_ 0 after immune response activation. The formulation in Eq. **4** is an empirical approach to model the effect of neutralizing antibodies, and its implementation requires the availability of infectious virus measurements. \n\n**Data Fitting and Parameter Estimation.** We fit our models to the longitudinal data (in logarithm scale) using a nonlinear mixedeffects modeling framework with Monolix version 2021R1 (44) ( _SI Appendix_ , S5). First, we estimated the initial growth rate of viral RNA and infectious virus including only the participants with at least two quantified measurements of _V_ or _Vi_ , before the peak viral level, since this is the minimum data providing information on the growth rate. Next, we fitted the power- law \n\nhttps://doi.org/10.1073/pnas.2406303121 **3 of 10** \n\n**PNAS** 2024  Vol. 121  No. 46 e2406303121 \n\nand saturation models to the data to find the relationship between viral RNA and infectious virus. To this end, we excluded infectious virus measurements below the LLOQ of 1.27 (log10 FFU/mL) and the concomitant viral RNA measurements, because they do not provide any information regarding the relationship between _V_ and _Vi_ , and in fact would distort it. \n\nFinally, we fit our dynamic models to the time course of viral RNA and infectious virus simultaneously. Here, detectable viral RNA and infectious virus measurements below the respective LLOQ of 3 log10 copies/mL and 1.27 log10 FFU/mL, were interval-censored at the LLOQ and LLOD values. In contrast, those measurements with undetectable virus were left-censored at the respective LLOD. In addition, we excluded a few measurements below the LLOQ that occurred between the first and last quantifiable viral measurements. i.e., in the middle of the viral load curve (shown in  Fig. 1 ). We believe the failure to quantify viruses at these time points is likely due to sampling or measurement errors since high levels of virus were detectable before and after. Furthermore, we kept only the first viral measurement below the LLOQ after the last quantifiable viral measurement for both the viral RNA and infectious virus, excluding the multiple later measurements below the LLOQ as these measurements below the LLOQ may reflect the cessation of viral shedding. \n\nWe compared model fits based on the goodness of fit by negative log-likelihood and the corrected Bayesian information criteria (BICc) ( 45 ). We quantify the uncertainty in our parameter estimates using the relative SE (RSE), which is calculated by dividing the SE by the estimated parameter value. In some cases, it was not possible to evaluate the uncertainty in the estimation of a parameter, and its RSE is specified as NaN. Note that NaN does not affect the maximum likelihood estimation ( _SI Appendix_ , S5 ). \n\nBased on prior studies, we fixed the rate at which cells in the eclipse phase become productively infected, _k_ = 4/d ( 10 ,  46 ,  47 ), and the clearance rate of viral RNA at _c_ = 10/d ( 10 ,  20 ,  37 ). We also assume that there are _T_ 0 = 8 × 10<sup>7</sup> target cells at the beginning of infection ( 10 ,  11 ,  17 ). \n\n## **Results** \n\n**Relationship between Total Viral RNA and Infectious Virus.** As shown in Fig. 1, the viral RNA quickly rises to a peak level (median time of 6.5 d postinoculation) and then decays until it becomes undetectable (median time of 16.5 d postinoculation). In three individuals (IDs 13, 14, and 15), there is a secondary viral peak before the virus ultimately decays to an undetectable level. Using a mixed- effects approach, we estimated the initial growth rate of the viral RNA across all individuals to be 7.86/d (SD = 0.28) and that of infectious virus as 5.36/d (SD = 0.17). This corresponds to a doubling time of ∼2 h for viral RNA and ∼3 h for infectious virus ( _SI Appendix_ , S6 and Fig. S1), suggesting that viral RNA grows ∼1.5 times faster than infectious virus during the early stage of infection. The data in Fig. 1 show a delay in detecting both the viral RNA and infectious virus. \n\nTo better understand the relationship between the viral RNA ( _V_ ) and infectious virus ( _Vi_ ), we quantitatively analyzed the relationship between the two variables using different models ( _Methods_ and _SI Appendix_ , S1 ). We found that a PLM, _Vi_ = _BV_<sup>_h_</sup> , with B = 2.63 × 10<sup>−3</sup> (SD = 0.22) and _h_ = 0.68 (SD = 0.084) ranked best based on BICc ( _SI Appendix_ , S1 ). Using the PLM and the exponential growth functions used to determine the growth rate of the viral RNA and infectious virus, we derived that the exponent ( _h_ ) in the PLM is the ratio of the growth rate of infectious virus to that of viral RNA. Furthermore, using the estimated growth rates for the two viral quantities gives _h_ ~ 0.68, \n\nwhich is the same as obtained by fitting the PLM to the entire dataset ( _SI Appendix_ , S7 ). \n\nThe fits in  Fig. 3 show that the PLM (Eq. **1** ) provides an excellent description of the relationship between the viral RNA and infectious virus throughout SARS-CoV-2 infection. Nevertheless, we tried other possibilities, such as having different parameters for the PLM during the growth and decline phases of the virus or describing the relationship with a linear or saturation model. We did not find statistical support for these alternatives ( _SI Appendix_ , S1 ). These results suggest a nonlinear relationship between the total viral RNA and infectious virus during SARS-CoV-2 infection, where the infectious virus increases sublinearly (since _h_ < 1) as the viral RNA increases. \n\n**Early Infection Dynamics.** We used a TCL model (3, 10, 11, 14, 37) of SARS- CoV- 2 infection (Fig. 2) and its extension with an innate immune response, which we refer to as the RCM (Fig. 2 and Eq. **2** ), to analyze the virus dynamics. We used the PLM to describe the relationship between viral RNA and infectious virus in the dynamic models. Initially, we fixed this relationship with the parameters found above ( _B_ = 2.63 × 10<sup>−3</sup> and _h_ = 0.68) but the fits obtained were poor ( _SI Appendix_ , Figs. S2 and S3). A comparison of model fits is given in _SI Appendix_ , Table S1. The best- fit model parameters are given in _SI Appendix_ , Tables S2 and S3. It is possible that this is because in the dynamical model, we used the full dataset, including censored data below the limit of quantification that were not used to determine the power law parameters ( _Methods_ ). Thus, we imposed the power- law relationship, but reestimated the parameters when fitting the viral dynamic models. Below we discuss and justify this further. \n\nIn fitting the models, we allowed for a delay _td_ after challenge, before infection takes hold ( _SI Appendix_ , S2 ). This delay, estimated at _td_ ~ 1 d improved the model description of the viral load data substantially (ΔBICc ~ 40 units) ( _SI Appendix_ , Figs. S4–S7 and Tables S4–S7 ). Overall, we found that a model with a delay of ~1 d between inoculum and the start of the exponential growth of the virus and incorporating an innate response that put cells in a refractory state for infection (RCM) described the data well. Based on this and the biological relevance of the innate immune response mechanisms involved, we adopt the RCM for further analyses. \n\n**Postpeak Viral Dynamics Predicted by Infectious Virus.** In some participants, the viral decline appears to be multiphasic, with some participants having viral rebounds toward the end of their infection (IDs 13, 14, and 15). Another common feature is a sudden and sharp decline in the viral RNA, which often coincides with the infectious virus becoming undetectable. \n\nTo understand possible mechanisms involved in the viral decline postpeak, we extended our RCM to include an adaptive immune response. We considered both _humoral_ and _cell-mediated_ immune mechanisms. We assume that the former involves the production of neutralizing antibodies, which bind to the virus, reducing its ability to infect target cells. We incorporated this effect by assuming that the exponent _h_ in the PLM decreases with the advent of humoral immunity ( _Methods_ ). This models the decrease in infectivity due to antibodies in a phenomenological way. We assume that the cell-mediated immune response involves killing of productively infected cells by immune cells. We incorporate this effect by increasing the death rate of infected cells after the onset of cellular immunity ( _SI Appendix_ , S4 ). \n\nWe analyzed separately both forms of adaptive immunity in the RCM, fitting each model separately to our dataset. Both models describe the viral RNA and infectious virus dynamics well for most participants ( _SI Appendix_ , Figs. S8 and S9 and Tables S8 and S9 ). \n\n**4 of 10** https://doi.org/10.1073/pnas.2406303121 \n\npnas.org \n\n\n\n**Fig. 3.** Fits using mixed- effects of the PLM to viral RNA and infectious virus. Blue triangles and green dots are for data obtained before the viral RNA peak and postpeak, respectively. Peak viral measurements are plotted together with the prepeak data except for participant 12, who does not have prepeak measurements. The solid black line is the model prediction. The horizontal red dashed line is the LLOQ of infectious virus (1.27 log10 FFU/mL). Data below the limit of quantification were not used in this analysis as there is no proper way to include them. \n\nThese extended models describe the rapid decline of virus near the end of infection better than the simpler models. The effects of adaptive immunity are estimated to start ∼7 d postchallenge. It is interesting to note that the adaptive immune response is predicted to start around the second peak for those participants with a viral rebound. Although incorporating adaptive immune response into the RCM increases the number of parameters in the model, these mechanisms improved the goodness of fit to the viral dynamics, with the humoral response improving the BICc score by 11 points (BICc = 1,457), and the cell-mediated response improving it by seven points (BICc = 1,461). \n\nUsing the humoral immune response model, we reestimated the parameters of the power-law relationship between viral RNA and infectious virus and found that the baseline _h_ 0 = 0.84, which then declines starting at _ta_ = 7.3 d postinoculation with rate _σh_ = 0.09/d. If we use these estimates to calculate the average _h_ over the 20 d of infection (typical duration in our fits), we find average _h_ = 0.62, which is very close to _h_ = 0.68 obtained in the PLM fit to the viral data directly in  Fig. 3 . This suggests that the initial estimate in  Fig. 3 is an average and not constant, which explains why fixing the power-law parameters from  Fig. 3 in our viral dynamics model results in poor fits ( _SI Appendix_ , Figs. S2 and S3 ). \n\n**Modeling Viral Rebound.** Incorporating adaptive immune response into our RCM improved the quality of the model fits. However, the viral rebound after the peak viral load experienced by some participants is still difficult to capture. It is likely that these rebounds require more target cells for the virus to infect, which the \n\nadaptive immunity models do not provide (48). One possibility is that refractory cells transition back to target cells faster after the peak, which the constant rate of transition does not capture. Therefore, we further extend the models by assuming that the rate at which refractory cells transition back into target cells depends on the density of infected cells ( _Methods_ ) and, thus, becomes faster as infected cells decline after the peak. In our model, we assume that the level of IFN is proportional to the level of infected cells, so the transition rate out of the refractory state reflects not only the decline in infected cells but also the decline of IFN (24, 49, 50). We refer to this model as the density- dependent RCM (DDRCM) ( _SI Appendix_ , S3). While this model fit the data slightly better than the RCM without density dependence, it was not favored because the extra parameters lead to an increase in the BICc of 15.3 points ( _SI Appendix_ , Table S1) The fit and best- fit parameters are given in _SI Appendix_ , Fig. S10 and Table S10. \n\nHowever, the DDRCM with either form of adaptive immune response improved the fit compared with the model without an adaptive immune response ( _SI Appendix_ , Table S1 ), with special effect in those individuals with a viral rebound ( Fig. 4 and _SI Appendix_ , Fig. S11 ). In these models, the estimated adaptive immune response activation time is ∼9 d postinoculation for the humoral response, and ∼10 d for the cell-mediated response ( Table 1 and _SI Appendix_ , Table S11 ). The DDRCM with a humoral immune response has a lower BICc score (1,461) than the model with a cell-mediated response (BICc = 1,469) and captures the viral rebound for the participants better. Note, however, that these BICc scores are not improved over the simpler RCMs \n\nhttps://doi.org/10.1073/pnas.2406303121 **5 of 10** \n\n**PNAS** 2024  Vol. 121  No. 46 e2406303121 \n\n\n\n**Fig. 4.** Fits of the DDRCM with humoral immunity. Measured viral RNA in log10 copies/mL (black dots) and infectious virus in log10 FFU/mL (red dots). Solid lines are model fits; horizontal dashed lines are the LLOQ, 3 log10 copies/mL for viral RNA (black) and 1.27 log10 FFU/mL for the infectious virus (red). Vertical dashed blue lines are the estimated time of humoral immunity activation. Open circles represent measurements below the LLOQ. Estimated population parameters are shown in Table 1. \n\nwith adaptive immunity. This may be because the extra parameters needed to capture the rebound are not justified when only a few participants show this rebound. In addition, the DDRCM with no adaptive immunity does not capture the different phases of viral decline and the viral rebounds well ( _SI Appendix_ , Fig. S10 ). In the DDRCM with humoral immunity, we estimated _B_ = 8.1 × 10<sup>−5</sup> , _h_ 0 = 0.86, _t_ a = 9.04 d, and _σh_ = 0.4/d for the power-law relationship between viral RNA and infectious virus ( Table 1 ). This indicates that most of the virus quickly becomes noninfectious after day 9 and may help explain why infectious virus is very difficult to recover after day 10 or so ( Fig. 4 ). We estimated the death rate of productively infected cells to be _δ_ = 2.17/d, implying that infected cells produce and secrete viruses for an average of ~11 h during their lifespan. Since cells transition from the eclipse phase to productive infection at rate _k_ = 4/d, they spend an average of 0.25 d (6 h) in the eclipse phase, and hence we estimate an average lifespan of infected cells of ~17 h. See  Table 1 for the remaining estimated population parameters for this model. Using these parameters, we obtained a within-host basic reproduction number of _R_ 0 = 22, where _R_ 0 is the number of cells a single infected cell will infect at the beginning of infection when there is no target cell limitation ( _SI Appendix_ , S8 ). \n\n## **Discussion** \n\nHere, we used multiple mathematical models to study in detail and quantitatively the dynamics of SARS-CoV-2 and the biological process involved in this acute infection. Two aspects of the data make our analyses unique. First, although other studies have viral load data obtained during both the upslope and downslope \n\nof infection ( 9 ,  51 ), the actual time of infection is generally not known, and very few, if any, other studies provide the 12 h sampling frequency possible in this human challenge study ( 8 ). We have recently shown that knowing the time of infection increases the fidelity of modeling acute infections ( 52 ). Second, the dataset includes both viral RNA and infectious virus levels at the same 12 h sampling frequency throughout the course of infection. \n\nAlthough the simplest, TCL model describes the data reasonably well, this rich dataset supported the inclusion of additional biological mechanisms in the model. Including an innate immune response that protects cells from infection (i.e., puts them into an antiviral state that makes them refractory to infection), improved the model fits, as has been seen before in SARS-CoV-2 ( 10 ,  11 , 19 – 21 ,  29 ) and other acute infection models ( 3 ,  33 ,  53 ). A recent analysis of the human challenge study data using single cell RNAseq showed that IFN induced genes were the dominant induced gene subset in individuals with sustained infection and that IFN signaling was strongly activated in every cell type in both blood and the nasopharynx ( 54 ), consistent with our inclusion of an IFN type response in our model. An advantage of knowing the time of challenge is that we found that we needed to include a delay (average ~1 d) between the inoculation and the time the virus starts to grow exponentially. This delay could involve stochastic processes such as the infectious virions in the inoculum finding the appropriate target cell and starting a chain of infections that does not go extinct ( 23 ,  55 ). In many of the participants, this chain of infections must have gone extinct since only 53% of the participants became infected after challenge ( 8 ). Note that we do not claim that there are no cell infections before the delay time, only that the events that initiate the exponential increase in virus \n\n**6 of 10** https://doi.org/10.1073/pnas.2406303121 \n\npnas.org \n\n**Table 1.   Estimated population parameters for the DDRCM with humoral immune response** \n\n|Parameter|Description|Fixed Effects (R.S.E., %)|\n|---|---|---|\n|_β_(mL/FFU/d)|Virus infection rate|8.3 × 10<sup>–4</sup>(22.2)|\n|_δ_(/d)|Death rate of productively infected cells|2.17 (24.0)|\n|_π_(RNA copies/mL/cell/d)|Product of virus production rate and fraction of virus<br>sampled on a swab (see ref. 10)|467.7 (16.7)|\n|_ϕ_(/cell/d)|Rate constant for conversion of target cells to refracto-<br>ry cells|1.1 × 10<sup>–7</sup>(19.1)|\n|_ρ_0(/d)|Baseline rate at which refractory cells transition back<br>into target cells|9.8 (NaN)|\n|_n_|Hill coefficient for the density-dependent rate at which<br>refractory cells transition back into target cells|4.88 (159)|\n|_Kρ _(cells)|Number of infected cells required to achieve half the<br>baseline rate_ρ_0|1.3 × 10<sup>–3</sup>(19.0)|\n|_td _(d)|Initial delay in target cell infection|0.87 (30.9)|\n|_ta _(d)|Humoral immunity activation time|9.04 (17.4)|\n|_B_|Proportionality constant in the PLM|8.1 × 10<sup>–5</sup>(13.7)|\n|_h_0|Baseline exponent of viral RNA in the PLM before hu-<br>moral immunity activation|0.86 (5.93)|\n|_σh _(/d)|Decay rate of_h_due to humoral immunity|0.4 (71.4)|\n\n\n\nNote: NaN is specified for RSE when there is too much uncertainty in the parameter estimation. The uncertainty and NaN do not affect the maximum likelihood estimation. \n\n(and ultimately lead to full-blown infection) have this delay. Furthermore, we found that the emergence of adaptive immune mechanisms, between days 7 and 11 postinfection, was important to improve the description of viral decline after the peak. Although inclusion of these mechanisms has been proposed before ( 3 ,  41 ,  56 ), here, we implemented humoral immune response as reducing viral infectious titers, which is a plausible mechanistic effect as neutralizing antibodies have been shown to arise starting about a week post symptom onset ( 57 ). This model with refractory cells and humoral immunity was the statistically best supported model for the dataset. Our estimate for the onset of humoral immunity in the model, 7 to 11 d after challenge, is consistent with previous reports that have suggested that the effect of adaptive immune response starts ~6 to 10 d after infection ( 32 ,  58 ) and it is known that natural existing polyreactive IgM antibodies can function to neutralize viruses early in infection ( 32 ,  59 ). Further, measurements of nasal and plasma virus-specific antibody concentrations against the SARS-CoV-2 spike protein in the infected volunteers showed elevated levels started to appear around day 10 after inoculation ( 32 ), consistent with our modeling predictions. \n\nIn our model, infected cells produce virus at the same rate during the phases of rising and falling viral loads, which is measured as total viral RNA, but antibodies neutralize some of this virus, effectively reducing infectious viral particles. This could explain why it has been so difficult to recover infectious virus past day 10 or so, as found here and in other studies ( 5 ,  7 ,  11 ). A model that used a cell-mediated immune response, starting ~9 to 11 d postinoculation, instead of a humoral response, fit the data almost as well ( _SI Appendix_ , Table S1 ). Analysis of the immune response data obtained during the human challenge suggests that CD8<sup>+</sup> T cell expansion started ~7 d postinoculation and peaking around day 14 ( 32 ,  54 ). Our models thus support a role for both humoral and cell-mediated responses. We also fitted a model that had both a humoral and cell-mediated response to the data (not shown). This added two additional parameters to the models with only one of these responses and not surprisingly found that the parameters were not identifiable most likely because the two responses acted similarly with the humoral response decreasing the amount of infectious virus and hence the number of infected cells and the \n\ncell-mediated response killing infected cells and thus also reducing their number. \n\nWe found that infectious virus is not a constant fraction of the total virus, but rather scales sublinearly with the total virus, and a PLM with an exponent less than one fits this relation well. The estimated PLM parameters are slightly different when we fitted the PLM directly to the viral RNA and infectious virus data compared to when we estimated the parameters together with other parameters in our dynamical models. However, we showed that the estimated power-law exponents in both instances are very similar when we averaged _h_ over the course of infection in the dynamic model (RCM with humoral response). The sublinear relationship between the total viral RNA and infectious virus has been documented before in cross-sectional measurements ( 10 ), but here, we were able to fine-tune this relation from serial measurements throughout acute infection. This relationship means that as the virus grows to the peak, a smaller fraction is infectious. In fact, fitting the exponential increase in virus toward its peak, we found that the amount of total virus doubled every 2 h, while the amount of infectious virus doubled every 3 h, consistent with our estimate of _h_ being approximately 2/3. For other viral infections, it has been noticed that an “infectious unit’’ can correspond to multiple viral particles ( 60 ,  61 ). If the number of viruses that comprise an infectious unit depends on viral density in a nonlinear manner a power law might result, with different growth rates for total virus and infectious units. Furthermore, Hatton et al. ( 62 ) provide empirical evidence from time-series analysis that many populations of mammals, birds, fish, and insects exhibit sublinear growth according to a power law with an exponent <1, often ranging between 2/3 and 3/4, but give no mechanistic explanation. As viruses grow and compete for resources, e.g., target cells, ecosystem laws should also apply to them. \n\nAs the total virus decays postpeak, if the same power-law (i.e., with the same constant exponent, _h_ 0 ) is operational, then the fraction of infectious virus would increase at late times. Although this may seem counterintuitive, at late times, the total virus is lower, and a power-law with _Vi_ = _BV_<sup>_h_</sup> implies a higher fraction of infectious virus at a lower total virus. An increase in the fraction of infectious virus late in infection does not seem to make \n\nhttps://doi.org/10.1073/pnas.2406303121 **7 of 10** \n\n**PNAS** 2024  Vol. 121  No. 46 e2406303121 \n\nbiological sense, and thus it is not surprising (at least a posteriori) that we found that the power-law had to change late in the infection, invoking an adaptive humoral response to generate this effect. We also note that this change in the exponent was suggested by the model fits, since initially we tried to enforce a constant exponent, which provided fits of inferior quality. It is interesting that when we average the exponent h throughout the course of infection, we recover approximately the value that we found using “static” data ( Fig. 3 ). \n\nTwice daily viral measurements in the early part of infection allowed a detailed view into the viral growth before peak. Our estimates of a doubling time of ~2 h for the total virus and ~3 h for infectious virus suggest the virus can expand exceedingly rapidly. Although longer doubling times have been estimated previously, ~6 h for total virus in primary human epithelial cell organoids ( 63 ) and ~7.3 h for infectious virus in ferrets ( 29 ), our estimate of the growth rate of total virus in vivo agrees well with the estimates of ~3.1 h by Gunawardana et al. ( 64 ) and ~2 and ~4 h by Ke et al. ( 10 ) from saliva and nasal samples, respectively. The twice daily measurements also revealed that the decay dynamics were complex. Therefore, we explored what mechanisms could improve the fits and found that adaptive immunity effects, either reducing viral infectiousness or increasing the death rate of infected cells, helped explain the fast decay of virus, particularly, the sudden decline in virus observed for some of the participants. This idea of an adaptive immune response being necessary to clear the virus in late stages of an acute infection has been proposed before ( 58 ,  65 ,  66 ), and here, we confirm it. Another interesting observation was that in some participants a viral rebound seems evident during the postpeak viral decay phase. Such rebounds have been clearly seen in people on treatment ( 67 – 71 ), but also in untreated cases although in smaller numbers ( 51 ,  68 ,  72 ,  73 ). It is possible that more frequent follow-up, as in the human challenge study, would show that these rebounds are more common. In any case, we explored the mechanisms that could generate these rebounds during the decay of virus. In the model, this rebound required the existence of target cells for the virus to infect and replicate in, which could be generated by the loss of the refractory state. However, a constant transition rate of refractory to target cells ( _ρ_ ) throughout infection was unable to generate enough target cells late in infection to describe the rebound. Accordingly, we proposed a transition rate that is dependent on the concentration of infected cells, which we take as a proxy for type-I and type-III IFN maintaining the antiviral state ( _SI Appendix_ , S5 ). In the model, as the number of infected cells decreases more and more refractory cells lose this state and become targets. This mechanism was able to quantitatively describe the rebound in the participants that show such dynamics. Since only a small number of participants had clear rebounds, overall, at the population level, this model did not lead to a statistically improved fit. However, given its biological plausibility and ability to explain rebounds, which is absent in the simpler model, we think that this is a preferred model for this complex and extended dataset. \n\nThere have been many previous studies analyzing the dynamics of SARS-CoV-2 infection ( 10 – 14 ,  17 – 19 ,  21 ,  22 ,  27 ,  29 ,  74 ,  75 ), but to our knowledge, only a few of these studies analyzed this human challenge dataset ( 14 ,  74 ,  75 ). Carruthers et al. ( 14 ) used a model similar to our TCL model, which included target cells, cells in the eclipse phase, infected cells, infectious virus, and total virus, but added an effector cell population that expands as a saturating function of total virus and that kills infected cells via a mass-action law. In addition, they modeled the dynamics of total viral RNA and infectious virus separately, with different production and clearance rate parameters, so that there was no link \n\nbetween these two viral populations. They did not consider the innate or humoral immune responses. They fit data from 16 participants and found that for only six individuals was there strong evidence to include the effector cell response in their model, a result quite different from ours. Xu et al. ( 73 ) use very simplified models involving either one or two equations that allow them to fit the upward and downward trends in the viral kinetics but none of the nuances in the data. Grebennikov et al. ( 74 ) go to the opposite extreme and introduce a model with 15 equations and over 50 parameters. Here, we introduced models that allowed us to explore different biological mechanisms to describe the infection, the immune response to it, and the relationship between infectious virus and total virus. Our model has a different structure than these other models and led to conclusions about the importance of both the innate and adaptive immune responses in all participants and time-dependent changes in viral infectivity during the course of infection. \n\nOne of the limitations of our study is that the participants were a highly selected set of young, healthy individuals between the ages of 18 to 29 y, who were given a specific dose of the virus and kept in a designated controlled environment. Clearly, these are not representative of the whole population, nor of the population with a higher chance of severe disease. Another limitation is that the variant of SARS-CoV-2 used is now of mostly historical interest, and most people are now vaccinated and may have access to antiviral therapies such as Paxlovid. However, the goal of the human challenge study was to elucidate information on the natural history of untreated infection in unvaccinated individuals. Nowadays a large fraction of the population has been vaccinated or infected (at least once) before, and most infections occur in the context of leaky immunity (i.e., immunity that is not sufficient to prevent infection), and dynamics may be somewhat different. Still, it is very likely that the different mechanisms that we explored, initial delay, refractory cells, neutralizing antibodies, a time-dependent infected cell death rate are also valid for other variants, although the rate parameters could be different. Also, our modeling approach can be applied to compare the dynamics of infection in the presence or absence of vaccination or to predict the effects of therapy ( 37 ,  41 ,  48 ). \n\nThere are also some limitations from the modeling perspective. For example, the exact initial conditions (e.g., how many virions start the exponential growth of infection, or how many target cells each person harbors) are unknown. To deal with the limited information on the initial number of virions, we instead assumed that the exponential phase of viral growth was initiated by one infected cell in the eclipse phase. Previously, we showed that our results were not sensitive to the exact number of initially infected cells if the number was small ( 10 ). We have also previously shown that in acute infection models the initial number of target cells, _T_ 0 , and the rate of viral production from infected cells, π, trade-off against one another so that only their product is identifiable ( 76 – 78 ). Moreover, we have no spatial information on viral spread and did not include this, assuming that the airway that is lined with fluid is a sufficiently well-mixed system for our modeling purposes. That the model provides such a good description of the data, partially supports this assumption. We also had to make specific choices, such as the power-law relation between total virus and infectious viruses, or the saturating Hill function for the term of describing the rate cells return from the refractory state. When developing a mathematical model to interpret experiments assumptions must be made. We tested several of our modeling assumptions with alternatives ( _SI Appendix_ ), and in addition, we started from a well-tested framework for viral infections (including the dynamics of infected cells, virus, and refractory cells), which has been shown multiple \n\n**8 of 10** https://doi.org/10.1073/pnas.2406303121 \n\npnas.org \n\ntimes in the literature to describe acute viral respiratory infections well, and which is grounded in biological knowledge of the system. Nonetheless, we have no direct experimental evidence that IFN acted to make some target cells refractory to infection, although both type I and III IFNs were detected in nasal lining fluid and plasma ( 32 ), and strong IFN responses were detected in individuals in our study ( 54 ). Further, our choice of preferring a humoral response over a cell-mediated response was based solely on model selection theory in which the model with the lowest BICc value is preferred. However, both types of responses play a role and may help prevent the virus from escaping the overall immune response. In summary, we quantified the in vivo dynamics of SARSCoV-2 infection from onset to virus clearance, shedding light on the early dynamics of the virus and the potential role of innate and adaptive immune responses in promoting viral decline during infection. Understanding these dynamics has implications both for our \n\n1. World Health Organization (WHO), Number of COVID- 19 deaths reported to WHO. _WHO_ (2024). https://data.who.int/dashboards/covid19/cases?n=c. Accessed 14 March 2024. \n\n2. Y.- C. Li, W.- Z. Bai, T. Hashikawa, The neuroinvasive potential of SARS- CoV2 may play a role in the respiratory failure of COVID- 19 patients. _J. Med. Virol._ 92, 552–555 (2020). \n\n3. P. Baccam, C. Beauchemin, C. A. Macken, F. G. Hayden, A. S. Perelson, Kinetics of influenza A virus infection in humans. _J. Virol._ 80, 7590–7599 (2006). \n\n4. N. J. Matheson, P. J. Lehner, How does SARS- CoV- 2 cause COVID- 19? _Science_ 369, 510–511 (2020). 5. R. Wölfel _et al._ , Virological assessment of hospitalized patients with COVID- 2019. _Nature_ 581, 465–469 (2020). \n\n6. World Health Organization (WHO), Timeline: WHO’s COVID- 19 response. _WHO_ (2023). https://www. who.int/emergencies/diseases/novel- coronavirus- 2019/interactive- timeline. Accessed 14 March 2024. \n\n7. S. Hakki _et al._ , Onset and window of SARS- CoV- 2 infectiousness and temporal correlation with symptom onset: A prospective, longitudinal, community cohort study. _Lancet Respir. Med._ 10, 1061–1073 (2022). \n\n8. B. Killingley _et al._ , Safety, tolerability and viral kinetics during SARS- CoV- 2 human challenge in young adults. _Nat. Med._ 28, 1031–1041 (2022). \n\n9. S. M. Kissler _et al._ , Viral dynamics of acute SARS- CoV- 2 infection and applications to diagnostic and public health strategies. _PLoS Biol._ 19, e3001333 (2021). \n\n10. R. Ke, C. Zitzmann, D. D. Ho, R. M. Ribeiro, A. S. Perelson, In vivo kinetics of SARS- CoV- 2 infection and its relationship with a person’s infectiousness. _Proc. Nat. Acad. Sci. U.S.A._ 118, e2111477118 (2021). \n\n11. R. Ke _et al._ , Daily longitudinal sampling of SARS- CoV- 2 infection reveals substantial heterogeneity in infectiousness. _Nat. Microbiol._ 7, 640–652 (2022). \n\n12. N. Heitzman- Breen, S. M. Ciupe, Modeling within- host and aerosol dynamics of SARS- CoV- 2: The relationship with infectiousness. _PLoS Comput. Biol._ 18, e1009997 (2022). \n\n13. A. Marc _et al._ , Quantifying the relationship between SARS- CoV- 2 viral load and infectiousness. _Elife_ 10, e69302 (2021). \n\n14. J. Carruthers, J. Xu, T. Finnie, I. Hall, A within- host model of SARS- CoV- 2 infection. medRxiv \n\n   - [Preprint] (2022). https://doi.org/10.1101/2022.04.22.22274137v1 (Accessed 18 January 2024). \n\n15. J. D. Challenger _et al._ , Modelling upper respiratory viral load dynamics of SARS- CoV- 2. _BMC Med._ 20, 25 (2022). \n\n16. B. Chatterjee, H. S. Sandhu, N. M. Dixit, Modeling recapitulates the heterogeneous outcomes of SARS- CoV- 2 infection and quantifies the differences in the innate immune and CD8 T- cell responses between patients experiencing mild and severe symptoms. _PLoS Pathog._ 18, e1010630 (2022). \n\n17. A. Goyal, E. F. Cardozo- Ojeda, J. T. Schiffer, Potency and timing of antiviral therapy as determinants of duration of SARS- CoV- 2 shedding and intensity of inflammatory response. _Sci. Adv._ 6, eabc7112 (2020). \n\n18. A. Goyal, D. B. Reeves, E. F. Cardozo- Ojeda, J. T. Schiffer, B. T. Mayer, Viral load and contact heterogeneity predict SARS- CoV- 2 transmission and super- spreading events. _Elife_ 10, e63537 (2021). \n\n19. A. Goyal, E. R. Duke, E. F. Cardozo- Ojeda, J. T. Schiffer, Modeling explains prolonged SARS- CoV- 2 nasal shedding relative to lung shedding in remdesivir- treated rhesus macaques. _iScience_ 25, 104448 (2022). \n\n20. N. Néant _et al._ , Modeling SARS- CoV- 2 viral kinetics and association with mortality in hospitalized patients from the French COVID cohort. _Proc. Natl. Acad. Sci. U.S.A._ 118, e2017962118 (2021). \n\n21. A. S. Perelson, R. Ke, Mechanistic modeling of SARS- CoV- 2 and other infectious diseases and the effects of therapeutics. _Clin. Pharmacol. Ther._ 109, 829–840 (2021). \n\n22. S. Wang _et al._ , Modeling the viral dynamics of SARS- CoV- 2 infection. _Math. Biosci._ 328, 108438 (2020). \n\n23. P. Czuppon _et al._ , Success of prophylactic antiviral therapy for SARS- CoV- 2: Predicted critical efficacies and impact of different drug- specific mechanisms of action. _PLoS Comput. Biol._ 17, e1008752 (2021). \n\n24. M. Alexandre _et al._ , Modelling the response to vaccine in non- human primates to define SARSCoV- 2 mechanistic correlates of protection. _Elife_ 11, e75427 (2022). \n\n25. A. Gonçalves _et al._ , SARS- CoV- 2 viral dynamics in non- human primates. _PLoS Comput. Biol._ 17, e1008785 (2021). \n\n26. G. Lingas _et al._ , Effect of remdesivir on viral dynamics in COVID- 19 hospitalized patients: A modelling analysis of the randomized, controlled, open- label DisCoVeRy trial. _J. Antimicrob Chemother._ 77, 1404–1412 (2022). \n\nknowledge about acute infections and for developing more sophisticated models of infection transmission, including the impact of pharmaceuticals ( 48 ) and nonpharmaceutical interventions. \n\n**Data, Materials, and Software Availability.** Previously published data were used for this work (8). \n\n**ACKNOWLEDGMENTS.** We thank Benny Chain for helpful discussions about the human challenge study and his comments on an earlier version of this paper. This work was performed under the auspices of the US Dept. of Energy under contract 9233218CNA000001 and supported by NIH grant U54- HL143541 and Los Alamos National Laboratory - Laboratory Directed Research and Development grants 20200743ER, 20200695ER, and 20210730ER. It was also performed in part at the Aspen Center for Physics, which is supported by NSF grant PHY- 2210452. \n\nAuthor affiliations:<sup>a</sup> Theoretical Division, Theoretical Biology and Biophysics, Los Alamos National Laboratory, Los Alamos, NM 87545 \n\n27. G. Lingas _et al._ , Modelling the association between neutralizing antibody levels and SARS- CoV- 2 viral dynamics: Implications to define correlates of protection against infection. medRxiv [Preprint] (2023). https://doi.org/10.1101/2023.03.05.23286816. \n\n28. A. Marc _et al._ , Impact of variants of concern on SARS- CoV- 2 viral dynamics in non- human primates. _PLoS Comput. Biol._ 19, e1010721 (2023). \n\n29. N. K. Vaidya, A. Bloomquist, A. S. Perelson, Modeling within- host dynamics of SARS- CoV- 2 infection: A case study in ferrets. _Viruses_ 13, 1635 (2021). \n\n30. S. Iwanami _et al._ , Detection of significant antiviral drug effects on COVID- 19 with reasonable sample sizes in randomized controlled trials: A modeling study. _PLoS Med._ 18, e1003660 (2021). \n\n31. A. Rohatgi, WebPlotDigitizer–Copyright 2010–2022 Ankit Rohatgi. Automeris.io (2022). https:// apps.automeris.io/wpd/. Accessed 24 February 2023. \n\n32. H. R. Wagstaffe _et al._ , Mucosal and systemic immune correlates of viral control after SARS- CoV- 2 infection challenge in seronegative adults. _Sci. Immunol._ 9, eadj9285 (2024). \n\n33. K. Best, A. S. Perelson, Mathematical modeling of within- host Zika virus dynamics. _Immunol. Rev._ 285, 81–96 (2018). \n\n34. A. U. Neumann _et al._ , Hepatitis C viral dynamics in vivo and the antiviral efficacy of interferon- alpha therapy. _Science_ 282, 103–107 (1998). \n\n35. A. S. Perelson, Modelling viral and immune system dynamics. _Nat. Rev. Immunol._ 2, 28–36 (2002). 36. R. J. De Boer, A. S. Perelson, Target cell limited and immune control models of HIV infection: A comparison. _J. Theor. Biol._ 190, 201–214 (1998). \n\n37. A. Gonçalves _et al._ , Timing of antiviral treatment initiation is critical to reduce SARS- CoV- 2 viral load. _CPT Pharmacometrics Syst. Pharmacol._ 9, 509–514 (2020). \n\n38. A. García- Sastre, C. A. Biron, Type 1 interferons and the virus- host relationship: A lesson in détente. _Science_ 312, 879–882 (2006). \n\n39. M. Sa Ribero, N. Jouvenet, M. Dreux, S. Nisole, Interplay between SARS- CoV- 2 and the type I interferon response. _PLoS Pathog._ 16, e1008737 (2020). \n\n40. C. E. Samuel, Antiviral actions of interferons. _Clin. Microbiol. Rev._ 14, 778–809 (2001). \n\n41. T. Phan _et al._ , Modeling the emergence of viral resistance for SARS- CoV- 2 during treatment with an anti- spike monoclonal antibody. _PLoS Pathog._ 20, e1011680 (2024). \n\n42. C. E. Samuel, G. S. Knutson, Mechanism of interferon action. Kinetics of decay of the antiviral state and protein phosphorylation in mouse fibroblasts treated with natural and cloned interferons. _J. Biol. Chem._ 257, 11796–11801 (1982). \n\n43. P. R. Somvanshi, K. V. Venkatesh, “Hill equation” in _Encyclopedia of Systems Biology_ , W. Dubitzky, O. Wolkenhauer, K.- H. Cho, H. Yokota, Eds. (Springer, 2013), pp. 892–895. \n\n44. S. A. S. Lixoft, Monolix|Lixoft. Lixoft (2015). https://lixoft.com/products/monolix/. Accessed 20 January 2023. \n\n45. K. P. Burnham, D. R. Anderson, “Practical use of the Information- theoretic approach” in _Model Selection and Inference: A Practical Information- Theoretic Approach_ , K. P. Burnham, D. R. Anderson, Eds. (Springer, 1998), pp. 75–117. \n\n46. Y. J. Hou _et al._ , SARS- CoV- 2 reverse genetics reveals a variable infection gradient in the respiratory tract. _Cell_ 182, 429–446.e14 (2020). \n\n47. N. S. Ogando _et al._ , SARS- coronavirus- 2 replication in Vero E6 cells: Replication kinetics, rapid adaptation and cytopathology. _J. Gen. Virol._ 101, 925–940 (2020). \n\n48. A. S. Perelson, R. M. Ribeiro, T. Phan, An explanation for SARS- CoV- 2 rebound after Paxlovid treatment. medRxiv [Preprint] (2023). https://www.medrxiv.org/content/ (Accessed 15 February 2024). \n\n49. E. A. Voigt, A. Swick, J. Yin, Rapid induction and persistence of paracrine- induced cellular antiviral states arrest viral infection spread in A549 cells. _Virology_ 496, 59–66 (2016). \n\n50. N. Ulker, X. Zhang, C. E. Samuel, Mechanism of interferon action. I. Characterization of a 54- kDa protein induced by gamma interferon with properties similar to a cytoskeletal component. _J. Biol. Chem._ 262, 16798–16803 (1987). \n\n51. J. A. Hay _et al._ , Quantifying the impact of immune history and variant on SARS- CoV- 2 viral kinetics and infection rebound: A retrospective cohort study. _Elife_ 11, e81849 (2022). \n\n52. C. Zitzmann, R. Ke, R. M. Ribeiro, A. S. Perelson, How robust are estimates of key parameters in standard viral dynamic models? _PLoS Comput. Biol._ 20, e1011437 (2024). \n\n53. R. A. Saenz _et al._ , Dynamics of influenza virus infection and pathology. _J. Virol._ 84, 3974–3983 (2010). \n\n54. R. G. H. Lindeboom _et al._ , Human SARS- CoV- 2 challenge uncovers local and systemic response dynamics. _Nature_ 631, 189–198 (2024). \n\n55. J. E. Pearson, P. Krapivsky, A. S. Perelson, Stochastic theory of early viral infection: Continuous versus burst production of virions. _PLoS Comput. Biol._ 7, e1001058 (2011). \n\nhttps://doi.org/10.1073/pnas.2406303121 **9 of 10** \n\n**PNAS** 2024  Vol. 121  No. 46 e2406303121 \n\n56. S. Q. Du, W. Yuan, Mathematical modeling of interaction between innate and adaptive immune responses in COVID- 19 and implications for viral pathogenesis. _J. Med. Virol._ 92, 1615–1628 (2020). \n\n57. B. Borremans _et al._ , Quantifying antibody kinetics and RNA detection during early- phase SARSCoV- 2 infection by time since symptom onset. _Elife_ 9, 1–27 (2020). \n\n58. A. Sette, S. Crotty, Adaptive immunity to SARS- CoV- 2 and COVID- 19. _Cell_ 184, 861–880 (2021). \n\n59. S. Panda, J. L. Ding, Natural antibodies bridge innate and adaptive immunity. _J. Immunol._ 194, 13–20 (2015). \n\n60. R. Sanjuán, Collective infectious units in viruses. _Trends Microbiol._ 25, 402–412 (2017). \n\n61. J. M. Cuevas, M. Durán- Moreno, R. Sanjuán, Multi- virion infectious units arise from free viral particles in an enveloped virus. _Nat. Microbiol._ 2, 1–7 (2017). \n\n62. I. A. Hatton, O. Mazzarisi, A. Altieri, M. Smerlak, Diversity begets stability: Sublinear growth and competitive coexistence across ecosystems. _Science_ 383, eadg8488 (2024). \n\n63. N. R. Cheemarla _et al._ , Dynamic innate immune response determines susceptibility to SARS- CoV- 2 infection and early replication kinetics. _J. Exp. Med._ 218, e20210583 (2021). \n\n64. M. Gunawardana _et al._ , Early SARS- CoV- 2 dynamics and immune responses in unvaccinated participants of an intensely sampled longitudinal surveillance study. _Commun. Med. (Lond.)_ 2, 129 (2022). \n\n65. B. Israelow _et al._ , Adaptive immune determinants of viral clearance and protection in mouse models of SARS- CoV- 2. _Sci. Immunol._ 6, eabl4509 (2021). \n\n66. P. Moss, The T cell immune response against SARS- CoV- 2. _Nat. Immunol._ 23, 186–193 (2022). \n\n67. M. C. Choudhary _et al._ , Emergence of SARS- CoV- 2 escape mutations during Bamlanivimab therapy in a phase II randomized clinical trial. _Nat. Microbiol._ 7, 1906–1917 (2022). \n\n68. R. Deo _et al._ , Symptom and viral rebound in untreated SARS- CoV- 2 infection. _Ann. Intern. Med._ 176, 348–354 (2023). \n\n69. B. Jensen _et al._ , Emergence of the E484K mutation in SARS- COV- 2- infected immunocompromised patients treated with bamlanivimab in Germany. _The Lancet Regional Health. Europe_ 8, 100164 (2021). \n\n70. N. Peiffer- Smadja _et al._ , Emergence of E484K mutation following bamlanivimab monotherapy among high- risk patients infected with the alpha variant of SARS- CoV- 2. _Viruses_ 13, 1642 (2021). \n\n71. G. E. Edelstein _et al._ , SARS- CoV- 2 virologic rebound with nirmatrelvir- ritonavir therapy. _Ann. Intern. Med._ 176, 1577–1585 (2023). \n\n72. A. S. Anderson, P. Caubel, J. M. Rusnak; EPIC- HR Trial Investigators, Nirmatrelvir- ritonavir and viral load rebound in Covid- 19. _N. Engl. J. Med._ 387, 1047–1049 (2022). \n\n73. N. Petrosillo, SARS- CoV- 2 rebound with and without antivirals. _Lancet Infect. Dis._ 23, 637–639 (2023). \n\n74. J. Xu, J. Carruthers, T. Finnie, I. Hall, Simplified within- host and dose- response models of SARSCoV- 2. _J. Theor. Biol._ 565, 111447 (2023). \n\n75. D. Grebennikov _et al._ , Predicting the kinetic coordination of immune response dynamics in SARSCoV- 2 infection: Implications for disease pathogenesis. _Mathematics_ 10, 3154 (2022). \n\n76. M. A. Stafford _et al._ , Modeling plasma virus concentration during primary HIV infection. _J. Theor. Biol._ 203, 285–301 (2000). \n\n77. S. M. Ciupe, N. Tuncer, Identifiability of parameters in mathematical models of SARS- CoV- 2 \n\n   - infections in humans. _Sci. Rep._ 12, 1–14 (2022). \n\n78. H. Miao, X. Xia, A. S. Perelson, H. Wu, On identifiability of nonlinear ODE models and applications in viral dynamics. _SIAM Rev. Soc. Ind. Appl. Math._ 53, 3–39 (2011), 10.1137/090757009. \n\n**10 of 10** https://doi.org/10.1073/pnas.2406303121 \n\npnas.org \n\n\n\n## References (78 total, showing 78)\n\n- World Health Organization (WHO) Number of COVID-19 deaths reported to WHO. WHO (2024). https://data.who.int/dashboards/covid19/cases?n=c. Accessed 14 March 2024.\n- 10.1002/jmv.25728\n- 10.1128/JVI.01623-05\n- 10.1126/science.abc6156\n- 10.1038/s41586-020-2196-x\n- World Health Organization (WHO) Timeline: WHO’s COVID-19 response. WHO (2023). https://www.who.int/emergencies/diseases/novel-coronavirus-2019/interactive-timeline. Accessed 14 March 2024.\n- 10.1016/S2213-2600(22)00226-0\n- 10.1038/s41591-022-01780-9\n- 10.1371/journal.pbio.3001333\n- 10.1073/pnas.2111477118\n- 10.1038/s41564-022-01105-z\n- 10.1371/journal.pcbi.1009997\n- 10.7554/eLife.69302\n- J. Carruthers J. Xu T. Finnie I. Hall A within-host model of SARS-CoV-2 infection. medRxiv [Preprint] (2022). https://doi.org/10.1101/2022.04.22.22274137v1 (Accessed 18 January 2024).\n- 10.1186/s12916-021-02220-0\n- 10.1371/journal.ppat.1010630\n- 10.1126/sciadv.abc7112\n- 10.7554/eLife.63537\n- 10.1016/j.isci.2022.104448\n- 10.1073/pnas.2017962118\n- 10.1002/cpt.2160\n- 10.1016/j.mbs.2020.108438\n- 10.1371/journal.pcbi.1008752\n- 10.7554/eLife.75427\n- 10.1371/journal.pcbi.1008785\n- 10.1093/jac/dkac048\n- G. Lingas Modelling the association between neutralizing antibody levels and SARS-CoV-2 viral dynamics: Implications to define correlates of protection against infection. medRxiv [Preprint] (2023). https://doi.org/10.1101/2023.03.05.23286816.\n- 10.1371/journal.pcbi.1010721\n- 10.3390/v13081635\n- 10.1371/journal.pmed.1003660\n- A. Rohatgi WebPlotDigitizer–Copyright 2010–2022 Ankit Rohatgi. Automeris.io (2022). https://apps.automeris.io/wpd/. Accessed 24 February 2023.\n- 10.1126/sciimmunol.adj9285\n- 10.1111/imr.12687\n- 10.1126/science.282.5386.103\n- 10.1038/nri700\n- 10.1006/jtbi.1997.0548\n- 10.1002/psp4.12543\n- 10.1126/science.1125676\n- 10.1371/journal.ppat.1008737\n- C. E. Samuel Antiviral actions of interferons. Clin. Microbiol. Rev. 14 778–809 (2001).\n- 10.1371/journal.ppat.1011680\n- 10.1016/S0021-9258(18)33834-1\n- 10.1007/978-1-4419-9863-7_946\n- S. A. S. Lixoft Monolix|Lixoft. Lixoft (2015). https://lixoft.com/products/monolix/. Accessed 20 January 2023.\n- 10.1007/978-1-4757-2917-7_3\n- 10.1016/j.cell.2020.05.042\n- 10.1099/jgv.0.001453\n- A. S. Perelson R. M. Ribeiro T. Phan An explanation for SARS-CoV-2 rebound after Paxlovid treatment. medRxiv [Preprint] (2023). https://www.medrxiv.org/content/ (Accessed 15 February 2024).\n- 10.1016/j.virol.2016.05.019\n- 10.1016/S0021-9258(18)45454-3\n- 10.7554/eLife.81849\n- 10.1371/journal.pcbi.1011437\n- 10.1128/JVI.02078-09\n- 10.1038/s41586-024-07575-x\n- 10.1371/journal.pcbi.1001058\n- 10.1002/jmv.25866\n- 10.7554/eLife.60122\n- 10.1016/j.cell.2021.01.007\n- 10.4049/jimmunol.1400844\n- 10.1016/j.tim.2017.02.003\n- 10.1038/nmicrobiol.2017.78\n- 10.1126/science.adg8488\n- N. R. Cheemarla Dynamic innate immune response determines susceptibility to SARS-CoV-2 infection and early replication kinetics. J. Exp. Med. 218 e20210583 (2021).\n- 10.1038/s43856-022-00195-4\n- 10.1126/sciimmunol.abl4509\n- 10.1038/s41590-021-01122-w\n- 10.1038/s41564-022-01254-1\n- 10.7326/M22-2381\n- 10.1016/j.lanepe.2021.100164\n- 10.3390/v13081642\n- 10.7326/M23-1756\n- 10.1056/NEJMc2205944\n- 10.1016/S1473-3099(23)00063-4\n- 10.1016/j.jtbi.2023.111447\n- 10.3390/math10173154\n- 10.1006/jtbi.2000.1076\n- 10.1038/s41598-022-18683-x\n- 10.1137/090757009\n\n",
+  "metadata": null,
+  "diagnostic_artifacts": [
+    {
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/provenance-repair-2026-09-17/fetch/10.1073_pnas.2406303121/diagnostics/pnas/10.1073_pnas.2406303121/browser_html-1/diagnostic.json",
+      "kind": "diagnostic",
+      "route": "browser_html",
+      "failure_code": "publisher_access_denied"
+    },
+    {
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/provenance-repair-2026-09-17/fetch/10.1073_pnas.2406303121/diagnostics/pnas/10.1073_pnas.2406303121/browser_html-1/page-sanitized.html",
+      "kind": "diagnostic",
+      "route": "browser_html",
+      "failure_code": "publisher_access_denied"
+    },
+    {
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/provenance-repair-2026-09-17/fetch/10.1073_pnas.2406303121/diagnostics/pnas/10.1073_pnas.2406303121/html-1/diagnostic.json",
+      "kind": "diagnostic",
+      "route": "html",
+      "failure_code": "empty_article_shell"
+    },
+    {
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/provenance-repair-2026-09-17/fetch/10.1073_pnas.2406303121/diagnostics/pnas/10.1073_pnas.2406303121/html-1/page-sanitized.html",
+      "kind": "diagnostic",
+      "route": "html",
+      "failure_code": "empty_article_shell"
+    }
+  ],
+  "acquisition": {
+    "provider": "pnas",
+    "route": "browser_pdf",
+    "representation": "pdf",
+    "transport": "browser",
+    "fallback_used": true
+  }
+}

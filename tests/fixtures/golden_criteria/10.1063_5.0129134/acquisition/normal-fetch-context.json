@@ -1,0 +1,6 @@
+{
+  "doi": "10.1063/5.0129134",
+  "scope": "One complete standard CLI fetch, after earlier endpoint and browser-preflight observations. No auth or route/timeout/headless overrides.",
+  "effective_headless": true,
+  "configured_browser_timeout_ms": 120000
+}

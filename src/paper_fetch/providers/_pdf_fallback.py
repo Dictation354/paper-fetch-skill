@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall
+
+from ..quality.access_boundary import raise_for_paywall, raise_for_api_entitlement
+
 import math
 import os
 import shutil
@@ -654,6 +658,7 @@ def _response_to_pdf_result(
             expected_identity=request.expected_identity,
         )
     except PdfFallbackFailure as exc:
+        propagate_paywall(exc)
         if exc.kind != "downloaded_file_not_pdf" or page is None:
             raise
         refetched = _refetch_pdf_with_browser_request(
@@ -727,6 +732,7 @@ def _refetch_pdf_with_browser_request(
     except PdfFallbackFailure:
         raise
     except Exception as exc:
+        propagate_paywall(exc)
         raise PdfFallbackFailure(
             "pdf_download_failed",
             f"Failed to refetch PDF fallback response from browser request context: {exc}",
@@ -911,6 +917,7 @@ def fetch_pdf_with_browser(
                 ),
             )
         except PdfFallbackFailure as exc:
+            propagate_paywall(exc)
             last_failure = exc
 
     PlaywrightError, PlaywrightTimeoutError = _playwright_pdf_error_types()
@@ -966,14 +973,73 @@ def fetch_pdf_with_browser(
             active_referer = normalize_text(referer)
             if active_referer:
                 goto_kwargs["referer"] = active_referer
+            ieee_stamp = False
+            ieee_navigation: dict[str, Any] = {}
             try:
-                with page.expect_download(timeout=download_timeout_ms) as download_info:
-                    try:
-                        initial_response = page.goto(url, **goto_kwargs)
-                    except PlaywrightError as exc:
-                        if "Download is starting" not in str(exc):
-                            raise
-                download = download_info.value
+                if browser_config.provider == "ieee":
+                    from ._ieee_pdf import navigate_stamp_pdf, stamp_article_number
+
+                    ieee_stamp = bool(stamp_article_number(url))
+                    if ieee_stamp:
+                        initial_response, iframe_response, download = (
+                            navigate_stamp_pdf(
+                                page,
+                                url,
+                                goto_kwargs=goto_kwargs,
+                                timeout_ms=download_timeout_ms,
+                                expected_identity=active_request.expected_identity,
+                                check_cancelled=context.raise_if_cancelled
+                                if context is not None
+                                else None,
+                                diagnostics=ieee_navigation,
+                            )
+                        )
+                        if iframe_response is not None:
+                            _remaining_pdf_timeout_seconds(
+                                context,
+                                request_deadline,
+                                maximum=browser_budget_seconds,
+                            )
+                            result = _response_to_pdf_result(
+                                iframe_response,
+                                artifact_dir=artifact_dir,
+                                asset_profile=asset_profile,
+                                asset_output_dir=asset_output_dir,
+                                allow_pdf_only=allow_pdf_only,
+                                source_url=iframe_response.url,
+                                final_url=iframe_response.url,
+                                request=active_request,
+                            )
+                            if result is not None:
+                                return replace(
+                                    result,
+                                    diagnostics={
+                                        **dict(result.diagnostics),
+                                        "browser_pdf_response": "ieee_stamp_direct"
+                                        if iframe_response is initial_response
+                                        else "ieee_stamp_iframe",
+                                        "wrapper_url": redact_url_for_diagnostics(url),
+                                        "iframe_url": redact_url_for_diagnostics(
+                                            iframe_response.url
+                                        ),
+                                        "response_status": iframe_response.status,
+                                        **ieee_navigation,
+                                    },
+                                )
+                        if download is None:
+                            raise PlaywrightTimeoutError(
+                                "IEEE stamp iframe did not return a PDF."
+                            )
+                if not ieee_stamp:
+                    with page.expect_download(
+                        timeout=download_timeout_ms
+                    ) as download_info:
+                        try:
+                            initial_response = page.goto(url, **goto_kwargs)
+                        except PlaywrightError as exc:
+                            if "Download is starting" not in str(exc):
+                                raise
+                    download = download_info.value
             except PlaywrightTimeoutError:
                 response = initial_response
                 if response is None:
@@ -1006,10 +1072,17 @@ def fetch_pdf_with_browser(
                         if pdf_result is not None:
                             return pdf_result
                     except PdfFallbackFailure as exc:
+                        propagate_paywall(exc)
                         last_failure = exc
                         continue
                 title = normalize_text(page.title())
                 html = page.content()
+                raise_for_paywall(
+                    html,
+                    metadata=active_request.expected_identity,
+                    source_url=page.url,
+                    provider=active_request.provider_name,
+                )
                 current_url = normalize_text(page.url)
                 html_base_url = current_url
                 parsed_current_url = urllib.parse.urlparse(current_url)
@@ -1070,6 +1143,7 @@ def fetch_pdf_with_browser(
                             ),
                         )
                     except PdfFallbackFailure as exc:
+                        propagate_paywall(exc)
                         last_failure = exc
                         if exc.kind == "pdf_fallback_timeout":
                             break
@@ -1114,7 +1188,14 @@ def fetch_pdf_with_browser(
                     },
                 )
                 continue
+            except PdfFallbackFailure as exc:
+                propagate_paywall(exc)
+                last_failure = exc
+                if exc.kind == "pdf_fallback_timeout":
+                    break
+                continue
             except Exception as exc:
+                propagate_paywall(exc)
                 last_failure = PdfFallbackFailure(
                     "pdf_download_failed",
                     f"Failed to trigger PDF fallback download: {exc}",
@@ -1137,14 +1218,15 @@ def fetch_pdf_with_browser(
                     asset_profile=asset_profile,
                     asset_output_dir=asset_output_dir,
                     allow_pdf_only=allow_pdf_only,
-                    source_url=url,
-                    final_url=page.url,
+                    source_url=download.url if ieee_navigation else url,
+                    final_url=download.url if ieee_navigation else page.url,
                     expected_identity=request.expected_identity,
                 )
                 return replace(
                     result,
                     diagnostics={
                         **dict(result.diagnostics),
+                        **ieee_navigation,
                         "timeout_budget_ms": int(browser_budget_seconds * 1000),
                         "elapsed_ms": round(
                             (time.monotonic() - request_started_at) * 1000, 3
@@ -1156,6 +1238,7 @@ def fetch_pdf_with_browser(
                     },
                 )
             except PdfFallbackFailure as exc:
+                propagate_paywall(exc)
                 last_failure = exc
                 if exc.kind == "pdf_fallback_timeout":
                     break
@@ -1329,6 +1412,18 @@ def fetch_pdf_over_http(
                 )
             )
         except RequestFailure as exc:
+            raise_for_api_entitlement(
+                exc.body,
+                source_url=str(exc.url or url),
+                provider=request.provider_name or "",
+                headers=exc.headers,
+            )
+            raise_for_paywall(
+                exc.body,
+                metadata=request.expected_identity,
+                source_url=str(exc.url or url),
+                provider=request.provider_name,
+            )
             details = _pdf_failure_details_from_response(
                 source_url=url,
                 final_url=str(exc.url or url),
@@ -1370,6 +1465,19 @@ def fetch_pdf_over_http(
             last_failure = exc
             break
         final_url = str(response.get("url") or url)
+        if not bytes(response.get("body") or b"").startswith(b"%PDF-"):
+            raise_for_api_entitlement(
+                response.get("body") or b"",
+                source_url=final_url,
+                provider=request.provider_name or "",
+                headers=response.get("headers"),
+            )
+            raise_for_paywall(
+                response.get("body") or b"",
+                metadata=request.expected_identity,
+                source_url=final_url,
+                provider=request.provider_name,
+            )
         response_headers = response.get("headers") or {}
         pdf_bytes = response.get("body", b"")
         content_type = header_value(response_headers, "content-type")
@@ -1427,6 +1535,7 @@ def fetch_pdf_over_http(
                 },
             )
         except PdfFetchFailure as exc:
+            propagate_paywall(exc)
             last_failure = exc
             if time.monotonic() >= request_deadline:
                 last_failure = PdfFetchFailure(

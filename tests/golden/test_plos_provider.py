@@ -1,0 +1,452 @@
+from __future__ import annotations
+from dataclasses import replace
+from pathlib import Path
+import re
+from paper_fetch.providers.plos import (
+    PlosClient,
+)
+from paper_fetch.reason_codes import PDF_FALLBACK
+from tests.golden_corpus import (
+    build_article_from_fixture,
+    golden_corpus_fixture_for_doi,
+)
+from tests.support._atypon_browser_workflow_provider_support import png_header
+from tests.support._paper_fetch_support import FixtureHtmlTransport, http_response
+
+
+STRUCTURE_DOI = "10.1371/journal.pone.0263725"
+TABLE_DOI = "10.1371/journal.pone.0304873"
+FORMULA_DOI = "10.1371/journal.pone.0126635"
+FIGURE_DOI = "10.1371/journal.pone.0015338"
+SUPPLEMENTARY_DOI = "10.1371/journal.pone.0218513"
+REFERENCES_DOI = "10.1371/journal.pone.0026949"
+PDF_FALLBACK_DOI = "10.1371/journal.pbio.0040298"
+STRUCTURE_XML_URL = "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0263725&type=manuscript"
+FIGURE_XML_URL = "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0015338&type=manuscript"
+PDF_FALLBACK_XML_URL = "https://journals.plos.org/plosbiology/article/file?id=10.1371/journal.pbio.0040298&type=manuscript"
+PDF_FALLBACK_URL = "https://journals.plos.org/plosbiology/article/file?id=10.1371/journal.pbio.0040298&type=printable"
+
+
+def _markdown_for(doi: str) -> str:
+    # Replay the captured XML/PDF through today's extraction and assembly.
+    return build_article_from_fixture(
+        golden_corpus_fixture_for_doi(doi)
+    ).to_ai_markdown(include_refs="all", asset_profile="all", max_tokens="full_text")
+
+
+def test_plos_xml_route_replays_jats_fixture_as_fulltext() -> None:
+    fixture = golden_corpus_fixture_for_doi(STRUCTURE_DOI)
+
+    article = build_article_from_fixture(fixture)
+    markdown = article.to_ai_markdown(
+        include_refs="all", asset_profile="body", max_tokens="full_text"
+    )
+
+    assert article.source == "plos_xml"
+    assert "fulltext:plos_xml_ok" in article.quality.source_trail
+    assert article.quality.content_kind == "fulltext"
+    assert "## Abstract" in markdown
+    assert "Download PDF" not in markdown
+
+
+def test_plos_runtime_xml_route_fetches_and_converts_jats_fixture() -> None:
+    fixture = golden_corpus_fixture_for_doi(STRUCTURE_DOI)
+    transport = FixtureHtmlTransport(
+        {
+            STRUCTURE_XML_URL: http_response(
+                STRUCTURE_XML_URL, fixture.raw_path.read_bytes(), "application/xml"
+            )
+        }
+    )
+    client = PlosClient(transport, {})
+
+    raw_payload = client.fetch_raw_fulltext(STRUCTURE_DOI, {"doi": STRUCTURE_DOI})
+    article = client.to_article_model({"doi": STRUCTURE_DOI}, raw_payload)
+
+    assert raw_payload.content is not None
+    assert raw_payload.content.route_kind == "xml"
+    assert article.source == "plos_xml"
+    assert article.quality.content_kind == "fulltext"
+    assert "fulltext:plos_xml_ok" in article.quality.source_trail
+
+
+def test_plos_runtime_xml_route_follows_relative_and_signed_redirects() -> None:
+    fixture = golden_corpus_fixture_for_doi(STRUCTURE_DOI)
+    encoded_candidate = (
+        "https://journals.plos.org/plosone/article/file"
+        "?id=10.1371%2Fjournal.pone.0263725&type=manuscript"
+    )
+    signed_url = (
+        "https://storage.googleapis.com/plos-corpus-prod/"
+        "10.1371/journal.pone.0263725/1/pone.0263725.xml"
+        "?X-Goog-Algorithm=GOOG4-RSA-SHA256"
+        "&X-Goog-Credential=temporary-credential"
+        "&X-Goog-Signature=temporary-signature"
+    )
+    transport = FixtureHtmlTransport(
+        {
+            STRUCTURE_XML_URL: http_response(
+                STRUCTURE_XML_URL,
+                b"",
+                "text/html",
+                status_code=302,
+                headers={
+                    "location": (
+                        "/plosone/article/file"
+                        "?id=10.1371%2Fjournal.pone.0263725&type=manuscript"
+                    )
+                },
+            ),
+            encoded_candidate: http_response(
+                encoded_candidate,
+                b"",
+                "text/html",
+                status_code=302,
+                headers={"location": signed_url},
+            ),
+            signed_url: http_response(
+                signed_url, fixture.raw_path.read_bytes(), "application/xml"
+            ),
+        }
+    )
+    client = PlosClient(transport, {})
+
+    raw_payload = client.fetch_raw_fulltext(STRUCTURE_DOI, {"doi": STRUCTURE_DOI})
+    article = client.to_article_model({"doi": STRUCTURE_DOI}, raw_payload)
+
+    assert raw_payload.content is not None
+    assert raw_payload.content.route_kind == "xml"
+    assert article.source == "plos_xml"
+    assert "fulltext:plos_xml_ok" in article.quality.source_trail
+    assert "fulltext:plos_xml_fail" not in article.quality.source_trail
+    assert "temporary-credential" not in raw_payload.source_url
+    assert "temporary-signature" not in raw_payload.source_url
+    assert "X-Goog-Credential=%2A%2A%2A" in raw_payload.source_url
+    assert "X-Goog-Signature=%2A%2A%2A" in raw_payload.source_url
+
+
+def test_plos_xml_redirect_failure_continues_to_pdf_fallback() -> None:
+    fixture = golden_corpus_fixture_for_doi(PDF_FALLBACK_DOI)
+    transport = FixtureHtmlTransport(
+        {
+            PDF_FALLBACK_XML_URL: http_response(
+                PDF_FALLBACK_XML_URL,
+                b"",
+                "text/html",
+                status_code=302,
+            ),
+            PDF_FALLBACK_URL: http_response(
+                PDF_FALLBACK_URL, fixture.raw_path.read_bytes(), "application/pdf"
+            ),
+        }
+    )
+    client = PlosClient(transport, {})
+
+    raw_payload = client.fetch_raw_fulltext(PDF_FALLBACK_DOI, {"doi": PDF_FALLBACK_DOI})
+    article = client.to_article_model({"doi": PDF_FALLBACK_DOI}, raw_payload)
+
+    assert raw_payload.content is not None
+    assert raw_payload.content.route_kind == PDF_FALLBACK
+    assert article.source == "plos_pdf"
+    assert "fulltext:plos_xml_fail" in article.quality.source_trail
+    assert "fulltext:plos_pdf_fallback_ok" in article.quality.source_trail
+    assert any(
+        "PLOS XML redirect chain was not usable" in warning
+        for warning in article.quality.warnings
+    )
+
+
+def test_plos_pdf_fallback_route_uses_pdf_magic_and_rejects_html_wrapper() -> None:
+    fixture = golden_corpus_fixture_for_doi(PDF_FALLBACK_DOI)
+    pdf_bytes = fixture.raw_path.read_bytes()
+
+    article = build_article_from_fixture(fixture)
+    markdown = article.to_ai_markdown(
+        include_refs="all", asset_profile="body", max_tokens="full_text"
+    )
+
+    assert pdf_bytes.startswith(b"%PDF"), (
+        "PLOS pdf_fallback fixture must preserve PDF magic bytes"
+    )
+    assert fixture.content_type == "application/pdf"
+    assert article.source == "plos_pdf"
+    assert "fulltext:plos_pdf_fallback_ok" in article.quality.source_trail
+    assert "Access Denied" not in markdown
+    assert "<html" not in markdown.lower(), (
+        "PLOS pdf_fallback must not capture an HTML wrapper"
+    )
+
+
+def test_plos_runtime_pdf_fallback_rejects_html_xml_candidate() -> None:
+    fixture = golden_corpus_fixture_for_doi(PDF_FALLBACK_DOI)
+    html_body = (
+        b"<!doctype html><html><title>Not XML</title><body>Download PDF</body></html>"
+    )
+    transport = FixtureHtmlTransport(
+        {
+            PDF_FALLBACK_XML_URL: http_response(
+                PDF_FALLBACK_XML_URL, html_body, "text/html"
+            ),
+            PDF_FALLBACK_URL: http_response(
+                PDF_FALLBACK_URL, fixture.raw_path.read_bytes(), "application/pdf"
+            ),
+        }
+    )
+    client = PlosClient(transport, {})
+
+    raw_payload = client.fetch_raw_fulltext(PDF_FALLBACK_DOI, {"doi": PDF_FALLBACK_DOI})
+    article = client.to_article_model({"doi": PDF_FALLBACK_DOI}, raw_payload)
+
+    assert raw_payload.content is not None
+    assert raw_payload.content.route_kind == PDF_FALLBACK
+    assert article.source == "plos_pdf"
+    assert article.quality.content_kind == "fulltext"
+    assert "fulltext:plos_xml_fail" in article.quality.source_trail
+    assert "fulltext:plos_pdf_fallback_ok" in article.quality.source_trail
+
+
+def test_plos_markdown_review_loop_non_null_fixture_contracts() -> None:
+    # markdown-review: purpose=structure doi=10.1371/journal.pone.0263725
+    markdown = _markdown_for(STRUCTURE_DOI)
+    assert "## Abstract" in markdown
+    assert (
+        "Social media usage to share information in communication journals" in markdown
+    )
+    assert "Download PDF" not in markdown
+
+    # markdown-review: purpose=table doi=10.1371/journal.pone.0304873
+    markdown = _markdown_for(TABLE_DOI)
+    assert "Table" in markdown
+    assert "lookup table technique" in markdown
+    assert re.search(r"(?m)^\|.+\|$", markdown)
+    assert "Article metrics" not in markdown
+
+    # markdown-review: purpose=formula doi=10.1371/journal.pone.0126635
+    markdown = _markdown_for(FORMULA_DOI)
+    assert "Boussinesq-Burgers Equation" in markdown
+    assert "Equation" in markdown
+    assert "[Formula unavailable" not in markdown
+
+    # markdown-review: purpose=figure doi=10.1371/journal.pone.0015338
+    markdown = _markdown_for(FIGURE_DOI)
+    assert "Figure Text Extraction in Biomedical Literature" in markdown
+    assert "![Figure 1]" in markdown
+    assert "[Formula unavailable" not in markdown
+    assert markdown.count("![Formula](") == 4
+    assert "Article metrics" not in markdown
+
+    # markdown-review: purpose=supplementary doi=10.1371/journal.pone.0218513
+    markdown = _markdown_for(SUPPLEMENTARY_DOI)
+    assert "Supporting Information" in markdown
+    assert "desiccation tolerance" in markdown
+    assert "Download PDF" not in markdown
+
+    # markdown-review: purpose=references doi=10.1371/journal.pone.0026949
+    markdown = _markdown_for(REFERENCES_DOI)
+    assert "## References" in markdown
+    assert "Non-Hodgkin Lymphoma" in markdown
+    assert "Google Scholar" not in markdown
+
+    # markdown-review: purpose=pdf_fallback doi=10.1371/journal.pbio.0040298
+    markdown = _markdown_for(PDF_FALLBACK_DOI)
+    assert "#" in markdown
+    assert "Escherichia coli" in markdown
+    assert "Access Denied" not in markdown
+
+
+def test_plos_asset_download_contract_resolves_figure_doi_uri(tmp_path: Path) -> None:
+    fixture = golden_corpus_fixture_for_doi(FIGURE_DOI)
+    image_body = png_header(8, 8) + b"plos-figure"
+    transport = FixtureHtmlTransport(
+        {
+            FIGURE_XML_URL: http_response(
+                FIGURE_XML_URL, fixture.raw_path.read_bytes(), "application/xml"
+            ),
+            "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g001": http_response(
+                "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g001",
+                image_body,
+                "image/png",
+            ),
+        }
+    )
+    client = PlosClient(transport, {})
+    raw_payload = client.fetch_raw_fulltext(FIGURE_DOI, {"doi": FIGURE_DOI})
+    article = client.to_article_model({"doi": FIGURE_DOI}, raw_payload)
+    body_figures = [
+        asset
+        for asset in article.assets
+        if asset.kind == "figure"
+        and asset.section == "body"
+        and (asset.original_url or "").startswith("info:doi/")
+    ]
+    first_figure = body_figures[0].__dict__
+    figure_id = first_figure["original_url"].removeprefix("info:doi/")
+    image_url = f"https://journals.plos.org/plosone/article/figure/image?size=large&id={figure_id}"
+    assert raw_payload.content is not None
+    raw_payload.content = replace(raw_payload.content, extracted_assets=[first_figure])
+
+    # asset-download-contract: provider=plos
+    result = client.download_related_assets(
+        FIGURE_DOI,
+        {"doi": FIGURE_DOI},
+        raw_payload,
+        tmp_path,
+        asset_profile="body",
+    )
+    assert result["asset_failures"] == []
+    assert result["assets"][0]["downloaded_bytes"] == len(image_body)
+    assert result["assets"][0]["download_url"] == image_url
+    path = Path(result["assets"][0]["path"])
+    assert path.is_file()
+    assert path.read_bytes() == image_body
+
+    article_with_assets = client.to_article_model(
+        {"doi": FIGURE_DOI},
+        raw_payload,
+        downloaded_assets=result["assets"],
+    )
+    rendered = article_with_assets.to_ai_markdown(
+        include_refs="all",
+        asset_profile="body",
+        max_tokens="full_text",
+    )
+    assert f"![Figure 1]({path})" in rendered
+    assert f"![Figure 1](info:doi/{figure_id})" not in rendered
+
+
+def test_plos_asset_download_follows_signed_image_redirect(tmp_path: Path) -> None:
+    fixture = golden_corpus_fixture_for_doi(FIGURE_DOI)
+    image_url = "https://journals.plos.org/plosone/article/figure/image?size=large&id=10.1371/journal.pone.0015338.g001"
+    redirected_url = "https://storage.googleapis.com/plos-corpus-prod/10.1371/journal.pone.0015338/1/pone.0015338.g001.PNG_L"
+    image_body = png_header(9, 9) + b"plos-redirected-figure"
+    transport = FixtureHtmlTransport(
+        {
+            FIGURE_XML_URL: http_response(
+                FIGURE_XML_URL, fixture.raw_path.read_bytes(), "application/xml"
+            ),
+            image_url: http_response(
+                image_url,
+                b"",
+                "",
+                status_code=302,
+                headers={"location": redirected_url},
+            ),
+            redirected_url: http_response(redirected_url, image_body, "image/png"),
+        }
+    )
+    client = PlosClient(transport, {})
+    raw_payload = client.fetch_raw_fulltext(FIGURE_DOI, {"doi": FIGURE_DOI})
+    article = client.to_article_model({"doi": FIGURE_DOI}, raw_payload)
+    first_figure = next(
+        asset.__dict__
+        for asset in article.assets
+        if asset.kind == "figure" and asset.heading == "Figure 1"
+    )
+    raw_payload.content = replace(raw_payload.content, extracted_assets=[first_figure])
+
+    result = client.download_related_assets(
+        FIGURE_DOI,
+        {"doi": FIGURE_DOI},
+        raw_payload,
+        tmp_path,
+        asset_profile="body",
+    )
+
+    assert result["asset_failures"] == []
+    assert result["assets"][0]["download_url"] == image_url
+    assert result["assets"][0]["source_url"] == redirected_url
+    assert result["assets"][0]["downloaded_bytes"] == len(image_body)
+    assert Path(result["assets"][0]["path"]).read_bytes() == image_body
+
+
+def test_plos_formula_graphic_assets_are_rendered_and_downloaded(
+    tmp_path: Path,
+) -> None:
+    fixture = golden_corpus_fixture_for_doi(FIGURE_DOI)
+    formula_url = "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0015338.e001&type=thumbnail"
+    image_body = png_header(10, 10) + b"plos-formula"
+    transport = FixtureHtmlTransport(
+        {
+            FIGURE_XML_URL: http_response(
+                FIGURE_XML_URL, fixture.raw_path.read_bytes(), "application/xml"
+            ),
+            formula_url: http_response(formula_url, image_body, "image/png"),
+        }
+    )
+    client = PlosClient(transport, {})
+    raw_payload = client.fetch_raw_fulltext(FIGURE_DOI, {"doi": FIGURE_DOI})
+    article = client.to_article_model({"doi": FIGURE_DOI}, raw_payload)
+    rendered = article.to_ai_markdown(
+        include_refs="all", asset_profile="body", max_tokens="full_text"
+    )
+
+    assert "[Formula unavailable" not in rendered
+    assert f"![Formula]({formula_url})" in rendered
+    formula_asset = next(
+        asset.__dict__
+        for asset in article.assets
+        if asset.kind == "formula"
+        and asset.original_url == "info:doi/10.1371/journal.pone.0015338.e001"
+    )
+    raw_payload.content = replace(raw_payload.content, extracted_assets=[formula_asset])
+
+    result = client.download_related_assets(
+        FIGURE_DOI,
+        {"doi": FIGURE_DOI},
+        raw_payload,
+        tmp_path,
+        asset_profile="body",
+    )
+
+    assert result["asset_failures"] == []
+    assert result["assets"][0]["kind"] == "formula"
+    assert result["assets"][0]["download_url"] == formula_url
+    assert result["assets"][0]["downloaded_bytes"] == len(image_body)
+    path = Path(result["assets"][0]["path"])
+    assert path.read_bytes() == image_body
+
+    article_with_assets = client.to_article_model(
+        {"doi": FIGURE_DOI},
+        raw_payload,
+        downloaded_assets=result["assets"],
+    )
+    rendered_with_assets = article_with_assets.to_ai_markdown(
+        include_refs="all",
+        asset_profile="body",
+        max_tokens="full_text",
+    )
+    assert f"![Formula]({path})" in rendered_with_assets
+    assert (
+        "![Formula](info:doi/10.1371/journal.pone.0015338.e001)"
+        not in rendered_with_assets
+    )
+
+
+def test_real_plos_table_preserves_cipher_parameters() -> None:
+    article = build_article_from_fixture(golden_corpus_fixture_for_doi(TABLE_DOI))
+    markdown = article.to_ai_markdown(
+        include_refs="all", asset_profile="body", max_tokens="full_text"
+    )
+    # original.xml pone.0304873.t001. Read all nine columns together, so a
+    # shifted register/table-size/access-count value cannot pass.
+    assert (
+        "Implementation parameters based on lookup tables for linear matrices"
+        in markdown
+    )
+    compact = re.sub(r"\s+", " ", markdown)
+    assert (
+        "| № | Cipher | Matrix size, Finite field | Register size (bits) | Lookup table size | Number of lookup tables | Number of memory accesses | Number of XORs | Size of the linear transform |"
+        in compact
+    )
+    assert (
+        "| 1 | LED block cipher [25] | 4×4,<br>*GF*(2<sup>4</sup>) | 16 | 128 B | 4 | 4 | 4 | 16 bits |"
+        in compact
+    )
+    assert (
+        "| 2 | AES block cipher [22, 23]) | 4×4,<br>*GF*(2<sup>8</sup>) | 32 | 4 KB | 4 | 4 | 4 | 32 bits |"
+        in compact
+    )
+    assert (
+        "| 4 | Kuznyechik [24, 32] | 16×16,<br>*GF*(2<sup>8</sup>) | 64 | 64 KB | 32 | 32 | 32 | 128 bits |"
+        in compact
+    )

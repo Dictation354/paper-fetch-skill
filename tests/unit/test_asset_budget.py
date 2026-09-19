@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from tests.support.asset_budget import _FakeStreamResponse
 from dataclasses import replace
 from io import BytesIO
 from pathlib import Path
@@ -9,7 +9,6 @@ import threading
 import types
 import zlib
 import zipfile
-
 import pytest
 from paper_fetch.extraction.html.assets import download as asset_download_module
 from paper_fetch.asset_budget import (
@@ -44,37 +43,6 @@ from paper_fetch.reason_codes import (
 )
 from paper_fetch.providers import _arxiv_assets
 from paper_fetch.runtime import RuntimeContext
-
-
-class _FakeStreamResponse:
-    def __init__(
-        self,
-        body: bytes,
-        *,
-        headers: dict[str, str] | None = None,
-        status: int = 200,
-    ) -> None:
-        self.status = status
-        self.headers = headers or {}
-        self._body = BytesIO(body)
-        self._paper_fetch_final_url = "https://assets.example/file.bin"
-        self.closed = False
-        self.released = False
-        self.bytes_read = 0
-
-    def read(self, amount: int, **_kwargs: object) -> bytes:
-        payload = self._body.read(amount)
-        self.bytes_read += len(payload)
-        return payload
-
-    def geturl(self) -> str:
-        return self._paper_fetch_final_url
-
-    def close(self) -> None:
-        self.closed = True
-
-    def release_conn(self) -> None:
-        self.released = True
 
 
 def _transport_with_response(

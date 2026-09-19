@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall
+
+from ..quality.access_boundary import raise_for_paywall
+
 import base64
 import contextlib
 import logging
@@ -1076,6 +1080,7 @@ def _prepare_provider_browser_page(
         if isinstance(preparation, Mapping):
             candidate_trace["provider_page_preparation"] = dict(preparation)
     except Exception as exc:
+        propagate_paywall(exc)
         candidate_trace["provider_page_preparation"] = {
             "attempted": True,
             "error_type": type(exc).__name__,
@@ -1735,15 +1740,19 @@ def fetch_html_with_playwright(
             document_request_diagnostics,
         ) = _install_page_diagnostic_listeners(page, trace)
 
-        # Science can replace an initial denied document through an automatic
+        # Science and PNAS can replace an initial denied document through an automatic
         # main-frame navigation while readiness waits. Keep response ownership
         # separate from the bounded, serializable diagnostic event summaries.
-        science_document_requests: dict[int, Any] = {}
-        science_document_responses: list[Any] = []
-        science_finished_requests: set[int] = set()
-        if normalize_text(publisher).lower() == "science":
+        owned_document_requests: dict[int, Any] = {}
+        owned_document_responses: list[Any] = []
+        owned_finished_requests: set[int] = set()
+        response_hosts = {
+            "science": {"science.org", "www.science.org"},
+            "pnas": {"pnas.org", "www.pnas.org"},
+        }.get(normalize_text(publisher).lower(), set())
+        if response_hosts:
 
-            def science_request_started(request: Any) -> None:
+            def owned_request_started(request: Any) -> None:
                 if (
                     _diagnostic_event_value(
                         getattr(request, "is_navigation_request", False)
@@ -1753,23 +1762,23 @@ def fetch_html_with_playwright(
                     and _diagnostic_event_attr(request, "frame")
                     is getattr(page, "main_frame", None)
                 ):
-                    science_document_requests[id(request)] = request
+                    owned_document_requests[id(request)] = request
 
-            def science_response_received(response: Any) -> None:
+            def owned_response_received(response: Any) -> None:
                 if (
                     id(_diagnostic_event_attr(response, "request"))
-                    in science_document_requests
+                    in owned_document_requests
                 ):
-                    science_document_responses.append(response)
+                    owned_document_responses.append(response)
 
-            def science_request_finished(request: Any) -> None:
-                if id(request) in science_document_requests:
-                    science_finished_requests.add(id(request))
+            def owned_request_finished(request: Any) -> None:
+                if id(request) in owned_document_requests:
+                    owned_finished_requests.add(id(request))
 
             for event, callback in (
-                ("request", science_request_started),
-                ("response", science_response_received),
-                ("requestfinished", science_request_finished),
+                ("request", owned_request_started),
+                ("response", owned_response_received),
+                ("requestfinished", owned_request_finished),
             ):
                 if callable(getattr(page, "on", None)):
                     page.on(event, callback)
@@ -1850,9 +1859,9 @@ def fetch_html_with_playwright(
             }
             trace["candidates"].append(candidate_trace)
             candidate_started = time.monotonic()
-            science_document_requests.clear()
-            science_document_responses.clear()
-            science_finished_requests.clear()
+            owned_document_requests.clear()
+            owned_document_responses.clear()
+            owned_finished_requests.clear()
             try:
                 logger.debug(
                     "browser_request backend=%s provider=%s action=request wait_seconds=%s url=%s",
@@ -1977,9 +1986,14 @@ def fetch_html_with_playwright(
                         browser_context_seed=browser_context_seed,
                         diagnostics={"browser_runtime_trace": trace},
                     )
-                if readiness_budget_seconds is not None and readiness_deadline is None:
+                if readiness_budget_seconds is not None and (
+                    readiness_deadline is None
+                    or normalize_text(publisher).lower() == "pnas"
+                ):
                     # Readiness owns its own budget: browser startup and the first
                     # document navigation remain governed by the request deadline.
+                    # PNAS candidates each need time for their own document body;
+                    # the overall request deadline still bounds every wait.
                     readiness_deadline = time.monotonic() + max(
                         0.0, float(readiness_budget_seconds)
                     )
@@ -1999,6 +2013,13 @@ def fetch_html_with_playwright(
                         else None
                     ),
                 )
+                if not return_image_payload:
+                    raise_for_paywall(
+                        str(page.content() or ""),
+                        metadata={"doi": config.doi},
+                        source_url=str(getattr(page, "url", "") or normalized_url),
+                        provider=publisher,
+                    )
                 _prepare_provider_browser_page(
                     page,
                     publisher=publisher,
@@ -2015,21 +2036,21 @@ def fetch_html_with_playwright(
                     title = (
                         extract_page_title(BeautifulSoup(html, choose_parser())) or ""
                     )
-                if science_document_responses:
-                    current_response = science_document_responses[-1]
+                if owned_document_responses:
+                    current_response = owned_document_responses[-1]
                     current_url = normalize_text(
                         str(_diagnostic_event_attr(current_response, "url") or "")
                     )
                     target_doi = normalize_doi(config.doi)
                     if (
                         id(_diagnostic_event_attr(current_response, "request"))
-                        in science_finished_requests
+                        in owned_finished_requests
                         and id(_diagnostic_event_attr(current_response, "request"))
-                        == next(reversed(science_document_requests))
+                        == next(reversed(owned_document_requests))
                         and urllib.parse.urldefrag(current_url)[0]
                         == urllib.parse.urldefrag(final_url)[0]
                         and urllib.parse.urlsplit(current_url).hostname
-                        in {"science.org", "www.science.org"}
+                        in response_hosts
                         and target_doi
                         and normalize_doi(extract_doi_from_url(current_url))
                         == target_doi
@@ -2097,6 +2118,7 @@ def fetch_html_with_playwright(
                 candidate_trace["error"] = "cancelled"
                 raise
             except Exception as exc:
+                propagate_paywall(exc)
                 candidate_trace["duration_seconds"] = round(
                     time.monotonic() - candidate_started,
                     3,
@@ -2137,6 +2159,13 @@ def fetch_html_with_playwright(
                 )
                 continue
 
+            if not return_image_payload:
+                raise_for_paywall(
+                    html,
+                    metadata={"doi": config.doi},
+                    source_url=final_url,
+                    provider=publisher,
+                )
             required_selector_ready = bool(
                 readiness.require_selector
                 and candidate_trace.get("selector_readiness_ready")

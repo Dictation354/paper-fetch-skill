@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "doi": "10.3390/foods10081757",
+      "provider": "mdpi",
+      "requested_url": "https://api.crossref.org/works/10.3390%2Ffoods10081757",
+      "final_url": "https://api.crossref.org/works/10.3390%2Ffoods10081757",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:26:36 GMT",
+        "content-type": "application/json",
+        "content-length": "7002"
+      },
+      "captured_at_utc": "2026-09-18T02:26:36.201638+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 24785,
+      "sha256": "f1d12a2395f18fbced3ed0933fc09b1fb25ff7559b9bf9429842a202073427be",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.3390/foods10081757",
+      "provider": "mdpi",
+      "requested_url": "https://www.mdpi.com/2304-8158/10/8/1757",
+      "final_url": "https://www.mdpi.com/2304-8158/10/8/1757",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "date": "Fri, 18 Sep 2026 02:26:40 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:26:43.019892+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 702950,
+      "sha256": "3cb5b7859ef0aeb9d24279795ebf6948874405d49b1ee9265fa63c72e0dc345e",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

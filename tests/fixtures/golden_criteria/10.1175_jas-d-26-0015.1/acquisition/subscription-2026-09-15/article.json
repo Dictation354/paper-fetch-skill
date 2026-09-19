@@ -1,0 +1,608 @@
+{
+  "doi": "10.1175/jas-d-26-0015.1",
+  "source": "ams_pdf",
+  "metadata": {
+    "title": "Local Energetics of Extratropical Transition: A Case Study of Typhoon Hagibis (2019)",
+    "authors": [
+      "Yeeun Kwon",
+      "Seok-Woo Son"
+    ],
+    "abstract": "Tropical cyclones (TCs) moving into the midlatitudes often undergo notable structural changes as they transition into extratropical cyclones (ETCs). This transition, known as the extratropical transition (ET), results from interactions between the TC and the midlatitude baroclinic environment. To elucidate the dynamical processes underlying ET, this study proposes a cyclone-following local energetics framework and applies it to TC Hagibis (2019) in the western North Pacific. The energy cycle intensifies during the ET phase, with its spatial structure becoming markedly asymmetric relative to that in the TC phase. In both the TC and ET phases, eddy available potential energy increases as its generation and energy conversion from background flow dominate over the baroclinic energy conversion. During ET, enhanced diabatic heating, warm temperature anomalies, and vertical motion appear ahead of the cyclone due to its interaction with the midlatitude jet. This leads to an asymmetric distribution of enhanced energy sources and energy conversions for eddy available potential energy. While eddy kinetic energy also increases in the TC phase as baroclinic energy conversion exceeds lateral boundary flux, it decreases and redistributes asymmetrically during ET due to enhanced divergence of eddy geopotential flux along the boundary of the western North Pacific subtropical high and the upper-level divergent TC outflow associated with jet–TC interaction. These results show that local energetics can effectively capture asymmetric thermal and dynamical processes during ET, offering a physical interpretation of TC-to-ETC transition processes.",
+    "journal": "Journal of the Atmospheric Sciences",
+    "article_type": null,
+    "published": "2026-9",
+    "keywords": [],
+    "license_urls": [
+      "http://www.ametsoc.org/PUBSReuseLicenses"
+    ],
+    "landing_page_url": "https://journals.ametsoc.org/view/journals/atsc/83/9/JAS-D-26-0015.1.xml"
+  },
+  "sections": [
+    {
+      "heading": "",
+      "level": 2,
+      "kind": "body",
+      "text": "1661\n\nSEPTEMBER 2026\n\nK W O N A N D S O N"
+    },
+    {
+      "heading": "Local Energetics of Extratropical Transition: A Case Study of Typhoon Hagibis (2019)",
+      "level": 1,
+      "kind": "body",
+      "text": "YEEUN KWON<sup>a</sup> AND SEOK-WOO SON a\n\na School of Earth and Environmental Sciences, Seoul National University, Seoul, South Korea\n\n(Manuscript received 17 January 2026, in final form 6 July 2026, accepted 23 July 2026)\n\nABSTRACT: Tropical cyclones (TCs) moving into the midlatitudes often undergo notable structural changes as they transition into extratropical cyclones (ETCs). This transition, known as the extratropical transition (ET), results from interactions between the TC and the midlatitude baroclinic environment. To elucidate the dynamical processes underlying ET, this study proposes a cyclone-following local energetics framework and applies it to TC Hagibis (2019) in the western North Pacific. The energy cycle intensifies during the ET phase, with its spatial structure becoming markedly asymmetric relative to that in the TC phase. In both the TC and ET phases, eddy available potential energy increases as its generation and energy conversion from background flow dominate over the baroclinic energy conversion. During ET, enhanced diabatic heating, warm temperature anomalies, and vertical motion appear ahead of the cyclone due to its interaction with the midlatitude jet. This leads to an asymmetric distribution of enhanced energy sources and energy conversions for eddy available potential energy. While eddy kinetic energy also increases in the TC phase as baroclinic energy conversion exceeds lateral boundary flux, it decreases and redistributes asymmetrically during ET due to enhanced divergence of eddy geopotential flux along the boundary of the western North Pacific subtropical high and the upper-level divergent TC outflow associated with jet–TC interaction. These results show that local energetics can effectively capture asymmetric thermal and dynamical processes during ET, offering a physical interpretation of TC-to-ETC transition processes.\n\nKEYWORDS: Extratropical transition; Tropical cyclones; Kinetic energy"
+    },
+    {
+      "heading": "1. Introduction",
+      "level": 2,
+      "kind": "body",
+      "text": "Tropical cyclones (TCs) that travel to the midlatitudes often undergo profound structural changes, transitioning into extratropical cyclones (ETCs). This transition, known as the extratropical transition (ET), evolves as the storm interacts with the midlatitude baroclinic environment (e.g., Jones et al. 2003; Evans et al. 2017). The ET is often associated with high-impact hazards, such as strong wind expansion (Powell 1982; Evans and Hart 2008), large ocean waves (Bowyer and MacAfee 2005), and heavy rainfall (Atallah and Bosart 2003; Chen 2011), allowing the storm to maintain or even expand its hazardous footprint well beyond the TC phase.\n\nPrevious studies have documented ET processes in various basins, including the western North Pacific (e.g., Klein et al. 2000; Kitabatake 2011), eastern Pacific (Wood and Ritchie 2014), North Atlantic (e.g., Bosart and Lackmann 1995; Hart and Evans 2001), and Southern Hemisphere (e.g., Foley and Hanstrum 1994; Sinclair 2002). Although regional differences exist, transitioning TCs exhibit a similar structural evolution. As a TC moves into the midlatitudes, it encounters decreasing sea surface temperature and increasing vertical wind shear. This leads to a weakening of its tropical characteristics, such as deep, moist, and warm-core structures. Simultaneously, the storm develops pronounced asymmetric structures, including dry intrusions, poleward-expanding cirrus shields, and frontal cloud bands (e.g., Klein et al. 2000; Harr and Elsberry 2000; Ritchie and Elsberry 2001). Consistent with these changes, the precipitation and wind fields show asymmetric evolutions (Abraham et al. 2004; Atallah et al. 2007; Fujibe and Kitabatake 2007;\n\nCorresponding author: Seok-Woo Son, seokwooson@snu.ac.kr\n\nEvans and Hart 2008). As the storm becomes fully embedded within the midlatitude baroclinic zone, it transitions to a distinct cold-cored extratropical system and often exhibits well-defined warm and cold sectors with pronounced frontal boundaries.\n\nThe midlatitude environment both drives and responds to the transitioning TCs (Evans et al. 2017; Keller et al. 2019). Throughout the evolution, upper-level divergent outflow of the TC is crucial, being primarily driven by diabatic heating but partially influenced by dry dynamic forcing (Grams and Archambault 2016; Quinting and Jones 2016). The divergent TC outflow modifies the background flow by advecting low potential vorticity (PV) air from the subtropics into the midlatitudes, lifting the tropopause and amplifying the downstream ridge (Bosart and Lackmann 1995; Archambault et al. 2013; Grams et al. 2013a). The enhanced PV gradient along the tropopause often anchors and intensifies the upper-level jet, while the upper-level divergent and anticyclonic PV anomaly inhibits eastward propagation of the upstream trough and wraps it up cyclonically (Agust´ı-Panareda et al. 2004; Riemer et al. 2008; Grams et al. 2013a; Grams and Archambault 2016). When the upstream trough and the transitioning TC are optimally phased, it can promote reintensification of a cyclone and downstream development (Ritchie and Elsberry 2003, 2007; Grams et al. 2013b; Archambault et al. 2015; Grams and Archambault 2016; Riboldi et al. 2019).\n\nTo objectively monitor the transformation of TCs into extratropical systems, the cyclone phase space (CPS) framework has been employed in both research and operations (Evans and Hart 2003; Hart 2003; Kitabatake 2011; Wood and Ritchie 2014). CPS characterizes the thermal and kinematic structure of a cyclone using parameters that represent the lower- and upper-tropospheric thermal wind and the storm asymmetry\n\nDOI: 10.1175/JAS-D-26-0015.1\n\nÓ 2026 American Meteorological Society. This published article is licensed under the terms of the default AMS reuse license. For information regarding reuse of this content and general copyright information, consult the AMS Copyright Policy (www.ametsoc.org/PUBSReuseLicenses).\n\n1662\n\nJ O U R N A L O F T H E A T M O S P H E R I C S C I E N C E S\n\nVOLUME 83\n\n(Hart 2003). This framework allows the structural evolution of a TC to be interpreted in terms of its transition from a symmetric warm-core tropical system to an asymmetric cold-core extratropical system. Although CPS provides a continuous and quantitative depiction of structural evolution of a cyclone, understanding these structural changes requires a dynamical interpretation.\n\nThe present study adopts a local energetics framework to assess how TC–midlatitude interaction affects ET. Lorenz (1955) laid the groundwork for atmospheric energetics by introducing available potential energy and developing a global energy cycle. By decomposing basic variables into zonal-mean and eddy components, this framework quantifies the generation, dissipation, and conversion of kinetic energy and available potential energy. This conceptual framework, known as the Lorenz energy cycle, has become the cornerstone for understanding the fundamental energetics of the atmospheric general circulation. Building on this, local energy budget approaches further characterize the regional energy structure and evolution. Local kinetic energy budgets have been used to examine the energy dispersion in baroclinic waves, establishing the concept of downstream development (Orlanski and Katzfey 1991; Orlanski and Chang 1993; Orlanski and Sheldon 1995). Studies on locally available potential energy have linked regional energy reservoirs to storm-track activity and the thermodynamic potential for organized ascent such as warm conveyor belts (Novak and Tailleux 2018; Gertler et al. 2023).\n\nMurakami (2011) proposed a local version of the complete Lorenz energy cycle. By introducing interaction energy and boundary flux terms, this framework distinguishes energy conversions within the local domain from energy exchanges across its boundaries, providing a local energy cycle that encompasses both the kinetic and available potential energy of the mean and eddy fields. This framework has been applied to paleoclimate (Murakami et al. 2011) and energy cascades in heavy rainfall events and their interactions with the large-scale background flow (Fu et al. 2016, 2018), demonstrating its usefulness across various temporal and spatial scales. However, Murakami’s local energy cycle is formulated within an Eulerian framework, and its application to moving systems such as TCs requires reformulation into a cyclone-following framework.\n\nIn this study, local energetics during ET are examined and compared with those during the TC. To this end, the local energy cycle of Murakami (2011) is modified for use in a cyclone frame of reference. The proposed framework is applied to TC Hagibis (2019), which made landfall in Japan and caused widespread damage. TC Hagibis exhibited pronounced structural changes through interactions with the baroclinic environment in midlatitudes, making it a representative ET case (Ito and Ichikawa 2021; Yanase et al. 2022; Nayak and Takemi 2023).\n\nThe rest of this paper is organized as follows. Section 2 explains the dataset and methods, including the cyclone-following local eddy energetics. Section 3 presents an overview of TC Hagibis, including its CPS evolution and synoptic environment. Section 4 applies the local eddy energetics to ET of Hagibis. The results are summarized and discussed in section 5."
+    },
+    {
+      "heading": "a. Dataset",
+      "level": 2,
+      "kind": "body",
+      "text": "The best track data of the Regional Specialized Meteorological Center Tokyo-Typhoon Center, operated by the Japan Meteorological Agency (JMA), are used for TC identification. The dataset provides at least 6-hourly (0000, 0600, 1200, and 1800 UTC) observations of longitude, latitude, central pressure, maximum sustained wind speed, storm category (i.e., tropical depression, tropical storm, typhoon, or extratropical cyclone), and wind radii for 30 and 50 kt (1 kt ’ 0.51 m s<sup>21</sup>) winds at 10 m above ground level. Satellite images from the Geostationary Korea Multi-Purpose Satellite-2A (GK2A) are also used to examine the structural evolution of the TC. The background fields are analyzed with the Japanese Reanalysis of Three Quarters of a Century (JRA-3Q; Kosaka et al. 2024) reanalysis data at 1.258 3 1.258 horizontal resolution, 45 pressure levels, and 6-hourly temporal resolution. Although this spatial resolution is too coarse to resolve the detailed TC structure, it is sufficient to explore the synoptic-scale features of TC and its interaction with the large-scale environment. Although not shown, the overall results are robust to the choice of reanalysis dataset (JRA-3Q vs ERA5) and spatial resolution (0.258 3 0.258 vs 1.58 3 1.58)."
+    },
+    {
+      "heading": "b. Cyclone phase space",
+      "level": 2,
+      "kind": "body",
+      "text": "The ET onset and completion are defined using the CPS diagram (Hart 2003; Evans and Hart 2003). The CPS employs three different parameters: the storm-relative geopotential thickness asymmetry between the right and left sides of the storm at 900–600 hPa (B), the low-level thermal wind between 900- and 600-hPa levels (2VT<sup>L),andtheupper-level</sup> thermal wind between 600- and 300-hPa levels (2VT<sup>U).The</sup> thermal asymmetry of the storm B is calculated as\n\nwhere Z is the geopotential height, R and L denote the right and left sides of the storm relative to its direction of motion, and the overbar indicates the area mean within a 500-km radius of the storm center. The temperature and depth of the storm core are represented by lower-tropospheric thermal wind (2VT<sup>L), which is calculated as</sup>\n\nand upper-tropospheric thermal wind (2VT<sup>U),whichiscalcu-</sup> lated as\n\nA positive 2VT<sup>Lindicates a warm-core system, while a neg-</sup> ative 2VT<sup>Lindicates a cold-core system. Combined with 2V</sup> T<sup>L,</sup> 2VT<sup>Uoffers a measure of the vertical extent of the storm core.</sup> For example, positive 2VT<sup>Land positive 2V</sup> T<sup>Uindicate a deep</sup>"
+    }
+  ],
+  "references": [
+    {
+      "raw": "Abraham, J., J. W. Strapp, C. Fogarty, and M. Wolde, 2004: Extratropical transition of Hurricane Michael: An aircraft investigation. Bull. Amer. Meteor. Soc., 85, 1323–1340, https://doi.org/10.1175/BAMS-85-9-1323.",
+      "doi": null,
+      "title": "Extratropical transition of Hurricane Michael: An aircraft investigation",
+      "year": "2004"
+    },
+    {
+      "raw": "Agustí-Panareda, A., C. D. Thorncroft, G. C. Craig, and S. L. Gray, 2004: The extratropical transition of hurricane Irene (1999): A potential-vorticity perspective. Quart. J. Roy. Meteor. Soc., 130, 1047–1074, https://doi.org/10.1256/qj.02.140.",
+      "doi": null,
+      "title": "The extratropical transition of hurricane Irene (1999): A potential-vorticity perspective",
+      "year": "2004"
+    },
+    {
+      "raw": "Archambault, H. M., L. F. Bosart, D. Keyser, and J. M. Cordeira, 2013: A climatological analysis of the extratropical flow response to recurving western North Pacific tropical cyclones. Mon. Wea. Rev., 141, 2325–2346, https://doi.org/10.1175/MWR-D-12-00257.1.",
+      "doi": null,
+      "title": "A climatological analysis of the extratropical flow response to recurving western North Pacific tropical cyclones",
+      "year": "2013"
+    },
+    {
+      "raw": "Archambault, H. M., D. Keyser, L. F. Bosart, C. A. Davis, and J. M. Cordeira, 2015: A composite perspective of the extratropical flow response to recurving western North Pacific tropical cyclones. Mon. Wea. Rev., 143, 1122–1141, https://doi.org/10.1175/MWR-D-14-00270.1.",
+      "doi": null,
+      "title": "A composite perspective of the extratropical flow response to recurving western North Pacific tropical cyclones",
+      "year": "2015"
+    },
+    {
+      "raw": "Atallah, E. H., and L. F. Bosart, 2003: The extratropical transition and precipitation distribution of Hurricane Floyd (1999). Mon. Wea. Rev., 131, 1063–1081, https://doi.org/10.1175/1520-0493(2003)131 2.0.CO;2.",
+      "doi": null,
+      "title": "The extratropical transition and precipitation distribution of Hurricane Floyd (1999)",
+      "year": "2003"
+    },
+    {
+      "raw": "Atallah, E. H., L. F. Bosart, and A. R. Aiyyer, 2007: Precipitation distribution associated with landfalling tropical cyclones over the eastern United States. Mon. Wea. Rev., 135, 2185–2206, https://doi.org/10.1175/MWR3382.1.",
+      "doi": null,
+      "title": "Precipitation distribution associated with landfalling tropical cyclones over the eastern United States",
+      "year": "2007"
+    },
+    {
+      "raw": "Bosart, L. F., and G. M. Lackmann, 1995: Postlandfall tropical cyclone reintensification in a weakly baroclinic environment: A case study of Hurricane David (September 1979). Mon. Wea. Rev., 123, 3268–3291, https://doi.org/10.1175/1520-0493(1995)123 2.0.CO;2.",
+      "doi": null,
+      "title": "Postlandfall tropical cyclone reintensification in a weakly baroclinic environment: A case study of Hurricane David (September 1979)",
+      "year": "1995"
+    },
+    {
+      "raw": "Bowyer, P. J., and A. W. MacAfee, 2005: The theory of trapped-fetch waves with tropical cyclones—An operational perspective. Wea. Forecasting, 20, 229–244, https://doi.org/10.1175/WAF849.1.",
+      "doi": null,
+      "title": "The theory of trapped-fetch waves with tropical cyclones—An operational perspective",
+      "year": "2005"
+    },
+    {
+      "raw": "Browning, K. A., 1997: The dry intrusion perspective of extra-tropical cyclone development. Meteor. Appl., 4, 317–324, https://doi.org/10.1017/S1350482797000613.",
+      "doi": null,
+      "title": "The dry intrusion perspective of extra-tropical cyclone development",
+      "year": "1997"
+    },
+    {
+      "raw": "Carlson, T. N., 1980: Airflow through midlatitude cyclones and the comma cloud pattern. Mon. Wea. Rev., 108, 1498–1509, https://doi.org/10.1175/1520-0493(1980)108 2.0.CO;2.",
+      "doi": null,
+      "title": "Airflow through midlatitude cyclones and the comma cloud pattern",
+      "year": "1980"
+    },
+    {
+      "raw": "Catto, J. L., L. C. Shaffrey, and K. I. Hodges, 2010: Can climate models capture the structure of extratropical cyclones? J. Climate, 23, 1621–1635, https://doi.org/10.1175/2009JCLI3318.1.",
+      "doi": null,
+      "title": "Can climate models capture the structure of extratropical cyclones?",
+      "year": "2010"
+    },
+    {
+      "raw": "Chan, J. C., and W. M. Gray, 1982: Tropical cyclone movement and surrounding flow relationships. Mon. Wea. Rev., 110, 1354–1374, https://doi.org/10.1175/1520-0493(1982)110 2.0.CO;2.",
+      "doi": null,
+      "title": "Tropical cyclone movement and surrounding flow relationships",
+      "year": "1982"
+    },
+    {
+      "raw": "Chen, G. H., 2011: A comparison of precipitation distribution of two landfalling tropical cyclones during the extratropical transition. Adv. Atmos. Sci., 28, 1390–1404, https://doi.org/10.1007/s00376-011-0148-y.",
+      "doi": null,
+      "title": "A comparison of precipitation distribution of two landfalling tropical cyclones during the extratropical transition",
+      "year": "2011"
+    },
+    {
+      "raw": "Davis, C. A., S. C. Jones, and M. Riemer, 2008: Hurricane vortex dynamics during Atlantic extratropical transition. J. Atmos. Sci., 65, 714–736, https://doi.org/10.1175/2007JAS2488.1.",
+      "doi": null,
+      "title": "Hurricane vortex dynamics during Atlantic extratropical transition",
+      "year": "2008"
+    },
+    {
+      "raw": "De Souza, D. C., P. L. D. Silva Dias, C. B. Gramcianinov, and R. Camargo, 2025: Lorenz energy cycle climatology for the southwestern Atlantic cyclones. Climate Dyn., 63, 426, https://doi.org/10.1007/s00382-025-07918-y.",
+      "doi": null,
+      "title": "Lorenz energy cycle climatology for the southwestern Atlantic cyclones",
+      "year": "2025"
+    },
+    {
+      "raw": "De Souza, D. C., V. A. Ranieri, P. L. D. Silva Dias, A. R. Flores, and R. Camargo, 2026: Revisiting the rare transition of a South Atlantic cyclone to Tropical Storm Akará: Energy cycle and stratosphere-troposphere interaction. Climate Dyn., 64, 94, https://doi.org/10.1007/s00382-026-08062-x.",
+      "doi": null,
+      "title": "Revisiting the rare transition of a South Atlantic cyclone to Tropical Storm Akará: Energy cycle and stratosphere-troposphere interaction",
+      "year": "2026"
+    },
+    {
+      "raw": "Evans, C., and R. E. Hart, 2008: Analysis of the wind field evolution associated with the extratropical transition of Bonnie (1998). Mon. Wea. Rev., 136, 2047–2065, https://doi.org/10.1175/2007MWR2051.1.",
+      "doi": null,
+      "title": "Analysis of the wind field evolution associated with the extratropical transition of Bonnie (1998)",
+      "year": "2008"
+    },
+    {
+      "raw": "Evans, C., and Coauthors, 2017: The extratropical transition of tropical cyclones. Part I: Cyclone evolution and direct impacts. Mon. Wea. Rev., 145, 4317–4344, https://doi.org/10.1175/MWR-D-17-0027.1.",
+      "doi": null,
+      "title": "The extratropical transition of tropical cyclones. Part I: Cyclone evolution and direct impacts",
+      "year": "2017"
+    },
+    {
+      "raw": "Evans, J. L., and R. E. Hart, 2003: Objective indicators of the life cycle evolution of extratropical transition for Atlantic tropical cyclones. Mon. Wea. Rev., 131, 909–925, https://doi.org/10.1175/1520-0493(2003)131 2.0.CO;2.",
+      "doi": null,
+      "title": "Objective indicators of the life cycle evolution of extratropical transition for Atlantic tropical cyclones",
+      "year": "2003"
+    },
+    {
+      "raw": "Evans, J. L., and B. E. Prater-Mayes, 2004: Factors affecting the posttransition intensification of Hurricane Irene (1999). Mon. Wea. Rev., 132, 1355–1368, https://doi.org/10.1175/1520-0493(2004)132 2.0.CO;2.",
+      "doi": null,
+      "title": "Factors affecting the posttransition intensification of Hurricane Irene (1999)",
+      "year": "2004"
+    },
+    {
+      "raw": "Foley, G. R., and B. N. Hanstrum, 1994: The capture of tropical cyclones by cold fronts off the west coast of Australia. Wea. Forecasting, 9, 577–592, https://doi.org/10.1175/1520-0434(1994)009 2.0.CO;2.",
+      "doi": null,
+      "title": "The capture of tropical cyclones by cold fronts off the west coast of Australia",
+      "year": "1994"
+    },
+    {
+      "raw": "Fu, S.-M., J.-H. Sun, J. Ling, H.-J. Wang, and Y.-C. Zhang, 2016: Scale interactions in sustaining persistent torrential rainfall events during the mei-yu season. J. Geophys. Res. Atmos., 121, 12 856–12 876, https://doi.org/10.1002/2016JD025446.",
+      "doi": null,
+      "title": "Scale interactions in sustaining persistent torrential rainfall events during the mei-yu season",
+      "year": "2016"
+    },
+    {
+      "raw": "Fu, S.-M., R.-X. Liu, and J.-H. Sun, 2018: On the scale interactions that dominate the maintenance of a persistent heavy rainfall event: A piecewise energy analysis. J. Atmos. Sci., 75, 907–925, https://doi.org/10.1175/JAS-D-17-0294.1.",
+      "doi": null,
+      "title": "On the scale interactions that dominate the maintenance of a persistent heavy rainfall event: A piecewise energy analysis",
+      "year": "2018"
+    },
+    {
+      "raw": "Fujibe, F., and N. Kitabatake, 2007: Classification of surface wind fields of tropical cyclones at landfall on the Japan main islands. J. Meteor. Soc. Japan, 85, 747–765, https://doi.org/10.2151/jmsj.85.747.",
+      "doi": null,
+      "title": "Classification of surface wind fields of tropical cyclones at landfall on the Japan main islands",
+      "year": "2007"
+    },
+    {
+      "raw": "Gertler, C. G., P. A. O’Gorman, and S. Pfahl, 2023: Moist available potential energy of the mean state of the atmosphere and the thermodynamic potential for warm conveyor belts and convection. Wea. Climate Dyn., 4, 361–379, https://doi.org/10.5194/wcd-4-361-2023.",
+      "doi": null,
+      "title": "Moist available potential energy of the mean state of the atmosphere and the thermodynamic potential for warm conveyor belts and convection",
+      "year": "2023"
+    },
+    {
+      "raw": "Grams, C. M., and H. M. Archambault, 2016: The key role of diabatic outflow in amplifying the midlatitude flow: A representative case study of weather systems surrounding western North Pacific extratropical transition. Mon. Wea. Rev., 144, 3847–3869, https://doi.org/10.1175/MWR-D-15-0419.1.",
+      "doi": null,
+      "title": "The key role of diabatic outflow in amplifying the midlatitude flow: A representative case study of weather systems surrounding western North Pacific extratropical transition",
+      "year": "2016"
+    },
+    {
+      "raw": "Grams, C. M., S. C. Jones, C. A. Davis, P. A. Harr, and M. Weissmann, 2013a: The impact of Typhoon Jangmi (2008) on the midlatitude flow. Part I: Upper-level ridgebuilding and modification of the jet. Quart. J. Roy. Meteor. Soc., 139, 2148–2164, https://doi.org/10.1002/qj.2091.",
+      "doi": null,
+      "title": "The impact of Typhoon Jangmi (2008) on the midlatitude flow. Part I: Upper-level ridgebuilding and modification of the jet",
+      "year": "2013a"
+    },
+    {
+      "raw": "Grams, C. M., S. C. Jones, and C. A. Davis, 2013b: The impact of Typhoon Jangmi (2008) on the midlatitude flow. Part II: Downstream evolution. Quart. J. Roy. Meteor. Soc., 139, 2165–2180, https://doi.org/10.1002/qj.2119.",
+      "doi": null,
+      "title": "The impact of Typhoon Jangmi (2008) on the midlatitude flow. Part II: Downstream evolution",
+      "year": "2013b"
+    },
+    {
+      "raw": "Harr, P. A., and R. L. Elsberry, 2000: Extratropical transition of tropical cyclones over the western North Pacific. Part I: Evolution of structural characteristics during the transition process. Mon. Wea. Rev., 128, 2613–2633, https://doi.org/10.1175/1520-0493(2000)128 2.0.CO;2.",
+      "doi": null,
+      "title": "Extratropical transition of tropical cyclones over the western North Pacific. Part I: Evolution of structural characteristics during the transition process",
+      "year": "2000"
+    },
+    {
+      "raw": "Hart, R. E., 2003: A cyclone phase space derived from thermal wind and thermal asymmetry. Mon. Wea. Rev., 131, 585–616, https://doi.org/10.1175/1520-0493(2003)131 2.0.CO;2.",
+      "doi": null,
+      "title": "A cyclone phase space derived from thermal wind and thermal asymmetry",
+      "year": "2003"
+    },
+    {
+      "raw": "Hart, R. E., and J. L. Evans, 2001: A climatology of the extratropical transition of Atlantic tropical cyclones. J. Climate, 14, 546–564, https://doi.org/10.1175/1520-0442(2001)014 2.0.CO;2.",
+      "doi": null,
+      "title": "A climatology of the extratropical transition of Atlantic tropical cyclones",
+      "year": "2001"
+    },
+    {
+      "raw": "Iizuka, S., R. Kawamura, H. Nakamura, and T. Miyama, 2021: Influence of warm SST in the Oyashio region on rainfall distribution of Typhoon Hagibis (2019). SOLA, 17A, 21–28, https://doi.org/10.2151/sola.17A-004.",
+      "doi": null,
+      "title": "Influence of warm SST in the Oyashio region on rainfall distribution of Typhoon Hagibis (2019)",
+      "year": "2021"
+    },
+    {
+      "raw": "Ito, K., and H. Ichikawa, 2021: Warm ocean accelerating Tropical Cyclone Hagibis (2019) through interaction with a mid-latitude westerly jet. SOLA, 17A, 1–6, https://doi.org/10.2151/sola.17A-001.",
+      "doi": null,
+      "title": "Warm ocean accelerating Tropical Cyclone Hagibis (2019) through interaction with a mid-latitude westerly jet",
+      "year": "2021"
+    },
+    {
+      "raw": "Jones, S. C., and Coauthors, 2003: The extratropical transition of tropical cyclones: Forecast challenges, current understanding, and future directions. Wea. Forecasting, 18, 1052–1092, https://doi.org/10.1175/1520-0434(2003)018 2.0.CO;2.",
+      "doi": null,
+      "title": "The extratropical transition of tropical cyclones: Forecast challenges, current understanding, and future directions",
+      "year": "2003"
+    },
+    {
+      "raw": "Jung, C., and G. M. Lackmann, 2021: The response of extratropical transition of tropical cyclones to climate change: Quasi-idealized numerical experiments. J. Climate, 34, 4361–4381, https://doi.org/10.1175/JCLI-D-20-0543.1.",
+      "doi": null,
+      "title": "The response of extratropical transition of tropical cyclones to climate change: Quasi-idealized numerical experiments",
+      "year": "2021"
+    },
+    {
+      "raw": "Keller, J. H., S. C. Jones, and P. A. Harr, 2014: An eddy kinetic energy view of physical and dynamical processes in distinct forecast scenarios for the extratropical transition of two tropical cyclones. Mon. Wea. Rev., 142, 2751–2771, https://doi.org/10.1175/MWR-D-13-00219.1.",
+      "doi": null,
+      "title": "An eddy kinetic energy view of physical and dynamical processes in distinct forecast scenarios for the extratropical transition of two tropical cyclones",
+      "year": "2014"
+    },
+    {
+      "raw": "Keller, J. H., and Coauthors, 2019: The extratropical transition of tropical cyclones. Part II: Interaction with the midlatitude flow, downstream impacts, and implications for predictability. Mon. Wea. Rev., 147, 1077–1106, https://doi.org/10.1175/MWR-D-17-0329.1.",
+      "doi": null,
+      "title": "The extratropical transition of tropical cyclones. Part II: Interaction with the midlatitude flow, downstream impacts, and implications for predictability",
+      "year": "2019"
+    },
+    {
+      "raw": "Kitabatake, N., 2011: Climatology of extratropical transition of tropical cyclones in the western North Pacific defined by using cyclone phase space. J. Meteor. Soc. Japan, 89, 309–325, https://doi.org/10.2151/jmsj.2011-402.",
+      "doi": null,
+      "title": "Climatology of extratropical transition of tropical cyclones in the western North Pacific defined by using cyclone phase space",
+      "year": "2011"
+    },
+    {
+      "raw": "Klein, P. M., P. A. Harr, and R. L. Elsberry, 2000: Extratropical transition of western North Pacific tropical cyclones: An overview and conceptual model of the transformation stage. Wea. Forecasting, 15, 373–395, https://doi.org/10.1175/1520-0434(2000)015 2.0.CO;2.",
+      "doi": null,
+      "title": "Extratropical transition of western North Pacific tropical cyclones: An overview and conceptual model of the transformation stage",
+      "year": "2000"
+    },
+    {
+      "raw": "Kosaka, Y., and Coauthors, 2024: The JRA-3Q reanalysis. J. Meteor. Soc. Japan, 102, 49–109, https://doi.org/10.2151/jmsj.2024-004.",
+      "doi": null,
+      "title": "The JRA-3Q reanalysis",
+      "year": "2024"
+    },
+    {
+      "raw": "Lackmann, G. M., 2015: Midlatitude Synoptic Meteorology: Dynamics, Analysis and Forecasting. Amer. Meteor. Soc., 345 pp.",
+      "doi": null,
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "Liu, Q., T. Li, and W. Zhou, 2018: Impact of 10–60-day low-frequency steering flows on straight northward-moving typhoon tracks over the western North Pacific. J. Meteor. Res., 32, 394–409, https://doi.org/10.1007/s13351-018-7035-8.",
+      "doi": null,
+      "title": "Impact of 10–60-day low-frequency steering flows on straight northward-moving typhoon tracks over the western North Pacific",
+      "year": "2018"
+    },
+    {
+      "raw": "Lorenz, E. N., 1955: Available potential energy and the maintenance of the general circulation. Tellus, 7 (2), 157–167, https://doi.org/10.1111/j.2153-3490.1955.tb01148.x.",
+      "doi": null,
+      "title": "Available potential energy and the maintenance of the general circulation",
+      "year": "1955"
+    },
+    {
+      "raw": "Murakami, S., 2011: Atmospheric local energetics and energy interactions between mean and eddy fields. Part I: Theory. J. Atmos. Sci., 68, 760–768, https://doi.org/10.1175/2010JAS3664.1.",
+      "doi": null,
+      "title": "Atmospheric local energetics and energy interactions between mean and eddy fields. Part I: Theory",
+      "year": "2011"
+    },
+    {
+      "raw": "Murakami, S., R. Ohgaito, and A. Abe-Ouchi, 2011: Atmospheric local energetics and energy interactions between mean and eddy fields. Part II: An example for the last glacial maximum climate. J. Atmos. Sci., 68, 533–552, https://doi.org/10.1175/2010JAS3583.1.",
+      "doi": null,
+      "title": "Atmospheric local energetics and energy interactions between mean and eddy fields. Part II: An example for the last glacial maximum climate",
+      "year": "2011"
+    },
+    {
+      "raw": "Nayak, S., and T. Takemi, 2023: Structural characteristics of Typhoons Jebi (2018), Faxai (2019), and Hagibis (2019). Meteor. Atmos. Phys., 135, 34, https://doi.org/10.1007/s00703-023-00973-2.",
+      "doi": null,
+      "title": "Structural characteristics of Typhoons Jebi (2018), Faxai (2019), and Hagibis (2019)",
+      "year": "2023"
+    },
+    {
+      "raw": "Novak, L., and R. Tailleux, 2018: On the local view of atmospheric available potential energy. J. Atmos. Sci., 75, 1891–1907, https://doi.org/10.1175/JAS-D-17-0330.1.",
+      "doi": null,
+      "title": "On the local view of atmospheric available potential energy",
+      "year": "2018"
+    },
+    {
+      "raw": "Orlanski, I., and J. Katzfey, 1991: The life cycle of a cyclone wave in the Southern Hemisphere. Part I: Eddy energy budget. J. Atmos. Sci., 48, 1972–1998, https://doi.org/10.1175/1520-0469(1991)048 2.0.CO;2.",
+      "doi": null,
+      "title": "The life cycle of a cyclone wave in the Southern Hemisphere. Part I: Eddy energy budget",
+      "year": "1991"
+    },
+    {
+      "raw": "Orlanski, I., and E. K. M. Chang, 1993: Ageostrophic geopotential fluxes in downstream and upstream development of baroclinic waves. J. Atmos. Sci., 50, 212–225, https://doi.org/10.1175/1520-0469(1993)050 2.0.CO;2.",
+      "doi": null,
+      "title": "Ageostrophic geopotential fluxes in downstream and upstream development of baroclinic waves",
+      "year": "1993"
+    },
+    {
+      "raw": "Orlanski, I., and J. P. Sheldon, 1995: Stages in the energetics of baroclinic systems. Tellus, 47A, 605–628, https://doi.org/10.3402/tellusa.v47i5.11553.",
+      "doi": null,
+      "title": "Stages in the energetics of baroclinic systems",
+      "year": "1995"
+    },
+    {
+      "raw": "Powell, M. D., 1982: The transition of the hurricane Frederic boundary-layer wind field from the open Gulf of Mexico to landfall. Mon. Wea. Rev., 110, 1912–1932, https://doi.org/10.1175/1520-0493(1982)110 2.0.CO;2.",
+      "doi": null,
+      "title": "The transition of the hurricane Frederic boundary-layer wind field from the open Gulf of Mexico to landfall",
+      "year": "1982"
+    },
+    {
+      "raw": "Quinting, J. F., and S. C. Jones, 2016: On the impact of tropical cyclones on Rossby wave packets: A climatological perspective. Mon. Wea. Rev., 144, 2021–2048, https://doi.org/10.1175/MWR-D-14-00298.1.",
+      "doi": null,
+      "title": "On the impact of tropical cyclones on Rossby wave packets: A climatological perspective",
+      "year": "2016"
+    },
+    {
+      "raw": "Riboldi, J., C. M. Grams, M. Riemer, and H. M. Archambault, 2019: A phase locking perspective on Rossby wave amplification and atmospheric blocking downstream of recurving western North Pacific tropical cyclones. Mon. Wea. Rev., 147, 567–589, https://doi.org/10.1175/MWR-D-18-0271.1.",
+      "doi": null,
+      "title": "A phase locking perspective on Rossby wave amplification and atmospheric blocking downstream of recurving western North Pacific tropical cyclones",
+      "year": "2019"
+    },
+    {
+      "raw": "Riemer, M., and S. C. Jones, 2010: The downstream impact of tropical cyclones on a developing baroclinic wave in idealized scenarios of extratropical transition. Quart. J. Roy. Meteor. Soc., 136, 617–637, https://doi.org/10.1002/qj.605.",
+      "doi": null,
+      "title": "The downstream impact of tropical cyclones on a developing baroclinic wave in idealized scenarios of extratropical transition",
+      "year": "2010"
+    },
+    {
+      "raw": "Riemer, M., and S. C. Jones, 2014: Interaction of a tropical cyclone with a high-amplitude, midlatitude wave pattern: Waviness analysis, trough deformation and track bifurcation. Quart. J. Roy. Meteor. Soc., 140, 1362–1376, https://doi.org/10.1002/qj.2221.",
+      "doi": null,
+      "title": "Interaction of a tropical cyclone with a high-amplitude, midlatitude wave pattern: Waviness analysis, trough deformation and track bifurcation",
+      "year": "2014"
+    },
+    {
+      "raw": "Riemer, M., S. C. Jones, and C. A. Davis, 2008: The impact of extratropical transition on the downstream flow: An idealized modelling study with a straight jet. Quart. J. Roy. Meteor. Soc., 134, 69–91, https://doi.org/10.1002/qj.189.",
+      "doi": null,
+      "title": "The impact of extratropical transition on the downstream flow: An idealized modelling study with a straight jet",
+      "year": "2008"
+    },
+    {
+      "raw": "Ritchie, E. A., and R. L. Elsberry, 2001: Simulations of the transformation stage of the extratropical transition of tropical cyclones. Mon. Wea. Rev., 129, 1462–1480, https://doi.org/10.1175/1520-0493(2001)129 2.0.CO;2.",
+      "doi": null,
+      "title": "Simulations of the transformation stage of the extratropical transition of tropical cyclones",
+      "year": "2001"
+    },
+    {
+      "raw": "Ritchie, E. A., and R. L. Elsberry, 2003: Simulations of the extratropical transition of tropical cyclones: Contributions by the midlatitude upper-level trough to reintensification. Mon. Wea. Rev., 131, 2112–2128, https://doi.org/10.1175/1520-0493(2003)131 2.0.CO;2.",
+      "doi": null,
+      "title": "Simulations of the extratropical transition of tropical cyclones: Contributions by the midlatitude upper-level trough to reintensification",
+      "year": "2003"
+    },
+    {
+      "raw": "Ritchie, E. A., and R. L. Elsberry, 2007: Simulations of the extratropical transition of tropical cyclones: Phasing between the upper-level trough and tropical cyclones. Mon. Wea. Rev., 135, 862–876, https://doi.org/10.1175/MWR3303.1.",
+      "doi": null,
+      "title": "Simulations of the extratropical transition of tropical cyclones: Phasing between the upper-level trough and tropical cyclones",
+      "year": "2007"
+    },
+    {
+      "raw": "Rivière, G., P. Arbogast, and A. Joly, 2015: Eddy kinetic energy redistribution within windstorms Klaus and Friedhelm. Quart. J. Roy. Meteor. Soc., 141, 925–938, https://doi.org/10.1002/qj.2412.",
+      "doi": null,
+      "title": "Eddy kinetic energy redistribution within windstorms Klaus and Friedhelm",
+      "year": "2015"
+    },
+    {
+      "raw": "Shimada, U., A. Wada, K. Yamazaki, and N. Kitabatake, 2014: Roles of an upper-level cold vortex and low-level baroclinicity in the development of polar lows over the Sea of Japan. Tellus, 66A, 24694, https://doi.org/10.3402/tellusa.v66.24694.",
+      "doi": null,
+      "title": "Roles of an upper-level cold vortex and low-level baroclinicity in the development of polar lows over the Sea of Japan",
+      "year": "2014"
+    },
+    {
+      "raw": "Sinclair, M. R., 2002: Extratropical transition of southwest Pacific tropical cyclones. Part I: Climatology and mean structure changes. Mon. Wea. Rev., 130, 590–609, https://doi.org/10.1175/1520-0493(2002)130 2.0.CO;2.",
+      "doi": null,
+      "title": "Extratropical transition of southwest Pacific tropical cyclones. Part I: Climatology and mean structure changes",
+      "year": "2002"
+    },
+    {
+      "raw": "Sun, Y., Z. Zhong, and Y. Wang, 2012: Kinetic energy budget of Typhoon Yagi (2006) during its extratropical transition. Meteor. Atmos. Phys., 118, 65–78, https://doi.org/10.1007/s00703-012-0200-1.",
+      "doi": null,
+      "title": "Kinetic energy budget of Typhoon Yagi (2006) during its extratropical transition",
+      "year": "2012"
+    },
+    {
+      "raw": "Teubler, F., and M. Riemer, 2016: Dynamics of Rossby wave packets in a quantitative potential vorticity—Potential temperature framework. J. Atmos. Sci., 73, 1063–1081, https://doi.org/10.1175/JAS-D-15-0162.1.",
+      "doi": null,
+      "title": "Dynamics of Rossby wave packets in a quantitative potential vorticity—Potential temperature framework",
+      "year": "2016"
+    },
+    {
+      "raw": "Wirth, V., M. Riemer, E. K. M. Chang, and O. Martius, 2018: Rossby wave packets on the midlatitude waveguide—A review. Mon. Wea. Rev., 146, 1965–2001, https://doi.org/10.1175/MWR-D-16-0483.1.",
+      "doi": null,
+      "title": "Rossby wave packets on the midlatitude waveguide—A review",
+      "year": "2018"
+    },
+    {
+      "raw": "Wood, K. M., and E. A. Ritchie, 2014: A 40-year climatology of extratropical transition in the eastern North Pacific. J. Climate, 27, 5999–6015, https://doi.org/10.1175/JCLI-D-13-00645.1.",
+      "doi": null,
+      "title": "A 40-year climatology of extratropical transition in the eastern North Pacific",
+      "year": "2014"
+    },
+    {
+      "raw": "Yanase, W., K. Araki, A. Wada, U. Shimada, M. Hayashi, and T. Horinouchi, 2022: Multiple dynamics of precipitation concentrated on the north side of Typhoon Hagibis (2019) during extratropical transition. J. Meteor. Soc. Japan, 100, 783–805, https://doi.org/10.2151/jmsj.2022-041.",
+      "doi": null,
+      "title": "Multiple dynamics of precipitation concentrated on the north side of Typhoon Hagibis (2019) during extratropical transition",
+      "year": "2022"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 3371,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "ams HTML route was not usable (abstract_only); attempting PDF fallback.",
+      "Full text was extracted from PDF fallback after the HTML path was not usable.",
+      "AMS official full text was downloaded as PDF/binary to /tmp/paper-fetch-paywall-expansion-20260915/ams/10.1175_jas-d-26-0015.1/fetch/Kwon_et_al_2026_Local_Energetics_of_Extratropical_Transition_A_Case_Study_of_Typhoon_Hagibis_2019.pdf.",
+      "Markdown full text was saved to /tmp/paper-fetch-paywall-expansion-20260915/ams/10.1175_jas-d-26-0015.1/fetch/Kwon_et_al_2026_Local_Energetics_of_Extratropical_Transition_A_Case_Study_of_Typhoon_Hagibis_2019.md."
+    ],
+    "source_trail": [
+      "fulltext:ams_html_fail",
+      "fulltext:ams_pdf_fallback_ok",
+      "fulltext:ams_pdf_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_ams",
+      "route:signal_publisher_ams",
+      "route:signal_doi_ams",
+      "route:probe_ams_unknown",
+      "route:provider_selected_ams",
+      "route:provider_candidate_ams_metadata_selected_rank_1",
+      "route:provider_candidate_ams_identity_strong",
+      "fulltext:ams_attempt",
+      "download:ams_saved",
+      "download:ams_assets_skipped_profile_none",
+      "fulltext:ams_article_ok",
+      "route:provider_candidate_ams_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 413,
+      "body": 2958,
+      "refs": 3689
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 11802,
+      "word_count": 1838,
+      "body_block_count": 5,
+      "body_heading_count": 4,
+      "body_to_abstract_ratio": 7.722689075630252,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "ams",
+    "route": "browser_pdf",
+    "representation": "pdf",
+    "transport": "browser",
+    "fallback_used": true
+  }
+}

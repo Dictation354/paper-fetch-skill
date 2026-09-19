@@ -1,0 +1,16 @@
+{
+  "doi": "10.1126/science.abo2812",
+  "provider": "science",
+  "source_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+  "attempt": 1,
+  "transport": "native Camoufox configured provider context",
+  "responses": [],
+  "no_fault_injection": true,
+  "title": "Satellites reveal widespread decline in global lake water storage | Science",
+  "observed_doi": "10.1126/science.abo2812",
+  "final_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+  "challenge": false,
+  "paywall_diagnostics": {},
+  "stop_reason": "runtime_or_navigation_error",
+  "error_type": "TimeoutError"
+}

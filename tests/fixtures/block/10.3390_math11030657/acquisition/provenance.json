@@ -1,0 +1,32 @@
+{
+  "records": [
+    {
+      "doi": "10.3390/math11030657",
+      "provider": "mdpi",
+      "requested_url": "https://www.mdpi.com/2227-7390/11/3/657",
+      "final_url": "https://www.mdpi.com/2227-7390/11/3/657",
+      "status_code": 403,
+      "response_headers": {
+        "mime-version": "1.0",
+        "content-type": "text/html",
+        "content-length": "398",
+        "expires": "Tue, 15 Sep 2026 03:03:45 GMT",
+        "cache-control": "max-age=0, no-cache, no-store",
+        "pragma": "no-cache",
+        "date": "Tue, 15 Sep 2026 03:03:45 GMT",
+        "connection": "close",
+        "server-timing": "ak_p; desc=\"1789441425162_387980994_110734520_23_10603_35_39_-\";dur=1",
+        "strict-transport-security": "max-age=31536000",
+        "akamai-grn": "0.c21e2017.1789441425.699acb8"
+      },
+      "captured_at_utc": "2026-09-15T03:03:43.422608+00:00",
+      "size": 398,
+      "sha256": "377af27433e4a2f0054bc14c7fa89cc55432c52419f28f54714ed911352e4b31",
+      "error": "HTTP 403 for https://www.mdpi.com/2227-7390/11/3/657",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "attempt": 1,
+      "body_file": "raw.html"
+    }
+  ]
+}

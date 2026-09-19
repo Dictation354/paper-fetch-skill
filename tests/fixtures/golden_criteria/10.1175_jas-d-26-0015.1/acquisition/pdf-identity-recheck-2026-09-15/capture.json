@@ -1,0 +1,61 @@
+{
+  "provider": "ams",
+  "doi": "10.1175/jas-d-26-0015.1",
+  "started_at_utc": "2026-09-15T06:51:21.140000+00:00",
+  "attempt": 1,
+  "headless": false,
+  "network_context": "User reports current network has no subscription access; not independently verified. Existing configured API credentials and provider storage state retained.",
+  "capture_scope": "Current repository CLI with passive HTTP/browser response and final DOM observers. No injected responses, forced failures, route overrides, or PDF quality fixes.",
+  "responses": [
+    {
+      "requested_url": "https://journals.ametsoc.org/view/journals/atsc/83/9/JAS-D-26-0015.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/atsc/83/9/JAS-D-26-0015.1.xml",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Tue, 15 Sep 2026 06:51:29 GMT",
+        "content-encoding": "gzip",
+        "x-cache": "Miss from cloudfront",
+        "via": "1.1 50298e0bc0765700a50cccdf5b6ac348.cloudfront.net (CloudFront)",
+        "x-amz-cf-pop": "LAX54-P7",
+        "x-amz-cf-id": "l_FeMstOdhNB0eaZqVvcou1OiX742c-bIzSgoyV7tVkSG3oFaKfo8A==",
+        "x-xss-protection": "1; mode=block",
+        "referrer-policy": "no-referrer-when-downgrade",
+        "content-security-policy": "frame-ancestors 'self' https://admin-journals.ametsoc.org",
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "Origin",
+        "x-firefox-spdy": "h2"
+      },
+      "capture_kind": "http_response_entity",
+      "transport": "Headed Camoufox requestfinished response.body()",
+      "body_file": "acquisition/pdf-identity-recheck-2026-09-15/response-001.bin",
+      "size": 1982142,
+      "sha256": "c6e8bba342b54dcd4ca45992432907de4eda4abc84b1b5a6ccd875fb535cdb5c",
+      "captured_at_utc": "2026-09-15T06:51:29.237973+00:00",
+      "headless": false,
+      "network_context": "User reports current network has no subscription access; not independently verified. Existing configured API credentials and provider storage state retained.",
+      "capture_scope": "Current repository CLI with passive HTTP/browser response and final DOM observers. No injected responses, forced failures, route overrides, or PDF quality fixes."
+    },
+    {
+      "requested_url": "https://journals.ametsoc.org/view/journals/atsc/83/9/JAS-D-26-0015.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/atsc/83/9/JAS-D-26-0015.1.xml",
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "browser_dom",
+      "transport": "Headed Camoufox page.content() immediately before provider closes page",
+      "title": "Local Energetics of Extratropical Transition: A Case Study of Typhoon Hagibis (2019) in: Journal of the Atmospheric Sciences Volume 83 Issue 9 (2026)",
+      "body_file": "acquisition/pdf-identity-recheck-2026-09-15/response-002.bin",
+      "size": 2049881,
+      "sha256": "8239f07fea6d0a896d99d562eb69c37dce07e64123d734d27553826cefca18b8",
+      "captured_at_utc": "2026-09-15T06:51:32.682351+00:00",
+      "headless": false,
+      "network_context": "User reports current network has no subscription access; not independently verified. Existing configured API credentials and provider storage state retained.",
+      "capture_scope": "Current repository CLI with passive HTTP/browser response and final DOM observers. No injected responses, forced failures, route overrides, or PDF quality fixes."
+    }
+  ],
+  "capture_errors": [],
+  "exit_code": 0,
+  "completed_at_utc": "2026-09-15T06:52:21.396968+00:00",
+  "excluded_unrelated_responses": 0
+}

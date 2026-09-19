@@ -1,0 +1,227 @@
+{
+  "records": [
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "body_file": "acquisition/requested-viewer-2026-09-16/000-browser_rendered_dom.html",
+      "size": 530196,
+      "sha256": "c345f420b6071c1fd74c55866624754db469fa27cf88e993f1e0429125860d31",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "native Camoufox",
+      "requested_url": "https://royalsocietypublishing.org/doi/10.1098/rsos.150470",
+      "final_url": "https://royalsocietypublishing.org/rsos/article/3/1/150470/36439/First-report-of-Plesiochelys-etalloni-and",
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": "2026-09-16T10:33:34.167064+00:00"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "body_file": "acquisition/requested-viewer-2026-09-16/001-browser_rendered_dom.html",
+      "size": 167537,
+      "sha256": "27a76a4a91c89957b674be1cc630262a7ffbddad70279e71c945e852d5321cf0",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "native Camoufox",
+      "requested_url": "https://royalsocietypublishing.org/view-large/figure/18113020/rsos150470f01.jpeg",
+      "final_url": "https://royalsocietypublishing.org/view-large/figure/18113020/rsos150470f01.jpeg",
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": "2026-09-16T10:33:40.669148+00:00"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "body_file": "acquisition/requested-viewer-2026-09-16/002-direct_http.jpeg",
+      "size": 217967,
+      "sha256": "a7c6ef04d3a9977b5bfeaa18db6e3cd6cbd3abbb5225bc0ebffd4831c7f4e420",
+      "capture_kind": "direct_http",
+      "transport": "HttpTransport",
+      "requested_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/rsos150470f01.jpeg?Expires=1792578818&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/rsos150470f01.jpeg?Expires=1792578818&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg",
+        "content-length": "217967",
+        "date": "Wed, 16 Sep 2026 10:33:39 GMT"
+      },
+      "captured_at_utc": "2026-09-16T10:33:41.741088+00:00"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "body_file": "acquisition/requested-viewer-2026-09-16/003-http_response_entity.html",
+      "size": 414530,
+      "sha256": "28bf5710a09ed668e7cbe746d4c63fa840b2a213a403f3106a509c554835745f",
+      "capture_kind": "http_response_entity",
+      "transport": "native Camoufox",
+      "requested_url": "https://royalsocietypublishing.org/rsos/article/3/1/150470/36439/First-report-of-Plesiochelys-etalloni-and",
+      "final_url": "https://royalsocietypublishing.org/rsos/article/3/1/150470/36439/First-report-of-Plesiochelys-etalloni-and",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 10:32:54 GMT",
+        "content-type": "text/html; charset=utf-8"
+      },
+      "captured_at_utc": "2026-09-16T10:33:41.771296+00:00"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "body_file": "acquisition/requested-viewer-2026-09-16/004-http_response_entity.html",
+      "size": 18104,
+      "sha256": "5b0b898dafd0385eac0246a328204b8d071345f0137d607a1e00380a505707e5",
+      "capture_kind": "http_response_entity",
+      "transport": "native Camoufox",
+      "requested_url": "https://royalsocietypublishing.org/view-large/figure/18113020/rsos150470f01.jpeg",
+      "final_url": "https://royalsocietypublishing.org/view-large/figure/18113020/rsos150470f01.jpeg",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 10:33:37 GMT",
+        "content-type": "text/html; charset=utf-8"
+      },
+      "captured_at_utc": "2026-09-16T10:33:41.773817+00:00"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "body_file": "acquisition/requested-viewer-missing-2026-09-16/000-browser_rendered_dom.html",
+      "size": 530196,
+      "sha256": "245173a6d52d5ecf441b6c8bbe6f4673f3cd9fcbbc31472aa2c8633bc3c2f6b2",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "native Camoufox",
+      "requested_url": "https://royalsocietypublishing.org/doi/10.1098/rsos.150470",
+      "final_url": "https://royalsocietypublishing.org/rsos/article/3/1/150470/36439/First-report-of-Plesiochelys-etalloni-and",
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": "2026-09-16T10:35:51.523672+00:00"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "body_file": "acquisition/requested-viewer-missing-2026-09-16/001-browser_rendered_dom.html",
+      "size": 166872,
+      "sha256": "16586cdba39b80f3e52966e55119ec0ab64c30048b837ba83cf9af820cd68ccc",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "native Camoufox",
+      "requested_url": "https://royalsocietypublishing.org/view-large/figure/18113020/rsos150470f02.jpeg",
+      "final_url": "https://royalsocietypublishing.org/view-large/figure/18113020/rsos150470f02.jpeg",
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": "2026-09-16T10:35:58.452528+00:00"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "body_file": "acquisition/requested-viewer-missing-2026-09-16/002-direct_http.jpeg",
+      "size": 198539,
+      "sha256": "8ee2216c2e842f21d9edb38ac778d95e4347b3409d1ea6b3eb0a0ef276be533b",
+      "capture_kind": "direct_http",
+      "transport": "HttpTransport",
+      "requested_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/rsos150470f02.jpeg?Expires=1792578956&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/rsos150470f02.jpeg?Expires=1792578956&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg",
+        "content-length": "198539",
+        "date": "Wed, 16 Sep 2026 10:35:57 GMT"
+      },
+      "captured_at_utc": "2026-09-16T10:35:59.165450+00:00"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "body_file": "acquisition/requested-viewer-missing-2026-09-16/003-http_response_entity.html",
+      "size": 414530,
+      "sha256": "c5678fa13d3146906406a56f4eba6a7b6a2181ad07af83386b07e2f30d33abb0",
+      "capture_kind": "http_response_entity",
+      "transport": "native Camoufox",
+      "requested_url": "https://royalsocietypublishing.org/rsos/article/3/1/150470/36439/First-report-of-Plesiochelys-etalloni-and",
+      "final_url": "https://royalsocietypublishing.org/rsos/article/3/1/150470/36439/First-report-of-Plesiochelys-etalloni-and",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 10:35:12 GMT",
+        "content-type": "text/html; charset=utf-8"
+      },
+      "captured_at_utc": "2026-09-16T10:35:59.195840+00:00"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "body_file": "acquisition/requested-viewer-missing-2026-09-16/004-http_response_entity.html",
+      "size": 17439,
+      "sha256": "c189906e015bd4a028e3488b532ff269ccfe970bc99090d95d9d4b262fd490a7",
+      "capture_kind": "http_response_entity",
+      "transport": "native Camoufox",
+      "requested_url": "https://royalsocietypublishing.org/view-large/figure/18113020/rsos150470f02.jpeg",
+      "final_url": "https://royalsocietypublishing.org/view-large/figure/18113020/rsos150470f02.jpeg",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 10:35:55 GMT",
+        "content-type": "text/html; charset=utf-8"
+      },
+      "captured_at_utc": "2026-09-16T10:35:59.198360+00:00"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/m_rsos150470f03.jpeg?Expires=1791539058&Signature=gURMTOerQEz43jgbwHy3q-neYPG5f0Td7ERjwuiAHxeiD9KExYVBTJkhM4btGSz06T3pY2L3AykT0LFp7RAzw-XbMhvSbQ0n386gy3fRP5Aob7dl~UmyJusV5SSCPMWOpeOb0bFovocfD48USilk6irML49CBA67p-2B4--CpO~pHoY3aIDDWpmq2FPBENTsS7IpkPytdYxiYRUzlpCkZiGONKmjAJCtnk6h~qyDr~GkcKWVpkzvY3e15E8BnvOBZ66N~ETCGRHo-7ho0s64mf5FO-9DcFZdkjr-iCZQ8UVzk7VNk9Za6FmOFqBEhvCZRiRre7BAgwvZ7GXSNxuNmA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/m_rsos150470f03.jpeg?Expires=1791539058&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg",
+        "content-length": "59545",
+        "last-modified": "Fri, 02 Jan 2026 17:26:41 GMT",
+        "date": "Fri, 18 Sep 2026 08:40:09 GMT",
+        "etag": "\"aed9830b43660a4706c5881bebaeba51\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:06.782265+00:00",
+      "size": 59545,
+      "sha256": "6b15f3bbb823eb6cf11b173e0c4e11ac91d616a3bd809f7dc1a195c6a952e7f6",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/3e1fd09855928fe34a.jpeg"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/m_rsos150470f04.jpeg?Expires=1791539058&Signature=XmSO6Ny9gvHXby3vaec7b-CG5SryiyUmtRXX4xY0vNUiD6nKtWqN35ceKWdYTTedT9Uh1YgNWJdchgOXY-vpoHUbugijneBW~ZUaNX0ZP5zLqyFPXwvFus14viN29hZZgzS5YCX3jFHcsopoTOqi8Bi5TQnamiYJdhMaCn5Rz68DiAKVQpRHVrrmQh03FnY2RJxql3VhVvetWyS3YQLzApEyNx70pQKXoLo35usePZN6Byv1t6FR3LKE5qF9kH84HBvpI1f8j~6GInz9vFDlmlhrW7Vd1RAPlHRcQQL20mbJVTa45x2VtJFc6ukvNHxbD62rCU4fUD8eL09nK~453A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/m_rsos150470f04.jpeg?Expires=1791539058&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg",
+        "content-length": "92371",
+        "last-modified": "Fri, 02 Jan 2026 17:26:41 GMT",
+        "date": "Fri, 18 Sep 2026 08:40:10 GMT",
+        "etag": "\"8c3a1ec73330e5fe1c1ac3824dfb7017\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:08.262893+00:00",
+      "size": 92371,
+      "sha256": "529944e39a0801f0c169798a153571be226e01b6735642511d10a71ec10796d3",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/57707edc9ce2e252e8.jpeg"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/rsos150470f05.jpeg?Expires=1791539058&Signature=qC2YLYtKrtdboXuM0APbVOGVP-k550LUZ2cJmlTI0uVWwpCixG-9NPHKCzMKSBAUqTWbSjHlvk9~V79YbEbvlHGRG91HdtUv3Z2iGQ3bcvVG5I7f-PzJLYjEqCZhQ46ifNUL1oAR2h0xGVV7pvqnLnWvatmzYu5O-ysZm90HOjnxbFJ4lYteWVcEgVj9QaIonFLpb5UQFt46u5HsOxtoSWVR5TGVDou2KB5A~L0ue3jhmKYuUaGtw1kutJhjQRhfVelig~H17oldZ64im8geO95OU7w2ks19eBZRMjjhHCAYapoJB-ReDXNyKrTXjVmOHnCVIo8hV8sQ-i6GWqEcqA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/rsos150470f05.jpeg?Expires=1791539058&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg",
+        "content-length": "238208",
+        "last-modified": "Fri, 02 Jan 2026 17:26:42 GMT",
+        "date": "Fri, 18 Sep 2026 08:40:11 GMT",
+        "etag": "\"393d521cb3e5961a7065895877f5d739\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:09.218607+00:00",
+      "size": 238208,
+      "sha256": "b90c8fb0ce295dd1b65f650e7f16870dbd149b7cdff37b972d58767f1d8b09ff",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/da9257c063545e7429.jpeg"
+    }
+  ]
+}

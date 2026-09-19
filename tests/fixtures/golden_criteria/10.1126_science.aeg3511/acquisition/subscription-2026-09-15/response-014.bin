@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Crossmark</title>
+        <link href="https://crossmark-cdn.crossref.org/main.css" rel="stylesheet">
+        <link rel="apple-touch-icon" sizes="57x57" href="https://assets.crossref.org/favicon/apple-touch-icon-57x57.png">
+        <link rel="apple-touch-icon" sizes="60x60" href="https://assets.crossref.org/favicon/apple-touch-icon-60x60.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="https://assets.crossref.org/favicon/apple-touch-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="https://assets.crossref.org/favicon/apple-touch-icon-76x76.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="https://assets.crossref.org/favicon/apple-touch-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="https://assets.crossref.org/favicon/apple-touch-icon-120x120.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="https://assets.crossref.org/favicon/apple-touch-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="https://assets.crossref.org/favicon/apple-touch-icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="https://assets.crossref.org/favicon/apple-touch-icon-180x180.png">
+        <link rel="icon" type="image/png" href="https://assets.crossref.org/favicon/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="https://assets.crossref.org/favicon/android-chrome-192x192.png" sizes="192x192">
+        <link rel="icon" type="image/png" href="https://assets.crossref.org/favicon/favicon-96x96.png" sizes="96x96">
+        <link rel="icon" type="image/png" href="https://assets.crossref.org/favicon/favicon-16x16.png" sizes="16x16">
+        <link rel="manifest" href="https://assets.crossref.org/favicon/manifest.json">
+        <link rel="mask-icon" href="https://assets.crossref.org/favicon/safari-pinned-tab.svg" color="#5bbad5">
+        <meta name="apple-mobile-web-app-title" content="Crossref">
+        <meta name="application-name" content="Crossref">
+        <meta name="msapplication-TileColor" content="#da532c">
+        <meta name="msapplication-TileImage" content="https://assets.crossref.org/favicon/mstile-144x144.png">
+        <meta name="theme-color" content="#ffffff">
+    </head>
+
+    <body>
+        <section class="page">
+
+            <div class="header">
+                <img class="header__logo" src="https://crossmark-cdn.crossref.org/images/logo-crossmark.svg">
+            </div>
+
+
+
+
+
+
+                <section class="document-status document-status--current">
+                    <header class="document-status__header">
+                        <h1 class="document-status__title">
+                            <span class="document-status__title__text">Document is current</span>
+                        </h1>
+                        <h2 class="document-status__subtitle">
+                            <span class="document-status__subtitle__text">Any future updates will be listed below</span>
+                        </h2>
+                    </header>
+                </section>
+
+            <section class="document-metadata">
+              <p class="document-metadata__text">Magma plumbing beneath Yellowstone</p>
+                <p class="document-metadata__text">
+                    Crossref DOI link:
+                    <a href="https://doi.org/10.1126/science.aeg3511" target="_blank">https://doi.org/10.1126/science.aeg3511</a>
+                </p>
+                
+                <p class="document-metadata__text">Published Print: 2026-04-09</p>
+                <p class="document-metadata__text">Update policy: <a href="https://doi.org/10.34133/aaas_crossmark" target="_blank">https://doi.org/10.34133/aaas_crossmark</a></p>
+            </section>
+            <ul class="records">
+
+
+                <li class="records__item">
+                    <a class="records__item__link" role="button" data-toggle="author-collapse" aria-expanded="false" aria-controls="author-collapse">Authors</a>
+                    <div class="records__item__content" id="author-collapse">
+                        <div class="records__item__content__block">
+                          
+                          <p class="records__item__content__text">Farrell, Jamie 
+                          
+                            </p>
+                          
+                          
+                        </div>
+                    </div>
+                </li>
+
+
+
+
+
+
+
+
+
+                <li class="records__item">
+                  <a class="records__item__link" role="button" data-toggle="extra-collapse" aria-expanded="false" aria-controls="extra-collapse">More Information</a>
+                  <div class="records__item__content" id="extra-collapse">
+                    <div class="records__item__content__block">
+                    
+
+                        
+                          <div class="records__item__content__group">
+                            
+
+                            
+                            <p class="records__item__content__text records__item__content__text--standfirst">Publication History</p>
+                            
+
+                            
+                              <p class="records__item__content__text">
+                                
+                                  Published:
+                                
+                                
+                                  2026-04-09
+                                
+                            </p>
+                          
+                        </div>
+                        
+
+                  </div>
+                  </div>
+              </li>
+
+
+
+            </ul>
+        </section>
+
+        <div class="footer">
+            <a class="footer-logo" href="http://www.crossref.org" target="_blank">
+                <img src="https://crossmark-cdn.crossref.org/images/logo-crossref.svg" alt="Crossref logo" width="80">
+            </a>
+            <span class="footer-link"><a href="http://crossmark.crossref.org/" target="_blank">About CrossMark</a></span>
+            
+            <!-- Did not verify script. -->
+            <script>console.error && console.error("Crossmark Script out of date.")</script>
+            
+        </div>
+
+        <script src="https://crossmark-cdn.crossref.org/script.js"></script>
+    </body>
+
+</html>

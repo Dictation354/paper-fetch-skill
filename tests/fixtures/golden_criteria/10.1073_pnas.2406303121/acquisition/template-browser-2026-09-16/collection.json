@@ -1,0 +1,43 @@
+{
+  "doi": "10.1073/pnas.2406303121",
+  "provider": "pnas",
+  "source_url": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+  "attempt": 1,
+  "transport": "native Camoufox configured provider context",
+  "responses": [
+    {
+      "body_error_type": "Error"
+    },
+    {
+      "body_error_type": "Error"
+    },
+    {
+      "body_error_type": "Error"
+    },
+    {
+      "body_error_type": "Error"
+    },
+    {
+      "record": "acquisition/template-browser-2026-09-16/002-http_response_entity.bin",
+      "status": 200
+    }
+  ],
+  "no_fault_injection": true,
+  "title": "The kinetics of SARS-CoV-2 infection based on a human challenge study | PNAS",
+  "observed_doi": "10.1073/pnas.2406303121",
+  "final_url": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+  "challenge": false,
+  "paywall_diagnostics": {},
+  "stop_reason": "single_observation_complete",
+  "direct_image": "acquisition/figure-1-2026-09-15.jpg",
+  "canvas_result": {
+    "ok": false,
+    "found": true,
+    "reason": "target_image_not_loaded",
+    "url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/34644f03-1696-4e48-bd29-7cbd5f1b907b/assets/images/large/pnas.2406303121fig01.jpg",
+    "width": 2067,
+    "height": 1512,
+    "title": "The kinetics of SARS-CoV-2 infection based on a human challenge study | PNAS",
+    "contentType": "text/html"
+  }
+}

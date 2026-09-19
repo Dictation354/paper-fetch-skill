@@ -1,0 +1,224 @@
+{
+  "doi": "10.48550/arxiv.1406.2661v1",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Goodfellow_et_al_2014_Generative_Adversarial_Networks.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/outputs/141e1c05c7e6-Goodfellow_et_al_2014_Generative_Adversarial_Networks.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "141e1c05c7e6b387a16c2a0cff77075a89d265b999f92368aa13ad3d8a28fd46",
+      "size": 81058
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Goodfellow_et_al_2014_Generative_Adversarial_Networks.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/outputs/606f9e3ffe60-Goodfellow_et_al_2014_Generative_Adversarial_Networks.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "606f9e3ffe60d4728fc04b96fbee2971d50eb87225604855388d0130d659a46d",
+      "size": 34679
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig1.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/assets/ec06463b19c7-fig1.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "ec06463b19c790e288f3246e05513f97d089476257b7242055addc1c5e246b87",
+      "size": 182296
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig2.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/assets/0a4fdaea5038-fig2.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "0a4fdaea5038dd59096d886d7573e444294b95d1dd580c751e3d702d614eb89f",
+      "size": 178050
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig3.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/assets/704045c7dc4c-fig3.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "704045c7dc4ced3dec560ab1eafd15682c16af7a3a02b9cb9e07a69f09aba297",
+      "size": 178333
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/fig4.svg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/assets/9cce642fa1cb-fig4.svg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "9cce642fa1cb0e470978f47f51d4ab08b7f02eadf04e6d1b5fa5e3a09544c31f",
+      "size": 177691
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/mnist_samples.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/assets/e2cc3411a041-mnist_samples.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "e2cc3411a041c37cc6be0afc938b9617fb99aed30c86f0087da07f6119a6d3b6",
+      "size": 12633
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/tfd_samples.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/assets/d1a06cc88c39-tfd_samples.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "d1a06cc88c39357487ffdee49ee2a78d7e7661970ad8872bff1143dda617c3ec",
+      "size": 65878
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/cifar_full_samples.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/assets/69235f743673-cifar_full_samples.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "69235f74367384f90a425faae0b792385b96c9b3d6cd5fb0eabf5c3b8114762a",
+      "size": 50876
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/cifar_conv_samples.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/assets/8a9fbfdfb36c-cifar_conv_samples.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "8a9fbfdfb36c76302fbca2d92b0cc7e90862352b8e57baf867187a9dffcb44a0",
+      "size": 53068
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/1dsubspace.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/assets/945d9743ad87-1dsubspace.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "945d9743ad879f72b4fb6504f9246d82f40c2fb29ee5f4f77899ed46d1801f56",
+      "size": 3863
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/1406.2661v1_assets/1dsubspace2.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/assets/ee0811e4d537-1dsubspace2.png",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "ee0811e4d5377bc7d3cf0c69630399992009ee91742af16d630683ca2764c4df",
+      "size": 4949
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/unknown_unknown_10.48550_arxiv.1406.2661v1_original.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "category": "raw_sources",
+      "origin_kind": "real_replay",
+      "sha256": "13fdf37674ea6f27b3cfb360e611a5647547cc7006c4a22cf418cb7393db1651",
+      "size": 171020
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "complete",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.48550/arxiv.1406.2661v1",
+      "expected_doi": "10.48550/arxiv.1406.2661v1",
+      "title": "Generative Adversarial Networks",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 6947,
+      "confidence": "high",
+      "flags": [],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 10,
+      "attempted": 10,
+      "total": 10,
+      "local": 10,
+      "full_size": 10,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 10,
+      "remote_only_count": 0,
+      "body_discovered": 10,
+      "body_attempted": 10,
+      "body_local": 10,
+      "body_full_size": 10,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "complete",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "arxiv_html",
+      "acquisition": {
+        "provider": "arxiv",
+        "route": "official_html",
+        "representation": "html",
+        "transport": "http",
+        "fallback_used": false
+      },
+      "trace_event_count": 17,
+      "fallback_codes": [],
+      "warning_codes": [],
+      "failure_codes": [],
+      "unstructured_warning_count": 2,
+      "acceptance_policy": "provider_html_body",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

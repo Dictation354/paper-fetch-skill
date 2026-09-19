@@ -48,6 +48,8 @@ class BrowserWorkflowPolicy:
     persistent_storage_state: bool = True
     retry_incomplete_html_candidates: bool = False
     direct_figure_page_fallback: bool = False
+    figure_page_discovery: bool = True
+    preview_fallback: bool = True
 
     def __post_init__(self) -> None:
         object.__setattr__(

@@ -1,0 +1,104 @@
+{
+  "records": [
+    {
+      "doi": "10.1098/rsos.201188",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://api.crossref.org/works/10.1098%2Frsos.201188",
+      "final_url": "https://api.crossref.org/works/10.1098%2Frsos.201188",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:27:07 GMT",
+        "content-type": "application/json",
+        "content-length": "6079"
+      },
+      "captured_at_utc": "2026-09-18T02:27:06.865447+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 19203,
+      "sha256": "92db82766936f54a9e90a4969f0f5948dbdf644214f419ffb8332a062a1db8bf",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1098/rsos.201188",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://royalsocietypublishing.org/doi/10.1098/rsos.201188",
+      "final_url": "https://royalsocietypublishing.org/rsos/article/7/10/201188/95104/Learning-agents-in-Black-Scholes-financial",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:27:12 GMT",
+        "content-type": "text/html; charset=utf-8"
+      },
+      "captured_at_utc": "2026-09-18T02:27:16.674632+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 536066,
+      "sha256": "345695bb432d64d4a8862f7064b225ced903a07f3ce94d8aa43a638c38dcc8ca",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1098/rsos.201188",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201188/9/rsos201188f02.png?Expires=1791298516&Signature=WNDmSp0N7U53bcAwZctn2equ5J-wJ1ULGxfGUcAxiJb-SXrEIkLBBQm7iLOFYu5wbEtNd1B5Jc8LSzcFNxL8cAGaC~Y8WRjPkaYfteIBWRff7xNKbocqmpJ7Ca1AhU7r3T1jUQ~4tdl8mGjx01h75Iou-LwAOPKE7Tus3LRR2f-jzHBYPNqIpm~mzYBbNn747h5txoRq2mPJadEjYQzLqEbsuUnpPXfP7FuQlddWmBAKP0c5Rkke9aXuy7youRvC7uwIlgr2j6YHiSJY7bh~YJfiB54L-PNTI1W5fC4IxzaHiFbEakxxA~ObYWf5fVk4II4tdWHqTbXEjW~LDSnBSQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201188/9/rsos201188f02.png?Expires=1791298516&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "110190",
+        "date": "Fri, 18 Sep 2026 08:40:12 GMT",
+        "last-modified": "Fri, 02 Jan 2026 13:37:14 GMT",
+        "etag": "\"4793255cb555c143b83c05f3b6f81e36\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:10.317941+00:00",
+      "size": 110190,
+      "sha256": "b03f5ec07d914221b067540937386537a84581adf89081dc8845eeb5d4ebb5a5",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/e010daa062ace519b4.png"
+    },
+    {
+      "doi": "10.1098/rsos.201188",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201188/9/rsos201188f01.png?Expires=1791298516&Signature=dLoFItztJ-q5j9vORPQI~lgKQxiDfy0UqYX-ECtaOTGT6sZLyfDI3jD13sen7nJ27NsbCCO8YWVVcJbpm7jrrB88--Wqd3GWY46jELmC6VWv-yUCT-L7veiIgbXWV8mIqhWcYyunEL6uTAL2UJ6f8Fvlf3RtiKYiHyi91pkQpjHT227jtnNv7JZKA6mTWZ7-rZkvGBKFqT4jlQJz6CiLdwyZPhlQOTe78Ys8SDzcA8nAXAQy7VXCcPLu-3xxogt3QTtQWwCnL8ADJCGhaTTb0ovuUSqZVhd0Ic3Iz5tdgYqXXp9OLbDV95r0sE9F33T1mehwRG9VGGE2e8Fqspwrcw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201188/9/rsos201188f01.png?Expires=1791298516&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "32352",
+        "date": "Fri, 18 Sep 2026 08:40:13 GMT",
+        "last-modified": "Fri, 02 Jan 2026 13:37:14 GMT",
+        "etag": "\"ad3704a3ce2a8f709c8f9595bee2f860\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:11.677874+00:00",
+      "size": 32352,
+      "sha256": "8defd6e658d57afc71ad67aba6003c3e8d1cd03489460badcdaa509d03c29f2b",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/57a8daeba5355863a5.png"
+    },
+    {
+      "doi": "10.1098/rsos.201188",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201188/9/m_rsos201188f03.png?Expires=1791298516&Signature=rwcOsSZ99ugXEdvQAayukwxr0fWtWjAHt9IwLKiKtCFyq59hwCstEb7hbIJtRNY0Tei6d4XB~~nFbtWeyL5TXnYrDjWRw5mF3gr4ILKy1H~HgnaBq5~KsBZzXSbwtoSCJ4j5JnOq6uvEfDgHtPkvfe3voJXW9Ax67kzWjhZ1OHNuNyYZAP7uwZ~Omo4ixBkJDzaCULV6X1uM8An-~JGviJz8hQf3eQv4pcW921msSPSSMmb~ACj8y7lsXQO44ZOnB2T8yII~1HxI5~4q0tPMQc7zQmH8utVt61pnj8mozlH3PvIlwBQv9EPu8oaBNq74zcdULJDBNbmpTUgZ2besGQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201188/9/m_rsos201188f03.png?Expires=1791298516&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "37160",
+        "date": "Fri, 18 Sep 2026 08:40:15 GMT",
+        "last-modified": "Fri, 02 Jan 2026 13:37:13 GMT",
+        "etag": "\"b286b20f73a57d47865c21affb9dff97\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:12.758059+00:00",
+      "size": 37160,
+      "sha256": "3427dc4554dbf8b93f32f27b4c0cc4d131b06145f8b738598f814fd1f1662419",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/1d449fb4a550c8f050.png"
+    }
+  ]
+}

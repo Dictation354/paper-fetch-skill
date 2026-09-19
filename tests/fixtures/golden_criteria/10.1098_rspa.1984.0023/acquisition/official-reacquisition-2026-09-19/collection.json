@@ -1,0 +1,464 @@
+{
+  "doi": "10.1098/rspa.1984.0023",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/outputs/4f71b69b5de9-Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "4f71b69b5de918760b51d15c1b459a90343f580a56e4438daa9f6ddeae95813d",
+      "size": 106711
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/outputs/56996c5f4bd7-Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "56996c5f4bd7bef2bf5492d8f61a098f74adcdc0c424400dc430ff3e58413caf",
+      "size": 36163
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/royalsocietypublishing/10.1098_rspa.1984.0023/html-1/diagnostic.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/outputs/22170098512f-diagnostic.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "22170098512feb173a88562046e4ac8fa4cca94fe70936ca3f777f6ce93c8e72",
+      "size": 14425
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/royalsocietypublishing/10.1098_rspa.1984.0023/html-1/page-sanitized.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/outputs/0c65cdefa98c-page-sanitized.html",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "0c65cdefa98c1649e3444efee187a16461b65819eb7d1be2787032f834f8312c",
+      "size": 58753
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/royalsocietypublishing/10.1098_rspa.1984.0023/html-2/diagnostic.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/outputs/482ddc1be4d9-diagnostic.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "482ddc1be4d9f930a7877ed6c0b9b074404f0ecd71302c8a3e7d49493640918b",
+      "size": 17195
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/royalsocietypublishing/10.1098_rspa.1984.0023/html-2/page-sanitized.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/outputs/1299290c90ee-page-sanitized.html",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "1299290c90ee175846026bc985bc440fb9b1bfce51f0503a72f380a614851f28",
+      "size": 58753
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0002-07.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/a4ceae02bb43-rspa.1984.0023-bbe02e7a88.pdf-0002-07.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "a4ceae02bb43fe077d3b4823d77434ddb66ba98c1eb6416ca2f3894b7a38b1dc",
+      "size": 8323
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0002-09.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/668d69c7f751-rspa.1984.0023-bbe02e7a88.pdf-0002-09.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "668d69c7f751aabbd4385242c441ab5df68a90336b277b0e76b82d2ffdacfe6c",
+      "size": 19666
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0002-13.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/f6bfb77382cf-rspa.1984.0023-bbe02e7a88.pdf-0002-13.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "f6bfb77382cfac11c24af425f0a7ac98e9691be6297b168f14f9b9c04eb1b686",
+      "size": 33179
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0002-16.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/3cef7f2751f0-rspa.1984.0023-bbe02e7a88.pdf-0002-16.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "3cef7f2751f02d382e84993e39b9ecf9bb2892e43ee991607c1b60dd8172e744",
+      "size": 12148
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0003-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/6742d401db6f-rspa.1984.0023-bbe02e7a88.pdf-0003-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "6742d401db6f136d9256cdd282668441e9763974b07c859e284cb948115dc47e",
+      "size": 33167
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0003-04.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/52cf68c0aac8-rspa.1984.0023-bbe02e7a88.pdf-0003-04.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "52cf68c0aac8f0f85f8fb57afc9435b725c24ae1378a175a05b63de5dc7e076d",
+      "size": 25179
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0003-07.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/8d555e69851f-rspa.1984.0023-bbe02e7a88.pdf-0003-07.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "8d555e69851f69825fcec6c579d8f9cd05ec2fae2da7cf4df5f15306d77642de",
+      "size": 25375
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0003-08.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/021d328aba02-rspa.1984.0023-bbe02e7a88.pdf-0003-08.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "021d328aba02629f6cbf932360a95f695b5d74e66e6a3efa11e6068b11298bba",
+      "size": 22609
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0003-09.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/744de945ff00-rspa.1984.0023-bbe02e7a88.pdf-0003-09.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "744de945ff00f2f0f6922a62a897ba639da4e08b898fe58319e990e608c65a16",
+      "size": 146541
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0003-11.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/e55e86c23a3e-rspa.1984.0023-bbe02e7a88.pdf-0003-11.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "e55e86c23a3e959c02571a5257540c29218e697e0d2b10bfb815d9ec3b341093",
+      "size": 69959
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0003-12.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/5a6575ba49a1-rspa.1984.0023-bbe02e7a88.pdf-0003-12.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "5a6575ba49a126e6df40adbe692c684674cb9f027f015f94cc173ca4a95f6913",
+      "size": 19626
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0003-14.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/6a8a6afe1c4b-rspa.1984.0023-bbe02e7a88.pdf-0003-14.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "6a8a6afe1c4b5a66be9cc33ba8e6c42fd8a28ef5904dcf9e7aee77161cefe23d",
+      "size": 67715
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0004-08.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/576326ce1d6e-rspa.1984.0023-bbe02e7a88.pdf-0004-08.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "576326ce1d6e41e88fc7e6f70e15e25c8ab48eec5019696271deec47e36bf810",
+      "size": 60690
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0005-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/09901f83f526-rspa.1984.0023-bbe02e7a88.pdf-0005-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "09901f83f526cbcded6ad47923461bf3c1a29708588751c8db7e976d6e9e19fd",
+      "size": 35667
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0005-04.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/4f933bedcc71-rspa.1984.0023-bbe02e7a88.pdf-0005-04.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "4f933bedcc712dc09b660c48d0596540d7757c5a134673eaac8d976c4b198753",
+      "size": 22990
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0005-07.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/88707245ad91-rspa.1984.0023-bbe02e7a88.pdf-0005-07.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "88707245ad91cf3f5dc7f1960d1dfee18e97c7ef3caab826b95572f61cec2a2d",
+      "size": 12917
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0005-09.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/7c01183c6c1c-rspa.1984.0023-bbe02e7a88.pdf-0005-09.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "7c01183c6c1cac76d13ec211a826f68eea07ab6df30dbef7f72ccbc1252ff053",
+      "size": 28383
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0005-11.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/c2a59fe4edc0-rspa.1984.0023-bbe02e7a88.pdf-0005-11.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "c2a59fe4edc0e3da56be8b4ce372d72aa0e89dfc140b9603c26aaa81a1bd6a61",
+      "size": 102878
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0005-13.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/469e572e08fb-rspa.1984.0023-bbe02e7a88.pdf-0005-13.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "469e572e08fbffd9b72bcce959de26f6d74d14a32b292924b776f74d85a6f1df",
+      "size": 16974
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0005-15.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/4002e73de856-rspa.1984.0023-bbe02e7a88.pdf-0005-15.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "4002e73de85689f3f5c2b04101067e7fbef1d65bf48810684387e5f2c38fc1a5",
+      "size": 21227
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0007-04.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/3c723a3f4de7-rspa.1984.0023-bbe02e7a88.pdf-0007-04.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "3c723a3f4de73324f79a24090c8d2c62d7fa3a4c7f884253b5cefbb640fca8e3",
+      "size": 91343
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0007-06.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/2c30c0551285-rspa.1984.0023-bbe02e7a88.pdf-0007-06.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "2c30c055128513c7f47db33b58c8b4b0326838c546eeb8456187d1ae4cb7e57c",
+      "size": 45668
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0007-08.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/cb35038e0706-rspa.1984.0023-bbe02e7a88.pdf-0007-08.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "cb35038e07069a12eebe14cc29f69bf6120abc42fbf3baac8953b8a9d499da7e",
+      "size": 128565
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0007-10.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/a11a2acc384f-rspa.1984.0023-bbe02e7a88.pdf-0007-10.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "a11a2acc384f427965d4d6e73bc676e6f8d11a17f908640daa6d772fa1e98032",
+      "size": 16498
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0007-14.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/e4f227eefa8d-rspa.1984.0023-bbe02e7a88.pdf-0007-14.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "e4f227eefa8d2dc96e7f5243e5dad2ec0938b5695819fc70f1f626e06e5a6149",
+      "size": 23121
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0008-04.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/9b5e26d64052-rspa.1984.0023-bbe02e7a88.pdf-0008-04.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "9b5e26d640529bd08f4974f2ca89a638563a6cfea83ce3d87819210cb559a11f",
+      "size": 18937
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0008-05.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/b987f1f356f3-rspa.1984.0023-bbe02e7a88.pdf-0008-05.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "b987f1f356f3d14655e16f6b540486d0fd0d0a302039a86067b248e77276b517",
+      "size": 309398
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0008-07.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/6c0b0300229c-rspa.1984.0023-bbe02e7a88.pdf-0008-07.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "6c0b0300229c8c4d4058368ff927ba307c61e94565f9884c2d5cf309552c383e",
+      "size": 14133
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0008-09.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/7957dab1acbb-rspa.1984.0023-bbe02e7a88.pdf-0008-09.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "7957dab1acbbf8d4d068de5ee2e0a4e243bc4f43e7a565dd78b4e76e3d99d1c8",
+      "size": 16270
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0009-04.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/6d367add83ed-rspa.1984.0023-bbe02e7a88.pdf-0009-04.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "6d367add83ed963a3aaa530cb2589d7342ce74b0382b9bd37b08231a1244cca9",
+      "size": 17574
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0009-06.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/5b457cd27408-rspa.1984.0023-bbe02e7a88.pdf-0009-06.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "5b457cd274082bc71ee558d828fb90bc889066097c7a5261ae9edef81c37da9b",
+      "size": 33294
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0009-08.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/0a59e14715d5-rspa.1984.0023-bbe02e7a88.pdf-0009-08.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "0a59e14715d5364b0b475f27e02998745b5274ef5f6ab3b780fff783fd19206f",
+      "size": 28400
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0009-11.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/50252e4d3d1c-rspa.1984.0023-bbe02e7a88.pdf-0009-11.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "50252e4d3d1c49409109a5ecaf83aca55ad0f4f839d7b65cd2fe4ea7470174cd",
+      "size": 68203
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0010-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/f782ca99adf6-rspa.1984.0023-bbe02e7a88.pdf-0010-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "f782ca99adf6547e6aa762965444337299d6771e23d2bf0b2cae1f1cbf46e5cb",
+      "size": 25179
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1098_rspa.1984.0023_assets/rspa.1984.0023-bbe02e7a88.pdf-0012-11.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/assets/b8e6bb2923f3-rspa.1984.0023-bbe02e7a88.pdf-0012-11.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "b8e6bb2923f3aa7a81fcf14341a6daf20c6ba029c27f2d8d946c6be938759ccd",
+      "size": 27745
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.pdf",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/raw_sources/4cbf879baad9-Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.pdf",
+      "category": "raw_sources",
+      "origin_kind": "real_replay",
+      "sha256": "4cbf879baad9a367ca6ef2f00bf47f6450163660488f0052bfb44570197e5c26",
+      "size": 2444608
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "degraded",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1098/rspa.1984.0023",
+      "expected_doi": "10.1098/rspa.1984.0023",
+      "title": "Quantal phase factors accompanying adiabatic changes",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 7796,
+      "confidence": "medium",
+      "flags": [
+        "weak_body_structure"
+      ],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 35,
+      "attempted": 35,
+      "total": 35,
+      "local": 35,
+      "full_size": 35,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 35,
+      "remote_only_count": 0,
+      "body_discovered": 35,
+      "body_attempted": 35,
+      "body_local": 35,
+      "body_full_size": 35,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "complete",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "royalsocietypublishing_pdf",
+      "acquisition": {
+        "provider": "royalsocietypublishing",
+        "route": "browser_pdf",
+        "representation": "pdf",
+        "transport": "browser",
+        "fallback_used": true
+      },
+      "trace_event_count": 18,
+      "fallback_codes": [
+        "abstract_only"
+      ],
+      "warning_codes": [
+        "weak_body_structure"
+      ],
+      "failure_codes": [
+        "abstract_only"
+      ],
+      "unstructured_warning_count": 4,
+      "acceptance_policy": "validated_pdf",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

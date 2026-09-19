@@ -31,8 +31,17 @@ reject_symlinks = true
 validated_purge_paths = true
 
 [browser]
+# 确认同篇正文付费墙后在现有 provider 结果边界停止；正文请求显式携带检查 provider，
+# 资产拒绝仍走资产结果；这些 Linux 回放证据不替代原生 macOS gate。
 # Provider 的响应选择、请求阻断及临时资产标签复用既有 Camoufox runtime；
 # 这些页面策略不改变下列 runtime 分发边界，也不提供原生 macOS 验证证据。
+# PNAS 与 Science 仅采用同篇同 URL、出版社主框架已完成导航的最终响应；
+# PNAS 每候选正文等待仍受总请求期限约束，不扩大 runtime 或访问权限边界。
+# PNAS 原图精确匹配与禁用 preview 只收敛 provider 候选；不新增浏览器执行面。
+# IEEE stamp 子 iframe 响应只在同篇官方路径内捕获，沿用 PDF 大小/身份验收；
+# stamp 失败后允许同篇文章页的可见 PDF 点击及 popup；Science 引用展开仅用页面可见控件。
+# IEEE direct PDF 的 HTTP 502 可进入上述既有浏览器回退，不改变 runtime 或身份验收边界。
+# Linux 浏览器回放验证响应契约，不代替 macos-15 原生 runtime gate。
 runtime_bundle_built_in = false
 core_install_downloads_runtime = false
 optional_install_download_requires_consent = true

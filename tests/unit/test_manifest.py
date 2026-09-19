@@ -1,15 +1,12 @@
 from __future__ import annotations
-
 import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
-
 import pytest
 from jsonschema import Draft202012Validator
 from pydantic import ValidationError
-
 from paper_fetch.manifest import (
     MANIFEST_RECORD_SCHEMA_VERSION,
     ArtifactVerificationStatus,
@@ -25,8 +22,8 @@ from paper_fetch.manifest import (
 from paper_fetch.reason_codes import METADATA_ONLY, PDF_FALLBACK
 from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import OverallAcceptanceStatus
+from tests.support.workflow_acceptance import _envelope
 
-from .test_workflow_acceptance import _envelope
 
 RUN_ID = UUID("10000000-0000-4000-8000-000000000001")
 RECORD_ID = UUID("20000000-0000-4000-8000-000000000002")

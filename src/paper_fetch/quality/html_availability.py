@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .access_boundary import CONFIRMED_PAYWALL, html_paywall_diagnostics
+
 import re
 from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
@@ -168,6 +170,7 @@ class FulltextAvailabilityDiagnostics:
     title: str | None = None
     container_tag: str | None = None
     container_text_length: int | None = None
+    confirmed_article_paywall: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -1305,6 +1308,12 @@ def assess_html_fulltext_availability(
     section_hints: Any = None,
 ) -> FulltextAvailabilityDiagnostics:
     metadata_map = dict(metadata or {})
+    boundary = html_paywall_diagnostics(
+        html_text or "",
+        metadata=metadata_map,
+        source_url=final_url or requested_url or "",
+        provider=provider,
+    )
     normalized_title = normalize_text(title or metadata_map.get("title") or "") or None
     page_text = (
         _normalized_page_text(html_text or "")
@@ -1514,6 +1523,13 @@ def assess_html_fulltext_availability(
             )
         )
     )
+    if boundary:
+        body_ok = False
+        content_kind = boundary["content_kind"]
+        reason = ABSTRACT_ONLY if content_kind == ABSTRACT_ONLY else PUBLISHER_PAYWALL
+        blocking_fallback_signals = _dedupe_signals(
+            [*blocking_fallback_signals, PUBLISHER_PAYWALL]
+        )
     return FulltextAvailabilityDiagnostics(
         accepted=body_ok and not blocking_fallback_signals,
         reason=reason,
@@ -1529,6 +1545,7 @@ def assess_html_fulltext_availability(
         title=normalized_title,
         container_tag=resolved_container_tag,
         container_text_length=resolved_container_text_length,
+        confirmed_article_paywall=boundary.get(CONFIRMED_PAYWALL, {}),
     )
 
 

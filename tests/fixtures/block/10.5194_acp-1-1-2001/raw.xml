@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN" "https://jats.nlm.nih.gov/nlm-dtd/publishing/3.0/journalpublishing3.dtd">
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" article-type="research-article" dtd-version="3.0" xml:lang="en">
+<front>
+<journal-meta>
+<journal-id journal-id-type="publisher">ACP</journal-id>
+<journal-title-group>
+<journal-title>Atmospheric Chemistry and Physics</journal-title>
+<abbrev-journal-title abbrev-type="publisher">ACP</abbrev-journal-title>
+<abbrev-journal-title abbrev-type="nlm-ta">Atmos. Chem. Phys.</abbrev-journal-title>
+</journal-title-group>
+<issn pub-type="epub">1680-7324</issn>
+<publisher><publisher-name>Copernicus Publications</publisher-name>
+<publisher-loc>Göttingen, Germany</publisher-loc>
+</publisher>
+</journal-meta>
+<article-meta>
+<article-id pub-id-type="doi">10.5194/acp-1-1-2001</article-id>
+<title-group>
+<article-title>298 K rate coefficients for the reaction of OH with &lt;i&gt;i&lt;/i&gt; - C&lt;sub&gt;3&lt;/sub&gt;H&lt;sub&gt;7&lt;/sub&gt;I, &lt;i&gt;n&lt;/i&gt; - C&lt;sub&gt;3&lt;/sub&gt;H&lt;sub&gt;7&lt;/sub&gt;I and C&lt;sub&gt;3&lt;/sub&gt;H&lt;sub&gt;8&lt;/sub&gt;</article-title>
+</title-group>
+<contrib-group><contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Carl</surname>
+<given-names>S. A.</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+</contrib>
+<contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Crowley</surname>
+<given-names>J. N.</given-names>
+</name>
+<xref ref-type="aff" rid="aff2">
+<sup>2</sup>
+</xref>
+</contrib>
+</contrib-group><aff id="aff1">
+<label>1</label>
+<addr-line>Department of Chemistry, University of Leuven, Celestijnenlaan 200F, B-3001 Leuven, Belgium</addr-line>
+</aff>
+<aff id="aff2">
+<label>2</label>
+<addr-line>Max-Planck-Institut für Chemie, Division of Atmospheric Chemistry, Postfach 3060, D-55020 Mainz, Germany</addr-line>
+</aff>
+<pub-date pub-type="epub">
+<day>22</day>
+<month>11</month>
+<year>2001</year>
+</pub-date>
+<volume>1</volume>
+<issue>1</issue>
+<fpage>1</fpage>
+<lpage>7</lpage>
+<permissions>
+<copyright-statement>Copyright: &#x000a9; 2001 S. A. Carl</copyright-statement>
+<copyright-year>2001</copyright-year>
+<license license-type="open-access">
+<license-p>This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 2.5 Generic License. To view a copy of this licence, visit <ext-link ext-link-type="uri"  xlink:href="https://creativecommons.org/licenses/by-nc-sa/2.5/">https://creativecommons.org/licenses/by-nc-sa/2.5/</ext-link></license-p>
+</license>
+</permissions>
+<self-uri xlink:href="https://acp.copernicus.org/articles/1/1/2001/acp-1-1-2001.html">This article is available from https://acp.copernicus.org/articles/1/1/2001/acp-1-1-2001.html</self-uri>
+<self-uri xlink:href="https://acp.copernicus.org/articles/1/1/2001/acp-1-1-2001.pdf">The full text article is available as a PDF file from https://acp.copernicus.org/articles/1/1/2001/acp-1-1-2001.pdf</self-uri>
+<abstract>
+<p>The kinetics of
+the title reactions were investigated using the laser photolysis - resonance
+fluorescence method, employing the sequential two-photon dissociation of NO&lt;sub&gt;2&lt;/sub&gt;
+in the 
+presence of H&lt;sub&gt;2&lt;/sub&gt;&amp;nbsp; as the OH source. The 298 K rate constant for OH
++ C&lt;sub&gt;3&lt;/sub&gt;H&lt;sub&gt;8&lt;/sub&gt; was found to be (1.15 ± 0.1) × 10&lt;sup&gt;-12&lt;/sup&gt;
+cm&lt;sup&gt;3&lt;/sup&gt; s&lt;sup&gt;-1&lt;/sup&gt;, in excellent agreement with the literature
+recommendation, and with a separate determination using HNO&lt;sub&gt;3&lt;/sub&gt;&amp;nbsp;
+photolysis at 248 nm as the OH source. The 298 K rate constants for OH + &lt;i&gt;n
+&lt;/i&gt;- C&lt;sub&gt;3&lt;/sub&gt;H&lt;sub&gt;7&lt;/sub&gt;I
+and&amp;nbsp; &lt;i&gt;i &lt;/i&gt;-
+C&lt;sub&gt;3&lt;/sub&gt;H&lt;sub&gt;7&lt;/sub&gt;I&amp;nbsp; were measured for the first time and found to
+be (1.47 ± 0.08) and (1.22 ± 0.06) × 10&lt;sup&gt;-12&lt;/sup&gt; cm&lt;sup&gt;3&lt;/sup&gt;
+s&lt;sup&gt;-1&lt;/sup&gt;, respectively. The errors include an assessment of systematic
+error due to concentration measurement, which, for the propyl-iodides was
+minimised by on-line UV-absorption spectroscopy. These results show that
+reaction with OH is an important sink for&amp;nbsp;
+&lt;i&gt;n &lt;/i&gt;-
+C&lt;sub&gt;3&lt;/sub&gt;H&lt;sub&gt;7&lt;/sub&gt;I and&amp;nbsp;
+&lt;i&gt;i &lt;/i&gt;-
+C&lt;sub&gt;3&lt;/sub&gt;H&lt;sub&gt;7&lt;/sub&gt;I, which has implications for the reactive iodine
+budget of the marine boundary layer.</p>
+</abstract>
+<counts><page-count count="7"/></counts>
+</article-meta>
+</front>
+<body/>
+<back>
+</back>
+</article>

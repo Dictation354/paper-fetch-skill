@@ -35,6 +35,7 @@ from ._mdpi_references import (
     extract_keywords,
     extract_references,
 )
+from ._retained_object_links import resolve_retained_object_links
 
 _NOISY_MARKDOWN_LINES = {
     "browse figures",
@@ -94,6 +95,24 @@ def _abstract_section_payload(abstract_text: str | None) -> list[dict[str, str]]
     return [{"heading": "Abstract", "text": normalized}]
 
 
+def _resolve_mdpi_retained_links(markdown: str, html_text: str, source_url: str) -> str:
+    soup = BeautifulSoup(html_text, choose_parser())
+    targets = {
+        str(node["id"]): str(node["id"])
+        for node in soup.select("#html-references_list li[id]")
+    }
+    for wrapper in soup.select(".html-table-wrap[id]"):
+        target = str(wrapper["id"])
+        targets[target] = target
+        for link in wrapper.select('a[href^="#"]'):
+            popup_id = str(link["href"])[1:]
+            popup = soup.find(id=popup_id)
+            if isinstance(popup, Tag) and "html-table_show" in popup.get("class", []):
+                # Link to the visible owner, not a hidden lightbox body.
+                targets[popup_id] = target
+    return resolve_retained_object_links(markdown, source_url, targets)
+
+
 def _normalize_mdpi_markdown(markdown_text: str) -> str:
     blocks = re.split(r"\n\s*\n", markdown_text)
     kept: list[str] = []
@@ -142,6 +161,7 @@ def extract_markdown(
     if title and f"# {title}" not in markdown:
         markdown = f"# {title}\n\n{markdown}".strip()
     markdown = _normalize_mdpi_markdown(markdown)
+    markdown = _resolve_mdpi_retained_links(markdown, html_text, source_url)
 
     quality_metadata = dict(metadata or {})
     if title and not quality_metadata.get("title"):
@@ -163,6 +183,9 @@ def extract_markdown(
         )
 
     extraction_payload = {
+        "semantic_losses": {
+            "formula_missing_count": markdown.count("[Formula unavailable]")
+        },
         "title": title,
         "abstract_text": abstract_text,
         "abstract_sections": _abstract_section_payload(abstract_text),

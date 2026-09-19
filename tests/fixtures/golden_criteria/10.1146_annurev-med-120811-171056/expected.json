@@ -1,21 +1,584 @@
 {
-  "counts": {
-    "abstract_sections": 0,
-    "body_sections": 30,
-    "figures": 0,
-    "references": 0,
-    "sections": 30,
-    "tables": 0
-  },
-  "expected_content_kind": "fulltext",
   "has": {
-    "abstract": false,
+    "title": true,
     "authors": false,
+    "abstract": false,
     "body": true,
-    "code_availability": false,
-    "data_availability": false,
     "figures": false,
     "references": false,
-    "title": true
-  }
+    "data_availability": false,
+    "code_availability": false
+  },
+  "counts": {
+    "sections": 1,
+    "abstract_sections": 0,
+    "body_sections": 1,
+    "figures": 0,
+    "tables": 0,
+    "references": 0
+  },
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.1146_annurev-med-120811-171056",
+    "provider": "annualreviews",
+    "doi": "10.1146/annurev-med-120811-171056",
+    "original": "tests/fixtures/golden_criteria/10.1146_annurev-med-120811-171056/original.pdf",
+    "sha256": "7d239afc998cf14d5b4b6a3c47ee8eeb0ea21e2f964154dbf5148a8bcac123ee",
+    "format": "pdf",
+    "review_method": "original PDF identity and role validation; complete readable file; real converter return value compared unchanged through provider assembly",
+    "dimensions": {
+      "pdf": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_pdf_identity_and_converter_passthrough",
+        "source_count": 1,
+        "scope": "target identity; readable complete PDF; provider assembly; exact converter payload retained"
+      }
+    },
+    "limitations": [
+      "PDF conversion layout, references, formulas, tables and OCR are excluded.",
+      "The existing converter is invoked and its returned text is treated as opaque; comparisons do not rate pymupdf4llm conversion quality.",
+      "Unknown historical HTTP status/final URL remain unknown in acquisition/provenance.json.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "pdf": {
+      "pages": 16,
+      "encrypted": false,
+      "repaired": false,
+      "role": "main_article",
+      "role_evidence": "canonical pdf_fallback target identity and complete document; preview/supplementary rejection is covered separately"
+    },
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ]
+  },
+  "source_objects": [
+    {
+      "source": "tests/fixtures/golden_criteria/10.1146_annurev-med-120811-171056/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "sha256": "cf96d168c7722c5c387afd5170af1d6cfa7d847a5e51fa8b8388aab3efa86c65",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": "b1",
+          "node_sha256": "d623f397098afab1b030b50497515ee086baa809d67245d0b20cc1b4061c6896",
+          "grid": [
+            [
+              0,
+              [
+                0
+              ]
+            ]
+          ],
+          "cells": [
+            "Sequencing Whole-exome sequencing: Genomic DNA is enriched using oligonucleotide probes complementary to portions of the genome encoding proteins. Sequencing only the coding portion of the genome focuses the effort to 1–2% of the genome and is more cost-effective, requiring the generation of only 6–9 billion bases of sequence. Whole-genome sequencing: Unbiased sequencing of the whole genome. In the context of cancer genome sequencing, this requires the generation of 90–180 billion bases from the tumor and 90 billion bases from the patient's normal DNA."
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "11cfde0d8f8c9c70541342604dbb8b2c68b4e34e43ee64c13d6471f5102a3d89",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                0,
+                1,
+                2
+              ]
+            ],
+            [
+              1,
+              [
+                3,
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                6,
+                7,
+                8
+              ]
+            ],
+            [
+              3,
+              [
+                9,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              4,
+              [
+                12,
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              5,
+              [
+                15,
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              6,
+              [
+                18,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              7,
+              [
+                21,
+                22,
+                23,
+                24
+              ]
+            ],
+            [
+              8,
+              [
+                25,
+                26,
+                27,
+                28
+              ]
+            ],
+            [
+              9,
+              [
+                29,
+                30,
+                31,
+                32
+              ]
+            ],
+            [
+              10,
+              [
+                33,
+                34,
+                35,
+                36
+              ]
+            ],
+            [
+              11,
+              [
+                37,
+                38,
+                39,
+                40
+              ]
+            ],
+            [
+              12,
+              [
+                41,
+                42,
+                43,
+                44
+              ]
+            ],
+            [
+              13,
+              [
+                45,
+                46,
+                47,
+                48
+              ]
+            ],
+            [
+              14,
+              [
+                49,
+                50,
+                51,
+                52
+              ]
+            ],
+            [
+              15,
+              [
+                53,
+                54,
+                55,
+                56
+              ]
+            ],
+            [
+              16,
+              [
+                57,
+                58,
+                59,
+                60
+              ]
+            ],
+            [
+              17,
+              [
+                61,
+                62,
+                63,
+                64
+              ]
+            ],
+            [
+              18,
+              [
+                65,
+                66,
+                67,
+                68
+              ]
+            ],
+            [
+              19,
+              [
+                69,
+                70,
+                71,
+                72
+              ]
+            ],
+            [
+              20,
+              [
+                73,
+                73,
+                74,
+                75
+              ]
+            ],
+            [
+              21,
+              [
+                76,
+                76,
+                77,
+                78
+              ]
+            ],
+            [
+              22,
+              [
+                79,
+                79,
+                80,
+                81
+              ]
+            ],
+            [
+              23,
+              [
+                82,
+                82,
+                83,
+                84
+              ]
+            ],
+            [
+              24,
+              [
+                85,
+                85,
+                86,
+                87
+              ]
+            ],
+            [
+              25,
+              [
+                88,
+                88,
+                89,
+                90
+              ]
+            ],
+            [
+              26,
+              [
+                91,
+                91,
+                92,
+                93
+              ]
+            ],
+            [
+              27,
+              [
+                94,
+                94,
+                95,
+                96
+              ]
+            ],
+            [
+              28,
+              [
+                97,
+                97,
+                98,
+                99
+              ]
+            ],
+            [
+              29,
+              [
+                100,
+                100,
+                101,
+                102
+              ]
+            ],
+            [
+              30,
+              [
+                103,
+                103,
+                104,
+                105
+              ]
+            ],
+            [
+              31,
+              [
+                106,
+                106,
+                107,
+                108
+              ]
+            ],
+            [
+              32,
+              [
+                109,
+                109,
+                110,
+                111
+              ]
+            ],
+            [
+              33,
+              [
+                112,
+                112,
+                113,
+                114
+              ]
+            ],
+            [
+              34,
+              [
+                115,
+                115,
+                116,
+                117
+              ]
+            ],
+            [
+              35,
+              [
+                118,
+                118,
+                119,
+                120
+              ]
+            ],
+            [
+              36,
+              [
+                121,
+                121,
+                122,
+                123
+              ]
+            ],
+            [
+              37,
+              [
+                124,
+                124,
+                125,
+                126
+              ]
+            ],
+            [
+              38,
+              [
+                127,
+                127,
+                128,
+                129
+              ]
+            ],
+            [
+              39,
+              [
+                130,
+                130,
+                131,
+                132
+              ]
+            ]
+          ],
+          "cells": [
+            "Pathway",
+            "Examples of new cancer genes discovered by NGS",
+            "Cancer types",
+            "Genome stability",
+            "POLE",
+            "Colorectal and endometrial cancers",
+            "",
+            "TERT promoter mutations",
+            "Melanomas, bladder, hepatocellular carcinomas, and many other cancer types",
+            "RNA splicing machinery",
+            "SF3B1",
+            "Myelodysplasia, chronic lymphocytic leukemia",
+            "",
+            "SF3A1 , U2AF1 , U2AF65 , ZRSR2 , SRSF2 , PRPF40B , SF1",
+            "Myelodysplasia",
+            "Metabolism",
+            "Glioblastoma, oligodendrogliomas, astrocytomas, AML, and many other cancer types",
+            "",
+            "",
+            "NT5C2",
+            "Acute lymphoblastic leukemia",
+            "",
+            "DNA methylation",
+            "DNMT3A",
+            "AML, myelodysplastic syndrome",
+            "",
+            "DNA hydroxymethylation",
+            "TET2",
+            "AML, myelodysplastic syndrome",
+            "",
+            "Histone methyltransferase",
+            "EZH2",
+            "Large B cell lymphomas",
+            "",
+            "Histone demethylase",
+            "KDM6A",
+            "Multiple myeloma, renal cell carcinoma, AML and other cancers",
+            "",
+            "",
+            "KDM5A , KDM5C",
+            "AML, renal clear cell carcinoma",
+            "",
+            "Histone deubiquitinase",
+            "BAP1",
+            "Mesothelioma, uveal melanoma, renal clear cell carcinoma",
+            "Epigenetic regulation",
+            "SWI/SNF chromatin complex",
+            "PBRM1 , SMARCA1 , SMARCA4",
+            "Renal clear cell carcinoma",
+            "",
+            "",
+            "SMARCA4",
+            "Melanomas",
+            "",
+            "",
+            "ARID1A",
+            "Ovarian clear cell carcinomas",
+            "",
+            "",
+            "ARID1B , ARID2",
+            "Melanoma, hepatocellular, and pancreatic cancers",
+            "",
+            "Chromatin compaction",
+            "CHD1",
+            "Prostate cancer",
+            "",
+            "",
+            "CHD2",
+            "Chronic lymphocytic leukemia",
+            "",
+            "",
+            "CHD4",
+            "Endometrial cancers",
+            "Transcription factors",
+            "SOX2",
+            "Esophageal cancer",
+            "",
+            "SOX9 , CDX2",
+            "Colorectal cancer",
+            "",
+            "GATA3",
+            "Breast cancer",
+            "",
+            "NKX2–1",
+            "Lung adenocarcinoma",
+            "",
+            "FOXA1 , MED12",
+            "Prostate cancer",
+            "Ubiquitination",
+            "SPOP",
+            "Prostate and endometrial cancers",
+            "",
+            "FBXW7",
+            "Endometrial, head/neck, bladder, gastrointestinal cancers",
+            "",
+            "WWP1",
+            "Liver cancer",
+            "RAC/PAK-signaling",
+            "RAC1 , RAC2 , CDC42",
+            "Melanoma",
+            "",
+            "ELMO1 , DOCK2",
+            "Esophageal cancer",
+            "Tumor suppressor",
+            "PTPN12",
+            "Breast cancer",
+            "",
+            "PPP6C",
+            "Melanoma",
+            "Notch signaling",
+            "NOTCH2 , NOTCH3",
+            "Head and neck squamous cell carcinoma",
+            "SLIT/ROBO signaling",
+            "ROBO1 , ROBO2 , SLIT2",
+            "Pancreatic cancer",
+            "Semaphorin signaling",
+            "SEMA3A , SEMA3E , SEMA5A",
+            "Pancreatic cancer",
+            "NF-KB signaling",
+            "MYD88",
+            "Diffuse large B cell lymphoma",
+            "RNA abundance",
+            "DIS3",
+            "Multiple myeloma",
+            "Translation regulation",
+            "FAM46C",
+            "Multiple myeloma",
+            "Protein homeostasis",
+            "XBP1",
+            "Multiple myeloma",
+            "Cell cycle",
+            "CCNE1",
+            "Uterine serous carcinoma"
+          ]
+        }
+      ],
+      "mathml": []
+    }
+  ]
 }

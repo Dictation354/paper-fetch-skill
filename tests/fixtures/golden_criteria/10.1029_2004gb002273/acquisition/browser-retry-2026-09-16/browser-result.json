@@ -1,0 +1,13 @@
+{
+  "doi": "10.1029/2004gb002273",
+  "captured_at_utc": "2026-09-16T05:47:48.681141+00:00",
+  "requested_url": "https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2004GB002273",
+  "browser_mode": "headless",
+  "backend": "camoufox",
+  "attempt": 1,
+  "user_authorized_browser_retry": true,
+  "outcome": "received_dom",
+  "status_code": 403,
+  "final_url": "https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2004GB002273",
+  "dom_file": "acquisition/browser-retry-2026-09-16/landing-dom.html"
+}

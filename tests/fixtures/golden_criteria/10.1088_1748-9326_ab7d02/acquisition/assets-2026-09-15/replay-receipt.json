@@ -1,0 +1,73 @@
+{
+  "doi": "10.1088/1748-9326/ab7d02",
+  "source_input": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/original.html",
+  "source_sha256": "e638a78a7fd2471ea3a6124f7dd1d25c3f8b5263390dad64a7a5d125171f1d60",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "b019a67775ddcdca6bc9a76c40c70b311ce04fd712a265da105a36084a5a8b22",
+  "files": [
+    {
+      "filename": "erlab7d02f1_hr.jpg",
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f1_hr.jpg",
+      "source_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f1_hr.jpg",
+      "sha256": "e0d9c531576476a32515ff855a3275910de784f10141dbbc556c4c35b965da87",
+      "size": 273648,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1725,
+      "height": 1712,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "erlab7d02f2_hr.jpg",
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f2_hr.jpg",
+      "source_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f2_hr.jpg",
+      "sha256": "7497abbbb25ab069ab7495f05f057374766368cd4b4b1a826e9b41b9d5e10ebb",
+      "size": 275790,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1725,
+      "height": 1640,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "erlab7d02f3_hr.jpg",
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f3_hr.jpg",
+      "source_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f3_hr.jpg",
+      "sha256": "402393383b8edc5aa0030e6a4a52bc4960f83ede4628855fef62c9b980c87755",
+      "size": 189786,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1725,
+      "height": 822,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "erlab7d02f4_hr.jpg",
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f4_hr.jpg",
+      "source_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f4_hr.jpg",
+      "sha256": "497b8dc05f3aaab91e699d803028f8d2bd3432167bd5724f7b0e3df6d7b2741c",
+      "size": 273633,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1725,
+      "height": 1495,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "erlab7d02f5_hr.jpg",
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f5_hr.jpg",
+      "source_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f5_hr.jpg",
+      "sha256": "45a1d304d6a11f973302c54b566af72d1c92a99cd839dda506106d4aed8dae03",
+      "size": 323009,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1725,
+      "height": 2076,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:25.021837+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 0
+}

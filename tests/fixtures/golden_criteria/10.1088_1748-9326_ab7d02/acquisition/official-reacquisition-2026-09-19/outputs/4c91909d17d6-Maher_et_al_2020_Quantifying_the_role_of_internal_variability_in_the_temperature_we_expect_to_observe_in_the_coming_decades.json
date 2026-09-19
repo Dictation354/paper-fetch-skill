@@ -1,0 +1,660 @@
+{
+  "doi": "10.1088/1748-9326/ab7d02",
+  "source": "iop_html",
+  "metadata": {
+    "title": "Quantifying the role of internal variability in the temperature we expect to observe in the coming decades",
+    "authors": [
+      "Nicola Maher",
+      "Flavio Lehner",
+      "Jochem Marotzke"
+    ],
+    "abstract": "On short (15-year) to mid-term (30-year) time-scales how the Earth’s surface temperature evolves can be dominated by internal variability as demonstrated by the global-warming pause or ‘hiatus’. In this study, we use six single model initial-condition large ensembles (SMILEs) and the Coupled Model Intercomparison Project 5 (CMIP5) to visualise the role of internal variability in controlling possible observable surface temperature trends in the short-term and mid-term projections from 2019 onwards. We confirm that in the short-term, surface temperature trend projections are dominated by internal variability, with little influence of structural model differences or warming pathway. Additionally we demonstrate that this result is independent of the model-dependent estimate of the magnitude of internal variability. Indeed, and perhaps counter intuitively, in all models a lack of warming, or even a cooling trend could be observed at all individual points on the globe, even under the largest greenhouse gas emissions. The near-equivalence of all six SMILEs and CMIP5 demonstrates the robustness of this result to the choice of models used. On the mid-term time-scale, we confirm that structural model differences and scenario uncertainties play a larger role in controlling surface temperature trend projections than they did on the shorter time-scale. In addition we show that whether internal variability still dominates, or whether model uncertainties and internal variability are a similar magnitude, depends on the estimate of internal variability, which differs between the SMILEs. Finally we show that even out to thirty years large parts of the globe (or most of the globe in MPI-GE and CMIP5) could still experience no-warming due to internal variability.",
+    "journal": "Environmental Research Letters",
+    "article_type": null,
+    "published": "2020-5-1",
+    "keywords": [],
+    "license_urls": [
+      "http://creativecommons.org/licenses/by/4.0",
+      "https://iopscience.iop.org/info/page/text-and-data-mining"
+    ],
+    "landing_page_url": "https://iopscience.iop.org/article/10.1088/1748-9326/ab7d02"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "On short (15-year) to mid-term (30-year) time-scales how the Earth’s surface temperature evolves can be dominated by internal variability as demonstrated by the global-warming pause or ‘hiatus’. In this study, we use six single model initial-condition large ensembles (SMILEs) and the Coupled Model Intercomparison Project 5 (CMIP5) to visualise the role of internal variability in controlling possible observable surface temperature trends in the short-term and mid-term projections from 2019 onwards. We confirm that in the short-term, surface temperature trend projections are dominated by internal variability, with little influence of structural model differences or warming pathway. Additionally we demonstrate that this result is independent of the model-dependent estimate of the magnitude of internal variability. Indeed, and perhaps counter intuitively, in all models a lack of warming, or even a cooling trend could be observed at all individual points on the globe, even under the largest greenhouse gas emissions. The near-equivalence of all six SMILEs and CMIP5 demonstrates the robustness of this result to the choice of models used. On the mid-term time-scale, we confirm that structural model differences and scenario uncertainties play a larger role in controlling surface temperature trend projections than they did on the shorter time-scale. In addition we show that whether internal variability still dominates, or whether model uncertainties and internal variability are a similar magnitude, depends on the estimate of internal variability, which differs between the SMILEs. Finally we show that even out to thirty years large parts of the globe (or most of the globe in MPI-GE and CMIP5) could still experience no-warming due to internal variability."
+    },
+    {
+      "heading": "1. Introduction",
+      "level": 2,
+      "kind": "body",
+      "text": "Short-term trends in climate indices, such as global-mean surface temperature are significantly influenced by internal variability (e.g. Hawkins and Sutton 2009, Marotzke and Forster 2015). This means that although greenhouse gas emissions are ever increasing, we may observe a global cooling trend over the coming decade, as demonstrated by the recent global warming slowdown or hiatus. Conversely, we could also observe a decade of accelerated warming that overshoots what we would expect due to the current emissions (Meehl *et al* 2013). In this paper we visually demonstrate the role of internal variability in the temperatures that will be observed at each point on the globe in the coming decades and confirm the dominance of internal variability in the short-term trends. To do this we use a combination of six single model initial-condition large ensembles (SMILEs) and the Coupled Model Intercomparison Project 5 (CMIP5) archive to investigate the range of projected temperature trends from 2019 onwards. Unlike previous studies, before the availability of many SMILEs, we are able to additionally demonstrate the effect of the uncertainty in the magnitude of internal variability itself on our results.\n\nInternal variability, or chaotic variability of the climate system (Hasselmann 1976) is a difficult concept to communicate (Deser *et al* 2012a). It is often explained in terms of the “Butterfly Effect”, where a small change in the present can result in a much larger change in the future state. It is also a difficult concept to study due to the short, and spatially inconsistent observations. Indeed, to truly study the observed internal variability of Earth’s surface temperature one must have long observational records under many different climate conditions, so as to be able to sample the internal variability.\n\nPractically, internal variability can be quantified and studied using climate models, with SMILEs effective tools to quantify the role of small perturbations in changing the short and long-term trajectory of the climate system. Individual SMILEs have been used in previous studies to investigate the role of internal variability in driving surface temperature projections, mainly on 35-60 year time-scales (Deser *et al* 2012b, Kay *et al* 2015, Deser *et al* 2016, Bengtsson and Hodges 2018), with few studies investigating the shorter time-scales (e.g. Marotzke 2019).\n\nTo date only one study, which focuses on North America, has investigated 60-year surface temperature trends from multiple SMILEs (Deser *et al* 2020). Importantly this study has demonstrated that the internal variability of these trends differs between SMILEs (Deser *et al* 2020). Indeed both Hawkins and Sutton (2009) and Kumar and Ganguly (2017) demonstrated that model differences dominate temperature trends on longer time-scales, with internal variability dominating on shorter time-scales. As such using many SMILEs is key to identifying uncertainties in both the magnitude of internal variability and the forced response due to model differences.\n\nIt is also unclear how the rate of anthropogenic greenhouse gas emissions will evolve over the coming decades. The last generation of climate models were run with four different possible futures; RCP2.6, 4.5, 6.0, and 8.5. Scientists have suggested that these scenarios cover the likely range of the possible greenhouse gas emissions for the coming century, however the true pathway will depend on the policy changes made by governments. This pathway is known to be important for long-term projections, however, it has been found to be less important on short-term time-scales (Hawkins and Sutton 2009). Indeed when changes in RCP2.6 were compared to a RCP4.5 scenario in the Max Planck Institute Grand Ensemble (MPI-GE) a large overlap in global temperatures in the short-term projections was found (Marotzke 2019). When extreme temperatures were considered in the Community Earth System Model Large Ensemble (CESM-LE) under RCP4.5 and RCP8.5 scenarios, statistically significant differences were found only in 2050 (Lehner *et al* 2016, Tebaldi and Wehner 2018), again demonstrating that pathway differences can be less important on short to mid-term time-scales.\n\nMany previous studies focus on detecting the climate signal and attributing it to anthropogenic greenhouse gas emissions (e.g. Stone *et al* 2007). Other studies use large ensembles to identify when a signal will emerge from the noise or internal variability. This is known as the time of emergence (e.g. Hawkins and Sutton 2012, Tebaldi and Friedlingstein 2013). In this study we turn this concept around to look not at when a signal will emerge or when it can be detected and attributed, but how the simulated internal variability can influence observed climate in the coming decades. This has importance for policy makers in determining the range of possible futures that could be observed.\n\nThe purpose of this paper is threefold. We will:\n\n(a) Visually demonstrate the role of internal variability in driving the observed climate.\n\n(b) Illustrate the maximum and minimum trends possible at each point of the globe on both short-term (15-year) and mid-term (30-year) time-scales.\n\n(c) Investigate the point-wise relative importance of internal variability, scenario uncertainties and model differences in controlling temperature trends on both the short and mid-term time-scales. Here, we include a new estimate of how model differences in the quantification of internal variability affect the relative importance of these quantities."
+    },
+    {
+      "heading": "2. Models",
+      "level": 2,
+      "kind": "body",
+      "text": "In this study we use 6 SMILEs to investigate internal variability of surface temperature trends (skin temperature; ts). The internal variability and model mean biases are shown in Supplementary figure 1 (stacks.iop.org/ERL/15/054014/mmedia). The SMILEs are all CMIP5 class models run with CMIP5 forcing:\n\nThe Max Planck institute Grand Ensemble (MPI-GE) (Maher *et al* 2019). This model has 100 ensemble members available for RCP2.6, RCP4.5 and RCP8.5 scenarios.\n\nThe Canadian Earth System Model Large Ensembles (CanESM2-LE) (Kirchmeier-Young *et al* 2017). This model has 50 ensemble members available for RCP8.5.\n\nThe Large Ensemble Community Project (CESM-LE) (Kay *et al* 2015). This model has 40 members available for RCP8.5.\n\nThe Commonwealth Scientific and Industrial Research Organisation Large Ensemble (CSIRO-Mk3.6-LE). (Jeffrey *et al* 2012). This model has 30 members for RCP8.5.\n\nGeophysical Fluid Dynamics Laboratory Earth System Model Large Ensemble (GFDL-ESM2M-LE). (Rodgers *et al* 2015). This model has 30 members for RCP8.5.\n\nGeophysical Fluid Dynamics Laboratory Large Ensemble (GFDL-CM3-LE) (Sun *et al* 2018). This model has 20 members for RCP8.5.\n\nWe additionally use all available ensemble members from the CMIP5 archive (Supplementary table 1), which have the field surface temperature (in CMIP; *ts*) available. We do not apply any model weighting. We do not select for ensemble members that exist for all scenarios (RCP2.6, RCP4.5 and RCP8.5 in this study), which means that different models and different numbers of ensemble members may be used for each scenario."
+    },
+    {
+      "heading": "3. Short-term projections (2019-2034)",
+      "level": 2,
+      "kind": "body",
+      "text": "The mean short-term trend at each point on the globe (2019-2034) and the trend at each grid-point when the global surface temperature trend is both maximum and minimum is demonstrated for the mean of the SMILEs and CMIP5 in figure 1. We find that the SMILEs broadly replicate the CMIP5 response, despite consisting of only 6 models. This highlights the large role of internal variability in driving the CMIP5 spread on short time-scales. The main differences between CMIP5 and the SMILEs are found at high-latitudes when the global surface temperature trend is minimum. In this case CMIP5 shows larger cooling than the SMILEs, suggesting that in this case the SMILEs do not quite cover the range of possible model results at high-latitudes. When the global surface temperature trend is minimum, both CMIP5 and the SMILEs show a negative Interdecadal Pacific Oscillation (IPO) like pattern (figure 1; top row, individual models in Supplementary figures 2 and 3), while when the global surface temperature trend is maximum all maps show a positive IPO-like pattern (figure 1; middle row, individual models in Supplementary figures 2 and 3). This result agrees well with Meehl *et al* (2013) and Maher *et al* (2014), who demonstrated for CCSM4 and CMIP5, respectively, that decades of cooling resemble a negative IPO-like pattern and decades of accelerated warming tend to resemble a positive IPO-like pattern.\n\n![Figure 1](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f1_hr.jpg)\n\n**Figure 1.** Short-term (2019-2034) trend in surface temperature. Shown for the maximum (top row) and minimum (second row) global mean surface temperature trend, and the mean trend (bottom row). All trends are shown as a mean of the six SMILEs (left) and CMIP5 mean (right). All panels use the RCP8.5 scenario.\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f2_hr.jpg)\n\n**Figure 2.** Percentage role of internal variability (top row), model uncertainty (middle row) and scenario uncertainty (bottom row). Shown for the short-term (left; 2019-2034) and mid-term (right; 2019-2049) trends. Internal variability is calculated as the standard deviation of a single SMILE, then averaged across SMILEs. Model uncertainty is calculated as the standard deviation across the six SMILE means. Scenario uncertainty is calculated as the standard deviation across the MPI-GE means from the three scenarios.\n\n![Figure 3](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f3_hr.jpg)\n\n**Figure 3.** Percentage role of minimum and maximum possible internal variability (top row), model uncertainty (middle row) and scenario uncertainty (bottom row) for the short-term (2019-2034; left two panels) and mid-term (2019-2049; right two panels) trends. Internal variability is calculated as the minimum or maximum standard deviation from the SMILEs. Model uncertainty is calculated as the standard deviation across the six SMILE means. Scenario uncertainty is calculated as the standard deviation across the MPI-GE means from the three scenarios.\n\nWe next investigate the relative importance of internal variability, model structural differences and scenario uncertainty by completing a decomposition similar to Hawkins and Sutton (2009) (figure 2; left column). Figure 2 demonstrates that internal variability dominates the short-term trend in temperature at all grid points, confirming the results of Hawkins and Sutton (2009), with both a newer generation of models and at a higher resolution. The near equivalence of each of the SMILEs and CMIP5 (figure 1; Supplementary figure 2 and 3) confirms the robustness of this result and demonstrates that the conclusions drawn from the SMILEs can be extended to the larger CMIP5 archive. Building on this confirmation, when we investigate the sensitivity of this result to the uncertainty in internal variability itself, we find that the dominance of internal variability in comparison to the other two uncertainties holds if we sample for either the maximum or minimum variability estimate from the SMILEs (figure 3). This emphasises the robustness of the dominance of internal variability on the short-term time-scale.\n\nWe also visualise what the largest and smallest trends at any given location on the globe could be (note that these trends are very unlikely to occur at the same time across the globe), and determine the likelihood of warming occurring on a short-term time-scale at each location (figure 4). We present these results using MPI-GE (RCP2.6 and RCP8.5) and CESM-LE (RCP8.5), as these models represent the spread of all of the SMILEs with RCP2.6 and RCP8.5 covering the scenario spread (individual model results; Supplementary figures 4 and 5). We confirm, again that on short time-scales it is not model differences or scenario uncertainties that dominate what temperature trend might be observed at each location. What will be observed in the coming 15 years is largely determined by internal variability. Counter-intuitively to what one might expect given ever increasing greenhouse gas emissions, figure 4 visually demonstrates that at all locations a cooling trend (or lack of warming trend) could be observed due to the large internal variability on short-term time-scales. We do, however, show that all locations, besides the Southern Ocean and the North Atlantic Ocean are much more likely to warm, than cool, demonstrating the role of increasing greenhouse gases (the forced response). This likelihood increases with increasing greenhouse gas emissions as demonstrated by the differences between the two MPI-GE scenarios and the two CMIP5 scenarios (Supplementary figure 5). Again we emphasise the robustness of these results given the near-identical results found in all individual SMILEs and CMIP5 (Supplementary figures 4 and 5).\n\n![Figure 4](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f4_hr.jpg)\n\n**Figure 4.** Point-wise maximum (top row) and minimum (middle row) short-term (2019-2034) trend in surface temperature, and percentage of ensemble members with an increasing surface temperature trend (bottom row). Shown for MPI-GE, RCP2.6 scenario (left) and RCP8.5 scenario (middle), and CESM-LE, RCP8.5 scenario (right). Note that these trends are very unlikely to occur at the same time across the globe.\n\n![Figure 5](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f5_hr.jpg)\n\n**Figure 5.** Mean mid-term (2019-2049) surface temperature trend (top row). Point-wise maximum (second row) and minimum (third row) mid-term trend in surface temperature, and percentage of ensemble members with a increasing surface temperature trend (bottom row). Shown for MPI-GE, RCP2.6 scenario (left) and RCP8.5 scenario (middle), and CESM-LE, RCP8.5 scenario (right). Note that these trends are very unlikely to occur at the same time across the globe."
+    },
+    {
+      "heading": "4. Mid-term projections (2019-2049)",
+      "level": 2,
+      "kind": "body",
+      "text": "Additionally we investigate the role of internal variability in mid-term (2019-2049) projections of surface temperature. Even though greenhouse gas emissions have increased compared to the short-term time-scale, we still find that many individual locations could experience cooling or a lack of warming on this mid-term time-scale due to internal variability (figure 5). This result is more model dependent than for the short-term, with MPI-GE showing a larger potential cooling trend than CESM-LE. In MPI-GE almost all land locations could see a lack of warming trend, even under RCP8.5, while this is only true for approximately half of the land points in CESM-LE. In general the minimum, mean and maximum trends are larger in CESM-LE, CanESM2-LE and GFDL-CM3-LE, than in MPI-GE and GFDL-ESM2M-LE, with CSIRO-Mk3.6-LE somewhere in between (Supplementary figures 6–9). This is also reflected in the likelihood of warming at each location, with the models exhibiting larger trends, showing a greater likelihood of warming (figure 5 bottom row). This demonstrates that the rate of warming in different models does make a difference to the mid-term projections. Scenario differences can also be visually seen as more important on the mid-term timescale than the short-term timescale, with the warmer scenarios showing larger maximum, minimum and mean trends, and a greater likelihood of warming (Supplementary figure 9).\n\nWhen we quantify the relative roles of the different uncertainties for the mid-term time-scale we find that internal variability is still the largest driver of what we will observe (figure 2; right column), however model uncertainties and scenario uncertainties play a larger role than on the short-term time-scale, with model uncertainties the larger of the two, again confirming the general results of Hawkins and Sutton (2009). This result is, however, dependent on the magnitude of internal variability simulated by the different SMILEs, something that can only be demonstrated using the large archive of SMILEs now available. Here, we find that a low estimate of internal variability would mean that model uncertainty becomes the main driver, while a high estimate shows internal variability as the clear driver (figure 3). This shows that model differences in internal variability do indeed matter for making projections on the mid-term time-scale.\n\nMore recently it has been emphasised that internal variability in SMILEs is not the same (Deser *et al* 2020). These differences could be due to the fact that not all models have the same internal variability (e.g. Sutton *et al* 2015) or due to the fact that internal variability itself may change under external forcing (e.g Maher *et al* 2015). This has not previously been considered in the Hawkins and Sutton-type breakdown."
+    },
+    {
+      "heading": "5. Summary and conclusions",
+      "level": 2,
+      "kind": "body",
+      "text": "This study is the first to investigate point-wise projected temperature trends across the entire globe in both multiple (six) SMILEs and CMIP5. Hawkins and Sutton (2009) originally demonstrated the changing role of internal variability, model differences and scenario uncertainty on different time-scales. However, they were unable to account for the fact that internal variability in all models is not the same and that this variability itself may change in the future (e.g. Sutton *et al* 2015,Maher *et al* 2019, Deser *et al* 2020). Here, we confirm the results of Hawkins and Sutton (2009) with a more recent generation of climate models and at a higher spatial resolution, using multiple SMILEs and CMIP5 in agreement with Lehner *et al* (in review 2020). We build on these results, by demonstrating their remarkable robustness and additionally investigating uncertainties due to the differences in internal variability between different models.\n\nWe first confirm that on short-term time-scales (15-years) temperature trends are dominated by internal variability. This result is shown to be remarkably robust. There is near-equivalence between the six individual SMILEs and CMIP5, demonstrating that the SMILE results hold when using all available climate models. We find that internal variability dominates projections even when we take the smallest estimate of internal variability available from the SMILEs.\n\nSecond we confirm that on mid-term time-scales (30-years) internal variability is still important for driving temperature trends, however in this case both structural model differences and scenario (or pathway) uncertainty also matter, with model differences having the greater importance of the two. Due to the availability of multiple SMILEs we additionally show that the relative importance of internal variability and model differences is dependent on the models representation of internal variability. Model uncertainty is found to be the main driver of mid-term trends when we take a low estimate of internal variability, while with a high estimate, internal variability instead dominates. This result highlights the importance of using multiple SMILEs, with a range of estimates of internal variability in future studies investigating mid-term time-scales and underscores the importance of evaluating not just a model’s mean state or forced trend, but also its internal variability.\n\nDue to the difficulty in communicating what internal variability is and its importance in driving the climate that we observe, we have created maps to visualise both the maximum and minimum global and point-wise future trends that could occur on both the short and mid-term time-scales. These maps clearly demonstrate the cooling that could occur under increasing greenhouse gases, caused by internal variability. In the short-term all points on the globe could individually experience cooling or no warming, although in a probabilistic sense they are much more likely to warm. While every grid point can still cool in the future, Sippel *et al* (2020) have recently demonstrated that climate change is still detectable in the pattern of global temperature anomalies at any given day. We find that even on the mid-term time-scale a large proportion of the globe could by chance still not experience a warming trend due to internal variability, although this result is somewhat model dependent. These maps provide an easy way to visualise the importance of internal variability on both short and mid-term time-scales, and can be used as a tool for understanding what we observe as we observe it over the coming decades."
+    },
+    {
+      "heading": "Acknowledgment",
+      "level": 2,
+      "kind": "body",
+      "text": "We thank the US CLIVAR Working Group on Large Ensembles for providing much of the large ensemble data and Maria Rugenstein for completing an internal review. We acknowledge the World Climate Research Programme’s Working Group on Coupled Modelling, which is responsible for CMIP, and we thank the climate modeling groups (listed in Supplementary table 1 of this paper) for producing and making available their model output. For CMIP the U.S. Department of Energy’s Program for Climate Model Diagnosis and Intercomparison provides coordinating support and led development of software infrastructure in partnership with the Global Organization for Earth System Science Portals. Flavio Lehner was supported by a Swiss NSF Ambizione Fellowship (Project PZ00P2_174128) and by U.S. NSF AGS-0856145, Amendment 87. The National Center for Atmospheric Research is sponsored by the U S National Science Foundation."
+    },
+    {
+      "heading": "Data availability",
+      "level": 2,
+      "kind": "data_availability",
+      "text": "The data that support the findings of this study are openly available at the following locations:\n\nMPI-GE https://esgf-data.dkrz.de/projects/mpi-ge/\n\nAll other large ensembles http://www.cesm.ucar.edu/projects/community-projects/MMLEA/\n\nCMIP5 https://esgf-node.llnl.gov/search/cmip5/"
+    },
+    {
+      "heading": "References",
+      "level": 2,
+      "kind": "references",
+      "text": "1. Bengtsson L, Hodges K I 2018 Can an ensemble climate simulation be used to separate climate change signals from internal unforced variability? Clim. Dyn. 52 3553-73 doi:10.1007/s00382-018-4343-8\n\n2. Deser C, Knutti R, Solomon S, Phillips A 2012a Communication of the role of natural variability in future North American climate Nat. Clim. Change 2 775-9 doi:10.1038/nclimate1562\n\n3. Deser C, Phillips V, Bourdette and, Teng H 2012b Uncertainty in climate change projections: the role of internal variability Clim. Dyn. 38 527-46 doi:10.1007/s00382-010-0977-x\n\n4. Deser C, Laurent T, Phillips A S 2016 Forced and internal components of winter air temperature trends over north america during the past 50 years: mechanisms and implications J. Climate. 29 2237-58 doi:10.1175/JCLI-D-15-0304.1\n\n5. Deser C, others 2020 Strength in Numbers: The Utility of Large Ensembles with Multiple Earth System Models Nat. Clim. Change 10 277-86 doi:10.1038/s41558-020-0731-2\n\n6. Hasselmann K 1976 Stochastic climate models. Part1. Theory Tellus 28 473-85 doi:10.3402/tellusa.v28i6.11316\n\n7. Hawkins E, Sutton R 2012 Time of emergence of climate signals Geophys. Res. Lett. 39 L01702 doi:10.1029/2011GL050087\n\n8. Hawkins E, Sutton R 2009 The Potential to Narrow Uncertainty in Regional Climate Predictions Bull. Am. Meteorol. Soc. 90 1095-108 doi:10.1175/2009BAMS2607.1\n\n9. Jeffrey S J, Rotstayn L, Collier M A, Dravitzki S M, Hamalainen C, Moeseneder C, Wong K K, Syktus J I 2012 Australia’s CMIP5 submission using the CSIRO-Mk3.6 model Aust. Meteorol. Ocean. 63 1-13 doi:10.22499/2.6301.001\n\n10. Kay J E, others 2015 The Community Earth System Model (CESM) Large Ensemble Project: A Community Resource for Studying Climate Change in the Presence of Internal Climate Variability Bull. Am. Meteorol. Soc. 96 1333-1349 doi:10.1175/BAMS-D-13-00255.1\n\n11. Kirchmeier-Young M C, Zwiers F W, Gillett N P 2017 Attribution of Extreme Events in Arctic Sea Ice Extent J. Clim. 30 553-71 doi:10.1175/JCLI-D-16-0412.1\n\n12. Kumar D, Ganguly A R 2017 Intercomparison of model response and internal variability across climate model ensembles Clim. Dyn. 51 207-19 doi:10.1007/s00382-017-3914-4\n\n13. Lehner F, Deser C, Sanderson B M 2016 Future risk of record-breaking summer temperatures and its mitigation Clim. Change 145 363-75 doi:10.1007/s10584-016-1616-2\n\n14. Lehner F, Deser C, Maher N, Marotzke F E, and J, Brunner L, Knutti R, Hawkins E 2020 Partitioning climate projection uncertainty with multiple Large Ensembles and CMIP5/6 Earth Syst. Dynam. Discuss.\n\n15. Maher N, Sen Gupta A, England M H 2014 Drivers of decadal hiatus periods in the 20th and 21st centuries Geophys. Res. Lett. 41 5978-86 doi:10.1002/2014GL060527\n\n16. Maher N, McGregor M, England H, Sen Gupta A 2015 Effects of volcanism on tropical variability Geophys. Res. Lett. 42 6024-33 doi:10.1002/2015GL064751\n\n17. Maher N, others 2019 The Max Planck Institute Grand Ensemble: Enabling the Exploration of Climate System Variability J. Adv. Model. Earth Syst. 11 2050-69 doi:10.1029/2019MS001639\n\n18. Marotzke J 2019 Quantifying the irreducible uncertainty in near-term climate projections WIREs Climate Change 10 e563 doi:10.1002/wcc.563\n\n19. Marotzke J, Forster P M 2015 Forcing feedback and internal variability in global temperature trends Nature 517 565-70 doi:10.1038/nature14117\n\n20. Meehl G A, Hu A, Arblaster J M, Fasullo J, Trenberth K E 2013 Externally Forced and Internally Generated Decadal Climate Variability Associated with the Interdecadal Pacific Oscillatio J. Clim. 26 7298-7310 doi:10.1175/JCLI-D-12-00548.1\n\n21. Rodgers K B, Lin J, Frölicher T L 2015 Emergence of multiple ocean ecosystem drivers in a large ensemble suite with an Earth system model Biogeosciences 12 3301-20 doi:10.5194/bg-12-3301-2015\n\n22. Sippel S, Meinshausen N, Fischer E M, Székely E, Knutti R 2020 Climate change now detectable from any single day of weather at global scale Nat. Clim. Change 10 35-41 doi:10.1038/s41558-019-0666-7\n\n23. Stone D, Allen M R, Selten F, Kliphuis M, Stott P A 2007 The Detection and Attribution of Climate Change Using an Ensemble of Opportunity J. Clim. 20 504-16 doi:10.1175/JCLI3966.1\n\n24. Sun L, Alexander M, Deser C 2018 Evolution of the Global Coupled Climate Response to Arctic Sea Ice Loss during 1990–2090 and Its Contribution to Climate Change J. Clim. 31 7823-43 doi:10.1175/JCLI-D-18-0134.1\n\n25. Sutton R, Suckling E, Hawkins E 2015 What does global mean temperature tell us about local climate? Phil. Trans. R. Soc. A. 373 20140426 doi:10.1098/rsta.2014.0426\n\n26. Tebaldi C, Wehner M F 2018 Benefits of mitigation for future heat extremes under RCP4.5 compared to RCP8.5 Clim. Change 146 349-61 doi:10.1007/s10584-016-1605-5\n\n27. Tebaldi C, Friedlingstein P 2013 Delayed detection of climate mitigation benefits due to climate inertia and variability Proc. Natl Acad. Sci. 110 17229-34 doi:10.1073/pnas.1300005110"
+    }
+  ],
+  "references": [
+    {
+      "raw": "1. Bengtsson L, Hodges K I 2018 Can an ensemble climate simulation be used to separate climate change signals from internal unforced variability? Clim. Dyn. 52 3553-73 doi:10.1007/s00382-018-4343-8",
+      "doi": "10.1007/s00382-018-4343-8",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "2. Deser C, Knutti R, Solomon S, Phillips A 2012a Communication of the role of natural variability in future North American climate Nat. Clim. Change 2 775-9 doi:10.1038/nclimate1562",
+      "doi": "10.1038/nclimate1562",
+      "title": null,
+      "year": "2012a"
+    },
+    {
+      "raw": "3. Deser C, Phillips V, Bourdette and, Teng H 2012b Uncertainty in climate change projections: the role of internal variability Clim. Dyn. 38 527-46 doi:10.1007/s00382-010-0977-x",
+      "doi": "10.1007/s00382-010-0977-x",
+      "title": null,
+      "year": "2012b"
+    },
+    {
+      "raw": "4. Deser C, Laurent T, Phillips A S 2016 Forced and internal components of winter air temperature trends over north america during the past 50 years: mechanisms and implications J. Climate. 29 2237-58 doi:10.1175/JCLI-D-15-0304.1",
+      "doi": "10.1175/jcli-d-15-0304.1",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "5. Deser C, others 2020 Strength in Numbers: The Utility of Large Ensembles with Multiple Earth System Models Nat. Clim. Change 10 277-86 doi:10.1038/s41558-020-0731-2",
+      "doi": "10.1038/s41558-020-0731-2",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "6. Hasselmann K 1976 Stochastic climate models. Part1. Theory Tellus 28 473-85 doi:10.3402/tellusa.v28i6.11316",
+      "doi": "10.3402/tellusa.v28i6.11316",
+      "title": null,
+      "year": "1976"
+    },
+    {
+      "raw": "7. Hawkins E, Sutton R 2012 Time of emergence of climate signals Geophys. Res. Lett. 39 L01702 doi:10.1029/2011GL050087",
+      "doi": "10.1029/2011gl050087",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "8. Hawkins E, Sutton R 2009 The Potential to Narrow Uncertainty in Regional Climate Predictions Bull. Am. Meteorol. Soc. 90 1095-108 doi:10.1175/2009BAMS2607.1",
+      "doi": "10.1175/2009bams2607.1",
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "9. Jeffrey S J, Rotstayn L, Collier M A, Dravitzki S M, Hamalainen C, Moeseneder C, Wong K K, Syktus J I 2012 Australia’s CMIP5 submission using the CSIRO-Mk3.6 model Aust. Meteorol. Ocean. 63 1-13 doi:10.22499/2.6301.001",
+      "doi": "10.22499/2.6301.001",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "10. Kay J E, others 2015 The Community Earth System Model (CESM) Large Ensemble Project: A Community Resource for Studying Climate Change in the Presence of Internal Climate Variability Bull. Am. Meteorol. Soc. 96 1333-1349 doi:10.1175/BAMS-D-13-00255.1",
+      "doi": "10.1175/bams-d-13-00255.1",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "11. Kirchmeier-Young M C, Zwiers F W, Gillett N P 2017 Attribution of Extreme Events in Arctic Sea Ice Extent J. Clim. 30 553-71 doi:10.1175/JCLI-D-16-0412.1",
+      "doi": "10.1175/jcli-d-16-0412.1",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "12. Kumar D, Ganguly A R 2017 Intercomparison of model response and internal variability across climate model ensembles Clim. Dyn. 51 207-19 doi:10.1007/s00382-017-3914-4",
+      "doi": "10.1007/s00382-017-3914-4",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "13. Lehner F, Deser C, Sanderson B M 2016 Future risk of record-breaking summer temperatures and its mitigation Clim. Change 145 363-75 doi:10.1007/s10584-016-1616-2",
+      "doi": "10.1007/s10584-016-1616-2",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "14. Lehner F, Deser C, Maher N, Marotzke F E, and J, Brunner L, Knutti R, Hawkins E 2020 Partitioning climate projection uncertainty with multiple Large Ensembles and CMIP5/6 Earth Syst. Dynam. Discuss.",
+      "doi": null,
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "15. Maher N, Sen Gupta A, England M H 2014 Drivers of decadal hiatus periods in the 20th and 21st centuries Geophys. Res. Lett. 41 5978-86 doi:10.1002/2014GL060527",
+      "doi": "10.1002/2014gl060527",
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "16. Maher N, McGregor M, England H, Sen Gupta A 2015 Effects of volcanism on tropical variability Geophys. Res. Lett. 42 6024-33 doi:10.1002/2015GL064751",
+      "doi": "10.1002/2015gl064751",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "17. Maher N, others 2019 The Max Planck Institute Grand Ensemble: Enabling the Exploration of Climate System Variability J. Adv. Model. Earth Syst. 11 2050-69 doi:10.1029/2019MS001639",
+      "doi": "10.1029/2019ms001639",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "18. Marotzke J 2019 Quantifying the irreducible uncertainty in near-term climate projections WIREs Climate Change 10 e563 doi:10.1002/wcc.563",
+      "doi": "10.1002/wcc.563",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "19. Marotzke J, Forster P M 2015 Forcing feedback and internal variability in global temperature trends Nature 517 565-70 doi:10.1038/nature14117",
+      "doi": "10.1038/nature14117",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "20. Meehl G A, Hu A, Arblaster J M, Fasullo J, Trenberth K E 2013 Externally Forced and Internally Generated Decadal Climate Variability Associated with the Interdecadal Pacific Oscillatio J. Clim. 26 7298-7310 doi:10.1175/JCLI-D-12-00548.1",
+      "doi": "10.1175/jcli-d-12-00548.1",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "21. Rodgers K B, Lin J, Frölicher T L 2015 Emergence of multiple ocean ecosystem drivers in a large ensemble suite with an Earth system model Biogeosciences 12 3301-20 doi:10.5194/bg-12-3301-2015",
+      "doi": "10.5194/bg-12-3301-2015",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "22. Sippel S, Meinshausen N, Fischer E M, Székely E, Knutti R 2020 Climate change now detectable from any single day of weather at global scale Nat. Clim. Change 10 35-41 doi:10.1038/s41558-019-0666-7",
+      "doi": "10.1038/s41558-019-0666-7",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "23. Stone D, Allen M R, Selten F, Kliphuis M, Stott P A 2007 The Detection and Attribution of Climate Change Using an Ensemble of Opportunity J. Clim. 20 504-16 doi:10.1175/JCLI3966.1",
+      "doi": "10.1175/jcli3966.1",
+      "title": null,
+      "year": "2007"
+    },
+    {
+      "raw": "24. Sun L, Alexander M, Deser C 2018 Evolution of the Global Coupled Climate Response to Arctic Sea Ice Loss during 1990–2090 and Its Contribution to Climate Change J. Clim. 31 7823-43 doi:10.1175/JCLI-D-18-0134.1",
+      "doi": "10.1175/jcli-d-18-0134.1",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "25. Sutton R, Suckling E, Hawkins E 2015 What does global mean temperature tell us about local climate? Phil. Trans. R. Soc. A. 373 20140426 doi:10.1098/rsta.2014.0426",
+      "doi": "10.1098/rsta.2014.0426",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "26. Tebaldi C, Wehner M F 2018 Benefits of mitigation for future heat extremes under RCP4.5 compared to RCP8.5 Clim. Change 146 349-61 doi:10.1007/s10584-016-1605-5",
+      "doi": "10.1007/s10584-016-1605-5",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "27. Tebaldi C, Friedlingstein P 2013 Delayed detection of climate mitigation benefits due to climate inertia and variability Proc. Natl Acad. Sci. 110 17229-34 doi:10.1073/pnas.1300005110",
+      "doi": "10.1073/pnas.1300005110",
+      "title": null,
+      "year": "2013"
+    }
+  ],
+  "assets": [
+    {
+      "kind": "figure",
+      "heading": "Figure 1. Short-term (2019-2034) trend in surface temperature. Shown for the max",
+      "caption": "Figure 1. Short-term (2019-2034) trend in surface temperature. Shown for the maximum (top row) and minimum (second row) global mean surface temperature trend, and the mean trend (bottom row). All trends are shown as a mean of the six SMILEs (left) and CMIP5 mean (right). All panels use the RCP8.5 scenario. Download figure: Standard image High-resolution image",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f1_hr.jpg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f1_hr.jpg",
+      "original_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f1_hr.jpg",
+      "source_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f1_hr.jpg",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/jpeg",
+      "downloaded_bytes": 273648,
+      "width": 1725,
+      "height": 1712,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": "direct_http",
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 0.022,
+        "candidate_resolution_ms": 0.026,
+        "dns_policy_validation_ms": 151.893,
+        "connect_to_headers_ttfb_ms": 839.307,
+        "body_stream_ms": 559.669,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.112,
+        "save_ms": 1.287,
+        "total_ms": 1553.07,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 2. Percentage role of internal variability (top row), model uncertainty (",
+      "caption": "Figure 2. Percentage role of internal variability (top row), model uncertainty (middle row) and scenario uncertainty (bottom row). Shown for the short-term (left; 2019-2034) and mid-term (right; 2019-2049) trends. Internal variability is calculated as the standard deviation of a single SMILE, then averaged across SMILEs. Model uncertainty is calculated as the standard deviation across the six SMILE means. Scenario uncertainty is calculated as the standard deviation across the MPI-GE means from the three scenarios. Download figure: Standard image High-resolution image",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f2_hr.jpg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f2_hr.jpg",
+      "original_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f2_hr.jpg",
+      "source_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f2_hr.jpg",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/jpeg",
+      "downloaded_bytes": 275790,
+      "width": 1725,
+      "height": 1640,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": "direct_http",
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 0.163,
+        "candidate_resolution_ms": 0.042,
+        "dns_policy_validation_ms": 4.045,
+        "connect_to_headers_ttfb_ms": 677.092,
+        "body_stream_ms": 536.03,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.127,
+        "save_ms": 2.277,
+        "total_ms": 1222.003,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 3. Percentage role of minimum and maximum possible internal variability (",
+      "caption": "Figure 3. Percentage role of minimum and maximum possible internal variability (top row), model uncertainty (middle row) and scenario uncertainty (bottom row) for the short-term (2019-2034; left two panels) and mid-term (2019-2049; right two panels) trends. Internal variability is calculated as the minimum or maximum standard deviation from the SMILEs. Model uncertainty is calculated as the standard deviation across the six SMILE means. Scenario uncertainty is calculated as the standard deviation across the MPI-GE means from the three scenarios. Download figure: Standard image High-resolution image",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f3_hr.jpg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f3_hr.jpg",
+      "original_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f3_hr.jpg",
+      "source_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f3_hr.jpg",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/jpeg",
+      "downloaded_bytes": 189786,
+      "width": 1725,
+      "height": 822,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": "direct_http",
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 0.806,
+        "candidate_resolution_ms": 0.037,
+        "dns_policy_validation_ms": 13.409,
+        "connect_to_headers_ttfb_ms": 797.933,
+        "body_stream_ms": 520.957,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.056,
+        "save_ms": 2.063,
+        "total_ms": 1336.644,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 4. Point-wise maximum (top row) and minimum (middle row) short-term (2019",
+      "caption": "Figure 4. Point-wise maximum (top row) and minimum (middle row) short-term (2019-2034) trend in surface temperature, and percentage of ensemble members with an increasing surface temperature trend (bottom row). Shown for MPI-GE, RCP2.6 scenario (left) and RCP8.5 scenario (middle), and CESM-LE, RCP8.5 scenario (right). Note that these trends are very unlikely to occur at the same time across the globe. Download figure: Standard image High-resolution image",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f4_hr.jpg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f4_hr.jpg",
+      "original_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f4_hr.jpg",
+      "source_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f4_hr.jpg",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/jpeg",
+      "downloaded_bytes": 273633,
+      "width": 1725,
+      "height": 1495,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": "direct_http",
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 1218.593,
+        "candidate_resolution_ms": 0.084,
+        "dns_policy_validation_ms": 5.34,
+        "connect_to_headers_ttfb_ms": 695.388,
+        "body_stream_ms": 543.914,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.06,
+        "save_ms": 1.95,
+        "total_ms": 2466.747,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 5. Mean mid-term (2019-2049) surface temperature trend (top row). Point-w",
+      "caption": "Figure 5. Mean mid-term (2019-2049) surface temperature trend (top row). Point-wise maximum (second row) and minimum (third row) mid-term trend in surface temperature, and percentage of ensemble members with a increasing surface temperature trend (bottom row). Shown for MPI-GE, RCP2.6 scenario (left) and RCP8.5 scenario (middle), and CESM-LE, RCP8.5 scenario (right). Note that these trends are very unlikely to occur at the same time across the globe. Download figure: Standard image High-resolution image",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f5_hr.jpg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f5_hr.jpg",
+      "original_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f5_hr.jpg",
+      "source_url": "https://content.cld.iop.org/journals/1748-9326/15/5/054014/revision2/erlab7d02f5_hr.jpg",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/jpeg",
+      "downloaded_bytes": 323009,
+      "width": 1725,
+      "height": 2076,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": "direct_http",
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 1333.985,
+        "candidate_resolution_ms": 0.031,
+        "dns_policy_validation_ms": 4.402,
+        "connect_to_headers_ttfb_ms": 685.173,
+        "body_stream_ms": 549.195,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.052,
+        "save_ms": 1.976,
+        "total_ms": 2575.67,
+        "status": "saved"
+      }
+    }
+  ],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 5680,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "Markdown full text was saved to /home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/Maher_et_al_2020_Quantifying_the_role_of_internal_variability_in_the_temperature_we_expect_to_observe_in_the_coming_decades.md."
+    ],
+    "source_trail": [
+      "fulltext:iop_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_iop",
+      "route:signal_publisher_iop",
+      "route:signal_doi_iop",
+      "route:probe_iop_unknown",
+      "route:provider_selected_iop",
+      "route:provider_candidate_iop_metadata_selected_rank_1",
+      "route:provider_candidate_iop_identity_strong",
+      "fulltext:iop_attempt",
+      "download:iop_assets_saved_profile_body",
+      "fulltext:iop_article_ok",
+      "route:provider_candidate_iop_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 444,
+      "body": 5236,
+      "refs": 1218
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 20903,
+      "word_count": 3364,
+      "body_block_count": 6,
+      "body_heading_count": 6,
+      "body_to_abstract_ratio": 12.100719424460431,
+      "explicit_body_container": true,
+      "post_abstract_body_run": true,
+      "figure_count": 10
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": true,
+      "profile": "body",
+      "expected": null,
+      "discovered": 5,
+      "attempted": 5,
+      "total": 5,
+      "local": 5,
+      "full_size": 5,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 5,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 5,
+          "requested": 5,
+          "full_size": 5,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": [
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f1_hr.jpg",
+          "real_mime": "image/jpeg",
+          "byte_count": 273648,
+          "width": 1725,
+          "height": 1712,
+          "preview_accepted": false,
+          "sha256": "e0d9c531576476a32515ff855a3275910de784f10141dbbc556c4c35b965da87",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f2_hr.jpg",
+          "real_mime": "image/jpeg",
+          "byte_count": 275790,
+          "width": 1725,
+          "height": 1640,
+          "preview_accepted": false,
+          "sha256": "7497abbbb25ab069ab7495f05f057374766368cd4b4b1a826e9b41b9d5e10ebb",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f3_hr.jpg",
+          "real_mime": "image/jpeg",
+          "byte_count": 189786,
+          "width": 1725,
+          "height": 822,
+          "preview_accepted": false,
+          "sha256": "402393383b8edc5aa0030e6a4a52bc4960f83ede4628855fef62c9b980c87755",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f4_hr.jpg",
+          "real_mime": "image/jpeg",
+          "byte_count": 273633,
+          "width": 1725,
+          "height": 1495,
+          "preview_accepted": false,
+          "sha256": "497b8dc05f3aaab91e699d803028f8d2bd3432167bd5724f7b0e3df6d7b2741c",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1748-9326_ab7d02_assets/erlab7d02f5_hr.jpg",
+          "real_mime": "image/jpeg",
+          "byte_count": 323009,
+          "width": 1725,
+          "height": 2076,
+          "preview_accepted": false,
+          "sha256": "45a1d304d6a11f973302c54b566af72d1c92a99cd839dda506106d4aed8dae03",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        }
+      ]
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "iop",
+    "route": "browser_html",
+    "representation": "html",
+    "transport": "browser",
+    "fallback_used": false
+  }
+}

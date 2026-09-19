@@ -1,21 +1,2251 @@
 {
+  "has": {
+    "title": true,
+    "authors": true,
+    "abstract": true,
+    "body": true,
+    "figures": false,
+    "references": true,
+    "data_availability": true,
+    "code_availability": false
+  },
   "counts": {
+    "sections": 22,
     "abstract_sections": 1,
     "body_sections": 20,
     "figures": 0,
-    "references": 44,
-    "sections": 21,
-    "tables": 0
+    "tables": 0,
+    "references": 44
   },
   "expected_content_kind": "fulltext",
-  "has": {
-    "abstract": true,
-    "authors": true,
-    "body": true,
-    "code_availability": false,
-    "data_availability": false,
-    "figures": false,
-    "references": true,
-    "title": true
-  }
+  "source_review": {
+    "sample_id": "10.3390_membranes15030093",
+    "provider": "mdpi",
+    "doi": "10.3390/membranes15030093",
+    "original": "tests/fixtures/golden_criteria/10.3390_membranes15030093/original.html",
+    "sha256": "9c4a67add7ab9bc3dbc067ef2e83e9afeeda1f46575f0934bd9801cf64f78295",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 7,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 44,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 68,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 13,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 133,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 1,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 51,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 57,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 51,
+      "tex_checked": 0,
+      "mathml_checked": 51,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.3390_membranes15030093/original.html",
+      "sha256": "9c4a67add7ab9bc3dbc067ef2e83e9afeeda1f46575f0934bd9801cf64f78295",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "aea361328f8aa676c84db7a6d65e2ea9a0b160978a831e0ecc119d99780b6252",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2
+              ]
+            ],
+            [
+              1,
+              [
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                7,
+                8
+              ]
+            ],
+            [
+              3,
+              [
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              4,
+              [
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              5,
+              [
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              6,
+              [
+                18,
+                19,
+                20
+              ]
+            ]
+          ],
+          "cells": [
+            "Specifications",
+            "Value",
+            "Unit",
+            "Module length ( L )",
+            "100",
+            "mm",
+            "Module inner radius ( R )",
+            "10",
+            "mm",
+            "Fiber inner radius ( r _{1} ) Fiber outer radius ( r _{2} )",
+            "0.16 0.21",
+            "mm mm",
+            "Porosity ( ε )",
+            "40",
+            "%",
+            "Tortuosity ( τ )",
+            "4",
+            "",
+            "Number of fibers ( n )",
+            "600",
+            ""
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "c1dbc75ff0a3ba5d8166c6e75f62df17e2ff236a6ec5e908d2619c0e2d5668eb",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            [
+              2,
+              [
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              3,
+              [
+                12,
+                13,
+                14,
+                15
+              ]
+            ],
+            [
+              4,
+              [
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              5,
+              [
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              6,
+              [
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              7,
+              [
+                28,
+                29,
+                30,
+                31
+              ]
+            ],
+            [
+              8,
+              [
+                32,
+                33,
+                34,
+                35
+              ]
+            ],
+            [
+              9,
+              [
+                36,
+                37,
+                38,
+                39
+              ]
+            ],
+            [
+              10,
+              [
+                40,
+                41,
+                42,
+                43
+              ]
+            ],
+            [
+              11,
+              [
+                44,
+                45,
+                46,
+                47
+              ]
+            ],
+            [
+              12,
+              [
+                48,
+                49,
+                50,
+                51
+              ]
+            ],
+            [
+              13,
+              [
+                52,
+                53,
+                54,
+                55
+              ]
+            ]
+          ],
+          "cells": [
+            "Parameter",
+            "Value",
+            "Unit",
+            "References",
+            "D _{CO2-shell}",
+            "1.8 × 10 ^{−5}",
+            "m ^{2} /s",
+            "[ 35 ]",
+            "D _{CO2-MEA}",
+            "1.51 × 10 ^{−9}",
+            "m ^{2} /s",
+            "[ 36 ]",
+            "D _{CO2-PG}",
+            "1.8 × 10 ^{−9}",
+            "m ^{2} /s",
+            "[ 37 ]",
+            "D _{CO2-} _{[EMIM][Ac]}",
+            "5.58 × 10 ^{−10}",
+            "m ^{2} /s",
+            "[ 38 ]",
+            "D _{MEA-tube}",
+            "9.32 × 10 ^{−10}",
+            "m ^{2} /s",
+            "[ 36 ]",
+            "D _{PG-tube}",
+            "1.05 × 10 ^{−9}",
+            "m ^{2} /s",
+            "[ 37 ]",
+            "D _{[EMIM][Ac]-tube}",
+            "8.36 × 10 ^{−11}",
+            "m ^{2} /s",
+            "[ 38 ]",
+            "k _{MEA}",
+            "\\frac{\n \n 10 \n^{\n ( \n 10.99 \n − \n 2152 \n / \n T \n ) \n} \n}{\n 1000 \n}",
+            "mol/m ^{3} ·s",
+            "[ 36 ]",
+            "k _{PG}",
+            "10 ^{16} exp(−8544/T)",
+            "mol/m ^{3} ·s",
+            "[ 37 ]",
+            "k _{[EMIM][Ac]}",
+            "1545 exp(−1240.9/T)",
+            "mol/m ^{3} ·s",
+            "[ 38 ]",
+            "m _{CO2-MEA}",
+            "0.86",
+            "",
+            "[ 39 ]",
+            "m _{CO2-PG}",
+            "0.625",
+            "",
+            "[ 13 ]",
+            "m _{CO2-} _{[EMIM][Ac]}",
+            "0.529",
+            "",
+            "[ 38 ]"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "b9f419f1208004ae6f362ce61a6a753bc47e512e5e4234fdb7b6356e7a923dfa",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            [
+              2,
+              [
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              3,
+              [
+                12,
+                13,
+                14,
+                15
+              ]
+            ],
+            [
+              4,
+              [
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              5,
+              [
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              6,
+              [
+                24,
+                25,
+                26,
+                27
+              ]
+            ]
+          ],
+          "cells": [
+            "Boundary",
+            "Tube",
+            "Membrane",
+            "Shell",
+            "z = 0",
+            "C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n t \n u \n b \n e \n} \n = \n 0 C \n_{\n a \n b \n s \n o \n r \n b \n e \n n \n t \n , \n t \n u \n b \n e \n} = C \n_{\n i \n n \n i \n t \n i \n a \n l \n}",
+            "Insulated",
+            "\\frac{\n ∂ \n \n C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n s \n h \n e \n l \n l \n} \n}{\n ∂ \n r \n} \n \n = \n 0",
+            "z = L",
+            "",
+            "Insulated",
+            "C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n , \n s \n h \n e \n l \n l \n} = C \n_{\n i \n n \n i \n t \n i \n a \n l \n}",
+            "r = 0",
+            "\\frac{\n ∂ \n \n C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n t \n u \n b \n e \n} \n}{\n ∂ \n r \n} \n \n = \n 0",
+            "",
+            "",
+            "r = r _{1}",
+            "C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n t \n u \n b \n e \n} \n = \n \n m \n_{\n \n C \n O \n_{\n 2 \n} \n} \n \n C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n m \n e \n m \n}",
+            "C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n m \n e \n m \n} \n = \n \n \\frac{\n \n C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n t \n u \n b \n e \n} \n}{\n \n m \n_{\n \n C \n O \n_{\n 2 \n} \n} \n}",
+            "",
+            "r = r _{2}",
+            "",
+            "C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n m \n e \n m \n} \n = \n \n C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n t \n u \n b \n e \n}",
+            "C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n , \n s \n h \n e \n l \n l \n} \n = \n \n C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n m \n e \n m \n}",
+            "r = r _{3}",
+            "",
+            "",
+            "\\frac{\n ∂ \n \n C \n_{\n \n C \n O \n_{\n 2 \n} \n , \n s \n h \n e \n l \n l \n} \n}{\n ∂ \n r \n} \n \n = \n 0"
+          ]
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "96e79e48f266f341cdd46a430d699c1754d792579e32dde428b989fa7af744d7",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            [
+              2,
+              [
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              3,
+              [
+                12,
+                13,
+                14,
+                15
+              ]
+            ],
+            [
+              4,
+              [
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              5,
+              [
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              6,
+              [
+                24,
+                25,
+                26,
+                27
+              ]
+            ]
+          ],
+          "cells": [
+            "Boundary",
+            "Tube",
+            "Membrane",
+            "Shell",
+            "z = 0",
+            "T \n_{\n L \n , \n t \n u \n b \n e \n} \n = \n \n T \n_{\n L \n , \n t \n u \n b \n e \n − \n i \n n \n}",
+            "\\frac{\n ∂ \n \n T \n_{\n \n C \n O \n_{\n 2 \n} \n , \n m \n e \n m \n} \n}{\n ∂ \n Z \n} \n \n = \n 0",
+            "− \n \n λ \n_{\n g \n , \n s \n h \n e \n l \n l \n} \n \n \\frac{\n ∂ \n \n T \n_{\n g \n , \n s \n h \n e \n l \n l \n} \n}{\n ∂ \n Z \n} \n \n = \n 0",
+            "z = L",
+            "− \n \n λ \n_{\n L \n , \n t \n u \n b \n e \n} \n \n \\frac{\n ∂ \n \n T \n_{\n L \n , \n t \n u \n b \n e \n} \n}{\n ∂ \n Z \n} \n \n = \n 0",
+            "\\frac{\n ∂ \n \n T \n_{\n \n C \n O \n_{\n 2 \n} \n , \n m \n e \n m \n} \n}{\n ∂ \n Z \n} \n \n = \n 0",
+            "T \n_{\n g \n , \n s \n h \n e \n l \n l \n} \n = \n \n T \n_{\n g \n , \n s \n h \n e \n l \n l \n − \n i \n n \n}",
+            "r = 0",
+            "\\frac{\n ∂ \n \n T \n_{\n L \n , \n t \n u \n b \n e \n} \n}{\n ∂ \n r \n} \n \n = \n 0",
+            "",
+            "",
+            "r = r _{1}",
+            "T \n_{\n L \n , \n t \n u \n b \n e \n} \n = \n \n T \n_{\n \n C \n O \n_{\n 2 \n} \n , \n m \n e \n m \n}",
+            "T \n_{\n \n C \n O \n_{\n 2 \n} \n , \n m \n e \n m \n} \n = \n \n T \n_{\n L \n , \n t \n u \n b \n e \n}",
+            "",
+            "r = r _{2}",
+            "",
+            "T \n_{\n \n C \n O \n_{\n 2 \n} \n , \n m \n e \n m \n} \n = \n \n T \n_{\n g \n , \n s \n h \n e \n l \n l \n}",
+            "T \n_{\n g \n , \n s \n h \n e \n l \n l \n} \n = \n \n T \n_{\n \n C \n O \n_{\n 2 \n} \n , \n m \n e \n m \n}",
+            "r = r _{3}",
+            "",
+            "",
+            "\\frac{\n ∂ \n \n T \n_{\n g \n , \n s \n h \n e \n l \n l \n} \n}{\n ∂ \n r \n} \n \n = \n 0"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "1f3605176ec5b37e880b75c6303daac9681dff725363fe7d3a1697a5aaddbc0d",
+          "numbers": "2",
+          "minimum": {
+            "_": 6,
+            "^": 1,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "i",
+            "t",
+            "D",
+            "i",
+            "C",
+            "i",
+            "C",
+            "i",
+            "V",
+            "Z",
+            "R",
+            "i"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "-",
+            "+"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "8489edbb309791d23d8a8db4f19e81112c4881b79a51a259039236f1a79d57f7",
+          "numbers": "2222122222",
+          "minimum": {
+            "_": 11,
+            "^": 4,
+            "\\frac": 5,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "D",
+            "C",
+            "O",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "C",
+            "C",
+            "O",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "r",
+            "r",
+            "C",
+            "C",
+            "O",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "r",
+            "C",
+            "C",
+            "O",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "Z",
+            "V",
+            "Z",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "C",
+            "C",
+            "O",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "Z"
+          ],
+          "operators": [
+            "+",
+            "+",
+            "="
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "e3d5ff1785e9290e6bf6483004fb83342fe7e7da02cd6f307bcc4e6e428f2b7c",
+          "numbers": "21232322322232344232423",
+          "minimum": {
+            "_": 13,
+            "^": 5,
+            "\\frac": 2,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "V",
+            "r",
+            "r",
+            "r",
+            "r",
+            "r",
+            "r",
+            "ln",
+            "r",
+            "r",
+            "r",
+            "r",
+            "r",
+            "r",
+            "ln",
+            "r",
+            "r",
+            "V",
+            "Z",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l"
+          ],
+          "operators": [
+            "-",
+            "×",
+            "-",
+            "+",
+            "+",
+            "-",
+            "+",
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "c336102c1f773b40cc05cf3a60c22281c0f86078302551e1b2dfe09b97c5965d",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "V"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "717f83f1cf9c2ddab433ed0147d9037cdc5280c74063c0f83fbaaea3b4a19337",
+          "numbers": "321112",
+          "minimum": {
+            "_": 2,
+            "^": 1,
+            "\\frac": 2,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "r",
+            "r",
+            "φ"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "24993b799743670178248d758eb24b999706148f57a03b155a6fe61b85d584cb",
+          "numbers": "122",
+          "minimum": {
+            "_": 1,
+            "^": 1,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "φ",
+            "n",
+            "r",
+            "R"
+          ],
+          "operators": [
+            "-",
+            "="
+          ]
+        },
+        {
+          "object_index": 6,
+          "id": null,
+          "node_sha256": "fa7f908f58c24492f4978be71dbfb4b989a1820f94bb35104f75ac57a6a5acc4",
+          "numbers": "22122",
+          "minimum": {
+            "_": 8,
+            "^": 4,
+            "\\frac": 5,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "λ",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "T",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "r",
+            "r",
+            "T",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "r",
+            "T",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "Z",
+            "V",
+            "Z",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "C",
+            "p",
+            "g",
+            "ρ",
+            "g",
+            "T",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "Z"
+          ],
+          "operators": [
+            "+",
+            "+",
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 7,
+          "id": null,
+          "node_sha256": "766f29b66addce367b92567d4ff0c9625af8c406c090c1efc550898eacc4b9e1",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "λ",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 8,
+          "id": null,
+          "node_sha256": "04236c0f9b08cac776f5d34ba87885036a0b0706ded8e1e2f2d4d1fa969dd037",
+          "numbers": "2222122220",
+          "minimum": {
+            "_": 8,
+            "^": 4,
+            "\\frac": 4,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "D",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "C",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "r",
+            "r",
+            "C",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "r",
+            "C",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "Z"
+          ],
+          "operators": [
+            "+",
+            "+",
+            "="
+          ]
+        },
+        {
+          "object_index": 9,
+          "id": null,
+          "node_sha256": "48fdcaa3828d3c80c383e0642481e4c54cbaeaf795dc2626cc9c4948d818d398",
+          "numbers": "22",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "D",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "D",
+            "C",
+            "O",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "ε",
+            "τ"
+          ],
+          "operators": [
+            "=",
+            "×"
+          ]
+        },
+        {
+          "object_index": 10,
+          "id": null,
+          "node_sha256": "5b7a1f612b2869543599dc7e4be3b4649deba3b1ca590633c93a4e3ee618cd2a",
+          "numbers": "2222122220",
+          "minimum": {
+            "_": 8,
+            "^": 4,
+            "\\frac": 4,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "λ",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "T",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "r",
+            "r",
+            "T",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "r",
+            "T",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "Z"
+          ],
+          "operators": [
+            "+",
+            "+",
+            "="
+          ]
+        },
+        {
+          "object_index": 11,
+          "id": null,
+          "node_sha256": "4dca523e672d413bbbb698598659609b0541fbc1ab5b5fe497e7bdec82d9d542",
+          "numbers": "221",
+          "minimum": {
+            "_": 5,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "λ",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "ε",
+            "λ",
+            "C",
+            "O",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "ε",
+            "λ",
+            "m",
+            "e",
+            "m"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 12,
+          "id": null,
+          "node_sha256": "1ac412ee95cd21da3e76633bf633201720d80161f31f91acd27480a7158f4efc",
+          "numbers": "2",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "λ",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 13,
+          "id": null,
+          "node_sha256": "d0325f9b0cf231a3fdd895ef999f04d25a84e3c56adf6034e96fb904c0cae9d1",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "λ",
+            "m",
+            "e",
+            "m"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 14,
+          "id": null,
+          "node_sha256": "a84257ea590170ee7c896aa4f085d65afe45813bd42d728e26320ced85157641",
+          "numbers": "22221222222",
+          "minimum": {
+            "_": 13,
+            "^": 4,
+            "\\frac": 5,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "D",
+            "C",
+            "O",
+            "t",
+            "u",
+            "b",
+            "e",
+            "C",
+            "C",
+            "O",
+            "t",
+            "u",
+            "b",
+            "e",
+            "r",
+            "r",
+            "C",
+            "C",
+            "O",
+            "t",
+            "u",
+            "b",
+            "e",
+            "r",
+            "C",
+            "C",
+            "O",
+            "t",
+            "u",
+            "b",
+            "e",
+            "Z",
+            "V",
+            "Z",
+            "t",
+            "u",
+            "b",
+            "e",
+            "C",
+            "C",
+            "O",
+            "t",
+            "u",
+            "b",
+            "e",
+            "Z",
+            "R",
+            "C",
+            "O",
+            "t",
+            "u",
+            "b",
+            "e"
+          ],
+          "operators": [
+            "+",
+            "+",
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 15,
+          "id": null,
+          "node_sha256": "ac9904a1738d481321d90c6d861d3ecf9a3427037e5d3f586341a89ac0185d5e",
+          "numbers": "2",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "C",
+            "O",
+            "t",
+            "u",
+            "b",
+            "e"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 16,
+          "id": null,
+          "node_sha256": "9d274a9d0fa9fbfa5527cd529316685d10d0911d4ff92203aa7741eef334f921",
+          "numbers": "2112",
+          "minimum": {
+            "_": 2,
+            "^": 1,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "V",
+            "Z",
+            "t",
+            "u",
+            "b",
+            "e",
+            "v",
+            "r",
+            "r"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 17,
+          "id": null,
+          "node_sha256": "dad460e362427b62632197c0f16a556e39e329bc436f6a96c6d98400b2d34eb0",
+          "numbers": "22122",
+          "minimum": {
+            "_": 10,
+            "^": 4,
+            "\\frac": 5,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "λ",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e",
+            "T",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e",
+            "r",
+            "r",
+            "T",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e",
+            "r",
+            "T",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e",
+            "Z",
+            "R",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e",
+            "H",
+            "a",
+            "b",
+            "s",
+            "V",
+            "Z",
+            "t",
+            "u",
+            "b",
+            "e",
+            "C",
+            "p",
+            "L",
+            "ρ",
+            "L",
+            "T",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e",
+            "Z"
+          ],
+          "operators": [
+            "+",
+            "+",
+            "+",
+            "="
+          ]
+        },
+        {
+          "object_index": 18,
+          "id": null,
+          "node_sha256": "67e316fa935a8a361d7969b5bdfd4ea6e00eab893576c8ac1cbefb37be6faccc",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "λ",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 19,
+          "id": null,
+          "node_sha256": "49b54db20e49e2b5736bd07737c8a835c4c7b701f23bb9c5a49fae436f904178",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "H",
+            "a",
+            "b",
+            "s"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 20,
+          "id": null,
+          "node_sha256": "bde7245d1db126848e47d207487615d49e12fe2ff36c147bdf48b0beb86e6216",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 21,
+          "id": null,
+          "node_sha256": "a3bae951c72b5af0a1195a8d9d00e9924802e45e4aba28eaef2501d03f8b99cd",
+          "numbers": "222",
+          "minimum": {
+            "_": 3,
+            "^": 2,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "O",
+            "R",
+            "N",
+            "H",
+            "R",
+            "N",
+            "H",
+            "C",
+            "O",
+            "O"
+          ],
+          "operators": [
+            "+",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 22,
+          "id": null,
+          "node_sha256": "c14fbe4decb42137e3cb49fece30cd6b952cdf55c9f8b820cb3c6d8f081cd7e0",
+          "numbers": "223",
+          "minimum": {
+            "_": 3,
+            "^": 4,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "N",
+            "H",
+            "C",
+            "O",
+            "O",
+            "R",
+            "N",
+            "H",
+            "R",
+            "N",
+            "H",
+            "C",
+            "O",
+            "O",
+            "R",
+            "N",
+            "H"
+          ],
+          "operators": [
+            "+",
+            "-",
+            "+",
+            "-",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 23,
+          "id": null,
+          "node_sha256": "5bfd7e0defd227dd4f7be73be0ef2cff754edea6ccf17bf1ba1ac44e10d89c54",
+          "numbers": "2223",
+          "minimum": {
+            "_": 3,
+            "^": 2,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "O",
+            "R",
+            "N",
+            "H",
+            "R",
+            "N",
+            "H",
+            "C",
+            "O",
+            "O",
+            "R",
+            "N",
+            "H"
+          ],
+          "operators": [
+            "+",
+            "-",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 24,
+          "id": null,
+          "node_sha256": "2ddedef7a36eaa6ba8f84d435861099a9e4b9420c8be45df6d1a0418dd1b4d2d",
+          "numbers": "2222",
+          "minimum": {
+            "_": 4,
+            "^": 2,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "N",
+            "H",
+            "C",
+            "O",
+            "R",
+            "N",
+            "H",
+            "C",
+            "O"
+          ],
+          "operators": [
+            "+",
+            "+",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 25,
+          "id": null,
+          "node_sha256": "bb03f13a72f9d7afe288ea0f5cc6d3b816068584929bbfc42473d57ca5177c58",
+          "numbers": "2222",
+          "minimum": {
+            "_": 6,
+            "^": 4,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "R",
+            "N",
+            "H",
+            "C",
+            "O",
+            "B",
+            "i",
+            "R",
+            "N",
+            "C",
+            "O",
+            "B",
+            "i",
+            "H"
+          ],
+          "operators": [
+            "+",
+            "-",
+            "+",
+            "-",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 26,
+          "id": null,
+          "node_sha256": "c2474677fce99a4ac7957fcb019280010a5f784dcbf8afa12620a3cba2077a12",
+          "numbers": "2232232",
+          "minimum": {
+            "_": 6,
+            "^": 4,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "m",
+            "i",
+            "n",
+            "C",
+            "H",
+            "C",
+            "O",
+            "O",
+            "C",
+            "m",
+            "i",
+            "n",
+            "C",
+            "m",
+            "i",
+            "n",
+            "H",
+            "C",
+            "H",
+            "C",
+            "O",
+            "O"
+          ],
+          "operators": [
+            "+",
+            "-",
+            "+",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 27,
+          "id": null,
+          "node_sha256": "ca0ba0fd1eba786bc59b8565a11cc18280abfb9f77e846f362afdc1f15327eb5",
+          "numbers": "222",
+          "minimum": {
+            "_": 3,
+            "^": 2,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "m",
+            "i",
+            "n",
+            "C",
+            "O",
+            "C",
+            "m",
+            "i",
+            "n",
+            "C",
+            "O",
+            "O"
+          ],
+          "operators": [
+            "+",
+            "+",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 28,
+          "id": null,
+          "node_sha256": "cf798862c7bbeae2249f2ffc54892d017b85818cb514221436a208b1284c0379",
+          "numbers": "1001",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "η",
+            "C",
+            "o",
+            "u",
+            "t",
+            "C",
+            "i",
+            "n"
+          ],
+          "operators": [
+            "=",
+            "×",
+            "-"
+          ]
+        },
+        {
+          "object_index": 29,
+          "id": null,
+          "node_sha256": "b8faa58de87cda743017a7b0047c8cba6b0b0b267242dc2443a3343e8d97e69e",
+          "numbers": "1010.9921521000",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 30,
+          "id": null,
+          "node_sha256": "89d1a1cf48a6752d5485cebc77acd8a06e9d7b5ee0170f579c992493d947aedb",
+          "numbers": "20",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "C",
+            "O",
+            "t",
+            "u",
+            "b",
+            "e"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 31,
+          "id": null,
+          "node_sha256": "14c3a6ddcc22a920e013e5c3b2f51fe438efa7a655097d9d5b19db1115f18d83",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "a",
+            "b",
+            "s",
+            "o",
+            "r",
+            "b",
+            "e",
+            "n",
+            "t",
+            "t",
+            "u",
+            "b",
+            "e"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 32,
+          "id": null,
+          "node_sha256": "30eb055be302746ddc8ffdf8c93202bdda0000b555d735d91ee8bb05c8576bf1",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "i",
+            "n",
+            "i",
+            "t",
+            "i",
+            "a",
+            "l"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 33,
+          "id": null,
+          "node_sha256": "1e976c45509859346f63427e123a79952c7c396ac7bfa89c27a2171fda4723e6",
+          "numbers": "20",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "C",
+            "O",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "r"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 34,
+          "id": null,
+          "node_sha256": "f06d3b3020dce78903af4f628bd7423fa6a89a106a5662ba1c836c3d4081d603",
+          "numbers": "2",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "C",
+            "O",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 35,
+          "id": null,
+          "node_sha256": "319cfed29e30df5067de9b7e803d27436ede0840b4c2ed18f0e20867295db99c",
+          "numbers": "20",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "C",
+            "O",
+            "t",
+            "u",
+            "b",
+            "e",
+            "r"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 36,
+          "id": null,
+          "node_sha256": "bf6544839059423a670ba0e7b5a82635586395ae5ffe4cf6c6ef27a9737edf6c",
+          "numbers": "222",
+          "minimum": {
+            "_": 6,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "C",
+            "O",
+            "t",
+            "u",
+            "b",
+            "e",
+            "m",
+            "C",
+            "O",
+            "C",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 37,
+          "id": null,
+          "node_sha256": "5db1ce9b240d302f3c687eb95f960a1d2ae3a664b66212bd584c64a76bc3250b",
+          "numbers": "222",
+          "minimum": {
+            "_": 6,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "C",
+            "C",
+            "O",
+            "t",
+            "u",
+            "b",
+            "e",
+            "m",
+            "C",
+            "O"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 38,
+          "id": null,
+          "node_sha256": "b7d4e7b31e308f2e53715e090f604db1816f12cda669e076b16f3eca08609c47",
+          "numbers": "22",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "C",
+            "C",
+            "O",
+            "t",
+            "u",
+            "b",
+            "e"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 39,
+          "id": null,
+          "node_sha256": "30255a5480a3cc868453f30186eb718cebbf8e73a02a5285d48a11a6694319cf",
+          "numbers": "22",
+          "minimum": {
+            "_": 4,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "C",
+            "C",
+            "O",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "C",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 40,
+          "id": null,
+          "node_sha256": "e9f37016710248c3ffd414e6bf30c431abf780ddfdb70ac3279dffb633a2a0de",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e",
+            "T",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e",
+            "i",
+            "n"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 41,
+          "id": null,
+          "node_sha256": "716a51efe967f77b5a9f5c5a6c5f747a07588ec12117912a40ca2e3e5d79fc45",
+          "numbers": "20",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "Z"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 42,
+          "id": null,
+          "node_sha256": "2e9d528706ba9779051b18768bd8fe5948a17c4ec6dba05c3017a0634795b9d8",
+          "numbers": "0",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "λ",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "T",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "Z"
+          ],
+          "operators": [
+            "-",
+            "="
+          ]
+        },
+        {
+          "object_index": 43,
+          "id": null,
+          "node_sha256": "e21ea79469f5a399272dd38a53b4daa31c153070c54c48b96a49b2857593fa59",
+          "numbers": "0",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "λ",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e",
+            "T",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e",
+            "Z"
+          ],
+          "operators": [
+            "-",
+            "="
+          ]
+        },
+        {
+          "object_index": 44,
+          "id": null,
+          "node_sha256": "f0c881d27a7c8b1f4dbdfbc901bb3d2ceb0168dfabc760085c9a102fb26a6b74",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "T",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "i",
+            "n"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 45,
+          "id": null,
+          "node_sha256": "ae35c1976ff02805395600f2391ac3350bbfc6709e281b81cfc3c430947a7c1f",
+          "numbers": "0",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e",
+            "r"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 46,
+          "id": null,
+          "node_sha256": "9f979fa5b28e481c4e9055b03aa5179991b8b49946531652b1c283b7b949d494",
+          "numbers": "2",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e",
+            "T",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 47,
+          "id": null,
+          "node_sha256": "353a9c9a1863c611e0f38f0a4b10f188fbd173f954f32eaa4a0ae59e86a339ab",
+          "numbers": "2",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "T",
+            "L",
+            "t",
+            "u",
+            "b",
+            "e"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 48,
+          "id": null,
+          "node_sha256": "0319da3964a36464de58aeb6800db6a80b30754304adab007956ee1e187b1cec",
+          "numbers": "2",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m",
+            "T",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 49,
+          "id": null,
+          "node_sha256": "b9b2d0e0ac7842d2c6e52fbad479062cd6a73dd8c8a7a373c510c92fa4aa5d46",
+          "numbers": "2",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "T",
+            "C",
+            "O",
+            "m",
+            "e",
+            "m"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 50,
+          "id": null,
+          "node_sha256": "a034f56f7bd1a1794f060d58137a16fe82379a3c7b28f1b62c86f6008c2b55c2",
+          "numbers": "0",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T",
+            "g",
+            "s",
+            "h",
+            "e",
+            "l",
+            "l",
+            "r"
+          ],
+          "operators": [
+            "="
+          ]
+        }
+      ]
+    }
+  ]
 }

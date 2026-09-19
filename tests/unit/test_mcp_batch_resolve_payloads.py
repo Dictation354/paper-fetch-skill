@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import asyncio
 import tempfile
 import threading
@@ -7,9 +6,7 @@ import time
 import unittest
 from pathlib import Path
 from unittest import mock
-
 import pytest
-
 from paper_fetch.http import RequestFailure
 from paper_fetch.mcp import batch as mcp_batch
 from paper_fetch.mcp.batch import (
@@ -33,8 +30,7 @@ from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, HasFulltextProbeResult, PaperFetchFailure
 from paper_fetch.tracing import trace_event
-
-from ._mcp_support import (
+from tests.support._mcp_support import (
     assert_mcp_tool_omits_output_schema,
     create_cached_downloads,
     mcp_test_deps,

@@ -1,0 +1,132 @@
+{"abstracts-retrieval-response": {
+    "affiliation": {
+        "affiliation-city": "Beijing",
+        "@id": "60108755",
+        "affilname": "China University of Mining & Technology, Beijing",
+        "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60108755",
+        "affiliation-country": "China"
+    },
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-85171480263",
+        "dc:description": "Drought seriously threatens the food and ecological security of many countries in the world. Currently, various remote sensing indicators of vegetation status have been utilized in drought monitoring and warning. This study classified them into four types according to the biophysical characteristics of vegetation, i.e., temperature, moisture, fluorescence, and greenness-based indicators. However, their responses to drought stress are still less clear at present, which is not conducive to remote sensing of drought. Hence, a comprehensive evaluation of their responses to drought was conducted in this study. MODIS spectral reflectance and land surface temperature products were used to obtain temperature, moisture, and greenness-based indicators, while five solar-induced chlorophyll fluorescence datasets were used to obtain fluorescence-based indicators. Soil moisture anomaly, Standardized Precipitation Index, and Standardized Precipitation Evapotranspiration Index calculated by reanalysis and in-situ meteorological data were employed to indicate drought stress. The Chinese mainland was selected as the study area and the study period covers the year from 2000 to 2020 with months from May to September, the vegetation growing period. Evaluation results demonstrated that: 1) The responses of all indicators to drought stress were the most sensitive in arid areas, the second in transitional areas, and the last in humid areas; Monitoring or evaluation of drought with remote sensing vegetation indicators was more suitable for arid and transitional areas. 2) Among all indicators, the temperature-based indicator was found to be the most sensitive, the moisture-based indicator was in the second, the fluorescence-based and greenness-based indicators were in the third where the former presented a little more sensitive than the latter. 3) Vegetation temperature and moisture-based indicators should be integrated in the comprehensive indexes of drought rather than only integrate vegetation greenness-based indicators. Soil background effect in the remotely sensed vegetation indicators can be reduced with the feature space model.",
+        "prism:coverDate": "2023-10-01",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/85171480263",
+        "subtypeDescription": "Article",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Hao",
+            "preferred-name": {
+                "ce:given-name": "Hao",
+                "ce:initials": "H.",
+                "ce:surname": "Sun",
+                "ce:indexed-name": "Sun H."
+            },
+            "@seq": "1",
+            "ce:initials": "H.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60108755",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60108755"
+            },
+            "ce:surname": "Sun",
+            "@auid": "55938578600",
+            "author-url": "https://api.elsevier.com/content/author/author_id/55938578600",
+            "ce:indexed-name": "Sun H."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/85171480263"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85171480263&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=85171480263&origin=inward"
+            }
+        ],
+        "prism:publicationName": "Journal of Hydrology",
+        "source-id": "50089",
+        "pii": "S0022169423010673",
+        "citedby-count": "34",
+        "prism:volume": "625",
+        "subtype": "ar",
+        "dc:title": "An evaluation of the response of vegetation greenness, moisture, fluorescence, and temperature-based remote sensing indicators to drought stress",
+        "openaccess": "0",
+        "openaccessFlag": "false",
+        "prism:doi": "10.1016/j.jhydrol.2023.130125",
+        "prism:issn": "00221694",
+        "publishercopyright": "© 2023 Elsevier B.V.",
+        "article-number": "130125",
+        "dc:identifier": "SCOPUS_ID:85171480263",
+        "dc:publisher": "Elsevier B.V."
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "Hao",
+            "preferred-name": {
+                "ce:given-name": "Hao",
+                "ce:initials": "H.",
+                "ce:surname": "Sun",
+                "ce:indexed-name": "Sun H."
+            },
+            "@seq": "1",
+            "ce:initials": "H.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60108755",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60108755"
+            },
+            "ce:surname": "Sun",
+            "@auid": "55938578600",
+            "author-url": "https://api.elsevier.com/content/author/author_id/55938578600",
+            "ce:indexed-name": "Sun H."
+        },
+        {
+            "ce:given-name": "Zhenheng",
+            "preferred-name": {
+                "ce:given-name": "Zhenheng",
+                "ce:initials": "Z.",
+                "ce:surname": "Xu",
+                "ce:indexed-name": "Xu Z."
+            },
+            "@seq": "2",
+            "ce:initials": "Z.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60108755",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60108755"
+            },
+            "ce:surname": "Xu",
+            "@auid": "58124543100",
+            "author-url": "https://api.elsevier.com/content/author/author_id/58124543100",
+            "ce:indexed-name": "Xu Z."
+        },
+        {
+            "ce:given-name": "Hao",
+            "preferred-name": {
+                "ce:given-name": "Hao",
+                "ce:initials": "H.",
+                "ce:surname": "Liu",
+                "ce:indexed-name": "Liu H."
+            },
+            "@seq": "3",
+            "ce:initials": "H.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60108755",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60108755"
+            },
+            "ce:surname": "Liu",
+            "@auid": "57351284100",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57351284100",
+            "ce:indexed-name": "Liu H."
+        }
+    ]}
+}}

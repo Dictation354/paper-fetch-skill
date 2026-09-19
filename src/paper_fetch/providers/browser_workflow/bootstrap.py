@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ...quality.access_boundary import propagate_paywall
+
 from dataclasses import replace
 import logging
 from collections.abc import Mapping
@@ -156,6 +158,7 @@ def bootstrap_browser_workflow(
         result.html_payload = html_payload
         return result
     except BrowserRuntimeFailure as exc:
+        propagate_paywall(exc)
         result.browser_context_seed = (
             exc.browser_context_seed or result.browser_context_seed
         )
@@ -163,6 +166,7 @@ def bootstrap_browser_workflow(
         result.html_failure_message = _structured_browser_failure_message(exc)
         result.html_failure_diagnostics = dict(exc.details or {})
     except HtmlExtractionFailure as exc:
+        propagate_paywall(exc)
         extraction_html_result = getattr(exc, "html_result", None)
         if extraction_html_result is not None:
             result.browser_context_seed = (

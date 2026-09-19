@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from urllib.parse import urljoin
 from typing import Any
 
 from ..extraction.html.parsing import choose_parser
@@ -54,6 +55,24 @@ AMS_INLINE_MARKDOWN_TAGS = (
     "sup",
 )
 AMS_INLINE_SKIP_ANCESTOR_TAGS = {"math", "script", "style", "table"}
+
+
+def prepare_source_images(container: Any, source_url: str) -> None:
+    """Resolve AMS table image renditions before their Markdown fallback forms."""
+    for node in container.select(".tableWrap img, .tableWrap a[href]"):
+        for attr in (
+            "src",
+            "data-src",
+            "data-image-src",
+            "data-full-size",
+            "data-fullsize",
+            "data-image-full",
+            "data-download-url",
+            "href",
+        ):
+            value = str(node.get(attr) or "")
+            if value.startswith("/view/"):
+                node[attr] = urljoin(source_url, value)
 
 
 def ams_before_block_normalization(container: Any) -> None:

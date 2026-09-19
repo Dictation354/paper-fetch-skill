@@ -1,0 +1,59 @@
+{
+  "doi": "10.1029/2004gb002273",
+  "provider": "wiley",
+  "source_url": "https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2004GB002273",
+  "attempt": 1,
+  "transport": "Camoufox with configured provider state",
+  "capture_started_utc": "2026-09-16T06:25:49.834704+00:00",
+  "historical_records_unchanged": true,
+  "responses": [
+    {
+      "url": "https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2004GB002273",
+      "status_code": 302,
+      "body_error_type": "Error"
+    },
+    {
+      "url": "https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2004GB002273?cookieSet=1",
+      "status_code": 302,
+      "body_error_type": "Error"
+    },
+    {
+      "url": "https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2004GB002273",
+      "status_code": 302,
+      "body_error_type": "Error"
+    },
+    {
+      "url": "https://agupubs.onlinelibrary.wiley.com/action/oidcStart",
+      "status_code": 302,
+      "body_error_type": "Error"
+    },
+    {
+      "url": "https://wiley.scienceconnect.io/api/oauth/authorize",
+      "status_code": 302,
+      "body_error_type": "Error"
+    },
+    {
+      "url": "https://agupubs.onlinelibrary.wiley.com/action/oidcCallback",
+      "status_code": 302,
+      "body_error_type": "Error"
+    },
+    {
+      "url": "https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2004GB002273",
+      "status_code": 200,
+      "record": "acquisition/known-gaps-2026-09-16/001-http_response_entity.bin"
+    }
+  ],
+  "dom_file": "acquisition/known-gaps-2026-09-16/000-browser_rendered_dom.html",
+  "final_url": "https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2004GB002273",
+  "title": "Terrestrial mechanisms of interannual CO2 variability - Zeng - 2005 - Global Biogeochemical Cycles - Wiley Online Library",
+  "observed_doi": "10.1029/2004gb002273",
+  "confirmed_paywall": false,
+  "paywall_diagnostics": {},
+  "challenge": false,
+  "formula_node": "<div class=\"inline-equation\" id=\"gbc1137-disp-0001\"><span class=\"inline-equation__construct\"><img alt=\"urn:x-wiley:08866236:media:gbc1137:gbc1137-math-0001\" class=\"\" loading=\"lazy\" src=\"/cms/asset/34efb858-9f37-465e-95e0-1a1a4ab00ca7/gbc1137-math-0001.gif\" title=\"urn:x-wiley:08866236:media:gbc1137:gbc1137-math-0001\"/></span><span class=\"inline-equation__label\"></span></div>",
+  "formula_resource_links": [
+    "/cms/asset/34efb858-9f37-465e-95e0-1a1a4ab00ca7/gbc1137-math-0001.gif"
+  ],
+  "stop_reason": "single_observation_completed",
+  "url_redaction_note": "OAuth/OIDC redirect query values omitted; navigation status retained."
+}

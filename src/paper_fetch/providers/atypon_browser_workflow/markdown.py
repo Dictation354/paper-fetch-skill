@@ -58,6 +58,7 @@ def extract_browser_workflow_markdown(
     soup = BeautifulSoup(html_text, choose_parser())
     title = extract_page_title(soup)
     title = _preferred_title_from_metadata(title, metadata)
+    title = " ".join((title or "").split())
     container_policy = _container_selection_policy(publisher)
     container = select_best_container(soup, publisher, policy=container_policy)
     if container is None:
@@ -74,6 +75,8 @@ def extract_browser_workflow_markdown(
     from ...extraction.html.assets import extract_figure_assets
 
     profile = _publisher_profile(publisher)
+    if profile.prepare_source_images is not None:
+        profile.prepare_source_images(container, source_url)
     asset_container = _clone_container(container)
     _normalize_abstract_blocks(asset_container)
     hook = profile.dom_hooks.asset_figure_extraction

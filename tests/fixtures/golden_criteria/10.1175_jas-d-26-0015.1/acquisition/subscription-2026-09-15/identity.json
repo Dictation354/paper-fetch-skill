@@ -1,0 +1,16 @@
+{
+  "query": "10.1175/jas-d-26-0015.1",
+  "query_kind": "doi",
+  "doi": "10.1175/jas-d-26-0015.1",
+  "landing_url": null,
+  "provider_hint": "ams",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 4,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "ams"
+}

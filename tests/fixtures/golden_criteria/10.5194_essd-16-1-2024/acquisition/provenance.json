@@ -1,0 +1,64 @@
+{
+  "records": [
+    {
+      "doi": "10.5194/essd-16-1-2024",
+      "provider": "copernicus",
+      "requested_url": "https://api.crossref.org/works/10.5194%2Fessd-16-1-2024",
+      "final_url": "https://api.crossref.org/works/10.5194%2Fessd-16-1-2024",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:17 GMT",
+        "content-type": "application/json",
+        "content-length": "7618"
+      },
+      "captured_at_utc": "2026-09-18T02:21:16.871213+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 23574,
+      "sha256": "3d71683fde46b7fb525c3543e88ecf8099a658ae70c90b6facd8efeee081a05c",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.5194/essd-16-1-2024",
+      "provider": "copernicus",
+      "requested_url": "https://essd.copernicus.org/articles/16/1/2024/",
+      "final_url": "https://essd.copernicus.org/articles/16/1/2024/",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:18 GMT",
+        "content-length": "51521",
+        "content-type": "text/html"
+      },
+      "captured_at_utc": "2026-09-18T02:21:18.476521+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "size": 275570,
+      "sha256": "bb8deea65879f18924b3b6e3723311708286cdcee6fce6c6c9f0767a20b95e0f",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.5194/essd-16-1-2024",
+      "provider": "copernicus",
+      "requested_url": "https://essd.copernicus.org/articles/16/1/2024/essd-16-1-2024.xml",
+      "final_url": "https://essd.copernicus.org/articles/16/1/2024/essd-16-1-2024.xml",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:19 GMT",
+        "last-modified": "Mon, 24 Feb 2025 23:24:32 GMT",
+        "etag": "\"1f790-62eeba4842b69-gzip\"",
+        "content-length": "25420",
+        "content-type": "application/xml"
+      },
+      "captured_at_utc": "2026-09-18T02:21:18.836597+00:00",
+      "body_file": "original.xml",
+      "size": 128912,
+      "sha256": "4eb51aa3374ded3375d17c99f8cc526d7edbc18fe76cadca04341f31d816af59",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes",
+      "original_body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.xml"
+    }
+  ]
+}

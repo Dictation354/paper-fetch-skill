@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall
+
 import urllib.parse
 import math
 from typing import Any
@@ -370,6 +372,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                     context=context,
                 )
             except PdfFallbackFailure as exc:
+                propagate_paywall(exc)
                 raise ProviderFailure(
                     NO_RESULT,
                     exc.message,
@@ -433,6 +436,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                 return self.deps.fetch_seeded_browser_pdf_payload(
                     provider=self.name,
                     doi=bootstrap.normalized_doi,
+                    expected_title=metadata.get("title"),
                     runtime=bootstrap.runtime,
                     pdf_candidates=bootstrap.pdf_candidates,
                     html_candidates=bootstrap.html_candidates,
@@ -452,7 +456,20 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                     deps=self.deps,
                 )
             except PdfFallbackFailure as exc:
-                raise ProviderFailure(NO_RESULT, exc.message) from exc
+                propagate_paywall(exc)
+                raise ProviderFailure(
+                    NO_RESULT,
+                    exc.message,
+                    trace=[
+                        trace_event(
+                            "fulltext",
+                            "wiley_pdf_transport",
+                            "fail",
+                            code=exc.kind,
+                            message=exc.message,
+                        )
+                    ],
+                ) from exc
 
         def browser_failure_warning(
             failure: ProviderFailure, _state: ProviderWaterfallState
@@ -598,6 +615,7 @@ PROVIDER_BUNDLE = ProviderBundle(
             container_tokens=WILEY_FORMULA_CONTAINER_TOKENS,
         ),
         availability=AvailabilityPolicy(
+            paywall_entitlement_signals=("wiley_access_no",),
             name="wiley",
             site_rule_overrides=WILEY_SITE_RULE_OVERRIDES,
             datalayer_signal_set=WILEY_SIGNAL_SET,

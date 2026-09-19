@@ -142,10 +142,17 @@ def paragraph_mentions_table(text: str, heading: str) -> bool:
     if not token:
         return False
     pattern = re.compile(
-        rf"\btab(?:le)?\.?\s*{re.escape(token)}(?:[a-z](?!\w))?",
+        rf"\btab(?:le)?\.?\s*{re.escape(token)}(?:[a-z])?(?!\w)",
         flags=re.IGNORECASE,
     )
-    return bool(pattern.search(text))
+    for match in pattern.finditer(text):
+        # A main-table fallback must not consume an appendix/supplement callout.
+        if re.search(r"(?:supplementary|appendix)\s*$", text[: match.start()], re.I):
+            continue
+        if re.match(r"\s+(?:of|in)\s+(?:the\s+)?appendix\b", text[match.end() :], re.I):
+            continue
+        return True
+    return False
 
 
 def should_render_elsevier_table_entry(

@@ -1,7 +1,6 @@
-# ruff: noqa: F403,F405
 from __future__ import annotations
-
-from ._service_support import *
+from tests.support._service_support import *
+# ruff: noqa: F403,F405
 
 
 class ServicePdfAndProviderFallbackTests(unittest.TestCase):
@@ -275,7 +274,7 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
             )
         )
 
-    def test_wiley_pdf_fallback_markdown_creates_multiple_sections_with_heading_priority(
+    def test_wiley_pdf_fallback_markdown_remains_one_opaque_section(
         self,
     ) -> None:
         article = WileyClient(HttpTransport(), {}).to_article_model(
@@ -307,15 +306,13 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
             ),
         )
 
-        headings = [section.heading for section in article.sections]
-        self.assertIn("Introduction", headings)
-        self.assertIn("Methods", headings)
-        self.assertIn("Results", headings)
-
-        truncated_markdown = article.to_ai_markdown(max_tokens=500)
-        self.assertIn("## Introduction", truncated_markdown)
-        self.assertIn("## Methods", truncated_markdown)
-        self.assertNotIn("## Discussion", truncated_markdown)
+        self.assertEqual(len(article.sections), 1)
+        self.assertEqual(article.sections[0].heading, "")
+        self.assertIn("# Wiley PDF Article", article.sections[0].text)
+        self.assertIn(article.sections[0].text, article.to_ai_markdown())
+        self.assertLess(
+            len(article.to_ai_markdown(max_tokens=500)), len(article.to_ai_markdown())
+        )
 
     def test_binary_downloads_follow_payload_semantics_not_provider_name(self) -> None:
         resolved = paper_fetch.ResolvedQuery(

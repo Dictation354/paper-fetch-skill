@@ -1,0 +1,224 @@
+{
+  "doi": "10.1088/1681-7575/ae1dfc",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Thomas_et_al_2025_Calibration_of_two_mass_standards_with_the_LNE_Kibble_balance_in_2024.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/outputs/b998e697562f-Thomas_et_al_2025_Calibration_of_two_mass_standards_with_the_LNE_Kibble_balance_in_2024.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "b998e697562f8a43a0c5293beb0f7c8dc6a5f125211b736da82ebac93f2ce75c",
+      "size": 99724
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Thomas_et_al_2025_Calibration_of_two_mass_standards_with_the_LNE_Kibble_balance_in_2024.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/outputs/b6545b74f081-Thomas_et_al_2025_Calibration_of_two_mass_standards_with_the_LNE_Kibble_balance_in_2024.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "b6545b74f08127f915d1021c217c385901c36bc7be12c12a17d7a26cfae700d9",
+      "size": 56946
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1681-7575_ae1dfc_assets/metae1dfcf1_hr.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/assets/9049d74a185b-metae1dfcf1_hr.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "9049d74a185b5231c5d597c3dc2f703ee7a7a0f4bd9cd64af5f5d8cdff77aef1",
+      "size": 227170
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1681-7575_ae1dfc_assets/metae1dfcf2_hr.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/assets/f93798ad8a0a-metae1dfcf2_hr.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "f93798ad8a0adca2fab5551c384661140696ff7b7e9a877b523d12d8f16f1b1f",
+      "size": 104049
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1681-7575_ae1dfc_assets/metae1dfcf3_hr.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/assets/56f0b4139f65-metae1dfcf3_hr.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "56f0b4139f654175173593a856747e2aed6f8113fa0258e30f6ee048b3fdad02",
+      "size": 151649
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1681-7575_ae1dfc_assets/metae1dfcf4_hr.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/assets/f057e04943f3-metae1dfcf4_hr.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "f057e04943f3c0ec69c685456bf58dcd2b6d7e73e5bf0249ca0cb4d540fd7ace",
+      "size": 107177
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1681-7575_ae1dfc_assets/metae1dfcf5_hr.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/assets/a00e2f1f5540-metae1dfcf5_hr.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "a00e2f1f5540d7f689d956f517a10655b91d69694088f1ad8363c5f4f73b7b87",
+      "size": 103284
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1681-7575_ae1dfc_assets/metae1dfcf6_hr.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/assets/9f7bceb581e1-metae1dfcf6_hr.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "9f7bceb581e14b25ed13005c7c2d8582c97a4bb1bf532f59d9b021fc31b00d1b",
+      "size": 95739
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1681-7575_ae1dfc_assets/metae1dfcf7_hr.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/assets/ad803a6b315b-metae1dfcf7_hr.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "ad803a6b315ba15c6c7911e37e9f9e0d52e34181356a284e8887699a95eb85f3",
+      "size": 101836
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1681-7575_ae1dfc_assets/metae1dfcf8_hr.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/assets/c368169638db-metae1dfcf8_hr.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "c368169638dbbbf58e75b61ba163b5416d21b59a001ebfc528d592bb05be717d",
+      "size": 78511
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1681-7575_ae1dfc_assets/metae1dfcf9_hr.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/assets/7d25d10e1d2c-metae1dfcf9_hr.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "7d25d10e1d2c20fc1798b1bd70b354b543ed83f03f203b33803f6abb6132703c",
+      "size": 83392
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1681-7575_ae1dfc_assets/metae1dfcf10_hr.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/assets/e3b56b2b5ec5-metae1dfcf10_hr.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "e3b56b2b5ec5dc19eca02204db5ea2bba49227f81fa6b8e3905305675c3baa57",
+      "size": 106390
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_1681-7575_ae1dfc_assets/metae1dfcf11_hr.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/assets/5f25640d2669-metae1dfcf11_hr.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "5f25640d266951b2b326c6555151b817108bc20b9136a985c3921716d41d824c",
+      "size": 118621
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "complete",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1088/1681-7575/ae1dfc",
+      "expected_doi": "10.1088/1681-7575/ae1dfc",
+      "title": "Calibration of two mass standards with the LNE Kibble balance in 2024",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 12749,
+      "confidence": "high",
+      "flags": [],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 11,
+      "attempted": 11,
+      "total": 11,
+      "local": 11,
+      "full_size": 11,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 11,
+      "remote_only_count": 0,
+      "body_discovered": 11,
+      "body_attempted": 11,
+      "body_local": 11,
+      "body_full_size": 11,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "complete",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "iop_html",
+      "acquisition": {
+        "provider": "iop",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "trace_event_count": 15,
+      "fallback_codes": [],
+      "warning_codes": [],
+      "failure_codes": [],
+      "unstructured_warning_count": 1,
+      "acceptance_policy": "provider_html_body",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

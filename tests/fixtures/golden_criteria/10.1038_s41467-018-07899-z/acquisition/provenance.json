@@ -1,0 +1,23 @@
+{
+  "records": [
+    {
+      "doi": "10.1038/s41467-018-07899-z",
+      "provider": "springer",
+      "requested_url": "https://www.nature.com/articles/s41467-018-07899-z",
+      "final_url": "https://www.nature.com/articles/s41467-018-07899-z?error=cookies_not_supported&code=5a14aace-9bb7-49d4-954c-7f3169d2b934",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html; charset=utf-8",
+        "server": "Oscar Platform 0.2423.0",
+        "date": "Wed, 16 Sep 2026 10:13:07 GMT"
+      },
+      "captured_at_utc": "2026-09-16T10:13:00.844462+00:00",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "body_file": "acquisition/requested-templates-2026-09-16/article-response.html",
+      "size": 503504,
+      "sha256": "41381a36d4fa210133ac74a36e8dc1e922eb449c4b400db914b55e6e46fac157",
+      "error": null
+    }
+  ]
+}

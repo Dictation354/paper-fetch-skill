@@ -1,0 +1,2822 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    <!-- charset must appear in the first 1024 bytes of the document -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy | Journal of the American Chemical Society | ACS Publications</title>
+        
+        
+
+
+
+<script async="" type="text/javascript" src="https://snap.licdn.com/li.lms-analytics/insight.min.js"></script><script async="" src="https://buttons-config.sharethis.com/js/68c9635c082c40fa02feea94.js"></script><script async="" src="https://www.clarity.ms/tag/wjbwha4hzw"></script><script async="" src="https://s.adroll.com/j/3LBZJ4KXKBF2PJ46QCMT3X/roundtrip.js"></script><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-5DJPTSH7"></script><script async="" src="https://www.datadoghq-browser-agent.com/us1/v6/datadog-rum.js"></script><script src="https://cmp.osano.com/16BPzAUFV1UoQ26HU/10002854-e376-4b5a-919a-0dd3ef22c9ed/osano.js"></script>
+        
+
+
+
+
+
+<script type="text/javascript" src="https://pubsbc.acs.org/script.js" async=""></script>
+
+
+
+
+<script>
+  (function(h,o,u,n,d) {
+    h=h[d]=h[d]||{q:[],onReady:function(c){h.q.push(c)}}
+    d=o.createElement(u);d.async=1;d.src=n
+    n=o.getElementsByTagName(u)[0];n.parentNode.insertBefore(d,n)
+  })(window,document,'script','https://www.datadoghq-browser-agent.com/us1/v6/datadog-rum.js','DD_RUM')
+  window.DD_RUM.onReady(function() {
+    window.DD_RUM.init({
+      clientToken: 'pub8faceb9e0694382453a68b735ff19f9f',
+      applicationId: 'b421d5df-4118-4ed7-839d-844e3a1df6d9',
+      site: 'datadoghq.com',
+      service: 'silverchair-prod',
+      env: 'prod',
+      sessionSampleRate: 1,
+      sessionReplaySampleRate: 1,
+      trackBfcacheViews: true,
+      defaultPrivacyLevel: 'mask-user-input',
+    });
+  })
+</script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" type="text/javascript"></script>
+<script>window.jQuery || document.write('<script src="//acs.silverchair-cdn.com/Themes/Silver/app/js/jquery.3.4.1.min.js" type="text/javascript">\x3C/script>')</script>
+<script src="//acs.silverchair-cdn.com/Themes/Silver/app/vendor/v-639223368734145355/jquery-migrate-3.1.0.min.js" type="text/javascript"></script>
+
+    <script async="async" src="https://platform-api.sharethis.com/js/sharethis.js#property=68c9635c082c40fa02feea94&amp;product=sop" type="text/javascript"></script>
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=10">
+
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <!-- Turn off telephone number detection. -->
+    <meta name="format-detection" content="telephone=no">
+    
+<!-- Bookmark Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="//acs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223361590723903/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="//acs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223361590823802/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" href="//acs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223361591234751/favicon.ico" sizes="32x32">
+  <link rel="icon" type="image/svg+xml" href="//acs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223361591284747/favicon.svg">
+  <link rel="manifest" href="//acs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223361591708997/site.webmanifest">
+  <meta name="apple-mobile-web-app-title" content="ACS">
+  <meta name="theme-color" content="#002f65">
+
+
+    
+
+
+  <link rel="stylesheet" type="text/css" href="//acs.silverchair-cdn.com/Themes/Client/app/css/v-639237259186283848/site.min.css">
+  <link rel="stylesheet" type="text/css" href="//acs.silverchair-cdn.com/Themes/Silver/app/icons/v-639223368479395161/style.css">
+  <link rel="stylesheet" type="text/css" href="//acs.silverchair-cdn.com/Themes/Client/app/css/v-639223361584294469/bg_img.css">
+      <link rel="stylesheet" type="text/css" href="//acs.silverchair-cdn.com/Themes/Client/app/css/icons-custom/v-639223361586803694/style.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+
+<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Libertinus+Math&amp;family=Libertinus+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&amp;display=swap" rel="stylesheet">
+
+
+
+
+            <link href="//acs.silverchair-cdn.com/data/SiteBuilderAssets/Live/CSS/jacsat/v-639205109784712981/site.css" rel="stylesheet" type="text/css">
+
+            <script>
+                (function (w, d, s, l, i) {
+                    w[l] = w[l] || []; w[l].push({
+                        'gtm.start':
+                            new Date().getTime(), event: 'gtm.js'
+                    }); var f = d.getElementsByTagName(s)[0],
+                        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+                        j.setAttribute('type', 'text/javascript');
+                        j.async = true; j.src =
+                        'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+                })(window, document, 'script', 'dataLayer', 'GTM-5DJPTSH7');
+            </script>
+
+    
+
+        <script type="text/javascript">
+            var App = App || {};
+            App.LoginUserInfo = {
+                isInstLoggedIn: 0,
+                isIndividualLoggedIn: 0
+            };
+
+            App.CurrentSubdomain = 'jacsat';
+            App.SiteURL = 'pubs.acs.org/jacsat';
+            App.EnableAdobeAnalytics = false;
+        </script>
+    
+    
+    
+    <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+
+    <meta name="citation_author" content="Wang, Xiao-Ting"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author" content="Wan, Jin-Long"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author" content="Zhong, Han-Liang"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author" content="Wang, Yao-Hui"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author" content="Zhang, Xin-Yue"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author" content="Peng, Zeyu"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author" content="Hu, Ling-Yun"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author" content="A, Yao-Lin"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author" content="Cheng, Shimiao"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author" content="Yang, Shuliang"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author" content="Zhang, Hua"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author" content="Yu, Jia"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author" content="Li, Jian-Feng"><meta name="citation_author_institution" content="College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment, Xiamen University, Xiamen361005, China"><meta name="citation_author_institution" content="Innovation Laboratory for Sciences and Technologies of Energy Materials of Fujian Province (IKKEM), Xiamen361005, China"><meta name="citation_author_institution" content="College of Chemistry, Chemical Engineering and Environment, Minnan Normal University, Zhangzhou363000, China"><meta name="citation_title" content="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy"><meta name="citation_doi" content="10.1021/jacs.6c10062"><meta name="citation_journal_title" content="Journal of the American Chemical Society"><meta name="citation_journal_abbrev" content="Journal American Chemical Society"><meta name="citation_reference" content="citation_title=2D graphdiyne: an emerging carbon material; citation_author=Fang  Y.; citation_author=Liu  Y.; citation_author=Qi  L.; citation_author=Xue  Y.; citation_author=Li  Y.;  citation_journal_title=Chem. Soc. Rev.;  citation_year=2022;  citation_volume=51;  citation_pages=2681-2709; "><meta name="citation_reference" content="citation_title=Efficient storage mechanisms for building better supercapacitors; citation_author=Salanne  M.; citation_author=Rotenberg  B.; citation_author=Naoi  K.; citation_author=Kaneko  K.; citation_author=Taberna  P. L.; citation_author=Grey  C. P.; citation_author=Dunn  B.; citation_author=Simon  P.;  citation_journal_title=Nat. Energy;  citation_year=2016;  citation_volume=1; "><meta name="citation_reference" content="citation_title=Impermeable Atomic Membranes from Graphene Sheets; citation_author=Bunch  J. S.; citation_author=Verbridge  S. S.; citation_author=Alden  J. S.; citation_author=van der Zande  A. M.; citation_author=Parpia  J. M.; citation_author=Craighead  H. G.; citation_author=McEuen  P. L.;  citation_journal_title=Nano Lett.;  citation_year=2008;  citation_volume=8;  citation_pages=2458-2462; "><meta name="citation_reference" content="citation_title=Understanding the interfacial water structure in electrocatalysis; citation_author=Shi  G.; citation_author=Lu  T.; citation_author=Zhang  L.;  citation_journal_title=Natl. Sci. Rev.;  citation_year=2024;  citation_volume=11; "><meta name="citation_reference" content="citation_title=The Electrochemical Double Layer at the Graphene/Aqueous Electrolyte Interface: What We Can Learn from Simulations, Experiments, and Theory; citation_author=Elliott  J. D.; citation_author=Papaderakis  A. A.; citation_author=Dryfe  R. A. W.; citation_author=Carbone  P.;  citation_journal_title=J. Mater. Chem. C;  citation_year=2022;  citation_volume=10;  citation_pages=15201-15227; "><meta name="citation_reference" content="citation_title=Graphdiyne Electrochemistry: Progress and Perspectives; citation_author=Chen  X.; citation_author=Jiang  X.; citation_author=Yang  N.;  citation_journal_title=Small;  citation_year=2022;  citation_volume=18; "><meta name="citation_reference" content="citation_title=Graphdiyne: The Emerging Energy Conversion Material; citation_author=Fu  X.; citation_author=Huang  C.; citation_author=Wang  Y.; citation_author=Gao  J.; citation_author=Wu  R.; citation_author=Zhang  Z.; citation_author=Yang  J.; citation_author=Chang  Q.; citation_author=Li  Y.;  citation_journal_title=Adv. Funct. Mater.;  citation_year=2025;  citation_volume=35; "><meta name="citation_reference" content="citation_title=Self-Expanding Ion-Transport Channels on Anodes for Fast-Charging Lithium-Ion Batteries; citation_author=An  J.; citation_author=Zhang  H.; citation_author=Qi  L.; citation_author=Li  G.; citation_author=Li  Y.;  citation_journal_title=Angew. Chem., Int. Ed.;  citation_year=2022;  citation_volume=61; "><meta name="citation_reference" content="citation_title=Graphdiyne/Graphene/Graphdiyne Sandwiched Carbonaceous Anode for Potassium-Ion Batteries; citation_author=Li  J.; citation_author=Yi  Y.; citation_author=Zuo  X.; citation_author=Hu  B.; citation_author=Xiao  Z.; citation_author=Lian  R.; citation_author=Kong  Y.; citation_author=Tong  L.; citation_author=Shao  R.; citation_author=Sun  J.; citation_author=Zhang  J.;  citation_journal_title=ACS Nano;  citation_year=2022;  citation_volume=16;  citation_pages=3163-3172; "><meta name="citation_reference" content="citation_title=Synthesis of two-dimensional ordered graphdiyne membranes for highly efficient and selective water transport; citation_author=Li  J.; citation_author=Zhou  K.; citation_author=Liu  Q.; citation_author=Tian  B.; citation_author=Liu  X.; citation_author=Cao  L.; citation_author=Cao  H.; citation_author=Li  G.; citation_author=Zhang  X.; citation_author=Han  Y.; citation_author=Lai  Z.;  citation_journal_title=Nat. Water;  citation_year=2025;  citation_volume=3;  citation_pages=307-318; "><meta name="citation_reference" content="citation_title=Cation Modifies Interfacial Water Structures on Platinum during Alkaline Hydrogen Electrocatalysis; citation_author=Xu  P.; citation_author=Wang  R.; citation_author=Zhang  H.; citation_author=Carnevale  V.; citation_author=Borguet  E.; citation_author=Suntivich  J.;  citation_journal_title=J. Am. Chem. Soc.;  citation_year=2024;  citation_volume=146;  citation_pages=2426-2434; "><meta name="citation_reference" content="citation_title=Effect of Ion-Specific Water Structures at Metal Surfaces on Hydrogen Production; citation_author=Tian  Y.; citation_author=Huang  B.; citation_author=Song  Y.; citation_author=Zhang  Y.; citation_author=Guan  D.; citation_author=Hong  J.; citation_author=Cao  D.; citation_author=Wang  E.; citation_author=Xu  L.; citation_author=Shao-Horn  Y.; citation_author=Jiang  Y.;  citation_journal_title=Nat. Commun.;  citation_year=2024;  citation_volume=15; "><meta name="citation_reference" content="citation_title=In Situ Probing Electrified Interfacial Water Structures at Atomically Flat Surfaces; citation_author=Li  C.-Y.; citation_author=Le  J.-B.; citation_author=Wang  Y.-H.; citation_author=Chen  S.; citation_author=Yang  Z.-L.; citation_author=Li  J.-F.; citation_author=Cheng  J.; citation_author=Tian  Z.-Q.;  citation_journal_title=Nat. Mater.;  citation_year=2019;  citation_volume=18;  citation_pages=697-701; "><meta name="citation_reference" content="citation_title=In situ Raman spectroscopy reveals the structure and dissociation of interfacial water; citation_author=Wang  Y. H.; citation_author=Zheng  S.; citation_author=Yang  W. M.; citation_author=Zhou  R. Y.; citation_author=He  Q. F.; citation_author=Radjenovic  P.; citation_author=Dong  J. C.; citation_author=Li  S.; citation_author=Zheng  J.; citation_author=Yang  Z. L.; citation_author=Attard  G.; citation_author=Pan  F.; citation_author=Tian  Z. Q.; citation_author=Li  J. F.;  citation_journal_title=Nature;  citation_year=2021;  citation_volume=600;  citation_pages=81-85; "><meta name="citation_reference" content="citation_title=Architecture of graphdiyne nanoscale films; citation_author=Li  G.; citation_author=Li  Y.; citation_author=Liu  H.; citation_author=Guo  Y.; citation_author=Li  Y.; citation_author=Zhu  D.;  citation_journal_title=Chem. Commun.;  citation_year=2010;  citation_volume=46;  citation_pages=3256-3258; "><meta name="citation_reference" content="citation_title=Crystalline Graphdiyne Nanosheets Produced at a Gas/Liquid or Liquid/Liquid Interface; citation_author=Matsuoka  R.; citation_author=Sakamoto  R.; citation_author=Hoshiko  K.; citation_author=Sasaki  S.; citation_author=Masunaga  H.; citation_author=Nagashio  K.; citation_author=Nishihara  H.;  citation_journal_title=J. Am. Chem. Soc.;  citation_year=2017;  citation_volume=139;  citation_pages=3145-3152; "><meta name="citation_reference" content="citation_title=Structural Characterization and Identification of Graphdiyne and Graphdiyne-Based Materials; citation_author=Bao  H.; citation_author=Wang  L.; citation_author=Li  C.; citation_author=Luo  J.;  citation_journal_title=ACS Appl. Mater. Interfaces;  citation_year=2019;  citation_volume=11;  citation_pages=2717-2729; "><meta name="citation_reference" content="citation_title=Characterizing surface-confined interfacial water at graphene surface by in situ Raman spectroscopy; citation_author=Wang  Y.-H.; citation_author=Jin  X.; citation_author=Xue  M.; citation_author=Cao  M.-F.; citation_author=Xu  F.; citation_author=Lin  G.-X.; citation_author=Le  J.-B.; citation_author=Yang  W.-M.; citation_author=Yang  Z.-L.; citation_author=Cao  Y.; citation_author=Zhou  Y.; citation_author=Cai  W.; citation_author=Zhang  Z.; citation_author=Cheng  J.; citation_author=Guo  W.; citation_author=Li  J.-F.;  citation_journal_title=Joule;  citation_year=2023;  citation_volume=7;  citation_pages=1652-1662; "><meta name="citation_reference" content="citation_title=Insights into Electrocatalysis through In Situ Electrochemical Surface-Enhanced Raman Spectroscopy; citation_author=Lin  X.-M.; citation_author=Sun  Y.-L.; citation_author=Chen  Y.-X.; citation_author=Li  S.-X.; citation_author=Li  J.-F.;  citation_journal_title=eScience;  citation_year=2025;  citation_volume=5; "><meta name="citation_reference" content="citation_title=Applications of Surface-Enhanced Raman Spectroscopy in Mechanistic Studies of Fuel Cells and Lithium Batteries; citation_author=Yang  Z.-L.; citation_author=Zhu  Y.-Z.; citation_author=Zhang  Y.-J.; citation_author=Li  J.-F.;  citation_journal_title=Chin. J. Light Scatt.;  citation_year=2023;  citation_volume=35;  citation_pages=97-107; "><meta name="citation_reference" content="citation_title=Unraveling the Energy Storage Mechanism in Graphene-Based Nonaqueous Electrochemical Capacitors by Gap-Enhanced Raman Spectroscopy; citation_author=Yin  X.-T.; citation_author=You  E.-M.; citation_author=Zhou  R.-Y.; citation_author=Zhu  L.-H.; citation_author=Wang  W.-W.; citation_author=Li  K.-X.; citation_author=Wu  D.-Y.; citation_author=Gu  Y.; citation_author=Li  J.-F.; citation_author=Mao  B.-W.; citation_author=Yan  J.-W.;  citation_journal_title=Nat. Commun.;  citation_year=2024;  citation_volume=15; "><meta name="citation_reference" content="citation_title=Shell-isolated nanoparticle-enhanced Raman spectroscopy; citation_author=Li  J.-F.; citation_author=Huang  Y.-F.; citation_author=Ding  Y.; citation_author=Yang  Z. L.; citation_author=Li  S. B.; citation_author=Zhou  X. S.; citation_author=Fan  F. R.; citation_author=Zhang  W.; citation_author=Zhou  Z. Y.; citation_author=Wu  D. Y.; citation_author=Ren  B.; citation_author=Wang  Z. L.; citation_author=Tian  Z.-Q.;  citation_journal_title=Nature;  citation_year=2010;  citation_volume=464;  citation_pages=392-395; "><meta name="citation_reference" content="citation_title=Nanostructure-based plasmon-enhanced Raman spectroscopy for surface analysis of materials; citation_author=Ding  S. Y.; citation_author=Yi  J.; citation_author=Li  J.-F.; citation_author=Ren  B.; citation_author=Wu  D.-Y.; citation_author=Panneerselvam  R.; citation_author=Tian  Z.-Q.;  citation_journal_title=Nat. Rev. Mater.;  citation_year=2016;  citation_volume=1; "><meta name="citation_reference" content="citation_title=Synthesis of wafer-scale ultrathin graphdiyne for flexible optoelectronic memory with over 256 storage levels; citation_author=Li  J.; citation_author=Zhang  Z.; citation_author=Kong  Y.; citation_author=Yao  B.; citation_author=Yin  C.; citation_author=Tong  L.; citation_author=Chen  X.; citation_author=Lu  T.; citation_author=Zhang  J.;  citation_journal_title=Chem;  citation_year=2021;  citation_volume=7;  citation_pages=1284-1296; "><meta name="citation_reference" content="citation_title=Electrochemical Oxidative Cross-coupling with Hydrogen Evolution: A Green and Sustainable Way for Bond Formation; citation_author=Tang  S.; citation_author=Liu  Y.; citation_author=Lei  A.;  citation_journal_title=Chem;  citation_year=2018;  citation_volume=4;  citation_pages=27-45; "><meta name="citation_reference" content="citation_title=Controllable Synthesis of Two-Dimensional Graphdiyne Films Catalyzed by a Copper (II) Trichloro Complex; citation_author=Hu  G.; citation_author=He  J.; citation_author=Li  Y.;  citation_journal_title=ACS Catal.;  citation_year=2022;  citation_volume=12;  citation_pages=6712-6721; "><meta name="citation_reference" content="citation_title=Electrochemically roughened gold microelectrode for surface-enhanced Raman spectroscopy; citation_author=Wang  W.; citation_author=Huang  Y.-F.; citation_author=Liu  D.-Y.; citation_author=Wang  F.-F.; citation_author=Tian  Z.-Q.; citation_author=Zhan  D.;  citation_journal_title=J. Electroanal. Chem.;  citation_year=2016;  citation_volume=779;  citation_pages=126-130; "><meta name="citation_reference" content="citation_title=Progress in Research into 2D Graphdiyne-Based Materials; citation_author=Huang  C.; citation_author=Li  Y.; citation_author=Wang  N.; citation_author=Xue  Y.; citation_author=Zuo  Z.; citation_author=Liu  H.; citation_author=Li  Y.;  citation_journal_title=Chem. Rev.;  citation_year=2018;  citation_volume=118;  citation_pages=7744-7803; "><meta name="citation_reference" content="citation_title=Raman Spectra and Corresponding Strain Effects in Graphyne and Graphdiyne; citation_author=Zhang  S.; citation_author=Wang  J.; citation_author=Li  Z.; citation_author=Zhao  R.; citation_author=Tong  L.; citation_author=Liu  Z.; citation_author=Zhang  J.; citation_author=Liu  Z.;  citation_journal_title=J. Phys. Chem. C;  citation_year=2016;  citation_volume=120;  citation_pages=10605-10613; "><meta name="citation_reference" content="citation_title=Breakdown of the Adiabatic Born–Oppenheimer Approximation in Graphene; citation_author=Pisana  S.; citation_author=Lazzeri  M.; citation_author=Casiraghi  C.; citation_author=Novoselov  K. S.; citation_author=Geim  A. K.; citation_author=Ferrari  A. C.; citation_author=Mauri  F.;  citation_journal_title=Nat. Mater.;  citation_year=2007;  citation_volume=6;  citation_pages=198-201; "><meta name="citation_reference" content="citation_title=Monitoring Dopants by Raman Scattering in an Electrochemically Top-Gated Graphene Transistor; citation_author=Das  A.; citation_author=Pisana  S.; citation_author=Chakraborty  B.; citation_author=Piscanec  S.; citation_author=Saha  S. K.; citation_author=Waghmare  U. V.; citation_author=Novoselov  K. S.; citation_author=Krishnamurthy  H. R.; citation_author=Geim  A. K.; citation_author=Ferrari  A. C.; citation_author=Sood  A. K.;  citation_journal_title=Nat. Nanotechnol.;  citation_year=2008;  citation_volume=3;  citation_pages=210-215; "><meta name="citation_reference" content="citation_title=Inhomogeneity of Interfacial Electric Fields at Vibrational Probes on Electrode Surfaces; citation_author=Goldsmith  Z. K.; citation_author=Secor  M.; citation_author=Hammes-Schiffer  S.;  citation_journal_title=ACS Cent. Sci.;  citation_year=2020;  citation_volume=6;  citation_pages=304-311; "><meta name="citation_reference" content="citation_title=The Solvation-Induced Onsager Reaction Field Rather than the Double-Layer Field Controls CO2 Reduction on Gold; citation_author=Zhu  Q.; citation_author=Wallentine  S. K.; citation_author=Deng  G.-H.; citation_author=Rebstock  J. A.; citation_author=Baker  L. R.;  citation_journal_title=JACS Au;  citation_year=2022;  citation_volume=2;  citation_pages=472-482; "><meta name="citation_reference" content="citation_title=Comparing Interfacial Cation Hydration at Catalytic Active Sites and Spectator Sites on Gold Electrodes: Understanding Structure-Sensitive CO2 Reduction Kinetics; citation_author=Rebstock  J. A.; citation_author=Zhu  Q.; citation_author=Baker  L. R.;  citation_journal_title=Chem. Sci.;  citation_year=2022;  citation_volume=13;  citation_pages=7634-7643; "><meta name="citation_reference" content="citation_title=Electrochemically Driven Specific Alkaline Metal Cation Adsorption on a Graphene Interface; citation_author=Yasuda  S.; citation_author=Tamura  K.; citation_author=Kato  M.; citation_author=Asaoka  H.; citation_author=Yagi  I.;  citation_journal_title=J. Phys. Chem. C;  citation_year=2021;  citation_volume=125;  citation_pages=22154-22162; "><meta name="citation_reference" content="citation_title=Specific Ion Effects at Graphitic Interfaces; citation_author=Zhan  C.; citation_author=Cerón  M. R.; citation_author=Campbell  P. G.; citation_author=Pham  T. A.; citation_author=Otani  M.; citation_author=Wood  B. C.; citation_author=Biener  J.; citation_author=Kucheyev  S. O.; citation_author=Wang  Y. M.;  citation_journal_title=Nat. Commun.;  citation_year=2019;  citation_volume=10; "><meta name="citation_reference" content="citation_title=Vibrational Stark Effects of Nitriles I. Methods and Experimental Results; citation_author=Andrews  S. S.; citation_author=Boxer  S. G.;  citation_journal_title=J. Phys. Chem. A;  citation_year=2000;  citation_volume=104;  citation_pages=11853-11863; "><meta name="citation_reference" content="citation_title=Measuring electric fields and noncovalent interactions using the vibrational stark effect; citation_author=Fried  S. D.; citation_author=Boxer  S. G.;  citation_journal_title=Acc. Chem. Res.;  citation_year=2015;  citation_volume=48;  citation_pages=998-1006; "><meta name="citation_reference" content="citation_title=Understanding the Electric and Nonelectric Field Components of the Cation Effect on the Electrochemical CO Reduction Reaction; citation_author=Malkani  A. S.; citation_author=Li  J.; citation_author=Oliveira  N. J.; citation_author=He  M.; citation_author=Chang  X.; citation_author=Xu  B.; citation_author=Lu  Q.;  citation_journal_title=Sci. Adv.;  citation_year=2020;  citation_volume=6; "><meta name="citation_reference" content="citation_title=Probing Cation Effects on *CO Intermediates from Electroreduction of CO2 through Operando Raman Spectroscopy; citation_author=Lee  S. Y.; citation_author=Kim  J.; citation_author=Bak  G.; citation_author=Lee  E.; citation_author=Kim  D.; citation_author=Yoo  S.; citation_author=Kim  J.; citation_author=Yun  H.; citation_author=Hwang  Y. J.;  citation_journal_title=J. Am. Chem. Soc.;  citation_year=2023;  citation_volume=145;  citation_pages=23068-23075; "><meta name="citation_reference" content="citation_title=Revealing the role of interfacial water and key intermediates at ruthenium surfaces in the alkaline hydrogen evolution reaction; citation_author=Chen  X.; citation_author=Wang  X.-T.; citation_author=Le  J.-B.; citation_author=Li  S.-M.; citation_author=Wang  X.; citation_author=Zhang  Y.-J.; citation_author=Radjenovic  P.; citation_author=Zhao  Y.; citation_author=Wang  Y.-H.; citation_author=Lin  X.-M.; citation_author=Dong  J.-C.; citation_author=Li  J.-F.;  citation_journal_title=Nat. Commun.;  citation_year=2023;  citation_volume=14; "><meta name="citation_reference" content="citation_title=In Situ Raman Spectroscopy Reveals the Multifunctional Role of Interfacial Water in CO2-to-C2 Electroreduction on Cu(hkl) Surfaces; citation_author=Zhao  Y.; citation_author=Li  Q.-Q.; citation_author=He  Q.-F.; citation_author=Ren  P.-W.; citation_author=Zhang  D.-A.; citation_author=Wang  Y.-H.; citation_author=Dong  J.-C.; citation_author=Zheng  S.; citation_author=Zhang  Y.-J.; citation_author=Yang  Z.-L.; citation_author=Li  J.-F.;  citation_journal_title=J. Am. Chem. Soc.;  citation_year=2025;  citation_volume=147;  citation_pages=30230-30238; "><meta name="citation_reference" content="citation_title=Modulating Water Hydrogen Bonding within a Non-Aqueous Environment Controls Its Reactivity in Electrochemical Transformations; citation_author=Gomes  R. J.; citation_author=Kumar  R.; citation_author=Fejzić  H.; citation_author=Sarkar  B.; citation_author=Roy  I.; citation_author=Amanchukwu  C. V.;  citation_journal_title=Nat. Catal.;  citation_year=2024;  citation_volume=7;  citation_pages=689-701; "><meta name="citation_reference" content="citation_title=Effect of Ions on the Structure of Water: Structure Making and Breaking; citation_author=Marcus  Y.;  citation_journal_title=Chem. Rev.;  citation_year=2009;  citation_volume=109;  citation_pages=1346-1370; "><meta name="citation_reference" content="citation_title=Tuning hydrogen bond network connectivity in the electric double layer with cations; citation_author=Tang  B.; citation_author=Fang  Y.; citation_author=Zhu  S.; citation_author=Bai  Q.; citation_author=Li  X.; citation_author=Wei  L.; citation_author=Li  Z.; citation_author=Zhu  C.;  citation_journal_title=Chem. Sci.;  citation_year=2024;  citation_volume=15;  citation_pages=7111-7120; "><meta name="citation_reference" content="citation_title=Cation-Driven Modulation of Interfacial Solvation Structures for Enhanced Alkaline Hydrogen Oxidation Kinetics; citation_author=Men  Y.; citation_author=Men  X.; citation_author=Li  P.; citation_author=Li  L.; citation_author=Wang  X.; citation_author=Su  X.; citation_author=Zhang  L.; citation_author=Chen  S.; citation_author=Luo  W.;  citation_journal_title=J. Am. Chem. Soc.;  citation_year=2025;  citation_volume=147;  citation_pages=21672-21685; "><meta name="citation_reference" content="citation_title=Revised Effective Ionic Radii and Systematic Studies of Interatomic Distances in Halides and Chalcogenides; citation_author=Shannon  R. D.;  citation_journal_title=Acta Crystallogr., Sect. A;  citation_year=1976;  citation_volume=32;  citation_pages=751-767; "><meta name="citation_reference" content="citation_title=Highly Efficient Helium Purification through a Dual-Membrane System: Insights from Molecular Dynamics Simulations; citation_author=Pakdel  S.; citation_author=Erfan-Niya  H.; citation_author=Azamat  J.; citation_author=Hasanzadeh  A.;  citation_journal_title=Phys. Chem. Chem. Phys.;  citation_year=2023;  citation_volume=25;  citation_pages=30572-30582; "><meta name="citation_reference" content="citation_title=Tunable sieving of ions using graphene oxide membranes; citation_author=Abraham  J.; citation_author=Vasu  K. S.; citation_author=Williams  C. D.; citation_author=Gopinadhan  K.; citation_author=Su  Y.; citation_author=Cherian  C. T.; citation_author=Dix  J.; citation_author=Prestat  E.; citation_author=Haigh  S. J.; citation_author=Grigorieva  I. V.; citation_author=Carbone  P.; citation_author=Geim  A. K.; citation_author=Nair  R. R.;  citation_journal_title=Nat. Nanotechnol.;  citation_year=2017;  citation_volume=12;  citation_pages=546-550; "><meta name="citation_reference" content="citation_title=Measurements of the Size and Correlations between Ions Using an Electrolytic Point Contact; citation_author=Rigo  E.; citation_author=Dong  Z.; citation_author=Park  J. H.;  citation_journal_title=Nat. Commun.;  citation_year=2019;  citation_volume=10; "><meta name="citation_reference" content="citation_title=Graphdiyne Pores: ″Ad Hoc″ Openings for Helium Separation Applications; citation_author=Bartolomei  M.; citation_author=Carmona-Novillo  E.; citation_author=Hernández  M. I.; citation_author=Campos-Martínez  J.; citation_author=Pirani  F.; citation_author=Giorgi  G.;  citation_journal_title=J. Phys. Chem. C;  citation_year=2014;  citation_volume=118;  citation_pages=29966-29972; "><meta name="citation_reference" content="citation_title=On the Molecular Origin of Supercapacitance in Nanoporous Carbon Electrodes; citation_author=Merlet  C.; citation_author=Rotenberg  B.; citation_author=Madden  P. A.; citation_author=Taberna  P.-L.; citation_author=Simon  P.; citation_author=Gogotsi  Y.; citation_author=Salanne  M.;  citation_journal_title=Nat. Mater.;  citation_year=2012;  citation_volume=11;  citation_pages=306-310; "><meta name="citation_reference" content="citation_title=Sub-Nanometer Mapping of the Interfacial Electric Field Profile Using a Vibrational Stark Shift Ruler; citation_author=Bhattacharyya  D.; citation_author=Videla  P. E.; citation_author=Palasz  J. M.; citation_author=Tangen  I.; citation_author=Meng  J.; citation_author=Kubiak  C. P.; citation_author=Batista  V. S.; citation_author=Lian  T.;  citation_journal_title=J. Am. Chem. Soc.;  citation_year=2022;  citation_volume=144;  citation_pages=14330-14338; "><meta name="citation_reference" content="citation_title=Molecular origin of negative component of Helmholtz capacitance at electrified Pt (111)/water interface; citation_author=Le  J. B.; citation_author=Fan  Q. Y.; citation_author=Li  J. Q.; citation_author=Cheng  J.;  citation_journal_title=Sci. Adv.;  citation_year=2020;  citation_volume=6; "><meta name="citation_pdf_url" content="https://pubs.acs.org/jacsat/article-pdf/doi/10.1021/jacs.6c10062/68501720/jacs.6c10062.pdf"><meta name="description" content="Abstract. Graphdiyne
+(GDY), featuring subnanometer pores and diacetylenic
+linkages, provides a platform for probing electrified carbon interfaces.
+Although">
+
+<meta name="citation_xml_url" content="https://pubs.acs.org/jacsat/article-xml/doi/10.1021/jacs.6c10062/5429482">
+
+
+    <link rel="canonical" href="https://pubs.acs.org/jacsat/article/doi/10.1021/jacs.6c10062/5429482/Decoupling-the-Cation-Induced-Vibrational">
+
+
+
+
+
+
+    <meta name="publish_date" content="2026-09-14">
+
+    <meta name="publish_image" content="//acs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/Images/basesite/logo.png">
+
+
+
+    <meta name="product_code" content="TESTMAP100">
+    <meta name="product_code" content="UMA100">
+    <meta name="product_code" content="ppvJournalsememb">
+    <meta name="product_code" content="M10">
+    <meta name="product_code" content="ppvJournalse">
+    <meta name="product_code" content="M100">
+    <meta name="product_code" content="COREPLUSKBART">
+    <meta name="product_code" content="M1000">
+    <meta name="product_code" content="M200">
+    <meta name="product_code" content="M2000">
+    <meta name="product_code" content="M25">
+    <meta name="product_code" content="M250">
+    <meta name="product_code" content="M4000">
+    <meta name="product_code" content="M50">
+    <meta name="product_code" content="M500">
+    <meta name="product_code" content="FULLPORTKBART">
+    <meta name="product_code" content="960C">
+    <meta name="product_code" content="ALL_CONTENT">
+    <meta name="product_code" content="960I">
+    <meta name="product_code" content="960G">
+    <meta name="product_code" content="730I">
+    <meta name="product_code" content="M8000">
+    <meta name="product_code" content="TM25">
+    <meta name="product_code" content="OHLNK42">
+    <meta name="product_code" content="CM250">
+    <meta name="product_code" content="PUB20">
+    <meta name="product_code" content="TESTMAP50">
+    <meta name="product_code" content="CM100">
+    <meta name="product_code" content="CM150">
+    <meta name="product_code" content="CM50">
+    <meta name="product_code" content="CM75">
+    <meta name="product_code" content="TEST960C">
+    <meta name="product_code" content="960IKBART">
+    <meta name="product_code" content="730IM">
+    <meta name="product_code" content="UMA150">
+    <meta name="product_code" content="UMA50">
+    <meta name="product_code" content="J_5429482">
+    <meta name="product_code" content="I_0">
+
+    <script type="application/ld+json">
+        {"@context":"https://schema.org","@type":"ScholarlyArticle","@id":"https://pubs.acs.org/jacsat/article/doi/10.1021/jacs.6c10062/5429482/Decoupling-the-Cation-Induced-Vibrational","name":"Decoupling\nthe Cation-Induced Vibrational Responses\nat the Graphdiyne–Water Interface via In Situ Surface-Enhanced\nRaman Spectroscopy","about":["Raman spectroscopy","Electrodes","Gold","Cations","Interfaces"],"datePublished":"2026-09-14","isPartOf":{"@id":"https://pubs.acs.org/jacsat","@type":"Periodical","name":"Journal of the American Chemical Society","issn":["1520-5126"]},"url":"https://dx.doi.org/10.1021/jacs.6c10062","inLanguage":"en","copyrightHolder":"American Chemical Society","copyrightYear":"2026","publisher":"","sameAs":["https://dx.doi.org/10.1021/jacs.6c10062"],"author":[{"name":"Wang, Xiao-Ting","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China","@type":"Person"},{"name":"Wan, Jin-Long","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China","@type":"Person"},{"name":"Zhong, Han-Liang","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China","@type":"Person"},{"name":"Wang, Yao-Hui","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China","@type":"Person","sameAs":"https://orcid.org/0000-0002-7311-9104"},{"name":"Zhang, Xin-Yue","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China","@type":"Person"},{"name":"Peng, Zeyu","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China","@type":"Person"},{"name":"Hu, Ling-Yun","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China","@type":"Person"},{"name":"A, Yao-Lin","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China","@type":"Person"},{"name":"Cheng, Shimiao","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China","@type":"Person"},{"name":"Yang, Shuliang","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China","@type":"Person","sameAs":"https://orcid.org/0000-0002-2428-3936"},{"name":"Zhang, Hua","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China","@type":"Person","sameAs":"https://orcid.org/0000-0001-9588-9030"},{"name":"Yu, Jia","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China","@type":"Person"},{"name":"Li, Jian-Feng","affiliation":"College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment ,  Xiamen University ,   Xiamen   361005 ,  China    Innovation Laboratory for Sciences and Technologies of Energy Materials of Fujian Province (IKKEM) ,   Xiamen   361005 ,  China    College of Chemistry, Chemical Engineering and Environment ,  Minnan Normal University ,   Zhangzhou   363000 ,  China","@type":"Person","sameAs":"https://orcid.org/0000-0003-1598-6856"}],"description":"Abstract. Graphdiyne\n(GDY), featuring subnanometer pores and diacetylenic\nlinkages, provides a platform for probing electrified carbon interfaces.\nAlthough","pageStart":"","pageEnd":"","siteName":"ACS Publications","thumbnailURL":"//acs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/jacsat/jacsat_large-1198042343.jpg","headline":"Decoupling\nthe Cation-Induced Vibrational Responses\nat the Graphdiyne–Water Interface via In Situ Surface-Enhanced\nRaman Spectroscopy","image":"//acs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/jacsat/jacsat_large-1198042343.jpg","image:alt":""}
+    </script>
+<meta property="og:site_name" content="ACS Publications">
+<meta property="og:title" content="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy">
+<meta property="og:description" content="Abstract. Graphdiyne
+(GDY), featuring subnanometer pores and diacetylenic
+linkages, provides a platform for probing electrified carbon interfaces.
+Although">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://dx.doi.org/10.1021/jacs.6c10062">
+<meta property="og:updated_time" content="">
+<meta property="og:image" content="https://acs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/jacsat/jacsat_large-1198042343.jpg">
+<meta property="og:image:url" content="https://acs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/jacsat/jacsat_large-1198042343.jpg">
+<meta property="og:image:secure_url" content="https://acs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/jacsat/jacsat_large-1198042343.jpg">
+<meta property="og:image:alt" content="">
+
+
+
+
+    
+
+
+
+    <script src="https://securepubads.g.doubleclick.net/tag/js/gpt.js" async="async" type="text/javascript"></script>
+
+    <script>
+        var SCM = SCM || {};
+        SCM.pubGradeAdsEnabled = false;
+    </script>
+
+
+<script>
+    var googletag = googletag || {};
+    googletag.cmd = googletag.cmd || [];
+
+    googletag.cmd.push(function () {
+    googletag.setConfig({ disableInitialLoad: true });
+
+    
+            googletag.pubads().setTargeting("journal",  "JACS");
+            googletag.pubads().setTargeting("pageType",  "article");
+
+    });
+</script>
+    
+
+            <script src="https://widgets.figshare.com/static/figshare.js" defer=""></script>
+
+    
+
+
+
+    <script type="text/javascript">
+        adroll_adv_id = "3LBZJ4KXKBF2PJ46QCMT3X";
+        adroll_pix_id = "6EITYRDI4FFGJPSZQ62UJJ";
+        adroll_version = "2.0";
+
+        (function(w, d, e, o, a) {
+            w.adroll_tag_source = w.adroll_tag_source || "manual";
+            w.__adroll_loaded = true;
+            w.adroll = w.adroll || [];
+            w.adroll.f = [ 'setProperties', 'identify', 'track', 'identify_email', 'get_cookie' ];
+            var roundtripUrl = "https://s.adroll.com/j/" + adroll_adv_id
+                    + "/roundtrip.js";
+            for (a = 0; a < w.adroll.f.length; a++) {
+                w.adroll[w.adroll.f[a]] = w.adroll[w.adroll.f[a]] || (function(n) {
+                    return function() {
+                        w.adroll.push([ n, arguments ])
+                    }
+                })(w.adroll.f[a])
+            }
+            e = d.createElement('script');
+            o = d.getElementsByTagName('script')[0];
+            e.async = 1;
+            e.src = roundtripUrl;
+            o.parentNode.insertBefore(e, o);
+        })(window, document);
+        adroll.track("pageView");
+    </script>
+    <script src="https://s.adroll.com/j/sendrolling.js" async="" type="text/javascript"></script>
+    <script type="text/javascript">
+        var _elqQ = _elqQ || [];
+        _elqQ.push(['elqSetSiteId', '1913652004']);
+        _elqQ.push(['elqUseFirstPartyCookie', 'pubstr.acs.org']);
+        _elqQ.push(['elqTrackPageView', window.location.href]);
+        (function () {
+            function async_load() {
+                var s = document.createElement('script');
+                s.type = 'text/javascript';
+                s.async = true;
+                s.src = '//img.en25.com/i/elqCfg.min.js';
+                var x = document.getElementsByTagName('script')[0];
+                x.parentNode.insertBefore(s, x);
+            }
+            if (window.addEventListener) window.addEventListener('DOMContentLoaded', async_load, false);
+            else if (window.attachEvent) window.attachEvent('onload', async_load);
+        })();
+    </script>
+    <script src="https://tag.demandbase.com/b01e0bcf02a2a19f.min.js" async="" type="text/javascript"></script>
+    <script src="https://snippet.maze.co/maze-universal-loader.js?apiKey=324f1949-7e39-430a-964b-caafd31cacfd" async="" type="text/javascript"></script>
+    <script type="text/javascript">
+        (function (c, l, a, r, i, t, y) {
+            c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) };
+            t = l.createElement(r); t.async = 1; t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", "wjbwha4hzw");
+    </script>
+
+    <!--BEGIN QUALTRICS WEBSITE FEEDBACK SNIPPET-->
+    <script type="text/javascript">
+
+        (function () {
+            var g = function (g) {
+
+                this.go = function () { var a = document.createElement("script"); a.type = "text/javascript"; a.src = g; document.body && document.body.appendChild(a) };
+
+                this.start = function () { var t = this; "complete" !== document.readyState ? window.addEventListener ? window.addEventListener("load", function () { t.go() }, !1) : window.attachEvent && window.attachEvent("onload", function () { t.go() }) : t.go() };
+            };
+
+            try { (new g("https://znq5gbi98oz0lbamd-americanchemical.siteintercept.qualtrics.com/SIE/?Q_ZID=ZN_Q5gBI98OZ0LBamd")).start() } catch (i) { }
+        })();
+
+    </script><script src="https://snippet.maze.co/static/eec1420eea51e3dfc162c26d011e9f282acf7bd7/contextualScaffold.js" async=""></script><style type="text/css" id="bc_pre_1789453816777">#body {opacity:0.0;filter:alpha(opacity=0);}
+</style></head><body data-sitestyletemplate="Journal" theme-jacsat="" class="off-canvas pg_Article pg_article   " data-sitename="journaloftheamericanchemicalsociety"><div id="ZN_Q5gBI98OZ0LBamd"><!--DO NOT REMOVE-CONTENTS PLACED HERE--></div>
+    <!--END WEBSITE FEEDBACK SNIPPET-->
+
+
+
+
+    <script async="" src="https://scholar.google.com/scholar_js/casa.js"></script>
+
+
+
+            <noscript>
+                <iframe  src="https://www.googletagmanager.com/ns.html?id=GTM-5DJPTSH7"
+                        height="0" width="0" style="display:none;visibility:hidden"></iframe>
+            </noscript>
+            <nav aria-label="Skip navigation">
+                <a href="#skipNav" class="skipnav">Skip to Main Content</a>
+            </nav>
+<input id="hdnSiteID" name="hdnSiteID" type="hidden" value="1000113"><input id="hdnAdDelaySeconds" name="hdnAdDelaySeconds" type="hidden" value="3000"><input id="hdnAdConfigurationTop" name="hdnAdConfigurationTop" type="hidden" value="basic"><input id="hdnAdConfigurationRightRail" name="hdnAdConfigurationRightRail" type="hidden" value="basic">
+    <div class="ad-banner js-ad-revealer ad-banner-revealer" role="region" aria-label="Advertisement" aria-hidden="true">
+    <div class="widget-AdBlock widget-instance-HeaderRevealerAd" data-widget-name="AdBlock" data-widget-instance="HeaderRevealerAd">
+            <input type="hidden" class="hfAdBlockInfo" data-divid="dfp-journal-hp-revealer" data-slotname="/8868/journal/JACS/homepage" data-targetname="" data-sizes="[[1,1]]" data-enabled-on-mobile="True" data-adprovider-typeid="1" data-accountid="" data-outofpagead="False" data-sticky-time="5" data-lazyloaded="False" data-position-keyword="Journals_HR" data-position-targeting-key="pos" data-skip-size-mapping="True" data-native-placement-id="" data-wps-adsize-number="0" data-wps-network-id="0" data-wps-site-id="0" data-wps-zone-ids="" data-wps-brandlock-keyword="" data-tapnative-aid="" data-tapnative-div-id="" data-suppress-display="false" data-fallback-divid="dfp-acs-header-leaderboard">
+    <div class="adblock-wrap js-adblock-wrap ">
+
+<div id="dfp-journal-hp-revealer" adslot="/8868/journal/JACS/homepage" class="adblock-slot-placeholder js-adblock"></div>
+
+            <button type="button" class="close-footer-ad js-close-footer-ad"><span class="screenreader-text">close advertisement</span><i class="icon-general-close" aria-hidden="true"></i></button>
+
+    </div>
+
+ 
+    </div>
+
+    </div>
+    
+
+
+
+
+<section class="master-header row vt-site-header" role="banner">
+
+    <div class="ad-banner js-ad-banner">
+    <div class="widget-AdBlock widget-instance-HeaderAd" data-widget-name="AdBlock" data-widget-instance="HeaderAd">
+            <input type="hidden" class="hfAdBlockInfo" data-divid="dfp-acs-header-leaderboard" data-slotname="/8868/journal/pubs/homepage" data-targetname="leaderboard1" data-sizes="[[728,90],[320,50]]" data-enabled-on-mobile="True" data-adprovider-typeid="1" data-accountid="" data-outofpagead="False" data-sticky-time="5" data-lazyloaded="False" data-position-keyword="header" data-position-targeting-key="position" data-skip-size-mapping="False" data-native-placement-id="" data-wps-adsize-number="0" data-wps-network-id="0" data-wps-site-id="0" data-wps-zone-ids="" data-wps-brandlock-keyword="" data-tapnative-aid="" data-tapnative-div-id="" data-suppress-display="false" data-fallback-divid="">
+    <div class="adblock-wrap js-adblock-wrap ">
+                <p class="adblock-advertisement-text js-adblock-advertisement-text hide">Advertisement</p>
+
+<div id="dfp-acs-header-leaderboard" adslot="/8868/journal/pubs/homepage" class="adblock-slot-placeholder js-adblock"></div>
+
+
+    </div>
+
+ 
+    </div>
+
+    </div>
+
+    <div class="widget-SitePageHeader widget-instance-SitePageHeader" data-widget-name="SitePageHeader" data-widget-instance="SitePageHeader">
+            <div class="site-theme-header">
+        <div class="site-theme-header_contents global-nav-base">
+            
+    <div class="sister-sites">
+            <div class="sister-site ">
+                <a href="http://www.acs.org/" target="_blank" class="external-link">ACS</a>
+            </div>
+            <div class="sister-site ">
+                <a href="/" target="" class="">ACS Publications</a>
+            </div>
+            <div class="sister-site ">
+                <a href="https://cen.acs.org/" target="_blank" class="external-link">C&amp;EN</a>
+            </div>
+            <div class="sister-site ">
+                <a href="https://www.cas.org/" target="_blank" class="external-link">CAS</a>
+            </div>
+    </div>
+
+
+    <div class="tablet-menu-trigger_wrap">
+        <!-- MOBILE SHOPPING CART ICON -->
+        <button type="button" class="btn-reset tablet-sign-in" data-theme-dropdown-trigger="tablet-user-dropdown" aria-controls="tablet-user-dropdown" aria-expanded="false"><i class="icon-menu_account"><span class="screenreader-text">User Tools Dropdown</span></i></button>
+    </div>
+<div class="site-theme-header-menu-item_wrap tablet-menu" id="tablet-user-dropdown" data-theme-dropdown="tablet-user-dropdown">
+    <!-- DESKTOP SHOPPING CART ICON -->
+
+    <!-- DESKTOP REGISTRATION -->
+
+    <!-- ACCESS THROUGH INSTITUTION -->
+        <div class="site-theme-header-menu-item site-theme-header-menu-item--institutional-login">
+            <a href="/institutional-login?returnUrl=https%3a%2f%2fpubs.acs.org%2fjacsat%2farticle-abstract%2fdoi%2f10.1021%2fjacs.6c10062%2f5429482%2fDecoupling-the-Cation-Induced-Vibrational%3fredirectedFrom%3dfulltext" class="institutional-login-link at-institutional-login-link">
+                Access through Institution
+            </a>
+        </div>
+        <span class="header-pipe-separator" aria-hidden="true">|</span>
+
+    <!-- DESKTOP INSTITUTIONS -->
+
+        <!-- DESKTOP SIGN IN -->
+        <div class="site-theme-header-menu-item not-authenicated">
+                <a href="https://pubs.acs.org/ExternalAuthentication/OIDCLogin?returnUrl=https%3a%2f%2fpubs.acs.org%2fjacsat%2farticle-abstract%2fdoi%2f10.1021%2fjacs.6c10062%2f5429482%2fDecoupling-the-Cation-Induced-Vibrational%3fredirectedFrom%3dfulltext" class="signin at-signin-static-link" id="header-account-info-user-fullname" rel="nofollow">Sign In</a>
+        </div>
+
+</div>
+        </div><!-- /.site-theme-header_content -->
+    </div><!-- /.site-theme-header- -->
+
+
+<div class="global-nav">
+    <div class="expanded-view column">
+        <a href="/" class="global-nav_link-wrap">
+            <picture>
+                    <source media="(max-width: 600px)" srcset="//acs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/Images/umbrella/ACSPubs_logo_tagline_RGB_rebrand.svg">
+                <source media="(min-width: 601px)" srcset="//acs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/Images/umbrella/ACSPubs_logo_tagline_RGB_rebrand.svg">
+                <img class="logo-JournaloftheAmericanChemicalSociety site-theme-header-image" src="//acs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/Images/umbrella/ACSPubs_logo_tagline_RGB_rebrand.svg" alt="ACS Publications. Most Cited. Most Trusted. Most Read.">
+            </picture>
+        </a>
+
+
+    <input type="hidden" class="hfEnableEnhancedAutoSuggest" value="true" name="searchScope" aria-hidden="true">
+        <div class="mobile-menu-trigger_wrap mobile-search_wrap">
+            <button type="button" class="mobile-search_toggle at-search-toggle" aria-expanded="false" data-theme-dropdown-trigger="search-dropdown"><i class="icon-menu_search" aria-hidden="true"></i><span class="screenreader-text">Search Dropdown Menu</span></button>
+        </div>
+    <div class="navbar-search-container mobile-dropdown search-dropdown" data-theme-dropdown="search-dropdown">
+        <div class="navbar-search">
+            <form class="microsite-search js-MicrositeSearch" aria-label="header search" role="search">
+                <fieldset class="searchbar-fieldset">
+                    <legend><span class="screenreader-text">header search</span></legend>
+                    <div class="navbar-search-input_wrap">
+                        
+                        <input class="navbar-search-input microsite-search-term at-microsite-search-term search-term-autosuggest" data-autosuggest-hint="micrositeSearchTermInputHint-SitePageHeader" data-autosuggest-results="micrositeAutoCompleteResults-SitePageHeader" data-autosuggest-id="MicrositeSearchTerm-SitePageHeader" data-searchfilter="search-filter-SitePageHeader" placeholder="Search text, authors, etc." aria-label="Search text, authors, etc." type="text" maxlength="255" autocomplete="off" id="MicrositeSearchTerm-SitePageHeader">
+                        
+                        <input type="hidden" name="hfAutoCompleteMaxResults" class="hfAutoCompleteMaxResults" value="6" aria-hidden="true">
+                        <input type="hidden" name="hfSolrAutoSuggestMinimumCharactersLength" class="hfSolrAutoSuggestMinimumCharactersLength" value="2" aria-hidden="true">
+                        <input type="hidden" name="hfSolrJournalName" class="hfSolrJournalName" value="" aria-hidden="true">
+                        <input type="hidden" name="hfSolrJournalID" class="hfSolrJournalID" value="" aria-hidden="true">
+                        <label for="micrositeSearchTermInputHint-SitePageHeader" aria-hidden="true">
+                            <span class="screenreader-text">Search input auto suggest</span>
+                        </label>
+                        <input type="text" id="micrositeSearchTermInputHint-SitePageHeader" data-autosuggest-id="micrositeSearchTermInputHint-SitePageHeader" class="microsite-search-term-input-hint" autocomplete="off" tabindex="-1" aria-hidden="true" disabled="">
+                        <ul data-autosuggest-id="micrositeAutoCompleteResults-SitePageHeader" class="term-list hidden"></ul>
+                    </div>
+                        <div class="navbar-search-filter_wrap">
+                            <label for="navbar-search-filter-site-SitePageHeader">
+                                <span class="screenreader-text">filter your search</span>
+                            </label>
+                            <select class="navbar-search-filter navbar-search-filter-site at-navbar-search-filter" id="navbar-search-filter-site-SitePageHeader" data-autosuggest-id="search-filter-SitePageHeader">
+<option class="header-search-bar-filters-item" value="/search-results?page=1&amp;q={searchQuery}" data-siteid="0">All Content</option><option class="header-search-bar-filters-item" value="/journals/search-results?page=1&amp;q={searchQuery}&amp;fl_SiteID=3&amp;allJournals=1" data-siteid="3">Journals</option><option class="header-search-bar-filters-item selected" value="/jacsat/search-results?page=1&amp;q={searchQuery}&amp;fl_SiteID=1000113" data-siteid="1000113" selected="">Journal of the American Chemical Society</option>                            </select>
+                        </div>
+                    <div class="navbar-search-submit_wrap">
+                        
+                        <button type="button" class="microsite-search-icon navbar-search-submit icon-menu_search"><span class="screenreader-text">Search</span></button>
+                    </div>
+                </fieldset>
+            </form><!-- /#MicrositeSearch -->
+        </div><!-- /.navbar-search -->
+<div class="navbar-search-advanced">
+    <a href="/advanced-search" class="advanced-search">Advanced Search</a>
+</div>    </div><!-- /.navbar-search-container -->
+
+<input type="hidden" name="parentSiteName" class="hfParentSiteName" value="Journals Gateway" aria-hidden="true">
+<input type="hidden" class="hfSolrMaxAllowSearchChar" value="100" aria-hidden="true">
+<input type="hidden" class="hfJournalShortName" value="" aria-hidden="true">
+<input type="hidden" class="hfSearchPlaceholder" value="" aria-hidden="true">
+<input type="hidden" name="hfGlobalSearchSiteURL" class="hfGlobalSearchSiteURL" value="" aria-hidden="true">
+<input type="hidden" name="hfSearchSiteURL" id="hfSiteURL" value="pubs.acs.org/jacsat" aria-hidden="true">
+<input type="hidden" class="hfQuickSearchUrl" value="/jacsat/search-results?page=1&amp;q={searchQuery}&amp;fl_SiteID=1000113" aria-hidden="true">
+<script type="text/javascript">
+    (function () {
+        var hfSiteUrl = document.getElementById('hfSiteURL');
+        var siteUrl = hfSiteUrl.value;
+        var subdomainIndex = siteUrl.indexOf('/');
+
+        hfSiteUrl.value = location.host + (subdomainIndex >= 0 ? siteUrl.substring(subdomainIndex) : '');
+    })();
+</script>
+
+        <button type="button" class="btn-reset global-mobile-site-menu-toggle" data-theme-dropdown-trigger="global-nav-menu" aria-controls="global-nav-menu" aria-expanded="false"><i class="icon-menu_hamburger"><span class="screenreader-text">Toggle Menu</span></i><span class="tablet-menu-label">Menu</span></button>
+        <nav class="navbar-menu" id="global-nav-menu" data-theme-dropdown="global-nav-menu">
+                    <ul class="site-menu site-menu-lvl-0 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Read " id="site-menu-item-8292">
+                        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">
+                            Read <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+                        </button>
+
+                            <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Journals " id="site-menu-item-8297">
+                        <a href="/journals" class="nav-link">
+                            Journals                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Books-&amp;-References " id="site-menu-item-8298">
+                        <a href="/books" class="nav-link">
+                            Books &amp; References                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-C&amp;EN site-menu-item-umbrellasisterjournal" id="site-menu-item-8299">
+                        <a href="https://cen.acs.org" class="nav-link" target="&quot;_blank&quot;">
+                            C&amp;EN <span class="screenreader-text external-link">Open External Link</span>                        </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Subjects " id="site-menu-item-8293">
+                        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">
+                            Subjects <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+                        </button>
+
+                            <ul class="site-menu site-menu-lvl-2 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Agricultural-&amp;-Food-Chemistry " id="site-menu-item-8300">
+                        <a href="/agriculture-food-chemistry" class="nav-link">
+                            Agricultural &amp; Food Chemistry                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Analytical-Chemistry " id="site-menu-item-8301">
+                        <a href="/analytical-chemistry" class="nav-link">
+                            Analytical Chemistry                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Biological-Chemistry-&amp;-Chemical-Biology " id="site-menu-item-8302">
+                        <a href="/biological-chemistry-chemical-biology" class="nav-link">
+                            Biological Chemistry &amp; Chemical Biology                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Chemical-Engineering-&amp;-Industrial-Chemistry " id="site-menu-item-8303">
+                        <a href="/chemical-engineering-industrial-chemistry" class="nav-link">
+                            Chemical Engineering &amp; Industrial Chemistry                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Environmental-&amp;-Sustainable-Chemistry " id="site-menu-item-8304">
+                        <a href="/environmental-and-sustainable-chemistry" class="nav-link">
+                            Environmental &amp; Sustainable Chemistry                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Energy " id="site-menu-item-8305">
+                        <a href="/energy" class="nav-link">
+                            Energy                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Inorganic-Chemistry " id="site-menu-item-8306">
+                        <a href="/inorganic-chemistry" class="nav-link">
+                            Inorganic Chemistry                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Materials-Science " id="site-menu-item-8307">
+                        <a href="/materials-science" class="nav-link">
+                            Materials Science                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Medicinal-Chemistry " id="site-menu-item-8308">
+                        <a href="/medicinal-chemistry" class="nav-link">
+                            Medicinal Chemistry                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Nanoscience " id="site-menu-item-8309">
+                        <a href="/nanoscience" class="nav-link">
+                            Nanoscience                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Organic-Chemistry " id="site-menu-item-8310">
+                        <a href="/organic-chemistry" class="nav-link">
+                            Organic Chemistry                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Physical-Chemistry " id="site-menu-item-8311">
+                        <a href="/physical-chemistry" class="nav-link">
+                            Physical Chemistry                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Polymer-Science-&amp;-Macromolecular-Chemistry " id="site-menu-item-8312">
+                        <a href="/polymer-science-and-macromolecular-chemistry" class="nav-link">
+                            Polymer Science &amp; Macromolecular Chemistry                         </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-2 site-menu-item-Theoretical-&amp;-Computational-Chemistry " id="site-menu-item-8313">
+                        <a href="/theoretical-computational-chemistry" class="nav-link">
+                            Theoretical &amp; Computational Chemistry                         </a>
+
+                    
+                </li>
+        </ul>
+
+                </li>
+        </ul>
+
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Publish " id="site-menu-item-8294">
+                        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">
+                            Publish <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+                        </button>
+
+                            <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Submit-a-Manuscript " id="site-menu-item-8314">
+                        <a href="https://publish.acs.org" class="nav-link" target="&quot;_blank&quot;">
+                            Submit a Manuscript <span class="screenreader-text external-link">Open External Link</span>                        </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Author-Resources " id="site-menu-item-8315">
+                        <a href="https://researcher-resources.acs.org" class="nav-link" target="&quot;_blank&quot;">
+                            Author Resources <span class="screenreader-text external-link">Open External Link</span>                        </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Peer-Review " id="site-menu-item-8316">
+                        <a href="https://researcher-resources.acs.org/publish/peer_reviews" class="nav-link" target="&quot;_blank&quot;">
+                            Peer Review <span class="screenreader-text external-link">Open External Link</span>                        </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Purchase-Author-Services " id="site-menu-item-8317">
+                        <a href="https://authoringservices.acs.org" class="nav-link" target="&quot;_blank&quot;">
+                            Purchase Author Services <span class="screenreader-text external-link">Open External Link</span>                        </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Explore-Open-Access " id="site-menu-item-8318">
+                        <a href="https://acsopenscience.org" class="nav-link" target="&quot;_blank&quot;">
+                            Explore Open Access <span class="screenreader-text external-link">Open External Link</span>                        </a>
+
+                    
+                </li>
+        </ul>
+
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Subscribe " id="site-menu-item-8295">
+                        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">
+                            Subscribe <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+                        </button>
+
+                            <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Librarians-&amp;-Account-Managers " id="site-menu-item-8319">
+                        <a href="https://solutions.acs.org" class="nav-link" target="&quot;_blank&quot;">
+                            Librarians &amp; Account Managers <span class="screenreader-text external-link">Open External Link</span>                        </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Open-Science-for-Institutions " id="site-menu-item-8320">
+                        <a href="https://acsopenscience.org/institutions" class="nav-link" target="&quot;_blank&quot;">
+                            Open Science for Institutions <span class="screenreader-text external-link">Open External Link</span>                        </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Inquire-About-Access " id="site-menu-item-8321">
+                        <a href="https://access.acspubs.org/connect" class="nav-link" target="&quot;_blank&quot;">
+                            Inquire About Access <span class="screenreader-text external-link">Open External Link</span>                        </a>
+
+                    
+                </li>
+        </ul>
+
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Help " id="site-menu-item-8296">
+                        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">
+                            Help <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+                        </button>
+
+                            <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Support-FAQ " id="site-menu-item-8322">
+                        <a href="https://acs.service-now.com/acs?id=kb_home" class="nav-link" target="&quot;_blank&quot;">
+                            Support FAQ <span class="screenreader-text external-link">Open External Link</span>                        </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Live-Chat-with-Agent " id="site-menu-item-8323">
+                        <a href="https://acs.service-now.com/acs" class="nav-link" target="&quot;_blank&quot;">
+                            Live Chat with Agent <span class="screenreader-text external-link">Open External Link</span>                        </a>
+
+                    
+                </li>
+        </ul>
+
+                </li>
+        </ul>
+
+        </nav>
+    </div>
+</div>
+
+
+    <div class="journal-header journal-bg">
+        <div class="journal-header_content ">
+    <div class="journal-logo_wrap">
+        <a href="//pubs.acs.org/jacsat" class="journal-logo-link">
+
+Journal of the American Chemical Society        </a>
+    </div>
+
+            
+
+<div class="navbar-menu_wrap">
+            <button type="button" class="btn-reset mobile-site-menu-toggle" data-theme-dropdown-trigger="microsite-nav-menu" aria-controls="microsite-nav-menu" aria-expanded="false"><span class="tablet-menu-text">Menu <i class="icon-general_arrow-down"></i></span></button>
+            <nav class="navbar-menu" id="microsite-nav-menu" data-theme-dropdown="microsite-nav-menu">
+                    <ul class="site-menu site-menu-lvl-0 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-7113">
+        <a href="/jacsat" class="nav-link">Journal Home</a>
+    </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-7110">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">Articles &amp; Issues<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-7114">
+        <a href="/jacsat/issue" class="nav-link">Current Issue</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-7115">
+        <a href="/jacsat/latest-articles" class="nav-link">ASAP Articles</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-7116">
+        <a href="/jacsat/issue-covers" class="nav-link">List of Issues</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-7117">
+        <a href="/pages/collections-special-issues?journal=jacsat" class="nav-link">Collections &amp; Special Issues</a>
+    </li>     </ul>
+ </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-7111">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">Submit<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-7118">
+        <a href="/jacsat/pages/info-for-authors" class="nav-link">Information for Authors</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-7119">
+        <a href="https://publish.acs.org/" class="nav-link" target="&quot;_blank&quot;">Submit a Manuscript<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-7120">
+        <a href="https://acsopenscience.org/" class="nav-link" target="&quot;_blank&quot;">Open Access<span class="screenreader-text">Open External Link</span></a>
+    </li>     </ul>
+ </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-7112">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">About<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-7121">
+        <a href="/jacsat/pages/About" class="nav-link">About the Journal</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-7122">
+        <a href="/jacsat/pages/Editorial_Board" class="nav-link">Editors &amp; Editorial Board</a>
+    </li>     </ul>
+ </li>     </ul>
+ 
+            </nav>
+</div><!-- /.navbar -->
+
+        </div><!-- /.center-inner-row -->
+
+    </div><!-- /.journal-header -->
+
+
+<input id="routename" name="RouteName" type="hidden" value="jacsat">
+
+ 
+    </div>
+
+</section>
+
+<div id="main" class="content-main js-main ui-base" role="main">
+    <section class="master-main row">
+        <div class="content-main_content">
+            <span id="skipNav" tabindex="-1"></span>
+            
+
+
+
+
+
+<div class="page-column-wrap article-browse_content ">
+<div id="InfoColumn" class="page-column page-column--left">
+
+    <div class="info-inner-wrap can-stick empty">
+
+        <button type="button" class="btn-as-icon toggle-left-col__close icon-general-close">
+            <span class="screenreader-text">Close navigation menu</span>
+        </button>
+        <div class="responsive-nav-title">Article navigation</div>
+
+        <div class="info-widget-wrap">
+            
+            
+    <div class="widget-ArticleJumpLinks widget-instance-ArticleJumpLinks_Widget" data-widget-name="ArticleJumpLinks" data-widget-instance="ArticleJumpLinks_Widget">
+        <div class="content-nav">
+        <div class="jumplink-title">Article Contents</div>
+    <ul class="jumplink-list">
+                <li class="section-jump-link js-article-jump-link head-1 abstract-section-jumplink" link-destination="257573597">
+                <div class="section-jump-link__link-wrap">
+
+                    <a class="jumplink scrollTo" href="#257573597">Abstract</a>
+                </div>
+            </li>
+    </ul>
+</div>
+ 
+    </div>
+
+
+
+        </div>
+    </div>
+</div> 
+        
+
+    <div id="ContentColumn" class="page-column page-column--center center-content can-stick">
+        <div class="article-browse_content-wrap js-content-standard">
+                <div class="widget-ArticleMainView widget-instance-Article_ArticleMainViewWrapper" data-widget-name="ArticleMainView" data-widget-instance="Article_ArticleMainViewWrapper">
+        <div class="article-browse-top article-browse-mobile-nav empty">
+    <div class="article-browse-mobile-nav-inner">
+        <button type="button" class="btn toggle-left-col toggle-left-col__article">Article Navigation</button>
+    </div>
+</div>
+
+<div class="content-inner-wrap">
+    
+
+    <div class="widget-ArticleTopInfo widget-instance-ArticleTopInfo" data-widget-name="ArticleTopInfo" data-widget-instance="ArticleTopInfo">
+        <div class="module-widget article-top-widget content-metadata_wrap">
+
+
+<div class="article-groups left-flag">
+        <span class="article-client_type">Article</span><span class="pipe">|</span>
+        <span class="article-date">September 14, 2026</span>
+
+</div>
+            <div class="article-access-icons">
+
+    <span data-resource-id-access="5429482"><i class="js-access-icon-placeholder"></i></span>
+
+            </div>
+
+
+    <div class="widget-items">
+    <h1 class="wi-article-title article-title-main" id="aria5429482">
+
+        Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy
+    </h1>
+
+
+<div class="wi-authors">
+    <div class="al-authors-list">
+
+        <input type="hidden" id="js-hdn-enable-corresponding-author-icon" value="False">
+                <div class="al-author-name">
+
+                                <!-- Keep these element on the same line, to prevent browsers from inserting a space between elements -->
+                <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301230">Xiao-Ting Wang</a>                <span class="info-card-footnote"><a href="javascript:;" reveal-id="notes-1" data-open="notes-1" class="link link-ref link-reveal xref-author-notes" aria-label="Author note">∥</a></span>
+<span class="al-author-delim">; </span>
+
+
+                    <div id="author-info-25301230" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Xiao-Ting Wang">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Xiao-Ting Wang</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Xiao-Ting Wang
+            <span class="info-card-footnote"><a href="javascript:;" reveal-id="notes-1" data-open="notes-1" class="link link-ref link-reveal xref-author-notes" aria-label="Author note">∥</a></span>
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Xiao-Ting+Wang" rel="nofollow">This Site</a>
+</div>
+
+</div>                    </div>
+                </div>
+                <div class="al-author-name">
+
+                                <!-- Keep these element on the same line, to prevent browsers from inserting a space between elements -->
+                <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301231">Jin-Long Wan</a>                <span class="info-card-footnote"><a href="javascript:;" reveal-id="notes-1" data-open="notes-1" class="link link-ref link-reveal xref-author-notes" aria-label="Author note">∥</a></span>
+<span class="al-author-delim">; </span>
+
+
+                    <div id="author-info-25301231" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Jin-Long Wan">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Jin-Long Wan</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Jin-Long Wan
+            <span class="info-card-footnote"><a href="javascript:;" reveal-id="notes-1" data-open="notes-1" class="link link-ref link-reveal xref-author-notes" aria-label="Author note">∥</a></span>
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Jin-Long+Wan" rel="nofollow">This Site</a>
+</div>
+
+</div>                    </div>
+                </div>
+                <div class="al-author-name">
+
+                                <!-- Keep these element on the same line, to prevent browsers from inserting a space between elements -->
+                <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301232">Han-Liang Zhong</a>                <span class="info-card-footnote"><a href="javascript:;" reveal-id="notes-1" data-open="notes-1" class="link link-ref link-reveal xref-author-notes" aria-label="Author note">∥</a></span>
+<span class="al-author-delim">; </span>
+
+
+                    <div id="author-info-25301232" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Han-Liang Zhong">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Han-Liang Zhong</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Han-Liang Zhong
+            <span class="info-card-footnote"><a href="javascript:;" reveal-id="notes-1" data-open="notes-1" class="link link-ref link-reveal xref-author-notes" aria-label="Author note">∥</a></span>
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Han-Liang+Zhong" rel="nofollow">This Site</a>
+</div>
+
+</div>                    </div>
+                </div>
+                <div class="al-author-name">
+
+                                <!-- Keep these element on the same line, to prevent browsers from inserting a space between elements -->
+                <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301233">Yao-Hui Wang</a>                <span class="info-card-footnote"><a href="javascript:;" reveal-id="cor1" data-open="cor1" class="link link-ref link-reveal js-reveal-distinct xref-corresp" aria-label="Corresponding author note"></a></span>
+<span class="al-author-delim">; </span>
+
+
+                    <div id="author-info-25301233" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Yao-Hui Wang">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Yao-Hui Wang</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Yao-Hui Wang
+            <span class="info-card-footnote"><a href="javascript:;" reveal-id="cor1" data-open="cor1" class="link link-ref link-reveal js-reveal-distinct xref-corresp" aria-label="Corresponding author note"></a></span>
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-author-correspondence">
+        <div content-id="cor1"><span class="label title-label">*</span>Email: <a href="mailto:yaohuiwang@xmu.edu.cn" target="_blank">yaohuiwang@xmu.edu.cn</a>.</div>
+    </div>
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Yao-Hui+Wang" rel="nofollow">This Site</a>
+</div>
+
+    <div class="info-card-location">
+        <a id="contrib-orcid-0000-0002-7311-9104" href="https://orcid.org/0000-0002-7311-9104">
+            <img class="orchid-icon" alt="ORCID logo" aria-hidden="true" src="//acs.silverchair-cdn.com/Themes/Silver/app/img/mini-icon.png">&nbsp;&nbsp;https://orcid.org/0000-0002-7311-9104
+        </a>
+    </div>
+</div>                    </div>
+                </div>
+                <div class="al-author-name">
+
+                                <!-- Keep these element on the same line, to prevent browsers from inserting a space between elements -->
+                <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301234">Xin-Yue Zhang</a><span class="al-author-delim">; </span>
+
+
+                    <div id="author-info-25301234" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Xin-Yue Zhang">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Xin-Yue Zhang</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Xin-Yue Zhang
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Xin-Yue+Zhang" rel="nofollow">This Site</a>
+</div>
+
+</div>                    </div>
+                </div>
+                <div class="al-author-name">
+
+                                <!-- Keep these element on the same line, to prevent browsers from inserting a space between elements -->
+                <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301235">Zeyu Peng</a><span class="al-author-delim">; </span>
+
+
+                    <div id="author-info-25301235" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Zeyu Peng">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Zeyu Peng</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Zeyu Peng
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Zeyu+Peng" rel="nofollow">This Site</a>
+</div>
+
+</div>                    </div>
+                </div>
+                <div class="al-author-name">
+
+                                <!-- Keep these element on the same line, to prevent browsers from inserting a space between elements -->
+                <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301236">Ling-Yun Hu</a><span class="al-author-delim">; </span>
+
+
+                    <div id="author-info-25301236" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Ling-Yun Hu">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Ling-Yun Hu</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Ling-Yun Hu
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Ling-Yun+Hu" rel="nofollow">This Site</a>
+</div>
+
+</div>                    </div>
+                </div>
+                <div class="al-author-name">
+
+                                <!-- Keep these element on the same line, to prevent browsers from inserting a space between elements -->
+                <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301237">Yao-Lin A</a><span class="al-author-delim">; </span>
+
+
+                    <div id="author-info-25301237" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Yao-Lin A">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Yao-Lin A</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Yao-Lin A
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Yao-Lin+A" rel="nofollow">This Site</a>
+</div>
+
+</div>                    </div>
+                </div>
+                <div class="al-author-name">
+
+                                <!-- Keep these element on the same line, to prevent browsers from inserting a space between elements -->
+                <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301238">Shimiao Cheng</a><span class="al-author-delim">; </span>
+
+
+                    <div id="author-info-25301238" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Shimiao Cheng">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Shimiao Cheng</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Shimiao Cheng
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Shimiao+Cheng" rel="nofollow">This Site</a>
+</div>
+
+</div>                    </div>
+                </div>
+                <div class="al-author-name">
+
+                                <!-- Keep these element on the same line, to prevent browsers from inserting a space between elements -->
+                <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301240">Shuliang Yang</a><span class="al-author-delim">; </span>
+
+
+                    <div id="author-info-25301240" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Shuliang Yang">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Shuliang Yang</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Shuliang Yang
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Shuliang+Yang" rel="nofollow">This Site</a>
+</div>
+
+    <div class="info-card-location">
+        <a id="contrib-orcid-0000-0002-2428-3936" href="https://orcid.org/0000-0002-2428-3936">
+            <img class="orchid-icon" alt="ORCID logo" aria-hidden="true" src="//acs.silverchair-cdn.com/Themes/Silver/app/img/mini-icon.png">&nbsp;&nbsp;https://orcid.org/0000-0002-2428-3936
+        </a>
+    </div>
+</div>                    </div>
+                </div>
+                <div class="al-author-name">
+
+                                <!-- Keep these element on the same line, to prevent browsers from inserting a space between elements -->
+                <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301242">Hua Zhang</a>                <span class="info-card-footnote"><a href="javascript:;" reveal-id="cor2" data-open="cor2" class="link link-ref link-reveal js-reveal-distinct xref-corresp" aria-label="Corresponding author note"></a></span>
+<span class="al-author-delim">; </span>
+
+
+                    <div id="author-info-25301242" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Hua Zhang">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Hua Zhang</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Hua Zhang
+            <span class="info-card-footnote"><a href="javascript:;" reveal-id="cor2" data-open="cor2" class="link link-ref link-reveal js-reveal-distinct xref-corresp" aria-label="Corresponding author note"></a></span>
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-author-correspondence">
+        <div content-id="cor2"><span class="label title-label">*</span>Email: <a href="mailto:Zhanghua@xmu.edu.cn" target="_blank">Zhanghua@xmu.edu.cn</a>.</div>
+    </div>
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Hua+Zhang" rel="nofollow">This Site</a>
+</div>
+
+    <div class="info-card-location">
+        <a id="contrib-orcid-0000-0001-9588-9030" href="https://orcid.org/0000-0001-9588-9030">
+            <img class="orchid-icon" alt="ORCID logo" aria-hidden="true" src="//acs.silverchair-cdn.com/Themes/Silver/app/img/mini-icon.png">&nbsp;&nbsp;https://orcid.org/0000-0001-9588-9030
+        </a>
+    </div>
+</div>                    </div>
+                </div>
+                <div class="al-author-name">
+
+                                <!-- Keep these element on the same line, to prevent browsers from inserting a space between elements -->
+                <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301244">Jia Yu</a>                <span class="info-card-footnote"><a href="javascript:;" reveal-id="cor3" data-open="cor3" class="link link-ref link-reveal js-reveal-distinct xref-corresp" aria-label="Corresponding author note"></a></span>
+<span class="al-author-delim">; </span>
+
+
+                    <div id="author-info-25301244" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Jia Yu">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Jia Yu</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Jia Yu
+            <span class="info-card-footnote"><a href="javascript:;" reveal-id="cor3" data-open="cor3" class="link link-ref link-reveal js-reveal-distinct xref-corresp" aria-label="Corresponding author note"></a></span>
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-author-correspondence">
+        <div content-id="cor3"><span class="label title-label">*</span>Email: <a href="mailto:yujia@xmu.edu.cn" target="_blank">yujia@xmu.edu.cn</a>.</div>
+    </div>
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Jia+Yu" rel="nofollow">This Site</a>
+</div>
+
+</div>                    </div>
+                </div>
+                <div class="al-author-name">
+
+                                    <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-25301246">Jian-Feng Li</a>                <span class="info-card-footnote"><a href="javascript:;" reveal-id="cor4" data-open="cor4" class="link link-ref link-reveal js-reveal-distinct xref-corresp" aria-label="Corresponding author note"></a></span>
+
+
+                    <div id="author-info-25301246" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Jian-Feng Li">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Jian-Feng Li</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Jian-Feng Li
+            <span class="info-card-footnote"><a href="javascript:;" reveal-id="cor4" data-open="cor4" class="link link-ref link-reveal js-reveal-distinct xref-corresp" aria-label="Corresponding author note"></a></span>
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff"><div class="institution">College of Materials, State Key Laboratory of Physical Chemistry of Solid Surfaces, iChEM, College of Chemistry and Chemical Engineering, College of Energy, School of Life Sciences, College of Physical Science and Technology, and Discipline of Intelligent Instrument and Equipment</div>, <div class="institution">Xiamen University</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div><div class="aff"><div class="institution">Innovation Laboratory for Sciences and Technologies of Energy Materials of Fujian Province (IKKEM)</div>,  <span class="city">Xiamen</span> <span class="postal-code">361005</span>, <div class="country">China</div></div><div class="aff"><div class="institution">College of Chemistry, Chemical Engineering and Environment</div>, <div class="institution">Minnan Normal University</div>,  <span class="city">Zhangzhou</span> <span class="postal-code">363000</span>, <div class="country">China</div></div>
+    </div>
+
+    <div class="info-author-correspondence">
+        <div content-id="cor4"><span class="label title-label">*</span>Email: <a href="mailto:Li@xmu.edu.cn" target="_blank">Li@xmu.edu.cn</a>.</div>
+    </div>
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/jacsat/search-results?f_AllAuthors=Jian-Feng+Li" rel="nofollow">This Site</a>
+</div>
+
+    <div class="info-card-location">
+        <a id="contrib-orcid-0000-0003-1598-6856" href="https://orcid.org/0000-0003-1598-6856">
+            <img class="orchid-icon" alt="ORCID logo" aria-hidden="true" src="//acs.silverchair-cdn.com/Themes/Silver/app/img/mini-icon.png">&nbsp;&nbsp;https://orcid.org/0000-0003-1598-6856
+        </a>
+    </div>
+</div>                    </div>
+                </div>
+    </div>
+</div>
+
+
+    <div class="js-author-expand-collapse-metadata-wrap author-expand-collapse-metadata-wrap stats-article-metadata-trigger-wrap">
+        <a href="javascript:;" class="js-expand-collapse-metadata author-expand-collapse-metadata stats-article-metadata-trigger" aria-expanded="false">
+            <i class="js-metadata-toggle-icon icon-general-add"></i>Author &amp; Article Information
+        </a>
+    </div>
+<div class="js-metadata-wrap metadata">
+            <div class="wi-footnotes">
+                    <div>
+                        <div class="article-footnote">
+                            <span class="label title-label">*</span>Email: <a href="mailto:yaohuiwang@xmu.edu.cn" target="_blank">yaohuiwang@xmu.edu.cn</a>.
+                        </div>
+                    </div>
+                    <div>
+                        <div class="article-footnote">
+                            <span class="label title-label">*</span>Email: <a href="mailto:Zhanghua@xmu.edu.cn" target="_blank">Zhanghua@xmu.edu.cn</a>.
+                        </div>
+                    </div>
+                    <div>
+                        <div class="article-footnote">
+                            <span class="label title-label">*</span>Email: <a href="mailto:yujia@xmu.edu.cn" target="_blank">yujia@xmu.edu.cn</a>.
+                        </div>
+                    </div>
+                    <div>
+                        <div class="article-footnote">
+                            <span class="label title-label">*</span>Email: <a href="mailto:Li@xmu.edu.cn" target="_blank">Li@xmu.edu.cn</a>.
+                        </div>
+                    </div>
+                    <div>
+                        <div class="article-footnote">
+                            <div class="fn" id="notes-2" content-id="notes-2"><p><strong>COI Statement:</strong>The authors
+declare no competing financial interest.</p></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="article-footnote">
+                            <div class="fn" id="notes-1" content-id="notes-1"><span class="label fn-label"><span rel="nofollow" data-fn-id="notes-1" class="end-note-link">∥</span></span><p>X.-T.W., J.-L.W., and H.-L.Z. contributed
+equally to this work.</p></div>
+                        </div>
+                    </div>
+            </div>
+            <div class="metadata-publisher">
+                Publisher: American Chemical Society
+            </div>
+            <div class="metadata-pubhistory">
+                    <div class="pubhistory-entry">
+                        <span class="pubhistory-state">Received:</span>
+                        <span class="pubhistory-date">May 16, 2026</span>
+                    </div>
+                    <div class="pubhistory-entry">
+                        <span class="pubhistory-state">Revision Received:</span>
+                        <span class="pubhistory-date">September 01, 2026</span>
+                    </div>
+                    <div class="pubhistory-entry">
+                        <span class="pubhistory-state">Accepted:</span>
+                        <span class="pubhistory-date">September 04, 2026</span>
+                    </div>
+                    <div class="pubhistory-entry">
+                        <span class="pubhistory-state">Published Online:</span>
+                        <span class="pubhistory-date">September 14, 2026</span>
+                    </div>
+
+            </div>
+            <div class="metadata-issn">
+                    <div class="metadata-issn-online">Online ISSN: 1520-5126</div>
+                                    <div class="metadata-issn-print">Print ISSN: 0002-7863</div>
+            </div>
+<div class="metadata-funding">
+    <div class="metadata-funding-caption">Funding</div>
+            <div class="metadata-funding-funder">
+                <div class="funding-group"><strong>Funding Group: </strong><ul><li><div class="award-group" data-award-id="fnd-1"><strong>Award Group: </strong><div class="award-group-info"><ul><li><strong>Funder(s): </strong><div class="funding-source">&nbsp;the Industry-University-Research Joint Innovation Project of Fujian Province, China</div></li><li><strong>Award Id(s): </strong><div class="award-id">2025H6023</div></li></ul></div></div></li></ul></div>
+            </div>
+            <div class="metadata-funding-funder">
+                <div class="funding-group"><strong>Funding Group: </strong><ul><li><div class="award-group" data-award-id="fnd-2"><strong>Award Group: </strong><div class="award-group-info"><ul><li><strong>Funder(s): </strong><div class="funding-source">&nbsp;the Fujian Provincial Natural Science Foundation</div></li><li><strong>Award Id(s): </strong><div class="award-id">2025J08010</div></li></ul></div></div></li></ul></div>
+            </div>
+            <div class="metadata-funding-funder">
+                <div class="funding-group"><strong>Funding Group: </strong><ul><li><div class="award-group" data-award-id="fnd-3"><strong>Award Group: </strong><div class="award-group-info"><ul><li><strong>Funder(s): </strong><div class="funding-source">&nbsp;the National Key R&amp;D Program of China</div></li><li><strong>Award Id(s): </strong><div class="award-id">2025YFA1511000</div></li></ul></div></div></li></ul></div>
+            </div>
+            <div class="metadata-funding-funder">
+                <div class="funding-group"><strong>Funding Group: </strong><ul><li><div class="award-group" data-award-id="fnd-4"><strong>Award Group: </strong><div class="award-group-info"><ul><li><strong>Funder(s): </strong><div class="funding-source">&nbsp;the Fundamental Research Funds for the Central Universities</div></li><li><strong>Award Id(s): </strong><div class="award-id">20720250143 and 20720240054</div></li></ul></div></div></li></ul></div>
+            </div>
+            <div class="metadata-funding-funder">
+                <div class="funding-group"><strong>Funding Group: </strong><ul><li><div class="award-group" data-award-id="fnd-5"><strong>Award Group: </strong><div class="award-group-info"><ul><li><strong>Funder(s): </strong><div class="funding-source">&nbsp;the National Natural Science Foundation of China</div></li><li><strong>Award Id(s): </strong><div class="award-id">22322206, 22472141, 22504118, 22525042, and T22936</div></li></ul></div></div></li></ul></div>
+            </div>
+            <div class="metadata-funding-funder">
+                <div class="funding-group"><strong>Funding Group: </strong><ul><li><div class="award-group" data-award-id="fnd-6"><strong>Award Group: </strong><div class="award-group-info"><ul><li><strong>Funder(s): </strong><div class="funding-source">&nbsp;the Liaoning Binhai Laboratory</div></li><li><strong>Award Id(s): </strong><div class="award-id">Grant No. 2024-05</div></li></ul></div></div></li></ul></div>
+            </div>
+            <div class="metadata-funding-funder">
+                <div class="funding-group"><strong>Funding Group: </strong><ul><li><div class="award-group" data-award-id="fnd-7"><strong>Award Group: </strong><div class="award-group-info"><ul><li><strong>Funder(s): </strong><div class="funding-source">&nbsp;the Fundamental and Interdisciplinary Disciplines Breakthrough Plan of the Ministry of Education of China</div></li><li><strong>Award Id(s): </strong><div class="award-id">JYB2025XDXM201</div></li></ul></div></div></li></ul></div>
+            </div>
+            <div class="metadata-funding-funder">
+                <div class="funding-group"><strong>Funding Group: </strong><ul><li><div class="award-group" data-award-id="fnd-8"><strong>Award Group: </strong><div class="award-group-info"><ul><li><strong>Funder(s): </strong><div class="funding-source">&nbsp;the State Key Laboratory of Fine Chemicals, Dalian University of Technology</div></li><li><strong>Award Id(s): </strong><div class="award-id">KF 2401</div></li></ul></div></div></li></ul></div>
+            </div>
+
+</div>
+            <div class="metadata-copyright">
+                <div class="copyright copyright-statement">© 2026 American Chemical Society</div>
+            </div>
+
+</div>
+
+
+<div class="pub-history-wrap clearfix">
+
+            <div class="pub-history-row clearfix">
+            <div class="ww-citation-primary"><em>Journal American Chemical Society</em> (2026)  </div>
+        </div>
+        <div class="pub-history-row citation-wrap-row clearfix">
+                <div class="ww-citation-wrap-doi">
+                    <div class="citation-doi">
+                        <a href="https://doi.org/10.1021/jacs.6c10062">https://doi.org/10.1021/jacs.6c10062</a>
+                    </div>
+                </div>
+
+                <div class="ww-citation-history-wrap js-history-dropdown-wrap">
+                    <a href="javascript:;" class="history-label js-history-dropdown-trigger">
+                        <span>Article history</span><i class="icon-history-small"></i>
+                    </a>
+
+                    <div class="ww-history js-history-entries-wrap">
+                            <div class="history-entry">
+                                <div class="wi-state">Received:</div>
+                                <div class="wi-date">May 16, 2026</div>
+                            </div>
+                            <div class="history-entry">
+                                <div class="wi-state">Revision Received:</div>
+                                <div class="wi-date">September 01, 2026</div>
+                            </div>
+                            <div class="history-entry">
+                                <div class="wi-state">Accepted:</div>
+                                <div class="wi-date">September 04, 2026</div>
+                            </div>
+                            <div class="history-entry">
+                                <div class="wi-state">Published Online:</div>
+                                <div class="wi-date">September 14, 2026</div>
+                            </div>
+                    </div>
+                </div>
+        </div>
+
+</div>
+
+
+
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.article-top-widget').on('click', '.ati-toggle-trigger', function () {
+            $(this).find('.icon-general-add, .icon-minus').toggleClass('icon-minus icon-general-add');
+            $(this).siblings('.ati-toggle-content').toggleClass('hide');
+        });
+
+        // In Chrome, an anchor tag with target="_blank" and a "mailto:" href opens a new tab/window as well as the email client
+        // I suspect this behavior will be corrected in the future
+        // Remove the target="_blank"
+        $('ul.wi-affiliationList').find('a[href^="mailto:"]').each(function () {
+            $(this).removeAttr('target');
+        });
+    });
+</script>
+
+ 
+    </div>
+    <div class="widget-ArticleLinks widget-instance-ArticleLinks" data-widget-name="ArticleLinks" data-widget-instance="ArticleLinks">
+         
+    </div>
+
+
+    <div class="widget-ArticleMainView widget-instance-ArticleMainView_Abstract" data-widget-name="ArticleMainView" data-widget-instance="ArticleMainView_Abstract">
+        
+
+
+<div class="toolbar-wrap vt-toolbar-wrap" role="navigation">
+    <div class="toolbar-inner-wrap">
+<div class="toolbar-inner-wrap ">
+    <ul id="Toolbar" class="debug js-toolbar toolbar">
+
+<li class="toolbar-item item-with-dropdown item-views js-item-views hide">
+  <a href="javascript:;" class="js-toolbar-dropdown" data-dropdown="FilterDrop" role="button" aria-expanded="false">
+    <i class="icon-menu_views"><span class="screenreader-text">Views Icon</span></i>
+    <span class="toolbar-label">
+      <span class="toolbar-text">Views</span>
+      <i class="icon-general_arrow-down arrow-icon js-toolbar-arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+    </span>
+  </a>
+  <ul id="ViewsDrop" class="f-dropdown js-dropdown-content" data-dropdown-content="">
+      <li class="article-content-filter js-content-filter hide" data-content-filter="article-content"><a href="javascript:;" rel="nofollow"><span>Article contents</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="figures-tables"><a href="javascript:;" rel="nofollow"><span>Figures &amp; tables</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="video"><a href="javascript:;" rel="nofollow"><span>Video</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="audio"><a href="javascript:;" rel="nofollow"><span>Audio</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="supplementary-data"><a href="javascript:;" rel="nofollow"><span>Supporting Information</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="peer-review"><a href="javascript:;" rel="nofollow"><span>Peer Review</span></a></li>
+  </ul>
+</li>
+
+    <li class="toolbar-item item-cite js-item-cite">
+<div class="getCitationDiv at-CiteButton">
+    <a href="javascript:;" class="stats-get-citation" data-modal-source-id="toolbox-get-citation" rel="nofollow">
+        <i class="icon-cite">
+            <span class="screenreader-text">Cite Icon</span>
+        </i>
+        <span class="toolbar-text normalize">Cite</span>
+    </a>
+</div>
+    </li>
+
+<li class="toolbar-item item-tools">
+    <div class="widget-ToolboxPermissions widget-instance-ToolboxPermissions_Abstract" data-widget-name="ToolboxPermissions" data-widget-instance="ToolboxPermissions_Abstract">
+            <div class="module-widget">
+        <a href="https://marketplace.copyright.com/rs-ui-web/mp/search/all/10.1021%2Fjacs.6c10062" id="PermissionsLink" role="button" rel="nofollow">
+            <span class="toolbar-label text">
+                <span class="toolbar-text normalize permission">Permissions</span>
+            </span>
+        </a>
+    </div>
+ 
+    </div>
+
+</li>
+    <li class="toolbar-item item-with-dropdown item-share">
+        <a href="javascript:;" class="drop-trigger js-toolbar-dropdown at-ShareButton" data-dropdown="ShareDrop" role="button" aria-expanded="false">
+            <i class="icon-menu_share"><span class="screenreader-text">Share Icon</span></i>
+            <span class="toolbar-label">
+                <span class="toolbar-text">Share</span>
+                <i class="arrow-icon icon-general_arrow-down js-toolbar-arrow-icon"></i>
+            </span>
+        </a>
+        <ul id="ShareDrop" class="addthis_toolbox addthis_default_style addthis_20x20_style f-dropdown js-dropdown-content" data-dropdown-content="">
+
+    <li>
+        <a class="st-custom-button addthis_button_facebook js-share-link" data-network="facebook" data-title="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" data-url="https://pubs.acs.org/jacsat/article-abstract/doi/10.1021/jacs.6c10062/5429482/Decoupling-the-Cation-Induced-Vibrational" data-email-subject="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" href="javascript:;" rel="nofollow"><span>Facebook</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_twitter js-share-link" data-network="twitter" data-title="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" data-url="https://pubs.acs.org/jacsat/article-abstract/doi/10.1021/jacs.6c10062/5429482/Decoupling-the-Cation-Induced-Vibrational" data-email-subject="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" href="javascript:;" rel="nofollow"><span>X</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_linkedin js-share-link" data-network="linkedin" data-title="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" data-url="https://pubs.acs.org/jacsat/article-abstract/doi/10.1021/jacs.6c10062/5429482/Decoupling-the-Cation-Induced-Vibrational" data-email-subject="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" href="javascript:;" rel="nofollow"><span>LinkedIn</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_email js-share-link" data-network="email" data-title="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" data-url="https://pubs.acs.org/jacsat/article-abstract/doi/10.1021/jacs.6c10062/5429482/Decoupling-the-Cation-Induced-Vibrational" data-email-subject="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" href="javascript:;" rel="nofollow"><span>Email</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_reddit js-share-link" data-network="reddit" data-title="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" data-url="https://pubs.acs.org/jacsat/article-abstract/doi/10.1021/jacs.6c10062/5429482/Decoupling-the-Cation-Induced-Vibrational" data-email-subject="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" href="javascript:;" rel="nofollow"><span>Reddit</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_bluesky js-share-link" data-network="bluesky" data-title="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" data-url=" https://pubs.acs.org/jacsat/article-abstract/doi/10.1021/jacs.6c10062/5429482/Decoupling-the-Cation-Induced-Vibrational" data-email-subject="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" href="javascript:;" rel="nofollow"><span>Bluesky</span></a>
+    </li>
+    <li>
+        <a class="st-custom-button addthis_button_wechat js-share-link" data-network="wechat" data-title="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" data-url="https://pubs.acs.org/jacsat/article-abstract/doi/10.1021/jacs.6c10062/5429482/Decoupling-the-Cation-Induced-Vibrational" data-email-subject="Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy" href="javascript:;" rel="nofollow"><span>WeChat</span></a>
+    </li>
+
+
+
+        </ul>
+    </li>
+    </ul>
+</div>
+
+<div id="getCitation" data-content-id="toolbox-get-citation" class="modal-only-content vt-citation-modal">
+  <div class="modal-title">Citation</div>
+  <p>Xiao-Ting Wang<span class="al-author-delim">, </span>Jin-Long Wan<span class="al-author-delim">, </span>Han-Liang Zhong<span class="al-author-delim">, </span>Yao-Hui Wang<span class="al-author-delim">, </span>Xin-Yue Zhang<span class="al-author-delim">, </span>Zeyu Peng<span class="al-author-delim">, </span>Ling-Yun Hu<span class="al-author-delim">, </span>Yao-Lin A<span class="al-author-delim">, </span>Shimiao Cheng<span class="al-author-delim">, </span>Shuliang Yang<span class="al-author-delim">, </span>Hua Zhang<span class="al-author-delim">, </span>Jia Yu<span class="al-author-delim">, </span>Jian-Feng Li; Decoupling
+the Cation-Induced Vibrational Responses
+at the Graphdiyne–Water Interface via In Situ Surface-Enhanced
+Raman Spectroscopy. <em><em>Journal American Chemical Society</em></em> 2026; <a href="https://doi.org/10.1021/jacs.6c10062">https://doi.org/10.1021/jacs.6c10062</a></p>
+  <p class="citation-label">Download citation file:</p>
+  <ul>
+      <li><a href="/Citation/Download?resourceId=5429482&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Ris (Zotero)</a></li>
+          <li><a href="/Citation/Download?resourceId=5429482&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Reference Manager</a></li>
+          <li><a href="/Citation/Download?resourceId=5429482&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">EasyBib</a></li>
+          <li><a href="/Citation/Download?resourceId=5429482&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Bookends</a></li>
+
+      <li><a href="/Citation/Download?resourceId=5429482&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Mendeley</a></li>
+
+      <li><a href="/Citation/Download?resourceId=5429482&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Papers</a></li>
+
+      <li><a href="/Citation/Download?resourceId=5429482&amp;resourceType=3&amp;citationFormat=1" rel="nofollow">EndNote</a></li>
+          <li><a href="/Citation/Download?resourceId=5429482&amp;resourceType=3&amp;citationFormat=3" rel="nofollow">RefWorks</a></li>
+          <li><a href="/Citation/Download?resourceId=5429482&amp;resourceType=3&amp;citationFormat=2" rel="nofollow">BibTex</a></li>
+          </ul>
+</div>
+
+
+        <div class="toolbar-search" id="toolbar-search-dropdown" data-theme-dropdown="toolbar-search-dropdown">
+            <fieldset>
+                <legend class="screenreader-text">toolbar search</legend>
+
+    <div class="widget-SitePageHeader widget-instance-SiteSearch_ArticleMainView_Abstract" data-widget-name="SitePageHeader" data-widget-instance="SiteSearch_ArticleMainView_Abstract">
+        
+
+    <input type="hidden" class="hfEnableEnhancedAutoSuggest" value="true" name="searchScope" aria-hidden="true">
+        <div class="mobile-menu-trigger_wrap mobile-search_wrap">
+            <button type="button" class="mobile-search_toggle at-search-toggle" aria-expanded="false" data-theme-dropdown-trigger="search-dropdown"><i class="icon-menu_search" aria-hidden="true"></i><span class="screenreader-text">Search Dropdown Menu</span></button>
+        </div>
+    <div class="navbar-search-container mobile-dropdown search-dropdown" data-theme-dropdown="search-dropdown">
+        <div class="navbar-search">
+            <form class="microsite-search js-MicrositeSearch" aria-label="toolbar search" role="search">
+                <fieldset class="searchbar-fieldset">
+                    <legend><span class="screenreader-text">toolbar search</span></legend>
+                    <div class="navbar-search-input_wrap">
+                        
+                        <input class="navbar-search-input microsite-search-term at-microsite-search-term search-term-autosuggest" data-autosuggest-hint="micrositeSearchTermInputHint-SiteSearch_ArticleMainView_Abstract" data-autosuggest-results="micrositeAutoCompleteResults-SiteSearch_ArticleMainView_Abstract" data-autosuggest-id="MicrositeSearchTerm-SiteSearch_ArticleMainView_Abstract" data-searchfilter="search-filter-SiteSearch_ArticleMainView_Abstract" placeholder="Search text, authors, etc." aria-label="Search text, authors, etc." type="text" maxlength="255" autocomplete="off" id="MicrositeSearchTerm-SiteSearch_ArticleMainView_Abstract">
+                        
+                        <input type="hidden" name="hfAutoCompleteMaxResults" class="hfAutoCompleteMaxResults" value="6" aria-hidden="true">
+                        <input type="hidden" name="hfSolrAutoSuggestMinimumCharactersLength" class="hfSolrAutoSuggestMinimumCharactersLength" value="2" aria-hidden="true">
+                        <input type="hidden" name="hfSolrJournalName" class="hfSolrJournalName" value="" aria-hidden="true">
+                        <input type="hidden" name="hfSolrJournalID" class="hfSolrJournalID" value="" aria-hidden="true">
+                        <label for="micrositeSearchTermInputHint-SiteSearch_ArticleMainView_Abstract" aria-hidden="true">
+                            <span class="screenreader-text">Search input auto suggest</span>
+                        </label>
+                        <input type="text" id="micrositeSearchTermInputHint-SiteSearch_ArticleMainView_Abstract" data-autosuggest-id="micrositeSearchTermInputHint-SiteSearch_ArticleMainView_Abstract" class="microsite-search-term-input-hint" autocomplete="off" tabindex="-1" aria-hidden="true" disabled="">
+                        <ul data-autosuggest-id="micrositeAutoCompleteResults-SiteSearch_ArticleMainView_Abstract" class="term-list hidden"></ul>
+                    </div>
+                        <div class="navbar-search-filter_wrap">
+                            <label for="navbar-search-filter-site-SiteSearch_ArticleMainView_Abstract">
+                                <span class="screenreader-text">filter your search</span>
+                            </label>
+                            <select class="navbar-search-filter navbar-search-filter-site at-navbar-search-filter" id="navbar-search-filter-site-SiteSearch_ArticleMainView_Abstract" data-autosuggest-id="search-filter-SiteSearch_ArticleMainView_Abstract">
+<option class="header-search-bar-filters-item" value="/search-results?page=1&amp;q={searchQuery}" data-siteid="0">All Content</option><option class="header-search-bar-filters-item" value="/journals/search-results?page=1&amp;q={searchQuery}&amp;fl_SiteID=3&amp;allJournals=1" data-siteid="3">Journals</option><option class="header-search-bar-filters-item selected" value="/jacsat/search-results?page=1&amp;q={searchQuery}&amp;fl_SiteID=1000113" data-siteid="1000113" selected="">Journal of the American Chemical Society</option>                            </select>
+                        </div>
+                    <div class="navbar-search-submit_wrap">
+                        
+                        <button type="button" class="microsite-search-icon navbar-search-submit icon-menu_search"><span class="screenreader-text">Search</span></button>
+                    </div>
+                </fieldset>
+            </form><!-- /#MicrositeSearch -->
+        </div><!-- /.navbar-search -->
+<div class="navbar-search-advanced">
+    <a href="/advanced-search" class="advanced-search">Advanced Search</a>
+</div>    </div><!-- /.navbar-search-container -->
+
+ 
+    </div>
+
+            </fieldset>
+        </div>
+    </div><!-- /.toolbar-inner-wrap -->
+</div><!-- /.toolbar-wrap -->
+
+<div class="article-body">
+    <div id="articleMainView-articleId" class="js-articleMainView-articleId" data-articleid="5429482" style="display: none;"></div>
+    <div id="ContentTab" class="content active">
+    <div class="widget-ArticleFulltext widget-instance-ArticleFulltext_Abstract" data-widget-name="ArticleFulltext" data-widget-instance="ArticleFulltext_Abstract">
+        <input type="hidden" name="js-hfArticleLinksReferencesDoiRegex" id="js-hfArticleLinksReferencesDoiRegex" value="">
+
+<div class="module-widget">
+    <div class="widget-items" data-widgetname="ArticleFulltext">
+        <span id="sr-fig-viewer-action" hidden="">Open figure viewer</span>
+        
+
+
+
+
+
+                <h2 scrollto-destination="257573597" id="257573597" data-section-title="Abstract" class="abstract-title jumplink-heading">Abstract</h2>
+                <div class="">
+                <div id="257573597-content" class="article-section-wrapper js-article-section js-content-section  " data-section-parent-id="0">
+                    
+                    <section class="abstract" aria-label="Main abstract"><p>Graphdiyne
+(GDY), featuring subnanometer pores and diacetylenic
+linkages, provides a platform for probing electrified carbon interfaces.
+Although the organization of cations and interfacial water governs
+electric double layer (EDL) structure and charge-transfer kinetics,
+tracking their reorganization and coupling with GDY remains challenging.
+Here, cation-dependent interfacial responses at Au–GDY electrodes
+were characterized using <em>in situ</em> surface-enhanced
+Raman spectroscopy and <em>ab initio</em> molecular dynamics
+(AIMD) simulations. A nonmonotonic cation dependence separates Li<sup>+</sup>/K<sup>+</sup> from Na<sup>+</sup>/Cs<sup>+</sup> rather than
+following a bare- or hydrated-ion size sequence. Under cathodic polarization,
+LiOH/KOH retain a single red-shifting diacetylenic band, while NaOH/CsOH
+develop an additional low-frequency band. This grouping coincides
+with distinct potential-dependent vibrational responses of cation-coordinated
+water and the GDY framework. AIMD indicates that Li<sup>+</sup>/K<sup>+</sup> access GDY sublayer regions, whereas Na<sup>+</sup>/Cs<sup>+</sup> remain mainly near the outer interface within the simulated
+time window. Combined analyses support a synergistic ion-sieving mechanism
+governed by hydration-shell reorganization, pore confinement, and
+cation–GDY interactions. This distribution is accompanied by
+interfacial-water reorganization and changes in local vibrational
+environments of the GDY framework. Together, these findings provide
+a molecular-level framework for understanding cation-specific EDL
+behavior at porous carbon interfaces, with implications for ion-selective
+electrochemical interfaces.</p></section>
+                </div>
+                <div id="257573599-content" class="article-section-wrapper js-article-section js-content-section  " data-section-parent-id="0">
+                    
+                    <div class="figure-table-wrapper graphical-abstract"><h2 class="graphical-abstract-label">Visual Abstract</h2><section class="abstract abstractBorder graphicalAbstract" aria-label="Main abstract"><p></p><div class="fig-graphic" id="tgr1"><a class="jumplink-placeholder" data-sectionid="257573599" data-filename="ja6c10062_0006.tif"><img class="content-image js-graphic-position-float" src="https://acs.silverchair-cdn.com/acs/content_public/journal/jacsat/pap/10.1021_jacs.6c10062/1/m_ja6c10062_0006.png?Expires=1792477818&amp;Signature=d2CNNmERWwd~U10Rc8jyn8J2LE6JSSMYXKl5vOwGuFe23DO-j5VimVAXRk9Ny7Am4B~OS68TQFhUpF~2WeM9SoMsRxo2cX9hEN8JoH0oSvUfo81Iy4~Y5QsVmJ-JlN0J8x-scC1PAQdE3N5H-6~GrxH8yJWJy~qy6nA6R39UgDaM8Dd6wsCvzwVD56BrZKwaF-pE582ji3r~cWpPFgsk8LFzdVWuJ0qrw1mfTeOhdd406Ao-s~zkIo-1JbO0ZSyyS3e9HTQrwo7ssimvYJsqg9HIfyI0L-9ZAEOPT2QDqshPPj9DxFuJCiEQtLeiEGX5obyMQY8N3fDW1AMeGXCacA__&amp;Key-Pair-Id=APKAIE5G5CRDK6RD3PGA" data-src="https://acs.silverchair-cdn.com/acs/content_public/journal/jacsat/pap/10.1021_jacs.6c10062/1/m_ja6c10062_0006.png?Expires=1792477818&amp;Signature=d2CNNmERWwd~U10Rc8jyn8J2LE6JSSMYXKl5vOwGuFe23DO-j5VimVAXRk9Ny7Am4B~OS68TQFhUpF~2WeM9SoMsRxo2cX9hEN8JoH0oSvUfo81Iy4~Y5QsVmJ-JlN0J8x-scC1PAQdE3N5H-6~GrxH8yJWJy~qy6nA6R39UgDaM8Dd6wsCvzwVD56BrZKwaF-pE582ji3r~cWpPFgsk8LFzdVWuJ0qrw1mfTeOhdd406Ao-s~zkIo-1JbO0ZSyyS3e9HTQrwo7ssimvYJsqg9HIfyI0L-9ZAEOPT2QDqshPPj9DxFuJCiEQtLeiEGX5obyMQY8N3fDW1AMeGXCacA__&amp;Key-Pair-Id=APKAIE5G5CRDK6RD3PGA" alt="Graphic. Refer to the image caption for details." path-from-xml="ja6c10062_0006.tif"></a></div><p></p></section></div>
+                </div>
+                    <div class="article-metadata-panel clearfix rs_skip">
+    <div class="widget-SolrResourceMetadata widget-instance-ContentMetadata_ArticleFulltext_Article" data-widget-name="SolrResourceMetadata" data-widget-instance="ContentMetadata_ArticleFulltext_Article">
+        
+        <div class="content-metadata-taxonomies article-metadata-taxonomies">
+        <div class="content-metadata article-metadata">
+
+            <strong class="article-metadata-taxonomies-title content-metadata-taxonomies-title taxonomy-title-override">Subjects</strong>
+
+                    <a href="/search-results?page=1&amp;tax=216">Raman spectroscopy</a><span>,</span>
+                    <a href="/search-results?page=1&amp;tax=2171">Gold</a><span>,</span>
+                    <a href="/search-results?page=1&amp;tax=3897">Cations</a><span>,</span>
+                    <a href="/search-results?page=1&amp;tax=644">Interfaces</a><span>,</span>
+                    <a href="/search-results?page=1&amp;tax=769">Electrodes</a>
+        </div>
+        </div>
+
+
+ 
+    </div>
+
+                    </div>
+                </div>
+                <h2 scrollto-destination="notes-3" data-legacyid="notes-3" id="notes-3" data-section-title="Supporting Information" class="backnotes-title jumplink-heading">Supporting Information</h2>
+                <div class="">
+                <div id="257573670-content" class="article-section-wrapper js-article-section js-content-section  " data-section-parent-id="257573669">
+                    
+                    <p>The Supporting Information
+is available free of charge at <a class="link" href="https://pubs.acs.org/doi/10.1021/jacs.6c10062?goto=supporting-info" target="_blank">https://pubs.acs.org/doi/10.1021/jacs.6c10062</a>.</p>
+                </div>
+                <div id="257573671-content" class="article-section-wrapper js-article-section js-content-section  " data-section-parent-id="257573669">
+                    
+                    <ul class="list-simple"><li><p>Experimental procedures;
+sample characterization; <em>in situ</em> Raman spectra and
+control measurements; interfacial-water
+spectral analysis; computational methods and analyses of cation hydration,
+pore access, charge redistribution, electric fields, and vibrational
+properties (<a class="supplementary-material-link" reveal-id="all-supplement-materials-popup" data-open="all-supplement-materials-popup" href="/jacsat/article-supplement/5429482/docx/ja6c10062_si_001/" path-from-xml="sifile1">DOCX</a>)</p></li></ul>
+                </div>
+        <!-- /foreach -->
+        </div> 
+
+
+            <div class="article-metadata-standalone-panel clearfix"></div>
+
+
+<div id="articlefulltext_figshare" class="figshare-wrapper" data-widgetname="filesViewerGeneric" data-showstats="True" data-showpageinfo="False" data-showsharebutton="True" data-showfiledetails="False" data-loaddoisbycollection="False">
+</div>
+
+        
+
+
+        <div class="permissionstatement-section-wrapper ">
+            
+            <div class="copyright copyright-statement">© 2026 American Chemical Society</div>
+        </div>
+<!-- /foreach -->
+
+
+        <span id="UserHasAccess" data-userhasaccess="False"></span>
+
+    </div><!-- /.widget-items -->
+    </div><!-- /.module-widget --> 
+    </div>
+    <div class="widget-ArticleDataSupplements widget-instance-ArticleDataSupplements_Abstract" data-widget-name="ArticleDataSupplements" data-widget-instance="ArticleDataSupplements_Abstract">
+            <a name="SupplementalTab" id="SupplementalTab"></a>
+<h2 scrollto-destination="supplementary-data" id="supplementary-data" class="section-title supplementary-data-section-title">Supporting Information</h2>
+    <input type="hidden" name="ShowFigShareInDataSupplements" id="ShowFigShareInDataSupplements" value="True">
+            <div class="dataSuppLink">
+                <a class="openInAnotherWindow js-download-file-gtm-datalayer-event" data-label="" data-doctype="dataSupplementDoc" target="_blank" href="/jacsat/article-supplement/5429482/docx/ja6c10062_si_001/" aria-label="Download sifile1" rel="nofollow">sifile1</a>- docx file
+            </div>
+ 
+    </div>
+                <div class="article-top-info-user-restricted-options">You do not currently have access to this content.</div>
+
+        <div id="ContentTabFilteredView"></div>
+
+    </div>
+</div>
+
+ 
+    </div>
+
+
+</div>
+ 
+    </div>
+<div class="user-comments-wrap js-userComments">
+    <div class="widget-UserCommentBody widget-instance-UserCommentBody" data-widget-name="UserCommentBody" data-widget-instance="UserCommentBody">
+         
+    </div>
+    <div class="widget-UserComment widget-instance-UserComment" data-widget-name="UserComment" data-widget-instance="UserComment">
+         
+    </div>
+
+</div>
+
+            <div>    <a id="FullTextLink"></a></div>
+
+<div id="unauth" class="unauth-wrap">
+                <div class="unauth-row clearfix">
+            <!-- /.register-ribbon-wrap -->
+        <div class="unauth-column-wrap">
+                <div class="unauth-column">
+    <div class="widget-LoginForm widget-instance-ArticlePage_LoginForm" data-widget-name="LoginForm" data-widget-instance="ArticlePage_LoginForm">
+            <div class="signin-form">
+
+        <div class="preloader-wrap hide">
+            <div class="preloader">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        
+        <div class="login-form__section-wrap">
+
+    <div class="widget-ExternalLogin widget-instance-loginForm_ExternalLogin" data-widget-name="ExternalLogin" data-widget-instance="loginForm_ExternalLogin">
+        
+    <div class="login-form__section">
+        <div class="external-login-provider">
+
+
+                <h3>ACS Login</h3>
+                <a class="externalLoginLink js-externalLogin-link at-externalLoginLink button-call-to-action" href="https://pubs.acs.org/ExternalAuthentication/OIDCLogin?returnUrl=https%3a%2f%2fpubs.acs.org%2fjacsat%2farticle-abstract%2fdoi%2f10.1021%2fjacs.6c10062%2f5429482%2fDecoupling-the-Cation-Induced-Vibrational%3fredirectedFrom%3dfulltext" rel="nofollow">
+                    Log In
+                </a>
+        </div>
+            </div>
+ 
+    </div>
+
+    <div class="widget-SeamlessAccess widget-instance-LoginForm_SeamlessAccess" data-widget-name="SeamlessAccess" data-widget-instance="LoginForm_SeamlessAccess">
+        
+<script src="https://service.seamlessaccess.org/thiss.js"></script>
+<div id="seamlessAccessLogin" class="seamless-access-button"></div>
+<script>
+    window.onload = function () {
+        var loginUrl = 'https://' + window.location.host + '/Shibboleth.sso/Login';
+        thiss.DiscoveryComponent.render({
+            loginInitiatorURL: loginUrl,
+        }, '#seamlessAccessLogin');
+    }
+</script> 
+    </div>
+
+
+
+        </div>
+    </div>
+ 
+    </div>
+
+                </div>
+    <div class="widget-RestoreGuestAccess widget-instance-ArticlePage_RestoreGuestAccess" data-widget-name="RestoreGuestAccess" data-widget-instance="ArticlePage_RestoreGuestAccess">
+            <div class="restore-access-form">
+        <div class="restore-access-form__heading">
+            <p class="restore-access-info-text">Purchased this content as a guest? Enter your email address to restore access.</p>
+        </div>
+        <div id="restoreGuestEmailFormatError" class="error at-error" role="alert">
+            Please enter valid email address.
+        </div>
+        <div id="restoreGuestEmailLengthError" class="error js-error-length at-error" role="alert">
+            Email address must be 94 characters or fewer.
+        </div>
+        <div class="restore-access-form__row">
+            <label for="guestEmailAddress" class="restore-access-form__label">Email Address</label>
+            <input id="guestEmailAddress" class="restore-guest-email" type="email" autocomplete="off" aria-describedby="restoreGuestEmailFormatError restoreGuestEmailLengthError" aria-invalid="false" data-max-length="94">
+        </div>
+        <div class="restore-access-form__row">
+            <button type="button" class="js-btn-restore-guest-access btn">Restore Access</button>
+        </div>
+    </div>
+ 
+    </div>
+                    <input type="hidden" id="resourceId" value="5429482">
+                    <input type="hidden" id="resourceTypeId" value="3">
+                <!-- /.unauth-column -->
+                            <div class="unauth-column entities">
+                        <div class="unauth-society-row">
+
+                        </div>
+                                    </div><!-- /.unauth-column -->
+
+        </div><!-- /.unauth-signin-col-wrap -->
+        </div>
+    <div class="product-type_wrap">
+    <div class="widget-BuyThisResourceLink widget-instance-ArticlePage_BuyThisResourceLink" data-widget-name="BuyThisResourceLink" data-widget-instance="ArticlePage_BuyThisResourceLink">
+                <div id="dvPurchaseButton" class="ppv-wrap">
+                            <div class="ppv_price_wrap">
+                        <div class="price_left_text">Pay-Per-View Access</div>
+                                            <div class="display_price_buy_resource">$48.00</div>
+                </div>
+                            <div id="buyThisResourceLink" class="buyThisResourceLink ppv box">
+    <a class="store-link js-add-to-cart" href="https://pubs.acs.org/store/add/5429482/3" rel="nofollow" data-article-doi="" data-article-title="" data-article-type="" data-journal-short-name="" data-currency="USD" data-price="48.00">
+        <i class="icon-availability_cart"></i> <span>Buy This Article</span>
+    </a>
+    <div class="widget-ExternalProductLink widget-instance-BuyThisResource" data-widget-name="ExternalProductLink" data-widget-instance="BuyThisResource">
+          
+    </div>
+
+                </div>
+
+        </div>
+
+
+ 
+    </div>
+            </div>
+    <div class="widget-BuyOrUseTokensLink widget-instance-ArticlePage_BuyOrUseTokensLink" data-widget-name="BuyOrUseTokensLink" data-widget-instance="ArticlePage_BuyOrUseTokensLink">
+         
+    </div>
+</div><!-- /.unauth-wrap -->
+
+            
+        </div>
+    </div> 
+    <div id="Sidebar" class="page-column page-column--right">
+        <input type="hidden" class="js-sidebar-stick-only-last-ad" value="true">
+
+    <div class="widget-AdBlock widget-instance-ArticlePageTopSidebar" data-widget-name="AdBlock" data-widget-instance="ArticlePageTopSidebar">
+        
+ 
+    </div>
+
+
+        <div class="sidebar-widget_wrap">
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRail" data-widget-name="DynamicWidgetLayout" data-widget-instance="Article_RightRail">
+        <div class="widget widget-dynamic " data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0" data-widget-name="DynamicWidgetLayout" data-widget-instance="Article_RightRailB0">
+        <div class="widget widget-dynamic right-rail" data-count="6">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B0" data-widget-name="DynamicWidgetLayout" data-widget-instance="Article_RightRailB0B0">
+        <div class="widget widget-dynamic article-article-level-metrics article-level-metrics" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-ArticleLevelMetrics widget-instance-Article_RightRailB0B0article-article-level-metrics" data-widget-name="ArticleLevelMetrics" data-widget-instance="Article_RightRailB0B0article-article-level-metrics">
+        
+
+
+
+    <div class="artmet-wrapper ">
+
+
+
+
+    <div id="artmet-full-details" class="artmet-full-wrap clearfix js-metric-full-wrap " data-autoload-chart="True">
+            <h2 id="widget-title-1-id" class="widget-title-1 artmet-widget-title-1">Article Metrics</h2>
+
+            <div class="artmet-item artmet-views-wrap">
+                <div class="artmet-views clearfix">
+                    <div class="artmet-total-views">
+                        <span class="artmet-text">Total Views</span>
+                        <span class="artmet-number">0</span>
+                    </div>
+                    <div class="artmet-breakdown-views-wrap">
+                        <div class="artmet-breakdown-view breakdown-border">
+                            <span class="artmet-number">0</span>
+                            <span class="artmet-text">Pageviews</span>
+                        </div>
+                        <div class="artmet-breakdown-view">
+                            <span class="artmet-number">0</span>
+                            <span class="artmet-text">PDF Downloads</span>
+                        </div>
+                                            </div>
+                </div>
+                <div class="artmet-views-since">Since 9/15/2026</div>
+            </div>
+
+
+<div class="artmet-condensed-wrap clearfix">
+    <div class="artmet-condensed-stats clearfix">
+            <div class="artmet-item artmet-views">
+                <span class="artmet-number">0</span>
+                <span class="artmet-text">Views</span>
+            </div>
+
+
+    </div>
+</div>
+
+
+    </div>
+
+    </div>
+
+ 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B1" data-widget-name="DynamicWidgetLayout" data-widget-instance="Article_RightRailB0B1">
+        <div class="widget widget-dynamic article-article-cited-by article-cited-by" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-ArticleCitedBy widget-instance-Article_RightRailB0B1article-article-cited-by" data-widget-name="ArticleCitedBy" data-widget-instance="Article_RightRailB0B1article-article-cited-by">
+        <div class="rail-widget_wrap vt-articles-cited-by">
+    <h2 class="article-cited-title">Cited By</h2>
+    <div class="widget-links_wrap">
+                    <div class="article-cited-link-wrap google-scholar-url">
+                <a href="https://scholar.google.com/scholar_lookup?title=Decoupling%0D%0Athe%20Cation-Induced%20Vibrational%20Responses%0D%0Aat%20the%20Graphdiyne%E2%80%93Water%20Interface%20via%20In%20Situ%20Surface-Enhanced%0D%0ARaman%20Spectroscopy&amp;author=Xiao-Ting%20Wang&amp;author=Jin-Long%20Wan&amp;author=Han-Liang%20Zhong&amp;author=Yao-Hui%20Wang&amp;author=Xin-Yue%20Zhang&amp;author=Zeyu%20Peng&amp;author=Ling-Yun%20Hu&amp;author=Yao-Lin%20A&amp;author=Shimiao%20Cheng&amp;author=Shuliang%20Yang&amp;author=Hua%20Zhang&amp;author=Jia%20Yu&amp;author=Jian-Feng%20Li&amp;publication_year=2026&amp;journal=Journal%20of%20the%20American%20Chemical%20Society" target="_blank" rel="nofollow">Google Scholar</a>
+            </div>
+            </div>
+</div> 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B2" data-widget-name="DynamicWidgetLayout" data-widget-instance="Article_RightRailB0B2">
+        <div class="widget widget-dynamic article-alerts alerts" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-AlertsSignUp widget-instance-Article_RightRailB0B2article-alerts" data-widget-name="AlertsSignUp" data-widget-instance="Article_RightRailB0B2article-alerts">
+            <div class="widget widget-Alerts widget-alerts rail-widget_wrap vt-widget-alerts js-alerts-preference-center js-alert-show-registered-state" data-modal-title="Sign Up for Alerts" data-modal-width="535" data-modal-height="600">
+        <h2 class="alerts-widget-header">Subscribe to Email Alerts</h2>
+        <div class="widget-links_wrap">
+                <div class="alert-section alert-section--journal">
+                    <p class="alert-prompt">Follow this journal to receive email updates on published articles and news.</p>
+                    <div class="userAlert alertType-5">
+                            <button type="button" class="alert-btn js-preference-center-alert-btn btn" data-preference-center-url="https://preferences.acs.org/iframe/jacsat" data-alert-type="5" data-alert-resource-id="1000059" data-alert-resource-type="2" data-alert-resource-name="Journal of the American Chemical Society" data-alert-user-email="" data-site-id="1000113" data-user-logged-in="False" aria-haspopup="dialog" aria-expanded="false">
+                                Follow Journal
+                            </button>
+                    </div>
+                </div>
+
+                <div class="alert-section alert-section--article">
+                    <p class="alert-prompt">Sign up to get notified when this article receives corrections or citation updates.</p>
+                    <div class="userAlert alertType-1">
+                        <button type="button" class="alert-btn js-open-alert-modal btn-inv" data-alert-type="1" data-alert-resource-id="5429482" data-alert-resource-type="3" data-alert-resource-name="" data-alert-user-email="" data-site-id="1000113" data-user-logged-in="False" aria-haspopup="dialog">
+                            Get Article Activity Alert
+                        </button>
+                    </div>
+                </div>
+            <div class="userAlertSignUpModal reveal-modal small" data-bypass-confirmation="false" data-enable-guest-signup="false" data-reveal="" role="dialog" aria-modal="true" aria-hidden="true" aria-live="assertive" aria-label="Alert sign-up">
+    <div class="userAlertSignUp"></div>
+    <a href="javascript:;" role="button" class="close-reveal-modal js-close-modal">
+        <i class="icon-general-close" aria-hidden="true"></i>
+        <span class="screenreader-text">Close alert sign-up modal</span>
+    </a>
+</div>
+
+        </div>
+    </div>
+    <div id="preference-center-modal" class="reveal-modal preference-center-modal" role="dialog" aria-modal="true" aria-label="Sign Up for Alerts" data-reveal="">
+        <div class="iframe-container js-iframe-container">
+            <iframe id="preference-center-iframe" class="preference-center-iframe js-preference-center-iframe" src="about:blank" title="Sign Up for Alerts" frameborder="0" allowfullscreen="">
+            </iframe>
+        </div>
+    </div>
+ 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B3" data-widget-name="DynamicWidgetLayout" data-widget-instance="Article_RightRailB0B3">
+        <div class="widget widget-dynamic article-related-content-solr-articles related-content-solr" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-RelatedContentSolr widget-instance-Article_RightRailB0B3Article_RightRail_RelatedContentArticles" data-widget-name="RelatedContentSolr" data-widget-instance="Article_RightRailB0B3Article_RightRail_RelatedContentArticles">
+            <div class="vt-related-content related-content_wrap rail-widget_wrap">
+        <h2>Recommended Articles</h2>
+
+        <div class="widget-links_wrap">
+                <div class="article-title">
+                    <a href="/jpcafh/article/113/46/12763/454774/Nature-of-the-N-H-S-Hydrogen-BondN-H-S-Hydrogen">Nature of the N−H···S Hydrogen Bond</a>
+    <div class="content-meta"><span class="j-name">J. Phys. Chem. A</span> <span class="j-date">(October,2009)</span></div>
+
+                </div>
+                <div class="article-title">
+                    <a href="/accacs/article/15/1/468/3691464/New-Insights-into-CO2-Electroreduction-in-Acidic">New Insights into
+CO<sub>2</sub> Electroreduction
+in Acidic Seawater</a>
+    <div class="content-meta"><span class="j-name">ACS Catal.</span> <span class="j-date">(December,2024)</span></div>
+
+                </div>
+                <div class="article-title">
+                    <a href="/jpcafh/article/113/46/12774/454796/Sulfur-Not-Too-Far-Behind-O-N-and-C-SH-Hydrogen">Sulfur, Not Too Far Behind O, N, and C: SH···π Hydrogen Bond</a>
+    <div class="content-meta"><span class="j-name">J. Phys. Chem. A</span> <span class="j-date">(October,2009)</span></div>
+
+                </div>
+                <div class="article-title">
+                    <a href="/acsodf/article/4/2/4147/1572832/Thermal-Transport-Engineering-in-Graphdiyne-and">Thermal Transport Engineering in Graphdiyne and Graphdiyne
+Nanoribbons</a>
+    <div class="content-meta"><span class="j-name">ACS Omega</span> <span class="j-date">(February,2019)</span></div>
+
+                </div>
+        </div>
+    </div>
+ 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B4" data-widget-name="DynamicWidgetLayout" data-widget-instance="Article_RightRailB0B4">
+        <div class="widget widget-dynamic article-native-ad sponsored-content" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-AdBlock widget-instance-Article_RightRailB0B4article-native-ad" data-widget-name="AdBlock" data-widget-instance="Article_RightRailB0B4article-native-ad">
+            <input type="hidden" class="hfAdBlockInfo" data-divid="dfp-journal-article-recommend" data-slotname="/8868/journal/JACS/article" data-targetname="" data-sizes="[[1,1],[300,250]]" data-enabled-on-mobile="True" data-adprovider-typeid="1" data-accountid="" data-outofpagead="False" data-sticky-time="5" data-lazyloaded="False" data-position-keyword="rightrail-native" data-position-targeting-key="position" data-skip-size-mapping="True" data-native-placement-id="1100167" data-wps-adsize-number="0" data-wps-network-id="0" data-wps-site-id="0" data-wps-zone-ids="" data-wps-brandlock-keyword="" data-tapnative-aid="" data-tapnative-div-id="" data-suppress-display="false" data-fallback-divid="">
+    <div class="adblock-wrap js-adblock-wrap ">
+                <p class="adblock-advertisement-text js-adblock-advertisement-text hide">Advertisement</p>
+
+<div id="dfp-journal-article-recommend" adslot="/8868/journal/JACS/article" class="adblock-slot-placeholder js-adblock"></div>
+
+
+    </div>
+
+ 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B5" data-widget-name="DynamicWidgetLayout" data-widget-instance="Article_RightRailB0B5">
+        <div class="widget widget-dynamic article-scite-badge scite-widget" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-SciteBadge widget-instance-Article_RightRailB0B5article-scite-badge" data-widget-name="SciteBadge" data-widget-instance="Article_RightRailB0B5article-scite-badge">
+        <div class="scite-badge" tabindex="0" data-doi="10.1021/jacs.6c10062" data-layout="horizontal" data-show-zero="true" data-show-labels="false" data-tooltip-placement="right">
+</div> 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+
+        </div>
+
+    <div class="widget-AdBlock widget-instance-ArticlePageTopMainBodyBottom" data-widget-name="AdBlock" data-widget-instance="ArticlePageTopMainBodyBottom">
+        
+ 
+    </div>
+
+
+
+
+    </div> 
+</div>
+
+
+
+    <div class="widget-Lockss widget-instance-Article_Lockss" data-widget-name="Lockss" data-widget-instance="Article_Lockss">
+         
+    </div>
+
+
+
+
+    <div class="widget-VideoListAccess widget-instance-Article_VideoListAccess" data-widget-name="VideoListAccess" data-widget-instance="Article_VideoListAccess">
+         
+    </div>
+
+
+    <div class="widget-ArticleListAccess widget-instance-Article_AccessIconData" data-widget-name="ArticleListAccess" data-widget-instance="Article_AccessIconData">
+        
+
+    <script type="text/javascript">
+        var SCM = SCM || {};
+        SCM.AccessIcons = SCM.AccessIcons || [];
+        SCM.AccessIcons = SCM.AccessIcons.concat([{"id":5429482,"icon":"icon-availability_cart","title":"Available to Purchase"}]);
+
+        SCM.SiteJS.setAccessIcons(SCM.AccessIcons);
+
+    </script>
+ 
+    </div>
+
+
+
+        </div><!-- /.content-main_content -->
+    </section>
+</div>
+<div class="mobile-mask">
+</div>
+<section class="footer_wrap vt-site-footer" role="contentinfo">
+    
+
+
+<div class="ad-banner js-ad-banner ad-banner-footer">
+    <div class="widget-AdBlock widget-instance-FooterAd" data-widget-name="AdBlock" data-widget-instance="FooterAd">
+        
+ 
+    </div>
+
+</div>
+
+<div class="sticky-footer-ad js-sticky-footer-ad">
+    <div class="widget-AdBlock widget-instance-StickyAd" data-widget-name="AdBlock" data-widget-instance="StickyAd">
+        
+ 
+    </div>
+
+</div>
+
+
+    <div class="widget-SitePageFooter widget-instance-SitePageFooter" data-widget-name="SitePageFooter" data-widget-instance="SitePageFooter">
+            <div class="journal-footer journal-bg">
+        <div class="journal-footer_content clearfix foot-left">
+        </div>
+    </div>
+ 
+    </div>
+
+
+
+<div class="site-theme-footer">
+        <div class="site-theme-footer_content">
+    <div class="widget-SelfServeContent widget-instance-UmbrellaFooterSelfServe" data-widget-name="SelfServeContent" data-widget-instance="UmbrellaFooterSelfServe">
+        
+
+
+
+    <input type="hidden" class="SelfServeContentId" value="GlobalFooter_Links">
+    <input type="hidden" class="SelfServeVersionId" value="0">
+
+<div class="theme-footer">
+<div class="flex-row">
+<div class="col-12 footer-nav">
+<div class="flex-row">
+<div class="col-2">
+<div class="footer-links-group with-header">
+<h3 class="footer-links-header">READ</h3>
+<ul class="list-lvl-0">
+    <li class="list-lvl-0">
+    <a href="/journals">Journals</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="/books">Books &amp; References</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://cen.acs.org">C&amp;EN</a>
+    </li>
+</ul>
+</div>
+</div>
+<!-- close .col-2-->
+<div class="col-2">
+<div class="footer-links-group with-header">
+<h3 class="footer-links-header">PUBLISH</h3>
+<ul class="list-lvl-0">
+    <li class="list-lvl-0">
+    <a href="https://publish.acs.org">Submit a Manuscript</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://researcher-resources.acs.org">Author Resources</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://researcher-resources.acs.org/publish/peer_reviews">Peer Review</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://authoringservices.acs.org">Purchase Author Services</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://acsopenscience.org">Explore Open Access</a>
+    </li>
+</ul>
+</div>
+</div>
+<!-- close .col-2-->
+<div class="col-2">
+<div class="footer-links-group with-header">
+<h3 class="footer-links-header">SUBSCRIBE</h3>
+<ul class="list-lvl-0">
+    <li class="list-lvl-0">
+    <a href="https://solutions.acs.org">Librarians &amp; Account Managers</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://acsopenscience.org/institutions">Open Science for Institutions</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://solutions.acs.org/contact-us/inquire-about-subscriptions/">Inquire About Access</a>
+    </li>
+</ul>
+</div>
+</div>
+<!-- close .col-2-->
+<div class="col-2">
+<div class="footer-links-group with-header">
+<h3 class="footer-links-header">HELP</h3>
+<ul class="list-lvl-0">
+    <li class="list-lvl-0">
+    <a href="https://acs.service-now.com/acs?id=kb_home">Support FAQ</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://acs.service-now.com/acs">Live Chat with Agent</a>
+    </li>
+</ul>
+</div>
+</div>
+<!-- close .col-2-->
+<div class="col-2">
+<div class="footer-links-group with-header">
+<h3 class="footer-links-header">RESOURCES</h3>
+<ul class="list-lvl-0">
+    <li class="list-lvl-0">
+    <a href="/pages/about">About ACS Publications</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://chemrxiv.org/engage/chemrxiv/public-dashboard">ChemRxiv</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://axial.acs.org">Blog</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://www.acs.org/events.html">Events</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://www.acs.org/membership.html">Join ACS</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://acsmediakit.org/products/acs-journals">For Advertisers</a>
+    </li>
+</ul>
+</div>
+</div>
+<!-- close .col-2-->
+</div>
+<!-- close .footer-nav .flex-row -->
+</div>
+<!-- close .footer-nav -->
+</div>
+<!-- close .flex-row -->
+<div class="footer-branding">
+<div class="footer-logo-wrap">
+<!-- If there are multiple logos, duplicate div.footer-logo -->
+<div class="footer-logo">
+<a href="#"><img alt="American Chemical Society logo" src="https://acs.silverchair-cdn.com/ImageLibrary/ACSPubs_logo_tagline_Knockout.svg?versionId=3826"></a>
+</div>
+</div>
+<div class="contact-info-wrap">
+<address>
+1155 Sixteenth Street N.W.<br>
+Washington, DC 20036
+</address>
+</div>
+</div>
+<div class="legal-links-wrap">
+<ul class="copyright-wrap">
+    <li class="copyright">
+    Copyright © <span id="copyright-year">2026</span> American Chemical Society.
+    </li>
+</ul>
+<script>
+            document.getElementById('copyright-year').textContent = new Date().getFullYear();
+        </script>
+<ul class="legal-links">
+    <li>
+    <a href="https://www.acs.org/terms.html">Terms of use</a>
+    </li>
+    <li>
+    <a href="https://www.acs.org/privacy.html">Privacy Policy</a>
+    </li>
+    <li>
+    <a onclick="Osano.cm.showDrawer('osano-cm-dom-info-dialog-open')">Manage Cookies</a>
+    </li>
+    <li>
+    <a href="/pages/accessibility">Accessibility</a>
+    </li>
+</ul>
+<ul class="social-icons-list">
+    <!-- Facebook -->
+    <li>
+    <a class="social-link" href="https://www.facebook.com/ACSPublications/" target="_blank"><span class="icon-social-facebook"></span><span class="screenreader-text">Facebook</span></a>
+    </li>
+    <!-- Twitter -->
+    <li>
+    <a class="social-link" href="https://x.com/ACSPublications" target="_blank"><span class="icon-social-twitter"></span><span class="screenreader-text">X</span></a>
+    </li>
+    <!-- Instagram -->
+    <li>
+    <a class="social-link" href="https://bsky.app/profile/pubs.acs.org" target="_blank"><span class="icon-social-bluesky"></span><span class="screenreader-text">BlueSky</span></a>
+    </li>
+    <!-- YouTube -->
+    <li>
+    <a class="social-link" href="https://www.youtube.com/user/AmerChemSoc" target="_blank"><span class="icon-social-youtube"></span><span class="screenreader-text">YouTube</span></a>
+    </li>
+    <!-- RSS -->
+    <li>
+    <a class="social-link" href="/pages/rss"><span class="icon-social-rss"></span><span class="screenreader-text">RSS Feed</span></a>
+    </li>
+</ul>
+</div>
+</div>
+<!-- close .theme-footer -->
+<!-- SMS-7376: temporary platform-migration notice. Remove this entire block on ACS request. -->
+<script>
+    (function () {
+        'use strict';
+
+        var ALLOWED_HOSTNAMES = ['pubs.acs.org', 'www.pubs.acs.org'];
+        var MIGRATION_PAGE_URL = '/pages/platform-migration';
+        var BANNER_ID = 'acs-migration-banner';
+
+        if (ALLOWED_HOSTNAMES.indexOf(window.location.hostname) === -1) {
+            return;
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        function init() {
+            if (document.getElementById(BANNER_ID)) {
+                return;
+            }
+            var header = document.querySelector('.master-header');
+            if (!header) {
+                return;
+            }
+            var sitePageHeader = header.querySelector('.widget-SitePageHeader');
+            var adBanner = header.querySelector('.ad-banner');
+            if (!sitePageHeader && !adBanner) {
+                return;
+            }
+
+            injectStyles();
+            var banner = buildBanner();
+            if (sitePageHeader) {
+                header.insertBefore(banner, sitePageHeader);
+            } else {
+                adBanner.parentNode.insertBefore(banner, adBanner.nextSibling);
+            }
+        }
+
+        function buildBanner() {
+            var banner = document.createElement('section');
+            banner.id = BANNER_ID;
+            banner.className = 'acs-migration-banner';
+            banner.setAttribute('role', 'region');
+            banner.setAttribute('aria-label', 'Platform migration notice');
+
+            banner.innerHTML =
+                '<div class="acs-migration-banner__inner">' +
+                '<div class="acs-migration-banner__content">' +
+                '<span class="acs-migration-banner__label">Site Notice</span>' +
+                '<p class="acs-migration-banner__message">' +
+                'Update: <a class="acs-migration-banner__link" href="/pages/rss">RSS feeds</a> and article metrics are now available. Learn more on our ' +
+                '<a class="acs-migration-banner__link" href="' +
+                MIGRATION_PAGE_URL +
+                '">' +
+                'Platform Migration page' +
+                '</a>.' +
+                '</p>' +
+                '</div>' +
+                '<button type="button" class="acs-migration-banner__toggle" aria-label="Dismiss notice">Dismiss</button>' +
+                '</div>';
+
+            banner
+                .querySelector('.acs-migration-banner__toggle')
+                .addEventListener('click', function () {
+                    if (banner.parentNode) {
+                        banner.parentNode.removeChild(banner);
+                    }
+                });
+
+            return banner;
+        }
+
+        function injectStyles() {
+            if (document.getElementById('acs-migration-banner-styles')) {
+                return;
+            }
+
+            var css =
+                '.acs-migration-banner{background:#E6EBF6;color:#1a1a1a;' +
+                "font-family:'Roboto',Arial,sans-serif;}" +
+                '.acs-migration-banner__inner{display:flex;align-items:center;gap:24px;' +
+                'max-width:1200px;margin:0 auto;padding:12px 20px;}' +
+                '.acs-migration-banner__content{flex:1 1 auto;}' +
+                '.acs-migration-banner__label{display:block;font-weight:600;font-size:16px;' +
+                'line-height:1.2;}' +
+                '.acs-migration-banner__message{margin:7px 0 0;color:#5c5c5c;font-weight:400;' +
+                'font-size:16px;line-height:1.4;}' +
+                '.acs-migration-banner__link{color:#0039A6;text-decoration:underline;}' +
+                '.acs-migration-banner__link:hover,.acs-migration-banner__link:focus{color:#0039A6;}' +
+                '.acs-migration-banner__toggle{flex:0 0 auto;width:90px;height:36px;' +
+                'background:transparent;color:#0039A6;border:1px solid #0039A6;border-radius:3px;' +
+                "font-family:'Roboto',Arial,sans-serif;font-weight:500;font-size:16px;" +
+                'cursor:pointer;}' +
+                '.acs-migration-banner__toggle:hover,.acs-migration-banner__toggle:focus{' +
+                'background:rgba(0,57,166,.08);}' +
+                '@media (max-width:600px){' +
+                '.acs-migration-banner__inner{flex-direction:column;align-items:flex-start;gap:12px;}' +
+                '.acs-migration-banner__toggle{align-self:flex-start;}' +
+                '}';
+
+            var style = document.createElement('style');
+            style.id = 'acs-migration-banner-styles';
+            style.textContent = css;
+            document.head.appendChild(style);
+        }
+    })();
+</script>
+
+
+
+ 
+    </div>
+
+
+
+        </div><!-- /.center-inner-row -->
+</div><!-- /.site-theme-footer -->
+<div class="ss-ui-only">
+
+    <div class="widget-SelfServeContent widget-instance-SSuiOnlySelfServe" data-widget-name="SelfServeContent" data-widget-instance="SSuiOnlySelfServe">
+        
+
+
+
+    <input type="hidden" class="SelfServeContentId" value="SSuiOnly">
+    <input type="hidden" class="SelfServeVersionId" value="0">
+
+<style>
+    .cfp__card-content h6 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    }
+    .cfp__card-content .cfp__card-blurb {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    }
+    .award-content h3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    }
+    .award-content p {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    }
+    .collections__card-content h6 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    }
+    .collections__card-content p {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    }
+    .awards__card-content h6 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    }
+    .awards__card-content p {
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    }
+    .content-metadata-taxonomies .content-metadata a {
+    text-decoration: underline !important;
+    }
+</style>
+
+
+
+ 
+    </div>
+
+</div>
+
+<div class="ad-banner js-ad-interstitial">
+    <div class="widget-AdBlock widget-instance-Interstitial" data-widget-name="AdBlock" data-widget-instance="Interstitial">
+        
+ 
+    </div>
+
+</div>
+</section>
+
+
+
+
+
+    
+
+
+
+    <div class="widget-SiteWideModals widget-instance-SiteWideModals" data-widget-name="SiteWideModals" data-widget-instance="SiteWideModals">
+        <div id="revealModal" class="reveal-modal" data-reveal="" aria-hidden="true" aria-live="assertive" tabindex="-1">
+    <div id="revealContent"></div>
+    
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close dialog</span></a>
+</div>
+
+<div id="globalModalContainer" class="modal-global-container" role="dialog" aria-hidden="true" aria-live="assertive" tabindex="-1">
+    <div id="globalModalContent">
+        <div class="js-globalModalPlaceholder"></div>
+    </div>
+    
+    <a href="javascript:;" class="close-modal js-close-modal" role="button">
+        <i class="icon-general-close" aria-hidden="true"></i>
+        <span class="screenreader-text">Close dialog</span>
+    </a>
+</div>
+<div id="globalModalOverlay" class="modal-overlay js-modal-overlay"></div>
+
+    <div id="NeedSubscription" class="reveal-modal small" data-reveal="">
+            <div class="subscription-needed">
+                <div class="modal-heading">This Feature Is Available To Subscribers Only</div>
+                <p><a class="btn modal-sign_in-btn" href="/sign-in?returnUrl=%2fjacsat%2farticle-abstract%2fdoi%2f10.1021%2fjacs.6c10062%2f5429482%2fDecoupling-the-Cation-Induced-Vibrational%3fredirectedFrom%3dfulltext">Sign In</a> or <a class="modal-register-link" href="/my-account/register?siteId=1000113&amp;returnUrl=%2fjacsat%2farticle-abstract%2fdoi%2f10.1021%2fjacs.6c10062%2f5429482%2fDecoupling-the-Cation-Induced-Vibrational%3fredirectedFrom%3dfulltext">Create an Account</a></p>
+            </div>
+
+
+        <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close subscription notice</span></a>
+    </div>
+
+
+<div id="noAccessReveal" class="reveal-modal tiny" data-reveal="">
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close access options</span></a>
+    <div id="noAccessForm">
+        <div class="spinner"></div>
+    </div>
+</div>
+
+
+<div id="cookieShareModal" class="cookie-share-modal-content" hidden="">
+    <h2 id="cookieShareModalTitle" class="js-modal-label">Sharing Unavailable</h2>
+    <p>Sharing content requires targeting cookies to be enabled. Please update your cookie preferences to use this feature.</p>
+    <div class="cookie-share-modal__actions">
+        <button type="button" class="btn btn-primary js-share-cookie-prefs-btn">Update Cookie Preferences</button>
+        <button type="button" class="btn js-close-modal">Cancel</button>
+    </div>
+</div> 
+    </div>
+
+    
+
+
+
+
+
+
+<script type="text/javascript">
+    MathJax = {
+        tex: {
+            inlineMath: [['|$', '$|'], ['\\(', '\\)']]
+        },
+options: {
+            menuOptions: {
+                settings: {
+                    zoom: 'Click'
+                }
+            }
+        },        startup: {
+            pageReady: function () {
+                try {
+                    SCM.ACS.MathJaxAccentFix.init();
+                } catch (e) {
+                    console.warn('MathJax pre-processing error:', e);
+                }
+                return MathJax.startup.defaultPageReady().then(function () {
+                    try {
+                        SCM.ACS.MathJaxAccentFix.postRender();
+                    } catch (e) {
+                        console.warn('MathJax post-processing error:', e);
+                    }
+                });
+            }
+        }
+    };
+</script>
+<script src="//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async="" id="MathJax-script"></script>
+
+
+    <!-- CookiePro Default Categories -->
+    <!-- When the Cookie Compliance code loads, if cookies for the associated group have consent...
+         it will dynamically change the tag to: script type=text/JavaScript...
+         the code inside the tags will then be recognized and run as normal. -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script type="text/javascript" src="//acs.silverchair-cdn.com/Themes/Client/app/jsdist/v-639237259313375349/site.min.js"></script><iframe style="display: none;" name="__gppLocator"></iframe><iframe style="display: none;" name="__tcfapiLocator"></iframe><iframe style="display: none;" name="__uspapiLocator"></iframe>
+
+
+    
+    
+    <script defer="" src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+
+
+
+
+
+
+    
+
+        <script type="text/javascript">
+        $(document).ready(function () {
+            App.SearchAutoComplete.init(["AllAuthors","Keywords"]);
+        });
+        </script>
+    
+    
+
+
+
+
+    <div class="ad-banner js-ad-riser ad-banner-riser" role="region" aria-label="Advertisement">
+    <div class="widget-AdBlock widget-instance-RiserAd" data-widget-name="AdBlock" data-widget-instance="RiserAd">
+        
+ 
+    </div>
+
+    </div>
+
+
+
+        
+
+
+<script type="text/javascript">
+    _linkedin_partner_id = "4207601";
+    window._linkedin_data_partner_ids = window._linkedin_data_partner_ids || [];
+    window._linkedin_data_partner_ids.push(_linkedin_partner_id);
+</script>
+<script type="text/javascript">
+    (function (l) {
+        if (!l) {
+            window.lintrk = function (a, b) {
+                window.lintrk.q.push([a, b])
+            }; window.lintrk.q = []
+        }
+        var s = document.getElementsByTagName("script")[0];
+        var b = document.createElement("script");
+        b.type = "text/javascript";
+        b.async = true;
+        b.src = "https://snap.licdn.com/li.lms-analytics/insight.min.js";
+        s.parentNode.insertBefore(b, s);
+    })(window.lintrk);
+</script> 
+<noscript><img height="1" width="1" style="display:none;" alt="" src="https://px.ads.linkedin.com/collect/?pid=4207601&fmt=gif" /></noscript>
+            <script src="https://d2g123z4nw1cg1.cloudfront.net/index.js"></script></body></html>

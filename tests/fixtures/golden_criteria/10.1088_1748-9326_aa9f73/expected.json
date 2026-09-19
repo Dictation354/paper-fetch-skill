@@ -1,21 +1,56 @@
 {
-  "counts": {
-    "abstract_sections": 0,
-    "body_sections": 18,
-    "figures": 0,
-    "references": 0,
-    "sections": 19,
-    "tables": 0
-  },
-  "expected_content_kind": "fulltext",
   "has": {
-    "abstract": false,
+    "title": true,
     "authors": false,
+    "abstract": false,
     "body": true,
-    "code_availability": false,
-    "data_availability": false,
     "figures": false,
     "references": false,
-    "title": true
+    "data_availability": false,
+    "code_availability": false
+  },
+  "counts": {
+    "sections": 1,
+    "abstract_sections": 0,
+    "body_sections": 1,
+    "figures": 0,
+    "tables": 0,
+    "references": 0
+  },
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.1088_1748-9326_aa9f73",
+    "provider": "iop",
+    "doi": "10.1088/1748-9326/aa9f73",
+    "original": "tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/original.pdf",
+    "sha256": "bbb52c0743e6ee55cb6c04f42e3d28a84c72a642d82e8d3f40c1408fef3339c2",
+    "format": "pdf",
+    "review_method": "original PDF identity and role validation; complete readable file; real converter return value compared unchanged through provider assembly",
+    "dimensions": {
+      "pdf": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_pdf_identity_and_converter_passthrough",
+        "source_count": 1,
+        "scope": "target identity; readable complete PDF; provider assembly; exact converter payload retained"
+      }
+    },
+    "limitations": [
+      "PDF conversion layout, references, formulas, tables and OCR are excluded.",
+      "The existing converter is invoked and its returned text is treated as opaque; comparisons do not rate pymupdf4llm conversion quality.",
+      "Unknown historical HTTP status/final URL remain unknown in acquisition/provenance.json.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "pdf": {
+      "pages": 12,
+      "encrypted": false,
+      "repaired": false,
+      "role": "main_article",
+      "role_evidence": "canonical pdf_fallback target identity and complete document; preview/supplementary rejection is covered separately"
+    },
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ]
   }
 }

@@ -219,19 +219,9 @@ def _normalize_silverchair_dom(container: Tag) -> None:
         if text:
             formula.replace_with(text)
 
-    for inline in list(container.find_all(["em", "i", "strong", "b", "sup", "sub"])):
+    for inline in list(container.find_all(["em", "i", "strong", "b"])):
         if isinstance(inline, Tag):
             inline.replace_with(inline.get_text("", strip=False))
-
-    for cell in list(container.select("table td, table th")):
-        if not isinstance(cell, Tag):
-            continue
-        for inline in list(cell.find_all(["em", "i", "strong", "b", "sup", "sub"])):
-            if isinstance(inline, Tag):
-                inline.replace_with(inline.get_text(" ", strip=False))
-        if not normalize_text(cell.get_text(" ", strip=True)):
-            cell.clear()
-            cell.append("not specified")
 
     for math_node in list(container.find_all("math")):
         if not isinstance(math_node, Tag):
@@ -366,11 +356,31 @@ def _clean_article_body_from_soup(soup: BeautifulSoup) -> tuple[str, int]:
     return str(body), body_text_length
 
 
-def _markdown_render_html(cleaned_html: str) -> str:
+def _markdown_render_html(cleaned_html: str, source_url: str) -> str:
     soup = BeautifulSoup(cleaned_html, choose_parser())
     for selector in (".fig-section", ".fig-modal", ".close-reveal-modal"):
         for node in list(soup.select(selector)):
             node.decompose()
+    source = urlparse(source_url)
+    if source.scheme in {"http", "https"} and source.netloc:
+        section_targets: dict[str, str] = {}
+        headings = soup.select("h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]")
+        for heading in headings:
+            target_id = str(heading["id"])
+            legacy_id = str(heading.get("data-legacyid") or "")
+            if target_id and legacy_id:
+                section_targets.setdefault(legacy_id, target_id)
+        # Actual DOM IDs take precedence over Silverchair's legacy aliases.
+        section_targets.update(
+            (str(heading["id"]), str(heading["id"]))
+            for heading in headings
+            if heading["id"]
+        )
+        for anchor in soup.select('a[href^="#"]'):
+            resolved_target_id = section_targets.get(str(anchor["href"])[1:])
+            if resolved_target_id:
+                # Markdown drops heading IDs; retain the source page's target.
+                anchor["href"] = urljoin(source_url, f"#{quote(resolved_target_id)}")
     return str(soup)
 
 
@@ -453,7 +463,9 @@ def _parse_html_reference_node(node: Tag) -> dict[str, Any] | None:
         return None
     title_node = ref.select_one(".article-title, .source")
     year_node = ref.select_one(".year")
-    doi = extract_doi(raw)
+    from ._html_references import _reference_doi
+
+    doi = extract_doi(raw) or _reference_doi(node)
     return {
         "raw": raw,
         "title": _node_text(title_node) or None,
@@ -518,8 +530,10 @@ def _merge_metadata_with_parsed_html(
     )
     if html_title and doi_value and normalize_doi(current_title) == doi_value:
         merged["title"] = html_title
+    if not references and merged.get("references"):
+        return dict(merged)
     references = references or citation_references_from_metadata(merged)
-    if references and not merged.get("references"):
+    if references:
         merged_payload: dict[str, Any] = dict(merged)
         merged_payload["references"] = references
         return merged_payload
@@ -598,7 +612,14 @@ def _royal_society_figure_assets(
             continue
         label = _node_text(node.select_one(".fig-label")) or "Figure"
         label = label.rstrip(".")
-        caption = _node_text(node.select_one(".fig-caption")) if include_caption else ""
+        from ._html_section_markdown import render_clean_text_from_html
+
+        caption_node = node.select_one(".fig-caption")
+        caption = (
+            render_clean_text_from_html(caption_node)
+            if include_caption and caption_node is not None
+            else ""
+        )
         if caption.lower() == label.lower():
             caption = ""
         if include_caption and not caption:
@@ -792,7 +813,7 @@ def extract_markdown(
             extracted_assets=[],
         )
 
-    render_html = _markdown_render_html(cleaned_html)
+    render_html = _markdown_render_html(cleaned_html, source_url)
     rendered = render_provider_html_fragment(
         render_html,
         source_url,

@@ -1,0 +1,709 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html xmlns:m="http://www.w3.org/1998/Math/MathML" lang="en"  id="simpleViewer">
+    <head>
+        <title>Reconfigurable hydrogel interfaces for soft brain electrodes</title>
+
+        
+        
+            
+
+
+
+
+
+
+
+
+
+
+
+        
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    <meta name="dc.identifier" content="10.1073/pnas.2607267123"/>
+
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin />
+<link rel='preload' as='style' href='https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&display=swap'/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700&display=swap" media="print" onload="this.media='all'"/>
+
+<link rel="prefetch" href="/cloud-reader/dist/fonts/MaterialIcons-Regular.8a9a261c8b8dfe90db11f1817a9d22e1.woff2" as="font" />
+<link rel="prefetch" href="/cloud-reader/dist/fonts/ereader-icon-font.1aec70bba47436a4f7d805c17eb4568e.woff" as="font" />
+
+<link title="eReader-css" rel="stylesheet" type="text/css" href="/cloud-reader/dist/shared.32d37ce38b108211ac74.css">
+
+    <link rel="stylesheet" type="text/css" href="/cloud-reader/dist/pdf-renderer.d052aa49bddf5a18b596.css">
+
+
+
+<style rel="text/css">
+    @import url("/templates/jsp/cloudReader/css/d.css");
+</style>
+<script type="text/javascript">
+    window.LIT = window.LIT || {};
+    LIT.Reader = LIT.Reader || {};
+    LIT.Reader.LogEnabled = false;
+    LIT.Reader.isSecureConnection = 'serviceWorker' in navigator && 'caches' in window && location.protocol !== "http:";
+    window.READER_OFFLINE = navigator && navigator.onLine === false;
+    
+    var verifyOfflineMode = function () {
+        
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            window.READER_OFFLINE = xhr.readyState === 4 && xhr.status !== 200;
+            if (window.READER_OFFLINE && true) {
+                
+                let mathjaxUrl = "/cloud-reader/dist/mathjax-8384f516fd1ed2b73148/es5/tex-mml-svg.js";
+                fetch(mathjaxUrl).then(function (res) {
+                    res.text().then(function (txt) {
+                        LIT.Reader.MathJaxUrl = window.URL.createObjectURL(new Blob([txt], {'type': 'text/javascript'}));
+                    })
+                })
+            }
+        };
+        xhr.open("HEAD", "/templates/jsp/images/singlePixel.gif?t=" + new Date().getTime());
+        
+        xhr.setRequestHeader("Cache-Control", "no-cache,must-revalidate,max-age=0");
+        xhr.setRequestHeader("Pragma", "no-cache");
+        xhr.send();
+    };
+    
+    verifyOfflineMode();
+
+    var path = (window.location && window.location.pathname) ? window.location.pathname : '';
+
+    
+    path = path.replace(/(.*)\/.*\.[x]?html$/, "$1");
+
+    
+    path = path.charAt(path.length - 1) === '/'
+        ? path.substr(0, path.length - 1)
+        : path;
+
+    
+    var readerResourcesPath = "/cloud-reader/dist";
+
+    var HTTPServerRootFolder =
+        window.location ? (
+            window.location.protocol
+            + "//"
+            + window.location.hostname
+            + (window.location.port ? (':' + window.location.port) : '')
+            + readerResourcesPath
+        ) : ''
+    ;
+</script>
+        
+        
+
+
+
+
+
+    <!-- Google Tag Manager -->
+    <script>
+    var dataLayer = dataLayer ||[];
+</script>
+
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;var n=d.querySelector('[nonce]');n&&j.setAttribute('nonce',n.nonce||n.getAttribute('nonce'));f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KCV32QR');</script>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KCV32QR" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+<!-- End Google Tag Manager -->
+
+
+        
+            <link rel="canonical" href="https://www.pnas.org/doi/10.1073/pnas.2607267123">
+
+        
+        
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+        
+
+<script nonce="a3b58f90ad58abcb-HKG">
+    window.addEventListener('load', () => {
+        PNASdataLayer ={"ecommerce":{},"page":{"pageInfo":{"nlmArticleType":"article-commentary","issue":"17","pageTitle":"","author":"Zhichang Liu|Sihong Wang","pubDate":"2026-04-20","seriesTitle":"pnas","volume":"123","pageType":"article","articleType":"Commentary","viewType":"pdf","pageURL":"https://www.pnas.org/doi/epdf/10.1073/pnas.2607267123","issueDate":"2026-04-28","DOI":"10.1073/pnas.2607267123"},"attributes":{"accessType":"Paywall","licenseType":"CC BY-NC-ND","keywords":[],"freeAccess":"no","openAccess":"no","sp-feat":"","colloquia":"","topic":"Applied Physical Sciences"}},"user":{"instType":"","geo":"China","institution":"PEKING UNIVERSITY","registeredUser":"no","authenticated":"yes","access":"yes","institutionID":508642,"groups":["SG_ScienceEnthusiasts","All users group","All institution users group","Known Users","All users no webcrawlers","Anonymous Users","All ip range users group"]}};
+        if (PNASdataLayer) {
+            var ua = navigator.userAgent;
+            var deviceType = "desktop";
+            var width = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+            var hight = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+            if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) deviceType = "etc";
+            if (/Mobile|iP(hone|od)|Android|BlackBerry|IEMobile|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) deviceType = "mobile";
+            PNASdataLayer.site = {};
+            PNASdataLayer.site.userAgent = ua;
+            PNASdataLayer.site.device = deviceType;
+            PNASdataLayer.site.viewport = width + "x" + hight;
+        }
+
+        window.dataLayer = window.dataLayer || []
+        window.dataLayer.push({
+            'event': 'get-meta-data',
+            'pnasDataLayer': PNASdataLayer
+        })
+    });
+</script>
+
+
+
+    </head>
+    
+    <body class="skeleton" >
+    
+        
+
+<noscript>
+    <div id="alert_box" class="popup_container full noScript">
+        <div class="popup_content">
+            <div class="flex-container">
+                <div class="text">
+                    <span class="popupIcon icon material-icons" data-type="">error_outline</span>
+                    <div>
+                        <h1 class="popupTitle">JavaScript disabled</h1>
+                        <p class="popupDescription">You have to enable JavaScript in your browser's settings in order to use the eReader.</p>
+                        
+                            <p class="popupDescription">Or try downloading the content offline</p>
+                            <a href="/doi/pdf/10.1073/pnas.2607267123?download=true" target="_blank" class="btn--bordered__light">DOWNLOAD</a>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        #app-container, .navbar {display: none !important;}
+    </style>
+</noscript>
+        <nav id="app-navbar" class="navbar" aria-label="{{Strings.i18n_toolbar}}">
+        </nav>
+    <div id="app-container" >
+        <div class="tips-area" style="display: none">
+            <p class="tip-title">Did you know?</p>
+        </div>
+        <div class="loading-area" style="display: none">
+            <p class="loaded-message">
+                Reader environment loaded
+            </p>
+            <div class="content-loading">
+                <p class="loading-title">Loading publication (600.3 KB)<span
+                        class="dots-1"></span></p>
+                <p class="loading-details">Large documents might take a while</p>
+            </div>
+        </div>
+        <div class="initial-loading">
+            <div class="text-container">
+                <span class="loading-text">Reader environment loading<span class="dots-1"></span></span>
+            </div>
+            <span class="loader"></span>
+        </div>
+        <div id="reading-area" role="main">
+        </div>
+    </div>
+        <script type="text/javascript">
+            var readerConfig = {"user":{"isLoggedIn":false,"loginLink":"/action/showLogin?redirectUri\u003d%2Fdoi%2Fepdf%2F10.1073%2Fpnas.2607267123","registerLink":"https://www.pnas.org/action/registration?redirectUri\u003d%2Fdoi%2Fepdf%2F10.1073%2Fpnas.2607267123"},"readingProgress":{"syncProgress":false,"syncUrl":"/reader/saveProgress","retrieveUrl":"/reader/retrieveProgress"},"doi":"10.1073/pnas.2607267123","title":"Reconfigurable hydrogel interfaces for soft brain electrodes","bookTitle":"","epubConfig":{"overrideEpubUrlParam":true,"epubUrl":"/doi/pdfdirect/10.1073/pnas.2607267123?hmac\u003d1789453596-UtcvM6oqOcBixR2wqzaP7kIzD4ImiEjduVZ9yNIoi%2B8%3D"},"epubActions":{"offline":{"available":true,"fileSize":"600.3 KB","simultaneousRetrievalsLimit":10},"download":{"files":{"pdf":{"shortCode":"pdf","name":"PDF","available":true,"size":"600.3 KB","url":"/doi/pdf/10.1073/pnas.2607267123?download\u003dtrue","doi":"10.1073/pnas.2607267123"},"epub":{"shortCode":"epub","name":"EPUB","available":true,"size":"1.3 MB","url":"/doi/epub/10.1073/pnas.2607267123?download\u003dtrue","doi":"10.1073/pnas.2607267123"}},"newDownloadDesign":false,"favoriteFormat":""},"print":true,"shareAccess":false,"preview":false,"rental":false,"print_pdf_pages":10},"displayOptions":{"displayFormat":"auto","displayMode":"scroll-continuous"},"annotationsConfig":{"enabled":false},"materialTabs":{"figuresSuppressed":false,"mediaSuppressed":false,"tablesSuppressed":false,"supplementsSuppressed":false,"linkOutUrl":"/doi/suppl/10.1073/pnas.2607267123","supplementsLinkOut":false,"openDownloadLinkInNewTab":false},"analyticsConfig":{"enabled":false},"waterMarkConfig":{"enabled":false,"hideOnFirstPage":false},"metadataUrl":"/doi/reader/metadata/10.1073/pnas.2607267123","referencesUrl":"/doi/reader/references/10.1073/pnas.2607267123","chapterReferences":[],"citedByUrl":"/doi/reader/citedBy/10.1073/pnas.2607267123","figuresUrl":"/doi/reader/figures/10.1073/pnas.2607267123","tablesUrl":"/doi/reader/tables/10.1073/pnas.2607267123","mediaUrl":"/doi/reader/media/10.1073/pnas.2607267123","recommendationsUrl":"/doi/reader/recommended/10.1073/pnas.2607267123","relatedArticlesUrl":"/doi/reader/related/10.1073/pnas.2607267123","siteUrl":"/doi/10.1073/pnas.2607267123","searchUrl":"/reader/search","currentUrl":"https://www.pnas.org/doi/epdf/10.1073/pnas.2607267123","permissionsUrl":"/action/availableUsageRights","consumePermissionsUrl":"/action/consumeUsage","format":"pdf","publicationType":"article","citationsExportUrl":"/action/showCitFormats?doi\u003d10.1073%2Fpnas.2607267123\u0026mobileUi\u003d0","dbStoreName":"readerOfflineStore","shareAccessUrl":"/action/generateShareUrl","readerSettingsLocalStorageKey":"article_reader_settings","recommendedEnabled":true,"relationsEnabled":true,"permissionsEnabled":false,"isOfflineSupportedForBrowser":true,"isOfflineDisabled":false,"isDownloadDisabled":false,"isShareDisabled":false,"isPrintDisabled":false,"nodeNavigationDisabled":false,"navigationMode":"DEFAULT","usageRightsEnabled":false,"print_pdf_pages":0,"authorizeSharing":"/action/authorizeSharing","shareMode":false,"sharedAccessConfig":{"alwaysDisplaySharingTermsPopup":false,"shareSponsorMessage":"This is a sponsor message (to be overridden)","shareMediaMessage":"This is a media sharing message (to be overridden)","isShared":false,"isPermissionEnabled":false,"isShareBannerEnabled":false,"displayAccessButton":false,"accessUrl":"/doi/full/10.1073/pnas.2607267123","displaySupplementsMessage":true},"inDocAdsEnabled":true,"campaigns":"{}","suspendAdsInSinglePagePdfs":true,"adsImpressionDuration":0,"campaignUrl":"/action/showReaderCampaign?doi\u003d10.1073%2Fpnas.2607267123","kevelConfig":{"url":"/action/showKevelAds","enabled":false},"eventsConfig":{"readerEventsAnalyticsUrl":"/action/readerEventsAnalytics?doi\u003d10.1073%2Fpnas.2607267123\u0026format\u003dpdf","adImpressionDuration":5000,"episodeRemainingTime":300000,"enabled":true,"allowedNumOfEventsPerReq":50,"excludedEvents":""},"content_buffer_size":2000,"isPrintSupportedForBrowser":true,"isMaterialDownloadable":true,"isEpubLazyLoadingEnabled":true,"isPdfLazyLoadingEnabled":true,"loadedPagesLimit":5,"maxPdfKeepSize":20,"switchFormats":{"enabled":true,"current":"pdf","available":{"pdf":{"name":"pdf","url":"/doi/epdf/10.1073/pnas.2607267123"},"epub":{"name":"epub","url":"/doi/epub/10.1073/pnas.2607267123"}}},"supplementsUrl":"/action/showReaderSupplements?doi\u003d10.1073%2Fpnas.2607267123","tabsSuppressionConfig":{"materialsSuppressed":false,"notesSuppressed":true,"linksSuppressed":false,"infosSuppressed":false,"tocSuppressed":false},"fetchFiguresFromEpub":false,"mediaPlayersConfig":{"enabled":false,"player":{"enabled":false,"name":"flowplayer","css":"//releases.flowplayer.org/6.0.5/commercial/skin/functional.css","key":"$414263249007417","playerScript":"//releases.flowplayer.org/6.0.5/flowplayer.min.js"}},"adsInclusionEnabled":false,"helpEnabled":true,"profileConfig":{"activeProfile":"DEFAULT","printSuppressed":false,"offlineSuppressed":false,"downloadSuppressed":false,"switchFormatsSuppressed":false,"materialsSuppressed":false,"notesSuppressed":true,"linksSuppressed":false,"infoSuppressed":false,"siteLinkOutSuppressed":false,"accessSharingSuppressed":false},"isReadingFlowEnabled":true,"showCrossmarkButton":false,"restrictContent":false,"restrictCopying":true,"isScitrusHelpGuideEnabled":false,"referencesNumberingSupported":true,"freeToReadConfig":{"learnMoreLink":"","bannerMessage":"This is a banner message (to be overridden)","isFreeToRead":false,"isBannerEnabled":true,"isGetAccessButtonVisible":false},"doiMappingConfig":{"enabled":false,"openReferences":false},"rendererData":{"src":"/cloud-reader/dist/pdf-renderer.6a1c40a232dca31c9f49.js","cssSrc":"/cloud-reader/dist/pdf-renderer.d052aa49bddf5a18b596.css","templatesSrc":""},"fileSize":614743,"faqLinkData":{"enabled":false},"pdfjsDisableStream":true,"pdfjsDefaultRangeChunkSize":262144,"pdfjs2PagesEnabled":false,"scitrusDecommissionMessageConfig":{"show":false,"date":"early May","faqLink":"https://www.scitrus.com/faq"},"locationHistoryEnabled":false,"pdfjsPrintResolution":300,"pdfjsPrintLimitEnabled":true,"issn":"0027-8424","eissn":"1091-6490","issue":"17","volume":"123","hmac":"1789453596-C8Fux4wS9V0ee63E0gZjVJQ0LA8nFJrZ2up5lpcmaeg%3D","userSuppressed":false,"openLeftMenu":true,"bannerConfig":{},"healthCareDisclaimerConfig":{"enabled":false},"getFTRConfig":{"enabled":false,"crossrefEnabled":false,"numberOfGetFTRLinks":0,"excludeCitedBy":false},"displayCiteButton":true,"readOnlyMode":false,"hotKeysEnabled":false,"axelEnabled":true,"topicLabels":["Commentary","Physical Sciences","Applied Physical Sciences"],"figshare":{"src":"https://widgets.figshare.com/static/figshare.js","widgetName":"filesViewerGeneric","enabled":true},"fontsSelection":true,"isPassport":true,"hotjarSurvey":{"enabled":false},"aiContentAssistant":{"enabled":false},"adConfig":{},"termsAndConditionsUrl":"/about/terms"};
+            readerConfig.contentCacheName = "readerPubPathsCache";
+            readerConfig.libraryPath='/reader/library';
+        </script>
+        
+
+
+
+
+
+
+<script type="text/javascript">
+    
+    readerConfig.alertPopupMsg = {
+        
+        PRINTING_DISABLED_MESSAGE : "<i class='material-icons'>info_outline</i> <h2>Do not print this page</h2> <h3>To view your printing options, return to the document and click the print option in the menu in the top right corner of the page.</h3>",
+        
+        USER_UNAUTHORIZED: "Your license does not permit this publication to be <span>X</span>.",
+        
+        SHARING_DISABLED: "Sharing access to publications is not currently enabled.",
+        SHARING_UNAUTHORIZED: "Your license does not permit this publication to be <span>X</span>.",
+        SHARING_UNAVAILABLE: "The publication is not available for sharing.",
+        SHARING_TEMPORARY_ERROR: "<span>X</span> failed. Please try again."
+    };
+    readerConfig.pdfjsFonts = {
+        "FoxitFixed.pfb": '/cloud-reader/dist/fonts/FoxitFixed.7a3a4872294289b49d4b2f396d4ec2f4.pfb',
+        "FoxitFixedBold.pfb": '/cloud-reader/dist/fonts/FoxitFixedBold.4225d6a0b272fc4ce8369911f1184c3c.pfb',
+        "FoxitFixedBoldItalic.pfb":  '/cloud-reader/dist/fonts/FoxitFixedBoldItalic.02c104df79fe576e33d0ada201e84ebb.pfb',
+        "FoxitSerif.pfb": '/cloud-reader/dist/fonts/FoxitSerif.65b3795a07441301ba4baacf5b3c9381.pfb',
+        "FoxitSerifBold.pfb": '/cloud-reader/dist/fonts/FoxitSerifBold.1cd12e9c39eb66347c75e32cb1d9660e.pfb',
+        "FoxitSerifBoldItalic.pfb":  '/cloud-reader/dist/fonts/FoxitSerifBoldItalic.727374189158907be1f3da01c224f0f3.pfb',
+        "FoxitSerifItalic.pfb":  '/cloud-reader/dist/fonts/FoxitSerifItalic.317e621502668c351d7da56d5f49142c.pfb',
+        "FoxitSymbol.pfb": '/cloud-reader/dist/fonts/FoxitSymbol.bf32dea01c56a04d7acede124ce34203.pfb',
+        "FoxitDingbats.pfb": '/cloud-reader/dist/fonts/FoxitDingbats.0ede4a10145bb9a3cfb4cf53fe3e6f22.pfb',
+        "FoxitFixedItalic.pfb":  '/cloud-reader/dist/fonts/FoxitFixedItalic.1fe3439747ae310e7f40810d4f82a451.pfb',
+        "LiberationSans-Regular.ttf":  '/cloud-reader/dist/fonts/LiberationSans-Regular.dceebf9db79d2acf4a12b8ef7c6fda3e.ttf',
+        "LiberationSans-Bold.ttf":  '/cloud-reader/dist/fonts/LiberationSans-Bold.a720cdc76cacedfaaddc13de2bb7e6b5.ttf',
+        "LiberationSans-BoldItalic.ttf": '/cloud-reader/dist/fonts/LiberationSans-BoldItalic.c190aa8a01fe181754e83d8fe9d6425d.ttf',
+        "LiberationSans-Italic.ttf": '/cloud-reader/dist/fonts/LiberationSans-Italic.d235bec3a6ae3a86fec2a79f2ab42c97.ttf'
+    };
+    readerConfig.pdfjsBcmap={
+    
+        'GBT-EUC-H.bcmap': '/cloud-reader/dist/fonts/GBT-EUC-H.a109d1ca6837ce5f5565c28d3b10db14.bcmap',
+    
+        'UniGB-UCS2-V.bcmap': '/cloud-reader/dist/fonts/UniGB-UCS2-V.e612b97dc2bf7592a35941a01f2c0fb2.bcmap',
+    
+        'Adobe-Japan1-6.bcmap': '/cloud-reader/dist/fonts/Adobe-Japan1-6.1c541669cdee3ef8c2e8f29f99f4a9f8.bcmap',
+    
+        'UniJIS2004-UTF32-H.bcmap': '/cloud-reader/dist/fonts/UniJIS2004-UTF32-H.d8fe0443a0412540621c8717030cea0a.bcmap',
+    
+        'GBK-EUC-H.bcmap': '/cloud-reader/dist/fonts/GBK-EUC-H.546ff998ffca9e8f5171705548b73947.bcmap',
+    
+        'GBTpc-EUC-H.bcmap': '/cloud-reader/dist/fonts/GBTpc-EUC-H.25eeeca5113ba0b3f5e6b3801c94e7d5.bcmap',
+    
+        '90ms-RKSJ-H.bcmap': '/cloud-reader/dist/fonts/90ms-RKSJ-H.f004fca8008bd7c441dd3c58a390f266.bcmap',
+    
+        'EUC-H.bcmap': '/cloud-reader/dist/fonts/EUC-H.a148cb650e78045565f5a93f9fdf4352.bcmap',
+    
+        'Adobe-CNS1-1.bcmap': '/cloud-reader/dist/fonts/Adobe-CNS1-1.1706915b9e351f7bf784e45ff0bc5d35.bcmap',
+    
+        '83pv-RKSJ-H.bcmap': '/cloud-reader/dist/fonts/83pv-RKSJ-H.94b942a274043dac7fb8c9325a944be9.bcmap',
+    
+        'Adobe-Japan1-0.bcmap': '/cloud-reader/dist/fonts/Adobe-Japan1-0.a066edf925d652e4566741be7aaf2e77.bcmap',
+    
+        'UniJIS-UTF16-H.bcmap': '/cloud-reader/dist/fonts/UniJIS-UTF16-H.84f5a941b57142fe3f1941442b0e5be6.bcmap',
+    
+        'Roman.bcmap': '/cloud-reader/dist/fonts/Roman.ccd95559d60a9d72d3a50039e83f6b54.bcmap',
+    
+        'Add-RKSJ-V.bcmap': '/cloud-reader/dist/fonts/Add-RKSJ-V.0caedf6b6009d36caa4a3f354856bbc8.bcmap',
+    
+        'UniCNS-UTF32-V.bcmap': '/cloud-reader/dist/fonts/UniCNS-UTF32-V.2db93aee01ee80ec4f91dce93f48501a.bcmap',
+    
+        'UniCNS-UCS2-V.bcmap': '/cloud-reader/dist/fonts/UniCNS-UCS2-V.2e01733017a16eddd9ab837f8ca275e4.bcmap',
+    
+        'Adobe-Korea1-1.bcmap': '/cloud-reader/dist/fonts/Adobe-Korea1-1.84eb56b5caf745cabd9229f37db72db9.bcmap',
+    
+        'KSC-Johab-V.bcmap': '/cloud-reader/dist/fonts/KSC-Johab-V.7c054594c09a5ac87361e486afe689bf.bcmap',
+    
+        'NWP-H.bcmap': '/cloud-reader/dist/fonts/NWP-H.b7cce8e1696a0f3f18f5fea7201ffd87.bcmap',
+    
+        'UniJIS-UCS2-V.bcmap': '/cloud-reader/dist/fonts/UniJIS-UCS2-V.54bac7377fcb902bec305b2589a742b9.bcmap',
+    
+        'UniGB-UTF8-H.bcmap': '/cloud-reader/dist/fonts/UniGB-UTF8-H.efe5b01ff58a88047f2927a06c44d8af.bcmap',
+    
+        'HKm314-B5-H.bcmap': '/cloud-reader/dist/fonts/HKm314-B5-H.6cef006196f7b8f5fc8900f3b5401381.bcmap',
+    
+        'Adobe-Korea1-2.bcmap': '/cloud-reader/dist/fonts/Adobe-Korea1-2.1752dd13143dafcbd7674bdc35acdaeb.bcmap',
+    
+        'ETen-B5-V.bcmap': '/cloud-reader/dist/fonts/ETen-B5-V.20fc6bca6d21e5cad9fb2e650f9ae034.bcmap',
+    
+        'Adobe-CNS1-6.bcmap': '/cloud-reader/dist/fonts/Adobe-CNS1-6.50690e841492eb306a3554ec93d22727.bcmap',
+    
+        'Adobe-Japan1-5.bcmap': '/cloud-reader/dist/fonts/Adobe-Japan1-5.123581eb09766fcd3d1626b5e2fa2f0c.bcmap',
+    
+        'UniCNS-UTF8-H.bcmap': '/cloud-reader/dist/fonts/UniCNS-UTF8-H.edcae260fcd8ae26bd68c787c3a9fb19.bcmap',
+    
+        'ETHK-B5-H.bcmap': '/cloud-reader/dist/fonts/ETHK-B5-H.6992841a10b5b04cd62f1ec7a2fd8bb8.bcmap',
+    
+        '78-EUC-V.bcmap': '/cloud-reader/dist/fonts/78-EUC-V.5d7d0e488fb52b2a4f8d240b0d572e89.bcmap',
+    
+        'GB-EUC-V.bcmap': '/cloud-reader/dist/fonts/GB-EUC-V.4489f113f6405d419c7590a59520ed2f.bcmap',
+    
+        'Ext-RKSJ-H.bcmap': '/cloud-reader/dist/fonts/Ext-RKSJ-H.bb6a6dfab041b3820249bb72bf23cba8.bcmap',
+    
+        'GB-V.bcmap': '/cloud-reader/dist/fonts/GB-V.576c153301c977f903a01e28927f721b.bcmap',
+    
+        'HKscs-B5-V.bcmap': '/cloud-reader/dist/fonts/HKscs-B5-V.2806aabef1c7dc9b36ef8182ceaab582.bcmap',
+    
+        'UniGB-UTF32-H.bcmap': '/cloud-reader/dist/fonts/UniGB-UTF32-H.7e80b8251c61612c682fc1722caa8fed.bcmap',
+    
+        'KSCms-UHC-V.bcmap': '/cloud-reader/dist/fonts/KSCms-UHC-V.8a7816d2df1da6d26e916b7c90cdc59c.bcmap',
+    
+        'KSCpc-EUC-H.bcmap': '/cloud-reader/dist/fonts/KSCpc-EUC-H.6beae596a780f2e4a4de74b5ed9999e1.bcmap',
+    
+        '78-RKSJ-V.bcmap': '/cloud-reader/dist/fonts/78-RKSJ-V.5c65c928ce1d77770cff741c2f33bc11.bcmap',
+    
+        'Adobe-CNS1-0.bcmap': '/cloud-reader/dist/fonts/Adobe-CNS1-0.175673c4e9ae968dcea3eaca4b7b7d1a.bcmap',
+    
+        'UniKS-UTF16-V.bcmap': '/cloud-reader/dist/fonts/UniKS-UTF16-V.0d45980df8769bd3b1b14687206d0c63.bcmap',
+    
+        'Adobe-Korea1-0.bcmap': '/cloud-reader/dist/fonts/Adobe-Korea1-0.8bd552079ccb0724d40e8fb3a0724006.bcmap',
+    
+        'UniKS-UTF32-V.bcmap': '/cloud-reader/dist/fonts/UniKS-UTF32-V.534254835ba655f6e61b36796c73f1a8.bcmap',
+    
+        'KSC-EUC-V.bcmap': '/cloud-reader/dist/fonts/KSC-EUC-V.61f1b5baf1ce16facee14cf148554e10.bcmap',
+    
+        '90pv-RKSJ-H.bcmap': '/cloud-reader/dist/fonts/90pv-RKSJ-H.87fe105691f63e1ca8fa6269a99e20c8.bcmap',
+    
+        'UniKS-UTF32-H.bcmap': '/cloud-reader/dist/fonts/UniKS-UTF32-H.0c33937aceaa1b85e4aad18b3906b906.bcmap',
+    
+        'KSC-EUC-H.bcmap': '/cloud-reader/dist/fonts/KSC-EUC-H.28a11b2394ffab355c68bf51629fa95c.bcmap',
+    
+        'CNS1-V.bcmap': '/cloud-reader/dist/fonts/CNS1-V.2793eed7c84487bd846f38f26843722c.bcmap',
+    
+        'CNS1-H.bcmap': '/cloud-reader/dist/fonts/CNS1-H.e2abbde56299f848291e059d041312e8.bcmap',
+    
+        'GBK2K-H.bcmap': '/cloud-reader/dist/fonts/GBK2K-H.ace168da92203829634b37aa60636b46.bcmap',
+    
+        'UniJISX0213-UTF32-H.bcmap': '/cloud-reader/dist/fonts/UniJISX0213-UTF32-H.1af0093c3e866566e599f4122ffd3738.bcmap',
+    
+        'CNS-EUC-H.bcmap': '/cloud-reader/dist/fonts/CNS-EUC-H.25edb8902ccdf5cca8393826ba76537c.bcmap',
+    
+        'GBT-V.bcmap': '/cloud-reader/dist/fonts/GBT-V.6b7422f3be63297a537edb3f16e72b98.bcmap',
+    
+        'V.bcmap': '/cloud-reader/dist/fonts/V.fe6a499319094136b2aa5b7edc627117.bcmap',
+    
+        'UniJIS-UCS2-HW-V.bcmap': '/cloud-reader/dist/fonts/UniJIS-UCS2-HW-V.86ac1bd54fadca24ad7b1e819e3be5c9.bcmap',
+    
+        'Adobe-GB1-0.bcmap': '/cloud-reader/dist/fonts/Adobe-GB1-0.f2997b05ae8aafd00114f98b2718f712.bcmap',
+    
+        'Katakana.bcmap': '/cloud-reader/dist/fonts/Katakana.28405011de4a74f5e78e02bccb85eaf6.bcmap',
+    
+        'UniKS-UTF8-H.bcmap': '/cloud-reader/dist/fonts/UniKS-UTF8-H.23efe636bda29ae5c4fcbc710b970e0a.bcmap',
+    
+        'B5pc-H.bcmap': '/cloud-reader/dist/fonts/B5pc-H.ad22300d6dba5b2343e2c05d38725b5d.bcmap',
+    
+        'Adobe-Japan1-2.bcmap': '/cloud-reader/dist/fonts/Adobe-Japan1-2.a935e26eb05160ba7b3c45255b0156ee.bcmap',
+    
+        'CNS-EUC-V.bcmap': '/cloud-reader/dist/fonts/CNS-EUC-V.dfc3bd3ebe7c403150cabf10d66d6231.bcmap',
+    
+        'GBT-H.bcmap': '/cloud-reader/dist/fonts/GBT-H.4e90c37287e2b90c921e4a19c57d6608.bcmap',
+    
+        '90msp-RKSJ-V.bcmap': '/cloud-reader/dist/fonts/90msp-RKSJ-V.22e09450e898241b030ce5b4d542659b.bcmap',
+    
+        'UniJIS-UTF32-V.bcmap': '/cloud-reader/dist/fonts/UniJIS-UTF32-V.b5d631a40f709e3747220de2641b4e39.bcmap',
+    
+        'UniJIS-UTF8-H.bcmap': '/cloud-reader/dist/fonts/UniJIS-UTF8-H.48bfd003325873efab276db8a1ae34b9.bcmap',
+    
+        'Adobe-Japan1-1.bcmap': '/cloud-reader/dist/fonts/Adobe-Japan1-1.2296cdd2b9e96b0a95d3cb9a0f98747c.bcmap',
+    
+        'UniJIS-UTF8-V.bcmap': '/cloud-reader/dist/fonts/UniJIS-UTF8-V.029c1bbcf404512f1a7fe5d48833d41d.bcmap',
+    
+        'HKgccs-B5-V.bcmap': '/cloud-reader/dist/fonts/HKgccs-B5-V.f132983d5f5420286682b172658a2ec1.bcmap',
+    
+        'Ext-V.bcmap': '/cloud-reader/dist/fonts/Ext-V.c6bf9c0e52edc7f7c9c28b4ba34bc311.bcmap',
+    
+        'HKdla-B5-V.bcmap': '/cloud-reader/dist/fonts/HKdla-B5-V.09e2c1b09885843ac57479d72402145a.bcmap',
+    
+        'HKdla-B5-H.bcmap': '/cloud-reader/dist/fonts/HKdla-B5-H.c31304dbfa1fe8990e5ea68676a0df95.bcmap',
+    
+        '78ms-RKSJ-H.bcmap': '/cloud-reader/dist/fonts/78ms-RKSJ-H.fe0b824fd3c0c4d56bb71fc83f5e3b00.bcmap',
+    
+        'UniJISX02132004-UTF32-V.bcmap': '/cloud-reader/dist/fonts/UniJISX02132004-UTF32-V.34a245178a071696fa87285a14a6a572.bcmap',
+    
+        'UniJIS-UTF32-H.bcmap': '/cloud-reader/dist/fonts/UniJIS-UTF32-H.09e701c16b91705c4a74e54f9b5548e4.bcmap',
+    
+        '90msp-RKSJ-H.bcmap': '/cloud-reader/dist/fonts/90msp-RKSJ-H.155fc53b29911db7197dd92832157fbe.bcmap',
+    
+        'H.bcmap': '/cloud-reader/dist/fonts/H.627aeed8bfccb1ed45805efc48dd4ce0.bcmap',
+    
+        'HKm471-B5-V.bcmap': '/cloud-reader/dist/fonts/HKm471-B5-V.cc4d2cb9929ed45e16bf61c0abc7479f.bcmap',
+    
+        'B5pc-V.bcmap': '/cloud-reader/dist/fonts/B5pc-V.f082e890137d28d3ff1db7dd53d857df.bcmap',
+    
+        'Hiragana.bcmap': '/cloud-reader/dist/fonts/Hiragana.649cb471527a4da81e6d07664c035477.bcmap',
+    
+        'UniJISX0213-UTF32-V.bcmap': '/cloud-reader/dist/fonts/UniJISX0213-UTF32-V.c7b74503909b3143712fa48df5bac8dd.bcmap',
+    
+        'HKgccs-B5-H.bcmap': '/cloud-reader/dist/fonts/HKgccs-B5-H.9261c86d4041514d3a635b7d594d6abc.bcmap',
+    
+        'UniJIS-UCS2-HW-H.bcmap': '/cloud-reader/dist/fonts/UniJIS-UCS2-HW-H.88d9668d4e0fe2cca6a05126eda0ff33.bcmap',
+    
+        'UniJISPro-UTF8-V.bcmap': '/cloud-reader/dist/fonts/UniJISPro-UTF8-V.870c2e8dbbce67547c940cc04d9aea76.bcmap',
+    
+        '78ms-RKSJ-V.bcmap': '/cloud-reader/dist/fonts/78ms-RKSJ-V.4a0fc4d9e4b243bbc1aaa24f7dc35f90.bcmap',
+    
+        'UniJISX02132004-UTF32-H.bcmap': '/cloud-reader/dist/fonts/UniJISX02132004-UTF32-H.78f91a094e3ba73570a907f26e5dfb6b.bcmap',
+    
+        'UniJISPro-UCS2-HW-V.bcmap': '/cloud-reader/dist/fonts/UniJISPro-UCS2-HW-V.982413ac0838783f38bdffc16dae96e5.bcmap',
+    
+        'NWP-V.bcmap': '/cloud-reader/dist/fonts/NWP-V.562550c483c23aeefcdb3e8e1e5eadb8.bcmap',
+    
+        'EUC-V.bcmap': '/cloud-reader/dist/fonts/EUC-V.085cdc069606e1879e9a53db7c695581.bcmap',
+    
+        'UniJIS-UTF16-V.bcmap': '/cloud-reader/dist/fonts/UniJIS-UTF16-V.db6a81ba21b84fa2a59faac42b323242.bcmap',
+    
+        'Adobe-CNS1-4.bcmap': '/cloud-reader/dist/fonts/Adobe-CNS1-4.52f19088dd3f2dc15715d4204fd68b7c.bcmap',
+    
+        '90ms-RKSJ-V.bcmap': '/cloud-reader/dist/fonts/90ms-RKSJ-V.04d52a362bd8c27fec29dcec9728ef77.bcmap',
+    
+        'UniJIS-UCS2-H.bcmap': '/cloud-reader/dist/fonts/UniJIS-UCS2-H.d3c57acf7d97190d2f44607c35cf8985.bcmap',
+    
+        'UniJIS2004-UTF32-V.bcmap': '/cloud-reader/dist/fonts/UniJIS2004-UTF32-V.bae31bac63e6b5d498116be513776f4b.bcmap',
+    
+        'Adobe-Japan1-3.bcmap': '/cloud-reader/dist/fonts/Adobe-Japan1-3.a97917c0e0f219e1cac2e471f69ba409.bcmap',
+    
+        'Adobe-GB1-2.bcmap': '/cloud-reader/dist/fonts/Adobe-GB1-2.4b816ff568b22bcd31417ae176c2af06.bcmap',
+    
+        'KSC-Johab-H.bcmap': '/cloud-reader/dist/fonts/KSC-Johab-H.45d61007e3761bb08e3479971b7cea94.bcmap',
+    
+        'UniCNS-UTF32-H.bcmap': '/cloud-reader/dist/fonts/UniCNS-UTF32-H.ffd5764a6de25e35c218633a153aee60.bcmap',
+    
+        'HKdlb-B5-V.bcmap': '/cloud-reader/dist/fonts/HKdlb-B5-V.92dc4bf1a4567215adab3d797654ad46.bcmap',
+    
+        'GBT-EUC-V.bcmap': '/cloud-reader/dist/fonts/GBT-EUC-V.f5ff779f0b6e6fdef747f22e8ddff800.bcmap',
+    
+        'Ext-RKSJ-V.bcmap': '/cloud-reader/dist/fonts/Ext-RKSJ-V.4b3106c186de7ccf3b56999b6b3bf32c.bcmap',
+    
+        'HKm471-B5-H.bcmap': '/cloud-reader/dist/fonts/HKm471-B5-H.1aae686eacbdb6060b539fc0c707d8cf.bcmap',
+    
+        '78-RKSJ-H.bcmap': '/cloud-reader/dist/fonts/78-RKSJ-H.a3820f0a3029a225c3006b28153a518d.bcmap',
+    
+        'HKscs-B5-H.bcmap': '/cloud-reader/dist/fonts/HKscs-B5-H.1bd13e99b26e216ecb42b311df49e6af.bcmap',
+    
+        'GBKp-EUC-V.bcmap': '/cloud-reader/dist/fonts/GBKp-EUC-V.986a674beebba7ffa85c0a351f571e19.bcmap',
+    
+        'UniGB-UTF16-H.bcmap': '/cloud-reader/dist/fonts/UniGB-UTF16-H.197ead1238cf310794bf8c440c6c951e.bcmap',
+    
+        'Add-RKSJ-H.bcmap': '/cloud-reader/dist/fonts/Add-RKSJ-H.efcdf16f5fd9e20c90f9e393fbea3e1d.bcmap',
+    
+        '78-EUC-H.bcmap': '/cloud-reader/dist/fonts/78-EUC-H.6d23b789047f6fa8f6923e7ae411d642.bcmap',
+    
+        'GBTpc-EUC-V.bcmap': '/cloud-reader/dist/fonts/GBTpc-EUC-V.e8eba8d9c036830493e148720377d119.bcmap',
+    
+        'ETen-B5-H.bcmap': '/cloud-reader/dist/fonts/ETen-B5-H.64f3db1a350af8c595f591b39ba96e21.bcmap',
+    
+        'UniGB-UTF8-V.bcmap': '/cloud-reader/dist/fonts/UniGB-UTF8-V.c488f7851343b8c193fa7d60ee961272.bcmap',
+    
+        'GBK-EUC-V.bcmap': '/cloud-reader/dist/fonts/GBK-EUC-V.e801ec722f7eabf2a3f7e3fd00d92c36.bcmap',
+    
+        'GB-EUC-H.bcmap': '/cloud-reader/dist/fonts/GB-EUC-H.1982d7870002a219da5cb6a80e418445.bcmap',
+    
+        'UniGB-UCS2-H.bcmap': '/cloud-reader/dist/fonts/UniGB-UCS2-H.f19fb20d2b1cb681ef320816e6064b28.bcmap',
+    
+        'UniJISPro-UCS2-V.bcmap': '/cloud-reader/dist/fonts/UniJISPro-UCS2-V.b3a9a06f3284bc0b5b653998c57dd2c7.bcmap',
+    
+        'WP-Symbol.bcmap': '/cloud-reader/dist/fonts/WP-Symbol.b24c3ddd810f5a50a671731381c3faf5.bcmap',
+    
+        'UniJIS2004-UTF16-H.bcmap': '/cloud-reader/dist/fonts/UniJIS2004-UTF16-H.1f037331a2bf13ecac7b25e749d77b61.bcmap',
+    
+        'KSCms-UHC-H.bcmap': '/cloud-reader/dist/fonts/KSCms-UHC-H.573d3648c7706e998b055e6af116cf72.bcmap',
+    
+        'Adobe-GB1-UCS2.bcmap': '/cloud-reader/dist/fonts/Adobe-GB1-UCS2.af9f90c0950eb1a4523bcca7a679d19b.bcmap',
+    
+        'Hankaku.bcmap': '/cloud-reader/dist/fonts/Hankaku.417dcb6fd94965007413db517d3fd067.bcmap',
+    
+        'UniKS-UTF16-H.bcmap': '/cloud-reader/dist/fonts/UniKS-UTF16-H.f3f4d4d463821193c6989f2b65c20863.bcmap',
+    
+        'Ext-H.bcmap': '/cloud-reader/dist/fonts/Ext-H.f78457b4f98a6be2820e6bbad710474d.bcmap',
+    
+        'ETHK-B5-V.bcmap': '/cloud-reader/dist/fonts/ETHK-B5-V.7a10542e0ff8112686846d6c50fefc7f.bcmap',
+    
+        'KSCpc-EUC-V.bcmap': '/cloud-reader/dist/fonts/KSCpc-EUC-V.65e5a7c51efeb1a7d286edd3bc9e6e26.bcmap',
+    
+        'UniCNS-UTF8-V.bcmap': '/cloud-reader/dist/fonts/UniCNS-UTF8-V.380c81f19a765fa3577e9b9c030c90a0.bcmap',
+    
+        'UniKS-UTF8-V.bcmap': '/cloud-reader/dist/fonts/UniKS-UTF8-V.f7b676cfe90f97ea650baf780b4886f9.bcmap',
+    
+        'ETenms-B5-V.bcmap': '/cloud-reader/dist/fonts/ETenms-B5-V.fd9fcb08808af325bb9d7c65b8f5332b.bcmap',
+    
+        'HKm314-B5-V.bcmap': '/cloud-reader/dist/fonts/HKm314-B5-V.4286ece506e56645b39ba68db5a07083.bcmap',
+    
+        'GB-H.bcmap': '/cloud-reader/dist/fonts/GB-H.69530bd74ed5eb6e117f5ebbbb869664.bcmap',
+    
+        'Add-H.bcmap': '/cloud-reader/dist/fonts/Add-H.f6efdbb61d3d966df09cc6c298c29868.bcmap',
+    
+        'RKSJ-H.bcmap': '/cloud-reader/dist/fonts/RKSJ-H.8bcf3f8777b3a7e8dc52fa3a921cea13.bcmap',
+    
+        'Adobe-CNS1-UCS2.bcmap': '/cloud-reader/dist/fonts/Adobe-CNS1-UCS2.6a32d36d37017a2e157b06dcc57b9eef.bcmap',
+    
+        'Adobe-Japan1-4.bcmap': '/cloud-reader/dist/fonts/Adobe-Japan1-4.1d1305c42d75b212dad20c6fb80d0bf1.bcmap',
+    
+        'Adobe-GB1-1.bcmap': '/cloud-reader/dist/fonts/Adobe-GB1-1.8cb590d42c29a684b45cd2323d804f2e.bcmap',
+    
+        'GBK2K-V.bcmap': '/cloud-reader/dist/fonts/GBK2K-V.3e25abf6ef781f84dc1fbe21776ca2fe.bcmap',
+    
+        'KSC-V.bcmap': '/cloud-reader/dist/fonts/KSC-V.b4ce24d7d1f815927c5559e983b86ffd.bcmap',
+    
+        '90pv-RKSJ-V.bcmap': '/cloud-reader/dist/fonts/90pv-RKSJ-V.a6bea88d2434f1daeffe7965347ad534.bcmap',
+    
+        '78-H.bcmap': '/cloud-reader/dist/fonts/78-H.1185e3229597bc4c1fb1ae6f0c7b2e13.bcmap',
+    
+        'UniGB-UTF32-V.bcmap': '/cloud-reader/dist/fonts/UniGB-UTF32-V.d1716f8249d50ce2c0483c56e8905e85.bcmap',
+    
+        'Adobe-GB1-3.bcmap': '/cloud-reader/dist/fonts/Adobe-GB1-3.be5c8267c6fe28d9f4ae11221a3c8c3c.bcmap',
+    
+        'Adobe-Korea1-UCS2.bcmap': '/cloud-reader/dist/fonts/Adobe-Korea1-UCS2.2b666a3cd23be13c9d2b77189345150a.bcmap',
+    
+        '78-V.bcmap': '/cloud-reader/dist/fonts/78-V.0d300f0f9e60396df0a524511c245944.bcmap',
+    
+        'KSCms-UHC-HW-V.bcmap': '/cloud-reader/dist/fonts/KSCms-UHC-HW-V.32424d5d84512218ea0812fe6db587c6.bcmap',
+    
+        'KSC-H.bcmap': '/cloud-reader/dist/fonts/KSC-H.858801396e7064112f546954633f1a61.bcmap',
+    
+        'UniKS-UCS2-V.bcmap': '/cloud-reader/dist/fonts/UniKS-UCS2-V.b5f48b86ad0a973ab4363d76dd02c82f.bcmap',
+    
+        'RKSJ-V.bcmap': '/cloud-reader/dist/fonts/RKSJ-V.4bda602f6d2cdd94ba08c2f9c388e582.bcmap',
+    
+        'B5-H.bcmap': '/cloud-reader/dist/fonts/B5-H.683aa95fc49aa53b2982c076e1d57463.bcmap',
+    
+        'Add-V.bcmap': '/cloud-reader/dist/fonts/Add-V.f70574fdd480d364a32532c5af31a397.bcmap',
+    
+        'ETenms-B5-H.bcmap': '/cloud-reader/dist/fonts/ETenms-B5-H.c00836e71e8c4e521632634f03990b6c.bcmap',
+    
+        'Adobe-CNS1-5.bcmap': '/cloud-reader/dist/fonts/Adobe-CNS1-5.6f7e75c26fd017c6070ce087170c79df.bcmap',
+    
+        'KSCms-UHC-HW-H.bcmap': '/cloud-reader/dist/fonts/KSCms-UHC-HW-H.d2890889e32e6582435b33aae2ff4e2a.bcmap',
+    
+        'CNS2-V.bcmap': '/cloud-reader/dist/fonts/CNS2-V.1a116f3db2e9f2d5871246c0a72d79d2.bcmap',
+    
+        'Adobe-CNS1-2.bcmap': '/cloud-reader/dist/fonts/Adobe-CNS1-2.c32fa54e54bd3a328ce0cbed30a6d09e.bcmap',
+    
+        'UniJIS2004-UTF8-H.bcmap': '/cloud-reader/dist/fonts/UniJIS2004-UTF8-H.ce0f823592f53616c7ae6544ceec099b.bcmap',
+    
+        'UniJIS2004-UTF8-V.bcmap': '/cloud-reader/dist/fonts/UniJIS2004-UTF8-V.8920d15338280d50b89404dc6209e3c4.bcmap',
+    
+        'CNS2-H.bcmap': '/cloud-reader/dist/fonts/CNS2-H.6ceb8bae07c42f08b9bada4cc611caea.bcmap',
+    
+        'UniJIS2004-UTF16-V.bcmap': '/cloud-reader/dist/fonts/UniJIS2004-UTF16-V.cd2354135bdca01b516f0ab5d23198dd.bcmap',
+    
+        'UniCNS-UTF16-H.bcmap': '/cloud-reader/dist/fonts/UniCNS-UTF16-H.8243da01521d95e9cbbf0a9581cb9b8a.bcmap',
+    
+        'UniGB-UTF16-V.bcmap': '/cloud-reader/dist/fonts/UniGB-UTF16-V.816ee62d950547ef64157ffc9c8eb7a1.bcmap',
+    
+        'GBpc-EUC-H.bcmap': '/cloud-reader/dist/fonts/GBpc-EUC-H.f5693d775aec9a96a26b2970a61d2e8e.bcmap',
+    
+        'Adobe-GB1-5.bcmap': '/cloud-reader/dist/fonts/Adobe-GB1-5.4fe4c440c3f09425f2b114e42ecb866e.bcmap',
+    
+        'GBpc-EUC-V.bcmap': '/cloud-reader/dist/fonts/GBpc-EUC-V.b5cde365a48639163ecd3086ee0dab23.bcmap',
+    
+        'Adobe-CNS1-3.bcmap': '/cloud-reader/dist/fonts/Adobe-CNS1-3.68996101860e16ad38924a1c5a7b54d8.bcmap',
+    
+        'B5-V.bcmap': '/cloud-reader/dist/fonts/B5-V.dd87b4ad5c26fad4efe5655dcd150c3c.bcmap',
+    
+        'Adobe-Japan1-UCS2.bcmap': '/cloud-reader/dist/fonts/Adobe-Japan1-UCS2.35f4e7f02523120aa37c79790a1b48bb.bcmap',
+    
+        'UniCNS-UCS2-H.bcmap': '/cloud-reader/dist/fonts/UniCNS-UCS2-H.94e0d8eda9e3cfcd6447ba6be938286a.bcmap',
+    
+        'UniCNS-UTF16-V.bcmap': '/cloud-reader/dist/fonts/UniCNS-UTF16-V.273d10d22bfd890d0c7a4a1c0fac3d0c.bcmap',
+    
+        'GBKp-EUC-H.bcmap': '/cloud-reader/dist/fonts/GBKp-EUC-H.ae828bc249c7fc18c84c2f5c58eceb58.bcmap',
+    
+        'UniKS-UCS2-H.bcmap': '/cloud-reader/dist/fonts/UniKS-UCS2-H.1bccd691db023fbebc2300c5053075f2.bcmap',
+    
+        'Adobe-GB1-4.bcmap': '/cloud-reader/dist/fonts/Adobe-GB1-4.e21e5a23751a1bcf9a05868190506a56.bcmap',
+    
+        'HKdlb-B5-H.bcmap': '/cloud-reader/dist/fonts/HKdlb-B5-H.3e1ec904aae270a8be1b6fd4c96326eb.bcmap',
+    
+    }
+
+    LIT.Reader.config = {
+        /* http://requirejs.org/docs/api.html#config-waitSeconds */
+        waitSeconds: 0,
+        config: {
+            'readerConfig': {
+                'mathJaxUrl': '/cloud-reader/dist/mathjax-8384f516fd1ed2b73148/es5/tex-mml-chtml.js',
+                'annotationCSSUrl': HTTPServerRootFolder + '/css/annotations.css',
+                'iframeContentCSSUrl': "/cloud-reader/dist/iframe-content.c03ea88098458927e1f9.css" || '/cloud-reader/dist/iframe-content.css',
+                'jsLibRoot': HTTPServerRootFolder + '/scripts/zip/',
+                'useSimpleLoader': false,
+                'epubLibraryPath': undefined,
+                'imagePathPrefix': '/cloud-reader/src/',
+                'canHandleUrl': false,
+                'canHandleDirectory': false,
+                'pdfjsWorkerUrl': "/cloud-reader/dist/worker_loader.09d643fee10b79e3d013.js",
+                'soundwave': "/cloud-reader/dist/images/soundwave.edc4862724cd89dcdf214bcb1e4c8416.svg",
+                'soundwave_white': "/cloud-reader/dist/images/soundwave_white.6a5609529967424c478295a103957ca7.svg",
+                'getFTR_full_text_version':"/cloud-reader/dist/images/getFTR-full-text-version.b82028595a0bbe8f561e3607ab7d440f.svg",
+                'getFTR_alternative_version':"/cloud-reader/dist/images/getFTR-alternative-version.a2b5c76c16cca33ce1b2512b00cefe16.svg",
+                'jwplayer': "/cloud-reader/dist/jwplayer.e264ce418a3a47bff900.js",
+                'icons': {
+                    ereader_icon_font_ttf: "/cloud-reader/dist/fonts/ereader-icon-font.194f6641c02ff2d7bcbdfaa1fe1bbfa5.ttf",
+                    ereader_icon_font_woff: "/cloud-reader/dist/fonts/ereader-icon-font.1aec70bba47436a4f7d805c17eb4568e.woff",
+                    ereader_icon_font_svg: "/cloud-reader/dist/images/ereader-icon-font.6002d33f5ab727ea2e5dfee9524d6bba.svg",
+                    MaterialIcons_Regular_eot: "/cloud-reader/dist/fonts/MaterialIcons-Regular.016c14adad95a0e21a2ae4fbc36955c6.eot",
+                    MaterialIcons_Regular_woff2: "/cloud-reader/dist/fonts/MaterialIcons-Regular.8a9a261c8b8dfe90db11f1817a9d22e1.woff2",
+                    MaterialIcons_Regular_woff: "/cloud-reader/dist/fonts/MaterialIcons-Regular.c38ebd3cd38c98fbd16bf31d1d24ce64.woff",
+                    MaterialIcons_Regular_ttf: "/cloud-reader/dist/fonts/MaterialIcons-Regular.55242ea5c378da626cab5b4aaf9c2255.ttf",
+                },
+                'epubReadingSystemUrl': undefined,
+                "customConfig": readerConfig
+            }
+        }
+    };
+</script>
+
+
+            
+            
+            
+                <script type="text/javascript" src="/cloud-reader/dist/templates.51ecdcc31ad0551fc6af.js"></script>
+                
+                <script type="text/javascript" src="/cloud-reader/dist/vendor.c56276dedd38f6c38ad2.js"></script>
+                <script type="text/javascript" src="/cloud-reader/dist/shared.e6db8f95c058d43856a9.js"></script>
+                <script type="text/javascript" src="/cloud-reader/dist/i18n.70062d15ca0ba92ca5b4.js"></script>
+            
+
+        
+        
+        
+            
+                
+                    <script type="module">
+                        if ('serviceWorker' in navigator && !window.READER_OFFLINE) {
+                            window.addEventListener("load", function (evt) {
+                                
+                                var CACHE_BUSTER_MARKER = 6;
+
+                                var assetsCacheName = 'readerAssetsCache-e2edb9ec093621805e932e38020a531b1ef9bed3-' + CACHE_BUSTER_MARKER;
+                                var readerContentUrl = window.location.pathname;
+                                import ('/templates/jsp/cloudReader/js/readerServiceWorkerHelper.js').then(function (swHelper) {
+                                    swHelper.registerServiceWorkers(true, readerContentUrl, readerContentPage, assetsCacheName, readerConfig.format, readerConfig.bannerConfig?.bannerImagePath);
+                                });
+                            });
+                            
+                            var readerContentPage = "<!DOCTYPE html>"+$('html')[0].outerHTML;
+                        }
+                    </script>
+                
+                
+            
+        
+    <script>window.__CF$cv$params={r:'a3b58f90ad58abcb',t:'MTc4OTQ1MzU5Ng==',u:'01a0a3beabc97652bf717bd99bf6c8fb',ut:'_2604Un5o8u.BjJFATA1IZZszRh5T7pvNYbgL_4gkDg-1789453596-1.2.1.1-hgGglO0LOChUJCYmHdCpheZjHPqhJLD2Nq.x.dCtcAZmDWc5Kl6AwxctJw4aJAjp0g6NqZ0l5cAoYWbKKPPdqJ0ILvU.x.a0tjUE994BVwQ',i:60};(function(){if(!document.body)return;var s=document.createElement('script');s.src='/cdn-cgi/challenge-platform/scripts/precursor/main.js';document.head.appendChild(s);})();</script></body>
+</html>

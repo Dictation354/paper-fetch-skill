@@ -1,19 +1,17 @@
 from __future__ import annotations
-
+from unittest import mock
 from dataclasses import replace
 from pathlib import Path
 import re
 import json
-
 import pytest
-
 from paper_fetch.extraction.image_payloads import image_mime_type_from_bytes
 from paper_fetch.providers.frontiers import FrontiersClient
 from paper_fetch.reason_codes import PDF_FALLBACK
-from tests.unit._atypon_browser_workflow_provider_support import png_header
-from tests.unit._paper_fetch_support import (
+from tests.support._atypon_browser_workflow_provider_support import png_header
+from tests.support._paper_fetch_support import (
     FixtureHtmlTransport,
-    fulltext_pdf_bytes,
+    build_pdf_bytes,
     http_response,
 )
 
@@ -315,6 +313,10 @@ def test_frontiers_canonical_xml_route_does_not_request_landing_page() -> None:
     }
 
 
+@mock.patch(
+    "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
+    new=lambda *a, **k: "Mock converter output. " * 120,
+)
 def test_frontiers_direct_pdf_fallback_does_not_request_landing_page() -> None:
     transport = FixtureHtmlTransport(
         {
@@ -325,7 +327,7 @@ def test_frontiers_direct_pdf_fallback_does_not_request_landing_page() -> None:
             ),
             PDF_URL: http_response(
                 PDF_URL,
-                fulltext_pdf_bytes(),
+                build_pdf_bytes(["doi:" + DOI, "Article body."]),
                 "application/pdf",
             ),
         }
@@ -724,13 +726,21 @@ def test_frontiers_unresolved_supplementary_asset_maps_to_landing_anchor(
     assert [call["url"] for call in transport.calls] == [XML_URL, SUPPLEMENT_API_URL]
 
 
+@mock.patch(
+    "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
+    new=lambda *a, **k: "Mock converter output. " * 120,
+)
 def test_frontiers_pdf_fallback_rejects_html_xml_candidate() -> None:
     transport = _frontiers_transport(
         {
             XML_URL: http_response(
                 XML_URL, b"<!doctype html><html>Not XML</html>", "text/html"
             ),
-            PDF_URL: http_response(PDF_URL, fulltext_pdf_bytes(), "application/pdf"),
+            PDF_URL: http_response(
+                PDF_URL,
+                build_pdf_bytes(["doi:" + DOI, "Article body."]),
+                "application/pdf",
+            ),
         }
     )
     client = FrontiersClient(transport, {})
@@ -742,7 +752,7 @@ def test_frontiers_pdf_fallback_rejects_html_xml_candidate() -> None:
     assert raw_payload.content.route_kind == PDF_FALLBACK
     markdown = raw_payload.content.markdown_text or ""
     # markdown-review: purpose=pdf_fallback doi=10.3389/fmars.2023.1101972
-    assert "Abstract" in markdown
+    assert markdown == "Mock converter output. " * 120
     assert "Access Denied" not in markdown
     assert article.source == "frontiers_pdf"
     assert "fulltext:frontiers_xml_fail" in article.quality.source_trail

@@ -1,7 +1,6 @@
-# ruff: noqa: F403,F405
 from __future__ import annotations
-
-from ._atypon_browser_workflow_provider_support import *
+from tests.support._atypon_browser_workflow_provider_support import *
+# ruff: noqa: F403,F405
 
 
 class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestCase):

@@ -1,0 +1,249 @@
+{"abstracts-retrieval-response": {
+    "affiliation": [
+        {
+            "affiliation-city": "Wuhan",
+            "@id": "60029306",
+            "affilname": "Wuhan University",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306",
+            "affiliation-country": "China"
+        },
+        {
+            "affiliation-city": "Fayetteville",
+            "@id": "60004862",
+            "affilname": "University of Arkansas",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60004862",
+            "affiliation-country": "United States"
+        },
+        {
+            "affiliation-city": "Jiaozuo",
+            "@id": "60025881",
+            "affilname": "Henan Polytechnic University",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60025881",
+            "affiliation-country": "China"
+        }
+    ],
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-85137267028",
+        "dc:description": "Drought\u2013land cover change (D-LCC) is considered to be an important stress factor that affects vegetation greenness and productivity (VG&P) in global terrestrial ecosystems. Understanding the effects of D-LCC on VG&P benefits the development of terrestrial ecosystem models and the prediction of ecosystem evolution. However, till today, the mechanism remains underexploited. In this study, based on the Theil-Sen median estimator and Mann-Kendall test, Hurst exponent evaluation and rescaled range analysis (R/S), Pearson and Partial correlation coefficient analyses, we explore the spatiotemporal distribution characteristics and future trends of Leaf area index (LAI), Net primary productivity (NPP), Solar-induced chlorophyll fluorescence (SIF), Standardized precipitation evapotranspiration index (SPEI), Soil moisture (SM), Land cover type (LC), and the impact mechanism of D-LCC on global VG&P. Our results provide four major insights. First, three independent satellite observations consistently indicate that the world is experiencing an increasing trend of VG&P: LAI (17.69 %), NPP (20.32 %) and SIF (16.46 %). Nonetheless, productivity-reducing trends are unfolding in some tropical regions, notably the Amazon rainforest and the Congo basin. Second, from 2001 to 2020, the frequency, severity, duration, and scope of global droughts have been increasing. Third, the impact of land cover change on global VG&P is region-dependent. Finally, our results indicate that the continuous growth of VG&P in the global vegetation area is likely to become more difficult to maintain.",
+        "pubmed-id": "36058327",
+        "prism:coverDate": "2022-12-15",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/85137267028",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Jinlong",
+            "preferred-name": {
+                "ce:given-name": "Jinlong",
+                "ce:initials": "J.",
+                "ce:surname": "Chen",
+                "ce:indexed-name": "Chen J."
+            },
+            "@seq": "1",
+            "ce:initials": "J.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Chen",
+            "@auid": "55787600800",
+            "author-url": "https://api.elsevier.com/content/author/author_id/55787600800",
+            "ce:indexed-name": "Chen J."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/85137267028"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85137267028&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=85137267028&origin=inward"
+            }
+        ],
+        "source-id": "25349",
+        "pii": "S004896972205598X",
+        "citedby-count": "82",
+        "prism:volume": "852",
+        "subtype": "ar",
+        "dc:title": "Assessing the impact of drought-land cover change on global vegetation greenness and productivity",
+        "openaccess": "0",
+        "prism:issn": "18791026 00489697",
+        "publishercopyright": "© 2022 Elsevier B.V.",
+        "article-number": "158499",
+        "subtypeDescription": "Article",
+        "prism:publicationName": "Science of the Total Environment",
+        "openaccessFlag": "false",
+        "prism:doi": "10.1016/j.scitotenv.2022.158499",
+        "dc:identifier": "SCOPUS_ID:85137267028",
+        "dc:publisher": "Elsevier B.V."
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "Jinlong",
+            "preferred-name": {
+                "ce:given-name": "Jinlong",
+                "ce:initials": "J.",
+                "ce:surname": "Chen",
+                "ce:indexed-name": "Chen J."
+            },
+            "@seq": "1",
+            "ce:initials": "J.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Chen",
+            "@auid": "55787600800",
+            "author-url": "https://api.elsevier.com/content/author/author_id/55787600800",
+            "ce:indexed-name": "Chen J."
+        },
+        {
+            "ce:given-name": "Zhenfeng",
+            "preferred-name": {
+                "ce:given-name": "Zhenfeng",
+                "ce:initials": "Z.",
+                "ce:surname": "Shao",
+                "ce:indexed-name": "Shao Z."
+            },
+            "@seq": "2",
+            "ce:initials": "Z.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Shao",
+            "@auid": "7202244409",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7202244409",
+            "ce:indexed-name": "Shao Z."
+        },
+        {
+            "ce:given-name": "Xiao",
+            "preferred-name": {
+                "ce:given-name": "Xiao",
+                "ce:initials": "X.",
+                "ce:surname": "Huang",
+                "ce:indexed-name": "Huang X."
+            },
+            "@seq": "3",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60004862",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60004862"
+            },
+            "ce:surname": "Huang",
+            "@auid": "57201292422",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57201292422",
+            "ce:indexed-name": "Huang X."
+        },
+        {
+            "ce:given-name": "Qingwei",
+            "preferred-name": {
+                "ce:given-name": "Qingwei",
+                "ce:initials": "Q.",
+                "ce:surname": "Zhuang",
+                "ce:indexed-name": "Zhuang Q."
+            },
+            "@seq": "4",
+            "ce:initials": "Q.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Zhuang",
+            "@auid": "57212874323",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57212874323",
+            "ce:indexed-name": "Zhuang Q."
+        },
+        {
+            "ce:given-name": "Chaoya",
+            "preferred-name": {
+                "ce:given-name": "Chaoya",
+                "ce:initials": "C.",
+                "ce:surname": "Dang",
+                "ce:indexed-name": "Dang C."
+            },
+            "@seq": "5",
+            "ce:initials": "C.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Dang",
+            "@auid": "57219449657",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57219449657",
+            "ce:indexed-name": "Dang C."
+        },
+        {
+            "ce:given-name": "Bowen",
+            "preferred-name": {
+                "ce:given-name": "Bowen",
+                "ce:initials": "B.",
+                "ce:surname": "Cai",
+                "ce:indexed-name": "Cai B."
+            },
+            "@seq": "6",
+            "ce:initials": "B.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Cai",
+            "@auid": "57192695178",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57192695178",
+            "ce:indexed-name": "Cai B."
+        },
+        {
+            "ce:given-name": "Xueke",
+            "preferred-name": {
+                "ce:given-name": "Xueke",
+                "ce:initials": "X.",
+                "ce:surname": "Zheng",
+                "ce:indexed-name": "Zheng X."
+            },
+            "@seq": "7",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60025881",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60025881"
+            },
+            "ce:surname": "Zheng",
+            "@auid": "57874840500",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57874840500",
+            "ce:indexed-name": "Zheng X."
+        },
+        {
+            "ce:given-name": "Qing",
+            "preferred-name": {
+                "ce:given-name": "Qing",
+                "ce:initials": "Q.",
+                "ce:surname": "Ding",
+                "ce:indexed-name": "Ding Q."
+            },
+            "@seq": "8",
+            "ce:initials": "Q.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60029306",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60029306"
+            },
+            "ce:surname": "Ding",
+            "@auid": "57224901116",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57224901116",
+            "ce:indexed-name": "Ding Q."
+        }
+    ]}
+}}

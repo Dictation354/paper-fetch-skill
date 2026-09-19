@@ -1,0 +1,344 @@
+{
+  "records": [
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "requested_url": "https://pubs.acs.org/view-large/figure/165496527/ao4c03987_0001.tif",
+      "final_url": "https://pubs.acs.org/view-large/figure/165496527/ao4c03987_0001.tif",
+      "status_code": 403,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 09:23:23 GMT",
+        "content-type": "text/html",
+        "server": "cloudflare"
+      },
+      "captured_at_utc": "2026-09-16T09:23:20.014594+00:00",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "body_file": "acquisition/template-gaps-2026-09-16/viewer-response.html",
+      "size": 93,
+      "sha256": "0d3e98ca727fc1201b436170af5a63f23348aaf146a3ac6234f6c4da283e8b34",
+      "error": "RequestFailure"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "body_file": "acquisition/template-browser-2026-09-16/000-browser_rendered_dom.html",
+      "size": 1391608,
+      "sha256": "83732c92a1165ddfe43d7c728f9ec152c9f7e2803f313384b79161f94fc44f3b",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "native Camoufox",
+      "requested_url": "https://pubs.acs.org/doi/10.1021/acsomega.4c03987",
+      "final_url": "https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere",
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": "2026-09-16T09:30:28.272530+00:00"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "body_file": "acquisition/template-browser-2026-09-16/001-browser_rendered_dom.html",
+      "size": 87756,
+      "sha256": "b315734949a2257c780410f512e641e135b4673815533ef581e96f63e980a7c2",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "native Camoufox",
+      "requested_url": "https://pubs.acs.org/view-large/figure/165496527/ao4c03987_0001.tif",
+      "final_url": "https://pubs.acs.org/view-large/figure/165496527/ao4c03987_0001.tif",
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": "2026-09-16T09:30:34.533226+00:00"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "body_file": "acquisition/template-browser-2026-09-16/002-http_response_entity.bin",
+      "size": 382159,
+      "sha256": "2c72dc3559aaee0e3b29ef87996d6fe58716a000b3ac6b4f846d30cf80220d91",
+      "capture_kind": "http_response_entity",
+      "transport": "native Camoufox",
+      "requested_url": "https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere",
+      "final_url": "https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 09:30:12 GMT",
+        "content-type": "text/html; charset=utf-8"
+      },
+      "captured_at_utc": "2026-09-16T09:30:34.559905+00:00"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "body_file": "acquisition/template-browser-2026-09-16/003-http_response_entity.bin",
+      "size": 18919,
+      "sha256": "d7ff18c4a08b01384ae92066b6d7aa34524460f5ee8a642adf8e5dd26d3539f5",
+      "capture_kind": "http_response_entity",
+      "transport": "native Camoufox",
+      "requested_url": "https://pubs.acs.org/view-large/figure/165496527/ao4c03987_0001.tif",
+      "final_url": "https://pubs.acs.org/view-large/figure/165496527/ao4c03987_0001.tif",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 09:30:31 GMT",
+        "content-type": "text/html; charset=utf-8"
+      },
+      "captured_at_utc": "2026-09-16T09:30:34.562663+00:00"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "requested_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0001.png?Expires=1791347537&Signature=4kTD~R3iopECmDrMIoKosE-b-cDdb4YqwX0zq3BJf-coZdoSIgqGCMdNJq~znRpWkDZKW54f5G-7qyoW4dQfYgOtesIDUG3~BsXiOmuRUxwckNdG9nYypXfW-jK6ABHfBsc4sxCT-aoXCTzHflzlXMS1ECWG5K765rbWrmw33hJZ0jq5qPvknNMLBosKqlDCQ8eA7dpNqk1thc3Kas~CTYhM-AzEkBWHjN-bu3Pa5MNlxrcNqRGeRscATPLgx2UNp2XGwO7GreQpPdsbTPwgJGnYYkK89rTNFcAZMhJSeeBj2Lddgrd2L6QCXgUi-h5wpAABgRNsqfMpxXluSp6w3A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0001.png?Expires=1791347537&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "181402",
+        "date": "Fri, 18 Sep 2026 08:39:55 GMT",
+        "last-modified": "Tue, 07 Apr 2026 20:28:28 GMT",
+        "etag": "\"54df110be74e4c873ca7b124cd573545\""
+      },
+      "captured_at_utc": "2026-09-18T08:39:52.856340+00:00",
+      "size": 181402,
+      "sha256": "71f2eb6185c79b2b41a0b0ee063b7d084894ad6376fa325cd4d4a2c021a26c4a",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/4e0d8484f7d1bc7350.png"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "requested_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0002.png?Expires=1791347537&Signature=AXvBdpnvjTew4lm9JvcsbpxxrR5FbZZFtBYXPqSltula5XSCf81oROyTsmqNNWxnqE9na1UGf4UaILeeDjjyQxwqt1tcTd2GlAQ-cvWhN5iqAF8oMB~fPijjheCxV4ljciyWCP2ZASGMuDlQ2jv0hKF~XBH7nzRPOlooyl83XxCYb2JyLANnhEciDG5KcwGg7OCHNmXmDffGtT1x8TYHhQwe2NZwjew7W1TVKCesCnxzSSFPzEdDCN6Wf551m4x3Bz5DitGhbJ6W0MlfNXuAOUa6-5J2dmRwdsaFwgK3~n8n0A170v~gTvcCpaawXSCvZkhY6XqaHu43gXl5Zs6Yog__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0002.png?Expires=1791347537&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "344707",
+        "date": "Fri, 18 Sep 2026 08:39:56 GMT",
+        "last-modified": "Tue, 07 Apr 2026 20:28:28 GMT",
+        "etag": "\"12c9d098247a768b6cad9bd4837deacc\""
+      },
+      "captured_at_utc": "2026-09-18T08:39:54.692881+00:00",
+      "size": 344707,
+      "sha256": "70f2a301402b90a54206e6c1af055e0946b4058b4aace516d58fb6d62f13d5dc",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/3555a08543b65eee5b.png"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "requested_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0003.png?Expires=1791347537&Signature=KgjWYr1K~IIjLZHg68JLIYKa4K0G6Q6nf8-jOI4U9-wqEv21GT1mF7jVuobqMLwbM1tQcT4m~xj7ZaKD0wJ8MBhstX0VfyU5hRbqqhAe-uKsv0z~~SGDRTbZlyu~Od0ruVbu5vy~KjRr8VQg8FWsKwkdWBWNHo~Bnepjt8c5D9TkdkJhm0CBpP7xv-uRnxFuEtCCc81JjReR27C983xb2FRCJqJdwvPu2tSO6GP5nyVCFPWWk5~PG5QxTjYZnC9JGrXdqdaM85RX45~YMo1rntQeURZG3Nlj6Rtr9duz1y8YKzK4VeuScQpwj9Rr62ttTYgpPeDnpiydbCpwYlrA4w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0003.png?Expires=1791347537&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "328476",
+        "date": "Fri, 18 Sep 2026 08:39:57 GMT",
+        "last-modified": "Tue, 07 Apr 2026 20:28:29 GMT",
+        "etag": "\"b3cd750285da9f8a5cdac3e9d15ce0d8\""
+      },
+      "captured_at_utc": "2026-09-18T08:39:55.555348+00:00",
+      "size": 328476,
+      "sha256": "baace14f4527d54e3088af49cce1d2b3504d268c062c7001136ba48dd5c294e0",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/8c434f6527e8fe7e75.png"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "requested_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0004.png?Expires=1791347537&Signature=GAKYPcX9pzlMikcPF0e7u2tfl7xx2X3Fdh1O4ehnC9xTiyvaFT9MDGStdmRlVkRcqmaMsZFc46g7JN8w~52qnEskiM5Nv-RXM8BEp9xNhqrXL27gsl4EazXPA916oSD~GYPy2TEJg33KH9fXTY6qm2qxW5eQWWYz8uzl77WL2ZPY6r1JZ63Bp4~d2LPVadH0g1nDv4OqMsSFjmuTYMq0V7ALkMbM9yO9iJd2WTDVl5ZgdfhhEUfBDvaN0VpOZIY85P07c6KSQKeh3qoypxka9D6e-qkqIFD2mAggfkbLLlo6qHTQ3nqeh7ahNA8ES9qNE8xSvCezke4iFahzdK0EUA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0004.png?Expires=1791347537&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "37500",
+        "date": "Fri, 18 Sep 2026 08:39:59 GMT",
+        "last-modified": "Tue, 07 Apr 2026 20:28:29 GMT",
+        "etag": "\"ff4739ff0f7995ea92e4f76791f60278\""
+      },
+      "captured_at_utc": "2026-09-18T08:39:56.807997+00:00",
+      "size": 37500,
+      "sha256": "5295cf9f327edeb9d4473465b22c3ae9edc73e82af6c232d616b219b78ab93f2",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/6aad9b05a7069e1a06.png"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "requested_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0005.png?Expires=1791347537&Signature=eBv9jXhyvPOxKHF4hwnRkmwirgH0TOLbZJM1rYi-8lDK67o3vHUm04MAC-lBgAfvyZrv5GgsTowtQC6N3isXjKxS0HZCWpqmsic0afomjQFR~rYrXG7EpfVDnFbeA45uelFef961aSFFo5tyQUcdR1mG59lI-k12vuZd706DLJJX-jpXDxSwRusFqqTyahOi-3BQCu5olgKgvb-50q0YkQZWoh2GNGhtQkTdl4AIrcZb2DYkM1is5XAdxlcABn~iLSfjvD6UYiBD0KBJx5nDZKxJHlr~W5OcLZuhtrfrTlaoRPr6Fz~dR0D4qKIqvGU4OiZduJH-n53MV750YXmPRw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0005.png?Expires=1791347537&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "78614",
+        "date": "Fri, 18 Sep 2026 08:40:00 GMT",
+        "last-modified": "Tue, 07 Apr 2026 20:28:29 GMT",
+        "etag": "\"372ae6747ec98bf33c382b6ae6019e3d\""
+      },
+      "captured_at_utc": "2026-09-18T08:39:57.761323+00:00",
+      "size": 78614,
+      "sha256": "7f59be346954c070fbebaf920c57f21b88767c2ea06334c162f0ea254fb3ece9",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/51bd32de79655b3516.png"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "requested_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0006.png?Expires=1791347537&Signature=Qj7XFN7XcG3enPe4wcbjBjl78Y9gi60r95NJBs9L2TNo1WkfsdgsDwdGHDhQ4jrSJrwszyUAiumYr7D16zS~4BL3u02RyEWnrwg5YQtQ5HRsnxplTLfgUblVDTRijB1X9PDJBpU81adC~KW~9cUktI7mF~u3jOV244GJxtktC5FDPIy9vTKrlPjf-G1qPRN-I3Ul7YFzILSzBAfuS6MNhnzLoWJHs~3eHhJrJ--LNR2H1zRS31O~joMzwl60mn9bkfLcYR6~U08CRLgVDLKmbn2s5YGuyTH3689fAdEvvGHxxEO3T6kXOODYOUsCdKB8jplj7dAljG9Bw2whufirDw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0006.png?Expires=1791347537&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "67285",
+        "date": "Fri, 18 Sep 2026 08:40:01 GMT",
+        "last-modified": "Tue, 07 Apr 2026 20:28:29 GMT",
+        "etag": "\"0f88e7f9a836a68f346cbe66c289a376\""
+      },
+      "captured_at_utc": "2026-09-18T08:39:58.997955+00:00",
+      "size": 67285,
+      "sha256": "798740c18c29b0afbab8eb04b85f4706b8e40ba96e5ba3a3a39db79fddd7833d",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/fd15928144d2ca0261.png"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "requested_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0009.png?Expires=1791347537&Signature=y~EKtEauu1XXHiVCDn4bO9aw~CcV84z6BcS9YIpxCDFa11I7LH0bxu570n7jCtX34vXB-gltzU24QmG3qBBuBtaKr-x7QsgHzNrvniGtaMNptRT1tyo2QlC1z2DxfUYWtBqId~pJhBvrw8B6s-AqbjAz39GzmDj10-Yj05VeyWBm1tjoJCq8ceqCcTBrt1lQBLjTN0ECydTwLcp7SYJqL~K~eHN98W2lvZV~fKdLPcPCsBkMo-S4wmdGAxHSsEXSLufG3jG-~FGBMtFoP6hsZZiCz1u~KsShcUCeuUptnzOTLx6xUb0yunTiRe13RhhuXJ5oYq15lZlB8KfE6ef5xA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0009.png?Expires=1791347537&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "80293",
+        "date": "Fri, 18 Sep 2026 08:40:02 GMT",
+        "last-modified": "Tue, 07 Apr 2026 20:28:29 GMT",
+        "etag": "\"be87ca4664d8e3d0270f32b26e31aa7d\""
+      },
+      "captured_at_utc": "2026-09-18T08:39:59.921139+00:00",
+      "size": 80293,
+      "sha256": "0e96606df6df59c1e30840da70bd588e9f1d480e08bc45d1ace677d91955a65c",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/ca29e0235e631fa24f.png"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "requested_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0007.png?Expires=1791347537&Signature=nisev8U4eMicoKe20WBw58WbwjPjWd0U52nMZPWA6kJInx5ry4M0qSh6ZvAg9kMFeNz8E4q-LUClBu9wgCaJYIdxIASD3QsApOtUS-ONXnaPSoRbp7-kBHoJ9F4V08m3PVJgWd2vk1oclG33BhItYyWSL7eJTByuS86F7NNEkHF5B5BTE5L~fqY2~hOoXCx2T7Cru5~aCfAW0iVy-oVPNL~rxQgDh8dcdVs6NTYtmMaqJU9gCZozzEPm648K1OTjlaaSP0zF5fEl~5CoR~Gneek6LsPwIu~Zz1tuoRdw798kvK78XCWjpJpUtbNtFIpBwwgv7w~2SPDMs2xjWhXUUw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0007.png?Expires=1791347537&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "26534",
+        "date": "Fri, 18 Sep 2026 08:40:03 GMT",
+        "last-modified": "Tue, 07 Apr 2026 20:28:29 GMT",
+        "etag": "\"c0cb493b75f714821c20b9f7ac271ccf\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:01.094900+00:00",
+      "size": 26534,
+      "sha256": "d62dc0ea6d95cf1febd67656d57507707f6befbb80380a824556bc4cd8f5f9e2",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/9acf67eb6b8ddc3c64.png"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "requested_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0010.png?Expires=1791347537&Signature=WE8ZJ1DVOQopfrgTcKPzDYjI734cLJata0J6CPEmPzQEevtXAZHlCxh7I9ywaSiHcTPcJvB6We2p8ESrDbZGBgWjoyxgUxH8fyrX7LWU-TlYpIwWznwraReSCx30ofjhuDGWSfbJlfij4JoNtz0iDQ~dWkxFhYA85DN3~fYdPfvr489~Eg202TMrXAzaoHiLDjQKGW0bJJ9Un4F9iOuVtxYXhnY59V2OrkR05FzCsFD9-F2IEmd2FCShsRfCZerX1GVIb6Y8oolTT3sfXLtJqzS3vdeZuO5TCaToCAAaLwPw5lMyHgGQYAS2~0w4Tn1ys9kkOmIGRVz-dZsWPXXgMA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0010.png?Expires=1791347537&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "59938",
+        "date": "Fri, 18 Sep 2026 08:40:03 GMT",
+        "last-modified": "Tue, 07 Apr 2026 20:28:29 GMT",
+        "etag": "\"3d8078645ed4c182045b846aa079ba63\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:01.968880+00:00",
+      "size": 59938,
+      "sha256": "483644913aa3d1c23145535d65c2adea9dcee3f4726faecf37eb36123d78242c",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/c556584de587746b07.png"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "requested_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0008.png?Expires=1791347537&Signature=fRs6dKESSHubPZV1nzJ8nd3tJyFTtCNk4Oj66rqpPX-X~cWajdMg-srIf8CiK4dobaDVDYKaAQnMYcA5JDzkjJQH~P6RkxZTxuZQr6E3Nj5QA76iPONSlZ~ntJBnD6uC2GZos94jPX7FJHk-vClpcfADlgo9ZwyRCYzKIoR4IGbVsc-DgdAO~JhPsmrfgyYBrz7vpgqnMFHG0fbfkCgtXMQTf5XWqE~MV0ssii7wFqliWbfkqjz56JDABt2Nw7zKJSBT2GJlM43G~ZDY5P-KEzy2FZnSWtFzOA4xvILpf4AhoVuUFGjtnhXhuw4QKmtDmTqpaTngbMMq7epW0J6u1A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0008.png?Expires=1791347537&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "159867",
+        "date": "Fri, 18 Sep 2026 08:40:04 GMT",
+        "last-modified": "Tue, 07 Apr 2026 20:28:29 GMT",
+        "etag": "\"314210b2036dde38b0de98773d4ce327\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:02.470613+00:00",
+      "size": 159867,
+      "sha256": "c7e12affd3dc377f0c1ca900dbba0ef9213085302848d60741f34ffdbe30bc79",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/0bd4aaa3c790abcf05.png"
+    }
+  ],
+  "removed_records": [
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "provider": "acs",
+      "requested_url": "https://pubs.acs.org/acsodf/article-supplement/358560/pdf/ao4c03987_si_001/",
+      "final_url": "https://pubs.acs.org/acsodf/article-supplement/358560/pdf/ao4c03987_si_001/",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Tue, 15 Sep 2026 07:53:59 GMT",
+        "content-type": "application/pdf",
+        "content-length": "415882",
+        "connection": "keep-alive",
+        "cache-control": "private",
+        "server": "cloudflare",
+        "x-content-type-options": "nosniff",
+        "permissions-policy": "camera=(), geolocation=(), microphone=(), usb=(), picture-in-picture=(), web-share=(), clipboard-read=(), interest-cohort=(), display-capture=(), screen-wake-lock=(), cross-origin-isolated=(), accelerometer=(), gyroscope=(), magnetometer=(), keyboard-map=(), midi=(), serial=(), hid=(), idle-detection=(), gamepad=(), xr-spatial-tracking=()",
+        "content-disposition": "attachment; filename=ao4c03987_si_001.pdf",
+        "x-scm-server-number": "SCM11WEB05",
+        "access-control-allow-origin": "*",
+        "access-control-allow-headers": "accept, cache-control, content-type, authorization",
+        "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "x-frame-options": "SAMEORIGIN",
+        "content-security-policy": "frame-ancestors 'self'",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a3b60f908cb3ddc6-HKG"
+      },
+      "captured_at_utc": "2026-09-15T07:53:57.251284+00:00",
+      "size": 415882,
+      "sha256": "88ad1b9edb843c625790ac25a1fe156725f5d636fe8ccbd79be3ebae82df895d",
+      "error": null,
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "browser_mode": null,
+      "attempt": 1,
+      "source_input": "tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/original.html",
+      "source_url": "https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere",
+      "asset_kind": "supplementary",
+      "label": "sifile1",
+      "access_conditions": "Existing original network and subscription credentials; Elsevier API key only; no authentication interaction",
+      "validation": {
+        "format": "pdf",
+        "pages": 8,
+        "first_page_excerpt": "S1\nSupporting Information\nFunctionalized metal-free carbon nanosphere catalyst for the selective \nC-N bond formation under open-air conditions\nKumar Krishana, Bhattu Swapnaa, Ankit Kumar Chourasia,b Chandra S. Sharma,b Putla \nSudarsanama,*\naDepartment of Chemistry, Indian Institute of Technology Hyderabad, Kandi 502284, \nTelangana, India\nbDepartment of Chemical Engineering, Indian Institute of Technology Hyderabad, Kandi \n502284, Telangana, India\n*Corresponding author email: sudarsanam.putla@chy.iith.ac.in\nDownloaded from pubs.​acs.​org/​acsodf/​article-supplement/​358560/​pdf/​ao4c03987_si_00",
+        "valid": true
+      },
+      "former_body_file": "acquisition/assets-2026-09-15/e6500fe5b02ab9e9-http-1.bin",
+      "retention": "removed_at_user_request_supplementary_payload"
+    }
+  ]
+}

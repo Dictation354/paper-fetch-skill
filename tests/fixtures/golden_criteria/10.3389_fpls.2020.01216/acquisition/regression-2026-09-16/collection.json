@@ -1,0 +1,257 @@
+{
+  "provider": "frontiers",
+  "doi": "10.3389/fpls.2020.01216",
+  "sample_id": "10.3389_fpls.2020.01216",
+  "source_url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/xml",
+  "source_input": "tests/fixtures/golden_criteria/10.3389_fpls.2020.01216/original.xml",
+  "source_sha256": "3687624b65cfe4ad9889d04d037cfb3275b363fdfb9caa27996b9d7e69615196",
+  "include_body": true,
+  "include_supplementary": false,
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "f1",
+        "anchor_key": "f1",
+        "heading": "Figure 1",
+        "caption": "Time courses of *A* **(A–D)**, *g*<sub>sw</sub> **(E–H)**, *C*<sub>i</sub> **(I–L)**, *T*<sub>leaf</sub> **(M–P)**, and VPD **(Q–T)** during photosynthetic induction in *N. heimii* **(A, E, I, M, Q)**, *L. senegalensis* **(B, F, J, N, R)**, *C. argyratus* **(C, G, K, O, S)**, and *S. leprosula* **(D, H, L, P, T)**. Shown are the data recorded during gas exchange only measurements under constant 30°C (*T*<sub>30</sub>) and 40°C (*T*<sub>40</sub>) and simulated dynamic temperature condition (*T*<sub>dyn</sub>). Values are the means ( ± SE) of five to six individual seedlings for each species. *A*, assimilation rate; *g*<sub>sw</sub>, stomatal conductance for H<sub>2</sub> O; *C*<sub>i</sub>, intercellular CO<sub>2</sub> concentration; *T*<sub>leaf</sub>, leaf temperature; VPD, leaf-to-air vapor pressure deficit.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g001.webp",
+        "original_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g001.webp",
+        "alternatives": [
+          {
+            "url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/fpls-11-01216-g001.tif",
+            "original_url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/fpls-11-01216-g001.tif",
+            "content_type": "image/tiff",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "download_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g001.webp",
+        "full_size_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g001.webp"
+      },
+      "download_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g001.webp",
+      "record": "acquisition/regression-2026-09-16/fpls-11-01216-g001.webp",
+      "file_role": "body",
+      "state": "file_verified",
+      "outcome": "complete",
+      "validation": {
+        "format": "image/webp",
+        "width": 1254,
+        "height": 1013,
+        "sha256": "5979e0cc4e5d16312d6e71b2fc14379e7506c338d8700622636c9ddaa727ba1f",
+        "valid": true,
+        "browser_decode": {
+          "width": 1254,
+          "height": 1013,
+          "rgba_bytes": 5081208,
+          "nonuniform_pixels": 291586
+        }
+      },
+      "replay_verified": true,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Figure graphic stem matched between same-DOI JATS and official landing; actual article ID 569407 differs from DOI suffix 01216"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "f2",
+        "anchor_key": "f2",
+        "heading": "Figure 2",
+        "caption": "Time courses of ETR II **(A–D)**, qP **(E–H)**, qL **(I–L)**, and NPQ **(M–P)** during photosynthetic induction in *N. heimii* **(A, E, I, M)**, *L. senegalensis* **(B, F, J, N)**, *C. argyratus* **(C, G, K, O)**, and *S. leprosula* **(D, H, L, P)**. Values are the means ( ± SE) of three to six individual seedlings for each species under constant 30°C (*T*<sub>30</sub>) and 40°C (*T*<sub>40</sub>) and dynamic temperature condition (*T*<sub>dyn</sub>). NPQ in *L. senegalensis* and *S. leprosula* was not shown due to insufficient replicates (n < 3, see *Materials and Methods*). ETR II, electron transport rate of photosystem II; qP and qL are photochemical quenching based on the puddle and the lake model, respectively; NPQ, non-photochemical quenching.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g002.webp",
+        "original_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g002.webp",
+        "alternatives": [
+          {
+            "url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/fpls-11-01216-g002.tif",
+            "original_url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/fpls-11-01216-g002.tif",
+            "content_type": "image/tiff",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "download_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g002.webp",
+        "full_size_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g002.webp"
+      },
+      "download_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g002.webp",
+      "record": "acquisition/regression-2026-09-16/fpls-11-01216-g002.webp",
+      "file_role": "body",
+      "state": "file_verified",
+      "outcome": "complete",
+      "validation": {
+        "format": "image/webp",
+        "width": 1358,
+        "height": 965,
+        "sha256": "af9372f949ca90c928000c35aec2002af08661775069c40f7d842e652687f247",
+        "valid": true,
+        "browser_decode": {
+          "width": 1358,
+          "height": 965,
+          "rgba_bytes": 5241880,
+          "nonuniform_pixels": 194901
+        }
+      },
+      "replay_verified": true,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Figure graphic stem matched between same-DOI JATS and official landing; actual article ID 569407 differs from DOI suffix 01216"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "f3",
+        "anchor_key": "f3",
+        "heading": "Figure 3",
+        "caption": "Representative time courses of measured *A* (open symbols), estimated *A*<sub>c</sub> (red solid line), and estimated *A*<sub>j</sub> (orange symbols with solid line) during photosynthetic induction in *N. heimii* **(A, E, I)**, *L. senegalensis* **(B, F, J)**, *C. argyratus* **(C, G, K)**, and *S. leprosula* **(D, H, L)** under constant 30°C [*T*<sub>30</sub> **(A–D)**] simulated dynamic temperature [*T*<sub>dyn</sub> **(E–H)**] and constant 40°C condition [*T*<sub>40</sub> **(I–L)**], respectively. Measured *A* were those simultaneously recorded during chlorophyll fluorescence measurements. Estimated *A*<sub>c</sub> and *A*<sub>j</sub> were the potential *A* supported by *V*<sub>c</sub> and ETR II, respectively. Periodic oscillations of *A* were inevitable due to the periodic dark pulses necessary for determining fluorescence yield.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g003.webp",
+        "original_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g003.webp",
+        "alternatives": [
+          {
+            "url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/fpls-11-01216-g003.tif",
+            "original_url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/fpls-11-01216-g003.tif",
+            "content_type": "image/tiff",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "download_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g003.webp",
+        "full_size_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g003.webp"
+      },
+      "download_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g003.webp",
+      "record": "acquisition/regression-2026-09-16/fpls-11-01216-g003.webp",
+      "file_role": "body",
+      "state": "file_verified",
+      "outcome": "complete",
+      "validation": {
+        "format": "image/webp",
+        "width": 1521,
+        "height": 866,
+        "sha256": "f13ceb132faa8c8dc3a2f8c6c59c23b2dcfc0cc4d5048ef801d8aec6a44fdf58",
+        "valid": true,
+        "browser_decode": {
+          "width": 1521,
+          "height": 866,
+          "rgba_bytes": 5268744,
+          "nonuniform_pixels": 256143
+        }
+      },
+      "replay_verified": true,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Figure graphic stem matched between same-DOI JATS and official landing; actual article ID 569407 differs from DOI suffix 01216"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "f4",
+        "anchor_key": "f4",
+        "heading": "Figure 4",
+        "caption": "Photosynthetic CO<sub>2</sub> response curve at high temperature (*T*<sub>40</sub>) in *N. heimii* **(A)**, *L. senegalensis* **(B)**, *C. argyratus* **(C)**, and *S. leprosula* **(D)**. Assimilation rate (*A*) was recorded under 1000 μmol m<sup>-2</sup> s<sup>-1</sup> at an average leaf temperature of 36.7°C.The *x*-intercept of vertical dotted lines represents the averaged transition CO<sub>2</sub> concentration in each species, above which the primary limitation imposed on photosynthesis switched from *A*<sub>c</sub> to *A*<sub>j</sub>. Values are the means ( ± SE) of five to six individual seedlings for each species. *A*, assimilation rate; *C*<sub>i</sub>, intercellular CO<sub>2</sub> concentration.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g004.webp",
+        "original_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g004.webp",
+        "alternatives": [
+          {
+            "url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/fpls-11-01216-g004.tif",
+            "original_url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/fpls-11-01216-g004.tif",
+            "content_type": "image/tiff",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "download_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g004.webp",
+        "full_size_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g004.webp"
+      },
+      "download_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g004.webp",
+      "record": "acquisition/regression-2026-09-16/fpls-11-01216-g004.webp",
+      "file_role": "body",
+      "state": "file_verified",
+      "outcome": "complete",
+      "validation": {
+        "format": "image/webp",
+        "width": 1385,
+        "height": 1055,
+        "sha256": "92a02942fe1543e55b9c7b53de19571c433f05be6ea62decef32821fa18f9fa3",
+        "valid": true,
+        "browser_decode": {
+          "width": 1385,
+          "height": 1055,
+          "rgba_bytes": 5844700,
+          "nonuniform_pixels": 94551
+        }
+      },
+      "replay_verified": true,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Figure graphic stem matched between same-DOI JATS and official landing; actual article ID 569407 differs from DOI suffix 01216"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "f5",
+        "anchor_key": "f5",
+        "heading": "Figure 5",
+        "caption": "ICG under simulated dynamic temperature condition [*T*<sub>dyn</sub> **(A)**] and under constant 40°C [*T*<sub>40</sub> **(B)**] relative to that under constant 30°C (*T*<sub>30</sub>) as a function of the time since light increased in tree seedlings of four tropical woody species. Shown are data recorded during gas exchange only measurements. The dotted lines indicate equal amount of ICG between two temperature conditions. Open and closed symbols represent data from shade-intolerant and shade-tolerant species, respectively. Values are the means ( ± SE) of five to six individual seedlings for each species. No significant differences were found across species at *P* = 0.05 level.",
+        "section": "body",
+        "render_state": "inline",
+        "link": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g005.webp",
+        "original_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g005.webp",
+        "alternatives": [
+          {
+            "url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/fpls-11-01216-g005.tif",
+            "original_url": "https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/fpls-11-01216-g005.tif",
+            "content_type": "image/tiff",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "download_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g005.webp",
+        "full_size_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g005.webp"
+      },
+      "download_url": "https://www.frontiersin.org/files/Articles/569407/xml-images/fpls-11-01216-g005.webp",
+      "record": "acquisition/regression-2026-09-16/fpls-11-01216-g005.webp",
+      "file_role": "body",
+      "state": "file_verified",
+      "outcome": "complete",
+      "validation": {
+        "format": "image/webp",
+        "width": 749,
+        "height": 1064,
+        "sha256": "00a045bf8506f5d48a2a79371781ccd6932141a18d17751528101885e88dec69",
+        "valid": true,
+        "browser_decode": {
+          "width": 749,
+          "height": 1064,
+          "rgba_bytes": 3187744,
+          "nonuniform_pixels": 67125
+        }
+      },
+      "replay_verified": true,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Figure graphic stem matched between same-DOI JATS and official landing; actual article ID 569407 differs from DOI suffix 01216"
+    }
+  ],
+  "counts": {
+    "unique_files": 5,
+    "verified_files": 5,
+    "replayed_files": 5
+  }
+}

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ...quality.access_boundary import propagate_paywall
+
 from functools import partial
 from pathlib import Path
 from typing import Any, cast
@@ -218,6 +220,7 @@ class BrowserWorkflowClient(ProviderClient):
             provider=self.name,
             doi=normalized_doi,
             runtime=runtime,
+            expected_title=metadata.get("title"),
             pdf_candidates=self.pdf_candidates(normalized_doi, metadata),
             html_candidates=self.html_candidates(normalized_doi, metadata),
             landing_page_url=str(
@@ -339,6 +342,7 @@ class BrowserWorkflowClient(ProviderClient):
                 return self.deps.fetch_seeded_browser_pdf_payload(
                     provider=self.name,
                     doi=normalize_doi(str(metadata.get("doi") or "")) or doi,
+                    expected_title=metadata.get("title"),
                     runtime=bootstrap.runtime,
                     pdf_candidates=bootstrap.pdf_candidates,
                     html_candidates=bootstrap.html_candidates,
@@ -354,6 +358,7 @@ class BrowserWorkflowClient(ProviderClient):
                     deps=self.deps,
                 )
             except PdfFallbackFailure as exc:
+                propagate_paywall(exc)
                 reason = (
                     bootstrap.html_failure_message or f"{self.name} HTML route failed."
                 )
@@ -375,7 +380,16 @@ class BrowserWorkflowClient(ProviderClient):
                         ]
                         if bootstrap.html_failure_reason
                         else []
-                    ),
+                    )
+                    + [
+                        trace_event(
+                            "fulltext",
+                            f"{self.name}_pdf_transport",
+                            "fail",
+                            code=exc.kind,
+                            message=exc.message,
+                        )
+                    ],
                 ) from exc
 
         return run_provider_waterfall(
@@ -449,7 +463,8 @@ class BrowserWorkflowClient(ProviderClient):
                 raw_payload,
                 context=context,
             )
-        except (ProviderFailure, PdfFallbackFailure):
+        except (ProviderFailure, PdfFallbackFailure) as exc:
+            propagate_paywall(exc)
             provider_label = self.provider_label()
             prepared.finalize_warnings.append(
                 f"{provider_label} HTML route only exposed abstract-level content after markdown extraction, "

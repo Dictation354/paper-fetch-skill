@@ -1,0 +1,955 @@
+{
+  "doi": "10.1093/molehr/gaaf013",
+  "source": "oxfordacademic_html",
+  "metadata": {
+    "title": "Effects of chronic particulate matter exposure on endometriosis-associated signaling pathways and disease progression",
+    "authors": [
+      "Gee Soo Jung",
+      "Jae Hoon Lee",
+      "Min Jung Lee",
+      "Inha Lee",
+      "Hyemin Park",
+      "Nara Kim",
+      "Ji-Ye Kim",
+      "Wooseok Im",
+      "SiHyun Cho",
+      "Young Sik Choi"
+    ],
+    "abstract": "Abstract",
+    "journal": "Molecular Human Reproduction",
+    "article_type": null,
+    "published": "2025-4-3",
+    "keywords": [],
+    "license_urls": [
+      "https://academic.oup.com/pages/standard-publication-reuse-rights"
+    ],
+    "landing_page_url": "https://academic.oup.com/molehr/article/doi/10.1093/molehr/gaaf013/8113907"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "Abstract"
+    },
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "Exposure to PM2.5 (particulate matter <2.5 μm) has been implicated in increasing the risk of endometriosis and worsening its symptoms. However, the molecular mechanisms and direct associations remain unclear. This study explored whether PM2.5 contributes to the onset or progression of endometriosis using in vitro and in vivo models. Endometrial (EM) cells from women without endometriosis were cultured to the second passages (P2) with or without exposure to PM2.5 at a concentration of 200 µg/ml (N = 5 for each group). Z-stack confocal imaging confirmed PM accumulation in the nucleus and cytoplasm of exposed EM cells. Initial PM exposure at the primary passage (P0) led to decreased proliferation, migration, anti-apoptosis, and oxidative stress, accompanied by downregulation of associated pathways. However, repeated PM exposure during subculturing to P2 led to increased proliferation, enhanced anti-apoptotic activity, and elevated oxidative stress. Given the similarity of these gene expression alterations to those observed in endometriosis, an endometriosis-induced mouse model was established to assess the potential of repeated PM exposure to exacerbate the condition in vivo. To investigate the in vivo effects, an endometriosis-induced mouse model was developed using female C57BL/6 mice exposed to low (10 mg/kg/day) or high (20 mg/kg/day) doses of PM2.5 for 4 weeks (n = 6 for each group). PM exposure significantly enlarged endometriotic lesions compared to controls (no PM exposure). Upregulated gene expression in endometriotic lesions included anti-apoptotic (Bcl2/Bax), proliferative (p-ERK), inflammatory (p-NF-κB, p-c-jun, IL-6, IL-1β), and migration (MMP-2, MMP-9) markers. PM exposure altered estrogen receptor (ER) expression, resulting in a decreased ERα/ERβ ratio in both dose groups. The control group exhibited a ratio of 1.03 ± 0.09, while the low-dose and high-dose mice had ratios of 0.57 ± 0.08 (P = 0.02) and 0.46 ± 0.26 (P = 0.03), respectively. In conclusion, PM2.5 exposure alters gene expression related to cell growth, survival, oxidative stress, and migration in EM cells and exacerbates endometriotic lesions in vivo, likely through ER modulation. These findings suggest PM2.5 may contribute to other estrogen-dependent conditions, such as leiomyoma or adenomyosis, by influencing ER pathways."
+    },
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "Download slide"
+    },
+    {
+      "heading": "",
+      "level": 2,
+      "kind": "body",
+      "text": "- PDF\n- Split View\n- Views\nArticle contents\nFigures & tables\nVideo\nAudio\nSupplementary Data\n- Cite\nCite\nGee Soo Jung, Jae Hoon Lee, Min Jung Lee, Inha Lee, Hyemin Park, Nara Kim, Ji-Ye Kim, Wooseok Im, SiHyun Cho, Young Sik Choi, Effects of chronic particulate matter exposure on endometriosis-associated signaling pathways and disease progression, Molecular Human Reproduction, Volume 31, Issue 2, 2025, gaaf013, https://doi.org/10.1093/molehr/gaaf013\nSelect Format Select format.ris (Mendeley, Papers, Zotero).enw (EndNote).bibtex (BibTex).txt (Medlars, RefWorks) Download citation\nClose\n- Permissions Icon Permissions\n- Share Icon Share\nBluesky\nFacebook\nX\nLinkedIn\nEmail"
+    },
+    {
+      "heading": "Introduction",
+      "level": 2,
+      "kind": "body",
+      "text": "Endometriosis is an inflammatory condition characterized by the abnormal growth of endometrial (EM) tissue outside the uterus, impacting ∼10% of women of reproductive age globally (Clement, 2007; Shafrir et al., 2018). Endometriosis primarily affects pelvic organs, such as the ovaries and pelvic peritoneum, but can also involve extra-pelvic sites like the bladder and bowel, often causing symptoms such as dysmenorrhea, chronic pelvic pain, and dyspareunia (Taylor et al., 2021). Moreover, endometriosis significantly impairs reproductive processes and is a major contributor to female infertility (Tanbo and Fedorcsak, 2017). Data from South Korea’s National Health Insurance Service indicate a steady increase in the prevalence of endometriosis since 2002, underscoring its significance as a public health concern (Kim et al., 2021, 2023). This is particularly relevant given the growing societal challenges of declining birth rates and increasing infertility (Song et al., 2018).\nAir pollution is another serious socioeconomic concern worldwide. Air pollution includes toxic substances such as particulate matter (PM), nitrogen dioxide, sulfur dioxide, ozone, and volatile organic compounds, among others (Saxena and Sonwani, 2019). PM in the size range of 2.5–10 μm makes up the majority of urban air pollution mass (Jaiswal and Singh, 2024). Long-term exposure to PM has been found to exacerbate respiratory and cardiovascular diseases such as asthma, chronic obstructive pulmonary disease, stroke, and heart attack by inducing inflammation and irritation of the cardiopulmonary system (Brook et al., 2010; Kim et al., 2020). Clinical evidence indicates that PM can also adversely affect the reproductive system, contributing to unfavorable birth outcomes such as low birth weight and preterm birth (Shah et al., 2011). Additionally, PM exposure has been linked to infertility and reproductive disorders in both men and women (Vizcaíno et al., 2016; Guo et al., 2023). Despite the growing body of clinical data implicating PM in female reproductive health, corresponding preclinical research remains scarce. Unlike the cardiopulmonary system, which is directly affected by PM introduced through the airway, the mechanism by which PM affects the reproductive system is not well understood. Considering that PM exacerbates metabolic conditions such as diabetes and increases the risk of developing certain cancers (Pearson et al., 2010; Wong et al., 2016), PM has more comprehensive and long-term consequences for human health (Garcia et al., 2023). Previous studies have shown that PM exposure disrupts inflammatory and apoptotic pathways both in vitro and in vivo, adversely impacting the EM environment (Park et al., 2024). While this study established a critical link between PM and EM dysfunction, it primarily focused on acute exposure and EM cellular responses. The current study expands upon these findings by investigating the effects of repeated PM exposure on EM stromal cells and its potential to induce endometriosis-like characteristics. Recent studies have suggested that long-term PM exposure may exacerbate inflammatory conditions like endometriosis by influencing the immune and hormonal systems, thereby worsening the disease process (Zhang et al., 2023; Park et al., 2024).\nThus, in this study, we aimed to investigate the effects of chronic PM exposure on the female reproductive system specifically on the endometrium and endometriosis. To establish a chronic exposure model, we subjected EM cells to PM treatment in vitro while growing them for several generations. In vivo, we used a mouse model of endometriosis to study the effect of long-term PM exposure on the development and progression of endometriotic lesions."
+    },
+    {
+      "heading": "Materials and methods",
+      "level": 2,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "Study population and sample collection",
+      "level": 3,
+      "kind": "body",
+      "text": "Thirteen premenopausal women who underwent laparoscopic surgery for gynecologic diseases other than endometriosis were enrolled in the study. EM tissue was obtained via pipelle biopsy (RI.MOS., Mirandola, Italy), washed three times with cold phosphate-buffered saline (PBS; Welgene, Gyeongsan, Korea), and sectioned into 4-mm<sup>3</sup> pieces.\nThe study protocol was approved by the Institutional Review Board of Gangnam Severance Hospital, Yonsei University College of Medicine (IRB approval no. 3-2021-0336). Informed written consent was obtained from all patients, and the study was conducted in accordance with the principles of the Declaration of Helsinki."
+    },
+    {
+      "heading": "Isolation and primary culture of EM cells",
+      "level": 3,
+      "kind": "body",
+      "text": "Fresh eutopic EM cells were extracted from women without endometriosis. The EM tissue samples were finely minced and subsequently incubated for 2 h in PBS containing 2.0 mg/ml collagenase type I (Gibco, Waltham, MA, USA) in a humidified incubator maintained at 37°C and 5% CO<sub>2</sub>. Following incubation, the cells were collected by filtering through a 40-μm cell strainer (BD Biosciences, San Jose, CA, USA). The cell culture medium consisted of Dulbecco’s modified Eagle’s medium (DMEM/F12; Cytiva, Marlborough, MA, USA) supplemented with 10% (v/v) fetal bovine serum (FBS; Gibco) and 2% penicillin-streptomycin (P/S; Cytiva). The cells were resuspended in the culture medium and incubated at 37°C and 5% CO<sub>2</sub>. For passaging, when the cells reached 80–90% confluence, 2 ml of 0.25% trypsin–ethylenediamine tetraacetic acid (Gibco) was added to digest the cells for 5 min in the incubator. Then, 1 ml of culture medium was added to stop the digestion. The primary cultured cells from passages 3–5 were used for subsequent experiments."
+    },
+    {
+      "heading": "PM treatment",
+      "level": 3,
+      "kind": "body",
+      "text": "EM cells were seeded at a density of 8 × 10<sup>5</sup> cells in a 60-mm culture dish and cultured until the cells reached ∼80% confluence. The culture medium was then changed to DMEM/F12 with 0.5% (v/v) FBS for 24 h. Following this incubation period, the cells were treated with PM (NIST<sup>®</sup> SRM<sup>®</sup> 1648a; Sigma-Aldrich, St Louis, MO, USA), which was dissolved in dimethyl sulfoxide (DMSO; Sigma-Aldrich) at a concentration of 200 μg/ml for 24 h. In all experiments, the control group was treated with DMSO alone instead of DMSO containing PM. This subculture process was repeated, with PM added each time. The concentration of PM used in this study was based on prior studies (Park et al., 2024), which demonstrated significant cellular responses at these levels. Although these concentrations may exceed typical environmental exposure, they are relevant for modeling high-pollution urban or occupational settings and enable the observation of biological responses under repeated exposure conditions."
+    },
+    {
+      "heading": "Cell proliferation assay",
+      "level": 3,
+      "kind": "body",
+      "text": "Cell proliferation was assessed using the Cell Count Assay Kit 8 (CCK-8; Dojindo, Kumamoto, Japan). For the CCK-8 assay, EM cells were cultured in 96-well plates at 5 × 10<sup>3</sup> cells/well for 24 h. Following this, 100 μl of DMEM with 0.5% (v/v) FBS, containing control or PM, was added and incubated for an additional 24 h. Following the incubation period, 20 μl of CCK-8 solution was added to the wells, and the plate was covered and incubated in the dark in an incubator at 37°C for 1–3 h. The optical density (OD) of each sample was measured at 450 nm using a VersaMax microplate reader (Molecular Devices, San Jose, CA, USA)."
+    },
+    {
+      "heading": "Western blotting",
+      "level": 3,
+      "kind": "body",
+      "text": "Proteins were extracted using radioimmunoprecipitation assay buffer (Thermo Scientific, Waltham, MA, USA) containing protease inhibitor cocktail (Thermo Scientific). Protein concentrations were measured using the bicinchoninic acid assay kit (Thermo Scientific). Equal amounts of protein (20 μg) were mixed with 5× sodium dodecyl sulfate–polyacrylamide gel electrophoresis (SDS–PAGE) loading buffer (Biosesang, Seongnam, Korea) and heated at 95°C for 5 min. The protein samples were separated via SDS–PAGE on a 10% gel and then transferred onto polyvinylidene fluoride membranes (Merck, Darmstadt, Germany). Membranes were blocked with 5% non-fat skimmed milk in Tris-buffered saline solution (10 mM Tris–HCl [pH 7.4] and 0.5 M NaCl) with Tween-20 (0.1% v/v) at 20°C for 1 h. The membranes were incubated with the following specific primary antibodies overnight at 4°C: Phospho-p44/42 mitogen-activated protein kinases (MAPK) (p-ERK 1/2; 1:500, No. 9101, Cell Signaling Technology, Danvers, MA, USA), p44/42 MAPK (ERK 1/2; 1:500, No. 4695, Cell Signaling Technology), Phospho-p53 (p-p53; 1:1000, No. sc-51690, Santa Cruz, Dallas, TX, USA), p53 (1:1000, No. sc-393031, Santa Cruz), Phospho-nuclear factor (NF)-κB p65 (1:1000, No. 3033, Cell Signaling Technology), Phospho-c-Jun (p-c-jun; 1:1000, No. 3270, Cell Signaling Technology), Caspase 3 (1:200, No. sc-56046, Santa Cruz), B-cell lymphoma 2 (Bcl-2) (1:500, No. sc-7382, Santa Cruz), Bcl-2 Associated X-protein (BAX) (1:500, No. sc-65532, Santa Cruz), estrogen receptor (ER)-α (1:100, No. sc-787, Santa Cruz), ER-β (1:1000, No. sc-390243, Santa Cruz), matrix metalloproteinases-9 (MMP-9) (1:1000, No. sc-393859, Santa Cruz), MMP-2 (1:1000, No. sc-13595, Santa Cruz), and GAPDH (1:2000, No. sc-137179, Santa Cruz). The membranes were then incubated with HRP-conjugated goat anti-mouse IgG (H + L) or HRP-conjugated anti-rabbit IgG (H + L) secondary antibody (1:3000, Thermo Scientific) for 1 h at room temperature. Detection was performed with Super Signal West Pico Plus Chemiluminescent Substrate (Thermo Scientific) solution and imaged in a chemiluminescence imaging system (Image Quant LAS 4000; General Electric, Chicago, IL, USA). The bands were quantified by densitometry using Image J software (NIH, Bethesda, MD, USA)."
+    },
+    {
+      "heading": "Cell migration assay (wound healing assay)",
+      "level": 3,
+      "kind": "body",
+      "text": "EM cells were seeded in 6-well plates at 3 × 10<sup>5</sup> cells per well, and the culture medium was exchanged with DMEM/F12 with 0.5% (v/v) FBS for 24 h when ∼80% confluence was reached. After 24 h of exposure to DMSO and PM, respectively, a clear scratch was made using a sterile pipette tip. The initial and final areas after 24 h were measured using Image J software (NIH). The wound’s healing area percentage was determined by applying the formula: [(initial area−final area)/initial area]."
+    },
+    {
+      "heading": "Annexin v/propidium iodide labeling and flow cytometry assay for apoptosis",
+      "level": 3,
+      "kind": "body",
+      "text": "EM cells were seeded at 2.1 × 10<sup>6</sup> cells/cm<sup>2</sup> and cultured in T75 culture flasks. When the cell confluence reached ∼80%, the culture medium was switched to DMEM/F12 supplemented with 0.5% (v/v) FBS. Subsequently, the cells were exposed to either the control or PM for 24 h each.\nIn cell death assays, we employed the fluorescein isothiocyanate Annexin V Apoptosis Detection Kit (BD Biosciences, San Jose, CA, USA). Briefly, following treatment, cells were trypsinized, rinsed with PBS, and suspended at a density of 1 × 10<sup>5</sup> cells per tube in Annexin V binding buffer. Standard samples for each staining dye were prepared, including a negative control (cells only), a standard sample for Annexin V staining, and a standard sample for propidium iodide (PI) staining. Test samples were treated with Annexin V and PI, followed by a 15-min incubation in the dark at 20°C. Analysis was performed using a fluorescence-activated cell sorting Canto II instrument (BD Biosciences). Fluorescence data were processed using Flowing Software 2.5.1 (Flowing Software, Turku, Finland)."
+    },
+    {
+      "heading": "Quantitative PCR",
+      "level": 3,
+      "kind": "body",
+      "text": "EM cells were seeded at a density of 8 × 10<sup>5</sup> cells in a 60-mm dish and cultured until they reached ∼80% confluence. The culture medium was then replaced with DMEM/F12 medium supplemented with 0.5% (v/v) FBS for 24 h. Subsequently, the cells were exposed to control or PM, each for 24 h. Upon completion of the treatment, cell pellets were harvested using 1 ml of TRIzol (Invitrogen, Waltham, MA, USA), and RNA extraction was performed. The extracted RNA (1 μg) was reverse transcribed using Maxima First Strand cDNA Synthesis Kit for RT-quantitative PCR (Thermo Scientific). The SYBR Green assay reaction mixture included PowerUp™ SYBR™ Green Master Mix (Thermo Scientific), 15 pmol each of forward and reverse primers, and 2 μl of extracted cDNA. Detection was performed using a Step One Plus Real-time PCR System (Applied Biosystems, Foster City, CA, USA). The thermocycling program comprised an initial denaturation step at 95°C for 10 min, followed by 40 cycles of denaturation at 95°C for 15 s, and annealing and extension at 60°C for 1 min. Following amplification, a melting curve analysis was conducted using the following cycling conditions: 95°C for 15 s; 60°C for 1 min; and 95°C for 15 s. Threshold cycle values were determined using the 2<sup>−ΔΔCT</sup> method, with each reaction run in triplicate. Statistical analysis was conducted using the One-way ANOVA to compare between-group data. Primer sequences are provided in Supplementary Table S1."
+    },
+    {
+      "heading": "Immunostaining of primary EM cells",
+      "level": 3,
+      "kind": "body",
+      "text": "Sterilized microscope cover glasses (Marienfeld) were gently positioned into a 12-well plate using forceps, and 700 μl poly-l-lysine solution (Merck, Darmstadt, Germany) was dispensed into each well and left to incubate for at least 3 h. The plate was then washed three times with PBS, and subsequently, EM cells were seeded. Upon reaching ∼50% confluency, cells were fixed with 4% (v/v) paraformaldehyde (Forbio, Seoul, Korea) on a shaker (Daihan Scientific, Wonju, Korea) set at 40 rpm for 15 min at 20°C. Following three washes with PBS, each well was treated on a shaker for 1 h at 25°C for nonspecific blocking with a 300-μl solution containing 4% (v/v) normal goat serum (Vector Laboratories, Burlingame, CA, USA) and 0.2% (v/v) Triton X-100 (Merck) in PBS. The primary antibody p-p53 (Santa Cruz) was diluted 1:100 in the 4% normal goat serum solution, and 300 μl was added in each well and incubated overnight at 4°C with shaking. Following the removal of the primary antibody, the samples were washed three times with PBS for 5 min each. The sample was then treated with the secondary antibody, Alexa488-conjugated mouse antibody (Thermo Scientific), and diluted 1:400 in PBS for 2 h at room temperature. Following PBS washing, 4′,6-diamidino-2-phenylindole (Merck) was added at a volume of 300 μl per well, and the plate was stained for 5 min. After another round of PBS washing, a drop of mounting medium (Dako, Glostrup, Denmark) was placed on the microscope cover glasses (Citotest Scientific, Jiangsu Province, China), covered with a coverslip, and allowed to dry completely. The coverslip was then sealed with nail polish. Finally, the sample was imaged using a confocal microscope (LSM 980, Carl Zeiss, Oberkochen, Germany)."
+    },
+    {
+      "heading": "Mouse model for endometriosis",
+      "level": 3,
+      "kind": "body",
+      "text": "All procedures were performed in accordance with the guidelines outlined in the National Institutes of Health Guide for the Care and Use of Laboratory Animals. This in vivo study was approved by the Institutional Animal Care and Use Committee of Gangnam Severance Hospital, Yonsei University College of Medicine, Seoul, Republic of Korea (Protocol number: 2021-0284).\nSeven-week-old, healthy, female wild-type C57BL/6 N mice from the parental wild-type inbred strain were obtained from Orient Bio Inc (Seongnam, Gyeonggi, Republic of Korea). The animals were randomly assigned and housed in transparent plastic cages, with five mice per cage, maintained under a 12:12 h light/dark cycle at 21°C. They were provided ad libitum access to water and standard rodent chow.\nIn brief, the donor mouse was euthanized by administering an overdose of isoflurane using an anesthesia machine, prioritizing the animal’s comfort and welfare, after which the uterus was carefully extracted. The ‘Y’-shaped uterus was then halved, and each uterine horn was dissected to expose the endometrium. Upon anesthetizing the recipient mouse, an incision was carefully made on the abdominal wall. Subsequently, the uterine horns from the donor mouse were transplanted onto each lateral side of the recipient’s peritoneum using Vicryl 3-0 sutures (Ethicon, Raritan, NJ, USA). The peritoneum and skin were carefully sutured closed using Vicryl 3-0 sutures, and the mice were closely monitored postoperatively for their condition.\nThe PM solution was prepared using DMSO, as described in the section ‘PM treatment’. PM-treated rodents were divided into two groups: a high-dose group (PM 20 mg/kg/day) and a low-dose group (PM 10 mg/kg/day), each consisting of six mice (Wen et al., 2021; Choi et al., 2023). The control group received an equal volume of DMSO administered through intranasal inhalation. Intranasal inhalation was conducted five times per week over a 4-week period to expose the mice to PM."
+    },
+    {
+      "heading": "Statistical analysis",
+      "level": 3,
+      "kind": "body",
+      "text": "Results are presented as mean±SD. For the in vitro experiments, biological replicates consisted of samples from five donors (N = 5), while technical replicates were derived from repeated measurements taken from each donor. For in vivo experiments, six mice (N = 6) were used. One-way ANOVA followed by Bonferroni’s post hoc test was used for multiple comparisons. Statistical analyses were performed using IBM SPSS<sup>®</sup> v.27.0 (IBM Corp., Armonk, NY, USA) and GraphPad Prism software (GraphPad Software Inc., San Diego, CA, USA), with all results visualized using GraphPad Prism. A P-value <0.05 was considered statistically significant."
+    },
+    {
+      "heading": "Results",
+      "level": 2,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "Effects of repeated PM exposure on human EM cells during subculture",
+      "level": 3,
+      "kind": "body",
+      "text": "To assess the morphology of human EM cells under repeated exposure to PM, the cells were treated with or without PM for 24 h during P0 and through P2. The primary aim of this experiment was to assess any morphological changes that could be indicative of cellular responses to PM exposure, which might be relevant for understanding the pathological processes in endometriosis. Using Z-stack confocal images, we observed that PM penetrated the cell membrane and accumulated in the nucleus and cytoplasm of P0 EM cells (Fig. 1A). Distinct cell morphological alterations were detected in EM cells following exposure to 100 and 200 μg/ml PM for 24 h: EM cells exposed to PM exhibited increased irregularity, partial disruption of the cell membrane and nuclear structure, and significant infiltration of PM particles at concentrations of 100 and 200 μg/ml. Additionally, morphology was observed to remain unaltered in cells subjected to repeated PM exposure up to P2 compared to the non-exposed control group (Fig. 1B).\n\n![Figure 1](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f1.jpeg?Expires=1791560914&Signature=sCbTiFtHPb8GvX-Ck20L8ulPzVjuKDH8A8-Rg8g72kfmoFHaKdO3cFQ~RjBxwV3eRXD-cA1FV0U7h3pvwzXBIBmY7WtpzqqDpb18Koh4V6V98Gwjv0M2kSYM4gUBX7LZtMPt14BLKYrTnpahE0-2PvSYhQRfI-yGcdpTsaUq5pCaYEj0-wjtPK88HYem4-ohhKNZVXhnn6iCRavBLis7HIFRyOBuZem~-uJUTgnYipyXtS~Jr15B3hXYKaIJO5m6dCUD685qFtA4ouP4uRq57kRIw-vqiiqSBoJJmOn0cs9uOGcYrCaibBTibRy1BK4aKRsMwxozqG1m07bIyYlU-A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 1.** Alteration in endometrial (EM) cell morphology following particulate matter (PM) exposure. (A) Primary (P0) EM cells exhibited partial disruption of the cell membrane and nuclear structure with PM accumulation in the nucleus and cytoplasm following exposure to 100 or 200 μg/ml PM for 24 h, which was observed on Z-stack images collected in 0.2-µm steps via confocal laser scanning microscopy. These morphological changes suggest that PM exposure may interfere with cell structure and impair cell viability (scale bar = 20 μm). (B) EM cells were subjected to second passages (P2) in Dulbecco’s modified Eagle’s medium with or without exposure to PM at a concentration of 200 µg/ml. Repeated PM exposure through P2 increased cell proliferation, suggesting a potential adaptive response to PM exposure. Such changes could have implications for understanding how PM contributes to cellular remodeling and pathology over successive passages (scale bar = 20 μm).\nFurther analysis of EM cell morphology up to passage 6 (P6) confirmed no significant differences between PM-exposed and control cells or between P2 and P6, as shown in Supplementary Fig. S1. Based on these observations, the experiment was limited to P2, as it was believed to be sufficient to capture the cellular response to PM exposure without further morphological changes in subsequent passage."
+    },
+    {
+      "heading": "Repeated PM exposure during subculture increases the proliferation of EM cells",
+      "level": 3,
+      "kind": "body",
+      "text": "EM cell proliferation is a critical factor in the development of endometriotic lesions. The impact of PM on cell proliferation was assessed by measuring CCK-8 activity. The OD 450 was measured for four groups: P0 EM cells with or without PM treatment and P2 EM cells with or without PM treatment. In P0 EM cells, exposure to PM significantly reduced cell proliferation compared to the control (Fig. 2A). However, repeated PM exposure up to P2 significantly increased proliferation compared to the control group (P0: 100 vs 81.92 ± 7.12, P = 0.008; P2: 91 ± 5.41 vs 105.3 ± 8.49, P = 0.01).\n\n![Figure 2](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f2.jpeg?Expires=1791560914&Signature=a9mu2uaJICaBZj5z-TU7LsEG~um4gs9oSkzEiaicEfjTllgx~6veoNa6s~T8vFEI9pfd2bOD6sSw9RBbE9YQYhP4EG~O9p44nG3wxs0kYW0~9TRYCnvcunHCxGOmqgGJ9Ttz3stin57d~u1Dic55gpdaM-wcTVsXwDdLzdpBKD04S54zGV3jaj~Gg9EM6XRR3xuawhBpsU2pFHk2zrGGVo37YZBk1pPDOvv4du-l91t3i9Yxowj0HI6vu1~Qc6~Ry5HSAuii-frSIznPP7bRl5sWV8GWSOKZrtZFPwx-Lj2YtfwPIuatPDnEPViGrMzi~R2hjzEMcqxvYAVxtj9gJA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 2.** Changes in cell proliferation in endometrial (EM) cells following particulate matter (PM) exposure. (A) Cell viability was assessed by measuring Cell Count Assay Kit 8 (CCK-8) activity. (B) Primary (P0) EM cells exhibited a notable reduction in phosphorylated extracellular signal-regulated kinase (p-ERK) expression upon PM exposure, whereas second passages (P2) EM cells showed a significant upregulation of p-ERK following PM exposure. The data are presented as the mean±SD. Statistical significance was determined using one-way ANOVA followed by Bonferroni’s post hoc test (N = 5, * P < 0.05, ** P < 0.01).\nAs shown in Fig. 2B and Supplementary Fig. S2, upon PM exposure, P0 EM cells demonstrated a significant decrease (P0: 1 vs 0.68 ± 0.21, P = 0.005, P2: 0.53 ± 0.4 3 vs 3.34 ± 2.32, P = 0.001) in p-ERK, a marker associated with cell proliferation and survival, compared to that in the control condition. In contrast, PM-treated P2 EM cells exhibited upregulated p-ERK levels, indicating enhanced cell proliferation. These findings suggest that repeated PM exposure during P2 may create a permissive environment for increased proliferation, potentially contributing to the pathogenesis of endometriosis."
+    },
+    {
+      "heading": "Repeated PM exposure suppresses apoptosis in P2 EM cells",
+      "level": 3,
+      "kind": "body",
+      "text": "To explore whether PM exposure affects apoptosis in EM cells, flow cytometry, qRT-PCR, and western-blot analyses were performed. Apoptosis is a key process that prevents pathological tissue growth, and its suppression could contribute to the persistence of endometriotic lesions.\nIn P0 cell culture, compared to the non-exposed control group, exposure to PM increased the proportion of early apoptotic cells. However, repeated exposure to PM through the P2 significantly decreased the proportion of early apoptotic cells compared to that in the non-exposed P2 EM cells (Fig. 3A). Furthermore, dose-dependent effects were observed both in the P0 and P2 EM cells treated with PM at 200 μg/ml compared to those treated with PM at 100 μg/ml (Fig. 3A): P0 control group 67.33 ± 30.66 vs P0 200 μg/ml group 225.33 ± 65.31 (P = 0.03), P2 control group 83.83 ± 8.43 vs P2 100 μg/ml group 33.57 ± 6.66 (P < 0.0001) vs P2 200 μg/ml group 16.77 ± 2.36 (P < 0.0001).\n\n![Figure 3](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f3.jpeg?Expires=1791560914&Signature=0l4Fk~~-LBygDvN9wTRAH3dfpcDamBQqFOJ7WwUZbG3aXuUvQIeA~s9ETDhe5e3QW3KCccvDJruYDZVqEEu~83uCwxJiNNEFudfxIhanDh5oU4yQ2WmvdOaEVLIGYL5DZJVQnWX3NKcQnOYc-eZb1sr~vrIcrNrWCLQUbGSTJScCaYgvk5OpUrnSXtHujfsHVzwIg8LOGJ8sxxhYOg070~xvm3Ai-mkJWEo~~1MEHS~BAHM3B7yJtzvEe8sWm53nZuauPTL0I6r65wezL2g3vfJuJNdXOItEvB5y08UzDwqbkpb4n6fgffHio01-MV-bTpVm3KBERUD609K9uHlKuA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 3.** Repeated particulate matter (PM) exposure changes apoptosis and p53 signaling in endometrial (EM) cells. (A) Fluorescence-activated cell sorting analysis was performed on EM cells exposed to PM during primary (P0) and second passages (P2) cultures. The upper panel of flow cytometry images represents P0 cells, while the lower panel represents P2 cells. Cells within the blue-boxed area are classified as early apoptotic. PM induces apoptosis in primary P0 EM cells (upper panel) but exhibits anti-apoptotic effects in subcultured P2 EM cells (lower panel). As shown in the bar graphs on the right side of the flow cytometry data, the effects of PM on both P0 and P2 cells were dose-dependent. (B) During P0 cell culture, PM exposure led to an elevation in the Bcl-2 associated X-protein (BAX)/B-cell lymphoma 2 (Bcl-2) ratio and caspase-3 expression. In contrast, repeated PM exposure through P2 resulted in a reduction in the mRNA expression of the BAX/Bcl-2 ratio and caspase-3. (C) During the P0 culture, EM cells exposed to PM exhibited a notable increase in the p-p53/p53 ratio, as observed in western blotting. In contrast, P2 EM cells repeatedly exposed to PM displayed a significant decrease in the p-p53/p53 ratio. (D) Immunofluorescence and confocal microscopy images of P0 and P2 EM cells with or without PM treatment. The images showcase the expression of p-p53 (in green) and 4′,6-diamidino-2-phenylindole (DAPI)-stained nuclei (in blue), allowing visualization of p-p53 expression alongside nuclear localization (scale bar = 20 μm). The data are presented as the mean±SD. Statistical significance was determined using one-way ANOVA followed by Bonferroni’s post hoc test (N = 5, * P < 0.05, ** P < 0.01, *** P < 0.001).\nAs shown in Fig. 3B, when P0 EM cells were first exposed to PM, the mRNA expression of BAX/Bcl-2 ratio and caspase-3 increased (BAX/Bcl-2; 1 vs 2.58 ± 1.27, P = 0.0001, caspase-3: 1 vs 1.52 ± 0.32, P = 0.007). However, repeated PM exposure through P2 decreased the mRNA expression of the BAX/Bcl-2 ratio and caspase-3 levels (BAX/Bcl-2: 2.23 ± 1.25 vs 0.38 ± 0.10, P = 0.0001; caspase-3: 1.35 ± 0.58 vs 0.50 ± 0.19, P = 0.02). Similarly, during P0 culture, cells exposed to PM exhibited a significant increase in p-p53 expression leading to increased p-p53/p53 ratio, as observed on western blotting (1 vs 1.69 ± 0.39, P = 0.005). In contrast, P2 cells repeatedly exposed to PM showed a significant decrease in p-p53 expression and p-p53/p53 ratio (1.19 ± 0.15 vs 0.26 ± 0.14, P < 0.0001) (Fig. 3C, Supplementary Fig. S2).\nWe further evaluated how repeated PM exposure affects EM cell apoptosis across the progression of passages via confocal microscopy. Consistent with the western-blot findings, the expression of p-p53 significantly increased when exposed to PM during P0 culture. However, upon repeated exposure to PM through the P2, the expression of p-p53 significantly decreased (Fig. 3D). These results suggest that repeated PM exposure suppresses apoptosis in P2 EM cells, potentially promoting cellular survival and pathological tissue development."
+    },
+    {
+      "heading": "Repeated PM exposure during P2 increases migration and decreases anti-oxidative potentials without affecting senescence in human EM cells",
+      "level": 3,
+      "kind": "body",
+      "text": "Enhanced migration and oxidative stress are features of endometriotic lesion. We assessed the effect of PM exposure on cell migratory capacity using a scratch wound healing assay. After 24 h of exposure to PM (200 μg/ml), relative wound closure was determined by measuring the width of the scratches. In P0 cells, a significant decrease in wound closure was observed in the group exposed to PM compared to that in the control (31.08 ± 3.79 vs 16.1 ± 1.25, P = 0.003). In contrast, in P2 EM cells, a significant increase in the degree of wound closure, indicating enhanced cell migration, was observed upon exposure to PM (33.78 ± 3.76 vs 47.04 ± 1.16, P = 0.004) (Fig. 4A).\n\n![Figure 4](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f4.jpeg?Expires=1791560914&Signature=aFoqMatlPwotID73GdXuf3OIRaybYCCQIzvqQYyU0KrH4s0bRQEahZhG77uLsGEw5G7Z~3EV~TlqrledzIgUe4hb~d5gLXo9Ot0ZDXyGreOqXCvOSyqK3tirbULJ2VIl9crk5TcfiAy0mPXZevK20RnMCplGS-qctWTRGYAJRYqLByfDhAy~eFMfrAo6zYj8Jm4DJZ-zWW7G~ZbKD4b9wjHCopmNy7pJxC8v~RoOsf61str08p-S12NH9PVTcAU1JQXJs9lpDYm4JZQ9QailaJHOXAgAwthCfiHy4nBfsrWp0NalVPG5g5qQ9CgdhBPK5F9Ay0XmMz1a~eT8f233nw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 4.** Repeated particulate matter (PM) exposure changes cell migration, oxidative stress, and aging in endometrial (EM) cells. (A) The effect of PM exposure on the migratory capacity of primary (P0) and second passages (P2) cells was analyzed using a scratch wound healing assay (scale bar = 20 μm). The percentage of wound closure significantly decreased in P0 EM cells following exposure to PM, while notably increased closure was observed in P2 EM cells exposed to PM. (B) In P0 EM cells, exposure to PM led to an increase in the expression of nuclear factor erythroid 2-related factor (Nrf2), heme oxygenase-1 (HO-1), and NAD(P)H quinone dehydrogenase 1 (NQO-1) compared to that in the control. However, repeated exposure to PM during the P2 strongly suppressed the expression of Nrf2. (C) A significant decrease in the mRNA expression of p16 and p18 was observed following PM exposure in both primary and P2 EM cells. The data are presented as the mean±SD. Statistical significance was determined using one-way ANOVA followed by Bonferroni’s post hoc test (N = 3, * P < 0.05).\nTo evaluate oxidative stress, the mRNA expression of nuclear factor erythroid 2-related factor 2 (Nrf2) and Nrf2 regulatory antioxidant genes (HO-1 and NQO-1) was evaluated via qRT-PCR analysis (Fig. 4B). In P0 cells, an increase in the expression of Nrf2 and Nrf2 regulatory genes (HO-1 and NQO-1) was observed when exposed to PM compared to the control (Nrf2: 1 vs 1.36 ± 0.16, P = 0.004; HO-1: 1 vs 3.39 ± 0.6, P < 0.0001; NQO-1: 1 vs 2.89 ± 1.27, P = 0.02). However, repeated exposure to PM through the P2 strongly suppressed the expression of Nrf2 and Nrf2 regulatory antioxidant genes (Nrf2: 1.32 ± 0.42 vs 0.71 ± 0.25, P = 0.02; NQO-1: 1.64 ± 0.66 vs 0.66 ± 0.08, P = 0.04).\nThe changes in cell migration and oxidative stress may be attributed to cellular aging due to successive passages. To evaluate senescence, the expression of p16 and p21 following PM exposure was assessed, revealing no significant difference in mRNA expression in both P0 and P2 EM cells (Fig. 4C). Overall, the increased levels of anti-apoptosis, proliferation, migratory capacity, and oxidative stress observed in PM-treated P2 EM cells, as described above, do not appear to be associated with the cellular aging process."
+    },
+    {
+      "heading": "Exposure to PM induces the progression of endometriosis in mice",
+      "level": 3,
+      "kind": "body",
+      "text": "Endometriotic lesions, unlike the normal endometrium, exhibit resistance to apoptosis, allowing them to persist and grow within the pelvic cavity (Béliard et al., 2004; Vercellini et al., 2014; Ansariniya et al., 2022). Additionally, endometriotic tissue is characterized by increased proliferation, contributing to the formation and expansion of lesions. These endometriotic lesions produce ROS, which can contribute to inflammation, tissue damage, and the progression of the disease (Donnez et al., 2016).\nGiven that gene expression changes in P2 EM cells were similar to those of endometriosis (Zhang et al., 2023), an endometriosis-induced mouse model was established to assess whether repeated PM exposure could exacerbate endometriosis in vivo. Eight-week-old female mice (n = 18) were surgically induced to develop endometriosis and divided into three groups: control (non-exposure), and high- and low-dose groups, exposed to PM 20 and 10 mg/kg/day, respectively, with continuous exposure for 4 weeks (5 times per week) via intranasal inhalation. Each group consisted of six mice, and the control group was administered an equivalent amount of DMSO.\nMasson’s trichrome-stained sections of lesions from the endometriosis mouse model revealed the presence of EM glands and stroma. Additionally, Masson’s trichrome staining indicated significantly increased fibrosis (depicted in blue) following exposure to both low and high doses of PM. Lesions from mice exposed to high doses of PM exhibited a greater extent of fibrosis compared to both control and low-dose exposed mice (Fig. 5). After 4 weeks of exposure to PM, a comparison of endometriotic lesions between the control group and the PM-exposed groups revealed significantly larger lesions in the mice exposed to PM (control 7.42 ± 1.42 vs low-dose mice 11.33 ± 0.38, P = 0.03 vs high-dose mice 11.25 ± 1.64, P = 0.01) (Fig. 5) No significant difference in size was found between the lesions of mice exposed to low-dose PM and those of mice exposed to high-dose PM.\n\n![Figure 5](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f5.jpeg?Expires=1791560914&Signature=q3hPXG4-KJ24tkneG8SV5uunVzAeHZsYSrSe5Suw1PXrylSyKV1htD0z0lJcRfJCQvXB6DyWPBJ7LwWy~etgE~ZmfmlkGE69pj43dwbMzkkxqyR5QLbkpVow~93YxMe90sgxMSmb84bqDdleknNUOqMsWyy5CVL5EknzJe1GiNp8J4-hzznD1e5rvGQlv-Ef0Dv~9gl~MFeh-KN60hPefpsMt~IhXTSwT~lWFso7zSi0aJxiW82S9FpdwSw2Hxav5GA54pkiR6W7ZyA78iboht40OmZcxzNOMxBhdvDfjdfvZuQf668s8~0xguVZuLL5xesGoy5MES0kPXd-Un7RWQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 5.** Surgical induction of endometriosis by autologous uterine tissue transplantation in mice exposed to particulate matter (PM). (A) Top row: After 4 weeks of uterine implantation in the peritoneal cavity of mice, multiple cystic lesions were observed upon gross examination (scale bar = 200 μm). Bottom row: Histologic evaluation of mice exposed to control, low-concentration, and high-concentration PM showed a difference in the extent of fibrosis. Masson’s trichrome stain revealed significantly increased fibrosis (depicted in blue) in mice exposed to both low and high concentrations of PM compared to controls, suggesting that PM exposure exacerbates fibrotic remodeling in endometriosis lesions. Specifically, endometriosis implants from control mice exhibited minimal fibrosis (Left), while those from low-concentration PM-exposed mice showed focal fibrosis (Middle). In contrast, endometriosis implants from high-concentration PM-exposed mice demonstrated a greater extent of fibrosis compared to both control and low-concentration exposed mice (Right). (B) The size of endometriotic lesions was significantly larger in the mice exposed to PM compared to those in non-exposed mice. Additionally, no significant difference was observed between the lesions of mice exposed to low-dose PM (10 mg/kg/day) and of those exposed to high-dose PM (20 mg/kg/day). These findings highlight the role of PM in enhancing both the fibrotic and proliferative characteristics of endometriotic lesions. The data are presented as the mean±SD. Statistical significance was determined using one-way ANOVA followed by Bonferroni’s post hoc test (N = 6 per experimental group, * P < 0.05)."
+    },
+    {
+      "heading": "Exposure to PM augments inflammatory cytokines and reduces apoptosis in endometriotic lesions in mice",
+      "level": 3,
+      "kind": "body",
+      "text": "To assess whether PM augments the inflammatory response in vivo, the expression of pro-inflammatory cytokines in endometriotic lesions of mice exposed to low-dose PM and high-dose PM was examined using q-PCR. As demonstrated in Fig. 6A, increased expression of IL-6 and IL-1β was observed in a dose-dependent manner in three groups: control, low-dose, and high-dose PM groups (IL-6: control 0.83 ± 0.3 vs low-dose mice 1.85 ± 0.7, P = 0.03 vs high-dose mice 4.16 ± 1.95, P = 0.02; IL-1β: control 0.44 ± 0.37 vs high-dose mice 1.42 ± 0.49, P = 0.02). These results suggest that PM exposure increases the inflammatory response in endometriotic lesions. Moreover, western-blot analysis confirmed that PM exposure significantly increased expression of p-NF-κB and p-c-jun in a dose-dependent manner in endometriotic lesions (p-NF-kB: control 0.72 ± 0.25 vs low-dose mice 1.72 ± 0.63, P = 0.03 vs high-dose mice 2.79 ± 1.43, P = 0.04; p-c-jun: control 1.44 ± 0.38 vs low-dose mice 2.35 ± 0.71, P = 0.01 vs high-dose mice 2.8 ± 1.01, P = 0.04) (Fig. 6B, Supplementary Fig. S2). Taken together, these results suggest that PM exposure accelerates the development and progression of endometriosis through an inflammation pathway in vivo. Intranasal injection of PM in mice significantly decreased the expression of the pro-apoptotic protein BAX and increased the expression of Bcl-2, resulting in a significantly reduced BAX/Bcl-2 ratio compared to the control group (control 0.87 ± 0.13 vs low-dose mice 0.59 ± 0.06, P = 0.01 vs high-dose mice 0.6 ± 0.1, P = 0.03). The BAX/Bcl-2 ratio was further reduced in the low-dose group compared to that in the high-dose group, although the difference between the two was not statistically significant (Fig. 6C, Supplementary Fig. S2). No significant difference was found in Cas-3 expression between the PM-treated and control groups. Taken together, these results suggest that PM exposure exacerbates inflammation and inhibits apoptosis in endometriotic lesions, contributing to disease progression.\n\n![Figure 6](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f6.jpeg?Expires=1791560914&Signature=WaAoncW~SxzFEnaKvdA68oUat7lAVPFwDmVCwdAGC6hVUhW~GLG9HW-tuau-Ac94tvSH-RwUwDrjiRzpikqRqU-MzMi45LQQ-amZpgiCZ~Sw5BoFg7BrXw15vAhxj46Jo4NfzdbdiO9uQLvmD0NkgtUPlrazhQbQ890av0q2COp7FL7acrlt1DwQcX4cJCHpwDc3Im9zxORT5I1roayBSHAF-f-28-Jc0o2pZGm9MRfqcsBuGClcfhsG9NCMYy2vlbUSehqaK6bjDzra5BI~~0ojzARHTcg3w-fh59VV8VivUq4apfhFTxvceyIYx1auyPDzKDNbCnRYRXofnpfydw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 6.** Particulate matter (PM) exposure changes inflammation and apoptosis in endometriotic lesions in mice. (A) The mRNA levels of pro-inflammatory cytokines (IL-6 and IL-1β) were significantly higher in the endometriotic lesions of PM-treated mice. (B) PM exposure significantly increased the expression of inflammatory genes (nuclear factor-kappa β [p-NF-κB] and p-c-jun) in a dose-dependent manner in endometriotic lesions of mice. (C) Bcl-2-associated X-protein (BAX)/B-cell lymphoma 2 (Bcl-2) was significantly decreased in endometriotic lesions of PM-treated mice. No significant difference was observed in Caspase 3 (Cas-3) expression between the PM-treated groups and the control group. The data are presented as the mean±SD. Statistical significance was determined using one-way ANOVA followed by Bonferroni’s post hoc test (N = 6, * P < 0.05)."
+    },
+    {
+      "heading": "PM exposure increases proliferation, migration, and induces aberrant expression of ER isoforms in endometriotic lesions in mice",
+      "level": 3,
+      "kind": "body",
+      "text": "The expression of p-ERK and p-ERK/ERK ratio in the endometriotic lesions of the high-dose PM group was substantially elevated compared to that of the control group (1.26 ± 0.43 vs 2.38 ± 0.05, P = 0.007), whereas no significant difference was observed between the low-dose PM group and the control (Fig. 7A, Supplementary Fig. S2).\n\n![Figure 7](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f7.jpeg?Expires=1791560914&Signature=2VY7s3ItlMW64kN0elQZizGJzpiv3-3TTjmHYnPQ4kWOIX8JaqGP-v1LR~xBXqpqVyWQSE2Wvg-Ke1PFuiPOAlI-umBjvzteIhdNMm~m1K2LMuIi3w~gw0VIkOvmkcDI~F0NC09g-~n78~5MvE38SF5kHVi~mJA8gEwRVaXb4gMimDfi3WkO6Lb4u8KMqiYlGs4EB6Yx~5iiX63gWDDwBMbQ~iZYLF9bqrXbsZD3sKvjyMkXt9JPxxywdr~3h8pBdSmA17y0ahQpd8tbEBAH3FxNCewsymg3RwBIvDdHU82wn3fGdJ--xl9ctUfKt1xdOvtzQEv7fWbPFwnzxAFY5A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 7.** Particulate matter exposure (PM) changes proliferation, migration, and hormones in endometriotic lesions of mice. (A) Expression of proliferation markers (phosphorylated extracellular signal-regulated kinase [p-ERK] and ERK) was significantly increased in the high-dose PM group. (B) The expression of matrix metalloproteinases-2 and -9 (MMP-2 and MMP-9) in each group was not significantly different. (C) A significant decrease in estrogen receptor (ER)-α and a significant increase in ER-β were observed in endometriotic lesions of mice treated with PM compared to the untreated control group. A decrease in ER isoform ratios was also observed in PM-treated mice. The data are presented as the mean±SD. Statistical significance was determined using one-way ANOVA followed by Bonferroni’s post hoc test (N = 6, * P < 0.05).\nThe expression of MMP-2 and MMP-9 was markedly elevated in the PM-treated group compared to that of the controls (MMP-2: control 0.77 ± 0.17 vs low-dose mice 1.42 ± 0.55, P = 0.04 vs high-dose mice 1.65 ± 0.26, P = 0.02; MMP-9: control 0.61 ± 0.29 vs low-dose mice 1.67 ± 0.45, P = 0.01 vs high-dose mice 1.73 ± 0.61, P = 0.04). However, no significant difference was found between the low-dose and high-dose PM groups, although the mean expression level in the high-dose group was higher than that in the low-dose group (Fig. 7B, Supplementary Fig. S2).\nAs demonstrated in Fig. 7C and Supplementary Fig. S2, a significant decrease in ER-α and a significant increase in ER-β were observed in endometriotic lesions of mice treated with PM compared to the untreated control group (ER-α/ER-β: control 1.03 ± 0.09 vs low-dose mice 0.57 ± 0.08, P = 0.02 vs high-dose mice 0.46 ± 0.26, P = 0.03). A decrease in ER isoform ratios was also observed in PM-treated mice. As the amount of PM exposure increased, the ER isoform ratio decreased in a dose-dependent manner; however, no statistically significant difference was observed between the low-dose group and the high-dose group (Fig. 7C, Supplementary Fig. S2). These findings provide strong evidence that chronic PM exposure can stimulate the proliferation and migration of endometriotic lesions and alter hormonal signaling pathways, which may further exacerbate endometriosis."
+    },
+    {
+      "heading": "Discussion",
+      "level": 2,
+      "kind": "body",
+      "text": "In this study, PM was found to penetrate the cell membrane, accumulating in both the nucleus and cytoplasm of human EM cells, as observed through Z-stack confocal imaging. When the EM cells were exposed to PM in the P0 cell culture, cellular proliferation, anti-apoptosis, migration, and oxidative stress were decreased. However, following repeated exposure of EM cells to PM through Passage 2, cellular proliferation, anti-apoptotic mechanisms, migration, and oxidative stress were found to be elevated. We subsequently assessed whether similar results would also be observed in endometriosis lesions using a mouse model. To validate the impact of PM on the pathogenesis of endometriosis, mice induced with endometriosis were exposed to PM for 4 weeks. Consequently, PM exposure facilitated disease progression by enhancing pathways associated with anti-apoptosis, proliferation, migration, and inflammation. Furthermore, prolonged PM exposure led to aberrant ER expression in the endometriotic lesions.\nPM is a mixture of several types of particles, including organic compounds, toxic metals, and crustal elements from various sources (Saxena and Sonwani, 2019). PM<sub>2.5</sub>, defined as particles that are 2.5 microns or less in diameter, damage the lungs, heart, and brain by penetrating deep into the respiratory and circulatory systems (Brook et al., 2010). PM<sub>2.5</sub> is known to have a widespread deleterious impact on various tissues in the human body (Garcia et al., 2023) For instance, exposure to PM<sub>2.5</sub> can induce systemic inflammation through the activation of pro-inflammatory signaling cascades, including the NF-κB and MAPK pathways (Rui et al., 2016). PM<sub>2.5</sub> exposure can also lead to the generation of reactive oxygen species (ROS) via the Nrf2 pathway (Fan et al., 2023) and impair endothelial cell function, potentially affecting angiogenesis (Liang et al., 2020).\nAlthough clinical data suggest that PM may have adverse effects on female reproduction, no evidence of PM has been detected in human reproductive organs, including the uterus and ovaries. Clinical studies have shown that birth rates and success rates of in vitro fertilization are negatively affected by an increase in outdoor PM levels (Choe et al., 2018; Conforti et al., 2018). Women who are exposed to high concentrations of PM during the follicular phase of their menstrual cycle may have a higher risk of miscarriage compared to those exposed to low concentrations (Conforti et al., 2018). Additionally, PM<sub>2.5</sub> has been associated with an increased risk of endometriosis by inducing chronic inflammation, oxidative stress, and hormonal imbalances (Vallée et al., 2024).\nThe endometrium is the site of embryo implantation and is essential for the establishment of pregnancy. It undergoes cyclical changes during the menstrual cycle in response to hormonal fluctuations. This dynamic process includes proliferation, differentiation, and shedding of the endometrium, which is essential for the implantation of a fertilized egg (Massimiani et al., 2019). Although the exact mechanism by which PM, absorbed through the respiratory tract, reaches the endometrium remains unclear, this study demonstrates that PM can enter EM cell nuclei and induce changes in gene expression, as evidenced by Z-stack confocal imaging. As described above, after exposure to PM, apoptosis was induced in the EM cells initially, along with a decrease in proliferation. Thereafter, an increase in proliferation, along with the induction of oxidative stress and anti-apoptosis, was observed in the subcultured cells, resembling the characteristics observed in ectopic EM cells in endometriosis (Béliard et al., 2004; Vercellini et al., 2014; Ansariniya et al., 2022). Specifically, repeated PM exposure strongly suppressed the expression of Nrf2 and Nrf2 regulatory antioxidant genes (Fig. 4B), suggesting that repeated PM exposure exacerbates cellular defenses against toxic and oxidative insults in human EM cells, rendering them more vulnerable to oxidative stress. These findings indicate that long-term exposure to PM may induce pathological processes at the cellular level in the female reproductive system. As shown in Fig. 4C, the increased levels of anti-apoptosis, proliferation, migratory capacity, and oxidative stress observed in PM-treated P2 EM cells do not appear to be associated with cellular aging processes.\nA previous study has shown that PM significantly inhibits various beneficial functions of EM stem cells, such as their self-renewal, trans-differentiation, and migratory capacities, in vitro and in vivo through the PM target gene SERPINB2 (Park et al., 2021). In EM stem cells, exposure to PM reduced migratory capacity and elevated the levels of pro-apoptotic proteins, subsequently resulting in apoptosis. In contrast, in this study using stromal cells of the endometrium, repeated PM exposure through P2 increased proliferation through the expression of p-ERK and suppressed apoptosis by reducing the expression of BAX/Bcl-2. The disparity in results between the two studies may be attributed to differences in the roles played by each cell type within the endometrium. When the results of the two studies are clinically correlated, decreased stem cell function has the potential to negatively impact reproduction by compromising EM function. Moreover, aberrant expression of genes in EM stromal cells may be related to endometrium-related diseases such as endometriosis.\nOur previous study demonstrated that PM exposure disrupts inflammatory and apoptotic pathways in EM cells, which significantly affects the reproductive system. In this study, we extend these findings by focusing on the chronic effects of repeated PM exposure on EM stromal cells and its potential to exacerbate endometriosis-like features (Zhang et al., 2023). These results suggest that long-term PM exposure may play a key role in the progression of endometriosis, further supporting the hypothesis that environmental pollutants contribute to the development and worsening of endometriosis and related reproductive disorders.\nIn this study, we utilized a mouse model of endometriosis to address the limitations associated with repeated PM exposure during cell culture. While the duration of PM exposure in vitro was relatively short, limited to P2, we investigated the long-term effects of in vivo exposure over a 4-week period. Furthermore, although PM could be directly applied to EM stromal cells in vitro, it remained uncertain whether PM exposure in humans could influence endometriotic lesions that do not come into direct contact with PM. Our animal experiments demonstrated that PM exposure can indeed impact areas that are not directly exposed to it. In the endometriotic lesions of mice exposed to PM, disease progression was observed along with gene expression related to inflammation (p-NF-κB and p-c-jun), proliferation (p-ERK/ERK), migration (MMP-2 and MMP-9), and anti-apoptosis (p-ERK/ERK). Research on the direct association between PM<sub>2.5</sub> and endometriosis risk is still emerging; however, there is evidence suggesting that exposure to air pollution, including PM<sub>2.5</sub>, may be associated with an increased risk of endometriosis or exacerbation of symptoms (Lin et al., 2021). Although PM can directly infiltrate EM cells, whether the changes in gene expression are because of PM directly infiltrating lesions and altering gene expression or because of global DNA damage caused by a systemic reaction triggered by PM remains unclear.\nIn this study, PM functioned as an endocrine-disrupting agent, influencing the expression patterns of ERs both in vitro and in vivo. Estrogen promotes proliferation and inhibits apoptosis in the endometrium, both in the absence of endometriosis and in endometriotic lesions (Harada et al., 2004). Since estrogen acts largely through ERs, changes in ER expression can modulate the action of estrogen. It is well established that the mRNA and protein levels of ERs differ between EM tissue from women without endometriosis and ectopic or eutopic endometrium from women with endometriosis. Endometriotic stromal cells express extraordinarily higher ER-β and substantially lower ERα levels compared to EM cells from women without endometriosis (Chantalat et al., 2020). Therefore, the aberrant expression of genes associated with anti-apoptosis, proliferation, and migration markers in endometriotic lesions from mice exposed to PM could potentially be attributed to changes in ERs (Han et al., 2015).\nThis study provides insights into the effects of PM on EM cells and the molecular characteristics associated with endometriosis. However, several limitations must be acknowledged. First, the cell proliferation assay was conducted only up to P2, a relatively short exposure period. While no significant differences were observed beyond P2, this limits our ability to draw definitive conclusions about the long-term effects of PM exposure on EM cells and the progression of endometriosis.\nAnother key limitation pertains to the relevance of the in vitro PM concentration to real-world human exposure. The selection of 200 µg/ml was based on cell viability assays, ensuring ∼80% cell viability while inducing measurable biological responses. In contrast, exposure to 400 µg/ml resulted in excessive cytotoxicity, significantly reducing cell viability and total protein expression. While airborne PM exposure varies widely depending on geographical location and occupational settings, individuals in highly polluted areas or specific work environments may experience cumulative exposures that exceed typical ambient levels. Additionally, PM can accumulate in body fluids and tissues, leading to local concentrations higher than those found in ambient air. Thus, the chosen in vitro concentration reflects potential high-exposure conditions, particularly relevant for populations living in heavily polluted environments.\nTo mitigate these limitations, we conducted experiments using an animal model of endometriosis. However, species-specific physiological differences, including metabolism, immune responses, and hormonal regulation, must be considered when interpreting the findings and generalizing them to humans. Further studies incorporating long-term exposure models and more physiologically relevant conditions are necessary to enhance translational applicability. Despite these limitations, our study offers a critical foundation for understanding the impact of PM on EM cells and provides important directions for future research."
+    },
+    {
+      "heading": "Conclusion",
+      "level": 2,
+      "kind": "body",
+      "text": "Increased cellular proliferation, anti-apoptosis, inflammation, and migratory capacity were observed in both EM cells and the endometriosis-induced mouse model following repeated PM exposure. Moreover, PM was found to alter the expression pattern of ERs, suggesting the potential for exacerbating the progression of not only endometriosis but also other estrogen-dependent diseases. These findings emphasize the significant impact of PM on cellular functions and hormonal signaling pathways, which may contribute to disease progression.\nFuture research should explore the effects of other environmental pollutants on the development and progression of endometriosis, as well as their interaction with hormonal regulation. Investigating the cumulative impact of chronic exposure to various environmental factors could provide further insights into the pathophysiology of endometriosis and other related disorders."
+    },
+    {
+      "heading": "Supplementary data",
+      "level": 2,
+      "kind": "body",
+      "text": "Supplementary data are available at Molecular Human Reproduction online."
+    },
+    {
+      "heading": "Data availability",
+      "level": 2,
+      "kind": "data_availability",
+      "text": "The data supporting the findings of this study are found in the article. The data underlying this article will be shared upon reasonable request to the corresponding author."
+    },
+    {
+      "heading": "Authors’ roles",
+      "level": 2,
+      "kind": "diagnostics",
+      "text": "G.S.J.: Writing – original draft, Data curation, Investigation, Software. J.H.L.: Writing – review and editing, Conceptualization. M.J.L.: Formal analysis, Methodology. I.L.: Resources. H.P.: Visualization. N.K.: Investigation. J-Y.K.: Validation. W.I.: Supervision. SH.C.: Funding acquisition, Project administration, Supervision. Y.S.C.: Funding acquisition. All authors have read and approved the final manuscript."
+    },
+    {
+      "heading": "Funding",
+      "level": 2,
+      "kind": "body",
+      "text": "National Research Foundation of Korea (NRF) funded by the Korean government (MSIT) (2023R1A2C200622512, 2022R1A2C2008378); Korea Health Technology R&D Project through the Korea Health Industry Development Institute (KHIDI) funded by the Ministry of Health and Welfare, Republic of Korea (HI21C1770000021); faculty research grant (6-2021-0131) from Yonsei University College of Medicine, Seoul, Republic of Korea. The funders had no role in the study design, collection, analysis and interpretation of data, writing of the report, and decision to submit the article for publication."
+    },
+    {
+      "heading": "Conflict of interest",
+      "level": 2,
+      "kind": "references",
+      "text": "None declared."
+    },
+    {
+      "heading": "References",
+      "level": 2,
+      "kind": "references",
+      "text": "Ansariniya H, Yavari A, Javaheri A, Zare F.\nOxidative stress‐related effects on various aspects of endometriosis.\nAm J Reprod Immunol\n2022;\n88:\ne13593.\nBéliard A, Noël A, Foidart J-M.\nReduction of apoptosis and proliferation in endometriosis.\nFertil Steril\n2004;\n82:\n80\n–\n85.\nBrook RD, Rajagopalan S, Pope CA, Brook JR, Bhatnagar A, Diez-Roux AV, Holguin F, Hong Y, Luepker RV, Mittleman MA et al.;\nAmerican Heart Association Council on Epidemiology and Prevention, Council on the Kidney in Cardiovascular Disease, and Council on Nutrition, Physical Activity and Metabolism.\nParticulate matter air pollution and cardiovascular disease: an update to the scientific statement from the American Heart Association.\nCirculation\n2010;\n121:\n2331\n–\n2378.\nChantalat E, Valera MC, Vaysse C, Noirrit E, Rusidze M, Weyl A, Vergriete K, Buscail E, Lluel P, Fontaine C et al.\nEstrogen receptors and endometriosis.\nInt J Mol Sci\n2020;\n21:\n2815.\nChoe S, Jun Y, Lee W, Yoon T, Kim S.\nAssociation between ambient air pollution and pregnancy rate in women who underwent IVF.\nHum Reprod\n2018;\n33:\n1071\n–\n1078.\nChoi YJ, Han H, Lee J-H, Lee J, Kim CY, Byun MK, Cho JH, Park HJ.\nParticulate matter10-induced airway inflammation and fibrosis can be regulated by chitinase-1 suppression.\nRespir Res\n2023;\n24:\n85.\nClement PB.\nThe pathology of endometriosis: a survey of the many faces of a common disease emphasizing diagnostic pitfalls and unusual and newly appreciated aspects.\nAdv Anat Pathol\n2007;\n14:\n241\n–\n260.\nConforti A, Mascia M, Cioffi G, De Angelis C, Coppola G, De Rosa P, Pivonello R, Alviggi C, De Placido G.\nAir pollution and female fertility: a systematic review of literature.\nReprod Biol Endocrinol\n2018;\n16:\n1\n–\n9.\nDonnez J, Binda MM, Donnez O, Dolmans MM.\nOxidative stress in the pelvic cavity and its role in the pathogenesis of endometriosis.\nFertil Steril\n2016;\n106:\n1011\n–\n1017.\nFan X, Dong T, Yan K, Ci X, Peng L.\nPM2. 5 increases susceptibility to acute exacerbation of COPD via NOX4/Nrf2 redox imbalance-mediated mitophagy.\nRedox Biol\n2023;\n59:\n102587.\nGarcia A, Santa-Helena E, De Falco A, de Paula Ribeiro J, Gioda A, Gioda CR.\nToxicological effects of fine particulate matter (PM2. 5): health risks and associated systemic injuries—systematic review.\nWater Air Soil Pollut\n2023;\n234:\n346.\nGuo Y, Chen Q, Zhan Y, Zhou W, Zhang H, Zhou N, Yang H, Chen Y, Wang Y, Sun L et al.\nSemen damage contributed over 50% to air-pollutant-induced infertility: a prospective cohort study of 3940 men in China.\nSci Total Environ\n2023;\n885:\n163532.\nHan SJ, Jung SY, Wu SP, Hawkins SM, Park MJ, Kyo S, Qin J, Lydon JP, Tsai SY, Tsai MJ et al.\nEstrogen receptor beta modulates apoptosis complexes and the inflammasome to drive the pathogenesis of endometriosis.\nCell\n2015;\n163:\n960\n–\n974.\nHarada T, Kaponis A, Iwabe T, Taniguchi F, Makrydimas G, Sofikitis N, Paschopoulos M, Paraskevaidis E, Terakawa N.\nApoptosis in human endometrium and endometriosis.\nHum Reprod Update\n2004;\n10:\n29\n–\n38.\nJaiswal C, Singh AK.\nParticulate matter exposure and its consequences on hippocampal neurogenesis and cognitive function in experimental models.\nEnviron Pollut\n2024;\n363:\n125275.\nKim H, Lee M, Hwang H, Chung Y-J, Cho H-H, Yoon H, Kim M, Chae K-H, Jung CY, Kim S et al.\nThe estimated prevalence and incidence of endometriosis with the Korean National Health Insurance Service-National Sample Cohort (NHIS-NSC): a national population-based study.\nJ Epidemiol\n2021;\n31:\n593\n–\n600.\nKim HK, Kim E-S, Park KS, Lee YJ, Ha I-H.\nCurrent treatments for endometriosis in South Korea: an analysis of nationwide data from 2010 to 2019.\nSci Rep\n2023;\n13:\n9573.\nKim Juyong Brian, Prunicki Mary, Haddad Francois, Dant Christopher, Sampath Vanitha, Patel Rushali, Smith Eric, Akdis Cezmi, Balmes John, Snyder Michael P, Wu Joseph C,.\nCumulative lifetime burden of cardiovascular disease from early exposure to air pollution.\nJ Am Heart Assoc\n2020;\n9:\ne014944.\nLiang S, Zhang J, Ning R, Du Z, Liu J, Batibawa JW, Duan J, Sun Z.\nThe critical role of endothelial function in fine particulate matter-induced atherosclerosis.\nPart Fibre Toxicol\n2020;\n17:\n1\n–\n24.\nLin SY, Yang YC, Lin CC, Chang CY, Hsu WH, Wang IK, Lin CD, Hsu CY, Kao CH.\nIncreased incidence of dysmenorrhea in women exposed to higher concentrations of NO, NO(2), NO(x), CO, and PM(2.5): a nationwide population-based study.\nFront Public Health\n2021;\n9:\n682341.\nMassimiani M, Lacconi V, La Civita F, Ticconi C, Rago R, Campagnolo L.\nMolecular signaling regulating endometrium–blastocyst crosstalk.\nInt J Mol Sci\n2019;\n21:\n23.\nPark S-R, Lee JW, Kim S-K, Yu W-J, Lee S-J, Kim D, Kim K-W, Jung J-W, Hong I-S.\nThe impact of fine particulate matter (PM) on various beneficial functions of human endometrial stem cells through its key regulator SERPINB2.\nExp Mol Med\n2021;\n53:\n1850\n–\n1865.\nPark Y, Lee I, Lee MJ, Park H, Jung GS, Kim N, Im W, Kim H, Lee JH, Cho S et al.\nParticulate matter exposure induces adverse effects on endometrium and fertility via aberrant inflammatory and apoptotic pathways in vitro and in vivo.\nChemosphere\n2024;\n361:\n142466.\nPearson JF, Bachireddy C, Shyamprasad S, Goldfine AB, Brownstein JS.\nAssociation between fine particulate matter and diabetes prevalence in the US.\nDiabetes Care\n2010;\n33:\n2196\n–\n2201.\nRui W, Guan L, Zhang F, Zhang W, Ding W.\nPM2. 5‐induced oxidative stress increases adhesion molecules expression in human endothelial cells through the ERK/AKT/NF‐κB‐dependent pathway.\nJ Appl Toxicol\n2016;\n36:\n48\n–\n59.\nSaxena P, Sonwani S. Criteria air pollutants: chemistry, sources and sinks. In:\nCriteria Air Pollutants and Their Impact on Environmental Health. Singapore: Springer,\n2019,\n7\n–\n48.\nShafrir AL, Farland L, Shah D, Harris H, Kvaskoff M, Zondervan K, Missmer S.\nRisk for and consequences of endometriosis: a critical epidemiologic review.\nBest Pract Res Clin Obstet Gynaecol\n2018;\n51:\n1\n–\n15.\nShah PS, Balkhair T, Births K;\nKnowledge Synthesis Group on Determinants of Preterm/LBW Births.\nAir pollution and birth outcomes: a systematic review.\nEnviron Int\n2011;\n37:\n498\n–\n516.\nSong J-E, Ahn J-A, Lee S-K, Roh EH.\nFactors related to low birth rate among married women in Korea.\nPLoS One\n2018;\n13:\ne0194597.\nTanbo T, Fedorcsak P.\nEndometriosis‐associated infertility: aspects of pathophysiological mechanisms and treatment options.\nActa Obstet Gynecol Scand\n2017;\n96:\n659\n–\n667.\nTaylor HS, Kotlyar AM, Flores VA.\nEndometriosis is a chronic systemic disease: clinical challenges and novel innovations.\nLancet\n2021;\n397:\n839\n–\n852.\nVallée A, Ceccaldi PF, Carbonnel M, Feki A, Ayoubi JM.\nPollution and endometriosis: a deep dive into the environmental impacts on women’s health.\nBJOG\n2024;\n131:\n401\n–\n414.\nVercellini P, Viganò P, Somigliana E, Fedele L.\nEndometriosis: pathogenesis and treatment.\nNat Rev Endocrinol\n2014;\n10:\n261\n–\n275.\nVizcaíno MAC, González-Comadran M, Jacquemin B.\nOutdoor air pollution and human infertility: a systematic review.\nFertil Steril\n2016;\n106:\n897\n–\n904.e1.\nWen Y, Ding X, Guan Q, Hu W, Wang B, Hu Q, Bigambo FM, Zhou Z, Wang X, Xia Y.\nEffects of exposure to urban particulate matter SRM 1648a during pregnancy on the neurobehavioral development of offspring mice.\nEcotoxicol Environ Saf\n2021;\n215:\n112142.\nWong CM, Tsang H, Lai HK, Thomas GN, Lam KB, Chan KP, Zheng Q, Ayres JG, Lee SY, Lam TH et al.\nCancer mortality risks from long-term exposure to ambient fine particle.\nCancer Epidemiol Biomarkers Prev\n2016;\n25:\n839\n–\n845.\nZhang M,, Xu T,, Tong D,, Li S,, Yu X,, Liu B,, Jiang L,, Liu K.\nResearch advances in endometriosis-related signaling pathways: A review.\nBiomed Pharmacother\n2023;\n164:\n114909.\n/foreach in Model.Sections"
+    },
+    {
+      "heading": "Author notes",
+      "level": 2,
+      "kind": "body",
+      "text": "Gee Soo Jung and Jae Hoon Lee authors contributed equally to this work.\n© The Author(s) 2025. Published by Oxford University Press on behalf of European Society of Human Reproduction and Embryology. All rights reserved. For commercial re-use, please contact\n[email protected]\nfor reprints and translation rights for reprints. All other permissions can be obtained through our RightsLink service via the Permissions link on the article page on our site—for further information please contact\n[email protected].\nThis article is published and distributed under the terms of the Oxford University Press, Standard Journals Publication Model (https://academic.oup.com/pages/standard-publication-reuse-rights)\n/foreach\n/.widget-items\n/.module-widget\nSupplementary data"
+    },
+    {
+      "heading": "Supplementary data",
+      "level": 2,
+      "kind": "references",
+      "text": "gaaf013_Supplementary_Data\n- pdf file"
+    },
+    {
+      "heading": "Supplementary Files",
+      "level": 2,
+      "kind": "body",
+      "text": "- gaaf013_Supplementary_Data - pdf file"
+    }
+  ],
+  "references": [
+    {
+      "raw": "1. Ansariniya H, Yavari A, Javaheri A, Zare F. Oxidative stress‐related effects on various aspects of endometriosis. Am J Reprod Immunol 2022; 88: e13593.",
+      "doi": "10.1111/aji.v88.3",
+      "title": null,
+      "year": "2022"
+    },
+    {
+      "raw": "2. Béliard A, Noël A, Foidart J-M. Reduction of apoptosis and proliferation in endometriosis. Fertil Steril 2004; 82: 80–85.",
+      "doi": "10.1016/j.fertnstert.2003.11.048",
+      "title": null,
+      "year": "2004"
+    },
+    {
+      "raw": "3. Brook RD, Rajagopalan S, Pope CA, Brook JR, Bhatnagar A, Diez-Roux AV, Holguin F, Hong Y, Luepker RV, Mittleman MA et al.; American Heart Association Council on Epidemiology and Prevention, Council on the Kidney in Cardiovascular Disease, and Council on Nutrition, Physical Activity and Metabolism. Particulate matter air pollution and cardiovascular disease: an update to the scientific statement from the American Heart Association. Circulation 2010; 121: 2331–2378.",
+      "doi": "10.1161/cir.0b013e3181dbece1",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "4. Chantalat E, Valera MC, Vaysse C, Noirrit E, Rusidze M, Weyl A, Vergriete K, Buscail E, Lluel P, Fontaine C et al. Estrogen receptors and endometriosis. Int J Mol Sci 2020; 21: 2815.",
+      "doi": "10.3390/ijms21082815",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "5. Choe S, Jun Y, Lee W, Yoon T, Kim S. Association between ambient air pollution and pregnancy rate in women who underwent IVF. Hum Reprod 2018; 33: 1071–1078.",
+      "doi": "10.1093/humrep/dey076",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "6. Choi YJ, Han H, Lee J-H, Lee J, Kim CY, Byun MK, Cho JH, Park HJ. Particulate matter10-induced airway inflammation and fibrosis can be regulated by chitinase-1 suppression. Respir Res 2023; 24: 85.",
+      "doi": "10.1186/s12931-023-02392-8",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "7. Clement PB. The pathology of endometriosis: a survey of the many faces of a common disease emphasizing diagnostic pitfalls and unusual and newly appreciated aspects. Adv Anat Pathol 2007; 14: 241–260.",
+      "doi": "10.1097/pap.0b013e3180ca7d7b",
+      "title": null,
+      "year": "2007"
+    },
+    {
+      "raw": "8. Conforti A, Mascia M, Cioffi G, De Angelis C, Coppola G, De Rosa P, Pivonello R, Alviggi C, De Placido G. Air pollution and female fertility: a systematic review of literature. Reprod Biol Endocrinol 2018; 16: 1–9.",
+      "doi": "10.1186/s12958-018-0433-z",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "9. Donnez J, Binda MM, Donnez O, Dolmans MM. Oxidative stress in the pelvic cavity and its role in the pathogenesis of endometriosis. Fertil Steril 2016; 106: 1011–1017.",
+      "doi": "10.1016/j.fertnstert.2016.07.1075",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "10. Fan X, Dong T, Yan K, Ci X, Peng L. PM2. 5 increases susceptibility to acute exacerbation of COPD via NOX4/Nrf2 redox imbalance-mediated mitophagy. Redox Biol 2023; 59: 102587.",
+      "doi": "10.1016/j.redox.2022.102587",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "11. Garcia A, Santa-Helena E, De Falco A, de Paula Ribeiro J, Gioda A, Gioda CR. Toxicological effects of fine particulate matter (PM2. 5): health risks and associated systemic injuries—systematic review. Water Air Soil Pollut 2023; 234: 346.",
+      "doi": "10.1007/s11270-023-06278-9",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "12. Guo Y, Chen Q, Zhan Y, Zhou W, Zhang H, Zhou N, Yang H, Chen Y, Wang Y, Sun L et al. Semen damage contributed over 50% to air-pollutant-induced infertility: a prospective cohort study of 3940 men in China. Sci Total Environ 2023; 885: 163532.",
+      "doi": "10.1016/j.scitotenv.2023.163532",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "13. Han SJ, Jung SY, Wu SP, Hawkins SM, Park MJ, Kyo S, Qin J, Lydon JP, Tsai SY, Tsai MJ et al. Estrogen receptor beta modulates apoptosis complexes and the inflammasome to drive the pathogenesis of endometriosis. Cell 2015; 163: 960–974.",
+      "doi": "10.1016/j.cell.2015.10.034",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "14. Harada T, Kaponis A, Iwabe T, Taniguchi F, Makrydimas G, Sofikitis N, Paschopoulos M, Paraskevaidis E, Terakawa N. Apoptosis in human endometrium and endometriosis. Hum Reprod Update 2004; 10: 29–38.",
+      "doi": "10.1093/humupd/dmh007",
+      "title": null,
+      "year": "2004"
+    },
+    {
+      "raw": "15. Jaiswal C, Singh AK. Particulate matter exposure and its consequences on hippocampal neurogenesis and cognitive function in experimental models. Environ Pollut 2024; 363: 125275.",
+      "doi": "10.1016/j.envpol.2024.125275",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "16. Kim H, Lee M, Hwang H, Chung Y-J, Cho H-H, Yoon H, Kim M, Chae K-H, Jung CY, Kim S et al. The estimated prevalence and incidence of endometriosis with the Korean National Health Insurance Service-National Sample Cohort (NHIS-NSC): a national population-based study. J Epidemiol 2021; 31: 593–600.",
+      "doi": "10.2188/jea.je20200002",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "17. Kim HK, Kim E-S, Park KS, Lee YJ, Ha I-H. Current treatments for endometriosis in South Korea: an analysis of nationwide data from 2010 to 2019. Sci Rep 2023; 13: 9573.",
+      "doi": "10.1038/s41598-023-36291-1",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "18. Kim Juyong Brian, Prunicki Mary, Haddad Francois, Dant Christopher, Sampath Vanitha, Patel Rushali, Smith Eric, Akdis Cezmi, Balmes John, Snyder Michael P, Wu Joseph C,. Cumulative lifetime burden of cardiovascular disease from early exposure to air pollution. J Am Heart Assoc 2020; 9: e014944.",
+      "doi": "10.1161/jaha.119.014944",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "19. Liang S, Zhang J, Ning R, Du Z, Liu J, Batibawa JW, Duan J, Sun Z. The critical role of endothelial function in fine particulate matter-induced atherosclerosis. Part Fibre Toxicol 2020; 17: 1–24.",
+      "doi": "10.1186/s12989-020-00391-x",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "20. Lin SY, Yang YC, Lin CC, Chang CY, Hsu WH, Wang IK, Lin CD, Hsu CY, Kao CH. Increased incidence of dysmenorrhea in women exposed to higher concentrations of NO, NO(2), NO(x), CO, and PM(2.5): a nationwide population-based study. Front Public Health 2021; 9: 682341.",
+      "doi": "10.3389/fpubh.2021.682341",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "21. Massimiani M, Lacconi V, La Civita F, Ticconi C, Rago R, Campagnolo L. Molecular signaling regulating endometrium–blastocyst crosstalk. Int J Mol Sci 2019; 21: 23.",
+      "doi": "10.3390/ijms21010023",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "22. Park S-R, Lee JW, Kim S-K, Yu W-J, Lee S-J, Kim D, Kim K-W, Jung J-W, Hong I-S. The impact of fine particulate matter (PM) on various beneficial functions of human endometrial stem cells through its key regulator SERPINB2. Exp Mol Med 2021; 53: 1850–1865.",
+      "doi": "10.1038/s12276-021-00713-9",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "23. Park Y, Lee I, Lee MJ, Park H, Jung GS, Kim N, Im W, Kim H, Lee JH, Cho S et al. Particulate matter exposure induces adverse effects on endometrium and fertility via aberrant inflammatory and apoptotic pathways in vitro and in vivo. Chemosphere 2024; 361: 142466.",
+      "doi": "10.1016/j.chemosphere.2024.142466",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "24. Pearson JF, Bachireddy C, Shyamprasad S, Goldfine AB, Brownstein JS. Association between fine particulate matter and diabetes prevalence in the US. Diabetes Care 2010; 33: 2196–2201.",
+      "doi": "10.2337/dc10-0698",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "25. Rui W, Guan L, Zhang F, Zhang W, Ding W. PM2. 5‐induced oxidative stress increases adhesion molecules expression in human endothelial cells through the ERK/AKT/NF‐κB‐dependent pathway. J Appl Toxicol 2016; 36: 48–59.",
+      "doi": "10.1002/jat.v36.1",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "26. Saxena P, Sonwani S. Criteria air pollutants: chemistry, sources and sinks. In: Criteria Air Pollutants and Their Impact on Environmental Health. Singapore: Springer, 2019, 7–48.",
+      "doi": "10.1007/978-981-13-9992-3",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "27. Shafrir AL, Farland L, Shah D, Harris H, Kvaskoff M, Zondervan K, Missmer S. Risk for and consequences of endometriosis: a critical epidemiologic review. Best Pract Res Clin Obstet Gynaecol 2018; 51: 1–15.",
+      "doi": "10.1016/j.bpobgyn.2018.06.001",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "28. Shah PS, Balkhair T, Births K; Knowledge Synthesis Group on Determinants of Preterm/LBW Births. Air pollution and birth outcomes: a systematic review. Environ Int 2011; 37: 498–516.",
+      "doi": "10.1016/j.envint.2010.10.009",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "29. Song J-E, Ahn J-A, Lee S-K, Roh EH. Factors related to low birth rate among married women in Korea. PLoS One 2018; 13: e0194597.",
+      "doi": "10.1371/journal.pone.0194597",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "30. Tanbo T, Fedorcsak P. Endometriosis‐associated infertility: aspects of pathophysiological mechanisms and treatment options. Acta Obstet Gynecol Scand 2017; 96: 659–667.",
+      "doi": "10.1111/aogs.2017.96.issue-6",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "31. Taylor HS, Kotlyar AM, Flores VA. Endometriosis is a chronic systemic disease: clinical challenges and novel innovations. Lancet 2021; 397: 839–852.",
+      "doi": "10.1016/s0140-6736(21)00389-5",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "32. Vallée A, Ceccaldi PF, Carbonnel M, Feki A, Ayoubi JM. Pollution and endometriosis: a deep dive into the environmental impacts on women’s health. BJOG 2024; 131: 401–414.",
+      "doi": "10.1111/bjo.v131.4",
+      "title": null,
+      "year": "2024"
+    },
+    {
+      "raw": "33. Vercellini P, Viganò P, Somigliana E, Fedele L. Endometriosis: pathogenesis and treatment. Nat Rev Endocrinol 2014; 10: 261–275.",
+      "doi": "10.1038/nrendo.2013.255",
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "34. Vizcaíno MAC, González-Comadran M, Jacquemin B. Outdoor air pollution and human infertility: a systematic review. Fertil Steril 2016; 106: 897–904.e1.",
+      "doi": "10.1016/j.fertnstert.2016.07.1110",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "35. Wen Y, Ding X, Guan Q, Hu W, Wang B, Hu Q, Bigambo FM, Zhou Z, Wang X, Xia Y. Effects of exposure to urban particulate matter SRM 1648a during pregnancy on the neurobehavioral development of offspring mice. Ecotoxicol Environ Saf 2021; 215: 112142.",
+      "doi": "10.1016/j.ecoenv.2021.112142",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "36. Wong CM, Tsang H, Lai HK, Thomas GN, Lam KB, Chan KP, Zheng Q, Ayres JG, Lee SY, Lam TH et al. Cancer mortality risks from long-term exposure to ambient fine particle. Cancer Epidemiol Biomarkers Prev 2016; 25: 839–845.",
+      "doi": "10.1158/1055-9965.epi-15-0626",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "37. Zhang M,, Xu T,, Tong D,, Li S,, Yu X,, Liu B,, Jiang L,, Liu K. Research advances in endometriosis-related signaling pathways: A review. Biomed Pharmacother 2023; 164: 114909.",
+      "doi": "10.1016/j.biopha.2023.114909",
+      "title": null,
+      "year": "2023"
+    }
+  ],
+  "assets": [
+    {
+      "kind": "figure",
+      "heading": "Figure 1.",
+      "caption": "Alteration in endometrial (EM) cell morphology following particulate matter (PM) exposure. ( A ) Primary (P0) EM cells exhibited partial disruption of the cell membrane and nuclear structure with PM accumulation in the nucleus and cytoplasm following exposure to 100 or 200 μg/ml PM for 24 h, which was observed on Z-stack images collected in 0.2-µm steps via confocal laser scanning microscopy. These morphological changes suggest that PM exposure may interfere with cell structure and impair cell viability (scale bar = 20 μm). ( B ) EM cells were subjected to second passages (P2) in Dulbecco’s modified Eagle’s medium with or without exposure to PM at a concentration of 200 µg/ml. Repeated PM exposure through P2 increased cell proliferation, suggesting a potential adaptive response to PM exposure. Such changes could have implications for understanding how PM contributes to cellular remodeling and pathology over successive passages (scale bar = 20 μm).",
+      "url": null,
+      "path": null,
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f1.jpeg?Expires=1791560914&Signature=sCbTiFtHPb8GvX-Ck20L8ulPzVjuKDH8A8-Rg8g72kfmoFHaKdO3cFQ~RjBxwV3eRXD-cA1FV0U7h3pvwzXBIBmY7WtpzqqDpb18Koh4V6V98Gwjv0M2kSYM4gUBX7LZtMPt14BLKYrTnpahE0-2PvSYhQRfI-yGcdpTsaUq5pCaYEj0-wjtPK88HYem4-ohhKNZVXhnn6iCRavBLis7HIFRyOBuZem~-uJUTgnYipyXtS~Jr15B3hXYKaIJO5m6dCUD685qFtA4ouP4uRq57kRIw-vqiiqSBoJJmOn0cs9uOGcYrCaibBTibRy1BK4aKRsMwxozqG1m07bIyYlU-A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 2.",
+      "caption": "Changes in cell proliferation in endometrial (EM) cells following particulate matter (PM) exposure. ( A ) Cell viability was assessed by measuring Cell Count Assay Kit 8 (CCK-8) activity. ( B ) Primary (P0) EM cells exhibited a notable reduction in phosphorylated extracellular signal-regulated kinase (p-ERK) expression upon PM exposure, whereas second passages (P2) EM cells showed a significant upregulation of p-ERK following PM exposure. The data are presented as the mean±SD. Statistical significance was determined using one-way ANOVA followed by Bonferroni’s post hoc test (N = 5, * P < 0.05, ** P < 0.01).",
+      "url": null,
+      "path": null,
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f2.jpeg?Expires=1791560914&Signature=a9mu2uaJICaBZj5z-TU7LsEG~um4gs9oSkzEiaicEfjTllgx~6veoNa6s~T8vFEI9pfd2bOD6sSw9RBbE9YQYhP4EG~O9p44nG3wxs0kYW0~9TRYCnvcunHCxGOmqgGJ9Ttz3stin57d~u1Dic55gpdaM-wcTVsXwDdLzdpBKD04S54zGV3jaj~Gg9EM6XRR3xuawhBpsU2pFHk2zrGGVo37YZBk1pPDOvv4du-l91t3i9Yxowj0HI6vu1~Qc6~Ry5HSAuii-frSIznPP7bRl5sWV8GWSOKZrtZFPwx-Lj2YtfwPIuatPDnEPViGrMzi~R2hjzEMcqxvYAVxtj9gJA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 3.",
+      "caption": "Repeated particulate matter (PM) exposure changes apoptosis and p53 signaling in endometrial (EM) cells. ( A ) Fluorescence-activated cell sorting analysis was performed on EM cells exposed to PM during primary (P0) and second passages (P2) cultures. The upper panel of flow cytometry images represents P0 cells, while the lower panel represents P2 cells. Cells within the blue-boxed area are classified as early apoptotic. PM induces apoptosis in primary P0 EM cells (upper panel) but exhibits anti-apoptotic effects in subcultured P2 EM cells (lower panel). As shown in the bar graphs on the right side of the flow cytometry data, the effects of PM on both P0 and P2 cells were dose-dependent. ( B ) During P0 cell culture, PM exposure led to an elevation in the Bcl-2 associated X-protein (BAX)/B-cell lymphoma 2 (Bcl-2) ratio and caspase-3 expression. In contrast, repeated PM exposure through P2 resulted in a reduction in the mRNA expression of the BAX/Bcl-2 ratio and caspase-3. ( C ) During the P0 culture, EM cells exposed to PM exhibited a notable increase in the p-p53/p53 ratio, as observed in western blotting. In contrast, P2 EM cells repeatedly exposed to PM displayed a significant decrease in the p-p53/p53 ratio. ( D ) Immunofluorescence and confocal microscopy images of P0 and P2 EM cells with or without PM treatment. The images showcase the expression of p-p53 (in green) and 4′,6-diamidino-2-phenylindole (DAPI)-stained nuclei (in blue), allowing visualization of p-p53 expression alongside nuclear localization (scale bar = 20 μm). The data are presented as the mean±SD. Statistical significance was determined using one-way ANOVA followed by Bonferroni’s post hoc test (N = 5, * P < 0.05, ** P < 0.01, *** P < 0.001).",
+      "url": null,
+      "path": null,
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f3.jpeg?Expires=1791560914&Signature=0l4Fk~~-LBygDvN9wTRAH3dfpcDamBQqFOJ7WwUZbG3aXuUvQIeA~s9ETDhe5e3QW3KCccvDJruYDZVqEEu~83uCwxJiNNEFudfxIhanDh5oU4yQ2WmvdOaEVLIGYL5DZJVQnWX3NKcQnOYc-eZb1sr~vrIcrNrWCLQUbGSTJScCaYgvk5OpUrnSXtHujfsHVzwIg8LOGJ8sxxhYOg070~xvm3Ai-mkJWEo~~1MEHS~BAHM3B7yJtzvEe8sWm53nZuauPTL0I6r65wezL2g3vfJuJNdXOItEvB5y08UzDwqbkpb4n6fgffHio01-MV-bTpVm3KBERUD609K9uHlKuA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 4.",
+      "caption": "Repeated particulate matter (PM) exposure changes cell migration, oxidative stress, and aging in endometrial (EM) cells. ( A ) The effect of PM exposure on the migratory capacity of primary (P0) and second passages (P2) cells was analyzed using a scratch wound healing assay (scale bar = 20 μm). The percentage of wound closure significantly decreased in P0 EM cells following exposure to PM, while notably increased closure was observed in P2 EM cells exposed to PM. ( B ) In P0 EM cells, exposure to PM led to an increase in the expression of nuclear factor erythroid 2-related factor (Nrf2), heme oxygenase-1 (HO-1), and NAD(P)H quinone dehydrogenase 1 (NQO-1) compared to that in the control. However, repeated exposure to PM during the P2 strongly suppressed the expression of Nrf2. ( C ) A significant decrease in the mRNA expression of p16 and p18 was observed following PM exposure in both primary and P2 EM cells. The data are presented as the mean±SD. Statistical significance was determined using one-way ANOVA followed by Bonferroni’s post hoc test (N = 3, * P < 0.05).",
+      "url": null,
+      "path": null,
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f4.jpeg?Expires=1791560914&Signature=aFoqMatlPwotID73GdXuf3OIRaybYCCQIzvqQYyU0KrH4s0bRQEahZhG77uLsGEw5G7Z~3EV~TlqrledzIgUe4hb~d5gLXo9Ot0ZDXyGreOqXCvOSyqK3tirbULJ2VIl9crk5TcfiAy0mPXZevK20RnMCplGS-qctWTRGYAJRYqLByfDhAy~eFMfrAo6zYj8Jm4DJZ-zWW7G~ZbKD4b9wjHCopmNy7pJxC8v~RoOsf61str08p-S12NH9PVTcAU1JQXJs9lpDYm4JZQ9QailaJHOXAgAwthCfiHy4nBfsrWp0NalVPG5g5qQ9CgdhBPK5F9Ay0XmMz1a~eT8f233nw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 5.",
+      "caption": "Surgical induction of endometriosis by autologous uterine tissue transplantation in mice exposed to particulate matter (PM). ( A ) Top row: After 4 weeks of uterine implantation in the peritoneal cavity of mice, multiple cystic lesions were observed upon gross examination (scale bar = 200 μm). Bottom row: Histologic evaluation of mice exposed to control, low-concentration, and high-concentration PM showed a difference in the extent of fibrosis. Masson’s trichrome stain revealed significantly increased fibrosis (depicted in blue) in mice exposed to both low and high concentrations of PM compared to controls, suggesting that PM exposure exacerbates fibrotic remodeling in endometriosis lesions. Specifically, endometriosis implants from control mice exhibited minimal fibrosis (Left), while those from low-concentration PM-exposed mice showed focal fibrosis (Middle). In contrast, endometriosis implants from high-concentration PM-exposed mice demonstrated a greater extent of fibrosis compared to both control and low-concentration exposed mice (Right). ( B ) The size of endometriotic lesions was significantly larger in the mice exposed to PM compared to those in non-exposed mice. Additionally, no significant difference was observed between the lesions of mice exposed to low-dose PM (10 mg/kg/day) and of those exposed to high-dose PM (20 mg/kg/day). These findings highlight the role of PM in enhancing both the fibrotic and proliferative characteristics of endometriotic lesions. The data are presented as the mean±SD. Statistical significance was determined using one-way ANOVA followed by Bonferroni’s post hoc test (N = 6 per experimental group, * P < 0.05).",
+      "url": null,
+      "path": null,
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f5.jpeg?Expires=1791560914&Signature=q3hPXG4-KJ24tkneG8SV5uunVzAeHZsYSrSe5Suw1PXrylSyKV1htD0z0lJcRfJCQvXB6DyWPBJ7LwWy~etgE~ZmfmlkGE69pj43dwbMzkkxqyR5QLbkpVow~93YxMe90sgxMSmb84bqDdleknNUOqMsWyy5CVL5EknzJe1GiNp8J4-hzznD1e5rvGQlv-Ef0Dv~9gl~MFeh-KN60hPefpsMt~IhXTSwT~lWFso7zSi0aJxiW82S9FpdwSw2Hxav5GA54pkiR6W7ZyA78iboht40OmZcxzNOMxBhdvDfjdfvZuQf668s8~0xguVZuLL5xesGoy5MES0kPXd-Un7RWQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 6.",
+      "caption": "Particulate matter (PM) exposure changes inflammation and apoptosis in endometriotic lesions in mice. ( A ) The mRNA levels of pro-inflammatory cytokines (IL-6 and IL-1β) were significantly higher in the endometriotic lesions of PM-treated mice. ( B ) PM exposure significantly increased the expression of inflammatory genes (nuclear factor-kappa β [p-NF-κB] and p-c-jun) in a dose-dependent manner in endometriotic lesions of mice. ( C ) Bcl-2-associated X-protein (BAX)/B-cell lymphoma 2 (Bcl-2) was significantly decreased in endometriotic lesions of PM-treated mice. No significant difference was observed in Caspase 3 (Cas-3) expression between the PM-treated groups and the control group. The data are presented as the mean±SD. Statistical significance was determined using one-way ANOVA followed by Bonferroni’s post hoc test (N = 6, * P < 0.05).",
+      "url": null,
+      "path": null,
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f6.jpeg?Expires=1791560914&Signature=WaAoncW~SxzFEnaKvdA68oUat7lAVPFwDmVCwdAGC6hVUhW~GLG9HW-tuau-Ac94tvSH-RwUwDrjiRzpikqRqU-MzMi45LQQ-amZpgiCZ~Sw5BoFg7BrXw15vAhxj46Jo4NfzdbdiO9uQLvmD0NkgtUPlrazhQbQ890av0q2COp7FL7acrlt1DwQcX4cJCHpwDc3Im9zxORT5I1roayBSHAF-f-28-Jc0o2pZGm9MRfqcsBuGClcfhsG9NCMYy2vlbUSehqaK6bjDzra5BI~~0ojzARHTcg3w-fh59VV8VivUq4apfhFTxvceyIYx1auyPDzKDNbCnRYRXofnpfydw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 7.",
+      "caption": "Particulate matter exposure (PM) changes proliferation, migration, and hormones in endometriotic lesions of mice. ( A ) Expression of proliferation markers (phosphorylated extracellular signal-regulated kinase [p-ERK] and ERK) was significantly increased in the high-dose PM group. ( B ) The expression of matrix metalloproteinases-2 and -9 (MMP-2 and MMP-9) in each group was not significantly different. ( C ) A significant decrease in estrogen receptor (ER)-α and a significant increase in ER-β were observed in endometriotic lesions of mice treated with PM compared to the untreated control group. A decrease in ER isoform ratios was also observed in PM-treated mice. The data are presented as the mean±SD. Statistical significance was determined using one-way ANOVA followed by Bonferroni’s post hoc test (N = 6, * P < 0.05).",
+      "url": null,
+      "path": null,
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/m_gaaf013f7.jpeg?Expires=1791560914&Signature=2VY7s3ItlMW64kN0elQZizGJzpiv3-3TTjmHYnPQ4kWOIX8JaqGP-v1LR~xBXqpqVyWQSE2Wvg-Ke1PFuiPOAlI-umBjvzteIhdNMm~m1K2LMuIi3w~gw0VIkOvmkcDI~F0NC09g-~n78~5MvE38SF5kHVi~mJA8gEwRVaXb4gMimDfi3WkO6Lb4u8KMqiYlGs4EB6Yx~5iiX63gWDDwBMbQ~iZYLF9bqrXbsZD3sKvjyMkXt9JPxxywdr~3h8pBdSmA17y0ahQpd8tbEBAH3FxNCewsymg3RwBIvDdHU82wn3fGdJ--xl9ctUfKt1xdOvtzQEv7fWbPFwnzxAFY5A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    },
+    {
+      "kind": "supplementary",
+      "heading": "gaaf013_Supplementary_Data",
+      "caption": null,
+      "url": null,
+      "path": null,
+      "section": "supplementary",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": null,
+      "download_url": null,
+      "original_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/molehr/31/2/10.1093_molehr_gaaf013/5/gaaf013_supplementary_data.pdf?Expires=1792477635&Signature=2dsGyFLUFGXgXBTSW9zs61jKrorDA6Tcg~gBpxjHRhvYITqXrpSb4G6r5N8jqafgf-uQOdGEqbv6dtn0gsNLqylYfjzsjyv2bUZo0ZL7lY-xTQ8fsWHTcxGCQTDZx6NP8ebrOPbOhST-dF2G~jWTSJWfNjkROWaOH0h-~7xIUUuQ0LGSRnh5Bt1MtR2U~9M8vP6Gb0sfplpMrb1qs8-ykkEIqy~5E5XhKq~mDTUtmIcsHpdIbRO78lQu75RoRXSdLtX5hLoOBvPvbR4p4hBIwTz~KrHz5BNPwtel6lBr0Om-~sEffD2ddgzvIorm81Dr0Rnve78pF4VH6McktO-7wg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": null,
+      "source_path": null,
+      "source_href": null,
+      "content_type": null,
+      "downloaded_bytes": null,
+      "width": null,
+      "height": null,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {}
+    }
+  ],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 13334,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "Markdown full text was saved to /tmp/paper-fetch-paywall-expansion-20260915/oxfordacademic/10.1093_molehr_gaaf013/fetch/Jung_et_al_2025_Effects_of_chronic_particulate_matter_exposure_on_endometriosis-associated_signaling_pathways_and_disease_progression.md."
+    ],
+    "source_trail": [
+      "fulltext:oxfordacademic_html_ok",
+      "fulltext:oxfordacademic_article_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_oxfordacademic",
+      "route:signal_publisher_oxfordacademic",
+      "route:signal_doi_oxfordacademic",
+      "route:probe_oxfordacademic_unknown",
+      "route:provider_selected_oxfordacademic",
+      "route:provider_candidate_oxfordacademic_metadata_selected_rank_1",
+      "route:provider_candidate_oxfordacademic_identity_strong",
+      "fulltext:oxfordacademic_attempt",
+      "download:oxfordacademic_assets_skipped_profile_none",
+      "fulltext:oxfordacademic_article_ok",
+      "route:provider_candidate_oxfordacademic_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 591,
+      "body": 12743,
+      "refs": 1924
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 50930,
+      "word_count": 8308,
+      "body_block_count": 26,
+      "body_heading_count": 25,
+      "body_to_abstract_ratio": 8308.0,
+      "explicit_body_container": true,
+      "post_abstract_body_run": true,
+      "figure_count": 7
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 8,
+      "attempted": 0,
+      "total": 8,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 8,
+      "not_archived": 0,
+      "remote_link_count": 8,
+      "remote_only_count": 8,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 7,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 7,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 1,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 1,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": [
+        {
+          "request_profile": "none",
+          "kind": "figure",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "none",
+          "kind": "figure",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "none",
+          "kind": "figure",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "none",
+          "kind": "figure",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "none",
+          "kind": "figure",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "none",
+          "kind": "figure",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "none",
+          "kind": "figure",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "none",
+          "kind": "supplement",
+          "status": "not_requested",
+          "download_tier": null,
+          "path": null,
+          "real_mime": null,
+          "byte_count": null,
+          "width": null,
+          "height": null,
+          "preview_accepted": false,
+          "sha256": null,
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        }
+      ]
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "oxfordacademic",
+    "route": "direct_html",
+    "representation": "html",
+    "transport": "http",
+    "fallback_used": false
+  }
+}

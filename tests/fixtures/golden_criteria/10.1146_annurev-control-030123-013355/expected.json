@@ -1,10 +1,10 @@
 {
   "counts": {
     "abstract_sections": 1,
-    "body_sections": 18,
+    "body_sections": 15,
     "figures": 5,
     "references": 121,
-    "sections": 21,
+    "sections": 18,
     "tables": 0
   },
   "expected_content_kind": "fulltext",
@@ -17,5 +17,2339 @@
     "figures": true,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1146_annurev-control-030123-013355",
+    "provider": "annualreviews",
+    "doi": "10.1146/annurev-control-030123-013355",
+    "original": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/original.html",
+    "sha256": "3350e0536c236034f2aa97c8182ca2e2c9490635a96765c7a29a294aefa1093a",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 2,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 121,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 92,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 5,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 419,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 3,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 27,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "No structured formula in the selected original; bitmap/externally loaded formulas have only captured index/link evidence.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/acquisition/provenance.json",
+    "captured_image_files": [
+      {
+        "path": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/acquisition/assets-2026-09-15/6af632b0c6b08e78-http-1.bin",
+        "sha256": "cb4aa33977f2a404863b0c68fb4b127fdab3a3f69b6c79e73b91cc8fcca98c2c",
+        "bytes": 1015459
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/acquisition/assets-2026-09-15/b64cbaddb9fa5983-http-1.bin",
+        "sha256": "af64e3c58139aa1ff1a1627adbd19377886ab581ba758b85c998c03f6dc1f96d",
+        "bytes": 5908583
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/acquisition/assets-2026-09-15/be7473b2ffe5996f-http-1.bin",
+        "sha256": "fa385243bbe7adc81692fb4b1c4ef18d8a87bd2857f8f2139d26eb3c9c2faf93",
+        "bytes": 5933211
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/acquisition/assets-2026-09-15/d6425b03561038b0-http-1.bin",
+        "sha256": "0233ad29b49fc303afbf984d1a21c07a2b3b969e56ee5ca203fd2bc86e174b00",
+        "bytes": 12293215
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/acquisition/assets-2026-09-15/c4c1be12e4f2c87c-http-1.bin",
+        "sha256": "48a94f58135b12711d175dc4ac1c963eb5fddec945aba8df6250e93a9da89ff9",
+        "bytes": 154631
+      }
+    ],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 0,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/original.html",
+      "sha256": "3350e0536c236034f2aa97c8182ca2e2c9490635a96765c7a29a294aefa1093a",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "af1ffe567cfdbc88cb1d951b22fce58f275ade2ab2e28d1260442350238d62af",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4
+              ]
+            ],
+            [
+              1,
+              [
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            ],
+            [
+              2,
+              [
+                10,
+                11,
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              3,
+              [
+                15,
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              4,
+              [
+                20,
+                21,
+                22,
+                23,
+                24
+              ]
+            ],
+            [
+              5,
+              [
+                25,
+                26,
+                27,
+                28,
+                29
+              ]
+            ],
+            [
+              6,
+              [
+                30,
+                31,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              7,
+              [
+                35,
+                36,
+                37,
+                38,
+                39
+              ]
+            ],
+            [
+              8,
+              [
+                40,
+                41,
+                42,
+                43,
+                44
+              ]
+            ],
+            [
+              9,
+              [
+                45,
+                46,
+                47,
+                48,
+                49
+              ]
+            ],
+            [
+              10,
+              [
+                50,
+                51,
+                52,
+                53,
+                54
+              ]
+            ]
+          ],
+          "cells": [
+            "Reference",
+            "Soft, rigid, or hybrid? ^{a}",
+            "DOFs for SC ^{b}",
+            "Open-loop control ^{c}",
+            "Closed-loop control ^{d}",
+            "Hwang et al. ( 31 ) ^{e}",
+            "Hybrid",
+            "1",
+            "Shape and gait ^{f}",
+            "NA",
+            "Shah et al. ( 9 )",
+            "Soft",
+            "1",
+            "Shape",
+            "Gait",
+            "Lee et al. ( 33 )",
+            "Hybrid",
+            "1",
+            "Shape and gait ^{g}",
+            "NA",
+            "Wilcox et al. ( 32 )",
+            "Rigid",
+            "1",
+            "Shape and gait",
+            "NA",
+            "Lin et al. ( 24 )",
+            "Soft",
+            "2",
+            "Shape and gait",
+            "NA",
+            "Sun et al. ( 25 )",
+            "Hybrid",
+            "3–4 ^{h}",
+            "Gait",
+            "Shape",
+            "Baines et al. ( 26 )",
+            "Hybrid",
+            "4",
+            "Shape and gait",
+            "NA",
+            "Nygaard et al. ( 29 )",
+            "Rigid",
+            "8",
+            "NA",
+            "Shape and gait",
+            "Jeong et al. ( 30 ) ^{i}",
+            "Soft",
+            "12",
+            "Shape and gait",
+            "NA",
+            "Shah et al. ( 27 )",
+            "Soft",
+            "20",
+            "Shape and gait",
+            "NA"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "76907510551ff0b300f6686d8c25187c4ebc8caf369056e14cdb1fcadd5a8688",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ]
+            ],
+            [
+              1,
+              [
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+              ]
+            ],
+            [
+              2,
+              [
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              3,
+              [
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              4,
+              [
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              5,
+              [
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              6,
+              [
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48
+              ]
+            ],
+            [
+              7,
+              [
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55
+              ]
+            ],
+            [
+              8,
+              [
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62
+              ]
+            ],
+            [
+              9,
+              [
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69
+              ]
+            ],
+            [
+              10,
+              [
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76
+              ]
+            ],
+            [
+              11,
+              [
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83
+              ]
+            ],
+            [
+              12,
+              [
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90
+              ]
+            ],
+            [
+              13,
+              [
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97
+              ]
+            ],
+            [
+              14,
+              [
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104
+              ]
+            ],
+            [
+              15,
+              [
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111
+              ]
+            ]
+          ],
+          "cells": [
+            "Reference",
+            "Approach ^{a}",
+            "Shape reconstruction technique ^{b}",
+            "Shape dim. ^{c}",
+            "Sensor location ^{d}",
+            "Max. stretch. ^{e}",
+            "Resolution ^{f}",
+            "Hoshi & Shinoda ( 53 )",
+            "Flexible array of IMUs",
+            "Rigid link",
+            "3D",
+            "Surface",
+            "NA",
+            "5.5 cm",
+            "Sprynski et al. ( 58 )",
+            "Flexible PCB ribbon of IMUs",
+            "Differential geometry",
+            "3D",
+            "Surface",
+            "NA",
+            "3 cm",
+            "Huard et al. ( 59 )",
+            "Flexible PCB ribbon of IMUs ^{g}",
+            "Differential geometry",
+            "3D",
+            "Surface",
+            "NA",
+            "3 cm",
+            "Huard et al. ( 60 )",
+            "Flexible PCB ribbon of IMUs",
+            "Differential geometry",
+            "3D",
+            "Surface",
+            "NA",
+            "3 cm",
+            "Saguin-Sprynski et al. ( 61 )",
+            "Array of IMUs on textile",
+            "Differential geometry",
+            "3D",
+            "Surface",
+            "NA",
+            "12.5 cm",
+            "Mittendorfer et al. ( 64 )",
+            "Camera and markers",
+            "Marker position reconstruction",
+            "3D",
+            "Offboard",
+            "NA",
+            "∼2.4 cm",
+            "Rendl et al. ( 63 )",
+            "Piezoelectric sensors on flexible film",
+            "Self-sensing using machine learning",
+            "3D",
+            "Surface",
+            "NA",
+            "NA",
+            "Hermanis et al. ( 54 )",
+            "Array of IMUs on textile",
+            "Rigid link",
+            "3D",
+            "Surface",
+            "NA",
+            "3.5 cm",
+            "Stanko et al. ( 56 )",
+            "Wheeled cart with IMU and encoders",
+            "Differential geometry",
+            "3D",
+            "Offboard",
+            "NA",
+            "NA",
+            "Zhou et al. ( 55 )",
+            "Flexible array of IMUs",
+            "Radial basis function interpolation",
+            "3D",
+            "Surface",
+            "NA",
+            "Variable",
+            "Hu et al. ( 62 )",
+            "Ribbon of IMUs",
+            "Differential geometry",
+            "2D",
+            "Surface",
+            "NA",
+            "20 cm",
+            "Lun et al. ( 66 )",
+            "Fiber Bragg grating in silicone",
+            "Self-sensing using machine learning",
+            "3D",
+            "Surface",
+            "<5% ^{h}",
+            "NA",
+            "Shah et al. ( 57 )",
+            "Stretchable electronic circuit with IMUs and stretch sensors",
+            "Rigid link and differential geometry",
+            "2D",
+            "Surface",
+            "30%",
+            "1.7 cm",
+            "Woodman et al. ( 65 )",
+            "Ribbon of IMUs and textile stretch sensors",
+            "Differential geometry",
+            "2D",
+            "Surface",
+            "40%",
+            "7 cm",
+            "Soleimani et al. ( 67 )",
+            "Mutual inductance sensor array",
+            "Self-sensing using inversion, calibration, and machine learning",
+            "2D",
+            "Surface",
+            "∼ 50% ^{i}",
+            "NA"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "58d1bfae22fde764bc81e6f2c81b79e3359b4bef77175e1ca843eeb2ca45ed3d",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              1,
+              [
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              2,
+              [
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35
+              ]
+            ],
+            [
+              3,
+              [
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47
+              ]
+            ],
+            [
+              4,
+              [
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59
+              ]
+            ],
+            [
+              5,
+              [
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71
+              ]
+            ],
+            [
+              6,
+              [
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83
+              ]
+            ],
+            [
+              7,
+              [
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95
+              ]
+            ],
+            [
+              8,
+              [
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106,
+                107
+              ]
+            ],
+            [
+              9,
+              [
+                108,
+                109,
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119
+              ]
+            ],
+            [
+              10,
+              [
+                120,
+                121,
+                122,
+                123,
+                124,
+                125,
+                126,
+                127,
+                128,
+                129,
+                130,
+                131
+              ]
+            ],
+            [
+              11,
+              [
+                132,
+                133,
+                134,
+                135,
+                136,
+                137,
+                138,
+                139,
+                140,
+                141,
+                142,
+                143
+              ]
+            ],
+            [
+              12,
+              [
+                144,
+                145,
+                146,
+                147,
+                148,
+                149,
+                150,
+                151,
+                152,
+                153,
+                154,
+                155
+              ]
+            ],
+            [
+              13,
+              [
+                156,
+                157,
+                158,
+                159,
+                160,
+                161,
+                162,
+                163,
+                164,
+                165,
+                166,
+                167
+              ]
+            ],
+            [
+              14,
+              [
+                168,
+                169,
+                170,
+                171,
+                172,
+                173,
+                174,
+                175,
+                176,
+                177,
+                178,
+                179
+              ]
+            ],
+            [
+              15,
+              [
+                180,
+                181,
+                182,
+                183,
+                184,
+                185,
+                186,
+                187,
+                188,
+                189,
+                190,
+                191
+              ]
+            ],
+            [
+              16,
+              [
+                192,
+                193,
+                194,
+                195,
+                196,
+                197,
+                198,
+                199,
+                200,
+                201,
+                202,
+                203
+              ]
+            ],
+            [
+              17,
+              [
+                204,
+                205,
+                206,
+                207,
+                208,
+                209,
+                210,
+                211,
+                212,
+                213,
+                214,
+                215
+              ]
+            ],
+            [
+              18,
+              [
+                216,
+                217,
+                218,
+                219,
+                220,
+                221,
+                222,
+                223,
+                224,
+                225,
+                226,
+                227
+              ]
+            ],
+            [
+              19,
+              [
+                228,
+                229,
+                230,
+                231,
+                232,
+                233,
+                234,
+                235,
+                236,
+                237,
+                238,
+                239
+              ]
+            ],
+            [
+              20,
+              [
+                240,
+                241,
+                242,
+                243,
+                244,
+                245,
+                246,
+                247,
+                248,
+                249,
+                250,
+                251
+              ]
+            ]
+          ],
+          "cells": [
+            "Reference",
+            "ICs?",
+            "Trace manufacturing technique",
+            "Num. layers ^{a}",
+            "Min. TW (μm) ^{b}",
+            "Max. strain (%)",
+            "Substrate",
+            "Application",
+            "Strain during application (%)",
+            "Num. rigid–soft interf. ^{c}",
+            "Num. rigid comp. ^{d}",
+            "Complexity num. ^{e}",
+            "Huang et al. ( 84 )",
+            "Yes",
+            "Geometric patterning",
+            "4",
+            "150",
+            "50",
+            "PDMS",
+            "Wearable",
+            "ND",
+            "0",
+            "56",
+            "0",
+            "Chen et al. ( 91 )",
+            "No",
+            "Stencil printing",
+            "2",
+            "200",
+            "ND",
+            "TPU or VHB",
+            "Wearable",
+            "ND",
+            "40",
+            "20",
+            "2",
+            "Song et al. ( 105 )",
+            "No",
+            "Photothermal patterning",
+            "3",
+            "250",
+            "30",
+            "PDMS",
+            "Wearable",
+            "ND",
+            "50",
+            "25",
+            "2",
+            "Lee et al. ( 103 )",
+            "No",
+            "Omnidirectional 3DP",
+            "2",
+            "100",
+            "40",
+            "PDMS",
+            "Wearable",
+            "ND",
+            "30",
+            "15",
+            "2",
+            "Lee et al. ( 106 )",
+            "Yes",
+            "Stencil printing",
+            "2",
+            "200 ^{LITERALASTERISK}",
+            "ND",
+            "VHB",
+            "NA",
+            "ND",
+            "24",
+            "11",
+            "2. 18",
+            "Li et al. ( 107 )",
+            "Yes",
+            "Solid wire fabrication",
+            "2",
+            "300 ^{LITERALASTERISK}",
+            "ND",
+            "Pt.-cure",
+            "Wearable",
+            "ND",
+            "44",
+            "18",
+            "2. 44",
+            "Tang et al. ( 108 )",
+            "Yes",
+            "Extrusion printing",
+            "1",
+            "350 ^{LITERALASTERISK}",
+            "ND",
+            "PU",
+            "Wearable",
+            "ND",
+            "15",
+            "6",
+            "2. 5",
+            "Reis Carneiro et al. ( 96 )",
+            "Yes",
+            "DIW",
+            "1",
+            "200",
+            "ND",
+            "TPU",
+            "Wearable",
+            "ND",
+            "55",
+            "21",
+            "2. 62",
+            "Valentine et al. ( 95 )",
+            "Yes",
+            "Hybrid 3DP",
+            "1",
+            "100",
+            "ND",
+            "TPU",
+            "Wearable",
+            "ND",
+            "42",
+            "16",
+            "2. 63",
+            "Tavakoli et al. ( 104 )",
+            "Yes",
+            "Laser patterning",
+            "2",
+            "25",
+            "ND",
+            "Tegaderm",
+            "Wearable",
+            "ND",
+            "58",
+            "21",
+            "2. 76f",
+            "Liu et al. ( 89 )",
+            "Yes",
+            "Transfer printing",
+            "2",
+            "25",
+            "200",
+            "VHB",
+            "Wearable",
+            "ND",
+            "20",
+            "7",
+            "2. 85",
+            "Yin et al. ( 109 )",
+            "Yes",
+            "Selective wetting",
+            "1",
+            "ND",
+            "ND",
+            "PDMS",
+            "Robot",
+            "ND",
+            "72",
+            "24",
+            "3",
+            "Ozutemiz et al. ( 82 )",
+            "Yes",
+            "Selective wetting",
+            "1",
+            "200 ^{LITERALASTERISK}",
+            "40",
+            "PDMS",
+            "Wearable",
+            "ND",
+            "9",
+            "3",
+            "3",
+            "Lopes et al. ( 94 )",
+            "Yes",
+            "DIW",
+            "1",
+            "200 ^{g}",
+            "ND",
+            "SIS",
+            "Wearable",
+            "ND",
+            "47",
+            "15",
+            "3. 13",
+            "Ozutemiz et al. ( 100 )",
+            "Yes",
+            "Selective wetting",
+            "1",
+            "40",
+            "40",
+            "PDMS",
+            "NA",
+            "ND",
+            "29",
+            "9",
+            "3. 22",
+            "Xie et al. ( 101 )",
+            "Yes",
+            "Extrusion printing",
+            "2",
+            "ND",
+            "360",
+            "Pt.-cure",
+            "Robot ^{h}",
+            "ND",
+            "25",
+            "6",
+            "4. 16",
+            "Lopes et al. ( 98 )",
+            "Yes",
+            "Extrusion printing",
+            "2",
+            "200",
+            "ND",
+            "SIS",
+            "Wearable",
+            "ND",
+            "35",
+            "8",
+            "4. 38",
+            "Woodman et al. ( 102 )",
+            "Yes",
+            "Screen printing",
+            "2",
+            "200",
+            "404",
+            "Pt.-cure and VHB",
+            "Robot",
+            "100",
+            "66",
+            "15",
+            "4. 4",
+            "Hellebrekers et al. ( 97 )",
+            "Yes",
+            "Selective wetting",
+            "1",
+            "200",
+            "ND",
+            "PDMS",
+            "Robot",
+            "ND",
+            "112",
+            "25",
+            "4. 48",
+            "Zu et al. ( 110 )",
+            "Yes",
+            "DIW",
+            "1",
+            "200",
+            "ND",
+            "Tegaderm",
+            "Wearable",
+            "ND",
+            "20",
+            "4",
+            "5"
+          ]
+        }
+      ],
+      "mathml": []
+    },
+    {
+      "source": "tests/fixtures/golden_criteria/10.1146_annurev-control-030123-013355/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "sha256": "315a820e5eeb2bf57c4b967e353276813ea58576f8896377f3a8adedaf0093be",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "af1ffe567cfdbc88cb1d951b22fce58f275ade2ab2e28d1260442350238d62af",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4
+              ]
+            ],
+            [
+              1,
+              [
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            ],
+            [
+              2,
+              [
+                10,
+                11,
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              3,
+              [
+                15,
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              4,
+              [
+                20,
+                21,
+                22,
+                23,
+                24
+              ]
+            ],
+            [
+              5,
+              [
+                25,
+                26,
+                27,
+                28,
+                29
+              ]
+            ],
+            [
+              6,
+              [
+                30,
+                31,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              7,
+              [
+                35,
+                36,
+                37,
+                38,
+                39
+              ]
+            ],
+            [
+              8,
+              [
+                40,
+                41,
+                42,
+                43,
+                44
+              ]
+            ],
+            [
+              9,
+              [
+                45,
+                46,
+                47,
+                48,
+                49
+              ]
+            ],
+            [
+              10,
+              [
+                50,
+                51,
+                52,
+                53,
+                54
+              ]
+            ]
+          ],
+          "cells": [
+            "Reference",
+            "Soft, rigid, or hybrid? ^{a}",
+            "DOFs for SC ^{b}",
+            "Open-loop control ^{c}",
+            "Closed-loop control ^{d}",
+            "Hwang et al. ( 31 ) ^{e}",
+            "Hybrid",
+            "1",
+            "Shape and gait ^{f}",
+            "NA",
+            "Shah et al. ( 9 )",
+            "Soft",
+            "1",
+            "Shape",
+            "Gait",
+            "Lee et al. ( 33 )",
+            "Hybrid",
+            "1",
+            "Shape and gait ^{g}",
+            "NA",
+            "Wilcox et al. ( 32 )",
+            "Rigid",
+            "1",
+            "Shape and gait",
+            "NA",
+            "Lin et al. ( 24 )",
+            "Soft",
+            "2",
+            "Shape and gait",
+            "NA",
+            "Sun et al. ( 25 )",
+            "Hybrid",
+            "3–4 ^{h}",
+            "Gait",
+            "Shape",
+            "Baines et al. ( 26 )",
+            "Hybrid",
+            "4",
+            "Shape and gait",
+            "NA",
+            "Nygaard et al. ( 29 )",
+            "Rigid",
+            "8",
+            "NA",
+            "Shape and gait",
+            "Jeong et al. ( 30 ) ^{i}",
+            "Soft",
+            "12",
+            "Shape and gait",
+            "NA",
+            "Shah et al. ( 27 )",
+            "Soft",
+            "20",
+            "Shape and gait",
+            "NA"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "76907510551ff0b300f6686d8c25187c4ebc8caf369056e14cdb1fcadd5a8688",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ]
+            ],
+            [
+              1,
+              [
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+              ]
+            ],
+            [
+              2,
+              [
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              3,
+              [
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              4,
+              [
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              5,
+              [
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              6,
+              [
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48
+              ]
+            ],
+            [
+              7,
+              [
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55
+              ]
+            ],
+            [
+              8,
+              [
+                56,
+                57,
+                58,
+                59,
+                60,
+                61,
+                62
+              ]
+            ],
+            [
+              9,
+              [
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69
+              ]
+            ],
+            [
+              10,
+              [
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76
+              ]
+            ],
+            [
+              11,
+              [
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83
+              ]
+            ],
+            [
+              12,
+              [
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90
+              ]
+            ],
+            [
+              13,
+              [
+                91,
+                92,
+                93,
+                94,
+                95,
+                96,
+                97
+              ]
+            ],
+            [
+              14,
+              [
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104
+              ]
+            ],
+            [
+              15,
+              [
+                105,
+                106,
+                107,
+                108,
+                109,
+                110,
+                111
+              ]
+            ]
+          ],
+          "cells": [
+            "Reference",
+            "Approach ^{a}",
+            "Shape reconstruction technique ^{b}",
+            "Shape dim. ^{c}",
+            "Sensor location ^{d}",
+            "Max. stretch. ^{e}",
+            "Resolution ^{f}",
+            "Hoshi & Shinoda ( 53 )",
+            "Flexible array of IMUs",
+            "Rigid link",
+            "3D",
+            "Surface",
+            "NA",
+            "5.5 cm",
+            "Sprynski et al. ( 58 )",
+            "Flexible PCB ribbon of IMUs",
+            "Differential geometry",
+            "3D",
+            "Surface",
+            "NA",
+            "3 cm",
+            "Huard et al. ( 59 )",
+            "Flexible PCB ribbon of IMUs ^{g}",
+            "Differential geometry",
+            "3D",
+            "Surface",
+            "NA",
+            "3 cm",
+            "Huard et al. ( 60 )",
+            "Flexible PCB ribbon of IMUs",
+            "Differential geometry",
+            "3D",
+            "Surface",
+            "NA",
+            "3 cm",
+            "Saguin-Sprynski et al. ( 61 )",
+            "Array of IMUs on textile",
+            "Differential geometry",
+            "3D",
+            "Surface",
+            "NA",
+            "12.5 cm",
+            "Mittendorfer et al. ( 64 )",
+            "Camera and markers",
+            "Marker position reconstruction",
+            "3D",
+            "Offboard",
+            "NA",
+            "∼2.4 cm",
+            "Rendl et al. ( 63 )",
+            "Piezoelectric sensors on flexible film",
+            "Self-sensing using machine learning",
+            "3D",
+            "Surface",
+            "NA",
+            "NA",
+            "Hermanis et al. ( 54 )",
+            "Array of IMUs on textile",
+            "Rigid link",
+            "3D",
+            "Surface",
+            "NA",
+            "3.5 cm",
+            "Stanko et al. ( 56 )",
+            "Wheeled cart with IMU and encoders",
+            "Differential geometry",
+            "3D",
+            "Offboard",
+            "NA",
+            "NA",
+            "Zhou et al. ( 55 )",
+            "Flexible array of IMUs",
+            "Radial basis function interpolation",
+            "3D",
+            "Surface",
+            "NA",
+            "Variable",
+            "Hu et al. ( 62 )",
+            "Ribbon of IMUs",
+            "Differential geometry",
+            "2D",
+            "Surface",
+            "NA",
+            "20 cm",
+            "Lun et al. ( 66 )",
+            "Fiber Bragg grating in silicone",
+            "Self-sensing using machine learning",
+            "3D",
+            "Surface",
+            "<5% ^{h}",
+            "NA",
+            "Shah et al. ( 57 )",
+            "Stretchable electronic circuit with IMUs and stretch sensors",
+            "Rigid link and differential geometry",
+            "2D",
+            "Surface",
+            "30%",
+            "1.7 cm",
+            "Woodman et al. ( 65 )",
+            "Ribbon of IMUs and textile stretch sensors",
+            "Differential geometry",
+            "2D",
+            "Surface",
+            "40%",
+            "7 cm",
+            "Soleimani et al. ( 67 )",
+            "Mutual inductance sensor array",
+            "Self-sensing using inversion, calibration, and machine learning",
+            "2D",
+            "Surface",
+            "∼ 50% ^{i}",
+            "NA"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "58d1bfae22fde764bc81e6f2c81b79e3359b4bef77175e1ca843eeb2ca45ed3d",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              1,
+              [
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              2,
+              [
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35
+              ]
+            ],
+            [
+              3,
+              [
+                36,
+                37,
+                38,
+                39,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47
+              ]
+            ],
+            [
+              4,
+              [
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54,
+                55,
+                56,
+                57,
+                58,
+                59
+              ]
+            ],
+            [
+              5,
+              [
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71
+              ]
+            ],
+            [
+              6,
+              [
+                72,
+                73,
+                74,
+                75,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82,
+                83
+              ]
+            ],
+            [
+              7,
+              [
+                84,
+                85,
+                86,
+                87,
+                88,
+                89,
+                90,
+                91,
+                92,
+                93,
+                94,
+                95
+              ]
+            ],
+            [
+              8,
+              [
+                96,
+                97,
+                98,
+                99,
+                100,
+                101,
+                102,
+                103,
+                104,
+                105,
+                106,
+                107
+              ]
+            ],
+            [
+              9,
+              [
+                108,
+                109,
+                110,
+                111,
+                112,
+                113,
+                114,
+                115,
+                116,
+                117,
+                118,
+                119
+              ]
+            ],
+            [
+              10,
+              [
+                120,
+                121,
+                122,
+                123,
+                124,
+                125,
+                126,
+                127,
+                128,
+                129,
+                130,
+                131
+              ]
+            ],
+            [
+              11,
+              [
+                132,
+                133,
+                134,
+                135,
+                136,
+                137,
+                138,
+                139,
+                140,
+                141,
+                142,
+                143
+              ]
+            ],
+            [
+              12,
+              [
+                144,
+                145,
+                146,
+                147,
+                148,
+                149,
+                150,
+                151,
+                152,
+                153,
+                154,
+                155
+              ]
+            ],
+            [
+              13,
+              [
+                156,
+                157,
+                158,
+                159,
+                160,
+                161,
+                162,
+                163,
+                164,
+                165,
+                166,
+                167
+              ]
+            ],
+            [
+              14,
+              [
+                168,
+                169,
+                170,
+                171,
+                172,
+                173,
+                174,
+                175,
+                176,
+                177,
+                178,
+                179
+              ]
+            ],
+            [
+              15,
+              [
+                180,
+                181,
+                182,
+                183,
+                184,
+                185,
+                186,
+                187,
+                188,
+                189,
+                190,
+                191
+              ]
+            ],
+            [
+              16,
+              [
+                192,
+                193,
+                194,
+                195,
+                196,
+                197,
+                198,
+                199,
+                200,
+                201,
+                202,
+                203
+              ]
+            ],
+            [
+              17,
+              [
+                204,
+                205,
+                206,
+                207,
+                208,
+                209,
+                210,
+                211,
+                212,
+                213,
+                214,
+                215
+              ]
+            ],
+            [
+              18,
+              [
+                216,
+                217,
+                218,
+                219,
+                220,
+                221,
+                222,
+                223,
+                224,
+                225,
+                226,
+                227
+              ]
+            ],
+            [
+              19,
+              [
+                228,
+                229,
+                230,
+                231,
+                232,
+                233,
+                234,
+                235,
+                236,
+                237,
+                238,
+                239
+              ]
+            ],
+            [
+              20,
+              [
+                240,
+                241,
+                242,
+                243,
+                244,
+                245,
+                246,
+                247,
+                248,
+                249,
+                250,
+                251
+              ]
+            ]
+          ],
+          "cells": [
+            "Reference",
+            "ICs?",
+            "Trace manufacturing technique",
+            "Num. layers ^{a}",
+            "Min. TW (μm) ^{b}",
+            "Max. strain (%)",
+            "Substrate",
+            "Application",
+            "Strain during application (%)",
+            "Num. rigid–soft interf. ^{c}",
+            "Num. rigid comp. ^{d}",
+            "Complexity num. ^{e}",
+            "Huang et al. ( 84 )",
+            "Yes",
+            "Geometric patterning",
+            "4",
+            "150",
+            "50",
+            "PDMS",
+            "Wearable",
+            "ND",
+            "0",
+            "56",
+            "0",
+            "Chen et al. ( 91 )",
+            "No",
+            "Stencil printing",
+            "2",
+            "200",
+            "ND",
+            "TPU or VHB",
+            "Wearable",
+            "ND",
+            "40",
+            "20",
+            "2",
+            "Song et al. ( 105 )",
+            "No",
+            "Photothermal patterning",
+            "3",
+            "250",
+            "30",
+            "PDMS",
+            "Wearable",
+            "ND",
+            "50",
+            "25",
+            "2",
+            "Lee et al. ( 103 )",
+            "No",
+            "Omnidirectional 3DP",
+            "2",
+            "100",
+            "40",
+            "PDMS",
+            "Wearable",
+            "ND",
+            "30",
+            "15",
+            "2",
+            "Lee et al. ( 106 )",
+            "Yes",
+            "Stencil printing",
+            "2",
+            "200 ^{LITERALASTERISK}",
+            "ND",
+            "VHB",
+            "NA",
+            "ND",
+            "24",
+            "11",
+            "2. 18",
+            "Li et al. ( 107 )",
+            "Yes",
+            "Solid wire fabrication",
+            "2",
+            "300 ^{LITERALASTERISK}",
+            "ND",
+            "Pt.-cure",
+            "Wearable",
+            "ND",
+            "44",
+            "18",
+            "2. 44",
+            "Tang et al. ( 108 )",
+            "Yes",
+            "Extrusion printing",
+            "1",
+            "350 ^{LITERALASTERISK}",
+            "ND",
+            "PU",
+            "Wearable",
+            "ND",
+            "15",
+            "6",
+            "2. 5",
+            "Reis Carneiro et al. ( 96 )",
+            "Yes",
+            "DIW",
+            "1",
+            "200",
+            "ND",
+            "TPU",
+            "Wearable",
+            "ND",
+            "55",
+            "21",
+            "2. 62",
+            "Valentine et al. ( 95 )",
+            "Yes",
+            "Hybrid 3DP",
+            "1",
+            "100",
+            "ND",
+            "TPU",
+            "Wearable",
+            "ND",
+            "42",
+            "16",
+            "2. 63",
+            "Tavakoli et al. ( 104 )",
+            "Yes",
+            "Laser patterning",
+            "2",
+            "25",
+            "ND",
+            "Tegaderm",
+            "Wearable",
+            "ND",
+            "58",
+            "21",
+            "2. 76f",
+            "Liu et al. ( 89 )",
+            "Yes",
+            "Transfer printing",
+            "2",
+            "25",
+            "200",
+            "VHB",
+            "Wearable",
+            "ND",
+            "20",
+            "7",
+            "2. 85",
+            "Yin et al. ( 109 )",
+            "Yes",
+            "Selective wetting",
+            "1",
+            "ND",
+            "ND",
+            "PDMS",
+            "Robot",
+            "ND",
+            "72",
+            "24",
+            "3",
+            "Ozutemiz et al. ( 82 )",
+            "Yes",
+            "Selective wetting",
+            "1",
+            "200 ^{LITERALASTERISK}",
+            "40",
+            "PDMS",
+            "Wearable",
+            "ND",
+            "9",
+            "3",
+            "3",
+            "Lopes et al. ( 94 )",
+            "Yes",
+            "DIW",
+            "1",
+            "200 ^{g}",
+            "ND",
+            "SIS",
+            "Wearable",
+            "ND",
+            "47",
+            "15",
+            "3. 13",
+            "Ozutemiz et al. ( 100 )",
+            "Yes",
+            "Selective wetting",
+            "1",
+            "40",
+            "40",
+            "PDMS",
+            "NA",
+            "ND",
+            "29",
+            "9",
+            "3. 22",
+            "Xie et al. ( 101 )",
+            "Yes",
+            "Extrusion printing",
+            "2",
+            "ND",
+            "360",
+            "Pt.-cure",
+            "Robot ^{h}",
+            "ND",
+            "25",
+            "6",
+            "4. 16",
+            "Lopes et al. ( 98 )",
+            "Yes",
+            "Extrusion printing",
+            "2",
+            "200",
+            "ND",
+            "SIS",
+            "Wearable",
+            "ND",
+            "35",
+            "8",
+            "4. 38",
+            "Woodman et al. ( 102 )",
+            "Yes",
+            "Screen printing",
+            "2",
+            "200",
+            "404",
+            "Pt.-cure and VHB",
+            "Robot",
+            "100",
+            "66",
+            "15",
+            "4. 4",
+            "Hellebrekers et al. ( 97 )",
+            "Yes",
+            "Selective wetting",
+            "1",
+            "200",
+            "ND",
+            "PDMS",
+            "Robot",
+            "ND",
+            "112",
+            "25",
+            "4. 48",
+            "Zu et al. ( 110 )",
+            "Yes",
+            "DIW",
+            "1",
+            "200",
+            "ND",
+            "Tegaderm",
+            "Wearable",
+            "ND",
+            "20",
+            "4",
+            "5"
+          ]
+        }
+      ],
+      "mathml": []
+    }
+  ]
 }

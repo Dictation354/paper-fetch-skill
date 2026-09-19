@@ -1,0 +1,131 @@
+{"abstracts-retrieval-response": {
+    "affiliation": {
+        "affiliation-city": "Nanjing",
+        "@id": "60064143",
+        "affilname": "Nanjing University of Information Science & Technology",
+        "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60064143",
+        "affiliation-country": "China"
+    },
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-85136301088",
+        "dc:description": "Flash drought is a type of drought with rapid onset and great destructiveness, which poses a serious threat to agriculture, ecosystem, and environment without sufficient early warning. The rapid onset is a unique feature that distinguishes flash drought from conventional dry conditions, but its underlying mechanism remains unclear. With the 42-years reanalysis data, we compared the differences in convective triggering potential and atmospheric humidity indices between flash drought onset and conventional dry conditions over China. We found that the dry land-atmospheric coupling can speed up flash drought onset by suppressing precipitation and increasing evapotranspiration. Results show that the increase of sensible heat transport during flash drought onset can intensify the heating of atmosphere, and enhance the lifting condensation level deficit which efficiently inhibits the convective precipitation. Meanwhile, the atmospheric drying significantly increases the evapotranspiration demand and decreases soil moisture, thus speeds up the drought onset. In this regard, the drier land surface makes the atmosphere drier through land-atmosphere coupling, and the rapid drought onset can be maintained via the positive feedback. Although the contribution of precipitation deficit averaged over China is 92 %, the evapotranspiration excess is also critical for increasing the onset speed especially over South China where the flash drought hotspot exists. With the contribution of evapotranspiration increased by about 26 %, the flash drought onset speed over China almost doubled. This study highlights the importance of dry land-atmospheric coupling for speeding up flash drought onset and provides insights for flash drought diagnosis and prediction.",
+        "pubmed-id": "35987240",
+        "prism:coverDate": "2022-12-10",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/85136301088",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Yumiao",
+            "preferred-name": {
+                "ce:given-name": "Yumiao",
+                "ce:initials": "Y.",
+                "ce:surname": "Wang",
+                "ce:indexed-name": "Wang Y."
+            },
+            "@seq": "1",
+            "ce:initials": "Y.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60064143",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60064143"
+                },
+                {
+                    "@id": "60064143",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60064143"
+                }
+            ],
+            "ce:surname": "Wang",
+            "@auid": "57223349748",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57223349748",
+            "ce:indexed-name": "Wang Y."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/85136301088"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=85136301088&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=85136301088&origin=inward"
+            }
+        ],
+        "source-id": "25349",
+        "pii": "S0048969722052081",
+        "citedby-count": "101",
+        "prism:volume": "851",
+        "subtype": "ar",
+        "dc:title": "Land-atmosphere coupling speeds up flash drought onset",
+        "openaccess": null,
+        "prism:issn": "18791026 00489697",
+        "publishercopyright": "© 2022 Elsevier B.V.",
+        "article-number": "158109",
+        "subtypeDescription": "Article",
+        "prism:publicationName": "Science of the Total Environment",
+        "openaccessFlag": null,
+        "prism:doi": "10.1016/j.scitotenv.2022.158109",
+        "dc:identifier": "SCOPUS_ID:85136301088",
+        "dc:publisher": "Elsevier B.V."
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "Yumiao",
+            "preferred-name": {
+                "ce:given-name": "Yumiao",
+                "ce:initials": "Y.",
+                "ce:surname": "Wang",
+                "ce:indexed-name": "Wang Y."
+            },
+            "@seq": "1",
+            "ce:initials": "Y.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60064143",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60064143"
+                },
+                {
+                    "@id": "60064143",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60064143"
+                }
+            ],
+            "ce:surname": "Wang",
+            "@auid": "57223349748",
+            "author-url": "https://api.elsevier.com/content/author/author_id/57223349748",
+            "ce:indexed-name": "Wang Y."
+        },
+        {
+            "ce:given-name": "Xing",
+            "preferred-name": {
+                "ce:given-name": "Xing",
+                "ce:initials": "X.",
+                "ce:surname": "Yuan",
+                "ce:indexed-name": "Yuan X."
+            },
+            "@seq": "2",
+            "ce:initials": "X.",
+            "@_fa": "true",
+            "affiliation": [
+                {
+                    "@id": "60064143",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60064143"
+                },
+                {
+                    "@id": "60064143",
+                    "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60064143"
+                }
+            ],
+            "ce:surname": "Yuan",
+            "@auid": "55373025000",
+            "author-url": "https://api.elsevier.com/content/author/author_id/55373025000",
+            "ce:indexed-name": "Yuan X."
+        }
+    ]}
+}}

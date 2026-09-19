@@ -1,0 +1,743 @@
+
+<!DOCTYPE html><!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" id="mainTemplate"> <![endif]--><!--[if IE 7]> <html class="no-js lt-ie9 lt-ie8" id="mainTemplate"> <![endif]--><!--[if IE 8]> <html class="no-js lt-ie9" id="mainTemplate"> <![endif]--><!--[if gt IE 8]><!--><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" class="no-js pb-page" id="mainTemplate"> <!--<![endif]--><head><meta charset="utf-8" /><meta http-equiv="X-UA-Compatible" content="IE=Edge" /><!-- BEGIN SHAREAHOLIC CODE --><link rel="preload" href="https://cdn.shareaholic.net/assets/pub/shareaholic.js" as="script" /><meta name="shareaholic:site_id" content="5a02bf1fca9627aa4ef195830cf8e332" /><script data-cfasync="false" async src="https://cdn.shareaholic.net/assets/pub/shareaholic.js"></script><!-- END SHAREAHOLIC CODE --><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Active Properties of Neocortical Pyramidal Neuron Dendrites | Annual Reviews</title><script src="https://scholar.google.com/scholar_js/casa.js" async></script>
+<link rel="schema.CRAWLER" href="http://labs.ingenta.com/2006/06/16/crawler" />
+<meta name="dc.title" content="Active Properties of Neocortical Pyramidal Neuron Dendrites" />
+<meta name="dc.publisher" content="Annual Reviews"/>
+<meta name="dc.type" content="Text"/>
+<meta name="author" content="Guy Major|Matthew E. Larkum|Jackie Schiller" />
+<meta name="dc.creator" content="Guy Major" />
+<meta name="dc.creator" content="Matthew E. Larkum" />
+<meta name="dc.creator" content="Jackie Schiller" />
+<meta name="dc.identifier" content="doi:10.1146/annurev-neuro-062111-150343"/>
+<meta name="dc.date" content="2013/07/08" />
+<meta property="og:title" content="Active Properties of Neocortical Pyramidal Neuron Dendrites"><meta property="og:description" content="Dendrites are the main recipients of synaptic inputs and are important sites that determine neurons&amp;apos; input-output functions. This review focuses on thin neocortical dendrites, which receive the vast majority of synaptic inputs in cortex but also have specialized electrogenic properties. We present a simplified working-model biophysical scheme of pyramidal neurons that attempts to capture the essence of their dendritic function, including the ability to behave under plausible conditions as dynamic computational subunits. We emphasize the electrogenic capabilities of NMDA receptors (NMDARs) because these transmitter-gated channels seem to provide the major nonlinear depolarizing drive in thin dendrites, even allowing full-blown NMDA spikes. We show how apparent discrepancies in experimental findings can be reconciled and discuss the current status of dendritic spikes in vivo; a dominant NMDAR contribution would indicate that the input-output relations of thin dendrites are dynamically set by network activity and cannot be fully predicted by purely reductionist approaches."><meta property="og:type" content="article"><meta property="og:image" content="https://www.annualreviews.org/upload/share/neuro_share.png"><meta property="og:image:secure_url" content="https://www.annualreviews.org/upload/share/neuro_share.png"><meta property="og:image:type" content="image/png"><meta property="og:image:alt" content="Annual Review of Neuroscience"><meta property="og:locale" content="en_US"><meta property="og:url" content="https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343"><meta property="og:site_name" content="Annual Reviews"><meta property="og:updated_time" content="2024-01-03T18:02:43Z" /><meta name="twitter:card" content="summary_large_image" ><meta name="twitter:site" content="@AnnualReviews"><meta name="twitter:creator" content="Annual Reviews"><meta name="twitter:title" content="Active Properties of Neocortical Pyramidal Neuron Dendrites"><meta name="twitter:description" content="Dendrites are the main recipients of synaptic inputs and are important sites that determine neurons&amp;apos; input-output functions. This review focuses on thin neocortical dendrites, which receive the vast majority of synaptic inputs in cortex but also have specialized electrogenic properties. We present a simplified working-model biophysical scheme of pyramidal neurons that attempts to capture the essence of their dendritic function, including the ability to behave under plausible conditions as dynamic computational subunits. We emphasize the electrogenic capabilities of NMDA receptors (NMDARs) because these transmitter-gated channels seem to provide the major nonlinear depolarizing drive in thin dendrites, even allowing full-blown NMDA spikes. We show how apparent discrepancies in experimental findings can be reconciled and discuss the current status of dendritic spikes in vivo; a dominant NMDAR contribution would indicate that the input-output relations of thin dendrites are dynamically set by network activity and cannot be fully predicted by purely reductionist approaches."><meta name="twitter:image" content="https://www.annualreviews.org/upload/share/neuro_share.png"><meta name="twitter:image:alt" content="Annual Review of Neuroscience marketing image"><meta name="citation_journal_title" content="Annual Review of Neuroscience" /><meta name="citation_issn" content="0147-006X" /><meta name="citation_issn" content="1545-4126" /><meta name="citation_doi" content="10.1146/annurev-neuro-062111-150343" /><meta name="citation_publication_date" content="2013/07/08" /><meta name="citation_date" content="2013/07/08" /><meta name="citation_year" content="2013" /><meta name="citation_online_date" content="2013/07/08" /><meta name="citation_title" content="Active Properties of Neocortical Pyramidal Neuron Dendrites" /><meta name="citation_author" content="Guy Major" /><meta name="citation_author_institution" content="1School of Biosciences, Cardiff University, Cardiff, CF10 3AX, United Kingdom; email: majorg@cardiff.ac.uk" /><meta name="citation_author" content="Matthew E. Larkum" /><meta name="citation_author_institution" content="2Charité University, Neuroscience Research Center (NWFZ), D-10117 Berlin, Germany; email: matthew.larkum@gmail.com" /><meta name="citation_author" content="Jackie Schiller" /><meta name="citation_author_institution" content="3Department of Physiology, Technion Medical School, Haifa 31096, Israel; email: jackie@techunix.technion.ac.il" /><meta name="citation_volume" content="36" /><meta name="citation_issue" content="Volume 36, 2013" /><meta name="citation_firstpage" content="1" /><meta name="citation_lastpage" content="24" /><meta name="citation_publisher" content="Annual Reviews" /><meta name="citation_abstract" content="Dendrites are the main recipients of synaptic inputs and are important sites that determine neurons&amp;apos; input-output functions. This review focuses on thin neocortical dendrites, which receive the vast majority of synaptic inputs in cortex but also have specialized electrogenic properties. We present a simplified working-model biophysical scheme of pyramidal neurons that attempts to capture the essence of their dendritic function, including the ability to behave under plausible conditions as dynamic computational subunits. We emphasize the electrogenic capabilities of NMDA receptors (NMDARs) because these transmitter-gated channels seem to provide the major nonlinear depolarizing drive in thin dendrites, even allowing full-blown NMDA spikes. We show how apparent discrepancies in experimental findings can be reconciled and discuss the current status of dendritic spikes in vivo; a dominant NMDAR contribution would indicate that the input-output relations of thin dendrites are dynamically set by network activity and cannot be fully predicted by purely reductionist approaches." /><meta name="citation_abstract_html_url" content="https://www.annualreviews.org/content/journals/10.1146/annurev-neuro-062111-150343" /><meta name="description" property="og:description" content="Dendrites are the main recipients of synaptic inputs and are important sites that determine neurons&amp;apos; input-output functions. This review focuses on thin neocortical dendrites, which receive the vast majority of synaptic inputs in cortex but also have specialized electrogenic properties. We present a simplified working-model biophysical scheme of pyramidal neurons that attempts to capture the essence of their dendritic function, including the ability to behave under plausible conditions as dynamic computational subunits. We emphasize the electrogenic capabilities of NMDA receptors (NMDARs) because these transmitter-gated channels seem to provide the major nonlinear depolarizing drive in thin dendrites, even allowing full-blown NMDA spikes. We show how apparent discrepancies in experimental findings can be reconciled and discuss the current status of dendritic spikes in vivo; a dominant NMDAR contribution would indicate that the input-output relations of thin dendrites are dynamically set by network activity and cannot be fully predicted by purely reductionist approaches." />
+<meta name="robots" content="NOODP,noarchive" />
+<meta name="stats-meta" content="stats" data-logstatisticsurl="/logstatistics.action" data-itemid="/content/journals/10.1146/annurev-neuro-062111-150343" data-baseuri="http://instance.metastore.ingenta.com"/>
+<link rel="shortcut icon" href="/upload/favicon.ico" /><link href="/css/v/12.4.0/hybrid/google-fonts.css" rel="stylesheet" /><link rel="stylesheet" media="screen and (max-width: 844px)" href="/common/v/12.4.0/css/component.css" type="text/css"/><link rel="stylesheet" href="/css/v/12.4.0/hybrid/site.css" type="text/css" /><link rel="stylesheet" href="/css/v/12.4.0/hybrid/main-masthead.css" type="text/css" /><link rel="stylesheet" href="/css/v/12.4.0/hybrid/annualreviews.css" type="text/css" /><link rel="stylesheet" href="/css/v/12.4.0/contentpreview/preview.css" type="text/css" media="screen, print" /><link rel="stylesheet" href="/css/v/12.4.0/hybrid/fulltext-html-tab.css" type="text/css" media="screen, print" /><link rel="stylesheet" href="/common/v/12.4.0/css/jquery.fancybox.css" type="text/css" media="screen, print" /><link rel="stylesheet" href="/css/v/12.4.0/hybrid/annualreviews-article.css" type="text/css" media="screen, print" /><link rel="stylesheet" href="/common/v/12.4.0/css/jquery.fancybox.css" type="text/css" media="screen" /><link href="https://cdnjs.cloudflare.com/ajax/libs/froala-editor/2.8.1/css/froala_style.min.css" rel="stylesheet" type="text/css" /><style type="text/css">#messageBox {position: fixed;bottom: 20px;right: 20px;left: auto;width: 450px;height: 150px;background-color: #fff;border: 1px solid #ccc;box-shadow: 0 4px 12px rgba(0,0,0,0.2);z-index: 1000;font-family: Arial, sans-serif;display: none;overflow: hidden;padding:0;}@media (max-width: 459px) {#messageBox {width: auto;right:5px;bottom:5px;left:5px;}}#closeBtn {position: absolute;top: 8px;right: 12px;font-size: 16px;font-weight: bold;color: #666;cursor: pointer;z-index: 3;border: none;background: none;}.popup-content {display: flex;height: 100%;}.popup-image {flex: 1;background-color: #3b777c; /* Teal background */display: flex;align-items: center;justify-content: center;}.popup-image img {max-height: 80%;max-width: 80%;padding: 10px 10px 10px 10px;margin: 0px !important}.popup-text {flex: 3;padding: 20px 15px;font-size: 14px;color: #333;display: flex;flex-direction: column;justify-content: center;}.popup-text p {margin: 0;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;}.popup-text a {color: #0077cc;text-decoration: none;font-weight: bold;margin-top: 5px;}.popup-text a span {margin-left: 6px;}.is-blurb-enabled #messageBox .blurb-editor { display: block;position: absolute;bottom: 0;right: 0;}#messageBox .fr-view { height: 100%; }</style><script src="/common/v/12.4.0/js/vendor/modernizer.custom.min.js" ></script><!-- HTML5 Respond.js IE8 support of media queries --><!--[if lt IE 9]><script src="//oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script><![endif]--><script src="/js/v/12.4.0/jp/jquery-1.11.1.min.js"></script><script src="/common/v/12.4.0/js/jquery.dlmenu.js" ></script><script async="async" src="https://www.googletagservices.com/tag/js/gpt.js" type="text/javascript"></script><script type="text/javascript">window.googletag = window.googletag || {cmd: []};</script><script src="https://scholar.google.com/scholar_js/casa.js" async></script><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8448320359294703" crossorigin="anonymous"></script></head><script type="text/javascript" src="https://js.trendmd.com/trendmd.min.js"></script><body id="article" class="body is-sticky-enabled is-altlayout-enabled is-hybrid-skin-template is-enabled-focus-state"data-instanceprefix="instance"data-elements-to-offset-scroll-when-fixed=".main-header-container, .article-navigation-bar"><nav id="ar-mobile-nav" class="mm-menu mm-pageshadow mm-offcanvas mm-right mm-hasnavbar-bottom-1">
+<div class="mm-navbar mm-navbar-bottom mm-navbar-bottom-1 mm-navbar-size-1">
+<div class="access-provided">
+<div class="wrapper">
+<div class="inner">
+<div class="welcome">
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mm-panels">
+<div class="mm-panel mm-hasnavbar mm-opened mm-current" id="mm-1">
+<div class="mm-navbar"><div class="mm-title" id="mainMenu">Menu</div></div>
+<ul class="mm-listview">
+<li class="mobile-nav-item">
+<a href="/content/publications">Publications A-Z</a>
+</li>
+<li class="has-dropdown mobile-nav-item">
+<a href="#mm-2" data-target="#mm-2" class="js-mm-next" id="journalInformationLink">Journal Information</a>
+<a class="mm-next" aria-expanded="false" href="#mm-2" data-target="#mm-2" role="button" aria-labelledby="journalInformationLink">&nbsp;</a>
+<li class="has-dropdown mobile-nav-item">
+<a href="/about" class="js-mm-next" id="aboutLink">About</a>
+<a class="mm-next" aria-expanded="false" href="#mm-3" data-target="#mm-3" role="button" aria-labelledby="aboutLink" >&nbsp;</a>
+</li>
+<li class="has-dropdown mobile-nav-item">
+<a href="/page/subscriptions/general-information" class="js-mm-next" id="subscribeLink">Subscribe</a>
+<a class="mm-next" aria-expanded="false" href="#mm-4" data-target="#mm-4" role="button" aria-labelledby="subscribeLink">&nbsp;</a>
+</li>
+<!-- <li><a aria-label="S2O" href="/page/subscriptions/subscribe-to-open">&nbsp;&nbsp;&nbsp;&nbsp;S2O&nbsp;&nbsp;&nbsp;&nbsp;</a></li> -->
+<li class="mobile-nav-item">
+<a href="/support-annual-reviews">Give</a>
+</li>
+<li class="secondary">
+<ul class="list-unstyled">
+<li><a href="/session/ext/shib?url=%2Fcontent%2Fjournals%2F10.1146%2Fannurev-neuro-062111-150343">
+<div><img src="/docserver/fulltext/InstLoginIco_15x15.png" class="fr-fil fr-dib" style="float:left;position:inherit !important;" alt="">&nbsp;Institutional Login</div>
+</a></li>
+<li class="login">
+<div class="loginBar login-open">
+<div class="loginBar">
+<a href="/registration/signin-or-register.action?signInTarget=%2Fcontent%2Fjournals%2F10.1146%2Fannurev-neuro-062111-150343">
+<span class="icon-profile_empty" aria-hidden="true"></span>
+<span class="sign-in-label">Login</span>
+</a>
+</div>
+</div>
+</li>
+<li>
+<a href="/registration/signin-or-register.action?page=register&signInTarget=%2Fcontent%2Fjournals%2F10.1146%2Fannurev-neuro-062111-150343">
+Register
+</a>
+</li>
+<li>
+<div class="pb-dropzone cartDropZone" data-pb-dropzone="cartDropZone">
+<div class="eCommerceCartIndicatorWidget">
+<a href="/cart" title="Show shopping cart">
+<div class="cartLabel">
+<span class="icon-shoppingcart" aria-hidden="true"></span>
+<span class="filter-count filter-count-bubble shopping-cart"
+data-id="cart-size">0</span>
+<span class="cartText">Cart</span>
+</div>
+</a>
+</div>
+</div>
+</li>
+<li>
+<a href="/help/main">Help</a>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="ar-dropdown mm-panel mm-hasnavbar mm-hidden" id="mm-2">
+<div class="mm-navbar">
+<a class="mm-btn mm-prev" aria-expanded="true" href="#mm-1" data-target="#mm-1" role="button" aria-labelledby="mainMenu"></a>
+<div class="mm-title">Journal Information</div></div>
+<ul role="list" aria-expanded="true" aria-hidden="false" class="mm-listview">
+<li><a href="/page/authors/general-information" tabindex="0">Author Resource Center</a></li>
+<li><a href="/page/about/copyright-and-permissions" tabindex="0">Copyright &amp; Permissions</a></li>
+<li><a href="/page/help/coursereader" tabindex="0">Add To Your Course Reader</a></li>
+<li><a href="/page/journal/pubdates" >Expected Publication Dates</a></li>
+<li><a href="/page/about/isi-rankings" tabindex="0" aria-label="journal impact factor rankings">Impact Factor Rankings</a></li>
+<li><a href="/page/about/metadata" tabindex="0">Access Metadata</a></li>
+<li><a href="/page/about/rssfeeds" tabindex="0" aria-label="Journal RSS feeds">RSS Feeds</a></li>
+</ul>
+</div>
+<div class="ar-dropdown mm-panel mm-hasnavbar mm-hidden" id="mm-3">
+<div class="mm-navbar">
+<a class="mm-btn mm-prev" aria-expanded="true" href="#mm-1" data-target="#mm-1" role="button" aria-labelledby="mainMenu">&nbsp;</a>
+<div class="mm-title" tabindex="0">About</div>
+</div>
+<ul role="list" aria-expanded="true" aria-hidden="false" class="mm-listview">
+<li><a href="/about/what-we-do" tabindex="0">What We Do</a></li>
+<li><a href="/S2O" tabindex="0">Subscribe to Open</a></li>
+<li><a href="/about/our-founder-and-early-history" tabindex="0">Founder &amp; History</a></li>
+<li><a href="https://knowablemagazine.org/" tabindex="0"><em>Knowable Magazine</em></a></li>
+<li><a href="/about/our-team" tabindex="0">Our Team</a></li>
+<li><a href="/page/about/careers-at-annual-reviews" tabindex="0">Careers</a></li>
+<li><a href="/about/press-center" tabindex="0">Press Center</a></li>
+<li><a href="/page/events" tabindex="0">Events</a></li>
+<li><a href="/about/global-access" tabindex="0">Global Access</a></li>
+<li><a href="/page/about/dei-committee" tabindex="0">DEI</a></li>
+<li><a href="/db/directory" tabindex="0">Directory</a></li>
+<li><a href="/help/main" tabindex="0">Help/FAQs</a></li>
+<li><a href="/page/about/contact-us" tabindex="0">Contact Us</a></li>
+</ul>
+</div>
+<div class="ar-dropdown mm-panel mm-hasnavbar mm-hidden" id="mm-4">
+<div class="mm-navbar">
+<a class="mm-btn mm-prev" aria-expanded="true" href="#mm-1" data-target="#mm-1" role="button" aria-labelledby="mainMenu">&nbsp;</a>
+<div class="mm-title" tabindex="0">Subscribe</div>
+</div>
+<ul role="list" aria-expanded="true" aria-hidden="false" class="mm-listview">
+<li><a href="/page/subscriptions/general-information" tabindex="0">General Ordering Info</a></li>
+<li><a href="/page/librarians/librarian-resource-page" tabindex="0">Library Resource Center</a></li>
+<li><a href="/page/subscriptions/online-activation-instructions" tabindex="0">Online Activation
+Instructions</a></li>
+<li><a href="/action/ecommerce?subscriberType=individual" tabindex="0">Personal Pricing</a></li>
+<li><a href="/page/subscriptions/instchoice" tabindex="0">Institutional Pricing</a></li>
+<li><a href="/page/about/society-partnerships" tabindex="0">Society Partnerships</a></li>
+<li><a href="https://www.ingentaconnect.com/content/charleston/chadv" tabindex="0">The Charleston Advisor</a>
+</li>
+</ul>
+</div>
+</div>
+</nav><!-- Google Tag Manager--><noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-KL6C9MW" height="0" width="0" style="display: none; visibility:hidden;"></iframe></noscript><script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KL6C9MW');</script><!-- End Google Tag Manager--><div id="hiddenContext" class="hidden-js-div" data-cookiemessage="We use &lt;a href=&#034;/cookie-info&#034;&gt;cookies&lt;/a&gt; to track usage and preferences." data-cookieaccepttext="I Understand" data-cookiedeclinetext="Disable Cookies" data-cookiepolicytext="Privacy Policy"></div><div id="skinPublishingDates" class="hidden-js-div">1932</div><div id="mm-0" class="mm-page mm-slideout"><div id="wrapper" class="siteWrapper"><header id="header" class=""><div class="top-stripes"></div>
+<section class="ar-mobile-header">
+<div class="inner">
+<div class="logo-container">
+<a href="/" class="logo"><img
+src="/images/hybrid/ar-logo.svg" width="50" height="50" alt="Annual Reviews logo"></a>
+</div>
+<div class="mobile-links">
+<a href="#"
+class="icon-search-trigger icon-search" aria-label="open site search" role="button" aria-expanded="false"><span class="sr-only">search</span></a>
+<a href="/cart" id="cartLabel" aria-label="shopping cart">
+<div data-widget-def="eCommerceCartIndicatorWidget" data-widget-id="66be61c1-70ea-4e40-8500-a50cf4d42ab7" class="mobile-cart">
+<div class="cartLabel">
+<span class="icon-shoppingcart"></span>
+<span class="filter-count filter-count-bubble shopping-cart" data-id="cart-size">0</span>
+<span class="cartText"></span>
+</div>
+</div>
+</a>
+<a href="#" class="ar-mobile-nav js_ar-mobile-nav" role="button" aria-label="site menu" aria-expanded="false" aria-controls="ar-mobile-nav"><span class="navicon"></span></a>
+</div>
+</div>
+<div class="mobile-search-container">
+<div class="ar-main-search-form">
+<div class="inner">
+<div class="quickSearchFormContainer">
+<form action="/search" name="quickSearch" class="quickSearchForm "
+title="Quick Search" method="get"><span class="simpleSearchBoxContainer">
+<input name="value1"
+class="searchText magicsuggest main-search-field autocomplete ui-autocomplete-input" value=""
+type="search" id="mobile-searchText" title="Type search term here" aria-label="Search" placeholder="Search"
+autocomplete="off" data-history-items-conf="3" data-publication-titles-conf="4"
+data-group-titles-conf="3" data-publication-items-conf="3" data-topics-conf="3"
+data-contributors-conf="3" data-display-labels="true" data-auto-complete-target="auto-complete"
+data-fuzzy-suggester="false" data-auto-complete-max-words="7"
+data-auto-complete-max-chars="32"><span role="status" aria-live="polite"
+class="ui-helper-hidden-accessible"></span><span role="status" aria-live="polite"
+class="ui-helper-hidden-accessible"></span>
+<input name="option1" value="fulltext" type="hidden">
+</span>
+<input class="mainSearchButton searchButtons pointer" aria-label="Search" title="search" type="submit" value="Search">
+</form>
+</div>
+<div class="advancedSearchLinkDropZone" data-pb-dropzone="advancedSearchLinkDropZone">
+</div>
+</div>
+</div>
+</div>
+</section><!-- / .ar-mobile-header -->
+<section class="ar-desktop-header">
+<a class="skip js-skip-content" href="#main-content-container">
+Skip to content
+</a>
+<div class="newNavs">
+<div class="utility-nav-container">
+</div>
+<div class="utility-nav-container">
+<div class="utility-nav">
+<nav>
+<ul class="list-unstyled">
+<li><a href="/session/ext/shib?url=%2Fcontent%2Fjournals%2F10.1146%2Fannurev-neuro-062111-150343">
+<div><img src="/docserver/fulltext/InstLoginIco_15x15.png" class="fr-fil fr-dib" style="float:left;position:inherit !important;" alt="">&nbsp;Institutional Login</div>
+</a></li>
+<li class="login">
+<div class="loginBar login-open">
+<div class="loginBar">
+<a href="/registration/signin-or-register.action?signInTarget=%2Fcontent%2Fjournals%2F10.1146%2Fannurev-neuro-062111-150343">
+<span class="icon-profile_empty" aria-hidden="true"></span>
+<span class="sign-in-label">Login</span>
+</a>
+</div>
+</div>
+</li>
+<li>
+<a href="/registration/signin-or-register.action?page=register&signInTarget=%2Fcontent%2Fjournals%2F10.1146%2Fannurev-neuro-062111-150343">
+Register
+</a>
+</li>
+<li>
+<div class="pb-dropzone cartDropZone" data-pb-dropzone="cartDropZone">
+<div class="eCommerceCartIndicatorWidget">
+<a href="/cart" title="Show shopping cart">
+<div class="cartLabel">
+<span class="icon-shoppingcart" aria-hidden="true"></span>
+<span class="filter-count filter-count-bubble shopping-cart"
+data-id="cart-size">0</span>
+<span class="cartText">Cart</span>
+</div>
+</a>
+</div>
+</div>
+</li>
+<li>
+<a href="/help/main">Help</a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<nav id="ar-main-nav" class="ar-main-nav masthead-container" aria-label="site" role="navigation">
+<a href="/" class="logos">
+<div class="logo">
+<img src="/images/hybrid/ar-logo-1479872034357.svg" alt="Annual Reviews Icon">
+</div>
+<div class="ar-logo">
+<img src="/images/hybrid/AR_white_Logo-1665986338647.webp" alt="">
+</div>
+</a>
+<ul class="center-navigation">
+<li class="has-dropdown full">
+<a href="/content/publications" class="main-nav-link" aria-expanded="false" role="button">Publications A-Z</a>
+<div class="ar-dropdown mega-dropdown">
+<div class="fr-view"><ul class="split columns-undefined"><li class="all"><a href="/content/publications">Journals A-Z</a></li><li class="publication" id="anchem" tabindex="-1"><a href="/content/journals/anchem">Analytical Chemistry</a></li><li class="publication" id="animal" tabindex="-1"><a href="/content/journals/animal">Animal Biosciences</a></li><li class="publication" id="anthro" tabindex="-1"><a href="/content/journals/anthro">Anthropology</a></li><li class="publication" id="astro" tabindex="-1"><a href="/content/journals/astro">Astronomy and Astrophysics</a></li><li class="publication" id="biochem" tabindex="-1"><a href="/content/journals/biochem">Biochemistry</a></li><li class="publication" id="biodatasci" tabindex="-1"><a href="/content/journals/biodatasci">Biomedical Data Science</a></li><li class="publication" id="bioeng" tabindex="-1"><a href="/content/journals/bioeng">Biomedical Engineering</a></li><li class="publication" id="biophys" tabindex="-1"><a href="/content/journals/biophys">Biophysics</a></li><li class="publication" id="cancerbio" tabindex="-1"><a href="/content/journals/cancerbio">Cancer Biology</a></li><li class="publication" id="cellbio" tabindex="-1"><a href="/content/journals/cellbio">Cell and Developmental Biology</a></li><li class="publication" id="chembioeng" tabindex="-1"><a href="/content/journals/chembioeng">Chemical and Biomolecular Engineering</a></li><li class="publication" id="clinpsy" tabindex="-1"><a href="/content/journals/clinpsy">Clinical Psychology</a></li><li class="publication" id="clinpsy" tabindex="-1"><a href="/content/journals/arcompsci">Computer Science</a></li><li class="publication" id="conmatphys" tabindex="-1"><a href="/content/journals/conmatphys">Condensed Matter Physics</a></li><li class="publication" id="control" tabindex="-1"><a href="/content/journals/control">Control, Robotics, and Autonomous Systems</a></li><li class="publication" id="criminol" tabindex="-1"><a href="/content/journals/criminol">Criminology</a></li><li class="publication" id="devpsych" tabindex="-1"><a href="/content/journals/devpsych">Developmental Psychology</a></li><li class="publication" id="earth" tabindex="-1"><a href="/content/journals/earth">Earth and Planetary Sciences</a></li><li class="publication" id="ecolsys" tabindex="-1"><a href="/content/journals/ecolsys">Ecology, Evolution, and Systematics</a></li><li class="publication" id="economics" tabindex="-1"><a href="/content/journals/economics">Economics</a></li><li class="publication" id="ento" tabindex="-1"><a href="/content/journals/ento">Entomology</a></li><li class="publication" id="energy" tabindex="-1"><a href="/content/journals/energy">Environment and Resources</a></li><li class="publication" id="financial" tabindex="-1"><a href="/content/journals/financial">Financial Economics</a></li><li class="publication" id="fluid" tabindex="-1"><a href="/content/journals/fluid">Fluid Mechanics</a></li><li class="publication" id="food" tabindex="-1"><a href="/content/journals/food">Food Science and Technology</a></li><li class="publication" id="genet" tabindex="-1"><a href="/content/journals/genet">Genetics</a></li><li class="publication" id="genom" tabindex="-1"><a href="/content/journals/genom">Genomics and Human Genetics</a></li><li class="publication" id="immunol" tabindex="-1"><a href="/content/journals/immunol">Immunology</a></li><li class="publication" id="lawsocsci" tabindex="-1"><a href="/content/journals/lawsocsci">Law and Social Science</a></li><li class="publication" id="linguistics" tabindex="-1"><a href="/content/journals/linguistics">Linguistics</a></li><li class="publication" id="marine" tabindex="-1"><a href="/content/journals/marine">Marine Science</a></li><li class="publication" id="matsci" tabindex="-1"><a href="/content/journals/matsci">Materials Research</a></li><li class="publication" id="med" tabindex="-1"><a href="/content/journals/med">Medicine</a></li><li class="publication" id="micro" tabindex="-1"><a href="/content/journals/micro">Microbiology</a></li><li class="publication" id="neuro" tabindex="-1"><a href="/content/journals/neuro">Neuroscience</a></li><li class="publication" id="nucl" tabindex="-1"><a href="/content/journals/nucl">Nuclear and Particle Science</a></li><li class="publication" id="nutr" tabindex="-1"><a href="/content/journals/nutr">Nutrition</a></li><li class="publication" id="orgpsych" tabindex="-1"><a href="/content/journals/orgpsych">Organizational Psychology and Organizational Behavior</a></li><li class="publication" id="pathmechdis" tabindex="-1"><a href="/content/journals/pathmechdis">Pathology: Mechanisms of Disease</a></li><li class="publication" id="pharmtox" tabindex="-1"><a href="/content/journals/pharmtox">Pharmacology and Toxicology</a></li><li class="publication" id="physchem" tabindex="-1"><a href="/content/journals/physchem">Physical Chemistry</a></li><li class="publication" id="physiol" tabindex="-1"><a href="/content/journals/physiol">Physiology</a></li><li class="publication" id="phyto" tabindex="-1"><a href="/content/journals/phyto">Phytopathology</a></li><li class="publication" id="arplant" tabindex="-1"><a href="/content/journals/arplant">Plant Biology</a></li><li class="publication" id="polisci" tabindex="-1"><a href="/content/journals/polisci">Political Science</a></li><li class="publication" id="psych" tabindex="-1"><a href="/content/journals/psych">Psychology</a></li><li class="publication" id="publhealth" tabindex="-1"><a href="/content/journals/publhealth">Public Health</a></li><li class="publication" id="resource" tabindex="-1"><a href="/content/journals/resource">Resource Economics</a></li><li class="publication" id="soc" tabindex="-1"><a href="/content/journals/soc">Sociology</a></li><li class="publication" id="statistics" tabindex="-1"><a href="/content/journals/statistics">Statistics and Its Application</a></li><li class="publication" id="virology" tabindex="-1"><a href="/content/journals/virology">Virology</a></li><li class="publication" id="vision" style="margin-bottom:20px;" tabindex="-1"><a href="/content/journals/vision">Vision Science</a></li><li class="publication" style="margin-top: 10px; padding-top: 10px; border-top: solid 1px #e5eaea;" tabindex="-1"><a href="https://knowablemagazine.org/" style="font-weight:600;">Knowable Magazine</a></li><li class="publication" tabindex="-1"><a href="https://katinamagazine.org/" style="font-weight:600;">Katina Magazine</a></li><li class="publication" tabindex="-1"><a href="https://annurev.publisher.ingentaconnect.com/content/annurev/tca/" style="font-weight:600;">The Charleston Advisor (Archive)</a></li><li class="publication" tabindex="-1"><a href="/page/events" style="font-weight:600;">Events</a></li><li class="publication" tabindex="-1"><a href="/page/collectionarchive" style="font-weight:600;">Topic Collections</a></li></ul></div>
+</div>
+</li>
+<li class="has-dropdown">
+<a href="#" class="main-nav-link journal-info" aria-expanded="false" role="button">Journal Information</a>
+<div class="ar-dropdown">
+<div class="fr-view"><ul><li tabindex="-1"><a href="/page/authors/general-information">Author Resource Center</a></li><li tabindex="-1"><a href="/page/about/copyright-and-permissions">Copyright &amp; Permissions</a></li><li tabindex="-1"><a href="/page/help/coursereader">Add To Your Course Reader</a></li><li tabindex="-1"><a href="/page/journal/pubdates">Expected Publication Dates</a></li><li tabindex="-1"><a href="/about/impact-factors">Impact Factor Rankings</a></li><li tabindex="-1"><a href="/page/about/metadata">Access Metadata</a></li><li tabindex="-1"><a href="/page/about/rssfeeds">RSS Feeds</a></li></ul></div>
+</div>
+</li>
+</ul>
+<ul class="right-navigation">
+<li class="has-dropdown" >
+<a href="/about" class="main-nav-link" aria-expanded="false" role="button">About</a>
+<div class="ar-dropdown">
+<div class="fr-view"><ul><li tabindex="-1"><a href="/about/what-we-do">What We Do</a></li><li tabindex="-1"><a href="/S2O">Subscribe to Open</a></li><li tabindex="-1"><a href="/about/our-founder-and-early-history">Founder &amp; History</a></li><li tabindex="-1"><a href="https://knowablemagazine.org/"><em>Knowable Magazine</em></a></li><li tabindex="-1"><a href="/about/our-team">Our Team</a></li><li tabindex="-1"><a href="/page/about/careers-at-annual-reviews">Careers</a></li><li tabindex="-1"><a href="/about/press-center">Press Center</a></li><li tabindex="-1"><a href="/page/events">Events</a></li><li tabindex="-1"><a href="/about/global-access">Global Access</a></li><li tabindex="-1"><a href="/db/directory">Directory</a></li><li tabindex="-1"><a href="/help/main">Help/FAQs</a></li><li tabindex="-1"><a href="/page/about/contact-us">Contact Us</a></li></ul></div>
+</div>
+</li>
+<li class="has-dropdown" >
+<a class="main-nav-link" href="/page/subscriptions/general-information" style="pointer-events: none;cursor: default;">Subscribe</a> <!--<label style="font-size: 1rem;color: #fff;font-weight: 700;margin-bottom:0px !important;padding:15px 15px;">Subscribe</label>-->
+<div class="ar-dropdown">
+<div class="fr-view"><ul><li tabindex="-1"><a href="/page/subscriptions/general-information">General Ordering Info</a></li><li tabindex="-1"><a href="/page/librarians/librarian-resource-page">Librarian Resource Center</a></li><li tabindex="-1"><a href="/S2O">Subscribe to Open</a></li><li tabindex="-1"><a href="/page/subscriptions/online-activation-instructions">Online Activation
+Instructions</a></li><li tabindex="-1"><a href="/action/ecommerce?subscriberType=individual">Personal Orders&nbsp;</a></li><li tabindex="-1"><a href="/page/subscriptions/instchoice">Institutional Pricing</a></li><li tabindex="-1"><a href="/page/about/society-partnerships">Society Partnerships</a></li><li tabindex="-1"><a href="https://annurev.publisher.ingentaconnect.com/content/annurev/tca/">The
+Charleston Advisor</a></li></ul></div>
+</div>
+</li>
+<li >
+<a href="/support-annual-reviews" class="main-nav-link">Give</a>
+</li>
+<li class="ar-main-search-form">
+<div class="quickSearchFormContainer">
+<form action="/search" id="global-search-form" name="quickSearch" class="quickSearchForm " title="Quick Search" method="get">
+<input name="value1" class="js-searchcomplete searchText magicsuggest main-search-field autocomplete ui-autocomplete-input" aria-label="Search" value="" type="search" id="searchText" title="Type search term here" placeholder="Search" autocomplete="off" data-history-items-conf="3" data-publication-titles-conf="4" data-group-titles-conf="3" data-publication-items-conf="3" data-topics-conf="3" data-contributors-conf="3" data-display-labels="true" data-auto-complete-target="auto-complete" data-fuzzy-suggester="false" data-auto-complete-max-words="7" data-auto-complete-max-chars="32">
+<input type="hidden" name="option1" value="fulltext" >
+<span role="status" aria-live="polite" class="ui-helper-hidden-accessible"></span>
+<input class="mainSearchButton searchButtons pointer" title="search" type="submit" value="Search">
+</form>
+</div>
+<a href="#" class="mobile-search-btn js-mobile-search-btn" aria-label="Search"><i class="fa fa-search" ></i></a>
+</li>
+</ul>
+</nav>
+</section>
+</header><div id="bellowheadercontainer" class="container no-padding container--jc__neuro" ><main class="col-xs-12 col-sm-12 col-md-9 content main-content-container js-main-content-container" id="main-content-container"><nav aria-label="breadcrumbs"><ol class="breadcrumb"><li><a href="/" dir="auto" >Home</a></li><li>
+<a href="/content/publications" 
+dir="auto" >A-Z Publications</a>
+</li><li>
+<a href="/content/journals/neuro" 
+dir="auto" >Annual Review of Neuroscience</a>
+</li><li>
+<a href="/content/journals/neuro/36/1" dir="auto">
+Volume 36, 2013
+</a>
+</li>
+<li>
+<span class="inactiveLink" dir="auto" aria-current="page">
+Article
+</span>
+</li>
+</ol></nav><input type="hidden" name="svgImageBackgroundColor" value="rgba(255,255,255,0.7)"/><div class="clearfix"></div><div class="article-cover"><!-- If we have come from a search page, a list of search articles maybe present in the session and should be used to providethe listItems for the next and previous bttns --><div class="title-box item-meta-data"><div class="journal-volume-issue-container item-meta-data__journal-volume-issue-container"><h3 title="Annual Review of Neuroscience" class=" item-meta-data__journal container__journal-title"><a href="/content/journals/neuro" class="item-meta-data__journal-title-link">Annual Review of Neuroscience</a></h3><a href="/content/journals/neuro/36/1" title="" class="item-meta-data__issue-title-link"><h4 class="item-meta-data__journal-issue"title="Volume 36, Issue 1">Volume 36, 2013</h4></a></div><div class="hidden-xs article-access-icon-and-access item-meta-data__accreditation"><h4 class="article-type item-meta-data__type">Review Article</h4></div><h1 class="item-meta-data__item-title">Active Properties of Neocortical Pyramidal Neuron Dendrites</h1><ul class="list-unstyled article-meta-data item-meta-data__article"> <li class="data-author article-meta-data__item item-meta-data__author"><span class="meta-value authors"><a href="/search?value1=Guy+Major&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Guy Major</a><sup>1</sup>, <a href="/search?value1=Matthew+E.+Larkum&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Matthew E. Larkum</a><sup>2</sup>&nbsp;and <a href="/search?value1=Jackie+Schiller&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Jackie Schiller</a><sup>3</sup></span>
+</li><li class="data-author article-meta-data__item item-meta-data__author-affiliations"><div class="showhide spacing">
+<a id="showHideAffiliation" href="#" role="button" class="std-display viewHideAffiliation js-showhide" aria-expanded="false" aria-controls="showHideAffiliationContent" >
+<span class="js-plus">
+<i class="fa fa-plus-circle"></i>
+<span class="underline">
+View Affiliations and Author Notes
+</span>
+</span>
+<span class="js-minus minus">
+<i class="fa fa-minus-circle"></i>
+<span class="underline">
+Hide Affiliations and Author Notes
+</span>
+</span>
+</a>
+<div id="showHideAffiliationContent" class="js-description minus">
+<div class="affiliation-details">
+<!-- -->
+<span class="meta-value affiliations">
+<sup>1</sup>School of Biosciences, Cardiff University, Cardiff, CF10 3AX, United Kingdom; email: <a href="/cdn-cgi/l/email-protection#8ae7ebe0e5f8edcae9ebf8eee3ececa4ebe9a4ffe1"><span class="__cf_email__" data-cfemail="c6aba7aca9b4a186a5a7b4a2afa0a0e8a7a5e8b3ad">[email&#160;protected]</span></a>
+</span>
+<!-- , -->
+<span class="meta-value affiliations">
+<sup>2</sup>Charité University, Neuroscience Research Center (NWFZ), D-10117 Berlin, Germany; email: <a href="/cdn-cgi/l/email-protection#721f1306061a17055c1e130019071f32151f131b1e5c111d1f"><span class="__cf_email__" data-cfemail="177a7663637f7260397b76657c627a57707a767e7b3974787a">[email&#160;protected]</span></a>
+</span>
+<!-- and -->
+<span class="meta-value affiliations">
+<sup>3</sup>Department of Physiology, Technion Medical School, Haifa 31096, Israel; email: <a href="/cdn-cgi/l/email-protection#bbd1dad8d0d2defbcfded8d3ced5d2c395cfded8d3d5d2d4d595dad895d2d7"><span class="__cf_email__" data-cfemail="1b717a7870727e5b6f7e78736e757263356f7e787375727475357a78357277">[email&#160;protected]</span></a>
+</span>
+</div>
+<div class="institutionLinks">
+<div class="instList">
+</div>
+</div>
+</div>
+</div>
+</li><li class="article-meta-data__item item-meta-data__date-and-doi"><span class="meta-container">Vol. 36:1-24(Volume publication date July 2013)</span><a href="https://doi.org/10.1146/annurev-neuro-062111-150343" 
+class="externallink meta-container meta-container__value item-meta-data__doi meta-container--doi hidden-xs" >https://doi.org/10.1146/annurev-neuro-062111-150343</a>
+</li><li><div class="copyright-info" dir="auto">&copy; Annual Reviews</div></li><li class="view-citation"><div class="showhide spacing">
+<a href="#" id="showHideCitation" class="std-display js-showhide" role="button" aria-expanded="false" aria-controls="showHideCitationContent">
+<span class="js-plus">
+<i class="fa fa-plus-circle"></i>
+<span class="underline">
+View Citation
+</span>
+</span>
+<span class="js-minus minus">
+<i class="fa fa-minus-circle"></i>
+<span class="underline">
+Hide Citation
+</span>
+</span>
+</a>
+<div id="showHideCitationContent" class="js-description minus">
+<div class="citation-details">
+<p class="citation">
+<span class="meta-value authors">Guy Major, Matthew E. Larkum, Jackie Schiller</span>. 2013. Active Properties of Neocortical Pyramidal Neuron Dendrites.
+<em>Annual Review of Neuroscience</em>
+36:1-24.
+<a href="https://doi.org/10.1146/annurev-neuro-062111-150343" title="DOI" target="_blank">https://doi.org/10.1146/annurev-neuro-062111-150343</a>
+</p>
+</div>
+</div>
+</div>
+</li></ul></div></div><nav class="article-navigation-bar non-printed-section" aria-label="Article navigation"><div class="article-navigation-bar__inner-container"><ul class="nav navbar-nav navbar-nav--article-nav-left"><li class="dropdown navbar-nav__item"><a href="#" data-toggle="dropdown" role="button" title="Navigate Article Resources"aria-haspopup="true" aria-expanded="false"><i class="material-icons hidden-xxs">info</i> Info</a> <ul class="dropdown-menu js-transformer-tabs"><li class="active tab-one tabIcon" id="abstract_tab">
+<a href="#abstract_content" title="Article information" 
+class="active tab-one" 
+role="button" aria-pressed="true" >
+<span class="iconContainer"><i class="fa-stack fa-lg"><i class="fa fa-ellipsis-h fa-stack-1x"></i><i class="fa fa-file-o fa-stack-2x"></i></i><strong class="titleIcon">Article information </strong></span>
+</a>
+</li><li class=" disabled tabIcon" id="html_tab">
+<a href="#html_fulltext" title="" 
+class=" disabled" 
+tabindex="-1" role="button" aria-disabled="true" >
+<span class="iconContainer"><i class="fa-stack fa-lg" aria-hidden="true"><i class="fa fa-code fa-stack-1x" aria-hidden="true"></i><i class="fa fa-file-o fa-stack-2x" aria-hidden="true"></i></i><strong class="titleIcon">Full-Text </strong></span>
+</a>
+</li><li class=" disabled tabIcon" id="dataandmedia_tab">
+<a href="#dataandmedia" title="" 
+class=" disabled" 
+tabindex="-1" role="button" aria-disabled="true" >
+<span class="iconContainer"><i class="fa fa-file-text-o"></i><strong class="titleIcon">Figures &amp; Tables </strong></span>
+</a>
+</li><li class=" disabled tabIcon" id="references">
+<a href="#referenceContainer" title="" 
+class=" disabled" 
+tabindex="-1" role="button" aria-disabled="true" >
+<span class="iconContainer"><i class="fa-stack fa-lg" aria-hidden="true"><i class="fa fa-bookmark fa-stack-1x" aria-hidden="true"></i><i class="fa fa-file-o fa-stack-2x" aria-hidden="true"></i></i><strong class="titleIcon">References (151)</strong></span>
+</a>
+</li><li class=" tabIcon" id="cite">
+<a href="#cited" title="Cited By" 
+class=" " 
+role="button" aria-pressed="false" >
+<span class="iconContainer"><i class="fa-stack fa-lg" aria-hidden="true"><i class="fa fa-quote-right fa-stack-1x" aria-hidden="true"></i><i class="fa fa-file-o fa-stack-2x" aria-hidden="true"></i></i><strong class="titleIcon">Cited By </strong></span>
+</a>
+</li><li class=" tabIcon" id="supplementary_Tab">
+<a href="#supplementary_data" title="Supplemental Material" 
+class=" " 
+role="button" aria-pressed="false" >
+<span class="iconContainer"><i class="fa fa-file-text-o"></i><strong class="titleIcon">Supplemental Material </strong></span>
+</a>
+</li></ul> </li><li class="dropdown navbar-nav__item navbar-nav__item--ft-sections disabled" id="sectionDropdownContainer"><a href="#" title="Navigate fulltext Sections"class="menu-sections dropdown-toggle disabled" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" aria-disabled="true"><i class="material-icons">list</i>Sections</a><div class="dropdown-menu"></div></li></ul><ul class="nav navbar-nav navbar-nav--article-nav-right pull-right"><li class="navbar-nav__item"><a href="#" class="js-launch-price-overlay" data-toggle="modal" data-target="#bs-example-modal-lg2">
+<i class="material-icons">vpn_key</i>
+Get Access
+</a>
+</li><li class="dropdown navbar-nav__item navbar-nav__item--keepopen" id="toolsDropdownContainer"><a href="#" role="button" id="toolsDropdown" aria-haspopup="true" aria-expanded="false" data-toggle="dropdown"><i class="material-icons">build</i> <span class="hidden-xxs">Tools</span></a><div class="dropdown-menu"><div class="tools-nav tools-nav--keepopen">
+<div class="panel-heading">
+<h2 class="panel-title" id="toolsMenuHeading1InPage"><i class="fa fa-wrench" aria-hidden="true"></i> Tools</h2 >
+</div>
+<div class="panel-body">
+<ul class="list-unstyled" aria-labelledBy="toolsMenuHeading1InPage">
+<li class=" tools-item tools-recommend">
+<div class="js-nli-createalert" data-toggle="modal" data-target="#signInToCreateAlert">
+<a tabindex="0" href="#" class="js-popoverLink" data-container="body" data-toggle="popover" data-placement="top" role="button"
+data-content="Please sign in or register to use this feature">
+<i class="fa fa-heart favouritesIcon fa-fw"></i>
+<span class="hidden-xs">Add to my favorites</span><span class="visible-xs-inline">Favourites</span>
+</a>
+</div> 
+</li>
+<li class="">
+<div class="js-nli-createalert" data-toggle="modal" data-target="#signInToCreateAlert">
+<a tabindex="0" href="#" class="js-popoverLink" data-container="body" data-toggle="popover" data-placement="top" role="button" 
+data-content="You must be signed in to create this alert!">
+<span class="fa fa-bell fa-fw"></span> Create Publication Alert
+</a>
+</div>
+<div class="js-nli-createalert" data-toggle="modal" data-target="#signInToCreateAlert">
+<a tabindex="0" href="#" class="js-popoverLink" data-container="body" data-toggle="popover" data-placement="top" role="button" 
+data-content="You must be signed in to create this alert!">
+<span class="fa fa-bell fa-fw"></span> Create Citation Alert
+</a>
+</div>
+<div class="js-nli-createalert" data-toggle="modal" data-target="#signInToCreateAlert">
+<a tabindex="0" href="#" class="js-popoverLink" data-container="body" data-toggle="popover" data-placement="top" role="button" 
+data-content="You must be signed in to create this alert!">
+<span class="fa fa-bell fa-fw"></span> Create Correction Alert
+</a>
+</div>
+</li>
+<li class="">
+<a href="#" class="toggle showhide collapsed js-dropdown-toggle" role="button" aria-expanded="false" data-toggle="collapse" title="Link to export citations" aria-controls="export-list0">
+<i class="fa fa-paper-plane fa-fw"></i>
+Export citation <span class="fa upDownCaret"></span>
+</a>
+<ul class="flat togglecontent hidden-js-li exportlist list-group collapse" id="export-list0">
+<li class="list-group-item">
+<a href="/content/journals/10.1146/annurev-neuro-062111-150343/cite/bibtex" title="Link to export in BibTEX format" 
+class="externallink" >BibT<sub>E</sub>X</a>
+</li>
+<li class="list-group-item">
+<a href="/content/journals/10.1146/annurev-neuro-062111-150343/cite/endnote" title="Link to export in Endnote format" 
+class="externallink" >Endnote</a>
+</li>
+<li class="list-group-item">
+<a href="/content/journals/10.1146/annurev-neuro-062111-150343/cite/bibtex" title="Link to export in Zotero format" 
+class="externallink" >Zotero</a>
+</li>
+<li class="list-group-item">
+<a href="/content/journals/10.1146/annurev-neuro-062111-150343/cite/medline" title="Link to export in MEDLARS text" 
+class="externallink" >Medlars</a>
+</li>
+<li class="list-group-item">
+<a href="/content/journals/10.1146/annurev-neuro-062111-150343/cite/refworks" title="Link to export in RefWorks format" 
+class="externallink" >RefWorks</a>
+</li>
+<li class="list-group-item">
+<a href="http://www.mendeley.com/import/?url=https%3A%2F%2Fwww.annualreviews.org%2Fcontent%2Fjournals%2F10.1146%2Fannurev-neuro-062111-150343" target="_blank" title="Link to export to Mendeley" class="externallink">Mendeley</a>
+</li>
+</ul>
+</li>
+<li class=" tools-item tools-recommend">
+<a href="/content/journals/neuro" title="Link to recommend this journal to a library" 
+data-title="Annual Review of Neuroscience" data-issn="0147-006X" data-eissn="1545-4126" data-emailbody="Dear Librarian,I would like to recommend the following publication:" data-subj="Recommend to library" class="js-recommendToLibrarian" ><i class="fa fa-thumbs-o-up fa-fw"></i>
+Recommend to library</a>
+</li>
+<li class=" tools-item tools-permissions">
+<a href="https://www.copyright.com/openurl.do?doi=10.1146%2Fannurev-neuro-062111-150343" title="Link to Reprints and Permissions page" 
+class="toolsprite reprint-permission popup" target="_blank" ><i class="fa fa-files-o fa-fw"></i>
+Permissions</a>
+</li>
+</ul>
+</div>
+</div>
+</div> </li><li class="dropdown navbar-nav__item navbar-nav__item--keepopen navbar-nav__item--share" id="shareDropdownContainer"><a href="#" role="button" id="shareDropdown" aria-haspopup="true" aria-expanded="false" data-toggle="dropdown"><i class="material-icons">share</i> <span class="hidden-xxs"> Share</span></a><div class="dropdown-menu "><div class="share-nav panel-default shareDropdown">
+<div class="panel-heading">
+<div class="fr-view"><h3 class="panel-title"><i class="fa fa-share-alt-square"></i> Share</h3></div>
+</div>
+<div class="panel-body">
+<div class="shareaholic-canvas" data-app="share_buttons" data-app-id="33134187"></div>
+</div>
+</div>
+</div> </li></ul></div></nav> <input type="hidden" name="svgImageBackgroundColor" value="rgba(255,255,255,0.7)"/><section id="tabbedpages" class="tabs icon-image-content"><div id="abstract_content" class="active tab-pane abstract tabbedsection"><div class="articleabstract">
+<h2 dir="auto">Abstract</h2>
+<div dir="auto">
+<div
+class="description" ><p>Dendrites are the main recipients of synaptic inputs and are important sites that determine neurons&apos; input-output functions. This review focuses on thin neocortical dendrites, which receive the vast majority of synaptic inputs in cortex but also have specialized electrogenic properties. We present a simplified working-model biophysical scheme of pyramidal neurons that attempts to capture the essence of their dendritic function, including the ability to behave under plausible conditions as dynamic computational subunits. We emphasize the electrogenic capabilities of NMDA receptors (NMDARs) because these transmitter-gated channels seem to provide the major nonlinear depolarizing drive in thin dendrites, even allowing full-blown NMDA spikes. We show how apparent discrepancies in experimental findings can be reconciled and discuss the current status of dendritic spikes in vivo; a dominant NMDAR contribution would indicate that the input-output relations of thin dendrites are dynamically set by network activity and cannot be fully predicted by purely reductionist approaches.</p></div>
+</div>
+</div>
+<ul class="list-inline border-right-list article-dates"></ul> <div class="bottom-side-nav"><span><strong dir="auto">Keyword(s):</strong></span><a href="/search?value1=%22action+potential%22&option1=pub_keyword" title="action potential">action potential</a>,&nbsp;<a href="/search?value1=%22computational+subunit%22&option1=pub_keyword" title="computational subunit">computational subunit</a>,&nbsp;<a href="/search?value1=%22NMDA+receptor%22&option1=pub_keyword" title="NMDA receptor">NMDA receptor</a>,&nbsp;<a href="/search?value1=%22NMDAR%22&option1=pub_keyword" title="NMDAR">NMDAR</a>,&nbsp;<a href="/search?value1=%22spike%22&option1=pub_keyword" title="spike">spike</a>,&nbsp;<a href="/search?value1=%22synaptic+integration%22&option1=pub_keyword" title="synaptic integration">synaptic integration</a></div></div><div id="metrics_content" class="tab-pane metrics hidden-js-div tabbedsection"><div class="itemMetricsLoading"><img src="/images/jp/spinner.gif" alt="Loading" /><p>Article metrics loading...</p></div><div class="metricsContainer retrieveMetrics">
+<div class="hiddenjsdiv metricsItemId">/content/journals/10.1146/annurev-neuro-062111-150343</div>
+<div class="hiddenjsdiv metricsPubDate">2013-07-08</div>
+<div class="hiddenjsdiv metricsEndDate">2026-09-15</div>
+<div class="hiddenjsdiv" id="graph1Settings" 
+data-nodata="No metrics data to plot."
+>
+</div>
+<div class="hiddenjsdiv" id="graph2Settings" 
+data-nodata="No metrics data to plot."
+>
+</div>
+<div class="hiddenjsdiv " id="graph3Settings" 
+data-nodata="No metrics data to plot."
+>
+</div>
+<h2 id="dailyMetrics">Metrics</h2>
+<div class="metricsDetails">
+</div>
+</div>
+</div><div id="html_fulltext" class="htmlfulltext hidden-js-div tabbedsection tab-pane "><form name="pptForm" class="hidden pptForm" id="pptDwnld" action="/contentexport/powerpoint/powerpoint.action" method="POST"><input type="hidden" name="itemId" value=""/><input type="hidden" name="title" value=""/><input type="hidden" name="caption" value=""/><input type="hidden" name="copyright" value=""/><input type="hidden" name="citation" value=""/><input type="hidden" name="imagePath" value=""/><input type="hidden" name="logoPath" value="jp/pub2web.gif" /><a href="#" class="pptDownload">Download as PowerPoint</a></form><div class="itemFullTextLoading"><img src="/images/jp/spinner.gif" alt="Loading full text..." /><p>Full text loading...</p></div><span class="showPPT" data-showppt="true" ></span></div><div id="referenceContainer" class="references hidden-js-div tabbedsection tab-pane"></div><div id="cited" class="citations hidden-js-div tabbedsection tab-pane"><div class="hiddenjsdiv" id="itemIdForCitations" data-doi="10.1146/annurev-neuro-062111-150343">/content/journals/10.1146/annurev-neuro-062111-150343</div><img class="citingArticlesLoading" src="/images/jp/spinner.gif" alt="Loading" /><div id="citationContent"></div></div><div class="hiddenjsdiv itemmetadata">
+<div class="metadata_title">Active Properties of Neocortical Pyramidal Neuron Dendrites</div>
+<div class="metadata_citation">
+<span>Annual Review of Neuroscience <span class="citationvolume">36</span></span><span>, 1</span><span> (2013)</span><span>; <a href="https://doi.org/10.1146/annurev-neuro-062111-150343" rel="external" class="externallink">https://doi.org/10.1146/annurev-neuro-062111-150343</a></span></div>
+<div class="metadata_itemWebId">/content/journals/10.1146/annurev-neuro-062111-150343</div>
+</div>
+<div id="dataandmedia" class="dataandmedia tabbedsection hidden-js-div tab-pane"data-fullTexturl=""data-fulltextexpandlinktext="Toggle display:"data-hideinlinetablesbydefault="false"><div id="figuredialog"></div><div id="tabledialog"></div><div id="videodialog" class="hide"></div><div id="hiddenDataMediaWebid" class="hiddenjsdiv">/content/journals/10.1146/annurev-neuro-062111-150343</div><div class="itemDataMediaLoading"><img src="/images/jp/spinner.gif" alt="Loading" /><p>Data &amp; Media loading...</p></div><div id="datamediacontent"></div></div><div id="supplementary_data" class="supplementary-container tabbedsection hidden-js-div tab-pane"><div id="supplementary_data_contents" data-statslogurl="/statslogredirect"><h4 id="supp_title_1" class="supplementary-item-heading-show" style="padding-top:10px;">Supplementary Data</h4><ul class="articleMetadata list-unstyled col-sm-8 pull-left" style="margin-bottom:0;padding-bottom:0;"><li style="margin-bottom:0;"><p><content><p>Download all <a href="/deliver/fulltext/neuro/36/1/ne36_schiller_supmat.pdf?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1"><b>Supplemental Material</b></a> as one PDF. Includes links to Supplemental Videos 1-4 (videos embedded below), Supplemental Figures 1-6, and a Supplemental Discussion. </p><hr></hr><p>Videos show time evolution of I-V curves and membrane potential (V<sub>m</sub>) of models, following a brief pulse of glutamate, with AMPAR conductances yielding just subthreshold and just-suprathreshold responses. Pale orange line in top panel and X in bottom right panel indicate threshold when bistable state exists. Download video files to view with QuickTime Player, dragging slider back and forth to vary speed and to replay key portions such as when threshold declines until it sinks below voltage (so technically, in this situation, voltage doesn’t cross above threshold, rather, threshold crosses below voltage). </p><p>In some cases, the threshold (orange line and X) first appears transiently below V<sub>m</sub>, and then rapidly rises above V<sub>m</sub> as the AMPAR conductance continues to fall; the net current is too small to charge the membrane capacitance fast enough to move the membrane into the up-state at that point (e.g. Supplemental Videos 2, 4). </p><p>Matlab code available on request. </p><hr></hr><p><b>Supplemental Videos 1 and 2</b>. Highest g<sub>max</sub> NMDA = 5 × leak (as in Figure 3b, dark green curve or Supplemental Figure 4c).</p><p><b>Supplemental Video 1</b>: g<sub>max</sub> AMPA = 2.1 × leak (subthreshold). <a href="/deliver/fulltext/neuro/36/1/schiller_video1.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1">Download video file</a> (MPG)</p><p><iframe allow="fullscreen" frameborder="0" src="https://www.youtube-nocookie.com/embed/o2MD5-28jJA?rel=0"><iframe></iframe></iframe></p><p><b>Supplemental Video 2</b> : g<sub>max</sub> AMPA = 2.2 × leak (suprathreshold). <a href="/deliver/fulltext/neuro/36/1/schiller_video2.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1">Download video file</a> (MPG)</p><p><iframe allow="fullscreen" frameborder="0" src="https://www.youtube-nocookie.com/embed/tL1jHPb-ctM?rel=0"><iframe></iframe></iframe></p><p>Would see small spike "riding on" big subthreshold response (if superimposed).</p><hr></hr><p><b>Supplemental Videos 3 and 4</b>. Highest g<sub>max</sub> NMDA = 6 × leak (as in Figure 3a, green curve, or Supplemental Figure 4d). </p><p><b>Supplemental Video 3</b>: g<sub>max</sub> AMPA = 1.37 × leak (subthreshold). <a href="/deliver/fulltext/neuro/36/1/schiller_video3.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1">Download video file</a> (MPG)</p><p><iframe allow="fullscreen" frameborder="0" src="https://www.youtube-nocookie.com/embed/SaW-Q_l83nI?rel=0"><iframe></iframe></iframe></p><p><b>Supplemental Video 4</b> : g<sub>max</sub> AMPA = 1.38 × leak (suprathreshold). <a href="/deliver/fulltext/neuro/36/1/schiller_video4.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1">Download video file</a> (MPG)</p><p><iframe allow="fullscreen" frameborder="0" src="https://www.youtube-nocookie.com/embed/v3LuU-E3YQg?rel=0"><iframe></iframe></iframe></p><p>Would see medium spike "riding on" medium subthreshold response (if superimposed).</p></content></p></li></ul></div></div></section><div class="clearfix"></div><div class="bottom-side-nav"></div><div class="mostreadcontainer panel panel-default"style="display: none;"><div class="panel-heading"><h3 class="panel-title">Most Read This Month</h3></div><div class="panel-body"><div id="hiddenmostviewedtype" class="hiddenjsdiv hidden-js-div">Article</div>
+<div id="hiddenmostviewedparent" class="hiddenjsdiv hidden-js-div">content/journals/neuro</div>
+<div id="hiddenmostviewedparenttype" class="hiddenjsdiv hidden-js-div">Journal</div>
+<div id="hiddenmostviewednumber" class="hiddenjsdiv hidden-js-div">5</div>
+<div id="hiddenmostviewednumbershown" class="hiddenjsdiv hidden-js-div">3</div>
+<div id="hiddenmostviewedemptymessage" class="hiddenjsdiv hidden-js-div">false</div>
+<div id="hiddenmostviewedlanguage" class="hiddenjsdiv hidden-js-div">en</div>
+<img class="mostviewedloading" src="/images/jp/spinner.gif" alt="Loading"/>
+</div></div><div class="mostcitedcontainer panel panel-default "><div class="panel-heading"><h2 class="panel-title">Most Cited<span class="rssicon">
+<a href="/rss/content/journals/neuro/mostcitedarticles?fmt=rss" 
+class="rssiconheader rssFeed externallink" 
+title="Subscribe to most Cited RSS feed">
+<i class="fa fa-rss"></i>
+<span class="sr-only">Most Cited RSS feed</span>
+</a>
+</span>
+</h2></div><div class="panel-body"><div id="mostcited"><ul class="separated-list list-unstyled"><li class="" id="mostCited__content_journals_10.1146_annurev.neuro.24.1.167_1"><div class="table-cell meta-data-container pd-remove"><ul class="list-unstyled browse-item js-browse-item" role="none"><li role="none"><div class="articleMetadata js-articleMetadata"><div class="articleMetadataInner js-articleMetadataInner"><h2 class="accessIcons js-accessIcons h3"><span class="articleTitle js-articleTitle title"><a href="/content/journals/10.1146/annurev.neuro.24.1.167" data-itemId="/content/journals/10.1146/annurev.neuro.24.1.167" dir="auto" class=""> An Integrative Theory of Prefrontal Cortex Function</a></span></h2><div class="authorsWithPopup"><div
+><span class="meta-key authors_label ">
+</span>
+<span class="meta-value authors ">
+<span class="author-list__item "><a href="/search?value1=Earl+K.+Miller&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Earl K. Miller</a></span><span class="author-list__item author-list__item--last">&nbsp;and<a href="/search?value1=Jonathan+D.+Cohen&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Jonathan D. Cohen</a></span></span></div>
+</div><div class="volYearPageRange">Vol. 24 (2001), <span
+><span class="meta-key pageRange_label">pp.</span>
+<span class="meta-value pageRange">167&ndash;202
+</span></span>
+</div></div></div></li></ul></div></li><li class="" id="mostCited__content_journals_10.1146_annurev.ne.09.030186.002041_2"><div class="table-cell meta-data-container pd-remove"><ul class="list-unstyled browse-item js-browse-item" role="none"><li role="none"><div class="articleMetadata js-articleMetadata"><div class="articleMetadataInner js-articleMetadataInner"><h2 class="accessIcons js-accessIcons h3"><span class="articleTitle js-articleTitle title"><a href="/content/journals/10.1146/annurev.ne.09.030186.002041" data-itemId="/content/journals/10.1146/annurev.ne.09.030186.002041" dir="auto" class=""> Parallel Organization of Functionally Segregated
+Circuits Linking Basal Ganglia and Cortex</a></span></h2><div class="authorsWithPopup"><div
+><span class="meta-key authors_label ">
+</span>
+<span class="meta-value authors ">
+<span class="author-list__item "><a href="/search?value1=G+E+Alexander&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">G E Alexander</a></span><span class="author-list__item ">,<a href="/search?value1=M+R+DeLong&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">M R DeLong</a></span><span class="author-list__item author-list__item--last">&nbsp;and<a href="/search?value1=P+L+Strick&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">P L Strick</a></span></span></div>
+</div><div class="volYearPageRange">Vol. 9 (1986), <span
+><span class="meta-key pageRange_label">pp.</span>
+<span class="meta-value pageRange">357&ndash;381
+</span></span>
+</div></div></div></li></ul></div></li><li class="" id="mostCited__content_journals_10.1146_annurev.neuro.23.1.155_3"><div class="table-cell meta-data-container pd-remove"><ul class="list-unstyled browse-item js-browse-item" role="none"><li role="none"><div class="articleMetadata js-articleMetadata"><div class="articleMetadataInner js-articleMetadataInner"><h2 class="accessIcons js-accessIcons h3"><span class="articleTitle js-articleTitle title"><a href="/content/journals/10.1146/annurev.neuro.23.1.155" data-itemId="/content/journals/10.1146/annurev.neuro.23.1.155" dir="auto" class=""> Emotion Circuits in the Brain</a></span></h2><div class="authorsWithPopup"><div
+><span class="meta-key authors_label ">
+</span>
+<span class="meta-value authors ">
+<span class="author-list__item author-list__item--last"><a href="/search?value1=Joseph+E.+LeDoux&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Joseph E. LeDoux</a></span></span></div>
+</div><div class="volYearPageRange">Vol. 23 (2000), <span
+><span class="meta-key pageRange_label">pp.</span>
+<span class="meta-value pageRange">155&ndash;184
+</span></span>
+</div></div></div></li></ul></div></li><li class="" id="mostCited__content_journals_10.1146_annurev.ne.18.030195.001205_4"><div class="table-cell meta-data-container pd-remove"><ul class="list-unstyled browse-item js-browse-item" role="none"><li role="none"><div class="articleMetadata js-articleMetadata"><div class="articleMetadataInner js-articleMetadataInner"><h2 class="accessIcons js-accessIcons h3"><span class="articleTitle js-articleTitle title"><a href="/content/journals/10.1146/annurev.ne.18.030195.001205" data-itemId="/content/journals/10.1146/annurev.ne.18.030195.001205" dir="auto" class=""> Neural Mechanisms of Selective Visual Attention</a></span></h2><div class="authorsWithPopup"><div
+><span class="meta-key authors_label ">
+</span>
+<span class="meta-value authors ">
+<span class="author-list__item "><a href="/search?value1=Robert+Desimone&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Robert Desimone</a></span><span class="author-list__item author-list__item--last">&nbsp;and<a href="/search?value1=John+Duncan&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">John Duncan</a></span></span></div>
+</div><div class="volYearPageRange">Vol. 18 (1995), <span
+><span class="meta-key pageRange_label">pp.</span>
+<span class="meta-value pageRange">193&ndash;222
+</span></span>
+</div></div></div></li></ul></div></li><li class="" id="mostCited__content_journals_10.1146_annurev.ne.13.030190.000325_5"><div class="table-cell meta-data-container pd-remove"><ul class="list-unstyled browse-item js-browse-item" role="none"><li role="none"><div class="articleMetadata js-articleMetadata"><div class="articleMetadataInner js-articleMetadataInner"><h2 class="accessIcons js-accessIcons h3"><span class="articleTitle js-articleTitle title"><a href="/content/journals/10.1146/annurev.ne.13.030190.000325" data-itemId="/content/journals/10.1146/annurev.ne.13.030190.000325" dir="auto" class=""> The Attention System of the Human Brain</a></span></h2><div class="authorsWithPopup"><div
+><span class="meta-key authors_label ">
+</span>
+<span class="meta-value authors ">
+<span class="author-list__item "><a href="/search?value1=Michael+I.+Posner&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Michael I. Posner</a></span><span class="author-list__item author-list__item--last">&nbsp;and<a href="/search?value1=Steven+E.+Petersen&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Steven E. Petersen</a></span></span></div>
+</div><div class="volYearPageRange">Vol. 13 (1990), <span
+><span class="meta-key pageRange_label">pp.</span>
+<span class="meta-value pageRange">25&ndash;42
+</span></span>
+</div></div></div></li></ul></div></li><li class="hiddenjsdiv" id="mostCited__content_journals_10.1146_annurev.neuro.27.070203.144230_6"><div class="table-cell meta-data-container pd-remove"><ul class="list-unstyled browse-item js-browse-item" role="none"><li role="none"><div class="articleMetadata js-articleMetadata"><div class="articleMetadataInner js-articleMetadataInner"><h2 class="accessIcons js-accessIcons h3"><span class="articleTitle js-articleTitle title"><a href="/content/journals/10.1146/annurev.neuro.27.070203.144230" data-itemId="/content/journals/10.1146/annurev.neuro.27.070203.144230" dir="auto" class=""> THE MIRROR-NEURON SYSTEM</a></span></h2><div class="authorsWithPopup"><div
+><span class="meta-key authors_label ">
+</span>
+<span class="meta-value authors ">
+<span class="author-list__item "><a href="/search?value1=Giacomo+Rizzolatti&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Giacomo Rizzolatti</a></span><span class="author-list__item author-list__item--last">&nbsp;and<a href="/search?value1=Laila+Craighero&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Laila Craighero</a></span></span></div>
+</div><div class="volYearPageRange">Vol. 27 (2004), <span
+><span class="meta-key pageRange_label">pp.</span>
+<span class="meta-value pageRange">169&ndash;192
+</span></span>
+</div></div></div></li></ul></div></li><li class="hiddenjsdiv" id="mostCited__content_journals_10.1146_annurev.neuro.24.1.677_7"><div class="table-cell meta-data-container pd-remove"><ul class="list-unstyled browse-item js-browse-item" role="none"><li role="none"><div class="articleMetadata js-articleMetadata"><div class="articleMetadataInner js-articleMetadataInner"><h2 class="accessIcons js-accessIcons h3"><span class="articleTitle js-articleTitle title"><a href="/content/journals/10.1146/annurev.neuro.24.1.677" data-itemId="/content/journals/10.1146/annurev.neuro.24.1.677" dir="auto" class=""> Neurotrophins: Roles in Neuronal Development and Function<span class="xref"><sup>1</sup></span></a></span></h2><div class="authorsWithPopup"><div
+><span class="meta-key authors_label ">
+</span>
+<span class="meta-value authors ">
+<span class="author-list__item "><a href="/search?value1=Eric+J+Huang&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Eric J Huang</a></span><span class="author-list__item author-list__item--last">&nbsp;and<a href="/search?value1=Louis+F+Reichardt&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Louis F Reichardt</a></span></span></div>
+</div><div class="volYearPageRange">Vol. 24 (2001), <span
+><span class="meta-key pageRange_label">pp.</span>
+<span class="meta-value pageRange">677&ndash;736
+</span></span>
+</div></div></div></li></ul></div></li><li class="hiddenjsdiv" id="mostCited__content_journals_10.1146_annurev.neuro.28.061604.135709_8"><div class="table-cell meta-data-container pd-remove"><ul class="list-unstyled browse-item js-browse-item" role="none"><li role="none"><div class="articleMetadata js-articleMetadata"><div class="articleMetadataInner js-articleMetadataInner"><h2 class="accessIcons js-accessIcons h3"><span class="articleTitle js-articleTitle title"><a href="/content/journals/10.1146/annurev.neuro.28.061604.135709" data-itemId="/content/journals/10.1146/annurev.neuro.28.061604.135709" dir="auto" class=""> AN INTEGRATIVE THEORY OF LOCUS COERULEUS-NOREPINEPHRINE FUNCTION: Adaptive Gain and Optimal Performance</a></span></h2><div class="authorsWithPopup"><div
+><span class="meta-key authors_label ">
+</span>
+<span class="meta-value authors ">
+<span class="author-list__item "><a href="/search?value1=Gary+Aston-Jones&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Gary Aston-Jones</a></span><span class="author-list__item author-list__item--last">&nbsp;and<a href="/search?value1=Jonathan+D.+Cohen&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Jonathan D. Cohen</a></span></span></div>
+</div><div class="volYearPageRange">Vol. 28 (2005), <span
+><span class="meta-key pageRange_label">pp.</span>
+<span class="meta-value pageRange">403&ndash;450
+</span></span>
+</div></div></div></li></ul></div></li><li class="hiddenjsdiv" id="mostCited__content_journals_10.1146_annurev-neuro-071013-014030_9"><div class="table-cell meta-data-container pd-remove"><ul class="list-unstyled browse-item js-browse-item" role="none"><li role="none"><div class="articleMetadata js-articleMetadata"><div class="articleMetadataInner js-articleMetadataInner"><h2 class="accessIcons js-accessIcons h3"><span class="articleTitle js-articleTitle title"><a href="/content/journals/10.1146/annurev-neuro-071013-014030" data-itemId="/content/journals/10.1146/annurev-neuro-071013-014030" dir="auto" class=""> The Brain&apos;s Default Mode Network</a></span></h2><div class="authorsWithPopup"><div
+><span class="meta-key authors_label ">
+</span>
+<span class="meta-value authors ">
+<span class="author-list__item author-list__item--last"><a href="/search?value1=Marcus+E.+Raichle&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Marcus E. Raichle</a></span></span></div>
+</div><div class="volYearPageRange">Vol. 38 (2015), <span
+><span class="meta-key pageRange_label">pp.</span>
+<span class="meta-value pageRange">433&ndash;447
+</span></span>
+</div></div></div></li></ul></div></li><li class="hiddenjsdiv" id="mostCited__content_journals_10.1146_annurev.ne.17.030194.000335_10"><div class="table-cell meta-data-container pd-remove"><ul class="list-unstyled browse-item js-browse-item" role="none"><li role="none"><div class="articleMetadata js-articleMetadata"><div class="articleMetadataInner js-articleMetadataInner"><h2 class="accessIcons js-accessIcons h3"><span class="articleTitle js-articleTitle title"><a href="/content/journals/10.1146/annurev.ne.17.030194.000335" data-itemId="/content/journals/10.1146/annurev.ne.17.030194.000335" dir="auto" class=""> Cloned Glutamate Receptors</a></span></h2><div class="authorsWithPopup"><div
+><span class="meta-key authors_label ">
+</span>
+<span class="meta-value authors ">
+<span class="author-list__item "><a href="/search?value1=Michael+Hollmann&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Michael Hollmann</a></span><span class="author-list__item author-list__item--last">&nbsp;and<a href="/search?value1=Stephen+Heinemann&option1=author&noRedirect=true&sortField=prism_publicationDate&sortDescending=true" class="nonDisambigAuthorLink">Stephen Heinemann</a></span></span></div>
+</div><div class="volYearPageRange">Vol. 17 (1994), <span
+><span class="meta-key pageRange_label">pp.</span>
+<span class="meta-value pageRange">31&ndash;108
+</span></span>
+</div></div></div></li></ul></div></li><li><a href="#" class="moreLink std-display" role="button" aria-controls="mostCited__content_journals_10.1146_annurev.neuro.27.070203.144230_6 mostCited__content_journals_10.1146_annurev.neuro.24.1.677_7 mostCited__content_journals_10.1146_annurev.neuro.28.061604.135709_8 mostCited__content_journals_10.1146_annurev-neuro-071013-014030_9 mostCited__content_journals_10.1146_annurev.ne.17.030194.000335_10" aria-expanded="false" aria-label="more cited articles">
+<i class="fa fa-plus"></i> More
+</a> 
+<a href="#" class="lessLink std-display" role="button" aria-controls="mostCited__content_journals_10.1146_annurev.neuro.27.070203.144230_6 mostCited__content_journals_10.1146_annurev.neuro.24.1.677_7 mostCited__content_journals_10.1146_annurev.neuro.28.061604.135709_8 mostCited__content_journals_10.1146_annurev-neuro-071013-014030_9 mostCited__content_journals_10.1146_annurev.ne.17.030194.000335_10" aria-expanded="true" aria-label="less cited articles">
+<i class="fa fa-minus"></i> Less
+</a>
+</li></ul><form class="ahahTocArticles"><input type="hidden" name="articleIds" value="http://instance.metastore.ingenta.com/content/journals/10.1146/annurev.neuro.24.1.167,http://instance.metastore.ingenta.com/content/journals/10.1146/annurev.ne.09.030186.002041,http://instance.metastore.ingenta.com/content/journals/10.1146/annurev.neuro.23.1.155,http://instance.metastore.ingenta.com/content/journals/10.1146/annurev.ne.18.030195.001205,http://instance.metastore.ingenta.com/content/journals/10.1146/annurev.ne.13.030190.000325,http://instance.metastore.ingenta.com/content/journals/10.1146/annurev.neuro.27.070203.144230,http://instance.metastore.ingenta.com/content/journals/10.1146/annurev.neuro.24.1.677,http://instance.metastore.ingenta.com/content/journals/10.1146/annurev.neuro.28.061604.135709,http://instance.metastore.ingenta.com/content/journals/10.1146/annurev-neuro-071013-014030,http://instance.metastore.ingenta.com/content/journals/10.1146/annurev.ne.17.030194.000335" /><input type="hidden" name="fmt" value="ahah" /><input type="hidden" name="ahahcontent" value="toc" /></form></div></div></div><input type='hidden' id='fancyBoxImgLoadErrMsg' value='Image can not be loaded' /><dialog id="messageBox" role="dialog"id="modal"tabindex="-1"aria-modal="true"aria-labelledby="dialog-title"><div class="fr-view"><div class="popup-content"><div class="popup-image"><img src="https://knowablemagazine.org/images/magazine/logo-k-half-white.svg" alt="knowable Logo" class="fr-fil fr-dib"></div><div class="popup-text"><button id="closeBtn" type="button">X<span class="sr-only">&nbsp;Close</span></button><h3 id="dialog-title">Science needs us — and you</h3><div>Support nonprofit Knowable Magazine and bring facts to light <a href="https://knowablemagazine.org/">→</a></div></div></div></div></dialog></main><div id="sidebar_right"><div class="mobile-tools">
+<button type="button" id="mobile-tools-button" data-parent="#bellowheadercontainer" class="navbar-toggle toggle-arrow" data-toggle="collapse"
+data-target="#tools-nav-mobile" aria-expanded="false">
+<span class="sr-only">Toggle navigation</span>
+<span>Tools <i class="fa fa-angle-down"></i></span>
+</button>
+</div>
+<aside class="col-xs-12 col-sm-12 col-md-3 pull-right left-padding sidebar-pub2web-container header-sidebar" aria-label="site sidebar containing page tools, access key and possibly adverts"> 
+<div id="signInOrRegisterDialog"></div>
+</aside>
+<asideclass=" footer-sidebar left-padding non-printed-section"><div id="pbgrd-mpu"></div><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.pbgrd.com/core-annualreviews.js" async></script><div class="horizontally-centered-content altmetrics sidebar-pub2web-element"></div><div class="panel panel-default sidebar-pub2web-element"><div class="panel-heading"><h4 class="panel-title"><span data-testid="comment-base-item-14187">Related Articles from Annual Reviews</span></h4></div><div class="panel-body" id="js-recommend-load"><div class="morelikethiscontainer">
+<div class="hiddenmorelikethisids hidden-js-div"></div>
+<div class="hiddenmorelikethiswebid hidden-js-div">/content/journals/10.1146/annurev-neuro-062111-150343</div>
+<div class="hiddenmorelikethisfields hidden-js-div">dcterms_title,dcterms_subject,pub_keyword</div>
+<div class="hiddenmorelikethisrestrictions hidden-js-div">-contentType:Journal -contentType:Contributor -contentType:Concept -contentType:Institution</div>
+<div class="hiddenmorelikethisnumber hidden-js-div">4</div>
+<div class="hiddenmorelikethisnumbershown hidden-js-div">4</div>
+</div>
+</div></div><div class="sidebar-pub2web-element editable-snippet-image default-pane panel panel-default "><div class="panel-heading"><div class="fr-view"><p><span class="fr-view"></span></p><p><span class="fr-view"></span></p><h3 class="panel-title">From <em>Knowable Magazine:</em></h3><p><a href="https://mailchi.mp/annualreviews/teen-brain-bootcamp"><img src="/pb-assets/marketing-ads/tbb-ar-300x150.png" alt="From knowable magazine: Teen Brain Bootcamp - A free email course - Enroll today" class="fr-fic fr-dib fr-fil fr-rounded"></a></p></div></div><div class="panel-body"><div class="fr-view"><p><span class="fr-view"></span></p><p><span class="fr-view"></span></p><p><a href="https://knowablemagazine.org/"><img src="/docserver/fulltext/k-mag-ad-300x150.png" alt="Knowable Magazine from Annual Reviews" class="fr-fic fr-dib fr-fil fr-rounded"></a></p><hr><p><a alt="Share on Bluesky" href="https://bsky.app/profile/annualreviews.bsky.social"><img src="/docserver/fulltext/bluesky-300x150.png" class="fr-fic fr-dib fr-fil fr-rounded" alt="Let's Connect on Bluesky @annualreviews.bsky.social"></a></p><p><span class="fr-view"></span></p><p><br></p><p><span class="fr-view"></span></p><p><span class="fr-view"></span></p><p><span class="fr-view"></span></p><p><a href="/page/climateresources"><img src="/docserver/fulltext/climate-resource-center-2023-knowable-ad-300x250.jpg" alt="Climate Resource Center - Article Collection from Annual Reviews" class="fr-fic fr-dib fr-fil fr-shadow fr-rounded"></a></p><p><br></p></div></div></div> <div class="editable-snippet-image default-pane sidebar-pub2web-element panel panel-default js-advert-editable-container"><div class="panel-heading"><div class="fr-view"><h3 class="panel-title">Journal News</h3></div></div><div class="panel-body"><div class="fr-view"><p><a href="/S2O"><img src="/docserver/fulltext/s2o-neuro-ad-300x150.png" style="display: block; vertical-align: top; margin: 5px auto 5px 0px; text-align: left;" class="fr-rounded"></a></p></div></div></div></aside></div></div><footer><div class="container-fluid mid-footer">
+<div class="col-md-1-1 inner-content">
+<div class="footer-grid">
+<div class="footer-grid-item">
+<div class="fr-view"><p class="h5">About Annual Reviews:</p><ul class="footer-sub-item"><li><a href="/about/what-we-do">What We Do</a></li><li><a href="/about/press-center">Press and News</a></li><li><a href="/page/about/careers-at-annual-reviews">Careers</a></li><li><a href="/page/about/contact-us">Contact Us</a></li><li><a href="/page/about/faq">FAQ</a></li><li><a href="/help/main">Help</a></li></ul></div>
+</div>
+<div class="footer-grid-item">
+<div class="fr-view"><p class="h5">Discover Content:</p><ul><li><a href="/content/publications">Journals A-Z</a></li><li><a href="/about/impact-factors">Impact Factor Rankings</a></li><li><a href="/journal/pubdates">Publication Dates</a></li><li><a href="/page/events">Online Events</a></li><li><a href="/page/collectionarchive">Article Collections</a></li><li><a href="https://knowablemagazine.org/"><em>Knowable Magazine</em></a></li><li><a href="https://katinamagazine.org/"><em>Katina Magazine</em></a></li><li><a href="https://www.charleston-hub.com/about/about-against-the-grain/">Against the Grain</a></li></ul></div>
+</div>
+<div class="footer-grid-item">
+<div class="fr-view"><p><span class="fr-view"></span></p><p class="h5">Libraries and Institutions:</p><ul><li><a href="/S2O">Subscribe to Open (S2O)</a></li><li><a href="/page/librarians/librarian-resource-page">Librarian Resource Center</a></li><li><a href="https://www.annualreviews.org/registration/signin-or-register.action?signInTarget=%2Fadmin">Institutional Account Administration</a></li><li><a href="/page/subscriptions/instchoice">Institutional Pricing</a></li><li><a href="/action/showInstitutionUsageReport">Usage Statistics</a></li><li><a href="https://www.charleston-hub.com/">Charleston Hub </a></li><li><a href="https://katinamagazine.org/">Katina | Librarianship Elevated</a></li><li><a href="https://annurev.publisher.ingentaconnect.com/content/annurev/tca/">Charleston Advisor (Archive)</a></li><li><a href="https://www.charleston-hub.com/about/about-against-the-grain/">Against the Grain</a></li></ul><p><br></p></div>
+</div>
+<div class="footer-grid-item">
+<p class="h5">Author Resources:</p>
+<ul>
+<li><a href="/page/authors/general-information">Article Preparation and Submission</a></li>
+<li><a href="/page/authors/editorial-policies">Editorial Principles and Policies</a></li>
+<li><a href="/page/authors/contact-us">Contact Us</a></li>
+<li><a href="/page/about/copyright-and-permissions">Copyright and Permissions</a></li>
+<li><a href="/page/authors/author-instructions/unsolicited-authors">Article Proposals</a></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="container-fluid absolute-footer">
+<div class="row row-md ">
+<div class="col-md-1-1 inner-content">
+<div class="contents" data-pb-dropzone="contents0">
+<section class="footer-links">
+<div class="fr-view"><ul><li>© <a href="/page/about/trademark">Copyright 2026</a></li><li><a href="/page/about/contact-us">Contact Us</a></li><li><a href="/userpreferencecenter">Email Preferences</a></li><li><a href="/db/directory">Annual Reviews Directory</a></li><li><a href="/page/about/faq">FAQs</a></li><li><a href="/page/about/privacy">Privacy Policy</a></li><li><a href="/page/about/privacy">Cookie Settings</a></li></ul></div>
+</section>
+<section class="social-links">
+<ul>
+<li><a href="https://bsky.app/profile/annualreviews.bsky.social" class="socialicon-bluesky" target="_blank" aria-label="Share on Bluesky"></a></li>
+<li><a href="https://twitter.com/AnnualReviews" class="socialicon-x" target="_blank" aria-label="Share on X"></a></li>
+<li><a href="https://mstdn.science/@AnnualReviews" class="socialicon-mastodon" target="_blank" aria-label="Share on Mastodon"></a></li>
+<li><a href="https://www.linkedin.com/company/annual-reviews" class="socialicon-linkedin" target="_blank" aria-label="Share on LinkedIn"></a></li>
+<li><a href="https://www.facebook.com/AnnualReviews" class="socialicon-facebook" target="_blank" aria-label="Share on Facebook"></a></li>
+<li><a href="https://www.instagram.com/annualreviews/" class="socialicon-instagram" target="_blank" aria-label="Share on Instagram"></a></li>
+<li><a href="/page/about/rssfeeds" class="socialicon-rss" target="_blank" aria-label="Follow us via RSS"></a></li>
+<li><a href="https://www.youtube.com/user/annualreviews" class="socialicon-youtube" aria-label="Annual Reviews YouTube Channel" target="_blank"></a></li>
+<li><a href="" class="socialicon-wechat" target="_blank" aria-label="Share on WeChat"></a></li>
+</ul>
+</section>
+</div>
+</div>
+</div>
+</div>
+<div id="weChatModal" class="modal-wechat">
+<span class="close">x</span>
+<img class="modal-wechat-content" id="barcode-wechat" src="/images/hybrid/AR_WeChat_barcode.jpg" alt="AR Wechat Barcode">
+</div></footer></div></div><div id="mm-blocker" class="mm-slideout" tabIndex="1" aria-label="site menu" aria-expanded="false" role="button"></div><div class="hiddenblurbsvalues hidden-js-div"><div id="required_field">This is a required field</div><div id="valid_email_address">Please enter a valid email address</div><div id="makelivesuccess">Approval was a Success</div><div id="makeliveinvaliddata">Invalid data</div><div id="makeliveerror">An Error Occurred</div><div id="makelivepartialsuccess">Approval was partially successful, following selected items could not be processed due to error</div></div> <form class="hidden" action="/cart/add" method="get" id="hiddenPurchaseForm"></form><form class="hidden" action="/carnet" method="post" id="hiddenCarnetForm"></form><div class="siqPageTitle hidden">Annual Reviews:</div><div class="siqItemId hidden">http://instance.metastore.ingenta.com/content/journals/10.1146/annurev-neuro-062111-150343</div><div class="siqDoi hidden">10.1146/annurev-neuro-062111-150343</div><div class="siqPub2webEventType hidden">SEARCH_EXPAND_ITEM</div><script type="text/javascript">var script = document.createElement('script');script.type = 'text/javascript';script.async = true;script.src = '//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML';document.getElementsByTagName('head')[0].appendChild(script);</script> <!--[if lt IE 7]><script src="/js/v/12.4.0/jp/IE7.js" ></script><![endif]--><!--[if lte IE 9]><script src="/js/v/12.4.0/hybrid/placeholder.js" ></script><![endif]--><script src="/js/v/12.4.0/jp/jquery.form.js" ></script> <script src="/js/v/12.4.0/jp/jquery.validate.js" ></script><script src="/common/v/12.4.0/js/plugins.js" ></script><script src="/common/v/12.4.0/js/sitejp.js" ></script><script src="/common/v/12.4.0/js/site_common.js" ></script><script src="/js/v/12.4.0/jp/platform.js" ></script><script src="/js/v/12.4.0/hybrid/site.js" ></script><script src="/js/v/12.4.0/hybrid/annualreviews.js" ></script><script src="/common/v/12.4.0/js/contentpreview/preview.js" ></script><script src="/common/v/12.4.0/js/jquery-plugins/jquery.horiz-bar-graph.js" ></script><script src="/common/v/12.4.0/js/ecommerceicons.js" ></script><script src="/common/v/12.4.0/js/toc_ecommerceicons.js" ></script><script src="/common/v/12.4.0/js/moreLikeThis.js" ></script><script src="/common/v/12.4.0/js/fulltext-html_media-objects.js" ></script><script src="/common/v/12.4.0/js/responsive-tabs.js"></script><div class="c-purchase modal fade bs-example-modal-lg" id="bs-example-modal-lg2" tabindex="-1" role="dialog" data-popup-enabled="true">
+<div class="modal-dialog" role="document">
+<div class="modal-content">
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+<h2 class="modal-title">Active Properties of Neocortical Pyramidal Neuron Dendrites</h2>
+</div>
+<div class="modal-body clearfix">
+<p>
+<strong>Publication Date: </strong>
+<time class="c-purchase__publish-date" datetime="Mon Jul 08 00:00:00 UTC 2013" >08 Jul 2013</time>
+</p>
+<a class="c-purchase__doi" href="https://doi.org/10.1146/annurev-neuro-062111-150343" target="_blank">https://doi.org/10.1146/annurev-neuro-062111-150343</a>
+<span></span>
+<div class="c-purchase-items clearfix">
+<div class="c-purchase__type"><form method="post" action="/cart/add.action" class="c-purchase__form js-purchase-form"><div class="tokenCSRF_HiddenValue hidden"><div class="hidden" id="timer_id">1117876148</div></div><input type="hidden" name="itemId" value="http://instance.metastore.ingenta.com/content/journals/10.1146/annurev-neuro-062111-150343" /><input type="hidden" name="terms" value="download" /><h4 class="c-purchase__type-title js-purchase-type">Online Option</h4><p class="c-purchase__type-description ">Sign in to access your <a href="https://www.annualreviews.org/session/ext/shib?url=%2F">institutional</a> or <a href="https://www.annualreviews.org/registration/signin-or-register.action?signInTarget=%2F">personal</a> subscription or get immediate access to your online copy - available in PDF and ePub formats</p><div class="c-purchase__type-price"><span class="c-purchase__type-price-label">Price:</span><span class="c-purchase__type-price-amount" data-currency="USD"><span class="js-purchase-price-with-currency ">$32.00<span>(excl. VAT)</span></span></span></div><button type="submit"data-itemId="http://instance.metastore.ingenta.com/content/journals/10.1146/annurev-neuro-062111-150343"data-puchaseType="download"data-currency="USD"data-cost="32.00"class="c-purchase__type-add-to-cart js-buy-now btn btn-default js-clickonce">Buy Online Access</button></form></div>
+</div> 
+<button type="button" class="btn btn-secondary visible-xs pull-right c-purchase__cancelbutton" data-dismiss="modal" aria-label="Close">Cancel</button> 
+</div>
+</div>
+</div>
+</div><div class="modal fade" id="myModal" tabindex="-1" role="dialog"></div></body></html>

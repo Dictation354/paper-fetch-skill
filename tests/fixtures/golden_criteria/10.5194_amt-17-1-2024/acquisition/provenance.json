@@ -1,0 +1,64 @@
+{
+  "records": [
+    {
+      "doi": "10.5194/amt-17-1-2024",
+      "provider": "copernicus",
+      "requested_url": "https://api.crossref.org/works/10.5194%2Famt-17-1-2024",
+      "final_url": "https://api.crossref.org/works/10.5194%2Famt-17-1-2024",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:24 GMT",
+        "content-type": "application/json",
+        "content-length": "6957"
+      },
+      "captured_at_utc": "2026-09-18T02:21:23.651254+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 19437,
+      "sha256": "8a8f623ff9c5f30be6b96a72de7041af75eb5f2f1344260404dc161fae24abb6",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.5194/amt-17-1-2024",
+      "provider": "copernicus",
+      "requested_url": "https://amt.copernicus.org/articles/17/1/2024/",
+      "final_url": "https://amt.copernicus.org/articles/17/1/2024/",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:24 GMT",
+        "content-length": "50547",
+        "content-type": "text/html"
+      },
+      "captured_at_utc": "2026-09-18T02:21:25.012361+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "size": 235155,
+      "sha256": "74fab0235fe76662efb2d49dc8b532d6e6cc842b7201fba25bf33e6c01c11d0f",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.5194/amt-17-1-2024",
+      "provider": "copernicus",
+      "requested_url": "https://amt.copernicus.org/articles/17/1/2024/amt-17-1-2024.xml",
+      "final_url": "https://amt.copernicus.org/articles/17/1/2024/amt-17-1-2024.xml",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:25 GMT",
+        "last-modified": "Wed, 14 Aug 2024 16:48:30 GMT",
+        "etag": "\"185a2-61fa77ef72811-gzip\"",
+        "content-length": "25782",
+        "content-type": "application/xml"
+      },
+      "captured_at_utc": "2026-09-18T02:21:25.351419+00:00",
+      "body_file": "original.xml",
+      "size": 99746,
+      "sha256": "8989db8d961a9d73be31251f6587b9e9f24448e88a68dda11cb472f51151d9c6",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes",
+      "original_body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.xml"
+    }
+  ]
+}

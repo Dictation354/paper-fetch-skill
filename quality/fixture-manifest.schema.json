@@ -3,7 +3,9 @@
   "$id": "https://paper-fetch.local/schemas/fixture-manifest-v1.json",
   "title": "Paper Fetch Fixture Manifest",
   "type": "object",
-  "required": ["samples"],
+  "required": [
+    "samples"
+  ],
   "properties": {
     "$schema": {
       "type": "string",
@@ -13,6 +15,27 @@
       "type": "object",
       "additionalProperties": {
         "$ref": "#/$defs/sample"
+      }
+    },
+    "rejected_sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "sha256",
+          "classification"
+        ]
+      }
+    },
+    "withdrawn_assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "former_path",
+          "sha256",
+          "size"
+        ]
       }
     }
   },
@@ -38,13 +61,26 @@
           "minLength": 1
         },
         "origin_kind": {
-          "enum": ["real_replay", "real_excerpt", "contract_scenario", "synthetic"]
+          "enum": [
+            "real_replay",
+            "real_excerpt",
+            "contract_scenario",
+            "synthetic",
+            "unverified"
+          ]
         },
         "usage_kind": {
-          "enum": ["content", "infrastructure"]
+          "enum": [
+            "content",
+            "infrastructure"
+          ]
         },
         "fixture_family": {
-          "enum": ["golden", "block", "scenario"]
+          "enum": [
+            "golden",
+            "block",
+            "scenario"
+          ]
         },
         "assets": {
           "type": "object",
@@ -54,7 +90,11 @@
           }
         },
         "negative_case_kind": {
-          "enum": ["access_block", "empty_shell", "xml_empty_or_abstract"]
+          "enum": [
+            "access_block",
+            "empty_shell",
+            "xml_empty_or_abstract"
+          ]
         },
         "provider_route": {
           "type": "string",
@@ -78,11 +118,30 @@
           "type": "string"
         },
         "route_kind": {
-          "enum": ["html", "xml", "official", "pdf_fallback", "blocked", "block"]
+          "enum": [
+            "html",
+            "xml",
+            "official",
+            "pdf_fallback",
+            "blocked",
+            "block"
+          ]
         },
         "content_type": {
           "type": "string",
           "minLength": 1
+        },
+        "asset_origins": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              "real_replay",
+              "real_excerpt",
+              "contract_scenario",
+              "synthetic",
+              "unverified"
+            ]
+          }
         }
       },
       "allOf": [
@@ -93,7 +152,9 @@
                 "const": "block"
               }
             },
-            "required": ["fixture_family"]
+            "required": [
+              "fixture_family"
+            ]
           },
           "then": {
             "required": [
@@ -109,21 +170,36 @@
             ],
             "properties": {
               "expected_failure_code": {
-                "enum": ["availability_rejected", "html_extraction_rejected", "xml_extraction_rejected"]
+                "enum": [
+                  "availability_rejected",
+                  "html_extraction_rejected",
+                  "xml_extraction_rejected"
+                ]
               },
               "expected_content_kind": {
-                "enum": ["metadata_only", "abstract_only"]
+                "enum": [
+                  "metadata_only",
+                  "abstract_only"
+                ]
               },
               "expected_outcome": {
-                "enum": ["rejected", "blocked", "metadata_only"]
+                "enum": [
+                  "rejected",
+                  "blocked",
+                  "metadata_only"
+                ]
               },
               "assets": {
                 "anyOf": [
                   {
-                    "required": ["raw.html"]
+                    "required": [
+                      "raw.html"
+                    ]
                   },
                   {
-                    "required": ["raw.xml"]
+                    "required": [
+                      "raw.xml"
+                    ]
                   }
                 ]
               }

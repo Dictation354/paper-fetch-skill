@@ -39,6 +39,7 @@ from ..extraction.html.semantics import (
     collect_html_section_hints,
     heading_category,
     normalize_section_title,
+    node_source_selector,
 )
 from ..extraction.html.ui_tokens import (
     SPRINGER_FULL_SIZE_IMAGE_LABEL,
@@ -289,6 +290,11 @@ def _clean_springer_abstract_sections(
 ) -> list[dict[str, Any]]:
     cleaned_sections: list[dict[str, Any]] = []
     for section in sections:
+        if (
+            normalize_section_title(str(section.get("heading") or ""))
+            == "reporting summary"
+        ):
+            continue
         cleaned_section = dict(section)
         if cleaned_section.get("text") is not None:
             cleaned_section["text"] = _clean_springer_preview_fragment(
@@ -366,6 +372,21 @@ def _normalized_root_html(html_text: str) -> tuple[str, Any]:
         '[data-expandable-box="true"][aria-hidden="true"]'
     ):
         del expandable_box["aria-hidden"]
+    # Image-only Nature boxes are captioned figures. Keep the source title
+    # beside the bitmap instead of producing a text-empty body section that
+    # the article renderer omits when deciding which sections contain prose.
+    for box in active_root.select(".c-article-box__content"):
+        images = box.find_all("img", recursive=False)
+        if images and not normalize_text(box.get_text(" ", strip=True)):
+            heading = box.parent.find(re.compile(r"^h[1-6]$"), recursive=False)
+            if heading is not None:
+                heading.name = "p"
+                bold = soup.new_tag("strong")
+                for child in list(heading.contents):
+                    bold.append(child.extract())
+                heading.append(bold)
+        for image in images:
+            image.wrap(soup.new_tag("figure"))
     prune_html_tree(active_root)
     _remove_springer_ai_alt_disclaimers(active_root)
     return str(active_root), active_root
@@ -425,14 +446,37 @@ def extract_html_extraction_sidecars(
     return {
         "cleaned_html": cleaned_html,
         "abstract_sections": abstract_sections,
-        "section_hints": collect_html_section_hints(
-            active_root,
-            title=title,
-            language_hint_resolver=lambda node: html_node_language_hint(
-                node, allow_soft_hints=True
-            ),
-        ),
+        "section_hints": _springer_section_hints(active_root, title=title),
     }
+
+
+def _springer_section_hints(root: Tag, *, title: str | None) -> list[dict[str, Any]]:
+    hints = collect_html_section_hints(
+        root,
+        title=title,
+        language_hint_resolver=lambda node: html_node_language_hint(
+            node, allow_soft_hints=True
+        ),
+    )
+    methods_ethics = set()
+    for heading in root.find_all(re.compile(r"^h[3-6]$")):
+        label = normalize_text(heading.get_text(" ", strip=True))
+        if normalize_section_title(label) not in {
+            "ethics compliance",
+            "ethics statement",
+        }:
+            continue
+        if any(
+            _springer_section_title_key(ancestor)
+            in {"methods", "materials and methods", "methodology"}
+            for ancestor in heading.parents
+            if isinstance(ancestor, Tag) and ancestor.name == "section"
+        ):
+            methods_ethics.add((label, node_source_selector(heading.parent)))
+    for hint in hints:
+        if (hint["heading"], hint["source_selector"]) in methods_ethics:
+            hint["kind"] = "body"
+    return hints
 
 
 def _springer_section_title_key(node: Any) -> str:

@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "doi": "10.1175/waf-d-24-0019.1",
+      "provider": "ams",
+      "requested_url": "https://api.crossref.org/works/10.1175%2Fwaf-d-24-0019.1",
+      "final_url": "https://api.crossref.org/works/10.1175%2Fwaf-d-24-0019.1",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:26:21 GMT",
+        "content-type": "application/json",
+        "content-length": "12559"
+      },
+      "captured_at_utc": "2026-09-18T02:26:21.196297+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 45345,
+      "sha256": "aaaeb78196cc3c92b4589c9ef34f581f3afd5f23463ea7c9cb2507ca8cb6c7a3",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1175/waf-d-24-0019.1",
+      "provider": "ams",
+      "requested_url": "https://journals.ametsoc.org/view/journals/wefo/39/12/WAF-D-24-0019.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/wefo/39/12/WAF-D-24-0019.1.xml",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Fri, 18 Sep 2026 02:26:25 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:26:31.332947+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 1916028,
+      "sha256": "2614d7a9c78f8de0d6a3b7b6724853311d854d33b0c291f772d38682017aa2d5",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

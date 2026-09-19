@@ -17,5 +17,733 @@
     "tables": 0,
     "references": 70
   },
-  "expected_content_kind": "fulltext"
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.1073_pnas.2402656121",
+    "provider": "pnas",
+    "doi": "10.1073/pnas.2402656121",
+    "original": "tests/fixtures/golden_criteria/10.1073_pnas.2402656121/original.html",
+    "sha256": "2c64fa403ff7ed64583bbaa388a8f763ae97f8e89c995faa3c33beb9a1661cca",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 6,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 70,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 54,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 4,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 0,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 28,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 28,
+      "tex_checked": 0,
+      "mathml_checked": 28,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1073_pnas.2402656121/original.html",
+      "sha256": "2c64fa403ff7ed64583bbaa388a8f763ae97f8e89c995faa3c33beb9a1661cca",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "76763857f8a619906dbebc4150b4fd33facd4aeaa2909e7a9a873817a518ff4c",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ρ",
+            "PREC",
+            "TR",
+            "P",
+            "R",
+            "E",
+            "C"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "0e898e2465e7baad8f49080f39e4406aba7614bac37458d1f1bd6c22c3ac1117",
+          "numbers": "33",
+          "minimum": {
+            "_": 0,
+            "^": 2,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "m",
+            "m"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "2d08e74bfc9b5b275c6fad84df5bc8668bc5741545d13b8444dc5bec4d0fdf0e",
+          "numbers": "11",
+          "minimum": {
+            "_": 0,
+            "^": 2,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "kgm",
+            "s"
+          ],
+          "operators": [
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "a5e733dbc1f4d5222700ead4f27c4071fdaaff49ec3930793daf8a2a55fd3c80",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ρ",
+            "PREC",
+            "TR",
+            "P",
+            "R",
+            "E",
+            "C"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "e48fd66ddaa30a2b182825c7f6e5bd9f85af943d4e480575dbf609e273dd5708",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "PREC",
+            "TR"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "05e3e4808333ee6347ad5406b48f2b4349f14485d1a479a18b0f2f7bd3e9ab02",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "PREC"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 6,
+          "id": null,
+          "node_sha256": "a0c1ff9681baa457c5271b751231afd372b3dda459e8b049f99cd1ed5958cdb9",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "θ",
+            "avail"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 7,
+          "id": null,
+          "node_sha256": "dc6e6692ec22f34878f1172a70113f2c6922418d82382cf584a57f0711296194",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "θ",
+            "limit"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 8,
+          "id": null,
+          "node_sha256": "620c91e16db8b82b33a84281ea9bdb17c1b875052867126600f23324da5bbceb",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "M",
+            "AD"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 9,
+          "id": null,
+          "node_sha256": "b2c8b461f8e98c453cb4c8f20462028db0c2740452c253b750f4f6bc42d5338a",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "f",
+            "irr"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 10,
+          "id": null,
+          "node_sha256": "1ca7458774316edec99a68bd4911d5fa795114b9c98d6ea5ce7ec9d8264dfb67",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "f",
+            "veg"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 11,
+          "id": null,
+          "node_sha256": "4dbc47224f0f6135392fe4eb63a9760378f9d2ccff59e30d73964ca1fb410dad",
+          "numbers": "0",
+          "minimum": {
+            "_": 8,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "I",
+            "W",
+            "f",
+            "irr",
+            "f",
+            "veg",
+            "θ",
+            "lim",
+            "θ",
+            "avail",
+            ";",
+            "i",
+            "f",
+            "θ",
+            "avail",
+            "θ",
+            "lim",
+            "M",
+            "AD",
+            ";",
+            "o",
+            "t",
+            "h",
+            "e",
+            "r",
+            "w",
+            "i",
+            "s",
+            "e"
+          ],
+          "operators": [
+            "=",
+            "×",
+            "×",
+            "-",
+            "≤"
+          ]
+        },
+        {
+          "object_index": 12,
+          "id": null,
+          "node_sha256": "9eb493268467a52cc9d4a252aeaacb816faa9bf9bad53968641ecfa1e6e37a49",
+          "numbers": "12212",
+          "minimum": {
+            "_": 0,
+            "^": 3,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "I",
+            "V",
+            "T",
+            "g",
+            "s",
+            "u",
+            "r",
+            "f",
+            "a",
+            "c",
+            "e",
+            "t",
+            "o",
+            "p",
+            "q",
+            "u",
+            "d",
+            "p",
+            "s",
+            "u",
+            "r",
+            "f",
+            "a",
+            "c",
+            "e",
+            "t",
+            "o",
+            "p",
+            "q",
+            "v",
+            "d",
+            "p"
+          ],
+          "operators": [
+            "=",
+            "+"
+          ]
+        },
+        {
+          "object_index": 13,
+          "id": null,
+          "node_sha256": "f33425ed8d9e6172a10fb9f4ee9682496d0144370e243a420e141bc03f1666df",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "F",
+            "in"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 14,
+          "id": null,
+          "node_sha256": "abf4c73ff2690a387e48151407269169360904f08cb1d3eada13883499316544",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "F",
+            "out"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 15,
+          "id": null,
+          "node_sha256": "1516bdc137a626b30ad9ddd1aaa147cc92a6b17661e75da8b1d991761564790f",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "F",
+            "out",
+            "F",
+            "in",
+            "E",
+            "P",
+            "L"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 16,
+          "id": null,
+          "node_sha256": "469c5fce3cc8e1cc8a8e57f5f5097e1c87c92d70c3927c0b848cc102777b2853",
+          "numbers": "0.50.5",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "F",
+            "F",
+            "in",
+            "F",
+            "out",
+            "F",
+            "in",
+            "E",
+            "P",
+            "L"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "=",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 17,
+          "id": null,
+          "node_sha256": "03e218ad93ee67fc79e290461511f4f201dc67750d8eb4ffc9eca8be65bf76ce",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "P",
+            "a"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 18,
+          "id": null,
+          "node_sha256": "40a8f477e679b8e7a710cb0e4b843a3b9df9d642166747672e2686f2f0f8785b",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "P",
+            "m"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 19,
+          "id": null,
+          "node_sha256": "ca33b03285b3349815e775be8b4586a6c6925903e211f67bea73e09469d2a83d",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "P",
+            "P",
+            "a",
+            "P",
+            "m"
+          ],
+          "operators": [
+            "=",
+            "+"
+          ]
+        },
+        {
+          "object_index": 20,
+          "id": null,
+          "node_sha256": "d6158e54e8cc34c6e1f1b0753e50dfb3600c30a12aff6149636cd1d91751c59d",
+          "numbers": "0.5",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "a",
+            "F",
+            "in",
+            "P",
+            "a",
+            "L"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 21,
+          "id": null,
+          "node_sha256": "6af350e19510be383982526821ac0bec3748c39c67d0b78e771b8f41b891cc27",
+          "numbers": "0.5",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "m",
+            "E",
+            "P",
+            "m",
+            "L"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 22,
+          "id": null,
+          "node_sha256": "edbae15011355cbbd8a65da40979bef1681fd2ebd7acffc68e79ce074d8b5c72",
+          "numbers": "0.50.5",
+          "minimum": {
+            "_": 7,
+            "^": 0,
+            "\\frac": 3,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "P",
+            "a",
+            "P",
+            "m",
+            "Q",
+            "a",
+            "Q",
+            "m",
+            "F",
+            "in",
+            "P",
+            "a",
+            "L",
+            "E",
+            "P",
+            "m",
+            "L"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 23,
+          "id": null,
+          "node_sha256": "f599ecc6c181c7ef7ebacc60517c6deb015f728bfa9baabe94646a7841f6a772",
+          "numbers": "2",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "P",
+            "a",
+            "P",
+            "m",
+            "F",
+            "in",
+            "E",
+            "L"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 24,
+          "id": null,
+          "node_sha256": "2dd12ea2d800442dce616b7825d053b57c04fc636f4bef69904ac97e5f0508fe",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ρ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 25,
+          "id": null,
+          "node_sha256": "638f63c6f14da00a9442239cd7f1f56beca918c1fe291dd04239fd674741496c",
+          "numbers": "2",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 2,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "ρ",
+            "P",
+            "m",
+            "P",
+            "EL",
+            "E",
+            "L",
+            "F",
+            "in"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "+"
+          ]
+        },
+        {
+          "object_index": 26,
+          "id": null,
+          "node_sha256": "2def28447e7a89e1aa20f2e5a0889d6015bba5caae883f85fd90a75b438dc1db",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "a"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 27,
+          "id": null,
+          "node_sha256": "0a823fe0057ac38b51c5de3a7501b42c5b308bff233ef22518925537f18ce545",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "Q",
+            "m"
+          ],
+          "operators": []
+        }
+      ]
+    }
+  ]
 }

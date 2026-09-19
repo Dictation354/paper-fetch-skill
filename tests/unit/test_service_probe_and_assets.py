@@ -1,9 +1,7 @@
-# ruff: noqa: F403,F405
 from __future__ import annotations
-
 from unittest import mock
-
-from ._service_support import *
+from tests.support._service_support import *
+# ruff: noqa: F403,F405
 
 
 class ServiceProbeAndAssetTests(unittest.TestCase):

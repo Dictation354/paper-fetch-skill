@@ -1,0 +1,408 @@
+{
+  "schema_version": 2,
+  "provider": "pnas",
+  "route": "browser_html",
+  "failure_code": "publisher_access_denied",
+  "stage": "block_detection",
+  "backend": "camoufox",
+  "attempt": 1,
+  "target": {
+    "url": "https://www.pnas.org/doi/10.1073/pnas.2607267123",
+    "host": "www.pnas.org",
+    "path": "/doi/10.1073/pnas.2607267123",
+    "url_sha256": "aa1bef8249b0f945ce71c8be0d7f198c69ae0a4cd08bd3417bbbe7be923b1f89"
+  },
+  "final": {
+    "url": "https://www.pnas.org/doi/10.1073/pnas.2607267123",
+    "host": "www.pnas.org",
+    "path": "/doi/10.1073/pnas.2607267123",
+    "url_sha256": "aa1bef8249b0f945ce71c8be0d7f198c69ae0a4cd08bd3417bbbe7be923b1f89"
+  },
+  "response_status": 403,
+  "title_summary": "Reconfigurable hydrogel interfaces for soft brain electrodes | PNAS",
+  "page_summary": "Reconfigurable hydrogel interfaces for soft brain electrodes | PNAS ARTICLES Current Issue Latest Articles Special Features List of Issues PNAS Nexus Front Matter AUTHORS Information for Authors Editorial and Journal Policies Submission Procedures Publication Charges Topics Physical Sciences Social Sciences Biological Sciences Featured Topics Physics Chemistry Sustainability Science Sustainable Development Goals Articles By Topic Applied Mathematics Applied Physical Sciences Astronomy Biophysics and Computational Biology Computer Sciences Earth, Atmospheric, and Planetary Sciences Engineering Environmental Sciences Mathematics Statistics Featured Topics Anthropology Sustainability Science Sustainable Development Goals Articles By Topic Demography Economic Sciences Environmental Sciences Political Sciences Psychological and Cognitive Sciences Social Sciences Featured Topic Anthropology Sustainability Science Sustainable Development Goals Articles By Topic Agricultural Sciences Applied B",
+  "page": {
+    "browser_runtime": {
+      "backend": "camoufox",
+      "media_blocking": true,
+      "timeout_budget_ms": 119748,
+      "browser_connect_seconds": 0.995,
+      "browser_context_seed": {
+        "provided": false,
+        "cookie_count": 0,
+        "applied": false,
+        "user_agent_reused": false,
+        "reason": "no_compatible_cookies"
+      },
+      "page_events": {
+        "document_requests": [
+          {
+            "url": "https://www.pnas.org/doi/10.1073/pnas.2607267123",
+            "host": "www.pnas.org",
+            "path": "/doi/10.1073/pnas.2607267123",
+            "url_sha256": "aa1bef8249b0f945ce71c8be0d7f198c69ae0a4cd08bd3417bbbe7be923b1f89",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 139.976,
+            "status": 403,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 273.367
+          },
+          {
+            "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/njbpx/0x4AAAAAAADnPIDROrmt1Wwj/dark/fbE/new/normal",
+            "host": "challenges.cloudflare.com",
+            "path": "/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/njbpx/0x4AAAAAAADnPIDROrmt1Wwj/dark/fbE/new/normal",
+            "url_sha256": "799997754200d1f2267fce7dfc663bb64cb28e12da963b9f900137382d253fda",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 176.971,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 200.093
+          },
+          {
+            "url": "https://www.pnas.org/doi/10.1073/pnas.2607267123",
+            "host": "www.pnas.org",
+            "path": "/doi/10.1073/pnas.2607267123",
+            "url_sha256": "aa1bef8249b0f945ce71c8be0d7f198c69ae0a4cd08bd3417bbbe7be923b1f89",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "request_finished_ms": 272.159,
+            "response_received_ms": 274.841,
+            "status": 302,
+            "content_type": null,
+            "content_length_bytes": 0,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false
+          },
+          {
+            "url": "https://www.pnas.org/action/oidcStart",
+            "host": "www.pnas.org",
+            "path": "/action/oidcStart",
+            "url_sha256": "f10f6f64d3a5b50b20d9125cac6b544d8221cccd8401f02e740f2b2199333be4",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "request_finished_ms": 210.789,
+            "response_received_ms": 211.131,
+            "status": 302,
+            "content_type": null,
+            "content_length_bytes": 0,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false
+          },
+          {
+            "url": "https://pnas.scienceconnect.io/api/oauth/authorize",
+            "host": "pnas.scienceconnect.io",
+            "path": "/api/oauth/authorize",
+            "url_sha256": "1a1027a5b3c2aa97ef6a32a5bd0bc6fb8f59d28f891285829076b1af9c99e0a8",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "request_finished_ms": 547.394,
+            "response_received_ms": 547.949,
+            "status": 302,
+            "content_type": null,
+            "content_length_bytes": 0,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false
+          },
+          {
+            "url": "https://www.pnas.org/action/oidcCallback",
+            "host": "www.pnas.org",
+            "path": "/action/oidcCallback",
+            "url_sha256": "091ea795f848e13a5863015629666967fee5b23ff3fc26284b5c7df6a5184e64",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "request_finished_ms": 94.121,
+            "response_received_ms": 99.598,
+            "status": 302,
+            "content_type": null,
+            "content_length_bytes": 0,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false
+          },
+          {
+            "url": "https://www.pnas.org/doi/10.1073/pnas.2607267123",
+            "host": "www.pnas.org",
+            "path": "/doi/10.1073/pnas.2607267123",
+            "url_sha256": "aa1bef8249b0f945ce71c8be0d7f198c69ae0a4cd08bd3417bbbe7be923b1f89",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 639.322,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 1498.731
+          },
+          {
+            "url": "https://static.addtoany.com/menu/sm.25.html",
+            "host": "static.addtoany.com",
+            "path": "/menu/sm.25.html",
+            "url_sha256": "129eac0a2ccb0b647e83d420fdc5da4ee922098c082ef1d1b0d1e08d7e7e029d",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "request_finished_ms": 145.653,
+            "response_received_ms": 201.931,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false
+          }
+        ],
+        "failed_requests": [
+          {
+            "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/ci/a3d514dcdcd8e2ee/1789784114991/k2b1Vesk4zF9t5_0ah_fLhwuRvWJirsdkDmwejcnrvw-1789784114-1.3.1.1-XnQuk482FZaKkBO8b2F9jiuf2v7BrUuBobVOlqDGST0rdwyeEGoon79s.xL9Ge7XbVFV3JUstlasPBBbuN9WWOCMkbTHz94vP3z75il7iyvISRnDDclb1ujE.ERUmlcJE2rh.29idC2tiIG0q1AzWxzxF2WDhUyOdK18BLN.OGT7RwVWPtmnt7V.T04Zl6RCV8V2fTBEwSin1JsboXoOLv5msXZ8C5gfwEV53FCGa9Bz.5GNFxfG7QcErHMWL4iDyKk6hNg3a1RGYs8_dVwwPofYK2ymvmo.iScYn3QxMjbiZpi0Yf_6je0VxsoKBSWIcE2EgEpuNCCQnfYAZ3QrLAkHhaXpErQUwZ2jtixx89PRmZLk9dntM8fiZIYGtNc6Yys5khpZ.aRB6rCsuiVwY0zq_akTJQ0ekr16V2T.Gvm_woTTpAR0nguMNJzFjIgsxhBoWPS9fiOlzvvplSneIbvwTPgbbXn5EWA9f8XwMlL9kILHMbxZ6QxHvU8axowlRg51r432HlYNUnF8dFCufkRnBza8MmhNgQ_phw2ySK9mbevA.CTtqursHS5otxI_lWQUmL02BiRs9MAnp.szZ60mjjguIoF7RwdogGrUkVBHEwtd6jSqxI6eue_QdKL1ASBOFZrv89RK3iBA4tXY1uEKOx.1obyYExOVFaLR52V2zPSf009gaPIY2V4Dmh48tjY_FaqX54r0G0ktdwPi8iB4qu5bXWEiVOqHsI5P8mooMy2a2NM95No8zT28nplD",
+            "host": "challenges.cloudflare.com",
+            "path": "/cdn-cgi/challenge-platform/h/g/ci/a3d514dcdcd8e2ee/1789784114991/k2b1Vesk4zF9t5_0ah_fLhwuRvWJirsdkDmwejcnrvw-1789784114-1.3.1.1-XnQuk482FZaKkBO8b2F9jiuf2v7BrUuBobVOlqDGST0rdwyeEGoon79s.xL9Ge7XbVFV3JUstlasPBBbuN9WWOCMkbTHz94vP3z75il7iyvISRnDDclb1ujE.ERUmlcJE2rh.29idC2tiIG0q1AzWxzxF2WDhUyOdK18BLN.OGT7RwVWPtmnt7V.T04Zl6RCV8V2fTBEwSin1JsboXoOLv5msXZ8C5gfwEV53FCGa9Bz.5GNFxfG7QcErHMWL4iDyKk6hNg3a1RGYs8_dVwwPofYK2ymvmo.iScYn3QxMjbiZpi0Yf_6je0VxsoKBSWIcE2EgEpuNCCQnfYAZ3QrLAkHhaXpErQUwZ2jtixx89PRmZLk9dntM8fiZIYGtNc6Yys5khpZ.aRB6rCsuiVwY0zq_akTJQ0ekr16V2T.Gvm_woTTpAR0nguMNJzFjIgsxhBoWPS9fiOlzvvplSneIbvwTPgbbXn5EWA9f8XwMlL9kILHMbxZ6QxHvU8axowlRg51r432HlYNUnF8dFCufkRnBza8MmhNgQ_phw2ySK9mbevA.CTtqursHS5otxI_lWQUmL02BiRs9MAnp.szZ60mjjguIoF7RwdogGrUkVBHEwtd6jSqxI6eue_QdKL1ASBOFZrv89RK3iBA4tXY1uEKOx.1obyYExOVFaLR52V2zPSf009gaPIY2V4Dmh48tjY_FaqX54r0G0ktdwPi8iB4qu5bXWEiVOqHsI5P8mooMy2a2NM95No8zT28nplD",
+            "url_sha256": "69761c5a9f88b292d541d4e9be1310e9b5efe1330f398cbeba7a4bf015a36fa1",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194",
+            "url_sha256": "5accb1148b91c1660aa1a1665039ae59a6fc74b087cfaa63eb898c88b76b6b54",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194",
+            "url_sha256": "5accb1148b91c1660aa1a1665039ae59a6fc74b087cfaa63eb898c88b76b6b54",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://www.pnas.org/pb-assets/images/Logos/header-logo/logo-1624644560537.svg",
+            "host": "www.pnas.org",
+            "path": "/pb-assets/images/Logos/header-logo/logo-1624644560537.svg",
+            "url_sha256": "32b05d6ad2d6e05f5f84a5d40d01262f4a2cc495a3f17fb4807ab188ae494ee0",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://www.pnas.org/pb-assets/images/Logos/header-logo/logo-light-1641218818190.svg",
+            "host": "www.pnas.org",
+            "path": "/pb-assets/images/Logos/header-logo/logo-light-1641218818190.svg",
+            "url_sha256": "b1d3121aed3ea55b0ee0225205af3d44a2c84036ed73e6ac80ff43985f65d6ae",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://www.pnas.org/pb-assets/images/icons/twitter-x-gray-1705527808743.svg",
+            "host": "www.pnas.org",
+            "path": "/pb-assets/images/icons/twitter-x-gray-1705527808743.svg",
+            "url_sha256": "257060ce336cc1ecacd126029331c94cc57133899957d59b34d683a9d6a90e14",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://www.pnas.org/pb-assets/images/icons/icon-bluesky-mobile-1734362341180.png",
+            "host": "www.pnas.org",
+            "path": "/pb-assets/images/icons/icon-bluesky-mobile-1734362341180.png",
+            "url_sha256": "fd74cc282267333e1f0af64807fa6b8ac5544156db99cb53cd22d6203fe0105e",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://www.pnas.org/products/pnas/releasedAssets/fonts/OpenSans-Bold-1025a6e0fb0fa86f17f57cc82a6b9756.ttf",
+            "host": "www.pnas.org",
+            "path": "/products/pnas/releasedAssets/fonts/OpenSans-Bold-1025a6e0fb0fa86f17f57cc82a6b9756.ttf",
+            "url_sha256": "4954bcb1273ee4693a420205f57242dc547d0406d07cce1416180b0004a36314",
+            "resource_type": "font",
+            "error": "NS_ERROR_FAILURE"
+          }
+        ],
+        "failed_scripts": [
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194",
+            "url_sha256": "5accb1148b91c1660aa1a1665039ae59a6fc74b087cfaa63eb898c88b76b6b54",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194",
+            "url_sha256": "5accb1148b91c1660aa1a1665039ae59a6fc74b087cfaa63eb898c88b76b6b54",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+            "host": "static.cloudflareinsights.com",
+            "path": "/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495",
+            "url_sha256": "2f7c44dfc9735ac852349b2c32920ab54f9e9bf9c18c3b7ea14f98faeeed7e98",
+            "resource_type": "script",
+            "error": "NS_ERROR_ABORT"
+          },
+          {
+            "url": "https://api.altmetric.com/v1/internal-556fdf0f/doi/10.1073/pnas.2607267123",
+            "host": "api.altmetric.com",
+            "path": "/v1/internal-556fdf0f/doi/10.1073/pnas.2607267123",
+            "url_sha256": "dfe933772d4cd0b60ab2253f9c6a49bee33a9e74ec6f175ae8b5f3fe299a3c60",
+            "resource_type": "script",
+            "error": "NS_ERROR_CORRUPTED_CONTENT"
+          }
+        ],
+        "console_errors": [
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"WebRTC: ICE failed, add a TURN server and see about:webrtc for more details\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Content-Security-Policy: The page’s settings blocked an inline script (script-src-elem) from being executed because it violates the following directive: “script-src 'nonce-SPMebtgA7kiz99wNNWdgpu' 'unsafe-eval' https://challenges.cloudflare.com”. Consider using a hash ('sha256-at4G4H8tZXYeM4BMZLmNg18pxWy9fs3cRXFVgTPzUas=') or a nonce.\" {file: \"sandbox eval code\" line: 19}]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Content-Security-Policy: The page’s settings blocked an inline script (script-src-elem) from being executed because it violates the following directive: “script-src 'nonce-SPMebtgA7kiz99wNNWdgpu' 'unsafe-eval' https://challenges.cloudflare.com”. Consider using a hash ('sha256-at4G4H8tZXYeM4BMZLmNg18pxWy9fs3cRXFVgTPzUas=') or a nonce.\" {file: \"sandbox eval code\" line: 19}]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194. (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"None of the “sha512” hashes in the integrity attribute match the content of the subresource at “https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194”. The computed hash is “z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==”.\" {file: \"https://www.pnas.org/doi/10.1073/pnas.2607267123\" line: 0}]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194. (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"None of the “sha512” hashes in the integrity attribute match the content of the subresource at “https://static.cloudflareinsights.com/beacon.min.js/v652eace1692a40cfa3763df669d7439c1639079717194”. The computed hash is “z4PhNX7vuL3xVChQ1m2AB9Yg5AULVxXcg/SpIdNs6c5H0NE8XYXysP+DGNKHfuwvY7kxvUdBeoGlODJ6+SfaPg==”.\" {file: \"https://www.pnas.org/doi/10.1073/pnas.2607267123\" line: 0}]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"downloadable font: download failed (font-family: \"Open Sans\" style:normal weight:700 stretch:100 src index:0): status=2147500037 source: https://www.pnas.org/products/pnas/releasedAssets/fonts/OpenSans-Bold-1025a6e0fb0fa86f17f57cc82a6b9756.ttf\"]"
+          }
+        ],
+        "page_errors": [
+          {
+            "error_type": "Error",
+            "message": "can't access property \"widgetTitle\", n is undefined"
+          }
+        ]
+      },
+      "challenge_signals": [
+        {
+          "reason": "publisher_access_denied",
+          "status": 403,
+          "url": "https://www.pnas.org/doi/10.1073/pnas.2607267123",
+          "host": "www.pnas.org",
+          "path": "/doi/10.1073/pnas.2607267123",
+          "url_sha256": "aa1bef8249b0f945ce71c8be0d7f198c69ae0a4cd08bd3417bbbe7be923b1f89"
+        }
+      ],
+      "candidates": [
+        {
+          "url": "https://www.pnas.org/doi/10.1073/pnas.2607267123",
+          "url_sha256": "aa1bef8249b0f945ce71c8be0d7f198c69ae0a4cd08bd3417bbbe7be923b1f89",
+          "final_url": "https://www.pnas.org/doi/10.1073/pnas.2607267123",
+          "final_url_sha256": "aa1bef8249b0f945ce71c8be0d7f198c69ae0a4cd08bd3417bbbe7be923b1f89",
+          "status": 403,
+          "main_document_response": {
+            "url": "https://www.pnas.org/doi/10.1073/pnas.2607267123",
+            "host": "www.pnas.org",
+            "path": "/doi/10.1073/pnas.2607267123",
+            "url_sha256": "aa1bef8249b0f945ce71c8be0d7f198c69ae0a4cd08bd3417bbbe7be923b1f89",
+            "status": 403,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "captured_html_bytes": 187357,
+            "navigation_timing": {
+              "available": true,
+              "document_ready_state": "interactive",
+              "navigation_entry_present": true,
+              "response_start_ms": 1177,
+              "response_end_ms": 1177,
+              "dom_interactive_ms": 5451,
+              "dom_content_loaded_event_end_ms": 5463,
+              "load_event_end_ms": 0,
+              "duration_ms": 0,
+              "transfer_size_bytes": 41044,
+              "encoded_body_size_bytes": 40744,
+              "decoded_body_size_bytes": 167299,
+              "navigation_type": "navigate",
+              "next_hop_protocol": "h2",
+              "response_completed": true,
+              "dom_content_loaded_completed": true,
+              "load_event_completed": false
+            },
+            "request_lifecycle": {
+              "response_received_observed": true,
+              "response_received_ms": 139.976,
+              "request_finished_observed": true,
+              "request_finished_ms": 273.367,
+              "request_failed_observed": false,
+              "observed_ms": 10221.015
+            }
+          },
+          "navigation_seconds": 0.306,
+          "dom_readiness_seconds": 8.545,
+          "dom_readiness_attempted": true,
+          "dom_readiness_ready": false,
+          "dom_readiness_selector": "#bodymatter",
+          "dom_readiness_text_length": 7471,
+          "dom_readiness_paragraph_count": 1,
+          "dom_readiness_heading_count": 1,
+          "dom_readiness_fingerprint_present": true,
+          "duration_seconds": 10.924,
+          "block_reason": "publisher_access_denied"
+        }
+      ]
+    },
+    "html_shape": {
+      "byte_count": 187357,
+      "has_html": true,
+      "has_head": true,
+      "has_body": true,
+      "body_text_length": 22841,
+      "body_element_count": 1959,
+      "article_container_count": 3
+    }
+  },
+  "raw_html": {
+    "byte_count": 187357,
+    "sha256": "aac60869af8875da45f12cac097b016bd99f21ae410a25dd6bd8cd0979f9b7fb"
+  },
+  "sanitized_html": {
+    "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/pnas/10.1073_pnas.2607267123/browser_html-1/page-sanitized.html",
+    "byte_count": 88190,
+    "sha256": "82325bb5c150500e73c46c4881256b49259cb751ec2009594b4b91e8917bd5fc",
+    "truncated": false
+  },
+  "diagnostic_path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/pnas/10.1073_pnas.2607267123/browser_html-1/diagnostic.json"
+}

@@ -1,13 +1,11 @@
 from __future__ import annotations
-
+from tests.support.camoufox_backend import _Context, _Page, _Response
 import json
 from types import SimpleNamespace
 import subprocess
 import threading
 from unittest import mock
-
 import pytest
-
 from paper_fetch.config import (
     BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_HEADLESS_ENV_VAR,
@@ -768,69 +766,6 @@ def test_runtime_context_closes_camoufox_on_owning_worker_thread() -> None:
 
     manager.close.assert_called_once_with()
     assert key not in runtime._camoufox_browser_managers
-
-
-class _Response:
-    status = 200
-    headers = {"content-type": "text/html"}
-
-    def all_headers(self):
-        return dict(self.headers)
-
-
-class _Page:
-    def __init__(self) -> None:
-        self.url = "https://example.test/article"
-        self.goto_kwargs: dict[str, object] = {}
-        self.route_handler = None
-        self.wait_for_function = mock.Mock()
-        self.wait_for_selector = mock.Mock()
-        self.wait_for_timeout = mock.Mock()
-
-    def goto(self, url: str, **kwargs):
-        self.url = url
-        self.goto_kwargs = dict(kwargs)
-        return _Response()
-
-    def route(self, _pattern: str, handler) -> None:
-        self.route_handler = handler
-
-    def content(self) -> str:
-        return "<html><head><title>Article</title></head><body><main>Full text</main></body></html>"
-
-    def title(self) -> str:
-        return "Article"
-
-    def evaluate(self, _script: str):
-        return "Mozilla/5.0 Firefox/152.0"
-
-    def close(self) -> None:
-        pass
-
-
-class _Context:
-    def __init__(self) -> None:
-        self.page = _Page()
-        self.added_cookies: list[dict[str, object]] = []
-        self.events: list[str] = []
-        self.route_handler = None
-
-    def add_cookies(self, cookies):
-        self.events.append("add_cookies")
-        self.added_cookies.extend(cookies)
-
-    def route(self, _pattern: str, handler) -> None:
-        self.route_handler = handler
-
-    def new_page(self):
-        self.events.append("new_page")
-        return self.page
-
-    def cookies(self, _urls=None):
-        return []
-
-    def close(self) -> None:
-        pass
 
 
 def _wiley_review_html(
@@ -2608,7 +2543,12 @@ def test_pnas_sidebar_route_is_exact_and_provider_local(
         "isolation",
     ],
 )
-def test_science_final_document_response_ownership(monkeypatch, tmp_path, scenario):
+@pytest.mark.parametrize(
+    "provider,doi", [("science", "10.1126/example"), ("pnas", "10.1073/example")]
+)
+def test_science_final_document_response_ownership(
+    monkeypatch, tmp_path, scenario, provider, doi
+):
     context = _Context()
     page = context.page
     page.main_frame = object()
@@ -2640,7 +2580,7 @@ def test_science_final_document_response_ownership(monkeypatch, tmp_path, scenar
         return result
 
     count = 0
-    url = "https://www.science.org/doi/full/10.1126/example"
+    url = f"https://www.{provider}.org/doi/full/{doi}"
 
     def goto(target, **kwargs):
         nonlocal count
@@ -2655,10 +2595,10 @@ def test_science_final_document_response_ownership(monkeypatch, tmp_path, scenar
             return
         target = page.url
         if scenario == "different_doi":
-            target = "https://www.science.org/doi/full/10.1126/different"
+            target = f"https://www.{provider}.org/doi/full/{doi}-different"
             page.url = target
         if scenario == "unrelated":
-            target = "https://other.test/doi/full/10.1126/example"
+            target = f"https://other.test/doi/full/{doi}"
             page.url = target
         response(
             200, target, main=scenario != "iframe", finished=scenario != "unfinished"
@@ -2678,10 +2618,10 @@ def test_science_final_document_response_ownership(monkeypatch, tmp_path, scenar
             else "<html><body><main>Full text</main></body></html>"
         )
     kwargs = dict(
-        publisher="science",
+        publisher=provider,
         config=BrowserRuntimeConfig(
-            provider="science",
-            doi="10.1126/example",
+            provider=provider,
+            doi=doi,
             artifact_dir=tmp_path,
             headless=True,
             user_agent=None,
@@ -3073,46 +3013,6 @@ def test_managed_camoufox_mismatched_target_metadata_is_repaired(managed_camoufo
     result = preparation.prepare_camoufox_managed_runtime()
     assert result.valid and result.version == env.latest.version.full_string
     env.download.assert_called_once()
-
-
-def test_managed_camoufox_process_lock_prevents_duplicate_install(
-    managed_camoufox, tmp_path
-):
-    import multiprocessing
-
-    if "fork" not in multiprocessing.get_all_start_methods():
-        pytest.skip("uses fork to inherit the isolated upstream download stub")
-    env = managed_camoufox
-    context = multiprocessing.get_context("fork")
-    barrier = context.Barrier(2)
-    downloads = tmp_path / "downloads"
-    original_download = env.download.side_effect
-
-    def download(file, url):
-        with downloads.open("a") as output:
-            output.write("download\n")
-        return original_download(file, url)
-
-    env.download.side_effect = download
-
-    def prepare():
-        barrier.wait(timeout=10)
-        assert preparation.prepare_camoufox_managed_runtime().valid
-
-    processes = [context.Process(target=prepare) for _ in range(2)]
-    try:
-        for process in processes:
-            process.start()
-        for process in processes:
-            process.join(timeout=15)
-            assert process.exitcode == 0
-    finally:
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
-                process.join(timeout=5)
-    assert downloads.read_text() == "download\n"
-    assert preparation.probe_camoufox_managed_runtime().valid
 
 
 def test_managed_camoufox_update_failure_keeps_legacy_cache(managed_camoufox):

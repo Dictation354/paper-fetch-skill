@@ -1,12 +1,11 @@
 from __future__ import annotations
-
-import unittest
-
-from bs4 import BeautifulSoup
-
+from __future__ import annotations
+from tests.golden_criteria import golden_criteria_scenario_asset
 from paper_fetch.providers.atypon_browser_workflow import (
     extract_atypon_browser_workflow_markdown,
 )
+import unittest
+from bs4 import BeautifulSoup
 from paper_fetch.providers.atypon_browser_workflow.postprocess import (
     _postprocess_browser_workflow_markdown,
 )
@@ -14,7 +13,6 @@ from paper_fetch.providers import _science_html
 from paper_fetch.providers.atypon_browser_workflow import (
     normalization as atypon_browser_workflow_normalization,
 )
-from tests.golden_criteria import golden_criteria_scenario_asset
 
 
 class AtyponBrowserWorkflowPostprocessUnitTests(unittest.TestCase):
@@ -334,6 +332,9 @@ $$
         self.assertIn("- Group: Group A; Values: Alpha / Beta", markdown)
         self.assertNotIn("| Group | Values |", markdown)
 
+
+if __name__ == "__main__":
+    unittest.main()
 
 if __name__ == "__main__":
     unittest.main()

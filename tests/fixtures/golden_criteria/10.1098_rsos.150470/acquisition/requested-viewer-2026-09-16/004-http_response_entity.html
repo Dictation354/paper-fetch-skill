@@ -1,0 +1,393 @@
+
+
+
+
+<!DOCTYPE html>
+
+<html lang="en" class="no-js">
+
+<head>
+    <!-- charset must appear in the first 1024 bytes of the document -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Figure 1. Plesiochelys etalloni ,... | The Royal Society</title>
+        
+
+
+
+        <script src="https://cookie-cdn.cookiepro.com/scripttemplates/otSDKStub.js" type="text/javascript" charset="UTF-8" data-domain-script="01980ead-9999-7ec5-8307-69ac7b4ebd59" class="cookiepro-otsdkstub"></script>
+    <script type="text/javascript">
+        function OptanonWrapper() {
+            // Get initial OnetrustActiveGroups ids
+            if (typeof OptanonWrapperCount == "undefined") {
+                otGetInitialGrps();
+            }
+
+            //Delete cookies
+            otDeleteCookie(otIniGrps);
+
+            // Assign OnetrustActiveGroups to custom variable
+            function otGetInitialGrps() {
+                OptanonWrapperCount = '';
+                otIniGrps = OnetrustActiveGroups;
+            }
+
+            function otDeleteCookie(iniOptGrpId) {
+                var otDomainGrps = JSON.parse(JSON.stringify(Optanon.GetDomainData().Groups));
+                var otDeletedGrpIds = otGetInactiveId(iniOptGrpId, OnetrustActiveGroups);
+                if (otDeletedGrpIds.length != 0 && otDomainGrps.length != 0) {
+                    for (var i = 0; i < otDomainGrps.length; i++) {
+                        //Check if CustomGroupId matches
+                        if (otDomainGrps[i]['CustomGroupId'] != '' && otDeletedGrpIds.includes(otDomainGrps[i]['CustomGroupId'])) {
+                            for (var j = 0; j < otDomainGrps[i]['Cookies'].length; j++) {
+                                // console.log("otDeleteCookie",otDomainGrps[i]['Cookies'][j]['Name'])
+                                //Delete cookie
+                                eraseCookie(otDomainGrps[i]['Cookies'][j]['Name']);
+                            }
+                        }
+
+                        //Check if Hostid matches
+                        if (otDomainGrps[i]['Hosts'].length != 0) {
+                            for (var j = 0; j < otDomainGrps[i]['Hosts'].length; j++) {
+                                //Check if HostId presents in the deleted list and cookie array is not blank
+                                if (otDeletedGrpIds.includes(otDomainGrps[i]['Hosts'][j]['HostId']) && otDomainGrps[i]['Hosts'][j]['Cookies'].length != 0) {
+                                    for (var k = 0; k < otDomainGrps[i]['Hosts'][j]['Cookies'].length; k++) {
+                                        //Delete cookie
+                                        eraseCookie(otDomainGrps[i]['Hosts'][j]['Cookies'][k]['Name']);
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+                otGetInitialGrps(); //Reassign new group ids
+            }
+
+            //Get inactive ids
+            function otGetInactiveId(customIniId, otActiveGrp) {
+                //Initial OnetrustActiveGroups
+                // console.log("otGetInactiveId",customIniId)
+                customIniId = customIniId.split(",");
+                customIniId = customIniId.filter(Boolean);
+
+                //After action OnetrustActiveGroups
+                otActiveGrp = otActiveGrp.split(",");
+                otActiveGrp = otActiveGrp.filter(Boolean);
+
+                var result = [];
+                for (var i = 0; i < customIniId.length; i++) {
+                    if (otActiveGrp.indexOf(customIniId[i]) <= -1) {
+                        result.push(customIniId[i]);
+                    }
+                }
+                return result;
+            }
+
+            //Delete cookie
+            function eraseCookie(name) {
+                //Delete root path cookies
+                domainName = window.location.hostname;
+                document.cookie = name + '=; Max-Age=-99999999; Path=/;Domain=' + domainName;
+                document.cookie = name + '=; Max-Age=-99999999; Path=/;';
+
+                //Delete LSO incase LSO being used, cna be commented out.
+                localStorage.removeItem(name);
+
+                //Check for the current path of the page
+                pathArray = window.location.pathname.split('/');
+                //Loop through path hierarchy and delete potential cookies at each path.
+                for (var i = 0; i < pathArray.length; i++) {
+                    if (pathArray[i]) {
+                        //Build the path string from the Path Array e.g /site/login
+                        var currentPath = pathArray.slice(0, i + 1).join('/');
+                        document.cookie = name + '=; Max-Age=-99999999; Path=' + currentPath + ';Domain=' + domainName;
+                        document.cookie = name + '=; Max-Age=-99999999; Path=' + currentPath + ';';
+                        //Maybe path has a trailing slash!
+                        document.cookie = name + '=; Max-Age=-99999999; Path=' + currentPath + '/;Domain=' + domainName;
+                        document.cookie = name + '=; Max-Age=-99999999; Path=' + currentPath + '/;';
+
+
+                    }
+                }
+
+            }
+        }
+    </script>
+                
+
+
+        <script type='text/plain' defer src='//js.trendmd.com/trendmd.min.js' data-trendmdconfig='{"element":"#trendmd-suggestions"}' class='optanon-category-C0002'></script>
+
+
+
+
+
+    <script src="//trs.silverchair-cdn.com/Themes/Silver/app/js/jquery.3.4.1.min.js" type="text/javascript"></script>
+<script>window.jQuery || document.write('<script src="//trs.silverchair-cdn.com/Themes/Silver/app/js/jquery.3.4.1.min.js" type="text/javascript">\x3C/script>')</script>
+<script src="//trs.silverchair-cdn.com/Themes/Silver/app/vendor/v-639223665058021011/jquery-migrate-3.1.0.min.js" type="text/javascript"></script>
+
+    <script type='text/plain' src='https://platform-api.sharethis.com/js/sharethis.js#property=688926d6a958a8ebfcf6dac0&amp;product=sop' async='async' class='optanon-category-C0004'></script>
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=10" />
+
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <!-- Turn off telephone number detection. -->
+    <meta name="format-detection" content="telephone=no" />
+    
+<!-- Bookmark Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="//trs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223659843641354/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="//trs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223659843691380/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" href="//trs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223659843691380/favicon.ico" sizes="32x32">
+  <link rel="icon" type="image/svg+xml" href="//trs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223659844103271/favicon.svg">
+  <link rel="manifest" href="//trs.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223659844153300/site.webmanifest">
+  <meta name="theme-color" content="#002f65">
+
+
+    
+
+
+  <link rel="stylesheet" type="text/css" href="//trs.silverchair-cdn.com/Themes/Client/app/css/v-639237411204728053/site.min.css" />
+  <link rel="stylesheet" type="text/css" href="//trs.silverchair-cdn.com/Themes/Silver/app/icons/v-639223664792286301/style.css" />
+  <link rel="stylesheet" type="text/css" href="//trs.silverchair-cdn.com/Themes/Client/app/css/v-639223659840185357/bg_img.css" />
+
+<link rel="stylesheet" href="https://use.typekit.net/tyr3hmc.css">
+
+
+            <link href="//trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/CSS/umbrella/v-639088486566875982/site-umbrella.css" rel="stylesheet" type="text/css" />
+
+
+
+    <script>
+        var dataLayer = [{}];
+        window.gtmDataLayerSettings = { enableUserEvents: false, textTruncateLength: 150, scrollDepthThreshold: 10 };
+    </script>
+            <script>
+                (function (w, d, s, l, i) {
+                    w[l] = w[l] || []; w[l].push({
+                        'gtm.start':
+                            new Date().getTime(), event: 'gtm.js'
+                    }); var f = d.getElementsByTagName(s)[0],
+                        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+                        j.setAttribute('type', 'text/plain');
+                            j.setAttribute('class', 'optanon-category-C0002');
+                        j.async = true; j.src =
+                        'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+                })(window, document, 'script', 'dataLayer', 'GTM-TFQX55T7');
+            </script>
+
+    
+
+        <script type="text/javascript">
+            var App = App || {};
+            App.LoginUserInfo = {
+                isInstLoggedIn: 1,
+                isIndividualLoggedIn: 0
+            };
+
+            App.CurrentSubdomain = '';
+            App.SiteURL = 'royalsocietypublishing.org';
+            App.EnableAdobeAnalytics = false;
+        </script>
+    
+    <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW" />
+
+
+    
+
+
+
+    <script type="text/plain" async="async" src="https://securepubads.g.doubleclick.net/tag/js/gpt.js" class='optanon-category-C0004'></script>
+
+    <script>
+        var SCM = SCM || {};
+        SCM.pubGradeAdsEnabled = false;
+    </script>
+
+
+<script>
+    var googletag = googletag || {};
+    googletag.cmd = googletag.cmd || [];
+
+    googletag.cmd.push(function () {
+    googletag.setConfig({ disableInitialLoad: true });
+
+    
+
+    });
+</script>
+    
+
+            <script src="https://widgets.figshare.com/static/figshare.js" ></script>
+
+    
+
+
+
+
+</head>
+
+<body data-sitename="theroyalsociety" class="off-canvas pg_ViewLarge pg_viewlarge   " theme-umbrella data-sitestyletemplate="Journal" >
+            <noscript>
+                <iframe  src="https://www.googletagmanager.com/ns.html?id=GTM-TFQX55T7"
+                        height="0" width="0" style="display:none;visibility:hidden"></iframe>
+            </noscript>
+<input id="hdnSiteID" name="hdnSiteID" type="hidden" value="1" /><input id="hdnAdDelaySeconds" name="hdnAdDelaySeconds" type="hidden" value="3000" /><input id="hdnAdConfigurationTop" name="hdnAdConfigurationTop" type="hidden" value="basic" /><input id="hdnAdConfigurationRightRail" name="hdnAdConfigurationRightRail" type="hidden" value="basic" />
+    <div class="ad-banner js-ad-revealer ad-banner-revealer" role="region" aria-label="Advertisement" aria-hidden="true">
+    <div class="widget-AdBlock widget-instance-HeaderRevealerAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="HeaderRevealerAd">
+        
+ 
+    </div>
+
+    </div>
+    
+
+
+<div class="js-main">
+    <div class="widget-FigureViewLarge widget-instance-FigureViewLarge" 
+         data-widget-name="FigureViewLarge" 
+         data-widget-instance="FigureViewLarge">
+            <div class="figure-wrapper">
+        <div data-id="RSOS150470F1" class="fig fig-section"><div class="label fig-label">Figure 1.</div><div class="graphic-wrap"><a class="fig-link" href="[XSLTImagePath]"><img class="content-image js-graphic-position-float" src="https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/rsos150470f01.jpeg?Expires=1792578818&amp;Signature=BVEfNmnSLpwUFolqfr-pLThEBXkLZvi-lmfb-phzJuMK1VPpTHwyBZltjRG4Qi4zQFeDaBfFujcnDON-J6Rr794eSdvMXQzRcRk9OLw08HcUtavpCbir65CrkjaRnTxw-rjxsReEIC9UPb29JD3r0qKMXIJmtR7SB6EIob2bzVaOLqPwWQfRdT~nu-uGZzsqxnbujeovx~S1LKK3qHxwxnovYBxJcXaQwrpWxPu6b2oUlmM4mjq-4U60ahcerd08wsLyfc2F61Aebf24j6nj5ssuSCbc6FPcOFQ-jo8pmtFjiikUbYKSyEqR4P5n0RxDYrBcu8oEEyrP2hHSeyQEjA__&amp;Key-Pair-Id=APKAIE5G5CRDK6RD3PGA" data-src="https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/3/1/10.1098_rsos.150470/6/rsos150470f01.jpeg?Expires=1792578818&amp;Signature=BVEfNmnSLpwUFolqfr-pLThEBXkLZvi-lmfb-phzJuMK1VPpTHwyBZltjRG4Qi4zQFeDaBfFujcnDON-J6Rr794eSdvMXQzRcRk9OLw08HcUtavpCbir65CrkjaRnTxw-rjxsReEIC9UPb29JD3r0qKMXIJmtR7SB6EIob2bzVaOLqPwWQfRdT~nu-uGZzsqxnbujeovx~S1LKK3qHxwxnovYBxJcXaQwrpWxPu6b2oUlmM4mjq-4U60ahcerd08wsLyfc2F61Aebf24j6nj5ssuSCbc6FPcOFQ-jo8pmtFjiikUbYKSyEqR4P5n0RxDYrBcu8oEEyrP2hHSeyQEjA__&amp;Key-Pair-Id=APKAIE5G5CRDK6RD3PGA" alt="Figure 1. Refer to the image caption for details." path-from-xml="rsos150470f01.jpeg" /></a></div><div class="caption fig-caption"><p><em>Plesiochelys etalloni</em>, basicranium, NHMUK R3370, Kimmeridge Clay (unknown locality). (<em>a</em>) Photograph in dorsal view; (<em>b</em>) interpretative drawing in dorsal view; (<em>c</em>) photograph in ventral view; (<em>d</em>) interpretative drawing in ventral view; (<em>e</em>) photograph in posterior view; (<em>f</em>) interpretative drawing in posterior view; (<em>g</em>) photograph in left lateral view; (<em>h</em>) interpretative drawing in left lateral view; (<em>i</em>) photograph in right lateral view; (<em>j</em>) interpretative drawing in right lateral view. ap, antrum postoticum; ast, aditus canalis stapedio-temporalis; bo, basioccipital; bs, basisphenoid; co, condylus occipitalis; ct, cavum tympani; ds, dorsum sellae; epi, epipterygoid; ex, exoccipital; faccc, foramen anterius canalis carotici cerebralis; feng, foramen externus nervi glossopharyngei; fm, foramen magnum; fnh, foramen nervi hypoglossi; fnt, foramen nervi trigemini; fpcci, foramen posterius canalis carotici interni; fst, foramen stapedio-temporale; ica, incisura columellae auris; op, opisthotic; pa, parietal; pcl, processus clinoideus; pi, processus interfenestralis; ppr, pila prootica; pr, prootic; pt, pterygoid; ptf, pterygoid fossa; pto, processus trochlearis oticum; qu, quadrate; so, supraoccipital; sq, squamosal; tra, trabecula. Hatchings represent damaged area. Matrix is in grey.</p></div></div>
+    </div>
+ 
+    </div>
+</div>
+
+    
+
+    <div class="widget-SiteWideModals widget-instance-SiteWideModals" 
+         data-widget-name="SiteWideModals" 
+         data-widget-instance="SiteWideModals">
+        <div id="revealModal" class="reveal-modal" data-reveal aria-hidden="true" aria-live="assertive" tabindex="-1">
+    <div id="revealContent"></div>
+    
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close dialog</span></a>
+</div>
+
+<div id="globalModalContainer" class="modal-global-container"
+     role="dialog"
+     aria-hidden="true"
+     aria-live="assertive"
+     tabindex="-1">
+    <div id="globalModalContent">
+        <div class="js-globalModalPlaceholder"></div>
+    </div>
+    
+    <a href="javascript:;" class="close-modal js-close-modal" role="button">
+        <i class="icon-general-close" aria-hidden="true"></i>
+        <span class="screenreader-text">Close dialog</span>
+    </a>
+</div>
+<div id="globalModalOverlay" class="modal-overlay js-modal-overlay"></div>
+
+    <div id="NeedSubscription" class="reveal-modal small" data-reveal>
+            <div class="subscription-needed">
+                <div class="modal-heading">This feature is available to subscribers only</div>
+                <p><a class="btn modal-sign_in-btn" href="/sign-in?returnUrl=%2fview-large%2ffigure%2f18113020%2frsos150470f01.jpeg">Sign in</a> or <a class="modal-register-link" href="/my-account/register?siteId=1&amp;returnUrl=%2fview-large%2ffigure%2f18113020%2frsos150470f01.jpeg">Create an account</a></p>
+            </div>
+
+
+        <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close subscription notice</span></a>
+    </div>
+
+
+<div id="noAccessReveal" class="reveal-modal tiny" data-reveal>
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close access options</span></a>
+    <div id="noAccessForm">
+        <div class="spinner"></div>
+    </div>
+</div>
+
+
+<div id="cookieShareModal" class="cookie-share-modal-content" hidden>
+    <h2 id="cookieShareModalTitle" class="js-modal-label">Sharing Unavailable</h2>
+    <p>Sharing content requires targeting cookies to be enabled. Please update your cookie preferences to use this feature.</p>
+    <div class="cookie-share-modal__actions">
+        <button type="button" class="btn btn-primary js-share-cookie-prefs-btn">Update Cookie Preferences</button>
+        <button type="button" class="btn js-close-modal">Cancel</button>
+    </div>
+</div> 
+    </div>
+
+    
+
+
+
+
+
+
+<script type="text/javascript">
+    MathJax = {
+        tex: {
+            inlineMath: [['|$', '$|'], ['\\(', '\\)']]
+        }    };
+</script>
+<script id="MathJax-script" async src="//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+    <!-- CookiePro Default Categories -->
+    <!-- When the Cookie Compliance code loads, if cookies for the associated group have consent...
+         it will dynamically change the tag to: script type=text/JavaScript...
+         the code inside the tags will then be recognized and run as normal. -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script type="text/javascript" src="//trs.silverchair-cdn.com/Themes/Client/app/jsdist/v-639237411556568308/site.min.js"></script>
+
+
+    
+
+    
+
+        <script type="text/javascript">
+        $(document).ready(function () {
+            App.SearchAutoComplete.init(["Keywords"]);
+        });
+        </script>
+    
+
+
+
+    <div class="ad-banner js-ad-riser ad-banner-riser" role="region" aria-label="Advertisement">
+    <div class="widget-AdBlock widget-instance-RiserAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="RiserAd">
+        
+ 
+    </div>
+
+    </div>
+
+
+
+            <input id="hdnSelfServeClassForDatalayerClickEvent" type="hidden" value="trs-ad-track">
+        
+    <div class="end-of-page-js"></div>
+</body>
+</html>
+

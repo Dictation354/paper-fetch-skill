@@ -1,0 +1,373 @@
+{
+  "date": "2026-09-16",
+  "scope": "Known gaps only; no corpus-wide content review, no PDF conversion changes, no publication.",
+  "results": [
+    {
+      "doi": "10.1029/2004gb002273",
+      "provider": "wiley",
+      "collections": [
+        "tests/fixtures/golden_criteria/10.1029_2004gb002273/acquisition/known-gaps-2026-09-16/collection.json"
+      ],
+      "new_response_files": 1,
+      "new_dom_files": 1,
+      "historical_envelopes": "unchanged; unknown remains unknown"
+    },
+    {
+      "doi": "10.1063/5.0129134",
+      "provider": "aip",
+      "collections": [
+        "tests/fixtures/golden_criteria/10.1063_5.0129134/acquisition/known-gaps-2026-09-16/collection.json"
+      ],
+      "new_response_files": 1,
+      "new_dom_files": 1,
+      "historical_envelopes": "unchanged; unknown remains unknown"
+    },
+    {
+      "doi": "10.1073/pnas.2406303121",
+      "provider": "pnas",
+      "collections": [
+        "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/acquisition/known-gaps-2026-09-16/collection.json"
+      ],
+      "new_response_files": 2,
+      "new_dom_files": 1,
+      "historical_envelopes": "unchanged; unknown remains unknown"
+    },
+    {
+      "doi": "10.1080/15481603.2026.2667034",
+      "provider": "tandf",
+      "collections": [
+        "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/known-gaps-2026-09-16/collection.json",
+        "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/known-gaps-bytes-2026-09-16/collection.json",
+        "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/known-gaps-jpeg-2026-09-16/collection.json"
+      ],
+      "new_response_files": 10,
+      "new_dom_files": 3,
+      "historical_envelopes": "unchanged; unknown remains unknown"
+    },
+    {
+      "doi": "10.1093/bioinformatics/btaa823",
+      "provider": "oxfordacademic",
+      "collections": [
+        "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/acquisition/known-gaps-2026-09-16/collection.json"
+      ],
+      "new_response_files": 1,
+      "new_dom_files": 1,
+      "historical_envelopes": "unchanged; unknown remains unknown"
+    },
+    {
+      "doi": "10.1109/PGEC.1967.264619",
+      "provider": "ieee",
+      "collections": [
+        "tests/fixtures/golden_criteria/10.1109_PGEC.1967.264619/acquisition/known-gaps-2026-09-16/collection.json",
+        "tests/fixtures/golden_criteria/10.1109_PGEC.1967.264619/acquisition/known-gaps-pdf-2026-09-16/collection.json",
+        "tests/fixtures/golden_criteria/10.1109_PGEC.1967.264619/acquisition/known-gaps-rest-2026-09-16/collection.json"
+      ],
+      "new_response_files": 4,
+      "new_dom_files": 3,
+      "historical_envelopes": "unchanged; unknown remains unknown",
+      "subsequent_collections": [
+        "tests/fixtures/golden_criteria/10.1109_PGEC.1967.264619/acquisition/no-subscription-2026-09-16/collection.json"
+      ]
+    },
+    {
+      "doi": "10.1109/TBME.2024.3434477",
+      "provider": "ieee",
+      "collections": [
+        "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/acquisition/known-gaps-2026-09-16/collection.json",
+        "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/acquisition/known-gaps-pdf-2026-09-16/collection.json",
+        "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/acquisition/known-gaps-rest-2026-09-16/collection.json"
+      ],
+      "new_response_files": 4,
+      "new_dom_files": 3,
+      "historical_envelopes": "unchanged; unknown remains unknown",
+      "subsequent_collections": [
+        "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/acquisition/no-subscription-2026-09-16/collection.json"
+      ]
+    },
+    {
+      "doi": "10.1126/sciadv.abf8021",
+      "provider": "science",
+      "collections": [
+        "tests/fixtures/golden_criteria/10.1126_sciadv.abf8021/acquisition/known-gaps-2026-09-16/collection.json",
+        "tests/fixtures/golden_criteria/10.1126_sciadv.abf8021/acquisition/known-gaps-bytes-2026-09-16/collection.json"
+      ],
+      "new_response_files": 2,
+      "new_dom_files": 2,
+      "historical_envelopes": "unchanged; unknown remains unknown",
+      "subsequent_collections": [
+        "tests/fixtures/golden_criteria/10.1126_sciadv.abf8021/acquisition/project-pdf-fallback-2026-09-16/collection.json"
+      ]
+    }
+  ],
+  "resolved": {
+    "wiley_appendix": "Complete paragraph and five original reference targets retained once; Conclusions -> Appendix A -> References; 75 references unchanged; exact sections 9 -> 10.",
+    "tandf_original_jpeg": {
+      "count": 8,
+      "width": 1500,
+      "http_status": 200,
+      "decoded_rgba_different_channels": 0,
+      "previous_png": "retained"
+    },
+    "pnas_pdf": "New official HTTP200, complete 10-page same-paper PDF; historic status stays unknown.",
+    "aip_oup": "New HTTP200 response entities and separate same-paper DOM captures; no new challenge claimed.",
+    "wiley_formula": {
+      "status": "accepted_by_user",
+      "user_confirmation": "Wiley公式没有问题。",
+      "follow_up_required": false,
+      "technical_classification": "preview",
+      "dimensions": [
+        384,
+        17
+      ],
+      "prior_question": "Does Wiley provide a higher-resolution original for equation 1?",
+      "evidence": "Current official formula node lists only gbc1137-math-0001.gif; previously captured response decodes to 384x17 and remains preview."
+    },
+    "science_pdf_project_fallback": {
+      "collection": "tests/fixtures/golden_criteria/10.1126_sciadv.abf8021/acquisition/project-pdf-fallback-2026-09-16/collection.json",
+      "outcome": "pdf_obtained",
+      "http_status": 200,
+      "pages": 12,
+      "bytes": 17082873,
+      "sha256": "b2bab33e562af288e08307d11b4e870db77342f29c7cd0f11746ff6d76462d96",
+      "final_url": "https://www.science.org/doi/pdf/10.1126/sciadv.abf8021",
+      "historical_original_pdf_envelope": "unknown; unchanged",
+      "production_code_changed": false
+    },
+    "ieee_current_article_gate": {
+      "status": "two_real_same_paper_subscription_gates_observed",
+      "record": "docs/fixture-records/fixture-no-subscription-2026-09-16.json",
+      "scope": "HTML body entitlement gate only; not REST/PDF denial"
+    }
+  },
+  "remaining": [],
+  "attempt_limits": {
+    "wiley": 1,
+    "tandf": 3,
+    "science": 2,
+    "pnas": 1,
+    "aip": 1,
+    "oxfordacademic": 1,
+    "ieee_each": 3
+  },
+  "collection_notes": [
+    "T&F attempt 1 checked literal URLs and missed script-encoded popup links; provider discovery subsequently confirmed the same originals.",
+    "T&F attempt 2 failed to import the repository helper before any image request. Attempt 3 corrected PYTHONPATH and obtained eight original JPEG responses.",
+    "OAuth/OIDC redirect query values omitted from durable navigation metadata.",
+    "Browser-export PNG, actual HTTP response entity, and offline replay envelopes remain distinct."
+  ],
+  "verification": {
+    "unit": "2262 passed, 366 subtests; default parallel configuration",
+    "integration": "102 passed, 4 skipped, 1335 subtests; default parallel configuration",
+    "source_manifest_and_new_evidence": "13 passed, 1301 subtests",
+    "asset_and_appendix_replay": "7 passed",
+    "new_evidence_including_formula": "9 passed",
+    "secrets": {
+      "schema_version": 1,
+      "status": "clean",
+      "scanned_file_count": 55,
+      "scanned_secret_name_count": 2,
+      "matches": [],
+      "errors": [],
+      "missing_roots": []
+    },
+    "ruff": "passed for this turn Python changes",
+    "diff_check": "passed",
+    "golden": "931 passed, 1 skipped, 177 subtests; default parallel configuration; added formula evidence separately passed in the 9-case evidence suite",
+    "science_project_fallback_secrets": {
+      "schema_version": 1,
+      "status": "clean",
+      "scanned_file_count": 7,
+      "scanned_secret_name_count": 2,
+      "matches": [],
+      "errors": [],
+      "missing_roots": []
+    },
+    "science_project_fallback": "5 passed, 1305 subtests (new golden receipt plus provenance/manifest audit); 7 capture files secret scan clean; Ruff and diff check passed",
+    "closure": {
+      "status": "passed",
+      "parallelism": "Default pyproject.toml pytest configuration; no -n 0 override.",
+      "unit": {
+        "command": "PYTHONPATH=src uv run python -m pytest tests/unit -q",
+        "passed": 2262,
+        "skipped": 0,
+        "subtests_passed": 366,
+        "warnings": 30
+      },
+      "integration": {
+        "command": "PYTHONPATH=src uv run python -m pytest tests/integration -q",
+        "passed": 102,
+        "skipped": 4,
+        "subtests_passed": 1358,
+        "warnings": 8
+      },
+      "golden": {
+        "command": "PYTHONPATH=src uv run python -m pytest tests/golden -q",
+        "passed": 935,
+        "skipped": 1,
+        "subtests_passed": 177,
+        "warnings": 5
+      },
+      "evidence_audit": {
+        "current_evidence_entries": 9,
+        "checked_paths": 21,
+        "remaining": 0,
+        "historical_unknowns_preserved": 4,
+        "secret_audit": {
+          "schema_version": 1,
+          "status": "clean",
+          "scanned_file_count": 77,
+          "scanned_secret_name_count": 2,
+          "matches": [],
+          "errors": [],
+          "missing_roots": []
+        }
+      },
+      "ruff": "Passed for all Python files changed by this known-gap task.",
+      "diff_check": "passed"
+    }
+  },
+  "status": "closed",
+  "closure": {
+    "date": "2026-09-16",
+    "user_decision": "那就以最新的为准，全部实现收口",
+    "scope": "Previously agreed known gaps only; no full review of all 151 exact entries, no PDF conversion-quality work, no commit or release.",
+    "acceptance_basis": "Latest actual observation for each target and task, with user acceptance of Wiley formula; confirmed IEEE article gates satisfy stop/degrade coverage.",
+    "remaining_count": 0,
+    "historical_provenance": "Preserved unchanged; unknown values remain unknown and are not current acceptance blockers.",
+    "post_gate_rest_pdf_denial": "Not observed and not required by the confirmed-paywall stop contract; no claim that such responses were collected.",
+    "verified": true
+  },
+  "historical_limitations": [
+    {
+      "doi": "10.1126/sciadv.abf8021",
+      "official_article": "https://www.science.org/doi/10.1126/sciadv.abf8021",
+      "question": "Can contemporaneous logs establish the historical original.pdf HTTP envelope?",
+      "evidence": "Current project PDF fallback successfully returned official HTTP200, 12-page same-paper PDF; only historical original.pdf envelope remains unknown.",
+      "manual_location": "Only consult contemporaneous download/network logs if historical provenance is required; current PDF access gap is closed.",
+      "disposition": "historical_only",
+      "follow_up_required": false
+    },
+    {
+      "doi": "10.1073/pnas.2406303121",
+      "official_article": "https://www.pnas.org/doi/10.1073/pnas.2406303121",
+      "question": "Can contemporaneous logs establish the historical original.pdf HTTP status and final URL?",
+      "evidence": "New HTTP200 same-paper 10-page PDF and final URL are recorded; historical original.pdf envelope remains unknown.",
+      "manual_location": "Original download/network log, if historical provenance is required; do not infer from current successful response.",
+      "disposition": "historical_only",
+      "follow_up_required": false
+    },
+    {
+      "doi": "10.1063/5.0129134",
+      "official_article": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+      "question": "Is there an original log establishing the historical challenge response status?",
+      "evidence": "New normal HTTP200 and same-paper DOM cannot prove a historical challenge.",
+      "manual_location": "Contemporaneous network log for the old challenge; current article only confirms current availability.",
+      "disposition": "historical_only",
+      "follow_up_required": false
+    },
+    {
+      "doi": "10.1093/bioinformatics/btaa823",
+      "official_article": "https://academic.oup.com/bioinformatics/article/37/4/497/5909988",
+      "question": "Is there an original log establishing the historical challenge response status?",
+      "evidence": "New normal HTTP200 and same-paper DOM cannot prove a historical challenge.",
+      "manual_location": "Contemporaneous network log for the old challenge; do not deliberately provoke a new challenge.",
+      "disposition": "historical_only",
+      "follow_up_required": false
+    },
+    {
+      "doi": "10.1109/PGEC.1967.264619",
+      "official_article": "https://ieeexplore.ieee.org/document/4038993/",
+      "question": "Does any legitimately available response explicitly deny article entitlement?",
+      "evidence": "New unsubscribed-network landing HTTP200/DOM explicitly says Sign In or Purchase and lacks #article; no institutional banner. Stopped without explicit fulltext REST, PDF, references or asset requests. Only browser-autoloaded toc/similar/snippet responses were observed; none proves REST/PDF entitlement denial.",
+      "manual_location": "Review captured article gate if needed. Do not continue REST/PDF requests for this gated paper merely to fill the negative-sample gap.",
+      "disposition": "closed_by_confirmed_gate_stop_contract",
+      "follow_up_required": false
+    },
+    {
+      "doi": "10.1109/TBME.2024.3434477",
+      "official_article": "https://ieeexplore.ieee.org/document/10612240/",
+      "question": "Does any legitimately available response explicitly deny article entitlement?",
+      "evidence": "New unsubscribed-network landing HTTP200/DOM explicitly says Sign In or Purchase and lacks #article; no institutional banner. Stopped without explicit fulltext REST, PDF, references or asset requests. Only browser-autoloaded toc/similar/snippet responses were observed; none proves REST/PDF entitlement denial.",
+      "manual_location": "Review captured article gate if needed. Do not continue REST/PDF requests for this gated paper merely to fill the negative-sample gap.",
+      "disposition": "closed_by_confirmed_gate_stop_contract",
+      "follow_up_required": false
+    }
+  ],
+  "current_evidence": [
+    {
+      "target": "wiley_appendix",
+      "doi": "10.1029/2004gb002273",
+      "status": "complete",
+      "source": "tests/fixtures/golden_criteria/10.1029_2004gb002273/acquisition/known-gaps-2026-09-16/000-browser_rendered_dom.html",
+      "regression": "tests/golden/test_wiley_appendix.py",
+      "result": "Full paragraph, five citation targets, Conclusions -> Appendix A -> References; 75 references unchanged."
+    },
+    {
+      "target": "wiley_formula",
+      "doi": "10.1029/2004gb002273",
+      "status": "accepted_by_user",
+      "collection": "tests/fixtures/golden_criteria/10.1029_2004gb002273/acquisition/browser-retry-2026-09-16/collection.json",
+      "current_dom_collection": "tests/fixtures/golden_criteria/10.1029_2004gb002273/acquisition/known-gaps-2026-09-16/collection.json",
+      "regression": "tests/golden/test_known_gap_evidence.py",
+      "result": "Original 384x17 GIF accepted; preview classification remains unchanged."
+    },
+    {
+      "target": "tandf_original_jpeg",
+      "doi": "10.1080/15481603.2026.2667034",
+      "status": "complete",
+      "collection": "tests/fixtures/golden_criteria/10.1080_15481603.2026.2667034/acquisition/known-gaps-jpeg-2026-09-16/collection.json",
+      "regression": "tests/golden/test_browser_retry_asset_collections.py",
+      "result": "Eight actual HTTP200 JPEGs; pixel-equal to retained PNGs; download and final article links verified."
+    },
+    {
+      "target": "science_pdf",
+      "doi": "10.1126/sciadv.abf8021",
+      "status": "complete",
+      "collection": "tests/fixtures/golden_criteria/10.1126_sciadv.abf8021/acquisition/project-pdf-fallback-2026-09-16/collection.json",
+      "source": "tests/fixtures/golden_criteria/10.1126_sciadv.abf8021/acquisition/project-pdf-fallback-2026-09-16/001-http_response_entity.pdf",
+      "regression": "tests/golden/test_science_project_pdf_fallback.py",
+      "result": "Project PDF fallback HTTP200, complete 12-page same-paper PDF."
+    },
+    {
+      "target": "pnas_pdf",
+      "doi": "10.1073/pnas.2406303121",
+      "status": "complete",
+      "collection": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/acquisition/known-gaps-2026-09-16/collection.json",
+      "source": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/acquisition/known-gaps-2026-09-16/002-http_response_entity.pdf",
+      "regression": "tests/golden/test_known_gap_evidence.py",
+      "result": "Official HTTP200, complete 10-page same-paper PDF."
+    },
+    {
+      "target": "aip_current_dom",
+      "doi": "10.1063/5.0129134",
+      "status": "complete",
+      "collection": "tests/fixtures/golden_criteria/10.1063_5.0129134/acquisition/known-gaps-2026-09-16/collection.json",
+      "regression": "tests/golden/test_known_gap_evidence.py",
+      "result": "Actual HTTP200 article entity and separately captured final same-paper DOM; historical challenge evidence retained."
+    },
+    {
+      "target": "oup_current_dom",
+      "doi": "10.1093/bioinformatics/btaa823",
+      "status": "complete",
+      "collection": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/acquisition/known-gaps-2026-09-16/collection.json",
+      "regression": "tests/golden/test_known_gap_evidence.py",
+      "result": "Actual HTTP200 article entity and separately captured final same-paper DOM; historical challenge evidence retained."
+    },
+    {
+      "target": "ieee_pgec_gate",
+      "doi": "10.1109/PGEC.1967.264619",
+      "status": "complete",
+      "collection": "tests/fixtures/golden_criteria/10.1109_PGEC.1967.264619/acquisition/no-subscription-2026-09-16/collection.json",
+      "regression": "tests/golden/test_ieee_no_subscription_evidence.py",
+      "result": "Same-paper Sign In or Purchase gate; no article body; explicit downstream requests stopped. Not a REST/PDF denial claim."
+    },
+    {
+      "target": "ieee_tbme_gate",
+      "doi": "10.1109/TBME.2024.3434477",
+      "status": "complete",
+      "collection": "tests/fixtures/golden_criteria/10.1109_TBME.2024.3434477/acquisition/no-subscription-2026-09-16/collection.json",
+      "regression": "tests/golden/test_ieee_no_subscription_evidence.py",
+      "result": "Same-paper Sign In or Purchase gate; no article body; explicit downstream requests stopped. Not a REST/PDF denial claim."
+    }
+  ]
+}

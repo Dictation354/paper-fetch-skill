@@ -1,0 +1,822 @@
+{
+  "date": "2026-09-18",
+  "scope": "documentation consolidation; targeted offline checks; no production fixes",
+  "before_sha256": "56ed26fc81dd6c1e426624ac2f9b147e597e1378c50a8a66063d8a681c64e96d",
+  "checks": {
+    "remaining_local_links": {
+      "10.3390/math11030657": [
+        {
+          "line": 170,
+          "target": "#B68-mathematics-11-00657",
+          "explicit_target_present": false
+        },
+        {
+          "line": 170,
+          "target": "#B69-mathematics-11-00657",
+          "explicit_target_present": false
+        },
+        {
+          "line": 209,
+          "target": "#table_body_display_mathematics-11-00657-t0A4",
+          "explicit_target_present": false
+        }
+      ],
+      "10.1126/science.abp8622": [
+        {
+          "line": 171,
+          "target": "#R43",
+          "explicit_target_present": false
+        }
+      ],
+      "10.1126/science.adp0212": [
+        {
+          "line": 112,
+          "target": "#R49",
+          "explicit_target_present": false
+        }
+      ]
+    },
+    "wiley_replaced_empty_math": {
+      "10.1111/gcb.16455": {
+        "old_source": "tests/fixtures/golden_criteria/10.1111_gcb.16455/original.html",
+        "old_source_sha256": "3ac824463d5a2aedad3968c78c407ae9221805302ca4e5ac164704ac7331458b",
+        "new_source": "tests/fixtures/golden_criteria/10.1111_gcb.16455/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+        "new_source_sha256": "b22526bf439b336498b88c691ac18580e923985a3fe9dd5c2c32004dab85cc2b",
+        "mapping": [
+          {
+            "container_id": "gcb16455-disp-0001",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16455:gcb16455-math-0001",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16455-sec-0006",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16455:gcb16455-math-0001",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16455-sec-0006",
+            "math_index_zero_based": 1,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16455:gcb16455-math-0002",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16455-sec-0006",
+            "math_index_zero_based": 2,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16455:gcb16455-math-0003",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16455-sec-0006",
+            "math_index_zero_based": 3,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16455:gcb16455-math-0004",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16455-sec-0008",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16455:gcb16455-math-0006",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16455-disp-0002",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16455:gcb16455-math-0007",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16455-sec-0008",
+            "math_index_zero_based": 1,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16455:gcb16455-math-0007",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16455-disp-0003",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16455:gcb16455-math-0009",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16455-disp-0004",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16455:gcb16455-math-0010",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16455-disp-0005",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16455:gcb16455-math-0011",
+            "nonempty": true
+          }
+        ],
+        "current_formula_coverage": {
+          "status": "compared",
+          "selected": 11,
+          "routes": {
+            "mathml": 11
+          },
+          "mismatches": 0
+        },
+        "current_missing_count": 0
+      },
+      "10.1111/gcb.16561": {
+        "old_source": "tests/fixtures/golden_criteria/10.1111_gcb.16561/original.html",
+        "old_source_sha256": "838d60f958878ebed5dca1d4263d5fca52d3981c2e7203009165b90378199ece",
+        "new_source": "tests/fixtures/golden_criteria/10.1111_gcb.16561/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+        "new_source_sha256": "ad45ae43672521578c6f2084d6b82e804932d2b93b228f8fbe408314b4ab1da6",
+        "mapping": [
+          {
+            "container_id": "gcb16561-disp-0001",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0001",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-disp-0002",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0002",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-disp-0003",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0003",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-disp-0004",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0004",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0009",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0005",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-disp-0005",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0006",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0004",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0007",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0004",
+            "math_index_zero_based": 1,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0008",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0004",
+            "math_index_zero_based": 2,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0009",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0004",
+            "math_index_zero_based": 3,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0010",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0004",
+            "math_index_zero_based": 4,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0011",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0004",
+            "math_index_zero_based": 5,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0012",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0004",
+            "math_index_zero_based": 6,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0013",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0004",
+            "math_index_zero_based": 7,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0014",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0004",
+            "math_index_zero_based": 8,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0015",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0009",
+            "math_index_zero_based": 1,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0006",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0009",
+            "math_index_zero_based": 2,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0007",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-disp-0006",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0018",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-disp-0007",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0019",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-disp-0008",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0020",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0005",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0021",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0005",
+            "math_index_zero_based": 1,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0022",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0005",
+            "math_index_zero_based": 2,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0023",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0005",
+            "math_index_zero_based": 3,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0024",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0005",
+            "math_index_zero_based": 4,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0025",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0006",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0026",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0006",
+            "math_index_zero_based": 1,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0027",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0006",
+            "math_index_zero_based": 2,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0028",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0006",
+            "math_index_zero_based": 3,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0029",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-fig-0006",
+            "math_index_zero_based": 4,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0030",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0011",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0031",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0011",
+            "math_index_zero_based": 1,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0032",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0011",
+            "math_index_zero_based": 2,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0033",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0011",
+            "math_index_zero_based": 3,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0034",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0011",
+            "math_index_zero_based": 4,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0035",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0011",
+            "math_index_zero_based": 5,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0036",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0011",
+            "math_index_zero_based": 6,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0037",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0015",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0038",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0015",
+            "math_index_zero_based": 1,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0039",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0015",
+            "math_index_zero_based": 2,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0040",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0016",
+            "math_index_zero_based": 0,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0041",
+            "nonempty": true
+          },
+          {
+            "container_id": "gcb16561-sec-0016",
+            "math_index_zero_based": 1,
+            "new_altimg": "urn:x-wiley:13541013:media:gcb16561:gcb16561-math-0042",
+            "nonempty": true
+          }
+        ],
+        "current_formula_coverage": {
+          "status": "compared",
+          "selected": 42,
+          "routes": {
+            "mathml": 42
+          },
+          "mismatches": 0
+        },
+        "current_missing_count": 0
+      }
+    },
+    "historical_signed_image_samples": {
+      "10.1021/acsomega.3c06992": {
+        "count": 8,
+        "earliest_expiry_utc": "2026-10-07T04:27:30+00:00",
+        "latest_expiry_utc": "2026-10-07T04:27:30+00:00",
+        "http_checked": false
+      },
+      "10.1021/acsomega.4c03987": {
+        "count": 10,
+        "earliest_expiry_utc": "2026-10-07T04:32:17+00:00",
+        "latest_expiry_utc": "2026-10-07T04:32:17+00:00",
+        "http_checked": false
+      },
+      "10.1063/5.0188905": {
+        "count": 6,
+        "earliest_expiry_utc": "2026-10-21T19:09:41+00:00",
+        "latest_expiry_utc": "2026-10-21T19:09:41+00:00",
+        "http_checked": false
+      },
+      "10.1093/bioinformatics/btaa823": {
+        "count": 9,
+        "earliest_expiry_utc": "2026-10-20T03:03:40+00:00",
+        "latest_expiry_utc": "2026-10-20T03:03:40+00:00",
+        "http_checked": false
+      },
+      "10.1098/rsif.2019.0334": {
+        "count": 5,
+        "earliest_expiry_utc": "2026-10-08T15:58:52+00:00",
+        "latest_expiry_utc": "2026-10-08T15:58:52+00:00",
+        "http_checked": false
+      },
+      "10.1098/rsos.150470": {
+        "count": 5,
+        "earliest_expiry_utc": "2026-10-09T09:44:18+00:00",
+        "latest_expiry_utc": "2026-10-09T09:44:18+00:00",
+        "http_checked": false
+      },
+      "10.1098/rsos.201188": {
+        "count": 3,
+        "earliest_expiry_utc": "2026-10-06T14:55:16+00:00",
+        "latest_expiry_utc": "2026-10-06T14:55:16+00:00",
+        "http_checked": false
+      },
+      "10.1098/rsos.201200": {
+        "count": 3,
+        "earliest_expiry_utc": "2026-10-06T15:25:08+00:00",
+        "latest_expiry_utc": "2026-10-06T15:25:08+00:00",
+        "http_checked": false
+      },
+      "10.1098/rspb.2020.0097": {
+        "count": 2,
+        "earliest_expiry_utc": "2026-10-08T15:35:49+00:00",
+        "latest_expiry_utc": "2026-10-08T15:35:49+00:00",
+        "http_checked": false
+      },
+      "10.1098/rsta.2019.0558": {
+        "count": 2,
+        "earliest_expiry_utc": "2026-10-09T07:44:07+00:00",
+        "latest_expiry_utc": "2026-10-09T07:44:07+00:00",
+        "http_checked": false
+      }
+    },
+    "title_seed_replay": {
+      "10.1016/j.rse.2026.115369": {
+        "seed_title": "10.1016/j.rse.2026.115369",
+        "canonical_builder_title": "10.1016/j.rse.2026.115369",
+        "verified_source_replay_title": "Sentinel-1 for offshore wind energy application",
+        "source": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/source-completion-2026-09-18/002-http_response_entity.xml"
+      },
+      "10.1007/s10584-011-0143-4": {
+        "seed_title": "10.1007/s10584-011-0143-4",
+        "canonical_builder_title": "10.1007/s10584-011-0143-4",
+        "verified_source_replay_title": "Hydrological response to climate change in a glacierized catchment in the Himalayas",
+        "source": "tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/acquisition/source-completion-2026-09-18/001-http_response_entity.html"
+      },
+      "10.1038/nature12915": {
+        "seed_title": "10.1038/nature12915",
+        "canonical_builder_title": "10.1038/nature12915",
+        "verified_source_replay_title": "A two-fold increase of carbon cycle sensitivity to tropical temperature variations",
+        "source": "tests/fixtures/golden_criteria/10.1038_nature12915/acquisition/source-completion-2026-09-18/001-http_response_entity.html"
+      }
+    },
+    "annualreviews_duplicates": {
+      "doi": "10.1146/annurev-control-090419-075625",
+      "urls_and_counts": {
+        "https://www.annualreviews.org/docserver/fulltext/control/3/1/as030269.f3.gif": 2,
+        "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-125.gif": 2,
+        "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-126.gif": 2,
+        "https://www.annualreviews.org/docserver/ahah/fulltext/control/3/1/eq-075625-127.gif": 2
+      },
+      "source": "tests/fixtures/golden_criteria/10.1146_annurev-control-090419-075625/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/annualreviews/10.1146_annurev-control-090419-075625.md"
+    },
+    "relative_image_recheck": {
+      "P03": [
+        {
+          "doi": "10.1175/aies-d-23-0093.1",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/ams/10.1175_aies-d-23-0093.1.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1175/jamc-d-24-0048.1",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/ams/10.1175_jamc-d-24-0048.1.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1175/jhm-d-23-0228.1",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/ams/10.1175_jhm-d-23-0228.1.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1175/jpo-d-23-0234.1",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/ams/10.1175_jpo-d-23-0234.1.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1175/jtech-d-24-0028.1",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/ams/10.1175_jtech-d-24-0028.1.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1175/waf-d-24-0019.1",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/ams/10.1175_waf-d-24-0019.1.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1029/2004GB002273",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/wiley/10.1029_2004gb002273.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1111/gcb.15322",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/wiley/10.1111_gcb.15322.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1111/gcb.16011",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/wiley/10.1111_gcb.16011.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1111/gcb.16455",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/wiley/10.1111_gcb.16455.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1111/gcb.16561",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/wiley/10.1111_gcb.16561.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1111/gcb.16758",
+          "status": "no_article_quality_assessment",
+          "markdown": null,
+          "root_or_protocol_relative_image_count": null
+        },
+        {
+          "doi": "10.1111/gcb.17141",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/wiley/10.1111_gcb.17141.md",
+          "root_or_protocol_relative_image_count": 0
+        }
+      ],
+      "P04": [
+        {
+          "doi": "10.1038/nature12915",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/springer/10.1038_nature12915.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1038/nature13376",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/springer/10.1038_nature13376.md",
+          "root_or_protocol_relative_image_count": 0
+        },
+        {
+          "doi": "10.1038/s42003-021-02908-2",
+          "status": "replayed",
+          "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/springer/10.1038_s42003-021-02908-2.md",
+          "root_or_protocol_relative_image_count": 0
+        }
+      ]
+    }
+  },
+  "user_decisions": {
+    "P26": "A: bold table captions, structurally appropriate glossary/footnote headings",
+    "P27": "A: preserve Methods ethics sections; retain existing back-matter rules"
+  },
+  "evidence": [
+    {
+      "doi": "10.1021/acsomega.3c06992",
+      "source": "tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/acquisition/article-response-2026-09-15.bin",
+      "source_sha256": "e4496615bc0c0db60fa81dce69a1ba792c136e35dbaba34eb45c2711e582a494",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/acs/10.1021_acsomega.3c06992.md",
+      "markdown_sha256": "24ad88dbd1f252da9ce1277adcdea982c115a3a2ef38b3c419f47bff7d0e336e",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1021/acsomega.4c03987",
+      "source": "tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/acquisition/template-browser-2026-09-16/000-browser_rendered_dom.html",
+      "source_sha256": "83732c92a1165ddfe43d7c728f9ec152c9f7e2803f313384b79161f94fc44f3b",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/acs/10.1021_acsomega.4c03987.md",
+      "markdown_sha256": "02ee9cd925ecca5128e3d99829fa30fb060421196c24d531965c0a6b27bf3fbf",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1063/5.0188905",
+      "source": "tests/fixtures/golden_criteria/10.1063_5.0188905/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "source_sha256": "26a0dc1992fa401f64bb659f5f0e4dec5b9ed9223a8770688bf1375340b4fc62",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/aip/10.1063_5.0188905.md",
+      "markdown_sha256": "762a8c7298a48aa2ae12cb2fb1a8e47c437fa85c9ae425c071aff9cc19a06731",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1146/annurev-control-090419-075625",
+      "source": "tests/fixtures/golden_criteria/10.1146_annurev-control-090419-075625/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "source_sha256": "4762c65db10b07266cc6c8e749a2a7b15bb3510e4c4ecf5d6fe31dad04dc0da1",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/annualreviews/10.1146_annurev-control-090419-075625.md",
+      "markdown_sha256": "733190cfac6c65f00d19010174f6a5024a4c91f7f8e7c6cc31747fd546afcc1e",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1016/j.rse.2026.115369",
+      "source": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/source-completion-2026-09-18/002-http_response_entity.xml",
+      "source_sha256": "afc9f7d59efafbe12d5df45f001007e366914b736cbd6672ec5416ebb4064076",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/elsevier/10.1016_j.rse.2026.115369.md",
+      "markdown_sha256": "c7e115671e3f5d45169f406bfd95202a71d5fe99b1ab070ba19218e53e07a213",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.3390/math11030657",
+      "source": "tests/fixtures/golden_criteria/10.3390_math11030657/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "source_sha256": "9cbc1b131357c4f25e3c4546a534f96659b95414fefdb886731058969116fde1",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/mdpi/10.3390_math11030657.md",
+      "markdown_sha256": "ff330026284a8ee214856a3998ccd77252f6be265ca5026c03a06b128088813c",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1093/bioinformatics/btaa823",
+      "source": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/acquisition/known-gaps-2026-09-16/000-browser_rendered_dom.html",
+      "source_sha256": "e8802f90a619a64c9f9616240ba56ee43c671ab039aad0a26d8bd718ebf76e93",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/oxfordacademic/10.1093_bioinformatics_btaa823.md",
+      "markdown_sha256": "6c3ab436db69df10231f239bcddd9ba2d32c51970f4ca76d52dfb6ac124d48dd",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1098/rsif.2019.0334",
+      "source": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/acquisition/article-response-2026-09-15.bin",
+      "source_sha256": "25fbdb18d6851cb6aa3255188efe68f6e7eaea3812affb03d90fdf0da6f09e34",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/royalsocietypublishing/10.1098_rsif.2019.0334.md",
+      "markdown_sha256": "956c891fe1f7113a52bdb52b6d83cd9e06f04d1beff16434051af4d166666f3a",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1098/rsos.150470",
+      "source": "tests/fixtures/golden_criteria/10.1098_rsos.150470/acquisition/requested-viewer-2026-09-16/000-browser_rendered_dom.html",
+      "source_sha256": "c345f420b6071c1fd74c55866624754db469fa27cf88e993f1e0429125860d31",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/royalsocietypublishing/10.1098_rsos.150470.md",
+      "markdown_sha256": "ebaeba23deab0aa1b3f09fc98efc99870d6df993853969f6c0ee70709dd8d4bc",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1098/rsos.201188",
+      "source": "tests/fixtures/golden_criteria/10.1098_rsos.201188/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "source_sha256": "345695bb432d64d4a8862f7064b225ced903a07f3ce94d8aa43a638c38dcc8ca",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/royalsocietypublishing/10.1098_rsos.201188.md",
+      "markdown_sha256": "fd44f737c80cf88ce39c8a9f48f4a43bfa314fef99815eb8fa13f22164cbfc17",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1098/rsos.201200",
+      "source": "tests/fixtures/golden_criteria/10.1098_rsos.201200/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "source_sha256": "d3836e3ce231fbca869e39dc3e7a7d94bade99767d847aca995fbb5a4c74478a",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/royalsocietypublishing/10.1098_rsos.201200.md",
+      "markdown_sha256": "4e522405559b1f4ae36cff8ce8a54df6b62849b2195059e9b303cc08f5e100aa",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1098/rspb.2020.0097",
+      "source": "tests/fixtures/golden_criteria/10.1098_rspb.2020.0097/acquisition/subscription-2026-09-15/response-005.bin",
+      "source_sha256": "d2f7c8e7192f0bcd93d9b45ff859ccc6747c1f844627fb215f94437e1d24294e",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/royalsocietypublishing/10.1098_rspb.2020.0097.md",
+      "markdown_sha256": "8d2b507ed85a8492868f64c0b30a2d163d153844b964d65738a916c5dd168cd2",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1098/rsta.2019.0558",
+      "source": "tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/acquisition/subscription-2026-09-15/response-005.bin",
+      "source_sha256": "794113e1967cab64a22cf1824b552f87f19e11b3497a4851f451a471b47af995",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/royalsocietypublishing/10.1098_rsta.2019.0558.md",
+      "markdown_sha256": "fbb121c20ed00343911dc253368983ccde11278982efb4d783828d302a8a6055",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1126/science.abp8622",
+      "source": "tests/fixtures/golden_criteria/10.1126_science.abp8622/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "source_sha256": "5f75cf13464ffc954bf6a76602d01f5233bb62364a26c00f71f5a3ffcb3013c8",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/science/10.1126_science.abp8622.md",
+      "markdown_sha256": "8bb71ac3d3b41df33d5251d39c8380c6ae5890bebc9885d39ebb47bcabb5face",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1126/science.adp0212",
+      "source": "tests/fixtures/golden_criteria/10.1126_science.adp0212/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "source_sha256": "2037d4e58858b36df85ad25e03a62d032c975c78751c36c4a95bdbfdba0ab8c2",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/science/10.1126_science.adp0212.md",
+      "markdown_sha256": "ca3abd6391fbf79d3d8992199c9fea31f4bdcec08e2f36ed2fb5e739d8574337",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1007/s10584-011-0143-4",
+      "source": "tests/fixtures/golden_criteria/10.1007_s10584-011-0143-4/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "source_sha256": "57d6ef8d0c33b63fde692bfc7026d923735a01566be0716b62bd45bdc9ba8d66",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/springer/10.1007_s10584-011-0143-4.md",
+      "markdown_sha256": "6cb631f6890b28a17b0c92714185558ca1bae290136a10460b2f541dcc319e5d",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1038/nature12915",
+      "source": "tests/fixtures/golden_criteria/10.1038_nature12915/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "source_sha256": "bedea018d4b1100b80edf296c5a7241d3b4cf1c3140bc6072a40e0e9882da008",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/springer/10.1038_nature12915.md",
+      "markdown_sha256": "c3d226cc34a86053674aaecd0c06401b108c3754d0ecb4746b4f853181cdd774",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1038/s41467-022-32108-3",
+      "source": "tests/fixtures/golden_criteria/10.1038_s41467-022-32108-3/acquisition/template-gaps-2026-09-16/article-response.html",
+      "source_sha256": "bc58449b4832822e74e670fb1c9b358aa270c2c26fd06b81420f7435bab4842f",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/springer/10.1038_s41467-022-32108-3.md",
+      "markdown_sha256": "13e43ff7c57705b5616b4e2afd65d53bb34bd180ec75b6a6ed781e2ab5682b60",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1038/s41522-026-01027-2",
+      "source": "tests/fixtures/golden_criteria/10.1038_s41522-026-01027-2/acquisition/template-gaps-2026-09-16/article-response.html",
+      "source_sha256": "8e4929c8b3b6289b09d37cf51361a501cf64992e0b4e3c160bc183ccfd3294a5",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/springer/10.1038_s41522-026-01027-2.md",
+      "markdown_sha256": "41fc9112913c67e0b5943bec1bdf8ce6f2e8f4da17ead75cbc3af6d9b1cb4959",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1111/gcb.16455",
+      "source": "tests/fixtures/golden_criteria/10.1111_gcb.16455/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "source_sha256": "b22526bf439b336498b88c691ac18580e923985a3fe9dd5c2c32004dab85cc2b",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/wiley/10.1111_gcb.16455.md",
+      "markdown_sha256": "dde53ac0dca8f2afc28dfcffd0ca3417a9011bd14e1a38ba75cd157ff22eb58d",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1111/gcb.16561",
+      "source": "tests/fixtures/golden_criteria/10.1111_gcb.16561/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "source_sha256": "ad45ae43672521578c6f2084d6b82e804932d2b93b228f8fbe408314b4ab1da6",
+      "markdown": ".paper-fetch-runs/markdown-review-2026-09-18/papers/wiley/10.1111_gcb.16561.md",
+      "markdown_sha256": "27d5d10a41c72c2e1945d8bf40820adc89ba52b65ca7b400913056b0a7e6581e",
+      "status": "replayed"
+    },
+    {
+      "doi": "10.1111/gcb.16758",
+      "source": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/subscription-2026-09-15/response-010.bin",
+      "source_sha256": "88f440042ad265b1f0e800e1abd664ac6d2bcdd4e0a543ee992793ccbcee4cd2",
+      "status": "no_article_quality_assessment"
+    }
+  ],
+  "active_ids": [
+    2,
+    5,
+    6,
+    7,
+    8,
+    9,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27
+  ],
+  "confirmed_ids": [
+    6,
+    7,
+    8,
+    9,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27
+  ],
+  "pending_evidence_ids": [
+    2,
+    5
+  ],
+  "after_sha256": "2ec13600cb7eda7e50b51dc650b218c9bca67f7bda846f975d0de2031d3a0ed1",
+  "validation": {
+    "active_id_count": 18,
+    "confirmed_count": 16,
+    "pending_evidence_count": 2,
+    "historical_ids_accounted_for": 32,
+    "local_document_links_checked": 188,
+    "referenced_evidence_rows_hash_verified": 22,
+    "whitespace_check": "passed",
+    "full_test_suite_rerun": false
+  }
+}

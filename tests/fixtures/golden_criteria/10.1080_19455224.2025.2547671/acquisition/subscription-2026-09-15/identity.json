@@ -1,0 +1,16 @@
+{
+  "query": "10.1080/19455224.2025.2547671",
+  "query_kind": "doi",
+  "doi": "10.1080/19455224.2025.2547671",
+  "landing_url": null,
+  "provider_hint": "tandf",
+  "confidence": 1.0,
+  "candidates": [],
+  "title": null,
+  "provider_identifiers": {},
+  "schema_version": 2,
+  "index": 24,
+  "status": "succeeded",
+  "error": null,
+  "provider_lane": "tandf"
+}

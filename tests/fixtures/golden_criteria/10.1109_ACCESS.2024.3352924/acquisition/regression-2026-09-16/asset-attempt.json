@@ -1,0 +1,61 @@
+{
+  "assets": [
+    {
+      "kind": "figure",
+      "heading": "FIGURE 2.",
+      "caption": "FIGURE 2. Example operation of an NDAcc and its interaction with the surrounding system: (1) the CPU stores the NDAcc kernel in memory; (2) the CPU triggers the NDAcc to start operating; (3) the NDAcc exchanges operands and results with the memory hierarchy; (4) CPU polls the NDAcc.",
+      "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir2-3352924-large.gif",
+      "original_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir2-3352924-large.gif",
+      "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir2-3352924-small.gif",
+      "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir2-3352924-large.gif",
+      "figure_page_url": "",
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir2-3352924-large.gif",
+      "download_tier": "full_size",
+      "source_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir2-3352924-large.gif",
+      "content_type": "image/gif",
+      "path": "/tmp/ieee-assets-new/10.1109_access.2024.3352924_assets/vieir2-3352924-large.gif",
+      "downloaded_bytes": 43702,
+      "section": "body",
+      "browser_backend": "camoufox",
+      "final_fetcher": "camoufox",
+      "recovery_attempts": [
+        {
+          "stage": "direct",
+          "status": 403,
+          "content_type": "text/html",
+          "reason": "HTTP 403 for https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir2-3352924-large.gif"
+        },
+        {
+          "stage": "browser",
+          "browser_backend": "camoufox",
+          "status": 200,
+          "content_type": "image/gif",
+          "reason": "recovered",
+          "final_fetcher": "camoufox"
+        }
+      ],
+      "asset_route": {
+        "host": "ieeexplore.ieee.org",
+        "route": "browser",
+        "probe": true,
+        "reason": "direct_failure_browser_recovery_succeeded"
+      },
+      "width": 820,
+      "height": 365,
+      "asset_timing": {
+        "queue_ms": 0.025,
+        "candidate_resolution_ms": 0.052,
+        "dns_policy_validation_ms": 0.0,
+        "connect_to_headers_ttfb_ms": 0.0,
+        "body_stream_ms": 0.0,
+        "browser_recovery_ms": 10378.179,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.049,
+        "save_ms": 0.383,
+        "total_ms": 11097.333,
+        "status": "saved"
+      }
+    }
+  ],
+  "asset_failures": []
+}

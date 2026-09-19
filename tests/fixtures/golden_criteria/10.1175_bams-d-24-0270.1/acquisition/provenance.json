@@ -1,0 +1,107 @@
+{
+  "records": [
+    {
+      "doi": "10.1175/bams-d-24-0270.1",
+      "provider": "ams",
+      "requested_url": "https://api.crossref.org/works/10.1175%2Fbams-d-24-0270.1",
+      "final_url": "https://api.crossref.org/works/10.1175%2Fbams-d-24-0270.1",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:29:38 GMT",
+        "content-type": "application/json",
+        "content-length": "1417"
+      },
+      "captured_at_utc": "2026-09-18T02:29:38.156577+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 5042,
+      "sha256": "3facb37169c5ff962fa83e9050054f22aaa8df2e209b35df5cc2a6e6941418c6",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1175/bams-d-24-0270.1",
+      "provider": "ams",
+      "requested_url": "https://journals.ametsoc.org/view/journals/bams/aop/BAMS-D-24-0270.1/BAMS-D-24-0270.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/bams/aop/BAMS-D-24-0270.1/BAMS-D-24-0270.1.xml",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Fri, 18 Sep 2026 02:29:42 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:29:54.943192+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 951387,
+      "sha256": "cf02d602a72aaa20f04700bd6db5d49ad9b40c5a71e12f926da72230f5e3d3e5",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1175/bams-d-24-0270.1",
+      "provider": "ams",
+      "requested_url": "https://journals.ametsoc.org/view/journals/bams/aop/BAMS-D-24-0270.1/BAMS-D-24-0270.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/bams/aop/BAMS-D-24-0270.1/BAMS-D-24-0270.1.xml",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Fri, 18 Sep 2026 02:30:00 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:30:21.660789+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-browser_rendered_dom.html",
+      "size": 951387,
+      "sha256": "b764177f535757216bb445d4d860c94e7acc61d9ae8f79e9b4107fdd6174b456",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1175/bams-d-24-0270.1",
+      "provider": "ams",
+      "requested_url": "https://journals.ametsoc.org/view/journals/bams/aop/BAMS-D-24-0270.1/BAMS-D-24-0270.1.xml",
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": "2026-09-18T02:49:08.052551+00:00",
+      "capture_kind": "existing_service_pdf_artifact",
+      "body_file": "acquisition/source-completion-2026-09-18/003-service_pdf_artifact.pdf",
+      "size": 1315356,
+      "sha256": "cdaeeb53a504a208bca9e42db306b96a64c8103570e9710504e5ea3703dfba7c",
+      "transport": "Existing paper-fetch browser PDF fallback; raw artifact copied after completed run",
+      "request_url_role": "Article landing URL from fetch metadata; the final PDF request URL and HTTP status were not observed",
+      "acquisition_window": {
+        "started_at_utc": "2026-09-18T02:29:37.368159+00:00",
+        "finished_at_utc": "2026-09-18T02:30:38.542906+00:00"
+      },
+      "runtime_evidence": ".paper-fetch-runs/source-completion-2026-09-18/captures/10.1175_bams-d-24-0270.1/fetch.json",
+      "original_artifact": ".paper-fetch-runs/source-completion-2026-09-18/fetch/10.1175_bams-d-24-0270.1/Grover_et_al_2024_Integrating_High-Resolution_Modeling_with_Diverse_Field_Campaign_Observations_through_an_Open_Science_Summer_School.pdf",
+      "runtime_source_trail": [
+        "fulltext:ams_html_fail",
+        "fulltext:ams_pdf_fallback_ok",
+        "fulltext:ams_pdf_ok",
+        "resolve:doi",
+        "resolve:doi_selected",
+        "route:crossref_signal_ok",
+        "route:signal_domain_ams",
+        "route:signal_publisher_ams",
+        "route:signal_doi_ams",
+        "route:probe_ams_unknown",
+        "route:provider_selected_ams",
+        "route:provider_candidate_ams_metadata_selected_rank_1",
+        "route:provider_candidate_ams_identity_strong",
+        "fulltext:ams_attempt",
+        "download:ams_saved",
+        "download:ams_assets_skipped_profile_none",
+        "fulltext:ams_article_ok",
+        "route:provider_candidate_ams_accepted"
+      ],
+      "runtime_acquisition": {
+        "provider": "ams",
+        "route": "browser_pdf",
+        "representation": "pdf",
+        "transport": "browser",
+        "fallback_used": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "doi": "10.1073/pnas.2317456120",
+    "provider": "pnas",
+    "requested_url": "https://www.pnas.org/doi/full/10.1073/pnas.2317456120",
+    "final_url": "https://www.pnas.org/doi/full/10.1073/pnas.2317456120",
+    "status_code": 200,
+    "response_headers": {
+      "date": "Thu, 17 Sep 2026 10:59:13 GMT",
+      "content-type": "text/html;charset=UTF-8"
+    },
+    "captured_at_utc": "2026-09-17T10:59:13.709824+00:00",
+    "body_file": "acquisition/provenance-repair-2026-09-17/000-browser_rendered_dom.html",
+    "size": 1731,
+    "sha256": "f806911760ce7b59167105888e4fc7c1b6c40360ef9aaabb101b06d2a3b042d3",
+    "capture_kind": "browser_rendered_dom",
+    "transport": "existing paper-fetch provider",
+    "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+  },
+  {
+    "doi": "10.1073/pnas.2317456120",
+    "provider": "pnas",
+    "requested_url": "https://pnas.org/doi/pdf/10.1073/pnas.2317456120",
+    "final_url": "https://www.pnas.org/doi/pdf/10.1073/pnas.2317456120",
+    "status_code": 200,
+    "response_headers": {
+      "date": "Thu, 17 Sep 2026 10:59:15 GMT",
+      "content-type": "application/pdf;charset=UTF-8"
+    },
+    "captured_at_utc": "2026-09-17T10:59:15.501646+00:00",
+    "body_file": "acquisition/provenance-camoufox-retry-2026-09-17/001-browser_rendered_dom.html",
+    "size": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "capture_kind": "browser_rendered_dom",
+    "transport": "existing paper-fetch provider",
+    "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+  }
+]

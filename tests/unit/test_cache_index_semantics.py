@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import hashlib
 import json
 import platform
@@ -8,9 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
-
 import yaml
-
 from paper_fetch.mcp.cache_index import (
     IDENTITY_PROOF_MARKDOWN_REGISTRATION,
     cache_index_path,
@@ -20,7 +17,8 @@ from paper_fetch.mcp.cache_index import (
 from paper_fetch.mcp.cache_payloads import get_cached_payload, list_cached_payload
 from paper_fetch.models import AcquisitionProvenance
 from paper_fetch.utils import sanitize_filename
-from tests.unit._mcp_support import create_cached_downloads
+from tests.support._mcp_support import create_cached_downloads
+
 
 TEST_ACQUISITION = AcquisitionProvenance(
     provider="crossref",

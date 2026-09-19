@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import base64
 import json
 import tempfile
@@ -8,7 +7,6 @@ import time
 import unittest
 from pathlib import Path
 from unittest import mock
-
 from paper_fetch.http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     DEFAULT_TIMEOUT_SECONDS,
@@ -30,9 +28,9 @@ from paper_fetch.providers.elsevier import (
 from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.wiley import WileyClient
 from paper_fetch.runtime import RuntimeContext
-from tests.unit._browser_workflow_deps import browser_workflow_deps
-from tests.unit._atypon_browser_workflow_provider_support import png_header
-from tests.unit._paper_fetch_support import RecordingTransport
+from tests.support._browser_workflow_deps import browser_workflow_deps
+from tests.support._atypon_browser_workflow_provider_support import png_header
+from tests.support._paper_fetch_support import RecordingTransport
 
 
 class _FakeImagePage:
@@ -2296,3 +2294,20 @@ class ProviderRequestOptionsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_access_boundary_scope_is_explicit_and_independent_of_cooldown():
+    from paper_fetch.http import HttpRequestPolicy, provider_request_policy
+
+    base = HttpRequestPolicy(cooldown_scope="custom-key", body_access_provider="wiley")
+    body = provider_request_policy("wiley", "browser_html", base=base)
+    asset = provider_request_policy("wiley", "assets", base=base)
+    assert body.cooldown_scope == asset.cooldown_scope == "custom-key"
+    assert body.body_access_provider == "wiley"
+    assert asset.body_access_provider is None
+    assert (
+        HttpRequestPolicy(
+            cooldown_scope="provider:wiley:browser_html"
+        ).body_access_provider
+        is None
+    )

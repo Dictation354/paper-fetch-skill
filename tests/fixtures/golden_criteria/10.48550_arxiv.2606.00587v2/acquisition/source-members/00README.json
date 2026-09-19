@@ -1,0 +1,21 @@
+{
+   "sources" : [
+      {
+         "usage" : "toplevel",
+         "filename" : "sn-article.tex"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "anc/supplementary_material.pdf"
+      },
+      {
+         "usage" : "ignore",
+         "filename" : "sn-mathphys-num.bst"
+      }
+   ],
+   "spec_version" : 1,
+   "texlive_version" : "2025",
+   "process" : {
+      "compiler" : "pdflatex"
+   }
+}

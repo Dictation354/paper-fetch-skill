@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import warnings
 from collections.abc import Iterator, Mapping as MappingABC, Set as SetABC
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from types import MappingProxyType
 from typing import Any
 from collections.abc import Callable, Mapping
@@ -449,7 +449,8 @@ def _availability_policy_with_defaults(
         container_rules = _availability_container_rules_from_site_rule_overrides(
             availability.site_rule_overrides
         )
-    return AvailabilityPolicy(
+    return replace(
+        availability,
         name=availability.name or provider_name,
         container_rules=container_rules,
         site_rule_overrides=availability.site_rule_overrides,

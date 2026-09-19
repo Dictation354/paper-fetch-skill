@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/WpLa0dr161ThhlyPn+aTd1AA36Y</id>
+  <title>arXiv Query: search_query=&amp;id_list=2605.06667v1&amp;start=0&amp;max_results=1</title>
+  <updated>2026-09-18T02:21:33Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=1&amp;id_list=2605.06667v1" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>1</opensearch:itemsPerPage>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2605.06667v1</id>
+    <title>ActCam: Zero-Shot Joint Camera and 3D Motion Control for Video Generation</title>
+    <updated>2026-05-07T17:59:58Z</updated>
+    <link href="https://arxiv.org/abs/2605.06667v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.06667v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>For artistic applications, video generation requires fine-grained control over both performance and cinematography, i.e., the actor's motion and the camera trajectory. We present ActCam, a zero-shot method for video generation that jointly transfers character motion from a driving video into a new scene and enables per-frame control of intrinsic and extrinsic camera parameters. ActCam builds on any pretrained image-to-video diffusion model that accepts conditioning in terms of scene depth and character pose. Given a source video with a moving character and a target camera motion, ActCam generates pose and depth conditions that remain geometrically consistent across frames. We then run a single sampling process with a two-phase conditioning schedule: early denoising steps condition on both pose and sparse depth to enforce scene structure, after which depth is dropped and pose-only guidance refines high-frequency details without over-constraining the generation. We evaluate ActCam on multiple benchmarks spanning diverse character motions and challenging viewpoint changes. We find that, compared to pose-only control and other pose and camera methods, ActCam improves camera adherence and motion fidelity, and is preferred in human evaluations, especially under large viewpoint changes. Our results highlight that careful camera-consistent conditioning and staged guidance can enable strong joint camera and motion control without training. Project page: https://elkhomar.github.io/actcam/.</summary>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-07T17:59:58Z</published>
+    <arxiv:comment>SIGGRAPH 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CV"/>
+    <author>
+      <name>Omar El Khalifi</name>
+    </author>
+    <author>
+      <name>Thomas Rossi</name>
+    </author>
+    <author>
+      <name>Oscar Fossey</name>
+    </author>
+    <author>
+      <name>Thibault Fouque</name>
+    </author>
+    <author>
+      <name>Ulysse Mizrahi</name>
+    </author>
+    <author>
+      <name>Philip Torr</name>
+    </author>
+    <author>
+      <name>Ivan Laptev</name>
+    </author>
+    <author>
+      <name>Fabio Pizzati</name>
+    </author>
+    <author>
+      <name>Baptiste Bellot-Gurlet</name>
+    </author>
+  </entry>
+</feed>

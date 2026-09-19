@@ -1,0 +1,173 @@
+{
+  "sample_id": "10.1038_d41586-022-01795-9",
+  "doi": "10.1038/d41586-022-01795-9",
+  "identity": {
+    "query": "10.1038/d41586-022-01795-9",
+    "query_kind": "doi",
+    "doi": "10.1038/d41586-022-01795-9",
+    "landing_url": null,
+    "provider_hint": "springer",
+    "confidence": 1.0,
+    "candidates": [],
+    "title": null,
+    "provider_identifiers": {}
+  },
+  "status": "returned",
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 1391,
+    "content_kind": "fulltext",
+    "has_abstract": false,
+    "warnings": [],
+    "source_trail": [
+      "fulltext:springer_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "route:crossref_signal_ok",
+      "route:signal_domain_springer",
+      "route:signal_publisher_springer",
+      "route:signal_doi_springer",
+      "route:probe_springer_unknown",
+      "route:provider_selected_springer",
+      "route:provider_candidate_springer_metadata_selected_rank_1",
+      "route:provider_candidate_springer_identity_strong",
+      "fulltext:springer_attempt",
+      "download:springer_html_saved",
+      "download:springer_assets_skipped_profile_none",
+      "fulltext:springer_article_ok",
+      "route:provider_candidate_springer_accepted"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 0,
+      "body": 1391,
+      "refs": 0
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 5547,
+      "word_count": 872,
+      "body_block_count": 3,
+      "body_heading_count": 2,
+      "body_to_abstract_ratio": 872.0,
+      "explicit_body_container": true,
+      "post_abstract_body_run": false,
+      "figure_count": 1
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acceptance": null,
+  "records": [
+    {
+      "doi": "10.1038/d41586-022-01795-9",
+      "provider": "springer",
+      "requested_url": "https://www.nature.com/articles/d41586-022-01795-9",
+      "final_url": "https://www.nature.com/articles/d41586-022-01795-9",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html; charset=utf-8",
+        "date": "Thu, 17 Sep 2026 10:58:47 GMT"
+      },
+      "captured_at_utc": "2026-09-17T10:58:48.640761+00:00",
+      "body_file": "original.html",
+      "size": 226618,
+      "sha256": "926ac358def1507fb781b26597f6bc597f62b936e2375c79013786e62372ec9d",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider",
+      "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+    }
+  ]
+}

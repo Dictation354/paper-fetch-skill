@@ -62,6 +62,11 @@ def pnas_before_block_normalization(container: Any) -> None:
     )
 
     _drop_promotional_blocks(container, promo_block_tokens=_promo_block_tokens("pnas"))
+    for anchor in container.select('a[href^="#eqn"]'):
+        # Bold equation numbers are cross-references, not bibliography markers.
+        # Prevent the legacy parenthetical citation formatter consuming them.
+        for emphasis in list(anchor.select("b, strong, i, em")):
+            emphasis.unwrap()
 
 
 def _pnas_markdown_has_heading(markdown_text: str, heading_text: str) -> bool:

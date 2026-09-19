@@ -1,0 +1,61 @@
+{
+  "records": [
+    {
+      "doi": "10.1016/j.uclim.2019.100528",
+      "provider": "elsevier",
+      "requested_url": "https://api.crossref.org/works/10.1016%2Fj.uclim.2019.100528",
+      "final_url": "https://api.crossref.org/works/10.1016%2Fj.uclim.2019.100528",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:57 GMT",
+        "content-type": "application/json",
+        "content-length": "4205"
+      },
+      "captured_at_utc": "2026-09-18T02:20:56.688772+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 14017,
+      "sha256": "dde2aac3f4cc07519bfc82a74e45099cdf0c36ca013b5410b4d6cb71589b4e1b",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1016/j.uclim.2019.100528",
+      "provider": "elsevier",
+      "requested_url": "https://api.elsevier.com/content/abstract/doi/10.1016%2Fj.uclim.2019.100528",
+      "final_url": "https://api.elsevier.com/content/abstract/doi/10.1016%2Fj.uclim.2019.100528",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:57 GMT",
+        "content-type": "application/json;charset=UTF-8",
+        "last-modified": "Thu, 27 May 2021 15:12:19 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:20:56.733327+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
+      "size": 6371,
+      "sha256": "998be297560b03779df604bd441d186eb59c39a5f2d819d8a90b36f29c745a49",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1016/j.uclim.2019.100528",
+      "provider": "elsevier",
+      "requested_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.uclim.2019.100528",
+      "final_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.uclim.2019.100528",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:58 GMT",
+        "content-type": "text/xml;charset=UTF-8",
+        "last-modified": "Fri, 20 Dec 2019 07:29:17 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:20:57.433962+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.xml",
+      "size": 226771,
+      "sha256": "eea2d89326433ac1d7b122c0744f54a037ba62693d26d3ec25fcaacc4d542207",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

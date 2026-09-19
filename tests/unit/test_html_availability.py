@@ -1,13 +1,10 @@
 from __future__ import annotations
-
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
-
 from paper_fetch import reason_codes as canonical_reason_codes
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html._runtime import body_metrics
-from paper_fetch.providers import _springer_html as springer_html
 from paper_fetch.providers import browser_workflow
 from paper_fetch.quality import html_availability as html_availability_module
 from paper_fetch.quality import reason_codes as quality_reason_codes
@@ -414,7 +411,7 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertTrue(diagnostics.body_metrics["substantive_body_container"])
         self.assertTrue(diagnostics.body_metrics["container_scope_trusted"])
 
-    def test_assess_html_real_article_stays_fulltext_with_repeated_ui_cards(
+    def test_assess_html_substantial_scenario_stays_fulltext_with_repeated_ui_cards(
         self,
     ) -> None:
         first = "This methods paragraph contains substantive scientific prose. " * 8
@@ -1063,77 +1060,6 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertEqual(diagnostics.content_kind, FULLTEXT)
         self.assertEqual(diagnostics.reason, "body_sufficient")
 
-    def test_assess_html_rejects_science_paywall_sample_with_abstract(self) -> None:
-        self._assert_rejected_browser_workflow_case("science")
-
-    def test_assess_html_accepts_science_entitled_fulltext_fixture(self) -> None:
-        self._assert_accepted_browser_workflow_case("science")
-
-    def test_assess_html_rejects_springer_paywall_samples_without_promoting_ancillary_sections(
-        self,
-    ) -> None:
-        ancillary_headings = {
-            "Corresponding author",
-            "Additional information",
-            "Rights and permissions",
-            "Profiles",
-            "Subscribe and save",
-            "Publisher's Note",
-        }
-
-        for doi in SPRINGER_PAYWALL_SAMPLE_DOIS:
-            with self.subTest(doi=doi):
-                html = block_asset(doi, "raw.html").read_text(encoding="utf-8")
-                source_url = f"https://link.springer.com/article/{doi}"
-                metadata = springer_html.parse_html_metadata(html, source_url)
-                extraction_payload = springer_html.extract_html_payload(
-                    html,
-                    source_url,
-                    title=str(metadata.get("title") or ""),
-                )
-                diagnostics = assess_html_fulltext_availability(
-                    extraction_payload["markdown_text"],
-                    metadata,
-                    provider="springer",
-                    html_text=html,
-                    title=str(metadata.get("title") or ""),
-                    final_url=source_url,
-                    section_hints=extraction_payload["section_hints"],
-                )
-
-                self.assertFalse(diagnostics.accepted)
-                self.assertEqual(diagnostics.content_kind, "abstract_only")
-                self.assertEqual(diagnostics.reason, "abstract_only")
-                self.assertIn("check access", diagnostics.blocking_fallback_signals)
-                self.assertIn(
-                    "access this article", diagnostics.blocking_fallback_signals
-                )
-                self.assertIn("buy now", diagnostics.blocking_fallback_signals)
-                self.assertFalse(
-                    ancillary_headings
-                    & {
-                        str(hint.get("heading") or "")
-                        for hint in extraction_payload["section_hints"]
-                        if hint.get("kind") == "body"
-                    }
-                )
-
-    def test_assess_html_rejects_wiley_paywall_metadata_with_abstract(self) -> None:
-        self._assert_rejected_browser_workflow_case("wiley")
-
-    def test_assess_html_accepts_wiley_fulltext_fixture_despite_login_chrome(
-        self,
-    ) -> None:
-        self._assert_accepted_browser_workflow_case("wiley")
-
-    def test_assess_html_rejects_pnas_paywall_metadata_with_abstract(self) -> None:
-        self._assert_rejected_browser_workflow_case("pnas")
-
-    def test_assess_html_accepts_pnas_fulltext_fixture_despite_institutional_login_chrome(
-        self,
-    ) -> None:
-        self._assert_accepted_browser_workflow_case("pnas")
-
     def test_body_metrics_excludes_nonliteral_data_availability_when_section_hints_are_present(
         self,
     ) -> None:
@@ -1157,74 +1083,6 @@ class HtmlAvailabilityTests(unittest.TestCase):
 
         self.assertEqual(metrics["char_count"], 0)
         self.assertEqual(metrics["body_block_count"], 0)
-
-    def test_body_metrics_excludes_real_structural_back_matter_and_chrome_headings(
-        self,
-    ) -> None:
-        real_fixture_cases = (
-            {
-                "doi": "10.1111/gcb.15322",
-                "raw_phrase": "research funding",
-                "provider": "wiley",
-                "source_url": "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322",
-                "extractor": "wiley",
-            },
-            {
-                "doi": "10.1126/sciadv.abg9690",
-                "raw_phrase": "statement of competing interests",
-                "provider": "science",
-                "source_url": "https://www.science.org/doi/10.1126/sciadv.abg9690",
-                "extractor": "science",
-            },
-        )
-        for case in real_fixture_cases:
-            with self.subTest(doi=case["doi"]):
-                html = golden_criteria_asset(case["doi"], "original.html").read_text(
-                    encoding="utf-8", errors="ignore"
-                )
-                self.assertIn(case["raw_phrase"], html.casefold())
-                markdown, info = _extract_browser_workflow_markdown(
-                    case["extractor"],
-                    html,
-                    case["source_url"],
-                    metadata={"doi": case["doi"]},
-                )
-                metrics = body_metrics(
-                    markdown,
-                    {"doi": case["doi"]},
-                    section_hints=info.get("section_hints"),
-                    noise_profile=case["provider"],
-                )
-
-                self.assertNotIn(case["raw_phrase"], markdown.casefold())
-                self.assertNotIn(case["raw_phrase"], metrics["text"].casefold())
-
-        nature_html = golden_criteria_asset(
-            "10.1038/nature13376", "original.html"
-        ).read_text(
-            encoding="utf-8",
-            errors="ignore",
-        )
-        nature_html_text = nature_html.casefold()
-        self.assertTrue("acknowledgements" in nature_html_text)
-        self.assertTrue("rights and permissions" in nature_html_text)
-        self.assertTrue("open access" in nature_html_text)
-        nature_payload = springer_html.extract_html_payload(
-            nature_html,
-            "https://www.nature.com/articles/nature13376",
-        )
-        nature_metrics = body_metrics(
-            nature_payload["markdown_text"],
-            {"doi": "10.1038/nature13376"},
-            section_hints=nature_payload["section_hints"],
-            noise_profile="springer_nature",
-        )
-
-        self.assertNotIn("acknowledgements", nature_metrics["text"].casefold())
-        self.assertNotIn(
-            "rights and permissions", nature_payload["markdown_text"].casefold()
-        )
-        self.assertNotIn("open access", nature_payload["markdown_text"].casefold())
 
     def test_assess_plain_text_excludes_nonliteral_data_availability_when_section_hints_are_present(
         self,

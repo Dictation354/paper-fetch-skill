@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+
 import contextlib
 from typing import Any
 from collections.abc import Mapping, Sequence
@@ -564,6 +565,10 @@ PROVIDER_BUNDLE = ProviderBundle(
             supplementary_text_tokens=_iop_html.IOP_SUPPLEMENTARY_TEXT_TOKENS,
         ),
         availability=AvailabilityPolicy(
+            paywall_gate_selectors="#wd-jnl-art-turn-away-panel, .js-launch-price-overlay",
+            paywall_remove_selectors=".overlay-text, .article-head, .author-affiliations",
+            paywall_abstract_selector=".wd-jnl-art-abstract",
+            paywall_body_selector=".wd-jnl-art-full-text, [property='articleBody'], [itemprop='articleBody']",
             name="iop",
             site_rule_overrides=_iop_html.IOP_SITE_RULE_OVERRIDES,
             text_marker_signal_set=_iop_html.IOP_TEXT_MARKER_SIGNAL_SET,

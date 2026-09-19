@@ -1,0 +1,259 @@
+{
+  "audited_at_utc": "2026-09-16T09:49:18.402388+00:00",
+  "scope": "User-authorized online acquisition to investigate the 17 remaining reviews from the original 56 module and 46 case annotations. No PDF conversion quality work.",
+  "source_authority": "tests/fixtures/golden_criteria/manifest.json and each sample acquisition/provenance.json; this file records decisions, not a second asset-origin catalog.",
+  "test_authority": "tests/test-evidence.json",
+  "original_annotation_count": 102,
+  "remaining_before": 17,
+  "newly_covered": 8,
+  "review_counts": {
+    "partial": 9,
+    "covered": 41,
+    "mechanism": 52
+  },
+  "acquisitions": [
+    {
+      "sample_id": "10.1021_acsomega.4c03987",
+      "provenance": "tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/acquisition/provenance.json",
+      "record_selector": "body_file starts with acquisition/template-gaps-2026-09-16/ or acquisition/template-browser-2026-09-16/",
+      "record_count": 5
+    },
+    {
+      "sample_id": "10.1038_nature13376",
+      "provenance": "tests/fixtures/golden_criteria/10.1038_nature13376/acquisition/provenance.json",
+      "record_selector": "body_file starts with acquisition/template-gaps-2026-09-16/ or acquisition/template-browser-2026-09-16/",
+      "record_count": 12
+    },
+    {
+      "sample_id": "10.1038_s41467-022-32108-3",
+      "provenance": "tests/fixtures/golden_criteria/10.1038_s41467-022-32108-3/acquisition/provenance.json",
+      "record_selector": "body_file starts with acquisition/template-gaps-2026-09-16/ or acquisition/template-browser-2026-09-16/",
+      "record_count": 1
+    },
+    {
+      "sample_id": "10.1038_s41522-026-01027-2",
+      "provenance": "tests/fixtures/golden_criteria/10.1038_s41522-026-01027-2/acquisition/provenance.json",
+      "record_selector": "body_file starts with acquisition/template-gaps-2026-09-16/ or acquisition/template-browser-2026-09-16/",
+      "record_count": 1
+    },
+    {
+      "sample_id": "10.1038_s42003-021-02908-2",
+      "provenance": "tests/fixtures/golden_criteria/10.1038_s42003-021-02908-2/acquisition/provenance.json",
+      "record_selector": "body_file starts with acquisition/template-gaps-2026-09-16/ or acquisition/template-browser-2026-09-16/",
+      "record_count": 2
+    },
+    {
+      "sample_id": "10.1073_pnas.2406303121",
+      "provenance": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/acquisition/provenance.json",
+      "record_selector": "body_file starts with acquisition/template-gaps-2026-09-16/ or acquisition/template-browser-2026-09-16/",
+      "record_count": 3
+    },
+    {
+      "sample_id": "10.1098_rsta.2019.0558",
+      "provenance": "tests/fixtures/golden_criteria/10.1098_rsta.2019.0558/acquisition/provenance.json",
+      "record_selector": "body_file starts with acquisition/template-gaps-2026-09-16/ or acquisition/template-browser-2026-09-16/",
+      "record_count": 5
+    },
+    {
+      "sample_id": "10.1126_science.abo2812",
+      "provenance": "tests/fixtures/golden_criteria/10.1126_science.abo2812/acquisition/provenance.json",
+      "record_selector": "body_file starts with acquisition/template-gaps-2026-09-16/ or acquisition/template-browser-2026-09-16/",
+      "record_count": 1
+    },
+    {
+      "sample_id": "10.1186_s40359-026-04991-8",
+      "provenance": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/provenance.json",
+      "record_selector": "body_file starts with acquisition/template-gaps-2026-09-16/ or acquisition/template-browser-2026-09-16/",
+      "record_count": 1
+    },
+    {
+      "sample_id": "10.48550_arxiv.2605.06556v1",
+      "provenance": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06556v1/acquisition/provenance.json",
+      "record_selector": "body_file starts with acquisition/template-gaps-2026-09-16/ or acquisition/template-browser-2026-09-16/",
+      "record_count": 1
+    }
+  ],
+  "capture_kind_counts": {
+    "http_response_entity": 25,
+    "browser_rendered_dom": 6,
+    "direct_http": 1
+  },
+  "recorded_http_status_counts": {
+    "403": 2,
+    "None": 6,
+    "200": 24
+  },
+  "decisions": [
+    {
+      "target": "arXiv 2605.06556v1",
+      "outcome": "covered",
+      "reviews_closed": 2,
+      "observation": "Actual same-version gzip archive contains Tau_Paper.tex and a 40866-byte fig_1_tau_picture.png. Recovery and preview tests now compare stored bytes to this original member; missing-src is still an explicitly injected mechanism condition."
+    },
+    {
+      "target": "Nature nature13376",
+      "outcome": "covered",
+      "reviews_closed": 3,
+      "observation": "Four original figure JPEGs and all four actual extended-data table satellite pages/JPEGs captured. Provider replay checks table identity, preserved captions, bytes, one local occurrence and original ordering. Historical article HTML retains its unknown HTTP envelope."
+    },
+    {
+      "target": "Nature expandable boxes",
+      "outcome": "covered",
+      "reviews_closed": 1,
+      "observation": "s41467-022-32108-3 has two real expandable boxes with prose. s42003-021-02908-2 has an image-only box; source title and actual PNG survive final rendering. Local HTML fixes prevent caption formulas consuming figure identities and preserve the image-only box."
+    },
+    {
+      "target": "Science science.abo2812",
+      "outcome": "covered",
+      "reviews_closed": 1,
+      "observation": "Native browser DOM has the pure bold Code availability statement within acknowledgments. Original statement, CodeOcean link, code_availability classification and exactly-once rendering pass. A later image scroll timeout does not invalidate saved DOM or prove canvas recovery."
+    },
+    {
+      "target": "IEEE TBME.2024.3434477",
+      "outcome": "covered",
+      "reviews_closed": 1,
+      "observation": "Reinspection of the previously captured original REST response found Table III alt text with Equation. The generic formula candidate shares the exact preview URL with the IEEE table; original replay verifies priority and final single table. No new live IEEE request or access-boundary change."
+    },
+    {
+      "target": "ACS and Royal Society viewer conditions",
+      "outcome": "partial",
+      "observation": "Configured native browser captured current articles and article-discovered viewers. They expose direct full images, so they do not prove a missing-direct-link recovery branch. Direct HTTP 403 records are separate. One early Royal viewer candidate used an unbound figure id and is explicitly identity_verified=false; it is not same-paper evidence."
+    },
+    {
+      "target": "PNAS/Science browser failures",
+      "outcome": "partial",
+      "observation": "PNAS original direct image returned HTTP200; native canvas observation returned target_image_not_loaded. Science DOM was captured but first-image scroll timed out. Neither proves challenged HTTP plus successful canvas; no failure was injected. Science attempt 2 selected visible image candidates but the article navigation returned HTTP403 with cf-mitigated=challenge before verified identity. Stopped without another same-state retry or authentication; only redacted diagnostics and the observed response hash are retained, not token-bearing challenge HTML."
+    },
+    {
+      "target": "Springer article-in-press positive",
+      "outcome": "partial",
+      "observation": "Two search candidates (s41522-026-01027-2 and s40359-026-04991-8) returned original HTTP200 HTML without the early-publication notice. Stale search snippets are not DOM evidence. No PDF was acquired or converted for this gap."
+    },
+    {
+      "target": "Springer direct-child order",
+      "outcome": "partial",
+      "observation": "New Nature/BMC HTML candidates have no direct .main-content > p in the required structure. Existing direct-child scenario stays mechanism-only."
+    },
+    {
+      "target": "arXiv generic fallback and alternate author pipelines",
+      "outcome": "partial",
+      "observation": "No unmodified matching publisher template identified. Ordinary LaTeXML HTML and author-bearing pages do not prove branches activated by removed selectors/metadata. Existing controlled tests and gaps remain."
+    }
+  ],
+  "remaining_reviews": [
+    {
+      "module": "tests/unit/test_acs_provider.py",
+      "definition": "default",
+      "reason": [
+        "已取得 acsomega.4c03987 的当前文章及 view-large 原始响应，二者都提供直接原图；仍缺无直接原图、仅 viewer 入口的真实 Silverchair 模板。"
+      ]
+    },
+    {
+      "module": "tests/unit/test_arxiv_provider.py",
+      "definition": "default",
+      "reason": [
+        "缺少不含 ltx 选择器、须 generic frontmatter/reference fallback 的真实 arXiv 页面。"
+      ]
+    },
+    {
+      "module": "tests/unit/test_atypon_browser_workflow_provider_asset_downloads.py",
+      "definition": "default",
+      "reason": [
+        "本次 PNAS 原图直连实际 HTTP200；当前文章存在直接图片，未复现仅 figure-page 入口且原图失败、preview 成功的真实完整链。"
+      ]
+    },
+    {
+      "module": "tests/unit/test_author_pipeline_per_provider.py",
+      "definition": "default",
+      "reason": [
+        "所有 provider 的备用作者 DOM/JSON 分支尚未逐个绑定未修改的真实模板，当前不能声称逐分支真实覆盖。"
+      ]
+    },
+    {
+      "module": "tests/unit/test_html_availability.py",
+      "definition": "default",
+      "reason": [
+        "候选 s41522-026-01027-2 与 s40359-026-04991-8 已取得 HTTP200 原文，当前均不含待刊通知。检索摘要保留旧状态，不能替代通知与充分正文共存的真实 DOM。"
+      ]
+    },
+    {
+      "module": "tests/unit/test_html_shared_helpers.py",
+      "definition": "default",
+      "reason": [
+        "已采 ACS 真实 view-large 响应，但其含直接原图，未出现必须解开 DownloadImage 包装的条件；不能删除直链后冒充原文。"
+      ]
+    },
+    {
+      "module": "tests/unit/test_provider_request_options.py",
+      "definition": "default",
+      "reason": [
+        "本次原生 PNAS 页面已验身份，但原图直连 HTTP200，canvas 返回 target_image_not_loaded；Science 已取得正文，图片定位等待超时。均未复现 HTTP challenge 与 canvas 成功同时成立的链路。 Science 第二次改用可见图片节点观察时，文章返回带 cf-mitigated: challenge 的 HTTP403，未取得身份或 canvas；已停在当前状态。"
+      ]
+    },
+    {
+      "module": "tests/unit/test_royalsocietypublishing_provider.py",
+      "definition": "default",
+      "reason": [
+        "已采 rsta.2019.0558 当前文章与正确 viewer，均提供原图直链；仍缺 DownloadImage 包装与无直链 viewer 的真实组合。早期未绑定 DOI 的 403 候选不算同篇证据。"
+      ]
+    },
+    {
+      "module": "tests/golden/test_springer_html_regressions.py",
+      "definition": "SpringerHtmlRegressionTests::test_springer_main_content_scenario_keeps_direct_child_order",
+      "reason": [
+        "缺少 main-content 直接子段落、Data availability 与 Reporting summary 共存的真实同结构 DOM。"
+      ]
+    }
+  ],
+  "validation": {
+    "status": "passed",
+    "unit": {
+      "passed": 2293,
+      "skipped": 0,
+      "subtests_passed": 366,
+      "log": "/tmp/online-gap-unit-final.log"
+    },
+    "integration": {
+      "passed": 124,
+      "skipped": 4,
+      "subtests_passed": 1390,
+      "log": "/tmp/online-gap-integration-final.log"
+    },
+    "golden": {
+      "passed": 956,
+      "skipped": 1,
+      "subtests_passed": 177,
+      "log": "/tmp/online-gap-golden-final.log"
+    },
+    "live": {
+      "collected": 32,
+      "executed": 0
+    },
+    "ruff": "passed for 8 touched Python files; formatting passed",
+    "diff_check": "passed",
+    "new_skips": 0,
+    "existing_skip_reasons": [
+      "Integration: Ghostscript unavailable",
+      "Integration: libvips unavailable",
+      "Integration: zsh unavailable",
+      "Integration: native Camoufox opt-in gate not enabled",
+      "Golden: historical Wiley asset-collection snapshot has no verified binary; later captures do not rewrite this historical snapshot"
+    ],
+    "exact_baselines_updated": [],
+    "post_suite_metadata_change": "Only redacted Science failed retry diagnostics and ledger/documentation status added after suites; provenance/policy verification repeated separately.",
+    "metadata_policy_check": {
+      "passed": 26,
+      "subtests_passed": 1346,
+      "log": "/tmp/online-gap-final-metadata-check.log"
+    }
+  },
+  "limitations": [
+    "File-read provenance checks do not prove semantic correctness of every assertion.",
+    "Covered is limited to each review scope, not every module branch.",
+    "No claim of all papers reviewed word for word or PDF conversion quality accepted.",
+    "No new dependency, version, public interface, commit or CI trigger."
+  ],
+  "browser_retry_diagnostic": "tests/fixtures/golden_criteria/10.1126_science.abo2812/acquisition/template-browser-image-2026-09-16/collection.json",
+  "superseded_review": "fixture-route-removals-2026-09-16.json",
+  "review_corrections": "Follow-up review corrected article versus viewer direct image links and the synthetic Springer scenario direct-child node type. Original captures remain unchanged."
+}

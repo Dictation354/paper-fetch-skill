@@ -1,0 +1,451 @@
+{
+  "doi": "10.1088/0034-4885/53/3/002",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/outputs/1f595795f1e4-Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "1f595795f1e485b8c6130d1d716e748647b772b09a1a96c0ba115859a1766704",
+      "size": 470264
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/outputs/f1ef5c351741-Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "f1ef5c35174187a96e3e955d60c033bf1f973bf6bec15059936517936b39eeab",
+      "size": 322735
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/iop/10.1088_0034-4885_53_3_002/html-1/diagnostic.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/outputs/8dfd0de15b6a-diagnostic.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "8dfd0de15b6a9d2c692ad435b85c394a6c75dcdb7669ce4e2db032b8d1556947",
+      "size": 11245
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/iop/10.1088_0034-4885_53_3_002/html-1/page-sanitized.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/outputs/a80e27919193-page-sanitized.html",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "a80e27919193892f34d7d353feffac2a36dab7d517172551ba7904b0022e1eab",
+      "size": 49903
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/iop/10.1088_0034-4885_53_3_002/html-2/diagnostic.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/outputs/599d0277419e-diagnostic.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "599d0277419e61083888f1a3e8b6786f8ca053375bd58319092ce9de17f6e53e",
+      "size": 13832
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/iop/10.1088_0034-4885_53_3_002/html-2/page-sanitized.html",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/outputs/b41739956d60-page-sanitized.html",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "b41739956d60dba06b8f83efb9606da7f7a3cde6245d8355a64e5cf0f3418b11",
+      "size": 49798
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0001-00.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/f85eaa016163-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0001-00.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "f85eaa016163f3540d712a02cd9fcb49fa12cbf9416a4a7128291904473bb7af",
+      "size": 17750
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0001-01.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/4f3e3bf975b5-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0001-01.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "4f3e3bf975b59147f860b2363accb17ecd2d7076b73a6bec3d7123f5d281dd52",
+      "size": 3618
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0005-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/710952f069d1-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0005-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "710952f069d11ba7a97307253f977620fa0657049f6eb8ef180bee89ba3204c0",
+      "size": 2114
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0006-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/ff483d839757-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0006-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "ff483d839757cf91b3362895234ca24c55c763ba41e2208a8ac239b18301a2ec",
+      "size": 10257
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0010-08.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/493224f020c3-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0010-08.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "493224f020c31d0be4b9f3fbc8edab4f0b288c257e231c69204f4f06f84c1309",
+      "size": 1466
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0011-07.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/b8c608152e4e-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0011-07.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "b8c608152e4e908fa32cce129397147a626a94971422a3948b06ef2d52294371",
+      "size": 51203
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0016-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/5e5f153a6a80-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0016-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "5e5f153a6a80c7ded63b0b67fcbd441778b2467ceef764f31cec534a7c427860",
+      "size": 47151
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0016-06.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/c33ae7f56213-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0016-06.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "c33ae7f5621390af7dc5e9b58e97ed9fcd0022d477c31b3fa0f5bc3d5764a108",
+      "size": 4379
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0017-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/b3a97413235e-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0017-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "b3a97413235e1f8a5b17f5e30471346887a55254d55149b4abf9fd16eea5863a",
+      "size": 3697
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0019-05.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/c46369806592-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0019-05.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "c4636980659266e375d0167c835f6bc9988ba5d6cd3d51f0c62db84813561370",
+      "size": 4166
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0020-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/20dd7a5ebf06-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0020-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "20dd7a5ebf065bec1a5eb8a5d317132ae4d3e6febe1922d43c36bd4a27e23e76",
+      "size": 14733
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0026-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/6eaef6ad61d0-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0026-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "6eaef6ad61d0dd767a46bdfa42298496e032aecccd0a80a9e66caee6541b63a0",
+      "size": 2841
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0029-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/ca70b01412fe-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0029-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "ca70b01412fe2563854ab5fa26ed46767368ce42d373b3a805b33de5b20d2275",
+      "size": 6801
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0030-04.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/e8d1e3710893-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0030-04.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "e8d1e37108930374a5a11885d928d3c76b3576153429901cf26b508b0dc5fd02",
+      "size": 32836
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0032-07.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/27bd689c678d-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0032-07.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "27bd689c678dcebff397c9905427f49cef9c92866a28c7f5bc1d9bad472818ca",
+      "size": 14737
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0033-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/dade2b1fd03f-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0033-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "dade2b1fd03f2a64356b98d988cd2d2082c2aece99c339c9c2ee5177208ddbba",
+      "size": 3456
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0035-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/a4ed9100cba3-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0035-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "a4ed9100cba369969a787d03b898946e6c47c08d7186c7d498ee45e0e7c7bb1a",
+      "size": 6409
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0036-04.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/5b4b589b565e-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0036-04.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "5b4b589b565eb12869fa8d4137edf64179cdf813543ef4eeb8977cd1b4b5e0b3",
+      "size": 7446
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0037-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/f5d8e68761fe-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0037-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "f5d8e68761fe6bd2b160a81d4e8dbd1c7aa588755a1dc9615abbf6617651b0c9",
+      "size": 3446
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0037-04.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/1ed8b1b30a79-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0037-04.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "1ed8b1b30a79a2b8b01e02788745456ac79834353d575c0bc841b1c1e0b73421",
+      "size": 2178
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0037-06.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/32511603f238-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0037-06.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "32511603f23881df139555e6d3a3c24ece5e3281c6c5a57bd3725c0b02cef93a",
+      "size": 1834
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0039-01.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/db975ce40a75-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0039-01.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "db975ce40a759030f41efbf3c6446ae5d61aeb5b709945639a404a460c4520b8",
+      "size": 21204
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0040-03.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/d934f85aabf7-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0040-03.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "d934f85aabf79b30db0c772dae2869a61dc501890a7b52787c189f668e813785",
+      "size": 3683
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0045-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/12d3e4fcede4-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0045-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "12d3e4fcede488e5cf76096656b5d3871530865a5a056cbbae527ce7c930da4b",
+      "size": 41473
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0046-08.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/166061c62bc0-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0046-08.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "166061c62bc05ac993ed2a660cd136c5fcbc5bc4207b1580f7f76afc9fda70fa",
+      "size": 1361
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0049-06.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/4247d6a41c00-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0049-06.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "4247d6a41c007137600c5cc984c06fa5e09515c39a81648f9e2cf0f470c126e5",
+      "size": 668
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0051-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/1bdb9e658c22-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0051-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "1bdb9e658c2209dc8bf13f3897b00ac240187062f670ae1a93e5b22ce56ed32c",
+      "size": 23705
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0054-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/c6ec717d026e-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0054-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "c6ec717d026e55668273b9f25b02d60bf13667529814191ec08cc9639d6d9f40",
+      "size": 50324
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0055-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/71e1030ee5ed-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0055-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "71e1030ee5ed9ab2b8206a8b12a0e94da4068fbbfdd755d0c78eb7bfced05a1a",
+      "size": 17910
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0060-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/ad758c3ad9af-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0060-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "ad758c3ad9af00f7b57daa7b0e4b544768f2447c870900dc00f31fa30f7d7def",
+      "size": 962
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0062-06.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/1a1648ddc58f-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0062-06.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "1a1648ddc58f9e860b275687a62a753f9fffbd09528d9e37c5b3329df1e737df",
+      "size": 1776
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0077-04.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/cd478a0a233c-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0077-04.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "cd478a0a233cf3ea31c1f48a97d282d6c7b6ad33697d96007f4b0930d394c0e0",
+      "size": 35781
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1088_0034-4885_53_3_002_assets/Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0078-02.png",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/assets/ae5edb4962fe-Y_Chevalier_1990_Rep._Prog._Phys._53_279-f84e8a69d0.pdf-0078-02.png",
+      "category": "assets",
+      "origin_kind": "unverified",
+      "sha256": "ae5edb4962fe738820d689bccd6ae5c44f13d8efaa575df5ec0fb596ed82e15e",
+      "size": 2448
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.pdf",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/raw_sources/1866e0df8119-Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.pdf",
+      "category": "raw_sources",
+      "origin_kind": "real_replay",
+      "sha256": "1866e0df81193cbc5d987e3d4e9c5a42946af6e01cffe25e9df460e0e391b9d9",
+      "size": 6755917
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "degraded",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1088/0034-4885/53/3/002",
+      "expected_doi": "10.1088/0034-4885/53/3/002",
+      "title": "The structure of micelles and microemulsions",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": false,
+      "token_estimate": 74597,
+      "confidence": "medium",
+      "flags": [
+        "weak_body_structure"
+      ],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 33,
+      "attempted": 33,
+      "total": 33,
+      "local": 33,
+      "full_size": 33,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 1,
+      "not_archived": 0,
+      "remote_link_count": 33,
+      "remote_only_count": 0,
+      "body_discovered": 33,
+      "body_attempted": 33,
+      "body_local": 33,
+      "body_full_size": 33,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [
+        "asset_placeholder_suspected"
+      ],
+      "status": "degraded",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "iop_pdf",
+      "acquisition": {
+        "provider": "iop",
+        "route": "browser_pdf",
+        "representation": "pdf",
+        "transport": "browser",
+        "fallback_used": true
+      },
+      "trace_event_count": 18,
+      "fallback_codes": [
+        "abstract_only"
+      ],
+      "warning_codes": [
+        "asset_placeholder_suspected",
+        "weak_body_structure"
+      ],
+      "failure_codes": [
+        "abstract_only"
+      ],
+      "unstructured_warning_count": 4,
+      "acceptance_policy": "validated_pdf",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

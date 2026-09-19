@@ -1,0 +1,20 @@
+[
+  {
+    "doi": "10.1073/pnas.2406303121",
+    "provider": "pnas",
+    "requested_url": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+    "final_url": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+    "status_code": 200,
+    "response_headers": {
+      "date": "Thu, 17 Sep 2026 11:10:16 GMT",
+      "content-type": "text/html;charset=UTF-8"
+    },
+    "captured_at_utc": "2026-09-17T11:10:20.057213+00:00",
+    "body_file": "acquisition/provenance-camoufox-retry-2026-09-17/000-browser_rendered_dom.html",
+    "size": 292460,
+    "sha256": "1abdb880c9fd9c48a5c50f013389e2db3e2dd9dd09214116b15c837b9d3dccff",
+    "capture_kind": "browser_rendered_dom",
+    "transport": "existing paper-fetch provider",
+    "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+  }
+]

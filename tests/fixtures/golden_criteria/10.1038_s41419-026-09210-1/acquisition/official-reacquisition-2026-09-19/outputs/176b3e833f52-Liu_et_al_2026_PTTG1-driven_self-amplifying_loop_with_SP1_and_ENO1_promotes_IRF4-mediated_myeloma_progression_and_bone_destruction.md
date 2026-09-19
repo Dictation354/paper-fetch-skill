@@ -1,0 +1,574 @@
+---
+title: "PTTG1-driven self-amplifying loop with SP1 and ENO1 promotes IRF4-mediated myeloma progression and bone destruction"
+authors: "Rui Liu, Yazhu Huang, Zhihong Fang, Xingding Zhang, Yafei Wang, Zongwei Li, Huan Liu"
+journal: "Cell Death & Disease"
+doi: "10.1038/s41419-026-09210-1"
+published: "2026-9-7"
+source: "springer_pdf"
+acquisition:
+  provider: "springer"
+  route: "direct_pdf"
+  representation: "pdf"
+  transport: "http"
+  fallback_used: true
+has_fulltext: true
+content_kind: "fulltext"
+has_abstract: true
+token_estimate: 25994
+---
+
+# PTTG1-driven self-amplifying loop with SP1 and ENO1 promotes IRF4-mediated myeloma progression and bone destruction
+
+**Abstract.** Multiple myeloma (MM) is a neoplastic disorder of plasma cells within the hematopoietic system and is characterized by osteolytic lesions. Despite significant advances, the molecular underpinnings of myeloma and its associated bone pathologies remain elusive, and there is an unmet need for effective targeted therapies. Our research uncovers upregulation of pituitary tumor-transforming gene 1 (PTTG1) in myeloma cells, which synergizes with transcription factor specificity protein 1 (SP1) to enhance its nuclear accumulation and consequently elevate the expression of glycolytic enzyme enolase-1 (ENO1). Intriguingly, ENO1, in a non-catalytic role, complexes with PTTG1/SP1, thereby amplifying the transcriptional activity of interferon regulatory factor 4 (IRF4). This cascade accelerates myeloma progression and exacerbates osteolytic lesions. Notably, IRF4 binds to the PTTG1 promoter, establishing a positive feedback loop that amplifies PTTG1 expression. Our study introduces a novel mechanistic insight into the pathogenesis of myeloma and bone deterioration and identifies disruption of the ENO1–PTTG1 interaction as a potential dual-targeting therapeutic strategy. The use of blocking peptides to interfere with this interaction demonstrates significant efficacy in curbing myeloma progression and osteolytic lesions, offering a promising avenue for clinical intervention.
+
+Cell Death and Disease 
+
+ARTICLE | Article in Press 
+
+# PTTG1-driven self-amplifying loop with SP1 and ENO1 promotes IRF4-mediated myeloma progression and bone destruction 
+
+Rui Liu ● Yazhu Huang ● Zhihong Fang ● Xingding Zhang ● Yafei Wang ● Zongwei Li ● Huan Liu 
+
+Received: 6 April 2026 / Revised: 31 July 2026 / Accepted: 17 August 2026 © The Author(s) 2026 
+
+#### Abstract 
+
+Multiple myeloma (MM) is a neoplastic disorder of plasma cells within the hematopoietic system and is characterized by osteolytic lesions. Despite significant advances, the molecular underpinnings of myeloma and its associated bone pathologies remain elusive, and there is an unmet need for effective targeted therapies. Our research uncovers upregulation of pituitary tumor-transforming gene 1 (PTTG1) in myeloma cells, which synergizes with transcription factor specificity protein 1 (SP1) to enhance its nuclear accumulation and consequently elevate the expression of glycolytic enzyme enolase-1 (ENO1). Intriguingly, ENO1, in a non-catalytic role, complexes with PTTG1/SP1, thereby amplifying the transcriptional activity of interferon regulatory factor 4 (IRF4). This cascade accelerates myeloma progression and exacerbates osteolytic lesions. Notably, IRF4 binds to the PTTG1 promoter, establishing a positive feedback loop that amplifies PTTG1 expression. Our study introduces a novel mechanistic insight into the pathogenesis of myeloma and bone deterioration and identifies disruption of the ENO1–PTTG1 interaction as a potential dual-targeting therapeutic strategy. The use of blocking peptides to interfere with this interaction demonstrates significant efficacy in curbing myeloma progression and osteolytic lesions, offering a promising avenue ~~for clinical intervention.~~ 
+
+## Introduction 
+
+Multiple myeloma is a hematologic malignancy characterized by the clonal expansion of malignant plasma cells within the bone marrow [1]. Although the introduction of proteasome inhibitors, immunomodulatory drugs, and chimeric antigen receptor T-cell therapies has substantially improved clinical outcomes, myeloma remains incurable for the majority of patients [2, 3]. Disease relapse is almost inevitable, driven by the persistence of drug-resistant clones and the supportive bone marrow microenvironment. Among the most debilitating complications of myeloma is the development of osteolytic bone disease, which affects over 80% of patients [4, 5]. This condition leads to severe skeletal-related events, including pathological fractures, spinal cord compression, and hypercalcemia, significantly impairing quality of life and overall survival. The pathogenesis of myeloma-associated bone disease is characterized by uncoupled bone remodeling, with excessive osteoclast-mediated bone resorption and profound suppression of osteoblast-mediated bone formation [4, 5]. Despite extensive investigation, the molecular mechanisms that 
+
+This Article in Press is shared early to give you faster access to new research. It is citable and carries a permanent DOI. The final edited version will replace it automatically. 
+
+
+![](10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0001-10.png)
+
+
+
+![](10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0001-11.png)
+
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+simultaneously drive myeloma progression and bone destruction remain incompletely understood, highlighting the urgent need for the identification of novel therapeutic targets that can address both aspects of the disease. 
+
+Pituitary tumor-transforming gene 1 (PTTG1) is a multifunctional oncogene [6]. PTTG1 is involved in a range of cellular processes, including sister chromatid separation, DNA damage repair, apoptosis, and cell cycle regulation [7–10]. Its overexpression has been documented in various solid tumors, such as prostate cancer, glioma, lung cancer, and breast cancer, where it contributes to proliferation, invasion, and chemoresistance [9–14]. In myeloma, previous studies have reported elevated PTTG1 expression and its association with adverse patient outcomes [15]. Another study reported that KLF10 suppresses PTTG1 transcription and inhibits myeloma cell growth under the regulation of miR-106b-5p [16]. However, the precise molecular mechanisms by which PTTG1 promotes myeloma progression remain largely unexplored. Moreover, whether PTTG1 plays a direct role in the pathogenesis of myeloma-induced osteolytic lesions has not been investigated. Elucidating these mechanisms could reveal critical nodes for therapeutic intervention. 
+
+Metabolic reprogramming is a hallmark of cancer, and myeloma cells exhibit heightened glycolytic activity to meet the biosynthetic and bioenergetic demands of rapid proliferation [17]. Enolase 1 (ENO1) is a key glycolytic enzyme that catalyzes the conversion of 2-phosphoglycerate to phosphoenolpyruvate [18]. Beyond its canonical role in glycolysis, ENO1 has emerged as a pleiotropic protein involved in diverse non-metabolic functions, including plasminogen binding, regulation of gene expression, and modulation of oncogenic signaling. In several cancers, ENO1 has been implicated in tumor progression through mechanisms independent of its enzymatic activity [19–21]. Recent studies have established ENO1 as a pro-oncogenic factor in myeloma through diverse mechanisms, including immunometabolic regulation [22], HIF-1α-mediated glycolysis [23], and mitophagy-mediated drug resistance [24]. However, the role of ENO1 in myeloma-induced bone destruction and its non-catalytic transcriptional function remain unexplored. Understanding whether ENO1 contributes to myeloma progression through non-catalytic functions may uncover novel therapeutic vulnerabilities. 
+
+Interferon regulatory factor 4 (IRF4) is a lineage-survival transcription factor essential for plasma cell differentiation and function [25]. In myeloma, IRF4 is a master regulator of disease pathogenesis, controlling the expression of critical oncogenes such as c-MYC and the survival of malignant plasma cells [26]. Given its central role, IRF4 has emerged as a promising therapeutic target. Nonetheless, the upstream regulators of IRF4 expression in myeloma, particularly those linking oncogenic signaling and metabolic pathways, remain incompletely defined. Elucidating how IRF4 is modulated could provide new strategies to disrupt its oncogenic function. 
+
+In this study, we identify a previously unrecognized signaling axis wherein PTTG1 drives myeloma progression and osteolytic lesions through a non-canonical interaction with the transcription factor SP1 and the glycolytic enzyme ENO1. We demonstrate that PTTG1 promotes SP1 nuclear accumulation and that ENO1, in a non-enzymatic capacity, forms a transcriptional complex with PTTG1 and SP1 to enhance IRF4 transcription. Notably, we uncover a positive feedback loop in which IRF4 directly binds to the PTTG1 promoter and upregulates PTTG1 expression, thereby amplifying the oncogenic and osteolytic cascade. Using a combination of in vitro, in vivo, and patientderived sample analyses, we further show that disruption of the PTTG1–ENO1 interaction with a blocking peptide significantly attenuates myeloma progression and bone destruction. Collectively, our findings unveil a novel mechanistic framework linking oncogenic signaling, metabolic regulation, and bone pathology in myeloma and identify the PTTG1–ENO1 interface as a promising therapeutic target for simultaneous treatment of tumor growth and osteolytic lesions. 
+
+## Results 
+
+### PTTG1 enhances tumor progression and osteolytic lesions 
+
+Consistent with previous reports establishing PTTG1 upregulation and its prognostic significance in multiple myeloma [15, 16], we first confirmed the alteration of gene expression in plasma cells of myeloma patients, compared to 
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+
+![](10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0003-02.png)
+
+
+<!-- Start of picture text -->
+A B C E<br>GSE2658+GSE5900 Logrank  p <0.0001 GSE755<br>100 15000<br>15000 p =0.0013<br>p =0.0013<br>Normal  75 200<br>plasma cells Pt MM cells 10000<br>10000<br>50<br>PTTG1 200<br>5000 25 PTTG1  low 5000<br>β-tubulin<br>PTTG1  high<br>0 0 0<br>0 500 1000 1500 2000 BL=0 BL≥1<br>Days<br>D CD138 PTTG1 Ki67 F<br>10 10 10<br>40 r=0.6914<br>5 Cluste r1 3 5 Cluste r1 3 5 Cluste r1 2.52.0 30 p< 0.0001 P1<br>0 2 0 2 0 1.5<br>1 1 1.00.5 20<br>-5 0 -5 0 -5 0.0<br>10<br>P2<br>-10 -10 -10<br>0<br>0 2 4 6 8<br>-10 -5 0 5 10 -10 -5 0 5 10 -10 -5 0 5 10 PTTG1  relative<br>UMAP_1 UMAP_1 UMAP_1 expression<br>G PTTG1 CD138 H I<br>P1 P2<br>P1<br>P1<br>P2<br>P2<br>MM patient bone marrow  MRI  X Ray<br>LP-1 ARH-77 ARP-1 IM-9<br>PTTG1  Signal  Overall survival PTTG1  Signal<br>UMAP_2<br>No. of bone lesion<br><!-- End of picture text -->
+
+Fig. 1 PTTG1 is critical for myeloma disease progression. A PTTG1 mRNA levels in plasma cells from myeloma patients (n = 559) compared to normal plasma cells from healthy donors (n = 22) (GEO: GSE2658 and GSE5900). p-value was determined by an unpaired two-tailed t-test. B Western blot analysis of PTTG1 expression in normal plasma cells, malignant plasma cells (Pt, n = 4), and human myeloma cell lines. GAPDH served as a loading control. Shown are representative of three independent experiments. C Overall survival (OS) of patient’s myeloma cells with high PTTG1 (High, n = 200) and low PTTG1 (Low, n = 200) expression in MMRF CoMMpass study IA15. D Representative patient’s UMAP plot of PTTG1 (left), CD138 (middle) or Ki67 (right) expression in scRNA-seq data (GSE161801) (n = 20). Cluster 1 region containing PTTG1<sup>high</sup> -expressed myeloma cells is indicated. E In a public dataset (GEO: GSE755), PTTG1 mRNA levels in malignant plasma cells were contrasted between 37 myeloma patients without (BL = 0) and 136 with osteolytic lesions (BL ≥ 1). Data shown as average ± SD. p-value was determined by an unpaired two-tailed t-test. F Correlation between PTTG1 mRNA levels and osteolytic lesions counts in 30 newly diagnosed myeloma patients. The correlations were evaluated using the Pearson coefficient. r, correlation coefficient. p-value was determined by the Pearson coefficient. G Representative images of immunohistochemical staining show the expression of CD138 and PTTG1 in the biopsy samples of two patients (P1 and P2) (n = 6 areas/patient). Scale bar, 30 µm. Representative images of magnetic resonance imaging and X-ray scanning for osteolytic lesions in the spine (H) and skull (I) in patients 1 and 2. Data are averages ± SD. Yellow arrow, osteolytic lesions. 
+
+plasma cells of healthy donors, using the public GEO dataset (GSE2658 and GSE5900). PTTG1 expression was much higher in myeloma cells than in normal plasma cells (Fig. 1A). Western blotting demonstrated that higher PTTG1 expression was detected in the majority of bone marrow aspirates derived from primary myeloma cells, as well as in the majority of established human myeloma cell lines. However, notably lower expression was observed in 
+
+Cell Death and Disease 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+##### **A** 
+
+##### **B** 
+
+
+![](10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0004-04.png)
+
+
+<!-- Start of picture text -->
+Pathway KEGG Enrichment (ARP-1  PTTG1  vs ARP-1  Vec ) Pathway KEGG Enrichment (LP-1  PTTG1  vs LP-1  Vec )<br>ECM-receptor interaction Cytokine-cytokine receptor interaction<br>Cell adhesion molecules Cell adhesion molecules<br>PI3K-AKT signaling pathway ECM-receptor interaction<br>MAPK signaling pathway PI3K-AKT signaling pathway<br>JAK-STAT signaling pathway JAK-STAT signaling pathway<br>Hippo signaling pathway NF-κB signaling pathway<br>Wnt signaling pathway MAPK signaling pathway<br>NF-κB signaling pathway Wnt signaling pathway<br>mTOR signaling pathway Tight junction<br>Tight junction Cell cycle<br>Osteoclast differentiation Osteoclast differentiation<br>0    5   10  15  20   25  30  35  40  45 0    6   12  18   24  30 36   42  48 54<br>Gene Count Gene Count<br>C D<br>ARH-77 IM-9 LP-1 ARP-1<br>10 sh Ctrl 10 sh Ctrl 8 Vec 15 Vec<br>8 sh PTTG1 8 sh PTTG1 6 PTTG1 10 PTTG1<br>6 6<br>4<br>4 4<br>5<br>2 2 2<br>0 0 0 0<br>0 1 2 3 4 5 0 1 2 3 4 5 0 1 2 3 4 5 0 1 2 3 4 5<br>Days Days Days Days<br>E EdU DAPI Merge EdU DAPI Merge F<br>sh Ctrl  sh PTTG1 sh Ctrl shPTTG1<br>ARH-77 IM-9<br>ARH-77 IM-9<br>G H ARH-77 I ARH-77 J<br>Ki67 DAPI Merge<br>3000 sh Ctrl 2.5<br>ARH-77<br>sh PTTG1 2.0<br>2000<br>1.5<br>sh Ctrl<br>1.0<br>1000 p =0.0002<br>sh PTTG1 0.5<br>0 0.0<br>14 16 18 20 22 24 sh Ctrl sh PTTG1<br>Days ARH-77<br>IM-9 IM-9 Ki67 DAPI Merge<br>IM-9 3000 sh Ctrl 4<br>sh PTTG1<br>3<br>2000<br>sh Ctrl<br>2<br>sh PTTG1 1000 1 p =0.0004<br>0 0<br>14 16 18 20 22 24 sh Ctrl sh PTTG1<br>Days IM-9<br><0.0001 p<br><0.0001 p <0.0001 p <0.0001 p<br>Relative cell viability Relative cell viability Relative cell viability Relative cell viability<br>Ctrl sh<br>PTTG1 sh<br>Ctrl sh<br><0.0001 p<br>Tumor Weight (g)<br>3Tumor Volume (mm)<br>PTTG1 sh<br>Ctrl sh<br><0.0001 p<br>Tumor Weight (g)<br>3Tumor Volume (mm) PTTG1 sh<br><!-- End of picture text -->
+
+normal plasma cells (Fig. 1B). Likewise, patients with high PTTG1 expression exhibited shorter overall survival than those with low expression (Fig. 1C). Moreover, public single-cell sequencing analysis indicated that within 
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+Fig. 2 PTTG1 is associated with the growth of myeloma cells in vitro and in vivo. A, B RNA-seq analysis of pathway enrichment in PTTG1-overexpressing myeloma cells (PTTG1) compared to control cells (Vec). C, D Proliferation of myeloma cells with reduced (shPTTG1) or increased (PTTG1) PTTG1 expression over time, as determined by CellTiter-Glo Luminescent Cell Viability Assay. Nontargeted shRNA (shCtrl) or control vector (Vec) served as control (n = 3 biological replicates). E Representative images and the percentage of EdU-positive cells of ARH-77 or IM-9 cells (shCtrl or shPTTG1), as determined by EdU staining assay. Scale bar, 20 μm (n = 3 biological replicates). F ARH-77 or IM-9 (shCtrl or shPTTG1) cells were cultured in soft agar for 3 weeks, and the colonies were stained and visualized (n = 3 biological replicates). G Photographic images of tumors in NSG mice after implantation of ARH-77 or IM-9 (shCtrl or shPTTG1) cells (n = 3 mice/group). Time course of tumor volume (H) and tumor weight (I) (n = 3 mice/group). J Immunofluorescent staining of Ki67 expression in tumor tissues. Each experiment was repeated three times. Data are averages ± SD. I p-value was determined by an unpaired two-tailed t- test.; C, D, H p-values were determined using two-way ANOVA. 
+
+subpopulations of myeloma cells (CD138<sup>+</sup> cells), those exhibiting high PTTG1 expression showed increased proliferative capacity (Fig. 1D). Having confirmed these reported findings, we next extended the analysis to investigate whether PTTG1 is associated with myeloma-induced osteolytic bone disease—an aspect not previously explored. We compared its expression levels in myeloma cells of patients from a published dataset (GEO: GSE755). PTTG1 expression was higher in myeloma cells of patients with osteolytic lesions than in those without (Fig. 1E). Furthermore, we found a strong positive correlation between PTTG1 expression in myeloma cells and the numbers of osteolytic lesions in myeloma patients (Fig. 1F). To determine whether PTTG1 is associated with osteolytic lesions caused by myeloma cells, we examined its expression in myeloma cells using a public data set (GEO: GSE755). We observed that the expression of PTTG1 was significantly elevated in myeloma cells from patients with osteolytic lesions as opposed to those who did not (Fig. 1E). Additionally, a robust positive correlation was identified between the expression levels of PTTG1 in myeloma cells and the number of osteolytic lesions in myeloma patients (Fig. 1F). Further evidence supporting the link between PTTG1 and the severity of myeloma-induced bone disease was provided by immunohistochemistry, which showed increased expression of PTTG1 and the myeloma cell surface marker CD138 in patients with a high number of osteolytic lesions (P1) compared to those with fewer osteolytic lesions (P2) (Fig. 1G). Additionally, representative X-ray scans and magnetic resonance images revealed a greater number of osteolytic lesions in the skull (Fig. 1H) and spine (Fig. 1I) of patients with more osteolytic lesions (P1) than those with fewer osteolytic lesions (P2). Collectively, these findings underscore the correlation between PTTG1 and the development of bone diseases in patients with myeloma. The clinical characteristics analysis showed that compared to myeloma patients with low PTTG1 expression, those with high PTTG1 expression have faster disease progression, higher levels of lactate dehydrogenase in their serum, and a lower proportion of achieving complete remission after initial treatment (Table S1). 
+
+To examine the functional role of PTTG1 in tumor growth, we first knocked down its expression in ARH-77 or IM-9 myeloma cells using shRNAs against human PTTG1, and overexpressed PTTG1 cDNA in LP-1 or ARP-1 myeloma cells (Fig. S1A, B). Consistent with the reported pro-proliferative function of PTTG1 in multiple myeloma [15, 16], we performed whole-transcriptome RNA-seq on PTTG1-overexpressing myeloma cells compared to control cells to identify potential downstream pathways. Computational overlapping of genes with the Molecular Signatures Database hallmark gene sets revealed significant enrichment of genes associated with proliferation-related signaling (Fig. 2A, B), further supporting the established growth-promoting role of PTTG1 and providing candidate pathways for functional validation. We therefore examined the effects of PTTG1 on myeloma cell proliferation. In cell proliferation assays, we observed increased growth in PTTG1-high myeloma cells (shCtrl or PTTG1) compared with PTTG1-low cells (shPTTG1 or Vec) (Fig. 2C, D). Furthermore, EdU staining and colony formation assays confirmed that PTTG1 knockdown significantly decreased colony formation and proliferation (Fig. 2E, F). Having confirmed these reported findings, we next extended the investigation to determine whether PTTG1 similarly promotes myeloma cell growth in vivo. We subcutaneously injected NSG mice with ARH-77 or IM-9 cells expressing shCtrl or shPTTG1. PTTG1 knockdown significantly delayed tumor progression in recipient mice compared with control mice (Fig. 2G–J). Collectively, these data corroborate the pro-tumorigenic function of PTTG1 in myeloma [15] and provide a foundation for dissecting the underlying molecular mechanisms in subsequent experiments. We next sought 
+
+Cell Death and Disease 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+
+![](10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0006-02.png)
+
+
+<!-- Start of picture text -->
+A B C<br>ARH-77 IM-9  60 60<br>No MM sh Ctrl sh PTTG1 sh Ctrl sh PTTG1 p =0.0162 p =0.004<br>40 p =0.0216 p =0.036 40<br>20 20<br>0 0<br>ARH-77 IM-9 ARH-77 IM-9<br>D 20 E 20 F 20 G 15<br>p =0.0059 p =0.0015 p =0.0017 p =0.0031 p =0.0034<br>15 15 15 p =0.0015<br>p =0.0023 10<br>p =0.004<br>10 10 10<br>5<br>5 5 5<br>0 0 0 0<br>ARH-77 IM-9 ARH-77 IM-9 ARH-77 IM-9 ARH-77 IM-9<br>H I J<br>25 Calcein staining 300<br>20<br>p =0.0234 200<br>p =0.0024<br>15 p =0.0242 p =0.0019<br>10 100<br>5<br>0 0<br>No MM sh Ctrl sh PTTG1 sh Ctrl sh PTTG1<br>ARH-77 IM-9 ARH-77 IM-9 ARH-77 IM-9<br>ARH-77 IM-9<br>K<br>MM ─  ─  sh Ctrl sh PTTG1 sh Ctrl sh PTTG1<br>RANKL ─  + + + + +<br>L 50 M N 1.0<br>40 0.8<br>p =0.0158 p =0.0038 p =0.0124 p =0.0052<br>30 ARH-77 IM-9 0.6<br>20 MM ─  sh Ctrl sh PTTG1 sh Ctrl sh PTTG1 0.4<br>10 0.2<br>0 0.0<br>RANKL ─  + + + + + MM ─<br>MM ─ ─<br>ARH-77 IM-9<br>ARH-77 IM-9<br>Mouse serum  PINP (ng/ml) Mouse serum  CTX-1 (ng/ml)<br>BV/TV (%) ES/BS (%) Oc.S/BS (%) OS/BS (%)<br>BFR/BS<br>Ob.S/BS (%) 32/μm/year)(μm<br>Multinuclear cellsTRAP+ Alizarin red-S (OD 490nm)<br><!-- End of picture text -->
+
+to determine whether PTTG1 also contributes to myeloma-induced osteolytic bone destruction—an aspect not previously explored. 
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+Fig. 3 PTTG1 enhances bone resorption and inhibits bone formation in vitro and in vivo in myeloma cells. NSG mice were intrafemorally injected with myeloma cell lines ARH-77 or IM-9 (shCtrl or shPTTG1). Mice not receiving myeloma cells (No MM) served as controls. After 4 weeks of cell injection, the representative X-ray images of osteolytic lesions (A), concentrations of PINP (B) or CTX-1 (C) in mouse sera, percentages of BV/TV (D), ES/BS (E), Oc.S/BS (F), OS/BS (G), and Ob.S/BS (H). Yellow arrow, osteolytic lesions. I, J Bone formation rate (BFR/BS) was measured by calcein injection, and the bone sections were imaged and analyzed. Shown are representative images and summarized data of bone formation in mouse femurs. Scale bar: 20 μm. Data are means ± SD (n = 5 mice/group). Precursors of osteoclasts were co-cultured with myeloma cell lines ARH77 or IM-9 (shCtrl or shPTTG1) in osteoclast medium. Shown are the numbers (K, L) of multinuclear (≥3) TRAP<sup>+</sup> cells. Scale bars, 100 μm. MSCs were cocultured with myeloma cell lines ARH-77 or IM-9 (shCtrl or shPTTG1) in osteoblast medium. Shown are representative images (M) and summarized data of Alizarin Red S staining (N) in MSCs (n = 3 biological replicates). Data are averages ± SD. p-values were determined using one-way ANOVA. 
+
+To determine the functional role of myeloma expressed PTTG1 in osteolytic lesions in vivo, we injected PTTG1 knockdown (shPTTG1) myeloma cells (ARH-77 or IM-9) into mouse femurs and observed fewer osteolytic lesions than control (shCtrl) myeloma cells did (Fig. 3A). To evaluate the function of PTTG1 expressed by myeloma cells in bone resorption mediated by osteoclasts in vivo, we analyzed the concentrations of mouse serum procollagen type I N-terminal propeptide (PINP), which serves as an indicator of bone formation, and C-telopeptide of type I collagen (CTX-1), an indicator of bone resorption. We found higher PINP and lower CTX-1 levels in the shPTTG1 group, compared with the shCtrl group (Fig. 3B, C). We also stained myeloma-bearing mouse femurs for TRAP and Toluidine blue, bone histomorphometric analysis demonstrated a lower bone volume/total volume (BV/TV) (Fig. 3D), higher percentage of bone surface eroded by osteoclasts (ES/BS) (Fig. 3E), percentage of bone surface covered with osteoclasts (Oc. S/BS) (Fig. 3F), and lower percentage of osteoid surface (OS/BS) (Fig. 3G), bone surface lined with osteoblasts (Ob. S/BS) (Fig. 3H) and bone formation rate (Fig. 3I, J) in mice injected with myeloma cells expressing high levels of PTTG1 (shCtrl) than in those injected with low PTTG1 myeloma cells (shPTTG1). 
+
+The process of bone remodeling is sustained by a balanced interaction between the bone-degrading activity of osteoclasts and the bone-building activity of osteoblasts. To explore the possible influence of the myeloma cell protein PTTG1 on preserving this balance, we first assessed its effect on the maturation of osteoclasts. In the presence of RANKL, coculture of osteoclast precursors (preOCs) with myeloma cells that highly express PTTG1 (shCtrl) resulted in increased formation of multinucleated tartrate-resistant acid phosphatase (TRAP)-positive cells (Figs. 3K, L and S2A), elevated secretion of TRAP 5b (Fig. S2B), and upregulated expression of genes associated with osteoclast differentiation (Fig. S2C, D) than in those cocultured with low levels of PTTG1 myeloma cells (shPTTG1). These findings indicated that myeloma cells with elevated PTTG1 levels stimulated osteoclastogenesis. To evaluate the effect of myeloma cells expressing PTTG1 on osteoblast formation, we conducted coculture experiments with osteoblast precursors, MSCs, in osteoblast medium with myeloma cells. MSCs cultured alone in this medium served as positive controls. The coculture with myeloma cell lines exhibiting reduced PTTG1 levels (shPTTG1) resulted in a greater quantity of mature osteoblasts (Fig. 3M, N), enhanced alkaline phosphatase (ALP) activity (Fig. S2E), and increased expression of genes associated with osteoblast differentiation (Fig. S2F, G) when compared to cocultures with myeloma cells with high PTTG1 expression (shCtrl). These results indicate that PTTG1 inhibits osteoblastogenesis in myeloma cells. 
+
+To further demonstrate that the effect of PTTG1 on osteolytic lesions is not solely due to its impact on the proliferation of myeloma cells, we performed another co-culture system. We pre-irradiated myeloma cells ARH-77 or IM-9 (shCtrl, shPTTG1) with γ-rays to abrogate their proliferative capacity. Subsequently, we employed a co-culture system similar to that shown in Fig. 3K. Given that the irradiated cells lost their proliferative ability, we adjusted the co-culture duration to two days. After co-culture, we analyzed the expression of osteoclast or osteoblast differentiation-associated genes using quantitative real-time PCR. The results indicated that irradiated myeloma cells with high PTTG1 expression exhibited a stronger capacity to promote osteoclast differentiation and inhibit osteoblast differentiation (Fig. S3A, B). This result suggests that PTTG1 can promote osteolytic lesions through mechanisms other than proliferation. 
+
+Cell Death and Disease 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+
+![](10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0008-02.png)
+
+
+<!-- Start of picture text -->
+A B GSE2658+GSE5900 GSE6477 C Logrank  p <0.0001 D<br>20 p =0.0088 15 p =0.0237 100 1.5 ARH-77 1.5 IM-9<br>200<br>75<br>Protein PTTG1 ENO1 15<br>10 1.0 1.0<br>10 50<br>Peptides 4 22 200<br>5 5 25 ENO1  low 0.5 0.5<br>Coverage  22% 54% ENO1  high<br>0 0 0 0.0 0.0<br>0 500 1000 1500 2000<br>Days<br>E F G 293T cells H<br>+                      +                       HA-PTTG1<br>- +                       SP1<br>SP1 PTTG1                      IP:HA SP1<br>ENO1 SP1<br>β-tubulin PTTG1<br>ARH-77 IM-9 PTTG1 SP1                      WCL PTTG1<br>293T cells ARH-77 IM-9<br>I DAPI PTTG1 SP1 Merge J<br>DAPI CD138 PTTG1 SP1 Merge<br>Myeloma patient bone marrow aspirates<br>K L M<br>SP1 DAPI Merge SP1 DAPI Merge 293T cells<br>KEN DNA binding Transactivating<br>PTTG1<br>1 9 11 61 118 119 164 202<br>ΔKEN<br>HA<br>ΔDBD<br>ΔTD β-tubulin<br>LP-1 ARP-1<br>N 293T cells O<br>ARH-77 IM-9<br>+                      - +                      +                       HA-PTTG1 (SP1                  KEN)                   +                      - + +                       HA-PTTG1 (SP1                  DBD)                   +                      - +                      +                       HA-PTTG1 (SP1                  TD)                   0.4 IgG 0.4 p <0.0001<br>SP1 Ab<br>HA                       HA                       HA                       0.3 p =0.0002 0.3<br>IP:HA IP:HA IP:HA<br>SP1                       SP1                       SP1                       0.2 0.2<br>HA                       HA                       HA                       0.1 0.1<br>WCL WCL WCL<br>SP1                       SP1                       SP1                       0.0 0.0<br>ENO1 ENO1<br>P Q R S T<br>Putative SP1 binding site 15 p <0.0001 r=0.4357 r=0.6777<br>-1249 bp +1 promoter region ENO1  10 p <0.0001 3040 p= 0.0161 108 p< 0.0001<br>-472 128 bp 6<br>5 20<br>luc ENO1-Full ns ns 4<br>10<br>0 2<br>X luc ENO1 -Mut<br>-472 SP1 + + + + 0 0 Multiple myeloma<br>PTTG1 + + 0 2 4 6 8 10 0 2 4 6 8<br>Full Mut ENO1  mRNA PTTG1  mRNA<br>=0.0134 p<br>0.0005 p=<br>3 ENO1  Signal (ˣ10)  Overall survival<br>ENO1  relativeexpression<br>ARH-77<br>IM-9<br>KEN DBD TD<br>Vec FL<br>PTTG1<br>% of Input % of Input<br>activity<br>Relative luciferase<br>No. of bone lesion<br>ENO1  relativeexpression<br><!-- End of picture text -->
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+Fig. 4 PTTG1 interacts with the transcription factor SP1 to promote its nuclear accumulation and activate the transcription of ENO1. A Analysis of immunoprecipitates of HA-tagged PTTG1 in IM-9 cells with mass spectrometry. The proteins identified are indicated. B ENO1 mRNA levels in plasma cells from myeloma patients (n = 559 or 73) compared to normal plasma cells (n = 22 or 14) from healthy donors (GEO: GSE2658 and GSE5900 or GSE6477). C Overall survival (OS) of patient’s myeloma cells with high ENO1 (High) and low ENO1 (Low) expression in the MMRF CoMMpass study IA15. D, E The expression of ENO1 in ARH-77 or IM-9 (shCtrl or shPTTG1) cells. F Co-immunoprecipitation of PTTG1 with SP1 in HEK293T cells co-transfected with PTTG1 and SP1 plasmid. G Pull-down of HA-PTTG1 with SP1 in HEK293T cells. H Coimmunoprecipitation of PTTG1 with SP1 in ARH-77 or IM-9 cells. I Immunofluorescent staining of ARH-77 or IM-9 cells with DAPI and antibodies against PTTG1 and SP1. Scale bar, 2 μm. J Immunofluorescent staining of myeloma patients' bone marrow samples with DAPI and antibodies against CD138, PTTG1, and SP1 (n = 3). Scale bar, 10 μm. K Immunofluorescent staining of LP-1 or ARP-1 cells (Vec and PTTG1) with DAPI and antibody against SP1. Scale bar, 5 μm. L Schematic of the truncations including ΔKEN, ΔDBD, and ΔTD fragments. M Western blotting showing different truncations of PTTG1 (ΔKEN, ΔDBD, and ΔTD fragments) in HEK293T cells. N Pull-down of SP1 with different truncations of PTTG1 (ΔKEN, ΔDBD, and ΔTD) in HEK293T cells. O ChIP assay showing SP1 enrichment in the ENO1 promoter in myeloma cell lines (ARH-77 or IM-9). P, Q Schematic of the ENO1 promoter luciferase reporter. Solid boxes: promoter region of ENO1; red crosses: mutations of nucleotides. The luciferase activity of ENO1-Full constructs was set at 1. ns, not significant. Primary myeloma cells were isolated from bone marrow aspirates of 30 newly diagnosed patients. Shown are the correlation coefficient of the mRNA levels of ENO1 and the number of osteolytic lesions in patients (R) or the mRNA levels of PTTG1 (n = 30) (S). The correlations were evaluated using the Pearson coefficient. r, correlation coefficient. p-value was determined by the Pearson coefficient. T Schematic of the recruitment of PTTG1 by SP1 to the ENO1 promoter. D–K, M–O, and Q are representative of three independent experiments. Data are averages ± SD. B, D, and O p values were determined by an unpaired two-tailed t-test; Q p value was determined using one-way ANOVA. 
+
+### PTTG1 interacts with the transcription factor SP1 to promote its nuclear accumulation and activate the transcription of ENO1 
+
+We next investigated the mechanism by which PTTG1 regulates myeloma cell proliferation and bone cell differentiation. To identify the interacting proteins of PTTG1 in myeloma cells, we first performed immunoprecipitation and analysis with mass spectrometry. The analysis identified glycolytic enzyme ENO1 as a specific binding partner of PTTG1 (Fig. 4A, Table S2). ENO1 is an enzyme that regulates glycolysis, capable of catalyzing the dehydration of 2-phosphoglycerate to phosphoenolpyruvate, playing an important role in the glycolytic pathway. Recent studies have established ENO1 as a pro-oncogenic factor in myeloma through various mechanisms, including immunometabolic regulation, glycolysis, and drug resistance [22–24]. However, the role of ENO1 in myeloma-induced osteolytic lesions, as well as its potential non-catalytic transcriptional function, has not been previously described. We examined changes in gene expression in the plasma cells of myeloma patients compared to those of healthy controls by accessing publicly available GEO datasets (GSE2658, GSE5900, and GSE6477). ENO1 was more highly expressed in myeloma cells than in normal plasma cells (Fig. 4B). Subsequently, we investigated the correlation between ENO1 and the progression of myeloma using data from the Multiple Myeloma Research Foundation’s (MMRF) coMMpass study IA15. Our findings indicated that patients with elevated ENO1 expression levels in myeloma cells had a reduced overall survival rate compared to those with lower expression levels (Fig. 4C). Furthermore, we discovered that the knockdown of PTTG1 in myeloma cells inhibited the expression of ENO1 at both the transcriptional and protein levels (Fig. 4D, E). There are reports showing that PTTG1 can interact with the transcription factor SP1 to regulate the transcription of downstream genes; hence, we hypothesized that PTTG1 may regulate ENO1 through a similar mechanism. 
+
+Consistent with previous reports that PTTG1 interacts with SP1 in other cancer types [27, 28], we observed a similar interaction in myeloma cells. In co-immunoprecipitation experiments, HEK293T cells were simultaneously transfected with plasmids encoding both PTTG1 and SP1. Subsequent immunoprecipitation was carried out, and the resulting precipitates were examined for the presence of either PTTG1 or SP1. The findings indicated a specific interaction between PTTG1 and SP1 (Fig. 4F). We next proceeded with co-immunoprecipitation studies by mixing cell lysates from HEK293T cells that had been engineered to express HA-tagged PTTG1 with those from cells producing SP1. The complexes were precipitated using an antibody specific for the HA tag. Our observations 
+
+Cell Death and Disease 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+
+![](10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0010-02.png)
+
+
+<!-- Start of picture text -->
+A B<br>DAPI PTTG1 ENO1 Merge DAPI PTTG1 ENO1 Merge<br>ARH-77 IM-9<br>C D<br>ARH-77 IM-9 ARH-77 IM-9<br>5 Ctrl 5 Ctrl 88 sh Ctrl 5 sh Ctrl<br>4 Ap-III-a4 4 Ap-III-a4 66 sh ENO1 4 sh ENO1<br>3 3 3<br>44<br>2 2 2<br>22<br>1 1 1<br>0 0 00 0<br>0 1 2 3 4 5 0 1 2 3 4 5 00 11 22 33 44 55 0 1 2 3 4 5<br>Days Days Days Days<br>E F<br>ARH-77 IM-9 ARH-77- ENO1 -mut IM-9- ENO1 -mut<br>88 sh ENO1+ENO1- mut 5 sh ENO1+ENO1- mut 1010 Ctrl 8 Ctrl<br>66 sh ENO1 4 sh ENO1 88 Ap-III-a4 6 Ap-III-a4<br>3 66<br>44 4<br>2 44<br>22 1 22 2<br>00 0 00 0<br>00 11 22 33 44 55 0 1 2 3 4 5 0 1 2 3 4 5 0 1 2 3 4 5<br>Days Days Days Days<br>G H ARH-77 I ARH-77 J Ki67 DAPI Merge<br>1500 sh Ctrl 0.6<br>ARH-77<br>sh ENO1<br>1000 0.4<br>sh Ctrl<br>500 0.2 p =0.0016<br>sh ENO1<br>0 0.0<br>12 14 16 18 20 sh Ctrl sh ENO1 ARH-77<br>Days<br>IM-9 IM-9 Ki67 DAPI Merge<br>3000 sh Ctrl 3<br>IM-9<br>sh ENO1<br>2000 2<br>sh Ctrl<br>1000 1<br>sh ENO1 p =0.0091<br>0 0<br>12 14 16 18 20 sh Ctrl sh ENO1<br>IM-9<br>Days<br>Ctrl sh Ctrl sh<br>PTTG1 sh PTTG1 sh<br><0.0001 p<br><0.0001 p<br>Relative cell viability Relative cell viability Relative cell viability Relative cell viability<br><0.0001 p<br><0.0001 p<br>Relative cell viability Relative cell viability Relative cell viability Relative cell viability<br>Ctrl sh<br><0.0001 p<br>Tumor Weight (g)  PTTG1 sh<br>3Tumor Volume (mm)<br>Ctrl sh<br><0.0001 p<br>Tumor Weight (g)<br>3Tumor Volume (mm) PTTG1 sh<br><!-- End of picture text -->
+
+revealed a clear instance of direct binding between PTTG1 and SP1 (Fig. 4G). Moving forward to assess the endogenous PTTG1/SP1 complex within myeloma cells, we executed immunoprecipitation using antibodies against PTTG1 or SP1 in myeloma cell lysates. We subsequently scrutinized these lysates for the presence of either SP1 or PTTG1. Our data validated the presence of both proteins in the immunoprecipitates, thereby confirming the 
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+- Fig. 5 ENO1 promotes the proliferation of myeloma cells in a non-enzymatic activity-dependent manner. A, B Immunofluorescent staining of tumor tissues in Fig. 2E with DAPI and antibodies against PTTG1 and ENO1 (n = 3 mice/ group). Scale bar, 10 μm. C Proliferation of myeloma cells (ARH-77 or IM-9) treated with ENO1 inhibitor Ap-III-a4 (10 μM) over time. The DMSO-treated group served as control (n = 3 biological replicates). D Proliferation of myeloma cells with reduced ENO1 (shENO1) expression over time. Nontargeted shRNA (shCtrl) served as control (n = 3 biological replicates). E ARH-77 or IM-9 cells with reduced ENO1 (shENO1) expression were transduced with or without H159A mutant ENO1 (H159A). Cell proliferation was monitored over time (n = 3 biological replicates). F Proliferation of myeloma cells with an enzymatically inactive mutant of ENO1 treated with ENO1 inhibitor Ap-III-a4 (10 μM) over time. The DMSO-treated group served as control (n = 3 biological replicates). G Photographic images of tumors in NSG mice after implantation of ARH-77 or IM-9 (shCtrl or shENO1) cells (n = 3 mice/group). Time course of tumor volume (H) and tumor weight (n = 3 mice/group) (I). J Immunofluorescent staining of Ki67 expression in tumor tissues. Scale bar, 20 μm. Data are averages ± SD. C–F, H p-values were determined using two-way ANOVA. I p-value was determined by an unpaired two-tailed t-test. 
+
+endogenous formation of the PTTG1/SP1 complex in myeloma cells (Fig. 4H). Moreover, immunofluorescence staining results provided further evidence of the interaction between PTTG1 and SP1 in myeloma cell lines or patient myeloma cells (Fig. 4I, J). Moreover, we extend these findings by demonstrating that PTTG1 promotes SP1 nuclear accumulation in myeloma (Fig. 4K), a functional consequence not previously described. According to previous studies, the primary sequence of PTTG1 protein contains three relatively conserved domains responsible for protein–protein or protein–DNA interactions, referred to as the KEN domain, DNA-binding domain, and transactivating domain (Fig. 4L). To determine which domain of PTTG1 interacts with SP1, we selectively knocked out these three domains, respectively (ΔKEN, ΔDBD, or ΔTD) (Fig. 4M). Pulldown assay showed that PTTG1 interacts with SP1 through the transactivating domain (Fig. 4N). 
+
+To determine whether SP1 binds to the ENO1 promoter, we performed a chromatin immunoprecipitation (ChIP) assay using an anti-SP1 antibody, confirming enrichment of SP1 in the promoter region of ENO1 in myeloma cells (Fig. 4O). We also examined a 1.249-kilobase region around the ENO1 transcriptional start site. According to the promoter sequence, we predicted one SP1 binding site (−472 base pairs [bp]) in the ENO1 promoter (Fig. 4P). Luciferase activity assays demonstrated that SP1 can bind to the ENO1 promoter to enhance its transcription, and PTTG1 can augment the binding capacity of SP1 to the ENO1 promoter. Mutation at the −472 bp binding site can significantly inhibit the promoter binding ability of either SP1 or PTTG1/SP1 complex (Fig. 4Q). Additionally, correlation analysis indicated that the expression level of ENO1 was positively correlated with the number of osteolytic lesions in myeloma patients (Fig. 4R) or the expression level of PTTG1 (Fig. 4S). These findings suggest that PTTG1 interacts with the transcription factor SP1, facilitating its nuclear accumulation and thereby enhancing the transcriptional activity of ENO1 (Fig. 4T). 
+
+Our next step was to demonstrate the relationship between ENO1 and the proliferation of myeloma cells. Initially, in the NSG mouse subcutaneous tumor model mentioned in Fig. 2, immunofluorescence staining results indicated that the knockdown of PTTG1 in myeloma cells reduced the expression of ENO1 (Fig. 5A, B). Cell proliferation experiment indicated that the ENO1 inhibitor did not suppress the proliferation of myeloma cells (Fig. 5C), while the knockdown of ENO1 expression can significantly inhibit the proliferation of myeloma cells (Fig. 5D). We also constructed a mutant of ENO1 at the His159 site, which has been reported to result in loss of ENO1 enzymatic activity [29]. We constructed human ENO1 wild-type and H159A mutant expression constructs and performed enzymatic activity assays. The H159A mutant exhibited dramatically reduced catalytic activity compared to wild-type ENO1 (Fig. S4), confirming the critical role of this conserved residue in human ENO1 enzymatic function. To further investigate whether ENO1 promotes myeloma cell proliferation through its catalytic activity, we generated ENO1knockdown myeloma cell lines and reintroduced wild-type ENO1 or H159A mutant ENO1. Notably, the H159A mutant retained the ability to rescue the proliferation defect in ENO1-knockdown cells with comparable efficiency to wild-type ENO1 (Fig. 5E), demonstrating that the pro-proliferative function of ENO1 in this context is independent of its enzymatic activity. Moreover, the ENO1 inhibitor AP-III-a4 showed no inhibitory effect on myeloma cell lines overexpressing the catalytically inactive ENO1 mutant (Fig. 5F). Furthermore, we administered ARH-77 or IM-9 cells (including shCtrl and shENO1 groups) into NSG mice via subcutaneous injection. Consistent with our expectations, the shENO1 group showed a significant delay in tumor progression in the recipient mice compared to 
+
+Cell Death and Disease 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+
+![](10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0012-02.png)
+
+
+the shCtrl group (Fig. 5G–J). This result suggests that ENO1 regulates the proliferation of myeloma cells in a manner that is independent of its enzymatic activity. 
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+Fig. 6 The PTTG1–SP1–ENO1 complex enhances the expression of IRF4. A IRF4 mRNA levels in plasma cells from myeloma patients (n = 559 or 73) compared to normal plasma cells (n = 22 or 14) from healthy donors (GEO: GSE2658 and GSE5900 or GSE6477). B–E The expression of IRF4 in myeloma cells with reduced (shENO1) or increased (ENO1) ENO1 expression. Nontargeted shRNA (shCtrl) or control vector (Vec) served as a control. F, G Pull-down of Myc-ENO1 with PTTG1 or SP1 in HEK293T cells. H Co-immunoprecipitation of ENO1 with PTTG1 or SP1 in HEK293T cells co-transfected with ENO1 and PTTG1 or SP1 plasmid. I Co-immunoprecipitation of ENO1 with PTTG1 or SP1 in ARH-77 or IM-9 cells. J Immunofluorescent staining of ARH-77 or IM-9 cells with DAPI and antibodies against PTTG1 and ENO1. Scale bar, 2 μm. K Immunofluorescent staining of myeloma patients' bone marrow samples with DAPI and antibodies against CD138, PTTG1, and ENO1 (n = 3). Scale bar, 5 μm. L Immunofluorescent staining of LP-1 or ARP-1 cells (Vec and PTTG1) with DAPI and antibody against SP1. Scale bar, 5 μm. M Immunofluorescent staining of tumor tissues in Fig. 2E with DAPI and antibodies against PTTG1 and IRF4 (n = 3 mice/group). Scale bar, 10 μm. N Pull-down of ENO1 with different truncations of PTTG1 (ΔKEN, ΔDBD, and ΔTD) in HEK293T cells. O ChIP assay showing ENO1 enrichment in the IRF4 promoter in myeloma cell lines (ARH-77 or IM-9). P, Q Schematic of the IRF4 promoter luciferase reporter. Solid boxes: promoter region of IRF4; red crosses: mutations of nucleotides. The luciferase activity of IRF4-Full constructs was set at 1. ns not significant. Primary myeloma cells were isolated from bone marrow aspirates of 30 newly diagnosed patients. Shown are the correlation coefficient of the mRNA levels of IRF4 and the number of osteolytic lesions in patients (R) or the mRNA levels of PTTG1 (S). The correlations were evaluated using the Pearson coefficient. r, correlation coefficient. p-value was determined by the Pearson coefficient. T Schematic of the recruitment of PTTG1/SP1 complex by ENO1 to the IRF4 promoter. B–J, L–O, and Q are representative of three independent experiments. Data are averages ± SD. A–O p-values were determined by an unpaired twotailed t-test; Q p-value was determined using one-way ANOVA. 
+
+### The PTTG1/SP1/ENO1 complex enhances the expression of IRF4 
+
+We demonstrated how the PTTG1/SP1/ENO1 complex promotes the proliferation of myeloma cells. Interferon regulatory factor 4 (IRF4) is a transcription factor that plays a central regulatory role in the progression of myeloma [30]. Firstly, by utilizing data from the public GEO database (GSE2658, GSE5900, and GSE6477), we confirmed the high expression of IRF4 in myeloma cells (Fig. 6A). Our research revealed that the suppression or enhancement of PTTG1 in myeloma cells led to a corresponding decrease or increase in the expression of ENO1, as observed at both the transcriptional and translational levels (Fig. 6B-E). Additionally, overexpression of PTTG1 significantly upregulated the expression of IRF4 target genes (c-MYC and LDHA) (Fig. S5A, B). To elucidate the molecular interplay between the PTTG1/SP1 complex and ENO1 protein, we conducted co-immunoprecipitation experiments. Subsequently, we conducted co-IP by blending lysates from HEK293T cells that had been transfected with a plasmid encoding HA-tagged ENO1 with those from cells overexpressing SP1 or PTTG1. Antibodies specific to the HA tag were utilized to precipitate the protein complexes. Our findings indicate a direct interaction between ENO1 and either PTTG1 or SP1 (Fig. 6F, G). HEK293T cells were co-transfected with plasmids expressing ENO1 along with either PTTG1 or SP1. Following immunoprecipitation, the precipitates were probed for the presence of ENO1, PTTG1, or SP1 proteins. The outcomes substantiated the interaction between ENO1 and PTTG1 or SP1 (Fig. 6H). Advancing our investigation to the endogenous PTTG1/SP1/ENO1 complex in myeloma cells, we performed immunoprecipitation with antibodies targeting PTTG1, SP1, or ENO1 on lysates derived from myeloma cells. These lysates were then examined for the presence of PTTG1, SP1, and ENO1. Our data confirmed the endogenous assembly of the PTTG1/SP1/ENO1 complex in myeloma cells, as evidenced by the co-precipitation of all three proteins (Fig. 6I). Furthermore, immunofluorescence assays provided corroborative evidence of the interaction between PTTG1 and ENO1 within both myeloma cell lines and primary patient myeloma cells, reinforcing the biological relevance of this complex (Fig. 6J, K). Additionally, we found that overexpression of PTTG1 in myeloma cells can also significantly enhance the nuclear translocation of ENO1 (Fig. 6L). Moreover, in the NSG mouse subcutaneous tumor model mentioned in Fig. 2, immunofluorescence staining results indicated that the knockdown of PTTG1 in myeloma cells reduced the expression of IRF4 (Fig. 6M). In addition, pulldown assay showed that PTTG1 interacted with ENO1 through the KEN domain (Fig. 6N). 
+
+To ascertain the binding of ENO1 to the IRF4 promoter, we conducted a ChIP assay utilizing an anti-ENO1 antibody, which confirmed the enrichment of ENO1 in the IRF4 promoter region in myeloma cells (Fig. 6O). We examined a 943-base pair region surrounding the transcriptional start site of IRF4. Based on the promoter sequence, 
+
+Cell Death and Disease 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+
+![](10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0014-02.png)
+
+
+<!-- Start of picture text -->
+A B C D E<br>ARH-77 IM-9 1.5 4 p =0.0003 40 p =0.0191 1.0<br>p =0.0254<br>- +    - +   sh PTTG1 3 30 0.8 p =0.0295<br>IL10 1.0 0.6 p =0.0138<br>CCL3 2 20<br>CXCL1 p =0.0045 0.4<br>GCSF 0.5<br>1 10<br>FGF7 0.2<br>CCL5<br>IGFBP2CXCL2 0 sh Ctrl sh PTTG1 0 Vec PTTG1 LP-1 LP-1  PTTG1Vec 0 ─+─ ─ ─+ ──+ + LP-1 LP-1  PTTG1Vec 0 ─+─ ─ ─+ ──+ +<br>4 CCL16CCL24 IM-9 LP-1 Antibody ─ Antibody ─<br>BDNF<br>3 IL6<br>SDF1<br>2 IGFBP4 1.5 6 F 40 G 1.0<br>IL4 p =0.0007 p =0.0344<br>1 TIMP2 1.0 4 30 p =0.0164 0.8 p =0.024<br>OPG 0.6 p =0.0126<br>MIF p =0.0241 20<br>IGF1 0.5 2 0.4<br>VEGFαTIMP1 10 0.2<br>CCL2 0 0 0 0<br>IL8 sh Ctrl sh PTTG1 Vec PTTG1 IM-9 sh Ctrl ─+ ─ ── IM-9 sh Ctrl ─+ ─ ──<br>PIGF IM-9 sh PTTG1 ─ ─ + + + IM-9 sh PTTG1 ─ ─ + + +<br>IGF2 IM-9 LP-1<br>FGF2 Cytokine ─ ── Cytokine ─ ──<br>H I 8 p =0.0003 J K 8<br>Putative IRF4 binding site Putative IRF4 binding site p =0.0002<br>+1 6 +1 6<br>-1411 bp CXCL1  -1420 bp IL6<br>promoter region 4 promoter region 4<br>-666 11 bp -218 54 bp<br>2 ns 2 ns<br>luc CXCL1-Full luc IL6-Full<br>0 0<br>X luc CXCL1-Mut IRF4 + + X luc IL6-Mut IRF4 + +<br>-666 -218<br>Full Mut Full Mut<br>L M N<br>r=0.6377 r=0.6204 r=0.4635 r=0.4216 r=0.4881 r=0.5381<br>10 p =0.0002 10 p= 0.0003 10 p= 0.0099 10 p= 0.0203 10 p= 0.0062 10 p= 0.0022<br>8 8 8 8 8 8<br>6 6 6 6 6 6<br>4 4 4 4 4 4<br>2 2 2 2 2 2<br>0 0 0 0 0 0<br>0 2 4 6 8 0 2 4 6 8 0 2 4 6 8 10 0 2 4 6 8 10 0 2 4 6 8 0 2 4 6 8<br>PTTG1  relative PTTG1  relative ENO1  relative ENO1  relative IRF4  relative IRF4  relative<br>expression expression expression expression expression expression<br>O ARH-77 IM-9 P ARH-77 IM-9 Q R<br>1.5 1.5 0.20 IgG 0.15 Putative IRF4 binding site+1 8 p =0.0012<br>IRF4 Ab -1392 bp PTTG1  6<br>0.15 p <0.0001 promoter region<br>1.0 1.0 p <0.0001 0.10 -1286 -607 138 bp 4<br>0.10<br>luc PTTG1-Full 2 ns ns<br>0.5 0.5 0.05 -1075<br>0.05 luc PTTG1- 1 0<br>0.0 0.0 0.0 0.00 X luc PTTG1-Mut IRF4 + + +<br>PTTG1 PTTG1 -1286 Full 1 Mut<br>Multinuclear TRAPcells+ Alizarin red-S (OD 490 nm)<br>CXCL1  relativeexpression<br>Multinuclear cellsTRAP+ Alizarin red-S (OD 490 nm)<br>IL6  relativeexpression<br>activity activity<br>Relative luciferase  Relative luciferase<br>IL6  relativeexpression IL6  relativeexpression<br>IL6  relativeexpression<br>CXCL1  relativeexpression CXCL1  relativeexpression CXCL1  relativeexpression<br>=0.0019 p activity<br>=0.0008 p<br>% of Input<br>PTTG1  relativeexpression Relative luciferase<br><!-- End of picture text -->
+
+we identified a single ENO1 binding site located at −19 base pairs within the IRF4 promoter, with the core sequence 5’-TATAAAT-3’ (Fig. 6P). Luciferase activity assays revealed that ENO1 can bind to the IRF4 promoter, thereby enhancing its transcriptional activity. Furthermore, the presence of PTTG1 and/or SP1 was found to amplify the binding capacity of ENO1 to the IRF4 promoter. A mutation at the −19 bp binding site significantly impaired the promoter binding capability of either ENO1 or the PTTG1/SP1/ENO1 complex (Fig. 6Q). Correlation analysis also indicated a positive correlation between the expression levels of IRF4 and the number of osteolytic lesions in 
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+Fig. 7 IRF4 increases osteolytic cytokines and PTTG1 expression. A Quantitative real-time PCR analysis shows the relative expression of cytokine genes in ARH-77 or IM-9 (shCtrl or shPTTG1) cells. B, C The expression of CXCL1 or IL6 in myeloma cells with reduced (shPTTG1) or increased (PTTG1) PTTG1 expression. Nontargeted shRNA (shCtrl) or control vector (Vec) served as a control. D The number of multinuclear TRAP<sup>+</sup> cells among precursors of osteoclasts cultured with LP-1 cells (Vec or PTTG1) in the presence of antibodies against CXCL1 or IL6. E The Alizarin red S staining of MSCs cultured in osteoblast medium with LP-1 cells (Vec or PTTG1) in the presence of antibodies against CXCL1 or IL6. F The numbers of multinuclear TRAP<sup>+</sup> cells among precursors of osteoclasts cultured with IM-9 cells (shCtrl or shPTTG1) in the presence of CXCL1 (1 ng/ml) or IL6 (1 ng/ml). G The Alizarin red S staining of MSCs cultured in osteoblast medium with IM-9 cells (shCtrl or shPTTG1) in the presence of CXCL1 (1 ng/ml) or IL6 (1 ng/ml). H–K Schematic of the CXCL1 or IL6 promoter luciferase reporter. Solid boxes: promoter region; red crosses: mutations of nucleotides. The luciferase activity of CXCL1-Full or IL6-Full constructs was set at 1. Shown are the correlation coefficients of the mRNA levels of CXCL1 or IL6 and the mRNA levels of PTTG1 (L), ENO1 (M), or IRF4 (N) in patients (n = 30). The correlations were evaluated using the Pearson coefficient. r, correlation coefficient. p- value was determined by the Pearson coefficient. O The expression of PTTG1 in myeloma cells with reduced IRF4 expression (shIRF4). Nontargeted shRNA (shCtrl) served as a control. P ChIP assay showing IRF4 enrichment in the PTTG1 promoter in myeloma cell lines (ARH-77 or IM-9). Q, R Schematic of the PTTG1 promoter luciferase reporter. The luciferase activity of PTTG1-Full constructs was set at 1. ns not significant. A–G, I, K, O, P, and R are representative of three independent experiments. Data are averages ± SD. B, C, O, and P p-values were determined by unpaired two-tailed t-test; D–G, I, K, and R p-values were determined using one-way ANOVA. 
+
+myeloma patients (Fig. 6R), as well as the expression level of PTTG1 (Fig. 6S). To further validate the functional requirement of SP1-mediated transcription in this axis, we treated myeloma cells with mithramycin, a selective inhibitor of SP1-DNA binding. As shown in Fig. S6, mithramycin treatment significantly reduced ENO1 and IRF4 expression, consistent with the essential role of SP1 in this transcriptional cascade. Collectively, these results suggest that the PTTG1/SP1/ENO1 complex may upregulate the expression of IRF4 (Fig. 6T). 
+
+### IRF4 increases osteolytic cytokines and PTTG1 expression 
+
+In subsequent studies, we delved into the mechanisms underlying the influence of PTTG1 in myeloma cells on bone cell differentiation. Myeloma cells are known to elicit osteolytic lesions primarily via the secretion of osteolytic cytokines, which facilitate osteoclast differentiation while impeding that of osteoblasts. To elucidate the impact of PTTG1 on this process, we conducted a cytokine array analysis to compare the expression profiles of cytokines in PTTG1 knockdown myeloma cells (shPTTG1) with those in the control group (shCtrl). This analysis revealed two significantly down-regulated genes: CXCL1 (C-X-C motif chemokine ligand 1) and IL6 (interleukin 6) (Fig. 7A). Further validation using quantitative PCR and ELISA confirmed the downregulation of CXCL1 and IL6 in shPTTG1 myeloma cells (Figs. 7B and S7A), and conversely, their upregulation in PTTG1-overexpressing myeloma cells (Figs. 7C and S7B). Previous investigations have established that CXCL1 and IL6 are instrumental in the promotion of osteoclast differentiation while concurrently suppressing the differentiation of osteoblasts. Addition of neutralizing antibodies specific to CXCL1 or IL6 to pre-osteoclasts (preOCs) co-cultured with myeloma cells mitigated the osteoclastogenic effects induced by myeloma cells overexpressing PTTG1 (Fig. 7D). Conversely, the introduction of cytokine-specific antibodies partially alleviated the suppressive impact on osteoblast differentiation caused by myeloma cells with elevated PTTG1 levels (Fig. 7E). Combined neutralization of CXCL1 and IL6 almost completely reversed the osteoclastogenic and anti-osteoblastogenic effects of PTTG1-overexpressing myeloma cells (Fig. S7C, D). Furthermore, the exogenous supplementation of CXCL1 or IL6 to preOCs co-cultured with myeloma cells rescued the diminished osteoclast differentiation observed in the context of PTTG1 knockdown myeloma cells (Fig. 7F). Similarly, the application of these cytokines partially counteracted the reduced osteoblast differentiation elicited by PTTG1 knockdown in myeloma cells (Fig. 7G). Combined exogenous CXCL1 and IL6 supplementation almost fully rescued the impaired osteoclast and osteoblast differentiation induced by PTTG1 knockdown (Fig. S7E, F). 
+
+To determine whether IRF4 binds to CXCL1 or IL6 promoters, we examined the promoter region around the CXCL1 or IL6 transcriptional start site. According to the promoter sequence, we predicted one IRF4 binding site (−666 bp) in the CXCL1 promoter (Fig. 7H). Luciferase activity assays demonstrated that IRF4 could bind to the 
+
+Cell Death and Disease 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+
+![](10.1038_s41419-026-09210-1_assets/s41419-026-09210-1_reference-d5147c6ef5.pdf-0016-02.png)
+
+
+<!-- Start of picture text -->
+A B C<br>ARH-77 IM-9 40 1.0<br>8 Con-pep. 8 Con-pep. p =0.0257 p =0.013<br>K24-R8 K24-R8 30 0.8 p =0.0204<br>6 6 0.6 p =0.0211<br>20<br>4 4 0.4<br>10<br>0.2<br>2 2<br>0 0.0<br>0 0 RANKL + + + + + + + + Con-pep. ─ ─ ─ + ─ ─ + ─<br>0 1 2 3 4 0 1 2 3 4 Con-pep. ─ ─ ─ + ─ ─ + ─ K24-R8 ─ + ─ ─ + ─ ─ +<br>Time (days) Time (days) ARH-77K24-R8 ── ─+ ─+ ─+ ++ ─+ ─+ ++ ARH-77IM-9 ── ── ─+ ─+ ─+ ─+ ─+ ─+<br>IM-9 ─ ─ ─ ─ ─ ─ ─ ─<br>D 1.5 E F 1.5 p =0.0028 G 1.5 H<br>p =0.0084 p =0.0076 p =0.0029 p =0.0056 Con-pep. ─ + ─ + ─<br>1.0 p =0.0045 ARH-77 IM-9 1.0 1.0 ARH-77K24-R8 ── ─+ ++ ── ─+<br>Con-pep. + ─ + ─ IM-9 ─ ─ ─ + +<br>0.5 K24-R8 ─ + ─ + 0.5 0.5<br>IRF4<br>Con-pep.0 + ─ + ─ β-tubulin Con-pep.0 + ─ + ─ Con-pep.0 + ─ + ─<br>K24-R8 ─ + ─ + K24-R8 ─ + ─ + K24-R8  ─ + ─ +<br>ARH-77 IM-9 ARH-77 IM-9 ARH-77 IM-9<br>I J K L<br>15 12 2.0 20<br>p =0.0008<br>p =0.0002 p =0.0004 p =0.0008 p =0.0032<br>9 1.5 15<br>10 p =0.0034 p =0.0036 p =0.0126<br>6 1.0 10<br>5<br>3 0.5 5<br>0 0 0.0 0<br>Con-pep. ─ + ─ + ─ Con-pep. ─ + ─ + ─ Con-pep. + ─ + ─ Con-pep. ─ + ─ + ─<br>K24-R8 ─ ─ + ─ + K24-R8 ─ ─ + ─ + K24-R8 ─ + ─ + K24-R8 ─ ─ + ─ +<br>ARH-77 ─ + + ─ ─ ARH-77 ─ + + ─ ─ ARH-77 + + ─ ─ ARH-77 ─ + + ─ ─<br>IM-9 ─ ─ ─ + + IM-9 ─ ─ ─ + + IM-9 ─ ─ + + IM-9 ─ ─ ─ + +<br>M O P<br>20 300<br>15 p =0.0109 p =0.003 p =0.0004<br>200 p =0.0068<br>10 TD domain<br>100<br>5<br>0 0<br>Con-pep. ─ + ─ + ─ Con-pep. ─ + ─ + ─<br>K24-R8 ─ ─ + ─ + K24-R8 ─ ─ + ─ + KEN domain<br>ARH-77 ─ + + ─ ─ ARH-77 ─ + + ─ ─<br>IM-9 ─ ─ ─ + + IM-9 ─ ─ ─ + +<br>N<br>15 500<br>p =0.0022 p =0.0172 400 p =0.0007<br>10<br>300 p =0.0117<br>200<br>5<br>100<br>0 0<br>Con-pep. ─ + ─ + ─ Con-pep. ─ + ─ + ─<br>K24-R8 ─ ─ + ─ + K24-R8 ─ ─ + ─ +<br>ARH-77 ─ + + ─ ─ ARH-77 ─ + + ─ ─<br>IM-9 ─ ─ ─ + + IM-9 ─ ─ ─ + +<br><0.0001 p <0.0001 p Multinuclear cellsTRAP+<br>Alizarin red-S (OD 490nm)<br>Relative cell viability<br>Relative cell viability<br>IRF4  relative expression expression IL6  relative expression<br>CXCL1  relative<br>BV/TV (%)<br>7Total flux (10 p/s) M protein (μg/ml)<br>IRF4  relativeexpression<br>ES/BS (%)<br>CXCL1 (pg/ml)<br>OS/BS (%) IL6 (pg/ml)<br><!-- End of picture text -->
+
+CXCL1 promoter to enhance its transcription. Mutation at the -666 bp binding site can significantly inhibit the promoter binding ability of IRF4 (Fig. 7I). Furthermore, luciferase activity assays also demonstrated that IRF4 
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+Fig. 8 PTTG1–ENO1 interactions blocking peptides reduce myeloma progression and osteolytic lesions in vitro and in vivo. A Proliferation of myeloma cells (ARH-77 or IM-9) treated with PTTG1 KEN domain blocking peptides K24-R8 (10 μM) over time. The scrambled control peptide-treated group served as the control. B The number of multinuclear TRAP<sup>+</sup> cells among precursors of osteoclasts cultured with ARH-77 or IM-9 cells in the presence of K24-R8 (10 μM). C The Alizarin red S staining of MSCs cultured in osteoblast medium with ARH-77 or IM-9 cells in the presence of K24-R8 (10 μM). D–G The expression of IRF4, CXCL1, or IL6 in myeloma cells (ARH-77 or IM-9) treated with or without K24-R8 (10 μM). The scrambled control peptide-treated group served as the control. H, I Representative images and summarized data of bioluminescent signals in NSG mice xenografted with luciferase-labeled ARH-77 or IM-9 cells injected with or without K24-R8 (5 mg/kg body weight). The scrambled control peptide-treated group served as the control. Shown are serum M protein levels (J). K After treatment, myeloma cells were isolated from the right femurs of NSG mice using anti-CD138 antibody-coated magnetic beads. IRF4 mRNA levels were compared in isolated myeloma cells treated with or without K24-R8 (n = 5 mice/group). The left femurs of NSG mice were extracted, fixed, and then either TRAP- or toluidine blue-stained for analysis. Shown are the percentages of BV/ TV (L), ES/BS (M), and OS/BS (N) (n = 5 mice/group). O ELISA analysis of serum CXCL1 and IL-6 concentrations in each group of mice (n = 5 mice/group). P Depiction of PTTG1-mediated signaling pathways in myeloma cells. A–G are representative of three independent experiments. Data are averages ± SD. A p-value was determined by two-way ANOVA; B–G, I–O p-values were determined using one-way ANOVA. 
+
+promotes IL6 transcription by binding to the −218 bp site within its promoter region (Fig. 7J, K). Additionally, correlation analysis indicated that the expression level of CXCL1 or IL6 is positively correlated with the expression levels of PTTG1, ENO1, or IRF4 (Fig. 7L–N). 
+
+Furthermore, we discovered that knockdown of PTTG1 in myeloma cells inhibited the expression of ENO1 at both the transcriptional and protein levels (Fig. 4D, E). There are reports showing that PTTG1 can interact with the transcription factor SP1 to regulate the transcription of downstream genes; we hypothesized that PTTG1 may regulate ENO1 through a similar mechanism. Additionally, we found knockdown of IRF4 expression significantly repressed PTTG1 expression (Fig. 7O). ChIP assays further confirm the binding of IRF4 to the promoter of PTTG1 (Fig. 7P). Luciferase activity assays demonstrated that IRF4 can bind to the PTTG1 promoter at the −1286 bp binding site to enhance its transcription (Fig. 7Q, R). These findings underscore the pivotal role of CXCL1 and IL6 in the reciprocal regulation of osteoclast and osteoblast differentiation, influenced by the expression levels of PTTG1 in myeloma cells, thereby highlighting potential targets for intervention in the pathological bone remodeling associated with myeloma. Moreover, upregulation of IRF4 expression by PTTG1 leads to a feedback regulation of PTTG1 expression, which in turn further enhances the proliferation of myeloma and the expression of osteolytic cytokines. Finally, to further validate the role of IRF4 in myeloma bone disease, we established an IRF4-knockdown myeloma cell line (Fig. S8A). Co-culture experiments demonstrated that IRF4 knockdown significantly suppressed the activation of osteoclast differentiation by myeloma cells and reversed the inhibitory effect of myeloma cells on osteoblast differentiation (Fig. S8B, C). In addition, we examined whether PTTG1 overexpression could functionally compensate for IRF4 loss. Reintroduction of PTTG1 into shIRF4 cells significantly rescued the proliferation defect and partially restored c-MYC expression (Fig. S9A, B), confirming that the IRF4-PTTG1 autoregulatory loop is functionally required for myeloma cell growth. 
+
+### PTTG1–ENO1 interactions blocking peptides reduce myeloma proliferation and osteolytic lesions in vitro and in vivo 
+
+Based on the domain mapping results showing that PTTG1 interacts with ENO1 through its KEN domain (Fig. 6N), we designed a blocking peptide, K24-R8, encompassing this domain. To test whether K24-R8 selectively disrupts PTTG1-ENO1 without affecting PTTG1-SP1 binding, we performed competitive co-immunoprecipitation in myeloma cell lysates and in vitro pull-down assays with purified recombinant proteins. As shown in Fig. S10A, B, K24R8 specifically reduced the PTTG1–ENO1 interaction while leaving the PTTG1–SP1 interaction intact. Having established the selectivity of K24-R8, we next examined its functional effects. Cell proliferation experiments demonstrated that K24-R8 significantly inhibited the proliferation of myeloma cells (Fig. 8A). The supplementation of K24-R8 to the co-culture system of pre-osteoclasts (preOCs) and myeloma cells resulted in a significant 
+
+Cell Death and Disease 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+attenuation of the osteoclastogenic effects elicited by myeloma cells (Fig. 8B). In contrast, the incorporation of K24R8 into the culture medium partially mitigated the inhibitory effects of myeloma cells on osteoblast differentiation (Fig. 8C). Molecular analyses using quantitative real-time PCR and western blotting revealed that K24-R8 exerted an inhibitory influence on the expression of IRF4, CXCL1, and IL6 (Fig. 8D–G). In the context of in vivo studies, ARH77 or IM-9 cells were intravenously injected into NSG mice, followed by a weekly three-times intraperitoneal administration of K24-R8 over a three-week period, initiated one week after cell injection. The results demonstrated that K24-R8 significantly diminished the tumorigenic capacity of ARH-77 or IM-9 cells in the xenograft models (Fig. 8H–J). Additionally, K24-R8 can significantly reduce the expression of IRF4 in myeloma cells isolated from mice's bone marrow after treatment (Fig. 8K). Bone histomorphometric analysis showed higher percentages of BV/ TV (Fig. 8L), lower ES/BS% (Fig. 8M), and higher OS/BS% (Fig. 8N) in mice injected with K24-R8. Moreover, K24-R8 significantly suppressed serum levels of CXCL1 and IL-6 in myeloma-bearing mice (Fig. 8O). Moreover, K24-R8 showed no significant cytotoxicity to normal peripheral blood mononuclear cells (Fig. S11). Taken together, these findings indicate that the K24-R8 peptide effectively inhibits myeloma progression and alleviates myelomaassociated bone damage by disrupting the PTTG1–ENO1 interaction and downregulating the downstream IRF4 pathway, thereby highlighting its potential as a novel therapeutic strategy for myeloma and its related osteolytic lesions. 
+
+## Discussion 
+
+In this study, we elucidate a previously unrecognized mechanistic axis in which the oncogene PTTG1 drives myeloma progression and associated osteolytic lesions through coordinated interactions with the transcription factor SP1 and the glycolytic enzyme ENO1. Our findings reveal that PTTG1 facilitates SP1 nuclear accumulation and, together with ENO1, forms a transcriptional complex that directly activates IRF4 expression. This, in turn, establishes a positive feedback loop wherein IRF4 transactivates PTTG1, amplifying both the oncogenic and osteolytic programs. Importantly, targeted disruption of the PTTG1–ENO1 interaction using a blocking peptide effectively abrogates these pathological effects, underscoring the therapeutic potential of this signaling node. 
+
+While PTTG1 has long been recognized as an oncogene in various malignancies, its functional role in myelomaassociated bone disease has remained largely unexplored. Prior studies have primarily focused on its prognostic significance, with elevated PTTG1 expression correlating with poor patient outcomes [15]. Another study reported that KLF10 suppresses PTTG1 transcription and inhibits myeloma cell growth [16], placing PTTG1 downstream of a tumor-suppressive axis. In contrast, our study reveals a mechanistically distinct scenario in which PTTG1 drives a positive autoregulatory loop through SP1/ENO1-mediated IRF4 activation, and further demonstrates that this axis promotes osteolytic bone destruction—an aspect not previously explored. Interestingly, a previous study in thyroid cancer cells reported that Sp1, Sp3, and Sp4 transcription factors regulate PTTG1 expression at the transcriptional level [31], suggesting a reciprocal regulatory relationship between PTTG1 and Sp family members. In contrast to this directional regulation, our study reveals a distinct mechanism in myeloma cells: PTTG1 enhances the nuclear accumulation of SP1 (Fig. 4K), thereby amplifying SP1-mediated transcriptional activity. Together, these findings suggest that the interplay between PTTG1 and Sp transcription factors may be cell type- and context-dependent. Our study extends these observations by demonstrating that PTTG1 exerts dual pathogenic functions: promoting myeloma cell proliferation and driving the uncoupling of bone remodeling that underlies osteolytic lesion formation. Notably, through the use of irradiated myeloma cells, we provide evidence that PTTG1’s effects on osteoclastogenesis and osteoblast differentiation are at least partially independent of its impact on tumor cell proliferation. This finding suggests that PTTG1 may directly modulate the bone microenvironment via paracrine mechanisms, a concept with important implications for understanding the pathogenesis of myeloma bone disease. 
+
+Beyond its canonical role in glycolysis, ENO1 has been reported to function as a nuclear transcriptional regulator in certain cell types. For example, Xiong et al. demonstrated that ENO1 binds directly to the Elmo1 promoter via a TATAA(A/C) cis-element and activates transcription in Sertoli cells [32]. A key discovery of this work is the identification of ENO1 as a critical non-enzymatic partner in the transcriptional regulation of IRF4. ENO1 is 
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+traditionally recognized for its catalytic role in glycolysis, a pathway frequently upregulated in myeloma to support rapid proliferation. Recent studies have established that ENO1 promotes myeloma progression through diverse mechanisms, including immunometabolic regulation, HIF-1α-mediated glycolysis, and YWHAZ/Parkin-dependent mitophagy [22–24]. These reports collectively support a pro-tumorigenic role of ENO1 in myeloma, but have primarily focused on its metabolic or drug-resistance functions. Our data demonstrate that ENO1 binds to the IRF4 promoter and collaborates with PTTG1 and SP1 to enhance IRF4 transcription. The observation that an enzymatically inactive ENO1 mutant retains the ability to promote myeloma cell proliferation further supports the notion that ENO1’s oncogenic contribution in this context is mechanistically distinct from its previously reported functions and is independent of its glycolytic activity. This raises the intriguing possibility that ENO1 serves as a molecular bridge linking metabolic state to transcriptional programs in myeloma cells, a paradigm that may extend to other malignancies characterized by metabolic rewiring. We acknowledge that ENO1 lacks a classical DNA-binding domain. Based on the precedent of Xiong et al., we hypothesize that ENO1 may bind DNA through a non-canonical mechanism, possibly involving a hydrophobic or basic patch on its surface. A more definitive characterization would require EMSA using purified recombinant ENO1 protein and labeled oligonucleotides containing the putative binding sequence. 
+
+The transcription factor IRF4 is a well-established dependency factor in myeloma, essential for plasma cell survival and proliferation [26]. Our study reveals that IRF4 not only acts as a downstream effector of the PTTG1–SP1–ENO1 axis but also functions upstream to directly transactivate PTTG1, thereby establishing a positive autoregulatory loop. Such self-reinforcing circuits are frequently associated with aggressive tumor behavior and may contribute to the sustained activation of oncogenic pathways that drive disease progression and therapeutic resistance. The identification of this feedback mechanism provides a rationale for therapeutic strategies aimed at disrupting the PTTG1–ENO1 interface to attenuate IRF4-driven malignancy. Consistent with this model, our mithramycin experiments further support the functional requirement of SP1-mediated transcription in this axis. However, we note that mithramycin is a broad-spectrum inhibitor of SP-family transcription factors; therefore, while it supports the functional importance of SP1-mediated transcription in this cascade, it does not specifically demonstrate that ENO1 acts as a direct DNA-binding protein. Consistent with a previous report identifying SP1 as a transcriptional regulator of the IRF4 promoter [33], our study confirms that SP1 binds to a GC-rich region within the IRF4 promoter (−500 to −200 bp relative to TSS). Notably, the ENO1 binding site we identified is located at a distinct position (−19 bp relative to TSS), as shown in Fig. 6P. The two binding sites do not overlap, suggesting that ENO1 and SP1 may independently contribute to IRF4 transcriptional activation, possibly through cooperative mechanisms. Moreover, the involvement of SP1, a transcription factor responsive to various cellular signals [34], suggests that this axis may integrate multiple upstream cues to coordinate metabolic and proliferative responses in myeloma cells. Although SP1 is predominantly a nuclear protein, its nuclear accumulation is dynamically regulated. Mechanistically, the zinc finger domains of SP1 serve as a functional nuclear localization signal (NLS) that mediates its nuclear import through direct interaction with importin α [35]. Additionally, post-translational modifications such as O-GlcNAcylation and phosphorylation have been shown to modulate SP1 subcellular compartmentalization and nuclear translocation in response to extracellular signals [36]. Our finding that PTTG1 enhances SP1 nuclear accumulation suggests that PTTG1 may facilitate SP1 nuclear import or retention, thereby amplifying SP1-mediated transcriptional activity in myeloma cells. 
+
+We note that targeting Sp-family transcription factors has been previously explored as a therapeutic strategy in myeloma and other cancers. Bat-Erdene et al. demonstrated that panobinostat combined with bortezomib induces caspase-8-mediated SP1 degradation in myeloma cells, leading to downregulation of SP1-driven oncogenes, including IRF4 [37]. Moreover, a comprehensive review by Safe et al. summarized numerous experimental and clinically used compounds that downregulate SP1, SP3, and SP4 across various tumor types [38]. However, these strategies primarily focus on directly reducing SP1 protein levels or inhibiting its DNA-binding activity. In contrast, our study reveals that PTTG1 enhances the nuclear accumulation of SP1, and our PTTG1-derived blocking peptide K24-R8 disrupts the PTTG1–ENO1 interaction, thereby indirectly attenuating SP1-mediated transcriptional activity by targeting an upstream regulator. Thus, our approach represents a complementary therapeutic strategy that may circumvent the toxicity associated with direct SP1 inhibition. 
+
+Cell Death and Disease 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+The translational implications of our findings are noteworthy. Current therapeutic approaches for myeloma bone disease are predominantly limited to bisphosphonates and denosumab, which primarily target osteoclast activity without restoring bone formation [5]. Moreover, their clinical utility is constrained by partial efficacy and adverse effects, including renal toxicity and osteonecrosis of the jaw [5, 39]. The PTTG1-derived blocking peptide K24-R8, designed to interfere with the PTTG1–ENO1 interaction, demonstrated dual efficacy in our models by suppressing tumor growth and attenuating osteolytic lesions while preserving bone formation. Importantly, this peptide exhibited minimal cytotoxicity toward normal peripheral blood mononuclear cells, suggesting a favorable safety profile. Given that the PTTG1–ENO1 axis operates independently of classical pathways targeted by proteasome inhibitors, such as NF-κB signaling and endoplasmic reticulum stress, this strategy may offer synergistic potential when combined with existing therapies. Such combination approaches could simultaneously enhance anti-tumor efficacy, mitigate drug resistance, and improve bone microenvironment homeostasis. 
+
+Several limitations of this study should be acknowledged. First, although we have validated the functional relevance of the PTTG1–SP1–ENO1–IRF4 axis using in vitro and xenograft models, further validation in immunocompetent murine models and larger patient cohorts is warranted to establish clinical significance. Second, the precise structural determinants of the interaction between PTTG1 and ENO1 remain to be fully resolved; such insights could facilitate the rational design of more potent and selective inhibitors. Third, whether this pathway is operative in other cancers that frequently metastasize to bone, including breast and lung carcinomas, remains an open question. Exploring these possibilities could broaden the therapeutic impact of targeting this axis beyond myeloma. Fourth, we acknowledge that ENO1 lacks a classical DNA-binding domain. Based on the precedent set by Xiong et al. [32], we hypothesize that ENO1 may bind DNA through a non-canonical mechanism, possibly involving a hydrophobic or basic patch on its surface. A more definitive characterization would require EMSA using purified recombinant ENO1 protein and labeled oligonucleotides containing the putative binding sequence. Finally, we have not determined whether PTTG1 can also interact with other members of the Sp family, such as SP3 or SP4. Given that SP3 and SP4 share similar DNA-binding domains with SP1 and can bind overlapping target promoters, it is plausible that PTTG1 may also interact with these factors in a context-dependent manner. Future studies employing coimmunoprecipitation and proximity ligation assays in myeloma cells will be needed to address this question. 
+
+In conclusion, this study uncovers a novel PTTG1-driven transcriptional network that integrates oncogenic signaling, metabolic adaptation, and bone destruction in myeloma. The identification of the PTTG1–ENO1 interaction as a critical node in this network provides a promising therapeutic opportunity for concurrently targeting tumor progression and bone disease. These findings lay a foundation for future translational efforts aimed at developing PTTG1-targeted interventions for patients with MM and potentially other malignancies complicated by osteolytic bone lesions. 
+
+## Methods 
+
+### Ethic approvals 
+
+This study was approved by the Ethics Committee of Xiamen University, and all protocols conformed to the Ethical Guidelines of the World Medical Association Declaration of Helsinki. Signed informed consent was obtained from all participating individuals prior to participation in the study. Mouse studies were approved by the Institutional Animal Care and Use Committee of Xiamen University. All protocols conformed to the Guidelines for Ethical Conduct in the Care and Use of Nonhuman Animals in Research. 
+
+### Cell lines and primary myeloma cells 
+
+Myeloma cell lines ARP-1 (RRID: CVCL_D523) and LP-1 (RRID: CVCL_0012) were sourced from Dr. Zhiqiang Liu’s lab at Shandong First Medical University and Shandong Academy of Medical Sciences. Additional cell lines, 
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+including MCF7 (RRID: CVCL_0031), HEK293T (RRID: CVCL_4V93), ARH-77 (RRID: CVCL_1072), and IM-9 (RRID: CVCL_1305), were acquired from the American Type Culture Collection (ATCC). Primary myeloma cells were extracted from the bone marrow of patients using anti-CD138 magnetic beads (Miltenyi Biotec). Myeloma cells were maintained in RPMI1640 medium with 10% fetal bovine serum (FBS). MCF7 and HEK293T cells were cultured in Dulbecco’s modified Eagle’s medium (DMEM) with 10% FBS. Experiments utilized cells confirmed to be mycoplasma-free through testing with the Universal Mycoplasma Detection Kit (ATCC, Manassas, VA, USA). Patient samples were collected from the First Affiliated Hospital of Xiamen University, and osteolytic lesions were assessed by radiologists. 
+
+### Plasmids, antibodies, blocking peptides, and reagents 
+
+Human HA-tagged PTTG1, MYC-tagged ENO1, PTTG1, and SP1 plasmids were subcloned into a plvx-AcGFP1-N1 vector (NovoPro, #V012707). The primers used in the analysis of amino deletion of PTTG1 and mutation of ENO1 are listed in Table S3. pRRL lentiviral luciferase vectors were purchased from Addgene (#120798). shRNAs against PTTG1, ENO1, and a non-target control were purchased from Sigma-Aldrich. A blocking peptides K24-R8, derived from PTTG1 KEN domain (ATLIYVDKENGEPGTRVVAKDGLK) with eight arginine residues fused to their C termini (R8) was synthetized (Sangon). Except where specified, all chemicals were purchased from Sigma-Aldrich, and all antibodies for western blot analysis were purchased from Cell Signaling Technology. 
+
+### Stable cell line construction 
+
+HEK 293T cells were transiently transfected using polyethyleneimine (PEI) (Polysciences, Warrington) in OPTIMEM medium (Life Technologies) at a ratio of 1:4 DNA to PEI. This process facilitated the generation of viral particles in HEK 293T cells through co-transfection with pMD2.G (#12259), psPAX2 (#12260) packaging plasmids (Addgene), and lentiviral vectors for target gene expression, such as human PTTG1, shRNAs targeting PTTG1, or ENO1. The viral supernatant was harvested 48 h post-transfection, then concentrated 100-fold with Polyethylene glycol 8000 (Sigma-Aldrich). Myeloma cells underwent spinfection with the concentrated viral particles in the presence of polybrene at 800×g for 30 min at 37 °C. After 12 h, the medium was refreshed, and the cells were cultured for an additional 48 h. Stable cell lines were established by selecting cells with puromycin (2 μg/mL) (#540222, Sigma-Aldrich) added to the culture medium. 
+
+### In vitro osteoblast and osteoclast formation and function assays 
+
+MSCs were harvested from bone marrow and differentiated into mature osteoblasts using a specialized osteoblast differentiation medium as previously reported. The osteoblasts’ bone-forming capacity was evaluated through Alizarin red S staining (Sigma-Aldrich). Human monocytes were extracted from peripheral blood mononuclear cells and cultivated to yield osteoclast precursors. These precursors were treated with macrophage colony-stimulating factor (M-CSF) at 25 ng/ml and a reduced concentration of receptor activator of nuclear factor kappa-B ligand (RANKL) at 10 ng/ml. They were then cocultured with or without myeloma cells for a week to promote the development of mature osteoclasts. The presence of mature osteoclasts was confirmed by tartrate-resistant acid phosphatase (TRAP) staining (Sigma-Aldrich), utilizing a leukocyte acid phosphatase kit. In the case of the irradiated myeloma cell coculture system, IM-9 cells were subjected to γ-irradiation at a dosage of 6 Gray. 
+
+### Western blot analysis 
+
+Cells were harvested and lysed with 1× lysis buffer (#9803, Cell Signaling Technology). Cell lysates were subjected to SDS-PAGE, transferred to a nitrocellulose membrane, and immunoblotted with antibodies against β-Tubulin (RRID: AB_2798712), PTTG1 (RRID: AB_2798220), SP1 (RRID: AB_11220235), ENO1 (RRID: AB_2246524), 
+
+Cell Death and Disease 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+IRF4 (RRID: AB_2798709), and HA (RRID: AB_1549585) (Cell Signaling Technology). Full-length, uncropped western blot images are provided in the Supplemental Material. 
+
+### Real-time quantitative PCR of mRNAs 
+
+RNA was extracted from samples using the RNeasy kit (QIAGEN). A portion of 1 μg of the extracted RNA was reverse transcribed using the SuperScript II RT-PCR kit (Invitrogen). Quantitative PCR was conducted utilizing SYBR Green Master Mix (Life Technologies), with the analysis carried out on the QuantStudio 3 Real-Time PCR System (Life Technologies). The reaction involved an initial denaturation step at 95 °C for 10 min, followed by 40 cycles of 95 °C for 15 s and 60 °C for 60 s. GAPDH was employed as the endogenous control for normalization. The primers used are listed in Table S4. 
+
+### Cell viability, soft agar colony formation assays, and ELISA 
+
+For assessing cell viability, cells were seeded at a density of 10,000 cells per well in triplicate. The CellTiter-Glo Luminescent Cell Viability Assay from Promega or the Cell Counting Kit-8 from Dojindo were utilized for the assays. Additionally, cell proliferation was evaluated using the EdU assay kit from RiboBio, following the manufacturer’s protocol. The soft agar colony formation assay was conducted as described in previous studies, where 50,000 cells were mixed with 0.4% Noble agar and layered over a 0.8% Noble agar base in six-well plates. After a 3-week incubation, colonies were visualized and quantified by staining with 1 mg/ml p-iodonitrotetrazolium violet. Enzyme-linked immunosorbent assay (ELISA) kits were sourced from R&D Systems, Abcam, and Immunodiagnostic Systems. 
+
+### Immunohistochemistry 
+
+Formalin-fixed, paraffin-embedded sections of bone marrow biopsy samples obtained from patients with myeloma were deparaffinized and stained. Slides were stained with anti-CD138 (RRID: AB_2877650) (LifeSpan BioSciences) and PTTG1 antibody (RRID: AB_2798220) (Cell Signaling Technology) using an EnVision System (#K5361, DAKO) following the manufacturer’s instructions and counterstained with hematoxylin. 
+
+### Immunoprecipitation and pull-down assays 
+
+Cells were subjected to lysis and then placed on ice for 15 min to facilitate the process. The resulting total protein lysate was subjected to immunoprecipitation using an antibody bound to agarose beads, which was carried out at 4 °C for an extended period overnight. Following this, the beads were thoroughly washed six times and subsequently resuspended in a 30 μl volume of 1× SDS buffer. After a brief boiling step for 5 min, the pull-down samples were loaded onto an SDS–PAGE gel alongside a 5% input sample. The proteins were then transferred to a PVDF membrane for immunoblotting analysis. IgG was utilized as a negative control, while total cell lysates served as a positive control for the input. In the context of the pull-down assay, HEK293T cells were transfected with a plasmid encoding an HA-tagged protein. The lysates from these cells, which had been precipitated with anti-HA agarose (#26181, Thermo Fisher Scientific), were subsequently mixed with lysates from cells that had been transfected with either full-length or truncated forms of PTTG1. Both the immunoprecipitated complexes and the whole cell lysates (WCL) were then subjected to immunoblotting. Non-transfected cells or those transfected with control plasmids, as well as WCL, were used as negative controls. 
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+### ChIP assay 
+
+After fixation with 4% formaldehyde, cells were sonicated to generate chromatin fragments suitable for analysis. Immunoprecipitation was performed on these samples using antibodies directed against SP1 (RRID: AB_11220235, 1:100), ENO1 (RRID: AB_2246524, 1:100), and IRF4 (RRID: AB_2798709, 1:100) (Cell Signaling Technology), with IgG serving as a control, under conditions of 4 °C for 3 h. The DNA from both the immunoprecipitated material and the total chromatin was then reverse cross-linked, purified, and subsequently assessed by PCR with primers specific to the promoter regions of the genes under investigation. The sequences of these primers are provided in Table S5. 
+
+### Immunofluorescent staining 
+
+Myeloma cells were fixed with 4% formaldehyde and permeabilized with 0.3% Triton X-100, then the cells were blocked with 2% goat serum. After staining with PTTG1 (RRID: AB_2798220, 1:200) (Cell Signaling Technology), SP1 (RRID: AB_2881871, 1:100) (Proteintech), or ENO1 (RRID: AB_2920094, 1:100) (Proteintech) antibodies overnight at 4 °C, cells were incubated with FITC-conjugated Goat anti-Mouse IgG (H + L) (#AS001, Abclonal, 1:200) and Cy3-conjugated Goat anti-Rabbit IgG (H + L) (#AS007, Abclonal, 1:200) for 60 min at room temperature and nucleus counterstaining with DAPI. Formalin-fixed, paraffin-embedded sections of bone marrow biopsy samples obtained from myeloma patients were deparaffinized and stained. Slides were stained with anti-CD138 (RRID: AB_442186, 1:100) (R&D system), PTTG1 (RRID: AB_2798220, 1:200) (Cell Signaling Technology), SP1 (RRID: AB_2881871, 1:100) (Proteintech), IRF4 (RRID: AB_2881820, 1:100), or (RRID: AB_2264940, 1:100) (Proteintech) overnight at 4 °C. After incubation, samples were stained with FITC-conjugated Goat anti-Mouse IgG (H + L) (#AS001, Abclonal, 1:200), Cy3-conjugated Goat anti-Rabbit IgG (H + L) (#AS007, Abclonal, 1:200), and Cy5-conjugated Mouse Anti-Goat IgG (#K0038M-Cy5, Solarbio, 1:200) for 60 min at room temperature and nucleus counterstaining with DAPI. Immunofluorescence images were acquired with an IX71 confocal microscope system (Olympus). 
+
+### Mass spectrometry 
+
+HA-PTTG1 overexpressing IM-9 cells were lysed and incubated on ice for 15 min to allow for efficient protein extraction. The lysate was subjected to immunoprecipitation with anti-HA agarose, which was carried out at 4 °C for an extended period overnight. After a series of six washes, the eluted proteins were prepared for analysis using nanoliquid chromatography-tandem mass spectrometry (nano-LC/MS/MS) from Thermo Fisher Scientific, interfaced with an 1100 HPLC system from Agilent Technologies. The resulting MS/MS spectra were processed with the SEQUEST algorithm through the BioWorks Browser software suite (version 3.3.1) to query the NCBI protein database. Control samples were derived from IM-9 cells transfected with a control empty vector. 
+
+### Luciferase assay in vitro 
+
+The construct covers the full-length (ENO1-Full, IRF4-Full, CXCL1-Full, IL6-Full, and PTTG1-Full), truncated form (PTTG1-Δ1), and mutated forms (ENO1-Mut, IRF4-Mut, CXCL1-Mut, IL6-Mut, and PTTG1-Mut) were subcloned into the pGL2 vector, and their transcriptional activities in HEK293T cells were examined using a Dual-Luciferase Reporter Assay System (#E1910, Promega) according to the manufacturer’s instructions. The primers used in the subcloning are listed in Table S6. 
+
+Cell Death and Disease 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+### In vivo mouse experiments, measurement of tumor burden, radiography and bone histomorphometry 
+
+6-week-old female NSG mice were purchased from Shanghai Model Organisms Center, Shanghai, China, and were maintained in Xiamen University Animal Care-accredited facilities. The mouse studies were approved by the Institutional Animal Care and Use Committee of Xiamen University. All protocols followed conformed to the Guidelines of Ethical Conduct in the Care and Use of Nonhuman Animals in Research. For bone histomorphometry analysis, NSG mice were randomly assigned to groups in a blinded manner and intrafemorally injected with myeloma cell lines ARH-77 or IM-9 [nontargeted shRNA (shCtrl), and PTTG1 shRNA (shPTTG1)] (5 × 10<sup>5</sup> cells/mouse). The mice not receiving myeloma cells (No MM) served as controls (n = 5 mice/group). To track the progression of cancer in the mice, weekly serum samples were taken and analyzed for the presence of myeloma-specific M proteins using ELISA and spectrophotometric methods. For the evaluation of osteolytic lesions, X-ray images were captured with the Bruker In-Vivo Xtreme imaging system. Histomorphometric measurements were conducted by administering two doses of 20 mg/kg calcein (Sigma-Aldrich) to the mice, timed at 6 and 3 days prior to the dissection. The bone tissues were then fixed in a 10% neutral-buffered formalin solution, decalcified, and sectioned. These sections were stained with toluidine blue or tartrate-resistant acid phosphatase (TRAP) according to standard histological procedures. The analysis of these stained sections was performed using the BIOQUANT OSTEO software version 18.2.6, provided by BIOQUANT Image Analysis Corporation. No animals were excluded from the analysis. 
+
+To demonstrate the effect of PTTG1 on myeloma cells' growth, NSG mice were randomly assigned to groups in a blinded manner and subcutaneously injected with myeloma cell lines ARH-77 or IM-9 [nontargeted shRNA (shCtrl), and PTTG1 or ENO1 shRNA (shPTTG1 or shENO1)] (1 × 10<sup>6</sup> cells/mouse) (n = 3 mice/group). The diameters of the tumors were measured every other day. After 3 weeks, the mice were sacrificed, tumor tissues were photographed and weighed. Tumor tissues were fixed in 10% neutral-buffered formalin, and sections of them were stained with Ki67 antibody (#9129, Cell Signaling Technology) following standard protocols. To identify the effect of PTTG1 blocking peptides in vivo, NSG mice were randomly assigned to groups in a blinded manner, and luciferase-expressing myeloma cells (ARH-77 or IM-9) (5 × 10<sup>5</sup> cells/mouse) were intravenously injected into NSG mice (n = 5 mice/ group). In vivo myeloma cell growth was monitored via chemiluminescence imaging of mice following intraperitoneal injection with luciferin. No animals were excluded from the analysis. 
+
+### Statistical analysis 
+
+The sample size, replication design, and selection of the primary surrogate endpoint were established based on historical data, with the study powered at 80% and the significance threshold set at a two-sided α of 0.05 [40, 41]. Statistical significance was analyzed using the Graphpad (Version 9.0) program with two-tailed unpaired Student t- tests for comparison of two groups, and one-way ANOVA with Tukey’s multiple comparisons test for comparison of more than two groups. The variance was similar between groups that were being statistically compared. p- values < 0.05 were considered statistically significant. All results were reproduced in at least two independent experiments. 
+
+Supplementary information The online version contains supplementary material available at https://doi.org/10.1038/s41419026-09210-1. 
+
+Acknowledgements We thank the Core Facility of Biomedical Sciences of Xiamen University. 
+
+Author contributions HL, ZWL, and YFW designed all experiments and wrote the manuscript; RL, YZH, XDZ, and ZHF performed the experiments and statistical analysis; ZHF provided patient samples. All authors have reviewed the final manuscript. 
+
+Funding This research was supported by the National Natural Science Foundation of China (82570252 to HL, 82270217 to ZWL, 82270208 to YFW), the Special Fund for Public Welfare Research Institutes of Fujian Province (2024R1036 to HL), Guangdong Basic and Applied Basic Research Foundation (2024A1515010076 to HL). 
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+Data availability All data associated with this study can be found in the paper or the supporting documents. Additional data are available upon reasonable request to the corresponding author. The RNA-seq data generated in this study are available at NCBI Sequence Read Archive under accession code PRJNA1208769 (https://www.ncbi.nlm.nih.gov/sra/PRJNA1208769). The mass spectrometry proteomics data have been deposited to the ProteomeXchange Consortium via the PRIDE partner repository with the dataset identifier PXD060018. 
+
+Competing interests The authors declare no competing interests. 
+
+Open Access This article is licensed under a Creative Commons Attribution 4.0 International License, which permits use, sharing, adaptation, distribution and reproduction in any medium or format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Creative Commons licence, and indicate if changes were made. The images or other third party material in this article are included in the article’s Creative Commons licence, unless indicated otherwise in a credit line to the material. If material is not included in the article’s Creative Commons licence and your intended use is not permitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the copyright holder. To view a copy of this licence, visit http://creativecommons.org/licenses/by/4.0/. 
+
+## References 
+
+1. Rajkumar SV. Multiple myeloma: 2024 update on diagnosis, risk-stratification, and management. Am J Hematol. 2024;99:1802–24. 
+
+2. Cowan AJ, Green DJ, Kwok M, Lee S, Coffey DG, Holmberg LA, et al. Diagnosis and management of multiple myeloma: a review. JAMA. 2022;327:464–77. 
+
+3. Malard F, Neri P, Bahlis NJ, Terpos E, Moukalled N, Hungria VTM, et al. Multiple myeloma. Nat Rev Dis Primers. 2024;10:45. 
+
+4. Liu H, He J, Koh SP, Zhong Y, Liu Z, Wang Z, et al. Reprogrammed marrow adipocytes contribute to myeloma-induced bone disease. Sci Transl Med 2019;11. 
+
+5. Liu H, Liu Z, Du J, He J, Lin P, Amini B, et al. Thymidine phosphorylase exerts complex effects on bone resorption and formation in myeloma. Sci Transl Med. 2016;8:353ra113. 
+
+6. Rakoczy K, Szymanska N, Stecko J, Kisiel M, Sleziak J, Gajewska-Naryniecka A, et al. The role of RAC2 and PTTG1 in cancer biology. Cells 2025;14. 
+
+7. Gong S, Wu C, Duan Y, Tang J, Wu P. A comprehensive pan-cancer analysis for pituitary tumor-transforming gene 1. Front Genet. 2022;13:843579. 
+
+8. Hatcher RJ, Dong J, Liu S, Bian G, Contreras A, Wang T, et al. Pttg1/securin is required for the branching morphogenesis of the mammary gland and suppresses mammary tumorigenesis. Proc Natl Acad Sci USA. 2014;111:1008–13. 
+
+9. Lin Y, Liang R, Ye J, Li Q, Liu Z, Gao X, et al. A twenty gene-based gene set variation score reflects the pathological progression from cirrhosis to hepatocellular carcinoma. Aging (Albany, NY). 2019;11:11157–69. 
+
+10. Zhi T, Jiang K, Xu X, Yu T, Zhou F, Wang Y, et al. ECT2/PSMD14/PTTG1 axis promotes the proliferation of glioma through stabilizing E2F1. Neuro Oncol. 2019;21:462–73. 
+
+11. Cui L, Ren T, Zhao H, Chen S, Zheng M, Gao X, et al. Suppression of PTTG1 inhibits cell angiogenesis, migration and invasion in glioma cells. Med Oncol. 2020;37:73. 
+
+12. Fraune C, Yehorov S, Luebke AM, Steurer S, Hube-Magg C, Buscheck F, et al. Upregulation of PTTG1 is associated with poor prognosis in prostate cancer. Pathol Int. 2020;70:441–51. 
+
+13. Li WH, Chang L, Xia YX, Wang L, Liu YY, Wang YH, et al. Knockdown of PTTG1 inhibits the growth and invasion of lung adenocarcinoma cells through regulation of TGFB1/SMAD3 signaling. Int J Immunopathol Pharmacol. 2015;28:45–52. 
+
+14. Meng C, Zou Y, Hong W, Bao C, Jia X. Estrogen-regulated PTTG1 promotes breast cancer progression by regulating cyclin kinase expression. Mol Med. 2020;26:33. 
+
+15. Noll JE, Vandyke K, Hewett DR, Mrozik KM, Bala RJ, Williams SA, et al. PTTG1 expression is associated with hyperproliferative disease and poor prognosis in multiple myeloma. J Hematol Oncol. 2015;8:106. 
+
+16. Zhou M, Chen J, Zhang H, Liu H, Yao H, Wang X, et al. KLF10 inhibits cell growth by regulating PTTG1 in multiple myeloma under the regulation of microRNA-106b-5p. Int J Biol Sci. 2020;16:2063–71. 
+
+17. Bloedjes TA, de Wilde G, Khan GH, Ashby TC, Shaughnessy JD, Zhan F, et al. AKT supports the metabolic fitness of multiple myeloma cells by restricting FOXO activity. Blood Adv. 2023;7:1697–712. 
+
+18. Huang CK, Sun Y, Lv L, Ping Y. ENO1 and cancer. Mol Ther Oncolytics. 2022;24:288–98. 
+
+19. Didiasova M, Schaefer L, Wygrecka M. When place matters: shuttling of enolase-1 across cellular compartments. Front Cell Dev Biol. 2019;7:61. 
+
+20. Shen C, Liu J, Xie F, Yu Y, Ma X, Hu D, et al. N6-Methyladenosine enhances the translation of ENO1 to promote the progression of bladder cancer by inhibiting PCNA ubiquitination. Cancer Lett. 2024;595:217002. 
+
+Cell Death and Disease 
+
+Article in Press 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+21. Sun L, Suo C, Zhang T, Shen S, Gu X, Qiu S, et al. ENO1 promotes liver carcinogenesis through YAP1-dependent arachidonic acid metabolism. Nat Chem Biol. 2023;19:1492–503. 
+
+22. Ray A, Song Y, Du T, Chauhan D, Anderson KC. Preclinical validation of alpha-enolase (ENO1) as a novel immunometabolic target in multiple myeloma. Oncogene. 2020;39:2786–96. 
+
+23. Chung IC, Huang WC, Huang YT, Chen ML, Tsai AW, Wu PY, et al. Unrevealed roles of extracellular enolase‑1 (ENO1) in promoting glycolysis and pro‑cancer activities in multiple myeloma via hypoxia‑inducible factor 1alpha. Oncol Rep 2023;50. 
+
+24. Gao X, Feng Q, Zhang Q, Zhang Y, Hu C, Zhang L, et al. Targeting enolase 1 reverses bortezomib resistance in multiple myeloma through YWHAZ/Parkin axis. J Biomed Sci. 2025;32:9. 
+
+25. Wang L, Zhu Y, Zhang N, Xian Y, Tang Y, Ye J, et al. The multiple roles of interferon regulatory factor family in health and disease. Signal Transduct Target Ther. 2024;9:282. 
+
+26. Bolomsky A, Ceribelli M, Scheich S, Rinaldi K, Huang DW, Chakraborty P, et al. IRF4 requires ARID1A to establish plasma cell identity in multiple myeloma. Cancer Cell. 2024;42:1185–201 e1114. 
+
+27. Tong Y, Tan Y, Zhou C, Melmed S. Pituitary tumor transforming gene interacts with Sp1 to modulate G1/S cell phase transition. Oncogene. 2007;26:5596–605. 
+
+28. Tong Y, Eigler T. Transcriptional targets for pituitary tumor-transforming gene-1. J Mol Endocrinol. 2009;43:179–85. 
+
+29. Ruan J, Mouveaux T, Light SH, Minasov G, Anderson WF, Tomavo S, et al. The structure of bradyzoite-specific enolase from Toxoplasma gondii reveals insights into its dual cytoplasmic and nuclear functions. Acta Crystallogr D Biol Crystallogr. 2015;71:417–26. 
+
+30. Shaffer AL, Emre NC, Lamy L, Ngo VN, Wright G, Xiao W, et al. IRF4 addiction in multiple myeloma. Nature. 2008;454:226–31. 
+
+31. Chintharlapalli S, Papineni S, Lee SO, Lei P, Jin UH, Sherman SI, et al. Inhibition of pituitary tumor-transforming gene-1 in thyroid cancer cells by drugs that decrease specificity proteins. Mol Carcinog. 2011;50:655–67. 
+
+32. Xiong H, Chen Z, Zhao J, Li W, Zhang S. TNF-alpha/ENO1 signaling facilitates testicular phagocytosis by directly activating Elmo1 gene expression in mouse Sertoli cells. FEBS J. 2022;289:2809–27. 
+
+33. Mamane Y, Sharma S, Grandvaux N, Hernandez E, Hiscott J. IRF-4 activities in HTLV-I-induced T cell leukemogenesis. J Interferon Cytokine Res. 2002;22:135–43. 
+
+34. Naseri A, Razi S, Rezaei N. Unraveling the role of specificity protein 1 in gliomas: pathophysiology and clinical implications. Clin Transl Oncol. 2026;28:818–40. 
+
+35. Ito T, Kitamura H, Uwatoko C, Azumano M, Itoh K, Kuwahara J. Interaction of Sp1 zinc finger with transport factor in the nuclear localization of transcription factor Sp1. Biochem Biophys Res Commun. 2010;403:161–6. 
+
+36. Majumdar G, Harrington A, Hungerford J, Martinez-Hernandez A, Gerling IC, Raghow R, et al. Insulin dynamically regulates calmodulin gene expression by sequential o-glycosylation and phosphorylation of sp1 and its subcellular compartmentalization in liver cells. J Biol Chem. 2006;281:3642–50. 
+
+37. Bat-Erdene A, Miki H, Oda A, Nakamura S, Teramachi J, Amachi R, et al. Synergistic targeting of Sp1, a critical transcription factor for myeloma cell growth and survival, by panobinostat and proteasome inhibitors. Oncotarget. 2016;7:79064–75. 
+
+38. Safe S, Abbruzzese J, Abdelrahim M, Hedrick E. Specificity protein transcription factors and cancer: opportunities for drug development. Cancer Prev Res (Phila). 2018;11:371–82. 
+
+39. Fulciniti M, Tassone P, Hideshima T, Vallet S, Nanjappa P, Ettenberg SA, et al. Anti-DKK1 mAb (BHQ880) as a potential therapeutic agent for multiple myeloma. Blood. 2009;114:371–9. 
+
+40. Charan J, Biswas T. How to calculate sample size for different study designs in medical research? Indian J Psychol Med. 2013;35:121–6. 
+
+41. Liu R, Li Z, Chen R, Fang Z, Liu Z, Liu H. EZH2 serves as a viable therapeutic target for myeloma-induced osteolytic bone destruction. Nat Commun. 2025;16:1206. 
+
+Publisher’s note Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations. 
+
+## Authors and Affiliations 
+
+## 3 4 Rui Liu<sup>1</sup> ● Yazhu Huang<sup>1</sup> ● Zhihong Fang<sup>1,2</sup> ● Xingding Zhang ● Yafei Wang ● Zongwei Li 5 ● Huan Liu 1,6 
+
+- 1 Institute for Common Diseases, JinJiang Municipal Hospital, School of Medicine, Xiamen University, Department of Hematology, The First Affiliated Hospital of Xiamen University and Institute of Hematology, School of Medicine, Xiamen University, Xiamen, China 
+
+Cell Death and Disease 
+
+https://doi.org/10.1038/s41419-026-09210-1 
+
+Article in Press 
+
+- 2 Department of Hematology, Key Laboratory of Xiamen for Diagnosis and Treatment of Hematological Malignancy, Xiamen, China 
+
+- 3 Shenzhen Key Laboratory for Systems Medicine in Inflammatory Diseases, School of Medicine, Shenzhen Campus of Sun Yat-Sen University, Sun Yat-Sen University, Shenzhen, China 
+
+- 4 Department of Hematology, Tianjin Medical University Cancer Institute and Hospital, National Clinical Research Center of Cancer, Tianjin Key Laboratory of Cancer Prevention and Therapy, Tianjin’s Clinical Research Center of Cancer, Tianjin, China 
+
+- 5 
+
+   - School of Life Sciences, Anhui Medical University, Hefei, China 
+
+- 6 Shenzhen Research Institute of Xiamen University, Xiamen University, Xiamen, China 
+
+Edited by Professor Roberto Mantovani 
+
+Cell Death and Disease 
+
+
+

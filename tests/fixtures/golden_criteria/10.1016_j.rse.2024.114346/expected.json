@@ -17,5 +17,425 @@
     "tables": 1,
     "references": 73
   },
-  "expected_content_kind": "fulltext"
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.1016_j.rse.2024.114346",
+    "provider": "elsevier",
+    "doi": "10.1016/j.rse.2024.114346",
+    "original": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml",
+    "sha256": "32d9c8ce1ffb48d56bf6b2be753cd8f464c09a8cd761468e19a1dfaa9db887a0",
+    "format": "xml",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 2,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 73,
+        "scope": "all structured author/title/journal/year/page/e-locator/edition/publisher/comment/web-link/suffix fields and independently decoded DOI in original reference order; plain text references checked in full"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 76,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 7,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 42,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 9,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 102,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "author-group author",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 9,
+      "tex_checked": 0,
+      "mathml_checked": 9,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/original.xml",
+      "sha256": "32d9c8ce1ffb48d56bf6b2be753cd8f464c09a8cd761468e19a1dfaa9db887a0",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": "t0005",
+          "node_sha256": "a57f58703074d8c5066f7a2078f510d46f61147b472c05a967e2b43d18a7ce5f",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                1,
+                2,
+                2,
+                3,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                0,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            ],
+            [
+              2,
+              [
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16
+              ]
+            ],
+            [
+              3,
+              [
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              4,
+              [
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30
+              ]
+            ],
+            [
+              5,
+              [
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37
+              ]
+            ]
+          ],
+          "cells": [
+            "Region",
+            "Freeze-up date",
+            "Break-up date",
+            "Ice duration",
+            "Mean value (DOY)",
+            "Trend (days per decade)",
+            "Mean value (DOY)",
+            "Trend (days per decade)",
+            "Mean value (days)",
+            "Trend (days per decade)",
+            "Asia ( n = 4166)",
+            "301.2 (Oct. 28)",
+            "+3.1",
+            "117.7 (Apr. 27)",
+            "−3.2",
+            "181.4",
+            "−6.4",
+            "NA ( n = 3804)",
+            "293.5 (Oct. 20)",
+            "+2.3",
+            "132.6 (May. 12)",
+            "−1.8",
+            "203.9",
+            "−4.5",
+            "QTP ( n = 614)",
+            "321.4 (Nov. 17)",
+            "+4.0",
+            "94.3 (Apr. 4)",
+            "−3.6",
+            "136.7",
+            "−7.8",
+            "Total ( n = 7970)",
+            "297.5 (Oct. 24)",
+            "+2.7",
+            "124.8 (May. 4)",
+            "−2.5",
+            "192.1",
+            "−5.5"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "e5753cb62b3dbcc7751a64df4d6fa45662fb1bf96ff197755e5ff223d213c320",
+          "numbers": "151151",
+          "minimum": {
+            "_": 0,
+            "^": 4,
+            "\\frac": 2,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "y",
+            "e",
+            "F",
+            "x",
+            "e",
+            "B",
+            "x"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "-",
+            "+",
+            "+",
+            "-",
+            "+"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "67ca883e652768add64fbebcb3ad9c91aa7ca763a2cdc2ba947103466dd928c0",
+          "numbers": "102",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "F",
+            "x",
+            "F",
+            "x",
+            "F"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "17d90a0976971781a9f2f81e2e8f8de8cdd4255c8b78cbe540f6f67488ac3a50",
+          "numbers": "012",
+          "minimum": {
+            "_": 2,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "x",
+            "B",
+            "x",
+            "B"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+",
+            "-"
+          ]
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "37410bb9aa73ae5d39ce3fdec9d717088c601a0ed2e3bf0e11a86b4181e866fb",
+          "numbers": "102",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "P",
+            "E",
+            "F",
+            "x",
+            "F",
+            "x",
+            "F"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "b781a0fa5303363ce7ee6f1d2acf164257437a6c58d3b64d26f6baa82fe9ef97",
+          "numbers": "012",
+          "minimum": {
+            "_": 3,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "P",
+            "E",
+            "B",
+            "x",
+            "B",
+            "x",
+            "B"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "c21b2028f6456047405380533d514449941f662f294e7c29c6999fa76fe162f8",
+          "numbers": "0",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "x",
+            "F"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 6,
+          "id": null,
+          "node_sha256": "6fa0957f746ad9b43e75446332d96e549b2d26c136ce396531578c433a22a2ca",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "x",
+            "F"
+          ],
+          "operators": [
+            "+"
+          ]
+        },
+        {
+          "object_index": 7,
+          "id": null,
+          "node_sha256": "ec29a976fc18ec09e7797ce78654e00eab01a31b9f23c08f9acc2e55bc982e51",
+          "numbers": "0",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "x",
+            "B"
+          ],
+          "operators": [
+            "+"
+          ]
+        },
+        {
+          "object_index": 8,
+          "id": null,
+          "node_sha256": "7b57328022d21604be03ce1e28f051913b41605307267e0845d48aad8312b968",
+          "numbers": "1",
+          "minimum": {
+            "_": 1,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "x",
+            "B"
+          ],
+          "operators": [
+            "-"
+          ]
+        }
+      ]
+    }
+  ]
 }

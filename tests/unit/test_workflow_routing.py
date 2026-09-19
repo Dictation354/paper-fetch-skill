@@ -1,8 +1,6 @@
 from __future__ import annotations
-
 from dataclasses import dataclass
 import unittest
-
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.workflow import routing
 from paper_fetch.workflow.batch_routing import (
@@ -13,7 +11,7 @@ from paper_fetch.workflow.batch_routing import (
     resolve_batch_item_routing,
 )
 from paper_fetch.workflow.session_cache import LANDING_PDF_PROBE_KEY
-from tests.unit._paper_fetch_support import RecordingTransport
+from tests.support._paper_fetch_support import RecordingTransport
 
 
 @dataclass(frozen=True)

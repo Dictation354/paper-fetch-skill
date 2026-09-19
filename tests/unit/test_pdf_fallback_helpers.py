@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import json
 import os
 from pathlib import Path
@@ -9,7 +8,6 @@ import tempfile
 import types
 import unittest
 from unittest import mock
-
 from paper_fetch.providers import (
     browser_runtime,
     _pdf_candidates,
@@ -18,8 +16,8 @@ from paper_fetch.providers import (
 )
 from paper_fetch.providers.browser_workflow import pdf_fallback as browser_pdf_fallback
 from paper_fetch.runtime import RuntimeContext
-from tests.unit._browser_workflow_deps import browser_workflow_deps
-from tests.unit._paper_fetch_support import (
+from tests.support._browser_workflow_deps import browser_workflow_deps
+from tests.support._paper_fetch_support import (
     RecordingTransport,
     build_pdf_bytes,
     fulltext_pdf_bytes,
@@ -205,6 +203,10 @@ class PdfFallbackHelperTests(unittest.TestCase):
         )
         self.assertTrue(calls[0]["allow_pdf_only"])
 
+    @mock.patch(
+        "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
+        new=lambda *a, **k: "Mock converter output. " * 120,
+    )
     def test_pdf_browser_owned_download_url_uses_saved_bytes_without_direct_replay(
         self,
     ) -> None:
@@ -406,6 +408,10 @@ class PdfFallbackHelperTests(unittest.TestCase):
         self.assertEqual(request_context.urls, [])
         self.assertEqual(mocked_from_bytes.call_args.kwargs["pdf_bytes"], pdf_bytes)
 
+    @mock.patch(
+        "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
+        new=lambda *a, **k: "Mock converter output. " * 120,
+    )
     def test_credentialed_pdf_cross_origin_uses_native_browser_context(
         self,
     ) -> None:
@@ -933,177 +939,6 @@ class PdfFallbackHelperTests(unittest.TestCase):
         mocked_stats.assert_not_called()
         mocked_transparent.assert_not_called()
 
-    def test_pdf_markdown_structure_promotes_missing_alpha_subsection(self) -> None:
-        markdown = "\n".join(
-            [
-                "# _a. First project_",
-                "",
-                "First body.",
-                "",
-                "# _b. Second project_",
-                "",
-                "Second body.",
-                "",
-                "_c. Third project_",
-                "",
-                "Third body.",
-            ]
-        )
-
-        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
-
-        self.assertIn("# _c. Third project_", normalized)
-
-    def test_pdf_markdown_structure_removes_empty_preamble_noise_heading(self) -> None:
-        markdown = "\n".join(
-            [
-                "## **<u>Further</u>**",
-                "",
-                "###### ANNUAL REVIEWS",
-                "",
-                "Publisher details.",
-                "",
-                "## Introduction",
-                "",
-                "Body.",
-            ]
-        )
-
-        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
-
-        self.assertNotIn("Further", normalized)
-        self.assertIn("###### ANNUAL REVIEWS", normalized)
-
-    def test_pdf_markdown_structure_removes_empty_title_h1_in_preamble(self) -> None:
-        markdown = "\n".join(
-            [
-                "Cover text.",
-                "",
-                "## Article category",
-                "",
-                "# A sufficiently descriptive article title",
-                "",
-                "### First Author and Second Author",
-                "",
-                "## Abstract",
-                "",
-                "Abstract body.",
-            ]
-        )
-
-        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
-
-        self.assertNotIn("# A sufficiently descriptive article title", normalized)
-        self.assertIn("Article category", normalized)
-        self.assertIn("### First Author and Second Author", normalized)
-
-    def test_pdf_markdown_structure_removes_first_prose_h1_before_author_heading(
-        self,
-    ) -> None:
-        markdown = "\n".join(
-            [
-                "Cover text.",
-                "",
-                "# A sufficiently descriptive article title",
-                "",
-                "### First Author and Second Author",
-                "",
-                "## Abstract",
-                "",
-                "Abstract body.",
-            ]
-        )
-
-        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
-
-        self.assertNotIn("# A sufficiently descriptive article title", normalized)
-
-    def test_pdf_markdown_structure_preserves_fragment_h1_before_author_heading(
-        self,
-    ) -> None:
-        markdown = "\n".join(
-            [
-                "Cover text.",
-                "",
-                "# _− i_ **C** 3 **H** 7 **I and C** 3 **H** 8",
-                "",
-                "### First Author and Second Author",
-                "",
-                "## Abstract",
-                "",
-                "Abstract body.",
-            ]
-        )
-
-        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
-
-        self.assertIn("# _− i_ **C** 3 **H** 7 **I and C** 3 **H** 8", normalized)
-
-    def test_pdf_markdown_structure_preserves_h1_with_body(self) -> None:
-        markdown = "\n".join(
-            [
-                "# A sufficiently descriptive article title",
-                "",
-                "Author and abstract text.",
-                "",
-                "## Introduction",
-                "",
-                "Body.",
-            ]
-        )
-
-        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
-
-        self.assertIn("# A sufficiently descriptive article title", normalized)
-
-    def test_pdf_markdown_structure_demotes_repeated_running_header(self) -> None:
-        running_header = "Author et al.: A repeated running header"
-        markdown = "\n".join(
-            [
-                running_header,
-                "",
-                "## Introduction",
-                "",
-                "Page one.",
-                "",
-                f"## {running_header}",
-                "",
-                "Page two.",
-                "",
-                running_header,
-                "",
-                f"## {running_header}",
-                "",
-                "Page three.",
-            ]
-        )
-
-        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
-
-        self.assertNotIn(f"## {running_header}", normalized)
-        self.assertEqual(normalized.count(running_header), 4)
-
-    def test_pdf_markdown_structure_preserves_valid_empty_parent_headings(self) -> None:
-        markdown = "\n".join(
-            [
-                "## 2. Methods",
-                "",
-                "### 2.1 Sampling",
-                "",
-                "Methods body.",
-                "",
-                "## 3. Results",
-                "",
-                "### 3.1 Primary result",
-                "",
-                "Results body.",
-            ]
-        )
-
-        normalized = _pdf_common._normalize_pdf_markdown_structure(markdown)
-
-        self.assertEqual(normalized, markdown)
-
     def test_default_pdf_markdown_prepares_tessdata_with_explicit_decoding(
         self,
     ) -> None:
@@ -1348,7 +1183,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
         self.assertEqual(calls[0]["write_images"], True)
         self.assertEqual(calls[0]["image_path"], str(image_dir))
         self.assertIn(
-            "![Figure 1](10.1234_test_assets/paper-0001-00.png)", result.markdown_text
+            "![](10.1234_test_assets/paper-0001-00.png)", result.markdown_text
         )
         self.assertEqual(len(result.assets), 1)
         self.assertEqual(result.assets[0]["kind"], "figure")

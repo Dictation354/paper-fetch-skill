@@ -1,0 +1,22 @@
+{
+  "records": [
+    {
+      "body_file": "raw.html",
+      "requested_url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+      "final_url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+      "captured_at_utc": "2026-09-14T10:52:08.382067+00:00",
+      "timestamp_basis": "filesystem mtime immediately after page.content() was saved",
+      "size": 28592,
+      "sha256": "36601c35dcf490448390524b2336e3e168131b2e2eebb07d4242408b2c4bbf65",
+      "transport": "camoufox",
+      "capture_kind": "browser_rendered_dom",
+      "status_code": null,
+      "response_headers": {},
+      "title": "Just a moment...",
+      "observed_reason": "cloudflare_challenge",
+      "scope": "Unmodified page.content() after DOMContentLoaded and 12-second observation. Not raw HTTP response bytes or complete provider readiness/fallback evidence; HTTP envelope unavailable.",
+      "derived_from": "tests/fixtures/golden_criteria/10.1063_5.0129134/acquisition/browser-observed.dom.html",
+      "replay_scope": "Original September 14 DOM promoted only after current provider rejection, PDF candidate selection and service degradation replay. Browser/bootstrap and PDF failures are injected; this is not a new live rejection."
+    }
+  ]
+}

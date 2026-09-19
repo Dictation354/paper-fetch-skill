@@ -1,0 +1,61 @@
+{
+  "records": [
+    {
+      "doi": "10.5194/gmd-17-1-2024",
+      "provider": "copernicus",
+      "requested_url": "https://api.crossref.org/works/10.5194%2Fgmd-17-1-2024",
+      "final_url": "https://api.crossref.org/works/10.5194%2Fgmd-17-1-2024",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:06 GMT",
+        "content-type": "application/json",
+        "content-length": "22246"
+      },
+      "captured_at_utc": "2026-09-18T02:21:06.000413+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 70994,
+      "sha256": "69f65b4664fdf0d45c2cdf75af37f176d57de642ef2a4e267e20cc6020db678a",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.5194/gmd-17-1-2024",
+      "provider": "copernicus",
+      "requested_url": "https://gmd.copernicus.org/articles/17/1/2024/",
+      "final_url": "https://gmd.copernicus.org/articles/17/1/2024/",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:07 GMT",
+        "content-type": "text/html"
+      },
+      "captured_at_utc": "2026-09-18T02:21:08.118187+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "size": 588845,
+      "sha256": "b3112e69470c0c3a511b49cfb59ca9f256001ef16db3530fa30fd5f67f228103",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.5194/gmd-17-1-2024",
+      "provider": "copernicus",
+      "requested_url": "https://gmd.copernicus.org/articles/17/1/2024/gmd-17-1-2024.xml",
+      "final_url": "https://gmd.copernicus.org/articles/17/1/2024/gmd-17-1-2024.xml",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:21:09 GMT",
+        "last-modified": "Wed, 20 May 2026 07:46:03 GMT",
+        "etag": "\"826fa-6523afcd27d6a-gzip\"",
+        "content-type": "application/xml"
+      },
+      "captured_at_utc": "2026-09-18T02:21:08.907867+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.xml",
+      "size": 534266,
+      "sha256": "82a2d900a10e58a42643ae7d1ed944b641f83b2768d2096dd37ef7f261574adb",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

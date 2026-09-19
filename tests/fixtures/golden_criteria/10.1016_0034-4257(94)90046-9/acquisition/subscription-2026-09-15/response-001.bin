@@ -1,0 +1,110 @@
+{"abstracts-retrieval-response": {
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-0028163123",
+        "dc:description": "The hypothesis tested in this study was that remote sensing constitutes a particular case of an arbitrary uniform spatial sampling grid used to obtain measurements about geographical entities that induces the scale and aggregation effect responsible for haphazard analysis results. The main objective was to evaluate the impact of measurement scale and spatial aggregation on the information content and classification accuracies of airborne MEIS-II data acquired over a midlatitude temperate forested environment. The original MEIS-II data were resampled to four spatial resolutions, namely 5 m, 10 m, 20 m, and 30 m. Forest classes were established according to three progressive levels of spatial aggregation. Descriptive statistics (Wald-Wolfowitz runs test, mean and variance) were calculated on transects of pixels representing each forest class delineated on the images at every spatial resolution. A maximum-likelihood classification was also performed for each combination of spatial resolution and aggregation level. The results reveal that, except for the mean, changing the measurement scale and the aggregation level of the classes greatly affects the values of the descriptive statistics. The Z value of the Wald-Wolfowitz runs test decreases with decreasing spatial resolution. The effect is more pronounced when the classes are progressively aggregated. For most classes, the variance decreases with the decrease of spatial resolution. In such cases, the impact of changing the measurement scale is greater than the change of aggregation level. Per-class accuracies are also considerably modified depending on the measurement scale and the aggregation level. Within a particular aggregation level, some classes are better classified at fine spatial resolutions, while others require coarser spatial resolutions. Three major conclusions can be stated from these results: 1) The information content of remote sensing images is dependent on the measurement scale determined by the spatial resolution of the sensor; 2) neglecting the scale and aggregation level when classifying remote sensing images can produce haphazard results having little correspondence with the objects of the scene; and 3) there is no unique spatial resolution appropriate for the detection and discrimination of all geographical entities composing a complex natural scene such as a forested environment. These conclusions provide a theoretical foundation from which original solutions to the problem of appropriate scales of measurement for geographical entities can be experimented. Logically, there exists an optimal spatial resolution for each entity of interest, corresponding to its intrinsic spatial and spectral characteristics. © 1994.",
+        "prism:coverDate": "1994-01-01",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/0028163123",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Danielle J.",
+            "preferred-name": {
+                "ce:given-name": "Danielle J.",
+                "ce:initials": "D.J.",
+                "ce:surname": "Marceau",
+                "ce:indexed-name": "Marceau D.J."
+            },
+            "@seq": "1",
+            "ce:initials": "D.J.",
+            "@_fa": "true",
+            "ce:surname": "Marceau",
+            "@auid": "7003429829",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7003429829",
+            "ce:indexed-name": "Marceau D.J."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/0028163123"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=0028163123&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=0028163123&origin=inward"
+            }
+        ],
+        "source-id": "12503",
+        "pii": "0034-4257(94)90046-9",
+        "citedby-count": "143",
+        "prism:volume": "49",
+        "subtype": "ar",
+        "dc:title": "Remote sensing and the measurement of geographical entities in a forested environment. 1. The scale and spatial aggregation problem",
+        "openaccess": "0",
+        "prism:issn": "00344257",
+        "prism:issueIdentifier": "2",
+        "subtypeDescription": "Article",
+        "prism:publicationName": "Remote Sensing of Environment",
+        "prism:pageRange": "93-104",
+        "prism:endingPage": "104",
+        "openaccessFlag": "false",
+        "prism:doi": "10.1016/0034-4257(94)90046-9",
+        "prism:startingPage": "93",
+        "dc:identifier": "SCOPUS_ID:0028163123"
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "Danielle J.",
+            "preferred-name": {
+                "ce:given-name": "Danielle J.",
+                "ce:initials": "D.J.",
+                "ce:surname": "Marceau",
+                "ce:indexed-name": "Marceau D.J."
+            },
+            "@seq": "1",
+            "ce:initials": "D.J.",
+            "@_fa": "true",
+            "ce:surname": "Marceau",
+            "@auid": "7003429829",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7003429829",
+            "ce:indexed-name": "Marceau D.J."
+        },
+        {
+            "ce:given-name": "Philip J.",
+            "preferred-name": {
+                "ce:given-name": "Philip J.",
+                "ce:initials": "P.J.",
+                "ce:surname": "Howarth",
+                "ce:indexed-name": "Howarth P.J."
+            },
+            "@seq": "2",
+            "ce:initials": "P.J.",
+            "@_fa": "true",
+            "ce:surname": "Howarth",
+            "@auid": "7103350370",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7103350370",
+            "ce:indexed-name": "Howarth P.J."
+        },
+        {
+            "ce:given-name": "Denis J.",
+            "preferred-name": {
+                "ce:given-name": "Denis J.",
+                "ce:initials": "D.J.",
+                "ce:surname": "Gratton",
+                "ce:indexed-name": "Gratton D.J."
+            },
+            "@seq": "3",
+            "ce:initials": "D.J.",
+            "@_fa": "true",
+            "ce:surname": "Gratton",
+            "@auid": "7004013396",
+            "author-url": "https://api.elsevier.com/content/author/author_id/7004013396",
+            "ce:indexed-name": "Gratton D.J."
+        }
+    ]}
+}}

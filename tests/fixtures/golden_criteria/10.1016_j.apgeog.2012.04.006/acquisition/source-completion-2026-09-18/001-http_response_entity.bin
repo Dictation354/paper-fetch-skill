@@ -1,0 +1,162 @@
+{"abstracts-retrieval-response": {
+    "affiliation": [
+        {
+            "affiliation-city": "Indianapolis",
+            "@id": "60024609",
+            "affilname": "Indiana University-Purdue University Indianapolis",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60024609",
+            "affiliation-country": "United States"
+        },
+        {
+            "affiliation-city": "Atlanta",
+            "@id": "60012318",
+            "affilname": "National Center for Environmental Health",
+            "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60012318",
+            "affiliation-country": "United States"
+        }
+    ],
+    "coredata": {
+        "srctype": "j",
+        "eid": "2-s2.0-84862165260",
+        "dc:description": "Extreme heat is a leading cause of weather-related fatalities worldwide. Emphasis is currently being placed on the development of spatially specific vulnerability models, which are useful for decision support during extreme heat events (EHE). Research results concerning such spatially-explicit models lead efforts in preparation and mitigation of heat-related vulnerability and potential adaptation. The presented research analyzes the 1995 Chicago EHE in the context of a socio-environmental hazards approach, and fosters the development of an extreme heat vulnerability index (EHVI). The EHVI is a fused dataset consisting of census data and remotely sensed variables, which are examined in relation to geocoded mortality data. The presented analysis combines 25 well-known indicators of extreme heat-health risk into an applied index utilizing a principal components analysis. The developed EHVI presented a trend of higher rates of death in the highest risk zones to lower rates in lower zones of risk. The model explains nearly 80% of the total variance in the heat-health vulnerability variables utilized. This index could be utilized by city officials to assist in the mitigation of extreme heat events and is a further evolution of previously developed efforts. Our findings indicate extreme heat vulnerability models should likely be developed on a local level for a specific location, taking into account local variations in social and environmental vulnerability. © 2012.",
+        "prism:coverDate": "2012-06-18",
+        "prism:aggregationType": "Journal",
+        "prism:url": "https://api.elsevier.com/content/abstract/scopus_id/84862165260",
+        "dc:creator": {"author": [{
+            "ce:given-name": "Daniel P.",
+            "preferred-name": {
+                "ce:given-name": "Daniel P.",
+                "ce:initials": "D.P.",
+                "ce:surname": "Johnson",
+                "ce:indexed-name": "Johnson D.P."
+            },
+            "@seq": "1",
+            "ce:initials": "D.P.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60024609",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60024609"
+            },
+            "ce:surname": "Johnson",
+            "@auid": "55996423400",
+            "author-url": "https://api.elsevier.com/content/author/author_id/55996423400",
+            "ce:indexed-name": "Johnson D.P."
+        }]},
+        "link": [
+            {
+                "@_fa": "true",
+                "@rel": "self",
+                "@href": "https://api.elsevier.com/content/abstract/scopus_id/84862165260"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus",
+                "@href": "https://www.scopus.com/inward/record.uri?partnerID=HzOxMe3b&scp=84862165260&origin=inward"
+            },
+            {
+                "@_fa": "true",
+                "@rel": "scopus-citedby",
+                "@href": "https://www.scopus.com/inward/citedby.uri?partnerID=HzOxMe3b&scp=84862165260&origin=inward"
+            }
+        ],
+        "source-id": "27471",
+        "pii": "S014362281200032X",
+        "citedby-count": "318",
+        "prism:volume": "35",
+        "subtype": "ar",
+        "dc:title": "Developing an applied extreme heat vulnerability index utilizing socioeconomic and environmental data",
+        "openaccess": "0",
+        "prism:issn": "01436228",
+        "prism:issueIdentifier": "1-2",
+        "subtypeDescription": "Article",
+        "prism:publicationName": "Applied Geography",
+        "prism:pageRange": "23-31",
+        "prism:endingPage": "31",
+        "openaccessFlag": "false",
+        "prism:doi": "10.1016/j.apgeog.2012.04.006",
+        "prism:startingPage": "23",
+        "dc:identifier": "SCOPUS_ID:84862165260"
+    },
+    "authors": {"author": [
+        {
+            "ce:given-name": "Daniel P.",
+            "preferred-name": {
+                "ce:given-name": "Daniel P.",
+                "ce:initials": "D.P.",
+                "ce:surname": "Johnson",
+                "ce:indexed-name": "Johnson D.P."
+            },
+            "@seq": "1",
+            "ce:initials": "D.P.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60024609",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60024609"
+            },
+            "ce:surname": "Johnson",
+            "@auid": "55996423400",
+            "author-url": "https://api.elsevier.com/content/author/author_id/55996423400",
+            "ce:indexed-name": "Johnson D.P."
+        },
+        {
+            "ce:given-name": "Austin",
+            "preferred-name": {
+                "ce:given-name": "Austin",
+                "ce:initials": "A.",
+                "ce:surname": "Stanforth",
+                "ce:indexed-name": "Stanforth A."
+            },
+            "@seq": "2",
+            "ce:initials": "A.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60024609",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60024609"
+            },
+            "ce:surname": "Stanforth",
+            "@auid": "53872085800",
+            "author-url": "https://api.elsevier.com/content/author/author_id/53872085800",
+            "ce:indexed-name": "Stanforth A."
+        },
+        {
+            "ce:given-name": "Vijay",
+            "preferred-name": {
+                "ce:given-name": "Vijay",
+                "ce:initials": "V.",
+                "ce:surname": "Lulla",
+                "ce:indexed-name": "Lulla V."
+            },
+            "@seq": "3",
+            "ce:initials": "V.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60024609",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60024609"
+            },
+            "ce:surname": "Lulla",
+            "@auid": "25647970300",
+            "author-url": "https://api.elsevier.com/content/author/author_id/25647970300",
+            "ce:indexed-name": "Lulla V."
+        },
+        {
+            "ce:given-name": "George",
+            "preferred-name": {
+                "ce:given-name": "George",
+                "ce:initials": "G.",
+                "ce:surname": "Luber",
+                "ce:indexed-name": "Luber G."
+            },
+            "@seq": "4",
+            "ce:initials": "G.",
+            "@_fa": "true",
+            "affiliation": {
+                "@id": "60012318",
+                "@href": "https://api.elsevier.com/content/affiliation/affiliation_id/60012318"
+            },
+            "ce:surname": "Luber",
+            "@auid": "15127075100",
+            "author-url": "https://api.elsevier.com/content/author/author_id/15127075100",
+            "ce:indexed-name": "Luber G."
+        }
+    ]}
+}}

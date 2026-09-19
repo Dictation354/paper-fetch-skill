@@ -1,10 +1,8 @@
 from __future__ import annotations
-
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
-
 from paper_fetch import service as paper_fetch
 from paper_fetch.providers import (
     elsevier as elsevier_provider,
@@ -16,7 +14,7 @@ from paper_fetch.providers.base import (
     RawFulltextPayload,
 )
 from paper_fetch.tracing import trace_from_markers
-from ._paper_fetch_support import (
+from tests.support._paper_fetch_support import (
     FixtureProvider,
     fetch_paper_model,
     fulltext_pdf_bytes,

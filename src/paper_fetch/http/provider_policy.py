@@ -45,6 +45,9 @@ def provider_request_policy(
     active = base or HttpRequestPolicy()
     return replace(
         active,
+        body_access_provider=(
+            compiled.provider if compiled.kind in {"html", "xml", "pdf"} else None
+        ),
         timeout_seconds=compiled.timeout_seconds,
         retry_on_rate_limit=compiled.retry_on_rate_limit,
         rate_limit_retries=compiled.rate_limit_retries,

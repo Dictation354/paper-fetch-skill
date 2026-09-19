@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall
+
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -51,7 +53,13 @@ from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import empty_asset_results, normalize_text
-from ._article_markdown_jats import assess_jats_body_availability, parse_jats_xml
+from ..xml_security import XmlParseFailure, parse_xml
+from ._article_markdown_common import XLINK_HREF, iter_descendants, xml_local_name
+from ._article_markdown_jats import (
+    JatsExtraction,
+    assess_jats_body_availability,
+    parse_jats_xml,
+)
 from ._payloads import build_provider_payload
 from ._pdf_common import (
     default_pdf_headers,
@@ -61,7 +69,7 @@ from ._pdf_common import (
     pdf_fetch_result_warnings,
 )
 from ._pdf_fallback import PdfFallbackStrategy, PdfFetchFailure, fetch_pdf_over_http
-from ._registry import ProviderBundle
+from ._registry import ProviderBundle, ProviderRenderPolicy
 from .base import (
     ProviderArtifacts,
     ProviderClient,
@@ -176,6 +184,12 @@ def _doi_asset_id(value: str) -> str:
     normalized = normalize_text(value)
     if normalized.startswith("info:doi/"):
         return normalize_text(normalized.removeprefix("info:doi/"))
+    if normalized.startswith(("https://", "http://")):
+        identifiers = urllib.parse.parse_qs(
+            urllib.parse.urlparse(normalized).query
+        ).get("id")
+        if identifiers and identifiers[0].startswith("10.1371/journal."):
+            return identifiers[0]
     if "10.1371/journal." in normalized:
         return normalized[normalized.find("10.1371/journal.") :]
     return ""
@@ -189,6 +203,120 @@ def _plos_figure_image_url(asset_id: str) -> str:
 def _plos_formula_image_url(asset_id: str) -> str:
     journal_path = _plos_journal_path(asset_id)
     return f"{PLOS_HOST}/{journal_path}/article/file?id={asset_id}&type=thumbnail"
+
+
+def _normalize_plos_asset_links(assets, doi):
+    """Retain both the exact JATS identity and official remote obligation."""
+    for asset in assets:
+        if asset.get("kind") not in {"figure", "formula", "table"}:
+            continue
+        asset_id = next(
+            (
+                identifier
+                for key in ("original_url", "url", "link")
+                if (identifier := _doi_asset_id(str(asset.get(key) or "")))
+                and identifier.startswith(doi + ".")
+            ),
+            "",
+        )
+        if not asset_id:
+            continue
+        asset["original_url"] = "info:doi/" + asset_id
+        asset["url"] = (
+            _plos_formula_image_url(asset_id)
+            if _is_plos_formula_asset(asset, asset_id)
+            else _plos_figure_image_url(asset_id)
+        )
+        asset["link"] = asset["url"]
+        if not asset.get("source_url"):
+            asset["source_url"] = asset["url"]
+
+
+def _rewrite_plos_asset_links(markdown_text, assets, doi):
+    """Bind by paper DOI and object ID; shared endpoint names are not identities."""
+    from ..markdown.images import render_markdown_image
+    from ..models.markdown import replace_markdown_images
+
+    identities = {}
+    for asset in assets:
+        asset_id = _doi_asset_id(asset.original_url or "")
+        if doi and asset_id.startswith(doi + "."):
+            identities[asset_id] = asset
+
+    def bind(image):
+        asset = identities.get(_doi_asset_id(image.url))
+        if asset is None:
+            return image.text
+        destination = asset.path or (
+            _plos_formula_image_url(_doi_asset_id(image.url))
+            if asset.kind == "formula"
+            else _plos_figure_image_url(_doi_asset_id(image.url))
+        )
+        return render_markdown_image(asset.kind, image.alt, destination)
+
+    return replace_markdown_images(markdown_text, bind)
+
+
+def parse_plos_xml(
+    body: bytes,
+    *,
+    source_url: str,
+    base_metadata: Mapping[str, Any] | None = None,
+) -> JatsExtraction | None:
+    """Resolve PLOS inline formula identities through the existing image route."""
+    try:
+        root = parse_xml(body, source="PLOS JATS XML", allow_external_doctype=True)
+    except XmlParseFailure:
+        return None
+    doi = next(
+        (
+            normalize_doi(node.text or "")
+            for node in iter_descendants(root, "article-id")
+            if node.get("pub-id-type") == "doi"
+        ),
+        "",
+    )
+    for formula in iter_descendants(root, "inline-formula"):
+        for graphic in iter_descendants(formula, "inline-graphic"):
+            key = XLINK_HREF if graphic.get(XLINK_HREF) else "href"
+            href = graphic.get(key, "")
+            if not href.startswith("info:doi/"):
+                continue
+            asset_id = _doi_asset_id(href)
+            if doi and re.fullmatch(
+                re.escape(doi) + r"\.ex?\d+", asset_id, re.IGNORECASE
+            ):
+                graphic.set(key, _plos_formula_image_url(asset_id))
+            else:
+                # An unrelated or malformed DOI is not this formula's image.
+                graphic.attrib.pop(key, None)
+    for ref in iter_descendants(root, "ref"):
+        # Mixed citations put names directly under mixed-citation, whereas
+        # element citations usually wrap them in person-group.
+        for group in ref.iter():
+            children = list(group)
+            for index, name in enumerate(children):
+                if xml_local_name(name.tag) != "name":
+                    continue
+                # Element-citation names have semantic boundaries even when
+                # the XML contains no whitespace between its child nodes.
+                text = " ".join(
+                    normalize_text("".join(part.itertext())) for part in name
+                ).strip()
+                if text:
+                    tail = name.tail
+                    name.clear()
+                    name.text = text
+                    name.tail = tail
+                if (
+                    index + 1 < len(children)
+                    and xml_local_name(children[index + 1].tag) == "name"
+                    and not normalize_text(name.tail)
+                ):
+                    name.tail = ", "
+    return parse_jats_xml(
+        body, source_url=source_url, base_metadata=base_metadata, xml_root=root
+    )
 
 
 def _plos_supplementary_file_url(asset_id: str) -> str:
@@ -437,7 +565,7 @@ class PlosClient(ProviderClient):
             )
 
         final_url = normalize_text(str(response.get("url") or candidate)) or candidate
-        extraction = parse_jats_xml(body, source_url=final_url, base_metadata=metadata)
+        extraction = parse_plos_xml(body, source_url=final_url, base_metadata=metadata)
         if extraction is None:
             raise ProviderFailure(
                 NO_RESULT, "PLOS XML response did not parse as a JATS article."
@@ -528,6 +656,7 @@ class PlosClient(ProviderClient):
                 fetcher=fetch_pdf_over_http,
             ).fetch([candidate])
         except PdfFetchFailure as exc:
+            propagate_paywall(exc)
             raise ProviderFailure(NO_RESULT, exc.message) from exc
 
         article_metadata = dict(metadata)
@@ -579,6 +708,7 @@ class PlosClient(ProviderClient):
                 self._fetch_xml_payload(doi, metadata),
             )
         except ProviderFailure as exc:
+            propagate_paywall(exc)
             failures.append(("xml", exc))
 
         xml_failure = failures[-1][1]
@@ -594,6 +724,7 @@ class PlosClient(ProviderClient):
                 ),
             )
         except ProviderFailure as exc:
+            propagate_paywall(exc)
             failures.append(("pdf", exc))
 
         combined = combine_provider_failures(failures)
@@ -653,10 +784,15 @@ class PlosClient(ProviderClient):
         body_image_assets = [
             dict(item)
             for item in body_assets
-            if normalize_text(
-                str(item.get("kind") or item.get("asset_type") or "")
-            ).lower()
-            in {"figure", "formula"}
+            if (
+                normalize_text(
+                    str(item.get("kind") or item.get("asset_type") or "")
+                ).lower()
+                in {"figure", "formula", "table"}
+                and _plos_figure_candidates(
+                    self.transport, asset=item, user_agent=self.user_agent
+                )
+            )
         ]
         merged_metadata = content.merged_metadata if content is not None else None
         article_id = (
@@ -696,6 +832,26 @@ class PlosClient(ProviderClient):
             if body_image_assets
             else empty_asset_results()
         )
+        # Keep the JATS reference as the article-link identity. The download
+        # endpoint (and its signed redirect) identifies the transferred bytes,
+        # but replacing info:doi/...e001 with that endpoint loses formula links
+        # when extracted and downloaded assets are assembled.
+        source_assets_by_url = {
+            url: item
+            for item in body_image_assets
+            for url in _plos_figure_candidates(
+                self.transport, asset=item, user_agent=self.user_agent
+            )
+        }
+        for downloaded in body_result.get("assets") or []:
+            original = source_assets_by_url.get(
+                str(downloaded.get("download_url") or "")
+            )
+            if original is None:
+                continue
+            for key in ("original_url", "link", "anchor_key"):
+                if original.get(key):
+                    downloaded[key] = original[key]
         normalized_supplementary = _normalize_plos_supplementary_assets(
             supplementary_assets
         )
@@ -769,7 +925,7 @@ class PlosClient(ProviderClient):
         source: SourceKind = "plos_pdf" if route == PDF_FALLBACK else "plos_xml"
         markdown_text = str(
             (content.markdown_text if content is not None else "") or ""
-        ).strip()
+        )
         if not markdown_text:
             warnings.append("PLOS retrieval did not produce usable Markdown.")
             return metadata_only_article(
@@ -796,6 +952,17 @@ class PlosClient(ProviderClient):
             list(content.extracted_assets if content is not None else []),
             list(downloaded_assets or []),
         )
+        if route != PDF_FALLBACK:
+            _normalize_plos_asset_links(assets, doi)
+        for asset in assets:
+            if (
+                asset.get("kind") == "table"
+                and asset.get("table_render_kind") == "structured"
+                and asset.get("path")
+            ):
+                # The text table is already inline; expose its separately
+                # downloaded publisher bitmap through the existing appendix.
+                asset["render_state"] = "appendix"
         article = article_from_markdown(
             source=source,
             metadata=article_metadata,
@@ -906,4 +1073,5 @@ PROVIDER_BUNDLE = ProviderBundle(
         availability=AvailabilityPolicy(name="plos"),
     ),
     sources=("plos_xml", "plos_pdf"),
+    render_policy=ProviderRenderPolicy(rewrite_asset_links=_rewrite_plos_asset_links),
 )

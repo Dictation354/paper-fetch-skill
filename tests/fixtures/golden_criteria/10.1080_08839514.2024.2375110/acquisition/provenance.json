@@ -1,0 +1,166 @@
+{
+  "records": [
+    {
+      "doi": "10.1080/08839514.2024.2375110",
+      "provider": "tandf",
+      "requested_url": "https://api.crossref.org/works/10.1080%2F08839514.2024.2375110",
+      "final_url": "https://api.crossref.org/works/10.1080%2F08839514.2024.2375110",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:31:06 GMT",
+        "content-type": "application/json",
+        "content-length": "2869"
+      },
+      "captured_at_utc": "2026-09-18T02:31:06.329494+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 9889,
+      "sha256": "24858066cf1f6a31df18a74f547d65d9e63fed8166277cd14da85545b1f00679",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1080/08839514.2024.2375110",
+      "provider": "tandf",
+      "requested_url": "https://www.tandfonline.com/doi/full/10.1080/08839514.2024.2375110",
+      "final_url": "https://www.tandfonline.com/doi/full/10.1080/08839514.2024.2375110",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:31:12 GMT",
+        "content-type": "text/html;charset=UTF-8"
+      },
+      "captured_at_utc": "2026-09-18T02:31:24.005948+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 4205925,
+      "sha256": "91b0a5c5bf896ab6ce93d53a9947d484df85482fa46f3c2611885e78f209d9dc",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1080/08839514.2024.2375110",
+      "provider": "tandf",
+      "source_url": "https://www.tandfonline.com/cms/asset/4198c003-9959-48c9-9c18-43ca09971c9a/uaai_a_2375110_f0001_oc.jpg",
+      "requested_url": "https://www.tandfonline.com/cms/asset/4198c003-9959-48c9-9c18-43ca09971c9a/uaai_a_2375110_f0001_oc.jpg",
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "official_cli_downloaded_asset",
+      "captured_at_utc": "2026-09-19T02:13:28.855374Z",
+      "capture_time_basis": "CLI terminal timestamp; exact network response timestamp not exposed",
+      "body_file": "acquisition/official-reacquisition-2026-09-19/assets/6147ac798a89-uaai_a_2375110_f0001_oc.jpg",
+      "sha256": "6147ac798a891eebf8f72b21a9ebd0b3d5bdf33aee1f9575c53f99d1aa6c0ccf",
+      "size": 204985,
+      "content_type": "image/jpeg;charset=UTF-8",
+      "acquisition": {
+        "provider": "tandf",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "official_cli_record": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/acquisition/official-reacquisition-2026-09-19/manifest.json",
+      "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
+    },
+    {
+      "doi": "10.1080/08839514.2024.2375110",
+      "provider": "tandf",
+      "source_url": "https://www.tandfonline.com/cms/asset/7574aac0-107b-4a12-a9be-5f202873d792/uaai_a_2375110_f0002_oc.jpg",
+      "requested_url": "https://www.tandfonline.com/cms/asset/7574aac0-107b-4a12-a9be-5f202873d792/uaai_a_2375110_f0002_oc.jpg",
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "official_cli_downloaded_asset",
+      "captured_at_utc": "2026-09-19T02:13:28.855374Z",
+      "capture_time_basis": "CLI terminal timestamp; exact network response timestamp not exposed",
+      "body_file": "acquisition/official-reacquisition-2026-09-19/assets/f9b5a555b7e6-uaai_a_2375110_f0002_oc.jpg",
+      "sha256": "f9b5a555b7e6bed2b35315f9927db5f15e87bd6cfca1b5ce2aacc1340e014ca3",
+      "size": 129768,
+      "content_type": "image/jpeg;charset=UTF-8",
+      "acquisition": {
+        "provider": "tandf",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "official_cli_record": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/acquisition/official-reacquisition-2026-09-19/manifest.json",
+      "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
+    },
+    {
+      "doi": "10.1080/08839514.2024.2375110",
+      "provider": "tandf",
+      "source_url": "https://www.tandfonline.com/cms/asset/61ac27e8-89c7-49c9-804e-4116c1bda1a4/uaai_a_2375110_f0003_oc.jpg",
+      "requested_url": "https://www.tandfonline.com/cms/asset/61ac27e8-89c7-49c9-804e-4116c1bda1a4/uaai_a_2375110_f0003_oc.jpg",
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "official_cli_downloaded_asset",
+      "captured_at_utc": "2026-09-19T02:13:28.855374Z",
+      "capture_time_basis": "CLI terminal timestamp; exact network response timestamp not exposed",
+      "body_file": "acquisition/official-reacquisition-2026-09-19/assets/b6d109284d44-uaai_a_2375110_f0003_oc.jpg",
+      "sha256": "b6d109284d44fcdd18d72a545e565ca53f29c2972b2e6b0dac0f03955fd767cd",
+      "size": 110667,
+      "content_type": "image/jpeg;charset=UTF-8",
+      "acquisition": {
+        "provider": "tandf",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "official_cli_record": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/acquisition/official-reacquisition-2026-09-19/manifest.json",
+      "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
+    },
+    {
+      "doi": "10.1080/08839514.2024.2375110",
+      "provider": "tandf",
+      "source_url": "https://www.tandfonline.com/cms/asset/1825658a-2e3d-4702-8310-66312c4e66cc/uaai_a_2375110_f0004_oc.jpg",
+      "requested_url": "https://www.tandfonline.com/cms/asset/1825658a-2e3d-4702-8310-66312c4e66cc/uaai_a_2375110_f0004_oc.jpg",
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "official_cli_downloaded_asset",
+      "captured_at_utc": "2026-09-19T02:13:28.855374Z",
+      "capture_time_basis": "CLI terminal timestamp; exact network response timestamp not exposed",
+      "body_file": "acquisition/official-reacquisition-2026-09-19/assets/4c76a196126d-uaai_a_2375110_f0004_oc.jpg",
+      "sha256": "4c76a196126d53daf6c9ae835aea6b0a2fd73bb9449b387568bb4059bfd4b7e0",
+      "size": 214665,
+      "content_type": "image/jpeg;charset=UTF-8",
+      "acquisition": {
+        "provider": "tandf",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "official_cli_record": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/acquisition/official-reacquisition-2026-09-19/manifest.json",
+      "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
+    },
+    {
+      "doi": "10.1080/08839514.2024.2375110",
+      "provider": "tandf",
+      "source_url": "https://www.tandfonline.com/cms/asset/eac59912-260c-4728-803a-619bd9f5d02f/uaai_a_2375110_f0005_oc.jpg",
+      "requested_url": "https://www.tandfonline.com/cms/asset/eac59912-260c-4728-803a-619bd9f5d02f/uaai_a_2375110_f0005_oc.jpg",
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "official_cli_downloaded_asset",
+      "captured_at_utc": "2026-09-19T02:13:28.855374Z",
+      "capture_time_basis": "CLI terminal timestamp; exact network response timestamp not exposed",
+      "body_file": "acquisition/official-reacquisition-2026-09-19/assets/88ec5ac456a5-uaai_a_2375110_f0005_oc.jpg",
+      "sha256": "88ec5ac456a559e84d2be4027fb799c8a9bbb040469189633bee67c206f41fdb",
+      "size": 115920,
+      "content_type": "image/jpeg;charset=UTF-8",
+      "acquisition": {
+        "provider": "tandf",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "official_cli_record": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/acquisition/official-reacquisition-2026-09-19/manifest.json",
+      "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
+    }
+  ]
+}

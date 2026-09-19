@@ -213,6 +213,8 @@ def _browser_workflow_image_download_candidates(
     user_agent: str,
     figure_page_fetcher: Callable[[str], tuple[str, str] | None] | None = None,
     direct_original_first: bool = False,
+    allow_figure_page: bool = True,
+    allow_preview: bool = True,
 ) -> list[str]:
     del user_agent
     download_url = normalize_text(str(asset.get("download_url") or ""))
@@ -228,7 +230,7 @@ def _browser_workflow_image_download_candidates(
 
     discovered_full_size_url = _discover_browser_workflow_figure_original_url(
         asset,
-        figure_page_fetcher=figure_page_fetcher,
+        figure_page_fetcher=figure_page_fetcher if allow_figure_page else None,
         direct_original_first=direct_original_first,
     )
     if discovered_full_size_url:
@@ -236,7 +238,7 @@ def _browser_workflow_image_download_candidates(
 
     if primary_url and looks_like_full_size_asset_url(primary_url):
         candidates.append(primary_url)
-    if preview_url:
+    if allow_preview and preview_url:
         candidates.append(preview_url)
 
     return dedupe_normalized(candidates)
@@ -302,11 +304,18 @@ def _discover_browser_workflow_figure_originals(
 def _merge_download_attempt_results(
     initial: Mapping[str, Any],
     retry: Mapping[str, Any],
+    *,
+    provider: str = "",
 ) -> dict[str, list[dict[str, Any]]]:
+    policy = BROWSER_WORKFLOW_ASSET_RETRY_POLICY
+    if provider == "ieee":
+        from .._ieee_asset_identity import IEEE_ASSET_RETRY_POLICY
+
+        policy = IEEE_ASSET_RETRY_POLICY
     merged_downloads = merge_asset_retry_results(
         list(initial.get("assets") or []),
         list(retry.get("assets") or []),
-        policy=BROWSER_WORKFLOW_ASSET_RETRY_POLICY,
+        policy=policy,
     )
     resolved_tokens = (
         set().union(
@@ -318,12 +327,18 @@ def _merge_download_attempt_results(
     failure_candidates = merge_asset_failures(
         list(initial.get("asset_failures") or []),
         list(retry.get("asset_failures") or []),
-        policy=BROWSER_WORKFLOW_ASSET_RETRY_POLICY,
+        policy=policy,
     )
     unresolved_failures = []
     for failure in failure_candidates:
         failure_tokens = _download_failure_match_tokens(failure)
-        if failure_tokens and failure_tokens & resolved_tokens:
+        if provider == "ieee":
+            if any(
+                policy.key_fn(asset) == policy.key_fn(failure)
+                for asset in merged_downloads
+            ):
+                continue
+        elif failure_tokens and failure_tokens & resolved_tokens:
             continue
         unresolved_failures.append(dict(failure))
 

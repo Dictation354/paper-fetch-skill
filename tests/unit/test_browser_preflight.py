@@ -1,12 +1,10 @@
 from __future__ import annotations
-
+from tests.support.browser_preflight import _runtime_config
 from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
-
 import pytest
-
 from paper_fetch import browser_preflight
 from paper_fetch.providers import _playwright_browser
 from paper_fetch.config import (
@@ -49,16 +47,6 @@ def test_preflight_failure_classification_is_code_and_stage_driven(
             stage=stage,
         )
         == expected
-    )
-
-
-def _runtime_config(tmp_path: Path, *, provider: str, doi: str) -> BrowserRuntimeConfig:
-    return BrowserRuntimeConfig(
-        provider=provider,
-        doi=doi,
-        artifact_dir=tmp_path / "artifacts" / provider,
-        headless=True,
-        user_agent=None,
     )
 
 

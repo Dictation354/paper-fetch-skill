@@ -9,6 +9,7 @@ from collections.abc import Mapping
 from ..markdown.citations import normalize_inline_citation_markdown
 from ..publisher_identity import normalize_doi
 from ..reason_codes import FULLTEXT
+from ..quality.access_boundary import confirmed_paywall, paywall_failure
 from ..tracing import TraceEvent, source_trail_from_trace, trace_from_markers
 from ..utils import normalize_text, safe_text
 from .markdown import (
@@ -153,15 +154,20 @@ def _apply_provider_render_policy(
     assets: list[Asset],
     *,
     source: SourceKind,
-) -> None:
-    if not markdown_text or not assets:
-        return
+    doi: str | None,
+) -> str:
     from ..provider_catalog import provider_render_policy_for_source
 
-    render_policy = provider_render_policy_for_source(source)
-    if render_policy is None or render_policy.mark_inline_assets is None:
-        return
-    render_policy.mark_inline_assets(markdown_text, assets, source)
+    policy = provider_render_policy_for_source(source)
+    rewrite = policy.rewrite_asset_links if policy is not None else None
+    markdown_text = (
+        rewrite(markdown_text, assets, doi)
+        if rewrite is not None
+        else rewrite_markdown_asset_links(markdown_text, assets)
+    )
+    if policy is not None and policy.mark_inline_assets is not None:
+        policy.mark_inline_assets(markdown_text, assets, source)
+    return markdown_text
 
 
 def build_metadata(metadata: Mapping[str, Any]) -> Metadata:
@@ -277,6 +283,26 @@ def _normalized_reference_raw(item: Mapping[str, Any]) -> str:
     return f"[{label}] {raw}"
 
 
+def _check_access_diagnostics(
+    metadata: Mapping[str, Any],
+    diagnostics: Mapping[str, Any] | None,
+    abstract_sections: Sequence[ExtractedAbstractBlock | Mapping[str, Any] | Section]
+    | None,
+    abstract_lines: list[str] | None = None,
+) -> None:
+    if not diagnostics or not confirmed_paywall(diagnostics):
+        return
+    received = {**metadata, **dict(diagnostics.get("received_metadata") or {})}
+    abstract = first_abstract_text(
+        abstract_text=None,
+        sections=_abstract_sections_from_blocks(abstract_sections)
+        or _abstract_sections_from_lines(abstract_lines or []),
+    )
+    if abstract:
+        received["abstract"] = abstract
+    raise paywall_failure({**diagnostics, "received_metadata": received})
+
+
 def article_from_structure(
     *,
     source: SourceKind,
@@ -301,6 +327,9 @@ def article_from_structure(
     inline_table_keys: Sequence[str] | None = None,
     allow_downgrade_from_diagnostics: bool = False,
 ) -> ArticleModel:
+    _check_access_diagnostics(
+        metadata, availability_diagnostics, abstract_sections, abstract_lines
+    )
     article_metadata = build_metadata(metadata)
     effective_trace = list(trace or trace_from_markers(source_trail))
     explicit_abstract_sections = _abstract_sections_from_blocks(
@@ -429,7 +458,10 @@ def article_from_markdown(
     semantic_losses: SemanticLosses | Mapping[str, Any] | None = None,
     quality_flags: Sequence[str] | None = None,
     allow_downgrade_from_diagnostics: bool = False,
+    pdf_representation: bool = False,
 ) -> ArticleModel:
+    is_pdf = pdf_representation or source.endswith("_pdf")
+    _check_access_diagnostics(metadata, availability_diagnostics, abstract_sections)
     article_metadata = build_metadata(metadata)
     effective_trace = list(trace or trace_from_markers(source_trail))
     normalized_assets = [
@@ -441,66 +473,75 @@ def article_from_markdown(
         )
         for item in (assets or [])
     ]
-    normalized = normalize_inline_citation_markdown(
-        strip_leading_markdown_title_heading(
-            markdown_text, title=article_metadata.title
+    if is_pdf:
+        # Converter output is opaque body text, including its own bibliography.
+        normalized = markdown_text
+        sections = [Section(heading="", level=2, kind="body", text=normalized)]
+        for asset in normalized_assets:
+            asset.render_state = "inline"
+    else:
+        normalized = normalize_inline_citation_markdown(
+            strip_leading_markdown_title_heading(
+                markdown_text, title=article_metadata.title
+            )
         )
-    )
-    normalized = rewrite_markdown_asset_links(normalized, normalized_assets)
-    _apply_provider_render_policy(normalized, normalized_assets, source=source)
-    normalized = normalize_markdown_text(normalized)
-    parsed_sections = lines_to_sections(
-        normalized.splitlines(),
-        fallback_heading="",
-        preserve_images=True,
-        section_hints=section_hints,
-    )
-    parsed_sections = [
-        _normalize_inline_citations_in_section(section) for section in parsed_sections
-    ]
-    normalize_methods_summary = _has_old_nature_methods_summary_structure(
-        parsed_sections, section_hints
-    )
-    explicit_abstract_sections = [
-        _normalize_inline_citations_in_section(section)
-        for section in _abstract_sections_from_blocks(abstract_sections)
-    ]
-    sections = list(explicit_abstract_sections)
-    extracted_abstract = first_abstract_text(
-        abstract_text=None, sections=explicit_abstract_sections
-    )
-    for section in parsed_sections:
-        if (
-            explicit_abstract_sections
-            and normalize_text(section.kind).lower() == "abstract"
-        ):
-            continue
-        if _section_matches_explicit_abstract(section, explicit_abstract_sections):
-            continue
-        original_section = section
-        stripped_section = _strip_leading_explicit_abstract_paragraphs(
-            section, explicit_abstract_sections
+        normalized = _apply_provider_render_policy(
+            normalized, normalized_assets, source=source, doi=doi
         )
-        promoted_section = _promote_stripped_methods_summary_section(
-            original_section,
-            stripped_section,
-            normalize_methods_summary=normalize_methods_summary,
+        normalized = normalize_markdown_text(normalized)
+        parsed_sections = lines_to_sections(
+            normalized.splitlines(),
+            fallback_heading="",
+            preserve_images=True,
+            section_hints=section_hints,
         )
-        if promoted_section is None:
-            continue
-        section = _normalize_inline_citations_in_section(promoted_section)
-        if section.kind == "abstract" and not extracted_abstract:
-            extracted_abstract = strip_markdown_images(section.text)
-        sections.append(section)
-    inline_abstract, sections = split_leading_inline_abstract(sections)
-    if inline_abstract:
-        extracted_abstract = normalize_inline_citation_markdown(inline_abstract)
-    article_metadata.abstract = (
-        normalize_inline_citation_markdown(
-            extracted_abstract or article_metadata.abstract or ""
+        parsed_sections = [
+            _normalize_inline_citations_in_section(section)
+            for section in parsed_sections
+        ]
+        normalize_methods_summary = _has_old_nature_methods_summary_structure(
+            parsed_sections, section_hints
         )
-        or None
-    )
+        explicit_abstract_sections = [
+            _normalize_inline_citations_in_section(section)
+            for section in _abstract_sections_from_blocks(abstract_sections)
+        ]
+        sections = list(explicit_abstract_sections)
+        extracted_abstract = first_abstract_text(
+            abstract_text=None, sections=explicit_abstract_sections
+        )
+        for section in parsed_sections:
+            if (
+                explicit_abstract_sections
+                and normalize_text(section.kind).lower() == "abstract"
+            ):
+                continue
+            if _section_matches_explicit_abstract(section, explicit_abstract_sections):
+                continue
+            original_section = section
+            stripped_section = _strip_leading_explicit_abstract_paragraphs(
+                section, explicit_abstract_sections
+            )
+            promoted_section = _promote_stripped_methods_summary_section(
+                original_section,
+                stripped_section,
+                normalize_methods_summary=normalize_methods_summary,
+            )
+            if promoted_section is None:
+                continue
+            section = _normalize_inline_citations_in_section(promoted_section)
+            if section.kind == "abstract" and not extracted_abstract:
+                extracted_abstract = strip_markdown_images(section.text)
+            sections.append(section)
+        inline_abstract, sections = split_leading_inline_abstract(sections)
+        if inline_abstract:
+            extracted_abstract = normalize_inline_citation_markdown(inline_abstract)
+        article_metadata.abstract = (
+            normalize_inline_citation_markdown(
+                extracted_abstract or article_metadata.abstract or ""
+            )
+            or None
+        )
     references = build_references(metadata.get("references"))
     token_estimate_breakdown = build_token_estimate_breakdown(
         abstract_text=article_metadata.abstract,
@@ -528,6 +569,15 @@ def article_from_markdown(
             token_estimate_breakdown=token_estimate_breakdown,
         ),
     )
+    if is_pdf and not source.endswith("_pdf"):
+        from ..provider_catalog import (
+            acquisition_for_provider_route,
+            provider_for_source,
+        )
+
+        article.acquisition = acquisition_for_provider_route(
+            provider_for_source(source), "browser_pdf"
+        )
     diagnostics_payload = availability_diagnostics
     has_provider_diagnostics = diagnostics_payload is not None
     if diagnostics_payload is None:

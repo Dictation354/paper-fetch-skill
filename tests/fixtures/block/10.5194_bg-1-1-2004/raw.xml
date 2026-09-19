@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD Journal Publishing DTD v3.0 20080202//EN" "https://jats.nlm.nih.gov/nlm-dtd/publishing/3.0/journalpublishing3.dtd">
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" article-type="research-article" dtd-version="3.0" xml:lang="en">
+<front>
+<journal-meta>
+<journal-id journal-id-type="publisher">BG</journal-id>
+<journal-title-group>
+<journal-title>Biogeosciences</journal-title>
+<abbrev-journal-title abbrev-type="publisher">BG</abbrev-journal-title>
+<abbrev-journal-title abbrev-type="nlm-ta">Biogeosciences</abbrev-journal-title>
+</journal-title-group>
+<issn pub-type="epub">1726-4189</issn>
+<publisher><publisher-name>Copernicus Publications</publisher-name>
+<publisher-loc>Göttingen, Germany</publisher-loc>
+</publisher>
+</journal-meta>
+<article-meta>
+<article-id pub-id-type="doi">10.5194/bg-1-1-2004</article-id>
+<title-group>
+<article-title>A field-based method for simultaneous measurements of the &amp;delta;&lt;sup&gt;18&lt;/sup&gt;O and &amp;delta;&lt;sup&gt;13&lt;/sup&gt;C of soil CO&lt;sub&gt;2&lt;/sub&gt; efflux</article-title>
+</title-group>
+<contrib-group><contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Mortazavi</surname>
+<given-names>B.</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+</contrib>
+<contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Prater</surname>
+<given-names>J. L.</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+</contrib>
+<contrib contrib-type="author" xlink:type="simple"><name name-style="western"><surname>Chanton</surname>
+<given-names>J. P.</given-names>
+</name>
+<xref ref-type="aff" rid="aff1">
+<sup>1</sup>
+</xref>
+</contrib>
+</contrib-group><aff id="aff1">
+<label>1</label>
+<addr-line>Florida State University, Department of Oceanography, Tallahassee, FL 32306-4320, USA</addr-line>
+</aff>
+<pub-date pub-type="epub">
+<day>13</day>
+<month>08</month>
+<year>2004</year>
+</pub-date>
+<volume>1</volume>
+<issue>1</issue>
+<fpage>1</fpage>
+<lpage>9</lpage>
+<permissions>
+<copyright-statement>Copyright: &#x000a9; 2004 B. Mortazavi et al.</copyright-statement>
+<copyright-year>2004</copyright-year>
+<license license-type="open-access">
+<license-p>This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 2.5 Generic License. To view a copy of this licence, visit <ext-link ext-link-type="uri"  xlink:href="https://creativecommons.org/licenses/by-nc-sa/2.5/">https://creativecommons.org/licenses/by-nc-sa/2.5/</ext-link></license-p>
+</license>
+</permissions>
+<self-uri xlink:href="https://bg.copernicus.org/articles/1/1/2004/bg-1-1-2004.html">This article is available from https://bg.copernicus.org/articles/1/1/2004/bg-1-1-2004.html</self-uri>
+<self-uri xlink:href="https://bg.copernicus.org/articles/1/1/2004/bg-1-1-2004.pdf">The full text article is available as a PDF file from https://bg.copernicus.org/articles/1/1/2004/bg-1-1-2004.pdf</self-uri>
+<abstract>
+<p>Three approaches for determining the stable isotopic composition (&amp;delta;&lt;sup&gt;13&lt;/sup&gt;C and &amp;delta;&lt;sup&gt;18&lt;/sup&gt;O) of soil CO efflux were compared. A
+new technique employed mini-towers, constructed of open-topped piping, that
+were placed on the soil surface to collect soil-emitted CO&lt;sub&gt;2&lt;/sub&gt;. Samples
+were collected along a vertical gradient and analyzed for CO&lt;sub&gt;2&lt;/sub&gt; concentration and isotopic composition. These data were then used to produce
+Keeling plots to determine the &amp;delta;&lt;sup&gt;18&lt;/sup&gt;O and &amp;delta;&lt;sup&gt;13&lt;/sup&gt;C of CO&lt;sub&gt;2&lt;/sub&gt; emitted from the soil. These results were then compared to the
+&amp;delta;&lt;sup&gt;18&lt;/sup&gt;O and &amp;delta;&lt;sup&gt;13&lt;/sup&gt;C of soil-respired CO&lt;sub&gt;2&lt;/sub&gt; measured with two other techniques: (1) flux chambers and (2) estimation from the application of the diffusional fractionation factor to measured values of
+below ground soil CO&lt;sub&gt;2&lt;/sub&gt; and to CO&lt;sub&gt;2&lt;/sub&gt; in equilibrium with soil water &amp;delta;&lt;sup&gt;18&lt;/sup&gt;O. Mini-tower &amp;delta;&lt;sup&gt;18&lt;/sup&gt;O Keeling plots were linear and highly significant (0.81&lt; r &lt;sup&gt;2&lt;/sup&gt; &gt; 0.96), in contrast to chamber &amp;delta;&lt;sup&gt;18&lt;/sup&gt;O Keeling plots, which showed significant curvature,
+necessitating the use of a mass balance to calculate the &amp;delta;&lt;sup&gt;18&lt;/sup&gt;O
+of respired CO&lt;sub&gt;2&lt;/sub&gt;. In the chambers, the values determined for the &amp;delta;&lt;sup&gt;18&lt;/sup&gt;O of soil respired CO&lt;sub&gt;2&lt;/sub&gt; approached the value of CO&lt;sub&gt;2&lt;/sub&gt; in equilibrium with surficial soil water, and the results were significantly &amp;delta;&lt;sup&gt;18&lt;/sup&gt;O enriched relative to the mini-tower results and the &amp;delta;&lt;sup&gt;18&lt;/sup&gt;O of soil CO&lt;sub&gt;2&lt;/sub&gt; efflux determined from soil CO&lt;sub&gt;2&lt;/sub&gt;. There were close agreements between the three methods for the determination of the &amp;delta;&lt;sup&gt;13&lt;/sup&gt;C of soil efflux CO&lt;sub&gt;2&lt;/sub&gt;. Results suggest that the mini-towers can be effectively used in the field for 
+determining the &amp;delta;&lt;sup&gt;18&lt;/sup&gt;O and the &amp;delta;&lt;sup&gt;13&lt;/sup&gt;C of soil-respired CO&lt;sub&gt;2&lt;/sub&gt;.</p>
+</abstract>
+<counts><page-count count="9"/></counts>
+</article-meta>
+</front>
+<body/>
+<back>
+</back>
+</article>

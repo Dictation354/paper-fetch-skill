@@ -1,0 +1,312 @@
+{
+  "doi": "10.1126/science.aeg3511",
+  "source": "science",
+  "metadata": {
+    "title": "Magma plumbing beneath Yellowstone",
+    "authors": [
+      "Jamie Farrell"
+    ],
+    "abstract": "Geodynamic modeling helps to elucidate magma formation and movement below Yellowstone",
+    "journal": "Science",
+    "article_type": null,
+    "published": "2026-4-9",
+    "keywords": [],
+    "license_urls": [],
+    "landing_page_url": "https://www.science.org/doi/10.1126/science.aeg3511"
+  },
+  "sections": [
+    {
+      "heading": "",
+      "level": 2,
+      "kind": "body",
+      "text": "![Figure](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1126_science.aeg3511_assets/science.aeg3511-f1.jpg)\n\n**Figure 1.** Yellowstone’s Grand Prismatic Spring is located in the Midway Geyser Basin within a massive caldera. These features point to an underlying magma reservoir in Earth’s crust. PHOTO: AVALON/UNIVERSAL IMAGES GROUP VIA GETTY IMAGES\n\nYellowstone is one of the most seismically active areas in the western United States. In addition to seismicity, Yellowstone experiences active ground deformation mainly concentrated at or near its caldera, a massive basin-shaped collapse structure formed shortly after the last explosive volcanic eruption 630,000 years ago. These characteristics, along with Yellowstone’s hydrothermal features, are evidence of an active magma reservoir underlying the caldera. Previous studies indicated the accumulation of partially molten rocks (melt) beneath Earth’s crust in Yellowstone<sup>1–4</sup>. However, their origin and interaction have been elusive. On page 175 of this issue, Cao *et al.*<sup>5</sup> report that melt can form in Yellowstone by tectonic forces alone, without a mantle plume—narrow pillars of hot material that rises through the mantle to the base of the crust. The finding is crucial for evaluating hazards at the Yellowstone volcanic system and other similar volcanic systems around the world.\n\nCalderas result from the emptying of an underlying magma reservoir during an eruption that causes the overlying roof to collapse. It is generally believed that there are bodies of partial melt, or magma reservoirs, in Earth’s crust underlying the Yellowstone volcanic field. Indeed, images of a crustal magmatic system, which were taken using seismic waves<sup>1–3</sup>, identified areas containing ~10 to 20% partial melt directly beneath the Yellowstone caldera at about 4 km below the surface. In addition to seismic data, a recent study also confirmed regions that host partial melt using magnetotelluric data by passing electric currents through the crustal material under Yellowstone<sup>4</sup>. However, how the magma reservoirs<sup>1–4</sup> interact with each other and with a possible mantle plume<sup>6, 7</sup> is still largely unknown. In addition, Yellowstone is a bimodal volcanic system that produces both silicic rhyolite magma (enriched with silica) and mafic basalt magma (less silica but enriched with magnesium and iron). This provides an additional complexity that cannot be easily explained by simplified models using traditional tomography<sup>8</sup>. Although these studies point to the formation of an active magma reservoir underneath the Yellowstone caldera, understanding the mechanism of magma production and mobility is challenging.\n\nA mantle plume has been commonly assumed to supply heat beneath Yellowstone<sup>6</sup>. One of the ongoing debates is whether the Yellowstone volcanic system is due to heat from a mantle plume or not<sup>8, 9</sup>. Seismic tomography has shown a low–seismic velocity, plume-like area in the mantle that extends from the core-mantle boundary to the base of the crust<sup>6, 7, 10</sup>. Although mantle plumes have been ubiquitously observed in tomographic models of the mantle beneath Yellowstone, the features of observed plume-like areas in Yellowstone are weaker than other imaged plumes in volcanoes around the globe<sup>6, 7</sup>. Moreover, several alternative explanations have suggested that melts can form without a mantle plume through a self-sustained melting process, which is guided by ancient structural zones that contain remnants of former oceanic crust<sup>9</sup>. Also, several other explanations for the source of Yellowstone volcanics that don't involve a mantle plume have been proposed, including an eastward-propagating rift<sup>11, 12</sup> where Earth’s crust pulls apart under tension, volcanism along a preexisting crustal weakness (e.g., faults and fractures)<sup>13</sup>, or the interaction of mantle flow and the leftover magma bodies beneath volcanic centers<sup>14</sup>.\n\nCao *et al.* used existing data on the Yellowstone volcanic system and the nearby Eastern Snake River Plain as input for three-dimensional geodynamic modeling of magma dynamics—specifically, melt production in the upper mantle and the overlying crust and its transport and storage in Earth’s crust beneath the Yellowstone volcanic field. This type of modeling can find the best fit from input data that span a broad range of spatial scales and physical parameters. Thus, the approach allows for a more robust interpretation of past events and offers a better model of future events. The results show that intruding material from the upper mantle produced primary melts (molten material that has the same composition as the source material that it melted from) from the combination of excess heat and decompression (a process in which reduced pressure can lead to melting) induced by tectonic forces. The proposed mechanism required little to no hot materials sourced from a mantle plume. In addition, the nearby Wyoming Craton, which is a dense ancient rock that extends under Earth’s crust on the hot upper mantle (asthenosphere), promotes delamination of the lithosphere and enhances local melting of rocks.\n\nThe study of Cao *et al.* predicts bifurcation (melt traveling in two split directions as it rises to Earth’s surface) of the upwelling melts in the crust, which is consistent with previous magnetotelluric imaging<sup>4</sup>. This implies that a volcano-free segment of the Eastern Snake River Plain, which stretches southwest from the Yellowstone volcanic field, could force upwelling melt to migrate in different paths—toward the southwest of the Snake River Plain and northeast toward Yellowstone. The basaltic melt that migrates toward Yellowstone stops its vertical movement when the density of the basaltic melt becomes greater than that of the surrounding crustal silicic rocks, which it is intruding in the lower crust. This creates bodies of basaltic partial melt in the lower crust<sup>1</sup> above which ongoing extension of the crust allows for incremental injection of basaltic material into the middle-to-upper crust. The resulting injected basaltic melt eventually differentiates and forms the body of silicic partial melt in the upper crust<sup>1–3</sup> that feeds the surficial eruptions that have occurred in the Yellowstone region.\n\nThe findings of Cao *et al.* suggest the existence of a translithospheric magma plumbing system—a vertical network of magma channels and reservoirs that transports magma from the asthenosphere to the surface—beneath the Yellowstone volcanic field. This implies that lithospheric tectonics plays an essential role in producing asthenosphere-sourced melts in the Yellowstone volcanic region with little to no contribution from a mantle plume, supporting the nonplume hypothesis. Cao *et al.* provide important new constraints for melt formation in Yellowstone that could help to better understand the physics of the magmatic system at depth. Beyond the Yellowstone volcanic system, geodynamic modeling can be applied to other volcanic systems around the world to reveal subsurface processes that give rise to melt generation, mobility, and eruptions on the surface. This information is essential for assessing hazards and associated risks of large and active volcanic systems."
+    }
+  ],
+  "references": [
+    {
+      "raw": "1. H.- H. Huang et al., Science 348, 773 (2015).",
+      "doi": null,
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "2. S.- M. Wu et al., Earth Planet. Sci. Lett. 616, 118244 (2023).",
+      "doi": "10.1016/j.epsl.2023.118244",
+      "title": null,
+      "year": "2023"
+    },
+    {
+      "raw": "3. C. Duan et al., Nature 640, 962 (2025).",
+      "doi": "10.1038/s41586-025-08775-9",
+      "title": null,
+      "year": "2025"
+    },
+    {
+      "raw": "4. N. Bennington et al., Nature 637, 97 (2025).",
+      "doi": "10.1038/s41586-024-08286-z",
+      "title": null,
+      "year": "2025"
+    },
+    {
+      "raw": "5. Z. Cao et al., Science 392, eady2027 (2026).",
+      "doi": null,
+      "title": null,
+      "year": "2026"
+    },
+    {
+      "raw": "6. P. L. Nelson, S. P. Grand, Nat. Geosci. 11, 280 (2018).",
+      "doi": "10.1038/s41561-018-0075-y",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "7. R. B. Smith et al., J. Volcanol. Geotherm. Res. 188, 26 (2009).",
+      "doi": "10.1016/j.jvolgeores.2009.08.020",
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "8. C. M. Messa, K. W. W. Sims, M. E. Stelten, B. L. Lawler, M. A. Kuntz, Geology 53, 317 (2025).",
+      "doi": "10.1130/g52709.1",
+      "title": null,
+      "year": "2025"
+    },
+    {
+      "raw": "9. R. L. Christiansen, G. R. Foulger, J. R. Evans, Geol. Soc. Am. Bull. 114, 1245 (2002).",
+      "doi": "10.1130/0016-7606(2002)114<1245:umooty>2.0.co;2",
+      "title": null,
+      "year": "2002"
+    },
+    {
+      "raw": "10. G. P. Waite et al., J. Geophys. Res. 11, B04303 (2006).",
+      "doi": null,
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "11. W. B. Hamilton, W. B. Myers, Rev. Geophys. 4, 509 (1966).",
+      "doi": "10.1029/rg004i004p00509",
+      "title": null,
+      "year": "1966"
+    },
+    {
+      "raw": "12. R. B. Smith, Tectonophysics 37, 323 (1977).",
+      "doi": "10.1016/0040-1951(77)90055-5",
+      "title": null,
+      "year": "1977"
+    },
+    {
+      "raw": "13. G. P. Eaton et al., Science 188, 787 (1975).",
+      "doi": null,
+      "title": null,
+      "year": "1975"
+    },
+    {
+      "raw": "14. E. D. Humphreys et al., GSA Today 10, 1 (2000).",
+      "doi": null,
+      "title": null,
+      "year": "2000"
+    }
+  ],
+  "assets": [
+    {
+      "kind": "figure",
+      "heading": "Yellowstone’s Grand Prismatic Spring is located in the Midway Geyser Basin withi",
+      "caption": "Yellowstone’s Grand Prismatic Spring is located in the Midway Geyser Basin within a massive caldera. These features point to an underlying magma reservoir in Earth’s crust. PHOTO: AVALON/UNIVERSAL IMAGES GROUP VIA GETTY IMAGES",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1126_science.aeg3511_assets/science.aeg3511-f1.jpg",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://www.science.org/cms/10.1126/science.aeg3511/asset/a7f25ff0-637d-4cbf-8f5f-d034d1228dd0/assets/images/large/science.aeg3511-f1.jpg",
+      "original_url": "https://www.science.org/cms/10.1126/science.aeg3511/asset/a7f25ff0-637d-4cbf-8f5f-d034d1228dd0/assets/images/large/science.aeg3511-f1.jpg",
+      "source_url": "https://www.science.org/cms/10.1126/science.aeg3511/asset/a7f25ff0-637d-4cbf-8f5f-d034d1228dd0/assets/images/large/science.aeg3511-f1.jpg",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/jpeg;charset=UTF-8",
+      "downloaded_bytes": 1243488,
+      "width": 2172,
+      "height": 1249,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": "direct_http",
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 0.021,
+        "candidate_resolution_ms": 0.031,
+        "dns_policy_validation_ms": 4.115,
+        "connect_to_headers_ttfb_ms": 154.718,
+        "body_stream_ms": 206.536,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.056,
+        "save_ms": 1.988,
+        "total_ms": 368.192,
+        "status": "saved"
+      }
+    }
+  ],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 1840,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "Markdown full text was saved to /home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/Farrell_2026_Magma_plumbing_beneath_Yellowstone.md."
+    ],
+    "source_trail": [
+      "fulltext:science_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_science",
+      "route:signal_doi_science",
+      "route:probe_science_unknown",
+      "route:provider_selected_science",
+      "route:provider_candidate_science_metadata_selected_rank_1",
+      "route:provider_candidate_science_identity_strong",
+      "fulltext:science_attempt",
+      "download:science_assets_saved_profile_body",
+      "fulltext:science_article_ok",
+      "route:provider_candidate_science_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 22,
+      "body": 1818,
+      "refs": 210
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 7266,
+      "word_count": 1147,
+      "body_block_count": 1,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 104.27272727272727,
+      "explicit_body_container": true,
+      "post_abstract_body_run": false,
+      "figure_count": 1
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": true,
+      "profile": "body",
+      "expected": null,
+      "discovered": 1,
+      "attempted": 1,
+      "total": 1,
+      "local": 1,
+      "full_size": 1,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 1,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 1,
+          "requested": 1,
+          "full_size": 1,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": [
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1126_science.aeg3511_assets/science.aeg3511-f1.jpg",
+          "real_mime": "image/jpeg",
+          "byte_count": 1243488,
+          "width": 2172,
+          "height": 1249,
+          "preview_accepted": false,
+          "sha256": "59bc2aefe140235ec1a79e80877cb150acfb7b8bcdabdf018c5be04f2be8c52b",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        }
+      ]
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "science",
+    "route": "browser_html",
+    "representation": "html",
+    "transport": "browser",
+    "fallback_used": false
+  }
+}

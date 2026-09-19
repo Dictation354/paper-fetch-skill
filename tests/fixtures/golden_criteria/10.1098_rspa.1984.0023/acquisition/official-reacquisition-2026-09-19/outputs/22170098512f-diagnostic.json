@@ -1,0 +1,262 @@
+{
+  "schema_version": 2,
+  "provider": "royalsocietypublishing",
+  "route": "html",
+  "failure_code": "abstract_only",
+  "stage": "html_extraction",
+  "backend": "camoufox",
+  "attempt": 1,
+  "target": {
+    "url": "https://royalsocietypublishing.org/rspa/article/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic",
+    "host": "royalsocietypublishing.org",
+    "path": "/rspa/article/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic",
+    "url_sha256": "9a499d1c2a9ce34a580f51743fbd3d6f1aa9d12e14b5d9030066ce997f17229d"
+  },
+  "final": {
+    "url": "https://royalsocietypublishing.org/rspa/article/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic",
+    "host": "royalsocietypublishing.org",
+    "path": "/rspa/article/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic",
+    "url_sha256": "9a499d1c2a9ce34a580f51743fbd3d6f1aa9d12e14b5d9030066ce997f17229d"
+  },
+  "response_status": 200,
+  "title_summary": "Quantal phase factors accompanying adiabatic changes | Proceedings A | The Royal Society",
+  "page_summary": "Quantal phase factors accompanying adiabatic changes | Proceedings A | The Royal Society Skip to Main Content Open Menu Close The Royal Society Open External Link Journals Open Menu Biographical Memoirs Biology Letters Interface Interface Focus Notes and Records Open Biology Philosophical Transactions A Philosophical Transactions B Proceedings A Proceedings B Royal Society Open Science Related content Open Menu Collections Journals archive Blog posts Open External Link Videos Open External Link Seminars Open External Link Sign up for alerts Information for Open Menu Authors Open External Link Reviewers Open External Link Librarians Open External Link Readers Open Access Open Menu Open access Open External Link Read & Publish Open External Link Subscribe to Open (S2O) Open External Link Open Access Membership Open External Link Open Access Equity Open External Link About us Open Menu About the Royal Society Open External Link About our journals Open External Link Journal policies Open E",
+  "page": {
+    "page_state": {
+      "route": "browser_html",
+      "page_sha256": "c1a795fbb190b9e145ca8123fa09628450ccff2ca78159d9a92dcb7d92971f52"
+    },
+    "browser_runtime": {
+      "backend": "camoufox",
+      "media_blocking": true,
+      "timeout_budget_ms": 15000,
+      "browser_connect_seconds": 1.023,
+      "duration_seconds": 7.4,
+      "remaining_ms": 7599,
+      "browser_context_seed": {
+        "provided": false,
+        "cookie_count": 0,
+        "applied": false,
+        "user_agent_reused": false,
+        "reason": "no_compatible_cookies"
+      },
+      "storage_state_save": {
+        "attempted": true,
+        "staged": true,
+        "saved": false,
+        "path": "/home/dictation/.local/share/paper-fetch/publisher-browser-profiles/royalsocietypublishing-camoufox/storage-state.json",
+        "filtered": true,
+        "borrowed_context": false,
+        "cookie_count": 5,
+        "reason": "awaiting_provider_acceptance"
+      },
+      "page_events": {
+        "document_requests": [
+          {
+            "url": "https://royalsocietypublishing.org/rspa/article/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic",
+            "host": "royalsocietypublishing.org",
+            "path": "/rspa/article/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic",
+            "url_sha256": "9a499d1c2a9ce34a580f51743fbd3d6f1aa9d12e14b5d9030066ce997f17229d",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 1923.976,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 1927.303
+          }
+        ],
+        "failed_requests": [
+          {
+            "url": "https://trs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/TRS-logo-256x256-1.png",
+            "host": "trs.silverchair-cdn.com",
+            "path": "/data/SiteBuilderAssetsOriginals/Live/images/umbrella/TRS-logo-256x256-1.png",
+            "url_sha256": "e10403c738ea9041f416e45e8070be9737bc2fd0d098a6890de758f4f3828d99",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/ProceedingsA-401091085.png",
+            "host": "trs.silverchair-cdn.com",
+            "path": "/data/SiteBuilderAssets/Live/Images/rspa/ProceedingsA-401091085.png",
+            "url_sha256": "141d43d1b8f3cad37062a3659ca9f46b2ecc0cc7f18e84d6bc411f61f251bcfb",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/RSPA_CoverImage68097636.jpg",
+            "host": "trs.silverchair-cdn.com",
+            "path": "/data/SiteBuilderAssets/Live/Images/rspa/RSPA_CoverImage68097636.jpg",
+            "url_sha256": "ee65bffddfbdfb424d0c515702f0678081bf76eed4f0b93fa8eba233ba8ed00a",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://trs.silverchair-cdn.com/ImageLibrary/RSPASelfServe/Article-advert/PublishingSubscribetoopenpillowadvert.jpg",
+            "host": "trs.silverchair-cdn.com",
+            "path": "/ImageLibrary/RSPASelfServe/Article-advert/PublishingSubscribetoopenpillowadvert.jpg",
+            "url_sha256": "c08335771432b933aa785828f6003d0cda0fc3e02d7b53885b8414a00eac2b48",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://royalsocietypublishing.org/imagelibrary/TRS-logo-association.png",
+            "host": "royalsocietypublishing.org",
+            "path": "/imagelibrary/TRS-logo-association.png",
+            "url_sha256": "94f4df5f79262698aa0dce8e43ec61f07b18e901ea16673c7f1b32fe7cb49904",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://trs.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/TRS-logo-256x256-1.png",
+            "host": "trs.silverchair-cdn.com",
+            "path": "/data/SiteBuilderAssetsOriginals/Live/images/umbrella/TRS-logo-256x256-1.png",
+            "url_sha256": "e10403c738ea9041f416e45e8070be9737bc2fd0d098a6890de758f4f3828d99",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/ProceedingsA-401091085.png",
+            "host": "trs.silverchair-cdn.com",
+            "path": "/data/SiteBuilderAssets/Live/Images/rspa/ProceedingsA-401091085.png",
+            "url_sha256": "141d43d1b8f3cad37062a3659ca9f46b2ecc0cc7f18e84d6bc411f61f251bcfb",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          },
+          {
+            "url": "https://trs.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/rspa/RSPA_CoverImage68097636.jpg",
+            "host": "trs.silverchair-cdn.com",
+            "path": "/data/SiteBuilderAssets/Live/Images/rspa/RSPA_CoverImage68097636.jpg",
+            "url_sha256": "ee65bffddfbdfb424d0c515702f0678081bf76eed4f0b93fa8eba233ba8ed00a",
+            "resource_type": "image",
+            "error": "NS_ERROR_FAILURE"
+          }
+        ],
+        "failed_scripts": [],
+        "console_errors": [
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://use.typekit.net/af/d7ff92/00000000000000007735e609/31/l?[redacted] (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://trs.silverchair-cdn.com/Themes/Silver/app/icons/v-639223664792286301/fonts/white-label.ttf?[redacted] (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"downloadable font: download failed (font-family: \"proxima-nova\" style:normal weight:400 stretch:100 src index:0): bad URI or cross-site access not allowed source: https://use.typekit.net/af/d7ff92/00000000000000007735e609/31/l?[redacted]\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://use.typekit.net/af/e37e5a/00000000000000007735e60d/31/l?[redacted] (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://use.typekit.net/af/5be242/00000000000000007735e603/31/l?[redacted] (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"downloadable font: download failed (font-family: \"white-label\" style:normal weight:400 stretch:100 src index:1): bad URI or cross-site access not allowed source: https://trs.silverchair-cdn.com/Themes/Silver/app/icons/v-639223664792286301/fonts/white-label.ttf?[redacted]\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://use.typekit.net/af/38ea3a/00000000000000007758cf7d/31/l?[redacted] (Reason: CORS request did not succeed). Status code: (null).\"]"
+          },
+          {
+            "type": "error",
+            "message": "[JavaScript Error: \"Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at https://use.typekit.net/af/6eb0e3/00000000000000007758cf8f/31/l?[redacted] (Reason: CORS request did not succeed). Status code: (null).\"]"
+          }
+        ],
+        "page_errors": [
+          {
+            "error_type": "Error",
+            "message": "can't access property \"setAccessIcons\", SCM.SiteJS is undefined"
+          }
+        ]
+      },
+      "candidates": [
+        {
+          "url": "https://royalsocietypublishing.org/rspa/article/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic",
+          "url_sha256": "9a499d1c2a9ce34a580f51743fbd3d6f1aa9d12e14b5d9030066ce997f17229d",
+          "final_url": "https://royalsocietypublishing.org/rspa/article/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic",
+          "final_url_sha256": "9a499d1c2a9ce34a580f51743fbd3d6f1aa9d12e14b5d9030066ce997f17229d",
+          "status": 200,
+          "main_document_response": {
+            "url": "https://royalsocietypublishing.org/rspa/article/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic",
+            "host": "royalsocietypublishing.org",
+            "path": "/rspa/article/392/1802/45/15579/Quantal-phase-factors-accompanying-adiabatic",
+            "url_sha256": "9a499d1c2a9ce34a580f51743fbd3d6f1aa9d12e14b5d9030066ce997f17229d",
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "captured_html_bytes": 129631,
+            "navigation_timing": {
+              "available": true,
+              "document_ready_state": "loading",
+              "navigation_entry_present": true,
+              "response_start_ms": 1930,
+              "response_end_ms": 1930,
+              "dom_interactive_ms": 0,
+              "dom_content_loaded_event_end_ms": 0,
+              "load_event_end_ms": 0,
+              "duration_ms": 0,
+              "transfer_size_bytes": 23129,
+              "encoded_body_size_bytes": 22829,
+              "decoded_body_size_bytes": 22829,
+              "navigation_type": "navigate",
+              "next_hop_protocol": "h2",
+              "response_completed": true,
+              "dom_content_loaded_completed": false,
+              "load_event_completed": false
+            },
+            "request_lifecycle": {
+              "response_received_observed": true,
+              "response_received_ms": 1923.976,
+              "request_finished_observed": true,
+              "request_finished_ms": 1927.303,
+              "request_failed_observed": false,
+              "observed_ms": 4834.556
+            }
+          },
+          "navigation_seconds": 1.954,
+          "dom_readiness_seconds": 2.535,
+          "dom_readiness_attempted": true,
+          "dom_readiness_ready": true,
+          "dom_readiness_selector": ".widget-ArticleFulltext",
+          "dom_readiness_text_length": 982,
+          "dom_readiness_paragraph_count": 1,
+          "dom_readiness_heading_count": 1,
+          "dom_readiness_fingerprint_present": true,
+          "duration_seconds": 5.954,
+          "result": "success"
+        }
+      ]
+    },
+    "html_shape": {
+      "byte_count": 129631,
+      "has_html": true,
+      "has_head": true,
+      "has_body": true,
+      "body_text_length": 7918,
+      "body_element_count": 1238,
+      "article_container_count": 1
+    }
+  },
+  "raw_html": {
+    "byte_count": 129631,
+    "sha256": "c1a795fbb190b9e145ca8123fa09628450ccff2ca78159d9a92dcb7d92971f52"
+  },
+  "sanitized_html": {
+    "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/royalsocietypublishing/10.1098_rspa.1984.0023/html-1/page-sanitized.html",
+    "byte_count": 58753,
+    "sha256": "0c65cdefa98c1649e3444efee187a16461b65819eb7d1be2787032f834f8312c",
+    "truncated": false
+  },
+  "diagnostic_path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/diagnostics/royalsocietypublishing/10.1098_rspa.1984.0023/html-1/diagnostic.json"
+}

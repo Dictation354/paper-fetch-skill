@@ -105,6 +105,10 @@ PROVIDER_BUNDLE = ProviderBundle(
             post_content_break_tokens=SCIENCE_POST_CONTENT_BREAK_TOKENS,
         ),
         availability=AvailabilityPolicy(
+            paywall_gate_selectors="#bodymatter > .core-container > .denial-block",
+            paywall_gate_pattern=r"view all access options to continue reading this article",
+            paywall_paragraph_selector="p, [role='paragraph']",
+            paywall_entitlement_signals=("aaas_page_type_denial",),
             name="science",
             site_rule_overrides=SCIENCE_SITE_RULE_OVERRIDES,
             datalayer_signal_set=SCIENCE_SIGNAL_SET,
@@ -121,6 +125,7 @@ PROVIDER_BUNDLE = ProviderBundle(
             asset_figure_extraction=_science_html.science_asset_figure_extraction,
         ),
         markdown_hooks=MarkdownHooks(
+            classify_heading=_science_html.science_classify_heading,
             normalize_markdown=_science_html.science_normalize_markdown,
             keep_unknown_abstract_block=_science_html.science_keep_unknown_abstract_block,
         ),

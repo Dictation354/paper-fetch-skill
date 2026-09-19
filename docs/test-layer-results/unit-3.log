@@ -1,0 +1,139 @@
+bringing up nodes...
+bringing up nodes...
+
+....uuuuuuuuuu.......................................................... [  2%]
+........................u..................u............................ [  5%]
+............................uuuuuuuu.....u.............................u [  8%]
+.u......u...u.u................uu..u............u...u.uuu..uuuu....uuuuu [ 10%]
+uuu.....................................................uuuuuu.....uuuuu [ 13%]
+.uuuuu......u.uuuu...............................u..uuuuuuu..u..uu..uuuu [ 15%]
+u.....uu....u...........................................u.......u....... [ 18%]
+........................................................................ [ 21%]
+.......u.u.u.....................u.u..u............uu.uuuuuuuu.uuu...... [ 24%]
+........................................................................ [ 27%]
+.......................u.......uuu...uu................................. [ 30%]
+.........................................uu..u...............uuuuu...uuu [ 33%]
+uuuuuuuuu...............u........u...u.....u............................ [ 35%]
+..........................................u......u.u.................... [ 38%]
+........u.uu...............u....uuuuuuuuu....uu......................... [ 41%]
+........................................................................ [ 44%]
+........................uuu..........................uuuuuu............. [ 47%]
+..........uuuu............................................u...uuu....... [ 50%]
+..............................u.................u....................... [ 53%]
+.u.........................uuuuu..u...uuuu........u..uu.u.u....u..u..... [ 55%]
+.......uuuuuu..u........................................................ [ 58%]
+........................................................................ [ 61%]
+........................................................................ [ 65%]
+................................uuuuuu.......uuuuuuuuuuuu............... [ 67%]
+uuuuuuuu.....uuuuuuuuuuuuuuu.uuuuuuuuuuuu............................... [ 69%]
+........................................................................ [ 72%]
+.......................................u..uuu...u...uuuu......uu.uu.u..u [ 74%]
+....uuuuu..............uuuuuu........................................... [ 77%]
+..................u....................u................................ [ 80%]
+...........................u...........uuuuu..................u......... [ 83%]
+u.......u..u..............uuuuuuu.....................u.....u.uuuuuuuuuu [ 85%]
+uuuuuu..uuu.....u......u......u.u...u...u..u..........................uu [ 88%]
+u.....u.uuuu....uu.u..uuuuuu..u.u...............u....................... [ 90%]
+........................................................................ [ 93%]
+..............................................uu.u.u.u...u.uuuu......... [ 96%]
+.....uuu.uuu................uuu.uu...................................... [ 99%]
+..............                                                           [100%]
+=============================== warnings summary ===============================
+tests/unit/test_camoufox_backend.py::test_managed_camoufox_pin_only_prepares_requested_version[True]
+tests/unit/test_camoufox_backend.py::test_browser_entrypoints_prepare_missing_runtime[True-fetch]
+tests/unit/test_provider_diagnostics.py::test_provider_status_never_uses_the_network
+tests/unit/test_provider_status.py::ProviderStatusTests::test_ieee_direct_html_and_pdf_routes_are_ready_without_env
+tests/unit/test_mcp_server.py::McpServerV2ApiTests::test_v2_client_negotiates_modern_protocol
+tests/unit/test_camoufox_backend.py::test_managed_camoufox_missing_installs_and_latest_reuses
+  /home/dictation/paper-fetch-skill/.venv/lib/python3.14/site-packages/rich_click/__init__.py:65: DeprecationWarning: 'click.utils.get_binary_stream' is deprecated and will be removed in Click 9.0.
+    from click.utils import get_binary_stream as get_binary_stream
+
+tests/unit/test_camoufox_backend.py::test_managed_camoufox_pin_only_prepares_requested_version[True]
+tests/unit/test_camoufox_backend.py::test_browser_entrypoints_prepare_missing_runtime[True-fetch]
+tests/unit/test_provider_diagnostics.py::test_provider_status_never_uses_the_network
+tests/unit/test_provider_status.py::ProviderStatusTests::test_ieee_direct_html_and_pdf_routes_are_ready_without_env
+tests/unit/test_mcp_server.py::McpServerV2ApiTests::test_v2_client_negotiates_modern_protocol
+tests/unit/test_camoufox_backend.py::test_managed_camoufox_missing_installs_and_latest_reuses
+  /home/dictation/paper-fetch-skill/.venv/lib/python3.14/site-packages/rich_click/__init__.py:66: DeprecationWarning: 'click.utils.get_text_stream' is deprecated and will be removed in Click 9.0.
+    from click.utils import get_text_stream as get_text_stream
+
+tests/unit/test_camoufox_backend.py::test_managed_camoufox_pin_only_prepares_requested_version[True]
+tests/unit/test_camoufox_backend.py::test_browser_entrypoints_prepare_missing_runtime[True-fetch]
+tests/unit/test_provider_diagnostics.py::test_provider_status_never_uses_the_network
+tests/unit/test_provider_status.py::ProviderStatusTests::test_ieee_direct_html_and_pdf_routes_are_ready_without_env
+tests/unit/test_mcp_server.py::McpServerV2ApiTests::test_v2_client_negotiates_modern_protocol
+tests/unit/test_camoufox_backend.py::test_managed_camoufox_missing_installs_and_latest_reuses
+  /home/dictation/paper-fetch-skill/.venv/lib/python3.14/site-packages/rich_click/rich_command.py:31: DeprecationWarning: 'click.utils.PacifyFlushWrapper' is deprecated and will be removed in Click 9.0.
+    from click.utils import PacifyFlushWrapper
+
+tests/unit/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_ieee_relative_rest_response_url_is_canonicalized_for_asset_urls
+tests/unit/test_ieee_provider_routes.py::IeeeProviderRouteTests::test_dynamic_html_success_uses_ieee_html_source_and_rest_headers
+tests/unit/test_ieee_provider_asset_downloads.py::IeeeProviderAssetDownloadTests::test_ieee_download_related_assets_all_profile_downloads_supplementary_files
+tests/unit/test_ieee_provider_asset_downloads.py::IeeeProviderAssetDownloadTests::test_ieee_download_related_assets_body_profile_passes_figure_table_and_formula
+tests/unit/test_ieee_provider_asset_downloads.py::IeeeProviderAssetDownloadTests::test_ieee_download_related_assets_downloads_mediastore_gifs_without_support_icon_failure
+tests/unit/test_ieee_provider_asset_downloads.py::IeeeProviderAssetDownloadTests::test_ieee_supplementary_download_failure_does_not_discard_body_assets
+  /home/dictation/paper-fetch-skill/src/paper_fetch/quality/access_boundary.py:104: XMLParsedAsHTMLWarning: It looks like you're using an HTML parser to parse an XML document.
+  
+  Assuming this really is an XML document, what you're doing might work, but you should know that using an XML parser will be more reliable. To parse this document as XML, make sure you have the Python package 'lxml' installed, and pass the keyword argument `features="xml"` into the BeautifulSoup constructor.
+  
+  If you want or need to use an HTML parser on this document, you can make this warning go away by filtering it. To do that, run this code before calling the BeautifulSoup constructor:
+  
+      from bs4 import XMLParsedAsHTMLWarning
+      import warnings
+  
+      warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
+  
+    soup = BeautifulSoup(html, "html.parser")
+
+tests/unit/test_ieee_provider_asset_extraction.py::IeeeProviderAssetExtractionTests::test_ieee_relative_rest_response_url_is_canonicalized_for_asset_urls
+tests/unit/test_ieee_provider_routes.py::IeeeProviderRouteTests::test_dynamic_html_success_uses_ieee_html_source_and_rest_headers
+tests/unit/test_ieee_provider_asset_downloads.py::IeeeProviderAssetDownloadTests::test_ieee_download_related_assets_all_profile_downloads_supplementary_files
+tests/unit/test_ieee_provider_asset_downloads.py::IeeeProviderAssetDownloadTests::test_ieee_download_related_assets_body_profile_passes_figure_table_and_formula
+tests/unit/test_ieee_provider_asset_downloads.py::IeeeProviderAssetDownloadTests::test_ieee_download_related_assets_downloads_mediastore_gifs_without_support_icon_failure
+tests/unit/test_ieee_provider_asset_downloads.py::IeeeProviderAssetDownloadTests::test_ieee_supplementary_download_failure_does_not_discard_body_assets
+  /home/dictation/paper-fetch-skill/src/paper_fetch/quality/access_boundary.py:50: XMLParsedAsHTMLWarning: It looks like you're using an HTML parser to parse an XML document.
+  
+  Assuming this really is an XML document, what you're doing might work, but you should know that using an XML parser will be more reliable. To parse this document as XML, make sure you have the Python package 'lxml' installed, and pass the keyword argument `features="xml"` into the BeautifulSoup constructor.
+  
+  If you want or need to use an HTML parser on this document, you can make this warning go away by filtering it. To do that, run this code before calling the BeautifulSoup constructor:
+  
+      from bs4 import XMLParsedAsHTMLWarning
+      import warnings
+  
+      warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
+  
+    soup = BeautifulSoup(html, "html.parser")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 30 durations =============================
+20.00s call     tests/unit/test_camoufox_backend.py::test_pnas_sidebar_route_is_exact_and_provider_local[pnas]
+20.00s call     tests/unit/test_camoufox_backend.py::test_browser_candidate_uses_native_navigation_without_context_guard
+20.00s call     tests/unit/test_camoufox_backend.py::test_pnas_sidebar_route_is_exact_and_provider_local[science]
+20.00s call     tests/unit/test_camoufox_backend.py::test_exact_script_response_policy_fulfills_only_matching_script
+20.00s call     tests/unit/test_camoufox_backend.py::test_unconfigured_science_fast_policy_keeps_legacy_media_only_blocking
+20.00s call     tests/unit/test_camoufox_backend.py::test_aip_normal_load_does_not_register_routes
+15.49s call     tests/unit/test_ieee_provider_asset_downloads.py::IeeeProviderAssetDownloadTests::test_ieee_article_seed_rejects_challenge_even_with_article_dom
+0.60s call     tests/unit/test_service_metadata_routing.py::ServiceMetadataRoutingTests::test_fulltext_tries_second_ranked_official_provider_after_no_result
+0.54s call     tests/unit/test_provider_waterfalls.py::PublisherWaterfallTests::test_springer_client_challenge_is_no_access_not_provisional_article
+0.51s call     tests/unit/test_service_provider_managed_fallbacks.py::ProviderManagedFallbackServiceTests::test_provider_managed_metadata_only_results_still_fall_back_to_crossref_metadata
+0.49s call     tests/unit/test_service_provider_managed_fallbacks.py::ProviderManagedFallbackServiceTests::test_provider_managed_abstract_only_results_return_provider_article_directly
+0.49s call     tests/unit/test_provider_waterfalls.py::PublisherWaterfallTests::test_springer_to_article_model_keeps_extracted_figures_without_downloads
+0.42s call     tests/unit/test_royalsocietypublishing_provider.py::test_article_html_route_uses_browser_doi_candidate_without_xml_route
+0.41s call     tests/unit/test_royalsocietypublishing_provider.py::test_royal_download_image_wrapper_rejects_non_silverchair_nested_host
+0.36s call     tests/unit/test_springer_html_tables.py::test_nature_body_all_scope_downloads_and_missing_evidence
+0.35s call     tests/unit/test_mcp_server.py::McpServerV2ApiTests::test_v2_client_negotiates_modern_protocol
+0.35s setup    tests/unit/test_camoufox_backend.py::test_browser_entrypoints_prepare_missing_runtime[True-fetch]
+0.32s call     tests/unit/test_provider_waterfalls.py::PublisherWaterfallTests::test_elsevier_xml_transport_failures_can_use_official_pdf_fallback
+0.31s call     tests/unit/test_provider_status.py::ProviderStatusTests::test_ieee_direct_html_and_pdf_routes_are_ready_without_env
+0.31s call     tests/unit/test_provider_fetch_result_template.py::ProviderFetchResultTemplateTests::test_base_fetch_result_auto_converts_html_fulltext_to_markdown
+0.27s call     tests/unit/test_service_metadata_routing.py::ServiceMetadataRoutingTests::test_weak_conflicting_access_boundary_continues_to_strong_doi_provider
+0.27s setup    tests/unit/test_camoufox_backend.py::test_managed_camoufox_pin_only_prepares_requested_version[True]
+0.26s call     tests/unit/test_ams_provider.py::AmsProviderTests::test_ams_formula_asset_extractor_uses_lazy_formula_image
+0.25s call     tests/unit/test_provider_diagnostics.py::test_provider_status_never_uses_the_network
+0.25s call     tests/unit/test_acs_provider.py::test_acs_silverchair_body_excludes_loaded_figshare_viewer
+0.24s call     tests/unit/test_copernicus_provider.py::CopernicusProviderTests::test_abstract_only_short_body_xml_falls_back_to_pdf
+0.22s call     tests/unit/test_cli.py::CliTests::test_batch_jsonl_preserves_input_indices_after_out_of_order_completion
+0.22s call     tests/unit/test_atypon_browser_workflow_postprocess.py::AtyponBrowserWorkflowPostprocessTests::test_wiley_abbreviations_scenario_moves_frontmatter_glossary_after_body
+0.22s call     tests/unit/test_cli_manifest_v2.py::test_single_manifest_is_explicit_atomic_and_hashes_final_output
+0.22s call     tests/unit/test_cache_index_semantics.py::CacheIndexSemanticsTests::test_cache_miss_does_not_open_network_connections
+2240 passed, 30 warnings, 366 subtests passed in 68.07s (0:01:08)

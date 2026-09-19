@@ -1,0 +1,515 @@
+{
+  "provider": "wiley",
+  "doi": "10.1029/2004gb002273",
+  "sample_id": "10.1029_2004gb002273",
+  "source_url": "https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2004GB002273",
+  "source_input": "tests/fixtures/golden_criteria/10.1029_2004gb002273/original.html",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "904da548a8212efbc5d9c9e792fa61b1924234dd6eafc71985efd8465cebf215",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 1 Open in figure viewer PowerPoint Anthropogenic CO 2 emission and atmosp",
+        "caption": "Figure 1 Open in figure viewer PowerPoint Anthropogenic CO 2 emission and atmospheric CO 2 growth rate (monthly from January 1965 to June 2000 with seasonal cycle removed) at Mauna Loa, Hawaii, in PgC yr −1 . Data are from GLOBALVIEW-CO2 (2001). Also plotted below these is the negative Southern Oscillation Index (-SOI; in mbar) which is an indicator of the tropical ENSO phenomenon.",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/2e14f46c-385a-423d-9c53-2184778731d1/gbc1137-fig-0001.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0001",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/2e14f46c-385a-423d-9c53-2184778731d1/gbc1137-fig-0001.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/2e14f46c-385a-423d-9c53-2184778731d1/gbc1137-fig-0001.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/2e14f46c-385a-423d-9c53-2184778731d1/gbc1137-fig-0001.png",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/558f7003488ecba5-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-002-http_response_entity.bin",
+        "body_assets/gbc1137-fig-0001.png"
+      ],
+      "record": "body_assets/gbc1137-fig-0001.png",
+      "validation": {
+        "format": "image/png",
+        "width": 570,
+        "height": 268,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "gbc1137-fig-0001.png",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 2 Open in figure viewer PowerPoint Lagged correlation between the observe",
+        "caption": "Figure 2 Open in figure viewer PowerPoint Lagged correlation between the observed CO 2 growth rate and the negative Southern Oscillation Index (-SOI, solid circles), compared to the autocorrelation of SOI, for the period 1965–2000. CO 2 at Mauna Loa correlates with -SOI at 0.54 at about 5 months lag.",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/05878783-6ecb-468e-b33c-f53b38fe34ea/gbc1137-fig-0002.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0002",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/05878783-6ecb-468e-b33c-f53b38fe34ea/gbc1137-fig-0002.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/05878783-6ecb-468e-b33c-f53b38fe34ea/gbc1137-fig-0002.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/05878783-6ecb-468e-b33c-f53b38fe34ea/gbc1137-fig-0002.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/183be589695e1f7d-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-003-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-003-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 3 Open in figure viewer PowerPoint Spatial distribution of model simulate",
+        "caption": "Figure 3 Open in figure viewer PowerPoint Spatial distribution of model simulated annual mean NPP averaged for 1965–2000 (kg m −2 yr −1 ); total land carbon consists of vegetation and soil carbon (kg m −2 ).",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/87764b87-06aa-4022-ae09-a6b82844434a/gbc1137-fig-0003.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0003",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/87764b87-06aa-4022-ae09-a6b82844434a/gbc1137-fig-0003.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/87764b87-06aa-4022-ae09-a6b82844434a/gbc1137-fig-0003.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/87764b87-06aa-4022-ae09-a6b82844434a/gbc1137-fig-0003.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/93137a873b6122a1-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-004-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-004-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 4 Open in figure viewer PowerPoint Monthly carbon flux from land to the a",
+        "caption": "Figure 4 Open in figure viewer PowerPoint Monthly carbon flux from land to the atmosphere from January 1965 to June 2000 (labeled on the left in PgC yr −1 ), simulated using the terrestrial carbon model VEGAS forced by the observed precipitation and temperature, compared to CO 2 growth rate observed at Mauna Loa, Hawaii (labeled on the right). Seasonal cycle has been removed from both using 12-month running mean. The observed CO 2 growth rate has higher values because it also contains the anthropogenic emission signal, and note the different scale for CO 2 growth rate on the right. The correlation between the two is 0.53 after removing the trends.",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/d3c1cb43-ba4b-4760-bc2a-98cde8d113fc/gbc1137-fig-0004.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0004",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/d3c1cb43-ba4b-4760-bc2a-98cde8d113fc/gbc1137-fig-0004.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/d3c1cb43-ba4b-4760-bc2a-98cde8d113fc/gbc1137-fig-0004.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/d3c1cb43-ba4b-4760-bc2a-98cde8d113fc/gbc1137-fig-0004.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/ea16862fc23fda2e-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-005-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-005-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 5 Open in figure viewer PowerPoint Land-atmosphere carbon flux modeled by",
+        "caption": "Figure 5 Open in figure viewer PowerPoint Land-atmosphere carbon flux modeled by VEGAS, ocean-atmosphere carbon flux modeled by HAMOCC, and the total surface to atmosphere flux (land+ocean) in PgC yr −1 .",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/9dd4ed91-8c83-4b21-a6bc-9af456f0ba9b/gbc1137-fig-0005.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0005",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/9dd4ed91-8c83-4b21-a6bc-9af456f0ba9b/gbc1137-fig-0005.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/9dd4ed91-8c83-4b21-a6bc-9af456f0ba9b/gbc1137-fig-0005.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/9dd4ed91-8c83-4b21-a6bc-9af456f0ba9b/gbc1137-fig-0005.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/622217b59de0b967-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-006-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-006-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 6 Open in figure viewer PowerPoint Time evolution (principal components o",
+        "caption": "Figure 6 Open in figure viewer PowerPoint Time evolution (principal components or PC) and spatial patterns of the first two MEOF from a detrended multivariate empirical orthogonal function (MEOF) analysis of modeled land-atmosphere carbon flux, observed precipitation, and temperature. Plotted together with PC1 is the Southern Oscillation Index (SOI, green line). The spatial patterns of MEOF1 of precipitation and temperature are ENSO-like, while MEOF2 temperature is similar to multidecadal surface warming pattern.",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/4874a2ff-42a1-4530-8897-c197680d1050/gbc1137-fig-0006.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0006",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/4874a2ff-42a1-4530-8897-c197680d1050/gbc1137-fig-0006.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/4874a2ff-42a1-4530-8897-c197680d1050/gbc1137-fig-0006.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/4874a2ff-42a1-4530-8897-c197680d1050/gbc1137-fig-0006.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/d3a68139af54e7ac-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-007-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-007-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 7 Open in figure viewer PowerPoint Carbon flux anomalies during the 1997–",
+        "caption": "Figure 7 Open in figure viewer PowerPoint Carbon flux anomalies during the 1997–1998 El Niño period (relative to the 10-year means of 1990–1999, in kg m −2 yr −1 ).",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/dbfe9c8c-a6af-4627-88fb-fe6a3ee5daaa/gbc1137-fig-0007.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0007",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/dbfe9c8c-a6af-4627-88fb-fe6a3ee5daaa/gbc1137-fig-0007.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/dbfe9c8c-a6af-4627-88fb-fe6a3ee5daaa/gbc1137-fig-0007.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/dbfe9c8c-a6af-4627-88fb-fe6a3ee5daaa/gbc1137-fig-0007.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/9f2bc0e5a241afbc-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-008-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-008-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 8 Open in figure viewer PowerPoint Interannual variability of land-atmosp",
+        "caption": "Figure 8 Open in figure viewer PowerPoint Interannual variability of land-atmosphere carbon fluxes from various regions: global total (black), the tropics between 20°N and 20°S (green), the Amazon (yellow), Northern Hemisphere north of 20°N (red), North America north of 20°N (blue), and Eurasia north of 20°N (purple), in PgC yr −1 . The tropics accounts for half of the climatological total and most of the interannual variability, while the Northern Hemisphere contributes to somewhat less than half of the total and a smaller interannual variability. Note that these are the actual fluxes, while Figures 9 and 11 plot anomalies relative to 1965–2000 means.",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/881cc176-6cfa-435a-9d71-ae04bc4da439/gbc1137-fig-0008.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0008",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/881cc176-6cfa-435a-9d71-ae04bc4da439/gbc1137-fig-0008.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/881cc176-6cfa-435a-9d71-ae04bc4da439/gbc1137-fig-0008.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/881cc176-6cfa-435a-9d71-ae04bc4da439/gbc1137-fig-0008.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/6daf5f9535c687af-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-009-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-009-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 9 Open in figure viewer PowerPoint Tropical contribution and mechanisms: ",
+        "caption": "Figure 9 Open in figure viewer PowerPoint Tropical contribution and mechanisms: (a) tropical carbon flux (green) compared to global total (black) in PgC yr −1 ; (b) NPP (green) and heterotrophic respiration (R h , red); (c) precipitation (green, mm d −1 labeled on the left) and temperature (red, Celsius labeled on the right), which are anticorrelated with temperature lagging by about 1 season; (d) precipitation (black, mm d −1 labeled on the left) and GPP (green, PgC yr −1 labeled on the right); (e) LAI (black; dimensionless labeled on the left), GPP (green), and R a (red) (in PgC yr −1 , labeled on the right); and (f) temperature (black, Celcius labeled on the left) and R h (red, PgC yr −1 labeled on the right). These are all anomalies relative to the 1965–2000 means so that the fluxes in Figure 9a are vertically shifted compared to Figure 8 .",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/05d70967-e2fe-4041-9151-f77c46cd4e28/gbc1137-fig-0009.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0009",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/05d70967-e2fe-4041-9151-f77c46cd4e28/gbc1137-fig-0009.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/05d70967-e2fe-4041-9151-f77c46cd4e28/gbc1137-fig-0009.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/05d70967-e2fe-4041-9151-f77c46cd4e28/gbc1137-fig-0009.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/fd45c156d7b4613e-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-010-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-010-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 10 Open in figure viewer PowerPoint Mechanisms of the tropical dominance ",
+        "caption": "Figure 10 Open in figure viewer PowerPoint Mechanisms of the tropical dominance and the high correlation between ENSO and CO 2 growth rate. During an El Niño event such as 1997–1998, climate anomalies in most of the tropical land regions change in the same direction, and the anti-correlation between precipitation and temperature “conspire” with plant and soil physiology to produce the large carbon release from the tropical land area.",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/794f91cf-bf12-4340-b3a0-990e66327953/gbc1137-fig-0010.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0010",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/794f91cf-bf12-4340-b3a0-990e66327953/gbc1137-fig-0010.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/794f91cf-bf12-4340-b3a0-990e66327953/gbc1137-fig-0010.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/794f91cf-bf12-4340-b3a0-990e66327953/gbc1137-fig-0010.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/f0f3586f66a2d789-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-011-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-011-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 11 Open in figure viewer PowerPoint Northern Hemisphere land contribution",
+        "caption": "Figure 11 Open in figure viewer PowerPoint Northern Hemisphere land contribution and mechanisms: (a) Northern Hemisphere extratropics (north of 20°N) flux anomalies (green) compared to global total (black) in PgC yr −1 ; (b) NPP (green) and heterotrophic respiration (red); and (c) Precipitation (green, mm d −1 labeled on the left) and temperature (red, Celsius labeled on the right). The correlation between precipitation and temperature gives rise to largely covarying NPP and R h which partially cancel each other, leading to a relatively small contribution to the global total carbon flux.",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/b215e297-75f5-4b93-b855-c8e6d04b0b16/gbc1137-fig-0011.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0011",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/b215e297-75f5-4b93-b855-c8e6d04b0b16/gbc1137-fig-0011.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/b215e297-75f5-4b93-b855-c8e6d04b0b16/gbc1137-fig-0011.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/b215e297-75f5-4b93-b855-c8e6d04b0b16/gbc1137-fig-0011.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/bd7f9f4e51a564d9-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-012-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-012-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 12 Open in figure viewer PowerPoint Model carbon fluxes (PgC yr −1 ) from",
+        "caption": "Figure 12 Open in figure viewer PowerPoint Model carbon fluxes (PgC yr −1 ) from North America and Eurasia from 1987 to 1998 compared to those from the atmospheric inversion of Bousquet et al. [2000] .",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/469ee321-9544-4d11-97bc-4529929df74d/gbc1137-fig-0012.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0012",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/469ee321-9544-4d11-97bc-4529929df74d/gbc1137-fig-0012.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/469ee321-9544-4d11-97bc-4529929df74d/gbc1137-fig-0012.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/469ee321-9544-4d11-97bc-4529929df74d/gbc1137-fig-0012.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/f068a2bca9c921ac-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-013-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-013-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 13 Open in figure viewer PowerPoint Carbon fluxes directly burned by fire",
+        "caption": "Figure 13 Open in figure viewer PowerPoint Carbon fluxes directly burned by fire from various regions: global total (black line), tropics (green), Amazon (yellow), Northern Hemisphere extratropics (red), North America (blue), and Eurasia (purple), in PgC yr −1 . The seasonal cycle has been removed. The tropics accounts for most of the total interannual variability, while the Northern Hemisphere also has significant but less variability.",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/bb750041-4bc8-430c-abfd-74346b9f9f90/gbc1137-fig-0013.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0013",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/bb750041-4bc8-430c-abfd-74346b9f9f90/gbc1137-fig-0013.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/bb750041-4bc8-430c-abfd-74346b9f9f90/gbc1137-fig-0013.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/bb750041-4bc8-430c-abfd-74346b9f9f90/gbc1137-fig-0013.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/4bdb710507ef4540-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-014-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-014-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Figure 14 Open in figure viewer PowerPoint Anomalies of global carbon fluxes rel",
+        "caption": "Figure 14 Open in figure viewer PowerPoint Anomalies of global carbon fluxes relative to 1980–2000 mean due to heterotrophic respiration (R h ), autotrophic respiration (R a ), and direct fire ( C fire ), in PgC yr −1 .",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/7a583cf3-f4b8-4137-86be-ffdd039c7daf/gbc1137-fig-0014.png",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "gbc1137-fig-0014",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/7a583cf3-f4b8-4137-86be-ffdd039c7daf/gbc1137-fig-0014.png",
+        "full_size_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/7a583cf3-f4b8-4137-86be-ffdd039c7daf/gbc1137-fig-0014.png"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/7a583cf3-f4b8-4137-86be-ffdd039c7daf/gbc1137-fig-0014.png",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/fe64ea11c11054ea-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-015-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-015-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "figure",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    },
+    {
+      "asset": {
+        "kind": "formula",
+        "heading": "gbc1137-disp-0001",
+        "caption": "",
+        "url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/34efb858-9f37-465e-95e0-1a1a4ab00ca7/gbc1137-math-0001.gif",
+        "preview_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/34efb858-9f37-465e-95e0-1a1a4ab00ca7/gbc1137-math-0001.gif",
+        "preview_accepted": "true",
+        "section": "body"
+      },
+      "download_url": "https://agupubs.onlinelibrary.wiley.com/cms/asset/34efb858-9f37-465e-95e0-1a1a4ab00ca7/gbc1137-math-0001.gif",
+      "state": "unavailable",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/32657457bc8595e5-http-1.bin",
+        "acquisition/assets-2026-09-15/wiley-headless-body-016-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/wiley-headless-body-016-http_response_entity.bin",
+      "validation": {
+        "valid": false,
+        "reason": "FzErrorFormat: code=7: unknown image file format"
+      },
+      "replay_verified": false,
+      "file_role": "formula",
+      "reason": "cloudflare_challenge",
+      "outcome": "blocked",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false
+    }
+  ],
+  "counts": {
+    "discovered_references": 15,
+    "unique_files": 15,
+    "verified_files": 1,
+    "replayed_files": 1,
+    "complete_received_files": 1,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1029_2004gb002273/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1029_2004gb002273/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "blocked",
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 15,
+    "unique_files": 15,
+    "verified_files": 1,
+    "replayed_files": 1,
+    "complete_received_files": 1
+  },
+  "historical_outcome_before_supplementary_removal": "partial",
+  "historical_blocking_evidence": [
+    "acquisition/assets-2026-09-15/558f7003488ecba5-http-1.bin",
+    "acquisition/assets-2026-09-15/183be589695e1f7d-http-1.bin",
+    "acquisition/assets-2026-09-15/93137a873b6122a1-http-1.bin",
+    "acquisition/assets-2026-09-15/ea16862fc23fda2e-http-1.bin",
+    "acquisition/assets-2026-09-15/622217b59de0b967-http-1.bin",
+    "acquisition/assets-2026-09-15/d3a68139af54e7ac-http-1.bin",
+    "acquisition/assets-2026-09-15/9f2bc0e5a241afbc-http-1.bin",
+    "acquisition/assets-2026-09-15/6daf5f9535c687af-http-1.bin",
+    "acquisition/assets-2026-09-15/fd45c156d7b4613e-http-1.bin",
+    "acquisition/assets-2026-09-15/f0f3586f66a2d789-http-1.bin",
+    "acquisition/assets-2026-09-15/bd7f9f4e51a564d9-http-1.bin",
+    "acquisition/assets-2026-09-15/f068a2bca9c921ac-http-1.bin",
+    "acquisition/assets-2026-09-15/4bdb710507ef4540-http-1.bin",
+    "acquisition/assets-2026-09-15/fe64ea11c11054ea-http-1.bin",
+    "acquisition/assets-2026-09-15/32657457bc8595e5-http-1.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-001-browser_dom.html",
+    "acquisition/assets-2026-09-15/wiley-headless-body-002-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-003-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-004-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-005-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-006-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-007-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-008-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-009-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-010-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-011-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-012-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-013-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-014-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-015-http_response_entity.bin",
+    "acquisition/assets-2026-09-15/wiley-headless-body-016-http_response_entity.bin"
+  ]
+}

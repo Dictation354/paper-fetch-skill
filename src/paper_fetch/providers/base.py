@@ -8,6 +8,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from collections.abc import Mapping
 
+from ..quality.access_boundary import (
+    check_payload_paywall,
+    confirmed_paywall,
+)
 from ..asset_budget import use_asset_budget
 from ..artifacts import ArtifactStore
 from ..extraction.html import decode_html, render_html_markdown
@@ -557,6 +561,65 @@ def combine_provider_failures(
     )
 
 
+def restricted_provider_result(
+    provider: str, metadata: Mapping[str, Any], failure: Any
+):
+    from typing import cast
+    from ..models import metadata_only_article
+    from ..models.schema import SourceKind
+    from ..models.quality import apply_quality_assessment
+    from ..provider_catalog import sources_by_provider
+    from ..quality.access_boundary import CONFIRMED_PAYWALL
+    from ..tracing import trace_event
+
+    details = dict(failure.details)
+    received_html = str(details.pop("received_html", "") or "")
+    merged = dict(metadata)
+    merged.update(
+        {
+            key: value
+            for key, value in details.get("received_metadata", {}).items()
+            if value
+        }
+    )
+    sources = sorted(sources_by_provider().get(provider, {"crossref_meta"}))
+    source = next(
+        (source for source in sources if not source.endswith("_pdf")), sources[0]
+    )
+    trace = [
+        *failure.trace,
+        trace_event(
+            "fulltext", provider, "fail", code="no_access", message=failure.message
+        ),
+    ]
+    article = metadata_only_article(
+        source=cast(SourceKind, source),
+        metadata=merged,
+        doi=merged.get("doi"),
+        warnings=[*failure.warnings, failure.message],
+        trace=trace,
+    )
+    apply_quality_assessment(article, availability_diagnostics=details)
+    article.quality.source_trail.append(CONFIRMED_PAYWALL)
+    evidence = details[CONFIRMED_PAYWALL]
+    content = ProviderContent(
+        route_kind="html" if received_html else "metadata",
+        source_url=evidence.get("source_url") or "",
+        content_type="text/html" if received_html else "application/json",
+        body=received_html.encode("utf-8"),
+        merged_metadata=merged,
+        diagnostics=details,
+    )
+    return ProviderFetchResult(
+        provider=provider,
+        article=article,
+        content=content,
+        warnings=list(article.quality.warnings),
+        trace=trace,
+        artifacts=ProviderArtifacts(allow_related_assets=False),
+    )
+
+
 class ProviderClient:
     """Provider interface used by the fetch workflow."""
 
@@ -591,6 +654,9 @@ class ProviderClient:
             prepared = self.prepare_fetch_result_payload(
                 doi, metadata, asset_profile=asset_profile, context=context
             )
+            checked_input = check_payload_paywall(
+                prepared.raw_payload, {**metadata, "doi": doi}, context=context
+            )
             prepared = self.maybe_recover_fetch_result_payload(
                 doi,
                 metadata,
@@ -605,6 +671,24 @@ class ProviderClient:
                 doi, metadata, prepared.raw_payload
             )
             raw_payload = prepared.raw_payload
+            checked_input = check_payload_paywall(
+                raw_payload,
+                {**metadata, "doi": doi},
+                context=context,
+                checked_input=checked_input,
+            )
+            # Assembly can expose an access restriction absent from the initial payload.
+            if prepared.provisional_article is None:
+                prepared.provisional_article = self.to_article_model(
+                    metadata, raw_payload, context=context
+                )
+            checked_input = check_payload_paywall(
+                raw_payload,
+                {**metadata, "doi": doi},
+                context=context,
+                checked_input=checked_input,
+            )
+            assembled_content = raw_payload.content
             artifact_policy = self.describe_artifacts(raw_payload)
             downloaded_assets: list[Mapping[str, Any]] = []
             asset_failures: list[Mapping[str, Any]] = []
@@ -655,6 +739,7 @@ class ProviderClient:
                     )
             if (
                 prepared.provisional_article is not None
+                and raw_payload.content is assembled_content
                 and not downloaded_assets
                 and not asset_failures
             ):
@@ -686,6 +771,10 @@ class ProviderClient:
                 trace=list(trace or trace_from_markers(article.quality.source_trail)),
                 artifacts=artifacts,
             )
+        except ProviderFailure as exc:
+            if not confirmed_paywall(exc):
+                raise
+            return restricted_provider_result(self.name, {**metadata, "doi": doi}, exc)
         finally:
             context.asset_profile = previous_asset_profile
             if owns_context:

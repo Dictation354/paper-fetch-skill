@@ -33,9 +33,11 @@ from ..markdown.citations import (
     normalize_inline_citation_markdown,
 )
 from ._html_section_markdown import (
+    FIGURE_ACTION_TRAILING_LINK_PATTERN,
     extract_section_title,
     render_heading_text_from_html,
     render_container_markdown,
+    render_retained_text_from_html,
     render_section_markdown,
     section_has_direct_renderable_content,
 )
@@ -431,6 +433,21 @@ def _normalize_springer_nature_inline_mathjax(root: Any) -> None:
             node.string = f"${value[2:-2]}$"
 
 
+def _separate_springer_caption_images(article: Tag) -> None:
+    # Inline formula images belong to the bottom caption, not the figure's
+    # image list. Render that caption immediately after its figure so generic
+    # figure rendering cannot duplicate it or bind it to the next figure.
+    for description in article.select(".c-article-section__figure-description"):
+        figure = description.find_parent("figure")
+        if figure is not None and description.find("img") is not None:
+            for link in description.select("a"):
+                if FIGURE_ACTION_TRAILING_LINK_PATTERN.fullmatch(
+                    normalize_text(link.get_text(" ", strip=True))
+                ):
+                    link.decompose()
+            figure.insert_after(description.extract())
+
+
 def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
     if not is_springer_nature_url(source_url):
         return ""
@@ -444,7 +461,14 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
     if article is None:
         return ""
     _prune_springer_nature_chrome(article)
+    # Bare Box/news images may have no numbered asset for link injection.
+    # Resolve their source URLs before rendering, preserving the rendition.
+    for image in article.find_all("img", src=True):
+        src = str(image["src"])
+        if src.startswith("//"):
+            image["src"] = urllib.parse.urljoin(source_url, src)
     _normalize_springer_nature_inline_mathjax(article)
+    _separate_springer_caption_images(article)
 
     lines: list[str] = []
     title_node = article.select_one("h1")
@@ -455,6 +479,11 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
     if is_nature_url(source_url):
         body = article.select_one("div.c-article-body") or article
         main = body.select_one("div.main-content") or body
+        retained_table_mentions = article.select("[data-paper-fetch-table-mention]")
+        for mention in retained_table_mentions:
+            mention.string = render_retained_text_from_html(
+                mention, source_url=source_url
+            )
         abstract_section = select_nature_abstract_section(body)
         if abstract_section is not None:
             render_section_markdown(
@@ -481,6 +510,22 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
         _render_scientific_back_matter_sections(
             article, main, lines, availability_only=True
         )
+        for mention in retained_table_mentions:
+            if main not in mention.parents:
+                lines.extend([mention.get_text(), ""])
+        # Extended tables can live outside main-content and expose only a
+        # caption plus an official table page, without an inline HTML table.
+        for caption in article.select(".c-article-table__figcaption"):
+            label = normalize_text(caption.get_text(" ", strip=True))
+            if not label.casefold().startswith("extended data table"):
+                continue
+            figure = caption.find_parent("figure")
+            link = (
+                figure.select_one("a[data-test='table-link'][href]") if figure else None
+            )
+            if link is not None:
+                target = urllib.parse.urljoin(source_url, str(link["href"]))
+                lines.extend([f"[{label}]({target})", ""])
     else:
         body = article.select_one("div.c-article-body") or article
         main = body.select_one("div.main-content") or body

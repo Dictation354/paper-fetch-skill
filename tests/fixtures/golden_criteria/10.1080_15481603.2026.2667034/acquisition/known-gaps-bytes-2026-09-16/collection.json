@@ -1,0 +1,20 @@
+{
+  "doi": "10.1080/15481603.2026.2667034",
+  "provider": "tandf",
+  "source_url": "https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034",
+  "attempt": 2,
+  "change_from_previous": "Use provider popup URL discovery; capture PDF response MIME regardless of request resource type",
+  "transport": "Camoufox with configured provider state",
+  "capture_started_utc": "2026-09-16T06:28:54.393841+00:00",
+  "historical_records_unchanged": true,
+  "responses": [],
+  "dom_file": "acquisition/known-gaps-bytes-2026-09-16/000-browser_rendered_dom.html",
+  "final_url": "https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034",
+  "title": "Full article: Quantifying cumulative heat effects on heat-related mortality using MODIS land surface temperature data",
+  "observed_doi": "10.1080/15481603.2026.2667034",
+  "confirmed_paywall": false,
+  "paywall_diagnostics": {},
+  "challenge": false,
+  "error_type": "ModuleNotFoundError",
+  "stop_reason": "runtime_or_navigation_error"
+}

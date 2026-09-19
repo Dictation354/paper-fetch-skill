@@ -17,5 +17,294 @@
     "tables": 0,
     "references": 106
   },
-  "expected_content_kind": "fulltext"
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.1111_gcb.16745",
+    "provider": "wiley",
+    "doi": "10.1111/gcb.16745",
+    "original": "tests/fixtures/golden_criteria/10.1111_gcb.16745/original.html",
+    "sha256": "528f8a1ab76079486ccf2b6c1949870758eda0d32dd7175c4c21958e247565b9",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 5,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 106,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 47,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 6,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 60,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 1,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "No structured formula in the selected original; bitmap/externally loaded formulas have only captured index/link evidence.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 0,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1111_gcb.16745/original.html",
+      "sha256": "528f8a1ab76079486ccf2b6c1949870758eda0d32dd7175c4c21958e247565b9",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "23c8a1cdad4f9ce17728f5ceaa2c571695395a3610c93ad7aeb8ea9638ea7dbb",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                4,
+                4,
+                4,
+                4
+              ]
+            ],
+            [
+              2,
+              [
+                5,
+                6,
+                7,
+                8
+              ]
+            ],
+            [
+              3,
+              [
+                9,
+                10,
+                11,
+                12
+              ]
+            ],
+            [
+              4,
+              [
+                13,
+                14,
+                15,
+                16
+              ]
+            ],
+            [
+              5,
+              [
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              6,
+              [
+                21,
+                22,
+                23,
+                24
+              ]
+            ],
+            [
+              7,
+              [
+                25,
+                26,
+                27,
+                28
+              ]
+            ],
+            [
+              8,
+              [
+                29,
+                30,
+                31,
+                32
+              ]
+            ],
+            [
+              9,
+              [
+                33,
+                34,
+                35,
+                36
+              ]
+            ],
+            [
+              10,
+              [
+                37,
+                37,
+                37,
+                37
+              ]
+            ],
+            [
+              11,
+              [
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              12,
+              [
+                42,
+                43,
+                44,
+                45
+              ]
+            ],
+            [
+              13,
+              [
+                46,
+                47,
+                48,
+                49
+              ]
+            ],
+            [
+              14,
+              [
+                50,
+                51,
+                52,
+                53
+              ]
+            ]
+          ],
+          "cells": [
+            "Ecosystem state variable (EV)",
+            "Original resolution (degree)",
+            "Data set (source: Table S1 )",
+            "Acronym ^{a}",
+            "Land",
+            "Vegetation productivity",
+            "0.003",
+            "Copernicus Leaf Area Index v3",
+            "LAI",
+            "Aboveground biomass",
+            "0.1",
+            "(Xu et al., 2021 )",
+            "Biomass",
+            "Vegetation functioning",
+            "0.1",
+            "Sequential Regression Slopes based on Copernicus NDVI and ERA5 precipitation",
+            "SeRGS",
+            "Surface reflectivity",
+            "0.008",
+            "ERA5 White Sky Albedo",
+            "Albedo",
+            "Soil water availability",
+            "0.25",
+            "Top Layer Soil Moisture ERA5 layer 1",
+            "Soil Moisture/SM",
+            "Land cover",
+            "300 m",
+            "ESA CCI Land Cover",
+            "LC",
+            "Land cover (continuous)",
+            "250 m",
+            "MODIS MOD44B Vegetation Cover Fraction v6 (Tree cover, non-tree vegetation)",
+            "VCF",
+            "Burned area",
+            "0.25",
+            "ESA CCI Fire",
+            "Burned/Burn frequency",
+            "Atmosphere",
+            "Wind speed",
+            "0.25",
+            "ERA5 Wind Speed",
+            "Wind speed",
+            "Cloud cover",
+            "0.25",
+            "ERA5 Total Cloud Cover",
+            "Cloud Cover/TCC",
+            "Surface temperature",
+            "0.25",
+            "ERA5 Skin Temperature",
+            "Temperature",
+            "Vapor-pressure deficit",
+            "0.04",
+            "Vapor-Pressure Deficit—Terra Climate",
+            "VPD"
+          ]
+        }
+      ],
+      "mathml": []
+    }
+  ]
 }

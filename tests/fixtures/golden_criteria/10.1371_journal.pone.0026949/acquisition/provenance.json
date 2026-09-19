@@ -1,0 +1,44 @@
+{
+  "records": [
+    {
+      "doi": "10.1371/journal.pone.0026949",
+      "provider": "plos",
+      "requested_url": "https://api.crossref.org/works/10.1371%2Fjournal.pone.0026949",
+      "final_url": "https://api.crossref.org/works/10.1371%2Fjournal.pone.0026949",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:34 GMT",
+        "content-type": "application/json",
+        "content-length": "3249"
+      },
+      "captured_at_utc": "2026-09-18T02:20:33.936090+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 11400,
+      "sha256": "7ba1c7a2f625debae178578cc1a07f07681b670fdd7c31094f10beb8686c17ce",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1371/journal.pone.0026949",
+      "provider": "plos",
+      "requested_url": "https://storage.googleapis.com/plos-corpus-prod/10.1371/journal.pone.0026949/1/pone.0026949.xml",
+      "final_url": "https://storage.googleapis.com/plos-corpus-prod/10.1371/journal.pone.0026949/1/pone.0026949.xml",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/xml",
+        "date": "Fri, 18 Sep 2026 02:20:35 GMT",
+        "last-modified": "Mon, 30 Nov 2020 20:18:52 GMT",
+        "etag": "\"014c866365143a9ca20324454b8a15b3\"",
+        "content-length": "283908"
+      },
+      "captured_at_utc": "2026-09-18T02:20:36.115020+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.xml",
+      "size": 283908,
+      "sha256": "3aebcd57e977337df5332cfceb5eb67a6046083de8d524dbdb6106135fe920a4",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

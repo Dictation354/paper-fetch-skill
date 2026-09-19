@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "doi": "10.1146/annurev-med-120811-171056",
+      "provider": "annualreviews",
+      "requested_url": "https://api.crossref.org/works/10.1146%2Fannurev-med-120811-171056",
+      "final_url": "https://api.crossref.org/works/10.1146%2Fannurev-med-120811-171056",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:28:06 GMT",
+        "content-type": "application/json",
+        "content-length": "2855"
+      },
+      "captured_at_utc": "2026-09-18T02:28:06.038632+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 9880,
+      "sha256": "dc5f2d368801a21e918ac83fb080c745a9361254769886cdf31e52cc4e77ede1",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1146/annurev-med-120811-171056",
+      "provider": "annualreviews",
+      "requested_url": "https://www.annualreviews.org/doi/10.1146/annurev-med-120811-171056",
+      "final_url": "https://www.annualreviews.org/content/journals/10.1146/annurev-med-120811-171056",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:28:09 GMT",
+        "content-type": "text/html;charset=UTF-8"
+      },
+      "captured_at_utc": "2026-09-18T02:28:14.126346+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 628353,
+      "sha256": "cf96d168c7722c5c387afd5170af1d6cfa7d847a5e51fa8b8388aab3efa86c65",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

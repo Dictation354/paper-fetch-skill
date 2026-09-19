@@ -1,11 +1,8 @@
 from __future__ import annotations
-
 import hashlib
 import json
 from pathlib import Path
-
 import pytest
-
 from paper_fetch.capability_scope import (
     BrowserStateCapabilityUse,
     CapabilityScopeBuilder,
@@ -25,7 +22,7 @@ from paper_fetch.mcp.fetch_tool import (
 )
 from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.runtime import RuntimeContext
-from tests.unit._mcp_support import mcp_test_deps, sample_envelope
+from tests.support._mcp_support import mcp_test_deps, sample_envelope
 
 
 def _write_state(path: Path, *, value: str = "session") -> Path:

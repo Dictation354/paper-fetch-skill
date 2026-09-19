@@ -17,5 +17,248 @@
     "figures": false,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1073_pnas.2309123120",
+    "provider": "pnas",
+    "doi": "10.1073/pnas.2309123120",
+    "original": "tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html",
+    "sha256": "10874801adfa85ac0691251f8e864f826a9849444e1bada7b5471fcee744ec2a",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 6,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 66,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 45,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 4,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 44,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "No structured formula in the selected original; bitmap/externally loaded formulas have only captured index/link evidence.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 0,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1073_pnas.2309123120/original.html",
+      "sha256": "10874801adfa85ac0691251f8e864f826a9849444e1bada7b5471fcee744ec2a",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "4300dc4dd203c2d0766f4b81913a8c4b6480cdd2b2cee3d2c4c8770251100863",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            [
+              2,
+              [
+                8,
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              3,
+              [
+                12,
+                13,
+                14,
+                15
+              ]
+            ],
+            [
+              4,
+              [
+                16,
+                17,
+                18,
+                19
+              ]
+            ],
+            [
+              5,
+              [
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              6,
+              [
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              7,
+              [
+                28,
+                29,
+                30,
+                31
+              ]
+            ],
+            [
+              8,
+              [
+                32,
+                33,
+                34,
+                35
+              ]
+            ],
+            [
+              9,
+              [
+                36,
+                37,
+                38,
+                39
+              ]
+            ],
+            [
+              10,
+              [
+                40,
+                41,
+                42,
+                43
+              ]
+            ]
+          ],
+          "cells": [
+            "Feature name",
+            "Distance",
+            "Description",
+            "Units",
+            "Δ T",
+            "0 km",
+            "Target feature: Surface temperature change calculated by subtracting the average surface temperature of the driest month for two periods at the end (2018 to 2020) and start (2001 to 2003) of the study period.",
+            "Kelvin (K)",
+            "Latitude",
+            "0 km",
+            "Model feature: Latitude at Δ T locations.",
+            "Degrees: rescaled (0 to 1)",
+            "Elevation",
+            "0 km",
+            "Model feature: Elevation at Δ T locations.",
+            "Meters (m): rescaled (0 to 1)",
+            "Distance to coast",
+            "0 km",
+            "Model feature: Distance to the nearest coastline from Δ T locations.",
+            "Kilometers (km): rescaled (0 to 1)",
+            "Local_0–2km_change",
+            "0–2 km",
+            "Model feature: Average forest fraction change in halo 0–2 km of Δ T locations.",
+            "Percentage point forest fraction loss (0 to 100)",
+            "Regional_2–5km_change",
+            "2–5 km",
+            "Model feature: Average forest fraction change in halo 2–5 km of Δ T locations.",
+            "Percentage point forest fraction loss (0 to 100)",
+            "Regional_5–10km_change",
+            "5–10 km",
+            "Model feature: Average forest fraction change in halo 5–10 km of Δ T locations.",
+            "Percentage point forest fraction loss (0 to 100)",
+            "Regional_10–25km_change",
+            "10–25 km",
+            "Model feature: Average forest fraction change in halo 10–25 km of Δ T locations.",
+            "Percentage point forest fraction loss (0 to 100)",
+            "Regional_25–50km_change",
+            "25–50 km",
+            "Model feature: Average forest fraction change in halo 25–50 km of Δ T locations.",
+            "Percentage point forest fraction loss (0 to 100)",
+            "Regional_50–100km_change",
+            "50–100 km",
+            "Model feature: Average forest fraction change in halo 50–100 km of Δ T locations.",
+            "Percentage point forest fraction loss (0 to 100)"
+          ]
+        }
+      ],
+      "mathml": []
+    }
+  ]
 }

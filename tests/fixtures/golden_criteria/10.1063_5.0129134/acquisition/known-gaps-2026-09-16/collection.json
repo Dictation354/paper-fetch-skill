@@ -1,0 +1,24 @@
+{
+  "doi": "10.1063/5.0129134",
+  "provider": "aip",
+  "source_url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+  "attempt": 1,
+  "transport": "Camoufox with configured provider state",
+  "capture_started_utc": "2026-09-16T06:27:15.034031+00:00",
+  "historical_records_unchanged": true,
+  "responses": [
+    {
+      "url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+      "status_code": 200,
+      "record": "acquisition/known-gaps-2026-09-16/001-http_response_entity.bin"
+    }
+  ],
+  "dom_file": "acquisition/known-gaps-2026-09-16/000-browser_rendered_dom.html",
+  "final_url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+  "title": "On-chip on-demand delivery of K+ for in vitro bioelectronics | AIP Advances | AIP Publishing",
+  "observed_doi": "10.1063/5.0129134",
+  "confirmed_paywall": false,
+  "paywall_diagnostics": {},
+  "challenge": false,
+  "stop_reason": "single_observation_completed"
+}

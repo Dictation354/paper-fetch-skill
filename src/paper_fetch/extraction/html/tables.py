@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from copy import deepcopy
 from typing import Any
 from collections.abc import Callable, Mapping, Sequence
 
@@ -21,7 +22,7 @@ from .inline import (
 )
 from .shared import attr_text
 
-from bs4 import Tag
+from bs4 import Tag, NavigableString
 
 TABLE_PLACEHOLDER_PREFIX = "PAPER_FETCH_TABLE_PLACEHOLDER_"
 
@@ -34,6 +35,17 @@ def wrap_table_text_fragment(text: str, marker: str | None) -> str:
 
 
 def render_table_inline_node(node: Any, *, text_style: str | None = None) -> str:
+    if isinstance(node, Tag) and "*" in node.get_text():
+        node = deepcopy(node)
+        for text in list(node.find_all(string=True)):
+            if "*" not in text or text.find_parent("math") is not None:
+                continue
+            parts = re.split(r"(\$[^$]+\$)", str(text))
+            escaped = "".join(
+                part if part.startswith("$") else part.replace("*", r"\*")
+                for part in parts
+            )
+            text.replace_with(NavigableString(escaped))
     return render_html_inline_node(node, policy="table_cell", text_style=text_style)
 
 
@@ -332,9 +344,6 @@ def render_table_markdown(
         body_rows: list[list[str]] = []
         for row in data_rows:
             cells = [normalize_text(str(cell.get("text") or "")) for cell in row]
-            nonempty_cells = [cell for cell in cells if cell]
-            if len(nonempty_cells) > 1 and len(set(nonempty_cells)) == 1:
-                cells = [nonempty_cells[0], *[""] * (len(cells) - 1)]
             body_rows.append(cells + [""] * max(0, len(header_row) - len(cells)))
         lines.extend(render_aligned_markdown_table([header_row, *body_rows]))
         return "\n".join(lines)

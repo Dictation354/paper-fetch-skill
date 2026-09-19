@@ -1,0 +1,152 @@
+{
+  "run": "iop-fetch",
+  "human_assistance": false,
+  "parameters": {
+    "modes": [
+      "article",
+      "markdown"
+    ],
+    "format": "json",
+    "strategy": {
+      "allow_metadata_only_fallback": true,
+      "asset_profile": "all",
+      "require_local_body_assets": false,
+      "require_full_size_body_assets": false
+    },
+    "render": {
+      "include_refs": "all",
+      "asset_profile": "all",
+      "max_tokens": "full_text"
+    },
+    "artifact_mode": "all",
+    "no_download": false,
+    "save_markdown": true,
+    "output": "-",
+    "output_dir": "/tmp/paper-fetch-0915-network-repair/iop-fetch",
+    "primary_output_to_output_dir": true,
+    "save_output_copy": false
+  },
+  "acquisition": {
+    "provider": "iop",
+    "route": "browser_html",
+    "representation": "html",
+    "transport": "browser",
+    "fallback_used": false
+  },
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "complete",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1088/1748-9326/ab7d02",
+      "expected_doi": "10.1088/1748-9326/ab7d02",
+      "title": "Quantifying the role of internal variability in the temperature we expect to observe in the coming decades",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 5680,
+      "confidence": "high",
+      "flags": [],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "all",
+      "audited": true,
+      "expected": null,
+      "discovered": 6,
+      "attempted": 6,
+      "total": 6,
+      "local": 6,
+      "full_size": 6,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 6,
+      "remote_only_count": 0,
+      "body_discovered": 5,
+      "body_attempted": 5,
+      "body_local": 5,
+      "body_full_size": 5,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": false,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "complete",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "iop_html",
+      "acquisition": {
+        "provider": "iop",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "trace_event_count": 15,
+      "fallback_codes": [],
+      "warning_codes": [],
+      "failure_codes": [],
+      "unstructured_warning_count": 1,
+      "acceptance_policy": "provider_html_body",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "relocations": {
+    "/tmp/paper-fetch-0915-network-repair/iop-fetch/Maher_et_al_2020_Quantifying_the_role_of_internal_variability_in_the_temperature_we_expect_to_observe_in_the_coming_decades.json": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/network-repair/iop-fetch.json",
+    "/tmp/paper-fetch-0915-network-repair/iop-fetch/Maher_et_al_2020_Quantifying_the_role_of_internal_variability_in_the_temperature_we_expect_to_observe_in_the_coming_decades.md": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/network-repair/iop-fetch.md",
+    "/tmp/paper-fetch-0915-network-repair/iop-fetch/10.1088_1748-9326_ab7d02_assets/ERL_15_5_054014_suppdata.pdf": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/network-repair/ERL_15_5_054014_suppdata.pdf",
+    "/tmp/paper-fetch-0915-network-repair/iop-fetch/10.1088_1748-9326_ab7d02_assets/erlab7d02f5_hr.jpg": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/assets-2026-09-15/b1f179c9252b7909-http-1.bin",
+    "/tmp/paper-fetch-0915-network-repair/iop-fetch/10.1088_1748-9326_ab7d02_assets/erlab7d02f4_hr.jpg": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/assets-2026-09-15/a9404274d7afe86c-http-1.bin",
+    "/tmp/paper-fetch-0915-network-repair/iop-fetch/10.1088_1748-9326_ab7d02_assets/erlab7d02f3_hr.jpg": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/assets-2026-09-15/7b1509fa1dd1d6eb-http-1.bin",
+    "/tmp/paper-fetch-0915-network-repair/iop-fetch/10.1088_1748-9326_ab7d02_assets/erlab7d02f2_hr.jpg": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/assets-2026-09-15/b253e577953551ca-http-1.bin",
+    "/tmp/paper-fetch-0915-network-repair/iop-fetch/10.1088_1748-9326_ab7d02_assets/erlab7d02f1_hr.jpg": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/assets-2026-09-15/ee28e5d600b0577c-http-1.bin"
+  }
+}

@@ -1,4 +1,10 @@
-This directory is the canonical home for real blocked / abstract-only HTML samples.
+# Block fixture conventions
+
+This directory contains canonical real article responses or captured browser DOMs
+rejected as full text, including subscription previews, abstract-only pages,
+challenges, access denials, empty shells, and empty-body XML.
+Current cases and remaining work are listed in the
+[real-case inventory](../../../docs/fixture-content-coverage.md).
 
 Conventions:
 
@@ -19,4 +25,18 @@ Contract:
   current provider extractor and current availability chain, then compare the full
   negative contract. An unsupported raw format is unexecutable and cannot count as
   route coverage.
-- These samples model access gates, abstract-only pages, and paywalled browser captures; they are not fulltext goldens.
+- These samples model rejected full-text inputs; they are not fulltext goldens.
+
+Evidence boundaries:
+
+- Subscription restrictions, challenges, and empty content are distinct evidence.
+  An `abstract_only` extraction result alone does not establish a paywall.
+- A captured response and a final browser DOM retain separate provenance; unknown
+  HTTP status or headers remain unknown.
+- Replaying real input with injected PDF failures verifies fallback behavior,
+  not a live failure of all access routes.
+- A purchase landing page is insufficient when another provider route returns
+  full text. IEEE purchase-page evidence stays auxiliary; Elsevier acquisition
+  evidence uses its API-key route.
+- Open-access targets do not require paywall examples, and challenge counts are
+  not acquisition quotas.

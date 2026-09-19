@@ -2,7 +2,7 @@
   "counts": {
     "abstract_sections": 1,
     "body_sections": 57,
-    "figures": 0,
+    "figures": 13,
     "references": 50,
     "sections": 59,
     "tables": 0
@@ -14,8 +14,1412 @@
     "body": true,
     "code_availability": false,
     "data_availability": false,
-    "figures": false,
+    "figures": true,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.48550_arxiv.2605.06663v1",
+    "provider": "arxiv",
+    "doi": "10.48550/arxiv.2605.06663v1",
+    "original": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/original.html",
+    "sha256": "1d5690e06e66fc71ef1c765cba12b7759fb963b16a6087265d3ac18d5a7380ad",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 3,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 50,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 161,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 13,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 470,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 121,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 82,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Author contact layout tables are excluded from scientific data cells; names are covered by the complete author list.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "article .ltx_personname:reviewed compact block",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 121,
+      "tex_checked": 121,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/original.html",
+      "sha256": "1d5690e06e66fc71ef1c765cba12b7759fb963b16a6087265d3ac18d5a7380ad",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": "S5.T1.1",
+          "node_sha256": "799c5abb3a56e98dd0232d00f3165709f0a84347462330e1898a0ab6ebe5ade0",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6
+              ]
+            ],
+            [
+              1,
+              [
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13
+              ]
+            ],
+            [
+              2,
+              [
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              3,
+              [
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27
+              ]
+            ],
+            [
+              4,
+              [
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34
+              ]
+            ],
+            [
+              5,
+              [
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              6,
+              [
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48
+              ]
+            ]
+          ],
+          "cells": [
+            "",
+            "# train tokens",
+            "MC9",
+            "Gen5",
+            "MMLU",
+            "MMLU Pro",
+            "GSM8K",
+            "OLMoE ^{†}",
+            "5T",
+            "63.5",
+            "57.6",
+            "42.8",
+            "18.7",
+            "13.7",
+            "Reg. MoE",
+            "1T",
+            "63.9",
+            "59.7",
+            "42.4",
+            "19.3",
+            "13.9",
+            "Emo (Ours)",
+            "1T",
+            "63.1",
+            "57.9",
+            "42.8",
+            "18.5",
+            "12.0",
+            "Dense",
+            "130B",
+            "54.1",
+            "41.5",
+            "33.0",
+            "12.2",
+            "2.7",
+            "Reg. MoE",
+            "130B",
+            "60.1",
+            "51.0",
+            "37.5",
+            "15.8",
+            "5.2",
+            "Emo (Ours)",
+            "130B",
+            "59.1",
+            "49.2",
+            "38.1",
+            "15.5",
+            "4.2"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": "A1.T2.4",
+          "node_sha256": "af4dcacefcc8e2f5efa7644791dbdfb8f126586fae5f42423aa3f9c2f0baeef4",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                2,
+                2
+              ]
+            ],
+            [
+              1,
+              [
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+              ]
+            ],
+            [
+              2,
+              [
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28
+              ]
+            ],
+            [
+              3,
+              [
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              4,
+              [
+                42,
+                43,
+                44,
+                45,
+                46,
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54
+              ]
+            ]
+          ],
+          "cells": [
+            "Configuration",
+            "Inference",
+            "Fine-tuning",
+            "$n_{r}$",
+            "$n_{s}$",
+            "$d$",
+            "8",
+            "16",
+            "32",
+            "64",
+            "128",
+            "8",
+            "16",
+            "32",
+            "64",
+            "128",
+            "128",
+            "0",
+            "32",
+            "30.2",
+            "35.3",
+            "37.2",
+            "36.0",
+            "31.9",
+            "31.7",
+            "36.2",
+            "37.8",
+            "38.4",
+            "37.3",
+            "127",
+            "1",
+            "32",
+            "29.6",
+            "34.4",
+            "36.6",
+            "35.6",
+            "33.6",
+            "31.7",
+            "36.0",
+            "38.3",
+            "38.5",
+            "37.4",
+            "127",
+            "1",
+            "$U(8,128)$",
+            "33.7",
+            "36.4",
+            "37.0",
+            "37.7",
+            "38.1",
+            "34.5",
+            "37.5",
+            "38.5",
+            "39.7",
+            "39.8"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": "A2.T3.1.1",
+          "node_sha256": "18e7e35444cbae511246fec9a9554a133a448e771f4044deee935331cfe88450",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3
+              ]
+            ],
+            [
+              1,
+              [
+                4,
+                1,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            ],
+            [
+              2,
+              [
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18
+              ]
+            ],
+            [
+              3,
+              [
+                11,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25
+              ]
+            ],
+            [
+              4,
+              [
+                11,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32
+              ]
+            ],
+            [
+              5,
+              [
+                11,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39
+              ]
+            ],
+            [
+              6,
+              [
+                11,
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46
+              ]
+            ],
+            [
+              7,
+              [
+                47,
+                48,
+                49,
+                50,
+                51,
+                52,
+                53,
+                54
+              ]
+            ],
+            [
+              8,
+              [
+                47,
+                55,
+                56,
+                57,
+                58,
+                59,
+                60,
+                61
+              ]
+            ],
+            [
+              9,
+              [
+                47,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68
+              ]
+            ],
+            [
+              10,
+              [
+                47,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75
+              ]
+            ],
+            [
+              11,
+              [
+                47,
+                76,
+                77,
+                78,
+                79,
+                80,
+                81,
+                82
+              ]
+            ]
+          ],
+          "cells": [
+            "",
+            "# Experts",
+            "Inference",
+            "Fine-tuning",
+            "",
+            "MMLU",
+            "MMLU-Pro",
+            "GSM8K",
+            "MMLU",
+            "MMLU-Pro",
+            "GSM8K",
+            "Emo -anneal",
+            "8",
+            "32.1",
+            "13.1",
+            "7.3",
+            "33.5",
+            "14.2",
+            "22.6",
+            "16",
+            "35.4",
+            "14.8",
+            "9.9",
+            "37.3",
+            "16.3",
+            "25.3",
+            "32",
+            "38.8",
+            "16.5",
+            "11.3",
+            "39.9",
+            "18.3",
+            "26.8",
+            "64",
+            "41.3",
+            "17.4",
+            "12.8",
+            "42.7",
+            "19.5",
+            "27.7",
+            "128 (trained)",
+            "42.3",
+            "18.2",
+            "13.0",
+            "43.7",
+            "20.1",
+            "27.2",
+            "Emo",
+            "8",
+            "36.1",
+            "14.7",
+            "6.9",
+            "37.3",
+            "15.6",
+            "23.3",
+            "16",
+            "39.9",
+            "16.6",
+            "12.2",
+            "40.1",
+            "17.5",
+            "28.3",
+            "32",
+            "41.4",
+            "17.6",
+            "11.7",
+            "41.7",
+            "19.5",
+            "27.5",
+            "64",
+            "42.5",
+            "18.2",
+            "11.0",
+            "43.3",
+            "20.0",
+            "27.1",
+            "128 (trained)",
+            "42.8",
+            "18.5",
+            "12.0",
+            "43.6",
+            "20.4",
+            "27.8"
+          ]
+        },
+        {
+          "object_index": 3,
+          "id": "A3.T4.1",
+          "node_sha256": "eceb9f55b117df7097fa0630189915e4bc862817341b5f2b42025de0381b3377",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4
+              ]
+            ],
+            [
+              1,
+              [
+                5,
+                5,
+                5,
+                5,
+                5
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                7,
+                8,
+                9,
+                10
+              ]
+            ],
+            [
+              3,
+              [
+                11,
+                12,
+                13,
+                14,
+                15
+              ]
+            ],
+            [
+              4,
+              [
+                16,
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              5,
+              [
+                21,
+                22,
+                23,
+                24,
+                25
+              ]
+            ],
+            [
+              6,
+              [
+                26,
+                27,
+                28,
+                29,
+                30
+              ]
+            ],
+            [
+              7,
+              [
+                31,
+                32,
+                33,
+                34,
+                35
+              ]
+            ],
+            [
+              8,
+              [
+                36,
+                37,
+                38,
+                39,
+                40
+              ]
+            ],
+            [
+              9,
+              [
+                41,
+                42,
+                43,
+                44,
+                45
+              ]
+            ],
+            [
+              10,
+              [
+                46,
+                47,
+                48,
+                49,
+                50
+              ]
+            ],
+            [
+              11,
+              [
+                51,
+                52,
+                53,
+                54,
+                55
+              ]
+            ],
+            [
+              12,
+              [
+                56,
+                57,
+                58,
+                59,
+                60
+              ]
+            ],
+            [
+              13,
+              [
+                61,
+                62,
+                63,
+                64,
+                65
+              ]
+            ],
+            [
+              14,
+              [
+                66,
+                67,
+                68,
+                69,
+                70
+              ]
+            ],
+            [
+              15,
+              [
+                71,
+                72,
+                73,
+                74,
+                75
+              ]
+            ],
+            [
+              16,
+              [
+                76,
+                76,
+                76,
+                76,
+                76
+              ]
+            ],
+            [
+              17,
+              [
+                77,
+                78,
+                79,
+                80,
+                81
+              ]
+            ],
+            [
+              18,
+              [
+                82,
+                83,
+                84,
+                85,
+                86
+              ]
+            ],
+            [
+              19,
+              [
+                87,
+                88,
+                89,
+                90,
+                91
+              ]
+            ],
+            [
+              20,
+              [
+                92,
+                93,
+                94,
+                95,
+                96
+              ]
+            ],
+            [
+              21,
+              [
+                97,
+                98,
+                99,
+                100,
+                101
+              ]
+            ],
+            [
+              22,
+              [
+                102,
+                103,
+                104,
+                105,
+                106
+              ]
+            ],
+            [
+              23,
+              [
+                107,
+                108,
+                109,
+                110,
+                111
+              ]
+            ],
+            [
+              24,
+              [
+                112,
+                113,
+                114,
+                115,
+                116
+              ]
+            ],
+            [
+              25,
+              [
+                117,
+                118,
+                119,
+                120,
+                121
+              ]
+            ],
+            [
+              26,
+              [
+                122,
+                123,
+                124,
+                125,
+                126
+              ]
+            ],
+            [
+              27,
+              [
+                127,
+                128,
+                129,
+                130,
+                131
+              ]
+            ],
+            [
+              28,
+              [
+                132,
+                133,
+                134,
+                135,
+                136
+              ]
+            ],
+            [
+              29,
+              [
+                137,
+                138,
+                139,
+                140,
+                141
+              ]
+            ],
+            [
+              30,
+              [
+                142,
+                143,
+                144,
+                145,
+                146
+              ]
+            ],
+            [
+              31,
+              [
+                147,
+                148,
+                149,
+                150,
+                151
+              ]
+            ],
+            [
+              32,
+              [
+                152,
+                153,
+                154,
+                155,
+                156
+              ]
+            ],
+            [
+              33,
+              [
+                157,
+                158,
+                159,
+                160,
+                161
+              ]
+            ],
+            [
+              34,
+              [
+                162,
+                162,
+                162,
+                162,
+                162
+              ]
+            ],
+            [
+              35,
+              [
+                163,
+                164,
+                165,
+                166,
+                167
+              ]
+            ],
+            [
+              36,
+              [
+                168,
+                169,
+                170,
+                171,
+                172
+              ]
+            ],
+            [
+              37,
+              [
+                173,
+                174,
+                175,
+                176,
+                177
+              ]
+            ],
+            [
+              38,
+              [
+                178,
+                179,
+                180,
+                181,
+                182
+              ]
+            ],
+            [
+              39,
+              [
+                183,
+                184,
+                185,
+                186,
+                187
+              ]
+            ],
+            [
+              40,
+              [
+                188,
+                189,
+                190,
+                191,
+                192
+              ]
+            ],
+            [
+              41,
+              [
+                193,
+                194,
+                195,
+                196,
+                197
+              ]
+            ],
+            [
+              42,
+              [
+                198,
+                199,
+                200,
+                201,
+                202
+              ]
+            ],
+            [
+              43,
+              [
+                203,
+                204,
+                205,
+                206,
+                207
+              ]
+            ],
+            [
+              44,
+              [
+                208,
+                208,
+                208,
+                208,
+                208
+              ]
+            ],
+            [
+              45,
+              [
+                209,
+                210,
+                211,
+                212,
+                213
+              ]
+            ],
+            [
+              46,
+              [
+                214,
+                215,
+                216,
+                217,
+                218
+              ]
+            ],
+            [
+              47,
+              [
+                219,
+                220,
+                221,
+                222,
+                223
+              ]
+            ],
+            [
+              48,
+              [
+                224,
+                225,
+                226,
+                227,
+                228
+              ]
+            ],
+            [
+              49,
+              [
+                229,
+                230,
+                231,
+                232,
+                233
+              ]
+            ],
+            [
+              50,
+              [
+                234,
+                234,
+                234,
+                234,
+                234
+              ]
+            ],
+            [
+              51,
+              [
+                235,
+                236,
+                237,
+                238,
+                239
+              ]
+            ]
+          ],
+          "cells": [
+            "Task",
+            "Shots",
+            "Train+Val",
+            "Test",
+            "Primary metric",
+            "MMLU-Pro (14 tasks)",
+            "Math",
+            "5",
+            "601",
+            "750",
+            "acc/raw",
+            "Health",
+            "5",
+            "388",
+            "430",
+            "acc/raw",
+            "Physics",
+            "5",
+            "580",
+            "719",
+            "acc/raw",
+            "Business",
+            "5",
+            "376",
+            "413",
+            "acc/raw",
+            "Biology",
+            "5",
+            "347",
+            "370",
+            "acc/raw",
+            "Chemistry",
+            "5",
+            "513",
+            "619",
+            "acc/raw",
+            "Computer Science",
+            "5",
+            "224",
+            "186",
+            "acc/raw",
+            "Economics",
+            "5",
+            "398",
+            "446",
+            "acc/raw",
+            "Engineering",
+            "5",
+            "448",
+            "521",
+            "acc/raw",
+            "Philosophy",
+            "5",
+            "260",
+            "239",
+            "acc/raw",
+            "Other",
+            "5",
+            "430",
+            "494",
+            "acc/raw",
+            "History",
+            "5",
+            "213",
+            "168",
+            "acc/raw",
+            "Psychology",
+            "5",
+            "380",
+            "418",
+            "acc/raw",
+            "Law",
+            "5",
+            "501",
+            "600",
+            "acc/raw",
+            "MMLU (17 tasks)",
+            "Biology",
+            "5",
+            "320",
+            "182",
+            "acc/raw",
+            "Business",
+            "5",
+            "308",
+            "176",
+            "acc/raw",
+            "Chemistry",
+            "5",
+            "211",
+            "122",
+            "acc/raw",
+            "Computer Science",
+            "5",
+            "289",
+            "165",
+            "acc/raw",
+            "Culture",
+            "5",
+            "232",
+            "134",
+            "acc/raw",
+            "Economics",
+            "5",
+            "525",
+            "298",
+            "acc/raw",
+            "Engineering",
+            "5",
+            "103",
+            "58",
+            "acc/raw",
+            "Geography",
+            "5",
+            "140",
+            "80",
+            "acc/raw",
+            "Health",
+            "5",
+            "1 162",
+            "659",
+            "acc/raw",
+            "History",
+            "5",
+            "658",
+            "373",
+            "acc/raw",
+            "Law",
+            "5",
+            "1 250",
+            "707",
+            "acc/raw",
+            "Math",
+            "5",
+            "752",
+            "427",
+            "acc/raw",
+            "Other",
+            "5",
+            "825",
+            "467",
+            "acc/raw",
+            "Philosophy",
+            "5",
+            "1 427",
+            "808",
+            "acc/raw",
+            "Physics",
+            "5",
+            "453",
+            "257",
+            "acc/raw",
+            "Politics",
+            "5",
+            "459",
+            "260",
+            "acc/raw",
+            "Psychology",
+            "5",
+            "823",
+            "463",
+            "acc/raw",
+            "MC9 (9 tasks)",
+            "ARC-Easy",
+            "5",
+            "2 821",
+            "2 376",
+            "acc/raw",
+            "ARC-Challenge",
+            "5",
+            "1 418",
+            "1 172",
+            "acc/raw",
+            "BoolQ",
+            "5",
+            "9 427",
+            "3 270",
+            "acc/raw",
+            "HellaSwag",
+            "5",
+            "39 905",
+            "10 042",
+            "acc/raw",
+            "CSQA",
+            "5",
+            "9 741",
+            "1 221",
+            "acc/raw",
+            "OpenBookQA",
+            "5",
+            "5 457",
+            "500",
+            "acc/raw",
+            "PIQA",
+            "5",
+            "16 113",
+            "1 838",
+            "acc/raw",
+            "SocialIQA",
+            "5",
+            "33 410",
+            "1 954",
+            "acc/raw",
+            "WinoGrande",
+            "5",
+            "40 398",
+            "1 267",
+            "acc/raw",
+            "Gen5 (5 tasks)",
+            "SQuAD",
+            "5",
+            "87 599",
+            "10 570",
+            "F1",
+            "CoQA",
+            "0",
+            "108 647",
+            "7 983",
+            "F1",
+            "NaturalQS",
+            "5",
+            "87 925",
+            "3 610",
+            "F1",
+            "TriviaQA",
+            "5",
+            "61 888",
+            "7 993",
+            "F1",
+            "DROP",
+            "5",
+            "77 409",
+            "9 536",
+            "F1",
+            "GSM8K (1 task)",
+            "GSM8K",
+            "8",
+            "7 473",
+            "1 319",
+            "EM"
+          ]
+        }
+      ],
+      "mathml": []
+    }
+  ]
 }

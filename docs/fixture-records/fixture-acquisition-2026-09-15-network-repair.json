@@ -1,0 +1,741 @@
+{
+  "scope": "Follow-up after user reported network repair. Exact HTTP wrappers and bytes live in per-fixture provenance. Browser-recovered PNGs and subsequent original JPEG navigation responses are separately retained.",
+  "attempts": [
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "figure-1",
+      "requested_url": "https://www.tandfonline.com/cms/asset/7c085eae-75e0-4ccb-96fa-2b1cb1f35450/tjde_a_2137254_f0001_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/7c085eae-75e0-4ccb-96fa-2b1cb1f35450/tjde_a_2137254_f0001_oc.jpg",
+      "status_code": 403,
+      "captured_at_utc": "2026-09-15T03:34:08.460490+00:00",
+      "size": 5781,
+      "sha256": "17e0800b56b2424dfb2a8510e0433e4a2dd178aa522ea4ac5203070f16ef9cd8"
+    },
+    {
+      "provider": "iop",
+      "doi": "10.1088/1748-9326/ab7d02",
+      "kind": "data",
+      "requested_url": "https://iopscience.iop.org/article/10.1088/1748-9326/ab7d02/data",
+      "final_url": "https://validate.perfdrive.com/fb803c746e9148689b3984a31fccd902/",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:34:08.607568+00:00",
+      "size": 14375,
+      "sha256": "8efb2ff152164aeb5a13f84cb6dea9713affa4ed9c30c1f4bf22a71a1e197fec"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "article",
+      "requested_url": "https://www.tandfonline.com/doi/full/10.1080/17538947.2022.2137254",
+      "final_url": "https://www.tandfonline.com/doi/full/10.1080/17538947.2022.2137254",
+      "status_code": 403,
+      "captured_at_utc": "2026-09-15T03:34:10.258175+00:00",
+      "size": 5673,
+      "sha256": "b74f4440b42f5f46dfa062837b807441bed2f9a977f960770975b1067fbc5d32"
+    },
+    {
+      "provider": "elsevier",
+      "doi": "10.1016/j.envres.2018.12.059",
+      "kind": "article",
+      "requested_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.envres.2018.12.059",
+      "final_url": "https://api.elsevier.com/content/article/doi/10.1016%2Fj.envres.2018.12.059",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:34:10.403420+00:00",
+      "size": 453952,
+      "sha256": "f17d27218a557bd93944f127bb0a40bb9c13d69a90d02e6b5a10831279a95781"
+    },
+    {
+      "provider": "ieee",
+      "doi": "10.1109/ACCESS.2024.3352924",
+      "kind": "article",
+      "requested_url": "https://ieeexplore.ieee.org/document/10388355",
+      "final_url": "https://ieeexplore.ieee.org/document/10388355",
+      "status_code": 202,
+      "captured_at_utc": "2026-09-15T03:34:11.335564+00:00",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "provider": "arxiv",
+      "doi": "10.48550/arxiv.0811.2625v2",
+      "kind": "article",
+      "requested_url": "https://arxiv.org/abs/0811.2625v2",
+      "final_url": "https://arxiv.org/abs/0811.2625v2",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:34:11.633468+00:00",
+      "size": 42744,
+      "sha256": "1247550c3a8988bd1760b0c8a5a9135542cf4d544644b9da9b85a525f66a5d29"
+    },
+    {
+      "provider": "royalsocietypublishing",
+      "doi": "10.1098/rsif.2019.0334",
+      "kind": "article",
+      "requested_url": "https://royalsocietypublishing.org/rsif/article/16/158/20190334/87174/Hepatitis-C-virus-modelled-as-an-indirectly",
+      "final_url": "https://royalsocietypublishing.org/rsif/article/16/158/20190334/87174/Hepatitis-C-virus-modelled-as-an-indirectly",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:34:12.497719+00:00",
+      "size": 442117,
+      "sha256": "748e1d541b521d444159a41773ffbe568be8fd46d8d72107aede8e00dffaf820"
+    },
+    {
+      "provider": "plos",
+      "doi": "10.1371/journal.pone.0015338",
+      "kind": "article",
+      "requested_url": "https://journals.plos.org/plosone/article/file",
+      "final_url": "https://storage.googleapis.com/plos-corpus-prod/10.1371/journal.pone.0015338/1/pone.0015338.xml",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:34:15.226621+00:00",
+      "size": 115948,
+      "sha256": "bc8131556913887e7a39e3cafb3836ac19e462701ab9756ba165ddfa5b0f2d45"
+    },
+    {
+      "provider": "oxfordacademic",
+      "doi": "10.1093/bioinformatics/btaa823",
+      "kind": "article",
+      "requested_url": "https://academic.oup.com/bioinformatics/article/37/4/497/5909988",
+      "final_url": "https://academic.oup.com/bioinformatics/article/37/4/497/5909988",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:34:17.232722+00:00",
+      "size": 424278,
+      "sha256": "ba5c9486579c12deae5eb7faa383f766e65b27280b585bc71bd94b578d7f21f7"
+    },
+    {
+      "provider": "acs",
+      "doi": "10.1021/acsomega.3c06992",
+      "kind": "article",
+      "requested_url": "https://pubs.acs.org/acsodf/article/8/51/49088/341563/General-Equation-to-Estimate-the-Physicochemical",
+      "final_url": "https://pubs.acs.org/acsodf/article/8/51/49088/341563/General-Equation-to-Estimate-the-Physicochemical",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:34:19.382643+00:00",
+      "size": 365104,
+      "sha256": "69353dd36fbfe64c4b480035aad497090d82a9e65444c01b1a3cf4e37cb69a3f"
+    },
+    {
+      "provider": "aip",
+      "doi": "10.1063/5.0129134",
+      "kind": "article",
+      "requested_url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+      "final_url": "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:34:20.758628+00:00",
+      "size": 338689,
+      "sha256": "643f72050a5446de18c88cae8f5a3725e274b6d65f429331ff21f93daf7a83bd"
+    },
+    {
+      "provider": "frontiers",
+      "doi": "10.3389/fmars.2023.1101972",
+      "kind": "article",
+      "requested_url": "https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/xml",
+      "final_url": "https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/xml",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:34:22.710202+00:00",
+      "size": 123079,
+      "sha256": "54be5357383c7c3973289613058ebb3c2a9ac432ac65db82e5c15add0e171ac7"
+    },
+    {
+      "provider": "arxiv",
+      "doi": "10.48550/arxiv.2606.00587v2",
+      "kind": "2606.00587v2-source-archive",
+      "requested_url": "https://arxiv.org/src/2606.00587v2",
+      "final_url": "https://arxiv.org/src/2606.00587v2",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:35:19.754727+00:00",
+      "size": 4078734,
+      "sha256": "0ff37dfc2b4fabbc8b5c2fea4cb671986615a1978562d75b0b289376ea442172"
+    },
+    {
+      "provider": "arxiv",
+      "doi": "10.48550/arxiv.2606.00587v2",
+      "kind": "2606.00587v2-supplementary",
+      "requested_url": "https://arxiv.org/src/2606.00587v2/anc/supplementary_material.pdf",
+      "final_url": "https://arxiv.org/src/2606.00587v2/anc/supplementary_material.pdf",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:35:24.063926+00:00",
+      "size": 2974436,
+      "sha256": "bc4687a0f46fc3f385ce0f97b1132022608c56f350a0f29377c6f67a10afe7ca"
+    },
+    {
+      "provider": "arxiv",
+      "doi": "10.48550/arxiv.0905.2326v2",
+      "kind": "0905.2326v2-source-archive",
+      "requested_url": "https://arxiv.org/src/0905.2326v2",
+      "final_url": "https://arxiv.org/src/0905.2326v2",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:35:27.003238+00:00",
+      "size": 2672048,
+      "sha256": "abcd288ac2d6a783d95ca10472c1d26dfdd056ef29c6e396a4b6dab6c2ad862b"
+    },
+    {
+      "provider": "iop",
+      "doi": "10.1088/1748-9326/ab7d02",
+      "kind": "supplementary-1",
+      "requested_url": "https://cfn-live-content-bucket-iop-org.s3.eu-west-1.amazonaws.com/journals/1748-9326/15/5/054014/revision2/ERL_15_5_054014_suppdata.pdf",
+      "final_url": "https://cfn-live-content-bucket-iop-org.s3.eu-west-1.amazonaws.com/journals/1748-9326/15/5/054014/revision2/ERL_15_5_054014_suppdata.pdf",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:38:05.153245+00:00",
+      "size": 7835543,
+      "sha256": "59d563e053ec14864440a2bf377afaff5c70466e76eeefbf3e5ca6eff8536774"
+    }
+  ],
+  "cli_runs": [
+    {
+      "query": "10.1088/1748-9326/ab7d02",
+      "started_at": "2026-09-15T03:34:52.187377Z",
+      "completed_at": "2026-09-15T03:35:13.095749Z",
+      "acquisition": {
+        "provider": "iop",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "acceptance": {
+        "schema_version": 2,
+        "minimum_reader_schema_version": 2,
+        "overall": "complete",
+        "identity": {
+          "status": "resolved",
+          "doi": "10.1088/1748-9326/ab7d02",
+          "expected_doi": "10.1088/1748-9326/ab7d02",
+          "title": "Quantifying the role of internal variability in the temperature we expect to observe in the coming decades",
+          "candidate_count": 0,
+          "canonical_landing_url": null,
+          "canonical_landing_verified": false,
+          "canonical_landing_unique": false,
+          "codes": []
+        },
+        "fetch": {
+          "status": "ok",
+          "completed": true,
+          "code": null
+        },
+        "content": {
+          "status": "fulltext",
+          "has_fulltext": true,
+          "has_abstract": true,
+          "token_estimate": 5680,
+          "confidence": "high",
+          "flags": [],
+          "tables": {
+            "fallback_count": 0,
+            "layout_degraded_count": 0,
+            "semantic_loss_count": 0
+          },
+          "formulas": {
+            "fallback_count": 0,
+            "missing_count": 0
+          }
+        },
+        "asset": {
+          "requested": true,
+          "profile": "all",
+          "audited": true,
+          "expected": null,
+          "discovered": 6,
+          "attempted": 6,
+          "total": 6,
+          "local": 6,
+          "full_size": 6,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_archived": 0,
+          "remote_link_count": 6,
+          "remote_only_count": 0,
+          "body_discovered": 5,
+          "body_attempted": 5,
+          "body_local": 5,
+          "body_full_size": 5,
+          "body_preview": 0,
+          "body_failed": 0,
+          "body_not_archived": 0,
+          "body_remote_only_count": 0,
+          "require_local_body_assets": false,
+          "require_full_size_body_assets": false,
+          "has_local_body_assets": true,
+          "all_body_assets_local": true,
+          "all_body_assets_full_size": true,
+          "local_body_assets_satisfied": true,
+          "full_size_body_assets_satisfied": true,
+          "failure_codes": [],
+          "issue_codes": [],
+          "status": "complete",
+          "remote_links_preserved": false
+        },
+        "output": {
+          "status": "complete",
+          "requested": [
+            "article",
+            "markdown"
+          ],
+          "available": [
+            "article",
+            "markdown"
+          ],
+          "missing": []
+        },
+        "provenance": {
+          "status": "complete",
+          "source": "iop_html",
+          "acquisition": {
+            "provider": "iop",
+            "route": "browser_html",
+            "representation": "html",
+            "transport": "browser",
+            "fallback_used": false
+          },
+          "trace_event_count": 15,
+          "fallback_codes": [],
+          "warning_codes": [],
+          "failure_codes": [],
+          "unstructured_warning_count": 1,
+          "acceptance_policy": "provider_html_body",
+          "acceptance_policy_satisfied": true
+        }
+      },
+      "failure_codes": []
+    },
+    {
+      "query": "10.1080/17538947.2022.2137254",
+      "started_at": "2026-09-15T03:34:52.166700Z",
+      "completed_at": "2026-09-15T03:35:18.231418Z",
+      "acquisition": {
+        "provider": "tandf",
+        "route": "browser_pdf",
+        "representation": "pdf",
+        "transport": "browser",
+        "fallback_used": true
+      },
+      "acceptance": {
+        "schema_version": 2,
+        "minimum_reader_schema_version": 2,
+        "overall": "degraded",
+        "identity": {
+          "status": "resolved",
+          "doi": "10.1080/17538947.2022.2137254",
+          "expected_doi": "10.1080/17538947.2022.2137254",
+          "title": "A new approach to LST modeling and normalization under clear-sky conditions based on a local optimization strategy",
+          "candidate_count": 0,
+          "canonical_landing_url": null,
+          "canonical_landing_verified": false,
+          "canonical_landing_unique": false,
+          "codes": []
+        },
+        "fetch": {
+          "status": "ok",
+          "completed": true,
+          "code": null
+        },
+        "content": {
+          "status": "fulltext",
+          "has_fulltext": true,
+          "has_abstract": true,
+          "token_estimate": 11921,
+          "confidence": "high",
+          "flags": [],
+          "tables": {
+            "fallback_count": 0,
+            "layout_degraded_count": 0,
+            "semantic_loss_count": 0
+          },
+          "formulas": {
+            "fallback_count": 0,
+            "missing_count": 0
+          }
+        },
+        "asset": {
+          "requested": true,
+          "profile": "all",
+          "audited": true,
+          "expected": null,
+          "discovered": 41,
+          "attempted": 41,
+          "total": 41,
+          "local": 41,
+          "full_size": 41,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 4,
+          "not_archived": 0,
+          "remote_link_count": 41,
+          "remote_only_count": 0,
+          "body_discovered": 41,
+          "body_attempted": 41,
+          "body_local": 41,
+          "body_full_size": 41,
+          "body_preview": 0,
+          "body_failed": 0,
+          "body_not_archived": 0,
+          "body_remote_only_count": 0,
+          "require_local_body_assets": false,
+          "require_full_size_body_assets": false,
+          "has_local_body_assets": true,
+          "all_body_assets_local": true,
+          "all_body_assets_full_size": true,
+          "local_body_assets_satisfied": true,
+          "full_size_body_assets_satisfied": true,
+          "failure_codes": [],
+          "issue_codes": [
+            "asset_placeholder_suspected"
+          ],
+          "status": "degraded",
+          "remote_links_preserved": false
+        },
+        "output": {
+          "status": "complete",
+          "requested": [
+            "article",
+            "markdown"
+          ],
+          "available": [
+            "article",
+            "markdown"
+          ],
+          "missing": []
+        },
+        "provenance": {
+          "status": "complete",
+          "source": "tandf_pdf",
+          "acquisition": {
+            "provider": "tandf",
+            "route": "browser_pdf",
+            "representation": "pdf",
+            "transport": "browser",
+            "fallback_used": true
+          },
+          "trace_event_count": 18,
+          "fallback_codes": [
+            "browser_connect_timeout"
+          ],
+          "warning_codes": [
+            "asset_placeholder_suspected"
+          ],
+          "failure_codes": [
+            "browser_connect_timeout"
+          ],
+          "unstructured_warning_count": 5,
+          "acceptance_policy": "validated_pdf",
+          "acceptance_policy_satisfied": true
+        }
+      },
+      "failure_codes": [
+        "browser_connect_timeout"
+      ]
+    },
+    {
+      "query": "10.1080/17538947.2022.2137254",
+      "started_at": "2026-09-15T03:36:19.547390Z",
+      "completed_at": "2026-09-15T03:38:42.790199Z",
+      "acquisition": {
+        "provider": "tandf",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "acceptance": {
+        "schema_version": 2,
+        "minimum_reader_schema_version": 2,
+        "overall": "complete",
+        "identity": {
+          "status": "resolved",
+          "doi": "10.1080/17538947.2022.2137254",
+          "expected_doi": "10.1080/17538947.2022.2137254",
+          "title": "A new approach to LST modeling and normalization under clear-sky conditions based on a local optimization strategy",
+          "candidate_count": 0,
+          "canonical_landing_url": null,
+          "canonical_landing_verified": false,
+          "canonical_landing_unique": false,
+          "codes": []
+        },
+        "fetch": {
+          "status": "ok",
+          "completed": true,
+          "code": null
+        },
+        "content": {
+          "status": "fulltext",
+          "has_fulltext": true,
+          "has_abstract": true,
+          "token_estimate": 11976,
+          "confidence": "high",
+          "flags": [],
+          "tables": {
+            "fallback_count": 0,
+            "layout_degraded_count": 0,
+            "semantic_loss_count": 0
+          },
+          "formulas": {
+            "fallback_count": 0,
+            "missing_count": 0
+          }
+        },
+        "asset": {
+          "requested": true,
+          "profile": "all",
+          "audited": true,
+          "expected": null,
+          "discovered": 12,
+          "attempted": 12,
+          "total": 12,
+          "local": 12,
+          "full_size": 12,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_archived": 0,
+          "remote_link_count": 12,
+          "remote_only_count": 0,
+          "body_discovered": 12,
+          "body_attempted": 12,
+          "body_local": 12,
+          "body_full_size": 12,
+          "body_preview": 0,
+          "body_failed": 0,
+          "body_not_archived": 0,
+          "body_remote_only_count": 0,
+          "require_local_body_assets": false,
+          "require_full_size_body_assets": false,
+          "has_local_body_assets": true,
+          "all_body_assets_local": true,
+          "all_body_assets_full_size": true,
+          "local_body_assets_satisfied": true,
+          "full_size_body_assets_satisfied": true,
+          "failure_codes": [],
+          "issue_codes": [],
+          "status": "complete",
+          "remote_links_preserved": false
+        },
+        "output": {
+          "status": "complete",
+          "requested": [
+            "article",
+            "markdown"
+          ],
+          "available": [
+            "article",
+            "markdown"
+          ],
+          "missing": []
+        },
+        "provenance": {
+          "status": "complete",
+          "source": "tandf_html",
+          "acquisition": {
+            "provider": "tandf",
+            "route": "browser_html",
+            "representation": "html",
+            "transport": "browser",
+            "fallback_used": false
+          },
+          "trace_event_count": 15,
+          "fallback_codes": [],
+          "warning_codes": [],
+          "failure_codes": [],
+          "unstructured_warning_count": 1,
+          "acceptance_policy": "provider_html_body",
+          "acceptance_policy_satisfied": true
+        }
+      },
+      "failure_codes": []
+    }
+  ],
+  "full_size_image_navigation": [
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-1-context-request",
+      "requested_url": "https://www.tandfonline.com/cms/asset/be72b11a-59f0-4568-89b2-86103c7d6953/tjde_a_2137254_f0001_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/be72b11a-59f0-4568-89b2-86103c7d6953/tjde_a_2137254_f0001_oc.jpg",
+      "status_code": 403,
+      "captured_at_utc": "2026-09-15T03:50:57.101716+00:00",
+      "size": 5994,
+      "sha256": "7c561ce4f2c1a77a816c51e5428828590035c18d7f95dc10c98285544d3c11d4"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-1-image-navigation",
+      "requested_url": "https://www.tandfonline.com/cms/asset/be72b11a-59f0-4568-89b2-86103c7d6953/tjde_a_2137254_f0001_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/be72b11a-59f0-4568-89b2-86103c7d6953/tjde_a_2137254_f0001_oc.jpg",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:50:57.196360+00:00",
+      "size": 159108,
+      "sha256": "d17ea41739278ee96dfb97ed06bd68464b5e9d70122601fe806495b2d964b9f9"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-2-context-request",
+      "requested_url": "https://www.tandfonline.com/cms/asset/3eb40468-4dd1-4d1d-83de-9b03067fd963/tjde_a_2137254_f0002_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/3eb40468-4dd1-4d1d-83de-9b03067fd963/tjde_a_2137254_f0002_oc.jpg",
+      "status_code": 403,
+      "captured_at_utc": "2026-09-15T03:50:57.331155+00:00",
+      "size": 5994,
+      "sha256": "6f5e0796bd0e70301d61e5457bed0a5aafafa4334e2f8957a2a228a7a05e3200"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-2-image-navigation",
+      "requested_url": "https://www.tandfonline.com/cms/asset/3eb40468-4dd1-4d1d-83de-9b03067fd963/tjde_a_2137254_f0002_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/3eb40468-4dd1-4d1d-83de-9b03067fd963/tjde_a_2137254_f0002_oc.jpg",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:51:45.032986+00:00",
+      "size": 328327,
+      "sha256": "aef58a62f2204bda4bd6fcc8dfed204e45247e4590606bdcb9a385e92431b1d6"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-3-image-navigation",
+      "requested_url": "https://www.tandfonline.com/cms/asset/dfae2c17-73b7-4ef9-8f5b-a4fbc3e629a5/tjde_a_2137254_f0003_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/dfae2c17-73b7-4ef9-8f5b-a4fbc3e629a5/tjde_a_2137254_f0003_oc.jpg",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:51:45.110703+00:00",
+      "size": 334026,
+      "sha256": "a0b5d58d736929e33e8b0bb3cfe77d4b8f34eb3b83dd24ef9c3c7586c1d34d25"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-4-image-navigation",
+      "requested_url": "https://www.tandfonline.com/cms/asset/38a1c809-dae0-47d7-9ce6-371ff9f051ca/tjde_a_2137254_f0004_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/38a1c809-dae0-47d7-9ce6-371ff9f051ca/tjde_a_2137254_f0004_oc.jpg",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:51:45.188586+00:00",
+      "size": 303713,
+      "sha256": "95262f30f8c8473fd52ba9eb2fb0b0dbe8c9008aa130ba6fac8852e38e03f767"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-5-image-navigation",
+      "requested_url": "https://www.tandfonline.com/cms/asset/0439e202-a6ef-4d12-9130-445ae0fcf609/tjde_a_2137254_f0005_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/0439e202-a6ef-4d12-9130-445ae0fcf609/tjde_a_2137254_f0005_oc.jpg",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:51:45.283783+00:00",
+      "size": 627679,
+      "sha256": "e44776507f831f81a1f4d56a154eb7c73e1094741b5e81fda8bb351c7cff8e61"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-6-image-navigation",
+      "requested_url": "https://www.tandfonline.com/cms/asset/7b78b5a9-84b0-4959-97cb-0a0a6dee6483/tjde_a_2137254_f0006_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/7b78b5a9-84b0-4959-97cb-0a0a6dee6483/tjde_a_2137254_f0006_oc.jpg",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:51:45.362530+00:00",
+      "size": 361469,
+      "sha256": "ac1c40dad6bb76ed40571097de9fcf7e30dc624ce82784580fe8e3c3914e1a70"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-7-image-navigation",
+      "requested_url": "https://www.tandfonline.com/cms/asset/8190e43b-4698-452c-b05d-2ad710f8d642/tjde_a_2137254_f0007_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/8190e43b-4698-452c-b05d-2ad710f8d642/tjde_a_2137254_f0007_oc.jpg",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:51:45.431589+00:00",
+      "size": 71359,
+      "sha256": "cf72b9a552a3aac134eeb56aadca365127cb13b5cda303effe043c66c7507c05"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-8-image-navigation",
+      "requested_url": "https://www.tandfonline.com/cms/asset/fbe51409-4637-433c-aa45-eed9efede36f/tjde_a_2137254_f0008_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/fbe51409-4637-433c-aa45-eed9efede36f/tjde_a_2137254_f0008_oc.jpg",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:51:45.515607+00:00",
+      "size": 519543,
+      "sha256": "7942fcd3516076d48229d8fb1b81c1e40d9b7ea74343a60239a41a14538d99d9"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-9-image-navigation",
+      "requested_url": "https://www.tandfonline.com/cms/asset/e82b56ca-141a-49bc-a914-b4c9d84eb862/tjde_a_2137254_f0009_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/e82b56ca-141a-49bc-a914-b4c9d84eb862/tjde_a_2137254_f0009_oc.jpg",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:51:45.597414+00:00",
+      "size": 514380,
+      "sha256": "112138e2bb6afa1f1481f075e8aecd7abcb951691b2b0c8e255b3bebeaa5a24e"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-10-image-navigation",
+      "requested_url": "https://www.tandfonline.com/cms/asset/cdb24607-45e7-410a-a8e7-129f6e49fdd4/tjde_a_2137254_f0010_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/cdb24607-45e7-410a-a8e7-129f6e49fdd4/tjde_a_2137254_f0010_oc.jpg",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:51:45.672638+00:00",
+      "size": 262792,
+      "sha256": "30f3d802f321bde4fc6a2ea4c508a80518d74338740c1acb068aa98f8b2ee597"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-11-image-navigation",
+      "requested_url": "https://www.tandfonline.com/cms/asset/f31d7c5f-2914-4752-983f-793e7ede27fb/tjde_a_2137254_f0011_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/f31d7c5f-2914-4752-983f-793e7ede27fb/tjde_a_2137254_f0011_oc.jpg",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:51:45.753425+00:00",
+      "size": 384930,
+      "sha256": "4a6ca801468240de5fb8b729bbeb6635195418159e26c70b2daf5d88e055620c"
+    },
+    {
+      "provider": "tandf",
+      "doi": "10.1080/17538947.2022.2137254",
+      "kind": "full-size-12-image-navigation",
+      "requested_url": "https://www.tandfonline.com/cms/asset/015b796c-226e-425a-8f25-25ad0e1e982b/tjde_a_2137254_f0012_oc.jpg",
+      "final_url": "https://www.tandfonline.com/cms/asset/015b796c-226e-425a-8f25-25ad0e1e982b/tjde_a_2137254_f0012_oc.jpg",
+      "status_code": 200,
+      "captured_at_utc": "2026-09-15T03:51:45.837428+00:00",
+      "size": 73556,
+      "sha256": "7f39435bd0c2991cb9bcfb8e90825338929ec37c1b5246fbcf455cf10e04c8dc"
+    }
+  ],
+  "corpus": {
+    "samples": 211,
+    "golden": 168,
+    "block": 27,
+    "scenario": 16,
+    "complete_original_pdfs": 26,
+    "pdf_providers": 19,
+    "block_providers": 12,
+    "executable_real_exact": 141
+  },
+  "historical_dom_replays": [
+    {
+      "provider": "aip",
+      "doi": "10.1063/5.0129134",
+      "capture_kind": "browser_rendered_dom",
+      "status_code": null,
+      "source": "tests/fixtures/block/10.1063_5.0129134/acquisition/provenance.json"
+    },
+    {
+      "provider": "oxfordacademic",
+      "doi": "10.1093/bioinformatics/btaa823",
+      "capture_kind": "browser_rendered_dom",
+      "status_code": null,
+      "source": "tests/fixtures/block/10.1093_bioinformatics_btaa823/acquisition/provenance.json"
+    }
+  ],
+  "validation": {
+    "targeted_unit_unique_passed": 70,
+    "integration_passed": 24,
+    "integration_skipped": 4,
+    "integration_subtests_passed": 208,
+    "full_unit_rerun": false,
+    "all_exact_shards_rerun": false
+  },
+  "supplementary_retention_note": "Existing supplementary payloads, partial files and archives containing ancillary material were deleted at user request. Historical acquisition statements and former file paths below do not assert current file availability. See supplementary-removal-2026-09-15.json; indexes, links and capture metadata remain."
+}

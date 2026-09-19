@@ -1,0 +1,856 @@
+{
+  "doi": "10.1098/rspb.2020.0097",
+  "source": "royalsocietypublishing_html",
+  "metadata": {
+    "title": "Fitness benefits of male dominance behaviours depend on the degree of individual inbreeding in a polyandrous lizard",
+    "authors": [
+      "Piza-Roca, Carmen",
+      "Schoeman, David",
+      "Frere, Celine"
+    ],
+    "abstract": "In polyandrous species, sexual selection extends beyond mating competition to selection for egg fertilization. As a result, the degree to which factors influencing mating success impact overall reproductive success becomes variable. Here, we used a longitudinal behavioural and genetic dataset for a population of eastern water dragons (Intellagama lesueurii) to investigate the degree to which male dominance, a pre-mating selection trait, influences overall reproductive success, measured as the number of surviving offspring. Moreover, we examine the interactive effects with a genetic trait, individual inbreeding, known to influence the reproductive success of males in this species. We found fitness benefits of male dominance, measured as body size and frequency of dominance behaviours displayed. However, individuals' propensity to display dominance behaviours had mixed effects, depending on the degree of inbreeding. While inbred males benefited from frequent displays, highly outbred males exhibited better reproductive outputs when displaying to a lesser extent. Given that outbred males have enhanced reproductive success in this species, the costs of displaying dominance behaviours may outweigh the benefits. Overall, our results demonstrate the fitness benefits of dominance in a polyandrous lizard, and suggest that these are modulated by an independent genetic trait. Our results may contribute to explaining the presence of alternative mating tactics in this species, owing to the variability in net fitness benefits of dominance. Our findings also reveal the challenges associated with investigating fitness traits in isolation, which may undermine the validity of results when important interactions are ignored.",
+    "journal": "Proceedings of the Royal Society B: Biological Sciences",
+    "article_type": null,
+    "published": "2020-5-27",
+    "keywords": [],
+    "license_urls": [
+      "https://royalsociety.org/-/media/journals/author/Licence-to-Publish-20062019-final.pdf",
+      "https://royalsociety.org/journals/ethics-policies/data-sharing-mining/"
+    ],
+    "landing_page_url": "https://royalsocietypublishing.org/doi/10.1098/rspb.2020.0097"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "In polyandrous species, sexual selection extends beyond mating competition to selection for egg fertilization. As a result, the degree to which factors influencing mating success impact overall reproductive success becomes variable. Here, we used a longitudinal behavioural and genetic dataset for a population of eastern water dragons (Intellagama lesueurii) to investigate the degree to which male dominance, a pre-mating selection trait, influences overall reproductive success, measured as the number of surviving offspring. Moreover, we examine the interactive effects with a genetic trait, individual inbreeding, known to influence the reproductive success of males in this species. We found fitness benefits of male dominance, measured as body size and frequency of dominance behaviours displayed. However, individuals' propensity to display dominance behaviours had mixed effects, depending on the degree of inbreeding. While inbred males benefited from frequent displays, highly outbred males exhibited better reproductive outputs when displaying to a lesser extent. Given that outbred males have enhanced reproductive success in this species, the costs of displaying dominance behaviours may outweigh the benefits. Overall, our results demonstrate the fitness benefits of dominance in a polyandrous lizard, and suggest that these are modulated by an independent genetic trait. Our results may contribute to explaining the presence of alternative mating tactics in this species, owing to the variability in net fitness benefits of dominance. Our findings also reveal the challenges associated with investigating fitness traits in isolation, which may undermine the validity of results when important interactions are ignored."
+    },
+    {
+      "heading": "1 Introduction",
+      "level": 2,
+      "kind": "body",
+      "text": "Sexual selection is recognized as a fundamental force driving evolution [1]. In many animal species, male competition revolves around mate acquisition, resulting in intense sexual selection pressures [2–4]. These can drive rapid evolution of male sexual traits and lead to sexual dimorphisms such as elaborate ornamentation and weaponry [1,5]. In polyandrous species, however, selection extends beyond mating, to competition for egg fecundation [6–11], which occurs mainly via sperm competition [12–14] or cryptic female choice [15,16]. These processes can drive strong shifts in sexual selective pressures operating on males, as mating success alone does not ensure reproductive success.\n\nWhile post-mating mechanisms of sexual selection have only recently gained focus [6,9,10], pre-mating sexual selection is a long-established and extensively researched topic, which was first considered by Darwin [2] as the exclusive mechanism of sexual selection. Here, male body size and ornamentation are often highly relevant for mate acquisition [17,18]. Similarly, social dominance and contest winning, which are intrinsically linked to body size and condition, are often determining factors for mate acquisition and retention [19,20]. The question arises in polyandrous species, however, of how much traits known to influence mating success, such as body size and dominance, impact overall reproductive success, given selection after mating.\n\nGenetic quality is also widely known to have important impacts on the reproductive success of males, both directly and indirectly [21]. Unlike body size and dominance, genetic quality plays an important role in both pre- (e.g. through increased survival, health and competitive ability) and post-mating selection (e.g. through genetic compatibility, sperm selection and offspring viability) [21–23]. For instance, male heterozygosity has been linked to improved survivorship [24–26], body condition [27,28], disease and parasite resistance [28,29] and competitive ability [30,31], as well as sperm competitiveness [32,33], fertilization success [34,35] and embryo survival [36]. Yet, despite an ever-increasing body of evidence supporting the importance of genetic quality for male reproductive success, the potential interactive effects of traits such as body size and dominance on the fitness of males have seldom been investigated. This may be problematic, because interactive effects between traits may change the net fitness they confer [37]. Therefore, quantifying the effects of dominance on reproductive success, without considering the potential interactions of other traits, could lead to unrepresentative results.\n\nThe eastern water dragon (Intellagama lesueurii, hereafter referred to as dragon) is a polyandrous lizard native to Australia. Male dragons are known to exhibit alternative mating tactics (AMTs), with some individuals demonstrating greater frequencies of dominance behaviours relative to others, which adopt non-dominant, satellite behaviours [38]. This suggests that pre-mating sexual selection may be strong in this species, given the high investment in displaying dominance behaviours and defending territories. Despite this, the presence of fitness benefits from dominance in male dragons has yet to be determined. Furthermore, recent findings suggest a fertilization bias towards outbred males [39]. Here, it has been hypothesized that, since female dragons do not appear to bias fertilization towards non-relatives, inbreeding depression may be minimized instead by biasing fertilizations towards more outbred males [39]; however, the exact mechanisms through which heterozygosity impacts the reproductive success of this species remain unknown. Regardless, we aimed to investigate whether the advantage of heterozygosity could interact with the potential fitness effects of dominance. In particular, could the extent of male heterozygosity be correlated with dominance in this species? And if not, could a trade-off exist between these two traits on the reproductive fitness of males?\n\nHere, we investigate the extent to which male dominance impacts male reproductive success in a wild population of dragons. Furthermore, we explore the relationships with a previously identified genetic trait pertinent to sexual selection, individual inbreeding, and how the two traits may interact to impact overall male reproductive success. The availability of long-term behavioural and genetic data in a wild population of dragons presents a unique opportunity to investigate these questions. Moreover, data on reproductive success comprising numbers of offspring that survived to subadulthood or adulthood represent a highly robust measure of males’ reproductive success. We hypothesize that male reproductive success will be enhanced by dominance, given the large energetic investment, but this may depend on the degree of inbreeding due to potential fitness trade-offs."
+    },
+    {
+      "heading": "2 Material and Methods",
+      "level": 2,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "(a) Study species, study site and data collection",
+      "level": 3,
+      "kind": "body",
+      "text": "The eastern water dragon is a large, long-lived (up to 14 years), semi-aquatic, arboreal agamid lizard distributed along the east coast of Australia. Males are markedly sexually dimorphic, presenting comparatively large body sizes, with larger heads and red ventral coloration [40–42]. Male dragons exhibit AMTs, which include expression of varying degrees of dominance (AMTs are not completely discrete) [38]. Dominance is asserted through agonistic displays stereotypical of agamid lizards, such as head bobbing, tail slaps, arm-waving or push-ups, as well as physical aggression and ritualized contests [38,43–46]. Mating tactics can be plastic [38]; however, our field observations suggest that switching tactics is uncommon under natural conditions, particularly from dominant to subordinate because dominant males that are defeated are likely to die. Females generally lay twice a year, with clutch sizes averaging around eight eggs [39,47,48]. Survival rates remain to be quantified in the field; however, our field observations indicate that survivorship from hatchling to adult is low, with survival rates increasing after sexual maturity is attained, resulting in low population turnover. Sexual maturity is reached around 3 years of age (subadults), with individuals growing rapidly in the first 4 years, after which body size stabilizes (adults) [40]. The species exhibits a complex social system, where individuals engage in long-term social preferences and avoidances of specific individuals in their surroundings [49–51].\n\nWe used data collected as part of a long-term study on a population of dragons at the Roma Street Parkland, a 16 ha city park in Brisbane, Australia (27°27′46″ S, 153°1′11″ E), from August 2012 to April 2017, encompassing five field seasons. The population has an estimated size of approximately 336 adult individuals [49]. The parkland is surrounded by roads and urban infrastructure, precluding dispersal to and from other locations [52]. Behavioural observation surveys were carried out twice daily (morning and afternoon) between August and April, when dragons are most active. All surveys were conducted following a predetermined transect that covers approximately 85% of the dragon population [51]. For each individual observed, data were collected on the sex, spatial location (GARMIN eTrex10 handheld GPS device) and occurrence of agonistic displays (head bobbing, tail slaps, arm-waving, push-ups, chasing others, physical aggression or ritualized contest). Individual profile images were also captured (Canon EOS 600 digital SLR camera) to enable identification based on unique scale patterns using the software I3S Manta [52,53]. This has been shown to be highly accurate and efficient for the identification of individual dragons [52]. In addition to behavioural surveys, the population was sampled once or twice per field season for genetic and morphological data, collected in the form of tissue and/or blood samples. Each time, approximately half of the population (selected opportunistically) was captured and sampled. Tissue samples, which consisted of shedding skin or tail tips, were stored in 75% ethanol. Blood samples were collected using the ventral tail caudal venepuncture technique [54]. Both blood and tissue were stored at −20°C. Morphological measures collected included jaw width, jaw length and snout-to-vent length, as detailed in Littleford-Colquhoun et al. [55]. Data collection was approved by the Animal Ethics Committee of the University of the Sunshine Coast (permit number AN/A/14/87), as well as the Queensland Government (Scientific Purposes Permit under Nature Conservation Regulation 2006, permit number WISP17696616)."
+    },
+    {
+      "heading": "(b) SNP genotyping",
+      "level": 3,
+      "kind": "body",
+      "text": "DNA from blood and tissue was extracted using the DNeasy extraction kit (Qiagen) according to the manufacturer's instructions. Extractions were used for single-nucleotide polymorphism (SNP) genotyping, which was conducted by Diversity Arrays Technology, Canberra, using proprietary DArTseq™ technology. This comprises a combination of complexity-reduction methods and next-generation sequencing platforms [56], and has been successfully applied in a wide range of species [57]. For more information, see electronic supplementary material, SNP genotyping. We obtained a total of 20 418 SNPs."
+    },
+    {
+      "heading": "(c) Parentage assignments",
+      "level": 3,
+      "kind": "body",
+      "text": "Parentage assignment was performed in Sequoia [58], a newly developed R package specifically designed for the use of SNPs. Sequoia uses a fast, heuristic hill-climbing algorithm that has been shown to result in low error and high assignment rates [58]. The likelihood-based assignment requires only a few hundred highly informative, low-linked SNPs [58]. These were obtained by applying the following filters (R code adapted from [59]): (i) SNPs showing a call rate greater than or equal to 99%, (ii) individual (sample) call rate greater than or equal to 99%, (iii) no significant deviation from the Hardy–Weinberg equilibrium (p ≤ 0.05; tested using a χ2 test in the HardyWeinberg package in R [60]), and (iv) proportion of technical replicate assay pairs for which the marker score was consistently greater than or equal to 99% (provided by DArTseq™, reflects marker-calling reproducibility). Lastly, we used PLINK [61] to filter on the basis of minor allele frequency (MAF) and linkage disequilibrium using squared correlation (r2). To select the best combination, we undertook sensitivity analyses by generating a set of files in which SNPs were filtered using different values of MAF (range 0.3–0.5) and r2 (0.3–0.5), performing parentage assignment with each and comparing the outputs (see below). The best-performing combination, as indicated by the highest assignment and absence of disagreements with field observations (see below), was MAF ≥ 0.38 and r2 ≤ 0.34, which resulted in a sample size of 349 SNPs.\n\nFor parentage assignment, we included, together with the SNP data, individual metadata containing the sex of individuals and the year in which they were first observed at sexual maturity. Parentage assignments were validated in two ways. First, known maternities from field observations of nesting events were compared with Sequoia assignments (see [48]), which matched in all instances. Second, we calculated genetic relatedness using the maximum-likelihood dyadic relatedness estimator [62] in Coancestry [63] and plotted parentage assignments against genetic relatedness (electronic supplementary material, figure S1). Genetic relatedness was calculated using a less strictly filtered subset of 4433 SNPs (SNP call rate ≥ 0.95; MAF ≥ 0.05; r2 ≤ 0.7; all other filters remained the same), given that a higher density of SNPs may increase the accuracy of relatedness estimation [64,65]. After pedigree computation, we extracted the number of paternities for each male. Only offspring (both males and females) that survived to sexual maturity were counted, in order to obtain a robust measure of reproductive success [66]."
+    },
+    {
+      "heading": "(d) Individual inbreeding",
+      "level": 3,
+      "kind": "body",
+      "text": "Multiple estimators of individual inbreeding and heterozygosity have been developed to date. Here, we used several of these estimators and compared the results to assess the robustness of estimates (see electronic supplementary material, Individual inbreeding). Estimates were highly correlated across methods (electronic supplementary material, figure S2). From these, we selected the low-sampling-bias inbreeding estimator (FIII) in GCTA [67], given that this has been shown to outperform other estimators in both simulated and real data, including wild populations [68–70]. All inbreeding and heterozygosity measures were calculated using the less strictly filtered subset of 4433 SNPs (as per genetic relatedness, see the section above)."
+    },
+    {
+      "heading": "(e) Male dominance",
+      "level": 3,
+      "kind": "body",
+      "text": "Male dominance was measured using a combination of behavioural and morphological data. Behavioural data included agonistic behaviours typical of agamid lizards (head bobbing, arm-waving, tail slapping, chasing and ritualized combat), which are highly linked to dominance [38,43–46]. For each male, we calculated the frequency of agonistic sightings over the total number of sightings. We used only individuals with at least 15 sightings, as this was found to be the minimum number required for stable estimates (electronic supplementary material, figure S3), and for which we had up-to-date morphological data. Morphological data (weight, jaw width and snout-to-vent length) were also included because male dominance is generally related to body size in lizards [71–73], including dragons [38]. Supporting this, the frequency of agonistic behaviours was strongly correlated with body size in our dragon population (Spearman's rs = 0.61, p = 7.029 × 10−11). These morphological traits were selected as they have been identified as determinants for winning contests [71,74,75], which is greatly linked to male reproductive success in reptiles [76]. We used the most recent morphological data available per individual, and ensured that this was consistent with previous measures (e.g. no sudden change) and corresponded with our latest field observations. Body size in dragons stabilizes after 4 years of age [40]; therefore, after reaching adulthood (4 years), body size measures should remain stable. This occurs shortly after sexual maturity (3 years), which was the minimum age for inclusion in this study. Moreover, we did not detect any significant change in body weight of any adult male that could bias its body size measurement.\n\nTo obtain a general estimate of dominance from correlated behavioural and morphological measures, we performed a principal component analysis (PCA) with the frequency of dominance behaviours displayed and the three body size measures. All measures loaded similarly in the first PC, which explained 78% of the variance (table 1). Given that the frequency of dominance displays was strongly correlated to morphological measures (see above), this first PC most likely reflected individuals' body size. The second PC was heavily loaded by the frequency of dominance behaviours displayed, but only weakly negatively loaded by body size measures, and explained 17% of the variance (table 1). Therefore, we also included this component as it was showing a portion of the variance in the frequency of dominance behaviours displayed that was independent of larger body size. Both the first PC, hereafter called ‘body size’, and the second PC, hereafter called ‘propensity to display dominance behaviours’, were used in our models of male reproductive success.\n\nTable 1: Results from PCA for male dominance, including three body size measures and the frequency of dominance displays of individuals. SNV, snout-to-vent.\n\n| not specified | PC1 | PC2 |\n|---|---|---|\n| SNV length (cm) | 0.532 | 0.261 |\n| jaw width (mm) | 0.535 | 0.210 |\n| weight (g) | 0.544 | 0.166 |\n| frequency of display | 0.368 | −0.928 |\n| proportion of variance | 0.784 | 0.167 |"
+    },
+    {
+      "heading": "(f) Fitness benefits of dominance and interactions with inbreeding",
+      "level": 3,
+      "kind": "body",
+      "text": "We first investigated whether male dominance is directly linked to the degree of inbreeding in this species. We used two separate generalized linear models to test whether body size or propensity to display dominance behaviours depended on the degree of inbreeding. Neither model indicated a significant relationship (see Results), allowing us to include dominance and inbreeding variables simultaneously in our models of reproductive success.\n\nWe investigated the extent to which dominance impacts reproductive success in male dragons using generalized linear negative binomial models in the R package MASS [77] to explain the number of offspring per male. Because males that had been reproductively active for longer periods had had increased chances of reproducing, we included the time of reproductive activity as an offset (on a log scale). This was calculated as the number of seasons, out of the five encompassed by this study, that individuals were available for reproduction (i.e. were sexually mature and had not died or disappeared from the population). Individual measures of body size and propensity to display dominance behaviours were fitted as predictors, together with individual inbreeding. We included all interactions between the above predictors (see electronic supplementary material, table S1 for full model outputs). This model was simplified using stepwise simplification on the basis of Akaike information criterion (AIC), confirmed with log-likelihood ratio tests, to evaluate the significance of model fit deterioration (electronic supplementary material, table S2). Given the abundance of zeros in our data, we also fitted a zero-inflated negative binomial model in the R package pscl [78]. However, zero inflation was not statistically justified, as indicated by a non-significant zero component of the models."
+    },
+    {
+      "heading": "3 Results",
+      "level": 2,
+      "kind": "body",
+      "text": "We had a total of 240 genotyped adult individuals, including 126 females and 114 males. Of these, 104 males had up-to-date morphological data and at least 15 sightings, and hence were included in our models of reproductive success. These included a total of 64 paternities from 29 males, while the remaining 75 did not have any paternity assigned. Males had been sighted an average of 99 times (s.d. = 75), and had been reproductively active for an average of 3.98 seasons (s.d. = 1.33) across the five seasons included in this study. Both genotyped individuals and paternities assigned were approximately randomly distributed across the study site, reflecting even sampling of the population (electronic supplementary material, figure S4).\n\nWe found no relationship between the degree of inbreeding of individual males and either their body size (PC1) (estimate = 0.454, s.e. = 1.109, t = 0.409, p = 0.683; electronic supplementary material, table S3) or their propensity to display dominance behaviours (PC2) (estimate = −0.270, s.e. = 0.647, t = −0.418, p = 0.677; electronic supplementary material, table S4).\n\nWe found a significant positive effect of body size on reproductive outcomes (estimate = 0.713, s.e. = 0.290, z = 2.454, p = 0.014, figure 1 and table 2). Moreover, we found a significant interaction, indicating that the effect of the propensity to display depended on the extent of inbreeding (Estimate = 6.190, s.e. = 2.400, z = 2.579, p = 0.010, figure 2 and table 2). Here, inbred individuals increasingly benefited from displaying dominance behaviours, while the opposite was true for outbred individuals (figure 2). This model explained 24.6% of the total deviance in the number of offspring per male.\n\n![Figure 1](https://trs.silverchair-cdn.com/trs/content_public/journal/rspb/287/1927/10.1098_rspb.2020.0097/6/rspb20200097f01.png?Expires=1791473749&Signature=dGSQyN9cCy~idqCh-30Xak4llBg2a83JaSp6M4dsUmJdDoYX4LJVEPgE-F0xUk6z3UsrvHs7ruG2qwtOW39GFsrV~a6hJFW5oaDwVaZ8EolyN8n30AwUvzxUf0XnMkwhF~8cgdRUZFIm~6wb85FWayeqKRisoZF61Ywak-WdWe6cxjiNF5R94HBgzCX8AoQCQKYhsBZEQmfB3OrRcVFXgoUH6xIwY9lNcoaF8kSrDZbIwI~48nYwgKo90lBC3kgKroDFBpN46GRZ8xDTuoGek4j-z8EoRVno5iT5Dt~P0GlzGF3b7mlm4kZrS~TmQBbRyjx0hxhoxkS8H8h8CNLn~w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 1.** Effect of male body size, represented by a principal component accounting for body size and frequency that they displayed dominance behaviours, on reproductive success (number of survived offspring). The graph shows fitted lines (model predictions, black line) with 95% confidence intervals (shaded area). Observations are solid dots. Dominant males tend to have better reproductive outcomes.\n\n![Figure 2](https://trs.silverchair-cdn.com/trs/content_public/journal/rspb/287/1927/10.1098_rspb.2020.0097/6/m_rspb20200097f02.png?Expires=1791473749&Signature=caGcs6HubqEboHCzkta6WGHpz4hn51AGTgGmhJqJXhvTCcmKowuD-VtzOTIZI0bhNRqa3kDcCsRXVOJE8Z~bc8So4EcQ090J~5EEVU-2Y8HOjIYOJCV2dLwBMz~zK4OEmeGYr14Hc9YawQV7SnpzROP~uVVGI2foqGhpyKBEH-cf57fUSvSu59Wuzc5wvMQz10eVjjtphG2ZwYCQPrPBeeZbSI8yvB-yqEXt3yaObR1tKMrJfa06nKW5NKRiU5~SMNpXLdJHXhiP6KbbHJ8sBYTA9FgB0-Gu0V3kzNLQa~q3iCGXKNnId32pamC1qq1BAmoaZ7Wraqo~F9-h2EfPZQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)\n\n**Figure 2.** Illustration of the interactive effect of males' propensity to display dominance behaviours and inbreeding (FIII) on reproductive success (number of offspring). The graphs show fitted lines (model predictions, black lines) with 95% confidence intervals (shaded area). Here, when inbreeding is low, males with a lesser propensity to display may have better reproductive outputs. Conversely, males with higher inbreeding may have improved reproductive success when they display to a greater extent. Note that wide confidence intervals can result from small sample sizes of observed data for specific combinations of dominance and FIII.\n\nTable 2: Full model outputs from generalized linear negative binomial model of number of offspring as a function of body size (PC1), propensity to display dominance behaviours (PC2) and inbreeding coefficient (F III) (N = 104). Model formula was number of offspring ∼ body size (PC1) + propensity to display (PC2) + inbreeding (F III) + propensity to display (PC2): inbreeding (F III) + offset(log(reproductive time)). All interactions between the terms were initially included, but only the interaction between propensity to display and inbreeding remained after model simplification. Note that the estimates are in logit space. The model explained 24.6% of deviance in the number of offspring per adult male.\n\n| parameter | estimate | s.e. | z-value | Pr(>\\|z\\|) |\n|---|---|---|---|---|\n| intercept | −3.779 | 0.746 | −5.068 | <0.001 |\n| PC1 | 0.713 | 0.290 | 2.454 | 0.014 |\n| PC2 | 0.162 | 0.302 | 0.538 | 0.591 |\n| FIII | −3.372 | 2.176 | −1.550 | 0.121 |\n| PC2: FIII | 6.190 | 2.400 | 2.579 | 0.010 |"
+    },
+    {
+      "heading": "4 Discussion",
+      "level": 2,
+      "kind": "body",
+      "text": "Here, we demonstrate that male dominance influences reproductive success in a polyandrous lizard, and provide initial evidence that the effect of dominance behaviours may be constrained by a genetic trait, individual inbreeding. We found a net positive effect of male dominance, based on body size and the frequency at which they displayed dominance behaviours. However, males’ propensity to display had mixed effects, depending on the extent of inbreeding. This interaction could contribute to explaining the presence of AMTs in this species, given that it generates variability in fitness benefits of displaying dominance. This is, to our knowledge, the first study to suggest an interaction between male dominance and inbreeding on reproductive success.\n\nWe found fitness benefits of male dominance, based on body size and behaviour, in a polyandrous species. While this is common in polygynous species [19], it varies in polyandrous species [79,80] because, while dominant males may have greater mating success [79], subordinate males may still sneak copulations and outcompete them during post-mating selection [81,82]. Nonetheless, dominance may still be advantageous for reproductive outcomes in other ways, such as territory defence and mate guarding, which may prevent copulations with other males [82]. Females may also select dominant males owing to the provision of good-quality genes and access to resources [1,83,84]. While female mate choice is rare in lizards [85], it is present in some species [86,87], and in these cases, females typically prefer larger males [88,89]. In dragons, mate choice by females seems unlikely, given the high levels of sexual coercion observed regularly in the field. Despite this, post-mating female cryptic choice [90,91] may be present, and this warrants further investigation.\n\nWhile dominance may lead to enhanced reproductive success, it also comes with a considerable cost. Dominance behaviours are notorious for being energetically expensive, with individuals often engaging in costly displays and aggressive encounters with competitors, which drives greater energetic requirements to maintain large body sizes [19,92,93]. In lizards, social dominance has been linked to reduced mobility due to larger body and head size, which could also reduce survivorship by impeding flight from predators [94]. Moreover, the maintenance of dominance status requires a larger activity budget, which can be especially costly for ectotherms, because thermoregulation limits levels of activity [95]. Therefore, the benefits of dominance may not always exceed the costs [93]. In this study, we found that highly outbred male dragons had improved reproductive success when expressing fewer dominance behaviours. This may be because highly outbred males perform relatively well compared with their inbred counterparts at some stage in sexual selection dynamics [39]. Owing to this intrinsic reproductive advantage, the benefits of displaying dominance behaviours in outbred male dragons may be limited (i.e. the associated costs may outweigh the benefits). Note that we did not find a relationship between displaying frequency and the extent of individual inbreeding, suggesting that individuals do not detect their own levels of inbreeding and adjust their dominance behaviour based upon that. Instead, males of all levels of inbreeding may show any extent of dominance behaviours, with varying fitness outcomes depending on the interaction between the two traits. This interaction may contribute to the maintenance of AMTs in this species, given that both tactics can provide benefits (a satellite or sneaky tactic benefits highly heterozygous males, while dominance benefits inbred males).\n\nWhile dominance generally impacts mating success (i.e. pre-mating selection) [19,79], heterozygosity may play a role in both pre- and post-mating selection [25]. During pre-mating selection, heterozygosity can increase opportunities for mating, for instance via increased physical strength, body size and survivorship [25,26], or even dictate mate choice by females [23,96–99]. During post-mating selection, females may cryptically bias fertilizations towards more outbred males [16,99–101]. Outbred males may also produce higher-quality, competitively superior sperm [32,33,35] and offspring with increased survivorship [25]. Here, we found no relationship between inbreeding and body size of males. Moreover, high levels of male sexual harassment suggest that mate choice by females is unlikely. Therefore, the main role of heterozygosity in sexual selection in this species is likely to be post-mating.\n\nWe hypothesize that highly outbred males may outcompete inbred males post-mating, and may do so more economically by simply sneaking copulations, rather than investing energy in asserting dominance. To test this hypothesis, future research will need to investigate the mechanisms by which heterozygosity impacts reproductive success in dragons. This will aid in disentangling whether the patterns observed here are due to an interaction between pre- and post-mating dynamics [37], or whether the interaction occurs within pre-mating selection. It should be noted that, even though this study included a large long-term dataset, any interactions need to be interpreted with caution, given that modelling these intrinsically reduces sample size. Also, our model explained one-quarter of the total variance in the number of surviving offspring per male; although substantial, this indicates that other factors contribute to male reproductive success, which requires future investigation. Further, because we used data on offspring that survived to sexual maturity, rather than the number of hatchlings produced, our data, while offering a robust measure of male fitness, may include processes impacting post-hatchling viability, which may add some noise (although observations of our population indicate high survival rates once subadulthood is reached).\n\nIt is important to note that, in this study, we detected a general pattern across various years of data. We measured the average frequency at which individual males displayed stereotypical agonistic behaviours, used by agamid lizards to assert dominance [38,43–46] across five field seasons, and studied how this, combined with body size, impacted reproductive success during this time. While this allowed us to identify a relationship with reproductive success, and an interaction with the degree of inbreeding, future research will need to look into finer-scale behaviours to build our knowledge into the role of dominance and ATMs on reproductive success in this species. First, while dominance is asserted through stereotypical displays, the frequency of displays does not determine dominance status. In order to do so, not only the behaviours of the focal individual need to be recorded, but also the responses of conspecifics (e.g. retreat or attack), and the subsequent dominant–subordinate relationships [102]. Furthermore, dominance status and display of dominance behaviours may vary through time, for instance when individuals mature and become dominant, or when they become sick or are defeated in contest by others. Future research could examine how dominance status impacts both mating rates and siring success of males during a given mating season, and how and why this may (co-)vary in time.\n\nOverall, we provide evidence of fitness benefits of male dominance in a reptile and how these may be regulated by a genetic trait, individual inbreeding. These findings suggest a fitness trade-off of male dominance, which supports the maintenance of phenotypic variation in this trait and may contribute to explaining the presence of AMTs in this species. Our results emphasize the importance of not considering individual traits in isolation in the study of reproductive success in polyandrous species [37]. Only through an inclusive framework will we be able to elucidate sexual selection processes and phenotypic evolution."
+    },
+    {
+      "heading": "Ethics",
+      "level": 2,
+      "kind": "body",
+      "text": "Data collection was approved by the Animal Ethics Committee of the University of the Sunshine Coast (permit number AN/A/14/87), as well as the Queensland Government (Scientific Purposes Permit under Nature Conservation Regulation 2006, permit number WISP17696616)."
+    },
+    {
+      "heading": "Data accessibility",
+      "level": 2,
+      "kind": "body",
+      "text": "The primary data and R code used for this study are available on the Dryad Digital Repository: https://dx.doi.org/10.5061/dryad.4r34d2k [103]."
+    },
+    {
+      "heading": "Authors' contributions",
+      "level": 2,
+      "kind": "body",
+      "text": "C.P.-R. and C.F. designed the research. C.P.-R. collected the data. C.P.-R. and D.S. analysed the data. C.P.-R. wrote the manuscript. C.F. and D.S. supervised the research and revised the manuscript. C.F. funded the project."
+    },
+    {
+      "heading": "Competing interests",
+      "level": 2,
+      "kind": "body",
+      "text": "We declare we have no competing interests."
+    },
+    {
+      "heading": "Funding",
+      "level": 2,
+      "kind": "body",
+      "text": "This study was supported by USC Research Fellowship C.F."
+    },
+    {
+      "heading": "Acknowledgements",
+      "level": 2,
+      "kind": "body",
+      "text": "We thank all volunteers and students involved in the RSP dragon study as well as staff at Roma Street Parkland. We also thank Daniel Nugent for valuable discussions and revisions of the manuscript."
+    }
+  ],
+  "references": [
+    {
+      "raw": "10.1515/9780691207278",
+      "doi": "10.1515/9780691207278",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/hdy.1948.21",
+      "doi": "10.1038/hdy.1948.21",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/sciadv.1500983",
+      "doi": "10.1126/sciadv.1500983",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0169-5347(89)90212-7",
+      "doi": "10.1016/0169-5347(89)90212-7",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nrg774",
+      "doi": "10.1038/nrg774",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature01367",
+      "doi": "10.1038/nature01367",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1098/rstb.2005.1785",
+      "doi": "10.1098/rstb.2005.1785",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.tree.2006.03.015",
+      "doi": "10.1016/j.tree.2006.03.015",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0169-5347(02)02533-8",
+      "doi": "10.1016/s0169-5347(02)02533-8",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1098/rspb.1990.0114",
+      "doi": "10.1098/rspb.1990.0114",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.tree.2004.10.011",
+      "doi": "10.1016/j.tree.2004.10.011",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1086/284170",
+      "doi": "10.1086/284170",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1515/9780691207209",
+      "doi": "10.1515/9780691207209",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/332640a0",
+      "doi": "10.1038/332640a0",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1439-0310.2005.01147.x",
+      "doi": "10.1111/j.1439-0310.2005.01147.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0162-3095(95)00050-U",
+      "doi": "10.1016/0162-3095(95)00050-u",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1006/anbe.1996.0417",
+      "doi": "10.1006/anbe.1996.0417",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.tree.2004.03.035",
+      "doi": "10.1016/j.tree.2004.03.035",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1365-294X.2004.02395.x",
+      "doi": "10.1111/j.1365-294x.2004.02395.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.tree.2004.07.018",
+      "doi": "10.1016/j.tree.2004.07.018",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/sj.hdy.6800409",
+      "doi": "10.1038/sj.hdy.6800409",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0169-5347(02)02489-8",
+      "doi": "10.1016/s0169-5347(02)02489-8",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.0014-3820.2004.tb00492.x",
+      "doi": "10.1111/j.0014-3820.2004.tb00492.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/bij.12513",
+      "doi": "10.1111/bij.12513",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1098/rspb.2014.1873",
+      "doi": "10.1098/rspb.2014.1873",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/ecs2.2407",
+      "doi": "10.1002/ecs2.2407",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/jzs.12084",
+      "doi": "10.1111/jzs.12084",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1098/rspb.2004.2805",
+      "doi": "10.1098/rspb.2004.2805",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/evo.13339",
+      "doi": "10.1111/evo.13339",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1371/journal.pone.0218538",
+      "doi": "10.1371/journal.pone.0218538",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s00265-004-0860-z",
+      "doi": "10.1007/s00265-004-0860-z",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1420-9101.2009.01738.x",
+      "doi": "10.1111/j.1420-9101.2009.01738.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1098/rspb.2016.0001",
+      "doi": "10.1098/rspb.2016.0001",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/jeb.12960",
+      "doi": "10.1111/jeb.12960",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1371/journal.pone.0041819",
+      "doi": "10.1371/journal.pone.0041819",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/ece3.1447",
+      "doi": "10.1002/ece3.1447",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1071/WR9930613",
+      "doi": "10.1071/wr9930613",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1655/HERPETOLOGICA-D-12-00079R1",
+      "doi": "10.1655/herpetologica-d-12-00079r1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1469-7998.2007.00328.x",
+      "doi": "10.1111/j.1469-7998.2007.00328.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.2307/1442277",
+      "doi": "10.2307/1442277",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1002/zoo.1430110304",
+      "doi": "10.1002/zoo.1430110304",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.anbehav.2003.02.003",
+      "doi": "10.1016/j.anbehav.2003.02.003",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s10164-005-0151-9",
+      "doi": "10.1007/s10164-005-0151-9",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s10682-006-0003-2",
+      "doi": "10.1007/s10682-006-0003-2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1093/jue/juz005",
+      "doi": "10.1093/jue/juz005",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1098/rsos.170641",
+      "doi": "10.1098/rsos.170641",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1093/beheco/arx148",
+      "doi": "10.1093/beheco/arx148",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.anbehav.2014.08.009",
+      "doi": "10.1016/j.anbehav.2014.08.009",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1371/journal.pone.0096992",
+      "doi": "10.1371/journal.pone.0096992",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1365-2664.2006.01273.x",
+      "doi": "10.1111/j.1365-2664.2006.01273.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/mec.14042",
+      "doi": "10.1111/mec.14042",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/978-1-61779-870-2_5",
+      "doi": "10.1007/978-1-61779-870-2_5",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "10.1098/rsos.161061",
+      "doi": "10.1098/rsos.161061",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/1755-0998.12665",
+      "doi": "10.1111/1755-0998.12665",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Foroughirad V. 2018 DArT_Prep v1.0.0. GitHub Repository. (doi:10.5281/zenodo.1308201)",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.18637/jss.v064.i03",
+      "doi": "10.18637/jss.v064.i03",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1086/519795",
+      "doi": "10.1086/519795",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Maximum-likelihood estimation of relatedness",
+      "doi": "10.1093/genetics/163.3.1153",
+      "title": "Maximum-likelihood estimation of relatedness",
+      "year": "2003"
+    },
+    {
+      "raw": "10.1111/j.1755-0998.2010.02885.x",
+      "doi": "10.1111/j.1755-0998.2010.02885.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "How well do molecular and pedigree relatedness correspond, in populations with variable mating systems, and types and quantities of molecular and demographic data?",
+      "doi": null,
+      "title": "How well do molecular and pedigree relatedness correspond, in populations with variable mating systems, and types and quantities of molecular and demographic data?",
+      "year": "2015"
+    },
+    {
+      "raw": "10.1111/j.1365-294X.2010.04554.x",
+      "doi": "10.1111/j.1365-294x.2010.04554.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1420-9101.2012.02540.x",
+      "doi": "10.1111/j.1420-9101.2012.02540.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.ajhg.2010.11.011",
+      "doi": "10.1016/j.ajhg.2010.11.011",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1534/genetics.111.130922",
+      "doi": "10.1534/genetics.111.130922",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/hdy.2015.17",
+      "doi": "10.1038/hdy.2015.17",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1073/pnas.1518046113",
+      "doi": "10.1073/pnas.1518046113",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/S0003-3472(85)80006-3",
+      "doi": "10.1016/s0003-3472(85)80006-3",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.2307/1466998",
+      "doi": "10.2307/1466998",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Effects of sex and size on home range, dominance and activity budgets in Ameiva exsul (Lacertilia: Teiidae)",
+      "doi": null,
+      "title": "Effects of sex and size on home range, dominance and activity budgets in Ameiva exsul (Lacertilia: Teiidae)",
+      "year": "1987"
+    },
+    {
+      "raw": "10.1111/j.1439-0310.1998.tb00071.x",
+      "doi": "10.1111/j.1439-0310.1998.tb00071.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1017/S0952836902003308",
+      "doi": "10.1017/s0952836902003308",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/B978-012100543-6/50038-6",
+      "doi": "10.1016/b978-012100543-6/50038-6",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/978-0-387-21706-2",
+      "doi": "10.1007/978-0-387-21706-2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.18637/jss.v027.i08",
+      "doi": "10.18637/jss.v027.i08",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1086/412672",
+      "doi": "10.1086/412672",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Does it pay to be a dominant male in a promiscuous species?",
+      "doi": null,
+      "title": "Does it pay to be a dominant male in a promiscuous species?",
+      "year": "2006"
+    },
+    {
+      "raw": "10.1016/j.anbehav.2007.03.005",
+      "doi": "10.1016/j.anbehav.2007.03.005",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/350033a0",
+      "doi": "10.1038/350033a0",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1086/283163",
+      "doi": "10.1086/283163",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/BF00177794",
+      "doi": "10.1007/bf00177794",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1098/rspb.2000.1137",
+      "doi": "10.1098/rspb.2000.1137",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1098/rsbl.2003.0079",
+      "doi": "10.1098/rsbl.2003.0079",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1007/s002650050336",
+      "doi": "10.1007/s002650050336",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1006/anbe.1993.1083",
+      "doi": "10.1006/anbe.1993.1083",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1046/j.1420-9101.2003.00665.x",
+      "doi": "10.1046/j.1420-9101.2003.00665.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/383585a0",
+      "doi": "10.1038/383585a0",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1111/j.1558-5646.1981.tb04905.x",
+      "doi": "10.1111/j.1558-5646.1981.tb04905.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1046/j.1095-8312.2002.00103.x",
+      "doi": "10.1046/j.1095-8312.2002.00103.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1139/z00-044",
+      "doi": "10.1139/z00-044",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature01969",
+      "doi": "10.1038/nature01969",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1093/beheco/8.1.60",
+      "doi": "10.1093/beheco/8.1.60",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/nature05558",
+      "doi": "10.1038/nature05558",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1046/j.1365-294x.2000.00964.x",
+      "doi": "10.1046/j.1365-294x.2000.00964.x",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1098/rspb.2013.1296",
+      "doi": "10.1098/rspb.2013.1296",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.tree.2017.02.010",
+      "doi": "10.1016/j.tree.2017.02.010",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1163/156853993X00290",
+      "doi": "10.1163/156853993x00290",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Piza-Roca C Schoeman D Frere C. 2020 Data from: Fitness benefits of male dominance behaviours depend on the degree of individual inbreeding in a polyandrous lizard. Dryad Digital Repository. (https://doi.org/10.5061/dryad.4r34d2k)",
+      "doi": null,
+      "title": null,
+      "year": null
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 8031,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "Markdown full text was saved to /tmp/paper-fetch-paywall-expansion-20260915/royalsocietypublishing/10.1098_rspb.2020.0097/fetch/Piza-Roca_et_al_2020_Fitness_benefits_of_male_dominance_behaviours_depend_on_the_degree_of_individual_inbreeding_in_a_polyandrous_lizard.md."
+    ],
+    "source_trail": [
+      "fulltext:royalsocietypublishing_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_royalsocietypublishing",
+      "route:signal_publisher_royalsocietypublishing",
+      "route:signal_doi_royalsocietypublishing",
+      "route:probe_royalsocietypublishing_unknown",
+      "route:provider_selected_royalsocietypublishing",
+      "route:provider_candidate_royalsocietypublishing_metadata_selected_rank_1",
+      "route:provider_candidate_royalsocietypublishing_identity_strong",
+      "fulltext:royalsocietypublishing_attempt",
+      "download:royalsocietypublishing_assets_skipped_profile_none",
+      "fulltext:royalsocietypublishing_article_ok",
+      "route:provider_candidate_royalsocietypublishing_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 434,
+      "body": 7597,
+      "refs": 731
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 30347,
+      "word_count": 4632,
+      "body_block_count": 15,
+      "body_heading_count": 15,
+      "body_to_abstract_ratio": 18.983606557377048,
+      "explicit_body_container": true,
+      "post_abstract_body_run": true,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "royalsocietypublishing",
+    "route": "browser_html",
+    "representation": "html",
+    "transport": "browser",
+    "fallback_used": false
+  }
+}

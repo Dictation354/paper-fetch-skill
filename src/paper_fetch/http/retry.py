@@ -29,6 +29,7 @@ class RetryAttemptContext:
     attempt: int
     cooldown_key: str
     host_semaphore: threading.BoundedSemaphore | None
+    body_access_provider: str | None = None
 
 
 class RetryMixin:
@@ -111,6 +112,21 @@ class RetryMixin:
         transient_attempts_made: int,
         attempt_context: RetryAttemptContext,
     ) -> tuple[Retry, Retry, int]:
+        # Only article retrieval routes participate in the access boundary.
+        # Asset/metadata failures and unscoped requests retain their retry policy.
+        provider = attempt_context.body_access_provider
+        if provider is not None:
+            from ..quality.access_boundary import (
+                raise_for_api_entitlement,
+                raise_for_paywall,
+            )
+
+            raise_for_api_entitlement(
+                body, source_url=request_url, provider=provider, headers=headers_map
+            )
+            raise_for_paywall(
+                body, source_url=error_url or request_url, provider=provider
+            )
         retry_after_seconds = parse_retry_after_seconds(headers_map.get("retry-after"))
         rate_limit_wait_seconds: float | None = retry_after_seconds
         if rate_limit_wait_seconds is None:

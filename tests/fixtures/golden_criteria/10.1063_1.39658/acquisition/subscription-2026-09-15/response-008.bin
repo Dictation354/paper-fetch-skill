@@ -1,0 +1,1004 @@
+
+
+
+
+<!DOCTYPE html>
+
+<html lang="en" class="no-js">
+
+<head>
+    <!-- charset must appear in the first 1024 bytes of the document -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Not Found | AIP Publishing</title>
+        
+
+
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent','default',{
+    'ad_storage':'denied','analytics_storage':'denied','ad_user_data':'denied',
+    'ad_personalization':'denied','personalization_storage':'denied',
+    'functionality_storage':'granted','security_storage':'granted','wait_for_update':500
+  });
+  gtag("set","ads_data_redaction",true);
+  gtag("set","url_passthrough",true);
+</script>
+
+
+
+        
+
+
+
+<script src="https://cmp.osano.com/Azytm7SGW0qsW1JZP/6074ddb6-2ea9-4eb5-b687-e5401632a614/osano.js"></script>
+        
+
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" type="text/javascript"></script>
+<script>window.jQuery || document.write('<script src="//aipp.silverchair-cdn.com/Themes/Silver/app/js/jquery.3.4.1.min.js" type="text/javascript">\x3C/script>')</script>
+<script src="//aipp.silverchair-cdn.com/Themes/Silver/app/vendor/v-639223378661642865/jquery-migrate-3.1.0.min.js" type="text/javascript"></script>    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=10" />
+
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <!-- Turn off telephone number detection. -->
+    <meta name="format-detection" content="telephone=no" />
+    
+<!-- Bookmark Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372179681126/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372182203266/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372180791781/favicon-16x16.png" sizes="16x16">
+  <link rel="mask-icon" href="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372183803339/safari-pinned-tab.svg" color="#5bbad5">
+  <link rel="icon" href="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372182653287/favicon.ico" sizes="32x32">
+  <link rel="manifest" href="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372184653363/site.webmanifest">
+  <meta name="msapplication-config" content="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372180181163/browserconfig.xml">
+  <meta name="theme-color" content="#002f65">
+
+
+    
+
+
+  <link rel="stylesheet" type="text/css" href="//aipp.silverchair-cdn.com/Themes/Client/app/css/v-639237259356007955/site.min.css" />
+  <link rel="stylesheet" type="text/css" href="//aipp.silverchair-cdn.com/Themes/Silver/app/icons/v-639223378264571583/style.css" />
+  <link rel="stylesheet" type="text/css" href="//aipp.silverchair-cdn.com/Themes/Client/app/css/v-639223372169797251/bg_img.css" />
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+
+        <link href="//aipp.silverchair-cdn.com/data/SiteBuilderAssets/Live/CSS/umbrella/v-638881201675924950/site.css" rel="stylesheet" type="text/css" />
+            <link href="//aipp.silverchair-cdn.com/data/SiteBuilderAssets/Live/CSS/umbrella/v-638318663995195955/site_v2.css" rel="stylesheet" type="text/css" />
+
+            <script>
+                (function (w, d, s, l, i) {
+                    w[l] = w[l] || []; w[l].push({
+                        'gtm.start':
+                            new Date().getTime(), event: 'gtm.js'
+                    }); var f = d.getElementsByTagName(s)[0],
+                        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+                        j.setAttribute('type', 'text/javascript');
+                        j.async = true; j.src =
+                        'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+                })(window, document, 'script', 'dataLayer', 'GTM-K9XV4SZ');
+            </script>
+
+    
+
+        <script type="text/javascript">
+            var App = App || {};
+            App.LoginUserInfo = {
+                isInstLoggedIn: 0,
+                isIndividualLoggedIn: 0
+            };
+
+            App.CurrentSubdomain = '';
+            App.SiteURL = 'pubs.aip.org';
+            App.EnableAdobeAnalytics = false;
+        </script>
+    
+    
+    
+
+
+    
+
+
+
+    <script type="text/javascript" async="async" src="https://securepubads.g.doubleclick.net/tag/js/gpt.js" ></script>
+
+    <script>
+        var SCM = SCM || {};
+        SCM.pubGradeAdsEnabled = false;
+    </script>
+
+
+<script>
+    var googletag = googletag || {};
+    googletag.cmd = googletag.cmd || [];
+
+    googletag.cmd.push(function () {
+    googletag.setConfig({ disableInitialLoad: true });
+
+    
+
+        
+        var keys = ["hum_aipp_ad_personalization"];
+        keys.forEach(x =>
+        {
+            var item = localStorage[x];
+            if (item)
+            {
+                var allTargets = JSON.parse(item);
+                Object.keys(allTargets).forEach(k => {
+                    googletag.pubads().setTargeting(k, allTargets[k]);
+                })
+            }
+        })
+        
+    });
+</script>
+    
+
+<script type="text/javascript" src="https://static.adzerk.net/ados.js"></script>            <script src="https://widgets.figshare.com/static/figshare.js" ></script>
+
+    
+
+
+
+
+</head>
+
+<body data-sitename="aippublishing" class="off-canvas pg_Error404 pg_error404   " theme-umbrella data-sitestyletemplate="Journal" >
+            <noscript>
+                <iframe  src="https://www.googletagmanager.com/ns.html?id=GTM-K9XV4SZ"
+                        height="0" width="0" style="display:none;visibility:hidden"></iframe>
+            </noscript>
+            <nav aria-label="Skip navigation">
+                <a href="#skipNav" class="skipnav">Skip to Main Content</a>
+            </nav>
+<input id="hdnSiteID" name="hdnSiteID" type="hidden" value="1" /><input id="hdnAdDelaySeconds" name="hdnAdDelaySeconds" type="hidden" value="3000" /><input id="hdnAdConfigurationTop" name="hdnAdConfigurationTop" type="hidden" value="basic" /><input id="hdnAdConfigurationRightRail" name="hdnAdConfigurationRightRail" type="hidden" value="basic" />
+    <div class="ad-banner js-ad-revealer ad-banner-revealer" role="region" aria-label="Advertisement" aria-hidden="true">
+    <div class="widget-AdBlock widget-instance-HeaderRevealerAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="HeaderRevealerAd">
+        
+ 
+    </div>
+
+    </div>
+    
+
+
+
+
+<section class="master-header row vt-site-header" role="banner">
+
+    <div class="ad-banner js-ad-banner">
+    <div class="widget-AdBlock widget-instance-HeaderAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="HeaderAd">
+            <input type="hidden"
+           class="hfAdBlockInfo"
+           data-divid="placement_582597_"
+           data-slotname="/21618997260/AIPP/aipp_homepage"
+           data-targetname=""
+           data-sizes="[[970, 90]]"
+           data-enabled-on-mobile="True"
+           data-adprovider-typeid="1"
+           data-accountid=""
+           data-outofpagead="False"
+           data-sticky-time="5"
+           data-lazyloaded="False"
+           data-position-keyword="POS-leaderboard"
+           data-position-targeting-key="position"
+           data-skip-size-mapping="True"
+           data-native-placement-id=""
+           data-wps-adsize-number="0"
+           data-wps-network-id="0"
+           data-wps-site-id="0"
+           data-wps-zone-ids=""
+           data-wps-brandlock-keyword=""
+           data-tapnative-aid=""
+           data-tapnative-div-id=""
+           data-suppress-display="false"
+           data-fallback-divid=""/>
+    <div class="adblock-wrap js-adblock-wrap vertical-text">
+
+<div id="placement_582597_" adslot="/21618997260/AIPP/aipp_homepage" class="adblock-slot-placeholder js-adblock" style="width:970px; height:90px;"></div>
+
+
+    </div>
+
+ 
+    </div>
+
+    </div>
+
+    <div class="widget-SitePageHeader widget-instance-SitePageHeader" 
+         data-widget-name="SitePageHeader" 
+         data-widget-instance="SitePageHeader">
+            <div class="site-theme-header">
+        <div class="site-theme-header_contents global-nav-base">
+
+
+
+<div class="global-nav">
+<a href="/" class="global-nav_link-wrap">
+            <picture>
+                <source media="(min-width: 601px)" srcset="//aipp.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/AIPP-Master-Logo-White-RGB.svg">
+                <img class="logo-AIPPublishing site-theme-header-image" src="//aipp.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/AIPP-Master-Logo-White-RGB.svg" alt="AIP Publishing Logo" />
+            </picture>
+        </a>
+        
+</div>
+
+
+
+    <input type="hidden" class="hfEnableEnhancedAutoSuggest" value="true" name="searchScope" aria-hidden="true" />
+        <div class="mobile-menu-trigger_wrap mobile-search_wrap">
+            <button type="button"
+                    class="mobile-search_toggle at-search-toggle"
+                    aria-expanded="false"
+                    data-theme-dropdown-trigger="search-dropdown"><i class="icon-menu_search" aria-hidden="true"></i><span class="screenreader-text">Search Dropdown Menu</span></button>
+        </div>
+    <div class="navbar-search-container mobile-dropdown search-dropdown" data-theme-dropdown="search-dropdown">
+        <div class="navbar-search citation-search">
+            <form class="microsite-search js-MicrositeSearch" aria-label="header search" role="search">
+                <fieldset class="searchbar-fieldset">
+                    <legend><span class="screenreader-text">header search</span></legend>
+                    <div class="navbar-search-input_wrap">
+                        
+                        <input class="navbar-search-input microsite-search-term at-microsite-search-term search-term-autosuggest"
+                               data-autosuggest-hint="micrositeSearchTermInputHint-SitePageHeader"
+                               data-autosuggest-results="micrositeAutoCompleteResults-SitePageHeader"
+                               data-autosuggest-id="MicrositeSearchTerm-SitePageHeader"
+                               data-searchfilter="search-filter-SitePageHeader"
+                               placeholder="Search..."
+                               aria-label="Search..."
+                               type="text" maxlength="255"
+                                 autocomplete="off"                                 id="MicrositeSearchTerm-SitePageHeader">
+                        
+                        <input type="hidden" name="hfAutoCompleteMaxResults" class="hfAutoCompleteMaxResults" value="6" aria-hidden="true" />
+                        <input type="hidden" name="hfSolrAutoSuggestMinimumCharactersLength" class="hfSolrAutoSuggestMinimumCharactersLength" value="2" aria-hidden="true" />
+                        <input type="hidden" name="hfSolrJournalName" class="hfSolrJournalName" value="" aria-hidden="true" />
+                        <input type="hidden" name="hfSolrJournalID" class="hfSolrJournalID" value="" aria-hidden="true" />
+                        <label for="micrositeSearchTermInputHint-SitePageHeader" aria-hidden="true">
+                            <span class="screenreader-text">Search input auto suggest</span>
+                        </label>
+                        <input type="text"
+                               id="micrositeSearchTermInputHint-SitePageHeader"
+                               data-autosuggest-id="micrositeSearchTermInputHint-SitePageHeader"
+                               class="microsite-search-term-input-hint"
+                               autocomplete="off"
+                               tabindex="-1"
+                               aria-hidden="true"
+                               disabled />
+                        <ul data-autosuggest-id="micrositeAutoCompleteResults-SitePageHeader" class="term-list hidden"></ul>
+                    </div>
+                        <div class="navbar-search-filter_wrap">
+                            <label for="navbar-search-filter-site-SitePageHeader">
+                                <span class="screenreader-text">filter your search</span>
+                            </label>
+                            <select class="navbar-search-filter navbar-search-filter-site at-navbar-search-filter" id="navbar-search-filter-site-SitePageHeader" data-autosuggest-id="search-filter-SitePageHeader">
+<option class="header-search-bar-filters-item selected" value="/search-results?page=1&q={searchQuery}" data-siteid="0" selected>All Content</option>                            </select>
+                        </div>
+                    <div class="navbar-search-submit_wrap">
+                        
+                        <button type="button" class="microsite-search-icon navbar-search-submit icon-menu_search"><span class="screenreader-text">Search</span></button>
+                    </div>
+                </fieldset>
+            </form><!-- /#MicrositeSearch -->
+        </div><!-- /.navbar-search -->
+    <div class="navbar-search-advanced-citation">
+        <a href="/advanced-search" class="advanced-search">Advanced Search</a>
+            <span>|</span><a href="/citation-search" class="citation-search">Citation Search</a>
+    </div>
+    </div><!-- /.navbar-search-container -->
+
+<input type="hidden" name="parentSiteName" class="hfParentSiteName" value="Umbrella" aria-hidden="true" />
+<input type="hidden" class="hfSolrMaxAllowSearchChar" value="100" aria-hidden="true" />
+<input type="hidden" class="hfJournalShortName" value="" aria-hidden="true" />
+<input type="hidden" class="hfSearchPlaceholder" value="" aria-hidden="true" />
+<input type="hidden" name="hfGlobalSearchSiteURL" class="hfGlobalSearchSiteURL" value="" aria-hidden="true" />
+<input type="hidden" name="hfSearchSiteURL" id="hfSiteURL" value="pubs.aip.org" aria-hidden="true" />
+<input type="hidden" class="hfQuickSearchUrl" value="/search-results?page=1&amp;q={searchQuery}" aria-hidden="true" />
+<script type="text/javascript">
+    (function () {
+        var hfSiteUrl = document.getElementById('hfSiteURL');
+        var siteUrl = hfSiteUrl.value;
+        var subdomainIndex = siteUrl.indexOf('/');
+
+        hfSiteUrl.value = location.host + (subdomainIndex >= 0 ? siteUrl.substring(subdomainIndex) : '');
+    })();
+</script>
+
+                <div class="tablet-menu-trigger_wrap">
+        <!-- MOBILE SHOPPING CART ICON -->
+
+<div class="site-theme-header-menu-item view-cart-wrap">
+    <a href="https://pubs.aip.org/store/cart" class="view-cart" rel="nofollow" aria-label="Cart">
+        <span class="text-cart"></span>
+            <span class="screen-reader-only">Cart</span>
+        <i class="access-icon icon-availability_cart" aria-hidden="true"></i>
+            <span class="items-in-cart" aria-live="polite"></span>
+    </a>
+</div>        <button type="button"
+           class="btn-reset tablet-sign-in"
+           data-theme-dropdown-trigger="tablet-user-dropdown"
+           aria-controls="tablet-user-dropdown"
+           aria-expanded="false"><i class="icon-menu_account"><span class="screenreader-text">User Tools Dropdown</span></i></button>
+    </div>
+<div class="site-theme-header-menu-item_wrap tablet-menu" id="tablet-user-dropdown" data-theme-dropdown="tablet-user-dropdown">
+    <!-- DESKTOP SHOPPING CART ICON -->
+
+<div class="site-theme-header-menu-item view-cart-wrap">
+    <a href="https://pubs.aip.org/store/cart" class="view-cart" rel="nofollow" aria-label="Cart">
+        <span class="text-cart"></span>
+            <span class="screen-reader-only">Cart</span>
+        <i class="access-icon icon-availability_cart" aria-hidden="true"></i>
+            <span class="items-in-cart" aria-live="polite"></span>
+    </a>
+</div>
+    <!-- DESKTOP REGISTRATION -->
+
+    <!-- ACCESS THROUGH INSTITUTION -->
+
+    <!-- DESKTOP INSTITUTIONS -->
+
+        <!-- DESKTOP SIGN IN -->
+        <div class="site-theme-header-menu-item not-authenicated">
+                <button type="button"
+                    class="btn-reset dropdown-toggle signin at-signin-dropdown at-signin-username"
+                    id="header-account-info-user-fullname"
+                    data-login-location="/SignIn/LoginForm/LoginFormPopup?returnUrl="
+                    data-theme-dropdown-trigger="sign-in-dropdown"
+                    aria-controls="sign-in-dropdown"
+                    aria-expanded="false"
+                    rel=nofollow>
+                    
+Sign In                    <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+                </button>
+                <div class="dropdown-panel dropdown-panel-signin dropdown-panel-form at-signin-dropdown-panel" id="sign-in-dropdown" data-theme-dropdown="sign-in-dropdown">
+                    <div class="spinner"></div>
+                </div><!-- /.dropdown-panel -->
+        </div>
+
+</div>
+        </div><!-- /.site-theme-header_content -->
+    </div><!-- /.site-theme-header- -->
+
+
+    <div class="journal-header journal-bg">
+        <div class="journal-header-aipp journal-header_content ">
+
+
+
+
+            
+
+
+<div class="navbar-menu_wrap">
+            <a class="mobile-site-menu-toggle" data-theme-dropdown-trigger="microsite-nav-menu" aria-controls="microsite-nav-menu" aria-expanded="false" href="javascript:;"><i class="icon-menu_hamburger"><span class="screenreader-text">Toggle Menu</span></i><span class="tablet-menu-label">Menu</span></a>
+            <nav class="navbar-menu" id="microsite-nav-menu" data-theme-dropdown="microsite-nav-menu" aria-label="Primary navigation">
+                    <ul class="site-menu site-menu-lvl-0 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-35608">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">Publishers<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35610">
+        <a href="/aip" class="nav-link" >AIP Publishing</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35611">
+        <a href="https://physicstoday.aip.org/" class="nav-link" target=&quot;_blank&quot;>Physics Today<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35612">
+        <a href="/asa" class="nav-link" >Acoustical Society of America</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35613">
+        <a href="/aapt" class="nav-link" >American Association of Physics Teachers</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35614">
+        <a href="/aca" class="nav-link" >ACA: The Structural Science Society</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35615">
+        <a href="/avs" class="nav-link" >AVS: Science and Technology of Materials, Interfaces and Processing</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35616">
+        <a href="/cps" class="nav-link" >Chinese Physical Society</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35617">
+        <a href="/hgmri" class="nav-link" >Hefei General Machinery Research Institute</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35618">
+        <a href="/lia" class="nav-link" >The Laser Institute</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35619">
+        <a href="/nuaa" class="nav-link" >State Key Laboratory of Mechanics and Control for Aerospace Structures</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35620">
+        <a href="/sor" class="nav-link" >The Society of Rheology</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35621">
+        <a href="/tu" class="nav-link" >Tianjin University</a>
+    </li>     </ul>
+ </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-35609">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">Publications<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35622">
+        <a href="/pages/journals" class="nav-link" >Journals</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35623">
+        <a href="https://physicstoday.aip.org/" class="nav-link" target=&quot;_blank&quot;>Physics Today<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35624">
+        <a href="/aip/acp" class="nav-link" >AIP Conference Proceedings</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-35625">
+        <a href="/books" class="nav-link" >Books</a>
+    </li>     </ul>
+ </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-35626">
+        <a href="/collections/" class="nav-link" >Special Topics</a>
+    </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-35627">
+        <a href="https://publishing.aip.org/resources/researchers/" class="nav-link" target=&quot;_blank&quot;>Authors<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-35628">
+        <a href="https://publishing.aip.org/resources/librarians/" class="nav-link" target=&quot;_blank&quot;>Librarians<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-35629">
+        <a href="/pages/about" class="nav-link" >About</a>
+    </li>     </ul>
+ 
+            </nav>
+</div><!-- /.navbar -->
+           
+        </div><!-- /.center-inner-row -->
+
+    </div><!-- /.journal-header -->
+
+
+<input id="routename" name="RouteName" type="hidden" value="" />
+
+ 
+    </div>
+
+</section>
+
+<div id="main" class="content-main js-main ui-base" role="main">
+    <section class="master-main row">
+        <div class="content-main_content">
+            <span id="skipNav" tabindex="-1"></span>
+            
+
+
+<div class="custom-error-wrap">
+    <input id="hdnAllowSigninRedirectToSamePageOnError" name="hdnAllowSigninRedirectToSamePageOnError" type="hidden" value="False" />
+    <h3 class="error-title">
+        The page you’re looking for cannot be found.
+    </h3>
+    <div class="error-message" id="divErrorMessage">
+        Please check the address, or try visiting the home page.
+    </div>
+            <div class="return-button ">
+            <a class="button return-home" href="/" target="">Return Home</a>
+        </div>
+    </div>
+        </div><!-- /.content-main_content -->
+    </section>
+</div>
+<div class="mobile-mask">
+</div>
+<section class="footer_wrap vt-site-footer" role="contentinfo">
+    
+
+
+<div class="ad-banner js-ad-banner ad-banner-footer">
+    <div class="widget-AdBlock widget-instance-FooterAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="FooterAd">
+        
+ 
+    </div>
+
+</div>
+
+<div class="sticky-footer-ad js-sticky-footer-ad">
+    <div class="widget-AdBlock widget-instance-StickyAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="StickyAd">
+        
+ 
+    </div>
+
+</div>
+
+
+    <div class="widget-SitePageFooter widget-instance-SitePageFooter" 
+         data-widget-name="SitePageFooter" 
+         data-widget-instance="SitePageFooter">
+         
+    </div>
+
+
+
+<div class="site-theme-footer">
+        <div class="site-theme-footer_content">
+    <div class="widget-SelfServeContent widget-instance-UmbrellaFooterSelfServe" 
+         data-widget-name="SelfServeContent" 
+         data-widget-instance="UmbrellaFooterSelfServe">
+        
+
+
+
+    <input type="hidden" class="SelfServeContentId" value="GlobalFooter_Links" />
+    <input type="hidden" class="SelfServeVersionId" value="0" />
+
+<div class="theme-footer">
+<div class="flex-row">
+<div class="col-8 footer-nav">
+<div class="flex-row">
+<div class="col-2" style="padding-bottom:0px;">
+<div class="footer-links-group with-header">
+<h3 class="footer-links-header">Resources</h3>
+<ul class="list-lvl-0">
+    <li class="list-lvl-0">
+    <a href="https://publishing.aip.org/resources/researchers/">For Researchers</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://publishing.aip.org/resources/librarians/">For Librarians</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://publishing.aip.org/resources/commercial-partners/advertising-solutions/">For Advertisers</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://publishing.aip.org/resources/publishing-partners/">Our Publishing Partners</a>&nbsp;</li>
+</ul>
+</div>
+</div>
+<!-- close .col-2-->
+<div class="col-2" style="padding-bottom:0px;">
+<div class="footer-links-group with-header">
+<h3 class="footer-links-header">Explore</h3>
+<ul class="list-lvl-0">
+    <li class="list-lvl-0">
+    <a href="/pages/journals">Journals</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://physicstoday.aip.org/">Physics Today    </a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="/aip/acp">AIP Conference Proceedings</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="/books">Books</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="/collections/">Special Topics</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="/pages/journals">Publishers</a>
+    </li>
+</ul>
+</div>
+</div>
+<!-- close .col-2-->
+<div class="col-2" style="padding-bottom:0px;">
+<div class="footer-links-group with-header">
+<h3 class="footer-links-header">pubs.aip.org</h3>
+<ul class="list-lvl-0">
+    <li class="list-lvl-0">
+    <a href="/pages/about">About</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://publishing.aip.org/wp-content/uploads/ContentPlatform_UserGuide_FINAL.pdf" target="_blank" rel="noopener">User Guide</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="/contact-us">Contact Us</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="/my-account/register">Register</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="/pages/help">Help</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://publishing.aip.org/privacy/">Privacy Policy</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://publishing.aip.org/terms-of-use/">Terms of Use</a>
+    </li>
+</ul>
+</div>
+</div>
+<!-- close .col-2-->
+<div class="col-2" style="padding-bottom:0px;">
+<div class="footer-links-group with-header">
+<h3 class="footer-links-header">Connect with AIP Publishing</h3>
+<ul class="list-lvl-0">
+    <li class="list-lvl-0">
+    <a href="https://www.facebook.com/AIPPublishing/">Facebook</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://www.linkedin.com/company/aip-publishing/">LinkedIn</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://bsky.app/profile/aip-publishing.bsky.social">Bluesky</a>
+    </li>
+    <li class="list-lvl-0">
+    <a href="https://www.youtube.com/user/AIPPublishing">YouTube</a>
+    </li>
+</ul>
+</div>
+</div>
+<!-- close .col-2-->
+<!-- close .col-2-->
+<!-- close .footer-nav .flex-row -->
+</div>
+<!--Verasafe blocks -->
+<div style="display:flex;justify-content:flex-end;">
+<div id="verasafe-block" style="align-items: flex-end;">
+<div id="verasafe-badge-26655432209" data-uid="26655432209">&nbsp;</div>
+<script src="https://content.verasafe.com/trust-seal/badge/badge.js"></script>
+<link rel="stylesheet" href="https://content.verasafe.com/trust-seal/badge/badge.css" />
+</div>
+<div id="verasafe-block">
+<div id="verasafe-badge-26674014304" data-uid="26674014304">&nbsp;</div>
+<script src="https://content.verasafe.com/trust-seal/badge/badge.js"></script>
+<link rel="stylesheet" href="https://content.verasafe.com/trust-seal/badge/badge.css" />
+</div>
+</div>
+<!-- Verasafe blocks end -->
+</div>
+<!-- close .flex-row -->
+</div>
+<!-- close .footer-nav -->
+</div>
+<div class="legal-links-row">
+<div class="legal-links-wrap">
+<ul class="legal-links">
+    <li class="copyright">© Copyright
+    <script>document.write( new Date().getFullYear() );</script>
+    AIP Publishing LLC</li>
+</ul>
+</div>
+</div>
+<script>
+  // Do not show button on my-account pages
+  const excludedPath = "https://pubs.aip.org/my-account";
+
+  // Only run if current URL does NOT start with excluded path
+  if (!window.location.href.startsWith(excludedPath)) {
+
+    // Create the button dynamically
+    const backToTopBtn = document.createElement("button");
+    backToTopBtn.id = "backToTopBtn";
+    backToTopBtn.title = "Back to top";
+    backToTopBtn.setAttribute("aria-label", "Back to top");
+    backToTopBtn.innerHTML = "↑ Top";
+
+    document.body.appendChild(backToTopBtn);
+
+    // Show the button only after the user has scrolled
+    // either 600px or 40% of the viewport height, whichever is greater
+    const showAfter = () => Math.max(600, window.innerHeight * 0.4);
+
+    window.addEventListener("scroll", () => {
+      const scrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+
+      if (scrollTop > showAfter()) {
+        backToTopBtn.classList.add("is-visible");
+      } else {
+        backToTopBtn.classList.remove("is-visible");
+      }
+    });
+
+    backToTopBtn.addEventListener("click", () => {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    });
+  }
+</script>
+<style>
+    #backToTopBtn {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 999;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 18px;
+    min-height: 48px;
+    background: #0F0052;
+    color: #FFFF;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease,
+    transform 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+    }
+    #backToTopBtn.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    }
+    #backToTopBtn:hover, #backToTopBtn:focus-visible {
+    background: #2915BC;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+    }
+    #backToTopBtn:focus-visible {
+    outline: 3px solid rgba(0, 87, 146, 0.25);
+    outline-offset: 3px;
+    }
+    @media (max-width: 768px) {
+    #backToTopBtn {
+    right: 16px;
+    bottom: 16px;
+    padding: 11px 16px;
+    font-size: 15px;
+    }
+    }
+    @media (prefers-reduced-motion: reduce) {
+    #backToTopBtn {
+    transition: none;
+    }
+    html {
+    scroll-behavior: auto;
+    }
+    }
+</style>
+<!-- close .theme-footer -->
+
+
+
+ 
+    </div>
+
+
+
+        </div><!-- /.center-inner-row -->
+</div><!-- /.site-theme-footer -->
+<div class="ss-ui-only">
+
+    <div class="widget-SelfServeContent widget-instance-SSuiOnlySelfServe" 
+         data-widget-name="SelfServeContent" 
+         data-widget-instance="SSuiOnlySelfServe">
+        
+
+
+
+    <input type="hidden" class="SelfServeContentId" value="SSuiOnly" />
+    <input type="hidden" class="SelfServeVersionId" value="0" />
+
+<style type="text/css">
+    .firefox .site-theme-header-image {
+    height: 26px;
+    }
+    .featured-jobs_wrap .featured-jobs-header h3 {
+    font-weight: 700;
+    font-size: 24px;
+    border-bottom: none !important;
+    }
+    em {
+    font-family: Helvetica,Arial,sans-serif !important;
+    }
+    strong {
+    font-family: Helvetica,Arial,sans-serif !important;
+    }
+    a {
+    font-family: Helvetica,Arial,sans-serif !important;
+    }
+    .cms-post-view .header .header-hero-wrap {
+    display: none;
+    }
+    .metadata-contentlicense {
+    display: none !important;
+    }
+    .article-body p {
+    font-family: Helvetica,Arial,sans-serif !important;
+    }
+    .add-new-alert .new-alert-row .new-alert-title {
+    font-size: 1.5rem;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    }
+    div#js-contextual-alerts-modal h2 {
+    padding-right: 10px;
+    }
+    .js-alert-details.alert-details {
+    padding-bottom: 10px;
+    }
+    .related-content_wrap .article-title {
+    border-top: 1px solid #dbdbdb;
+    padding: 1.25rem 0 !important;
+    }
+    .related-content_wrap .article-title:first-of-type {
+    border-top: none;
+    padding: 0 0 1.25rem 0 !important;
+    }
+    .tex-math.display-math {
+    display: none !important;
+    }
+    .account-feedback.success-message.offset-wrap.clearfix {
+    padding-left: 0 !important;
+    }
+    img.crossmark-reset.crossmark-popup__logo {
+    display: none !important;
+    }
+    .btn-print-purchase-link {
+    padding-top: 1rem !important;
+    }
+    @media (max-width: 599px) {
+    .toolbar-wrap .toolbar-inner-wrap>ul .toolbar-item {
+    margin: 0 !important;
+    }
+    }
+    @media (max-width: 480px) {
+    .toolbar-wrap.toolbar-stuck .toolbar-inner-wrap {
+    max-width: 91%;
+    padding: 0;
+    margin: 0 .5rem;
+    }
+    .toolbar-wrap.toolbar-stuck .toolbar-inner-wrap>ul#Toolbar {
+    max-width: 360px;
+    margin: 0 auto;
+    }
+    }
+</style>
+
+
+
+ 
+    </div>
+
+</div>
+
+<div class="ad-banner js-ad-interstitial">
+    <div class="widget-AdBlock widget-instance-Interstitial" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="Interstitial">
+        
+ 
+    </div>
+
+</div>
+</section>
+
+
+
+
+
+    
+
+
+
+    <div class="widget-SiteWideModals widget-instance-SiteWideModals" 
+         data-widget-name="SiteWideModals" 
+         data-widget-instance="SiteWideModals">
+        <div id="revealModal" class="reveal-modal" data-reveal aria-hidden="true" aria-live="assertive" tabindex="-1">
+    <div id="revealContent"></div>
+    
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close dialog</span></a>
+</div>
+
+<div id="globalModalContainer" class="modal-global-container"
+     role="dialog"
+     aria-hidden="true"
+     aria-live="assertive"
+     tabindex="-1">
+    <div id="globalModalContent">
+        <div class="js-globalModalPlaceholder"></div>
+    </div>
+    
+    <a href="javascript:;" class="close-modal js-close-modal" role="button">
+        <i class="icon-general-close" aria-hidden="true"></i>
+        <span class="screenreader-text">Close dialog</span>
+    </a>
+</div>
+<div id="globalModalOverlay" class="modal-overlay js-modal-overlay"></div>
+
+    <div id="NeedSubscription" class="reveal-modal small" data-reveal>
+            <div class="subscription-needed">
+                <div class="modal-heading">This Feature Is Available To Subscribers Only</div>
+                <p><a class="btn modal-sign_in-btn" href="/sign-in?returnUrl=%2f">Sign In</a> or <a class="modal-register-link" href="/my-account/register?siteId=1&amp;returnUrl=%2f">Create an Account</a></p>
+            </div>
+
+
+        <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close subscription notice</span></a>
+    </div>
+
+
+<div id="noAccessReveal" class="reveal-modal tiny" data-reveal>
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close access options</span></a>
+    <div id="noAccessForm">
+        <div class="spinner"></div>
+    </div>
+</div>
+
+
+<div id="cookieShareModal" class="cookie-share-modal-content" hidden>
+    <h2 id="cookieShareModalTitle" class="js-modal-label">Sharing Unavailable</h2>
+    <p>Sharing content requires targeting cookies to be enabled. Please update your cookie preferences to use this feature.</p>
+    <div class="cookie-share-modal__actions">
+        <button type="button" class="btn btn-primary js-share-cookie-prefs-btn">Update Cookie Preferences</button>
+        <button type="button" class="btn js-close-modal">Cancel</button>
+    </div>
+</div> 
+    </div>
+
+    
+
+
+
+
+
+
+<script type="text/javascript">
+    MathJax = {
+        tex: {
+            inlineMath: [['|$', '$|'], ['\\(', '\\)']]
+        }    };
+</script>
+<script id="MathJax-script" async src="//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+    <!-- CookiePro Default Categories -->
+    <!-- When the Cookie Compliance code loads, if cookies for the associated group have consent...
+         it will dynamically change the tag to: script type=text/JavaScript...
+         the code inside the tags will then be recognized and run as normal. -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script type="text/javascript" src="//aipp.silverchair-cdn.com/Themes/Client/app/jsdist/v-639237259613339134/site.min.js"></script>
+
+
+    
+    
+
+
+    
+
+        <script type="text/javascript">
+        $(document).ready(function () {
+            App.SearchAutoComplete.init(["Tags","AllAuthors"]);
+        });
+        </script>
+    
+    
+
+
+
+
+    <div class="ad-banner js-ad-riser ad-banner-riser" role="region" aria-label="Advertisement">
+    <div class="widget-AdBlock widget-instance-RiserAd" 
+         data-widget-name="AdBlock" 
+         data-widget-instance="RiserAd">
+        
+ 
+    </div>
+
+    </div>
+
+
+
+                    <script src="//aipp.silverchair-cdn.com/aipp/scm.proxylogging.js"></script>
+
+    <div class="end-of-page-js"></div>
+</body>
+</html>
+

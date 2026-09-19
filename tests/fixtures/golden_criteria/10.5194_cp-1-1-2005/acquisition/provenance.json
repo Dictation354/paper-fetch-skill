@@ -1,0 +1,86 @@
+{
+  "records": [
+    {
+      "doi": "10.5194/cp-1-1-2005",
+      "provider": "copernicus",
+      "requested_url": "https://api.crossref.org/works/10.5194%2Fcp-1-1-2005",
+      "final_url": "https://api.crossref.org/works/10.5194%2Fcp-1-1-2005",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:36 GMT",
+        "content-type": "application/json",
+        "content-length": "1553"
+      },
+      "captured_at_utc": "2026-09-18T02:20:35.999733+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 3699,
+      "sha256": "f1dd817f9d376913c6cda06b57884b883077af911922e725e8bca90fc64cb803",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.5194/cp-1-1-2005",
+      "provider": "copernicus",
+      "requested_url": "https://cp.copernicus.org/articles/1/1/2005/",
+      "final_url": "https://cp.copernicus.org/articles/1/1/2005/",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:37 GMT",
+        "content-length": "19931",
+        "content-type": "text/html"
+      },
+      "captured_at_utc": "2026-09-18T02:20:37.475739+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "size": 113848,
+      "sha256": "f487b97d9e291bad4cf9a7e8d14b14b497e05f9a9ec248df1fdbd6b380450aee",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.5194/cp-1-1-2005",
+      "provider": "copernicus",
+      "requested_url": "https://cp.copernicus.org/articles/1/1/2005/cp-1-1-2005.xml",
+      "final_url": "https://cp.copernicus.org/articles/1/1/2005/cp-1-1-2005.xml",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:38 GMT",
+        "last-modified": "Wed, 14 Aug 2024 16:39:07 GMT",
+        "etag": "\"13f1-61fa75d642b6b-gzip\"",
+        "content-length": "1951",
+        "content-type": "application/xml"
+      },
+      "captured_at_utc": "2026-09-18T02:20:37.833259+00:00",
+      "body_file": "original.xml",
+      "size": 5105,
+      "sha256": "5c84ead11d426be30c9905c4684064f89725a66ede637149568795a2db8bc587",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes",
+      "original_body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.xml"
+    },
+    {
+      "doi": "10.5194/cp-1-1-2005",
+      "provider": "copernicus",
+      "requested_url": "https://cp.copernicus.org/articles/1/1/2005/cp-1-1-2005.pdf",
+      "final_url": "https://cp.copernicus.org/articles/1/1/2005/cp-1-1-2005.pdf",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:48:04 GMT",
+        "last-modified": "Fri, 19 Jun 2020 15:15:13 GMT",
+        "etag": "\"f45e9-5a8715c1b36e3\"",
+        "content-length": "1000937",
+        "content-type": "application/pdf"
+      },
+      "captured_at_utc": "2026-09-18T02:48:08.115385+00:00",
+      "capture_kind": "http_response_entity",
+      "body_file": "original.pdf",
+      "size": 1000937,
+      "sha256": "9013c0447b22548e0d32a33eb1b3481538ba3de3180da7c4c37e9ed6c9b68ab7",
+      "transport": "Existing Copernicus PDF fallback via HttpTransport.stream_to_file",
+      "access_conditions": "Public same-article PDF link in captured publisher landing page; no access-policy changes",
+      "original_body_file": "acquisition/source-completion-2026-09-18/003-http_stream_entity.pdf"
+    }
+  ]
+}

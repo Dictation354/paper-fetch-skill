@@ -1,0 +1,36 @@
+{
+  "records": [
+    {
+      "doi": "10.1175/jamc-d-24-0048.1",
+      "provider": "ams",
+      "requested_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1.xml",
+      "status_code": 403,
+      "response_headers": {
+        "server": "CloudFront",
+        "date": "Tue, 15 Sep 2026 03:03:19 GMT",
+        "content-type": "text/html",
+        "content-length": "919",
+        "connection": "keep-alive",
+        "x-cache": "Error from cloudfront",
+        "via": "1.1 00a89680d4bb5bbe828a15cebe001b9a.cloudfront.net (CloudFront)",
+        "x-amz-cf-pop": "LAX54-P7",
+        "x-amz-cf-id": "Cps1kJSkaRfa2wCbek1WgT59aKxSt4xmZknh8OkCkwCRm8zKk5xr9g==",
+        "x-xss-protection": "1; mode=block",
+        "referrer-policy": "no-referrer-when-downgrade",
+        "content-security-policy": "frame-ancestors 'self' https://admin-journals.ametsoc.org",
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "Origin"
+      },
+      "captured_at_utc": "2026-09-15T03:03:18.217449+00:00",
+      "size": 919,
+      "sha256": "d482aee80ec0bf48db6cb31235533f650a065bf3457cf87bec1647333ec017fd",
+      "error": "HTTP 403 for https://journals.ametsoc.org/view/journals/apme/63/12/JAMC-D-24-0048.1.xml",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "attempt": 1,
+      "body_file": "raw.html"
+    }
+  ]
+}

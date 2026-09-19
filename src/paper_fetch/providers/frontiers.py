@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..quality.access_boundary import propagate_paywall
+
 from dataclasses import asdict, dataclass, replace
 import html
 import json
@@ -743,6 +745,7 @@ class FrontiersClient(ProviderClient):
                 fetcher=fetch_pdf_over_http,
             ).fetch([route.pdf_url])
         except PdfFetchFailure as exc:
+            propagate_paywall(exc)
             raise ProviderFailure(NO_RESULT, exc.message) from exc
 
         article_metadata = dict(metadata)
@@ -802,6 +805,7 @@ class FrontiersClient(ProviderClient):
                     self._fetch_xml_payload(route, doi, metadata),
                 )
             except ProviderFailure as exc:
+                propagate_paywall(exc)
                 failures.append(("xml", exc))
 
             xml_failure_message = combine_provider_failures(failures).message
@@ -818,6 +822,7 @@ class FrontiersClient(ProviderClient):
                     ),
                 )
             except ProviderFailure as exc:
+                propagate_paywall(exc)
                 failures.append(("pdf", exc))
 
         discovered_routes = self.route_candidates(
@@ -839,6 +844,7 @@ class FrontiersClient(ProviderClient):
                     self._fetch_xml_payload(route, doi, metadata),
                 )
             except ProviderFailure as exc:
+                propagate_paywall(exc)
                 failures.append(("xml", exc))
 
         xml_failure_message = (
@@ -860,6 +866,7 @@ class FrontiersClient(ProviderClient):
                     ),
                 )
             except ProviderFailure as exc:
+                propagate_paywall(exc)
                 failures.append(("pdf", exc))
 
         combined = combine_provider_failures(failures)
@@ -1157,7 +1164,7 @@ class FrontiersClient(ProviderClient):
         )
         markdown_text = str(
             (content.markdown_text if content is not None else "") or ""
-        ).strip()
+        )
         if not markdown_text:
             warnings.append("Frontiers retrieval did not produce usable Markdown.")
             return metadata_only_article(
@@ -1191,6 +1198,14 @@ class FrontiersClient(ProviderClient):
             markdown_text=markdown_text,
             abstract_sections=abstract_sections
             if isinstance(abstract_sections, list)
+            else None,
+            # Match the existing provider convention for retained back matter:
+            # body enables rendering; it does not describe scientific content.
+            section_hints=[
+                {"heading": heading, "kind": "body"}
+                for heading in ("Author contributions", "Acknowledgments")
+            ]
+            if source == "frontiers_xml"
             else None,
             assets=assets,
             warnings=warnings,

@@ -1,0 +1,73 @@
+{
+  "doi": "10.1098/rsif.2019.0334",
+  "source_input": "tests/fixtures/golden_criteria/10.1098_rsif.2019.0334/acquisition/assets-2026-09-15/1e9a0baf2b8c5afe-http-1.bin",
+  "source_sha256": "f3cfdbd9d07c602e3adb414bb2e618ef58fe6d5e7ab6edfa97946b18c77cdf2a",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "9df5a5d2f14eea967d5345b0cd5f62131f9d955feaf226fcd485b5f068a1553f",
+  "files": [
+    {
+      "filename": "rsif20190334f01.png",
+      "download_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f01.png?Expires=1791475132&Signature=nw7ngijm2eaL4PUQ9-ll8oLLWKSXM-f5jfj8LqLv3Y-zUCWEz8Uu5j86MPBHRaxw9rxyJ-CplPLxv78NReWm5-qOh0om1XyoBCgGJ478XWMhsVJoaq4hazK~Sd8ZiQ3-X2rCAppxeM9D~V8HBB6m1FGshob603ABmkD8JVXDCgRcXWjnWpclMppXDwPDfpTkpI2Avp0V~l5Voe6KdbISKMTtebihTBnlajOvvmaYvxqjctvi18LqbTKdompUp3UPRxXSluQl7wmCsHaRMQ1TPDEQCYATf00gzrVVyNWNpXjWWgM7-bqTcUO6Zu9Q3NynaXignH4ijFoNaxuSXRGcdg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f01.png?Expires=1791475132&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "5648250ff3adb53a478b596b470bc04ca083b7260b0f72d148fc911daf539a40",
+      "size": 131804,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1651,
+      "height": 659,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "rsif20190334f02.png",
+      "download_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f02.png?Expires=1791475132&Signature=eDg60bVOHk9h40VYpyvDavJUAoBGTbS7N97RqWqi7FEP1Vy4GnXFMMb2SCtXKJomE0y2xa-nh1T8BQrlh8nEqP9e1XRHz3l7Uo-39SSW-t8OLGDsvmSQZEnGltUhEYj4f51C44bhGL~aYa4X8mQQPsQvOOVv1iBAO11JohKb5ooqsQLEU0gwj5NcevnEkxyuCiC01SLJIy5sk0pFFky4oDAu0ymQF0H4xQ6ttn8M9US5xUNgqV5y6HQ54GhqM6TR2Yu0SDDvySbI-ocwjKWhod8gJ2CSSpqEKd8Jwf~6uLhXyoM5HfCQO1cyAxX8N~Wb9SN1QjDGP9EFSnryZuAB~w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f02.png?Expires=1791475132&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "21966cf528f660e2e1c2f3aebb7421fe62b4b4a5e28f564acf26936f0f1be640",
+      "size": 225014,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1653,
+      "height": 771,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "rsif20190334f03.png",
+      "download_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f03.png?Expires=1791475132&Signature=waf1a1dTic~Rw5CyzJr4RdW~~TaTBEU-wFJZf6Asfqh72xcOYAtxqFo8OYUZJ6T5nVhnDEI7pZcMrmcvotrmysp0~e0jh1ugO~Ss7kU8BO1MHkcX6aEy0uDBWL2iOwcyn9kEuS4SqjTPIJRnykUPJzNXpa25oXWsYN797sGraORVQoZGWJVsOeoPuAohBSMxGIZjpZfYUDtlCx-MpO7rJNwDlL5HO4POvawFFMfEFVKDfkwF~86mI~cAndEkMs2kHqJOetz22gP-3G3sMTU2AazPiFyTvreHfi94PJk1-rp5kS0uo7zionOjgrICXlIMfIeQ3kKqT-GfWpoWWPCZ6w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f03.png?Expires=1791475132&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "2d4cb06b41410515eebb97d3929dde987ad6580ceab90729a2a07f5546a4602d",
+      "size": 125470,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 943,
+      "height": 534,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "rsif20190334f04.png",
+      "download_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f04.png?Expires=1791475132&Signature=Ao5MCvQiAUxDNEhCqATC2HmLrQ-dcRq~mOPzynK6Jmr0F9pky-ThzasRDoXW9syvS8IF80haxnP0eKxBrRo7y1WlJo7py6Px4Ln-omwLGQiFtsJIxda9Yo6AyrE39x-iSUD-oAr0lOJCimgj58~6Y80MOAKEqU6GUHNydxBS-tm5ooeNxlyBhuViaaK1pbTiCapxWXgD2w~P0ql0dc2hZYj9Ovf5DmdZmwABZB1c5gXHI~AF7HG7OkXhy0zhcDbbWhhyRdKDcMGzoV9hiGAV15yOG--TmQp08Ra-hJzDmUN50E4KbYX0dqyPFlE5sVxp~Y8vhNP-auc5s78CIeBA1g__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f04.png?Expires=1791475132&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "7adfcaec7d479b7b3ac5dfeb9cbd270d69de7bf049152e82a2cec39bd94be771",
+      "size": 434981,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1760,
+      "height": 874,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "rsif20190334f05.png",
+      "download_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f05.png?Expires=1791475132&Signature=tdjdKJNy1g7j6YGeqSt6Xfumks3zZhfZwy2E9mZuwakGuj-WzlapxDApvRUG2xT6~lwDicXSrbtX6yGUMWqqrQSg1s5hsxNBSf7-UZH193qqCkev~1mJX-v43p9WV6DdiwXuFomW0b4muqlmGl2dRJUVeGcYXOVMG9ueyxcSAag0jaS1WVLbPO61p8uxBUvTUuIkVor56F~qrUxKLTkX4ueBzYTkd91AeZ~RWgfq7X-PkXq51HAZbtiFZ9K3LybS0Etv44jyWaiGGQmxJhgLLlZh-YL~cQX9jY4L5uK2a2q8GbEEbGdcqlikc1gIm7aO5-3qGPmRS99uOzYanTYOOw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "source_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsif/16/158/10.1098_rsif.2019.0334/6/rsif20190334f05.png?Expires=1791475132&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "sha256": "3578698a9aad9b480bd0bc81187c3e9469237965754b9af348f5f63d50b7c67d",
+      "size": 147807,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 926,
+      "height": 792,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.941017+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 1
+}

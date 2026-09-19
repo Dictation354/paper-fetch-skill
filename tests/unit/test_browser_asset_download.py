@@ -1,14 +1,11 @@
 from __future__ import annotations
-
 import base64
-
 import pytest
 from pathlib import Path
 import threading
 import tempfile
 from types import SimpleNamespace
 from unittest import TestCase, mock
-
 from paper_fetch.extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
@@ -31,8 +28,8 @@ from paper_fetch.providers.browser_workflow.asset_download import (
     retry_failed_browser_assets,
     run_browser_asset_download_attempt,
 )
-from tests.unit._atypon_browser_workflow_provider_support import png_header
-from tests.unit._browser_workflow_deps import browser_workflow_deps
+from tests.support._atypon_browser_workflow_provider_support import png_header
+from tests.support._browser_workflow_deps import browser_workflow_deps
 
 
 class BrowserWorkflowAssetDownloadTests(TestCase):
@@ -1120,7 +1117,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         )
         image_fetcher.close.assert_called_once()
 
-    def test_silverchair_figure_page_resolution_stays_on_camoufox_owner_thread(
+    def test_annualreviews_figure_page_resolution_stays_on_camoufox_owner_thread(
         self,
     ) -> None:
         discovered_url = "https://example.test/original.jpg"
@@ -1133,7 +1130,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             )
 
         plan = BrowserAssetDownloadPlan(
-            article_id="10.1021/example",
+            article_id="10.1146/example",
             output_dir=Path("/tmp/browser-assets"),
             asset_profile="body",
             body_assets=[
@@ -1149,13 +1146,13 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         )
         recovery = BrowserAssetRecoveryContext(
             runtime=BrowserRuntimeConfig(
-                provider="acs",
+                provider="annualreviews",
                 doi=plan.article_id,
                 artifact_dir=plan.output_dir,
                 headless=True,
                 user_agent="test-agent",
             ),
-            provider="acs",
+            provider="annualreviews",
             user_agent="test-agent",
             browser_context_seed={},
             browser_cookies=[],
@@ -1495,7 +1492,7 @@ def test_wiley_split_preview_preserves_fidelity_and_full_failure(tmp_path):
     from paper_fetch.models.builders import _asset_from_entry
     from paper_fetch.quality.assets import build_asset_quality_summary
     from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
-    from tests.unit.test_workflow_acceptance import _envelope
+    from tests.support.workflow_acceptance import _envelope
 
     full = "https://example.test/full.png"
     preview = "https://example.test/preview.png"
@@ -1671,7 +1668,7 @@ def test_asset_progress_counts_identity_once_across_candidates_and_resets_scope(
     assert transport.request.call_count == 3
 
 
-@pytest.mark.parametrize("provider", ["royalsocietypublishing", "acs", "annualreviews"])
+@pytest.mark.parametrize("provider", ["royalsocietypublishing", "annualreviews"])
 @pytest.mark.parametrize("discovery", ["original", "empty", "failure"])
 def test_silverchair_later_figure_discovery_precedes_parallel_http(
     tmp_path, provider, discovery
@@ -1682,11 +1679,11 @@ def test_silverchair_later_figure_discovery_precedes_parallel_http(
         RoyalsocietypublishingClient,
     )
     from paper_fetch.providers.browser_runtime import BrowserRuntimeFailure
-    from tests.unit._atypon_browser_workflow_provider_support import (
+    from tests.support._atypon_browser_workflow_provider_support import (
         AssetTransport,
         _typed_raw_payload,
     )
-    from tests.unit._browser_workflow_deps import install_browser_workflow_deps
+    from tests.support._browser_workflow_deps import install_browser_workflow_deps
 
     owner = threading.get_ident()
     browser_threads = []
@@ -1803,3 +1800,89 @@ def test_silverchair_later_figure_discovery_precedes_parallel_http(
     assert all(
         Path(a["path"]).read_bytes() == png_header(640, 480) for a in result["assets"]
     )
+
+
+@pytest.mark.parametrize("fetcher", ["direct_http", "camoufox"])
+def test_ieee_probe_merge_preserves_same_caption_figures(tmp_path, fetcher):
+    assets = [
+        {
+            "kind": "figure",
+            "heading": "-",
+            "caption": "-",
+            "section": "body",
+            "url": f"https://ieeexplore.ieee.org/mediastore/IEEE/content/media/1/2/3/figure{i}-large.gif",
+        }
+        for i in range(3)
+    ]
+    plan = BrowserAssetDownloadPlan(
+        article_id="10.1109/example",
+        output_dir=tmp_path,
+        asset_profile="body",
+        body_assets=assets,
+        supplementary_assets=[],
+        figure_page_discovery=False,
+    )
+    recovery = BrowserAssetRecoveryContext(
+        runtime=SimpleNamespace(backend="camoufox", headless=True),
+        provider="ieee",
+        user_agent="test",
+        browser_context_seed={},
+        browser_cookies=[],
+        active_seed_urls=[],
+    )
+    image_fetcher = mock.Mock(requires_caller_thread=True)
+    calls = []
+
+    def download(_kind, *_args, **kwargs):
+        calls.append(kwargs["assets"])
+        return {
+            "assets": [
+                {
+                    **a,
+                    "source_url": a["url"],
+                    "path": str(tmp_path / f"{assets.index(a)}.gif"),
+                    "final_fetcher": fetcher,
+                }
+                for a in kwargs["assets"]
+            ],
+            "asset_failures": [],
+        }
+
+    result = run_browser_asset_download_attempt(
+        plan,
+        recovery,
+        image_fetcher_factory=lambda **kwargs: image_fetcher,
+        file_fetcher_factory=lambda **kwargs: None,
+        download_settings={"serial_browser_assets": True},
+        deps=browser_workflow_deps(download_assets=download),
+    )
+    assert [len(batch) for batch in calls] == [1, 2]
+    assert [a["url"] for a in result.body_results] == [a["url"] for a in assets]
+    assert [a["path"] for a in result.body_results] == [
+        str(tmp_path / f"{i}.gif") for i in range(3)
+    ]
+    assert result.failures == []
+
+
+def test_ieee_merge_resolves_only_matching_image_failure():
+    first = {
+        "kind": "figure",
+        "heading": "-",
+        "caption": "-",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/1/2/3/fig1-small.gif",
+    }
+    second = {**first, "url": first["url"].replace("fig1", "fig2")}
+    result = browser_workflow_assets._merge_download_attempt_results(
+        {"assets": [], "asset_failures": [first, second]},
+        {
+            "assets": [
+                {
+                    **first,
+                    "url": first["url"].replace("-small", "-large"),
+                    "path": "fig1.gif",
+                }
+            ]
+        },
+        provider="ieee",
+    )
+    assert result["asset_failures"] == [second]

@@ -66,30 +66,6 @@ jobs:
           full: "true"
       - run: PYTHONPATH=src uv run python -m pytest tests/integration -q
 
-  golden-exact:
-    name: Exact golden corpus (provider shard ${{ matrix.shard }})
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [0, 1, 2, 3]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          ref: ${{ inputs.ref }}
-          persist-credentials: false
-      - uses: ./.github/actions/setup-python-deps
-        with:
-          python-version: "3.11"
-          full: "true"
-      - name: Run every exact fixture in this provider shard
-        env:
-          PAPER_FETCH_GOLDEN_SHARD: ${{ matrix.shard }}
-        run: >-
-          PYTHONPATH=src uv run python -m pytest
-          tests/integration/test_golden_corpus.py::test_golden_corpus_expected_summary_matches_current_extractor
-          -q
-
   python-boundaries:
     strategy:
       fail-fast: false

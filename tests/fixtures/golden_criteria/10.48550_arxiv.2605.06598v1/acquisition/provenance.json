@@ -1,0 +1,78 @@
+{
+  "records": [
+    {
+      "doi": "10.48550/arxiv.2605.06598v1",
+      "provider": "arxiv",
+      "body_file": "original.html",
+      "capture_kind": "local_reuse",
+      "source_url": "https://arxiv.org/html/2605.06598v1",
+      "requested_url": null,
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "captured_at_utc": null,
+      "audited_at_utc": "2026-09-16T05:16:23.153590+00:00",
+      "size": 336385,
+      "sha256": "d210bd8dc72bda89f1099541b577c187174db07c8702e1641f551e9e5342196f",
+      "evidence": "Existing canonical publisher HTML reused unchanged. Original HTTP envelope and capture timestamp were not retained; current audit does not infer them."
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06598v1",
+      "provider": "arxiv",
+      "requested_url": "https://api.crossref.org/works/10.48550%2Farxiv.2605.06598v1",
+      "final_url": "https://api.crossref.org/works/10.48550%2Farxiv.2605.06598v1",
+      "status_code": 404,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:20:43 GMT",
+        "content-type": "text/plain"
+      },
+      "captured_at_utc": "2026-09-18T02:20:42.515416+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 19,
+      "sha256": "ae8462e3af85ca7577aaa97ff22a194f9dfd7fada58cf4944b53d2fdfa7b1f92",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06598v1",
+      "provider": "arxiv",
+      "requested_url": "https://arxiv.org/html/2605.06598v1",
+      "final_url": "https://arxiv.org/html/2605.06598v1",
+      "status_code": 200,
+      "response_headers": {
+        "content-length": "339177",
+        "etag": "\"CO+gzeX0uZYDEAE=\"",
+        "content-type": "text/html; charset=utf-8",
+        "last-modified": "Mon, 24 Aug 2026 18:39:00 GMT",
+        "date": "Fri, 18 Sep 2026 02:20:44 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:20:44.571549+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+      "size": 339177,
+      "sha256": "c063dea510f1474377e359cf9b84c8e3e91d6bc14b691cb38f0bce8230db2f27",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06598v1",
+      "provider": "arxiv",
+      "requested_url": "https://export.arxiv.org/api/query",
+      "final_url": "https://export.arxiv.org/api/query",
+      "status_code": 200,
+      "response_headers": {
+        "content-length": "2789",
+        "content-type": "application/atom+xml; charset=utf-8",
+        "date": "Fri, 18 Sep 2026 02:20:46 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:20:46.528195+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-http_response_entity.xml",
+      "size": 2789,
+      "sha256": "b6ab483e36c764d302d35c1dd8d48a6e99d68440abdd53c9419a110f87c8526f",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    }
+  ]
+}

@@ -1,0 +1,198 @@
+{
+  "sample_id": "10.1073_pnas.2317456120",
+  "doi": "10.1073/pnas.2317456120",
+  "identity": {
+    "query": "10.1073/pnas.2317456120",
+    "query_kind": "doi",
+    "doi": "10.1073/pnas.2317456120",
+    "landing_url": null,
+    "provider_hint": "pnas",
+    "confidence": 1.0,
+    "candidates": [],
+    "title": null,
+    "provider_identifiers": {}
+  },
+  "status": "returned",
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 4191,
+    "content_kind": "fulltext",
+    "has_abstract": false,
+    "warnings": [
+      "pnas HTML route was not usable (empty_article_shell); attempting PDF fallback.",
+      "Full text was extracted from PDF fallback after the HTML path was not usable.",
+      "PNAS official full text was downloaded as PDF/binary to /home/dictation/paper-fetch-skill/.paper-fetch-runs/provenance-repair-2026-09-17/retry-fetch/10.1073_pnas.2317456120/Artaxo_2023_Amazon_deforestation_implications_in_local_regional_climate_change.pdf."
+    ],
+    "source_trail": [
+      "fulltext:pnas_html_fail",
+      "fulltext:pnas_pdf_fallback_ok",
+      "fulltext:pnas_pdf_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "route:crossref_signal_ok",
+      "route:signal_domain_pnas",
+      "route:signal_doi_pnas",
+      "route:probe_pnas_unknown",
+      "route:provider_selected_pnas",
+      "route:provider_candidate_pnas_metadata_selected_rank_1",
+      "route:provider_candidate_pnas_identity_strong",
+      "fulltext:pnas_attempt",
+      "download:pnas_saved",
+      "download:pnas_assets_skipped_profile_none",
+      "fulltext:pnas_article_ok",
+      "route:provider_candidate_pnas_accepted"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 0,
+      "body": 4191,
+      "refs": 327
+    },
+    "confidence": "medium",
+    "flags": [
+      "weak_body_structure"
+    ],
+    "body_metrics": {
+      "char_count": 16705,
+      "word_count": 2561,
+      "body_block_count": 1,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 2561.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acceptance": null,
+  "records": [
+    {
+      "doi": "10.1073/pnas.2317456120",
+      "provider": "pnas",
+      "requested_url": "https://www.pnas.org/doi/full/10.1073/pnas.2317456120",
+      "final_url": "https://www.pnas.org/doi/full/10.1073/pnas.2317456120",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Thu, 17 Sep 2026 11:09:34 GMT",
+        "content-type": "text/html;charset=UTF-8"
+      },
+      "captured_at_utc": "2026-09-17T11:09:35.151575+00:00",
+      "body_file": "acquisition/provenance-camoufox-retry-2026-09-17/000-browser_rendered_dom.html",
+      "size": 1731,
+      "sha256": "fcc8a3747df0361913cc5002bc40e75d1c05fae89292825c2cacc6158ff8e027",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider",
+      "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+    },
+    {
+      "doi": "10.1073/pnas.2317456120",
+      "provider": "pnas",
+      "requested_url": "https://www.pnas.org/doi/pdf/10.1073/pnas.2317456120",
+      "final_url": "https://www.pnas.org/doi/pdf/10.1073/pnas.2317456120",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Thu, 17 Sep 2026 11:09:37 GMT",
+        "content-type": "application/pdf;charset=UTF-8"
+      },
+      "captured_at_utc": "2026-09-17T11:09:37.965427+00:00",
+      "body_file": "acquisition/provenance-camoufox-retry-2026-09-17/001-browser_rendered_dom.html",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider",
+      "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+    }
+  ]
+}

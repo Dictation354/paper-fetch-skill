@@ -1,0 +1,33 @@
+{
+  "doi": "10.1126/science.abo2812",
+  "provider": "science",
+  "source_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+  "attempt": 2,
+  "change_from_previous": "Select a visible article figure instead of a hidden duplicate before waiting for load. Prior saved article DOM remains unchanged.",
+  "transport": "native Camoufox configured provider context",
+  "responses": [
+    {
+      "status_code": 403,
+      "response_headers": {
+        "date": "Wed, 16 Sep 2026 09:51:53 GMT",
+        "content-type": "text/html; charset=UTF-8",
+        "cf-mitigated": "challenge"
+      },
+      "observed_body_sha256": "70c4cd4ba710ec786774bb021285c4ba659a0433266bf642dd377d73e0d08a53",
+      "observed_body_size": 5885,
+      "captured_at_utc": "2026-09-16T09:52:06.809896+00:00"
+    }
+  ],
+  "no_fault_injection": true,
+  "title": "Loading https://www.science.org/doi/full/10.1126/science.abo2812",
+  "observed_doi": null,
+  "final_url": "https://www.science.org/doi/full/10.1126/science.abo2812",
+  "challenge": true,
+  "paywall_diagnostics": {},
+  "stop_reason": "browser_challenge",
+  "initial_stop_reason": "identity_not_verified",
+  "reason": "The recorded HTTP response has status 403 and cf-mitigated: challenge; no article identity and no canvas export obtained.",
+  "raw_response_retained": false,
+  "raw_response_retention_reason": "Challenge DOM and scripts contain temporary challenge tokens. Only response diagnostics and body hash are retained; this is not a replay input or original article evidence.",
+  "final_url_query_redacted": true
+}

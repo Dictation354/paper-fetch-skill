@@ -17,5 +17,856 @@
     "tables": 1,
     "references": 56
   },
-  "expected_content_kind": "fulltext"
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.5194_nhess-24-1-2024",
+    "provider": "copernicus",
+    "doi": "10.5194/nhess-24-1-2024",
+    "original": "tests/fixtures/golden_criteria/10.5194_nhess-24-1-2024/original.xml",
+    "sha256": "b59403b074c8f86e331704baf8daf15aabca0e99860aa88dd712f1fcda647af6",
+    "format": "xml",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 6,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 56,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 32,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 6,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 48,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 37,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "article-meta contrib-group contrib[contrib-type=\"author\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 37,
+      "tex_checked": 0,
+      "mathml_checked": 37,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.5194_nhess-24-1-2024/original.xml",
+      "sha256": "b59403b074c8f86e331704baf8daf15aabca0e99860aa88dd712f1fcda647af6",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "1f5983ec13b3cd936e0bab9ebe79608f4fa7deeca8c8d8ae64164b6cdfb43cca",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ]
+            ],
+            [
+              1,
+              [
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+              ]
+            ],
+            [
+              2,
+              [
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              3,
+              [
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31
+              ]
+            ],
+            [
+              4,
+              [
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39
+              ]
+            ],
+            [
+              5,
+              [
+                40,
+                41,
+                42,
+                43,
+                44,
+                45,
+                46,
+                47
+              ]
+            ]
+          ],
+          "cells": [
+            "Location",
+            "Area",
+            "Coastline",
+            "DEM",
+            "Compute",
+            "Slope",
+            "Time per",
+            "Time per",
+            "",
+            "(km ^{2} )",
+            "",
+            "resolution",
+            "time",
+            "unit",
+            "area",
+            "slope",
+            "",
+            "",
+            "",
+            "(m)",
+            "(min)",
+            "count",
+            "(s km ^{- 2} )",
+            "unit (s)",
+            "Umpqua",
+            "257",
+            "No",
+            "10",
+            "3.11",
+            "3841",
+            "0.7",
+            "0.05",
+            "Calapooia",
+            "743",
+            "No",
+            "10",
+            "9.97",
+            "6990",
+            "0.8",
+            "0.09",
+            "Puerto Rico",
+            "8870",
+            "Yes",
+            "10",
+            "383.28",
+            "140 367",
+            "2.6",
+            "0.16"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": "M3",
+          "node_sha256": "354ac52532015e726fcf3a79bd631ae8857d2f3edcb8bebc19d74ad1bd2a8ab8",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ">"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 1,
+          "id": "M4",
+          "node_sha256": "8c3bbc0eb8c4d3bcbfd4ce2b73e66649172722f48fd03ad05c7acc465e1dd83f",
+          "numbers": "2",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ""
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 2,
+          "id": "M5",
+          "node_sha256": "a7d0b5907c8f40e9c3759ea4216a93464ba0ab794d6c3eae78389bb080128f91",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "<"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 3,
+          "id": "M6",
+          "node_sha256": "5190058ec00e4c0b224736bcfef93e90048a90f51e1821de7f2d93890bdd40c9",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ">"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 4,
+          "id": "M7",
+          "node_sha256": "c6a6dede9f14e9c951850bf786b35cbe7e021b7431cddb9aed96e0fd9cb0592c",
+          "numbers": "24",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 5,
+          "id": "M8",
+          "node_sha256": "2422adea82c2ca2613548723f7db83269fd55959998ad056b5e14a073423985d",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ">"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 6,
+          "id": "M9",
+          "node_sha256": "dc15adf52f340ef4ef2feafb81294eccdfe7fb2d2b161655b1693b08f9c6d2f4",
+          "numbers": "2",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ""
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 7,
+          "id": "M10",
+          "node_sha256": "c7c2f7187523272159274466e6ac25fa6ceb0171ce2293be2125d184d7499dda",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "T"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 8,
+          "id": "M11",
+          "node_sha256": "8841411c5990d73f868c844f45d0d2e04c601e56dbb06f2a3988570736a74347",
+          "numbers": "100",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 9,
+          "id": "M12",
+          "node_sha256": "a4974d17e6a9b1621ae3c659abef34ec8b58db8a5277acddb5089b934f8ef0d6",
+          "numbers": "2",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ""
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 10,
+          "id": "M13",
+          "node_sha256": "ea3190008c8835308903314f20b463d45850e822954dd90704a42da070f55735",
+          "numbers": "2",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ""
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 11,
+          "id": "M14",
+          "node_sha256": "87a0dad466533c9fdd81a0ea12b5321e63497784501a43d9e57d3a676bfabe30",
+          "numbers": "4.4106",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": [
+            "×"
+          ]
+        },
+        {
+          "object_index": 12,
+          "id": "M15",
+          "node_sha256": "7de6bc15a542947ea1178fe50f45299ba405872287e946c347908a9c128dba84",
+          "numbers": "1.88107",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": [
+            "×"
+          ]
+        },
+        {
+          "object_index": 13,
+          "id": "M16",
+          "node_sha256": "f4dc5a90a40e93f261bb1464ecacd1da5c7055e0d60e89c2d71a71bec423377f",
+          "numbers": "2",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ""
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 14,
+          "id": "M17",
+          "node_sha256": "8a412d7ce4f8ae8e476a770bdf277cfbae87e0bfdff23ebe93c5a4d5248db610",
+          "numbers": "11",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 15,
+          "id": "M18",
+          "node_sha256": "85cd021e17b26160aa2a8eb582c483514c7af35cae2a847909e02c7b3586e264",
+          "numbers": "11",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [],
+          "operators": []
+        },
+        {
+          "object_index": 16,
+          "id": "M19",
+          "node_sha256": "d1b22e5e12700f202c2cbfc7a3df2dc5628e9b76cce7c6971f510e0551284eb5",
+          "numbers": "1",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "log",
+            "P",
+            "P"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 17,
+          "id": "M20",
+          "node_sha256": "2667ede31b942a770fb3c1ea90d42ebcc6d4834ae109047e1633927a5b3f8280",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "P"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 18,
+          "id": "M21",
+          "node_sha256": "02b22481509cb651ab3618e270c228284923ff4b5bd28d47f76be01dc0199f45",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "x"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 19,
+          "id": "M22",
+          "node_sha256": "3bd3d90b1e5b6a0f51cbae3be3dfa4a021717cd6d59493ec759793b7fbf43e94",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "M"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 20,
+          "id": "M23",
+          "node_sha256": "35334eb33c56c22606170d95a71c2a1c4dd909e09294ebd4db6430e9cc1963d5",
+          "numbers": "11122",
+          "minimum": {
+            "_": 7,
+            "^": 0,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "log",
+            "P",
+            "P",
+            "β",
+            "o",
+            "β",
+            "x",
+            "β",
+            "x",
+            "...",
+            "β",
+            "M",
+            "x",
+            "M"
+          ],
+          "operators": [
+            "-",
+            "=",
+            "+",
+            "+",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 21,
+          "id": "M24",
+          "node_sha256": "ba9dd43696818f9a7fe12abd3e53c6c9c2c32f20907aab298f710a6785e776b2",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "β"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 22,
+          "id": "M25",
+          "node_sha256": "beec9df0c54f9ebc8483d7593e7bb849a8e4e5ff8e5b1b3444fa057f1ff0afba",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "φ"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 23,
+          "id": "M26",
+          "node_sha256": "482238a28f31e6856d46ee82d7ab403a193659ff27d0d105752843466761b9f2",
+          "numbers": "45",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "cos",
+            "φ",
+            ""
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 24,
+          "id": "M27",
+          "node_sha256": "016dde28dbe13b9924038e5a505559812245d3099e0ccc2d0a57ff341a188a91",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 25,
+          "id": "M28",
+          "node_sha256": "eefba5650330fd2c9a4c5917ab16cb088e30b3c3525ba30d5f98d85e692c093d",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "P"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 26,
+          "id": "M29",
+          "node_sha256": "2011b640d64b5f8083bc7f9e7408df23fbc107cfeccca407315392c9ef3c7012",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "O"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 27,
+          "id": "M30",
+          "node_sha256": "c6a85e9c6a21b380682f60c07d1f36ca8ffd8949d2afe4f40aa61478ee50b89e",
+          "numbers": "112",
+          "minimum": {
+            "_": 2,
+            "^": 1,
+            "\\frac": 1,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B",
+            "N",
+            "i",
+            "N",
+            "P",
+            "i",
+            "O",
+            "i"
+          ],
+          "operators": [
+            "=",
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 28,
+          "id": "M31",
+          "node_sha256": "9d93383c44d4dc72936c6eb70b6a563f0060a12e3d5f0e30ba6e7c9adc8f7c03",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "N"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 29,
+          "id": "M32",
+          "node_sha256": "87c3590cec79c0576d9ae75a5673f411bddf36b58e92c7f51ec42c2fa6cd50fe",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "B"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 30,
+          "id": "M33",
+          "node_sha256": "185cc80b4e64d1ddaf0ed2f8d1027b114a56d4efdb21045c99f15d90f8f6cfca",
+          "numbers": "2",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ""
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 31,
+          "id": "M34",
+          "node_sha256": "016f98a433741118720fb9a3fd58ccf47c292bf1e2fdd50007771722d88356d9",
+          "numbers": "2",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ""
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 32,
+          "id": "M35",
+          "node_sha256": "c724c688015c1e15945058f42236abfcd3f2bade928cacb5407490021a9cee0b",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ">"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 33,
+          "id": "M36",
+          "node_sha256": "fcb860ef876bc3c6c0094d99dd855221b19188065932f280cac45fea31248074",
+          "numbers": "2",
+          "minimum": {
+            "_": 0,
+            "^": 1,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ""
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 34,
+          "id": "M37",
+          "node_sha256": "dbb337dad2164c107055131b9f4390119bae9c885b0b81614360f7ebd5cc7369",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "<"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 35,
+          "id": "M38",
+          "node_sha256": "8d684d279344f51a5b862016e7d8455bab7cb4ea11ac6a5e8f7bb38ecf38063b",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            "P"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 36,
+          "id": "M39",
+          "node_sha256": "4b6e407834e880c492c472b0be3661288ec998c8e778e4249828e1dc7f007ed7",
+          "numbers": "",
+          "minimum": {
+            "_": 0,
+            "^": 0,
+            "\\frac": 0,
+            "\\sqrt": 0
+          },
+          "identifiers": [
+            ">"
+          ],
+          "operators": []
+        }
+      ]
+    }
+  ]
 }

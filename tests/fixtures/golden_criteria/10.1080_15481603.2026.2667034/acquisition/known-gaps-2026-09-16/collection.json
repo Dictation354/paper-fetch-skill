@@ -1,0 +1,56 @@
+{
+  "doi": "10.1080/15481603.2026.2667034",
+  "provider": "tandf",
+  "source_url": "https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034",
+  "attempt": 1,
+  "transport": "Camoufox with configured provider state",
+  "capture_started_utc": "2026-09-16T06:26:11.966373+00:00",
+  "historical_records_unchanged": true,
+  "responses": [
+    {
+      "url": "https://www.tandfonline.com/cms/asset/137ee923-898e-409c-8adc-44d8cb9c124a/tgrs_a_2667034_f0007_c.jpg",
+      "outcome": "not_in_current_dom"
+    },
+    {
+      "url": "https://www.tandfonline.com/cms/asset/21b5bf98-c7be-4c42-af01-6315f936ed49/tgrs_a_2667034_f0002_c.jpg",
+      "outcome": "not_in_current_dom"
+    },
+    {
+      "url": "https://www.tandfonline.com/cms/asset/27808f19-01f4-4ddd-b472-5ca3a820b7c9/tgrs_a_2667034_f0004_c.jpg",
+      "outcome": "not_in_current_dom"
+    },
+    {
+      "url": "https://www.tandfonline.com/cms/asset/46fe68a6-c219-4cd9-904e-e2c0e5a114ed/tgrs_a_2667034_f0009_c.jpg",
+      "outcome": "not_in_current_dom"
+    },
+    {
+      "url": "https://www.tandfonline.com/cms/asset/917f6b4f-c135-46d5-a8e8-e46e0ffcd932/tgrs_a_2667034_f0006_c.jpg",
+      "outcome": "not_in_current_dom"
+    },
+    {
+      "url": "https://www.tandfonline.com/cms/asset/b414b655-cec7-4f69-9257-3f4d178d99fb/tgrs_a_2667034_f0005_c.jpg",
+      "outcome": "not_in_current_dom"
+    },
+    {
+      "url": "https://www.tandfonline.com/cms/asset/cbd97bef-bc6d-44d8-bdf8-3cad60d8d048/tgrs_a_2667034_f0008_c.jpg",
+      "outcome": "not_in_current_dom"
+    },
+    {
+      "url": "https://www.tandfonline.com/cms/asset/d0c510bb-675b-4d91-84a7-af67d0e7874b/tgrs_a_2667034_f0003_c.jpg",
+      "outcome": "not_in_current_dom"
+    },
+    {
+      "url": "https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034",
+      "status_code": 200,
+      "record": "acquisition/known-gaps-2026-09-16/001-http_response_entity.bin"
+    }
+  ],
+  "dom_file": "acquisition/known-gaps-2026-09-16/000-browser_rendered_dom.html",
+  "final_url": "https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034",
+  "title": "Full article: Quantifying cumulative heat effects on heat-related mortality using MODIS land surface temperature data",
+  "observed_doi": "10.1080/15481603.2026.2667034",
+  "confirmed_paywall": false,
+  "paywall_diagnostics": {},
+  "challenge": false,
+  "stop_reason": "single_observation_completed"
+}

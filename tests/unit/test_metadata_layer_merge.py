@@ -185,7 +185,7 @@ def test_ieee_merge_uses_landing_scalars_and_keeps_base_fallbacks() -> None:
     assert merged["publisher"] == "IEEE"
 
 
-def test_arxiv_merge_appends_html_but_api_layer_replaces_lists() -> None:
+def test_arxiv_merge_keeps_html_author_list_and_api_bibliographic_metadata() -> None:
     merged = _arxiv_metadata._merge_arxiv_metadata_layers(
         {
             "source_url": "https://example.test/source",
@@ -211,7 +211,7 @@ def test_arxiv_merge_appends_html_but_api_layer_replaces_lists() -> None:
     )
 
     assert merged["title"] == "API title"
-    assert merged["authors"] == ["API Author"]
+    assert merged["authors"] == ["HTML Author"]
     assert merged["keywords"] == ["cs.LG"]
     assert merged["license_urls"] == ["https://example.test/api-license"]
     assert merged["references"] == [{"raw": "1. API reference"}]

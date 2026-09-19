@@ -1,0 +1,320 @@
+{
+  "provider": "oxfordacademic",
+  "doi": "10.1093/bioinformatics/btaa823",
+  "sample_id": "10.1093_bioinformatics_btaa823",
+  "source_url": "https://academic.oup.com/bioinformatics/article/37/4/497/5909988",
+  "source_input": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/acquisition/assets-2026-09-15/oxfordacademic-headless-004-browser_dom.html",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "076af5f3b43b760f3c6470304d7e2da444bc984ab60da0a9c2ecff71036d148e",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 1.",
+        "caption": "Flowchart of the text-mining system. Algorithm of the TM with the SVM model is the same as in ( Badal et al. , 2018 ) and thus is not shown in detail. Both full text sets are unified in one training set (shown by the dashed line) when the trained NN is tested on the PubMed abstracts",
+        "url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f1.jpeg?Expires=1792465420&Signature=e9cu1zXT94FV95n4BERbVDfm69c8GkrcosOcYcvO-IqhxiccJV72OkXPXKDyYGq1eSeh3Gf3~fpdUYQ1OSA~OQnd3E99b~oa0H7-bheyoQKHDPA7LLEjDgZibWqt~Dhoc4Iq36VNhFPloB~UoOYxxu720sgtH8rXB298cyziHOvc5ddJ3bI9Zd80X0wjDM5vuJ8nR68~5LCvO3yeZk0OqorHjQc6WtgoqBpCd7gewmXnpzsBQYXv0khFhxphEWDHWq~vO5ehYwp6EiDP2WV-9vDOrhNgAAgtz1yJEMB2dg6Idfn4MlaVJcdB6~9HSyoOtAZbFTufqN5zG3ed3AZzWA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "btaa823-f1",
+        "preview_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/m_btaa823f1.jpeg?Expires=1792465420&Signature=cvshD5Kh7DOVSyLyWf08KJaYLcYWvkiGJIC2t7u2iBKtCeJeeVJ~rFkQed5voPA5JyQCHQz~2jCQbXJle3OuY9GdNPifrFz7p-87vI50vT1RuTJ5Cb-I1M9NbmVoeJa2Ph5It1-umGTVzC0Hd~akHBvPpI6ZOiJHRprD8EMEX6hGkUfWB4p4xTdHpjiIb3HmcaGGpWN4sXFsGkItrk8iylnbJ3J1IFHiK2M5A-cmp1OZzQjxbqXEiHEYgK~VYgUIyRtBWJfVefpP~1Mu~iWNvxm0tcD-MZBFHV-ahtsDOhNBq6M2aEFbBsk08JfwdtMQmFMfLvmB79ue-BoFeUr5KQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f1.jpeg?Expires=1792465420&Signature=e9cu1zXT94FV95n4BERbVDfm69c8GkrcosOcYcvO-IqhxiccJV72OkXPXKDyYGq1eSeh3Gf3~fpdUYQ1OSA~OQnd3E99b~oa0H7-bheyoQKHDPA7LLEjDgZibWqt~Dhoc4Iq36VNhFPloB~UoOYxxu720sgtH8rXB298cyziHOvc5ddJ3bI9Zd80X0wjDM5vuJ8nR68~5LCvO3yeZk0OqorHjQc6WtgoqBpCd7gewmXnpzsBQYXv0khFhxphEWDHWq~vO5ehYwp6EiDP2WV-9vDOrhNgAAgtz1yJEMB2dg6Idfn4MlaVJcdB6~9HSyoOtAZbFTufqN5zG3ed3AZzWA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA"
+      },
+      "download_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f1.jpeg?Expires=1792465420&Signature=e9cu1zXT94FV95n4BERbVDfm69c8GkrcosOcYcvO-IqhxiccJV72OkXPXKDyYGq1eSeh3Gf3~fpdUYQ1OSA~OQnd3E99b~oa0H7-bheyoQKHDPA7LLEjDgZibWqt~Dhoc4Iq36VNhFPloB~UoOYxxu720sgtH8rXB298cyziHOvc5ddJ3bI9Zd80X0wjDM5vuJ8nR68~5LCvO3yeZk0OqorHjQc6WtgoqBpCd7gewmXnpzsBQYXv0khFhxphEWDHWq~vO5ehYwp6EiDP2WV-9vDOrhNgAAgtz1yJEMB2dg6Idfn4MlaVJcdB6~9HSyoOtAZbFTufqN5zG3ed3AZzWA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-005-http_response_entity.bin",
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-005-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/oxfordacademic-headless-005-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1924,
+        "height": 1095,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "btaa823f1.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 2.",
+        "caption": "Schematic representation of a sentence binary tree and associated sentiment labels",
+        "url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f2.jpeg?Expires=1792465420&Signature=Ij7uIt61n98iDUxMy9hCDJox8MaOxgbxRqksjX~GDkKcP6IXuuevPy0u9wJohJTm2t4FqbZJhaVEGgf4KgoEPpqeoMX0q8Yh-B5-36dPEV-G1ALvMfwCOi35fiie4yih8VcrMms7GuYRFOH-fGFtrvqlqtCmhsmDdS4fJs3WcBQ98BVZ2S-NfRgZxrNZFFupIxn2wrtGwxglWQ9OeNPzXb~kX9PBz1rNfUPJqGzVusBXVaVS~pxtNVDqoD89etCtzwbawyBDtbQ-krHdc0kPGHr3YK6wuIMCFrrgv5EndB7HSfuqULa~g5tdqpjFMieCPqkav5sgQLwiswJaMCA9Sw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "btaa823-f2",
+        "preview_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/m_btaa823f2.jpeg?Expires=1792465420&Signature=iee2oJSp01dTjI1ySmLFnT-PPfBhDxvEnmlOMrWmhtwVL7dOZBHTCVqD2GUbjjAHzHIIa~iJoD-V0Olgh70vzzTXKT14svTjeSTJF244MKLKqV4Q56IUvSrKdIcW~MVPC8QoBrBqz9V4WH~NP5fLZaUI7eixdwtUjPqzqIAA4gp6~ZZ-4hh40nXu-os1BZlhjIl2mg6WnaYj4yYarq9gJV0WUHulfaABB9h3IFYXlcwrvpg8qI~6VS7kN1Gks2RGMEuFsKcRIfI9ub2TRZ7JkmByIsvtpfxMxGYLmMfQcHZTCfi~0pmr1u-E5dn0Mx-6FYyZEhJMAtVmQnB5dMgBIw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f2.jpeg?Expires=1792465420&Signature=Ij7uIt61n98iDUxMy9hCDJox8MaOxgbxRqksjX~GDkKcP6IXuuevPy0u9wJohJTm2t4FqbZJhaVEGgf4KgoEPpqeoMX0q8Yh-B5-36dPEV-G1ALvMfwCOi35fiie4yih8VcrMms7GuYRFOH-fGFtrvqlqtCmhsmDdS4fJs3WcBQ98BVZ2S-NfRgZxrNZFFupIxn2wrtGwxglWQ9OeNPzXb~kX9PBz1rNfUPJqGzVusBXVaVS~pxtNVDqoD89etCtzwbawyBDtbQ-krHdc0kPGHr3YK6wuIMCFrrgv5EndB7HSfuqULa~g5tdqpjFMieCPqkav5sgQLwiswJaMCA9Sw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA"
+      },
+      "download_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f2.jpeg?Expires=1792465420&Signature=Ij7uIt61n98iDUxMy9hCDJox8MaOxgbxRqksjX~GDkKcP6IXuuevPy0u9wJohJTm2t4FqbZJhaVEGgf4KgoEPpqeoMX0q8Yh-B5-36dPEV-G1ALvMfwCOi35fiie4yih8VcrMms7GuYRFOH-fGFtrvqlqtCmhsmDdS4fJs3WcBQ98BVZ2S-NfRgZxrNZFFupIxn2wrtGwxglWQ9OeNPzXb~kX9PBz1rNfUPJqGzVusBXVaVS~pxtNVDqoD89etCtzwbawyBDtbQ-krHdc0kPGHr3YK6wuIMCFrrgv5EndB7HSfuqULa~g5tdqpjFMieCPqkav5sgQLwiswJaMCA9Sw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-006-http_response_entity.bin",
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-006-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/oxfordacademic-headless-006-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 900,
+        "height": 536,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "btaa823f2.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 3.",
+        "caption": "Example of the initial word vectors distribution. Highlighted areas show similar words in the same region of the vector space. The distribution was generated by arbitrarily choosing a set of 55 words that are typically found in PPI publications, not meeting any scientific criteria, but representing a rich mix of domain vocabulary. The words were put in a list, along with the file containing word-vector lookup table (output of word2vec). The t-SNE software ( van der Maaten and Hinton, 2008 ) extracted relevant 55 word-vectors and performed dimensionality reduction, until the required criteria of given perplexity (40) is met and the final dimensionality is reduced to 2. The points were plotted and labelled using pyplot in a python script. The highlighted areas were overlaid on the graph",
+        "url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f3.jpeg?Expires=1792465420&Signature=35bcdoOPTbaFwtq0GL8K0t7aMUg~-JavR6YdWRJPnuowMo7d2eOYU9geSyqsd79RGRR2b1raygs6wxhBRCReXpIdj-kH8pNGrbyfnlYrCqC~obi1p1P-20d98s0btlKBaCvgBzqiMcwk~RScozDZpCnm7fODwsApmlaoJkPBSHxpn-IVXLE0WLbd85oLvrpLCcD2WyT~2JZkd6T5zZJ~HL9hCFV5yvYIWAwiGpy86G4GcWAdCXSaspxs-SG-kk3Ee-vvhWtcm8DVantout4UYIdpnidfS-qGsigqpDlSWBhllSygAQOvFs-dEWzjLlRl4J8Kh77kz~5zursXYC-mtA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "btaa823-f3",
+        "preview_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/m_btaa823f3.jpeg?Expires=1792465420&Signature=p4FKKqRTWm9bvUuiG6vaKs3vVMaezHNi-Mopb5OA7-QR4W4vIy2CAVaYWiDN3NyrDjbYxty7w93xxohr6SPOyVwxgAH0igxprHsmpjnb5ak3YuSSLtsODvtsw6nn5ahCslS4XGPIvGtY~7Ll0JXEyOk58Dki~a13mY8i85p0tcx6KfJZkiczhszhW5VpbFcAAecDOA9nGRNiawIy-41JGCf5CW8ePsUMh8H4Khf499VaKJGoWnRLYxzN7UAnY2iOYNNgZ6VvEBLxpcgna5uwssfCd7LUsaybDqhW9C5Pc4G3pPg2akJCUmrq3F5sXYA3eBNzonnGZVqa1IBf1s1iLA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f3.jpeg?Expires=1792465420&Signature=35bcdoOPTbaFwtq0GL8K0t7aMUg~-JavR6YdWRJPnuowMo7d2eOYU9geSyqsd79RGRR2b1raygs6wxhBRCReXpIdj-kH8pNGrbyfnlYrCqC~obi1p1P-20d98s0btlKBaCvgBzqiMcwk~RScozDZpCnm7fODwsApmlaoJkPBSHxpn-IVXLE0WLbd85oLvrpLCcD2WyT~2JZkd6T5zZJ~HL9hCFV5yvYIWAwiGpy86G4GcWAdCXSaspxs-SG-kk3Ee-vvhWtcm8DVantout4UYIdpnidfS-qGsigqpDlSWBhllSygAQOvFs-dEWzjLlRl4J8Kh77kz~5zursXYC-mtA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA"
+      },
+      "download_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f3.jpeg?Expires=1792465420&Signature=35bcdoOPTbaFwtq0GL8K0t7aMUg~-JavR6YdWRJPnuowMo7d2eOYU9geSyqsd79RGRR2b1raygs6wxhBRCReXpIdj-kH8pNGrbyfnlYrCqC~obi1p1P-20d98s0btlKBaCvgBzqiMcwk~RScozDZpCnm7fODwsApmlaoJkPBSHxpn-IVXLE0WLbd85oLvrpLCcD2WyT~2JZkd6T5zZJ~HL9hCFV5yvYIWAwiGpy86G4GcWAdCXSaspxs-SG-kk3Ee-vvhWtcm8DVantout4UYIdpnidfS-qGsigqpDlSWBhllSygAQOvFs-dEWzjLlRl4J8Kh77kz~5zursXYC-mtA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-007-http_response_entity.bin",
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-007-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/oxfordacademic-headless-007-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1373,
+        "height": 1026,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "btaa823f3.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 4.",
+        "caption": "Basic TM on abstracts and full-texts. The performance P TM for individual complexes was calculated by Equation 1 . The distribution is normalized to the total number of complexes for which residues were extracted ( Table 1 )",
+        "url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f4.jpeg?Expires=1792465420&Signature=qSxaNsAoj8FJco69XbwpzNOUoFJtiLK38uROzblHul3C1qhpq9nozizaGcBROosn47mSoQ4zLBMfkJA2epqNDw12pJDv8UlzlBZZ~NTg-xlqR843ZOrrRqshH4SzgJ246owJl~S-qJJuxnIwIpQO0DMU-ImPDgUimvHDAsKQ7I8-1XBpZIzS~Y3uxNCZ01aqHyfL-wsJSafZFkhfgFwFIa2PaYaLu4um3r4v7ssdxzZk3VIm35-8eTOBVkDPc1LhD~NcXEOSys~kYGjwi5wxyI4gABgQbja5HWPQIpFLl5QPApFIQOIrQmaZycoFm-4Nxv1PFRo0EpNwCY9JZ9ZazA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "btaa823-f4",
+        "preview_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/m_btaa823f4.jpeg?Expires=1792465420&Signature=BZEcHSOBtazE0PDfMBT6FpFIx12M6eAzggKhYD~ojDQcZP5Kmnq9Hyp28~yctjpmRgnd85jOVYKITlGOp6noB6mFIOr3q0j0Xo7iH-aZMR0F6UoYEeVIDr8xZvmcJR0ut6vFNUhwB~FCDDO8bEPKXnCX8j1wsj77UsYZPC5g3uJd03dfYQST9GR8ZziUMkfEmGRZRhI6CKw-i~2Dg6aRP9wh4rOZtqD5J2BiiqcX13rvWQ~X8NQuYgAFHhmooC9zbyR~Los0Uh1CQkNbldmawCyyxivHGhsq5B9YXNwxa136pr2iekDDqk54mt1slShcDVhHvuSaRvD8ohc0k2pjWw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f4.jpeg?Expires=1792465420&Signature=qSxaNsAoj8FJco69XbwpzNOUoFJtiLK38uROzblHul3C1qhpq9nozizaGcBROosn47mSoQ4zLBMfkJA2epqNDw12pJDv8UlzlBZZ~NTg-xlqR843ZOrrRqshH4SzgJ246owJl~S-qJJuxnIwIpQO0DMU-ImPDgUimvHDAsKQ7I8-1XBpZIzS~Y3uxNCZ01aqHyfL-wsJSafZFkhfgFwFIa2PaYaLu4um3r4v7ssdxzZk3VIm35-8eTOBVkDPc1LhD~NcXEOSys~kYGjwi5wxyI4gABgQbja5HWPQIpFLl5QPApFIQOIrQmaZycoFm-4Nxv1PFRo0EpNwCY9JZ9ZazA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA"
+      },
+      "download_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f4.jpeg?Expires=1792465420&Signature=qSxaNsAoj8FJco69XbwpzNOUoFJtiLK38uROzblHul3C1qhpq9nozizaGcBROosn47mSoQ4zLBMfkJA2epqNDw12pJDv8UlzlBZZ~NTg-xlqR843ZOrrRqshH4SzgJ246owJl~S-qJJuxnIwIpQO0DMU-ImPDgUimvHDAsKQ7I8-1XBpZIzS~Y3uxNCZ01aqHyfL-wsJSafZFkhfgFwFIa2PaYaLu4um3r4v7ssdxzZk3VIm35-8eTOBVkDPc1LhD~NcXEOSys~kYGjwi5wxyI4gABgQbja5HWPQIpFLl5QPApFIQOIrQmaZycoFm-4Nxv1PFRo0EpNwCY9JZ9ZazA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-008-http_response_entity.bin",
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-008-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/oxfordacademic-headless-008-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 881,
+        "height": 500,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "btaa823f4.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 5.",
+        "caption": "Comparison of text-mining protocols on full texts. Both SVM and DRNN were trained on reduced full-text training set. The performance P TM was calculated by Equation 1 . The distribution is normalized to the total number of complexes for which residues were extracted ( Table 2 )",
+        "url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f5.jpeg?Expires=1792465420&Signature=rmYfzdaqBvoruticqHtywF4rUCFtAu9UMvmfOVRRBV6ZsMStf2LXhAYgO~eTwWsNgy0NJwkewtVS6TTGgGe0iIOLwZf7e~yW940QzBJ0Ler-ejpVgpMuFB6kbH4yFydoMt9v9TNuSSDP7r2tfdffOjs14JHuAF42VmICVOyS7I3Cb~0nM9RVWlYHf14NIJoWfz4azty8PiI1VCl~jo9cMwtrlGyKC5qKOOwGxDUoSBGo7Ff-9FZZktyHJM8t7nTxuvcGoxa3owM7GxgXL2iM7FOKvTltySe08OHG7xavU76xueqjXhinLCUUyLdXfC3Vg2pNmnoFqtAeCrS-6r3KZg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "btaa823-f5",
+        "preview_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/m_btaa823f5.jpeg?Expires=1792465420&Signature=zh7dEnvcHGtTNXgycfxqFSvXRrImzteAVAIEUVz2j3oxkbEXtyogGIaEYxESuhR8nN3ZblvwRsF4WbXocL9352eDBLZ0TmLkrrT7QXHLeIqTlwxTJX-uurPAfJIvY~4rgl7C~~yDAo-I2CPPqo4yQXt6BVgwAREDPQmxzTYMuNcbM8m05yN~qr9ZOaOSsHCMSsRE2~WyPKIhLyU8dfpFF6jQqx7EXRk3Olum7UILUFOkVnkJyGEWBbtn96V7nlJdl5L2Qcat4PLS6H2~M795VRXF-Tj6gNqwVn2PpHDlA73VFiEsiYIb2e610emXS8N6r0pZ4LEkF22YZbRTfKnUqg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f5.jpeg?Expires=1792465420&Signature=rmYfzdaqBvoruticqHtywF4rUCFtAu9UMvmfOVRRBV6ZsMStf2LXhAYgO~eTwWsNgy0NJwkewtVS6TTGgGe0iIOLwZf7e~yW940QzBJ0Ler-ejpVgpMuFB6kbH4yFydoMt9v9TNuSSDP7r2tfdffOjs14JHuAF42VmICVOyS7I3Cb~0nM9RVWlYHf14NIJoWfz4azty8PiI1VCl~jo9cMwtrlGyKC5qKOOwGxDUoSBGo7Ff-9FZZktyHJM8t7nTxuvcGoxa3owM7GxgXL2iM7FOKvTltySe08OHG7xavU76xueqjXhinLCUUyLdXfC3Vg2pNmnoFqtAeCrS-6r3KZg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA"
+      },
+      "download_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f5.jpeg?Expires=1792465420&Signature=rmYfzdaqBvoruticqHtywF4rUCFtAu9UMvmfOVRRBV6ZsMStf2LXhAYgO~eTwWsNgy0NJwkewtVS6TTGgGe0iIOLwZf7e~yW940QzBJ0Ler-ejpVgpMuFB6kbH4yFydoMt9v9TNuSSDP7r2tfdffOjs14JHuAF42VmICVOyS7I3Cb~0nM9RVWlYHf14NIJoWfz4azty8PiI1VCl~jo9cMwtrlGyKC5qKOOwGxDUoSBGo7Ff-9FZZktyHJM8t7nTxuvcGoxa3owM7GxgXL2iM7FOKvTltySe08OHG7xavU76xueqjXhinLCUUyLdXfC3Vg2pNmnoFqtAeCrS-6r3KZg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-009-http_response_entity.bin",
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-009-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/oxfordacademic-headless-009-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 878,
+        "height": 514,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "btaa823f5.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 6.",
+        "caption": "Example of residues mined from full texts. The structure is 1usu, chain A (gray) and B (cyan). Out of six residues identified by the basic TM (four at the interface, in green and blue, and two not at the interface, in red) NLP SVM and DRNN models correctly classified three interface residues (green) and failed to identify Asp53 (which could be easily identified by a human reader, see Supplementary Text S2 ). Only one non-interface residue (magenta) was mined from the PubMed abstracts. The abstracts from PMC-OA did not predict any residues in basic TM. Details are in Supplementary Text S2",
+        "url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f6.jpeg?Expires=1792465420&Signature=wAeR3U51jeCE69ryzZ7z7U6X-tOw-0GJvVIBsjWsHOm66YuYUYBA57NDwAKzM8tpRKQQJsVI0NND-YNU43xFGdSi-M2b~AtTXlgYCzaQll7p1TTj8VodMCbh21z9zPp9H9oldC~VqKd5OnzfGzw4nt6awURgJbB5HJOTO~8KqqeLdifrQHRj0tJfkTowKiaaXLQk8PMelXlyOmull5bKF63kIeySdDasBb~aH2GiX7Lde1D57VmFzE4SK7MVzVUQmdG~qNIZIJsWWFwtTEFPlkPeFau7mpD1kvOrfvLGtk00gss5nQi9fKlDof~BVrovV4M~HIOzIPFME5VIUS8qyA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "btaa823-f6",
+        "preview_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/m_btaa823f6.jpeg?Expires=1792465420&Signature=MpaHw2BNKkie-6wAxSO2vHSn~sZAlzioVgOts9tDyQy9XsmKFp-OqlTR6lOZjc8T0FAO~74eufJt3lXd5FyX~yPgYyO3aVr99MOxiLZd0XnyPfsN~GqLe~wPjCfPXIgjtFZBt64WS8vmE0ljN57T-DQzRAHlXJJeakOON53wUCyHdhQJax7NMWFO4LdlmC0jO8ua9CtJ3hc8M8x5f9E8oVPCzY7hKhcHoDf8RoCoUmWAnnIl11dPepp-hl9oYNdHLDfOmdPIcPq0aQWqJaRUtA2SLDl~9LaJZ5x2aaMfq4afUSsISoskmukfUoU96e~74tE~bk0Sl4nEKoWrnJHRxg__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f6.jpeg?Expires=1792465420&Signature=wAeR3U51jeCE69ryzZ7z7U6X-tOw-0GJvVIBsjWsHOm66YuYUYBA57NDwAKzM8tpRKQQJsVI0NND-YNU43xFGdSi-M2b~AtTXlgYCzaQll7p1TTj8VodMCbh21z9zPp9H9oldC~VqKd5OnzfGzw4nt6awURgJbB5HJOTO~8KqqeLdifrQHRj0tJfkTowKiaaXLQk8PMelXlyOmull5bKF63kIeySdDasBb~aH2GiX7Lde1D57VmFzE4SK7MVzVUQmdG~qNIZIJsWWFwtTEFPlkPeFau7mpD1kvOrfvLGtk00gss5nQi9fKlDof~BVrovV4M~HIOzIPFME5VIUS8qyA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA"
+      },
+      "download_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f6.jpeg?Expires=1792465420&Signature=wAeR3U51jeCE69ryzZ7z7U6X-tOw-0GJvVIBsjWsHOm66YuYUYBA57NDwAKzM8tpRKQQJsVI0NND-YNU43xFGdSi-M2b~AtTXlgYCzaQll7p1TTj8VodMCbh21z9zPp9H9oldC~VqKd5OnzfGzw4nt6awURgJbB5HJOTO~8KqqeLdifrQHRj0tJfkTowKiaaXLQk8PMelXlyOmull5bKF63kIeySdDasBb~aH2GiX7Lde1D57VmFzE4SK7MVzVUQmdG~qNIZIJsWWFwtTEFPlkPeFau7mpD1kvOrfvLGtk00gss5nQi9fKlDof~BVrovV4M~HIOzIPFME5VIUS8qyA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-010-http_response_entity.bin",
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-010-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/oxfordacademic-headless-010-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 724,
+        "height": 721,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "btaa823f6.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 7.",
+        "caption": "Comparison of text-mining protocols on abstracts. The PubMed abstracts were retrieved by the OR-queries with simplified residue filtering (basic TM) and with the residue filtering by SVM model and DRNN. Both SVM and DRNN were trained on entire full-text training set. DRNN was applied for classifying residues in the entire sentence and with 7-words window around the mined residues. The performance P TM for individual complexes was calculated by Equation 1 . The distribution is normalized to the total number of complexes for which residues were extracted ( Table 3 )",
+        "url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f7.jpeg?Expires=1792465420&Signature=S3kumLwM62wOHIGYMus2bwnzHQPD-Gg8s-pWCXAUrQJgL2wee7vU~nS9c59EBP3U7e2fDJVzdfnslG15zVUs-JlXlbDAjAumjAw4hefilT4Q0wwcynSNHcBUPM3be-NCGrGA2bqLiEPQETv4qEi9X2noJXPQLX3CNGjOKGSDGZwTsv0AqvbonneruDDzR-whjzvJMs6Tgot0B1-k8nKvaSmjZs1PzLuRwpBcIuUM~bd6-6X5ij0BTVhS8u28rOBQ2dCd56zAFPE8XwJ4ERHZvNSXhRkn4gTABYFqi-BMb-GSWG5xdpnS13QNHeTxGT6ragzi05bkrwVHBDBEgT7J-w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "btaa823-f7",
+        "preview_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/m_btaa823f7.jpeg?Expires=1792465420&Signature=aYPg-TWCndF7YWWY-emGrwkNtL2R-2r9ZaLk7kz5NUCcsW-37zsRLwQcBpSMBW6R8Y~-k35ne6PDnOai8x3MzTPQgowJrZ1mdZsjWLsVeTVr36C-6a-ZYLn-6teKTU1OWWLvJcsL6SGJoqYCPAVUf6eiEJ-6rHxTBz5zTiihcL5PQkcBqBGc1BsoTSNw-sOXuJp3XvNVki01nMP6fec5BHO28BNTEgcBYBHNaVSfglg2f0~k4FoUnko4LvP~nEKvmnZ5tgCIAzDD8aOTdF4cwUHWrcI8UCqNYyA3yv3aHV5eQIR0tTXl-lfgVFvfxCsbThAT5eWRTkqbN6BV3k~Bjw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f7.jpeg?Expires=1792465420&Signature=S3kumLwM62wOHIGYMus2bwnzHQPD-Gg8s-pWCXAUrQJgL2wee7vU~nS9c59EBP3U7e2fDJVzdfnslG15zVUs-JlXlbDAjAumjAw4hefilT4Q0wwcynSNHcBUPM3be-NCGrGA2bqLiEPQETv4qEi9X2noJXPQLX3CNGjOKGSDGZwTsv0AqvbonneruDDzR-whjzvJMs6Tgot0B1-k8nKvaSmjZs1PzLuRwpBcIuUM~bd6-6X5ij0BTVhS8u28rOBQ2dCd56zAFPE8XwJ4ERHZvNSXhRkn4gTABYFqi-BMb-GSWG5xdpnS13QNHeTxGT6ragzi05bkrwVHBDBEgT7J-w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA"
+      },
+      "download_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f7.jpeg?Expires=1792465420&Signature=S3kumLwM62wOHIGYMus2bwnzHQPD-Gg8s-pWCXAUrQJgL2wee7vU~nS9c59EBP3U7e2fDJVzdfnslG15zVUs-JlXlbDAjAumjAw4hefilT4Q0wwcynSNHcBUPM3be-NCGrGA2bqLiEPQETv4qEi9X2noJXPQLX3CNGjOKGSDGZwTsv0AqvbonneruDDzR-whjzvJMs6Tgot0B1-k8nKvaSmjZs1PzLuRwpBcIuUM~bd6-6X5ij0BTVhS8u28rOBQ2dCd56zAFPE8XwJ4ERHZvNSXhRkn4gTABYFqi-BMb-GSWG5xdpnS13QNHeTxGT6ragzi05bkrwVHBDBEgT7J-w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-011-http_response_entity.bin",
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-011-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/oxfordacademic-headless-011-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 829,
+        "height": 537,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "btaa823f7.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 8.",
+        "caption": "TM performance with residue filtering by DRNN using different window sizes around mined residues. DRNN was trained on the entire training set of PMC-OA full-text articles. The performance P TM w as calculated by Equation 1",
+        "url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f8.jpeg?Expires=1792465420&Signature=IJQ-jnArv0w9z-YovJhDmQ3AlSEN3tXL8Uqkchhbt3~wSzCX4wXYAhZQCOVHlqUw3S8NMi7oJInJenod5pYYTZsO7jGS58rxW2M~-LrPlILLyM16RU-UzOHazaCet4xLRGAlOVeZ0cRGZUmPNwvnZtvthGyrZRFC8eCfmFftjTETAdjWUWA-xOrYP2lfUcz3g~SjCp55dqKxLd~CIPpQ~LIgwYuZ0N6jGa3ThvY~xALlstiZRyQb9zo0zE3498-9D3Ism13kzZSKG7AUhFMpoLvaFbFSi~53UiGLpHxLgkSke7oxvYtuUbm1B3kACFpHFP79CC-lH~RjTFhYmmSYVw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "btaa823-f8",
+        "preview_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/m_btaa823f8.jpeg?Expires=1792465420&Signature=nmLSMDSypS3juHvMLCwC9xi4WEdxIadlNOOrY2PJ8wbYs7CHb~t8e12i1TkQv0-vpGzbkS462BcWr~od8lM9Lvk~LhBLzBcMXklgFjU6rSoTzjDGvOmW0XNiPiFkR2eu5DXWOHTR4k~jiRMf9fqO9pICgUXIhuAOI-oANypTmgjd9POaHjUfLF7AZ6A~T1HXi-p92BiwZ65kn4qoCrjhoEu0AE937kZ88fj9yX3Kygep1f6PArVFjrcmSB8NHnEXXzgMfV3BXa~sRZ6RFfqcTNjvY-unKAQA5Z57gocO9IykYQ0TivFVJPxhJvsCoovWPFvv1ARxd~21j~aQ7s4mFA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f8.jpeg?Expires=1792465420&Signature=IJQ-jnArv0w9z-YovJhDmQ3AlSEN3tXL8Uqkchhbt3~wSzCX4wXYAhZQCOVHlqUw3S8NMi7oJInJenod5pYYTZsO7jGS58rxW2M~-LrPlILLyM16RU-UzOHazaCet4xLRGAlOVeZ0cRGZUmPNwvnZtvthGyrZRFC8eCfmFftjTETAdjWUWA-xOrYP2lfUcz3g~SjCp55dqKxLd~CIPpQ~LIgwYuZ0N6jGa3ThvY~xALlstiZRyQb9zo0zE3498-9D3Ism13kzZSKG7AUhFMpoLvaFbFSi~53UiGLpHxLgkSke7oxvYtuUbm1B3kACFpHFP79CC-lH~RjTFhYmmSYVw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA"
+      },
+      "download_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f8.jpeg?Expires=1792465420&Signature=IJQ-jnArv0w9z-YovJhDmQ3AlSEN3tXL8Uqkchhbt3~wSzCX4wXYAhZQCOVHlqUw3S8NMi7oJInJenod5pYYTZsO7jGS58rxW2M~-LrPlILLyM16RU-UzOHazaCet4xLRGAlOVeZ0cRGZUmPNwvnZtvthGyrZRFC8eCfmFftjTETAdjWUWA-xOrYP2lfUcz3g~SjCp55dqKxLd~CIPpQ~LIgwYuZ0N6jGa3ThvY~xALlstiZRyQb9zo0zE3498-9D3Ism13kzZSKG7AUhFMpoLvaFbFSi~53UiGLpHxLgkSke7oxvYtuUbm1B3kACFpHFP79CC-lH~RjTFhYmmSYVw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-012-http_response_entity.bin",
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-012-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/oxfordacademic-headless-012-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 896,
+        "height": 630,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "btaa823f8.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fig. 9.",
+        "caption": "The increase in successful docking predictions over the basic TM protocol. The change of the number of correctly predicted complexes is in blue and the change of the number of correct matches in top 100 is in orange",
+        "url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f9.jpeg?Expires=1792465420&Signature=HlHzwZLUamNf~pCBaarlADKjy0Syknd5uMUP2Hgsxa5r2GTfjjE5Yg7pEjEHjaMbihPDLtxyB6qcpMYsxx5dR7I2vRaVeqQrOzWhTtnadlKfI8iCkt1Jk1eW6SBgfIJT12UWbwP8-NVvxlqv2imTLI4CBJZJPHGsq6uh1JOi3EooeoXtuR5BGkF-eSElIseL8yApq2XCjbqyGYz5tH4cKM10nXHS2YyPnG9kNk79-FXbgdFBr318KDQoMpU7hQBPOedbpFJ32rXLBLC6TUHo0dvv1y1m1rfw0FXdP3Z2lTf4OPS4HhOkF2ewoxI0yphs8l4CCTybDLKX8BgXVKLqXQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "btaa823-f9",
+        "preview_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/m_btaa823f9.jpeg?Expires=1792465420&Signature=HGz6TreP-u-E5YHazz7t~G-hA3hNY4lTfO~afJ8jy8wP2dSgexp0r2PO~E9f-hdR1TJuYnlOMBOGDJEr7g-xUEWNJIH6v9uHhaKp0tjUrC39htTFmDtwb1CaWgbMQ8n9cbwKvhO8FgCzGeAtl9aWmqdfTNQKEHs4YZyxrtEgEVOy5AUfMFUpYB7jkisowJ1GdHC3HFoYA2xFQDeQGBo64HZMSzEppoeNI9-EzBjKWNLklU7NphSD~gGnAVLm5IPhthDziBPXQguPfoSt3hvxZDEeHpnDVn6LF6ZNN0BzpCwzmaq33JkWCTKVgj2mHZYzr6fnsnqnCDPt5WefC6Pf8A__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+        "full_size_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f9.jpeg?Expires=1792465420&Signature=HlHzwZLUamNf~pCBaarlADKjy0Syknd5uMUP2Hgsxa5r2GTfjjE5Yg7pEjEHjaMbihPDLtxyB6qcpMYsxx5dR7I2vRaVeqQrOzWhTtnadlKfI8iCkt1Jk1eW6SBgfIJT12UWbwP8-NVvxlqv2imTLI4CBJZJPHGsq6uh1JOi3EooeoXtuR5BGkF-eSElIseL8yApq2XCjbqyGYz5tH4cKM10nXHS2YyPnG9kNk79-FXbgdFBr318KDQoMpU7hQBPOedbpFJ32rXLBLC6TUHo0dvv1y1m1rfw0FXdP3Z2lTf4OPS4HhOkF2ewoxI0yphs8l4CCTybDLKX8BgXVKLqXQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA"
+      },
+      "download_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/37/4/10.1093_bioinformatics_btaa823/2/btaa823f9.jpeg?Expires=1792465420&Signature=HlHzwZLUamNf~pCBaarlADKjy0Syknd5uMUP2Hgsxa5r2GTfjjE5Yg7pEjEHjaMbihPDLtxyB6qcpMYsxx5dR7I2vRaVeqQrOzWhTtnadlKfI8iCkt1Jk1eW6SBgfIJT12UWbwP8-NVvxlqv2imTLI4CBJZJPHGsq6uh1JOi3EooeoXtuR5BGkF-eSElIseL8yApq2XCjbqyGYz5tH4cKM10nXHS2YyPnG9kNk79-FXbgdFBr318KDQoMpU7hQBPOedbpFJ32rXLBLC6TUHo0dvv1y1m1rfw0FXdP3Z2lTf4OPS4HhOkF2ewoxI0yphs8l4CCTybDLKX8BgXVKLqXQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-013-http_response_entity.bin",
+        "acquisition/assets-2026-09-15/oxfordacademic-headless-013-http_response_entity.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/oxfordacademic-headless-013-http_response_entity.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 680,
+        "height": 695,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "btaa823f9.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 9,
+    "unique_files": 9,
+    "verified_files": 9,
+    "replayed_files": 9,
+    "complete_received_files": 9,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa823/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 9,
+    "unique_files": 9,
+    "verified_files": 9,
+    "replayed_files": 9,
+    "complete_received_files": 9
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

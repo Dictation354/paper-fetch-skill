@@ -1,0 +1,61 @@
+{
+  "provider": "ams",
+  "doi": "10.1175/jtech-d-24-0028.1",
+  "started_at_utc": "2026-09-15T06:26:45.298084+00:00",
+  "attempt": 1,
+  "headless": false,
+  "network_context": "User reports current network has no subscription access; not independently verified. Existing configured API credentials and provider storage state retained.",
+  "capture_scope": "Current repository CLI with passive HTTP/browser response and final DOM observers. No injected responses, forced failures, route overrides, or PDF quality fixes.",
+  "responses": [
+    {
+      "requested_url": "https://journals.ametsoc.org/view/journals/atot/41/12/JTECH-D-24-0028.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/atot/41/12/JTECH-D-24-0028.1.xml",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Tue, 15 Sep 2026 06:26:52 GMT",
+        "content-encoding": "gzip",
+        "x-cache": "Miss from cloudfront",
+        "via": "1.1 b9b7c10d90a52e2843c3e95e795e359a.cloudfront.net (CloudFront)",
+        "x-amz-cf-pop": "LAX54-P7",
+        "x-amz-cf-id": "pkGDMKNEAJ6kjQ61rRotq3Mk0Lmio8e2rzjAh_WMjYSSO0Xv9YZITA==",
+        "x-xss-protection": "1; mode=block",
+        "referrer-policy": "no-referrer-when-downgrade",
+        "content-security-policy": "frame-ancestors 'self' https://admin-journals.ametsoc.org",
+        "x-content-type-options": "nosniff",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "vary": "Origin",
+        "x-firefox-spdy": "h2"
+      },
+      "capture_kind": "http_response_entity",
+      "transport": "Headed Camoufox requestfinished response.body()",
+      "body_file": "acquisition/subscription-2026-09-15/response-001.bin",
+      "size": 1464527,
+      "sha256": "2223545dcfc935965cd7bbf39d67c6d7a0d50357a4d2bd1822d67e5aaf72ed48",
+      "captured_at_utc": "2026-09-15T06:26:51.240789+00:00",
+      "headless": false,
+      "network_context": "User reports current network has no subscription access; not independently verified. Existing configured API credentials and provider storage state retained.",
+      "capture_scope": "Current repository CLI with passive HTTP/browser response and final DOM observers. No injected responses, forced failures, route overrides, or PDF quality fixes."
+    },
+    {
+      "requested_url": "https://journals.ametsoc.org/view/journals/atot/41/12/JTECH-D-24-0028.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/atot/41/12/JTECH-D-24-0028.1.xml",
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "browser_dom",
+      "transport": "Headed Camoufox page.content() immediately before provider closes page",
+      "title": "Assessing Air–Sea Surface Turbulent Heat Fluxes from Reanalyses Using Concurrent Shipboard Measurements in: Journal of Atmospheric and Oceanic Technology Volume 41 Issue 12 (2024)",
+      "body_file": "acquisition/subscription-2026-09-15/response-002.bin",
+      "size": 1498973,
+      "sha256": "b25a557a847efc6d194f53198dbc1100467364fa8b2300e545b7037a7b21a776",
+      "captured_at_utc": "2026-09-15T06:26:53.597441+00:00",
+      "headless": false,
+      "network_context": "User reports current network has no subscription access; not independently verified. Existing configured API credentials and provider storage state retained.",
+      "capture_scope": "Current repository CLI with passive HTTP/browser response and final DOM observers. No injected responses, forced failures, route overrides, or PDF quality fixes."
+    }
+  ],
+  "capture_errors": [],
+  "exit_code": 0,
+  "completed_at_utc": "2026-09-15T06:27:01.648829+00:00",
+  "excluded_unrelated_responses": 0
+}

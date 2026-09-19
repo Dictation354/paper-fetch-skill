@@ -1,0 +1,1089 @@
+{
+  "doi": "10.1111/cas.16117",
+  "source": "wiley_browser",
+  "has_fulltext": true,
+  "content_kind": "fulltext",
+  "has_abstract": true,
+  "warnings": [],
+  "source_trail": [
+    "fulltext:wiley_html_ok",
+    "resolve:doi",
+    "resolve:doi_selected",
+    "route:crossref_signal_ok",
+    "route:signal_domain_wiley",
+    "route:signal_publisher_wiley",
+    "route:signal_doi_wiley",
+    "route:probe_wiley_unknown",
+    "route:provider_selected_wiley",
+    "route:provider_candidate_wiley_metadata_selected_rank_1",
+    "route:provider_candidate_wiley_identity_strong",
+    "fulltext:wiley_attempt",
+    "download:wiley_assets_skipped_profile_none",
+    "fulltext:wiley_article_ok",
+    "route:provider_candidate_wiley_accepted"
+  ],
+  "trace": [
+    {
+      "stage": "resolve",
+      "component": "doi",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "resolve",
+      "component": "doi_selected",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "crossref_signal",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "signal_domain_wiley",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "signal_publisher_wiley",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "signal_doi_wiley",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "probe_wiley",
+      "outcome": "unknown",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "provider_selected_wiley",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "provider_candidate_wiley_metadata_selected_rank_1",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "provider_candidate_wiley_identity_strong",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "fulltext",
+      "component": "wiley",
+      "outcome": "attempt",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "download",
+      "component": "wiley_assets_skipped_profile_none",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "fulltext",
+      "component": "wiley_html",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "fulltext",
+      "component": "wiley_article",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    },
+    {
+      "stage": "route",
+      "component": "provider_candidate_wiley_accepted",
+      "outcome": "info",
+      "code": null,
+      "message": null,
+      "provider": null,
+      "route": null,
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    }
+  ],
+  "token_estimate": 6840,
+  "token_estimate_breakdown": {
+    "abstract": 337,
+    "body": 6503,
+    "refs": 2474
+  },
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 6840,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [],
+    "source_trail": [
+      "fulltext:wiley_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "route:crossref_signal_ok",
+      "route:signal_domain_wiley",
+      "route:signal_publisher_wiley",
+      "route:signal_doi_wiley",
+      "route:probe_wiley_unknown",
+      "route:provider_selected_wiley",
+      "route:provider_candidate_wiley_metadata_selected_rank_1",
+      "route:provider_candidate_wiley_identity_strong",
+      "fulltext:wiley_attempt",
+      "download:wiley_assets_skipped_profile_none",
+      "fulltext:wiley_article_ok",
+      "route:provider_candidate_wiley_accepted"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 337,
+      "body": 6503,
+      "refs": 2474
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 25987,
+      "word_count": 3982,
+      "body_block_count": 7,
+      "body_heading_count": 7,
+      "body_to_abstract_ratio": 20.957894736842107,
+      "explicit_body_container": false,
+      "post_abstract_body_run": true,
+      "figure_count": 5
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "article": {
+    "doi": "10.1111/cas.16117",
+    "source": "wiley_browser",
+    "metadata": {
+      "title": "Cell cycle heterogeneity and plasticity of colorectal cancer stem cells",
+      "authors": [
+        "Tsunaki Higa",
+        "Keiichi I. Nakayama"
+      ],
+      "abstract": "Cancer stem cells (CSCs) are a long-lived and self-renewing cancer cell population that drives tumor propagation and maintains cancer heterogeneity. They are also implicated in the therapeutic resistance of various types of cancer. Recent studies of CSCs in colorectal cancer (CRC) have uncovered fundamental paradigms that have increased understanding of CSC systems in solid tumors. Colorectal CSCs share multiple biological properties with normal intestinal stem cells (ISCs), including expression of the stem cell marker Lgr5. New evidence suggests that colorectal CSCs manifest substantial heterogeneity, as exemplified by the existence of both actively cycling Lgr5<sup>+</sup> CSCs as well as quiescent Lgr5<sup>+</sup> CSCs that are resistant to conventional anticancer therapies. The classical view of a rigid cell hierarchy and irreversible cell differentiation trajectory in normal and neoplastic tissues is now challenged by the finding that differentiated cells have the capacity to revert to stem cells through dynamic physiological reprogramming events. Such plasticity of CSC systems likely underlies both carcinogenesis and therapeutic resistance in CRC. Further characterization of the mechanisms underpinning the heterogeneity and plasticity of CSCs should inform future development of eradicative therapeutic strategies for CRC.",
+      "journal": "Cancer Science",
+      "article_type": null,
+      "published": "2024-5",
+      "keywords": [],
+      "license_urls": [
+        "http://creativecommons.org/licenses/by-nc/4.0/"
+      ],
+      "landing_page_url": "https://onlinelibrary.wiley.com/doi/10.1111/cas.16117"
+    },
+    "sections": [
+      {
+        "heading": "Abstract",
+        "level": 2,
+        "kind": "abstract",
+        "text": "Cancer stem cells (CSCs) are a long-lived and self-renewing cancer cell population that drives tumor propagation and maintains cancer heterogeneity. They are also implicated in the therapeutic resistance of various types of cancer. Recent studies of CSCs in colorectal cancer (CRC) have uncovered fundamental paradigms that have increased understanding of CSC systems in solid tumors. Colorectal CSCs share multiple biological properties with normal intestinal stem cells (ISCs), including expression of the stem cell marker Lgr5. New evidence suggests that colorectal CSCs manifest substantial heterogeneity, as exemplified by the existence of both actively cycling Lgr5<sup>+</sup> CSCs as well as quiescent Lgr5<sup>+</sup> CSCs that are resistant to conventional anticancer therapies. The classical view of a rigid cell hierarchy and irreversible cell differentiation trajectory in normal and neoplastic tissues is now challenged by the finding that differentiated cells have the capacity to revert to stem cells through dynamic physiological reprogramming events. Such plasticity of CSC systems likely underlies both carcinogenesis and therapeutic resistance in CRC. Further characterization of the mechanisms underpinning the heterogeneity and plasticity of CSCs should inform future development of eradicative therapeutic strategies for CRC."
+      },
+      {
+        "heading": "1 INTRODUCTION",
+        "level": 2,
+        "kind": "body",
+        "text": "Cancer cells, even those within an individual tumor, manifest pronounced heterogeneity with regard to cell proliferation, gene expression, and the ability to initiate tumor growth.<sup>1</sup> The concept of the cancer stem cell (CSC), which was originally established for leukemia, posits that a small subpopulation of cancer cells (CSCs) is largely responsible for the growth of an entire tumor.<sup>2</sup> By analogy with normal tissue stem cells, CSCs are thought to have the ability both to undergo self-renewal and to differentiate into diverse cell types, thereby supporting the long-term maintenance of heterogeneous cancer cell populations.<sup>3</sup> CSCs in several cancers have been shown to harbor a quiescent population that is resistant to conventional anticancer therapies that primarily target actively cycling cells.<sup>4</sup> Approaches designed to eradicate such quiescent CSCs have succeeded in overcoming the therapeutic resistance of leukemia and several types of solid tumors<sup>5–7</sup>\n\nColorectal cancer (CRC) presents a major challenge to clinical medicine worldwide. However, substantial advances over the past decade in understanding of the biology of normal intestinal stem cells (ISCs) have provided insight into the characteristics of CSCs in CRC,<sup>3, 8</sup> with such findings having the potential to inform the future development of effective therapeutic strategies. Several recent studies have uncovered the existence of quiescent colorectal CSCs,<sup>9–11</sup> underscoring the importance of therapeutic targeting of this cell population to achieve cancer eradication. Although classical paradigms of hematopoietic or leukemia stem cells postulated a hardwired hierarchy underlying the cell differentiation process, more recent evidence suggests that differentiated cells can revert to the stem cell state in response to various perturbations in both normal and neoplastic intestinal epithelia.<sup>12–15</sup> Generation or replenishment of the CSC pool as a result of such plasticity likely underlies colorectal carcinogenesis as well as the development of resistance to cancer therapies. Here we review historical and recent evidence related to cell cycle heterogeneity and cellular plasticity of colorectal CSCs, including the similarities and differences between these cells and normal ISCs."
+      },
+      {
+        "heading": "2 CARCINOGENESIS OF COLORECTAL CANCER",
+        "level": 2,
+        "kind": "body",
+        "text": "Approximately 85% of CRC cases are thought to arise from malignant transformation of precancerous lesions<sup>16</sup> as a result of cumulative genetic mutations or epigenetic abnormalities. Given that such oncogenic changes have been shown to accumulate primarily in self-renewing and long-lived normal ISCs,<sup>17</sup> ISC biology is thought to be highly relevant to CRC carcinogenesis. As reviewed in detail elsewhere,<sup>18</sup> most precancerous colorectal lesions can be classified into two major subtypes: tubular adenoma and serrated lesions. Tubular adenoma constitutes the most frequent and well-studied origin of CRC, and its development is typically initiated by a loss-of-function mutation of Apc (adenomatous polyposis coli) that triggers aberrant activation of the Wnt–β-catenin signaling pathway.<sup>19</sup> The adenoma–carcinoma sequence theory states that the stepwise accumulation of a gain-of-function mutation of Kras (which activates the MAPK signaling pathway), loss of Smad4 (which inactivates signaling by transforming growth factor–β [TGF-β]), and loss of the tumor suppressor p53 results in the malignant transformation of tubular adenoma into CRC.<sup>20</sup> The activation of Wnt and MAPK pathways and the suppression of TGF-β signaling are facilitated by the essential niche factors R-spondin, epidermal growth factor (EGF), and Noggin, respectively, and have been shown to be necessary for the maintenance of ISC function and consequent generation of intestinal organoids in culture.<sup>21</sup> Sequential introduction of the abovementioned driver mutations affecting Apc, Kras, Smad4, and p53 renders intestinal organoids independent of these niche factors and eventually results in their malignant transformation.<sup>22</sup> Colorectal tumors originating from tubular adenoma manifest active cell proliferation and turnover as well as upregulation of ISC gene expression signatures.<sup>19, 23</sup> The essence of carcinogenesis from this type of adenoma is, thus, likely an aberrant cell-autonomous activation of ISC function.\n\nSerrated lesions, also referred to as hyperplastic polyps, are characterized by recurrent Braf<sup>V600E</sup> mutation.<sup>24</sup> Although serrated lesions were considered harmless polyps until a little over a decade ago, new evidence has suggested that their malignant transformation can result in the development of CRC with a poor prognosis,<sup>25</sup> albeit with a relatively low frequency. Given that the Braf<sup>V600E</sup> mutation induces cellular senescence,<sup>26, 27</sup> serrated lesions generally show almost complete inactivation of cell proliferation and loss of ISCs.<sup>26</sup> Although the mechanism by which carcinogenesis is initiated from such senescent, static, and ISC-depleted polyps is not fully understood, inactivation of senescence pathways, such as Cdkn2a or p53 at the later stages, is likely a key to the malignant transformation of serrated lesions.<sup>28</sup>"
+      },
+      {
+        "heading": "3 LGR5<sup>+</sup> STEM CELLS IN NORMAL AND NEOPLASTIC INTESTINAL EPITHELIA",
+        "level": 2,
+        "kind": "body",
+        "text": "Numerous studies performed with genetically engineered mouse and organoid models over the past decade have greatly advanced understanding of normal ISCs and colorectal CSCs. Lgr5 is one of the marker proteins identified by such approaches and has become the most intensely studied colorectal CSC marker to date. Lgr5 is encoded by a Wnt target gene and serves as a receptor for R-spondin that activates Wnt signaling, and it was first identified as a marker for normal ISCs by lineage tracing experiments in vivo.<sup>29</sup> Each intestinal crypt contains a limited number (5–15) of equipotent Lgr5<sup>+</sup> ISCs that divide relatively frequently to drive daily epithelial turnover while continuously competing for their niche space—a process referred to as neutral drift dynamics (Figure 1A).<sup>30</sup>\n\n![Figure 1](https://onlinelibrary.wiley.com/cms/asset/3c4d7aae-d18a-470f-b5a4-bbea0017e31c/cas16117-fig-0001-m.jpg)\n\n**Figure 1.** Cell cycle heterogeneity among colorectal cancer (CRC) stem cell populations. (A) Normal intestinal stem cell (ISC) populations. Lgr5 <sup>+</sup> crypt base columnar cells (CBCs) reside at the crypt base and divide rapidly to drive homeostatic epithelial turnover. The existence of quiescent +4 ISCs has also been indicated by analysis of several markers. (B) Cell cycle heterogeneity of Lgr5 <sup>+</sup> CSCs that underlies therapeutic resistance of CRC. Quiescent CSCs expressing markers such as Mex3a, p27, and p57 persist during conventional anticancer therapies, and their subsequent activation initiates post-therapeutic tumor regrowth. (C) Our scRNA-seq analysis of mouse CRC. Cell cycle analysis shows that Lgr5 <sup>+</sup> CSCs are divided into actively cycling (cluster 2) and quiescent (cluster 4) populations.\n\nLoss of Apc in Lgr5<sup>+</sup> ISCs was found to result in the rapid development of tubular adenoma,<sup>31</sup> whereas that in differentiated cells failed to initiate tumor formation and induced apoptosis,<sup>31, 32</sup> suggesting that normal Lgr5<sup>+</sup> ISCs serve as predominant CRC-initiating cells. Lineage tracing experiments in established adenoma of Apc mutant mice showed that intratumoral Lgr5<sup>+</sup> cells function as CSCs that are capable of both self-renewal and differentiation and which maintain long-term tumor growth.<sup>33</sup> A recent large-scale single-cell RNA-sequencing (scRNA-seq) analysis of human CRC revealed marked upregulation of Lgr5<sup>+</sup> ISC signature genes in tubular adenoma.<sup>23</sup> These findings suggest that, at least in the case of tubular adenoma-related CRC, Lgr5-expressing cell populations include the CSCs that drive cancer growth and that these CSCs likely share similar biological properties with normal ISCs. Attempts to develop antibody–drug conjugates that target Lgr5<sup>+</sup> CSCs have shown that such agents substantially prolong the survival of tumor-bearing mice.<sup>34, 35</sup>\n\nDespite evidence suggesting the importance of Lgr5<sup>+</sup> CSCs in CRC, it remains unclear whether therapeutic targeting of these cells can result in the eradication of CRC. As discussed in detail below, recent studies suggest that marked heterogeneity of CSCs and plasticity of differentiated cancer cells underlie therapeutic resistance of CRC, indicating that a single CSC-targeting strategy is likely to be insufficient. In addition, another recent study uncovered the existence of an irreversible gradient of protein synthesis activity associated with CRC tumor zonation and suggested that cells with high biosynthetic activity exclusively function as top-of-hierarchy CSCs irrespective of Lgr5 expression.<sup>36</sup> Ablation of Lgr5<sup>+</sup> cells in CRC derived from serrated lesions was also shown to have no effect on tumor growth,<sup>37</sup> indicative of the possible existence of a completely different CSC system in serrated lesion-derived cancer. The details of such CSCs remain largely unclear."
+      },
+      {
+        "heading": "4 CELL CYCLE HETEROGENEITY AND THERAPEUTIC RESISTANCE IN COLORECTAL CANCER STEM CELLS",
+        "level": 2,
+        "kind": "body",
+        "text": "The CSC theory was first established as a result of studies of leukemia in the 1990s.<sup>2</sup> Most leukemia stem cells (LSCs) are quiescent and highly resistant to conventional anticancer therapies that target proliferative cells.<sup>4</sup> Several approaches to eliminate such quiescent LSCs by molecular interference with cell cycle regulation have succeeded in eradicating leukemia in animal models (reviewed in Takeishi & Nakayama).<sup>4</sup> We previously showed that genetic ablation of the ubiquitin ligase subunit Fbxw7 resulted in accumulation of its substrate c-Myc and thereby activated the cell cycle in LSCs in a model of chronic myeloid leukemia. This termination of quiescence sensitized the LSCs to cytosine arabinoside and imatinib and reduced the rate of post-therapeutic relapse.<sup>38</sup> The strategy of quiescent CSC ablation has also been successfully extended to the treatment of several types of solid tumor.<sup>5–7</sup> Quiescence of LSCs is thought to be a property inherited from their normal counterparts, hematopoietic stem cells.<sup>14, 38, 39</sup> However, normal Lgr5<sup>+</sup> ISCs have been thought to constitute an actively cycling population, with this proliferation contributing to the rapid homeostatic turnover of the intestinal epithelium.<sup>15, 30, 40</sup> An initial view of ISC systems postulated that quiescent ISCs also exist in the +4 position of intestinal crypts (Figure 1A).<sup>40</sup> Although several markers for +4 ISCs—such as Bmi1,<sup>41</sup> Lrig1,<sup>42</sup> mTert,<sup>43</sup> and Hopx<sup>44</sup>—have been identified, the existence of such undifferentiated quiescent stem cells in the intestinal epithelium remains controversial, given that these markers are also expressed by Lgr5<sup>+</sup> ISCs and are, therefore, not restricted to quiescent ISCs, as has been extensively discussed elsewhere.<sup>14, 15</sup>\n\nSeveral groups have reported the existence of quiescent CSCs within the last two years, highlighting the marked heterogeneity of the colorectal CSC pool (Figure 1B,C). Mex3a was thus shown to mark a slowly cycling Lgr5<sup>+</sup> CSC population that undergoes self-renewal and maintains long-term tumor growth. Ablation of Mex3a<sup>+</sup> CSCs in combination with chemotherapy prolonged the survival of tumor-bearing mice by preventing CRC chemoresistance.<sup>11</sup> A subset of Lgr5<sup>+</sup> CSCs was also found to express the cyclin-dependent kinase inhibitor (CKI) p27 (Figure 2A) and to be maintained in a dormant state as a result of the inhibition of focal adhesion kinase (FAK) activity by the collagen protein COL17A1 at the plasma membrane. Chemotherapy disrupted the cell–matrix interface and downregulated COL17A1 expression, resulting in the activation of a FAK–YAP (Yes-associated protein) signaling axis. YAP activation abrogated the dormancy of the Lgr5<sup>+</sup> CSCs by downregulating p27 and thereby promoted post-therapeutic tumor regrowth (Figure 2B).<sup>10</sup> Our recent study of a syngeneic transplantation model with malignant CRC organoids revealed that Lgr5<sup>+</sup> CSCs can be divided into actively cycling and quiescent populations on the basis of scRNA-seq analysis, with the latter cell population being found to specifically express p57 (Figure 2C),<sup>9</sup> a CKI that is structurally similar to p27. We also previously showed that p57 is specifically expressed in hematopoietic,<sup>39</sup> neural,<sup>45</sup> and injury-induced intestinal<sup>13</sup> stem cells. Deletion of p57 gene resulted in the disruption of quiescence and thereby in the impairment of tissue-constituting ability in these normal tissue stem cells, suggesting that p57 plays a pivotal role in the maintenance of tissue stem cell populations. In CRC, we found that the Lgr5<sup>+</sup> colorectal CSCs expressing p57 contribute minimally to tumor growth in the steady state, but they are activated by chemotherapy and substantially drive tumor regrowth. Genetic ablation of p57<sup>+</sup>Lgr5<sup>+</sup> CSCs greatly attenuated post-therapeutic CRC recurrence.<sup>9</sup> Another study showed that p57 expression is upregulated in Lgr5<sup>+</sup> colorectal CSCs by the transcription factor PROX1, whose expression is, in turn, under the control of the Wnt-responsive transcription factor TCF1 (Figure 2C).<sup>46</sup> Collectively, these recent findings highlight the substantial heterogeneity of Lgr5<sup>+</sup> CSCs as well as the need for novel therapeutic strategies based on the targeting of quiescent CSCs for the eradication of CRC.\n\n![Figure 2](https://onlinelibrary.wiley.com/cms/asset/df4b669d-0cef-41b2-a840-9beaa4379389/cas16117-fig-0002-m.jpg)\n\n**Figure 2.** Mechanisms underlying the quiescence and therapy resistance of colorectal cancer (CRC) stem cells. (A) The cyclin-dependent kinase (CDK) inhibitors p21, p27, and p57 directly inhibit the activity of cyclin–CDK complexes and maintain cells in a quiescent state. All of these CDK inhibitors are thought to be particularly important to inhibit the G<sub>1</sub> cyclin–CDK complexes such as Cyclin C–CDK3, Cyclin D–CDK4/6 or Cyclin E–CDK2. (B) Mechanism for regulation of dormancy and reactivation of quiescent Lgr5 <sup>+</sup> CSCs by the cell–matrix interface. In the steady state, COL17A1, which anchors cells to the basement membrane, mediates constitutive inhibition of FAK activity and thereby maintains p27 expression in CSCs. Chemotherapy disrupts this cell–matrix interface and activates a FAK–YAP–TEAD signaling axis that breaks the dormancy of cancer step cell (CSC) and thereby promotes post-therapeutic tumor regrowth. RTK, receptor tyrosine kinase. (C) Our scRNA-seq analysis of mouse CRC revealed that the p57 gene is specifically expressed in the quiescent subpopulation of Lgr5 <sup>+</sup> CSCs. This expression has been shown by others to be upregulated by a Wnt-TCF1-PROX1 axis in Lgr5 <sup>+</sup> CSCs.<sup>46</sup>"
+      },
+      {
+        "heading": "5 REPLENISHMENT OF THE CANCER STEM CELL POOL DUE TO PLASTICITY OF NON-CANCER STEM CELLS",
+        "level": 2,
+        "kind": "body",
+        "text": "According to the classical paradigms established from studies of hematopoietic and leukemia stem cells, cell differentiation has been considered a unidirectional and irreversible process in both normal tissue and cancer. In the past few years, however, the mechanisms underlying the maintenance of tissue integrity as well as cellular identity have been shown to be much more plastic than expected.<sup>14</sup> Several studies have revealed that ISCs in intestinal crypts can be replenished after transient loss by dedifferentiation of their progeny cells such as enterocytes<sup>47</sup> or secretory lineage cells.<sup>13, 48</sup> Given that Lgr5<sup>+</sup> ISCs are proliferative and susceptible to various cytotoxic or inflammatory insults,<sup>13, 49</sup> this plasticity-based dedifferentiation is thought to be a key mechanism by which to regenerate damaged epithelium and the ISC pool.<sup>50</sup>\n\nCell plasticity as a regenerative response is also implicated in colorectal carcinogenesis. For example, whereas forced expression of β-catenin in differentiated intestinal epithelial cells does not result in adenoma formation, the additional loss of the inhibitory protein IκB and consequent activation of the transcription factor NF-κB induce the dedifferentiation and transformation of these cells, leading to the rapid development of adenoma.<sup>32</sup> Loss of Apc in Dclk1<sup>+</sup> tuft cells also leads to colorectal tumor formation in the setting of dextran sulfate sodium (DSS)-induced colitis.<sup>51</sup> A recent in vivo genetic screening study also showed that inflammation-activated TNF-α signaling concomitantly upregulates ISC-related genes as well as senescence pathways in the intestinal epithelium thereby confers a growth advantage on the cells in which Cdkn2a or p53 gene is inactivated.<sup>52</sup> Collectively, these findings suggest that inflammation not only gives rise to cancer-initiating stem cells through dedifferentiation, but also renders the survival of these cells advantageous compared with that of their normal counterparts, possibly explaining why long-term administration of aspirin lowers the risk of CRC development.<sup>32, 53</sup> The microenvironment of established tumors might also induce cell plasticity. We recently found that p57<sup>+</sup> enteroendocrine cells in intestinal crypts dedifferentiate to serve as ISCs only in an injury-induced manner (Figure 3A). Although p57<sup>+</sup> cells retained enteroendocrine cell properties in adenomas of Apc mutant mice, the intratumoral p57<sup>+</sup> cells showed homeostatic stem cell activity and produced Lgr5<sup>+</sup> CSCs even in the absence of injury,<sup>13</sup> suggesting that the adenoma microenvironment induces constitutive dedifferentiation of these cells.\n\n![Figure 3](https://onlinelibrary.wiley.com/cms/asset/e0319abd-af6e-4330-adea-31402f160fb7/cas16117-fig-0003-m.jpg)\n\n**Figure 3.** Plasticity of stem cell systems in the normal intestine and colorectal cancer (CRC). (A) p57 <sup>+</sup> enteroendocrine cells in normal intestinal crypts do not manifest stem cell activity in the steady state. However, they dedifferentiate after injury and acquire stem cell potential to drive postinjury epithelial regeneration. (B and C) Plasticity promotes therapy resistance and metastasis of CRC. Lgr5 <sup>−</sup> cells that persist after anticancer therapies (B) or that metastasize (C) replenish or generate Lgr5 <sup>+</sup> cancer step cells (CSCs) through dedifferentiation and thereby initiate new tumor growth.\n\nThe cancer cell plasticity that gives rise to the replenishment of lost CSCs represents a major obstacle to the eradication of CRC. A study based on a xenograft model with human malignant CRC organoids revealed that genetic ablation of Lgr5<sup>+</sup> CSCs was compensated for by the reversion of relatively differentiated tumor cells expressing the keratin protein KRT20, rendering the therapeutic effect of such ablation only transient (Figure 3B).<sup>12</sup> Plasticity also plays a key role in CRC metastasis. Although Lgr5<sup>+</sup> CSCs were shown to be indispensable for the formation of liver metastases,<sup>54</sup> recent intravital imaging studies have revealed that most cells that initially migrate from the primary tumor and play a major role in metastasis formation do not express Lgr5.<sup>55, 56</sup> These findings suggest that an Lgr5<sup>−</sup> cell population is essential for the initiation of metastasis and that these cells as a result of their plasticity subsequently give rise to Lgr5<sup>+</sup> CSCs that contribute to the maintenance of metastatic tumors (Figure 3C). Although the targeting of such highly flexible cells would appear to pose a substantial challenge, the recent finding that the extent of protein synthesis activity is a major determinant of both stemness and plasticity, irrespective of Lgr5 expression,<sup>36</sup> suggests that taking aim at the cellular machinery that dictates such high biosynthetic activity might offer a therapeutic strategy to simultaneously target both CSCs and cellular plasticity."
+      },
+      {
+        "heading": "6 MECHANISMS UNDERLYING PLASTICITY: FETAL-LIKE REVERSION AND METAPLASIA-LIKE CONVERSION",
+        "level": 2,
+        "kind": "body",
+        "text": "The dedifferentiation process induced by ISC loss was initially explained by the simple hypothesis that differentiated cells entering the vacant stem cell niche are exposed to niche factors including Wnt and thereby acquire stemness.<sup>47</sup> However, more recent evidence indicates that dedifferentiation represents a complex reprogramming event that dynamically alters spatiotemporal cell identity. One such event is fetal-like reversion, which gives rise to a regeneration-specific ISC population referred to as regenerative/revival stem cells (RSCs) in response to various injury contexts such as anticancer drug treatment, irradiation, genetic ablation of Lgr5<sup>+</sup> cells, and parasitic infection (Figure 4).<sup>49, 57</sup> RSCs highly express fetal genes such as those for Sca-1<sup>49</sup> or Clu.<sup>57</sup> In the case of CRC, RSCs and typical Lgr5<sup>+</sup> CSCs were recently shown to coexist within the tumor.<sup>11, 58</sup> The equilibrium of RSC-CSC distribution is adaptively altered by selective pressures including chemotherapy (Figure 4),<sup>58</sup> suggesting that the reversion program represents a universal mechanism to deal with perturbations in both normal and neoplastic tissues.\n\n![Figure 4](https://onlinelibrary.wiley.com/cms/asset/b9839d98-12a9-499e-a4bc-2a38a27b8e31/cas16117-fig-0004-m.jpg)\n\n**Figure 4.** Mechanisms underlying the plasticity of intestinal stem cell (ISC) and cancer step cell (CSC) systems. Fetal-like as well as metaplasia-like transcriptomic changes underlie injury-induced dedifferentiation and RSC induction in the normal intestinal epithelium. Such regenerative programs are also activated in CRC. The balance between CBC-like and RSC-like CSCs is dynamically altered depending on various selective pressures such as anticancer therapies, mutations, and signaling pathways.\n\nSeveral molecular mechanisms have been implicated in fetal-like reversion and the induction of RSCs. Induction of Sca-1<sup>+</sup> RSCs in the small intestinal epithelium was thus found to be dependent on interferon-γ (IFN-γ) secreted from immune cells after injury.<sup>49</sup> In contrast, two other studies have shown that injury-induced activation of the transcriptional co-activators YAP and TAZ is required and sufficient for the generation of Clu<sup>+</sup> RSCs<sup>57</sup> or Sca-1<sup>+</sup> RSCs<sup>59</sup> in the context of radiation-mediated damage to the small intestine or of DSS-induced colitis. In particular, YAP/TAZ activation in epithelial cells and subsequent induction of Sca-1<sup>+</sup> RSCs in colitis are triggered by inflammation-dependent remodeling of extracellular matrix in the colonic epithelium to a collagen-rich state.<sup>59</sup> YAP activation and concurrent fetal-like RSC induction have also been shown to take place in CRC after chemotherapy<sup>11</sup> as well as the liver metastasis.<sup>56</sup> In addition, secretion of TGF-β1 from monocyte–macrophage populations after tissue damage was recently found to be essential for postinjury YAP activation and consequent RSC induction in the normal intestine.<sup>60</sup> Collectively, these various observations suggest that extraepithelial factors, such as inflammatory signals from immune cells or mechanotransduction from extracellular matrix, might play an important role in the induction of RSCs. It remains elusive whether cell plasticity might also be induced in an epithelial cell–autonomous manner.\n\nIn addition to fetal-like reversion, our recent scRNA-seq analysis has indicated that injury-induced dedifferentiation of and stemness acquisition by p57<sup>+</sup> cells in the small intestine are associated with dynamic transcriptomic reprogramming to a state that resembles gastric metaplasia (Figure 4).<sup>13</sup> A recent scRNA-seq analysis of human CRC also revealed that both fetal-like and metaplasia-like gene expression signatures were concomitantly upregulated in tumors derived from serrated lesions,<sup>23</sup> whereas the typical Lgr5<sup>+</sup> ISC signature was hardly detectable. Pathological analysis has shown that human serrated lesions manifest both downregulation of CDX2, a transcription factor required for maintenance of intestinal tissue identity and for prevention of metaplasia, as well as consequent ectopic upregulation of gastric-related gene expression.<sup>61</sup> Mouse studies have also revealed that, although the Braf<sup>V600E</sup> mutation alone induces cellular senescence and loss of ISCs in the intestinal epithelium, the combination of CDX2 ablation, which induces gastric metaplasia, and the Braf<sup>V600E</sup> mutation results in the reappearance of ISCs and subsequent development of carcinoma with a serrated morphology.<sup>26, 27</sup> Together, these findings raise the possibility that metaplasia is also a physiological regenerative program to promote plasticity and stemness acquisition and that it might be hijacked pathologically to initiate carcinogenesis, in particular from senescent serrated lesions. Although the molecular mechanism responsible for linking metaplasia to stemness acquisition remains largely unknown, future studies to elucidate this mechanism might be expected to shed light on carcinogenesis and CSC systems of the enigmatic serrated lesions, as well as to inform the development of new targeted therapeutic strategies."
+      },
+      {
+        "heading": "7 CONCLUSION",
+        "level": 2,
+        "kind": "body",
+        "text": "Recent studies of normal ISCs and colorectal CSCs have uncovered pronounced heterogeneity as well as plasticity of normal tissue and cancer stem cell systems. Further understanding of the molecular mechanisms underlying such characteristics should contribute to the development of novel anticancer therapeutic strategies. However, given that ISCs and CSCs share several mechanisms for maintenance of homeostasis and promotion of regeneration, selective therapeutic intervention that targets only CSCs remains a challenge. Future studies are warranted to provide greater insight into the similarities and differences between normal and neoplastic stem cell systems and to establish therapeutic strategies that target CSC-specific vulnerabilities."
+      }
+    ],
+    "references": [
+      {
+        "raw": "1. 1 Reya T, Morrison SJ, Clarke MF, Weissman IL. Stem cells, cancer, and cancer stem cells. Nature. 2001; 414: 105-111.",
+        "doi": "10.1038/35102167",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "2. 2 Lapidot T, Sirard C, Vormoor J, et al. A cell initiating human acute myeloid leukaemia after transplantation into SCID mice. Nature. 1994; 367: 645-648.",
+        "doi": "10.1038/367645a0",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "3. 3 Batlle E, Clevers H. Cancer stem cells revisited. Nat Med. 2017; 23: 1124-1134.",
+        "doi": "10.1038/nm.4409",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "4. 4 Takeishi S, Nakayama KI. To wake up cancer stem cells, or to let them sleep, that is the question. Cancer Sci. 2016; 107: 875-881.",
+        "doi": "10.1111/cas.12958",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "5. 5 Baldominos P, Barbera-Mourelle A, Barreiro O, et al. Quiescent cancer cells resist T cell attack by forming an immunosuppressive niche. Cell. 2022; 185: 1694-1708.e19.",
+        "doi": "10.1016/j.cell.2022.03.033",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "6. 6 Sanchez-Danes A, Larsimont JC, Liagre M, et al. A slow-cycling LGR5 tumour population mediates basal cell carcinoma relapse after therapy. Nature. 2018; 562: 434-438.",
+        "doi": "10.1038/s41586-018-0603-3",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "7. 7 Shimizu H, Takeishi S, Nakatsumi H, Nakayama KI. Prevention of cancer dormancy by Fbxw7 ablation eradicates disseminated tumor cells. JCI Insight. 2019; 4:e125138.",
+        "doi": "10.1172/jci.insight.125138",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "8. 8 Gehart H, Clevers H. Tales from the crypt: new insights into intestinal stem cells. Nat Rev Gastroenterol Hepatol. 2019; 16: 19-34.",
+        "doi": "10.1038/s41575-018-0081-y",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "9. 9 Oka T, Higa T, Sugahara O, Koga D, Nakayama S, Nakayama KI. Ablation of p57+ quiescent cancer stem cells suppresses recurrence after chemotherapy of intestinal tumors. Cancer Res. 2023; 83: 1393-1409.",
+        "doi": "10.1158/0008-5472.can-22-2578",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "10. 10 Ohta Y, Fujii M, Takahashi S, et al. Cell-matrix interface regulates dormancy in human colon cancer stem cells. Nature. 2022; 608: 784-794.",
+        "doi": "10.1038/s41586-022-05043-y",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "11. 11 Alvarez-Varela A, Novellasdemunt L, Barriga FM, et al. Mex3a marks drug-tolerant persister colorectal cancer cells that mediate relapse after chemotherapy. Nat Can. 2022; 3: 1052-1070.",
+        "doi": "10.1038/s43018-022-00402-0",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "12. 12 Shimokawa M, Ohta Y, Nishikori S, et al. Visualization and targeting of LGR5(+) human colon cancer stem cells. Nature. 2017; 545: 187-192.",
+        "doi": "10.1038/nature22081",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "13. 13 Higa T, Okita Y, Matsumoto A, et al. Spatiotemporal reprogramming of differentiated cells underlies regeneration and neoplasia in the intestinal epithelium. Nat Commun. 2022; 13: 1500.",
+        "doi": "10.1038/s41467-022-29165-z",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "14. 14 Clevers H, Watt FM. Defining adult stem cells by function, not by phenotype. Annu Rev Biochem. 2018; 87: 1015-1027.",
+        "doi": "10.1146/annurev-biochem-062917-012341",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "15. 15 Beumer J, Clevers H. Regulation and plasticity of intestinal stem cells during homeostasis and regeneration. Development. 2016; 143: 3639-3649.",
+        "doi": "10.1242/dev.133132",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "16. 16 Strum WB. Colorectal Adenomas. N Engl J Med. 2016; 374: 1065-1075.",
+        "doi": "10.1056/nejmra1513581",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "17. 17 Tomasetti C, Vogelstein B, Cancer etiology. Variation in cancer risk among tissues can be explained by the number of stem cell divisions. Science. 2015; 347: 78-81.",
+        "doi": "10.1126/science.1260825",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "18. 18 Mezzapesa M, Losurdo G, Celiberto F, et al. Serrated colorectal lesions: an up-to-Date review from histological pattern to molecular pathogenesis. Int J Mol Sci. 2022; 23:4461.",
+        "doi": "10.3390/ijms23084461",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "19. 19 Clevers H, Nusse R. Wnt/beta-catenin signaling and disease. Cell. 2012; 149: 1192-1205.",
+        "doi": "10.1016/j.cell.2012.05.012",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "20. 20 Fearon ER. Molecular genetics of colorectal cancer. Annu Rev Pathol. 2011; 6: 479-507.",
+        "doi": "10.1146/annurev-pathol-011110-130235",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "21. 21 Sato T, Vries RG, Snippert HJ, et al. Single Lgr5 stem cells build crypt-villus structures in vitro without a mesenchymal niche. Nature. 2009; 459: 262-265.",
+        "doi": "10.1038/nature07935",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "22. 22 Drost J, van Jaarsveld RH, Ponsioen B, et al. Sequential cancer mutations in cultured human intestinal stem cells. Nature. 2015; 521: 43-47.",
+        "doi": "10.1038/nature14415",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "23. 23 Chen B, Scurrah CR, McKinley ET, et al. Differential pre-malignant programs and microenvironment chart distinct paths to malignancy in human colorectal polyps. Cell. 2021; 184: 6262-6280.e26.",
+        "doi": "10.1016/j.cell.2021.11.031",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "24. 24 Crockett SD, Nagtegaal ID. Terminology, molecular features, epidemiology, and Management of Serrated Colorectal Neoplasia. Gastroenterology. 2019; 157: 949-966.e4.",
+        "doi": "10.1053/j.gastro.2019.06.041",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "25. 25 De Sousa EMF, Wang X, Jansen M, et al. Poor-prognosis colon cancer is defined by a molecularly distinct subtype and develops from serrated precursor lesions. Nat Med. 2013; 19: 614-618.",
+        "doi": "10.1038/nm.3174",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "26. 26 Tong K, Pellon-Cardenas O, Sirihorachai VR, et al. Degree of tissue differentiation dictates susceptibility to BRAF-driven colorectal cancer. Cell Rep. 2017; 21: 3833-3845.",
+        "doi": "10.1016/j.celrep.2017.11.104",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "27. 27 Sakamoto N, Feng Y, Stolfi C, et al. BRAF(V600E) cooperates with CDX2 inactivation to promote serrated colorectal tumorigenesis. elife. 2017; 6:e20331.",
+        "doi": "10.7554/elife.20331",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "28. 28 Rad R, Cadinanos J, Rad L, et al. A genetic progression model of Braf(V600E)-induced intestinal tumorigenesis reveals targets for therapeutic intervention. Cancer Cell. 2013; 24: 15-29.",
+        "doi": "10.1016/j.ccr.2013.05.014",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "29. 29 Barker N, van Es JH, Kuipers J, et al. Identification of stem cells in small intestine and colon by marker gene Lgr5. Nature. 2007; 449: 1003-1007.",
+        "doi": "10.1038/nature06196",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "30. 30 Snippert HJ, van der Flier LG, Sato T, et al. Intestinal crypt homeostasis results from neutral competition between symmetrically dividing Lgr5 stem cells. Cell. 2010; 143: 134-144.",
+        "doi": "10.1016/j.cell.2010.09.016",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "31. 31 Barker N, Ridgway RA, van Es JH, et al. Crypt stem cells as the cells-of-origin of intestinal cancer. Nature. 2009; 457: 608-611.",
+        "doi": "10.1038/nature07602",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "32. 32 Schwitalla S, Fingerle AA, Cammareri P, et al. Intestinal tumorigenesis initiated by dedifferentiation and acquisition of stem-cell-like properties. Cell. 2013; 152: 25-38.",
+        "doi": "10.1016/j.cell.2012.12.012",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "33. 33 Schepers AG, Snippert HJ, Stange DE, et al. Lineage tracing reveals Lgr5+ stem cell activity in mouse intestinal adenomas. Science. 2012; 337: 730-735.",
+        "doi": "10.1126/science.1224676",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "34. 34 Gong X, Azhdarinia A, Ghosh SC, et al. LGR5-targeted antibody-drug conjugate eradicates gastrointestinal tumors and prevents recurrence. Mol Cancer Ther. 2016; 15: 1580-1590.",
+        "doi": "10.1158/1535-7163.mct-16-0114",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "35. 35 Junttila MR, Mao W, Wang X, et al. Targeting LGR5+ cells with an antibody-drug conjugate for the treatment of colon cancer. Sci Transl Med. 2015; 7:314ra186.",
+        "doi": "10.1126/scitranslmed.aac7433",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "36. 36 Morral C, Stanisavljevic J, Hernando-Momblona X, et al. Zonation of ribosomal DNA transcription defines a stem cell hierarchy in colorectal cancer. Cell Stem Cell. 2020; 26: 845-861.e12.",
+        "doi": "10.1016/j.stem.2020.04.012",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "37. 37 Kawasaki K, Fujii M, Sugimoto S, et al. Chromosome engineering of human colon-derived organoids to develop a model of traditional serrated adenoma. Gastroenterology. 2020; 158: 638-651.e8.",
+        "doi": "10.1053/j.gastro.2019.10.009",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "38. 38 Takeishi S, Matsumoto A, Onoyama I, Naka K, Hirao A, Nakayama KI. Ablation of Fbxw7 eliminates leukemia-initiating cells by preventing quiescence. Cancer Cell. 2013; 23: 347-361.",
+        "doi": "10.1016/j.ccr.2013.01.026",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "39. 39 Matsumoto A, Takeishi S, Kanie T, et al. p57 is required for quiescence and maintenance of adult hematopoietic stem cells. Cell Stem Cell. 2011; 9: 262-271.",
+        "doi": "10.1016/j.stem.2011.06.014",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "40. 40 Li L, Clevers H. Coexistence of quiescent and active adult stem cells in mammals. Science. 2010; 327: 542-545.",
+        "doi": "10.1126/science.1180794",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "41. 41 Sangiorgi E, Capecchi MR. Bmi1 is expressed in vivo in intestinal stem cells. Nat Genet. 2008; 40: 915-920.",
+        "doi": "10.1038/ng.165",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "42. 42 Powell AE, Wang Y, Li Y, et al. The pan-ErbB negative regulator Lrig1 is an intestinal stem cell marker that functions as a tumor suppressor. Cell. 2012; 149: 146-158.",
+        "doi": "10.1016/j.cell.2012.02.042",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "43. 43 Montgomery RK, Carlone DL, Richmond CA, et al. Mouse telomerase reverse transcriptase (mTert) expression marks slowly cycling intestinal stem cells. Proc Natl Acad Sci USA. 2011; 108: 179-184.",
+        "doi": "10.1073/pnas.1013004108",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "44. 44 Takeda N, Jain R, LeBoeuf MR, Wang Q, Lu MM, Epstein JA. Interconversion between intestinal stem cell populations in distinct niches. Science. 2011; 334: 1420-1424.",
+        "doi": "10.1126/science.1213214",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "45. 45 Furutachi S, Miya H, Watanabe T, et al. Slowly dividing neural progenitors are an embryonic origin of adult neural stem cells. Nat Neurosci. 2015; 18: 657-665.",
+        "doi": "10.1038/nn.3989",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "46. 46 Shiokawa D, Sakai H, Ohata H, et al. Slow-cycling cancer stem cells regulate progression and Chemoresistance in colon cancer. Cancer Res. 2020; 80: 4451-4464.",
+        "doi": "10.1158/0008-5472.can-20-0378",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "47. 47 Tetteh PW, Basak O, Farin HF, et al. Replacement of lost Lgr5-positive stem cells through plasticity of their enterocyte-lineage daughters. Cell Stem Cell. 2016; 18: 203-213.",
+        "doi": "10.1016/j.stem.2016.01.001",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "48. 48 Buczacki SJ, Zecchini HI, Nicholson AM, et al. Intestinal label-retaining cells are secretory precursors expressing Lgr5. Nature. 2013; 495: 65-69.",
+        "doi": "10.1038/nature11965",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "49. 49 Nusse YM, Savage AK, Marangoni P, et al. Parasitic helminths induce fetal-like reversion in the intestinal stem cell niche. Nature. 2018; 559: 109-113.",
+        "doi": "10.1038/s41586-018-0257-1",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "50. 50 de Sousa EMF, de Sauvage FJ. Cellular plasticity in intestinal homeostasis and disease. Cell Stem Cell. 2019; 24: 54-64.",
+        "doi": "10.1016/j.stem.2018.11.019",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "51. 51 Westphalen CB, Asfaha S, Hayakawa Y, et al. Long-lived intestinal tuft cells serve as colon cancer-initiating cells. J Clin Invest. 2014; 124: 1283-1295.",
+        "doi": "10.1172/jci73434",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "52. 52 Shimomura K, Hattori N, Iida N, et al. Sleeping beauty transposon mutagenesis identified genes and pathways involved in inflammation-associated colon tumor development. Nat Commun. 2023; 14: 6514.",
+        "doi": "10.1038/s41467-023-42228-z",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "53. 53 Rothwell PM, Fowkes FG, Belch JF, Ogawa H, Warlow CP, Meade TW. Effect of daily aspirin on long-term risk of death due to cancer: analysis of individual patient data from randomised trials. Lancet. 2011; 377: 31-41.",
+        "doi": "10.1016/s0140-6736(10)62110-1",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "54. 54 de Sousa EMF, Kurtova AV, Harnoss JM, et al. A distinct role for Lgr5(+) stem cells in primary and metastatic colon cancer. Nature. 2017; 543: 676-680.",
+        "doi": "10.1038/nature21713",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "55. 55 Fumagalli A, Oost KC, Kester L, et al. Plasticity of Lgr5-negative cancer cells drives metastasis in colorectal cancer. Cell Stem Cell. 2020; 26: 569-578.e7.",
+        "doi": "10.1016/j.stem.2020.02.008",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "56. 56 Heinz MC, Peters NA, Oost KC, et al. Liver colonization by colorectal cancer metastases requires YAP-controlled plasticity at the micrometastatic stage. Cancer Res. 2022; 82: 1953-1968.",
+        "doi": "10.1158/0008-5472.can-21-0933",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "57. 57 Ayyaz A, Kumar S, Sangiorgi B, et al. Single-cell transcriptomes of the regenerating intestine reveal a revival stem cell. Nature. 2019; 569: 121-125.",
+        "doi": "10.1038/s41586-019-1154-y",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "58. 58 Vasquez EG, Nasreddin N, Valbuena GN, et al. Dynamic and adaptive cancer stem cell population admixture in colorectal neoplasia. Cell Stem Cell. 2022; 29: 1213-1228.e8.",
+        "doi": "10.1016/j.stem.2022.07.008",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "59. 59 Yui S, Azzolin L, Maimets M, et al. YAP/TAZ-dependent reprogramming of colonic epithelium links ECM remodeling to tissue regeneration. Cell Stem Cell. 2018; 22: 35-49.e7.",
+        "doi": "10.1016/j.stem.2017.11.001",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "60. 60 Chen L, Qiu X, Dupre A, et al. TGFB1 induces fetal reprogramming and enhances intestinal regeneration. Cell Stem Cell. 2023; 30: 1520-1537.",
+        "doi": "10.1016/j.stem.2023.09.015",
+        "title": null,
+        "year": null
+      },
+      {
+        "raw": "61. 61 Kim JH, Kim KJ, Rhee YY, et al. Gastric-type expression signature in serrated pathway-associated colorectal tumors. Hum Pathol. 2015; 46: 643-656.",
+        "doi": "10.1016/j.humpath.2015.01.003",
+        "title": null,
+        "year": null
+      }
+    ],
+    "assets": [],
+    "quality": {
+      "has_fulltext": true,
+      "token_estimate": 6840,
+      "content_kind": "fulltext",
+      "has_abstract": true,
+      "warnings": [],
+      "source_trail": [
+        "fulltext:wiley_html_ok",
+        "resolve:doi",
+        "resolve:doi_selected",
+        "route:crossref_signal_ok",
+        "route:signal_domain_wiley",
+        "route:signal_publisher_wiley",
+        "route:signal_doi_wiley",
+        "route:probe_wiley_unknown",
+        "route:provider_selected_wiley",
+        "route:provider_candidate_wiley_metadata_selected_rank_1",
+        "route:provider_candidate_wiley_identity_strong",
+        "fulltext:wiley_attempt",
+        "download:wiley_assets_skipped_profile_none",
+        "fulltext:wiley_article_ok",
+        "route:provider_candidate_wiley_accepted"
+      ],
+      "token_estimate_breakdown": {
+        "abstract": 337,
+        "body": 6503,
+        "refs": 2474
+      },
+      "confidence": "high",
+      "flags": [],
+      "body_metrics": {
+        "char_count": 25987,
+        "word_count": 3982,
+        "body_block_count": 7,
+        "body_heading_count": 7,
+        "body_to_abstract_ratio": 20.957894736842107,
+        "explicit_body_container": false,
+        "post_abstract_body_run": true,
+        "figure_count": 5
+      },
+      "semantic_losses": {
+        "table_fallback_count": 0,
+        "table_layout_degraded_count": 0,
+        "table_semantic_loss_count": 0,
+        "formula_fallback_count": 0,
+        "formula_missing_count": 0
+      },
+      "asset_failures": [],
+      "asset_summary": {
+        "audited": true,
+        "requested": false,
+        "profile": "none",
+        "expected": null,
+        "discovered": 0,
+        "attempted": 0,
+        "total": 0,
+        "local": 0,
+        "full_size": 0,
+        "preview": 0,
+        "accepted_preview": 0,
+        "fallback_preview": 0,
+        "failed": 0,
+        "placeholder_suspected": 0,
+        "not_requested": 0,
+        "not_archived": 0,
+        "remote_link_count": 0,
+        "remote_only_count": 0,
+        "failure_codes": [],
+        "issue_codes": [],
+        "by_kind": {
+          "figure": {
+            "total": 0,
+            "requested": 0,
+            "full_size": 0,
+            "preview": 0,
+            "accepted_preview": 0,
+            "fallback_preview": 0,
+            "failed": 0,
+            "placeholder_suspected": 0,
+            "not_requested": 0,
+            "not_archived": 0
+          },
+          "formula": {
+            "total": 0,
+            "requested": 0,
+            "full_size": 0,
+            "preview": 0,
+            "accepted_preview": 0,
+            "fallback_preview": 0,
+            "failed": 0,
+            "placeholder_suspected": 0,
+            "not_requested": 0,
+            "not_archived": 0
+          },
+          "table": {
+            "total": 0,
+            "requested": 0,
+            "full_size": 0,
+            "preview": 0,
+            "accepted_preview": 0,
+            "fallback_preview": 0,
+            "failed": 0,
+            "placeholder_suspected": 0,
+            "not_requested": 0,
+            "not_archived": 0
+          },
+          "supplement": {
+            "total": 0,
+            "requested": 0,
+            "full_size": 0,
+            "preview": 0,
+            "accepted_preview": 0,
+            "fallback_preview": 0,
+            "failed": 0,
+            "placeholder_suspected": 0,
+            "not_requested": 0,
+            "not_archived": 0
+          },
+          "decoration": {
+            "total": 0,
+            "requested": 0,
+            "full_size": 0,
+            "preview": 0,
+            "accepted_preview": 0,
+            "fallback_preview": 0,
+            "failed": 0,
+            "placeholder_suspected": 0,
+            "not_requested": 0,
+            "not_archived": 0
+          }
+        },
+        "diagnostics": []
+      },
+      "extraction_revision": 5
+    },
+    "acquisition": {
+      "provider": "wiley",
+      "route": "browser_html",
+      "representation": "html",
+      "transport": "browser",
+      "fallback_used": false
+    }
+  },
+  "markdown": "---\ntitle: \"Cell cycle heterogeneity and plasticity of colorectal cancer stem cells\"\nauthors: \"Tsunaki Higa, Keiichi I. Nakayama\"\njournal: \"Cancer Science\"\ndoi: \"10.1111/cas.16117\"\npublished: \"2024-5\"\nsource: \"wiley_browser\"\nacquisition:\n  provider: \"wiley\"\n  route: \"browser_html\"\n  representation: \"html\"\n  transport: \"browser\"\n  fallback_used: false\nhas_fulltext: true\ncontent_kind: \"fulltext\"\nhas_abstract: true\ntoken_estimate: 6840\n---\n\n# Cell cycle heterogeneity and plasticity of colorectal cancer stem cells\n\n## Abstract\n\nCancer stem cells (CSCs) are a long-lived and self-renewing cancer cell population that drives tumor propagation and maintains cancer heterogeneity. They are also implicated in the therapeutic resistance of various types of cancer. Recent studies of CSCs in colorectal cancer (CRC) have uncovered fundamental paradigms that have increased understanding of CSC systems in solid tumors. Colorectal CSCs share multiple biological properties with normal intestinal stem cells (ISCs), including expression of the stem cell marker Lgr5. New evidence suggests that colorectal CSCs manifest substantial heterogeneity, as exemplified by the existence of both actively cycling Lgr5<sup>+</sup> CSCs as well as quiescent Lgr5<sup>+</sup> CSCs that are resistant to conventional anticancer therapies. The classical view of a rigid cell hierarchy and irreversible cell differentiation trajectory in normal and neoplastic tissues is now challenged by the finding that differentiated cells have the capacity to revert to stem cells through dynamic physiological reprogramming events. Such plasticity of CSC systems likely underlies both carcinogenesis and therapeutic resistance in CRC. Further characterization of the mechanisms underpinning the heterogeneity and plasticity of CSCs should inform future development of eradicative therapeutic strategies for CRC.\n\n## 1 INTRODUCTION\n\nCancer cells, even those within an individual tumor, manifest pronounced heterogeneity with regard to cell proliferation, gene expression, and the ability to initiate tumor growth.<sup>1</sup> The concept of the cancer stem cell (CSC), which was originally established for leukemia, posits that a small subpopulation of cancer cells (CSCs) is largely responsible for the growth of an entire tumor.<sup>2</sup> By analogy with normal tissue stem cells, CSCs are thought to have the ability both to undergo self-renewal and to differentiate into diverse cell types, thereby supporting the long-term maintenance of heterogeneous cancer cell populations.<sup>3</sup> CSCs in several cancers have been shown to harbor a quiescent population that is resistant to conventional anticancer therapies that primarily target actively cycling cells.<sup>4</sup> Approaches designed to eradicate such quiescent CSCs have succeeded in overcoming the therapeutic resistance of leukemia and several types of solid tumors<sup>5–7</sup>\n\nColorectal cancer (CRC) presents a major challenge to clinical medicine worldwide. However, substantial advances over the past decade in understanding of the biology of normal intestinal stem cells (ISCs) have provided insight into the characteristics of CSCs in CRC,<sup>3, 8</sup> with such findings having the potential to inform the future development of effective therapeutic strategies. Several recent studies have uncovered the existence of quiescent colorectal CSCs,<sup>9–11</sup> underscoring the importance of therapeutic targeting of this cell population to achieve cancer eradication. Although classical paradigms of hematopoietic or leukemia stem cells postulated a hardwired hierarchy underlying the cell differentiation process, more recent evidence suggests that differentiated cells can revert to the stem cell state in response to various perturbations in both normal and neoplastic intestinal epithelia.<sup>12–15</sup> Generation or replenishment of the CSC pool as a result of such plasticity likely underlies colorectal carcinogenesis as well as the development of resistance to cancer therapies. Here we review historical and recent evidence related to cell cycle heterogeneity and cellular plasticity of colorectal CSCs, including the similarities and differences between these cells and normal ISCs.\n\n## 2 CARCINOGENESIS OF COLORECTAL CANCER\n\nApproximately 85% of CRC cases are thought to arise from malignant transformation of precancerous lesions<sup>16</sup> as a result of cumulative genetic mutations or epigenetic abnormalities. Given that such oncogenic changes have been shown to accumulate primarily in self-renewing and long-lived normal ISCs,<sup>17</sup> ISC biology is thought to be highly relevant to CRC carcinogenesis. As reviewed in detail elsewhere,<sup>18</sup> most precancerous colorectal lesions can be classified into two major subtypes: tubular adenoma and serrated lesions. Tubular adenoma constitutes the most frequent and well-studied origin of CRC, and its development is typically initiated by a loss-of-function mutation of Apc (adenomatous polyposis coli) that triggers aberrant activation of the Wnt–β-catenin signaling pathway.<sup>19</sup> The adenoma–carcinoma sequence theory states that the stepwise accumulation of a gain-of-function mutation of Kras (which activates the MAPK signaling pathway), loss of Smad4 (which inactivates signaling by transforming growth factor–β [TGF-β]), and loss of the tumor suppressor p53 results in the malignant transformation of tubular adenoma into CRC.<sup>20</sup> The activation of Wnt and MAPK pathways and the suppression of TGF-β signaling are facilitated by the essential niche factors R-spondin, epidermal growth factor (EGF), and Noggin, respectively, and have been shown to be necessary for the maintenance of ISC function and consequent generation of intestinal organoids in culture.<sup>21</sup> Sequential introduction of the abovementioned driver mutations affecting Apc, Kras, Smad4, and p53 renders intestinal organoids independent of these niche factors and eventually results in their malignant transformation.<sup>22</sup> Colorectal tumors originating from tubular adenoma manifest active cell proliferation and turnover as well as upregulation of ISC gene expression signatures.<sup>19, 23</sup> The essence of carcinogenesis from this type of adenoma is, thus, likely an aberrant cell-autonomous activation of ISC function.\n\nSerrated lesions, also referred to as hyperplastic polyps, are characterized by recurrent Braf<sup>V600E</sup> mutation.<sup>24</sup> Although serrated lesions were considered harmless polyps until a little over a decade ago, new evidence has suggested that their malignant transformation can result in the development of CRC with a poor prognosis,<sup>25</sup> albeit with a relatively low frequency. Given that the Braf<sup>V600E</sup> mutation induces cellular senescence,<sup>26, 27</sup> serrated lesions generally show almost complete inactivation of cell proliferation and loss of ISCs.<sup>26</sup> Although the mechanism by which carcinogenesis is initiated from such senescent, static, and ISC-depleted polyps is not fully understood, inactivation of senescence pathways, such as Cdkn2a or p53 at the later stages, is likely a key to the malignant transformation of serrated lesions.<sup>28</sup>\n\n## 3 LGR5<sup>+</sup> STEM CELLS IN NORMAL AND NEOPLASTIC INTESTINAL EPITHELIA\n\nNumerous studies performed with genetically engineered mouse and organoid models over the past decade have greatly advanced understanding of normal ISCs and colorectal CSCs. Lgr5 is one of the marker proteins identified by such approaches and has become the most intensely studied colorectal CSC marker to date. Lgr5 is encoded by a Wnt target gene and serves as a receptor for R-spondin that activates Wnt signaling, and it was first identified as a marker for normal ISCs by lineage tracing experiments in vivo.<sup>29</sup> Each intestinal crypt contains a limited number (5–15) of equipotent Lgr5<sup>+</sup> ISCs that divide relatively frequently to drive daily epithelial turnover while continuously competing for their niche space—a process referred to as neutral drift dynamics (Figure 1A).<sup>30</sup>\n\n![Figure 1](https://onlinelibrary.wiley.com/cms/asset/3c4d7aae-d18a-470f-b5a4-bbea0017e31c/cas16117-fig-0001-m.jpg)\n\n**Figure 1.** Cell cycle heterogeneity among colorectal cancer (CRC) stem cell populations. (A) Normal intestinal stem cell (ISC) populations. Lgr5 <sup>+</sup> crypt base columnar cells (CBCs) reside at the crypt base and divide rapidly to drive homeostatic epithelial turnover. The existence of quiescent +4 ISCs has also been indicated by analysis of several markers. (B) Cell cycle heterogeneity of Lgr5 <sup>+</sup> CSCs that underlies therapeutic resistance of CRC. Quiescent CSCs expressing markers such as Mex3a, p27, and p57 persist during conventional anticancer therapies, and their subsequent activation initiates post-therapeutic tumor regrowth. (C) Our scRNA-seq analysis of mouse CRC. Cell cycle analysis shows that Lgr5 <sup>+</sup> CSCs are divided into actively cycling (cluster 2) and quiescent (cluster 4) populations.\n\nLoss of Apc in Lgr5<sup>+</sup> ISCs was found to result in the rapid development of tubular adenoma,<sup>31</sup> whereas that in differentiated cells failed to initiate tumor formation and induced apoptosis,<sup>31, 32</sup> suggesting that normal Lgr5<sup>+</sup> ISCs serve as predominant CRC-initiating cells. Lineage tracing experiments in established adenoma of Apc mutant mice showed that intratumoral Lgr5<sup>+</sup> cells function as CSCs that are capable of both self-renewal and differentiation and which maintain long-term tumor growth.<sup>33</sup> A recent large-scale single-cell RNA-sequencing (scRNA-seq) analysis of human CRC revealed marked upregulation of Lgr5<sup>+</sup> ISC signature genes in tubular adenoma.<sup>23</sup> These findings suggest that, at least in the case of tubular adenoma-related CRC, Lgr5-expressing cell populations include the CSCs that drive cancer growth and that these CSCs likely share similar biological properties with normal ISCs. Attempts to develop antibody–drug conjugates that target Lgr5<sup>+</sup> CSCs have shown that such agents substantially prolong the survival of tumor-bearing mice.<sup>34, 35</sup>\n\nDespite evidence suggesting the importance of Lgr5<sup>+</sup> CSCs in CRC, it remains unclear whether therapeutic targeting of these cells can result in the eradication of CRC. As discussed in detail below, recent studies suggest that marked heterogeneity of CSCs and plasticity of differentiated cancer cells underlie therapeutic resistance of CRC, indicating that a single CSC-targeting strategy is likely to be insufficient. In addition, another recent study uncovered the existence of an irreversible gradient of protein synthesis activity associated with CRC tumor zonation and suggested that cells with high biosynthetic activity exclusively function as top-of-hierarchy CSCs irrespective of Lgr5 expression.<sup>36</sup> Ablation of Lgr5<sup>+</sup> cells in CRC derived from serrated lesions was also shown to have no effect on tumor growth,<sup>37</sup> indicative of the possible existence of a completely different CSC system in serrated lesion-derived cancer. The details of such CSCs remain largely unclear.\n\n## 4 CELL CYCLE HETEROGENEITY AND THERAPEUTIC RESISTANCE IN COLORECTAL CANCER STEM CELLS\n\nThe CSC theory was first established as a result of studies of leukemia in the 1990s.<sup>2</sup> Most leukemia stem cells (LSCs) are quiescent and highly resistant to conventional anticancer therapies that target proliferative cells.<sup>4</sup> Several approaches to eliminate such quiescent LSCs by molecular interference with cell cycle regulation have succeeded in eradicating leukemia in animal models (reviewed in Takeishi & Nakayama).<sup>4</sup> We previously showed that genetic ablation of the ubiquitin ligase subunit Fbxw7 resulted in accumulation of its substrate c-Myc and thereby activated the cell cycle in LSCs in a model of chronic myeloid leukemia. This termination of quiescence sensitized the LSCs to cytosine arabinoside and imatinib and reduced the rate of post-therapeutic relapse.<sup>38</sup> The strategy of quiescent CSC ablation has also been successfully extended to the treatment of several types of solid tumor.<sup>5–7</sup> Quiescence of LSCs is thought to be a property inherited from their normal counterparts, hematopoietic stem cells.<sup>14, 38, 39</sup> However, normal Lgr5<sup>+</sup> ISCs have been thought to constitute an actively cycling population, with this proliferation contributing to the rapid homeostatic turnover of the intestinal epithelium.<sup>15, 30, 40</sup> An initial view of ISC systems postulated that quiescent ISCs also exist in the +4 position of intestinal crypts (Figure 1A).<sup>40</sup> Although several markers for +4 ISCs—such as Bmi1,<sup>41</sup> Lrig1,<sup>42</sup> mTert,<sup>43</sup> and Hopx<sup>44</sup>—have been identified, the existence of such undifferentiated quiescent stem cells in the intestinal epithelium remains controversial, given that these markers are also expressed by Lgr5<sup>+</sup> ISCs and are, therefore, not restricted to quiescent ISCs, as has been extensively discussed elsewhere.<sup>14, 15</sup>\n\nSeveral groups have reported the existence of quiescent CSCs within the last two years, highlighting the marked heterogeneity of the colorectal CSC pool (Figure 1B,C). Mex3a was thus shown to mark a slowly cycling Lgr5<sup>+</sup> CSC population that undergoes self-renewal and maintains long-term tumor growth. Ablation of Mex3a<sup>+</sup> CSCs in combination with chemotherapy prolonged the survival of tumor-bearing mice by preventing CRC chemoresistance.<sup>11</sup> A subset of Lgr5<sup>+</sup> CSCs was also found to express the cyclin-dependent kinase inhibitor (CKI) p27 (Figure 2A) and to be maintained in a dormant state as a result of the inhibition of focal adhesion kinase (FAK) activity by the collagen protein COL17A1 at the plasma membrane. Chemotherapy disrupted the cell–matrix interface and downregulated COL17A1 expression, resulting in the activation of a FAK–YAP (Yes-associated protein) signaling axis. YAP activation abrogated the dormancy of the Lgr5<sup>+</sup> CSCs by downregulating p27 and thereby promoted post-therapeutic tumor regrowth (Figure 2B).<sup>10</sup> Our recent study of a syngeneic transplantation model with malignant CRC organoids revealed that Lgr5<sup>+</sup> CSCs can be divided into actively cycling and quiescent populations on the basis of scRNA-seq analysis, with the latter cell population being found to specifically express p57 (Figure 2C),<sup>9</sup> a CKI that is structurally similar to p27. We also previously showed that p57 is specifically expressed in hematopoietic,<sup>39</sup> neural,<sup>45</sup> and injury-induced intestinal<sup>13</sup> stem cells. Deletion of p57 gene resulted in the disruption of quiescence and thereby in the impairment of tissue-constituting ability in these normal tissue stem cells, suggesting that p57 plays a pivotal role in the maintenance of tissue stem cell populations. In CRC, we found that the Lgr5<sup>+</sup> colorectal CSCs expressing p57 contribute minimally to tumor growth in the steady state, but they are activated by chemotherapy and substantially drive tumor regrowth. Genetic ablation of p57<sup>+</sup>Lgr5<sup>+</sup> CSCs greatly attenuated post-therapeutic CRC recurrence.<sup>9</sup> Another study showed that p57 expression is upregulated in Lgr5<sup>+</sup> colorectal CSCs by the transcription factor PROX1, whose expression is, in turn, under the control of the Wnt-responsive transcription factor TCF1 (Figure 2C).<sup>46</sup> Collectively, these recent findings highlight the substantial heterogeneity of Lgr5<sup>+</sup> CSCs as well as the need for novel therapeutic strategies based on the targeting of quiescent CSCs for the eradication of CRC.\n\n![Figure 2](https://onlinelibrary.wiley.com/cms/asset/df4b669d-0cef-41b2-a840-9beaa4379389/cas16117-fig-0002-m.jpg)\n\n**Figure 2.** Mechanisms underlying the quiescence and therapy resistance of colorectal cancer (CRC) stem cells. (A) The cyclin-dependent kinase (CDK) inhibitors p21, p27, and p57 directly inhibit the activity of cyclin–CDK complexes and maintain cells in a quiescent state. All of these CDK inhibitors are thought to be particularly important to inhibit the G<sub>1</sub> cyclin–CDK complexes such as Cyclin C–CDK3, Cyclin D–CDK4/6 or Cyclin E–CDK2. (B) Mechanism for regulation of dormancy and reactivation of quiescent Lgr5 <sup>+</sup> CSCs by the cell–matrix interface. In the steady state, COL17A1, which anchors cells to the basement membrane, mediates constitutive inhibition of FAK activity and thereby maintains p27 expression in CSCs. Chemotherapy disrupts this cell–matrix interface and activates a FAK–YAP–TEAD signaling axis that breaks the dormancy of cancer step cell (CSC) and thereby promotes post-therapeutic tumor regrowth. RTK, receptor tyrosine kinase. (C) Our scRNA-seq analysis of mouse CRC revealed that the p57 gene is specifically expressed in the quiescent subpopulation of Lgr5 <sup>+</sup> CSCs. This expression has been shown by others to be upregulated by a Wnt-TCF1-PROX1 axis in Lgr5 <sup>+</sup> CSCs.<sup>46</sup>\n\n## 5 REPLENISHMENT OF THE CANCER STEM CELL POOL DUE TO PLASTICITY OF NON-CANCER STEM CELLS\n\nAccording to the classical paradigms established from studies of hematopoietic and leukemia stem cells, cell differentiation has been considered a unidirectional and irreversible process in both normal tissue and cancer. In the past few years, however, the mechanisms underlying the maintenance of tissue integrity as well as cellular identity have been shown to be much more plastic than expected.<sup>14</sup> Several studies have revealed that ISCs in intestinal crypts can be replenished after transient loss by dedifferentiation of their progeny cells such as enterocytes<sup>47</sup> or secretory lineage cells.<sup>13, 48</sup> Given that Lgr5<sup>+</sup> ISCs are proliferative and susceptible to various cytotoxic or inflammatory insults,<sup>13, 49</sup> this plasticity-based dedifferentiation is thought to be a key mechanism by which to regenerate damaged epithelium and the ISC pool.<sup>50</sup>\n\nCell plasticity as a regenerative response is also implicated in colorectal carcinogenesis. For example, whereas forced expression of β-catenin in differentiated intestinal epithelial cells does not result in adenoma formation, the additional loss of the inhibitory protein IκB and consequent activation of the transcription factor NF-κB induce the dedifferentiation and transformation of these cells, leading to the rapid development of adenoma.<sup>32</sup> Loss of Apc in Dclk1<sup>+</sup> tuft cells also leads to colorectal tumor formation in the setting of dextran sulfate sodium (DSS)-induced colitis.<sup>51</sup> A recent in vivo genetic screening study also showed that inflammation-activated TNF-α signaling concomitantly upregulates ISC-related genes as well as senescence pathways in the intestinal epithelium thereby confers a growth advantage on the cells in which Cdkn2a or p53 gene is inactivated.<sup>52</sup> Collectively, these findings suggest that inflammation not only gives rise to cancer-initiating stem cells through dedifferentiation, but also renders the survival of these cells advantageous compared with that of their normal counterparts, possibly explaining why long-term administration of aspirin lowers the risk of CRC development.<sup>32, 53</sup> The microenvironment of established tumors might also induce cell plasticity. We recently found that p57<sup>+</sup> enteroendocrine cells in intestinal crypts dedifferentiate to serve as ISCs only in an injury-induced manner (Figure 3A). Although p57<sup>+</sup> cells retained enteroendocrine cell properties in adenomas of Apc mutant mice, the intratumoral p57<sup>+</sup> cells showed homeostatic stem cell activity and produced Lgr5<sup>+</sup> CSCs even in the absence of injury,<sup>13</sup> suggesting that the adenoma microenvironment induces constitutive dedifferentiation of these cells.\n\n![Figure 3](https://onlinelibrary.wiley.com/cms/asset/e0319abd-af6e-4330-adea-31402f160fb7/cas16117-fig-0003-m.jpg)\n\n**Figure 3.** Plasticity of stem cell systems in the normal intestine and colorectal cancer (CRC). (A) p57 <sup>+</sup> enteroendocrine cells in normal intestinal crypts do not manifest stem cell activity in the steady state. However, they dedifferentiate after injury and acquire stem cell potential to drive postinjury epithelial regeneration. (B and C) Plasticity promotes therapy resistance and metastasis of CRC. Lgr5 <sup>−</sup> cells that persist after anticancer therapies (B) or that metastasize (C) replenish or generate Lgr5 <sup>+</sup> cancer step cells (CSCs) through dedifferentiation and thereby initiate new tumor growth.\n\nThe cancer cell plasticity that gives rise to the replenishment of lost CSCs represents a major obstacle to the eradication of CRC. A study based on a xenograft model with human malignant CRC organoids revealed that genetic ablation of Lgr5<sup>+</sup> CSCs was compensated for by the reversion of relatively differentiated tumor cells expressing the keratin protein KRT20, rendering the therapeutic effect of such ablation only transient (Figure 3B).<sup>12</sup> Plasticity also plays a key role in CRC metastasis. Although Lgr5<sup>+</sup> CSCs were shown to be indispensable for the formation of liver metastases,<sup>54</sup> recent intravital imaging studies have revealed that most cells that initially migrate from the primary tumor and play a major role in metastasis formation do not express Lgr5.<sup>55, 56</sup> These findings suggest that an Lgr5<sup>−</sup> cell population is essential for the initiation of metastasis and that these cells as a result of their plasticity subsequently give rise to Lgr5<sup>+</sup> CSCs that contribute to the maintenance of metastatic tumors (Figure 3C). Although the targeting of such highly flexible cells would appear to pose a substantial challenge, the recent finding that the extent of protein synthesis activity is a major determinant of both stemness and plasticity, irrespective of Lgr5 expression,<sup>36</sup> suggests that taking aim at the cellular machinery that dictates such high biosynthetic activity might offer a therapeutic strategy to simultaneously target both CSCs and cellular plasticity.\n\n## 6 MECHANISMS UNDERLYING PLASTICITY: FETAL-LIKE REVERSION AND METAPLASIA-LIKE CONVERSION\n\nThe dedifferentiation process induced by ISC loss was initially explained by the simple hypothesis that differentiated cells entering the vacant stem cell niche are exposed to niche factors including Wnt and thereby acquire stemness.<sup>47</sup> However, more recent evidence indicates that dedifferentiation represents a complex reprogramming event that dynamically alters spatiotemporal cell identity. One such event is fetal-like reversion, which gives rise to a regeneration-specific ISC population referred to as regenerative/revival stem cells (RSCs) in response to various injury contexts such as anticancer drug treatment, irradiation, genetic ablation of Lgr5<sup>+</sup> cells, and parasitic infection (Figure 4).<sup>49, 57</sup> RSCs highly express fetal genes such as those for Sca-1<sup>49</sup> or Clu.<sup>57</sup> In the case of CRC, RSCs and typical Lgr5<sup>+</sup> CSCs were recently shown to coexist within the tumor.<sup>11, 58</sup> The equilibrium of RSC-CSC distribution is adaptively altered by selective pressures including chemotherapy (Figure 4),<sup>58</sup> suggesting that the reversion program represents a universal mechanism to deal with perturbations in both normal and neoplastic tissues.\n\n![Figure 4](https://onlinelibrary.wiley.com/cms/asset/b9839d98-12a9-499e-a4bc-2a38a27b8e31/cas16117-fig-0004-m.jpg)\n\n**Figure 4.** Mechanisms underlying the plasticity of intestinal stem cell (ISC) and cancer step cell (CSC) systems. Fetal-like as well as metaplasia-like transcriptomic changes underlie injury-induced dedifferentiation and RSC induction in the normal intestinal epithelium. Such regenerative programs are also activated in CRC. The balance between CBC-like and RSC-like CSCs is dynamically altered depending on various selective pressures such as anticancer therapies, mutations, and signaling pathways.\n\nSeveral molecular mechanisms have been implicated in fetal-like reversion and the induction of RSCs. Induction of Sca-1<sup>+</sup> RSCs in the small intestinal epithelium was thus found to be dependent on interferon-γ (IFN-γ) secreted from immune cells after injury.<sup>49</sup> In contrast, two other studies have shown that injury-induced activation of the transcriptional co-activators YAP and TAZ is required and sufficient for the generation of Clu<sup>+</sup> RSCs<sup>57</sup> or Sca-1<sup>+</sup> RSCs<sup>59</sup> in the context of radiation-mediated damage to the small intestine or of DSS-induced colitis. In particular, YAP/TAZ activation in epithelial cells and subsequent induction of Sca-1<sup>+</sup> RSCs in colitis are triggered by inflammation-dependent remodeling of extracellular matrix in the colonic epithelium to a collagen-rich state.<sup>59</sup> YAP activation and concurrent fetal-like RSC induction have also been shown to take place in CRC after chemotherapy<sup>11</sup> as well as the liver metastasis.<sup>56</sup> In addition, secretion of TGF-β1 from monocyte–macrophage populations after tissue damage was recently found to be essential for postinjury YAP activation and consequent RSC induction in the normal intestine.<sup>60</sup> Collectively, these various observations suggest that extraepithelial factors, such as inflammatory signals from immune cells or mechanotransduction from extracellular matrix, might play an important role in the induction of RSCs. It remains elusive whether cell plasticity might also be induced in an epithelial cell–autonomous manner.\n\nIn addition to fetal-like reversion, our recent scRNA-seq analysis has indicated that injury-induced dedifferentiation of and stemness acquisition by p57<sup>+</sup> cells in the small intestine are associated with dynamic transcriptomic reprogramming to a state that resembles gastric metaplasia (Figure 4).<sup>13</sup> A recent scRNA-seq analysis of human CRC also revealed that both fetal-like and metaplasia-like gene expression signatures were concomitantly upregulated in tumors derived from serrated lesions,<sup>23</sup> whereas the typical Lgr5<sup>+</sup> ISC signature was hardly detectable. Pathological analysis has shown that human serrated lesions manifest both downregulation of CDX2, a transcription factor required for maintenance of intestinal tissue identity and for prevention of metaplasia, as well as consequent ectopic upregulation of gastric-related gene expression.<sup>61</sup> Mouse studies have also revealed that, although the Braf<sup>V600E</sup> mutation alone induces cellular senescence and loss of ISCs in the intestinal epithelium, the combination of CDX2 ablation, which induces gastric metaplasia, and the Braf<sup>V600E</sup> mutation results in the reappearance of ISCs and subsequent development of carcinoma with a serrated morphology.<sup>26, 27</sup> Together, these findings raise the possibility that metaplasia is also a physiological regenerative program to promote plasticity and stemness acquisition and that it might be hijacked pathologically to initiate carcinogenesis, in particular from senescent serrated lesions. Although the molecular mechanism responsible for linking metaplasia to stemness acquisition remains largely unknown, future studies to elucidate this mechanism might be expected to shed light on carcinogenesis and CSC systems of the enigmatic serrated lesions, as well as to inform the development of new targeted therapeutic strategies.\n\n## 7 CONCLUSION\n\nRecent studies of normal ISCs and colorectal CSCs have uncovered pronounced heterogeneity as well as plasticity of normal tissue and cancer stem cell systems. Further understanding of the molecular mechanisms underlying such characteristics should contribute to the development of novel anticancer therapeutic strategies. However, given that ISCs and CSCs share several mechanisms for maintenance of homeostasis and promotion of regeneration, selective therapeutic intervention that targets only CSCs remains a challenge. Future studies are warranted to provide greater insight into the similarities and differences between normal and neoplastic stem cell systems and to establish therapeutic strategies that target CSC-specific vulnerabilities.\n\n## References (61 total, showing 61)\n\n1. 1 Reya T, Morrison SJ, Clarke MF, Weissman IL. Stem cells, cancer, and cancer stem cells. Nature. 2001; 414: 105-111.\n2. 2 Lapidot T, Sirard C, Vormoor J, et al. A cell initiating human acute myeloid leukaemia after transplantation into SCID mice. Nature. 1994; 367: 645-648.\n3. 3 Batlle E, Clevers H. Cancer stem cells revisited. Nat Med. 2017; 23: 1124-1134.\n4. 4 Takeishi S, Nakayama KI. To wake up cancer stem cells, or to let them sleep, that is the question. Cancer Sci. 2016; 107: 875-881.\n5. 5 Baldominos P, Barbera-Mourelle A, Barreiro O, et al. Quiescent cancer cells resist T cell attack by forming an immunosuppressive niche. Cell. 2022; 185: 1694-1708.e19.\n6. 6 Sanchez-Danes A, Larsimont JC, Liagre M, et al. A slow-cycling LGR5 tumour population mediates basal cell carcinoma relapse after therapy. Nature. 2018; 562: 434-438.\n7. 7 Shimizu H, Takeishi S, Nakatsumi H, Nakayama KI. Prevention of cancer dormancy by Fbxw7 ablation eradicates disseminated tumor cells. JCI Insight. 2019; 4:e125138.\n8. 8 Gehart H, Clevers H. Tales from the crypt: new insights into intestinal stem cells. Nat Rev Gastroenterol Hepatol. 2019; 16: 19-34.\n9. 9 Oka T, Higa T, Sugahara O, Koga D, Nakayama S, Nakayama KI. Ablation of p57+ quiescent cancer stem cells suppresses recurrence after chemotherapy of intestinal tumors. Cancer Res. 2023; 83: 1393-1409.\n10. 10 Ohta Y, Fujii M, Takahashi S, et al. Cell-matrix interface regulates dormancy in human colon cancer stem cells. Nature. 2022; 608: 784-794.\n11. 11 Alvarez-Varela A, Novellasdemunt L, Barriga FM, et al. Mex3a marks drug-tolerant persister colorectal cancer cells that mediate relapse after chemotherapy. Nat Can. 2022; 3: 1052-1070.\n12. 12 Shimokawa M, Ohta Y, Nishikori S, et al. Visualization and targeting of LGR5(+) human colon cancer stem cells. Nature. 2017; 545: 187-192.\n13. 13 Higa T, Okita Y, Matsumoto A, et al. Spatiotemporal reprogramming of differentiated cells underlies regeneration and neoplasia in the intestinal epithelium. Nat Commun. 2022; 13: 1500.\n14. 14 Clevers H, Watt FM. Defining adult stem cells by function, not by phenotype. Annu Rev Biochem. 2018; 87: 1015-1027.\n15. 15 Beumer J, Clevers H. Regulation and plasticity of intestinal stem cells during homeostasis and regeneration. Development. 2016; 143: 3639-3649.\n16. 16 Strum WB. Colorectal Adenomas. N Engl J Med. 2016; 374: 1065-1075.\n17. 17 Tomasetti C, Vogelstein B, Cancer etiology. Variation in cancer risk among tissues can be explained by the number of stem cell divisions. Science. 2015; 347: 78-81.\n18. 18 Mezzapesa M, Losurdo G, Celiberto F, et al. Serrated colorectal lesions: an up-to-Date review from histological pattern to molecular pathogenesis. Int J Mol Sci. 2022; 23:4461.\n19. 19 Clevers H, Nusse R. Wnt/beta-catenin signaling and disease. Cell. 2012; 149: 1192-1205.\n20. 20 Fearon ER. Molecular genetics of colorectal cancer. Annu Rev Pathol. 2011; 6: 479-507.\n21. 21 Sato T, Vries RG, Snippert HJ, et al. Single Lgr5 stem cells build crypt-villus structures in vitro without a mesenchymal niche. Nature. 2009; 459: 262-265.\n22. 22 Drost J, van Jaarsveld RH, Ponsioen B, et al. Sequential cancer mutations in cultured human intestinal stem cells. Nature. 2015; 521: 43-47.\n23. 23 Chen B, Scurrah CR, McKinley ET, et al. Differential pre-malignant programs and microenvironment chart distinct paths to malignancy in human colorectal polyps. Cell. 2021; 184: 6262-6280.e26.\n24. 24 Crockett SD, Nagtegaal ID. Terminology, molecular features, epidemiology, and Management of Serrated Colorectal Neoplasia. Gastroenterology. 2019; 157: 949-966.e4.\n25. 25 De Sousa EMF, Wang X, Jansen M, et al. Poor-prognosis colon cancer is defined by a molecularly distinct subtype and develops from serrated precursor lesions. Nat Med. 2013; 19: 614-618.\n26. 26 Tong K, Pellon-Cardenas O, Sirihorachai VR, et al. Degree of tissue differentiation dictates susceptibility to BRAF-driven colorectal cancer. Cell Rep. 2017; 21: 3833-3845.\n27. 27 Sakamoto N, Feng Y, Stolfi C, et al. BRAF(V600E) cooperates with CDX2 inactivation to promote serrated colorectal tumorigenesis. elife. 2017; 6:e20331.\n28. 28 Rad R, Cadinanos J, Rad L, et al. A genetic progression model of Braf(V600E)-induced intestinal tumorigenesis reveals targets for therapeutic intervention. Cancer Cell. 2013; 24: 15-29.\n29. 29 Barker N, van Es JH, Kuipers J, et al. Identification of stem cells in small intestine and colon by marker gene Lgr5. Nature. 2007; 449: 1003-1007.\n30. 30 Snippert HJ, van der Flier LG, Sato T, et al. Intestinal crypt homeostasis results from neutral competition between symmetrically dividing Lgr5 stem cells. Cell. 2010; 143: 134-144.\n31. 31 Barker N, Ridgway RA, van Es JH, et al. Crypt stem cells as the cells-of-origin of intestinal cancer. Nature. 2009; 457: 608-611.\n32. 32 Schwitalla S, Fingerle AA, Cammareri P, et al. Intestinal tumorigenesis initiated by dedifferentiation and acquisition of stem-cell-like properties. Cell. 2013; 152: 25-38.\n33. 33 Schepers AG, Snippert HJ, Stange DE, et al. Lineage tracing reveals Lgr5+ stem cell activity in mouse intestinal adenomas. Science. 2012; 337: 730-735.\n34. 34 Gong X, Azhdarinia A, Ghosh SC, et al. LGR5-targeted antibody-drug conjugate eradicates gastrointestinal tumors and prevents recurrence. Mol Cancer Ther. 2016; 15: 1580-1590.\n35. 35 Junttila MR, Mao W, Wang X, et al. Targeting LGR5+ cells with an antibody-drug conjugate for the treatment of colon cancer. Sci Transl Med. 2015; 7:314ra186.\n36. 36 Morral C, Stanisavljevic J, Hernando-Momblona X, et al. Zonation of ribosomal DNA transcription defines a stem cell hierarchy in colorectal cancer. Cell Stem Cell. 2020; 26: 845-861.e12.\n37. 37 Kawasaki K, Fujii M, Sugimoto S, et al. Chromosome engineering of human colon-derived organoids to develop a model of traditional serrated adenoma. Gastroenterology. 2020; 158: 638-651.e8.\n38. 38 Takeishi S, Matsumoto A, Onoyama I, Naka K, Hirao A, Nakayama KI. Ablation of Fbxw7 eliminates leukemia-initiating cells by preventing quiescence. Cancer Cell. 2013; 23: 347-361.\n39. 39 Matsumoto A, Takeishi S, Kanie T, et al. p57 is required for quiescence and maintenance of adult hematopoietic stem cells. Cell Stem Cell. 2011; 9: 262-271.\n40. 40 Li L, Clevers H. Coexistence of quiescent and active adult stem cells in mammals. Science. 2010; 327: 542-545.\n41. 41 Sangiorgi E, Capecchi MR. Bmi1 is expressed in vivo in intestinal stem cells. Nat Genet. 2008; 40: 915-920.\n42. 42 Powell AE, Wang Y, Li Y, et al. The pan-ErbB negative regulator Lrig1 is an intestinal stem cell marker that functions as a tumor suppressor. Cell. 2012; 149: 146-158.\n43. 43 Montgomery RK, Carlone DL, Richmond CA, et al. Mouse telomerase reverse transcriptase (mTert) expression marks slowly cycling intestinal stem cells. Proc Natl Acad Sci USA. 2011; 108: 179-184.\n44. 44 Takeda N, Jain R, LeBoeuf MR, Wang Q, Lu MM, Epstein JA. Interconversion between intestinal stem cell populations in distinct niches. Science. 2011; 334: 1420-1424.\n45. 45 Furutachi S, Miya H, Watanabe T, et al. Slowly dividing neural progenitors are an embryonic origin of adult neural stem cells. Nat Neurosci. 2015; 18: 657-665.\n46. 46 Shiokawa D, Sakai H, Ohata H, et al. Slow-cycling cancer stem cells regulate progression and Chemoresistance in colon cancer. Cancer Res. 2020; 80: 4451-4464.\n47. 47 Tetteh PW, Basak O, Farin HF, et al. Replacement of lost Lgr5-positive stem cells through plasticity of their enterocyte-lineage daughters. Cell Stem Cell. 2016; 18: 203-213.\n48. 48 Buczacki SJ, Zecchini HI, Nicholson AM, et al. Intestinal label-retaining cells are secretory precursors expressing Lgr5. Nature. 2013; 495: 65-69.\n49. 49 Nusse YM, Savage AK, Marangoni P, et al. Parasitic helminths induce fetal-like reversion in the intestinal stem cell niche. Nature. 2018; 559: 109-113.\n50. 50 de Sousa EMF, de Sauvage FJ. Cellular plasticity in intestinal homeostasis and disease. Cell Stem Cell. 2019; 24: 54-64.\n51. 51 Westphalen CB, Asfaha S, Hayakawa Y, et al. Long-lived intestinal tuft cells serve as colon cancer-initiating cells. J Clin Invest. 2014; 124: 1283-1295.\n52. 52 Shimomura K, Hattori N, Iida N, et al. Sleeping beauty transposon mutagenesis identified genes and pathways involved in inflammation-associated colon tumor development. Nat Commun. 2023; 14: 6514.\n53. 53 Rothwell PM, Fowkes FG, Belch JF, Ogawa H, Warlow CP, Meade TW. Effect of daily aspirin on long-term risk of death due to cancer: analysis of individual patient data from randomised trials. Lancet. 2011; 377: 31-41.\n54. 54 de Sousa EMF, Kurtova AV, Harnoss JM, et al. A distinct role for Lgr5(+) stem cells in primary and metastatic colon cancer. Nature. 2017; 543: 676-680.\n55. 55 Fumagalli A, Oost KC, Kester L, et al. Plasticity of Lgr5-negative cancer cells drives metastasis in colorectal cancer. Cell Stem Cell. 2020; 26: 569-578.e7.\n56. 56 Heinz MC, Peters NA, Oost KC, et al. Liver colonization by colorectal cancer metastases requires YAP-controlled plasticity at the micrometastatic stage. Cancer Res. 2022; 82: 1953-1968.\n57. 57 Ayyaz A, Kumar S, Sangiorgi B, et al. Single-cell transcriptomes of the regenerating intestine reveal a revival stem cell. Nature. 2019; 569: 121-125.\n58. 58 Vasquez EG, Nasreddin N, Valbuena GN, et al. Dynamic and adaptive cancer stem cell population admixture in colorectal neoplasia. Cell Stem Cell. 2022; 29: 1213-1228.e8.\n59. 59 Yui S, Azzolin L, Maimets M, et al. YAP/TAZ-dependent reprogramming of colonic epithelium links ECM remodeling to tissue regeneration. Cell Stem Cell. 2018; 22: 35-49.e7.\n60. 60 Chen L, Qiu X, Dupre A, et al. TGFB1 induces fetal reprogramming and enhances intestinal regeneration. Cell Stem Cell. 2023; 30: 1520-1537.\n61. 61 Kim JH, Kim KJ, Rhee YY, et al. Gastric-type expression signature in serrated pathway-associated colorectal tumors. Hum Pathol. 2015; 46: 643-656.\n",
+  "metadata": null,
+  "diagnostic_artifacts": [],
+  "acquisition": {
+    "provider": "wiley",
+    "route": "browser_html",
+    "representation": "html",
+    "transport": "browser",
+    "fallback_used": false
+  }
+}

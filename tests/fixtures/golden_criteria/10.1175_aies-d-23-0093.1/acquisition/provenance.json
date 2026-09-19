@@ -1,0 +1,77 @@
+{
+  "records": [
+    {
+      "doi": "10.1175/aies-d-23-0093.1",
+      "provider": "ams",
+      "requested_url": "https://api.crossref.org/works/10.1175%2Faies-d-23-0093.1",
+      "final_url": "https://api.crossref.org/works/10.1175%2Faies-d-23-0093.1",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:28:14 GMT",
+        "content-type": "application/json",
+        "content-length": "10261"
+      },
+      "captured_at_utc": "2026-09-18T02:28:14.030592+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 61295,
+      "sha256": "299e95313d650d582f275b7623e51692236c9da422f06efeed3ed2d9ce1da591",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1175/aies-d-23-0093.1",
+      "provider": "ams",
+      "requested_url": "https://journals.ametsoc.org/view/journals/aies/3/4/AIES-D-23-0093.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/aies/3/4/AIES-D-23-0093.1.xml",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Fri, 18 Sep 2026 02:28:18 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:28:29.309115+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 37819,
+      "sha256": "b2a7032caf2e60f9e0c210586d3b364ba9d4330185d90a0be7019bbdcb7bffea",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1175/aies-d-23-0093.1",
+      "provider": "ams",
+      "requested_url": "https://journals.ametsoc.org/view/journals/aies/3/4/AIES-D-23-0093.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/aies/3/4/AIES-D-23-0093.1.xml",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Fri, 18 Sep 2026 02:28:32 GMT"
+      },
+      "captured_at_utc": "2026-09-18T02:28:52.132233+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/002-browser_rendered_dom.html",
+      "size": 41918,
+      "sha256": "b154fb4917a53d50a3e08e62bb26c77e96d47f2ffe596c7645f820c3a377fce3",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1175/aies-d-23-0093.1",
+      "provider": "ams",
+      "requested_url": "https://journals.ametsoc.org/view/journals/aies/3/4/AIES-D-23-0093.1.xml",
+      "final_url": "https://journals.ametsoc.org/view/journals/aies/3/4/AIES-D-23-0093.1.xml",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Fri, 18 Sep 2026 03:06:22 GMT"
+      },
+      "captured_at_utc": "2026-09-18T03:06:25.806049+00:00",
+      "capture_kind": "browser_rendered_dom",
+      "body_file": "acquisition/source-completion-2026-09-18/003-user-followup-browser_rendered_dom.html",
+      "size": 1369793,
+      "sha256": "7bc32cb47e7ae7e73301bfaa79c2895fa815c8be817a4ca1548022907788659e",
+      "transport": "Existing paper-fetch provider/runtime; user-directed targeted follow-up",
+      "access_conditions": "Existing lawful publisher access; no authentication or access-classification changes"
+    }
+  ]
+}

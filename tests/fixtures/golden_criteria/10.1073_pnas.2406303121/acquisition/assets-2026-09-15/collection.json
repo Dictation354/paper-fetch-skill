@@ -1,0 +1,156 @@
+{
+  "provider": "pnas",
+  "doi": "10.1073/pnas.2406303121",
+  "sample_id": "10.1073_pnas.2406303121",
+  "source_url": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+  "source_input": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/original.html",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "ec485f2e53f05724c1a3a6f199a4c0c75bc5a609c1bd0ec5164204315bb00302",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Digitized nasal viral RNA and infectious virus from a SARS-CoV-2 human challenge",
+        "caption": "Digitized nasal viral RNA and infectious virus from a SARS-CoV-2 human challenge study (from extended figure 5 of ref. 8 ). Longitudinal viral RNA (black dots) and infectious virus (red dots) measurements for the 12 infected, untreated participants in the human challenge study (we use the original ID numbers). Solid lines are used to connect data. The horizontal dashed lines are the LLOQ, 3 log 10 copies/mL for viral RNA (black) and 1.27 log 10 FFU/mL for infectious virus (red). Open circles represent measurements below the LLOQ.",
+        "url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/34644f03-1696-4e48-bd29-7cbd5f1b907b/assets/images/large/pnas.2406303121fig01.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "fig01",
+        "preview_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/34644f03-1696-4e48-bd29-7cbd5f1b907b/assets/images/large/pnas.2406303121fig01.jpg",
+        "full_size_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/34644f03-1696-4e48-bd29-7cbd5f1b907b/assets/images/large/pnas.2406303121fig01.jpg"
+      },
+      "download_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/34644f03-1696-4e48-bd29-7cbd5f1b907b/assets/images/large/pnas.2406303121fig01.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/figure-1-2026-09-15.jpg"
+      ],
+      "record": "acquisition/figure-1-2026-09-15.jpg",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2067,
+        "height": 1512,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pnas.2406303121fig01.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Schematic illustration of the dynamic models. The TCL model (light green rectang",
+        "caption": "Schematic illustration of the dynamic models. The TCL model (light green rectangle), RCM (rectangle with dashed border), and the RCM with humoral immune response (entire diagram). Target cells ( T ) are infected by infectious virus ( V i ) at rate β and transition through an eclipse phase ( E ) before becoming productively infected at per capita rate k . Productively infected cells ( I ) die at the per capita rate δ and produce virus ( V ), at constant rate π , which is then cleared at per capita rate c . The virus population includes both infectious virus ( V i , colored red) and noninfectious virus (colored blue). For the RCM, target cells also become refractory to infection due to the actions of type-I and type-III IFNs at rate ϕ, and refractory cells transition to back to the target state at rate ρ . Neutralizing antibodies bind infectious viruses, thereby preventing them from infecting target cells. Diagram created with BioRender.com .",
+        "url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/3f267b33-1526-4bcf-afd5-4154b6524f15/assets/images/large/pnas.2406303121fig02.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "fig02",
+        "preview_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/3f267b33-1526-4bcf-afd5-4154b6524f15/assets/images/large/pnas.2406303121fig02.jpg",
+        "full_size_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/3f267b33-1526-4bcf-afd5-4154b6524f15/assets/images/large/pnas.2406303121fig02.jpg"
+      },
+      "download_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/3f267b33-1526-4bcf-afd5-4154b6524f15/assets/images/large/pnas.2406303121fig02.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/b9dbb4826bce9ec7-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/b9dbb4826bce9ec7-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 3045,
+        "height": 2029,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pnas.2406303121fig02.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fits using mixed-effects of the PLM to viral RNA and infectious virus. Blue tria",
+        "caption": "Fits using mixed-effects of the PLM to viral RNA and infectious virus. Blue triangles and green dots are for data obtained before the viral RNA peak and postpeak, respectively. Peak viral measurements are plotted together with the prepeak data except for participant 12, who does not have prepeak measurements. The solid black line is the model prediction. The horizontal red dashed line is the LLOQ of infectious virus (1.27 log 10 FFU/mL). Data below the limit of quantification were not used in this analysis as there is no proper way to include them.",
+        "url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/a24ce606-ff17-43cc-aa5c-134d14eb92b7/assets/images/large/pnas.2406303121fig03.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "fig03",
+        "preview_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/a24ce606-ff17-43cc-aa5c-134d14eb92b7/assets/images/large/pnas.2406303121fig03.jpg",
+        "full_size_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/a24ce606-ff17-43cc-aa5c-134d14eb92b7/assets/images/large/pnas.2406303121fig03.jpg"
+      },
+      "download_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/a24ce606-ff17-43cc-aa5c-134d14eb92b7/assets/images/large/pnas.2406303121fig03.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/df8e0f1ae9b5db71-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/df8e0f1ae9b5db71-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 1929,
+        "height": 1647,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pnas.2406303121fig03.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Fits of the DDRCM with humoral immunity. Measured viral RNA in log 10 copies/mL ",
+        "caption": "Fits of the DDRCM with humoral immunity. Measured viral RNA in log 10 copies/mL (black dots) and infectious virus in log 10 FFU/mL (red dots). Solid lines are model fits; horizontal dashed lines are the LLOQ, 3 log 10 copies/mL for viral RNA (black) and 1.27 log 10 FFU/mL for the infectious virus (red). Vertical dashed blue lines are the estimated time of humoral immunity activation. Open circles represent measurements below the LLOQ. Estimated population parameters are shown in Table 1 .",
+        "url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/00262115-8681-4cdc-81f2-896b309a946e/assets/images/large/pnas.2406303121fig04.jpg",
+        "section": "body",
+        "asset_order": "0",
+        "dom_id": "fig04",
+        "preview_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/00262115-8681-4cdc-81f2-896b309a946e/assets/images/large/pnas.2406303121fig04.jpg",
+        "full_size_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/00262115-8681-4cdc-81f2-896b309a946e/assets/images/large/pnas.2406303121fig04.jpg"
+      },
+      "download_url": "https://www.pnas.org/cms/10.1073/pnas.2406303121/asset/00262115-8681-4cdc-81f2-896b309a946e/assets/images/large/pnas.2406303121fig04.jpg",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/7afc350c6e5c732c-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/7afc350c6e5c732c-http-1.bin",
+      "validation": {
+        "format": "image/jpeg",
+        "width": 2067,
+        "height": 1504,
+        "valid": true
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "pnas.2406303121fig04.jpg",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 4,
+    "unique_files": 4,
+    "verified_files": 4,
+    "replayed_files": 4,
+    "complete_received_files": 4,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1073_pnas.2406303121/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 4,
+    "unique_files": 4,
+    "verified_files": 4,
+    "replayed_files": 4,
+    "complete_received_files": 4
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

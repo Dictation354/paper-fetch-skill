@@ -1,0 +1,32 @@
+{
+  "doi": "10.1098/rsos.150470",
+  "provider": "royalsocietypublishing",
+  "source_url": "https://royalsocietypublishing.org/doi/10.1098/rsos.150470",
+  "attempt": 1,
+  "change_from_previous": "Verify the real rsos.150470 article whose first figure has no matching original link; follow its unchanged original viewer link.",
+  "transport": "native Camoufox configured provider context",
+  "responses": [
+    {
+      "body_error_type": "Error"
+    },
+    {
+      "record": "acquisition/requested-viewer-2026-09-16/003-http_response_entity.html",
+      "status": 200
+    },
+    {
+      "record": "acquisition/requested-viewer-2026-09-16/004-http_response_entity.html",
+      "status": 200
+    }
+  ],
+  "no_fault_injection": true,
+  "navigation_error_type": "TimeoutError",
+  "title": "First report of Plesiochelys etalloni and Tropidemys langii from the Late Jurassic of the UK and the palaeobiogeography of plesiochelyid turtles | Royal Society Open Science | The Royal Society",
+  "observed_doi": "10.1098/rsos.150470",
+  "final_url": "https://royalsocietypublishing.org/rsos/article/3/1/150470/36439/First-report-of-Plesiochelys-etalloni-and",
+  "challenge": false,
+  "paywall_diagnostics": {},
+  "stop_reason": "single_observation_complete",
+  "viewer_count": 20,
+  "viewer_title": "Figure 1. Plesiochelys etalloni ,... | The Royal Society",
+  "viewer_image": "acquisition/requested-viewer-2026-09-16/002-direct_http.jpeg"
+}

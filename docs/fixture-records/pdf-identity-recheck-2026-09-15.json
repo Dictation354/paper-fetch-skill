@@ -1,0 +1,583 @@
+{
+  "scope": "Post-fix live rechecks; file identity/preview/supplement validation only. Original captures remain unchanged.",
+  "runs": [
+    {
+      "doi": "10.1038/s41586-026-11124-z",
+      "provider": "springer",
+      "phase": "final",
+      "acceptance": {
+        "schema_version": 2,
+        "minimum_reader_schema_version": 2,
+        "overall": "limited",
+        "identity": {
+          "status": "resolved",
+          "doi": "10.1038/s41586-026-11124-z",
+          "expected_doi": "10.1038/s41586-026-11124-z",
+          "title": "Encoded and non-genetic protein variants expand human functional proteome",
+          "candidate_count": 0,
+          "canonical_landing_url": null,
+          "canonical_landing_verified": false,
+          "canonical_landing_unique": false,
+          "codes": []
+        },
+        "fetch": {
+          "status": "ok",
+          "completed": true,
+          "code": null
+        },
+        "content": {
+          "status": "abstract_only",
+          "has_fulltext": false,
+          "has_abstract": true,
+          "token_estimate": 431,
+          "confidence": "low",
+          "flags": [
+            "access_gate_detected"
+          ],
+          "tables": {
+            "fallback_count": 0,
+            "layout_degraded_count": 0,
+            "semantic_loss_count": 0
+          },
+          "formulas": {
+            "fallback_count": 0,
+            "missing_count": 0
+          }
+        },
+        "asset": {
+          "requested": false,
+          "profile": "none",
+          "audited": true,
+          "expected": null,
+          "discovered": 0,
+          "attempted": 0,
+          "total": 0,
+          "local": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_archived": 0,
+          "remote_link_count": 0,
+          "remote_only_count": 0,
+          "body_discovered": 0,
+          "body_attempted": 0,
+          "body_local": 0,
+          "body_full_size": 0,
+          "body_preview": 0,
+          "body_failed": 0,
+          "body_not_archived": 0,
+          "body_remote_only_count": 0,
+          "require_local_body_assets": false,
+          "require_full_size_body_assets": false,
+          "has_local_body_assets": false,
+          "all_body_assets_local": true,
+          "all_body_assets_full_size": true,
+          "local_body_assets_satisfied": true,
+          "full_size_body_assets_satisfied": true,
+          "failure_codes": [],
+          "issue_codes": [],
+          "status": "not_requested",
+          "remote_links_preserved": false
+        },
+        "output": {
+          "status": "complete",
+          "requested": [
+            "article",
+            "markdown"
+          ],
+          "available": [
+            "article",
+            "markdown"
+          ],
+          "missing": []
+        },
+        "provenance": {
+          "status": "partial",
+          "source": "springer_html",
+          "acquisition": {
+            "provider": "springer",
+            "route": "direct_html",
+            "representation": "html",
+            "transport": "http",
+            "fallback_used": true
+          },
+          "trace_event_count": 18,
+          "fallback_codes": [
+            "fulltext:springer_html:fail",
+            "no_result",
+            "pdf_download_failed"
+          ],
+          "warning_codes": [
+            "access_gate_detected"
+          ],
+          "failure_codes": [
+            "fulltext:springer_html:fail",
+            "no_result",
+            "pdf_download_failed"
+          ],
+          "unstructured_warning_count": 5,
+          "acceptance_policy": "provider_html_body",
+          "acceptance_policy_satisfied": false
+        }
+      },
+      "capture": "tests/fixtures/golden_criteria/10.1038_s41586-026-11124-z/acquisition/pdf-identity-recheck-2026-09-15/capture.json",
+      "manifest": "tests/fixtures/golden_criteria/10.1038_s41586-026-11124-z/acquisition/pdf-identity-recheck-2026-09-15/fetch.manifest.json",
+      "artifacts": [
+        {
+          "original_path": "/tmp/paper-fetch-pdf-identity-recheck-20260915/springer/fetch/Tretyachenko_et_al_2026_Encoded_and_non-genetic_protein_variants_expand_human_functional_proteome.json",
+          "archived_path": "tests/fixtures/golden_criteria/10.1038_s41586-026-11124-z/acquisition/pdf-identity-recheck-2026-09-15/article.json"
+        }
+      ]
+    },
+    {
+      "doi": "10.1175/jas-d-26-0015.1",
+      "provider": "ams",
+      "phase": "final",
+      "acceptance": {
+        "schema_version": 2,
+        "minimum_reader_schema_version": 2,
+        "overall": "complete",
+        "identity": {
+          "status": "resolved",
+          "doi": "10.1175/jas-d-26-0015.1",
+          "expected_doi": "10.1175/jas-d-26-0015.1",
+          "title": "Local Energetics of Extratropical Transition: A Case Study of Typhoon Hagibis (2019)",
+          "candidate_count": 0,
+          "canonical_landing_url": null,
+          "canonical_landing_verified": false,
+          "canonical_landing_unique": false,
+          "codes": []
+        },
+        "fetch": {
+          "status": "ok",
+          "completed": true,
+          "code": null
+        },
+        "content": {
+          "status": "fulltext",
+          "has_fulltext": true,
+          "has_abstract": true,
+          "token_estimate": 16460,
+          "confidence": "high",
+          "flags": [],
+          "tables": {
+            "fallback_count": 0,
+            "layout_degraded_count": 0,
+            "semantic_loss_count": 0
+          },
+          "formulas": {
+            "fallback_count": 0,
+            "missing_count": 0
+          }
+        },
+        "asset": {
+          "requested": false,
+          "profile": "none",
+          "audited": true,
+          "expected": null,
+          "discovered": 0,
+          "attempted": 0,
+          "total": 0,
+          "local": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_archived": 0,
+          "remote_link_count": 0,
+          "remote_only_count": 0,
+          "body_discovered": 0,
+          "body_attempted": 0,
+          "body_local": 0,
+          "body_full_size": 0,
+          "body_preview": 0,
+          "body_failed": 0,
+          "body_not_archived": 0,
+          "body_remote_only_count": 0,
+          "require_local_body_assets": false,
+          "require_full_size_body_assets": false,
+          "has_local_body_assets": false,
+          "all_body_assets_local": true,
+          "all_body_assets_full_size": true,
+          "local_body_assets_satisfied": true,
+          "full_size_body_assets_satisfied": true,
+          "failure_codes": [],
+          "issue_codes": [],
+          "status": "not_requested",
+          "remote_links_preserved": false
+        },
+        "output": {
+          "status": "complete",
+          "requested": [
+            "article",
+            "markdown"
+          ],
+          "available": [
+            "article",
+            "markdown"
+          ],
+          "missing": []
+        },
+        "provenance": {
+          "status": "complete",
+          "source": "ams_html",
+          "acquisition": {
+            "provider": "ams",
+            "route": "browser_html",
+            "representation": "html",
+            "transport": "browser",
+            "fallback_used": false
+          },
+          "trace_event_count": 15,
+          "fallback_codes": [],
+          "warning_codes": [],
+          "failure_codes": [],
+          "unstructured_warning_count": 1,
+          "acceptance_policy": "provider_html_body",
+          "acceptance_policy_satisfied": true
+        }
+      },
+      "capture": "tests/fixtures/golden_criteria/10.1175_jas-d-26-0015.1/acquisition/pdf-identity-recheck-2026-09-15/capture.json",
+      "manifest": "tests/fixtures/golden_criteria/10.1175_jas-d-26-0015.1/acquisition/pdf-identity-recheck-2026-09-15/fetch.manifest.json",
+      "artifacts": [
+        {
+          "original_path": "/tmp/paper-fetch-pdf-identity-recheck-20260915/ams/fetch/Kwon_et_al_2026_Local_Energetics_of_Extratropical_Transition_A_Case_Study_of_Typhoon_Hagibis_2019.json",
+          "archived_path": "tests/fixtures/golden_criteria/10.1175_jas-d-26-0015.1/acquisition/pdf-identity-recheck-2026-09-15/article.json"
+        }
+      ]
+    },
+    {
+      "doi": "10.1063/5.0260731",
+      "provider": "aip",
+      "phase": "intermediate_before_footer_filter",
+      "acceptance": {
+        "schema_version": 2,
+        "minimum_reader_schema_version": 2,
+        "overall": "limited",
+        "identity": {
+          "status": "resolved",
+          "doi": "10.1063/5.0260731",
+          "expected_doi": "10.1063/5.0260731",
+          "title": "A basis-free phase space electronic Hamiltonian that recovers beyond Born–Oppenheimer electronic momentum and current density",
+          "candidate_count": 0,
+          "canonical_landing_url": null,
+          "canonical_landing_verified": false,
+          "canonical_landing_unique": false,
+          "codes": []
+        },
+        "fetch": {
+          "status": "ok",
+          "completed": true,
+          "code": null
+        },
+        "content": {
+          "status": "abstract_only",
+          "has_fulltext": false,
+          "has_abstract": true,
+          "token_estimate": 305,
+          "confidence": "low",
+          "flags": [],
+          "tables": {
+            "fallback_count": 0,
+            "layout_degraded_count": 0,
+            "semantic_loss_count": 0
+          },
+          "formulas": {
+            "fallback_count": 0,
+            "missing_count": 0
+          }
+        },
+        "asset": {
+          "requested": false,
+          "profile": "none",
+          "audited": false,
+          "expected": null,
+          "discovered": 0,
+          "attempted": 0,
+          "total": 0,
+          "local": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_archived": 0,
+          "remote_link_count": 0,
+          "remote_only_count": 0,
+          "body_discovered": 0,
+          "body_attempted": 0,
+          "body_local": 0,
+          "body_full_size": 0,
+          "body_preview": 0,
+          "body_failed": 0,
+          "body_not_archived": 0,
+          "body_remote_only_count": 0,
+          "require_local_body_assets": false,
+          "require_full_size_body_assets": false,
+          "has_local_body_assets": false,
+          "all_body_assets_local": true,
+          "all_body_assets_full_size": true,
+          "local_body_assets_satisfied": true,
+          "full_size_body_assets_satisfied": true,
+          "failure_codes": [],
+          "issue_codes": [],
+          "status": "not_requested",
+          "remote_links_preserved": false
+        },
+        "output": {
+          "status": "complete",
+          "requested": [
+            "article",
+            "markdown"
+          ],
+          "available": [
+            "article",
+            "markdown"
+          ],
+          "missing": []
+        },
+        "provenance": {
+          "status": "complete",
+          "source": "metadata_only",
+          "acquisition": {
+            "provider": "crossref",
+            "route": "metadata",
+            "representation": "metadata",
+            "transport": "api",
+            "fallback_used": true
+          },
+          "trace_event_count": 18,
+          "fallback_codes": [
+            "abstract_only",
+            "fallback:aip_html_managed_by_provider:info",
+            "fallback:metadata_only:info",
+            "fulltext:aip:fail",
+            "no_result",
+            "pdf_fallback_timeout"
+          ],
+          "warning_codes": [],
+          "failure_codes": [
+            "abstract_only",
+            "fulltext:aip:fail",
+            "no_result",
+            "pdf_fallback_timeout"
+          ],
+          "unstructured_warning_count": 4,
+          "acceptance_policy": "metadata_identity",
+          "acceptance_policy_satisfied": true
+        }
+      },
+      "capture": "tests/fixtures/golden_criteria/10.1063_5.0260731/acquisition/pdf-identity-recheck-2026-09-15-intermediate/capture.json",
+      "manifest": "tests/fixtures/golden_criteria/10.1063_5.0260731/acquisition/pdf-identity-recheck-2026-09-15-intermediate/fetch.manifest.json",
+      "artifacts": [
+        {
+          "original_path": "/tmp/paper-fetch-pdf-identity-recheck-20260915/aip/fetch/Tao_et_al_2025_A_basis-free_phase_space_electronic_Hamiltonian_that_recovers_beyond_Born_Oppenheimer_electronic_momentum_and_current_density.json",
+          "archived_path": "tests/fixtures/golden_criteria/10.1063_5.0260731/acquisition/pdf-identity-recheck-2026-09-15-intermediate/article.json"
+        }
+      ],
+      "downloaded_article_evidence": {
+        "artifact": "tests/fixtures/golden_criteria/10.1063_5.0260731/acquisition/pdf-identity-recheck-2026-09-15-intermediate/response-008.bin",
+        "identity": {
+          "status": "match",
+          "method": "doi",
+          "confidence": "high",
+          "expected_doi": "10.1063/5.0260731",
+          "observed_doi": "10.1063/5.0260731"
+        },
+        "pages": 16,
+        "note": "真实 HTTP200 同篇 16 页正式 PDF 已收到并核验身份；本次标准 CLI 最终仍为 limited（deadline 耗尽），不改写为 CLI 成功，不等同于最终权限拒绝。"
+      }
+    },
+    {
+      "doi": "10.1063/5.0260731",
+      "provider": "aip",
+      "phase": "final",
+      "acceptance": {
+        "schema_version": 2,
+        "minimum_reader_schema_version": 2,
+        "overall": "limited",
+        "identity": {
+          "status": "resolved",
+          "doi": "10.1063/5.0260731",
+          "expected_doi": "10.1063/5.0260731",
+          "title": "A basis-free phase space electronic Hamiltonian that recovers beyond Born–Oppenheimer electronic momentum and current density",
+          "candidate_count": 0,
+          "canonical_landing_url": null,
+          "canonical_landing_verified": false,
+          "canonical_landing_unique": false,
+          "codes": []
+        },
+        "fetch": {
+          "status": "ok",
+          "completed": true,
+          "code": null
+        },
+        "content": {
+          "status": "abstract_only",
+          "has_fulltext": false,
+          "has_abstract": true,
+          "token_estimate": 305,
+          "confidence": "low",
+          "flags": [],
+          "tables": {
+            "fallback_count": 0,
+            "layout_degraded_count": 0,
+            "semantic_loss_count": 0
+          },
+          "formulas": {
+            "fallback_count": 0,
+            "missing_count": 0
+          }
+        },
+        "asset": {
+          "requested": false,
+          "profile": "none",
+          "audited": false,
+          "expected": null,
+          "discovered": 0,
+          "attempted": 0,
+          "total": 0,
+          "local": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_archived": 0,
+          "remote_link_count": 0,
+          "remote_only_count": 0,
+          "body_discovered": 0,
+          "body_attempted": 0,
+          "body_local": 0,
+          "body_full_size": 0,
+          "body_preview": 0,
+          "body_failed": 0,
+          "body_not_archived": 0,
+          "body_remote_only_count": 0,
+          "require_local_body_assets": false,
+          "require_full_size_body_assets": false,
+          "has_local_body_assets": false,
+          "all_body_assets_local": true,
+          "all_body_assets_full_size": true,
+          "local_body_assets_satisfied": true,
+          "full_size_body_assets_satisfied": true,
+          "failure_codes": [],
+          "issue_codes": [],
+          "status": "not_requested",
+          "remote_links_preserved": false
+        },
+        "output": {
+          "status": "complete",
+          "requested": [
+            "article",
+            "markdown"
+          ],
+          "available": [
+            "article",
+            "markdown"
+          ],
+          "missing": []
+        },
+        "provenance": {
+          "status": "complete",
+          "source": "metadata_only",
+          "acquisition": {
+            "provider": "crossref",
+            "route": "metadata",
+            "representation": "metadata",
+            "transport": "api",
+            "fallback_used": true
+          },
+          "trace_event_count": 18,
+          "fallback_codes": [
+            "abstract_only",
+            "fallback:aip_html_managed_by_provider:info",
+            "fallback:metadata_only:info",
+            "fulltext:aip:fail",
+            "no_result",
+            "pdf_fallback_timeout"
+          ],
+          "warning_codes": [],
+          "failure_codes": [
+            "abstract_only",
+            "fulltext:aip:fail",
+            "no_result",
+            "pdf_fallback_timeout"
+          ],
+          "unstructured_warning_count": 4,
+          "acceptance_policy": "metadata_identity",
+          "acceptance_policy_satisfied": true
+        }
+      },
+      "capture": "tests/fixtures/golden_criteria/10.1063_5.0260731/acquisition/pdf-identity-recheck-2026-09-15/capture.json",
+      "manifest": "tests/fixtures/golden_criteria/10.1063_5.0260731/acquisition/pdf-identity-recheck-2026-09-15/fetch.manifest.json",
+      "artifacts": [
+        {
+          "original_path": "/tmp/paper-fetch-pdf-identity-recheck-20260915/aip-final/fetch/Tao_et_al_2025_A_basis-free_phase_space_electronic_Hamiltonian_that_recovers_beyond_Born_Oppenheimer_electronic_momentum_and_current_density.json",
+          "archived_path": "tests/fixtures/golden_criteria/10.1063_5.0260731/acquisition/pdf-identity-recheck-2026-09-15/article.json"
+        }
+      ]
+    }
+  ],
+  "latest_per_doi_counts": {
+    "distinct_candidates": 36,
+    "acceptance": {
+      "degraded": 13,
+      "limited": 14,
+      "complete": 9
+    },
+    "cli_fulltext": 22,
+    "note": "以 3 次 final 重测替换同 DOI 的历史 CLI 判定；其他 33 篇未重新联网。另有 AIP 同篇完整 PDF 文件获取证据，但不计入 CLI 全文成功。"
+  },
+  "reanalysis": {
+    "explicit_restriction_samples": {
+      "elsevier": 4,
+      "iop": 3
+    },
+    "not_permission_denial": [
+      "AIP final PDF timeout despite intermediate full-article download",
+      "Nature final PDF route failure including HTTP404",
+      "Annual Reviews and Science PDF timeouts",
+      "IEEE empty REST / HTTP502",
+      "Taylor & Francis HTTP403 Error"
+    ],
+    "oa_pdf_evidence": [
+      "10.1073/pnas.2607267123",
+      "10.1080/19455224.2025.2547671"
+    ],
+    "remaining_identity_verified_original_pdfs": 13,
+    "limits": "仍保留现有 credentials 和浏览器会话；不是匿名网络测试。身份校验不能证明所有出版社所有短预览均可识别。",
+    "confirmed_negative_sample_groups": {
+      "elsevier": 4,
+      "iop": 3
+    },
+    "negative_sample_classification_note": "Elsevier 与 IOP 的这 7 篇均为真实订阅受限负样本；失败路径差异不改变负样本归类。"
+  },
+  "validation": {
+    "unit": {
+      "command": "PYTHONPATH=src uv run python -m pytest tests/unit -q",
+      "passed": 2951,
+      "skipped": 1,
+      "subtests_passed": 576
+    },
+    "integration": {
+      "command": "PYTHONPATH=src uv run python -m pytest tests/integration -q",
+      "passed": 24,
+      "skipped": 4,
+      "subtests_passed": 720
+    },
+    "secret_scan": {
+      "status": "clean",
+      "files": 33
+    },
+    "note": "默认 pytest 并行配置；联网采集结束后验证。PDF 解析质量警告不作新增质量修复目标。"
+  },
+  "supplementary_retention_note": "Existing supplementary payloads, partial files and archives containing ancillary material were deleted at user request. Historical acquisition statements and former file paths below do not assert current file availability. See supplementary-removal-2026-09-15.json; indexes, links and capture metadata remain."
+}

@@ -1,0 +1,1293 @@
+<!DOCTYPE html><html lang="en" class="no-js"><head>
+    <!-- charset must appear in the first 1024 bytes of the document -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>High throughput x‐ray astronomy | AIP Conference Proceedings | AIP Publishing</title>
+        
+
+
+<script async="" type="text/javascript" src="https://www.googletagmanager.com/gtm.js?id=GTM-K9XV4SZ"></script><script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent','default',{
+    'ad_storage':'denied','analytics_storage':'denied','ad_user_data':'denied',
+    'ad_personalization':'denied','personalization_storage':'denied',
+    'functionality_storage':'granted','security_storage':'granted','wait_for_update':500
+  });
+  gtag("set","ads_data_redaction",true);
+  gtag("set","url_passthrough",true);
+</script>
+
+
+
+        
+
+
+
+<script src="https://cmp.osano.com/Azytm7SGW0qsW1JZP/6074ddb6-2ea9-4eb5-b687-e5401632a614/osano.js"></script>
+        
+
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" type="text/javascript"></script>
+<script>window.jQuery || document.write('<script src="//aipp.silverchair-cdn.com/Themes/Silver/app/js/jquery.3.4.1.min.js" type="text/javascript">\x3C/script>')</script>
+<script src="//aipp.silverchair-cdn.com/Themes/Silver/app/vendor/v-639223378661642865/jquery-migrate-3.1.0.min.js" type="text/javascript"></script>    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=10">
+
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <!-- Turn off telephone number detection. -->
+    <meta name="format-detection" content="telephone=no">
+    
+<!-- Bookmark Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372179681126/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372182203266/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372180791781/favicon-16x16.png" sizes="16x16">
+  <link rel="mask-icon" href="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372183803339/safari-pinned-tab.svg" color="#5bbad5">
+  <link rel="icon" href="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372182653287/favicon.ico" sizes="32x32">
+  <link rel="manifest" href="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372184653363/site.webmanifest">
+  <meta name="msapplication-config" content="//aipp.silverchair-cdn.com/Themes/Client/app/img/favicons/v-639223372180181163/browserconfig.xml">
+  <meta name="theme-color" content="#002f65">
+
+
+    
+
+
+  <link rel="stylesheet" type="text/css" href="//aipp.silverchair-cdn.com/Themes/Client/app/css/v-639237259356007955/site.min.css">
+  <link rel="stylesheet" type="text/css" href="//aipp.silverchair-cdn.com/Themes/Silver/app/icons/v-639223378264571583/style.css">
+  <link rel="stylesheet" type="text/css" href="//aipp.silverchair-cdn.com/Themes/Client/app/css/v-639223372169797251/bg_img.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,700;1,400&amp;family=Noto+Serif:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet">
+
+
+        <link href="//aipp.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/CSS/umbrella/v-638881201675924950/site.css" rel="stylesheet" type="text/css">
+            <link href="//aipp.silverchair-cdn.com/data/SiteBuilderAssets/Live/CSS/acp/v-639215416046833162/site_v2.css" rel="stylesheet" type="text/css">
+
+            <script>
+                (function (w, d, s, l, i) {
+                    w[l] = w[l] || []; w[l].push({
+                        'gtm.start':
+                            new Date().getTime(), event: 'gtm.js'
+                    }); var f = d.getElementsByTagName(s)[0],
+                        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : '';
+                        j.setAttribute('type', 'text/javascript');
+                        j.async = true; j.src =
+                        'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+                })(window, document, 'script', 'dataLayer', 'GTM-K9XV4SZ');
+            </script>
+
+    
+
+        <script type="text/javascript">
+            var App = App || {};
+            App.LoginUserInfo = {
+                isInstLoggedIn: 0,
+                isIndividualLoggedIn: 0
+            };
+
+            App.CurrentSubdomain = 'acp';
+            App.SiteURL = 'pubs.aip.org/acp';
+            App.EnableAdobeAnalytics = false;
+        </script>
+    
+    
+    
+    <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+
+    <meta name="citation_author" content="Gorenstein, Paul"><meta name="citation_author_institution" content="Harvard‐Smithsonian Center for Astrophysics"><meta name="citation_title" content="High throughput x‐ray astronomy"><meta name="citation_firstpage" content="297"><meta name="citation_lastpage" content="313"><meta name="citation_doi" content="10.1063/1.39658"><meta name="citation_journal_title" content="AIP Conference Proceedings"><meta name="citation_journal_abbrev" content="AIP Conf. Proc."><meta name="citation_volume" content="211"><meta name="citation_issue" content="1"><meta name="citation_publication_date" content="1990/08/10"><meta name="citation_issn" content="0094-243X"><meta name="citation_publisher" content="AIP Publishing"><meta name="citation_pdf_url" content="https://pubs.aip.org/aip/acp/article-pdf/211/1/297/12102372/297_1_online.pdf"><meta name="description" content="Many of the scientific objectives of x‐ray astronomy for the 1990’s and the twenty‐first century require high throughput. Three phases of high throughput telesc"><meta property="og:updated_time" content="8/10/1990">
+<meta property="og:type" content="article">
+<meta property="og:title" content="High throughput x‐ray astronomy">
+<meta property="og:description" content="Many of the scientific objectives of x‐ray astronomy for the 1990’s and the twenty‐first century require high throughput. Three phases of high throughput telesc">
+<meta property="og:url" content="/aip/acp/article/211/1/297/745585/High-throughput-x-ray-astronomy">
+<meta property="og:site_name" content="AIP Publishing">
+<meta property="og:image" content="/UI/app/svg/umbrella/logo.svg">
+
+
+<meta name="citation_xml_url" content="https://pubs.aip.org/aip/acp/article-xml/211/1/297/745585">
+
+
+    <link rel="canonical" href="https://pubs.aip.org/aip/acp/article/211/1/297/745585/High-throughput-x-ray-astronomy">
+
+
+
+
+
+
+    <meta name="publish_date" content="1990-08-10">
+
+    <meta name="publish_image" content="//aipp.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/acp/aipp-aipconferenceproceedings-vr21895546277.svg">
+
+
+
+    <meta name="product_code" content="CPS_D6">
+    <meta name="product_code" content="CPS_ON">
+    <meta name="product_code" content="CPS_BF">
+    <meta name="product_code" content="CPS_DR">
+    <meta name="product_code" content="ALL_CONTENT">
+    <meta name="product_code" content="CPS_D8">
+    <meta name="product_code" content="D25_25">
+    <meta name="product_code" content="AOD_25">
+    <meta name="product_code" content="AOD_50">
+    <meta name="product_code" content="AOD_100">
+    <meta name="product_code" content="AOD_250">
+    <meta name="product_code" content="AOD_500">
+    <meta name="product_code" content="AOD_1000">
+    <meta name="product_code" content="Article_PPV">
+    <meta name="product_code" content="confproc_2519">
+    <meta name="product_code" content="J_745585">
+    <meta name="product_code" content="I_13917">
+
+    <script type="application/ld+json">
+        {"@context":"https://schema.org","@type":"ScholarlyArticle","@id":"https://pubs.aip.org/aip/acp/article/211/1/297/745585/High-throughput-x-ray-astronomy","name":"High throughput x‐ray astronomy","about":["Telescopes","X-ray astronomy","X-ray optics","News and events"],"datePublished":"1990-08-10","hasPart":[{"@type":"WebPageElement","isAccessibleForFree":false,"cssSelector":".paywall"}],"isPartOf":{"@id":"https://pubs.aip.org/acp/issue/211/1","@type":"PublicationIssue","issueNumber":"1","datePublished":"1990-08-10","isPartOf":{"@id":"https://pubs.aip.org/acp","@type":"Periodical","name":"AIP Conference Proceedings","issn":["1551-7616"]}},"url":"https://dx.doi.org/10.1063/1.39658","inLanguage":"en","copyrightHolder":"AIP Publishing","copyrightYear":"2026","publisher":"","sameAs":["https://dx.doi.org/10.1063/1.39658"],"author":[{"name":"Gorenstein, Paul","affiliation":"Harvard‐Smithsonian Center for Astrophysics","@type":"Person"}],"description":"Many of the scientific objectives of x‐ray astronomy for the 1990’s and the twenty‐first century require high throughput. Three phases of high throughput telesc","pageStart":"297","pageEnd":"313","siteName":"AIP Publishing","thumbnailURL":"//aipp.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/acp/acp_cover-357135284.jpg","headline":"High throughput x‐ray astronomy","image":"//aipp.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/acp/acp_cover-357135284.jpg","image:alt":"","isAccessibleForFree":false}
+    </script>
+
+
+
+
+    
+
+
+
+    <script type="text/javascript" async="async" src="https://securepubads.g.doubleclick.net/tag/js/gpt.js"></script>
+
+    <script>
+        var SCM = SCM || {};
+        SCM.pubGradeAdsEnabled = false;
+    </script>
+
+
+<script>
+    var googletag = googletag || {};
+    googletag.cmd = googletag.cmd || [];
+
+    googletag.cmd.push(function () {
+    googletag.setConfig({ disableInitialLoad: true });
+
+    
+            googletag.pubads().setTargeting("contextual",  "P292P6060,P292P6596,P4276C1894,P5510P3944");
+
+        
+        var keys = ["hum_aipp_ad_personalization"];
+        keys.forEach(x =>
+        {
+            var item = localStorage[x];
+            if (item)
+            {
+                var allTargets = JSON.parse(item);
+                Object.keys(allTargets).forEach(k => {
+                    googletag.pubads().setTargeting(k, allTargets[k]);
+                })
+            }
+        })
+        
+    });
+</script>
+    
+
+<script type="text/javascript" src="https://static.adzerk.net/ados.js"></script>            <script src="https://widgets.figshare.com/static/figshare.js"></script>
+
+    
+
+
+
+
+
+
+    <script src="https://scholar.google.com/scholar_js/casa.js" async="" type="osano/blocked"></script>
+</head>
+
+<body data-sitename="aipconferenceproceedings" class="off-canvas pg_Article pg_article   " theme-acp="" data-sitestyletemplate="Journal">
+            <noscript>
+                <iframe  src="https://www.googletagmanager.com/ns.html?id=GTM-K9XV4SZ"
+                        height="0" width="0" style="display:none;visibility:hidden"></iframe>
+            </noscript>
+            <nav aria-label="Skip navigation">
+                <a href="#skipNav" class="skipnav">Skip to Main Content</a>
+            </nav>
+<input id="hdnSiteID" name="hdnSiteID" type="hidden" value="1000005"><input id="hdnAdDelaySeconds" name="hdnAdDelaySeconds" type="hidden" value="3000"><input id="hdnAdConfigurationTop" name="hdnAdConfigurationTop" type="hidden" value="basic"><input id="hdnAdConfigurationRightRail" name="hdnAdConfigurationRightRail" type="hidden" value="basic">
+    <div class="ad-banner js-ad-revealer ad-banner-revealer" role="region" aria-label="Advertisement" aria-hidden="true">
+    <div class="widget-AdBlock widget-instance-HeaderRevealerAd" data-widget-name="AdBlock" data-widget-instance="HeaderRevealerAd">
+        
+ 
+    </div>
+
+    </div>
+    
+
+
+
+
+<section class="master-header row vt-site-header" role="banner">
+
+    <div class="ad-banner js-ad-banner">
+    <div class="widget-AdBlock widget-instance-HeaderAd" data-widget-name="AdBlock" data-widget-instance="HeaderAd">
+            <input type="hidden" class="hfAdBlockInfo" data-divid="placement_582597_" data-slotname="/21618997260/AIPP/aip-conference-proceedings_acp" data-targetname="" data-sizes="[[970, 90]]" data-enabled-on-mobile="True" data-adprovider-typeid="1" data-accountid="" data-outofpagead="False" data-sticky-time="5" data-lazyloaded="False" data-position-keyword="POS-leaderboard" data-position-targeting-key="position" data-skip-size-mapping="True" data-native-placement-id="" data-wps-adsize-number="0" data-wps-network-id="0" data-wps-site-id="0" data-wps-zone-ids="" data-wps-brandlock-keyword="" data-tapnative-aid="" data-tapnative-div-id="" data-suppress-display="false" data-fallback-divid="">
+    <div class="adblock-wrap js-adblock-wrap vertical-text">
+
+<div id="placement_582597_" adslot="/21618997260/AIPP/aip-conference-proceedings_acp" class="adblock-slot-placeholder js-adblock" style="width:970px; height:90px;"></div>
+
+
+    </div>
+
+ 
+    </div>
+
+    </div>
+
+    <div class="widget-SitePageHeader widget-instance-SitePageHeader" data-widget-name="SitePageHeader" data-widget-instance="SitePageHeader">
+            <div class="site-theme-header">
+        <div class="site-theme-header_contents global-nav-base">
+
+
+
+<div class="global-nav">
+            <a class="js-dropdown-trigger global-nav-trigger" href="javascript:;">
+            <picture>
+                <source media="(min-width: 601px)" srcset="//aipp.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/AIPP-Master-Logo-White-RGB.svg">
+                <img class="logo-AIPConferenceProceedings site-theme-header-image" src="//aipp.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/AIPP-Master-Logo-White-RGB.svg" alt="AIP Publishing Logo">
+            </picture>
+                <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+        </a>
+        <nav class="navbar-menu global-nav-dropdown js-dropdown" aria-label="Primary navigation">
+            <div class="site-theme-header-logo">
+                <a href="/" class="site-theme-header-image-wrap">
+                        <picture>
+                            <source media="(min-width: 601px)" srcset="//aipp.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/AIPP-Master-Logo-White-RGB.svg">
+                            <img class="logo-AIPConferenceProceedings site-theme-header-image" src="//aipp.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/images/umbrella/AIPP-Master-Logo-White-RGB.svg" alt="AIP Publishing Logo">
+                        </picture>
+                </a>
+                <a href="javascript:;" class="icon-general-close menu-close js-menu-close"><span class="screenreader-text">Close</span></a>
+            </div>
+                    <ul class="site-menu site-menu-lvl-0 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Publishers " id="site-menu-item-35608">
+                        <a href="javascript:;" class="nav-link js-theme-dropdown-trigger" aria-expanded="false">Publishers <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></a>
+
+                            <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-AIP-Publishing " id="site-menu-item-35610">
+                        <a href="/aip" class="nav-link">AIP Publishing                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Physics-Today " id="site-menu-item-35611">
+                        <a href="https://physicstoday.aip.org/" class="nav-link" target="&quot;_blank&quot;">Physics Today <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Acoustical-Society-of-America " id="site-menu-item-35612">
+                        <a href="/asa" class="nav-link">Acoustical Society of America                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-American-Association-of-Physics-Teachers " id="site-menu-item-35613">
+                        <a href="/aapt" class="nav-link">American Association of Physics Teachers                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-ACA:-The-Structural-Science-Society " id="site-menu-item-35614">
+                        <a href="/aca" class="nav-link">ACA: The Structural Science Society                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-AVS:-Science-and-Technology-of-Materials,-Interfaces-and-Processing " id="site-menu-item-35615">
+                        <a href="/avs" class="nav-link">AVS: Science and Technology of Materials, Interfaces and Processing                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Chinese-Physical-Society " id="site-menu-item-35616">
+                        <a href="/cps" class="nav-link">Chinese Physical Society                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Hefei-General-Machinery-Research-Institute " id="site-menu-item-35617">
+                        <a href="/hgmri" class="nav-link">Hefei General Machinery Research Institute                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-The-Laser-Institute " id="site-menu-item-35618">
+                        <a href="/lia" class="nav-link">The Laser Institute                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-State-Key-Laboratory-of-Mechanics-and-Control-for-Aerospace-Structures " id="site-menu-item-35619">
+                        <a href="/nuaa" class="nav-link">State Key Laboratory of Mechanics and Control for Aerospace Structures                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-The-Society-of-Rheology " id="site-menu-item-35620">
+                        <a href="/sor" class="nav-link">The Society of Rheology                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Tianjin-University " id="site-menu-item-35621">
+                        <a href="/tu" class="nav-link">Tianjin University                      </a>
+
+                    
+                </li>
+        </ul>
+
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Publications " id="site-menu-item-35609">
+                        <a href="javascript:;" class="nav-link js-theme-dropdown-trigger" aria-expanded="false">Publications <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></a>
+
+                            <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Journals " id="site-menu-item-35622">
+                        <a href="/pages/journals" class="nav-link">Journals                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Physics-Today " id="site-menu-item-35623">
+                        <a href="https://physicstoday.aip.org/" class="nav-link" target="&quot;_blank&quot;">Physics Today <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-AIP-Conference-Proceedings " id="site-menu-item-35624">
+                        <a href="/aip/acp" class="nav-link">AIP Conference Proceedings                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 site-menu-item-Books " id="site-menu-item-35625">
+                        <a href="/books" class="nav-link">Books                      </a>
+
+                    
+                </li>
+        </ul>
+
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Special-Topics " id="site-menu-item-35626">
+                        <a href="/collections/" class="nav-link">Special Topics                      </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Authors " id="site-menu-item-35627">
+                        <a href="https://publishing.aip.org/resources/researchers/" class="nav-link" target="&quot;_blank&quot;">Authors <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-Librarians " id="site-menu-item-35628">
+                        <a href="https://publishing.aip.org/resources/librarians/" class="nav-link" target="&quot;_blank&quot;">Librarians <span class="screenreader-text">Open External Link</span>                     </a>
+
+                    
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 site-menu-item-About " id="site-menu-item-35629">
+                        <a href="/pages/about" class="nav-link">About                      </a>
+
+                    
+                </li>
+        </ul>
+
+        </nav>
+    
+</div>
+
+
+
+    <input type="hidden" class="hfEnableEnhancedAutoSuggest" value="true" name="searchScope" aria-hidden="true">
+        <div class="mobile-menu-trigger_wrap mobile-search_wrap">
+            <button type="button" class="mobile-search_toggle at-search-toggle" aria-expanded="false" data-theme-dropdown-trigger="search-dropdown"><i class="icon-menu_search" aria-hidden="true"></i><span class="screenreader-text">Search Dropdown Menu</span></button>
+        </div>
+    <div class="navbar-search-container mobile-dropdown search-dropdown" data-theme-dropdown="search-dropdown">
+        <div class="navbar-search citation-search">
+            <form class="microsite-search js-MicrositeSearch" aria-label="header search" role="search">
+                <fieldset class="searchbar-fieldset">
+                    <legend><span class="screenreader-text">header search</span></legend>
+                    <div class="navbar-search-input_wrap">
+                        
+                        <input class="navbar-search-input microsite-search-term at-microsite-search-term search-term-autosuggest" data-autosuggest-hint="micrositeSearchTermInputHint-SitePageHeader" data-autosuggest-results="micrositeAutoCompleteResults-SitePageHeader" data-autosuggest-id="MicrositeSearchTerm-SitePageHeader" data-searchfilter="search-filter-SitePageHeader" placeholder="Search..." aria-label="Search..." type="text" maxlength="255" autocomplete="off" id="MicrositeSearchTerm-SitePageHeader">
+                        
+                        <input type="hidden" name="hfAutoCompleteMaxResults" class="hfAutoCompleteMaxResults" value="6" aria-hidden="true">
+                        <input type="hidden" name="hfSolrAutoSuggestMinimumCharactersLength" class="hfSolrAutoSuggestMinimumCharactersLength" value="2" aria-hidden="true">
+                        <input type="hidden" name="hfSolrJournalName" class="hfSolrJournalName" value="" aria-hidden="true">
+                        <input type="hidden" name="hfSolrJournalID" class="hfSolrJournalID" value="" aria-hidden="true">
+                        <label for="micrositeSearchTermInputHint-SitePageHeader" aria-hidden="true">
+                            <span class="screenreader-text">Search input auto suggest</span>
+                        </label>
+                        <input type="text" id="micrositeSearchTermInputHint-SitePageHeader" data-autosuggest-id="micrositeSearchTermInputHint-SitePageHeader" class="microsite-search-term-input-hint" autocomplete="off" tabindex="-1" aria-hidden="true" disabled="">
+                        <ul data-autosuggest-id="micrositeAutoCompleteResults-SitePageHeader" class="term-list hidden"></ul>
+                    </div>
+                        <div class="navbar-search-filter_wrap">
+                            <label for="navbar-search-filter-site-SitePageHeader">
+                                <span class="screenreader-text">filter your search</span>
+                            </label>
+                            <select class="navbar-search-filter navbar-search-filter-site at-navbar-search-filter" id="navbar-search-filter-site-SitePageHeader" data-autosuggest-id="search-filter-SitePageHeader">
+<option class="header-search-bar-filters-item" value="/search-results?page=1&amp;q={searchQuery}" data-siteid="0">All Content</option><option class="header-search-bar-filters-item" value="/aip/search-results?page=1&amp;q={searchQuery}&amp;fl_SiteID=1000001" data-siteid="1000001">AIP Publishing Portfolio</option><option class="header-search-bar-filters-item selected" value="/aip/acp/search-results?page=1&amp;q={searchQuery}&amp;fl_SiteID=1000005" data-siteid="1000005" selected="">AIP Conference Proceedings</option>                            </select>
+                        </div>
+                    <div class="navbar-search-submit_wrap">
+                        
+                        <button type="button" class="microsite-search-icon navbar-search-submit icon-menu_search"><span class="screenreader-text">Search</span></button>
+                    </div>
+                </fieldset>
+            </form><!-- /#MicrositeSearch -->
+        </div><!-- /.navbar-search -->
+    <div class="navbar-search-advanced-citation">
+        <a href="/advanced-search" class="advanced-search">Advanced Search</a>
+            <span>|</span><a href="/citation-search" class="citation-search">Citation Search</a>
+    </div>
+    </div><!-- /.navbar-search-container -->
+
+<input type="hidden" name="parentSiteName" class="hfParentSiteName" value="AIP Publishing Portfolio" aria-hidden="true">
+<input type="hidden" class="hfSolrMaxAllowSearchChar" value="100" aria-hidden="true">
+<input type="hidden" class="hfJournalShortName" value="" aria-hidden="true">
+<input type="hidden" class="hfSearchPlaceholder" value="" aria-hidden="true">
+<input type="hidden" name="hfGlobalSearchSiteURL" class="hfGlobalSearchSiteURL" value="" aria-hidden="true">
+<input type="hidden" name="hfSearchSiteURL" id="hfSiteURL" value="pubs.aip.org/aip/acp" aria-hidden="true">
+<input type="hidden" class="hfQuickSearchUrl" value="/aip/acp/search-results?page=1&amp;q={searchQuery}&amp;fl_SiteID=1000005" aria-hidden="true">
+<script type="text/javascript">
+    (function () {
+        var hfSiteUrl = document.getElementById('hfSiteURL');
+        var siteUrl = hfSiteUrl.value;
+        var subdomainIndex = siteUrl.indexOf('/');
+
+        hfSiteUrl.value = location.host + (subdomainIndex >= 0 ? siteUrl.substring(subdomainIndex) : '');
+    })();
+</script>
+
+                <div class="tablet-menu-trigger_wrap">
+        <!-- MOBILE SHOPPING CART ICON -->
+
+<div class="site-theme-header-menu-item view-cart-wrap">
+    <a href="https://pubs.aip.org/store/cart" class="view-cart" rel="nofollow" aria-label="Cart">
+        <span class="text-cart"></span>
+            <span class="screen-reader-only">Cart</span>
+        <i class="access-icon icon-availability_cart" aria-hidden="true"></i>
+            <span class="items-in-cart" aria-live="polite"></span>
+    </a>
+</div>        <button type="button" class="btn-reset tablet-sign-in" data-theme-dropdown-trigger="tablet-user-dropdown" aria-controls="tablet-user-dropdown" aria-expanded="false"><i class="icon-menu_account"><span class="screenreader-text">User Tools Dropdown</span></i></button>
+    </div>
+<div class="site-theme-header-menu-item_wrap tablet-menu" id="tablet-user-dropdown" data-theme-dropdown="tablet-user-dropdown">
+    <!-- DESKTOP SHOPPING CART ICON -->
+
+<div class="site-theme-header-menu-item view-cart-wrap">
+    <a href="https://pubs.aip.org/store/cart" class="view-cart" rel="nofollow" aria-label="Cart">
+        <span class="text-cart"></span>
+            <span class="screen-reader-only">Cart</span>
+        <i class="access-icon icon-availability_cart" aria-hidden="true"></i>
+            <span class="items-in-cart" aria-live="polite"></span>
+    </a>
+</div>
+    <!-- DESKTOP REGISTRATION -->
+
+    <!-- ACCESS THROUGH INSTITUTION -->
+
+    <!-- DESKTOP INSTITUTIONS -->
+
+        <!-- DESKTOP SIGN IN -->
+        <div class="site-theme-header-menu-item not-authenicated">
+                <button type="button" class="btn-reset dropdown-toggle signin at-signin-dropdown at-signin-username" id="header-account-info-user-fullname" data-login-location="/SignIn/LoginForm/LoginFormPopup?returnUrl=" data-theme-dropdown-trigger="sign-in-dropdown" aria-controls="sign-in-dropdown" aria-expanded="false" rel="nofollow">
+                    
+Sign In                    <i class="icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+                </button>
+                <div class="dropdown-panel dropdown-panel-signin dropdown-panel-form at-signin-dropdown-panel" id="sign-in-dropdown" data-theme-dropdown="sign-in-dropdown">
+                    <div class="spinner"></div>
+                </div><!-- /.dropdown-panel -->
+        </div>
+
+</div>
+        </div><!-- /.site-theme-header_content -->
+    </div><!-- /.site-theme-header- -->
+
+
+    <div class="journal-header journal-bg">
+        <div class="journal-header-aipp journal-header_content with-society-logo">
+
+    <div class="society-block_wrap">
+            <a href="/aip" target="" class="society-logo-link">
+                <picture>
+                    <source media="(min-width: 600px)" srcset="//aipp.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/Images/aip/logo.png">
+                    <img id="logo-AIPPublishingLogo" class="society-logo" src="//aipp.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/Images/aip/logo.png" alt="AIP Publishing Logo">
+                </picture>
+            </a>
+            </div><!-- /.society-block-inner-wrap - NOTE: used to vertically center one or more society logos -->
+
+
+    <div class="journal-logo_wrap">
+        <a href="https://pubs.aip.org/aip/acp" class="journal-logo-link">
+            <picture>
+                <source media="(min-width: 601px)" srcset="//aipp.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/acp/aipp-aipconferenceproceedings-vr21895546277.svg">
+                <img class="logo-AIPConferenceProceedings journal-logo" src="//aipp.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/acp/aipp-aipconferenceproceedings-vr21895546277.svg" alt="AIP Conference Proceedings">
+            </picture>
+        </a>
+    </div>
+
+            
+
+
+<div class="navbar-menu_wrap">
+            <a class="mobile-site-menu-toggle" data-theme-dropdown-trigger="microsite-nav-menu" aria-controls="microsite-nav-menu" aria-expanded="false" href="javascript:;"><i class="icon-menu_hamburger"><span class="screenreader-text">Toggle Menu</span></i><span class="tablet-menu-label">Menu</span></a>
+            <nav class="navbar-menu" id="microsite-nav-menu" data-theme-dropdown="microsite-nav-menu" aria-label="Primary navigation">
+                    <ul class="site-menu site-menu-lvl-0 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-36794">
+        <a href="/aip/acp" class="nav-link">Home</a>
+    </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-36790">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">Browse<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36795">
+        <a href="/aip/acp/issue" class="nav-link">Newest Issue</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36796">
+        <a href="/aip/acp/issue/browse-by-year" class="nav-link">All Issues</a>
+    </li>     </ul>
+ </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-36791">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">For Authors<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36797">
+        <a href="/aip/acp/pages/preppapers" class="nav-link">Preparing Your Manuscript</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36798">
+        <a href="/aip/acp/pages/reuse" class="nav-link">Re-use of Proceedings Articles</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36799">
+        <a href="/aip/acp/pages/charges" class="nav-link">Publication Charges</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36800">
+        <a href="https://publishing.aip.org/authors" class="nav-link" target="&quot;_blank&quot;">Author Resources<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36801">
+        <a href="https://authorservices.aip.org/" class="nav-link" target="&quot;_blank&quot;">AIP Author Services<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36802">
+        <a href="/aip/acp/pages/policy" class="nav-link">Post Publication Policy</a>
+    </li>     </ul>
+ </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-36792">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">For Organizers<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36803">
+        <a href="/aip/acp/pages/abstracts" class="nav-link">Abstracting &amp; Indexing</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36804">
+        <a href="/aip/acp/pages/article-at-a-time-publishing" class="nav-link">Article-at-a-Time Publishing</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36805">
+        <a href="https://publishing.aip.org/resources/researchers/policies-and-ethics/" class="nav-link" target="&quot;_blank&quot;">Ethics Policy<span class="screenreader-text">Open External Link</span></a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36806">
+        <a href="/aip/acp/pages/faq" class="nav-link">FAQ for Organizers</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36807">
+        <a href="/aip/acp/pages/peerreview" class="nav-link">Peer Review</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36808">
+        <a href="/aip/acp/pages/pubprocess" class="nav-link">The Publication Process</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36809">
+        <a href="/aip/acp/pages/discretion" class="nav-link">Publication Discretion Policy</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36810">
+        <a href="/aip/acp/pages/policy" class="nav-link">Post Publication Policy</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36811">
+        <a href="/aip/acp/pages/testimonials" class="nav-link">Testimonials from Editors &amp; Organizers</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36812">
+        <a href="/aip/acp/pages/access_codes" class="nav-link">How To Redeem Access Codes</a>
+    </li>     </ul>
+ </li> <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-36793">
+        <button type="button" class="btn-reset nav-link js-theme-dropdown-trigger" aria-expanded="false">About<i class="nav-arrow icon-general_arrow-down arrow-icon"><span class="screenreader-text">Open Menu</span></i></button>
+        <ul class="site-menu site-menu-lvl-1 js-theme-dropdown">
+<li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36813">
+        <a href="/aip/acp/pages/about" class="nav-link">Overview</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36814">
+        <a href="/aip/acp/pages/news" class="nav-link">News</a>
+    </li> <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-36815">
+        <a href="/aip/acp/pages/contact" class="nav-link">Contact</a>
+    </li>     </ul>
+ </li>     </ul>
+ 
+            </nav>
+</div><!-- /.navbar -->
+           
+        </div><!-- /.center-inner-row -->
+
+    </div><!-- /.journal-header -->
+
+
+<input id="routename" name="RouteName" type="hidden" value="acp">
+
+ 
+    </div>
+
+</section>
+
+<div id="main" class="content-main js-main ui-base" role="main">
+    <section class="master-main row">
+        <div class="content-main_content">
+            <span id="skipNav" tabindex="-1"></span>
+            
+
+
+
+
+
+<div class="page-column-wrap article-browse_content ">
+<div id="InfoColumn" class="page-column page-column--left">
+
+    <div class="info-inner-wrap can-stick empty">
+
+        <button type="button" class="btn-as-icon toggle-left-col__close icon-general-close">
+            <span class="screenreader-text">Close navigation menu</span>
+        </button>
+        <div class="responsive-nav-title">Article navigation</div>
+
+        <div class="info-widget-wrap">
+    <div class="widget-IssueInfo widget-instance-IssueInfo_Article" data-widget-name="IssueInfo" data-widget-instance="IssueInfo_Article">
+        
+
+<div id="issueInfo-IssueInfo_Article" class="article-info-wrap clearfix ">
+<div class="article-issue-info">
+    <div class="volume-issue__wrap">
+            <a href="/aip/acp/issue/211/1">
+
+            <span class="volume issue">Volume 211, Issue 1</span>
+
+            </a>
+    </div>
+
+    <div class="ii-pub-date">
+10 August 1990    </div>
+
+
+    
+
+</div>
+<div class="article-issue-img">
+            <a href="/aip/acp/issue/211/1">
+        <img id="issueFallbackImage" class="fb-featured-image at-coverimage" src="//aipp.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/acp/acp_cover-357135284.jpg" alt="Issue Cover">
+            </a>
+</div>
+
+        <div class="issue-info-conference"><div class="conf-name">High−Energy Astrophysics in the 21st Century</div><div class="conf-date">11−14 Dec 1989</div><div class="conf-loc">Taos, New Mexico (USA)</div></div>
+    
+
+</div>
+ 
+    </div>
+                <div class="widget-ArticleNavLinks widget-instance-ArticleNavLinks_Article" data-widget-name="ArticleNavLinks" data-widget-instance="ArticleNavLinks_Article">
+        <ul class="inline-list">
+        <li class="prev arrow">
+            <a href="/aip/acp/article/211/1/291/745558/X-ray-interferometry-for-sub-milliarcsecond-and"><i class="icon-general_arrow-left"></i>Previous <span>Article</span></a>
+        </li>
+            <li class="next arrow">
+            <a href="/aip/acp/article/211/1/314/745538/The-X-ray-large-array-XLA">Next <span>Article</span><i class="icon-general_arrow-right"></i></a>
+        </li>
+</ul>
+ 
+    </div>
+
+            
+
+
+
+        </div>
+    </div>
+</div> 
+        
+
+    <div id="ContentColumn" class="page-column page-column--center center-content can-stick">
+        <div class="article-browse_content-wrap js-content-standard">
+                <div class="toprail-widget_wrap">
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_TopRail" data-widget-name="DynamicWidgetLayout" data-widget-instance="Article_TopRail">
+        <div class="widget widget-dynamic " data-count="0">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+
+    </div>
+
+</div> 
+    </div>
+
+                </div>
+                <div class="widget-ArticleMainView widget-instance-Article_ArticleMainViewWrapper" data-widget-name="ArticleMainView" data-widget-instance="Article_ArticleMainViewWrapper">
+        <div class="article-browse-top article-browse-mobile-nav empty">
+    <div class="article-browse-mobile-nav-inner">
+        <button type="button" class="btn toggle-left-col toggle-left-col__article">Article Navigation</button>
+    </div>
+</div>
+
+<div class="content-inner-wrap">
+    
+
+    <div class="widget-ArticleTopInfo widget-instance-ArticleTopInfo" data-widget-name="ArticleTopInfo" data-widget-instance="ArticleTopInfo">
+        <div class="module-widget article-top-widget content-metadata_wrap">
+
+
+<div class="article-groups left-flag">
+        <span class="article-client_type">Research Article</span><span class="pipe">|</span>
+        <span class="article-date">August 10 1990</span>
+
+</div>
+
+
+    <div class="widget-items">
+    <h1 class="wi-article-title article-title-main" id="aria745585">
+
+        High throughput x‐ray astronomy
+
+    <span data-resource-id-access="745585"><i class="js-access-icon-placeholder"></i></span>
+    </h1>
+
+
+<div class="wi-authors">
+    <div class="al-authors-list">
+
+        <input type="hidden" id="js-hdn-enable-corresponding-author-icon" value="True">
+                <div class="al-author-name">
+
+                                    <a rel="nofollow" class="linked-name js-linked-name stats-author-info-trigger" href="javascript:;" aria-haspopup="dialog" aria-expanded="false" aria-controls="author-info-8204778">Paul Gorenstein</a>
+
+                    <div id="author-info-8204778" class="al-author-info-wrap arrow-up stats-author-info-panel" role="dialog" aria-label="Author information for Paul Gorenstein">
+                        <button class="js-author-info-close al-author-info-close" type="button"><i class="icon-general-close" aria-hidden="true"></i><span class="screenreader-text">Close author information for Paul Gorenstein</span></button>
+<div class="info-card-author authorInfo_ArticleTopInfo">
+    <div class="name-role-wrap">
+        <div class="info-card-name">
+    Paul Gorenstein
+</div>
+
+    </div>
+
+    <div class="info-card-affilitation">
+        <div class="aff">Harvard‐Smithsonian Center for Astrophysics</div>
+    </div>
+
+    <div class="info-card-search-label">
+        Search for other works by this author on:
+    </div>
+
+<div class="info-card-search info-card-search-internal">
+    <a href="/search-results?f_AllAuthors=Paul+Gorenstein" rel="nofollow">This Site</a>
+</div>
+
+    <div class="info-card-search info-card-search-pubmed">
+        <a href="http://www.ncbi.nlm.nih.gov/pubmed?cmd=search&amp;term=Paul Gorenstein">PubMed</a>
+    </div>
+    <div class="info-card-search info-card-search-google">
+        <a href="http://scholar.google.com/scholar?q=author:&quot;Paul Gorenstein&quot;">Google Scholar</a>
+    </div>
+</div>                    </div>
+                </div>
+    </div>
+</div>
+    <div class="widget-EditorInformation widget-instance-ArticleTopInfo_EditorInformation" data-widget-name="EditorInformation" data-widget-instance="ArticleTopInfo_EditorInformation">
+        
+ 
+    </div>
+
+
+    <div class="js-author-expand-collapse-metadata-wrap author-expand-collapse-metadata-wrap stats-article-metadata-trigger-wrap">
+        <a href="javascript:;" class="js-expand-collapse-metadata author-expand-collapse-metadata stats-article-metadata-trigger" aria-expanded="false">
+            <i class="js-metadata-toggle-icon icon-general-add"></i>Author &amp; Article Information
+        </a>
+    </div>
+<div class="js-metadata-wrap metadata">
+<div id="authorListWithFootnotes" class="author-affiliations-list">
+<div class="author-info-wrap">
+            <div class="author-full-name">
+                Paul Gorenstein
+
+                <span class="author-superscripts">
+                </span>
+            </div>
+        </div>
+</div>
+<div class="js-metadata-wrap metadata">
+    <div id="authorAffilliationInformation" class="author-info-full-list author-list-with-superscripts">
+        <div class="author-info-wrap">
+            <div class="author-affiliation">
+                <div class="aff">Harvard‐Smithsonian Center for Astrophysics</div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+
+<div class="pub-history-wrap clearfix">
+
+            <div class="pub-history-row clearfix">
+            <div class="ww-citation-primary"><em>AIP Conf. Proc.</em> 211, 297–313 (1990)</div>
+        </div>
+        <div class="pub-history-row citation-wrap-row clearfix">
+                <div class="ww-citation-wrap-doi">
+                    <div class="citation-doi">
+                        <a href="https://doi.org/10.1063/1.39658">https://doi.org/10.1063/1.39658</a>
+                    </div>
+                </div>
+
+        </div>
+
+</div>
+
+
+
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.article-top-widget').on('click', '.ati-toggle-trigger', function () {
+            $(this).find('.icon-general-add, .icon-minus').toggleClass('icon-minus icon-general-add');
+            $(this).siblings('.ati-toggle-content').toggleClass('hide');
+        });
+
+        // In Chrome, an anchor tag with target="_blank" and a "mailto:" href opens a new tab/window as well as the email client
+        // I suspect this behavior will be corrected in the future
+        // Remove the target="_blank"
+        $('ul.wi-affiliationList').find('a[href^="mailto:"]').each(function () {
+            $(this).removeAttr('target');
+        });
+    });
+</script>
+
+ 
+    </div>
+    <div class="widget-ArticleLinks widget-instance-ArticleLinks" data-widget-name="ArticleLinks" data-widget-instance="ArticleLinks">
+         
+    </div>
+
+
+    <div class="widget-ArticleMainView widget-instance-ArticleMainView_Abstract" data-widget-name="ArticleMainView" data-widget-instance="ArticleMainView_Abstract">
+        
+
+
+<div class="toolbar-wrap vt-toolbar-wrap" role="navigation">
+    <div class="toolbar-inner-wrap">
+<div class="toolbar-inner-wrap ">
+    <ul id="Toolbar" class="debug js-toolbar toolbar">
+<li class="toolbar-item item-site-logos site-logos_trigger_wrap">
+    <div class="widget-SitePageHeader widget-instance-SitePageHeader" data-widget-name="SitePageHeader" data-widget-instance="SitePageHeader">
+            <div class="journal-header journal-bg journal-header-toolbox">
+        <div class="journal-header-aipp journal-header_content with-society-logo">
+
+    <div class="society-block_wrap">
+            <a href="/aip" target="" class="society-logo-link">
+                <picture>
+                    <source media="(min-width: 600px)" srcset="//aipp.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/Images/aip/logo.png">
+                    <img id="logo-AIPPublishingLogo" class="society-logo" src="//aipp.silverchair-cdn.com/data/SiteBuilderAssetsOriginals/Live/Images/aip/logo.png" alt="AIP Publishing Logo">
+                </picture>
+            </a>
+            </div><!-- /.society-block-inner-wrap - NOTE: used to vertically center one or more society logos -->
+
+
+    <div class="journal-logo_wrap">
+        <a href="https://pubs.aip.org/aip/acp" class="journal-logo-link">
+            <picture>
+                <source media="(min-width: 601px)" srcset="//aipp.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/acp/aipp-aipconferenceproceedings-vr21895546277.svg">
+                <img class="logo-AIPConferenceProceedings journal-logo" src="//aipp.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/acp/aipp-aipconferenceproceedings-vr21895546277.svg" alt="AIP Conference Proceedings">
+            </picture>
+        </a>
+    </div>
+
+        </div><!-- /.center-inner-row -->   
+    </div><!-- /.journal-header -->
+ 
+    </div>
+
+</li>
+<li class="toolbar-item item-with-dropdown item-views js-item-views hide">
+  <a href="javascript:;" class="js-toolbar-dropdown" data-dropdown="FilterDrop" role="button" aria-expanded="false">
+    <i class="icon-menu_views"><span class="screenreader-text">Views Icon</span></i>
+    <span class="toolbar-label">
+      <span class="toolbar-text">Views</span>
+      <i class="icon-general_arrow-down arrow-icon js-toolbar-arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+    </span>
+  </a>
+  <ul id="ViewsDrop" class="f-dropdown js-dropdown-content" data-dropdown-content="">
+      <li class="article-content-filter js-content-filter hide" data-content-filter="article-content"><a href="javascript:;" rel="nofollow"><span>Article contents</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="figures-tables"><a href="javascript:;" rel="nofollow"><span>Figures &amp; tables</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="video"><a href="javascript:;" rel="nofollow"><span>Video</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="audio"><a href="javascript:;" rel="nofollow"><span>Audio</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="supplementary-data"><a href="javascript:;" rel="nofollow"><span>Supplementary Material</span></a></li>
+      <li class="article-content-filter js-content-filter hide" data-content-filter="peer-review"><a href="javascript:;" rel="nofollow"><span>Peer Review</span></a></li>
+  </ul>
+</li>
+
+
+    <li class="toolbar-item item-with-dropdown item-share">
+        <a href="javascript:;" class="drop-trigger js-toolbar-dropdown at-ShareButton" data-dropdown="ShareDrop" role="button" aria-expanded="false">
+            <i class="icon-menu_share"><span class="screenreader-text">Share Icon</span></i>
+            <span class="toolbar-label">
+                <span class="toolbar-text">Share</span>
+                <i class="arrow-icon icon-general_arrow-down js-toolbar-arrow-icon"></i>
+            </span>
+        </a>
+        <ul id="ShareDrop" class="addthis_toolbox addthis_default_style addthis_20x20_style f-dropdown js-dropdown-content" data-dropdown-content="">
+
+    <li><a class="Facebook" href="https://www.facebook.com/sharer/sharer.php?u=https%3a%2f%2fpubs.aip.org%2faip%2facp%2farticle-lookup%2fdoi%2f10.1063%2f1.39658&amp;quote=High throughput x‐ray astronomy" rel="nofollow">Facebook</a></li>
+    <li><a class="Reddit" href="https://www.reddit.com/submit?url=https%3a%2f%2fpubs.aip.org%2faip%2facp%2farticle-lookup%2fdoi%2f10.1063%2f1.39658&amp;title=High throughput x‐ray astronomy" rel="nofollow">Reddit</a></li>
+    <li><a class="LinkedIn" href="https://www.linkedin.com/sharing/share-offsite/?url=https%3a%2f%2fpubs.aip.org%2faip%2facp%2farticle-lookup%2fdoi%2f10.1063%2f1.39658" rel="nofollow">LinkedIn</a></li>
+    <li><a class="Bluesky" href="https://bsky.app/intent/compose?text=High throughput x‐ray astronomy%20https%3a%2f%2fpubs.aip.org%2faip%2facp%2farticle-lookup%2fdoi%2f10.1063%2f1.39658" rel="nofollow">Bluesky</a></li>
+    <li><a class="WeChat" href="https://api.qrserver.com/v1/create-qr-code/?size=154x154&amp;data=https%3a%2f%2fpubs.aip.org%2faip%2facp%2farticle-lookup%2fdoi%2f10.1063%2f1.39658" rel="nofollow">WeChat</a></li>
+
+
+
+        </ul>
+    </li>
+<li class="toolbar-item item-with-dropdown item-tools last">
+      <a href="javascript:;" class="js-toolbar-dropdown" data-dropdown="ToolsDrop" role="button" aria-expanded="false">
+        <i class="icon-menu_tools"><span class="screenreader-text">Tools Icon</span></i>
+        <span class="toolbar-label">
+          <span class="toolbar-text">Tools</span>
+          <i class="icon-general_arrow-down arrow-icon js-toolbar-arrow-icon"><span class="screenreader-text">Open Menu</span></i>
+        </span>
+      </a>
+      <ul id="ToolsDrop" class="f-dropdown mobile js-dropdown-content" data-dropdown-content="">
+<li class="toolbar-item item-tools">
+    <div class="widget-ToolboxPermissions widget-instance-ToolboxPermissions_Abstract" data-widget-name="ToolboxPermissions" data-widget-instance="ToolboxPermissions_Abstract">
+            <div class="module-widget">
+        <a href="https://s100.copyright.com/AppDispatchServlet?publisherName=aip&amp;publication=APCPCS&amp;issn=0094-243X&amp;title=High%20throughput%20x%E2%80%90ray%20astronomy&amp;publicationDate=1990-08-10&amp;volumeNum=211&amp;issueNum=1&amp;author=Gorenstein%2C%20Paul&amp;startPage=297&amp;endPage=313&amp;contentId=10.1063%2F1.39658&amp;oa=&amp;orderBeanReset=True" id="PermissionsLink" role="button" rel="nofollow">
+            <span class="toolbar-label text">
+                <span class="toolbar-text normalize permission">Rights and Permissions</span>
+            </span>
+        </a>
+    </div>
+ 
+    </div>
+
+</li>
+    <li class="toolbar-item item-cite js-item-cite">
+<div class="getCitationDiv at-CiteButton">
+    <a href="javascript:;" class="stats-get-citation" data-modal-source-id="toolbox-get-citation" rel="nofollow">
+        <i class="icon-cite">
+            <span class="screenreader-text">Cite Icon</span>
+        </i>
+        <span class="toolbar-text normalize">Cite</span>
+    </a>
+</div>
+    </li>
+
+<li class="toolbar-item item-tools">
+    <div class="widget-ToolboxReprints widget-instance-ArticleMainView_Abstract" data-widget-name="ToolboxReprints" data-widget-instance="ArticleMainView_Abstract">
+        <div class="module-widget">
+    <a href="https://marketplace.copyright.com/" id="ReprintsLink" target="_blank" class="" rel="nofollow">
+        <i class="icon-menu_pdf-small"></i>
+        <span class="toolbar-text normalize reprint">Reprints</span>
+    </a>
+</div>
+ 
+    </div>
+
+</li>      </ul>
+  
+</li>
+
+<li class="search-dropdown-trigger_wrap toolbar-item">
+    <a href="javascript:;" data-theme-dropdown-trigger="toolbar-search-dropdown" aria-controls="toolbar-search-dropdown" aria-expanded="false">
+        <i class="icon-menu_search"></i>
+        <span class="site-search-text">Search Site</span>
+    </a>
+</li>
+
+    </ul>
+</div>
+
+<div id="getCitation" data-content-id="toolbox-get-citation" class="modal-only-content vt-citation-modal">
+  <div class="modal-title">Citation</div>
+  <p>Paul Gorenstein; High throughput x‐ray astronomy. <em><em>AIP Conf. Proc.</em></em> 10 August 1990; 211 (1): 297–313. <a href="https://doi.org/10.1063/1.39658">https://doi.org/10.1063/1.39658</a></p>
+  <p class="citation-label">Download citation file:</p>
+  <ul>
+      <li><a href="/Citation/Download?resourceId=745585&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Ris (Zotero)</a></li>
+          <li><a href="/Citation/Download?resourceId=745585&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Reference Manager</a></li>
+          <li><a href="/Citation/Download?resourceId=745585&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">EasyBib</a></li>
+          <li><a href="/Citation/Download?resourceId=745585&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Bookends</a></li>
+
+      <li><a href="/Citation/Download?resourceId=745585&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Mendeley</a></li>
+
+      <li><a href="/Citation/Download?resourceId=745585&amp;resourceType=3&amp;citationFormat=0" rel="nofollow">Papers</a></li>
+
+      <li><a href="/Citation/Download?resourceId=745585&amp;resourceType=3&amp;citationFormat=1" rel="nofollow">EndNote</a></li>
+          <li><a href="/Citation/Download?resourceId=745585&amp;resourceType=3&amp;citationFormat=3" rel="nofollow">RefWorks</a></li>
+          <li><a href="/Citation/Download?resourceId=745585&amp;resourceType=3&amp;citationFormat=2" rel="nofollow">BibTex</a></li>
+          </ul>
+</div>
+
+
+        <div class="toolbar-search" id="toolbar-search-dropdown" data-theme-dropdown="toolbar-search-dropdown">
+            <fieldset>
+                <legend class="screenreader-text">toolbar search</legend>
+
+    <div class="widget-SitePageHeader widget-instance-SiteSearch_ArticleMainView_Abstract" data-widget-name="SitePageHeader" data-widget-instance="SiteSearch_ArticleMainView_Abstract">
+        
+
+    <input type="hidden" class="hfEnableEnhancedAutoSuggest" value="true" name="searchScope" aria-hidden="true">
+        <div class="mobile-menu-trigger_wrap mobile-search_wrap">
+            <button type="button" class="mobile-search_toggle at-search-toggle" aria-expanded="false" data-theme-dropdown-trigger="search-dropdown"><i class="icon-menu_search" aria-hidden="true"></i><span class="screenreader-text">Search Dropdown Menu</span></button>
+        </div>
+    <div class="navbar-search-container mobile-dropdown search-dropdown" data-theme-dropdown="search-dropdown">
+        <div class="navbar-search citation-search">
+            <form class="microsite-search js-MicrositeSearch" aria-label="toolbar search" role="search">
+                <fieldset class="searchbar-fieldset">
+                    <legend><span class="screenreader-text">toolbar search</span></legend>
+                    <div class="navbar-search-input_wrap">
+                        
+                        <input class="navbar-search-input microsite-search-term at-microsite-search-term search-term-autosuggest" data-autosuggest-hint="micrositeSearchTermInputHint-SiteSearch_ArticleMainView_Abstract" data-autosuggest-results="micrositeAutoCompleteResults-SiteSearch_ArticleMainView_Abstract" data-autosuggest-id="MicrositeSearchTerm-SiteSearch_ArticleMainView_Abstract" data-searchfilter="search-filter-SiteSearch_ArticleMainView_Abstract" placeholder="Search..." aria-label="Search..." type="text" maxlength="255" autocomplete="off" id="MicrositeSearchTerm-SiteSearch_ArticleMainView_Abstract">
+                        
+                        <input type="hidden" name="hfAutoCompleteMaxResults" class="hfAutoCompleteMaxResults" value="6" aria-hidden="true">
+                        <input type="hidden" name="hfSolrAutoSuggestMinimumCharactersLength" class="hfSolrAutoSuggestMinimumCharactersLength" value="2" aria-hidden="true">
+                        <input type="hidden" name="hfSolrJournalName" class="hfSolrJournalName" value="" aria-hidden="true">
+                        <input type="hidden" name="hfSolrJournalID" class="hfSolrJournalID" value="" aria-hidden="true">
+                        <label for="micrositeSearchTermInputHint-SiteSearch_ArticleMainView_Abstract" aria-hidden="true">
+                            <span class="screenreader-text">Search input auto suggest</span>
+                        </label>
+                        <input type="text" id="micrositeSearchTermInputHint-SiteSearch_ArticleMainView_Abstract" data-autosuggest-id="micrositeSearchTermInputHint-SiteSearch_ArticleMainView_Abstract" class="microsite-search-term-input-hint" autocomplete="off" tabindex="-1" aria-hidden="true" disabled="">
+                        <ul data-autosuggest-id="micrositeAutoCompleteResults-SiteSearch_ArticleMainView_Abstract" class="term-list hidden"></ul>
+                    </div>
+                        <div class="navbar-search-filter_wrap">
+                            <label for="navbar-search-filter-site-SiteSearch_ArticleMainView_Abstract">
+                                <span class="screenreader-text">filter your search</span>
+                            </label>
+                            <select class="navbar-search-filter navbar-search-filter-site at-navbar-search-filter" id="navbar-search-filter-site-SiteSearch_ArticleMainView_Abstract" data-autosuggest-id="search-filter-SiteSearch_ArticleMainView_Abstract">
+<option class="header-search-bar-filters-item" value="/search-results?page=1&amp;q={searchQuery}" data-siteid="0">All Content</option><option class="header-search-bar-filters-item" value="/aip/search-results?page=1&amp;q={searchQuery}&amp;fl_SiteID=1000001" data-siteid="1000001">AIP Publishing Portfolio</option><option class="header-search-bar-filters-item selected" value="/aip/acp/search-results?page=1&amp;q={searchQuery}&amp;fl_SiteID=1000005" data-siteid="1000005" selected="">AIP Conference Proceedings</option>                            </select>
+                        </div>
+                    <div class="navbar-search-submit_wrap">
+                        
+                        <button type="button" class="microsite-search-icon navbar-search-submit icon-menu_search"><span class="screenreader-text">Search</span></button>
+                    </div>
+                </fieldset>
+            </form><!-- /#MicrositeSearch -->
+        </div><!-- /.navbar-search -->
+    <div class="navbar-search-advanced-citation">
+        <a href="/advanced-search" class="advanced-search">Advanced Search</a>
+            <span>|</span><a href="/citation-search" class="citation-search">Citation Search</a>
+    </div>
+    </div><!-- /.navbar-search-container -->
+
+ 
+    </div>
+
+            </fieldset>
+        </div>
+    </div><!-- /.toolbar-inner-wrap -->
+</div><!-- /.toolbar-wrap -->
+
+<div class="article-body">
+    <div id="articleMainView-articleId" class="js-articleMainView-articleId" data-articleid="745585" style="display: none;"></div>
+    <div id="ContentTab" class="content active">
+    <div class="widget-ArticleFulltext widget-instance-ArticleFulltext_Abstract" data-widget-name="ArticleFulltext" data-widget-instance="ArticleFulltext_Abstract">
+        <input type="hidden" name="js-hfArticleLinksReferencesDoiRegex" id="js-hfArticleLinksReferencesDoiRegex" value="">
+
+<div class="module-widget">
+    <div class="widget-items" data-widgetname="ArticleFulltext">
+        <span id="sr-fig-viewer-action" hidden="">Open figure viewer</span>
+        
+
+
+
+
+
+                <div id="54982944-content" class="article-section-wrapper js-article-section js-content-section  " data-section-parent-id="0">
+                    
+                    <section class="abstract" aria-label="Main abstract"><p>Many of the scientific objectives of x‐ray astronomy for the 1990’s and the twenty‐first century require high throughput. Three phases of high throughput telescopes are discussed: 1 m<sup>2</sup>, 10 m<sup>2</sup>, and 100 m<sup>2</sup> effective areas. The era of the 1 m<sup>2</sup> telescope will commence in the late 1990’s with the launches of XMM and LAMAR. A 10 m<sup>2</sup> facility could be built with existing technology and launched as a free‐flyer on a rocket like the Soviet Energia. With its relevance to x‐ray astronomy’s scientific objectives the 10 m<sup>2</sup> facility should be given high priority as the first major initiative of the twenty‐first century. A 100 m<sup>2</sup> facility could occur in the middle of the twenty‐first century. Although it is rather speculative, an appropriate site for the 100 m<sup>2</sup> telescope is a lunar base where x‐ray optics can be manufactured in situ.</p></section>
+                </div>
+                    <div class="article-metadata-panel clearfix rs_skip">
+    <div class="widget-SolrResourceMetadata widget-instance-ContentMetadata_ArticleFulltext_Article" data-widget-name="SolrResourceMetadata" data-widget-instance="ContentMetadata_ArticleFulltext_Article">
+        
+        <div class="content-metadata-taxonomies article-metadata-taxonomies">
+        <div class="content-metadata article-metadata">
+
+            <strong class="article-metadata-taxonomies-title content-metadata-taxonomies-title">Topics</strong>
+
+                    <a href="/acp/search-results?page=1&amp;tax=P292P6060">Telescopes</a><span>,</span>
+                    <a href="/acp/search-results?page=1&amp;tax=P292P6596">X-ray astronomy</a><span>,</span>
+                    <a href="/acp/search-results?page=1&amp;tax=P4276C1894">X-ray optics</a><span>,</span>
+                    <a href="/acp/search-results?page=1&amp;tax=P5510P3944">News and events</a>
+        </div>
+        </div>
+
+
+ 
+    </div>
+
+                    </div>
+        <!-- /foreach -->
+
+
+            <div class="article-metadata-standalone-panel clearfix"></div>
+
+                <div class="pdf-notice">
+                    This content is only available via PDF.
+                </div>
+
+<div id="articlefulltext_figshare" class="figshare-wrapper" data-widgetname="filesViewerGeneric" data-showstats="True" data-showpageinfo="True" data-showsharebutton="True" data-showfiledetails="True" data-loaddoisbycollection="False">
+</div>
+
+        
+
+
+        <div class="permissionstatement-section-wrapper ">
+            
+            <div class="copyright copyright-statement">© 1990 American Institute of Physics.</div><div class="copyright copyright-year">1990</div><div class="copyright copyright-holder">American Institute of Physics</div>
+        </div>
+<!-- /foreach -->
+
+
+        <span id="UserHasAccess" data-userhasaccess="False"></span>
+
+    </div><!-- /.widget-items -->
+    </div><!-- /.module-widget --> 
+    </div>
+                <div class="article-top-info-user-restricted-options">You do not currently have access to this content.</div>
+
+        <div id="ContentTabFilteredView"></div>
+
+    </div>
+</div>
+
+ 
+    </div>
+
+
+</div>
+ 
+    </div>
+<div class="user-comments-wrap js-userComments">
+    <div class="widget-UserCommentBody widget-instance-UserCommentBody" data-widget-name="UserCommentBody" data-widget-instance="UserCommentBody">
+         
+    </div>
+    <div class="widget-UserComment widget-instance-UserComment" data-widget-name="UserComment" data-widget-instance="UserComment">
+         
+    </div>
+
+</div>
+
+            <div>    <a id="FullTextLink"></a></div>
+
+
+<div id="unauth" class="unauth-wrap">
+    <div class="widget-BuyOrUseTokensLink widget-instance-ArticlePage_BuyOrUseTokensLink" data-widget-name="BuyOrUseTokensLink" data-widget-instance="ArticlePage_BuyOrUseTokensLink">
+         
+    </div>
+    <div class="product-type_wrap">
+    <div class="widget-BuyThisResourceLink widget-instance-ArticlePage_BuyThisResourceLink" data-widget-name="BuyThisResourceLink" data-widget-instance="ArticlePage_BuyThisResourceLink">
+                <div id="dvPurchaseButton" class="ppv-wrap">
+                            <div class="ppv_price_wrap">
+                        <div class="price_left_text">Pay-Per-View Access</div>
+                                            <div class="display_price_buy_resource">$40.00</div>
+                </div>
+                            <div id="buyThisResourceLink" class="buyThisResourceLink ppv box">
+    <a class="store-link js-add-to-cart" href="https://pubs.aip.org/store/add/745585/3" rel="nofollow" data-article-doi="" data-article-title="" data-article-type="" data-journal-short-name="" data-currency="USD" data-price="40.00">
+        <i class="icon-availability_cart"></i> <span>Buy This Article</span>
+    </a>
+    <div class="widget-ExternalProductLink widget-instance-BuyThisResource" data-widget-name="ExternalProductLink" data-widget-instance="BuyThisResource">
+          
+    </div>
+
+                </div>
+
+        </div>
+
+
+ 
+    </div>
+            </div>
+        <div class="unauth-row clearfix">
+            <div class="unauth-column-wrap">
+                    <div class="unauth-column">
+    <div class="widget-LoginForm widget-instance-ArticlePage_LoginForm" data-widget-name="LoginForm" data-widget-instance="ArticlePage_LoginForm">
+            <div class="signin-form">
+
+        <div class="preloader-wrap hide">
+            <div class="preloader">
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        
+        <div class="login-form__section-wrap">
+                <form class="login-form__section">
+                    <div class="login-form__heading">
+                        <h3>Sign In</h3>
+                    </div>
+                    <!-- Errors -->
+                    <div id="LoginErrorMessage" class="error at-error" data-default-message="You could not be signed in. Please check your credentials and make sure you have an active account and try again.">
+                    </div>
+                    <div class="login-form__row">
+                        <label for="user_ArticlePage_LoginForm" class="login-form__label">
+                            <span class="login-form__label-text">Username</span>
+                            <a class="question-icon" href="#" data-reveal-id="modalSignInEmail"><span>?</span></a>
+                        </label>
+                        <input id="user_ArticlePage_LoginForm" type="text" class="username at-username" autocomplete="username" aria-required="true" aria-describedby="LoginErrorMessage">
+                    </div>
+                    <div class="login-form__row">
+                        <label for="pass_ArticlePage_LoginForm" class="login-form__label-text">Password</label>
+                        <input id="pass_ArticlePage_LoginForm" type="password" class="password at-password" autocomplete="current-password" aria-required="true" aria-describedby="LoginErrorMessage">
+                    </div>
+                    
+                    <input type="hidden" id="enableReCaptcha" name="enableReCaptcha" value="False">
+
+                    <div class="login-form__row">
+                        <button type="button" class="signin-button btn at-signin-button">Sign In</button>
+                        <div class="login-form__link-wrap">
+                            <a class="logged-out-link at-reset-link" href="/my-account/reset-password" rel="nofollow">Reset password</a>
+                        </div>
+                        <div class="login-form__link-wrap">
+                            <a class="logged-out-link at-register-link js-register-user-modals" href="/my-account/register?siteId=1000005&amp;returnUrl=https%3a%2f%2fpubs.aip.org%2faip%2facp%2farticle-abstract%2f211%2f1%2f297%2f745585%2fHigh-throughput-x-ray-astronomy%3fredirectedFrom%3dfulltext" data-target="register" rel="nofollow">Register</a>
+                        </div>
+                    </div>
+
+                    <!-- /.login-form-section -->
+                </form>
+
+
+                    <div class="login-form__section login-form__row--lower">
+
+                        <a class="logged-out-link institutional-login-link at-institutional-login-link" href="/institutional-login?returnUrl=https%3a%2f%2fpubs.aip.org%2faip%2facp%2farticle-abstract%2f211%2f1%2f297%2f745585%2fHigh-throughput-x-ray-astronomy%3fredirectedFrom%3dfulltext" rel="nofollow">Sign in via your Institution</a>
+                    </div>
+
+
+
+        </div>
+    </div>
+ 
+    </div>
+
+                    </div>
+    <div class="widget-RestoreGuestAccess widget-instance-ArticlePage_RestoreGuestAccess" data-widget-name="RestoreGuestAccess" data-widget-instance="ArticlePage_RestoreGuestAccess">
+         
+    </div>
+                        <input type="hidden" id="resourceId" value="745585">
+                        <input type="hidden" id="resourceTypeId" value="3">
+                    <!-- /.unauth-column -->
+                                    <div class="unauth-column entities">
+                            <div class="unauth-society-row">
+
+                            </div>
+                                            </div><!-- /.unauth-column -->
+
+            </div><!-- /.unauth-signin-col-wrap -->
+        </div>
+</div><!-- /.unauth-wrap -->
+
+            
+        </div>
+    </div> 
+    <div id="Sidebar" class="page-column page-column--right">
+        <input type="hidden" class="js-sidebar-stick-only-last-ad" value="true">
+
+    <div class="widget-AdBlock widget-instance-ArticlePageTopSidebar" data-widget-name="AdBlock" data-widget-instance="ArticlePageTopSidebar">
+        
+ 
+    </div>
+
+
+        <div class="sidebar-widget_wrap">
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRail" data-widget-name="DynamicWidgetLayout" data-widget-instance="Article_RightRail">
+        <div class="widget widget-dynamic " data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0" data-widget-name="DynamicWidgetLayout" data-widget-instance="Article_RightRailB0">
+        <div class="widget widget-dynamic right-rail" data-count="6">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-DynamicWidgetLayout widget-instance-Article_RightRailB0B0" data-widget-name="DynamicWidgetLayout" data-widget-instance="Article_RightRailB0B0">
+        <div class="widget widget-dynamic article-article-level-metrics article-level-metrics" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-ArticleLevelMetrics widget-instance-Article_RightRailB0B0article-article-level-metrics" data-widget-name="ArticleLevelMetrics" data-widget-instance="Article_RightRailB0B0article-article-level-metrics">
+        
+
+
+
+    <div class="artmet-wrapper horizontal-artmet">
+<div class="artmet-condensed-wrap clearfix">
+    <div class="artmet-condensed-stats clearfix">
+            <div class="artmet-item artmet-views">
+                <span class="artmet-number">3</span>
+                <span class="artmet-text">Views</span>
+            </div>
+
+
+            <div class="artmet-item artmet-badges-wrap">
+                    <div class="artmet-item artmet-altmetric">
+    <div class="widget-AltmetricLink widget-instance-ArticleLevelMetrics_AltmetricLinkSummary" data-widget-name="AltmetricLink" data-widget-instance="ArticleLevelMetrics_AltmetricLinkSummary">
+            <!-- Altmetrics -->
+    <div id="altmetricEmbedId" runat="server" class="altmetric-embed" data-badge-type="donut" data-hide-no-mentions="false" data-doi="10.1063/1.39658" data-link-target="_blank"></div>
+         <script type="text/javascript" src="https://d1bxh8uas1mnw7.cloudfront.net/assets/embed.js"></script></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></section></div><iframe style="display: none;" name="__gppLocator"></iframe></body></html>

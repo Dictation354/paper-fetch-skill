@@ -1,9 +1,7 @@
-# ruff: noqa: F403,F405
 from __future__ import annotations
-
 from paper_fetch.providers.base import ProviderFailure
-
-from ._atypon_browser_workflow_provider_support import *
+from tests.support._atypon_browser_workflow_provider_support import *
+# ruff: noqa: F403,F405
 
 
 class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTestCase):
@@ -190,11 +188,23 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         )
         raw_payload = client.fetch_raw_fulltext(
             PNAS_SAMPLE.doi,
-            {"doi": PNAS_SAMPLE.doi, "title": PNAS_SAMPLE.title},
+            {
+                "doi": PNAS_SAMPLE.doi,
+                "title": PNAS_SAMPLE.title,
+                "landing_page_url": f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
+            },
         )
 
         mocked_runtime.assert_called_once()
         mocked_browser.assert_called_once()
+        self.assertEqual(
+            list(mocked_browser.call_args.args[0]),
+            [
+                f"https://www.pnas.org/doi/full/{PNAS_SAMPLE.doi}",
+                f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
+                f"https://doi.org/{PNAS_SAMPLE.doi}",
+            ],
+        )
         self.assertIs(
             mocked_browser.call_args.kwargs["config"], mocked_runtime.return_value
         )
@@ -252,318 +262,6 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         self.assertIsNotNone(raw_payload.content)
         assert raw_payload.content is not None
         self.assertEqual(raw_payload.content.fetcher, "camoufox")
-
-    def test_pnas_provider_fetch_result_recovers_pdf_when_html_article_is_abstract_only(
-        self,
-    ) -> None:
-        client = pnas_provider.PnasClient(transport=None, env={})
-        doi = "10.1073/pnas.2509692123"
-        title = "A discrete serotonergic circuit involved in the generation of tinnitus behavior"
-        landing_url = f"https://www.pnas.org/doi/full/{doi}"
-        html_payload = _typed_raw_payload(
-            provider="pnas",
-            source_url=landing_url,
-            content_type="text/html",
-            body=PNAS_PAYWALL_SAMPLE_RAW.read_bytes(),
-            route="html",
-            markdown_text=PNAS_PAYWALL_SAMPLE_MARKDOWN.read_text(encoding="utf-8"),
-            source_trail=["fulltext:pnas_html_ok"],
-            browser_context_seed={
-                "browser_cookies": [
-                    {
-                        "name": "cf_clearance",
-                        "value": "secret",
-                        "domain": ".pnas.org",
-                        "path": "/",
-                    }
-                ],
-                "browser_user_agent": "Mozilla/5.0",
-            },
-        )
-        pdf_payload = _typed_raw_payload(
-            provider="pnas",
-            source_url=f"https://www.pnas.org/doi/pdf/{doi}",
-            content_type="application/pdf",
-            body=fulltext_pdf_bytes(),
-            route="pdf_fallback",
-            markdown_text=PNAS_FULLTEXT_FALLBACK_MARKDOWN.read_text(encoding="utf-8"),
-            source_trail=[
-                "fulltext:pnas_html_ok",
-                "fulltext:pnas_abstract_only",
-                "fulltext:pnas_pdf_fallback_ok",
-            ],
-            suggested_filename="archive.pdf",
-        )
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runtime = self._runtime_config(tmpdir, "pnas", doi)
-            mocked_pdf = mock.Mock(return_value=pdf_payload)
-            install_browser_workflow_deps(
-                client,
-                load_runtime_config=mock.Mock(return_value=runtime),
-                ensure_runtime_ready=mock.Mock(),
-                fetch_seeded_browser_pdf_payload=mocked_pdf,
-            )
-            with mock.patch.object(
-                client, "fetch_raw_fulltext", return_value=html_payload
-            ):
-                result = client.fetch_result(
-                    doi,
-                    {"doi": doi, "title": title, "landing_page_url": landing_url},
-                    None,
-                )
-
-        mocked_pdf.assert_called_once()
-        self.assertEqual(result.article.quality.content_kind, "fulltext")
-        self.assertIn("fulltext:pnas_html_ok", result.article.quality.source_trail)
-        self.assertIn(
-            "fulltext:pnas_abstract_only", result.article.quality.source_trail
-        )
-        self.assertIn(
-            "fulltext:pnas_pdf_fallback_ok", result.article.quality.source_trail
-        )
-        self.assertTrue(
-            any(
-                "attempting PDF fallback" in warning
-                for warning in mocked_pdf.call_args.kwargs["warnings"]
-            )
-        )
-
-    def test_science_provider_fetch_result_recovers_pdf_for_paywall_sample_markdown(
-        self,
-    ) -> None:
-        client = science_provider.ScienceClient(transport=None, env={})
-        doi = "10.1126/science.aeg3511"
-        title = "Magma plumbing beneath Yellowstone"
-        landing_url = f"https://www.science.org/doi/full/{doi}"
-        markdown_text = SCIENCE_PAYWALL_SAMPLE_MARKDOWN.read_text(encoding="utf-8")
-        html_text = SCIENCE_PAYWALL_SAMPLE_RAW.read_text(encoding="utf-8")
-        diagnostics = assess_html_fulltext_availability(
-            markdown_text,
-            {
-                "title": title,
-                "doi": doi,
-                "abstract": markdown_text.split("## Access the full article", 1)[0]
-                .split("## Abstract", 1)[1]
-                .strip(),
-            },
-            provider="science",
-            html_text=html_text,
-            title=title,
-            final_url=landing_url,
-        )
-        html_payload = _typed_raw_payload(
-            provider="science",
-            source_url=landing_url,
-            content_type="text/html",
-            body=SCIENCE_PAYWALL_SAMPLE_RAW.read_bytes(),
-            route="html",
-            markdown_text=markdown_text,
-            source_trail=["fulltext:science_html_ok"],
-            availability_diagnostics=diagnostics.to_dict(),
-            browser_context_seed={
-                "browser_cookies": [
-                    {
-                        "name": "cf_clearance",
-                        "value": "secret",
-                        "domain": ".science.org",
-                        "path": "/",
-                    }
-                ],
-                "browser_user_agent": "Mozilla/5.0",
-            },
-        )
-        pdf_payload = _typed_raw_payload(
-            provider="science",
-            source_url=f"https://www.science.org/doi/epdf/{doi}",
-            content_type="application/pdf",
-            body=fulltext_pdf_bytes(),
-            route="pdf_fallback",
-            markdown_text=SCIENCE_FULLTEXT_FALLBACK_MARKDOWN.read_text(
-                encoding="utf-8"
-            ),
-            source_trail=[
-                "fulltext:science_html_ok",
-                "fulltext:science_abstract_only",
-                "fulltext:science_pdf_fallback_ok",
-            ],
-            suggested_filename="science-paywall.pdf",
-        )
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runtime = self._runtime_config(tmpdir, "science", doi)
-            mocked_pdf = mock.Mock(return_value=pdf_payload)
-            install_browser_workflow_deps(
-                client,
-                load_runtime_config=mock.Mock(return_value=runtime),
-                ensure_runtime_ready=mock.Mock(),
-                fetch_seeded_browser_pdf_payload=mocked_pdf,
-            )
-            with mock.patch.object(
-                client, "fetch_raw_fulltext", return_value=html_payload
-            ):
-                result = client.fetch_result(
-                    doi,
-                    {"doi": doi, "title": title, "landing_page_url": landing_url},
-                    None,
-                )
-
-        mocked_pdf.assert_called_once()
-        self.assertEqual(result.article.quality.content_kind, "fulltext")
-        self.assertIn("fulltext:science_html_ok", result.article.quality.source_trail)
-        self.assertIn(
-            "fulltext:science_abstract_only", result.article.quality.source_trail
-        )
-        self.assertIn(
-            "fulltext:science_pdf_fallback_ok", result.article.quality.source_trail
-        )
-
-    def test_pnas_provider_fetch_result_returns_abstract_only_when_pdf_recovery_fails(
-        self,
-    ) -> None:
-        client = pnas_provider.PnasClient(transport=None, env={})
-        doi = "10.1073/pnas.2509692123"
-        title = "A discrete serotonergic circuit involved in the generation of tinnitus behavior"
-        landing_url = f"https://www.pnas.org/doi/full/{doi}"
-        html_payload = _typed_raw_payload(
-            provider="pnas",
-            source_url=landing_url,
-            content_type="text/html",
-            body=PNAS_PAYWALL_SAMPLE_RAW.read_bytes(),
-            route="html",
-            markdown_text=PNAS_PAYWALL_SAMPLE_MARKDOWN.read_text(encoding="utf-8"),
-            source_trail=["fulltext:pnas_html_ok"],
-            browser_context_seed={
-                "browser_cookies": [
-                    {
-                        "name": "cf_clearance",
-                        "value": "secret",
-                        "domain": ".pnas.org",
-                        "path": "/",
-                    }
-                ],
-                "browser_user_agent": "Mozilla/5.0",
-            },
-        )
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runtime = self._runtime_config(tmpdir, "pnas", doi)
-            install_browser_workflow_deps(
-                client,
-                load_runtime_config=mock.Mock(return_value=runtime),
-                ensure_runtime_ready=mock.Mock(),
-                fetch_seeded_browser_pdf_payload=mock.Mock(
-                    side_effect=browser_workflow.PdfFallbackFailure(
-                        "pdf_download_failed", "PNAS PDF fallback failed."
-                    )
-                ),
-            )
-            with mock.patch.object(
-                client, "fetch_raw_fulltext", return_value=html_payload
-            ):
-                result = client.fetch_result(
-                    doi,
-                    {"doi": doi, "title": title, "landing_page_url": landing_url},
-                    None,
-                )
-
-        self.assertEqual(result.article.source, "pnas")
-        self.assertEqual(result.article.quality.content_kind, "abstract_only")
-        self.assertIn("fulltext:pnas_html_ok", result.article.quality.source_trail)
-        self.assertIn(
-            "fulltext:pnas_abstract_only", result.article.quality.source_trail
-        )
-        self.assertNotIn(
-            "fulltext:pnas_pdf_fallback_ok", result.article.quality.source_trail
-        )
-        self.assertTrue(
-            any(
-                "returning abstract-only content" in warning
-                for warning in result.article.quality.warnings
-            )
-        )
-
-    def test_science_provider_fetch_result_returns_abstract_only_when_pdf_recovery_fails(
-        self,
-    ) -> None:
-        client = science_provider.ScienceClient(transport=None, env={})
-        doi = "10.1126/science.aeg3511"
-        title = "Magma plumbing beneath Yellowstone"
-        landing_url = f"https://www.science.org/doi/full/{doi}"
-        html_text = SCIENCE_PAYWALL_SAMPLE_RAW.read_text(encoding="utf-8")
-        markdown_text = SCIENCE_PAYWALL_SAMPLE_MARKDOWN.read_text(encoding="utf-8")
-        diagnostics = assess_html_fulltext_availability(
-            markdown_text,
-            {
-                "title": title,
-                "doi": doi,
-                "abstract": markdown_text.split("## Access the full article", 1)[0]
-                .split("## Abstract", 1)[1]
-                .strip(),
-            },
-            provider="science",
-            html_text=html_text,
-            title=title,
-            final_url=landing_url,
-        )
-        html_payload = _typed_raw_payload(
-            provider="science",
-            source_url=landing_url,
-            content_type="text/html",
-            body=SCIENCE_PAYWALL_SAMPLE_RAW.read_bytes(),
-            route="html",
-            markdown_text=markdown_text,
-            source_trail=["fulltext:science_html_ok"],
-            availability_diagnostics=diagnostics.to_dict(),
-            browser_context_seed={
-                "browser_cookies": [
-                    {
-                        "name": "cf_clearance",
-                        "value": "secret",
-                        "domain": ".science.org",
-                        "path": "/",
-                    }
-                ],
-                "browser_user_agent": "Mozilla/5.0",
-            },
-        )
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            runtime = self._runtime_config(tmpdir, "science", doi)
-            install_browser_workflow_deps(
-                client,
-                load_runtime_config=mock.Mock(return_value=runtime),
-                ensure_runtime_ready=mock.Mock(),
-                fetch_seeded_browser_pdf_payload=mock.Mock(
-                    side_effect=browser_workflow.PdfFallbackFailure(
-                        "pdf_download_failed", "Science PDF fallback failed."
-                    )
-                ),
-            )
-            with mock.patch.object(
-                client, "fetch_raw_fulltext", return_value=html_payload
-            ):
-                result = client.fetch_result(
-                    doi,
-                    {"doi": doi, "title": title, "landing_page_url": landing_url},
-                    None,
-                )
-
-        self.assertEqual(result.article.source, "science")
-        self.assertEqual(result.article.quality.content_kind, "abstract_only")
-        self.assertIn("fulltext:science_html_ok", result.article.quality.source_trail)
-        self.assertIn(
-            "fulltext:science_abstract_only", result.article.quality.source_trail
-        )
-        self.assertNotIn(
-            "fulltext:science_pdf_fallback_ok", result.article.quality.source_trail
-        )
-        self.assertTrue(
-            any(
-                "returning abstract-only content" in warning
-                for warning in result.article.quality.warnings
-            )
-        )
 
     def test_wiley_provider_fetch_result_returns_abstract_only_when_pdf_recovery_fails(
         self,
@@ -816,7 +514,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         self.assertTrue(mocked_warm.call_args.kwargs["lightweight"])
         self.assertIsNone(kwargs["seed_urls"])
         self.assertEqual(
-            kwargs["referer"], f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}"
+            kwargs["referer"], f"https://www.pnas.org/doi/full/{PNAS_SAMPLE.doi}"
         )
         self.assertEqual(
             list(mocked_pdf.call_args.args[0])[:3],

@@ -1,0 +1,1039 @@
+{
+  "doi": "10.1038/s41561-022-00912-7",
+  "source": "springer_html",
+  "metadata": {
+    "title": "Drought self-propagation in drylands due to land–atmosphere feedbacks",
+    "authors": [
+      "Dominik L. Schumacher",
+      "Jessica Keune",
+      "Paul Dirmeyer",
+      "Diego G. Miralles"
+    ],
+    "abstract": "Reduced evaporation due to dry soils can affect the land surface energy balance, with implications for local and downwind precipitation. When evaporation is constrained by soil moisture, the atmospheric supply of water is depleted, and this deficit may propagate in time and space. This mechanism could theoretically result in the self-propagation of droughts, but the extent to which this process occurs is unknown. Here we isolate the influence of soil moisture drought on downwind precipitation using Lagrangian moisture tracking constrained by observations from the 40 largest recent droughts worldwide. We show that dryland droughts are particularly prone to self-propagating because evaporation tends to respond strongly to enhanced soil water stress. In drylands, precipitation can decline by more than 15% due to upwind drought during a single event and up to 30% during individual months. In light of projected widespread reductions in water availability, this feedback may further exacerbate future droughts.",
+    "journal": "Nature Geoscience",
+    "article_type": "Article",
+    "published": "2022-4",
+    "keywords": [],
+    "license_urls": [
+      "https://www.springer.com/tdm"
+    ],
+    "landing_page_url": "https://www.nature.com/articles/s41561-022-00912-7"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "Reduced evaporation due to dry soils can affect the land surface energy balance, with implications for local and downwind precipitation. When evaporation is constrained by soil moisture, the atmospheric supply of water is depleted, and this deficit may propagate in time and space. This mechanism could theoretically result in the self-propagation of droughts, but the extent to which this process occurs is unknown. Here we isolate the influence of soil moisture drought on downwind precipitation using Lagrangian moisture tracking constrained by observations from the 40 largest recent droughts worldwide. We show that dryland droughts are particularly prone to self-propagating because evaporation tends to respond strongly to enhanced soil water stress. In drylands, precipitation can decline by more than 15% due to upwind drought during a single event and up to 30% during individual months. In light of projected widespread reductions in water availability, this feedback may further exacerbate future droughts."
+    },
+    {
+      "heading": "Main",
+      "level": 2,
+      "kind": "body",
+      "text": "Drought has decidedly impacted human history and is estimated to affect about 55 million people worldwide every year<sup>1</sup>. Its frequency, duration and magnitude are projected to increase in many regions around the globe<sup>2, 3</sup>, yet climate model projections remain uncertain<sup>3, 4</sup>. Unusual and prolonged precipitation shortages, or meteorological drought, spread through the soil, aquifers, rivers and lakes as agricultural and hydrological drought<sup>5, 6</sup> and thereby prompt a wide array of societal, economic and ecological consequences<sup>7</sup>. Precipitation requires air saturation and involves complex microphysics<sup>8</sup>, usually achieved by cooling air to its dew point through convection, frontal or orographic lifting and other dynamical mechanisms<sup>9</sup>. Thus, in the context of meteorological drought, precipitation variability is regarded as dominated by atmospheric circulation and thermodynamics, which in turn are often forced externally by, for example, remote sea surface temperature changes<sup>9, 10</sup>. Local soil moisture deficits have also been shown to promote precipitation deficits, particularly in transitional regimes between humid and arid climates<sup>11, 12</sup>. In these regional hotspots, soil moisture exerts control on the surface energy partitioning and hence on moist convection<sup>12, 13</sup>. The initiation and intensification of convective storms has been linked to both local soil moisture and mesoscale soil moisture heterogeneities<sup>14, 15, 16</sup>, which may also affect organized convection several hundred kilometres downwind<sup>17</sup>. In short, reduced evaporation due to soil water limitations affects the local atmosphere and may thereby trigger distant modulations of dynamical saturation-achieving mechanisms, resulting in complex and tenuous soil moisture–precipitation coupling<sup>18</sup>. But desiccating soils have more obvious, potentially even farther-reaching impacts: a decline in evaporation implies a reduced water supply to the atmosphere.\n\nDroughts are thus hypothesized to self-propagate<sup>19</sup> as soil moisture drought may cause water-vapour deficits that cascade downwind and hence favour remote drought conditions. Consequently, the feedback chain consists of the translation of soil dryness into atmospheric water-vapour deficits via reduced evaporation and the conversion of water vapour into downwind precipitation (or lack thereof). During droughts, the conversion of water vapour into precipitation is frequently altered by anomalous large-scale atmospheric circulation and other dynamical mechanisms<sup>20</sup>, which tend to vary more than water vapour in space and time; hence, water vapour frequently does not correlate well with observed precipitation<sup>21</sup>. Nonetheless, the link between (total column) water vapour and precipitation clearly emerges in the tropics<sup>22</sup>, throughout China<sup>23</sup> and even in Eurasian boreal forests<sup>21</sup>. For example, it has already been suggested that enhanced evaporation through irrigation increases both water vapour and precipitation downwind in the United States<sup>24</sup>, India<sup>25</sup> and Africa<sup>26</sup>. Recently, reduced evaporation in all upwind land areas was estimated to account for 62% of the total precipitation shortages during the 2012 North American drought<sup>27</sup>. Meanwhile, terrestrial moisture deficits resulted in rainfall decreases of only ~6% during southeastern Australian droughts<sup>28</sup>. While these studies suggested that remote evaporation affects downwind droughts to varying extents, they provided no evidence of self-propagation. To study self-propagation, only the impact of a single, spatiotemporally coherent drought on its own downwind propagation should be considered<sup>19</sup>, rather than the impact of all terrestrial sources as in previous studies<sup>27, 28</sup>. At least three criteria are required for soil (moisture) stress to impact the further propagation of drought: (1) upwind soils must become dry enough for evaporation to be water limited, (2) the winds must blow towards other land regions still unaffected by the drought and (3) downwind water-vapour deficits must cause precipitation shortages. In this Article, we examine drought self-propagation using a combination of reanalysis, satellite observations and modelling techniques, focusing on the 40 largest soil droughts worldwide from 1980 to 2016 (Methods)."
+    },
+    {
+      "heading": "Effect of upwind soil drought on downwind water vapour",
+      "level": 2,
+      "kind": "body",
+      "text": "Soil drought events are selected using monthly root-zone soil moisture anomalies and a new mathematical morphing approach (Methods), resulting in dynamic and coherent events in space and time (see Fig1a and Extended Data Fig1 for an overview of all 40 droughts examined in this study). For these events, we analyse the impact of upwind drought (source) on downwind areas (target) and whether the soils in the latter become subject to drought conditions. The link between source and target is established with a Lagrangian atmospheric trajectory model driven by reanalysis data: the water vapour residing in newly affected drought areas is traced back in time, thereby revealing its evaporative sources (Methods). Throughout the evolution of each drought event, water-vapour tracking is performed for all pixels where propagation occurs in the same month (propagation step). Taking soil memory into account, the water-vapour content (and ultimately precipitation) during the three months leading to the soil drought propagation is considered. The 40 largest droughts are analysed and ranked according to their spatiotemporal extent (Supplementary Table 1). Figure 1b,c focuses on six exemplary events that portray a range of climatic conditions: western Russia and Kazakhstan (2009–2013, rank 1), southern Africa (1991–1993, rank 11), Amazonia (1997–1998, rank 13), eastern Russia (1991–1992, rank 20), central North America (2012–2013, rank 23) and northwestern to central Australia (2005, rank 26). To understand the impact of upwind drought on downwind water-vapour content, the latter is visualized in Fig1d. For all events shown here, except the Amazonian event, the propagation (coloured polygons) stagnates at least once during the drought evolution, which means that no new neighbouring areas became subject to drought conditions, yet the drought persisted (Fig1c). This is particularly evident for the largest event on record (Russia and Kazakhstan 2009–2013), for which the drought area (black line) decreases to nearly zero multiple times in (boreal) winter before further propagation during summer.\n\n![Figure 1](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41561-022-00912-7_assets/41561_2022_912_Fig1_HTML.png)\n\n**Figure 1.** Impact of upwind soil drought on downwind column water vapour.\n\na, An overview of the 40 largest soil droughts in recent history, with six selected events shown in colour. Pixels of the same colour are part of the same spatiotemporally coherent drought, but the timing of drought onset and offset varies per pixel. The ranking of each drought in terms of total extent (space and time) is provided by numbers of matching colours. b, c, Drought propagation in space for six selected events (b), with polygons of matching colour in the time series (c) indicating the cumulative area under soil drought after each of these ‘propagation steps’, as well as the actual area subject to soil drought at the time of propagation (black line). d, The actual water vapour (Q) in the areas that are newly affected by soil drought (where the drought propagates to; solid black line); ensemble-mean ‘non-drought’ water vapour, calculated for climatological soil stress in upwind drought-stricken areas using existing potential evaporation and circulation (dashed black line; Methods). The difference (red shading) thus indicates the downwind reduction in water vapour due solely to upwind soil drought for the given atmospheric conditions and circulation. Source data\n\nNext, we discern the impact of upwind anomalous soil moisture stress on downwind water vapour. This impact is isolated from the influence of circulation and potential evaporation using a Reynolds decomposition (Methods), enabling an estimate of downwind water vapour if there had been no upwind drought (dashed lines in Fig1d). Note that this estimate of downwind water vapour does not consider changes in circulation patterns that may emerge due to the upwind soil stress<sup>14, 29</sup>. In the case of both Russian droughts, our estimate of non-drought downwind water vapour is nearly identical to the actual amount (Fig1d). By contrast, upwind soil moisture stress causes a severe reduction in downwind water vapour for both the southern African and Australian events (red areas in Fig1d). Thus, at least two of the aforementioned criteria for drought self-propagation are met there: dry winds originating in already drought-stricken areas blow towards land regions the drought has not reached yet. Our analysis indicates that certain areas are more prone than others to be influenced by upwind drought; except for the regions affected by the Amazonian and eastern Russian events, the climatological water-vapour sources encompass primarily large land areas (Extended Data Fig2). What paves the way for water-vapour deficits caused by upwind drought, however, is a strong reliance on proximate terrestrial evaporative sources, as is the case particularly for the southern African drought footprint. Another crucial factor is whether upwind drought limits the atmospheric moistening in the first place; for example, evaporation is not severely water limited in eastern Russia, even when soils are dry relative to their own climatological expectation. By contrast, during the drought events in southern Africa and Australia, soil moisture was low enough to diminish evaporation rates by at least one-third with respect to the climatological mean (Extended Data Fig3)."
+    },
+    {
+      "heading": "From downwind water vapour to downwind precipitation",
+      "level": 2,
+      "kind": "body",
+      "text": "To quantify the impact of the upwind soil drought on downwind precipitation reduction, we conceptually define precipitation as the product of water vapour and precipitation efficiency (Methods). On the basis of the actual precipitation efficiency during the drought events, given by the degree to which water vapour was converted into precipitation according to observations and reanalysis data, we estimate the effects of drought-induced reductions in water vapour on precipitation (Δ P). Thus, rather than directly equating anomalous moisture transport to precipitation reductions, as for example in<sup>27</sup>, we consider the atmosphere’s propensity to convert water vapour into precipitation. To visualize the influence of this assumption, four different estimates of Δ P are shown in Fig2b: the actual precipitation efficiency (blue line), the climatological precipitation efficiency (dotted blue line), and the minimum and maximum efficiencies (grey shading) encountered on record for the respective propagation areas. The estimate based on actual precipitation efficiency is frequently close, or even identical to, the minimum estimate (Fig2d), implying an unusually unfavourable tendency to convert water vapour into precipitation during droughts. This suggests that all these events are enabled mainly by unusually low precipitation efficiency, whose causes are not investigated here but are often rooted in anomalous convective potential or large-scale winds<sup>9</sup>. Still, drought-induced reductions in water-vapour content further contribute to these events and facilitate their spatial propagation, even though these modulations are less relevant than they would be in an atmosphere capable of condensing and precipitating water more efficiently.\n\n![Figure 2](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41561-022-00912-7_assets/41561_2022_912_Fig2_HTML.png)\n\n**Figure 2.** Upwind soil drought propagation to downwind precipitation deficits.\n\na, For the same six events as in Fig1b–d, the climatological and actual precipitation are shown (dotted and solid black lines, respectively). The extra water vapour for non-drought conditions in Fig1d is converted to precipitation on the basis of the actual precipitation efficiency (dashed black line; Main and Methods), shown as the ensemble mean. The difference between non-drought and actual precipitation is an estimate of the drought self-propagation effect (red shading). b, Since Δ P depends not only on the amount of extra water evaporating at climatological soil moisture stress, but also on the conversion of water vapour to precipitation, the values corresponding to the actual precipitation efficiency employed for Fig2a, the climatological mean, maximum and minimum precipitation efficiency are shown (solid and dashed blue lines, upper and lower bounds of grey shading, respectively), again averaged over the entire ensemble of simulations. Source data\n\nDue to this low precipitation efficiency for the 1997–1998 Amazonian event and despite upwind soil drought reducing downwind water vapour (Fig1d), this anomaly in water vapour did not propagate in terms of precipitation (Fig2a). According to our estimate, drought self-propagation decreased precipitation by less than 1% during this Amazonian drought. For the 1991–1992 drought in eastern Russia, the effects on precipitation (Fig2a) are minor (<1%), as already suggested by the largely unchanged water-vapour content (Fig1d), whereas the North American and western Russian events (Fig2a) are slightly more affected, with about 3% and 2%, respectively. Soil drought is known to modulate convection through enhanced sensible heating, and hence precipitation efficiency, but the uncertainty of modelling experiments is still large<sup>15, 30, 31</sup>, and more research is needed, especially beyond the local scale<sup>32</sup>. We thus highlight that the atmosphere was not efficient at generating precipitation during all events (Fig2b) and note the potential contribution from soil drought to the reduction in precipitation efficiency, but we consider only the effect of soil drought via reductions in moisture supply in our definition of self-propagation. Regardless, as evidenced by the events in southern Africa and Australia (Fig2a), pronounced alterations to the water-vapour content further downwind, enabled by upwind drought, may severely affect the amount of precipitation; we estimate that 9% and 18% less precipitation occurred solely due to drought self-propagation, respectively."
+    },
+    {
+      "heading": "Drought self-propagation worldwide",
+      "level": 2,
+      "kind": "body",
+      "text": "To provide a more complete global picture, the 40 largest soil drought events in the past four decades are investigated. In Fig3, their estimated drought self-propagation effect is visualized in space, expressed as the ratio between the Δ P induced by upwind drought and the precipitation that would have occurred without drought self-propagation (see red areas and dashed lines in Fig2a). As evidenced by Fig1a, multiple drought events occurred in Australia and southern Africa (Supplementary Table 1). The majority of these events are associated with the most pronounced drought self-propagation among the 40 events analysed here. The map in Fig3 depicts a clear gradient between water- and energy-limited regimes<sup>33</sup> since strong self-propagation is confined to transitional or purely water-driven areas, whereas droughts in energy-driven regions show weaker self-propagation. The 2009–2013 drought in western Russia and Kazakhstan—by far the longest event identified in the analysis—is a clear example of that behaviour. However, during the peak of the 2010 Russian mega-heatwave in August 2010<sup>34</sup>, precipitation was reduced by roughly 7% due to drought self-propagation (Figs1d and 2a). Similarly, the 2012–2013 drought in central North America features notable self-propagation during boreal summer, concurring with a hot extreme in the region. Therefore, even in energy-limited regions, short-duration compound dry–hot events can be associated with self-propagation.\n\n![Figure 3](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41561-022-00912-7_assets/41561_2022_912_Fig3_HTML.png)\n\n**Figure 3.** Drought self-propagation in drylands.\n\nThe map illustrates the monthly maximum (or ‘peak’) drought self-propagation, expressed as the ratio between Δ P and the precipitation expectation without upwind drought. If several events overlap in space, their average is visualized. Only the ensemble mean is shown. The graph illustrates the mean drought self-propagation per event (including all propagation steps) as a function of the climatological aridity index (the ratio of annual mean precipitation to potential evaporation). Marker colours indicate the (monthly) peak self-propagation. Vertical grey lines represent the uncertainty range, given by the respective ensemble minima and maxima. The transition to drylands at P/E<sub>p</sub> = 0.65<sup>36</sup> is marked by a vertical black line and a change in background colour (from blue to brown). The six events highlighted in Figs1 and 2 are labelled and marked with purple dots. Source data\n\nRevisiting the three necessary conditions for drought self-propagation—water-limited evaporation, circulation to other land regions and conversion of water vapour into precipitation (conceptualized as precipitation efficiency here)—we point out that the characteristics of the morphed droughts also influence our results. In particular, strong self-propagation was sustained throughout drought evolution only for events that reach a large spatial extent in a short time, frequently associated with the concept of ‘flash droughts’, rather than those with a multiannual sequence of slow expansion and decay. Therefore, to reduce the sensitivity of our results with respect to event duration, the map in Fig3 displays the monthly peak drought self-propagation for each event (Methods). While the peak self-propagation remains low in the tropics and the high northern latitudes, precipitation reductions of 15% and more are identified in several regions, such as the Gran Chaco and Pampas in South America, the Sahel, southern Africa and Australia. Although our analysis shows that moisture recycling<sup>35</sup> affects these results—with a higher climatological precipitation recycling ratio of a drought’s footprint generally being associated with stronger self-propagation (Extended Data Fig4)—it also indicates that water scarcity is a key factor that determines the tendency of droughts to self-propagate. To further condense our findings, the graph in Fig3 depicts the peak (colours) and the event-mean (y axis) drought self-propagation for all 40 droughts, expressed as a function of aridity index (x axis). The latter serves as a proxy for water limitation and is calculated as annual mean precipitation (P) divided by potential evaporation (E<sub>p</sub>). In terms of peak self-propagation, events in drylands (aridity index of less than 0.65<sup>36</sup>) are associated with an average precipitation reduction of nearly 16%, whereas the remaining events have a corresponding decline of less than 5% on average. Several droughts in drylands reach peak reductions beyond 20%, and even up to 32%, while events taking place elsewhere usually culminate at clearly less than 10%. Therefore, droughts occurring in more arid climates tend to display more intense drought self-propagation. In fact, none of the droughts in regions not classified as dryland exceeds a mean self-propagation of 5%, and the six strongest events with respect to both peak and mean drought self-propagation all occurred in drylands.\n\nOur main findings are summarized in Fig4. While precipitation deficits are associated mostly with anomalously low precipitation efficiency, drought self-propagation via reduced atmospheric moistening is an important process in drylands. In such regions, potential evaporation is high, and actual evaporation is frequently water limited since precipitation shortages cause anomalous soil stress. Only then can the negative soil moisture anomalies propagate downwind as water-vapour deficits, a necessary—but not sufficient—criterion for drought self-propagation as defined here. Our results suggest that a strong dependence on self-supplied moisture facilitates this feedback; for example, the largest drought in Australia analysed here (rank 17), situated in the south and southeast of the continent, portrayed less self-propagation than the events closer to the northwest (Fig3), where water vapour usually travels shorter distances between evaporation and precipitation<sup>20</sup>. All the events characterized by a strong self-propagation take place in subtropical regions where evaporation is locally recycled year round<sup>20</sup> and particularly during dry years<sup>37</sup>. Furthermore, the convective nature of precipitation in tropical and subtropical drylands<sup>38</sup> allows for a secondary feedback: for a given convergence and ascent, more water vapour in the vicinity strengthens updraughts through enhanced convective heating, which may invigorate convergence and enable a positive feedback loop<sup>39, 40</sup>. Consequently, a reduction in tropospheric water vapour may contribute to low precipitation efficiencies during droughts where precipitation is mainly convective (Fig4).\n\n![Figure 4](/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41561-022-00912-7_assets/41561_2022_912_Fig4_HTML.png)\n\n**Figure 4.** Upwind drought in drylands.\n\nMeteorological drought is frequently triggered by weaker-than-usual dynamical saturation-enabling mechanisms (conceptualized as low precipitation efficiency; P<sub>eff</sub>ʹ < 0), which in turn may respond to a remote forcing, such as anomalous sea surface temperatures. Once that happens, limited precipitation (P ʹ < 0) causes soil desiccation (SMʹ < 0) and soil stress, exacerbated by the high potential evaporation due to clear skies and elevated temperatures. Then, evaporation becomes (more) water limited (E’ < 0). The reduction in near-surface air moistening—extending across the troposphere via vertical mixing—causes a reduction in water vapour being exported downwind (Q ʹ < 0). Therefore, further downwind, for the same precipitation efficiency, even less precipitation is expected (P ʹ < 0), contributing to downwind drought onset (SMʹ < 0, E ʹ < 0). Moreover, since water vapour is known to enhance uplift, additional reductions are possible for convective precipitation (P<sub>eff</sub>ʹ, P ʹ, SMʹ, E ʹ « 0).\n\nOur findings point to a direct connection between aridity and the ability of droughts to fuel themselves. In recent years, projections regarding the ‘dry gets drier, wet gets wetter’ paradigm<sup>41</sup> and the expansion of aridity and drought-affected areas, have been fiercely debated<sup>36, 42</sup>. Many wet areas are expected to become drier, and regions already characterized by pronounced dry and wet seasons will probably experience more variable precipitation<sup>43</sup>. There is a consensus that increased atmospheric water demand acts to accelerate evaporation in most regions<sup>43, 44</sup>, resulting in an intensification of the dry season in many extratropical regions<sup>45</sup>. Meanwhile, terrestrial surface relative humidity is already declining, reflecting decreases in soil moisture and thus increasingly water-limited evaporation<sup>46</sup>, which underlines the exacerbating role of land–atmosphere interactions in a more arid world due to climate change<sup>47</sup>. For drylands, soil moisture–atmosphere feedbacks have recently been shown to partially attenuate declines in water availability (P – E) through enhanced moisture transport from other land areas and particularly oceans<sup>48, 49</sup>, and a widespread conversion from temperate into subtropical drylands is projected<sup>50</sup>. Together, a less stable precipitation supply in regions that already crucially depend on seasonal rainfall, and an increasing potential for rapidly desiccating soils, might increase the potential of droughts for self-propagating as we progress into the future."
+    },
+    {
+      "heading": "Methods",
+      "level": 2,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "Workflow and overview",
+      "level": 3,
+      "kind": "body",
+      "text": "The methodological steps performed for this analysis consist of (1) drought definition and propagation, (2) water-vapour tracking from drought-propagation regions, (3) disentangling the impact of already existing soil drought on downwind water vapour and precipitation and (4) conversion of water vapour (reductions) to precipitation (deficits). An overview of these steps is provided in Supplementary Fig1."
+    },
+    {
+      "heading": "Drought definition and propagation",
+      "level": 3,
+      "kind": "body",
+      "text": "This study investigates the meteorological propagation of soil drought on the basis of root-zone soil moisture data. These data are obtained at monthly and 0.25° horizontal resolution from the Global Land Evaporation Amsterdam Model (GLEAM) v.3.5a<sup>51, 52</sup>, a semi-empirical model heavily constrained by satellite and reanalysis data. Whereas many drought definitions are applied independently per pixel (or grid cell), more holistic approaches have been proposed that consider droughts as spatiotemporally connected events<sup>53</sup>. We employ a recently suggested method that uses mathematical morphology to characterize drought events<sup>54</sup>. This approach requires binary input—maps that solely distinguish between drought and no-drought conditions at each pixel. We obtain this input by thresholding all time series of deseasonalized monthly root-zone soil moisture anomalies with the respective tenth percentile. Then, ‘morphing’ is performed through a series of erosion and dilation operations (see Figs2–4 in<sup>54</sup>) in the predefined spatiotemporal neighbourhood of each drought pixel, for which a 3 × 3 × 3 box is used here, that is, 3 months and 3 × 0.25° in each horizontal direction. Since the Lagrangian moisture source identification is performed on a 1.0 × 1.0° grid, the resulting morphed drought events are regridded, requiring that at least 75% of the 0.25° sub-pixels (12 out of 16) are subject to soil drought conditions. Last, all unique drought events in space and time are identified and ranked, and the 40 largest ones by the product of area and duration are selected for analysis. The timings of drought onset and recovery are defined by the earliest appearance and complete disappearance of morphed drought pixels belonging to each event.\n\nEach of the 40 largest drought events in space and time is represented as a series of ‘propagation steps’ at monthly temporal resolution. As soon as a pixel becomes part of an existing soil drought (via expansion), or a new drought event is triggered, the change is considered ‘propagation’ and may occur only once for each event (Supplementary Fig2). That is, even if a certain pixel initially belongs to a (spatially large) drought event, then recovers temporarily while the drought persists elsewhere and finally merges with the same drought event again, only the first drought occurrence is considered as the propagation step. Note that due to the morphing technique and subsequent identification of unique droughts in space time, multiple seemingly separate droughts in space can belong to a singular event, granted that they concatenate spatially at some point in time before recovery. We emphasize here the distinction between the areas where droughts propagate, considered as ‘targets’ of water vapour, and upwind areas, or ‘sources’. Specifically, we focus on the downwind impact of sources situated within the respective drought area before drought propagation."
+    },
+    {
+      "heading": "Water-vapour tracking",
+      "level": 3,
+      "kind": "body",
+      "text": "We estimate the origins of tropospheric water vapour with a Lagrangian backward analysis. Since the drought morphing approach employed here does not, for example, constrain drought evolution to the dry or wet season, propagation can occur year round for some of the selected drought events. To this end, the air residing over all of the 40 selected drought areas is first tracked back in time for at most 15 days during the entire analysis period (1980–2016). This is done separately for each temporally coherent propagation step per drought so that a corresponding (evaporative) moisture source region for every month is obtained. To address the hypothesis of drought self-propagation, we examine the moisture transport only before and up to propagation, but not afterwards. For our analysis, the moisture sources of the respective month of propagation as well as of the two antecedent months are evaluated, taking the memory of soil moisture—upon which the drought definition is based here—into account. Thus, for each propagation step, water vapour residing above the respective area is tracked backwards during the month of propagation and the two antecedent months (three months total). To estimate the effect of soils already affected by drought on downwind water vapour (and hence drought self-propagation), the source regions are split into ‘drought’ and ‘elsewhere’ (Supplementary Fig3a); only land areas already subject to the (same) drought event are considered for the former, whereas the latter is defined as the remaining terrestrial as well as all oceanic sources. This differentiation is based on the state of the morphed drought, which may vary from month to month (Supplementary Fig3a).\n\nMoisture tracking is performed using a modified version of the framework first presented by<sup>55</sup>, following<sup>56, 57</sup>. This process-based approach evaluates air-parcel property changes along trajectories, which are affected by mixing, surface fluxes and phase changes. Air parcels are a conceptualization of coherent air masses, but mixing processes still occur—particularly within the (well-mixed) atmospheric boundary layer (ABL; for example,<sup>58</sup>). Specific humidity in the ABL, either in the absence of large-scale advection or, arguably, from a Lagrangian perspective, is largely controlled by surface evaporation and entrainment (for example,<sup>59, 60</sup>). Since entrainment of free tropospheric air usually dries the ABL<sup>61, 62, 63</sup>, increases in specific humidity along air-parcel trajectories within the ABL may be assumed to reflect surface evaporation (as in, for example,<sup>55, 56</sup>). Our Lagrangian atmospheric model is FLEXPART v.9.01<sup>64, 65</sup> driven with European Centre for Medium-Range Weather Forecasts Reanalysis Interim (ERA-Interim) data<sup>66</sup>, consisting of both analyses and forecasts at three-hourly temporal resolution; only the moisture budgets of six-hourly reanalysis steps are evaluated. Note that FLEXPART does not assume the entire troposphere is well mixed or that it consists of a single or two vertical layers<sup>67, 68, 69</sup>, instead relying on three-dimensional winds and a convective scheme<sup>70</sup>. In this study, we employ FLEXPART to estimate the origins of tropospheric moisture over all propagation areas (all pixels at a certain month that meet the criteria for propagation as described). Note that this is different from many other drought studies, for which a static drought region is employed to track moisture back in time (for example,<sup>28, 71, 72</sup>).\n\nTo determine the origin of water vapour residing over the expanding drought areas, the following steps are performed: (1) all air parcels within the troposphere are selected, (2) backward trajectories are constructed, (3) moisture changes along these trajectories are evaluated to infer evaporative moisture sources, which are then (4) cast onto a regular 1.0 × 1.0° grid (Supplementary Fig3b). Only sources of tropospheric moisture are identified in step 1; tropopause heights are calculated on the basis of a 2 potential-vorticity-units threshold in the version of FLEXPART employed here<sup>65</sup>, a common approach in atmospheric dynamics research (for example,<sup>73, 74, 75</sup>). As near-surface potential vorticity values can sometimes exceed this threshold, this may rarely result in unrealistically low tropopause heights. It is thus ensured that all air parcels within the first 5 km above the surface are always tracked back in time. Backward trajectories in step 2 are restricted to a maximum of 15 days as a compromise between trajectory accuracy<sup>55, 56, 76, 77, 78</sup> and consideration of the long, thin tail in the probability density function of the atmospheric lifetime of water vapour over long time spans<sup>79</sup>. To assess the uncertainty involved in the choice of maximum trajectory length, an ensemble analysis also employing five and ten days as the upper limit, following<sup>78</sup>, is performed. Evaporative sources (step 3) are detected through increasing specific humidity of air parcels in the vicinity of the ABL (see<sup>78</sup>), without any additional thresholds. Any water-vapour losses en route, for example due to intermittent precipitation, are considered through linear scaling of evaporative source contributions with the subsequent evolution of specific humidity<sup>55</sup>.\n\nBoth evaporative sources and the target water vapour are bias corrected on a daily and a monthly basis for each pixel<sup>78</sup>. The use of two different timescales when bias correcting our estimates for both evaporation and water vapour serves to extend the uncertainty analysis to an ensemble consisting of 3 × 2 × 2 = 12 members per event. For the source correction, we employ evaporation from GLEAM v.3.5a over land and from OAFlux<sup>80</sup> over oceans, with 1980–1984 of the latter consisting of cumulative distribution function-matched ERA-Interim evaporation<sup>66</sup> and ERA-Interim vertically integrated water vapour<sup>66</sup> for the target bias correction. Since the majority of water vapour resides in the lower troposphere (for example,<sup>81</sup>), and the stratosphere contains only about 0.03%<sup>79</sup>, any errors introduced by employing vertically integrated (rather than tropospheric) water vapour above the tropopause are negligible."
+    },
+    {
+      "heading": "Disentangling the effect of upwind drought on downwind water vapour",
+      "level": 3,
+      "kind": "body",
+      "text": "Enabled by the water-vapour tracking framework, for every analysis day, a (linearly discounted) evaporative contribution δ Q from each source pixel (i) and backward day (t) to the mean water vapour residing over a specific drought-propagation pixel can be calculated. This is performed separately for each receptor pixel, that is, for all 1 × 1° areas where the respective drought propagates. The total water vapour Q of a receptor pixel is then given by the sum over all n source pixels, and over each backward day with contributions (at most 15 days into the past), that is,\n\n$$Q = \\mathop {\\sum}\\limits_{i = 1}^n {\\mathop {\\sum}\\limits_{t = - 15}^0 {\\delta Q_{i,t}} }$$\n\n(1)\n\nTo disentangle the impact of upwind soil drought (source) on downwind water vapour (receptor), the evaporative contribution of any source pixel to the water vapour residing over any drought-propagation pixel is conceptualized as the product of circulation (α) and upwind evaporation (E):\n\n$$\\delta Q_{i,t} = \\alpha _{i,t}E_{i,t}$$\n\n(2)\n\nWith our water-vapour tracking framework that extracts information from air-parcel trajectories, we obtain estimates (δ Q<sub>i</sub><sub>,</sub><sub>t</sub>) on how much each source pixel contributes to downwind tropospheric water vapour. We introduce a circulation component $\\alpha _{i,t} = \\delta Q_{i,t}/E_{i,t}$ to describe the fraction of water vapour previously evaporating in a certain (source) region being transported to where the drought propagates (receptor). As such, α represents the complete source–receptor relationship between any evaporative source location and the downwind receptor region. It contains information both on the prevailing large-scale winds advecting air parcels in the Lagrangian framework and on any moisture losses occurring en route, for example, due to intermittent precipitation. α is a fraction ranging between 0 and 1, with the former implying that none of the evaporation from the source region is advected to the receptor region; α = 1 indicates that (1) all air parcels that gain water vapour from evaporation in the source region arrive in the receptor region and (2) that none of this advected water vapour is lost en route (for example, through rainfall). A value of α = 1 thus usually occurs only if source and receptor are neighbouring pixels and typically decreases with increasing distance from the receptor region. Using this definition, we obtain how much evaporation in a source region (E) contributes to the water-vapour content of the air parcels residing above this source region and how much of this evaporation arrives in the receptor region (α). Furthermore, the evaporation component is conceptualized as the product of potential evaporation and soil stress to target the effect of soil drought. E<sub>p</sub> is obtained from GLEAM v.3.5a, as is actual evaporation (E), also used for water-vapour tracking, so that the soil moisture stress S is calculated as\n\n$$S_{i,t} = \\frac{{E_{i,t}}}{{E_{{\\mathrm{p}}(i,t)}}}$$\n\n(3)\n\nIntroducing the soil moisture stress S as such allows us to disentangle the impact of soil moisture from the prevailing meteorological conditions—captured by E<sub>p</sub>— on evaporation, and hence ultimately tropospheric water vapour. Therefore, the evaporative contribution δ Q<sub>i</sub><sub>,</sub><sub>t</sub> from a single source pixel (i) and a given backward day (t) to the daily mean water vapour residing over a specific drought-propagation pixel can be expressed as the product of circulation ɑ, potential evaporation (E<sub>p</sub>) and soil stress S,\n\n$$\\delta Q_{i,t} = \\alpha _{i,t}E_{{\\mathrm{p}}(i,t)}S_{i,t}$$\n\n(4)\n\nNote that for aesthetic reasons, the (i,t) notation is omitted from now on, but the following equations are still expressed for an individual source pixel and backward day (and a given receptor pixel and analysis day).\n\nApplying a Reynolds decomposition results in\n\n$$\\begin{array}{l}\\delta Q = \\overline {\\left({\\alpha E_{\\mathrm{p}}S} \\right)} \\left({\\alpha E_{\\mathrm{p}}S} \\right)^\\prime = \\bar \\alpha \\overline {E_{\\mathrm{p}}} \\bar S + \\bar \\alpha {E_{\\mathrm{p}}}^\\prime \\bar S + \\alpha {^\\prime}\\overline {E_{\\mathrm{p}}} \\bar S + \\alpha {^\\prime}{E_{\\mathrm{p}}}^\\prime \\bar S + \\bar \\alpha \\overline {E_{\\mathrm{p}}} S{^\\prime}\\\\\\qquad + \\bar \\alpha {E_{\\mathrm{p}}}^\\prime S{^\\prime} + \\alpha {^\\prime}\\overline {E_{\\mathrm{p}}} S{^\\prime} + \\alpha {^\\prime}{E_{\\mathrm{p}}}^\\prime S{^\\prime}\\end{array}$$\n\n(5)\n\nThe first four terms, summarized as $\\alpha E_{\\mathrm{p}}\\bar S$, express how much water vapour a source pixel would have contributed to the selected receptor pixel if soils experienced climatological stress ($S = \\bar S$), whereas the last four terms, summarized as $\\alpha E_{\\mathrm{p}}S{^\\prime}$, describe the difference of transported water vapour from source to receptor due to anomalous soil stress S ʹ for the given circulation and potential evaporation. Such a decomposition enables the estimation of water-vapour contributions from all drought-source pixels to the drought-propagation area if soils had not experienced unusual soil stress (S ʹ = 0). This is performed separately for all combinations of source and receptor pixels, and for each one, the effect of drought self-propagation is defined as\n\n$$\\delta Q_{{\\mathrm{self - propagation}}} = \\alpha E_{\\mathrm{p}}S - \\alpha E_{\\mathrm{p}}\\bar S = \\alpha E_{\\mathrm{{p}}}S{^\\prime}$$\n\n(6)\n\nAggregating $\\delta Q_{{\\mathrm{self - propagation}}}$ for each drought-propagation step, that is, over all source pixels (i) and backward days (t), and additionally over all days before and during propagation of the respective receptor pixel (three months), yields the estimated impact of soil drought on water vapour (red areas in Fig1d). The theoretical nature of this estimate is noted, as actual (or observed) circulation and potential evaporation are employed, but also climatological soil moisture stress. In reality, a reduction in soil stress in the drought area may alter the large-scale circulation pattern<sup>14, 29</sup> and thereby affect potential evaporation, yet this is not investigated here."
+    },
+    {
+      "heading": "Conversion of water vapour to precipitation",
+      "level": 3,
+      "kind": "body",
+      "text": "The conversion of water vapour to precipitation is enabled by various saturation-enabling, often referred to as ‘dynamical’, mechanisms. Desiccating soils are capable of affecting both water vapour and these dynamical mechanisms via water and energy fluxes (for example,<sup>11, 12, 82, 83, 84, 85, 86, 87</sup>). Yet, to date, moisture-tracking studies have focused only on climatological moisture sources of precipitation and how they change during drought (for example,<sup>88, 89, 90</sup>). Here, a conceptual approach is employed, in which daily precipitation is considered to be the product of water vapour (Q) and precipitation efficiency (P<sub>eff</sub>) (for example,<sup>21, 91</sup>):\n\n$$P_{{\\mathrm{actual}}} = Q_{{\\mathrm{actual}}} \\times P_{{\\mathrm{eff}},\\;{\\mathrm{actual}}}$$\n\n(7)\n\n$P_{{\\mathrm{eff}}}$ can be thought of as the conceptualization of dynamical mechanisms that achieve saturation, converting water vapour into precipitation, whereas Q provides the input for this conversion. Water vapour (again from ERA-Interim) and precipitation (from MSWEP v.2.2;<sup>92, 93</sup>) during the drought are employed to calculate the actual precipitation efficiency, per receptor pixel and day. Using this conceptualization, we estimate the daily precipitation deficits due to drought self-propagation:\n\n$${\\Delta}P_{{\\mathrm{self - propagation}}} = {\\Delta}Q_{{\\mathrm{self - propagation}}} \\times P_{{\\mathrm{eff}},{\\mathrm{actual}}}$$\n\n(8)\n\nThis procedure is repeated for the climatological as well as the maximum and minimum daily P<sub>eff</sub> encountered from 1980 to 2016 for each drought event to visualize an upper and lower bound as to how much additional precipitation might have occurred if drought-stricken soils were not anomalously stressed or the atmosphere had been more efficient at converting water vapour into precipitation (Fig2b). The minimum and maximum P<sub>eff</sub> of each day and pixel are obtained from the year in which the respective monthly mean P<sub>eff</sub> is lowest and highest. Using estimates of Δ P<sub>self-propagation</sub>, we can estimate how much precipitation would have occurred in the absence of self-propagation:\n\n$$P_{{\\mathrm{non - drought}}} = P_{{\\mathrm{actual}}} + {\\Delta}P_{{\\mathrm{self - propagation}}}$$\n\n(9)\n\nTo obtain the event-mean drought self-propagation (Fig3), the daily estimates of Δ P<sub>self-propagation</sub>(equation (8)) are first aggregated per month and drought-propagation area and then divided by analogously aggregated P<sub>non-drought</sub>(equation (9)). The resulting fractions express the precipitation deficits that are estimated to occur due to self-propagation (red areas in Fig2a). Then, an area-weighted average of Δ P<sub>self-propagation</sub> across all propagation steps is calculated and related to P<sub>non-drought</sub>(dashed line in Fig2a) to estimate the mean effect of drought self-propagation for each event (Fig3). The peak drought self-propagation (Fig3) is given by the month during which the ratio of Δ P<sub>self-propagation</sub> to P<sub>non-drought</sub> culminates. To enhance the comparability across events, only propagation steps corresponding to a total receptor area of at least 100,000 km² are considered for the peak effects. All quantities are expressed as the mean of the ensemble unless noted otherwise. Uncertainty bars in Fig3 are constructed using the minimum and maximum estimates of the ensemble.\n\nNote that with this approach, a linear dependency of precipitation on water-vapour content is assumed, which is not in line with some observational evidence—precipitation originating from deep convection is portrayed by an exponential relationship with column water vapour<sup>94</sup>. Nevertheless, as upwind droughts tend to only moderately alter the overall column water vapour, we also need only to assume piecewise linearity rather than across the entire range from low to high water vapour. Moreover, we point out that the relationship between water vapour and precipitation is also important at synoptic scales: precipitation of cyclones is proportional to their intensity and tropospheric water vapour, and the latter is a particularly useful predictor for extratropical cyclone precipitation<sup>95</sup>."
+    },
+    {
+      "heading": "Data availability",
+      "level": 2,
+      "kind": "data_availability",
+      "text": "The FLEXPART model can be downloaded via https://www.flexpart.eu/. ERA-Interim data were obtained from http://apps.ecmwf.int/datasets. GLEAM data are available through https://www.gleam.eu/. MSWEP data are accessible through http://www.gloh2o.org/. The FLEXPART simulation employed here was performed by R. Nieto, A. Drumond and L. Gimeno and is not publicly accessible. Due to the large data volumes, post-processed FLEXPART data are available upon request from the corresponding author, and sample data are publicly accessible through Zenodo at https://doi.org/10.5281/zenodo.5839819, together with the complete drought event data used for analysis and event-aggregated results. Source data are provided with this paper."
+    },
+    {
+      "heading": "Code availability",
+      "level": 2,
+      "kind": "code_availability",
+      "text": "The code used for analysis is publicly available through Zenodo at https://doi.org/10.5281/zenodo.5840791."
+    }
+  ],
+  "references": [
+    {
+      "raw": "1. Ligtvoet W. et al. The Geography of Future Water Challenges (PBL Netherlands Environmental Assessment Agency, 2018).",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "2. Dai, A. Increasing drought under global warming in observations and models. Nat. Clim. Change 3, 52–58 (2013).",
+      "doi": "10.1038/nclimate1633",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "3. Ukkola, A. M., De Kauwe, M. G., Roderick, M. L., Abramowitz, G. & Pitman, A. J. Robust future changes in meteorological drought in CMIP6 projections despite uncertainty in precipitation. Geophys. Res. Lett. 46, e2020GL087820 (2020).",
+      "doi": null,
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "4. Wang, B., Jin, C. & Liu, J. Understanding future change of global monsoons projected by CMIP6 models. J. Clim. 33, 6471–6489 (2020).",
+      "doi": "10.1175/jcli-d-19-0993.1",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "5. Cook, B. I., Mankin, J. S. & Anchukaitis, K. J. Climate change and drought: from past to future. Curr. Clim. Change Rep. 4, 164–179 (2018).",
+      "doi": null,
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "6. Wang, W., Ertsen, M. W., Svoboda, M. D. & Hafeez, M. Propagation of drought: from meteorological drought to agricultural and hydrological drought. Adv. Meteorol. 2016, 6547209 (2016).",
+      "doi": "10.1155/2016/6547209",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "7. Wilhite, D. A., Svoboda, M. D. & Hayes, M. J. Understanding the complex impacts of drought: a key to enhancing drought mitigation and preparedness. Water Resour. Manag. 21, 763–774 (2007).",
+      "doi": null,
+      "title": null,
+      "year": "2007"
+    },
+    {
+      "raw": "8. Morrison, H. et al. Confronting the challenge of modeling cloud and precipitation microphysics. J. Adv. Model. Earth Syst. 12, e2019MS001689 (2020).",
+      "doi": "10.1029/2019ms001689",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "9. Schubert, S. D. et al. Global meteorological drought: a synthesis of current understanding with a focus on SST drivers of precipitation deficits. J. Clim. 29, 3989–4019 (2016).",
+      "doi": "10.1175/jcli-d-15-0452.1",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "10. Hoerling, M. & Kumar, A. The perfect ocean for drought. Science 299, 691–694 (2003).",
+      "doi": "10.1126/science.1079053",
+      "title": null,
+      "year": "2003"
+    },
+    {
+      "raw": "11. Koster, R. D., Guo, Z., Bonan, G., Chan, E. & Cox, P. Regions of strong coupling between soil moisture and precipitation. Science 1138, 10–13 (2004).",
+      "doi": null,
+      "title": null,
+      "year": "2004"
+    },
+    {
+      "raw": "12. Guo, Z. et al. GLACE: the global land–atmosphere coupling experiment. Part II: analysis. J. Hydrometeorol. 7, 611–625 (2006).",
+      "doi": "10.1175/jhm511.1",
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "13. Dirmeyer, P. A., Koster, R. D. & Guo, Z. Do global models properly represent the feedback between land and atmosphere? J. Hydrometeorol. 7, 1177–1198 (2006).",
+      "doi": "10.1175/jhm532.1",
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "14. Taylor, C. M. et al. Frequency of Sahelian storm initiation enhanced over mesoscale soil-moisture patterns. Nat. Geosci. 4, 430–433 (2011).",
+      "doi": "10.1038/ngeo1173",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "15. Taylor, C. M., De Jeu, R. A. M., Guichard, F., Harris, P. P. & Dorigo, W. A. Afternoon rain more likely over drier soils. Nature 489, 423–426 (2012).",
+      "doi": "10.1038/nature11377",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "16. Guillod, B. P., Orlowsky, B., Miralles, D. G., Teuling, A. J. & Seneviratne, S. I. Reconciling spatial and temporal soil moisture effects on afternoon rainfall. Nat. Commun. 6, 6443 (2015).",
+      "doi": "10.1038/ncomms7443",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "17. Klein, C. & Taylor, C. M. Dry soils can intensify mesoscale convective systems. Proc. Natl Acad. Sci. USA 117, 21132–21137 (2020).",
+      "doi": "10.1073/pnas.2007998117",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "18. Dirmeyer, P. A., Schlosser, C. A. & Brubaker, K. L. Precipitation, recycling, and land memory: an integrated analysis. J. Hydrometeorol. 10, 278–288 (2009).",
+      "doi": "10.1175/2008jhm1016.1",
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "19. Miralles, D. G., Gentine, P., Seneviratne, S. I. & Teuling, A. J. Land–atmospheric feedbacks during droughts and heatwaves: state of the science and current challenges. Ann. N. Y. Acad. Sci. 1436, 19–35 (2019).",
+      "doi": "10.1111/nyas.13912",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "20. Dirmeyer, P. A., Wei, J., Bosilovich, M. G. & Mocko, D. M. Comparing evaporative sources of terrestrial precipitation and their extremes in MERRA using relative entropy. J. Hydrometeorol. 15, 102–116 (2014).",
+      "doi": "10.1175/jhm-d-13-053.1",
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "21. Ye, H. et al. Impact of increased water vapor on precipitation efficiency over northern Eurasia. Geophys. Res. Lett. 41, 2941–2947 (2014).",
+      "doi": "10.1002/2014gl059830",
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "22. Peters, O. & Neelin, J. D. Critical phenomena in atmospheric precipitation. Nat. Phys. 2, 393–396 (2006).",
+      "doi": "10.1038/nphys314",
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "23. Dong, W. et al. Precipitable water and CAPE dependence of rainfall intensities in China. Clim. Dyn. 52, 3357–3368 (2019).",
+      "doi": null,
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "24. DeAngelis, A. et al. Evidence of enhanced precipitation due to irrigation over the Great Plains of the United States. J. Geophys. Res. Atmos. 115, D15115 (2010).",
+      "doi": "10.1029/2010jd013892",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "25. Tuinenburg, O. A., Hutjes, R. W. A. & Kabat, P. The fate of evaporated water from the Ganges basin. J. Geophys. Res. Atmos. 117, D01107 (2012).",
+      "doi": "10.1029/2011jd016221",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "26. De Vrese, P., Hagemann, S. & Claussen, M. Asian irrigation, African rain: remote impacts of irrigation. Geophys. Res. Lett. 43, 3737–3745 (2016).",
+      "doi": "10.1002/2016gl068146",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "27. Herrera-Estrada, J. E. et al. Reduced moisture transport linked to drought propagation across North America. Geophys. Res. Lett. 46, 5243–5253 (2019).",
+      "doi": "10.1029/2019gl082475",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "28. Holgate, C. M., Van Dijk, A. I. J. M., Evans, J. P. & Pitman, A. J. Local and remote drivers of Southeast Australian drought. Geophys. Res. Lett. 47, e2020GL090238 (2020).",
+      "doi": "10.1029/2020gl090238",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "29. Koster, R. D., Chang, Y. & Schubert, S. D. A mechanism for land–atmosphere feedback involving planetary wave structures. J. Clim. 27, 9290–9301 (2014).",
+      "doi": "10.1175/jcli-d-14-00315.1",
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "30. Seneviratne, S. et al. Impact of soil moisture-climate feedbacks on CMIP5 projections: first results from the GLACE-CMIP5 experiment. Geophys. Res. Lett. 40, 5212–5217 (2013).",
+      "doi": "10.1002/grl.50956",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "31. Berg, A., Lintner, B. R., Findell, K. & Giannini, A. Uncertain soil moisture feedbacks in model projections of Sahel precipitation. Geophys. Res. Lett. 44, 6124–6133 (2017).",
+      "doi": "10.1002/2017gl073851",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "32. Santanello, J. A. et al. Land-atmosphere interactions: the LoCo perspective. Bull. Am. Meteorol. Soc. 99, 1253–1272 (2018).",
+      "doi": "10.1175/bams-d-17-0001.1",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "33. Seneviratne, S. I. et al. Investigating soil moisture–climate interactions in a changing climate: a review. Earth Sci. Rev. 99, 125–161 (2010).",
+      "doi": "10.1016/j.earscirev.2010.02.004",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "34. Miralles, D. G., Teuling, A. J., Van Heerwaarden, C. C. & De Arellano, J. V. G. Mega-heatwave temperatures due to combined soil desiccation and atmospheric heat accumulation. Nat. Geosci. 7, 345–349 (2014).",
+      "doi": "10.1038/ngeo2141",
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "35. Trenberth, K. E. Atmospheric moisture recycling: role of advection and local evaporation. J. Clim. 12, 1368–1381 (1999).",
+      "doi": "10.1175/1520-0442(1999)012<1368:amrroa>2.0.co;2",
+      "title": null,
+      "year": "1999"
+    },
+    {
+      "raw": "36. Berg, A. & McColl, K. A. No projected global drylands expansion under greenhouse warming. Nat. Clim. Change 11, 331–337 (2021).",
+      "doi": "10.1038/s41558-021-01007-8",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "37. Miralles, D. G. et al. Contribution of water-limited ecoregions to their own supply of rainfall. Environ. Res. Lett. 11, 124007 (2016).",
+      "doi": "10.1088/1748-9326/11/12/124007",
+      "title": null,
+      "year": "2016"
+    },
+    {
+      "raw": "38. Houze, R. A. J., Rasmussen, K. L., Zuluaga, M. D. & Brodzik, S. R. The variable nature of convection in the tropics and subtropics: a legacy of 16 years of the Tropical Rainfall Measuring Mission satellite. Rev. Geophys. 53, 994–1021 (2015).",
+      "doi": "10.1002/2015rg000488",
+      "title": null,
+      "year": "2015"
+    },
+    {
+      "raw": "39. Charney, J. G. & Eliassen, A. On the growth of the hurricane depression. J. Atmos. Sci. 21, 68–75 (1964).",
+      "doi": "10.1175/1520-0469(1964)021<0068:otgoth>2.0.co;2",
+      "title": null,
+      "year": "1964"
+    },
+    {
+      "raw": "40. Liu, Y., Tan, Z. M. & Wu, Z. Noninstantaneous wave-CISK for the interaction between convective heating and low-level moisture convergence in the tropics. J. Atmos. Sci. 76, 2083–2101 (2019).",
+      "doi": "10.1175/jas-d-19-0003.1",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "41. Greve, P. et al. Global assessment of trends in wetting and drying over land. Nat. Geosci. 7, 716–721 (2014).",
+      "doi": "10.1038/ngeo2247",
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "42. Sheffield, J., Wood, E. F. & Roderick, M. L. Little change in global drought over the past 60 years. Nature 491, 435–438 (2012).",
+      "doi": "10.1038/nature11575",
+      "title": null,
+      "year": "2012"
+    },
+    {
+      "raw": "43. Konapala, G., Mishra, A. K., Wada, Y. & Mann, M. E. Climate change will affect global water availability through compounding changes in seasonal precipitation and evaporation. Nat. Commun. 11, 3044 (2020).",
+      "doi": "10.1038/s41467-020-16757-w",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "44. Miralles, D. G. et al. El Niño–La Niña cycle and recent trends in continental evaporation. Nat. Clim. Change 4, 122–126 (2014).",
+      "doi": "10.1038/nclimate2068",
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "45. Padrón, R. S. et al. Observed changes in dry-season water availability attributed to human-induced climate change. Nat. Geosci. 13, 477–481 (2020).",
+      "doi": "10.1038/s41561-020-0594-1",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "46. Laîné, A., Nakamura, H., Nishii, K. & Miyasaka, T. A diagnostic study of future evaporation changes projected in CMIP5 climate models. Clim. Dyn. 42, 2745–2761 (2014).",
+      "doi": null,
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "47. Dirmeyer, P. A., Jin, Y., Singh, B. & Yan, X. Trends in land–atmosphere interactions from CMIP5 simulations. J. Hydrometeorol. 14, 829–849 (2013).",
+      "doi": "10.1175/jhm-d-12-0107.1",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "48. Findell, K. L. et al. Rising temperatures increase importance of oceanic evaporation as a source for continental precipitation. J. Clim. 32, 7713–7726 (2019).",
+      "doi": "10.1175/jcli-d-19-0145.1",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "49. Zhou, S. et al. Soil moisture–atmosphere feedbacks mitigate declining water availability in drylands. Nat. Clim. Change 11, 38–44 (2021).",
+      "doi": "10.1038/s41558-020-00945-z",
+      "title": null,
+      "year": "2021"
+    },
+    {
+      "raw": "50. Schlaepfer, D. R. et al. Climate change reduces extent of temperate drylands and intensifies drought in deep soils. Nat. Commun. 8, 14196 (2017).",
+      "doi": null,
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "51. Miralles, D. G., De Jeu, R. A. M., Gash, J. H., Holmes, T. R. H. & Dolman, A. J. Magnitude and variability of land evaporation and its components at the global scale. Hydrol. Earth Syst. Sci. 15, 967–981 (2011).",
+      "doi": "10.5194/hess-15-967-2011",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "52. Martens, B. et al. GLEAM v3: satellite-based land evaporation and root-zone soil moisture. Geosci. Model Dev. 10, 1903–1925 (2017).",
+      "doi": "10.5194/gmd-10-1903-2017",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "53. Andreadis, K. M., Clark, E. A., Wood, A. W., Hamlet, A. F. & Lettenmaier, D. P. Twentieth-century drought in the conterminous United States. J. Hydrometeorol. 6, 985–1001 (2005).",
+      "doi": "10.1175/jhm450.1",
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "54. Vernieuwe, H., De Baets, B. & Verhoest, N. E. C. A mathematical morphology approach for a qualitative exploration of drought events in space and time. Int. J. Climatol. 40, 530–543 (2020).",
+      "doi": "10.1002/joc.6226",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "55. Sodemann, H., Schwierz, C. & Wernli, H. Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. J. Geophys. Res. 113, D03107 (2008).",
+      "doi": null,
+      "title": null,
+      "year": "2008"
+    },
+    {
+      "raw": "56. Keune, J. & Miralles, D. G. A precipitation recycling network to assess freshwater vulnerability: challenging the watershed convention. Water Resour. Res. 55, 9947–9961 (2019).",
+      "doi": "10.1029/2019wr025310",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "57. Schumacher, D. L. et al. Amplification of mega-heatwaves through heat torrents fuelled by upwind drought. Nat. Geosci. 12, 712–717 (2019).",
+      "doi": "10.1038/s41561-019-0431-6",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "58. Ek, M. & Mahrt, L. Daytime evolution of relative humidity at the boundary layer top. Mon. Weather Rev. 122, 2709–2721 (1994).",
+      "doi": "10.1175/1520-0493(1994)122<2709:deorha>2.0.co;2",
+      "title": null,
+      "year": "1994"
+    },
+    {
+      "raw": "59. Munley, W. G. & Hipps, L. E. Estimation of regional evaporation for a tallgrass prairie from measurements of properties of the atmospheric boundary layer. Water Resour. Res. 27, 225–230 (1991).",
+      "doi": "10.1029/90wr02407",
+      "title": null,
+      "year": "1991"
+    },
+    {
+      "raw": "60. van Heerwaarden, C., Vila-Guerau de Arellano, J., Moene, A. & Holtslag, A. Interactions between dry-air entrainment, surface evaporation and convective boundary-layer development. Q. J. R. Meteorol. Soc. 135, 1277–1291 (2009).",
+      "doi": "10.1002/qj.431",
+      "title": null,
+      "year": "2009"
+    },
+    {
+      "raw": "61. Mahrt, L. Boundary‐layer moisture regimes. Q. J. R. Meteorol. Soc. 117, 151–176 (1991).",
+      "doi": "10.1002/qj.49711749708",
+      "title": null,
+      "year": "1991"
+    },
+    {
+      "raw": "62. Yu, H., Liu, S. C. & Dickinson, R. E. Radiative effects of aerosols on the evolution of the atmospheric boundary layer. J. Geophys. Res. Atmos. 107, AAC 3-1–AAC 3-14 (2002).",
+      "doi": "10.1029/2001jd000754",
+      "title": null,
+      "year": "2002"
+    },
+    {
+      "raw": "63. Wood, R. & Bretherton, C. S. Boundary layer depth, entrainment, and decoupling in the cloud-capped subtropical and tropical marine boundary layer. J. Clim. 17, 3576–3588 (2004).",
+      "doi": "10.1175/1520-0442(2004)017<3576:bldead>2.0.co;2",
+      "title": null,
+      "year": "2004"
+    },
+    {
+      "raw": "64. Stohl, A., Hittenberger, M. & Wotawa, G. Validation of the Lagrangian particle dispersion model FLEXPART against large-scale tracer experiment data. Atmos. Environ. 32, 4245–4264 (1998).",
+      "doi": "10.1016/s1352-2310(98)00184-8",
+      "title": null,
+      "year": "1998"
+    },
+    {
+      "raw": "65. Stohl, A., Forster, C., Frank, A., Seibert, P. & Wotawa, G. Technical note: the Lagrangian particle dispersion model FLEXPART version 6.2. Atmos. Chem. Phys. 5, 2461–2474 (2005).",
+      "doi": "10.5194/acp-5-2461-2005",
+      "title": null,
+      "year": "2005"
+    },
+    {
+      "raw": "66. Dee, D. P. et al. The ERA-Interim reanalysis: configuration and performance of the data assimilation system. Q. J. R. Meteorol. Soc. 137, 553–597 (2011).",
+      "doi": "10.1002/qj.828",
+      "title": null,
+      "year": "2011"
+    },
+    {
+      "raw": "67. Dominguez, F., Kumar, P., Liang, X. Z. & Ting, M. Impact of atmospheric moisture storage on precipitation recycling. J. Clim. 19, 1513–1530 (2006).",
+      "doi": "10.1175/jcli3691.1",
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "68. van der Ent, R. J., Tuinenburg, O. A., Knoche, H. R., Kunstmann, H. & Savenije, H. H. G. Should we use a simple or complex model for moisture recycling and atmospheric moisture tracking? Hydrol. Earth Syst. Sci. 17, 4869–4884 (2013).",
+      "doi": "10.5194/hess-17-4869-2013",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "69. Alejandro Martinez, J. & Dominguez, F. Sources of atmospheric moisture for the La Plata River basin. J. Clim. 27, 6737–6753 (2014).",
+      "doi": "10.1175/jcli-d-14-00022.1",
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "70. Emanuel, K. A. A scheme for representing cumulus convection in large-scale models. J. Atmos. Sci. 48, 2313–2335 (1991).",
+      "doi": "10.1175/1520-0469(1991)048<2313:asfrcc>2.0.co;2",
+      "title": null,
+      "year": "1991"
+    },
+    {
+      "raw": "71. Trigo, R. M. et al. The record winter drought of 2011–12 in the Iberian Peninsula. Bull. Am. Meteorol. Soc. 94, S41–S45 (2013).",
+      "doi": null,
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "72. Drumond, A., Stojanovic, M., Nieto, R., Vicente-Serrano, S. M. & Gimeno, L. Linking anomalous moisture transport and drought episodes in the IPCC reference regions. Bull. Am. Meteorol. Soc. 100, 1481–1498 (2019).",
+      "doi": "10.1175/bams-d-18-0111.1",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "73. Thorncroft, C. D., Hoskins, B. J. & McIntyre, M. E. Two paradigms of baroclinic‐wave life‐cycle behaviour. Q. J. R. Meteorol. Soc. 119, 17–55 (1993).",
+      "doi": "10.1002/qj.49711950903",
+      "title": null,
+      "year": "1993"
+    },
+    {
+      "raw": "74. Appenzeller, C., Davies, H. C. & Norton, W. A. Fragmentation of stratospheric intrusions. J. Geophys. Res. Atmos. 101, 1435–1456 (1996).",
+      "doi": "10.1029/95jd02674",
+      "title": null,
+      "year": "1996"
+    },
+    {
+      "raw": "75. Wernli, H. & Sprenger, M. Identification and ERA-15 climatology of potential vorticity streamers and cutoffs near the extratropical tropopause. J. Atmos. Sci. 64, 1569–1586 (2007).",
+      "doi": "10.1175/jas3912.1",
+      "title": null,
+      "year": "2007"
+    },
+    {
+      "raw": "76. Seibert, P. Convergence and accuracy of numerical methods for trajectory calculations. J. Appl. Meteorol. 32, 558–566 (1993).",
+      "doi": "10.1175/1520-0450(1993)032<0558:caaonm>2.0.co;2",
+      "title": null,
+      "year": "1993"
+    },
+    {
+      "raw": "77. Stohl, A. & Seibert, P. Accuracy of trajectories as determined from the conservation of meteorological tracers. Q. J. R. Meteorol. Soc. 124, 1465–1484 (1998).",
+      "doi": "10.1002/qj.49712454907",
+      "title": null,
+      "year": "1998"
+    },
+    {
+      "raw": "78. Schumacher, D. L., Keune, J. & Miralles, D. G. Atmospheric heat and moisture transport to energy- and water-limited ecosystems. Ann. N. Y. Acad. Sci. 1472, 123–138 (2020).",
+      "doi": "10.1111/nyas.14357",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "79. Sodemann, H. Beyond turnover time: constraining the lifetime distribution of water vapor from simple and complex approaches. J. Atmos. Sci. 77, 413–433 (2020).",
+      "doi": "10.1175/jas-d-18-0336.1",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "80. Yu, L. & Weller, R. A. Objectively analyzed air–sea heat fluxes for the global ice-free oceans (1981–2005). Bull. Am. Meteorol. Soc. 88, 527–539 (2007).",
+      "doi": "10.1175/bams-88-4-527",
+      "title": null,
+      "year": "2007"
+    },
+    {
+      "raw": "81. Stevens, B. et al. Structure and dynamical influence of water vapor in the lower tropical troposphere. Surv. Geophys. 38, 1371–1397 (2017).",
+      "doi": null,
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "82. Atlas, R., Wolfson, N. & Terry, J. The effect of SST and soil moisture anomalies on GLA model simulations of the 1988 US summer drought. J. Clim. 6, 2034–2048 (1993).",
+      "doi": "10.1175/1520-0442(1993)006<2034:teosas>2.0.co;2",
+      "title": null,
+      "year": "1993"
+    },
+    {
+      "raw": "83. Sud, Y. C., Mocko, D. M., Lau, K. M. & Atlas, R. Simulating the midwestern US drought of 1988 with a GCM. J. Clim. 16, 3946–3965 (2003).",
+      "doi": "10.1175/1520-0442(2003)016<3946:stmudo>2.0.co;2",
+      "title": null,
+      "year": "2003"
+    },
+    {
+      "raw": "84. Koster, R. D. et al. GLACE: the Global Land–Atmosphere Coupling Experiment. Part I: overview. J. Hydrometeorol. 7, 590–610 (2006).",
+      "doi": "10.1175/jhm510.1",
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "85. Zaitchik, B. F., Santanello, J. A., Kumar, S. V. & Peters-Lidard, C. D. Representation of soil moisture feedbacks during drought in NASA unified WRF (NU-WRF). J. Hydrometeorol. 14, 360–367 (2013).",
+      "doi": "10.1175/jhm-d-12-069.1",
+      "title": null,
+      "year": "2013"
+    },
+    {
+      "raw": "86. Froidevaux, P., Schlemmer, L., Schmidli, J., Langhans, W. & Schar̈, C. Influence of the background wind on the local soil moisture–precipitation feedback. J. Atmos. Sci. 71, 782–799 (2014).",
+      "doi": "10.1175/jas-d-13-0180.1",
+      "title": null,
+      "year": "2014"
+    },
+    {
+      "raw": "87. Yang, L., Sun, G., Zhi, L. & Zhao, J. Negative soil moisture–precipitation feedback in dry and wet regions. Sci. Rep. 8, 4026 (2018).",
+      "doi": "10.1038/s41598-018-22394-7",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "88. Drumond, A., Gimeno, L., Nieto, R., Trigo, R. M. & Vicente-Serrano, S. M. Drought episodes in the climatological sinks of the Mediterranean moisture source: the role of moisture transport. Glob. Planet. Change 151, 4–14 (2017).",
+      "doi": "10.1016/j.gloplacha.2016.12.004",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "89. Salah, Z., Nieto, R., Drumond, A., Gimeno, L. & Vicente-Serrano, S. M. A Lagrangian analysis of the moisture budget over the Fertile Crescent during two intense drought episodes. J. Hydrol. 560, 382–395 (2018).",
+      "doi": "10.1016/j.jhydrol.2018.03.021",
+      "title": null,
+      "year": "2018"
+    },
+    {
+      "raw": "90. Shah, D. & Mishra, V. Drought onset and termination in India. J. Geophys. Res. Atmos. 125, e2020JD032871 (2020).",
+      "doi": "10.1029/2020jd032871",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "91. Tuller, S. E. Seasonal and annual precipitation efficiency in Canada. Atmosphere 11, 52–66 (1973).",
+      "doi": "10.1080/00046973.1973.9648348",
+      "title": null,
+      "year": "1973"
+    },
+    {
+      "raw": "92. Beck, H. E. et al. MSWEP: 3-hourly 0.25° global gridded precipitation (1979–2015) by merging gauge, satellite, and reanalysis data. Hydrol. Earth Syst. Sci. 21, 589–615 (2017).",
+      "doi": "10.5194/hess-21-589-2017",
+      "title": null,
+      "year": "2017"
+    },
+    {
+      "raw": "93. Beck, H. E. et al. Daily evaluation of 26 precipitation datasets using Stage-IV gauge-radar data for the CONUS. Hydrol. Earth Syst. Sci. Discuss. 23, 207–224 (2019).",
+      "doi": "10.5194/hess-23-207-2019",
+      "title": null,
+      "year": "2019"
+    },
+    {
+      "raw": "94. Holloway, C. E. & Neelin, J. D. Temporal relations of column water vapor and tropical precipitation. J. Atmos. Sci. 67, 1091–1105 (2010).",
+      "doi": "10.1175/2009jas3284.1",
+      "title": null,
+      "year": "2010"
+    },
+    {
+      "raw": "95. Pfahl, S. & Sprenger, M. On the relationship between extratropical cyclone precipitation and intensity. Geophys. Res. Lett. 43, 1752–1758 (2016).",
+      "doi": "10.1002/2016gl068018",
+      "title": null,
+      "year": "2016"
+    }
+  ],
+  "assets": [
+    {
+      "kind": "figure",
+      "heading": "Figure 1",
+      "caption": "a , An overview of the 40 largest soil droughts in recent history, with six selected events shown in colour. Pixels of the same colour are part of the same spatiotemporally coherent drought, but the timing of drought onset and offset varies per pixel. The ranking of each drought in terms of total extent (space and time) is provided by numbers of matching colours. b , c , Drought propagation in space for six selected events ( b ), with polygons of matching colour in the time series ( c ) indicating the cumulative area under soil drought after each of these ‘propagation steps’, as well as the actual area subject to soil drought at the time of propagation (black line). d , The actual water vapour ( Q ) in the areas that are newly affected by soil drought (where the drought propagates to; solid black line); ensemble-mean ‘non-drought’ water vapour, calculated for climatological soil stress in upwind drought-stricken areas using existing potential evaporation and circulation (dashed black line; Methods ). The difference (red shading) thus indicates the downwind reduction in water vapour due solely to upwind soil drought for the given atmospheric conditions and circulation. Source data",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41561-022-00912-7_assets/41561_2022_912_Fig1_HTML.png",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_Fig1_HTML.png",
+      "original_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_Fig1_HTML.png",
+      "source_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_Fig1_HTML.png",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/png",
+      "downloaded_bytes": 538840,
+      "width": 1583,
+      "height": 2364,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 0.274,
+        "candidate_resolution_ms": 0.054,
+        "dns_policy_validation_ms": 4.493,
+        "connect_to_headers_ttfb_ms": 955.936,
+        "body_stream_ms": 1338.752,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 10.393,
+        "save_ms": 26.833,
+        "total_ms": 2347.765,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 2",
+      "caption": "a , For the same six events as in Fig. 1b–d , the climatological and actual precipitation are shown (dotted and solid black lines, respectively). The extra water vapour for non-drought conditions in Fig. 1d is converted to precipitation on the basis of the actual precipitation efficiency (dashed black line; Main and Methods ), shown as the ensemble mean. The difference between non-drought and actual precipitation is an estimate of the drought self-propagation effect (red shading). b , Since Δ P depends not only on the amount of extra water evaporating at climatological soil moisture stress, but also on the conversion of water vapour to precipitation, the values corresponding to the actual precipitation efficiency employed for Fig. 2a , the climatological mean, maximum and minimum precipitation efficiency are shown (solid and dashed blue lines, upper and lower bounds of grey shading, respectively), again averaged over the entire ensemble of simulations. Source data",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41561-022-00912-7_assets/41561_2022_912_Fig2_HTML.png",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_Fig2_HTML.png",
+      "original_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_Fig2_HTML.png",
+      "source_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_Fig2_HTML.png",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/png",
+      "downloaded_bytes": 233780,
+      "width": 1574,
+      "height": 1918,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 0.765,
+        "candidate_resolution_ms": 0.042,
+        "dns_policy_validation_ms": 4.96,
+        "connect_to_headers_ttfb_ms": 1673.609,
+        "body_stream_ms": 910.262,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 10.556,
+        "save_ms": 26.599,
+        "total_ms": 2643.752,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 3",
+      "caption": "The map illustrates the monthly maximum (or ‘peak’) drought self-propagation, expressed as the ratio between Δ P and the precipitation expectation without upwind drought. If several events overlap in space, their average is visualized. Only the ensemble mean is shown. The graph illustrates the mean drought self-propagation per event (including all propagation steps) as a function of the climatological aridity index (the ratio of annual mean precipitation to potential evaporation). Marker colours indicate the (monthly) peak self-propagation. Vertical grey lines represent the uncertainty range, given by the respective ensemble minima and maxima. The transition to drylands at P / E p = 0.65 (ref. 36 ) is marked by a vertical black line and a change in background colour (from blue to brown). The six events highlighted in Figs. 1 and 2 are labelled and marked with purple dots. Source data",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41561-022-00912-7_assets/41561_2022_912_Fig3_HTML.png",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_Fig3_HTML.png",
+      "original_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_Fig3_HTML.png",
+      "source_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_Fig3_HTML.png",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/png",
+      "downloaded_bytes": 214880,
+      "width": 1497,
+      "height": 593,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 2310.72,
+        "candidate_resolution_ms": 0.039,
+        "dns_policy_validation_ms": 9.302,
+        "connect_to_headers_ttfb_ms": 1582.2,
+        "body_stream_ms": 164.894,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 5.274,
+        "save_ms": 38.698,
+        "total_ms": 4152.771,
+        "status": "saved"
+      }
+    },
+    {
+      "kind": "figure",
+      "heading": "Figure 4",
+      "caption": "Meteorological drought is frequently triggered by weaker-than-usual dynamical saturation-enabling mechanisms (conceptualized as low precipitation efficiency; P eff ʹ < 0), which in turn may respond to a remote forcing, such as anomalous sea surface temperatures. Once that happens, limited precipitation ( P ʹ < 0) causes soil desiccation (SMʹ < 0) and soil stress, exacerbated by the high potential evaporation due to clear skies and elevated temperatures. Then, evaporation becomes (more) water limited ( E ’ < 0). The reduction in near-surface air moistening—extending across the troposphere via vertical mixing—causes a reduction in water vapour being exported downwind ( Q ʹ < 0). Therefore, further downwind, for the same precipitation efficiency, even less precipitation is expected ( P ʹ < 0), contributing to downwind drought onset (SMʹ < 0, E ʹ < 0). Moreover, since water vapour is known to enhance uplift, additional reductions are possible for convective precipitation ( P eff ʹ, P ʹ, SMʹ, E ʹ « 0).",
+      "url": null,
+      "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41561-022-00912-7_assets/41561_2022_912_Fig4_HTML.png",
+      "section": "body",
+      "render_state": null,
+      "anchor_key": null,
+      "download_tier": "full_size",
+      "download_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_Fig4_HTML.png",
+      "original_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_Fig4_HTML.png",
+      "source_url": "https://media.springernature.com/full/springer-static/image/art%3A10.1038%2Fs41561-022-00912-7/MediaObjects/41561_2022_912_Fig4_HTML.png",
+      "source_path": null,
+      "source_href": null,
+      "content_type": "image/png",
+      "downloaded_bytes": 678527,
+      "width": 1535,
+      "height": 1044,
+      "preview_accepted": false,
+      "browser_backend": null,
+      "final_fetcher": null,
+      "recovery_attempts": [],
+      "provenance": [],
+      "asset_timing": {
+        "queue_ms": 2616.845,
+        "candidate_resolution_ms": 0.039,
+        "dns_policy_validation_ms": 15.975,
+        "connect_to_headers_ttfb_ms": 4373.521,
+        "body_stream_ms": 869.321,
+        "browser_recovery_ms": 0.0,
+        "retry_wait_ms": 0.0,
+        "conversion_ms": 0.052,
+        "save_ms": 1.446,
+        "total_ms": 7877.843,
+        "status": "saved"
+      }
+    }
+  ],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 11202,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "Markdown full text was saved to /home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/Schumacher_et_al_2022_Drought_self-propagation_in_drylands_due_to_land_atmosphere_feedbacks.md."
+    ],
+    "source_trail": [
+      "fulltext:springer_html_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_springer",
+      "route:signal_publisher_springer",
+      "route:signal_doi_springer",
+      "route:probe_springer_unknown",
+      "route:provider_selected_springer",
+      "route:provider_candidate_springer_metadata_selected_rank_1",
+      "route:provider_candidate_springer_identity_strong",
+      "fulltext:springer_attempt",
+      "download:springer_html_saved",
+      "download:springer_assets_saved_profile_body",
+      "fulltext:springer_article_ok",
+      "route:provider_candidate_springer_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 255,
+      "body": 10947,
+      "refs": 3843
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 43727,
+      "word_count": 6787,
+      "body_block_count": 9,
+      "body_heading_count": 9,
+      "body_to_abstract_ratio": 44.651315789473685,
+      "explicit_body_container": true,
+      "post_abstract_body_run": true,
+      "figure_count": 4
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": true,
+      "profile": "body",
+      "expected": null,
+      "discovered": 4,
+      "attempted": 4,
+      "total": 4,
+      "local": 4,
+      "full_size": 4,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 4,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 4,
+          "requested": 4,
+          "full_size": 4,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": [
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41561-022-00912-7_assets/41561_2022_912_Fig1_HTML.png",
+          "real_mime": "image/png",
+          "byte_count": 538840,
+          "width": 1583,
+          "height": 2364,
+          "preview_accepted": false,
+          "sha256": "58c67b72030cccab014aa0cd5dce00fadfa23e1de3431221cdbf82367150f047",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41561-022-00912-7_assets/41561_2022_912_Fig2_HTML.png",
+          "real_mime": "image/png",
+          "byte_count": 233780,
+          "width": 1574,
+          "height": 1918,
+          "preview_accepted": false,
+          "sha256": "3238c24639209a216244dc12f9b076527e09199b0939870b973baa8d7c05c97a",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41561-022-00912-7_assets/41561_2022_912_Fig3_HTML.png",
+          "real_mime": "image/png",
+          "byte_count": 214880,
+          "width": 1497,
+          "height": 593,
+          "preview_accepted": false,
+          "sha256": "d386b771756ac0016015dbba6813cd78ba37c78ec859c92df07715332b4c3bc1",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        },
+        {
+          "request_profile": "body",
+          "kind": "figure",
+          "status": "available",
+          "download_tier": "full_size",
+          "path": "/home/dictation/paper-fetch-skill/.paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1038_s41561-022-00912-7_assets/41561_2022_912_Fig4_HTML.png",
+          "real_mime": "image/png",
+          "byte_count": 678527,
+          "width": 1535,
+          "height": 1044,
+          "preview_accepted": false,
+          "sha256": "7429a4c91155f8ba041a71d99d9d5fc5e530e5470c3afb804f8e6c1c3561363d",
+          "failure_code": null,
+          "provenance": [],
+          "suspected_reasons": []
+        }
+      ]
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "springer",
+    "route": "direct_html",
+    "representation": "html",
+    "transport": "http",
+    "fallback_used": false
+  }
+}

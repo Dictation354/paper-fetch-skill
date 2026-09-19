@@ -1,0 +1,61 @@
+{
+  "doi": "10.3389/fmars.2023.1101972",
+  "source_input": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/original.xml",
+  "source_sha256": "54be5357383c7c3973289613058ebb3c2a9ac432ac65db82e5c15add0e171ac7",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "74a34c372e958ea34a7dff9ade4284c7e895c441d0097281de34340492fc7e93",
+  "files": [
+    {
+      "filename": "fmars-10-1101972-g001.webp",
+      "download_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g001.webp",
+      "source_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g001.webp",
+      "sha256": "97e641c52dbe280a446ec4bd4228afe9f3c46d8fcb9324ff89995b4b87e0d195",
+      "size": 223240,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1417,
+      "height": 850,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "fmars-10-1101972-g002.webp",
+      "download_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g002.webp",
+      "source_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g002.webp",
+      "sha256": "5b16cecd65e9858291ba2aa44d82470570d1b13972f07848cbbb65b0bf668de8",
+      "size": 95972,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1417,
+      "height": 858,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "fmars-10-1101972-g003.webp",
+      "download_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g003.webp",
+      "source_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g003.webp",
+      "sha256": "962f7d6c1033b85cd281bd2b7787e1fae2d3fbc0adecad7a1000974e032fee46",
+      "size": 223630,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1299,
+      "height": 1297,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "fmars-10-1101972-g004.webp",
+      "download_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g004.webp",
+      "source_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g004.webp",
+      "sha256": "b2fc2375026eab45cca88d248f2cf0b8cd307b7148231a8a596160e020b23ad1",
+      "size": 268300,
+      "kind": "figure",
+      "download_tier": "full_size",
+      "width": 1299,
+      "height": 1289,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:25.021075+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 0
+}

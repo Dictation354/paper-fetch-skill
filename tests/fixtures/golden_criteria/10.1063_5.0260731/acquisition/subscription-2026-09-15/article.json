@@ -1,0 +1,766 @@
+{
+  "doi": "10.1063/5.0260731",
+  "source": "aip_pdf",
+  "metadata": {
+    "title": "A basis-free phase space electronic Hamiltonian that recovers beyond Born–Oppenheimer electronic momentum and current density",
+    "authors": [
+      "Zhen Tao",
+      "Tian Qiu",
+      "Xuezhi Bian",
+      "Titouan Duston",
+      "Nadine Bradbury",
+      "Joseph E. Subotnik"
+    ],
+    "abstract": "We present a phase-space electronic Hamiltonian ĤPS (parameterized by both nuclear position X and momentum P) that boosts each electron into the moving frame of the nuclei that are closest in real space. The final form for the phase space Hamiltonian does not assume the existence of an atomic orbital basis, and relative to standard Born–Oppenheimer theory, the newly proposed one-electron operators can be expressed directly as functions of electronic and nuclear positions and momentum. We show that (i) quantum–classical dynamics along such a Hamiltonian maintains momentum conservation and that (ii) diagonalizing such a Hamiltonian can recover the electronic momentum and electronic current density reasonably well. In conjunction with other reports in the literature that such a phase-space approach can also recover vibrational circular dichroism spectra, we submit that the present phase-space approach offers a testable and powerful approach to post-BO electronic structure theory. Moreover, the approach is inexpensive and can be immediately applied to simulations of chiral induced spin selectivity experiments (where the transfer of angular momentum between nuclei and electrons is considered critical).",
+    "journal": "The Journal of Chemical Physics",
+    "article_type": null,
+    "published": "2025-4-14",
+    "keywords": [],
+    "license_urls": [],
+    "landing_page_url": "https://pubs.aip.org/jcp/article/162/14/144111/3343998/A-basis-free-phase-space-electronic-Hamiltonian"
+  },
+  "sections": [
+    {
+      "heading": "An Introduction to Configuration Interaction Theory",
+      "level": 1,
+      "kind": "body",
+      "text": "C. David Sherrill\n\nSchool of Chemistry and Biochemistry Georgia Institute of Technology 1995\n\nCONTENTS\n\n2"
+    },
+    {
+      "heading": "Contents",
+      "level": 1,
+      "kind": "body",
+      "text": "|1|Intr|oduction<br>4|\n|---|---|---|\n|2|Fun|damental Concepts<br>7|\n||2.1|Scope of the Method<br>...........................<br>7|\n||2.2|Why Configuration Interaction?<br>.....................<br>8|\n||2.3|The Correlation Energy..........................<br>11|\n||2.4|Slater’s Rules...............................<br>13|\n|3|The|Variational Theorem<br>15|\n||3.1|The Method of Linear Variations.....................<br>15|\n||3.2|Variational Theorem for the Ground State................<br>17|\n||3.3|Why are Coupled-Cluster and MBPT Energies not Variational?.....<br>18|\n||3.4|Application of the Variational Theorem to Other States.........<br>19|\n||3.5|Convergence of the Wavefunction<br>....................<br>20|\n||3.6|Variational Theorem Bounds on Excited States<br>.............<br>20|\n|4|Red|ucing the CI Space<br>21|\n||4.1|Symmetry Restrictions on the CI Space<br>.................<br>21|\n||4.2|Classification of Basis Functions by Excitation Level..........<br>23|\n||4.3|Energy Contributions of the Various Excitation Levels..........<br>24|\n||4.4|Size of the CI Space as a Function of Excitation Level..........<br>25|\n||4.5|The Frozen Core Approximation.....................<br>27|\n\n||4.6|Truncated CI is not Size Extensive.................|...<br>31|\n|---|---|---|---|\n|5|Seco|nd Quantization|34|\n|6|Dete|rminant CI|37|\n||6.1|Introduction to Determinant CI...................|...<br>37|\n||6.2|Alpha and Beta Strings.......................|...<br>37|\n|||6.2.1<br>Graphical Representation of Alpha and Beta Strings<br>...|...<br>39|\n||6.3|RAS CI...............................|...<br>45|\n|||6.3.1<br>Olsen’s Full CIσEquations................|...<br>46|\n||6.4|Full CI Algorithm..........................|...<br>51|\n\n1 INTRODUCTION\n\n4"
+    },
+    {
+      "heading": "1 Introduction and Notation",
+      "level": 1,
+      "kind": "body",
+      "text": "These notes attempt to present the essential ideas of configuration interaction (CI) theory in a fairly detailed mathematical framework. Of all the ab initio methods, CI is probably the easiest to understand—and perhaps one of the hardest to implement efficiently on a computer! The next two sections explain what the CI method is: the matrix formulation of the Schr¨odinger equation H<sup>ˆ</sup> Ψ = EΨ. The remaining sections describe various simplifications, approximations, and computational techniquies.\n\nI have attempted to use a uniform notation throughout these notes. Much of the notation is consistent with that of Szabo and Ostlund, Modern Quantum Chemistry [1]. Below are listed several of the commonly-used symbols and their meanings.\n\nN The number of electrons in the system.\n\n- nα The number of alpha electrons.\n\n- nβ The number of beta electrons.\n\n- n The number of orbitals in the one-particle basis set.\n\n- δij Kronecker delta function, equal to one if i = j and zero otherwise.\n\n- Hˆ The exact nonrelativistic Hamiltonian operator.\n\n- H The Hamiltonian matrix, i.e. the matrix form of H<sup>ˆ</sup>, in whatever N -electron basis is currently being used.\n\n- Hij The i, j-th element of H, equal to ⟨Φi|H<sup>ˆ</sup> |Φj⟩, where Φi and Φj are N -electron CI basis functions.\n\n- xi The space and spin coordinates of particle i.\n\n- ri The spatial coordinates of particle i.\n\n- φi The i-th one-particle basis function (orbital). Usually denotes a spin-orbital obtained from a Hartree-Fock procedure. May also be written simply as i.\n\n5\n\n1 INTRODUCTION\n\n- χi The i-th one-particle basis function (orbital). Usually denotes an atomic spin-orbital.\n\n- |Φi⟩ The i-th N -electron basis function. Usually denotes a single Slater determinant, but may also be a configuration state function (CSF).\n\n- |Ψ⟩ Usually denotes an eigenfunction of H. The exact nonrelativistic wavefunction if a complete basis is used in the expansion of H<sup>ˆ</sup>.\n\n- |Φ<sup>r</sup> a<sup>⟩An N-electron basis function which differs from some reference function |Φ0⟩by</sup> the replacement of spin-orbital a by spin-orbital r. Usually implies a single Slater determinant.\n\n- |ab... c⟩ A Slater determinant with spin-orbitals a, b,... c occupied, i.e.\n\n- ⟨i|h<sup>ˆ</sup> |j⟩ One-electron integral in physicists’ notation (i and j are spin-orbitals). More explicitly, this is\n\n- [i|h<sup>ˆ</sup> |j] One-electron integral in chemists’ notation, where i and j are spin-orbitals. Equivalent to ⟨i|h<sup>ˆ</sup> |j⟩.\n\n(i|h<sup>ˆ</sup> |j) One-electron integral in chemists’ notation (i and j are spatial orbitals).\n\n⟨ij||kl⟩ Antisymmetrized two-electron integral, equal to ⟨ij|kl⟩−⟨ij|lk⟩.\n\n- ⟨ij|kl⟩ A simple two-electron integral, in physicists’ notation, where i, j, k, and l are spin-orbitals. This is\n\n6\n\n1 INTRODUCTION\n\n[ij|kl] A simple two-electron integral in chemists’ notation, where i, j, k, and l are spin-orbitals. This is\n\n(ij|kl) A simple two-electron in chemists’ notation where i, j, k, and l are spatial orbitals. This is\n\na<sup>†</sup> i<sup>Second-quantized creation operator for orbital i.</sup>\n\nai Second-quantized annihilation operator for orbital i.\n\n2 FUNDAMENTAL CONCEPTS\n\n7"
+    },
+    {
+      "heading": "2 Fundamental Concepts",
+      "level": 1,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "2.1 Scope of the Method",
+      "level": 2,
+      "kind": "body",
+      "text": "Configuration interaction (CI) is a method for solving the nonrelativistic Schr¨odinger equation\n\nwhere i, j denote electrons and A, B denote nuclei, with rij = |ri−rj|, RAi = |RA−ri|, and RAB = |RA − RB|. Typical applications of the CI method employ the BornOppenheimer approximation, whereby the the motions of the electrons are treated as uncoupled from those of the nuclei. Thus the “electronic” Schr¨odinger equation is solved at discrete sets of fixed nuclear positions\n\nThe Born-Oppenheimer approximation is invoked so often in computational quantum chemistry that the subscripts in the preceeding equation are usually suppressed and the equation is written simply as H<sup>ˆ</sup> Ψ = EΨ. However, it is important to remember that the electronic energy Ee is an artifact of the Born-Oppenheimer approximation and is not as physically meaningful as the total energy of a system. Within the Born-Oppenheimer approximation, we estimate the total energy by adding the nuclear-nuclear repulsion energy and the nuclear kinetic energy to the total electronic energy Ee of equation (2.7).\n\nWhile the CI method can be extended to incorporate some relativistic effects (e.g. spin-orbit terms), this is not generally done; these notes will be concerned only with the nonrelativistic Hamiltonian (2.7).\n\n2 FUNDAMENTAL CONCEPTS\n\n8"
+    },
+    {
+      "heading": "2.2 Why Configuration Interaction?",
+      "level": 2,
+      "kind": "body",
+      "text": "In the first paper on quantum mechanics, Heisenberg used matrix mechanics to calculate the frequencies and intensities of spectral lines [2]. Later, when Schr¨odinger discovered wave mechanics, it was quickly shown that the Schr¨odinger and Heisenberg approaches are mathematically equivalent [3, 4]. Given the ease with which matrices may be implemented on a computer, it is entirely natural to attempt to solve the molecular time-independent Schr¨odinger equation H<sup>ˆ</sup> Ψ = EΨ using matrix mechanics.\n\nMatrix mechanics requires that we choose a vector space for the expansion of the problem. For the case of an N -electron molecule, our wavefunction must be expanded in a basis of N -particle functions (the nuclei need not be considered in the electronic wavefunction, if we have invoked the Born-Oppenheimer approximation). How do we construct the N -particle basis functions? Here we follow the arguments of Szabo and Ostlund [1], p. 60. Assume we have a complete set of functions {χi(x1)} of a single variable x1. Then any arbitrary function of that variable can be expanded exactly as\n\nHow can we expand a function of two variables x1 and x2 which have the same domain? If we hold x2 fixed, then\n\nNow note that each expansion coefficient ai(x2) is a function of a single variable, which can be expanded as\n\nSubstituting this expression into the one for Φ(x1, x2), we now have\n\na process which can obviously be extended for Φ(x1, x2,..., xN).\n\n2 FUNDAMENTAL CONCEPTS\n\n9\n\nLet us now collect the spin and space coordinates of an electron into a variable x. We can write a spin orbital as χ(x). The result analogous to equation (2.4) for a system of N electrons is\n\nHowever, the wavefunction must be antisymmetric with respect to the exchange of the coordinates of any two electrons<sup>1</sup> For the two-particle case, the requirement\n\nimplies that bij = −bji and bii = 0, or\n\nMore generally, an arbitrary N -electron wavefunction can be expressed exactly as a linear combination of all possible N -electron Slater determinants formed from a complete set of spin orbitals {χi(x)}. If we solve the matrix mechanics problem H|Ψ⟩ = E|Ψ⟩ in a complete basis of N -electron functions as just described, we will obtain all electronic eigenstates of the system exactly. If our N -electron basis functions are denoted |Φi⟩, the eigenvectors of H are given as\n\nif there are I possible N -electron basis functions (I will be infinite if we actually have a complete set of one electron functions χi). The matrix H is constructed so that Hij = ⟨Φi|H|Φj⟩ for i, j = 1, 2,..., I. The matrix elements Hij may be written in terms of one- and two-electron integrals according to “Slater’s rules,” as discussed in section 2.4.\n\nThe N -electron basis functions |Φi⟩ can be written as substitutions or “excitations” from the Hartree-Fock “reference” determinant, i.e.\n\n1According to the antisymmetry principle for fermions, of which the Pauli principle is a direct result.\n\n2 FUNDAMENTAL CONCEPTS\n\n10\n\nwhere |Φ<sup>r</sup> a<sup>⟩meanstheSlaterdeterminantformedbyreplacingspin-orbitalain|Φ0⟩</sup> with spin orbital r, etc. Every N -electron Slater determinant can be described by the set of N spin orbitals from which it is formed, and this set of orbital occupancies is often referred to as a “configuration.” Thus the “configuration interaction” method is, in its most straightforward implementation, nothing more or less than the matrix mechanics solution of the time-independent non-relativistic electronic Schr¨odinger equation Hˆ Ψ = EΨ. One of the great strengths of the CI method is its generality; the formalism applies to excited states, to open-shell systems, and to systems far from their equilibrium geometries. By contrast, traditional single-reference perturbation theory and coupled-cluster approaches generally assume that the reference configuration is dominant, and they may fail when it is not.\n\nIn practice, one does not have a complete set of one-particle basis functions {χi(x)}; typically one assumes that the incomplete one-electron basis set is large enough to give useful results, and the CI procedure is not modified. The quality of the one-particle basis set can be checked by comparing the results of calculations using progressively larger basis sets.\n\nIt is also possible to reduce the size of the N -electron basis set. If we desire only wavefunctions of a given spin and/or spatial symmetry, as is usually the case, we need include only those N -electron basis functions of that symmetry, since the Hamiltonian matrix is block-diagonal according to space and spin symmetries. This point is discussed further in section 4.1. If one performs the matrix mechanics calculation using a given set of one-particle functions {χi(x)} and all possible N -electron basis functions {|Φi⟩} (possibly symmetry-restricted), the procedure is called “full CI.” The full CI corresponds to solving Schr¨odinger’s equation exactly within the space spanned by the specified one-electron basis. If the one-electron basis is complete (it never is in practice, but it may be in theory), then the procedure is called a “complete CI” [5].\n\nUnfortunately, even with an incomplete one-electron basis, a full CI is computationally intractable for any but the smallest systems, due to the vast number of N -electron basis functions required (the size of the CI space is discussed in section 4.4). The CI space must be reduced somehow—hopefully in such a way that the approximate CI wavefunction and energy are as close as possible to the exact values. The effective\n\n2 FUNDAMENTAL CONCEPTS\n\n11\n\nreduction of the CI space is a major concern in CI theory, and we will discuss some of the more popular approaches in these notes.\n\nBy far the most common CI approximation is the truncation of the CI space expansion according to excitation level relative to the reference state (equation 2.9). The widely-employed CI singles and doubles (CISD) wavefunction includes only those N - electron basis functions which represent single or double excitations relative to the reference state. Since the Hamiltonian operator includes only one- and two-electron terms, only singly and doubly excited configurations can interact directly with the reference, and they typically account for about 95% of the correlation energy in small molecules at their equilibrium geometries [6]. Truncation of the CI space according to excitation class is discussed more thoroughly in section 4.2."
+    },
+    {
+      "heading": "2.3 The Correlation Energy",
+      "level": 2,
+      "kind": "body",
+      "text": "Approximate CI methods can be judged according to what fraction of the correlation energy they recover. The correlation energy is defined as the difference between the energy in the Hartree-Fock limit (EHF) and the exact nonrelativistic energy of a system (E0)\n\nThis energy will always be negative because the Hartree-Fock energy is an upper bound to the exact energy (this is guaranteed by the variational theorem, as explained in section 3). The exact nonrelativistic energy E0 could, in principle, be calculated by performing a full CI in a complete one-electron basis set. If we have an incomplete oneelectron basis set, then we can only compute the basis set correlation energy, which is the correlation energy for a given one-electron basis. For convenience, the basis set correlation energy is often simply referred to as the correlation energy.\n\nThe correlation energy is the energy recovered by fully allowing the electrons to avoid each other; Hartree-Fock improperly treats interelectron repulsions in an averaged way.<sup>2</sup> However, there is some inconsistency in this line of thinking. When a\n\n2Some texts talk about the “average” electron repulsion term in the Fock operator; I find this misleading in that Hartree-\n\n2 FUNDAMENTAL CONCEPTS\n\n12\n\nmolecule is pulled apart, the electrons shouldn’t need to avoid each other as much, so the magnitude of the correlation energy should decrease. In fact, the opposite is true, as shown by the basis set correlation energies given in Table 1 for H2O at three different geometries.\n\nTable 1: Electron Correlation in H2O with a DZ Basis.\n\n|Geometry<br>Ecorr(hartree)<sup>a</sup>|\n|---|\n|Re<br>-0.148028|\n|1.5 Re<br>-0.210992|\n|2.0 Re<br>-0.310067|\n|aData from reference [6].|\n\nThe correlation energy increases at stretched geometries, because our definition of the correlation energy in equation (2.10) includes not only the concept of electrons avoiding each other, which is called the “dynamical” correlation energy, but also a more subtle effect called the “nondynamical,” or “static” correlation energy. Nondynamical correlation energy reflects the inadequacy of a single reference in describing a given molecular state, and is due to nearly degenerate states or rearrangement of electrons within partially filled shells. Shavitt [7] has pointed out this deficiency in the definition of the correlation energy, and has suggested that perhaps a multiconfigurational Hartree-Fock method may be more useful in the definition of correlation energy.\n\nSiegbahn [8] offers the following explanation of the difference between dynamical and nondynamical correlation energies:\n\n“In many situations it is further convenient to subdivide the correlation energy into two parts with different physical origins. For chemical reactions where bonds are broken and formed, and for most excited states, the major part of the correlation energy can be obtained by adding only a few extra configurations besides the Hartree-Fock configuration. This part of the correlation energy is due to near degeneracy between different configurations and\n\nFock uses the same instantaneous interelectron repulsion term as CI—it’s the same Hamiltonian! The restriction to a single Slater determinant is what causes the averaging of interelectron repulsions.\n\n2 FUNDAMENTAL CONCEPTS\n\n13\n\nhas its origin quite often in artifacts of the Hartree-Fock approximation. The physical origin of the second part of the correlation energy is the dynamical correlation of the motion of the electrons and is therefore sometimes called the dynamical correlation energy. Since the Hamiltonian operator contains only one- and two-particle operators this part of the correlation energy can be very well described by single and double replacements from the leading, near degenerate, reference configurations.”"
+    },
+    {
+      "heading": "2.4 Slater’s Rules",
+      "level": 2,
+      "kind": "body",
+      "text": "Whether we perform a full CI or only a limited CI, we must be able to express H<sup>ˆ</sup> in matrix form so that we can diagonalize it and obtain the eigenvectors and eigenvalues of interest. In this section we discuss Slater’s rules (or the Slater-Condon rules [9, 10, 11]), which allow us to express matrix elements Hij = ⟨Φi|H<sup>ˆ</sup> |Φj⟩ in terms of one- and twoelectron integrals. At the moment, we will express these results in terms spin-orbitals using physicist’s notation. The one-electron integrals are written as\n\nand the two-electron integrals are written as\n\nwhere\n\nBefore Slater’s rules can be used, the two Slater determinants must be arranged in maximum coincidence. Remember that switching columns in a determinant introduces a minus sign. For instance, to calculate ⟨Φ1|H<sup>ˆ</sup> |Φ2⟩, where we have\n\n2 FUNDAMENTAL CONCEPTS\n\n14\n\nthen we must first interchange columns of |Φ1⟩ or |Φ2⟩ to make the two determinants look as much alike as possible. For example, we may rearrange |Φ2⟩ as\n\nAfter the determinants are in maximum coincidence, we see how many spin orbitals they differ by, and we then use the following rules:\n\n1. Identical Determinants: If the determinants are identical, then"
+    },
+    {
+      "heading": "4. Determinants that differ by More than Two Spin Orbitals:",
+      "level": 2,
+      "kind": "body",
+      "text": "The derivation of these rules can be found in Szabo and Ostlund [1], section 2.3.4 (pp. 74-81).\n\n15\n\n3 THE VARIATIONAL THEOREM\n\n3 The Variational Theorem"
+    },
+    {
+      "heading": "3.1 The Method of Linear Variations",
+      "level": 2,
+      "kind": "body",
+      "text": "In this section we show that the method of linear variations (also called the Ritz method [12]) is equivalent to the matrix formulation Hc = Ec of the Schr¨odinger equation Hˆ |Ψ⟩ = E|Ψ⟩. Our treatment is similar to that of Szabo and Ostlund [1], p. 116. The linear variation method states that, given the linear expansion\n\nwe vary the coefficients ci so that we minimize E = ⟨Ψ|H<sup>ˆ</sup> |Ψ⟩/⟨Ψ|Ψ⟩. We begin by requiring that the wavefunction be normalized so that ⟨Ψ|Ψ⟩ = 1. Normalization means that we cannot minimize E simply by solving\n\nbecause the ci’s are not independent. In this case we have a constrained minimization, so we apply Lagrange’s method of undetermined multipliers, and we minimize the functional\n\nwhich has the same minimum as E when |Ψ⟩ is normalized. When we substitute equation (3.1) into equation (3.3), we obtain\n\nwhich we may rewrite as\n\nwhere of course Hij = ⟨Φi|H<sup>ˆ</sup> |Φj⟩ and Sij = ⟨Φi|Φj⟩. Now set the first variation in L equal to zero:\n\n16\n\n3 THE VARIATIONAL THEOREM\n\nSince the summations run over all i and j, and since Hij = Hji<sup>∗and Sij=S</sup> ji<sup>∗, we can</sup> simplify to\n\nSince each term is a sum of a number and its complex conjugate, the imaginary parts will cancel. However, the real part will not necessarily be zero; in fact, since all the δci’s are arbitrary (that is the whole point of using Lagrange’s method), then for δL to be zero, the term in brackets must be zero. We may rewrite this condition as a matrix equation\n\nIf the basis functions { |Φi⟩} are chosen orthonormal (as is usually the case), then S = I the identity matrix, and we have Hc = Ec. Of course c is the column-vector representation of |Ψ⟩ in the basis { |Φi⟩}. We thus have two equivalent ways of viewing a CI—either as the matrix formulation of the Schr¨odinger equation within the given linear vector space of N -electron basis functions, or as the minimization of the energy with respect to the linear expansion coefficients ci of (3.1), subject to the constraint that the wavefunction remain normalized. Another way of viewing the results of this section is to note that only eigenvectors of the Hamiltonian matrix H are stable with respect to variations in the linear expansion coefficients.\n\nAt this point it is reasonable to ask why we wish to minimize the energy by varying the coefficients in equation (3.1). How do we know that this will give us the best estimate of the wavefunction? There are two answers to this. First, as we have just shown, minimizing the energy by variation of the linear expansion coefficients gives the Schr¨odinger equation in matrix form; thus the procedure is justified a posteriori by the validity of its result. The other reason is that, for the ground state, the linear expansion in equation (3.1) gives an expectation value for the energy E which is always an upper bound to the exact nonrelativistic ground state energy E0. We will prove this assertion in the next section; the result is called the Variational Theorem. The best estimate of E, then, is the minimum value which can be obtained by varying the coefficients in equation (3.1) (while also maintaining normalization). These arguments also hold for excited states, so long as each excited state is made orthogonal to all lower states.\n\n3 THE VARIATIONAL THEOREM\n\n17"
+    },
+    {
+      "heading": "3.2 Variational Theorem for the Ground State",
+      "level": 2,
+      "kind": "body",
+      "text": "One particularly nice feature of the CI method is that the calculated lowest energy eigenvalue is always an upper bound to the exact ground state energy. Our approximate wavefunction |Θ⟩ can always be expressed as a linear combination of the exact nonrelativistic eigenvectors |Ψi⟩, which span the entire N -electron space.\n\nand the energy is given by\n\nNow if |Θ⟩ is normalized, and we substitue the expansion over exact eigenfunctions (equation 3.9) into the equation above, we obtain\n\nwhere Ei is the ith energy eigenvalue, i.e. H<sup>ˆ</sup> |Ψi⟩ = Ei|Ψi⟩. Now subtract E0, the exact nonrelativistic ground state energy, from both sides to obtain\n\nor\n\nsince |Θ⟩ is normalized and �i<sup>c∗</sup> i<sup>ci=1.SinceEiaregreaterthanorequaltoE0for</sup> all values of i and the coefficients c<sup>∗</sup> i<sup>ciare necessarily non-negative, the right hand side</sup> of equation (3.12) is non-negative, so that E ≥E0. We should also point out that the variational theorem holds for the Hartree-Fock method as well as for CI, since equation (3.10) is valid for the Hartree-Fock energy—for a given set of MO’s, the HF energy can be formulated as a (trivial) 1 x 1 CI eigenvalue problem. In a similar manner, the MCSCF method (where MO’s and CI coefficients are optimized) is also “variational.”\n\nIt should be clear that instead of using the exact nonrelativistic eigenfunctions |Ψi⟩ in equation (3.9), we could also have used an expansion over the exact eigenfunctions\n\n3 THE VARIATIONAL THEOREM\n\n18\n\nwithin the one-electron space spanned by |Θ⟩ (i.e. we could expand the approximate CI wavefunction |Θ⟩ in terms of the full CI wavefunctions). This means that not only is the approximate energy an upper bound to the exact nonrelativistic ground-state energy, but it is also an upper bound to the full CI energy in the given one-electron basis."
+    },
+    {
+      "heading": "3.3 Why are Coupled-Cluster and MBPT Energies not Variational?",
+      "level": 2,
+      "kind": "body",
+      "text": "Electron correlation methods other than CI may not be variational. For example, consider the coupled-cluster energy expression\n\nIf the operator e<sup>Tˆ</sup> is not trunctated, then we know that e<sup>Tˆ</sup> |Φ0⟩ = |Ψ0⟩. Generally, however, the operator is truncated. Let us define e<sup>Tˆ ′</sup> |Φ0⟩ = |ΘA⟩ for our truncated T<sup>ˆ′</sup>. Now define ⟨Φ0|e<sup>−Tˆ ′</sup> = ⟨ΘB|. Note that in general |ΘB⟩̸ = |ΘA⟩, which would have occurred had we used ⟨Φ0|(e<sup>Tˆ ′</sup>)<sup>†</sup> on the left. Then the energy expression is\n\nwhich, after expansion over the complete set of eigenvectors, becomes\n\nThis simplifies to\n\nAt this point we can go no farther, because the terms c<sup>∗</sup> i<sup>dimay be negative, in contrast</sup> to the situation in equation (3.12).\n\nFor completeness, we also show that MBPT energies are not variational. The nth order MBPT wavefunction may be written [13] as\n\n3 THE VARIATIONAL THEOREM\n\n19\n\nwhere the sum is over “linked diagrams” only. The nth order energy is then given by\n\nSince this integral is not symmetric, the energy is not variational. Only the first-order perturbation theory energy (which is also the Hartree-Fock energy) is variational, since it uses |Θ<sup>(0)</sup> MBPT<sup>⟩= |Φ0⟩.</sup>"
+    },
+    {
+      "heading": "3.4 Application of the Variational Theorem to Other States",
+      "level": 2,
+      "kind": "body",
+      "text": "In this section, we parallel the arguments of Pauling and Wilson [14], p. 186. So far, we have shown only that the energy calculated as the expectation value of some trial function must be an upper bound to the true ground state energy E0. In certain cases, we may derive a similar result for other states. If we take a trial function |Φ0⟩ such that the first k coefficients in equation (3.9) are zero, then we may subtract Ek from equation (3.11) to obtain\n\nNow since we’ve assumed cj = 0, j = 0, 1,..., k, this simplifies to\n\nOnce again, we can see that every term on the right side is nonnegative, so E −Ek ≥ 0.\n\nThere are any number of cases in which we have a trial function of the form just described. Consider, for example, a calculation on a triplet state for a molecule which has a singlet ground state. If our trial function is constrained to be a triplet, then all singlet eigenfunctions |Ψi⟩ will have zero coefficients in the expansion of the trial function. In this case, the energy we minimize from the triplet trial function will be an upper bound to the lowest triplet energy, even though there is a lower-lying singlet state. Similar arguments can be made for spatial symmetry.\n\n3 THE VARIATIONAL THEOREM\n\n20"
+    },
+    {
+      "heading": "3.5 Convergence of the Wavefunction",
+      "level": 2,
+      "kind": "body",
+      "text": "A consequence of the variational theorem is that as the energy E of an approximate variational wavefunction approaches the exact energy E0, the approximate wavefunction |Φ⟩ approaches the exact one |Ψ0⟩. This follows from equation (3.12), which shows that as the energy E is minimized (or, equivalently, as E −E0 is minimized), then �i<sup>c∗</sup> i<sup>ci(Ei−E0)isminimized;thatis,thesumofsquaresoftheabsolutevalues</sup> of the coefficients of excited states with weight factors (Ei −E0) is minimized. It is apparent that these weight factors might not be optimal if we want the |Φ⟩ which gives the best value for a property other than the energy, such as dipole moment. However, in the limit that E is minimized with a sufficiently large basis so that E = E0, then �i=1<sup>c∗</sup> i<sup>ci(Ei−E0)=0, or c0=1, implying that |Φ⟩=|Ψ0⟩.Once we have the exact</sup> wavefunction, then of course all properties can be computed exactly (again, within the Born-Oppernheimer approximation and neglecting relativistic effects). To summarize, variational improvements in the energy give improvements in the approximate wavefunction, which in turn improves the values of all other properties; however, these other properties will not necessarily converge as fast as the energy with respect to N -electron basis set improvement."
+    },
+    {
+      "heading": "3.6 Variational Theorem Bounds on Excited States",
+      "level": 2,
+      "kind": "body",
+      "text": "Just as the lowest eigenvalue has been shown to be an upper bound to the exact groundstate energy, more generally, any eigenvalue Ei can be shown to be an upper bound to the corresponding exact excited state energy Ei [15]. In fact, one can also show that as other N -electron basis functions are added to the CI procedure, the eigenvalues obey the MacDonald-Hylleraas-Undheim relations [15, 16]\n\nwhere m is the number of N -electron basis functions.\n\n4 REDUCING THE CI SPACE\n\n21"
+    },
+    {
+      "heading": "4 Reducing the Size of the CI Space",
+      "level": 1,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "4.1 Symmetry Restrictions on the CI Space",
+      "level": 2,
+      "kind": "body",
+      "text": "In this section we discuss some general considerations concerning which N -electron basis functions should be included in the CI space (given that, in the general case, there are too many for us to include all of them). Certainly if we can find a class of N - electron functions which rigorously have zero Hamiltonian matrix elements with the desired CI wavefunction, then none of these basis functions will contribute at all to our approximate wavefunction and they should not be included in the CI space; the Hamiltonian will be block diagonal, and all the functions in this class will contribute to the wrong block. We will now prove the following: consider an operator A<sup>ˆ</sup> which commutes with H<sup>ˆ</sup>. If\n\nand\n\nthen\n\nFirst we show that H<sup>ˆ</sup> |Φ2⟩ is an eigenfunction of A<sup>ˆ</sup> with eigenvalue a2. Define\n\nNow apply A<sup>ˆ</sup> to |Φ<sup>′</sup> 2<sup>⟩</sup>\n\nWhere we have used the given that A<sup>ˆ</sup> H<sup>ˆ</sup> = H<sup>ˆ</sup> A<sup>ˆ</sup>. We may now write\n\n4 REDUCING THE CI SPACE\n\n22\n\nNow consider again equation (4.1). If we take the adjoint of this equation we obtain\n\nNow use the fact that A<sup>ˆ</sup> = A<sup>ˆ†</sup> (we assumed A<sup>ˆ</sup> was Hermitian) and that the eigenvalues of a Hermitian operator are real. This yields\n\nMultiply on the right by |Φ<sup>′</sup> 2<sup>⟩</sup>\n\nNow multiply equation (4.6) on the left by ⟨Φ1| to obtain\n\nIf we subtract equation (4.10) from equation (4.9) we arrive at\n\nSince we assumed a1̸ = a2, then ⟨Φ1|Φ2<sup>′⟩=0.Recallingthedefinitionof|Φ′</sup> 2<sup>⟩,we</sup> have ⟨Φ1|H<sup>ˆ</sup> |Φ2⟩ = 0 (4.12)\n\nwhich was to be proven. Thus if our desired wavefunction is an eigenfunction of some Hermitian operator that commutes with the Hamiltonian, our CI space need not include those N -electron functions which are eigenfunctions of this operator with different eigenvalues. As an example, consider the spin angular momentum operator S<sup>ˆ2</sup>. If we want to solve for a state |Ψ⟩ of spin S, then we know\n\nand any basis function of a different spin can be excluded from the CI. Slater determinants are generally not eigenfunctions of S<sup>ˆ2</sup>. However, we can take linear combinations of Slater determinants so that we do have eigenfunctions of S<sup>ˆ2</sup>; such functions are generally called configuration state functions, or CSF’s. The advantage of using CSF’s is that we can throw out all functions with the wrong eigenvalue S—they contribute to\n\n4 REDUCING THE CI SPACE\n\n23\n\nanother, noninteracting block of the Hamiltonian matrix. This reasoning also applies to symmetry operations of point groups, such that we can throw away any N -electron basis functions (whether determinants or CSF’s) which have the wrong irreducible representation. We can also restrict the basis functions according to their eigenvalues with respect to the operator Sz. For a triplet state, we can perform the calculation using basis functions which have Ms = −1, 0, or 1. If we were to include basis functions of all these values of Ms, we would obtain a triply-degenerate answer—as one should expect!<sup>3</sup>"
+    },
+    {
+      "heading": "4.2 Classification of Basis Functions by Excitation Level",
+      "level": 2,
+      "kind": "body",
+      "text": "Now we will discuss the importance of various excitation classes to the CI wavefunction. As noted in equation (2.9), the CI expansion is typically truncated according to excitation level; in the vast majority of CI studies, the expansion is truncated (for computational tractability) at doubly-excited configurations. Since the Hamiltonian contains only two-body terms, only singles and doubles can interact directly with the reference (for the sake of simplicity, we are assuming only a single reference for now). This is a direct result of Slater’s Rules (cf. section 2.4). The structure of the CI matrix with respect to excitation level is given below (adapted from Szabo and Ostlund [1], p. 235), where |S⟩, |D⟩, |T ⟩, and |Q⟩ represent blocks of singly, doubly, triply, and quadruply excited determinants, respectively. The Hamiltonian matrix H is Hermitian; if only real orbitals are used, as is usually the case, then the Hamiltonian is also symmetric. Thus only the lower triangle of H is shown below.\n\n> 3However, state-of-the-art determinant-based CI algorithms often include computational simplifications if the Ms = 0 component is used [17].\n\n4 REDUCING THE CI SPACE\n\n24\n\nNote that the matrix elements ⟨S|H|Φ0⟩ are given as 0. This is due to Brillouin’s theorem, which is valid when our reference function |Φ0⟩ is obtained by the Hartree-Fock method (Hartree-Fock guarantees that off-diagonal elements of the Fock matrix are zero, and it turns out that the matrix element between two Slater determinants which differ by one spin orbital is equal to an off-diagonal element of the Fock matrix). Furthermore, the blocks ⟨X|H|Y ⟩ which are not necessarily zero may still be sparse; for example, the matrix element ⟨Φ<sup>rs</sup> ab<sup>|H|Φtuvw</sup> cdef<sup>⟩, which belongs to the block ⟨D|H|Q⟩, will</sup> be nonzero only if a and b are contained in the set {c, d, e, f } and if r and s are contained in the set {t, u, v, w}.\n\nSince only the doubles interact directly with the Hartree-Fock reference, we expect double excitations to make the largest contributions to the CI wavefunction, after the reference state. Indeed, this is what is observed. Even though singles, triples, etc. do not interact directly with the reference, they can still become part of the CI wavefunction (i.e. have non-zero coefficients) because they mix with the doubles, directly or indirectly. Although singles are much less important to the energy than doubles, they are generally included in CI treatments because of their relatively small number and because of their greater importance in describing one-electron properties (dipole moment, etc.)"
+    },
+    {
+      "heading": "4.3 Energy Contributions of the Various Excitation Levels",
+      "level": 2,
+      "kind": "body",
+      "text": "Table 2 demonstrates the importance of various excitation classes in obtaining CI energies. We see that singles and doubles account for 95% of the correlation energy at the equilibrium geometries of the molecules listed. We see that quadruple excitations are more important than triples, at least as far as the energy is concerned. At stretched geometries, the CISD and CISDT methods become markedly poorer, yet the CISDTQ method still recovers a very high (and nearly constant) fraction of the correlation energy, suggesting that CISDTQ should give reliable results for energy differences across potential energy surfaces for molecules of this size.\n\n25\n\n4 REDUCING THE CI SPACE\n\nTable 2: Percentage of correlation energy recovered by various CI excitation levels for some small molecules.\n\n||Perc<br>|ent Corr.<br>|Energy<sup>a</sup><br>|\n|---|---|---|---|\n|Molecule|CISD|CISDT|CISDTQ|\n|BH|94.91|n/a|99.97|\n|H2O(Re)|94.70|95.47|99.82|\n|H2O(1.5 Re)|89.39|91.15|99.48|\n|H2O(2.0 Re)|80.51|83.96|98.60|\n|NH3|94.44|95.43|99.84|\n|HF|95.41|96.49|99.86|\n|H<sup>+</sup><br>7|96.36|96.87|99.96|\n\n> aData from reference [6] except for H+7<sup>data</sup> from reference [18]."
+    },
+    {
+      "heading": "4.4 Size of the CI Space as a Function of Excitation Level",
+      "level": 2,
+      "kind": "body",
+      "text": "We can also see from Table 3 that the number of N -electron basis functions increases dramatically with increasing excitation level. It should be pointed out that while the calculations on BH, HF, and H<sup>+</sup> 7<sup>used DZP basis sets, those on H</sup> 2<sup>O and NH</sup> 3<sup>used only</sup> DZ basis sets. A DZP basis should be considred the minimum adequate basis for a truly meaningful benchmark study, and even then it is desirable to use a high-quality basis such as an Atomic Natural Orbital (ANO) set. While it is generally possible to perform CISD calculations on small molecules with a good one-electron basis, the CISDTQ method is limited to molecules containing very few heavy atoms, due to the extreme number of N -electron basis functions required. Full CI calculations are of course even more difficult to perform, so that despite their importance as benchmarks, few full CI energies using flexible one-electron basis sets have been obtained.\n\nThe size of the full CI space in CSF’s can be calculated (including spin symmetry but ignoring spatial symmetry) by Weyl’s dimension formula as applied to the Distinct row table (DRT). If N is the number of electrons, n is the number of orbitals, and S is\n\n26\n\n4 REDUCING THE CI SPACE\n\nTable 3: Number of CSF’s required for small molecules at several levels of CI.\n\n|||CSF’|s required<sup>a</sup>||\n|---|---|---|---|---|\n|Molecule|CISD|CISDT|CISDTQ|FCI|\n|BH|568|n/a|28 698|132 686|\n|H2O|361|3 203|17 678|256 473|\n|NH3|461|4 029|19 925|137 321|\n|HF|552|6 712|48 963|944 348|\n|H<sup>+</sup><br>7|1 271|24 468|248 149|2 923 933|\n|aData from<br>reference [1|reference<br>8].|[6] except|for H+<br>7 <sup>data</sup>|<sup>from</sup>|\n\nthe total spin, then the dimension of the CI space in CSF’s is given by\n\nThe dimension of the full CI space in determinants (again, ignoring spatial symmetry) is computed simply by\n\nor, in a form closer to equation 4.15,\n\nTable 4 shows the dimension of the full CI space (neglecting spatial symmetry) in determinants and in CSF’s. Current full CI algorithms are limited to a few million determinants. Although there have been reports [19, 20, 21] of larger calculations (including a few billion determinants), the computational expense is (currently) too great for routine calculations of this size.\n\n4 REDUCING THE CI SPACE\n\n27\n\nTable 4: Dimension of Full CI in Determinants (CSF’s in parentheses)\n\n|||Number o|f electrons||\n|---|---|---|---|---|\n|Orbitals|6|8|10|12|\n|10|14.4×10<sup>3</sup>|44.1×10<sup>3</sup>|63.5×10<sup>3</sup>|44.1×10<sup>3</sup>|\n||(4.95×10<sup>3</sup>)|(13.9×10<sup>3</sup>)|(19.4×10<sup>3</sup>)|(13.9×10<sup>3</sup>)|\n|20|1.30×10<sup>6</sup>|23.5×10<sup>6</sup>|240×10<sup>6</sup>|1.50×10<sup>9</sup>|\n||(379×10<sup>3</sup>)|(5.80×10<sup>6</sup>)|(52.6×10<sup>6</sup>)|(300×10<sup>6</sup>)|\n|30|16.5×10<sup>6</sup>|751×10<sup>6</sup>|20.3×10<sup>9</sup>|353×10<sup>9</sup>|\n||(4.56×10<sup>6</sup>)|(172×10<sup>6</sup>)|(4.04×10<sup>9</sup>)|(62.5×10<sup>9</sup>)|"
+    },
+    {
+      "heading": "4.5 The Frozen Core Approximation",
+      "level": 2,
+      "kind": "body",
+      "text": "It is quite common in applications of the CI method to invoke the frozen core approximation, in which the lowest-lying molecular orbitals (occupied by the inner-shell electrons) are constrained to remain doubly-occupied in all configurations. The frozen core for atoms lithium to neon typically consists of the 1s atomic orbital, while that for atoms sodium to argon consists of the atomic orbitals 1s, 2s, 2px, 2py and 2pz. The frozen molecular orbitals are those which are primarily these inner-shell atomic orbitals (or linear combinations thereof).\n\nA justification for this approximation is that the inner-shell electrons of an atom are less sensitive to their environment than are the valence electrons. Thus the error introduced by freezing the core orbitals is nearly constant for molecules containing the same types of atoms. In fact, it is sometimes recommended that one employ the frozen core approximation as a general rule because most of the basis sets commonly used in quantum chemical calculations do not provide sufficient flexibility in the core region to accurately describe the correlation of the core electrons.\n\nNot only does the frozen core approximation reduce the number of configurations in the CI procedure, but it also reduces the computational effort required to evaluate matrix elements between the configurations which remain. Assuming that all frozen\n\n4 REDUCING THE CI SPACE\n\n28\n\ncore orbitals are doubly occupied and orthogonal to all other molecular orbitals, then it can be shown [22] that\n\nwhere Φ<sup>¯</sup> I and Φ<sup>¯</sup> J are identical to ΦI and ΦJ, respectively, except that the core orbitals have been deleted from Φ<sup>¯</sup> I and Φ<sup>¯</sup> J, and H<sup>ˆ</sup> has been replaced by H<sup>ˆ</sup> 0 defined by\n\nwhere N is the number of electrons and Nc is the number of core electrons. Ec is the so-called “frozen-core energy,” which is the expectation value of the determinant formed from only the Nc core electrons doubly occupying the nc = Nc/2 core orbitals\n\nFinally, h<sup>ˆ</sup> c(i) is the one-electron Hamiltonian operator for electron i in the average field produced by the Nc core electrons,\n\nwith J<sup>ˆ</sup> j(i) and K<sup>ˆ</sup> j(i) representing the standard Coulomb and exchange operators, respectively. Note that, although we have written the frozen core energy Ec and frozen core operator h<sup>ˆ</sup> c in terms of molecular orbitals, it is not necessary to explicitly transform the one- and two-electron integrals involving core orbitals. Assuming real orbitals, we can define a frozen core density matrix [23] in atomic (or symmetry) orbitals as\n\nwhere Cρ<sup>iis the contribution of atomic orbital ρ to molecular orbital i.Now the frozen</sup> core operator in atomic orbitals becomes\n\n4 REDUCING THE CI SPACE\n\n29\n\nand the frozen core operator in molecular orbitals h<sup>c</sup> ij<sup>can be obtained simply by trans-</sup> forming h<sup>c</sup> µν<sup>.Similarly the frozen core energy can be evaluated as</sup>\n\nAn analogous approximation is the deleted virtual approximation, whereby a few of the highest-lying virtual (unoccupied) molecular orbitals are constrained to remain unoccupied in all configurations. Since these orbitals can never be occupied, they can be removed from the CI procedure entirely because no terms involving them contribute to the CI coefficients or energy. The rationalization for this procedure is that it is unlikely that electrons will choose to partially populate high-energy orbitals in their attempt to avoid other electrons. However, this conclusion is generally true only for very highlying virtual orbitals (such as those formed by antisymmetric combinations of symmetry orbitals in the core region). For all other virtual orbitals, such simplistic reasoning is not sufficient.\n\nDavidson points out that those high energy SCF virtual orbitals which result from the antisymmetric combination of the two basis functions describing each atomic orbital in a double-ζ basis set (such as the 3p-like orbital formed from the minus combination of the larger and smaller 2p atomic orbitals on oxygen) often make the largest contribution to the correlation energy in Møller-Plesset (MPn) wavefunctions [24]. This can be seen from the expression for the second-order correction to the energy in Møller-Plesset perturbation theory,\n\nwhere ǫi is the orbital energy (eigenvalue) of orbital i. Thus a virtual orbital r with a large energy ǫr will contribute to a large energy denominator in each term of equation (4.25) in which it appears. However, if orbital r lies close spatially to one of the orbitals a or b occupied in the reference, then this large overlap will contribute to a large twoelectron integral ⟨ab||rs⟩. This integral is squared in the numerator, leading to a large overall contribution to the second-order energy. For the antisymmetric combinations\n\n4 REDUCING THE CI SPACE\n\n30\n\nof the basis functions describing the core region, this large numerator is insufficient to overcome the even larger energy denominator; such virtual orbitals can generally be deleted with minimal loss in the correlation energy recovered.\n\nAlthough the analysis in the preceeding paragraph is based on perturbation theory, similar conclusions can be drawn for the CI method. This is most easily verified by actual calculations, since analytical expressions for the energetic contribution of orbitals to the CI energy are not nearly as simple to obtain or interpret as is equation (4.25).\n\n4 REDUCING THE CI SPACE\n\n31"
+    },
+    {
+      "heading": "4.6 Truncated CI is not Size Extensive",
+      "level": 2,
+      "kind": "body",
+      "text": "As we have previously pointed out, full CI—being the matrix formulation of the Schr¨odinger equation—is an exact theory for nonrelativistic electronic structure problems. If we truncate the CI (either in the one-electron or N -electron space), we no longer have an exact theory. Of course either of these truncations will introduce an error in the wavefunction, which will cause errors in the energy and all other properties. One particularly unwelcome result of truncating the N -electron basis is that the CI energies obtained are no longer size extensive or size consistent.\n\nThese two terms, size extensive and size consistent, are used somewhat loosely in the literature. Of the two, size extensivity is the most well-defined. A method is said to be size extensive if the energy calculated thereby scales linearly with the number of particles N. The word “extensive” is used in the same sense as in thermodynamics, when we refer to an extensive, rather than an intensive property. A method is called size consistent if it gives an energy EA + EB for two well separated subsystems A and B. While the definition of size extensivity applies at any geometry, the concept of size consistency applies only in the limiting case of infinite separation. In addition, size consistency usually also implies correct dissociation into fragments; this is the source of much of the confusion arising from this term. Thus restricted Hartree-Fock (RHF) is size extensive, but it is not necessarily size consistent, since it cannot properly describe dissociation into open-shell fragments. It can be shown that many-body perturbation theory (MBPT) and coupled-cluster (CC) methods are size extensive, but they will be size consistent only if they are based on reference wavefunction which dissociates properly.\n\nAs previously stated, truncated CI’s are neither size extensive nor size consistent. A simple (and often used!) example is sufficient to make the point. Consider two noninteracting hydrogen molecules. If the CISD method is used, then the energy of the two molecules at large separation will not be the same as the sum of their energies when calculated separately. In order for this to be the case, we would have to include quadruple excitations in the supermolecule calculation, since local double excitations could happen simultaneously on A and B.\n\n4 REDUCING THE CI SPACE\n\n32\n\nWe would tend to think that size extensivity and size consistency are important, physical properties that all quantum mechanical models should have (indeed, full CI, an exact theory, has these properties), but perhaps they are not as essential as all that. Duch and Diercksen have claimed that “making size extensivity the most important requirement of quantum chemical methods, although it does not guarantee correct physical description, seems to be based not that much on physical as on esthetical criteria” [25]. Indeed, they show that quantum mechanics is a “holistic” theory, not well-suited toward the description of separated subsystems:\n\nHilbert space of antisymmetric, many particle functions, describing the total system, can not be decomposed into separate subspaces. Consider two systems, SA and SB, with NA and NB electrons, respectively. Each system is described by its own function, ΨA antisymmetric in NA particles and ΨB in NB. Assuming that both functions are normalized to unity it is easy to show that the product function ΨAB = ΨAΨB is always “far” from the antisymmetric function Ψ = AΨAB, as measured by the overlap ⟨ΨAB|Ψ⟩ or the norm of the difference 2 − √2 ≤||ΨAB − Ψ||<sup>2</sup> ≤ 2.\n\nSuch arguments notwithstanding, it is clear that the fraction of the correlation energy recovered by a truncated CI will diminish as the size of the system increases, making it a progressively less accurate method. There have been many attempts to correct the CI energy to make it size extensive. The most widely-used (and simplest) of these methods is referred to as the Davidson correction [26], which is\n\nwhere ESD is the basis set correlation energy recovered by a CISD procedure. This correction approximately accounts for the effects of “unlinked quadruple” excitations (i.e. simultaneous pairs of double excitations). The multireference version [25] of this correction is\n\nwhere EMRCI is the multireference CI energy and EMR is the energy obtained from the set of references (MCSCF energy if the references are obtained as all references in an\n\n4 REDUCING THE CI SPACE\n\n33\n\nMCSCF procedure). We have simply replaced the CISD correlation energy in equation (4.26) with the analogous multireference correlation energy, and we have replaced c<sup>2</sup> 0 with the analogous sum of squares of all the reference coefficients.\n\nThere are a number of other size extensivity corrections, and most of them do not take any significant amount of computation. Reference [25] provides a nice comparison of several of the more common CI size extensivity correction methods. We should also mention that Malrieu and co-workers have presented a self-consistent dressing of the Hamiltonian which gives size extensive results for selected CI procedures [27].\n\n5 SECOND QUANTIZATION\n\n34"
+    },
+    {
+      "heading": "5 Second Quantization",
+      "level": 1,
+      "kind": "body",
+      "text": "Much of the literature in CI theory makes use of the notation of second-quantization. Szabo and Ostlund [1] give a good introduction to second-quantized operators. Here we will only summarize the anticommutation relations between creation and annihilation operators, and then proceed to express the Hamiltonian in second quantized form for spatial orbitals, rather than for spin orbitals. Then we will use these results to derive the Hamiltonian in terms of the unitary group generators.\n\nThe anticommutation relations for two annihilation operators is\n\nand the anticommutation relation for two creation operators is similarly\n\nThe anticommutation relation between a creation and an annihilation operator is\n\nNow we will find an expression for the Hamiltonian in terms of creation and annihilation operators over spatial orbitals. We begin with the second-quantized form of the one- and two-electron operators (see Szabo and Ostlund [1] p. 95)\n\nwhere the sums run over all spin orbitals {χi}. Thus the Hamiltonian is\n\nFrom the previous equation we can see that the second-quantized form of the Hamiltonian is independent of the number of electrons in the system. Now integrate over spin,\n\n5 SECOND QUANTIZATION\n\n35\n\nassuming that spatial orbitals are constrained to be identical for α and β spins. A sum over all 2n spin orbitals can be split up into two sums, one over n orbitals with α spin, and one over n orbitals with β spin. Symbolically, this is\n\nThe one-electron part of the Hamiltonian becomes\n\nAfter integrating over spin, this becomes\n\nThe two-electron term can be expanded similarly to give\n\nNow we make use of the anticommutation relation (5.1) and we swap the order of as and aq, introducing a minus sign. This yields\n\nNow we use the anticommutation relation between a creation and an annihilation operator, which is given by (5.3). This relation allows us to swap the aq and ar<sup>†in each term,</sup> to give\n\n5 SECOND QUANTIZATION\n\n36\n\nNow we observe that δqα,rα and δqβ,rβ can both be written δqr, and also that δqα,rβ and δqβ,rα are both 0. This simplifies our equation to\n\nNow we introduce the replacement (or shift) operator\n\nwhich Paldus has shown [5] to be isomorphic to the generators of the unitary group. This replacement operator is commonly referred to as a unitary group generator, but as Duch has pointed out [28], such usage is somewhat dubious in papers where no unitary group theory is employed.\n\nThis is the Hamiltonian in terms of replacement operators. Contemporary papers on CI theory often express the Hamiltonian in the form of equation (5.15).<sup>4</sup>\n\n4Reference [29] contains a minor mistake, giving (pq|rs) as ⟨pq|rs⟩.\n\n6 DETERMINANT CI\n\n37"
+    },
+    {
+      "heading": "6 Determinant-Based CI",
+      "level": 1,
+      "kind": "body",
+      "text": ""
+    },
+    {
+      "heading": "6.1 Introduction to Determinant CI",
+      "level": 2,
+      "kind": "body",
+      "text": "As we have already pointed out, the size of the CI space can be reduced significantly by including only those N -electron basis functions which have the same value of the quantum number S as the desired approximate wavefunction (cf. sections 4.1 and 4.4). Thus it would seem that one should always prefer CSF’s to Slater determinants when performing a CI. However, certain computational advantages arise from using determinants, as we will discuss in the next few sections. Many modern algorithms for performing large CI’s (i.e. more than single and double excitations) use determinants as the N -electron basis.\n\nHandy’s 1980 paper “Multi-Root Configuration Interaction Calculations” [30] represented a major advance in determinant-based CI, even though the paper was more concerned with how integrals and CI coefficients are stored than with the computational advantages of determinants over CSF’s. Handy used the Cooper-Nesbet method for performing the CI iteration; the CI coefficients are updated according to the formula\n\nwhere the r vector is defined as\n\nHandy realized that, if determinants are used as basis functions, and particularly if these determinants are expressed as “alpha strings” and “beta strings,” then Hij (and thus r) could be evaluated very efficiently. In order to understand Handy’s reasoning, we must first define alpha and beta strings."
+    },
+    {
+      "heading": "6.2 Alpha and Beta Strings",
+      "level": 2,
+      "kind": "body",
+      "text": "Although Handy was the first to use alpha and beta strings, we will use the notation of Olsen et al. [17]. We define an alpha string as an ordered product of creation operators\n\n6 DETERMINANT CI\n\n38\n\nfor spin orbitals with alpha spin. If Iα contains a list {i, j,... n} of the nα occupied spin orbitals with alpha spin in determinant |I⟩, then the alpha string α(Iα) is aiα<sup>†a†</sup> jα<sup>... a</sup> nα<sup>†.</sup> A beta string is defined similarly. Thus we can rewrite Slater determinant |I⟩ in terms of alpha and beta strings.\n\nFor instance, suppose we have the Slater determinant |I⟩ = |φ1αφ2αφ3αφ1βφ2βφ4β⟩. Then the alpha string α(Iα) is given by\n\nand the beta string is given by\n\nNote that the order of the creation operators matters; if we swap the order of two creation operators within the alpha string (or within the beta string), then we introduce a sign change (see equation 5.2). Also, acting the alpha string on the vacuum first, rather than the beta string, may introduce a minus sign, depending on the number of alpha and beta electrons. Although the order of the orbitals and whether the alpha or beta string acts first is of no real consequence, we must be sure to keep our use of alpha and beta strings consistent, or sign problems will result. In most of the literature, and in these notes, the beta string will be placed to the right of the alpha string in equations like (6.3). Further, within each string, orbitals are listed in strictly increasing order.\n\nHandy realized the following advantages to alpha and beta strings:\n\n1. Direct CI methods often require an index vector which points to a list of all allowed excitations from a given N -electron basis function. Using alpha and beta strings, the index vector need not be the length of the CI vector—its size is dictated by the number of alpha or beta strings, which is approximately the square root of the number of determinants. This results from the fact that (in determinant-based CI) electrons in alpha spin-orbitals can be excited only to other alpha spin-orbitals, and electrons in beta spin-orbitals can be excited only to other beta spin-orbitals.<sup>5</sup>\n\n5In the determinant CI expansion, we restrict all determinants to a single value of Ms.\n\n6 DETERMINANT CI\n\n39\n\n2. To form r(Iα, Iβ) in equation (6.2), all functions |α(Jα)β(Jβ)⟩ which have nonzero matrix elements with |α(Iα)β(Iβ)⟩ are generated, one at a time, with the appropriate integral being looked up and multiplied by the appropriate CI coefficient. No time is wasted considering determinants which are noninteracting, and the coefficients of the integrals are simply ±1.\n\n3. Efficiency is increased by realizing that all integrals which enter the expression ⟨α(Iα)β(Iβ)|H<sup>ˆ</sup> |α(Jα)β(Iβ)⟩ (equation 6.2), where α(Jα) differs from α(Iα) by two orbitals, are independent of β(Iβ).\n\nWe will make these points more clear in our discussion of the RAS CI, which is a direct extension of Handy’s observations concerning alpha and beta strings. However, at this point we will proceed to discuss the graphical representation of alpha and beta strings."
+    },
+    {
+      "heading": "6.2.1 Graphical Representation of Alpha and Beta Strings",
+      "level": 3,
+      "kind": "body",
+      "text": "Any CI program requires some method for assigning a numerical code to each determinant (or configuration). Determinant-based CI’s also require an addressing scheme for each alpha and beta string. Such addressing can be facilitated by using graphical representations. This section discusses the construction of simple graphs representing alpha and beta strings, and how the numerical code or address of each string can be calculated from these graphs. Our approach will be based on the work of Duch, who has described [28] the graphical representation of CI spaces in considerable detail. First, we consider the simple two-slope directed graphs (“digraphs”) G2(n: nα/β) which represent alpha or beta strings without consideration of point-group symmetry. Figure 1 presents such a digraph representing all strings with five electrons in seven orbitals (as might be appropriate for the alpha or beta strings of H2O in a minimal basis set, neglecting point-group symmetry). Each string is represented by a “walk” on the graph, from the head (at e = o = 0) to the tail (at e = nα/β, o = n); the graph should always be traversed in this direction. Moving straight down from vertex (e, o) to vertex (e, o + 1) indicates that orbital o + 1 is unoccupied in the current string, while moving down diagonally from vertex (e, o) to vertex (e + 1, o + 1) indicates that orbital o + 1\n\n6 DETERMINANT CI\n\n40\n\nis occupied. Each vertex on the graph is assigned a weight x(e, o), and each arc connecting two vertices is assigned an arc weight Y (e, o) for the arc leaving vertex (e, o). Since, in general, two different arcs can leave a given vertex, we write Y0(e, o) for the arc originating from vertex (e, o) which leaves orbital o + 1 unoccupied, and Y1(e, o) for the arc which occupies orbital o + 1.<sup>6</sup> The index or address of a string or walk is obtained by adding weights for each arc contained in the walk, i.e.\n\nwhere Li is the occupation (0 or 1) of the ith arc, and (ei, i) are the coordinates of the vertices crossed by L<sup>α</sup>. The term X(L<sup>α</sup>) gives the offset of a given graph, if more than one graph is employed. The index for a determinant is given by I(L<sup>α</sup>, L<sup>β</sup>) = Iα(L<sup>α</sup>)Sα + Iβ(L<sup>β</sup>), where Sα is the number of alpha strings. This leads us to write the CI coefficients as a rectangular matrix C(Iα, Iβ). Restrictions on the CI space mean that only certain subblocks of the C matrix are allowed to be nonzero.\n\nThere are several different methods for assigning the arc weights by which we calculate the index of a string according to equation (6.6). Under the lexical ordering scheme, the tail (nα, n) of an alpha string graph is assigned a weight x = 1. Other vertex weights are computed according to the recursive formula\n\nUsing lexical ordering, typically all arc weights Y0(e, o) are set equal to zero, and the arc weights Y1(e, o) are determined according to\n\nFigure 1a features vertex and arc weights computed in this manner. A result of the lexical ordering scheme is that paths with a fixed upper part and an arbitrary lower part have contiguous indices. The particular choice of Y values above is appropriate if the rightmost path is to have an index of zero. The same effects can be achieved using\n\n> 6This differs somewhat from Duch [28], who sometimes uses Y¯ (e, o) to denote the arc entering vertex (e, o) in reverselexical addressing.\n\n6 DETERMINANT CI\n\n41\n\nFigure 1: Alpha string graph for nα = 5, n = 7. Vertex weights are determined according to lexical ordering, and arc weights are given so that the rightmost path has index zero. (a) All unoccupied arc weights Y0(e, o) are zero. (b) All occupied arc weights Y1(e, o) are zero.\n\n<!-- Start of picture text -->\ne e<br>0 1 2 3 4 5 0 1 2 3 4 5<br>0 21 0 21<br>0<br>15<br>1 6 15 1 6 15<br>5 0<br>5 10<br>2 1 5 10 2 1 5 10<br>6 4 0<br>4 6<br>3 1 4 6 3 1 4 6<br>5 3 0<br>o o 3 3<br>4 1 3 3 4 1 3 3<br>4 2 0<br>2 1<br>5 1 2 1 5 1 2 1<br>3 1<br>1 0<br>6 1 1 6 1 1<br>2<br>0<br>7 1 7 1<br>(a) (b)<br><!-- End of picture text -->\n\n6 DETERMINANT CI\n\n42\n\nas illustrated in Figure 1b. Any walk has the same index in Figures 1a and 1b. For instance, the walk a<sup>†</sup> 2α<sup>a†</sup> 3α<sup>a</sup> 4<sup>†</sup> α<sup>a†</sup> 5α<sup>a†</sup> 7α<sup>has an index of 5 + 4 + 3 + 2 + 2=16 (equation</sup> 6.6) from Figure 1a, and an index of 15 + 1 = 16 from Figure 1b.\n\nIn the so-called “reverse-lexical” ordering scheme, all upper paths for a fixed lower path have contiguous indices. Vertex weights are now determined as\n\nwhere the overbar indicates reversed-lexical ordering. Figure 2a depicts a reversedlexical graph with all non-occupied orbital arcs set to zero. The occupied orbital arcs are computed as\n\nFigure 2b is the same except that now all occupied arcs have weights of zero. The non-occupied arc weights are\n\nNote that string indices for reverse-lexical ordering are not necessarily the same as indices for lexical ordering. For the string a<sup>†</sup> 2α<sup>a†</sup> 3α<sup>a</sup> 4<sup>†</sup> α<sup>a†</sup> 5α<sup>a†</sup> 7α<sup>considered previously, the</sup> index is calculated as 1 + 1 + 1 + 1 + 6 = 10 from Figure 2a, or as 5 + 5 = 10 from Figure 2b.\n\nThe arc weights given in Figures 1 and 2 cause the rightmost path to have an index I(Rm) = 0. If we change the arc weights so that the leftmost path has index I(Lm) = 0, we obtain four more addressing schemes. The two simplest schemes for I(Lm) = 0 are\n\nwhere the overbars indicate that reversed-lexical vertex weights have been used. Alpha strings for 5 electrons in 7 orbitals employing these addressing schemes are depicted in Figure 3.\n\nIf we add another coordinate Γ to each vertex, we can extend these simple digraphs to include point-group symmetry.\n\n6 DETERMINANT CI\n\n43\n\nFigure 2: Alpha string graph for nα = 5, n = 7. Vertex weights are determined according to reverselexical ordering, and arc weights are given so that the rightmost path has index zero. (a) All unoccupied arc weights Y0(e, o) are zero. (b) Occupied arc weights Y1(e, o) are set to zero.\n\n<!-- Start of picture text -->\ne e<br>0 1 2 3 4 5 0 1 2 3 4 5<br>0 1 0 1<br>0<br>5<br>1 1 1 1 1 1<br>1 0<br>15 4<br>2 1 2 1 2 1 2 1<br>2 1 0<br>14 3<br>3 3 3 1 3 3 3 1<br>3 1 0<br>o o 12 2<br>4 6 4 1 4 6 4 1<br>4 1 0<br>9 1<br>5 10 5 1 5 10 5 1<br>5 1<br>5 0<br>6 15 6 6 15 6<br>6<br>0<br>7 21 7 21<br>(a) (b)<br><!-- End of picture text -->\n\n6 DETERMINANT CI\n\n44\n\nFigure 3: Alpha string graph for nα = 5, n = 7, with arc weights determined so that the leftmost path has index zero. (a) Vertex weights for lexical ordering, and arc weights according to Y0(e, o) = 0, Y1(e, o) = x(e, o + 1). (b) Vertex weights according to reverse-lexical ordering, and arc weights according to Y<sup>¯</sup> 1(e, o) = 0, Y<sup>¯</sup> 0(e, o) = x¯(e − 1, o).\n\n<!-- Start of picture text -->\ne e<br>0 1 2 3 4 5 0 1 2 3 4 5<br>0 21 0 1<br>6<br>0<br>1 6 15 1 1 1<br>1 5<br>0 1<br>2 1 5 10 2 1 2 1<br>0 1 4<br>1 2<br>3 1 4 6 3 3 3 1<br>0 1 3<br>o o 3<br>4 1 3 3 4 6 4 1<br>0 1 2<br>6 4<br>5 1 2 1 5 10 5 1<br>0 1<br>10 5<br>6 1 1 6 15 6<br>0<br>15<br>7 1 7 21<br>(a) (b)<br><!-- End of picture text -->\n\n45\n\n6 DETERMINANT CI"
+    },
+    {
+      "heading": "6.3 Restricted Active Space CI",
+      "level": 2,
+      "kind": "body",
+      "text": "The Restricted Active Space (RAS) CI method was introduced by Olsen, Roos, Jørgensen, and Aa. Jensen [17] in 1988. The RAS method calls for the partitioning of the oneelectron basis into four subsets. The first subset consists of the core orbitals, which are constrained to remain doubly-occupied. The remaining three subsets are labelled I, II, and III, and the CI space is limited by requiring a minimum of p electrons in RAS I and a maximum of q electrons in RAS III. There are no restrictions on the number of electrons in RAS II, and thus it is analogous to the complete active space (CAS). The full CI can be obtained as the maximum limit of the RAS space. Interestingly, although the main focus of the paper is on the utility of the RAS method in limiting the size of CI calculations, the maximum impact of this paper has been on the development of determinant-based full CI algorithms [20, 21].\n\nThe RAS CI method relies on Handy’s separation of determinants into alpha and beta strings (see section 6.2). As in other determinant-based CI methods, the basis determinants are restricted to those having a given value of Ms. Since the number of electrons N is also fixed, this means that the alpha and beta strings always have constant lengths of nα and nβ, respectively. For a full CI, one forms all possible alpha and beta strings for a given nα and nβ, and the basis determinants are all possible combinations of these alpha and beta strings. In a RAS CI, the CI space is restricted in two ways: first, not all alpha and beta strings are allowed, and secondly, not all combinations of alpha and beta strings to form determinants are accepted. This is best seen from an example: consider the case of 6 orbitals, with nα = nβ = 3. If orbitals 4, 5, and 6 constitute RAS III, with a maximum of 2 electrons allowed, then clearly alpha strings such as a<sup>†</sup> 4α<sup>a†</sup> 5α<sup>a†</sup> 6α<sup>arenotallowed.Similarly,eventhougha</sup> 1<sup>†</sup> α<sup>a</sup> 4<sup>†</sup> α<sup>a†</sup> 5α<sup>anda†</sup> 1β<sup>a†</sup> 4β<sup>a</sup> 5<sup>†</sup> β are allowed alpha and beta strings, these strings cannot be combined with each other because the resulting determinant would represent a quadruple excition into RAS III.\n\nIf we employ a graphical description of the alpha and beta strings as described in section 6.2.1, in general we require one graph for alpha strings and one graph for beta strings. However, in the case that Ms = 0, only one graph is needed because the alpha string and beta string graphs are identical. As previously mentioned, for a RAS space\n\n6 DETERMINANT CI\n\n46\n\nnot all alpha and beta strings can be freely combined. While it would be possible to create a table listing all allowed combinations of alpha and beta strings, there is a more efficient way around this difficulty. Instead of using a single graph to represent all alpha (or beta) strings, instead we use several graphs. For example, we might use one graph for all strings with no electrons in RAS III, one graph for all strings with one electron in RAS III, and one graph for all strings with two electrons in RAS III. In this case, the restrictions on combinations of strings become restrictions on combinations of graphs—a more efficient treatment computationally. Figure 4 displays string graphs for nα = nβ = 3 and n = 6 for at most 2 electrons in RAS III, orbitals 4-6. Graph (a) represents all walks with two electrons in RAS III; graph (b) gives all walks with one electron in RAS III; and graph (c) gives the one walk with no electrons in RAS III. If only two electrons are allowed in RAS III, it is clear that alpha strings of graph a can be combined only with the beta string from graph (c), and alpha strings of graph (b) can be combined with beta strings of graphs (b) and (c). An alpha string from graph (c) can be combined with beta strings from graphs (a), (b), and (c)."
+    },
+    {
+      "heading": "6.3.1 Olsen’s Full CI σ Equations",
+      "level": 3,
+      "kind": "body",
+      "text": "We now turn our attention to the general formulation of the full CI problem in terms of alpha and beta strings. Later on, we will consider how to modify our results for RAS CI’s. We begin by describing Olsen’s expressions for σ, which is the action of the Hamiltonian H<sup>ˆ</sup> on the CI vector (or matrix) C(Iα, Iβ). First we express H<sup>ˆ</sup> in secondquantized form (see section 5).\n\nwhere E<sup>ˆ</sup> kl is the shift operator\n\nAgain, σ is given by\n\n6 DETERMINANT CI\n\n47\n\nFigure 4: String graphs for nα/β = 3, n = 6 with at most two electrons in RAS III of orbitals 4-6. Vertex weights and arc weights are given for lexical ordering.\n\n<!-- Start of picture text -->\ne e e<br>0 1 2 3 0 1 2 3 0 1 2 3<br>0 1 1 1<br>0 0 0<br>1 1 1 1 1 1<br>1 1 0 0<br>2 1 2 2 1 1<br>2 1 0<br>o 3 3 3 1<br>0 0<br>4 3 3 3 3 1<br>0 3<br>3<br>5 6 3 3 6 1<br>3 6<br>6 9 9 1<br>(a) (b) (c)<br><!-- End of picture text -->\n\n6 DETERMINANT CI\n\n48\n\nAs we will proceed to show, σ can be split up into three terms: one involving only beta components of the linear group generators (σ1), one involving only alpha components of the generators (σ2), and one involving mixtures of the two (σ3). Inserting equation (6.16) into equation (6.18) yields\n\n6 DETERMINANT CI\n\n49\n\nNow expanding the shift operators according to equation (6.17), we write σ as a sum of three terms\n\nwhere\n\nand\n\nand\n\nObviously, these expressions can be simplified further. First, we observe that the expression for σ1 contains no α operators. Therefore, σ1(Iα, Iβ) = 0 unless Jα = Iα. Using this fact, and integrating out the α part, we obtain\n\n50\n\n6 DETERMINANT CI\n\nTaking out the Kronecker delta term and rearranging, we have\n\nNow the second term can be combined with the first to give equation (9a) of reference [17].\n\nSimilarly, σ2 can be simplified to\n\nFor efficient implementation, it is convenient to precompute the quantities\n\nFinally, we simplify σ3. It may be rewritten as\n\n51\n\n6 DETERMINANT CI\n\nSince we sum over all ijkl, we can permute i and j with k and l. We can also swap E<sup>ˆ</sup> ij<sup>α</sup> and E<sup>ˆβ</sup> kl<sup>as can easily be verified.This yields equation (9c) from reference [17].</sup>\n\nThus we have written the action of the Hamiltonian on the current CI vector in terms of alpha and beta strings and alpha and beta shift operators. The product σ is written as a sum of three terms: the first (σ1) involves only beta shift operators, the second (σ2) involves only alpha shift operators, and the third (σ3) involves both alpha and beta shift operators. Note that, except for the factor C(Iα, Jβ), σ1 is independent of Iα so that the algorithm for computing σ1 is vectorizable (see below). Analogous results hold for σ2. This situation does not obtain in the computation of σ3, however, which is the rate-limiting step."
+    },
+    {
+      "heading": "6.4 Full CI Algorithm",
+      "level": 2,
+      "kind": "body",
+      "text": "It is easy to vectorize the formation of σ1 since each element σ1(Iα, Iβ) can be written as independent of Iα apart from multiplication by a factor C(Iα, Jβ). The vectorized algorithm for the evaluation of σ1, adapted from reference [17], appears in Figure 5. An analogous algorithm can be used to obtain σ2. However, we can also obtain σ2 for Ms = 0 states by\n\nas proven by Olsen and co-workers [17].\n\nA fairly straightforward algorithm for evaluating σ3 is presented in Figure 6. The vectorized algorithm for the evaluation of σ3 is presented in Figure 7. This algorithm makes use of a gather and scatter operation to avoid indirect addressing.\n\nFor Ms = 0, an improvement to the σ3 algorithm can be made by utilizing an identity similar to equation (6.31). The ijklth component of σ3 is related to the klijth\n\n52\n\n6 DETERMINANT CI"
+    },
+    {
+      "heading": "Figure 5: Vectorized Algorithm for σ1.",
+      "level": 3,
+      "kind": "body",
+      "text": "loop over Iβ Set array F (Jβ) = 0 Loop over excitations E<sup>ˆ</sup> kl<sup>βfrom |β(Iβ)⟩</sup> |β(Kβ)⟩ = sgn(kl) E<sup>ˆ</sup> kl<sup>β|β(Iβ)⟩</sup> F (Kβ)+ = sgn(kl)hkl<sup>′</sup> Loop over excitations E<sup>ˆ</sup> ij<sup>βfrom |β(Kβ)⟩</sup> |β(Jβ)⟩ = sgn(ij) E<sup>ˆ</sup> ij<sup>β|β(Kβ)⟩</sup> F (Jβ)+ = (1/2)sgn(kl)sgn(ij)(ij|kl) end loop over E<sup>ˆ</sup> ij<sup>β</sup> end loop over E<sup>ˆ</sup> kl<sup>β</sup> σ1(Iα, Iβ) = �Jβ<sup>F(J</sup> β<sup>)C(I</sup> α<sup>, J</sup> β<sup>); vect’d over I</sup> α end loop over Iβ\n\nFigure 6: Simple Algorithm for σ3.\n\n53\n\n6 DETERMINANT CI"
+    },
+    {
+      "heading": "Figure 7: Vectorized Algorithm for σ3.",
+      "level": 3,
+      "kind": "body",
+      "text": "loop over kl set up L(I), R(I), and sgn(I), defined by |α[L(I)]⟩ = E<sup>ˆ</sup> kl<sup>α|α[R(I)]⟩sgn(I)</sup> C<sup>′</sup> (I, Jβ) = C[L(I), Jβ]sgn(I); vectorized gather loop over Iβ loop over excitations E<sup>ˆ</sup> ij<sup>βfrom |β(Iβ)⟩</sup> |β(Jβ)⟩ = sgn(ij) E<sup>ˆ</sup> ij<sup>β|β(Iβ)⟩</sup> F (Jβ)+ = sgn(ij)(ij|kl) end loop over E<sup>ˆ</sup> ij<sup>β</sup> V (I) = �Jβ<sup>F(J</sup> β<sup>)C′(I, J</sup> β<sup>); vect’d over I</sup> σ3[R(I), Iβ]+ = V (I); vectorized scatter end loop over Iβ end loop over kl\n\ncomponent via\n\n54\n\nREFERENCES"
+    }
+  ],
+  "references": [
+    {
+      "raw": "Chiral-induced spin selectivity effect",
+      "doi": "10.1021/jz300793y",
+      "title": "Chiral-induced spin selectivity effect",
+      "year": "2012"
+    },
+    {
+      "raw": "Vibrational origin of exchange splitting and chiral-induced spin selectivity",
+      "doi": "10.1103/physrevb.102.235416",
+      "title": "Vibrational origin of exchange splitting and chiral-induced spin selectivity",
+      "year": "2020"
+    },
+    {
+      "raw": "Induced spin filtering in electron transmission through chiral molecular layers adsorbed on metals with strong spin–orbit coupling",
+      "doi": "10.1063/1.4820907",
+      "title": "Induced spin filtering in electron transmission through chiral molecular layers adsorbed on metals with strong spin–orbit coupling",
+      "year": "2013"
+    },
+    {
+      "raw": "Direct observation of chirality-induced spin selectivity in electron donor–acceptor molecules",
+      "doi": "10.1126/science.adj5328",
+      "title": "Direct observation of chirality-induced spin selectivity in electron donor–acceptor molecules",
+      "year": "2023"
+    },
+    {
+      "raw": "Energy, momentum, and angular momentum transfer between electrons and nuclei",
+      "doi": "10.1103/physrevlett.128.113001",
+      "title": "Energy, momentum, and angular momentum transfer between electrons and nuclei",
+      "year": "2022"
+    },
+    {
+      "raw": "Conservation of angular momentum in direct nonadiabatic dynamics",
+      "doi": "10.1021/acs.jpclett.9b03749",
+      "title": "Conservation of angular momentum in direct nonadiabatic dynamics",
+      "year": "2020"
+    },
+    {
+      "raw": "Total angular momentum conservation in Ehrenfest dynamics with a truncated basis of adiabatic states",
+      "doi": "10.1063/5.0177778",
+      "title": "Total angular momentum conservation in Ehrenfest dynamics with a truncated basis of adiabatic states",
+      "year": "2024"
+    },
+    {
+      "raw": "Total angular momentum conservation in ab initio Born–Oppenheimer molecular dynamics",
+      "doi": "10.1103/physrevb.108.l220304",
+      "title": "Total angular momentum conservation in ab initio Born–Oppenheimer molecular dynamics",
+      "year": "2023"
+    },
+    {
+      "raw": "Isotope effects in optical rotation",
+      "doi": "10.1021/ja00962a010",
+      "title": "Isotope effects in optical rotation",
+      "year": "1966"
+    },
+    {
+      "raw": "Velocity-dependent property surfaces and the theory of vibrational circular dichroism",
+      "doi": "10.1016/0301-0104(87)85017-6",
+      "title": "Velocity-dependent property surfaces and the theory of vibrational circular dichroism",
+      "year": "1987"
+    },
+    {
+      "raw": "Adiabatic molecular properties beyond the Born–Oppenheimer approximation. Complete adiabatic wave functions and vibrationally induced electronic current density",
+      "doi": "10.1063/1.445588",
+      "title": "Adiabatic molecular properties beyond the Born–Oppenheimer approximation. Complete adiabatic wave functions and vibrationally induced electronic current density",
+      "year": "1983"
+    },
+    {
+      "raw": "Theory of vibrational circular dichroism",
+      "doi": "10.1021/j100251a006",
+      "title": "Theory of vibrational circular dichroism",
+      "year": "1985"
+    },
+    {
+      "raw": "Representation and conservation of angular momentum in the Born–Oppenheimer theory of polyatomic molecules",
+      "doi": "10.1063/5.0143809",
+      "title": "Representation and conservation of angular momentum in the Born–Oppenheimer theory of polyatomic molecules",
+      "year": "2023"
+    },
+    {
+      "raw": "Chaotic classical and half-classical adiabatic reactions: Geometric magnetism and deterministic friction",
+      "doi": "10.1098/rspa.1993.0127",
+      "title": "Chaotic classical and half-classical adiabatic reactions: Geometric magnetism and deterministic friction",
+      "year": "1993"
+    },
+    {
+      "raw": "Ab initio molecular dynamics with screened Lorentz forces. I. Calculation and atomic charge interpretation of berry curvature",
+      "doi": "10.1063/5.0055388",
+      "title": "Ab initio molecular dynamics with screened Lorentz forces. I. Calculation and atomic charge interpretation of berry curvature",
+      "year": "2021"
+    },
+    {
+      "raw": "Magnetic-translational sum rule and approximate models of the molecular berry curvature",
+      "doi": "10.1063/5.0112943",
+      "title": "Magnetic-translational sum rule and approximate models of the molecular berry curvature",
+      "year": "2022"
+    },
+    {
+      "raw": "Adiabatic dynamics of coupled spins and phonons in magnetic insulators",
+      "doi": "10.1103/physrevx.14.011041",
+      "title": "Adiabatic dynamics of coupled spins and phonons in magnetic insulators",
+      "year": "2024"
+    },
+    {
+      "raw": "Semiclassical description of nuclear dynamics moving through complex-valued single avoided crossings of two electronic states",
+      "doi": "10.1063/5.0054014",
+      "title": "Semiclassical description of nuclear dynamics moving through complex-valued single avoided crossings of two electronic states",
+      "year": "2021"
+    },
+    {
+      "raw": "The Landau–Zener formula",
+      "doi": "10.1021/jp040627u",
+      "title": "The Landau–Zener formula",
+      "year": "2005"
+    },
+    {
+      "raw": "Quantum fluctuation of electronic wave-packet dynamics coupled with classical nuclear motions",
+      "doi": "10.1063/1.1854115",
+      "title": "Quantum fluctuation of electronic wave-packet dynamics coupled with classical nuclear motions",
+      "year": "2005"
+    },
+    {
+      "raw": "Exploring dynamical electron theory beyond the Born–Oppenheimer framework: From chemical reactivity to non-adiabatically coupled electronic and nuclear wavepackets on-the-fly under laser field",
+      "doi": "10.1039/c0cp00937g",
+      "title": "Exploring dynamical electron theory beyond the Born–Oppenheimer framework: From chemical reactivity to non-adiabatically coupled electronic and nuclear wavepackets on-the-fly under laser field",
+      "year": "2011"
+    },
+    {
+      "raw": "Path integral formulation for quantum nonadiabatic dynamics and the mixed quantum classical limit",
+      "doi": "10.1063/1.2716387",
+      "title": "Path integral formulation for quantum nonadiabatic dynamics and the mixed quantum classical limit",
+      "year": "2007"
+    },
+    {
+      "raw": "Mixed quantum-classical equilibrium",
+      "doi": "10.1063/1.1856460",
+      "title": "Mixed quantum-classical equilibrium",
+      "year": "2005"
+    },
+    {
+      "raw": "Mixed quantum-classical equilibrium: Surface hopping",
+      "doi": "10.1063/1.2955564",
+      "title": "Mixed quantum-classical equilibrium: Surface hopping",
+      "year": "2008"
+    },
+    {
+      "raw": "Exact factorization of the time-dependent electron-nuclear wave function",
+      "doi": "10.1103/physrevlett.105.123002",
+      "title": "Exact factorization of the time-dependent electron-nuclear wave function",
+      "year": "2010"
+    },
+    {
+      "raw": "Correlated electron-nuclear dynamics: Exact factorization of the molecular wavefunction",
+      "doi": "10.1063/1.4745836",
+      "title": "Correlated electron-nuclear dynamics: Exact factorization of the molecular wavefunction",
+      "year": "2012"
+    },
+    {
+      "raw": "On the mass of atoms in molecules: Beyond the Born–Oppenheimer approximation",
+      "doi": "10.1103/physrevx.7.031035",
+      "title": "On the mass of atoms in molecules: Beyond the Born–Oppenheimer approximation",
+      "year": "2017"
+    },
+    {
+      "raw": "Describing the photo-isomerization of a retinal chromophore model with coupled and quantum trajectories",
+      "doi": "10.1063/5.0089415",
+      "title": "Describing the photo-isomerization of a retinal chromophore model with coupled and quantum trajectories",
+      "year": "2022"
+    },
+    {
+      "raw": "Surface hopping by consensus",
+      "doi": "10.1021/acs.jpclett.6b01186",
+      "title": "Surface hopping by consensus",
+      "year": "2016"
+    },
+    {
+      "raw": "Surface hopping without momentum jumps: A quantum-trajectory-based approach to nonadiabatic dynamics",
+      "doi": "10.1021/acs.jpca.8b10487",
+      "title": "Surface hopping without momentum jumps: A quantum-trajectory-based approach to nonadiabatic dynamics",
+      "year": "2019"
+    },
+    {
+      "raw": "Coupled-trajectory mixed quantum-classical algorithm: A deconstruction",
+      "doi": "10.1021/acs.jctc.8b00449",
+      "title": "Coupled-trajectory mixed quantum-classical algorithm: A deconstruction",
+      "year": "2018"
+    },
+    {
+      "raw": "A self-consistent eikonal treatment of electronic transitions in molecular collisions",
+      "doi": "10.1063/1.444753",
+      "title": "A self-consistent eikonal treatment of electronic transitions in molecular collisions",
+      "year": "1983"
+    },
+    {
+      "raw": "Eikonal method in magnetohydrodynamics",
+      "doi": "10.1103/physrev.126.1899",
+      "title": "Eikonal method in magnetohydrodynamics",
+      "year": "1962"
+    },
+    {
+      "raw": "Quantum phase corrections from adiabatic iteration",
+      "doi": "10.1098/rspa.1987.0131",
+      "title": "Quantum phase corrections from adiabatic iteration",
+      "year": "1987"
+    },
+    {
+      "raw": "Histories of adiabatic quantum transitions",
+      "doi": "10.1098/rspa.1990.0051",
+      "title": "Histories of adiabatic quantum transitions",
+      "year": "1990"
+    },
+    {
+      "raw": "Phase-space surface hopping: Nonadiabatic dynamics in a superadiabatic basis",
+      "doi": "10.1063/1.3098321",
+      "title": "Phase-space surface hopping: Nonadiabatic dynamics in a superadiabatic basis",
+      "year": "2009"
+    },
+    {
+      "raw": "Linear and angular momentum conservation in surface hopping methods",
+      "doi": "10.1063/5.0179599",
+      "title": "Linear and angular momentum conservation in surface hopping methods",
+      "year": "2024"
+    },
+    {
+      "raw": "Practical phase-space electronic Hamiltonians for ab initio dynamics",
+      "doi": "10.1063/5.0192084",
+      "title": "Practical phase-space electronic Hamiltonians for ab initio dynamics",
+      "year": "2024"
+    },
+    {
+      "raw": "Electronic currents and Born–Oppenheimer molecular dynamics",
+      "doi": "10.1063/1.4747540",
+      "title": "Electronic currents and Born–Oppenheimer molecular dynamics",
+      "year": "2012"
+    },
+    {
+      "raw": "On the molecular electronic flux: Role of nonadiabaticity and violation of conservation",
+      "doi": "10.1063/5.0049821",
+      "title": "On the molecular electronic flux: Role of nonadiabaticity and violation of conservation",
+      "year": "2021"
+    },
+    {
+      "raw": "Velocity-gauge formalism in the theory of vibrational circular dichroism and infrared absorption",
+      "doi": "10.1063/1.462668",
+      "title": "Velocity-gauge formalism in the theory of vibrational circular dichroism and infrared absorption",
+      "year": "1992"
+    },
+    {
+      "raw": "A phase-space electronic Hamiltonian for vibrational circular dichroism",
+      "doi": "10.1021/acs.jctc.4c00662",
+      "title": "A phase-space electronic Hamiltonian for vibrational circular dichroism",
+      "year": "2024"
+    },
+    {
+      "raw": "An electronic phase-space Hamiltonian approach for electronic current density and vibrational circular dichroism",
+      "doi": "10.1063/5.0233618",
+      "title": "An electronic phase-space Hamiltonian approach for electronic current density and vibrational circular dichroism",
+      "year": "2024"
+    },
+    {
+      "raw": "Electron capture in slow collisions",
+      "doi": "10.1098/rspa.1958.0075",
+      "title": "Electron capture in slow collisions",
+      "year": "1958"
+    },
+    {
+      "raw": "Theory of near-adiabatic collisions. I. Electron translation factor method",
+      "doi": "10.1103/physreva.18.117",
+      "title": "Theory of near-adiabatic collisions. I. Electron translation factor method",
+      "year": "1978"
+    },
+    {
+      "raw": "Common translation factor method",
+      "doi": "10.1088/0953-4075/27/16/010",
+      "title": "Common translation factor method",
+      "year": "1994"
+    },
+    {
+      "raw": "Time-dependent theoretical treatments of the dynamics of electrons and nuclei in molecular systems",
+      "doi": "10.1103/revmodphys.66.917",
+      "title": "Time-dependent theoretical treatments of the dynamics of electrons and nuclei in molecular systems",
+      "year": "1994"
+    },
+    {
+      "raw": "Electron transfer in p–He+ and He2+-H collisions using a Sturmian basis",
+      "doi": "10.1103/physreva.25.697",
+      "title": "Electron transfer in p–He+ and He2+-H collisions using a Sturmian basis",
+      "year": "1982"
+    },
+    {
+      "raw": "Velocity-dependent orbitals in proton-on-hydrogen-atom collisions",
+      "doi": "10.1103/physrev.181.311",
+      "title": "Velocity-dependent orbitals in proton-on-hydrogen-atom collisions",
+      "year": "1969"
+    },
+    {
+      "raw": "Analytic derivative couplings between configuration-interaction-singles states with built-in electron-translation factors for translational invariance",
+      "doi": "10.1063/1.3665031",
+      "title": "Analytic derivative couplings between configuration-interaction-singles states with built-in electron-translation factors for translational invariance",
+      "year": "2011"
+    },
+    {
+      "raw": "Surface hopping, electron translation factors, electron rotation factors, momentum conservation, and size consistency",
+      "doi": "10.1063/5.0160965",
+      "title": "Surface hopping, electron translation factors, electron rotation factors, momentum conservation, and size consistency",
+      "year": "2023"
+    },
+    {
+      "raw": "A simple one-electron expression for electron rotational factors",
+      "doi": "10.1063/5.0192083",
+      "title": "A simple one-electron expression for electron rotational factors",
+      "year": "2024"
+    },
+    {
+      "raw": "Mathematical structures: Spatial Tessellations. Concepts and applications of voronoi diagrams. Atsuyuki Okabe, Barry Boots, and Kokichi Sugihara. Wiley, New York, 1992. xii, 532 pp., illus. $89.95. Wiley series in probability and mathematical statistics",
+      "doi": "10.1126/science.260.5111.1170",
+      "title": "Mathematical structures: Spatial Tessellations. Concepts and applications of voronoi diagrams. Atsuyuki Okabe, Barry Boots, and Kokichi Sugihara. Wiley, New York, 1992. xii, 532 pp., illus. $89.95. Wiley series in probability and mathematical statistics",
+      "year": "1993"
+    },
+    {
+      "raw": "Diagonalizing the Born–Oppenheimer Hamiltonian via Moyal perturbation theory, nonadiabatic corrections, and translational degrees of freedom",
+      "doi": "10.1063/5.0192465",
+      "title": "Diagonalizing the Born–Oppenheimer Hamiltonian via Moyal perturbation theory, nonadiabatic corrections, and translational degrees of freedom",
+      "year": "2024"
+    },
+    {
+      "raw": "Software for the frontiers of quantum chemistry: An overview of developments in the Q-Chem 5 package",
+      "doi": "10.1063/5.0055522",
+      "title": "Software for the frontiers of quantum chemistry: An overview of developments in the Q-Chem 5 package",
+      "year": "2021"
+    },
+    {
+      "raw": "Geometric phases in the asymptotic theory of coupled wave equations",
+      "doi": "10.1103/physreva.44.5239",
+      "title": "Geometric phases in the asymptotic theory of coupled wave equations",
+      "year": "1991"
+    },
+    {
+      "raw": "Theoretical study of the nuclear spin-molecular rotation coupling for relativistic electrons and non-relativistic nuclei",
+      "doi": "10.1063/1.4721627",
+      "title": "Theoretical study of the nuclear spin-molecular rotation coupling for relativistic electrons and non-relativistic nuclei",
+      "year": "2012"
+    },
+    {
+      "raw": "A semiclassical non-adiabatic phase-space approach to molecular translations and rotations: Surface hopping with electronic inertial effects",
+      "doi": "10.1063/5.0242673",
+      "title": "A semiclassical non-adiabatic phase-space approach to molecular translations and rotations: Surface hopping with electronic inertial effects",
+      "year": "2024"
+    },
+    {
+      "raw": "David Sherrill CIS notes, http://vergil.chemistry.gatech.edu/notes/ci.pdf.",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Nuclear velocity perturbation theory for vibrational circular dichroism: An approach based on the exact factorization of the electron-nuclear wave function",
+      "doi": "10.1063/1.4928578",
+      "title": "Nuclear velocity perturbation theory for vibrational circular dichroism: An approach based on the exact factorization of the electron-nuclear wave function",
+      "year": "2015"
+    },
+    {
+      "raw": "Implementation of nuclear velocity perturbation and magnetic field perturbation theory in CP2K and their application to vibrational circular dichroism",
+      "doi": "10.1021/acs.jctc.2c00006",
+      "title": "Implementation of nuclear velocity perturbation and magnetic field perturbation theory in CP2K and their application to vibrational circular dichroism",
+      "year": "2022"
+    },
+    {
+      "raw": "X. Bian , C.Khan, T.Duston, J.Rawlinson, R. G.Littlejohn, and J. E.Subotnik, “A phase-space view of vibrational energies without the Born–Oppenheimer framework,” J. Chem. Theory Comput.21(6), 2880–2893 (2025).10.1021/acs.jctc.4c01294",
+      "doi": "10.1021/acs.jctc.4c01294",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Jet-cooled molecular radicals in slit supersonic discharges: Sub-Doppler infrared studies of methyl radical",
+      "doi": "10.1063/1.474259",
+      "title": "Jet-cooled molecular radicals in slit supersonic discharges: Sub-Doppler infrared studies of methyl radical",
+      "year": "1997"
+    },
+    {
+      "raw": "Chiral induced spin selectivity",
+      "doi": "10.1021/acs.chemrev.3c00661",
+      "title": "Chiral induced spin selectivity",
+      "year": "2024"
+    },
+    {
+      "raw": "Random-phase approximation methods",
+      "doi": "10.1146/annurev-physchem-040215-112308",
+      "title": "Random-phase approximation methods",
+      "year": "2017"
+    },
+    {
+      "raw": "A tractable and accurate electronic structure method for static correlations: The perfect hextuples model",
+      "doi": "10.1063/1.3456001",
+      "title": "A tractable and accurate electronic structure method for static correlations: The perfect hextuples model",
+      "year": "2010"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 18081,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "aip HTML route was not usable (abstract_only); attempting PDF fallback.",
+      "Full text was extracted from PDF fallback after the HTML path was not usable.",
+      "AIP Publishing official full text was downloaded as PDF/binary to /tmp/paper-fetch-paywall-expansion-20260915/aip/10.1063_5.0260731/fetch/Tao_et_al_2025_A_basis-free_phase_space_electronic_Hamiltonian_that_recovers_beyond_Born_Oppenheimer_electronic_momentum_and_current_density.pdf.",
+      "Markdown full text was saved to /tmp/paper-fetch-paywall-expansion-20260915/aip/10.1063_5.0260731/fetch/Tao_et_al_2025_A_basis-free_phase_space_electronic_Hamiltonian_that_recovers_beyond_Born_Oppenheimer_electronic_momentum_and_current_density.md."
+    ],
+    "source_trail": [
+      "fulltext:aip_html_fail",
+      "fulltext:aip_pdf_fallback_ok",
+      "fulltext:aip_pdf_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_aip",
+      "route:signal_publisher_aip",
+      "route:signal_doi_aip",
+      "route:probe_aip_unknown",
+      "route:provider_selected_aip",
+      "route:provider_candidate_aip_metadata_selected_rank_1",
+      "route:provider_candidate_aip_identity_strong",
+      "fulltext:aip_attempt",
+      "download:aip_saved",
+      "download:aip_assets_skipped_profile_none",
+      "fulltext:aip_article_ok",
+      "route:provider_candidate_aip_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 305,
+      "body": 17776,
+      "refs": 1490
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 70749,
+      "word_count": 12609,
+      "body_block_count": 29,
+      "body_heading_count": 29,
+      "body_to_abstract_ratio": 68.90163934426229,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "aip",
+    "route": "browser_pdf",
+    "representation": "pdf",
+    "transport": "browser",
+    "fallback_used": true
+  }
+}

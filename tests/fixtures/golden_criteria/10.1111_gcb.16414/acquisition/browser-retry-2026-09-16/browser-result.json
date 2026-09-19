@@ -1,0 +1,13 @@
+{
+  "doi": "10.1111/gcb.16414",
+  "captured_at_utc": "2026-09-16T05:47:40.499537+00:00",
+  "requested_url": "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
+  "browser_mode": "headless",
+  "backend": "camoufox",
+  "attempt": 1,
+  "user_authorized_browser_retry": true,
+  "outcome": "received_dom",
+  "status_code": 200,
+  "final_url": "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
+  "dom_file": "acquisition/browser-retry-2026-09-16/landing-dom.html"
+}

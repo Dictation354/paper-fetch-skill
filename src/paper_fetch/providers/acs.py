@@ -122,7 +122,7 @@ ACS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     fallback_author_extractor=_acs_html.extract_authors,
     policy=browser_workflow.BrowserWorkflowPolicy(
         blocked_resource_types=("image", "font", "media"),
-        direct_figure_page_fallback=True,
+        figure_page_discovery=False,
     ),
 )
 

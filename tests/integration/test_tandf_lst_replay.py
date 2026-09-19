@@ -1,36 +1,68 @@
 """Replay the publisher HTML through provider, service, CLI and MCP outputs."""
 
 from __future__ import annotations
-
 from dataclasses import replace
 import hashlib
 import json
 from pathlib import Path
 import re
-import shutil
-
 from bs4 import BeautifulSoup
 import pytest
-
 from paper_fetch import cli, service
 from paper_fetch.extraction.html._metadata import parse_html_metadata
+from paper_fetch.extraction.html.assets import (
+    AssetDownloadOptions,
+    FIGURE_KIND,
+    download_assets,
+)
 from paper_fetch.mcp._deps import default_mcp_deps
 from paper_fetch.mcp.fetch_tool import fetch_paper_payload
-from paper_fetch.models import RenderOptions
+from paper_fetch.models import EXTRACTION_REVISION, RenderOptions
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.tandf import TandfClient
+from paper_fetch.providers.browser_workflow.asset_download import (
+    plan_browser_asset_download,
+)
 from paper_fetch.resolve.query import ResolvedQuery
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.tracing import trace_from_markers
 from paper_fetch.workflow.types import FetchStrategy
-from tests.golden_criteria import golden_criteria_asset
-from tests.unit.test_tandf_lst_render import DOI, URL, source_html, assert_formulas
+from tests.support._paper_fetch_support import RecordingTransport
+from tests.support.acquired_publisher_inputs import _record, _response
+from tests.support.tandf_lst_render import DOI, URL, source_html
+
+
+def representative_html():
+    """Keep source metadata, abstract, prose, one equation and one figure.
+
+    Full formula/reference/asset oracles live in golden/test_tandf_lst_render.py
+    and golden/test_acquired_article_assets.py.
+    """
+    soup = BeautifulSoup(source_html(), "lxml")
+    container = soup.select_one(".hlFld-Fulltext")
+    abstract = str(container.select_one(".hlFld-Abstract"))
+    paragraphs = [str(p) for p in container.select(".NLM_sec p")[:4]]
+    formula = str(container.select_one(".NLM_disp-formula"))
+    figure = str(container.select_one(".figureView"))
+    container.clear()
+    # Keep several source section boundaries so cache rehydration can assess
+    # structure from the model without relying on transient DOM diagnostics.
+    sections = "".join(
+        '<div class="NLM_sec"><h2>' + heading + "</h2>" + prose + "</div>"
+        for heading, prose in zip(
+            ("Introduction", "Materials and methods", "Results"),
+            (paragraphs[0], paragraphs[1], "".join(paragraphs[2:]) + formula + figure),
+            strict=True,
+        )
+    )
+    container.append(BeautifulSoup(abstract + sections, "html.parser"))
+    return str(soup)
 
 
 @pytest.fixture
 def replay(monkeypatch):
     class ReplayClient(TandfClient):
-        html = source_html()
+        html = representative_html()
 
         def fetch_metadata(self, query):
             return {
@@ -77,39 +109,62 @@ def replay(monkeypatch):
             asset_profile=None,
             context=None,
         ):
-            # Transport stub only: real publisher URLs and asset merge/rendering.
-            markdown, _ = self.extract_markdown(self.html, URL, metadata=metadata)
-            urls = re.findall(r"!\[Figure \d+\]\(([^)]+)\)", markdown)
-            output_dir.mkdir(parents=True, exist_ok=True)
-            images = [
-                *sorted(
-                    golden_criteria_asset("10.1063/5.0129134", "body_assets").glob(
-                        "*.jpeg"
-                    )
-                ),
-                *sorted(
-                    golden_criteria_asset("10.1126/sciadv.adl6155", "body_assets").glob(
-                        "*.jpg"
-                    )
-                ),
-            ]
-            assets = []
-            for i, url in enumerate(urls, 1):
-                path = output_dir / Path(url).name
-                shutil.copyfile(images[i - 1], path)
-                assets.append(
-                    {
-                        "kind": "figure",
-                        "heading": f"Figure {i}",
-                        "url": url,
-                        "path": str(path),
-                        "download_url": url,
-                        "download_tier": "full_size",
-                        "section": "body",
-                        "content_type": "image/jpeg",
-                    }
+            # Replay the original JPEG bodies and HTTP wrappers captured by
+            # normal image navigation. Only the browser operation is injected.
+            plan = plan_browser_asset_download(
+                article_id=doi,
+                output_dir=output_dir,
+                html_text=self.html,
+                source_url=URL,
+                profile={"client": self, "context": context, "asset_profile": "body"},
+                deps=self.deps,
+            )
+            captured = {}
+            for index in range(1, 2):
+                record, body = _record(
+                    DOI,
+                    "acquisition/network-repair/raw-body-assets/"
+                    f"tjde_a_2137254_f{index:04d}_oc.jpg",
                 )
-            return {"assets": assets, "asset_failures": []}
+                assert record["capture_kind"] == "http_response_entity"
+                assert record["status_code"] == 200
+                captured[record["requested_url"]] = (record, body)
+            calls = []
+
+            def recovered_image(url, asset):
+                calls.append(url)
+                record, body = captured[url]
+                return {
+                    **_response(record, body),
+                    "dimensions": {key: record[key] for key in ("width", "height")},
+                }
+
+            result = download_assets(
+                FIGURE_KIND,
+                RecordingTransport({}),
+                article_id=doi,
+                assets=plan.body_assets,
+                output_dir=output_dir,
+                user_agent="offline replay",
+                asset_profile="body",
+                options=AssetDownloadOptions(
+                    candidate_builder=plan.candidate_builder,
+                    image_document_fetcher=recovered_image,
+                    fetch_policy="browser_first",
+                    asset_download_concurrency=2,
+                    provider_name="tandf",
+                ),
+            )
+            assert not result["asset_failures"], result
+            assert len(result["assets"]) == 1
+            assert set(calls) == set(captured)
+            for asset in result["assets"]:
+                assert (
+                    Path(asset["path"]).read_bytes()
+                    == captured[asset["download_url"]][1]
+                )
+                assert asset["download_tier"] == "full_size"
+            return result
 
     client = ReplayClient(None, {})
     monkeypatch.setattr(RuntimeContext, "get_clients", lambda self: {"tandf": client})
@@ -143,9 +198,8 @@ def test_python_cli_mcp_saved_semantics(replay, tmp_path, capsys):
             context=context,
         )
     assert envelope.article.quality.semantic_losses.formula_missing_count == 0
-    assert_formulas(envelope.markdown)
     wire = json.loads(envelope.to_json())
-    assert wire["article"]["quality"]["extraction_revision"] == 5
+    assert wire["article"]["quality"]["extraction_revision"] == EXTRACTION_REVISION
     out = tmp_path / "cli" / "paper.md"
     manifest = out.with_suffix(".json")
     assert (
@@ -223,7 +277,7 @@ def test_python_cli_mcp_saved_semantics(replay, tmp_path, capsys):
             service_fetch_paper=service.fetch_paper,
         ),
     )
-    assert saved["acceptance"]["overall"] == "complete"
+    assert saved["acceptance"]["overall"] == "complete", saved["acceptance"]
     assert saved["markdown"] is None  # Saved MCP replies intentionally omit body.
     texts = [
         envelope.markdown,
@@ -232,9 +286,8 @@ def test_python_cli_mcp_saved_semantics(replay, tmp_path, capsys):
         (mcpdir / "paper.md").read_text(),
     ]
     for text in texts:
-        assert_formulas(text)
         images = re.findall(r"!\[Figure \d+\]\(([^)]+)\)", text)
-        assert len(images) == 12
+        assert len(images) == 1
         assert all(not url.startswith("https:") for url in images)
 
     def body(text):

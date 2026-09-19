@@ -1,0 +1,330 @@
+{
+  "network": false,
+  "plos_partial_localization": {
+    "doi": "10.1371/journal.pcbi.1003118",
+    "source": {
+      "path": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/original.xml",
+      "sha256": "5bc10955e1774bbd49685a3a0bd7ac6d4fce9ff613051ac47b5616af8cd01daf"
+    },
+    "image_sources": [
+      {
+        "path": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png",
+        "sha256": "2c65b6ed59749d9565b3383b167491e2799146c31b08a08f263aa6f25d70ef58"
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/681339045e5b-pcbi.1003118.e002.png",
+        "sha256": "681339045e5bb1bc03c2faeaafeb7f2119cfce3b5d69484b409558f82f0d22f4"
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/6b0f400ca0af-pcbi.1003118.e003.png",
+        "sha256": "6b0f400ca0afd698ea2f7ce06e0c8d966f1c39f900020886dbdfd2434a2111d7"
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/7528e75411f1-pcbi.1003118.e004.png",
+        "sha256": "7528e75411f1864184defe95ede1ea31d5273cbe1471e2f87ae9537192939069"
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/e29376fe5a5e-pcbi.1003118.e005.png",
+        "sha256": "e29376fe5a5e617d47605d0a69ed72e32bb5056bd2879608d50d246d6e6d56a2"
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/274663b6f424-pcbi.1003118.e006.png",
+        "sha256": "274663b6f424dbc641dcd277e9095f32fd8b369444012cbb2e474dde38098560"
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/dbc3dec23263-pcbi.1003118.e007.png",
+        "sha256": "dbc3dec2326347c6fff850b9af6baf0e5cd95012311e27bf3ced6c1500428b37"
+      }
+    ],
+    "cases": [
+      {
+        "downloaded_count": 0,
+        "before": [
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e001&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e002&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e003&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e004&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e005&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e006&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e007&type=thumbnail"
+        ],
+        "after": [
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e001&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e002&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e003&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e004&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e005&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e006&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e007&type=thumbnail"
+        ]
+      },
+      {
+        "downloaded_count": 1,
+        "before": [
+          "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e002&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e003&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e004&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e005&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e006&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e007&type=thumbnail"
+        ],
+        "after": [
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png"
+        ]
+      },
+      {
+        "downloaded_count": 2,
+        "before": [
+          "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png",
+          "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/681339045e5b-pcbi.1003118.e002.png",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e003&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e004&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e005&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e006&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e007&type=thumbnail"
+        ],
+        "after": [
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/681339045e5b-pcbi.1003118.e002.png",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e003&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e004&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e005&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e006&type=thumbnail",
+          "https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.1003118.e007&type=thumbnail"
+        ]
+      },
+      {
+        "downloaded_count": 7,
+        "before": [
+          "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png",
+          "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/681339045e5b-pcbi.1003118.e002.png",
+          "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/6b0f400ca0af-pcbi.1003118.e003.png",
+          "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/7528e75411f1-pcbi.1003118.e004.png",
+          "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/e29376fe5a5e-pcbi.1003118.e005.png",
+          "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/274663b6f424-pcbi.1003118.e006.png",
+          "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/dbc3dec23263-pcbi.1003118.e007.png"
+        ],
+        "after": [
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/2c65b6ed5974-pcbi.1003118.e001.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/681339045e5b-pcbi.1003118.e002.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/6b0f400ca0af-pcbi.1003118.e003.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/7528e75411f1-pcbi.1003118.e004.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/e29376fe5a5e-pcbi.1003118.e005.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/274663b6f424-pcbi.1003118.e006.png",
+          "../../tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/dbc3dec23263-pcbi.1003118.e007.png"
+        ]
+      }
+    ]
+  },
+  "arxiv_occurrence_labels": [
+    {
+      "doi": "10.48550/arxiv.1406.2661v1",
+      "source": {
+        "path": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+        "sha256": "13fdf37674ea6f27b3cfb360e611a5647547cc7006c4a22cf418cb7393db1651"
+      },
+      "missing_labels": [],
+      "extra_labels": []
+    },
+    {
+      "doi": "10.48550/arxiv.2006.11239v2",
+      "source": {
+        "path": "tests/fixtures/golden_criteria/10.48550_arxiv.2006.11239v2/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+        "sha256": "889bf6b3d1e18930447c30ab2c32c4c9b6134777502794e2f09aa7fd4506aef5"
+      },
+      "missing_labels": [
+        [
+          [
+            "Figure 13",
+            "body_assets/image_1.png"
+          ],
+          1
+        ],
+        [
+          [
+            "Figure 14",
+            "body_assets/image_5.png"
+          ],
+          1
+        ]
+      ],
+      "extra_labels": [
+        [
+          [
+            "Figure 1",
+            "body_assets/image_1.png"
+          ],
+          1
+        ],
+        [
+          [
+            "Figure 6",
+            "body_assets/image_5.png"
+          ],
+          1
+        ]
+      ],
+      "source_figures": [
+        {
+          "id": "A4.F13",
+          "caption": "Figure 13 : Unconditional CIFAR10 generated samples",
+          "images": [
+            "2006.11239v2/images/cifar10_eps-fixedlarge-mse_20x20.png"
+          ]
+        },
+        {
+          "id": "A4.F14",
+          "caption": "Figure 14 : Unconditional CIFAR10 progressive generation",
+          "images": [
+            "2006.11239v2/images/cifar10_eps-fixedlarge-mse_20_progressive.jpg"
+          ]
+        }
+      ]
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06663v1",
+      "source": {
+        "path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+        "sha256": "975efd41f740ee2ec6047345e36e60377da5a8b8a933220ce02e3920c70b7f68"
+      },
+      "missing_labels": [],
+      "extra_labels": []
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06665v1",
+      "source": {
+        "path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+        "sha256": "d313bca95f25d49de8ba149036242bf1ca12eddbf7f84e8b2a810e7493a448a0"
+      },
+      "missing_labels": [],
+      "extra_labels": []
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06666v1",
+      "source": {
+        "path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06666v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+        "sha256": "b9cc4a2b2783553009929d1ac4dcc2485798627662bf95201e4b1837784d1527"
+      },
+      "missing_labels": [],
+      "extra_labels": []
+    },
+    {
+      "doi": "10.48550/arxiv.2605.06667v1",
+      "source": {
+        "path": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
+        "sha256": "a22847d7d4a41cb8d9f41ec9663da22c6cb3ccd46b6a9f34d27fa1b4c311aa8f"
+      },
+      "missing_labels": [],
+      "extra_labels": []
+    }
+  ],
+  "scope": {
+    "inventory": {
+      "real_replay": 151,
+      "manifest_only": 42,
+      "unit_only": 6,
+      "synthetic": 3
+    },
+    "providers": {
+      "acs": 3,
+      "aip": 2,
+      "ams": 11,
+      "annualreviews": 4,
+      "arxiv": 9,
+      "copernicus": 12,
+      "elsevier": 14,
+      "frontiers": 2,
+      "ieee": 8,
+      "iop": 3,
+      "mdpi": 9,
+      "oxfordacademic": 5,
+      "plos": 8,
+      "pnas": 11,
+      "royalsocietypublishing": 7,
+      "science": 12,
+      "springer": 14,
+      "tandf": 5,
+      "wiley": 12
+    },
+    "non_pdf_replays": 137,
+    "pdf_replays": 14
+  },
+  "tests": {
+    "unit": {
+      "passed": 2501,
+      "subtests_passed": 373
+    },
+    "integration": {
+      "passed": 136,
+      "skipped": 4,
+      "subtests_passed": 2144
+    },
+    "golden": {
+      "passed": 2854,
+      "skipped": 1,
+      "subtests_passed": 34238
+    }
+  },
+  "findings": [
+    {
+      "id": "R1",
+      "priority": "P1",
+      "title": "PLOS partial formula downloads are rebound to another object during final output rewriting",
+      "code": "src/paper_fetch/workflow/rendering.py:273",
+      "related": "src/paper_fetch/models/markdown.py:156",
+      "count": 6,
+      "status": "fixed_regression_verified"
+    },
+    {
+      "id": "R2",
+      "priority": "P2",
+      "title": "DDPM legitimate reused images lose their occurrence-specific figure labels when localized",
+      "code": "src/paper_fetch/models/render.py:421",
+      "related": "src/paper_fetch/workflow/rendering.py:208",
+      "count": 2,
+      "status": "fixed_regression_verified"
+    }
+  ],
+  "post_fix_verification": {
+    "unit": {
+      "passed": 2504,
+      "subtests": 373
+    },
+    "integration": {
+      "passed": 136,
+      "skipped": 4,
+      "subtests": 2144
+    },
+    "golden": {
+      "passed": 2858,
+      "skipped": 1,
+      "subtests": 34238
+    },
+    "review_export": "papers/README.md",
+    "historical_reproduction_values_preserved": true,
+    "review_export_summary": {
+      "canonical_converted": 151,
+      "input_versions": 994,
+      "converted": 501,
+      "fulltext": 446,
+      "metadata_only": 31,
+      "abstract_only": 20,
+      "contract_scenario": 4,
+      "not_converted": 493,
+      "golden_papers": 196,
+      "local_asset_files": 1949,
+      "documents_with_remote_images": 83,
+      "unique_remote_image_urls": 662,
+      "broken_local_images": 0,
+      "outside_papers_images": 0,
+      "downloaded_assets": 581
+    }
+  }
+}

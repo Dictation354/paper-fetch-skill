@@ -1,0 +1,69 @@
+{
+  "provider": "oxfordacademic",
+  "doi": "10.1093/bioinformatics/btaa161",
+  "sample_id": "10.1093_bioinformatics_btaa161",
+  "source_url": "https://academic.oup.com/bioinformatics/article/36/11/3409/5802463",
+  "source_input": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa161/acquisition/assets-2026-09-15/oxfordacademic-headless-001-browser_dom.html",
+  "include_supplementary": true,
+  "include_body": true,
+  "source_sha256": "83ee8dec16e86722ea6e618b874ab94b4cd919f0d77412fe664f39f739c035c3",
+  "targets": [
+    {
+      "asset": {
+        "kind": "supplementary",
+        "heading": "btaa161_Supplementary_Materials",
+        "caption": "",
+        "section": "supplementary",
+        "url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/36/11/10.1093_bioinformatics_btaa161/6/bioinformatics_36_11_3409_s1.pdf?Expires=1792482946&Signature=kTKys6KdTIPEBrON6WRhaw5KPqzh6xxq~JMtzK0MlFw6tn5VKBiNgpcf60VvGVrF5HfLXYYS1zx3Kp~kWGR9L6o2ajVo1abcHVyt4lef2fHsb2XaZK-UMUXAAQFJLXLxFfRj-uSdbIp7ZVZDbqOiFOtX3cGb7KWtE62bYaylpiXA9BtHcGmC0QGGCGXoTZwWSJJV8icTmGfA0bhMabZ18-cBdDCWazwajXTD7WAqnJzB9q2-Di94bvWuqlF50Dbzx1fF~q5xaDihtFjp1nHhkSuZWFlcLLoccTbfa8JL7LHi8ATyKp0D70zHLKMOzKs4yhOdTeQ606XAyYsHxt2Zxw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA"
+      },
+      "download_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/bioinformatics/36/11/10.1093_bioinformatics_btaa161/6/bioinformatics_36_11_3409_s1.pdf?Expires=1792482946&Signature=kTKys6KdTIPEBrON6WRhaw5KPqzh6xxq~JMtzK0MlFw6tn5VKBiNgpcf60VvGVrF5HfLXYYS1zx3Kp~kWGR9L6o2ajVo1abcHVyt4lef2fHsb2XaZK-UMUXAAQFJLXLxFfRj-uSdbIp7ZVZDbqOiFOtX3cGb7KWtE62bYaylpiXA9BtHcGmC0QGGCGXoTZwWSJJV8icTmGfA0bhMabZ18-cBdDCWazwajXTD7WAqnJzB9q2-Di94bvWuqlF50Dbzx1fF~q5xaDihtFjp1nHhkSuZWFlcLLoccTbfa8JL7LHi8ATyKp0D70zHLKMOzKs4yhOdTeQ606XAyYsHxt2Zxw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/1124c250f2e5c22e-http-1.bin"
+      ],
+      "file_role": "supplementary",
+      "identity_evidence": "Explicit same-paper supplementary index link; PDF opens without repair; no text conversion quality claim",
+      "historical_capture": {
+        "state": "file_verified",
+        "validation": {
+          "format": "pdf",
+          "pages": 31,
+          "first_page_excerpt": "8\nData Sets, Implementation and Goodness-of-ﬁt Tests\n8.1\nData sets\nData sets 1, 2 and 6\nThese data sets were published by TCGA (http://cancergenome.nih.gov/).\nData set 1 consists of the methylation proﬁles (beta values) of tumor samples from 280 pa-\ntients with glioblastoma (GBM) obtained using the Inﬁnium HumanMethylation27 platform.\nThe beta values were normalized using the logit transformation. For genes with multiple\nmethylation probes, the probe most negatively correlated with expression is used. Data\nset 2 consists of microRNA expression proﬁles in the form of z-scores compared to all\ntu",
+          "valid": true
+        },
+        "replay_verified": true,
+        "outcome": "complete",
+        "output_filename": "bioinformatics_36_11_3409_s1.pdf",
+        "download_tier": "supplementary_file",
+        "final_article_link_verified": true,
+        "former_record": "acquisition/assets-2026-09-15/oxfordacademic-headless-002-http_response_entity.bin",
+        "retention": "Supplementary payload removed or never downloaded; metadata only"
+      },
+      "state": "index_only",
+      "outcome": "index_only",
+      "replay_verified": false,
+      "final_article_link_verified": false
+    }
+  ],
+  "counts": {
+    "discovered_references": 1,
+    "unique_files": 1,
+    "verified_files": 0,
+    "replayed_files": 0,
+    "complete_received_files": 0,
+    "index_only_files": 1
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa161/acquisition/assets-2026-09-15/collection.json",
+  "outcome": "index_only",
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 1,
+    "unique_files": 1,
+    "verified_files": 1,
+    "replayed_files": 1,
+    "complete_received_files": 1
+  },
+  "historical_outcome_before_supplementary_removal": "complete",
+  "historical_blocking_evidence": [
+    "acquisition/assets-2026-09-15/1124c250f2e5c22e-http-1.bin"
+  ],
+  "former_replay_receipt": "tests/fixtures/golden_criteria/10.1093_bioinformatics_btaa161/acquisition/assets-2026-09-15/replay-receipt.json"
+}

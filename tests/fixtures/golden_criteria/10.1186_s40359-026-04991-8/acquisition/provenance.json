@@ -1,0 +1,123 @@
+{
+  "records": [
+    {
+      "doi": "10.1186/s40359-026-04991-8",
+      "provider": "springer",
+      "requested_url": "https://link.springer.com/article/10.1186/s40359-026-04991-8",
+      "final_url": "https://link.springer.com/article/10.1186/s40359-026-04991-8?error=cookies_not_supported&code=06ce9ff9-86b4-42b4-b45d-ed965835d721",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html; charset=utf-8",
+        "server": "Oscar Platform 0.1780.0",
+        "date": "Wed, 16 Sep 2026 09:40:08 GMT"
+      },
+      "captured_at_utc": "2026-09-16T09:40:01.144579+00:00",
+      "capture_kind": "http_response_entity",
+      "transport": "HttpTransport",
+      "body_file": "acquisition/template-gaps-2026-09-16/article-response.html",
+      "size": 256092,
+      "sha256": "4290577127cc34d4a6baac19ef7c8371122d676cba31b12bd17514fdd8879f3c",
+      "error": null
+    },
+    {
+      "doi": "10.1186/s40359-026-04991-8",
+      "provider": "springer",
+      "source_url": "https://link.springer.com/content/pdf/10.1186/s40359-026-04991-8_reference.pdf?error=cookies_not_supported&code=5e531b07-a62d-4c6d-be51-22983a1e36fe",
+      "requested_url": "10.1186_s40359-026-04991-8_assets/s40359-026-04991-8_reference-f475db51b0.pdf-0001-05.png",
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "official_cli_pdf_converted_asset",
+      "captured_at_utc": "2026-09-19T02:16:07.538879Z",
+      "capture_time_basis": "CLI terminal timestamp; exact network response timestamp not exposed",
+      "body_file": "acquisition/official-reacquisition-2026-09-19/assets/72a4d539ff9b-s40359-026-04991-8_reference-f475db51b0.pdf-0001-05.png",
+      "sha256": "72a4d539ff9b45898a1a00b07478e9ebd629bd9e1d3db0939ee7c61ddd948ea0",
+      "size": 3585,
+      "content_type": "image/png",
+      "acquisition": {
+        "provider": "springer",
+        "route": "direct_pdf",
+        "representation": "pdf",
+        "transport": "http",
+        "fallback_used": true
+      },
+      "official_cli_record": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/manifest.json",
+      "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
+    },
+    {
+      "doi": "10.1186/s40359-026-04991-8",
+      "provider": "springer",
+      "source_url": "https://link.springer.com/content/pdf/10.1186/s40359-026-04991-8_reference.pdf?error=cookies_not_supported&code=5e531b07-a62d-4c6d-be51-22983a1e36fe",
+      "requested_url": "10.1186_s40359-026-04991-8_assets/s40359-026-04991-8_reference-f475db51b0.pdf-0027-01.png",
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "official_cli_pdf_converted_asset",
+      "captured_at_utc": "2026-09-19T02:16:07.538879Z",
+      "capture_time_basis": "CLI terminal timestamp; exact network response timestamp not exposed",
+      "body_file": "acquisition/official-reacquisition-2026-09-19/assets/8662b2323892-s40359-026-04991-8_reference-f475db51b0.pdf-0027-01.png",
+      "sha256": "8662b23238920f7bfb6774ecb82d14ab310815569557898ea8dd7455c9b04bd1",
+      "size": 10719,
+      "content_type": "image/png",
+      "acquisition": {
+        "provider": "springer",
+        "route": "direct_pdf",
+        "representation": "pdf",
+        "transport": "http",
+        "fallback_used": true
+      },
+      "official_cli_record": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/manifest.json",
+      "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
+    },
+    {
+      "doi": "10.1186/s40359-026-04991-8",
+      "provider": "springer",
+      "source_url": "https://link.springer.com/content/pdf/10.1186/s40359-026-04991-8_reference.pdf?error=cookies_not_supported&code=5e531b07-a62d-4c6d-be51-22983a1e36fe",
+      "requested_url": "10.1186_s40359-026-04991-8_assets/s40359-026-04991-8_reference-f475db51b0.pdf-0027-03.png",
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "official_cli_pdf_converted_asset",
+      "captured_at_utc": "2026-09-19T02:16:07.538879Z",
+      "capture_time_basis": "CLI terminal timestamp; exact network response timestamp not exposed",
+      "body_file": "acquisition/official-reacquisition-2026-09-19/assets/8f905585fb83-s40359-026-04991-8_reference-f475db51b0.pdf-0027-03.png",
+      "sha256": "8f905585fb83e49f64cb7772a75d3ce018475638f4909c97ba2925ff8e7efe71",
+      "size": 42948,
+      "content_type": "image/png",
+      "acquisition": {
+        "provider": "springer",
+        "route": "direct_pdf",
+        "representation": "pdf",
+        "transport": "http",
+        "fallback_used": true
+      },
+      "official_cli_record": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/manifest.json",
+      "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
+    },
+    {
+      "doi": "10.1186/s40359-026-04991-8",
+      "provider": "springer",
+      "source_url": "https://link.springer.com/10.1186/s40359-026-04991-8",
+      "requested_url": null,
+      "final_url": null,
+      "status_code": null,
+      "response_headers": {},
+      "capture_kind": "official_cli_pdf_artifact",
+      "captured_at_utc": "2026-09-19T02:16:07.538879Z",
+      "capture_time_basis": "CLI terminal timestamp; exact network response timestamp not exposed",
+      "body_file": "acquisition/official-reacquisition-2026-09-19/raw_sources/c865aa6e439f-Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.pdf",
+      "sha256": "c865aa6e439f29a8a53e83a6b338d70bb42123c304f5527476ea9bffdabccdb6",
+      "size": 1234733,
+      "content_type": null,
+      "acquisition": {
+        "provider": "springer",
+        "route": "direct_pdf",
+        "representation": "pdf",
+        "transport": "http",
+        "fallback_used": true
+      },
+      "official_cli_record": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/manifest.json",
+      "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
+    }
+  ]
+}

@@ -187,7 +187,7 @@ def render_mathml_expression(element: ET.Element | None) -> str:
         local_name = xml_local_name(node.tag)
         children = [child for child in list(node) if isinstance(child.tag, str)]
 
-        if local_name in {"math", "mrow", "mstyle", "mpadded", "mphantom"}:
+        if local_name in {"math", "mrow", "mstyle", "mpadded", "mphantom", "merror"}:
             return _render_mathml_sequence(children, render_node)
         if local_name == "semantics":
             for child in children:
@@ -225,7 +225,6 @@ def render_mathml_expression(element: ET.Element | None) -> str:
                 "−": " - ",
                 "±": " ± ",
                 "×": r" \times ",
-                "*": r" \times ",
                 "·": r" \cdot ",
                 "/": " / ",
                 "<": " < ",
@@ -275,7 +274,9 @@ def render_mathml_expression(element: ET.Element | None) -> str:
                 )
         if local_name == "mspace":
             width = normalize_compact_text(str(node.get("width") or ""))
-            return "" if width.startswith(("0", "-")) else r"\,"
+            from ..formula.semantics import mathml_space_latex
+
+            return mathml_space_latex(width) or r"\,"
         if local_name == "mfenced":
             open_char = node.get("open", "(")
             close_char = node.get("close", ")")
@@ -322,19 +323,19 @@ def render_mathml_expression(element: ET.Element | None) -> str:
         if local_name == "mtable":
             rows = []
             for row in children:
-                if xml_local_name(row.tag) != "mtr":
+                if xml_local_name(row.tag) not in {"mtr", "mlabeledtr"}:
                     continue
                 cells = [
                     render_node(cell) for cell in list(row) if isinstance(cell.tag, str)
                 ]
-                rows.append(" , ".join(cells))
+                rows.append(" & ".join(cells))
             return (
                 r"\begin{matrix} " + r" \\ ".join(rows) + r" \end{matrix}"
                 if rows
                 else ""
             )
-        if local_name == "mtr":
-            return " , ".join(render_node(child) for child in children)
+        if local_name in {"mtr", "mlabeledtr"}:
+            return " & ".join(render_node(child) for child in children)
         if local_name == "mtd":
             return _render_mathml_sequence(children, render_node)
 
@@ -474,6 +475,8 @@ def render_inline_formula(element: ET.Element | None) -> str:
 
 def formula_graphic_url(element: ET.Element | None, *, source_url: str = "") -> str:
     graphic = first_descendant(element, "graphic")
+    if graphic is None:
+        graphic = first_descendant(element, "inline-graphic")
     if graphic is None:
         return ""
     href = normalize_compact_text(

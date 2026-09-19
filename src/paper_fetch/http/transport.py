@@ -134,6 +134,7 @@ class HttpRequestPolicy:
     max_response_bytes: int | None = None
     max_compressed_response_bytes: int | None = None
     cooldown_scope: str | None = None
+    body_access_provider: str | None = None
     sensitive_headers: tuple[str, ...] = ()
     timeout_seconds: int | None = None
     retry_on_rate_limit: bool | None = None
@@ -916,6 +917,7 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                             started_at=request_started_at,
                             attempt=attempt,
                             cooldown_key=cooldown_key,
+                            body_access_provider=policy.body_access_provider,
                             host_semaphore=host_semaphore,
                         ),
                     )
@@ -1215,6 +1217,7 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                                 started_at=request_started_at,
                                 attempt=attempt,
                                 cooldown_key=cooldown_key,
+                                body_access_provider=policy.body_access_provider,
                                 host_semaphore=host_semaphore,
                             ),
                         )
@@ -1282,6 +1285,7 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                                 started_at=request_started_at,
                                 attempt=attempt,
                                 cooldown_key=cooldown_key,
+                                body_access_provider=policy.body_access_provider,
                                 host_semaphore=host_semaphore,
                             ),
                         )

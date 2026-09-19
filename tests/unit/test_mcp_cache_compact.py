@@ -1,22 +1,20 @@
 from __future__ import annotations
-
 import json
 import socket
 from pathlib import Path
 from unittest import mock
-
 import pytest
-
 from paper_fetch.config import build_runtime_env
 from paper_fetch.mcp import fetch_cache
 from paper_fetch.mcp.cache_payloads import get_cached_payload
 from paper_fetch.mcp.server import build_server
 from paper_fetch.utils import sanitize_filename
-from tests.unit._mcp_support import (
+from tests.support._mcp_support import (
     assert_mcp_tool_omits_output_schema,
     create_cached_downloads,
     create_cached_fetch_envelope,
 )
+
 
 DOI = "10.1000/cache-compact"
 

@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 import argparse
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import UTC, datetime
@@ -11,9 +10,7 @@ import shutil
 from types import SimpleNamespace
 from unittest import mock
 from uuid import UUID
-
 import pytest
-
 from paper_fetch import cli
 from paper_fetch import runtime as runtime_module
 from paper_fetch.manifest import (
@@ -32,8 +29,7 @@ from paper_fetch.workflow.acceptance import (
     AssetAcceptanceStatus,
     OverallAcceptanceStatus,
 )
-
-from .test_workflow_acceptance import _envelope
+from tests.support.workflow_acceptance import _envelope
 
 
 RUN_ID = UUID("10000000-0000-4000-8000-000000000001")

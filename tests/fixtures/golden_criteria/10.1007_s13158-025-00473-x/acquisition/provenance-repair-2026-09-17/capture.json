@@ -1,0 +1,59 @@
+[
+  {
+    "doi": "10.1007/s13158-025-00473-x",
+    "provider": "springer",
+    "requested_url": "https://link.springer.com/10.1007/s13158-025-00473-x",
+    "final_url": "https://link.springer.com/article/10.1007/s13158-025-00473-x",
+    "status_code": 200,
+    "response_headers": {
+      "etag": "W/\"d5f7978318ecf564157dcec0f518dc60\"",
+      "content-type": "text/html; charset=utf-8",
+      "date": "Thu, 17 Sep 2026 10:58:46 GMT"
+    },
+    "captured_at_utc": "2026-09-17T10:58:47.658460+00:00",
+    "body_file": "bilingual.html",
+    "size": 375447,
+    "sha256": "d0d769fb69f9b1c86343eda44d25ce82e6be9eb2425883256e25d5bc57caa37d",
+    "capture_kind": "http_response_entity",
+    "transport": "existing paper-fetch provider",
+    "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+  },
+  {
+    "doi": "10.1007/s13158-025-00473-x",
+    "provider": "springer",
+    "requested_url": "https://link.springer.com/article/10.1007/s13158-025-00473-x/tables/1",
+    "final_url": "https://link.springer.com/article/10.1007/s13158-025-00473-x/tables/1",
+    "status_code": 200,
+    "response_headers": {
+      "etag": "W/\"140a6eff1f9def8fe17326bb7cb7e367\"",
+      "content-type": "text/html; charset=utf-8",
+      "date": "Thu, 17 Sep 2026 10:58:50 GMT"
+    },
+    "captured_at_utc": "2026-09-17T10:58:51.626114+00:00",
+    "body_file": "acquisition/provenance-repair-2026-09-17/001-http_response_entity.html",
+    "size": 202025,
+    "sha256": "453978824a93d20ff9331a7ffb0931abf62408120e063fb1ce265f2db260ef58",
+    "capture_kind": "http_response_entity",
+    "transport": "existing paper-fetch provider",
+    "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+  },
+  {
+    "doi": "10.1007/s13158-025-00473-x",
+    "provider": "springer",
+    "requested_url": "https://link.springer.com/article/10.1007/s13158-025-00473-x/tables/2",
+    "final_url": "https://link.springer.com/article/10.1007/s13158-025-00473-x/tables/2",
+    "status_code": 200,
+    "response_headers": {
+      "etag": "W/\"d9cc83cca291da0e03507d07e90fd854\"",
+      "content-type": "text/html; charset=utf-8",
+      "date": "Thu, 17 Sep 2026 10:58:54 GMT"
+    },
+    "captured_at_utc": "2026-09-17T10:58:55.554635+00:00",
+    "body_file": "acquisition/provenance-repair-2026-09-17/002-http_response_entity.html",
+    "size": 201715,
+    "sha256": "a5eef2e2f1526e8bdafd38a779735fcb4ba9ef475cc54c150cc1950cbaf57537",
+    "capture_kind": "http_response_entity",
+    "transport": "existing paper-fetch provider",
+    "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+  }
+]

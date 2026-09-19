@@ -1,0 +1,104 @@
+{
+  "records": [
+    {
+      "doi": "10.1098/rsos.201200",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://api.crossref.org/works/10.1098%2Frsos.201200",
+      "final_url": "https://api.crossref.org/works/10.1098%2Frsos.201200",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:27:34 GMT",
+        "content-type": "application/json",
+        "content-length": "3532"
+      },
+      "captured_at_utc": "2026-09-18T02:27:34.113795+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
+      "size": 11975,
+      "sha256": "e2e92b63201ae1bf56231618bf717158a7b7bc83644121ff49ad699756b3078a",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1098/rsos.201200",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://royalsocietypublishing.org/doi/10.1098/rsos.201200",
+      "final_url": "https://royalsocietypublishing.org/rsos/article/7/10/201200/95314/Adaptation-of-the-carbamoyl-phosphate-synthetase",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 02:27:39 GMT",
+        "content-type": "text/html; charset=utf-8"
+      },
+      "captured_at_utc": "2026-09-18T02:27:42.773119+00:00",
+      "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "size": 355026,
+      "sha256": "d3836e3ce231fbca869e39dc3e7a7d94bade99767d847aca995fbb5a4c74478a",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1098/rsos.201200",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201200/9/rsos201200f01.png?Expires=1791300308&Signature=JGC-9Np8Q1yDGsHywUXJUr5--PuspqETTyisNxbRVOqA3DlovuuWIovBC0qfJFW2Dwi~RhT7z9GxuYsYg~Y9xK4MKD8XXy1Mv9-M1zKijMy6~70v2Njede2oDtm9Tu8r2XfOUMe~8CRT5i4NpK-De1j6L7hLHYlGaWlyn9UPDsG5~KLxjW1JcoSt4Lu11JMoumqELWGoklwPv9NEgrTNXQyY~NOEDAYcg1kIst7JoqhzKIdgtd-VC9NLLKjfJ7vrohC7yctZEmdlM9PLHdKd76D8Pg7AHbKCxoH~mG4Gy-PPBgVzT1etStpx86ltfxknVZBroX3EfUnRS87QYb7n9w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201200/9/rsos201200f01.png?Expires=1791300308&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "2646157",
+        "date": "Fri, 18 Sep 2026 08:40:15 GMT",
+        "last-modified": "Fri, 02 Jan 2026 13:37:30 GMT",
+        "etag": "\"dd3fe3900571327d972dfe536a57ca46\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:13.677900+00:00",
+      "size": 2646157,
+      "sha256": "2b36c5ea1ed364cb28ee73dd88722fd0f89f7ea3aa504e3ff8926fe849faf3ff",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/7a1a58317529528edb.png"
+    },
+    {
+      "doi": "10.1098/rsos.201200",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201200/9/rsos201200f02.png?Expires=1791300308&Signature=inJrju3NJwzbdmHvN33f-2V2CvzUywwkOcbmjCI823Icot6bh1j06EqoZ4PRnCt4hgxttwawozrUCmN0DOF1NX6zVa4b6-q1hIdgUFXB9lgTKqJQRik46Y~uVyQ3ZEk63imnjiijyJ3vWBYbGjJVKZrvW6bhXqGDn1ue5jExe6f2e0P2ihDHtLj24ipDirVsdqmmz8LfbLzZdBaX0ZQRYINkQu6k4B9MX1Eq8MrmEn~OYlLWV0W0za0yiE44JMjSy~1Eak1pzWl-e2CBil1ixqf28sFma8ErChmtuZBjvXEAWbVw4I7PRViDRISKtSCs-jM6llaI4XAbZ6mKUWu1Uw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201200/9/rsos201200f02.png?Expires=1791300308&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "77221",
+        "date": "Fri, 18 Sep 2026 08:40:18 GMT",
+        "last-modified": "Fri, 02 Jan 2026 13:37:30 GMT",
+        "etag": "\"4143d94bd53adf4719c642547a5b9b9e\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:16.103883+00:00",
+      "size": 77221,
+      "sha256": "ef157774ff5660fdf13cf5323b34b4249263c3680db3e36625d49b4be1d31860",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/820b73097b99d9f3cf.png"
+    },
+    {
+      "doi": "10.1098/rsos.201200",
+      "provider": "royalsocietypublishing",
+      "requested_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201200/9/rsos201200f03.png?Expires=1791300308&Signature=mWyftOkRQLQei7iWt96ZmvdFXZsC2KgBCAx~S-nct7a~fY66o4Qt~Idx30ZmhcBzTzKtwpeyR~FJ~vDx0D35W8gUxnH-50cYo7XaQQuvICdDJFfuwMhcLoa3C~HTcz9aSkhuxFCl5MGtCLEMng5LEgtaSTs3~6RHwaG~wvNibweRw7tXO6Q3IPCG004sd4SCpqf22wMKBPFWg21g5pHbZjfof-JYAWcS1Ikse2YfiXmoAtRSrh07IfNWVasqtbN8jNpxrIf4pbdK5bZoMIk12eC6GRKSD24L~pfphrR~yL3EpNcoUyvgcKxUCTHqf-YIeYbg6RURe3~M1U0RMZ7R9g__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://trs.silverchair-cdn.com/trs/content_public/journal/rsos/7/10/10.1098_rsos.201200/9/rsos201200f03.png?Expires=1791300308&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/png",
+        "content-length": "389691",
+        "date": "Fri, 18 Sep 2026 08:40:20 GMT",
+        "last-modified": "Fri, 02 Jan 2026 13:37:30 GMT",
+        "etag": "\"0b6dd541767417ef1030ccc1dd52874e\""
+      },
+      "captured_at_utc": "2026-09-18T08:40:17.581898+00:00",
+      "size": 389691,
+      "sha256": "b0cc5be1007ad93c090b40204748f1b8437dbada6bd4c698a2b5c16f5f8b4c3f",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch HttpTransport; one bounded direct official asset request",
+      "access_conditions": "No authentication, signature, browser or access-policy changes",
+      "body_file": "acquisition/asset-evidence-2026-09-18/8f74f134c4f907cc84.png"
+    }
+  ]
+}

@@ -1,0 +1,309 @@
+{
+  "doi": "10.1088/1681-7575/ae1dfc",
+  "source": "crossref_meta",
+  "metadata": {
+    "title": "Calibration of two mass standards with the LNE Kibble balance in 2024",
+    "authors": [
+      "M Thomas",
+      "D Ziane",
+      "P Espel",
+      "K Dougdag",
+      "F Beaudoux",
+      "S Merlet",
+      "N Addi",
+      "F Couëdo",
+      "M Taupin"
+    ],
+    "abstract": "Kibble balances are complex electromechanical instruments that enable the determination of mass within the SI by linking it to the Planck constant h , the defining constant of the mass unit. The LNE has been developing its own Kibble balance since 2002, with the most recent improvements focusing on the implementation of a contactless linear motor for the dynamic phase and the fine adjustment of the beam’s orientation with respect to the horizontal plane for the static phase. In 2024, two mass calibration campaigns were carried out using the LNE Kibble balance: first with an iridium standard (DB1), and then with a platinum-iridium standard (W1). Both artefacts have a nominal mass of 500 g, and their masses were determined with relative standard uncertainties of 3.1 ⋅ 10 − 8 and 3.5 ⋅ 10 − 8 respectively ( k = 1 ).",
+    "journal": "Metrologia",
+    "article_type": null,
+    "published": "2025-12-1",
+    "keywords": [],
+    "license_urls": [
+      "https://publishingsupport.iopscience.iop.org/iop-standard/v1",
+      "https://iopscience.iop.org/info/page/text-and-data-mining"
+    ],
+    "landing_page_url": "https://iopscience.iop.org/article/10.1088/1681-7575/ae1dfc"
+  },
+  "sections": [],
+  "references": [
+    {
+      "raw": "First determination of the Planck constant using the LNE watt balance",
+      "doi": "10.1088/0026-1394/52/2/433",
+      "title": "First determination of the Planck constant using the LNE watt balance",
+      "year": "2015"
+    },
+    {
+      "raw": "Report on CCM pilot study CCM.R-kg-P1: comparison of future realizations of the kilogram",
+      "doi": null,
+      "title": "Report on CCM pilot study CCM.R-kg-P1: comparison of future realizations of the kilogram",
+      "year": "2017"
+    },
+    {
+      "raw": "A determination of the Planck constant using the LNE Kibble balance in air",
+      "doi": "10.1088/1681-7575/aa7882",
+      "title": "A determination of the Planck constant using the LNE Kibble balance in air",
+      "year": "2018"
+    },
+    {
+      "raw": "A measurement of the gyromagnetic ratio of the proton by the strong field method",
+      "doi": "10.1007/978-1-4684-2682-3_80",
+      "title": "A measurement of the gyromagnetic ratio of the proton by the strong field method",
+      "year": "1975"
+    },
+    {
+      "raw": "Mass measurement noise improvement of the LNE Kibble balance, from 2017 to 2024",
+      "doi": "10.1109/tim.2025.3572156",
+      "title": "Mass measurement noise improvement of the LNE Kibble balance, from 2017 to 2024",
+      "year": null
+    },
+    {
+      "raw": "Absolute position sensor using Gaussian beam propagation properties and their spatial modulation",
+      "doi": "10.1117/12.723033",
+      "title": "Absolute position sensor using Gaussian beam propagation properties and their spatial modulation",
+      "year": "2007"
+    },
+    {
+      "raw": "75 mm stroke flexure stage for the LNE watt balance experiment",
+      "doi": "10.1016/j.precisioneng.2011.06.003",
+      "title": "75 mm stroke flexure stage for the LNE watt balance experiment",
+      "year": "2011"
+    },
+    {
+      "raw": "Static phase improvements in the LNE watt balance",
+      "doi": "10.1063/1.4964293",
+      "title": "Static phase improvements in the LNE watt balance",
+      "year": "2016"
+    },
+    {
+      "raw": "Characterisation of a SINIS programmable binary Josephson junction array as a reference for the French watt balance experiment",
+      "doi": null,
+      "title": "Characterisation of a SINIS programmable binary Josephson junction array as a reference for the French watt balance experiment",
+      "year": "2006"
+    },
+    {
+      "raw": "Magnetic circuit design for the BNM Watt balance experiment",
+      "doi": "10.1109/tim.2004.843072",
+      "title": "Magnetic circuit design for the BNM Watt balance experiment",
+      "year": "2005"
+    },
+    {
+      "raw": "Micro-gravity investigations for the LNE watt balance project",
+      "doi": "10.1088/0026-1394/45/3/002",
+      "title": "Micro-gravity investigations for the LNE watt balance project",
+      "year": "2008"
+    },
+    {
+      "raw": "The 8th international comparison of absolute gravimeters 2009: the first key comparison (CCM.G-K1) in the field of absolute gravimetry",
+      "doi": "10.1088/0026-1394/49/6/666",
+      "title": "The 8th international comparison of absolute gravimeters 2009: the first key comparison (CCM.G-K1) in the field of absolute gravimetry",
+      "year": "2012"
+    },
+    {
+      "raw": "The watt or Kibble balance: a technique for implementing the new SI definition of the unit of mass",
+      "doi": "10.1088/0026-1394/53/5/a46",
+      "title": "The watt or Kibble balance: a technique for implementing the new SI definition of the unit of mass",
+      "year": "2016"
+    },
+    {
+      "raw": "Detailed note on the dissemination process after the redefinition of the kilogram (CCM)",
+      "doi": null,
+      "title": "Detailed note on the dissemination process after the redefinition of the kilogram (CCM)",
+      "year": "2019"
+    },
+    {
+      "raw": "10.5880/igets.tr.l1.001",
+      "doi": "10.5880/igets.tr.l1.001",
+      "title": null,
+      "year": "2020"
+    },
+    {
+      "raw": "Calibration of a superconducting gravimeter with an absolute atom gravimeter",
+      "doi": "10.1007/s00190-021-01516-6",
+      "title": "Calibration of a superconducting gravimeter with an absolute atom gravimeter",
+      "year": "2021"
+    },
+    {
+      "raw": "French gravimetry organization and its instrumental park",
+      "doi": "10.1109/mim.2024.10654723",
+      "title": "French gravimetry organization and its instrumental park",
+      "year": "2024"
+    },
+    {
+      "raw": "Evaluation of measurement data—Guide to the expression of uncertainty in measurement",
+      "doi": null,
+      "title": "Evaluation of measurement data—Guide to the expression of uncertainty in measurement",
+      "year": "2008"
+    },
+    {
+      "raw": "Coil-current effect in Kibble balances: analysis, measurement and optimization",
+      "doi": "10.1088/1681-7575/aa9a8e",
+      "title": "Coil-current effect in Kibble balances: analysis, measurement and optimization",
+      "year": "2018"
+    },
+    {
+      "raw": "Measurement of the Planck constant at the National Institute of Standards and Technology from 2015 to 2017",
+      "doi": "10.1088/1681-7575/aa7bf2",
+      "title": "Measurement of the Planck constant at the National Institute of Standards and Technology from 2015 to 2017",
+      "year": "2017"
+    },
+    {
+      "raw": "An initial measurement of Planck’s constant using the NPL Mark II watt balance",
+      "doi": "10.1088/0026-1394/44/6/001",
+      "title": "An initial measurement of Planck’s constant using the NPL Mark II watt balance",
+      "year": "2007"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": false,
+    "token_estimate": 206,
+    "content_kind": "abstract_only",
+    "has_abstract": true,
+    "warnings": [
+      "iop HTML route was not usable (abstract_only); attempting PDF fallback.",
+      "pdf: iop full text could not be retrieved via HTML or PDF fallback. HTML failure: Publisher HTML only exposed abstract-level content without article body text. PDF failure: Browser context did not trigger a PDF download.",
+      "Full text was not available; returning metadata and abstract only.",
+      "--save-markdown was set but full text was not available; nothing written to disk."
+    ],
+    "source_trail": [
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_iop",
+      "route:signal_publisher_iop",
+      "route:signal_doi_iop",
+      "route:probe_iop_unknown",
+      "route:provider_selected_iop",
+      "route:provider_candidate_iop_metadata_selected_rank_1",
+      "route:provider_candidate_iop_identity_strong",
+      "fulltext:iop_attempt",
+      "fulltext:iop_html_fail",
+      "fulltext:iop_fail",
+      "route:provider_candidate_iop_rejected",
+      "fallback:iop_html_managed_by_provider",
+      "fallback:metadata_only",
+      "fulltext:iop_pdf_transport_fail",
+      "fulltext:iop_pdf_fail",
+      "download:markdown_skipped_no_fulltext"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 206,
+      "body": 0,
+      "refs": 421
+    },
+    "confidence": "low",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 0,
+      "word_count": 0,
+      "body_block_count": 0,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 0.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": false,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "crossref",
+    "route": "metadata",
+    "representation": "metadata",
+    "transport": "api",
+    "fallback_used": true
+  }
+}

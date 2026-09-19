@@ -1,0 +1,293 @@
+{
+  "doi": "10.1126/science.aeg3511",
+  "source": "science",
+  "metadata": {
+    "title": "Magma plumbing beneath Yellowstone",
+    "authors": [
+      "Jamie Farrell"
+    ],
+    "abstract": "Geodynamic modeling helps to elucidate magma formation and movement below Yellowstone",
+    "journal": "Science",
+    "article_type": null,
+    "published": "2026-4-9",
+    "keywords": [],
+    "license_urls": [],
+    "landing_page_url": "https://www.science.org/doi/10.1126/science.aeg3511"
+  },
+  "sections": [
+    {
+      "heading": "**Magma plumbing beneath Yellowstone**",
+      "level": 2,
+      "kind": "body",
+      "text": "Geodynamic modeling helps to elucidate magma formation and movement below Yellowstone"
+    },
+    {
+      "heading": "**Jamie Farrell**",
+      "level": 4,
+      "kind": "body",
+      "text": "ellowstone is one of the most seismically active areas in the western United States. In addition to seismicity, Yellowstone experiences active ground deformation mainly **Y** concentrated at or near its caldera, a massive basin-shaped collapse structure formed shortly after the last explosive volcanic eruption 630,000 years ago. These characteristics, along with Yellowstone’s hydrothermal features, are evidence of an active magma reservoir underlying the caldera. Previous studies indicated the accumulation of partially molten rocks (melt) beneath Earth’s crust in Yellowstone (_1_ – _4_). However, their origin and interaction have been elusive. On page 175 of this issue, Cao _et al._ (_5_) report that melt can form in Yellowstone by tectonic forces alone, without a mantle plume—narrow pillars of hot material that rises through the mantle to the base of the crust. The finding is crucial for evaluating hazards at the Yellowstone volcanic system and other similar volcanic systems around the world.\n\nvolcanic system that produces both silicic rhyolite magma (enriched with silica) and mafic basalt magma (less silica but enriched with magnesium and iron). This provides an additional complexity that cannot be easily explained by simplified models using traditional tomography (_8_). Although these studies point to the formation of an active magma reservoir underneath the Yellowstone caldera, understanding the mechanism of magma production and mobility is challenging.\n\nYellowstone’s Grand Prismatic Spring is located in the Midway Geyser Basin within a massive caldera. These features point to an underlying magma reservoir in Earth’s crust.\n\nA mantle plume has been commonly assumed to supply heat beneath Yellowstone (_6_). One of the ongoing debates is whether the Yellowstone volcanic system is due to heat from a mantle plume or not (_8_, _9_). Seismic tomography has shown a low–seismic velocity, plume-like area in the mantle that extends from the core-mantle boundary to the base of the crust (_6, 7, 10_). Although mantle plumes have been ubiquitously observed in tomographic models of the mantle beneath Yellowstone, the features of observed plume-like areas in Yellowstone are weaker than other imaged plumes in volcanoes around the globe (_6, 7_). Moreover, several alternative explanations have suggested that melts can form without a mantle plume through a self-sustained melting process, which is guided by ancient structural zones that contain remnants of former oceanic crust (_9_). Also, several other explanations for the source of Yellowstone volcanics that don't involve a mantle plume have been proposed, including an eastward-propagating rift (_11, 12_) where Earth’s crust pulls apart under tension, volcanism along a preexisting crustal weakness (e.g., faults and fractures) (_13_), or the interaction of mantle flow and the leftover magma bodies beneath volcanic centers (_14_).\n\nCalderas result from the emptying of an underlying magma reservoir during an eruption that causes the overlying roof to collapse. It is generally believed that there are bodies of partial melt, or magma reservoirs, in Earth’s crust underlying the Yellowstone volcanic field. Indeed, images of a crustal magmatic system, which were taken using seismic waves (_1–3_), identified areas containing ~10 to 20% partial melt directly beneath the Yellowstone caldera at about 4 km below the surface. In addition to seismic data, a recent study also confirmed regions that host partial melt using magnetotelluric data by passing electric currents through the crustal material under Yellowstone (_4_). However, how the magma reservoirs (_1_ – _4_) interact with each other and with a possible mantle plume (_6_, _7_) is still largely unknown. In addition, Yellowstone is a bimodal\n\nCao _et al._ used existing data on the Yellowstone volcanic system and the nearby Eastern Snake River Plain as input for three-dimensional geodynamic modeling of magma dynamics—specifically, melt produc-\n\nScience 9 APRIL 2026\n\n**143**\n\n**PERSPECTIVES**\n\ntion in the upper mantle and the overlying crust and its transport and storage in Earth’s crust beneath the Yellowstone volcanic field. This type of modeling can find the best fit from input data that span a broad range of spatial scales and physical parameters. Thus, the approach allows for a more robust interpretation of past events and offers a better model of future events. The results show that intruding material from the upper mantle produced primary melts (molten material that has the same composition as the source material that it melted from) from the combination of excess heat and decompression (a process in which reduced pressure can lead to melting) induced by tectonic forces. The proposed mechanism required little to no hot materials sourced from a mantle plume. In addition, the nearby Wyoming Craton, which is a dense ancient rock that extends under Earth’s crust on the hot upper mantle (asthenosphere), promotes delamination of the lithosphere and enhances local melting of rocks.\n\nThe study of Cao _et al._ predicts bifurcation (melt traveling in two split directions as it rises to Earth’s surface) of the upwelling melts in the crust, which is consistent with previous magnetotelluric imaging (_4_). This implies that a volcano-free segment of the Eastern Snake River Plain, which stretches southwest from the Yellowstone volcanic field, could force upwelling melt to migrate in different paths—toward the southwest of the Snake River Plain and northeast toward Yellowstone. The basaltic melt that migrates toward Yellowstone stops its vertical movement when the density of the basaltic melt becomes greater than that of the surrounding crustal silicic rocks, which it is intruding in the lower crust. This creates bodies of basaltic partial melt in the lower crust (_1_) above which ongoing extension of the crust allows for incremental injection of basaltic material into the middle-to-upper crust. The resulting injected basaltic melt eventually differentiates and forms the body of silicic partial melt in the upper crust (_1–3_) that feeds the surficial eruptions that have occurred in the Yellowstone region.\n\nThe findings of Cao _et al._ suggest the existence of a translithospheric magma plumbing system—a vertical network of magma channels and reservoirs that transports magma from the asthenosphere to the surface—beneath the Yellowstone volcanic field. This implies that lithospheric tectonics plays an essential role in producing asthenosphere-sourced melts in the Yellowstone volcanic region with little to no contribution from a mantle plume, supporting the nonplume hypothesis. Cao _et al._ provide important new constraints for melt formation in Yellowstone that could help to better understand the physics of the magmatic system at depth. Beyond the Yellowstone volcanic system, geodynamic modeling can be applied to other volcanic systems around the world to reveal subsurface processes that give rise to melt generation, mobility, and eruptions on the surface. This information is essential for assessing hazards and associated risks of large and active volcanic systems. �"
+    },
+    {
+      "heading": "**A universal law for random fl uctuations**",
+      "level": 2,
+      "kind": "body",
+      "text": "A two-dimensional array of quasiparticles confirms a universal scaling theory for nonequilibrium systems"
+    },
+    {
+      "heading": "**Alexey Kavokin**<sup>**1,2**</sup> and **Stella Kavokina**<sup>**1,2**</sup>",
+      "level": 4,
+      "kind": "body",
+      "text": "onequilibrium random behaviors, such as the growth of bacterial colonies and propagation of wildfire fronts, are difficult to predict because of the inherent uncertainty of complex systems **N** in which many entities interact with each other. The Kardar-Parisi-Zhang (KPZ) differential equation (_1_) models the random growth of interfaces in two-dimensional (2D) crystal surfaces, describing how the roughness of an interface changes with respect to time and spatial size. The theory is presumed to provide a universal framework for describing the fluctuation dynamics of a wide range of nonequilibrium systems in different dimensions (_2_ – _4_). However, experimental validation of the theory is scarce and often demonstrated in 1D systems. On page 221 of this issue, Widmann _et al._ (_5_) report an observation of the KPZ theory in a 2D platform that is different from a crystal surface, proving that diverse physical systems can share fundamentally similar predictable behavior."
+    },
+    {
+      "heading": "**N**",
+      "level": 1,
+      "kind": "body",
+      "text": "When atoms with an even total number of protons, neutrons, and electrons (bosonic atoms) are cooled to near absolute zero (0 K), they merge into a highly organized state that exhibits wavelike behavior—a Bose-Einstein condensate. These condensates provide experimental platforms for studying quantum mechanical behaviors, which deviate from a classical system, by amplifying microscopic quantum phenomena to an observable signal on a macroscopic level. They also exhibit quantum fluctuations, which manifest themselves in stochastic variations of their macroscopic properties, such as phase and wavelength. This provides a suitable environment for experimentally simulating KPZ theory. However, Bose-Einstein condensates of bosonic atoms may only exist at extremely low temperature, which is challenging to experimentally implement. Excitonpolaritons, which are part-light–part-matter quasiparticles that arise in an array of semiconductor micropillars (_6_), have properties that are similar to those of bosonic atoms and can undergo Bose-Einstein condensation. They offer room-temperature operation and are highly scalable. KPZ theory has been confirmed in a 1D chain of exciton-polariton condensates (_7_). However, evidence of the theory in a 2D exciton-polariton system has been elusive.\n\nWidmann _et al._ now demonstrate KPZ scaling in a 2D array of exciton-polariton condensates that emerge in an array of semiconductor micropillars. Upon light irradiation, confined photons (light particles) in each microcavity between pillars coupled strongly with excitons (electrically neutral pairs of positively and negatively charged quasiparticles) that are also generated in each pillar (see the figure). Spontaneous synchronization of the phases and frequencies of excitons and photons formed coherent flows of exciton-polariton condensates that could be visualized experimentally through optical spectra.\n\n9 APRIL 2026 Science\n\n**144**"
+    },
+    {
+      "heading": "**Magma plumbing beneath Yellowstone**",
+      "level": 3,
+      "kind": "body",
+      "text": "Jamie Farrell\n\n_Science_ **392** (6794),. DOI: 10.1126/science.aeg3511\n\n**View the article online** https://www.science.org/doi/10.1126/science.aeg3511 **Permissions** https://www.science.org/help/reprints-and-permissions\n\nUse of this article is subject to the Terms of service\n\n_Science_ (ISSN 1095-9203) is published by the American Association for the Advancement of Science. 1200 New York Avenue NW, Washington, DC 20005. The title _Science_ is a registered trademark of AAAS.\n\nCopyright © 2026 The Authors, some rights reserved; exclusive licensee American Association for the Advancement of Science. No claim to original U.S. Government Works"
+    }
+  ],
+  "references": [
+    {
+      "raw": "10.1126/science.aaa5648",
+      "doi": "10.1126/science.aaa5648",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.epsl.2023.118244",
+      "doi": "10.1016/j.epsl.2023.118244",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41586-025-08775-9",
+      "doi": "10.1038/s41586-025-08775-9",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41586-024-08286-z",
+      "doi": "10.1038/s41586-024-08286-z",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.ady2027",
+      "doi": "10.1126/science.ady2027",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1038/s41561-018-0075-y",
+      "doi": "10.1038/s41561-018-0075-y",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/j.jvolgeores.2009.08.020",
+      "doi": "10.1016/j.jvolgeores.2009.08.020",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1130/G52709.1",
+      "doi": "10.1130/g52709.1",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1130/0016-7606(2002)114 2.0.CO;2",
+      "doi": "10.1130/0016-7606(2002)114<1245:umooty>2.0.co;2",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "G. P. Waite , J. Geophys. Res. 11, B04303 (2006).",
+      "doi": null,
+      "title": null,
+      "year": "2006"
+    },
+    {
+      "raw": "10.1029/RG004i004p00509",
+      "doi": "10.1029/rg004i004p00509",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1016/0040-1951(77)90055-5",
+      "doi": "10.1016/0040-1951(77)90055-5",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "10.1126/science.188.4190.787",
+      "doi": "10.1126/science.188.4190.787",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "E. D. Humphreys , GSA Today 10, 1 (2000).",
+      "doi": null,
+      "title": null,
+      "year": "2000"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 2757,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [
+      "science HTML route was not usable (abstract_only); attempting PDF fallback.",
+      "Full text was extracted from PDF fallback after the HTML path was not usable.",
+      "PDF bibliography separation was incomplete; metadata references are used and the original PDF retains the unparsed text.",
+      "Science official full text was downloaded as PDF/binary to /tmp/paper-fetch-paywall-expansion-20260915/science/10.1126_science.aeg3511/fetch/Farrell_2026_Magma_plumbing_beneath_Yellowstone.pdf.",
+      "Markdown full text was saved to /tmp/paper-fetch-paywall-expansion-20260915/science/10.1126_science.aeg3511/fetch/Farrell_2026_Magma_plumbing_beneath_Yellowstone.md."
+    ],
+    "source_trail": [
+      "fulltext:science_html_fail",
+      "fulltext:science_pdf_fallback_ok",
+      "fulltext:science_pdf_ok",
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_science",
+      "route:signal_doi_science",
+      "route:probe_science_unknown",
+      "route:provider_selected_science",
+      "route:provider_candidate_science_metadata_selected_rank_1",
+      "route:provider_candidate_science_identity_strong",
+      "fulltext:science_attempt",
+      "download:science_saved",
+      "download:science_assets_skipped_profile_none",
+      "fulltext:science_article_ok",
+      "route:provider_candidate_science_accepted",
+      "download:markdown_saved"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 22,
+      "body": 2735,
+      "refs": 104
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 10913,
+      "word_count": 1665,
+      "body_block_count": 6,
+      "body_heading_count": 6,
+      "body_to_abstract_ratio": 151.36363636363637,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": true,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "science",
+    "route": "browser_pdf",
+    "representation": "pdf",
+    "transport": "browser",
+    "fallback_used": true
+  }
+}

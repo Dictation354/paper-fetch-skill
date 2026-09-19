@@ -1,0 +1,20 @@
+[
+  {
+    "doi": "10.1111/gcb.16386",
+    "provider": "wiley",
+    "requested_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16386",
+    "final_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16386",
+    "status_code": 200,
+    "response_headers": {
+      "date": "Thu, 17 Sep 2026 10:59:48 GMT",
+      "content-type": "text/html;charset=UTF-8"
+    },
+    "captured_at_utc": "2026-09-17T10:59:51.340909+00:00",
+    "body_file": "bilingual.html",
+    "size": 1308636,
+    "sha256": "235c1f19d1ad2bbc0e91f4bf2b2f3c597ab0bca466f5da6d0a522871ebd34195",
+    "capture_kind": "browser_rendered_dom",
+    "transport": "existing paper-fetch provider",
+    "access_conditions": "Existing environment and lawful public/subscription access; no authentication interaction"
+  }
+]

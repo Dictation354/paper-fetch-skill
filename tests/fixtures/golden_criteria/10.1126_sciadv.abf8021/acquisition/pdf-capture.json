@@ -1,0 +1,59 @@
+{
+  "doi": "10.1126/sciadv.abf8021",
+  "capture_started_at_utc": "2026-09-14T11:54:37.428421+00:00",
+  "verified_at_utc": "2026-09-14T12:00:53.117659+00:00",
+  "headless": false,
+  "human_assistance": "Reused publisher storage state after the user manually completed the prior headed HTML verification. This capture does not prove unattended authentication.",
+  "prior_headed_run_id": "c8ce6973-51d7-4b2f-90fd-daae9674d494",
+  "capture_method": "Current Science pdf_candidates plus fetch_pdf_with_browser. The helper obtained the PDF through its browser-seeded HTTP fallback and wrote it before Markdown conversion.",
+  "candidate_urls": [
+    "https://www.science.org/doi/epdf/10.1126/sciadv.abf8021",
+    "https://www.science.org/doi/pdf/10.1126/sciadv.abf8021",
+    "https://www.science.org/doi/pdf/10.1126/sciadv.abf8021?download=true",
+    "https://science.org/doi/epdf/10.1126/sciadv.abf8021",
+    "https://science.org/doi/pdf/10.1126/sciadv.abf8021",
+    "https://science.org/doi/pdf/10.1126/sciadv.abf8021?download=true"
+  ],
+  "successful_requested_url": null,
+  "successful_final_url": null,
+  "http_status": null,
+  "http_headers": {},
+  "pdf": {
+    "body_file": "original.pdf",
+    "size": 17082866,
+    "sha256": "449b7bf739ecf3fee25446b0777fcbefcf4e965dab53d70888c283825c40bb9e",
+    "pages": 12,
+    "article_pages": 11,
+    "publisher_information_pages": 1,
+    "identity_validation": {
+      "status": "match",
+      "method": "title",
+      "confidence": "medium",
+      "expected_doi": "10.1126/sciadv.abf8021",
+      "observed_doi": null,
+      "expected_arxiv_id": null,
+      "observed_arxiv_id": null,
+      "title_score": 100.0,
+      "reason": null
+    },
+    "independent_page_checks": {
+      "first_article_page": "1 of 11",
+      "last_article_page": "11 of 11",
+      "doi_on_last_article_page": true,
+      "doi_on_publisher_information_page": true,
+      "middle_article_text_checked": "Equation 4 involves the vertical moisture gradient"
+    }
+  },
+  "markdown_conversion": {
+    "status": "interrupted",
+    "stage": "pymupdf.layout extraction",
+    "scope": "After the PDF had been written and parsed, the helper did not finish Markdown conversion. Interrupted locally. The 120-second browser request budget does not establish a Markdown conversion deadline; this is not a PDF download timeout or publisher rejection."
+  },
+  "additional_reader_attempt": {
+    "status": "failed",
+    "reason": "pdf_download_failed",
+    "stage": "response_body_read",
+    "detail": "Separate discovered pdfdirect URL attempt failed because Playwright reported the response body was evicted. It is not the source of the retained original.pdf."
+  },
+  "scope": "Retained provider PDF artifact, independently verified; raw successful HTTP envelope was not recorded. Does not claim completion of the standard CLI PDF-to-Markdown path. Earlier successful HTML Markdown remains available."
+}

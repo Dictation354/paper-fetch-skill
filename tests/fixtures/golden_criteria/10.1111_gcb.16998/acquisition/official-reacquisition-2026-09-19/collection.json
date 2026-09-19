@@ -1,0 +1,168 @@
+{
+  "doi": "10.1111/gcb.16998",
+  "run": "official-reacquisition-2026-09-19",
+  "files": [
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Sun_et_al_2024_Drought_thresholds_that_impact_vegetation_reveal_the_divergent_responses_of_vegetation_growth_to_drought_across_China.json",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16998/acquisition/official-reacquisition-2026-09-19/outputs/98c4205bd2ea-Sun_et_al_2024_Drought_thresholds_that_impact_vegetation_reveal_the_divergent_responses_of_vegetation_growth_to_drought_across_China.json",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "98c4205bd2ea18c259214210abf5edc3cb910494c1b2ff7c6d5f05e773cafd2b",
+      "size": 92944
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/Sun_et_al_2024_Drought_thresholds_that_impact_vegetation_reveal_the_divergent_responses_of_vegetation_growth_to_drought_across_China.md",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16998/acquisition/official-reacquisition-2026-09-19/outputs/2714e6e2be75-Sun_et_al_2024_Drought_thresholds_that_impact_vegetation_reveal_the_divergent_responses_of_vegetation_growth_to_drought_across_China.md",
+      "category": "outputs",
+      "origin_kind": "unverified",
+      "sha256": "2714e6e2be7532f895536e28f631e5c51af30a9c80d6641acf8339c71c10733d",
+      "size": 64268
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16998_assets/gcb16998-fig-0001-m.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16998/acquisition/official-reacquisition-2026-09-19/assets/592920b97385-gcb16998-fig-0001-m.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "592920b9738544f2b9e785e4a10c19e5be99a78f86c5858f28b574ffffa3e99c",
+      "size": 301436
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16998_assets/gcb16998-fig-0002-m.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16998/acquisition/official-reacquisition-2026-09-19/assets/65dba427b1be-gcb16998-fig-0002-m.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "65dba427b1bee7cb3ea9bd6524fd45e7e4cc24ef5213e21a0dd1c50e0a10b237",
+      "size": 221604
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16998_assets/gcb16998-fig-0003-m.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16998/acquisition/official-reacquisition-2026-09-19/assets/bf2256225d7c-gcb16998-fig-0003-m.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "bf2256225d7ca8f042ce75d131bf5429b8f093adc62e518fa9ed83014fb5fc2b",
+      "size": 377615
+    },
+    {
+      "original_path": ".paper-fetch-runs/official-reacquisition-2026-09-19/papers/10.1111_gcb.16998_assets/gcb16998-fig-0004-m.jpg",
+      "fixture_path": "tests/fixtures/golden_criteria/10.1111_gcb.16998/acquisition/official-reacquisition-2026-09-19/assets/46b0fcf9bf75-gcb16998-fig-0004-m.jpg",
+      "category": "assets",
+      "origin_kind": "real_replay",
+      "sha256": "46b0fcf9bf75c7c24d2fe003c46382d04565e5c9deca7ddeb53ca845a8fb3e29",
+      "size": 517115
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "complete",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1111/gcb.16998",
+      "expected_doi": "10.1111/gcb.16998",
+      "title": "Drought thresholds that impact vegetation reveal the divergent responses of vegetation growth to drought across China",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 10172,
+      "confidence": "high",
+      "flags": [],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": true,
+      "profile": "body",
+      "audited": true,
+      "expected": null,
+      "discovered": 4,
+      "attempted": 4,
+      "total": 4,
+      "local": 4,
+      "full_size": 4,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 4,
+      "remote_only_count": 0,
+      "body_discovered": 4,
+      "body_attempted": 4,
+      "body_local": 4,
+      "body_full_size": 4,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": true,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": true,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "complete",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "wiley_browser",
+      "acquisition": {
+        "provider": "wiley",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "trace_event_count": 15,
+      "fallback_codes": [],
+      "warning_codes": [],
+      "failure_codes": [],
+      "unstructured_warning_count": 1,
+      "acceptance_policy": "provider_html_body",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "limits": [
+    "No custom downloader, monkeypatch, forced provider, or altered access/cache/retry policy.",
+    "HTTP status/final response URL not exposed by CLI assets remain unknown; successful artifact storage is distinct from captured response envelopes.",
+    "Current structured T&F formulas do not establish downloads of the 232 historical formula GIFs.",
+    "PDF checks concern readable files and identity, never converter quality or content repair.",
+    "Provider-specific CLI raw source retention is unchanged; generated JSON/Markdown are not publisher HTML/XML."
+  ],
+  "snapshot_paths": "Copied CLI JSON and Markdown retain their original run paths; copies are auxiliary evidence, not new live outputs."
+}

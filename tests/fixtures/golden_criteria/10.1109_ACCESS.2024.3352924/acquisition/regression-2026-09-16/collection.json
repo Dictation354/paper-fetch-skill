@@ -1,0 +1,1015 @@
+{
+  "provider": "ieee",
+  "doi": "10.1109/ACCESS.2024.3352924",
+  "sample_id": "10.1109_ACCESS.2024.3352924",
+  "source_url": "https://ieeexplore.ieee.org/document/10388355",
+  "source_input": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/regression-2026-09-16/ddfa8385193e34-dom.bin",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "e3dadaf0bbfb4e00b62d6f6073e522cb9d2989142dc6a30462d659314a369cc4",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 1.",
+        "caption": "FIGURE 1. Physical representation of the proposed NDPmulator. BW2* and BW3* represent configurable parameters that define the bandwidths between the different levels of the memory hierarchy and the NDAcc. The L1I and L1D blocks represent L1 instruction and data caches, respectively, while the L2/LLC block represents the L2 unified cache, which corresponds to the Last-Level Cache of the depicted system.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir1-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir1-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir1-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir1-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/figure-1.gif"
+      ],
+      "record": "acquisition/figure-1.gif",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 583,
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 583,
+          "rgba_bytes": 1912240,
+          "nonuniform_pixels": 224906
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "vieir1-3352924-large.gif",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 2.",
+        "caption": "FIGURE 2. Example operation of an NDAcc and its interaction with the surrounding system: (1) the CPU stores the NDAcc kernel in memory; (2) the CPU triggers the NDAcc to start operating; (3) the NDAcc exchanges operands and results with the memory hierarchy; (4) CPU polls the NDAcc.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir2-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir2-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir2-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir2-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/3ede4b8521c486-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 365,
+        "sha256": "a686420d43b57fc2af3c23cd1f4f460ae77dc7e6052e9d81dcf72a768ff20f8b",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 365,
+          "rgba_bytes": 1197200,
+          "nonuniform_pixels": 102495
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 3.",
+        "caption": "FIGURE 3. NDPmulator diagram relating the framework software routines to its main architectural blocks illustrated in the bottom right Section of Fig. 1 , namely the Prog. Interface and the Load/Store Unit. It also shows the connections between the NDAcc and the main devices of the processing system depicted in Fig. 2 .",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir3-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir3-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir3-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir3-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/0dfdf42992e1c7-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 503,
+        "sha256": "5ae7ac5e06f1bb023fd4b6f6d95f199885c94b350b8d9449e24d1ec1da347304",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 503,
+          "rgba_bytes": 1649840,
+          "nonuniform_pixels": 288296
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 4.",
+        "caption": "FIGURE 4. Diagram showing how NDPmulator Load/Store Unit unfolds large requests into smaller ones suitable to be sent to the memory devices.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir4-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir4-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir4-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir4-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/19cefefec42433-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 611,
+        "sha256": "051107d7528966c85aa04757f41d41e2606e9c925268dc923c10c0ec10503208",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 611,
+          "rgba_bytes": 2004080,
+          "nonuniform_pixels": 80434
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 5.",
+        "caption": "FIGURE 5. The device driver interfaces an application with the physical NDAcc by accessing its PI registers at privileged kernel level.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir5-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir5-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir5-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir5-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/7c5b42ef980b3c-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 359,
+        "sha256": "b4d56925c109d18308a835bb84744c3c6c9a8f1aef0d61d412271a1d8f2e4e4c",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 359,
+          "rgba_bytes": 1177520,
+          "nonuniform_pixels": 171117
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Listing 1.",
+        "caption": "Listing 1. Partial gem5 SE script simulating a standard processing system and a memory hierarchy with an NDAcc by making use of NDPmulator. In this example, the NDAcc is connected to the L2 cache. Nevertheless, NDPmulator allows to connect one or more NDAccs to any level of the memory hierarchy (or even multiple levels).",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir16-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir16-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir16-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir16-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/e55bb999d151cb-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 656,
+        "height": 820,
+        "sha256": "38128f52a20ba7137097420761c59c1c1690758665d1593a05bbca9ba8f70f4f",
+        "valid": true,
+        "browser_decode": {
+          "width": 656,
+          "height": 820,
+          "rgba_bytes": 2151680,
+          "nonuniform_pixels": 537896
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Listing 2.",
+        "caption": "Listing 2. C code example to initialize and control an NDAcc using NDPmulator SE mode. The routines initData and initKernel preload the data and the kernel into the memory region shared with the NDAcc.__ ndaccLaunchKernel instructs the NDAcc to execute the kernel and__ ndaccReady checks (pooling) if the NDAcc finished processing. Both these routines are implemented by the user who also defines the programming interface of the NDAcc.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir17-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir17-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir17-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir17-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/5346e9f91c5e61-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 588,
+        "sha256": "64ea64cd0cb2866aba52c98d92fa441395c82b13f0dce06f0891cd240e3851c1",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 588,
+          "rgba_bytes": 1928640,
+          "nonuniform_pixels": 49000
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Listing 3.",
+        "caption": "Listing 3. Partial gem5 FS script integrating a standard processing system and memory hierarchy with an NDAcc.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir18-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir18-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir18-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir18-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/cd7c345c611ef7-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 714,
+        "height": 820,
+        "sha256": "97447b1a1d0e230d5d05d79830ede67aae31b914e8b56199a7f5ab9df72c79fc",
+        "valid": true,
+        "browser_decode": {
+          "width": 714,
+          "height": 820,
+          "rgba_bytes": 2341920,
+          "nonuniform_pixels": 585250
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "Listing 4.",
+        "caption": "Listing 4. C code example to initialize and control an NDAcc using NDPmulator FS mode. Similarly to the SE mode, the routines initData and initKernel preload the data and the kernel into the memory region shared with the NDAcc.__ ndaccLaunchKernel instructs the NDAcc to execute the kernel and__ ndaccReady checks if the NDAcc finished processing. Both these routines are implemented by the user who is also responsible for implementing a device driver suitable for the NDAcc custom programming interface, for which NDPmulator provides templates and documentation.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir19-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir19-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir19-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir19-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/f88a26e45114ac-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 648,
+        "sha256": "2bbd09f6aa0d376ae061d9784e73e0d32793af605f5938553f6cef40bd887e17",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 648,
+          "rgba_bytes": 2125440,
+          "nonuniform_pixels": 51718
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 6.",
+        "caption": "FIGURE 6. NDCU architecture proposed by Das and Kapoor [46] .",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir6-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir6-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir6-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir6-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/b574b96b2e33f8-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 544,
+        "sha256": "9ad1d919c97a9ccb24b3f49bde9fb0a038b2373a246767b2f7fdf08bc886fa25",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 544,
+          "rgba_bytes": 1784320,
+          "nonuniform_pixels": 227008
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "heading": "TABLE 1",
+        "caption": "TABLE 1 Parameters Used to Configure the Baseline System for the Evaluation of the NDCU Proposed in [46] and Executed Benchmarks",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t1-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t1-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t1-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t1-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/8d865a27f8f2da-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 472,
+        "sha256": "1f851e9ca6b316c01c856f2fd5e6032fc0c814a59c47f5d9bec8ad94d24b3ad9",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 472,
+          "rgba_bytes": 1548160,
+          "nonuniform_pixels": 72999
+        }
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 7.",
+        "caption": "FIGURE 7. Performance benefits of the NDCU presented in [46] . The second bar represents the results obtained by Das and Kapoor [46] in their original evaluation. The third bar illustrates the estimated performance benefits of the NDCU modeled using NDPmulator when coupled to the L2 data cache in SE mode. Finally, the last bar depicts the performance benefits estimated using the FS mode of NDPmulator with the NDCU also coupled with the L2 cache. The results are presented in the same format as in the original paper [46] .",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir7-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir7-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir7-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir7-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/8b1f7f434665a9-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 329,
+        "sha256": "53e17942cfadce702772c3a8f98faaf3548ee4274171dcc9e3ac092d3c5c1ea4",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 329,
+          "rgba_bytes": 1079120,
+          "nonuniform_pixels": 112510
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 8.",
+        "caption": "FIGURE 8. Execution time of the five benchmarks used to evaluate the NDCU proposed by Das and Kapoor [46] obtained with NDPmulator FS mode. In (a), no other workload is being executed in parallel with the considered benchmarks. (b) illustrates a scenario where another data-intensive workload is being executed in parallel with the benchmarks. Due to its much smaller execution time, hit best results were represented using a different scale in the vertical axis.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir8ab-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir8ab-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir8ab-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir8ab-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/3a8d7e06111b7e-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 406,
+        "sha256": "a0eea1885bd8227fbdf6f834f2473b5597edd2bbaf945cc832bc1d1b903b1c46",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 406,
+          "rgba_bytes": 1331680,
+          "nonuniform_pixels": 98042
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 9.",
+        "caption": "FIGURE 9. Execution time of the five benchmarks used to evaluate the NDCU proposed in [46] considering: only the CPU; the CPU plus the NDAcc being controlled by simply and directly reading and writing from/to its programming registers; the CPU and the NDAcc being controlled through a proper device driver (bars 3–5, each corresponding to a different run). Due to its much smaller execution time, hit best results were represented using a different scale in the vertical axis.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir9-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir9-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir9-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir9-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/9025c9960992db-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 328,
+        "sha256": "44bed044e8fddc799bf52e76327f8ef8d57d19241299b2d4e2d69f4170530c5c",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 328,
+          "rgba_bytes": 1075840,
+          "nonuniform_pixels": 79342
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 10.",
+        "caption": "FIGURE 10. NDAcc architecture proposed by Wang et al. [47–48].",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir10-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir10-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir10-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir10-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/1e6f1ad8cca930-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 691,
+        "sha256": "a76d8d00784496494e7a14c95558047eea9ac65d0153904cedea4fc2a36222b9",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 691,
+          "rgba_bytes": 2266480,
+          "nonuniform_pixels": 102499
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "heading": "TABLE 2",
+        "caption": "TABLE 2 Parameters Used to Configure the Baseline System for the Evaluation of the NDAcc Proposed in [47] and [48] and Executed Benchmarks",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t2-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t2-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t2-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t2-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/7f567de279f078-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 624,
+        "sha256": "ce853a8860de1dac403d1df6392460f2c90928f1116d9bc5ef0e65d8dfd63aa7",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 624,
+          "rgba_bytes": 2046720,
+          "nonuniform_pixels": 96001
+        }
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 11.",
+        "caption": "FIGURE 11. Performance benefits of the NDAcc proposed by Wang et al. 47]–[48 compared with those estimated using NDPmulator.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir11-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir11-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir11-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir11-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/6b1ecd1f113afb-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 435,
+        "sha256": "69c36d7b350e5d39432621ec712ef41a4bf560b45e2cb60890895dbaa5d2c0bc",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 435,
+          "rgba_bytes": 1426800,
+          "nonuniform_pixels": 96334
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 12.",
+        "caption": "FIGURE 12. Generic architecture of a Gemmini NN accelerator consisting of a configurable systolic mesh of PEs grouped into tiles, as well as NN-specific units and input and output memories.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir12-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir12-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir12-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir12-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/d8fc93c60dc243-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 508,
+        "sha256": "6d6e3d6702db970560e8dd0ab93f37a0ba8dcab9dfcbcc4d22f03da6c144f4da",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 508,
+          "rgba_bytes": 1666240,
+          "nonuniform_pixels": 187965
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "heading": "TABLE 3",
+        "caption": "TABLE 3 Parameters Used to Configure the Baseline System for the Evaluation of the NDAcc Proposed in [49] and Executed Benchmarks",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t3-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t3-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t3-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t3-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/0f8b35f0c8803c-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 503,
+        "sha256": "4a74767972de8162828773a24b0ecc57ebf76875ff51ff57bdefe8e0bdf66b2f",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 503,
+          "rgba_bytes": 1649840,
+          "nonuniform_pixels": 73183
+        }
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 13.",
+        "caption": "FIGURE 13. Microbenchmarks (a, b) and full CNN benchmarks (c, d). (a) and (c) show the results for applications where the gathering of the operands is done by the CPU. (b) and (d) correspond to applications fully executed by the Gemmini NDAcc.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir13abcd-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir13abcd-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir13abcd-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir13abcd-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/12804dad6256dc-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 644,
+        "sha256": "5e26717638855ba9e5a64aad431edf850d36b5871faacc2b379aed75d0c2e409",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 644,
+          "rgba_bytes": 2112320,
+          "nonuniform_pixels": 397064
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 14.",
+        "caption": "FIGURE 14. Execution time of each layer of a small CNN optimized for the CIFAR-10 dataset when executed only by the CPU (blue bars) and the CPU equipped with the NDAcc (orange bars).",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir14-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir14-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir14-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir14-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/18d06f32b7ac04-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 455,
+        "sha256": "259b3ee05ede3c8f9c540a3a76f3d93da1c4cc5fb541a132959dbcf6db2ef1a2",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 455,
+          "rgba_bytes": 1492400,
+          "nonuniform_pixels": 86139
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "heading": "FIGURE 15.",
+        "caption": "FIGURE 15. (a) Simulation speedup of NDPmulator over an official Gemmini simulation platform. (b) Performance benefits obtained when increasing the width of the bus connecting the Gemmini NDAcc with the L2 cache, which can be determined by simply changing a parameter in the simulation file.",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir15ab-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir15ab-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir15ab-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir15ab-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/a3c31f0f9e1c95-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 350,
+        "sha256": "15a373c120d71ed4077790965e4604dd166afc09f523bb62bb3f3b2d428e77c4",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 350,
+          "rgba_bytes": 1148000,
+          "nonuniform_pixels": 97549
+        }
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    },
+    {
+      "asset": {
+        "kind": "table",
+        "heading": "TABLE 4",
+        "caption": "TABLE 4 Summary and Comparison of Main Features Offered by NDPmulator and Two Previous Works: gem5-Aladdin [59] and gem5-SALAM [60]",
+        "url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t4-3352924-large.gif",
+        "section": "body",
+        "render_state": "inline",
+        "preview_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t4-3352924-small.gif",
+        "full_size_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t4-3352924-large.gif"
+      },
+      "download_url": "https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6287639/10380310/10388355/vieir.t4-3352924-large.gif",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+        "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+      ],
+      "record": "acquisition/regression-2026-09-16/3cc77a39f0f25f-browser.bin",
+      "validation": {
+        "format": "image/gif",
+        "width": 820,
+        "height": 627,
+        "sha256": "da7e3c6517a2f0e012114eca37f08f3ba626d2e6e0adcfb9fcccdae70a1bef25",
+        "valid": true,
+        "browser_decode": {
+          "width": 820,
+          "height": 627,
+          "rgba_bytes": 2056560,
+          "nonuniform_pixels": 81767
+        }
+      },
+      "replay_verified": true,
+      "file_role": "table",
+      "reason": "publisher_access_denied",
+      "outcome": "complete",
+      "blocker": "file_access_denied",
+      "bytes_received_complete": false,
+      "final_article_link_verified": true,
+      "download_tier": "full_size",
+      "identity_evidence": "Same DOI/document 10388355 official browser DOM links exact large.gif URL; provider browser image path returned HTTP200"
+    }
+  ],
+  "counts": {
+    "discovered_references": 23,
+    "unique_files": 23,
+    "verified_files": 23,
+    "replayed_files": 23,
+    "complete_received_files": 23,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "blocked",
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 23,
+    "unique_files": 23,
+    "verified_files": 1,
+    "replayed_files": 1,
+    "complete_received_files": 1
+  },
+  "historical_outcome_before_supplementary_removal": "partial",
+  "historical_blocking_evidence": [
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin",
+    "acquisition/assets-2026-09-15/0dfdf42992e1c736-http-1.bin"
+  ]
+}

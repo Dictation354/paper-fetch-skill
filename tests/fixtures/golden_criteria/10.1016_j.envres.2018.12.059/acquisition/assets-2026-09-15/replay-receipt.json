@@ -1,0 +1,61 @@
+{
+  "doi": "10.1016/j.envres.2018.12.059",
+  "source_input": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/original.xml",
+  "source_sha256": "10a0412ae55960c749a17685417b3da6dce8cf59d75b7f830f6daeafd25d07e1",
+  "scope": "Historical offline source and retained body/object byte replay. Supplementary payloads removed; their local-link entries are no longer retained.",
+  "rendered_article_sha256": "3c70b1a40098900bb7f07d4704645f20ac54b409a81ff6fb9406883abfdd528d",
+  "files": [
+    {
+      "filename": "1-s2.0-S0013935118306947-gr1_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr1_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr1_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "fb674850e570a13342ffa219fae9230a395e5312d3912822af69d9d2451fe166",
+      "size": 420506,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 2500,
+      "height": 2182,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S0013935118306947-gr2_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr2_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr2_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "6fc116ef1e99d9dcbc461a4cbf27b09100ad987aa893189e2e1488a1fb6ce93a",
+      "size": 413588,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 1500,
+      "height": 3759,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S0013935118306947-gr3_lrg.jpg",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr3_lrg.jpg?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr3_lrg.jpg?httpAccept=%2A%2F%2A",
+      "sha256": "1ad3c5fcfe76b3ee5b428765e260970b333801a280b00f211cd0e939c113daa1",
+      "size": 713013,
+      "kind": "figure",
+      "download_tier": "preview",
+      "width": 1708,
+      "height": 4402,
+      "final_article_link_verified": true
+    },
+    {
+      "filename": "1-s2.0-S0013935118306947-am.pdf",
+      "download_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-am.pdf?httpAccept=%2A%2F%2A",
+      "source_url": "https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-am.pdf?httpAccept=%2A%2F%2A",
+      "sha256": "156ff3dc019c882fd077e15435da00457efbd2dd5b60f335e9b7f244ecc67013",
+      "size": 716843,
+      "kind": "supplementary",
+      "download_tier": "supplementary_file",
+      "width": null,
+      "height": null,
+      "final_article_link_verified": true
+    }
+  ],
+  "verified_at_utc": "2026-09-15T08:26:24.596107+00:00",
+  "python_version": "3.14.7",
+  "output_retention": "Tests wrote/read real local files and article.md in pytest temporary output; this receipt retains the verified hashes, file names and link results.",
+  "removed_supplementary_file_count": 1
+}

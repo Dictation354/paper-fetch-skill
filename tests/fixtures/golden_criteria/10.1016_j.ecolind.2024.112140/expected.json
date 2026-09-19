@@ -17,5 +17,135 @@
     "figures": true,
     "references": true,
     "title": true
-  }
+  },
+  "source_review": {
+    "sample_id": "10.1016_j.ecolind.2024.112140",
+    "provider": "elsevier",
+    "doi": "10.1016/j.ecolind.2024.112140",
+    "original": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml",
+    "sha256": "a59871f1deee860d4a50b8ae9f29961fd5b687dc0bd5c3050ed1dc0572dff2e4",
+    "format": "xml",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 6,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 60,
+        "scope": "all structured author/title/journal/year/page/e-locator/edition/publisher/comment/web-link/suffix fields and independently decoded DOI in original reference order; plain text references checked in full"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 47,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 8,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 0,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 36,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "No structured formula in the selected original; bitmap/externally loaded formulas have only captured index/link evidence.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence."
+    ],
+    "author_source": "author-group author",
+    "provenance": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/provenance.json",
+    "captured_image_files": [
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/5b9231d7aa7328ca-http-1.bin",
+        "sha256": "9916a3f7dec42078f6b38d7e406dfaae6043cb1b0d7b1fd8bd9f9f56fda6db39",
+        "bytes": 670977
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/304b3daf53d44e86-http-1.bin",
+        "sha256": "2b9a55e4309aae1540ec42180ed435871ce5a06c722476a15e41d92863e14888",
+        "bytes": 459477
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/9813b0d86fd53b5c-http-1.bin",
+        "sha256": "8b58a268b581d25cce92fd8803a98a81baca3f85cbf72a3158f53e602242a9d3",
+        "bytes": 407184
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/9565a86df0a43020-http-1.bin",
+        "sha256": "c9877ab670af55f67a0d5cb377d33da008d98eb0c02080c34a68e677f474dbb2",
+        "bytes": 467307
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/7e3d0168540b1c68-http-1.bin",
+        "sha256": "46a3eaff5a59318ed60015a934c57068647ed9ee4170d79d2c6fd4f0d93cf758",
+        "bytes": 441647
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/688e29b5a1dfca91-http-1.bin",
+        "sha256": "ffab85939c68e258e3d1e335a058701fbd1f0e0b26a8745e789e5b5ccf111db4",
+        "bytes": 425084
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/987de4056dae91e4-http-1.bin",
+        "sha256": "69c583eb6aff29e938641b1a65c1eedbf5e82782cf71034112c494d1de61fab1",
+        "bytes": 801885
+      },
+      {
+        "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/5ec4d0d13dc7b0b8-http-1.bin",
+        "sha256": "35efb78d3929f6c888ec547af9587cd7c0647a71dc4b34105b7e99408e2b15f7",
+        "bytes": 791868
+      }
+    ],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 0,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml",
+      "sha256": "a59871f1deee860d4a50b8ae9f29961fd5b687dc0bd5c3050ed1dc0572dff2e4",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [],
+      "mathml": []
+    }
+  ]
 }

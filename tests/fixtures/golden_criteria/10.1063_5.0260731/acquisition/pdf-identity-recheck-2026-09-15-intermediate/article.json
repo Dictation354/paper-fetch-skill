@@ -1,0 +1,573 @@
+{
+  "doi": "10.1063/5.0260731",
+  "source": "crossref_meta",
+  "metadata": {
+    "title": "A basis-free phase space electronic Hamiltonian that recovers beyond Born–Oppenheimer electronic momentum and current density",
+    "authors": [
+      "Zhen Tao",
+      "Tian Qiu",
+      "Xuezhi Bian",
+      "Titouan Duston",
+      "Nadine Bradbury",
+      "Joseph E. Subotnik"
+    ],
+    "abstract": "We present a phase-space electronic Hamiltonian ĤPS (parameterized by both nuclear position X and momentum P) that boosts each electron into the moving frame of the nuclei that are closest in real space. The final form for the phase space Hamiltonian does not assume the existence of an atomic orbital basis, and relative to standard Born–Oppenheimer theory, the newly proposed one-electron operators can be expressed directly as functions of electronic and nuclear positions and momentum. We show that (i) quantum–classical dynamics along such a Hamiltonian maintains momentum conservation and that (ii) diagonalizing such a Hamiltonian can recover the electronic momentum and electronic current density reasonably well. In conjunction with other reports in the literature that such a phase-space approach can also recover vibrational circular dichroism spectra, we submit that the present phase-space approach offers a testable and powerful approach to post-BO electronic structure theory. Moreover, the approach is inexpensive and can be immediately applied to simulations of chiral induced spin selectivity experiments (where the transfer of angular momentum between nuclei and electrons is considered critical).",
+    "journal": "The Journal of Chemical Physics",
+    "article_type": null,
+    "published": "2025-4-14",
+    "keywords": [],
+    "license_urls": [],
+    "landing_page_url": "https://pubs.aip.org/jcp/article/162/14/144111/3343998/A-basis-free-phase-space-electronic-Hamiltonian"
+  },
+  "sections": [],
+  "references": [
+    {
+      "raw": "Chiral-induced spin selectivity effect",
+      "doi": "10.1021/jz300793y",
+      "title": "Chiral-induced spin selectivity effect",
+      "year": "2012"
+    },
+    {
+      "raw": "Vibrational origin of exchange splitting and chiral-induced spin selectivity",
+      "doi": "10.1103/physrevb.102.235416",
+      "title": "Vibrational origin of exchange splitting and chiral-induced spin selectivity",
+      "year": "2020"
+    },
+    {
+      "raw": "Induced spin filtering in electron transmission through chiral molecular layers adsorbed on metals with strong spin–orbit coupling",
+      "doi": "10.1063/1.4820907",
+      "title": "Induced spin filtering in electron transmission through chiral molecular layers adsorbed on metals with strong spin–orbit coupling",
+      "year": "2013"
+    },
+    {
+      "raw": "Direct observation of chirality-induced spin selectivity in electron donor–acceptor molecules",
+      "doi": "10.1126/science.adj5328",
+      "title": "Direct observation of chirality-induced spin selectivity in electron donor–acceptor molecules",
+      "year": "2023"
+    },
+    {
+      "raw": "Energy, momentum, and angular momentum transfer between electrons and nuclei",
+      "doi": "10.1103/physrevlett.128.113001",
+      "title": "Energy, momentum, and angular momentum transfer between electrons and nuclei",
+      "year": "2022"
+    },
+    {
+      "raw": "Conservation of angular momentum in direct nonadiabatic dynamics",
+      "doi": "10.1021/acs.jpclett.9b03749",
+      "title": "Conservation of angular momentum in direct nonadiabatic dynamics",
+      "year": "2020"
+    },
+    {
+      "raw": "Total angular momentum conservation in Ehrenfest dynamics with a truncated basis of adiabatic states",
+      "doi": "10.1063/5.0177778",
+      "title": "Total angular momentum conservation in Ehrenfest dynamics with a truncated basis of adiabatic states",
+      "year": "2024"
+    },
+    {
+      "raw": "Total angular momentum conservation in ab initio Born–Oppenheimer molecular dynamics",
+      "doi": "10.1103/physrevb.108.l220304",
+      "title": "Total angular momentum conservation in ab initio Born–Oppenheimer molecular dynamics",
+      "year": "2023"
+    },
+    {
+      "raw": "Isotope effects in optical rotation",
+      "doi": "10.1021/ja00962a010",
+      "title": "Isotope effects in optical rotation",
+      "year": "1966"
+    },
+    {
+      "raw": "Velocity-dependent property surfaces and the theory of vibrational circular dichroism",
+      "doi": "10.1016/0301-0104(87)85017-6",
+      "title": "Velocity-dependent property surfaces and the theory of vibrational circular dichroism",
+      "year": "1987"
+    },
+    {
+      "raw": "Adiabatic molecular properties beyond the Born–Oppenheimer approximation. Complete adiabatic wave functions and vibrationally induced electronic current density",
+      "doi": "10.1063/1.445588",
+      "title": "Adiabatic molecular properties beyond the Born–Oppenheimer approximation. Complete adiabatic wave functions and vibrationally induced electronic current density",
+      "year": "1983"
+    },
+    {
+      "raw": "Theory of vibrational circular dichroism",
+      "doi": "10.1021/j100251a006",
+      "title": "Theory of vibrational circular dichroism",
+      "year": "1985"
+    },
+    {
+      "raw": "Representation and conservation of angular momentum in the Born–Oppenheimer theory of polyatomic molecules",
+      "doi": "10.1063/5.0143809",
+      "title": "Representation and conservation of angular momentum in the Born–Oppenheimer theory of polyatomic molecules",
+      "year": "2023"
+    },
+    {
+      "raw": "Chaotic classical and half-classical adiabatic reactions: Geometric magnetism and deterministic friction",
+      "doi": "10.1098/rspa.1993.0127",
+      "title": "Chaotic classical and half-classical adiabatic reactions: Geometric magnetism and deterministic friction",
+      "year": "1993"
+    },
+    {
+      "raw": "Ab initio molecular dynamics with screened Lorentz forces. I. Calculation and atomic charge interpretation of berry curvature",
+      "doi": "10.1063/5.0055388",
+      "title": "Ab initio molecular dynamics with screened Lorentz forces. I. Calculation and atomic charge interpretation of berry curvature",
+      "year": "2021"
+    },
+    {
+      "raw": "Magnetic-translational sum rule and approximate models of the molecular berry curvature",
+      "doi": "10.1063/5.0112943",
+      "title": "Magnetic-translational sum rule and approximate models of the molecular berry curvature",
+      "year": "2022"
+    },
+    {
+      "raw": "Adiabatic dynamics of coupled spins and phonons in magnetic insulators",
+      "doi": "10.1103/physrevx.14.011041",
+      "title": "Adiabatic dynamics of coupled spins and phonons in magnetic insulators",
+      "year": "2024"
+    },
+    {
+      "raw": "Semiclassical description of nuclear dynamics moving through complex-valued single avoided crossings of two electronic states",
+      "doi": "10.1063/5.0054014",
+      "title": "Semiclassical description of nuclear dynamics moving through complex-valued single avoided crossings of two electronic states",
+      "year": "2021"
+    },
+    {
+      "raw": "The Landau–Zener formula",
+      "doi": "10.1021/jp040627u",
+      "title": "The Landau–Zener formula",
+      "year": "2005"
+    },
+    {
+      "raw": "Quantum fluctuation of electronic wave-packet dynamics coupled with classical nuclear motions",
+      "doi": "10.1063/1.1854115",
+      "title": "Quantum fluctuation of electronic wave-packet dynamics coupled with classical nuclear motions",
+      "year": "2005"
+    },
+    {
+      "raw": "Exploring dynamical electron theory beyond the Born–Oppenheimer framework: From chemical reactivity to non-adiabatically coupled electronic and nuclear wavepackets on-the-fly under laser field",
+      "doi": "10.1039/c0cp00937g",
+      "title": "Exploring dynamical electron theory beyond the Born–Oppenheimer framework: From chemical reactivity to non-adiabatically coupled electronic and nuclear wavepackets on-the-fly under laser field",
+      "year": "2011"
+    },
+    {
+      "raw": "Path integral formulation for quantum nonadiabatic dynamics and the mixed quantum classical limit",
+      "doi": "10.1063/1.2716387",
+      "title": "Path integral formulation for quantum nonadiabatic dynamics and the mixed quantum classical limit",
+      "year": "2007"
+    },
+    {
+      "raw": "Mixed quantum-classical equilibrium",
+      "doi": "10.1063/1.1856460",
+      "title": "Mixed quantum-classical equilibrium",
+      "year": "2005"
+    },
+    {
+      "raw": "Mixed quantum-classical equilibrium: Surface hopping",
+      "doi": "10.1063/1.2955564",
+      "title": "Mixed quantum-classical equilibrium: Surface hopping",
+      "year": "2008"
+    },
+    {
+      "raw": "Exact factorization of the time-dependent electron-nuclear wave function",
+      "doi": "10.1103/physrevlett.105.123002",
+      "title": "Exact factorization of the time-dependent electron-nuclear wave function",
+      "year": "2010"
+    },
+    {
+      "raw": "Correlated electron-nuclear dynamics: Exact factorization of the molecular wavefunction",
+      "doi": "10.1063/1.4745836",
+      "title": "Correlated electron-nuclear dynamics: Exact factorization of the molecular wavefunction",
+      "year": "2012"
+    },
+    {
+      "raw": "On the mass of atoms in molecules: Beyond the Born–Oppenheimer approximation",
+      "doi": "10.1103/physrevx.7.031035",
+      "title": "On the mass of atoms in molecules: Beyond the Born–Oppenheimer approximation",
+      "year": "2017"
+    },
+    {
+      "raw": "Describing the photo-isomerization of a retinal chromophore model with coupled and quantum trajectories",
+      "doi": "10.1063/5.0089415",
+      "title": "Describing the photo-isomerization of a retinal chromophore model with coupled and quantum trajectories",
+      "year": "2022"
+    },
+    {
+      "raw": "Surface hopping by consensus",
+      "doi": "10.1021/acs.jpclett.6b01186",
+      "title": "Surface hopping by consensus",
+      "year": "2016"
+    },
+    {
+      "raw": "Surface hopping without momentum jumps: A quantum-trajectory-based approach to nonadiabatic dynamics",
+      "doi": "10.1021/acs.jpca.8b10487",
+      "title": "Surface hopping without momentum jumps: A quantum-trajectory-based approach to nonadiabatic dynamics",
+      "year": "2019"
+    },
+    {
+      "raw": "Coupled-trajectory mixed quantum-classical algorithm: A deconstruction",
+      "doi": "10.1021/acs.jctc.8b00449",
+      "title": "Coupled-trajectory mixed quantum-classical algorithm: A deconstruction",
+      "year": "2018"
+    },
+    {
+      "raw": "A self-consistent eikonal treatment of electronic transitions in molecular collisions",
+      "doi": "10.1063/1.444753",
+      "title": "A self-consistent eikonal treatment of electronic transitions in molecular collisions",
+      "year": "1983"
+    },
+    {
+      "raw": "Eikonal method in magnetohydrodynamics",
+      "doi": "10.1103/physrev.126.1899",
+      "title": "Eikonal method in magnetohydrodynamics",
+      "year": "1962"
+    },
+    {
+      "raw": "Quantum phase corrections from adiabatic iteration",
+      "doi": "10.1098/rspa.1987.0131",
+      "title": "Quantum phase corrections from adiabatic iteration",
+      "year": "1987"
+    },
+    {
+      "raw": "Histories of adiabatic quantum transitions",
+      "doi": "10.1098/rspa.1990.0051",
+      "title": "Histories of adiabatic quantum transitions",
+      "year": "1990"
+    },
+    {
+      "raw": "Phase-space surface hopping: Nonadiabatic dynamics in a superadiabatic basis",
+      "doi": "10.1063/1.3098321",
+      "title": "Phase-space surface hopping: Nonadiabatic dynamics in a superadiabatic basis",
+      "year": "2009"
+    },
+    {
+      "raw": "Linear and angular momentum conservation in surface hopping methods",
+      "doi": "10.1063/5.0179599",
+      "title": "Linear and angular momentum conservation in surface hopping methods",
+      "year": "2024"
+    },
+    {
+      "raw": "Practical phase-space electronic Hamiltonians for ab initio dynamics",
+      "doi": "10.1063/5.0192084",
+      "title": "Practical phase-space electronic Hamiltonians for ab initio dynamics",
+      "year": "2024"
+    },
+    {
+      "raw": "Electronic currents and Born–Oppenheimer molecular dynamics",
+      "doi": "10.1063/1.4747540",
+      "title": "Electronic currents and Born–Oppenheimer molecular dynamics",
+      "year": "2012"
+    },
+    {
+      "raw": "On the molecular electronic flux: Role of nonadiabaticity and violation of conservation",
+      "doi": "10.1063/5.0049821",
+      "title": "On the molecular electronic flux: Role of nonadiabaticity and violation of conservation",
+      "year": "2021"
+    },
+    {
+      "raw": "Velocity-gauge formalism in the theory of vibrational circular dichroism and infrared absorption",
+      "doi": "10.1063/1.462668",
+      "title": "Velocity-gauge formalism in the theory of vibrational circular dichroism and infrared absorption",
+      "year": "1992"
+    },
+    {
+      "raw": "A phase-space electronic Hamiltonian for vibrational circular dichroism",
+      "doi": "10.1021/acs.jctc.4c00662",
+      "title": "A phase-space electronic Hamiltonian for vibrational circular dichroism",
+      "year": "2024"
+    },
+    {
+      "raw": "An electronic phase-space Hamiltonian approach for electronic current density and vibrational circular dichroism",
+      "doi": "10.1063/5.0233618",
+      "title": "An electronic phase-space Hamiltonian approach for electronic current density and vibrational circular dichroism",
+      "year": "2024"
+    },
+    {
+      "raw": "Electron capture in slow collisions",
+      "doi": "10.1098/rspa.1958.0075",
+      "title": "Electron capture in slow collisions",
+      "year": "1958"
+    },
+    {
+      "raw": "Theory of near-adiabatic collisions. I. Electron translation factor method",
+      "doi": "10.1103/physreva.18.117",
+      "title": "Theory of near-adiabatic collisions. I. Electron translation factor method",
+      "year": "1978"
+    },
+    {
+      "raw": "Common translation factor method",
+      "doi": "10.1088/0953-4075/27/16/010",
+      "title": "Common translation factor method",
+      "year": "1994"
+    },
+    {
+      "raw": "Time-dependent theoretical treatments of the dynamics of electrons and nuclei in molecular systems",
+      "doi": "10.1103/revmodphys.66.917",
+      "title": "Time-dependent theoretical treatments of the dynamics of electrons and nuclei in molecular systems",
+      "year": "1994"
+    },
+    {
+      "raw": "Electron transfer in p–He+ and He2+-H collisions using a Sturmian basis",
+      "doi": "10.1103/physreva.25.697",
+      "title": "Electron transfer in p–He+ and He2+-H collisions using a Sturmian basis",
+      "year": "1982"
+    },
+    {
+      "raw": "Velocity-dependent orbitals in proton-on-hydrogen-atom collisions",
+      "doi": "10.1103/physrev.181.311",
+      "title": "Velocity-dependent orbitals in proton-on-hydrogen-atom collisions",
+      "year": "1969"
+    },
+    {
+      "raw": "Analytic derivative couplings between configuration-interaction-singles states with built-in electron-translation factors for translational invariance",
+      "doi": "10.1063/1.3665031",
+      "title": "Analytic derivative couplings between configuration-interaction-singles states with built-in electron-translation factors for translational invariance",
+      "year": "2011"
+    },
+    {
+      "raw": "Surface hopping, electron translation factors, electron rotation factors, momentum conservation, and size consistency",
+      "doi": "10.1063/5.0160965",
+      "title": "Surface hopping, electron translation factors, electron rotation factors, momentum conservation, and size consistency",
+      "year": "2023"
+    },
+    {
+      "raw": "A simple one-electron expression for electron rotational factors",
+      "doi": "10.1063/5.0192083",
+      "title": "A simple one-electron expression for electron rotational factors",
+      "year": "2024"
+    },
+    {
+      "raw": "Mathematical structures: Spatial Tessellations. Concepts and applications of voronoi diagrams. Atsuyuki Okabe, Barry Boots, and Kokichi Sugihara. Wiley, New York, 1992. xii, 532 pp., illus. $89.95. Wiley series in probability and mathematical statistics",
+      "doi": "10.1126/science.260.5111.1170",
+      "title": "Mathematical structures: Spatial Tessellations. Concepts and applications of voronoi diagrams. Atsuyuki Okabe, Barry Boots, and Kokichi Sugihara. Wiley, New York, 1992. xii, 532 pp., illus. $89.95. Wiley series in probability and mathematical statistics",
+      "year": "1993"
+    },
+    {
+      "raw": "Diagonalizing the Born–Oppenheimer Hamiltonian via Moyal perturbation theory, nonadiabatic corrections, and translational degrees of freedom",
+      "doi": "10.1063/5.0192465",
+      "title": "Diagonalizing the Born–Oppenheimer Hamiltonian via Moyal perturbation theory, nonadiabatic corrections, and translational degrees of freedom",
+      "year": "2024"
+    },
+    {
+      "raw": "Software for the frontiers of quantum chemistry: An overview of developments in the Q-Chem 5 package",
+      "doi": "10.1063/5.0055522",
+      "title": "Software for the frontiers of quantum chemistry: An overview of developments in the Q-Chem 5 package",
+      "year": "2021"
+    },
+    {
+      "raw": "Geometric phases in the asymptotic theory of coupled wave equations",
+      "doi": "10.1103/physreva.44.5239",
+      "title": "Geometric phases in the asymptotic theory of coupled wave equations",
+      "year": "1991"
+    },
+    {
+      "raw": "Theoretical study of the nuclear spin-molecular rotation coupling for relativistic electrons and non-relativistic nuclei",
+      "doi": "10.1063/1.4721627",
+      "title": "Theoretical study of the nuclear spin-molecular rotation coupling for relativistic electrons and non-relativistic nuclei",
+      "year": "2012"
+    },
+    {
+      "raw": "A semiclassical non-adiabatic phase-space approach to molecular translations and rotations: Surface hopping with electronic inertial effects",
+      "doi": "10.1063/5.0242673",
+      "title": "A semiclassical non-adiabatic phase-space approach to molecular translations and rotations: Surface hopping with electronic inertial effects",
+      "year": "2024"
+    },
+    {
+      "raw": "David Sherrill CIS notes, http://vergil.chemistry.gatech.edu/notes/ci.pdf.",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Nuclear velocity perturbation theory for vibrational circular dichroism: An approach based on the exact factorization of the electron-nuclear wave function",
+      "doi": "10.1063/1.4928578",
+      "title": "Nuclear velocity perturbation theory for vibrational circular dichroism: An approach based on the exact factorization of the electron-nuclear wave function",
+      "year": "2015"
+    },
+    {
+      "raw": "Implementation of nuclear velocity perturbation and magnetic field perturbation theory in CP2K and their application to vibrational circular dichroism",
+      "doi": "10.1021/acs.jctc.2c00006",
+      "title": "Implementation of nuclear velocity perturbation and magnetic field perturbation theory in CP2K and their application to vibrational circular dichroism",
+      "year": "2022"
+    },
+    {
+      "raw": "X. Bian , C.Khan, T.Duston, J.Rawlinson, R. G.Littlejohn, and J. E.Subotnik, “A phase-space view of vibrational energies without the Born–Oppenheimer framework,” J. Chem. Theory Comput.21(6), 2880–2893 (2025).10.1021/acs.jctc.4c01294",
+      "doi": "10.1021/acs.jctc.4c01294",
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "Jet-cooled molecular radicals in slit supersonic discharges: Sub-Doppler infrared studies of methyl radical",
+      "doi": "10.1063/1.474259",
+      "title": "Jet-cooled molecular radicals in slit supersonic discharges: Sub-Doppler infrared studies of methyl radical",
+      "year": "1997"
+    },
+    {
+      "raw": "Chiral induced spin selectivity",
+      "doi": "10.1021/acs.chemrev.3c00661",
+      "title": "Chiral induced spin selectivity",
+      "year": "2024"
+    },
+    {
+      "raw": "Random-phase approximation methods",
+      "doi": "10.1146/annurev-physchem-040215-112308",
+      "title": "Random-phase approximation methods",
+      "year": "2017"
+    },
+    {
+      "raw": "A tractable and accurate electronic structure method for static correlations: The perfect hextuples model",
+      "doi": "10.1063/1.3456001",
+      "title": "A tractable and accurate electronic structure method for static correlations: The perfect hextuples model",
+      "year": "2010"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": false,
+    "token_estimate": 305,
+    "content_kind": "abstract_only",
+    "has_abstract": true,
+    "warnings": [
+      "aip HTML route was not usable (abstract_only); attempting PDF fallback.",
+      "pdf: aip full text could not be retrieved via HTML or PDF fallback. HTML failure: Publisher HTML only exposed abstract-level content without article body text. PDF failure: PDF fallback request deadline was exhausted.",
+      "Full text was not available; returning metadata and abstract only.",
+      "--save-markdown was set but full text was not available; nothing written to disk."
+    ],
+    "source_trail": [
+      "resolve:doi",
+      "resolve:doi_selected",
+      "metadata:crossref_ok",
+      "route:signal_domain_aip",
+      "route:signal_publisher_aip",
+      "route:signal_doi_aip",
+      "route:probe_aip_unknown",
+      "route:provider_selected_aip",
+      "route:provider_candidate_aip_metadata_selected_rank_1",
+      "route:provider_candidate_aip_identity_strong",
+      "fulltext:aip_attempt",
+      "fulltext:aip_html_fail",
+      "fulltext:aip_fail",
+      "route:provider_candidate_aip_rejected",
+      "fallback:aip_html_managed_by_provider",
+      "fallback:metadata_only",
+      "fulltext:aip_pdf_transport_fail",
+      "fulltext:aip_pdf_fail",
+      "download:markdown_skipped_no_fulltext"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 305,
+      "body": 0,
+      "refs": 1490
+    },
+    "confidence": "low",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 0,
+      "word_count": 0,
+      "body_block_count": 0,
+      "body_heading_count": 0,
+      "body_to_abstract_ratio": 0.0,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": false,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 5
+  },
+  "acquisition": {
+    "provider": "crossref",
+    "route": "metadata",
+    "representation": "metadata",
+    "transport": "api",
+    "fallback_used": true
+  }
+}

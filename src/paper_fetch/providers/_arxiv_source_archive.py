@@ -43,7 +43,7 @@ _ARXIV_SOURCE_IMAGE_SUFFIXES = {
 }
 _ARXIV_SOURCE_GRAPHIC_SUFFIXES = (*sorted(_ARXIV_SOURCE_IMAGE_SUFFIXES), ".pdf")
 _ARXIV_LATEX_FIGURE_ENV_PATTERN = re.compile(
-    r"\\begin\{(?P<env>figure\*?)\}(?P<body>.*?)\\end\{(?P=env)\}",
+    r"\\begin\{(?P<env>(?:figure|extdatafigure)\*?)\}(?P<body>.*?)\\end\{(?P=env)\}",
     flags=re.DOTALL,
 )
 _ARXIV_LATEX_INCLUDEGRAPHICS_PATTERN = re.compile(
@@ -475,7 +475,14 @@ def _extract_arxiv_source_figure_references(
         tex = _strip_latex_comments(tex)
         for block_match in _ARXIV_LATEX_FIGURE_ENV_PATTERN.finditer(tex):
             block = block_match.group("body")
-            caption = _latex_caption_to_text(_latex_command_argument(block, "caption"))
+            caption_command = (
+                "extdatacaption"
+                if block_match.group("env").startswith("extdatafigure")
+                else "caption"
+            )
+            caption = _latex_caption_to_text(
+                _latex_command_argument(block, caption_command)
+            )
             label = normalize_text(_latex_command_argument(block, "label"))
             for graphic_path in _latex_includegraphics_paths(block):
                 resolved = _resolve_arxiv_source_graphic(

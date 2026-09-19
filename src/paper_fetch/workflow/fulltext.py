@@ -10,6 +10,12 @@ from collections.abc import Mapping, Sequence
 
 from ..artifacts import ArtifactStore
 from ..failure import FailureDiagnostics
+from ..providers.base import restricted_provider_result
+from ..quality.access_boundary import (
+    CONFIRMED_PAYWALL,
+    check_payload_paywall,
+    confirmed_paywall,
+)
 from ..logging_utils import emit_structured_log
 from ..models import ArticleModel, AssetProfile, metadata_only_article
 from ..provider_catalog import (
@@ -101,7 +107,7 @@ def _apply_article_acquisition(
     source_trail: Sequence[str],
 ) -> None:
     route_name = safe_text(getattr(content, "route_name", "")) or None
-    article.acquisition = acquisition_for_provider_route(
+    acquisition = acquisition_for_provider_route(
         provider_name,
         route_name,
         fallback_used=acquisition_fallback_used(
@@ -109,6 +115,12 @@ def _apply_article_acquisition(
             source_trail=source_trail,
         ),
     )
+
+    if (
+        acquisition is not None
+        or safe_text(getattr(content, "route_kind", "")) != PDF_FALLBACK
+    ):
+        article.acquisition = acquisition
 
 
 def _provider_fetch_result(
@@ -140,6 +152,22 @@ def _provider_fetch_result(
             )
 
         raw_payload = provider_client.fetch_raw_fulltext(doi, metadata, context=context)
+        checked_input = check_payload_paywall(
+            raw_payload, {**metadata, "doi": doi}, context=context
+        )
+        article = provider_client.to_article_model(
+            metadata,
+            raw_payload,
+            downloaded_assets=[],
+            asset_failures=[],
+            context=context,
+        )
+        check_payload_paywall(
+            raw_payload,
+            {**metadata, "doi": doi},
+            context=context,
+            checked_input=checked_input,
+        )
         downloaded_assets: list[Mapping[str, Any]] = []
         asset_failures: list[Mapping[str, Any]] = []
         if (
@@ -157,13 +185,13 @@ def _provider_fetch_result(
             )
             downloaded_assets = list(asset_results.get("assets") or [])
             asset_failures = list(asset_results.get("asset_failures") or [])
-        article = provider_client.to_article_model(
-            metadata,
-            raw_payload,
-            downloaded_assets=downloaded_assets,
-            asset_failures=asset_failures,
-            context=context,
-        )
+            article = provider_client.to_article_model(
+                metadata,
+                raw_payload,
+                downloaded_assets=downloaded_assets,
+                asset_failures=asset_failures,
+                context=context,
+            )
         content = getattr(raw_payload, "content", None)
         route = safe_text(getattr(content, "route_kind", "")).lower()
         extracted_assets = (
@@ -244,6 +272,19 @@ def _try_official_provider(
             asset_profile=resolved_asset_profile,
             context=context,
         )
+        if CONFIRMED_PAYWALL in provider_result.article.quality.source_trail:
+            if not strategy.allow_metadata_only_fallback:
+                raise PaperFetchFailure(
+                    NO_ACCESS,
+                    "The publisher restricts this article and metadata-only fallback is disabled.",
+                    diagnostics=FailureDiagnostics(
+                        provider=provider_name,
+                        retryable=False,
+                        details=dict(provider_result.content.diagnostics)
+                        if provider_result.content is not None
+                        else {},
+                    ),
+                )
         observed_article = provider_result.article
         identity = validate_extracted_identity(
             {"doi": doi, "title": metadata.get("title")},
@@ -310,6 +351,13 @@ def _try_official_provider(
             ),
         )
         extend_unique(source_trail, article.quality.source_trail)
+        if CONFIRMED_PAYWALL in article.quality.source_trail:
+            return finalize_article(
+                article,
+                warnings=warnings,
+                source_trail=source_trail,
+                trace=workflow_trace,
+            )
         if article.quality.content_kind == FULLTEXT:
             emit_structured_log(
                 logger,
@@ -406,6 +454,21 @@ def _try_official_provider(
             extend_unique(source_trail, [fulltext_marker(provider_name, "not_usable")])
         extend_unique(warnings, article.quality.warnings)
     except ProviderFailure as exc:
+        if confirmed_paywall(exc):
+            if not strategy.allow_metadata_only_fallback:
+                raise PaperFetchFailure.from_provider_failure(exc) from exc
+            result = restricted_provider_result(
+                provider_name, {**metadata, "doi": doi}, exc
+            )
+            artifact_store.save_provider_html_payload(
+                provider_name, content=result.content, doi=doi, metadata=metadata
+            )
+            return finalize_article(
+                result.article,
+                warnings=[*warnings, *result.warnings],
+                source_trail=[*source_trail, *result.article.quality.source_trail],
+                trace=[*workflow_trace, *result.trace],
+            )
         outputs.failures.append(exc)
         workflow_trace[:] = merge_trace(workflow_trace, exc.trace)
         extend_unique(warnings, exc.warnings)

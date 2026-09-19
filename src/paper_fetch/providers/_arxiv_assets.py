@@ -35,6 +35,7 @@ from ..http import (
 )
 from ..runtime import RuntimeContext
 from ..markdown.images import render_markdown_image
+from ..models.markdown import iter_markdown_images
 from ..utils import empty_asset_results, normalize_text, sanitize_filename
 from ._arxiv_parsing import ARXIV_HTML_PARSER
 from ._arxiv_source_archive import (
@@ -312,6 +313,28 @@ def _extract_arxiv_html_assets(
         if normalize_text(str(item.get("kind") or "")).lower() == "figure"
         and _asset_has_download_candidate(item)
     ]
+    soup = BeautifulSoup(article_html, ARXIV_HTML_PARSER)
+    for image in soup.select("img[data-arxiv-graphic]"):
+        matches = [
+            asset for asset in assets if asset.get("image_id") == image.get("id")
+        ]
+        if not matches:
+            # Some LaTeXML graphs occur directly in a paragraph, with no figure.
+            matches = [
+                {
+                    "kind": "figure",
+                    "section": "body",
+                    "url": image["src"],
+                    "image_id": image.get("id"),
+                    "dom_id": image.get("id"),
+                    "heading": "Figure",
+                    "caption": "",
+                }
+            ]
+            assets.extend(matches)
+        for asset in matches:
+            asset["source_kind"] = image["data-arxiv-graphic"]
+            asset["full_size_url"] = image["src"]
     return [dict(item) for item in merge_assets_by_identity(assets)]
 
 
@@ -375,37 +398,46 @@ def _caption_similarity(left: Any, right: Any) -> int:
         from rapidfuzz import fuzz
     except Exception:
         return 100 if left_text == right_text else 0
-    return int(fuzz.token_set_ratio(left_text, right_text))
+    # A short generic caption contained in a longer one is not object identity.
+    return int(fuzz.token_sort_ratio(left_text, right_text))
 
 
 def _match_source_figures_to_html_placeholders(
     placeholders: Sequence[Mapping[str, Any]],
     source_figures: Sequence[Mapping[str, Any]],
 ) -> list[tuple[dict[str, Any], dict[str, Any] | None]]:
-    unused = set(range(len(source_figures)))
     matches: list[tuple[dict[str, Any], dict[str, Any] | None]] = []
-    for index, placeholder in enumerate(placeholders):
-        best_index: int | None = None
-        best_score = -1
-        for source_index in sorted(unused):
-            score = _caption_similarity(
-                placeholder.get("caption"), source_figures[source_index].get("caption")
+    for placeholder in placeholders:
+        # A member may legitimately occur in several HTML figures. Match identity,
+        # not the position in a source archive (whose TeX order can differ).
+        paths = {
+            urllib.parse.unquote(urllib.parse.urlsplit(url).path).lstrip("/")
+            for url in _asset_candidate_urls(placeholder)
+        }
+        candidates = [
+            figure
+            for figure in source_figures
+            if (path := str(figure.get("source_path") or "").lstrip("./"))
+            and any(value == path or value.endswith("/" + path) for value in paths)
+        ]
+        if not candidates:
+            # Caption-only recovery is reserved for missing/generated HTML URLs.
+            # A known filename must never be reassigned to an unrelated member.
+            named_image = any(
+                not re.fullmatch(r"x\d+", Path(path).stem) for path in paths
             )
-            if score > best_score:
-                best_index = source_index
-                best_score = score
-        if best_index is not None and best_score >= 55:
-            unused.remove(best_index)
-            matches.append((dict(placeholder), dict(source_figures[best_index])))
-            continue
-        fallback_index = index if index in unused else None
-        if fallback_index is None and unused:
-            fallback_index = min(unused)
-        if fallback_index is None:
-            matches.append((dict(placeholder), None))
-            continue
-        unused.remove(fallback_index)
-        matches.append((dict(placeholder), dict(source_figures[fallback_index])))
+            if not named_image:
+                candidates = [
+                    figure
+                    for figure in source_figures
+                    if _caption_similarity(
+                        placeholder.get("caption"), figure.get("caption")
+                    )
+                    >= 90
+                ]
+        by_path = {str(figure.get("source_path")): figure for figure in candidates}
+        matched = next(iter(by_path.values())) if len(by_path) == 1 else None
+        matches.append((dict(placeholder), dict(matched) if matched else None))
     return matches
 
 
@@ -559,7 +591,7 @@ def _arxiv_source_downloaded_asset(
     asset = {
         **dict(placeholder),
         "url": f"arxiv-source://{arxiv_id}/{source_path}",
-        "original_url": source_ref_url,
+        "original_url": placeholder.get("url") or source_ref_url,
         "download_url": source_ref_url,
         "source_url": source_archive_url,
         "source_path": source_path,
@@ -1013,12 +1045,28 @@ def inline_arxiv_source_assets_in_markdown(
 
     source_assets_by_heading: dict[str, list[Mapping[str, Any]]] = {}
     heading_order: list[str] = []
+    images = list(iter_markdown_images(markdown_text))
+    represented: set[int] = set()
     for asset in assets:
         if normalize_text(str(asset.get("download_tier") or "")) != "arxiv_source":
             continue
         heading = normalize_text(str(asset.get("heading") or ""))
         inline_url = normalize_text(str(asset.get("url") or ""))
-        if not heading or not inline_url or inline_url in markdown_text:
+        if not heading or not inline_url:
+            continue
+        aliases = _asset_candidate_urls(asset) | {str(asset.get("path") or "")}
+        occurrence = next(
+            (
+                index
+                for index, image in enumerate(images)
+                if index not in represented
+                and image.alt == heading
+                and image.url in aliases
+            ),
+            None,
+        )
+        if occurrence is not None:
+            represented.add(occurrence)
             continue
         if heading not in source_assets_by_heading:
             source_assets_by_heading[heading] = []
@@ -1046,6 +1094,47 @@ def inline_arxiv_source_assets_in_markdown(
         if count:
             continue
     return rendered
+
+
+def reconcile_arxiv_body_assets(
+    markdown_text: str,
+    extracted_assets: Sequence[Mapping[str, Any]],
+    downloaded_assets: Sequence[Mapping[str, Any]],
+    *,
+    article_html: str = "",
+    source_url: str = "",
+) -> list[dict[str, Any]]:
+    """Keep undispatched/failed body images visible to local-asset acceptance."""
+    assets = [dict(asset) for asset in downloaded_assets]
+    known_urls = set().union(*(_asset_candidate_urls(asset) for asset in assets))
+    for asset in extracted_assets:
+        urls = _asset_candidate_urls(asset)
+        if not urls.intersection(known_urls):
+            assets.append(dict(asset))
+            known_urls.update(urls)
+    # Audit retained body figure nodes, not badges/icons in article frontmatter.
+    soup = BeautifulSoup(article_html, ARXIV_HTML_PARSER)
+    article = soup.find("article") or soup
+    body_urls = set().union(
+        *(
+            set(_arxiv_image_url_candidates(image, source_url))
+            for image in article.find_all("img")
+            if _arxiv_inline_figure_for_image(image, article) is not None
+        )
+    )
+    for image in iter_markdown_images(markdown_text):
+        if image.url in body_urls and image.url not in known_urls:
+            assets.append(
+                {
+                    "kind": "figure",
+                    "section": "body",
+                    "url": image.url,
+                    "heading": image.alt or "Figure",
+                    "render_state": "inline",
+                }
+            )
+            known_urls.add(image.url)
+    return assets
 
 
 def _arxiv_parent_figures(node: Any, article: Any) -> list[Any]:
@@ -1229,9 +1318,9 @@ def _annotate_arxiv_inline_figure_images(
     image_by_id: dict[str, Any] = {}
     image_url_candidates: dict[int, set[str]] = {}
     for image in article.find_all("img"):
-        if (
-            not isinstance(image, Tag)
-            or _arxiv_inline_figure_for_image(image, article) is None
+        if not isinstance(image, Tag) or (
+            _arxiv_inline_figure_for_image(image, article) is None
+            and not image.get("data-arxiv-graphic")
         ):
             continue
         eligible_images.append(image)

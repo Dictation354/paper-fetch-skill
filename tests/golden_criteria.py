@@ -34,7 +34,16 @@ def golden_criteria_dir_for_doi(doi: str) -> Path:
 
 
 def golden_criteria_asset(doi: str, filename: str) -> Path:
-    return golden_criteria_dir_for_doi(doi) / filename
+    direct = golden_criteria_dir_for_doi(doi) / filename
+    if direct.exists():
+        return direct
+    # Logical names survive entity deduplication in the existing asset mapping.
+    for sample in golden_criteria_manifest()["samples"].values():
+        if str(sample["doi"]).casefold() == doi.casefold():
+            target = sample["assets"].get(filename)
+            if target:
+                return REPO_ROOT / target
+    return direct
 
 
 def golden_criteria_scenario_dir(name: str) -> Path:
@@ -92,3 +101,12 @@ def iter_manifest_samples(
     return tuple(
         sample for sample in samples if sample.get("fixture_family") == fixture_family
     )
+
+
+def source_selections() -> list[dict[str, Any]]:
+    """Current capture selection and identity scope, owned by the manifest."""
+    return [
+        sample["source_selection"]
+        for sample in golden_criteria_manifest()["samples"].values()
+        if "source_selection" in sample
+    ]

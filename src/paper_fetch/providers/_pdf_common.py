@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from ..models.markdown import replace_markdown_image_url
+
+
+from ..quality.access_boundary import raise_for_paywall
+from ..acquisition import PDF_RENDER_REVISION
+
 import json
 import functools
 import os
@@ -11,14 +17,16 @@ import tempfile
 import threading
 import contextlib
 from contextlib import nullcontext
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Literal
 from collections.abc import Mapping, Sequence
 import hashlib
 import urllib.parse
+import unicodedata
 
 from cachetools import LRUCache
+from rapidfuzz.fuzz import partial_ratio
 
 from ..common_patterns import WORD_TOKEN_PATTERN
 from ..http import PDF_ACCEPT_HEADER, is_pdf_content_type
@@ -27,6 +35,7 @@ from ..pdf_limits import pdf_max_bytes
 from ..publisher_identity import extract_doi, validate_extracted_identity
 from ..utils import normalize_text, sanitize_filename
 from .browser_runtime.seed import CLOUDFLARE_COOKIE_NAMES, _CLOUDFLARE_COOKIE_PREFIXES
+from ._pdf_document import non_article_pdf_reason
 
 PdfAssetProfile = Literal["none", "body", "all"]
 
@@ -89,21 +98,6 @@ _IEEE_PDF_LICENSE_MARKERS = (
 _MIN_USABLE_PDF_MARKDOWN_WORDS = 250
 _MIN_TRANSPARENT_TEXT_WORDS = 500
 _TRANSPARENT_FALLBACK_WORD_FACTOR = 3
-_PDF_MARKDOWN_HEADING_PATTERN = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
-_PDF_PROSE_WORD_PATTERN = re.compile(r"[^\W\d_]{3,}", flags=re.UNICODE)
-_PDF_ITALIC_ALPHA_SUBSECTION_PATTERN = re.compile(
-    r"^_([a-z])\.\s+(.+?)_\s*$", flags=re.IGNORECASE
-)
-_PDF_HEADED_ITALIC_ALPHA_SUBSECTION_PATTERN = re.compile(
-    r"^(#{1,6})\s+_([a-z])\.\s+(.+?)_\s*$", flags=re.IGNORECASE
-)
-_PDF_PREAMBLE_NOISE_HEADINGS = frozenset({"further", "letter"})
-_PDF_MAJOR_SECTION_PATTERN = re.compile(
-    r"^(?:\d+(?:\.\d+)*[.)]?\s+)?"
-    r"(?:abstract|introduction|background|methods?|materials and methods|"
-    r"results?|discussion|conclusions?)\b",
-    flags=re.IGNORECASE,
-)
 PDF_ONLY_MARKDOWN_WARNING = "PDF was downloaded but Markdown extraction was not usable."
 PDF_MAX_PAGES_ENV_VAR = "PAPER_FETCH_PDF_MAX_PAGES"
 PDF_MARKDOWN_CACHE_SIZE_ENV_VAR = "PAPER_FETCH_PDF_MARKDOWN_CACHE_SIZE"
@@ -259,6 +253,7 @@ def _pdf_identity_evidence(pdf_path: Path) -> dict[str, Any]:
         for key, value in {
             "doi": response_doi,
             "title": title or None,
+            "opening_text": first_pages_text[:8000],
             "method": (
                 "pdf_metadata_or_first_pages"
                 if response_doi or title
@@ -277,7 +272,7 @@ def _cacheable_pdf_markdown_key(
 ) -> tuple[str, str] | None:
     if _pdf_image_dir(asset_output_dir, asset_profile) is not None:
         return None
-    return ("no_image_dir", pdf_sha256)
+    return (f"converter_verbatim_v{PDF_RENDER_REVISION}:no_image_dir", pdf_sha256)
 
 
 def _render_pdf_markdown_result_with_cache(
@@ -494,153 +489,6 @@ def _render_default_pdf_markdown(
         )
         or ""
     )
-
-
-def _canonical_pdf_heading(value: str) -> str:
-    text = re.sub(r"<[^>]+>", " ", str(value or ""))
-    text = re.sub(r"!\[([^\]]*)\]\([^)]*\)", r"\1", text)
-    text = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", text)
-    text = re.sub(r"[*_`~]+", "", text)
-    text = re.sub(r"[^\w]+", " ", text, flags=re.UNICODE)
-    return normalize_text(text).casefold()
-
-
-def _next_nonblank_line_index(lines: Sequence[str], start: int) -> int | None:
-    for index in range(start, len(lines)):
-        if normalize_text(lines[index]):
-            return index
-    return None
-
-
-def _first_major_pdf_section_index(lines: Sequence[str]) -> int | None:
-    for index, line in enumerate(lines):
-        match = _PDF_MARKDOWN_HEADING_PATTERN.match(line.strip())
-        if match is None:
-            continue
-        if _PDF_MAJOR_SECTION_PATTERN.match(_canonical_pdf_heading(match.group(2))):
-            return index
-    return None
-
-
-def _pdf_alpha_subsection_heading_level(lines: Sequence[str]) -> int | None:
-    levels: list[int] = []
-    labels: set[str] = set()
-    for line in lines:
-        match = _PDF_HEADED_ITALIC_ALPHA_SUBSECTION_PATTERN.match(line.strip())
-        if match is None:
-            continue
-        levels.append(len(match.group(1)))
-        labels.add(match.group(2).casefold())
-    if len(labels) < 2:
-        return None
-    return max(set(levels), key=lambda level: (levels.count(level), -level))
-
-
-def _empty_preamble_title_indices(
-    lines: Sequence[str], first_major_index: int | None
-) -> set[int]:
-    indices: set[int] = set()
-    seen_heading = False
-    for index, line in enumerate(lines):
-        if first_major_index is not None and index >= first_major_index:
-            break
-        match = _PDF_MARKDOWN_HEADING_PATTERN.match(line.strip())
-        if match is None:
-            continue
-        if len(match.group(1)) != 1:
-            seen_heading = True
-            continue
-        canonical = _canonical_pdf_heading(match.group(2))
-        next_index = _next_nonblank_line_index(lines, index + 1)
-        next_is_heading = (
-            next_index is not None
-            and _PDF_MARKDOWN_HEADING_PATTERN.match(lines[next_index].strip())
-            is not None
-        )
-        if (
-            (seen_heading or len(_PDF_PROSE_WORD_PATTERN.findall(canonical)) >= 4)
-            and len(canonical.split()) >= 4
-            and next_is_heading
-            and not _PDF_MAJOR_SECTION_PATTERN.match(canonical)
-        ):
-            indices.add(index)
-        seen_heading = True
-    return indices
-
-
-def _normalize_pdf_markdown_structure(markdown_text: str) -> str:
-    """Repair deterministic PyMuPDF heading drift without provider/DOI rules."""
-
-    if not normalize_text(markdown_text):
-        return str(markdown_text or "")
-
-    lines = str(markdown_text).splitlines()
-    canonical_line_counts: dict[str, int] = {}
-    for line in lines:
-        stripped = line.strip()
-        heading_match = _PDF_MARKDOWN_HEADING_PATTERN.match(stripped)
-        value = heading_match.group(2) if heading_match is not None else stripped
-        canonical = _canonical_pdf_heading(value)
-        if canonical:
-            canonical_line_counts[canonical] = (
-                canonical_line_counts.get(canonical, 0) + 1
-            )
-
-    first_major_index = _first_major_pdf_section_index(lines)
-    empty_title_indices = _empty_preamble_title_indices(lines, first_major_index)
-    first_empty_title_index = min(empty_title_indices, default=None)
-    subsection_level = _pdf_alpha_subsection_heading_level(lines)
-    normalized_lines: list[str] = []
-    for index, line in enumerate(lines):
-        stripped = line.strip()
-        heading_match = _PDF_MARKDOWN_HEADING_PATTERN.match(stripped)
-        if heading_match is None:
-            alpha_match = _PDF_ITALIC_ALPHA_SUBSECTION_PATTERN.match(stripped)
-            if alpha_match is not None and subsection_level is not None:
-                normalized_lines.append(f"{'#' * subsection_level} {stripped}")
-            else:
-                normalized_lines.append(line)
-            continue
-
-        raw_heading = heading_match.group(2)
-        canonical = _canonical_pdf_heading(raw_heading)
-        in_preamble = first_major_index is None or index < first_major_index
-        next_index = _next_nonblank_line_index(lines, index + 1)
-        next_is_heading = (
-            next_index is not None
-            and _PDF_MARKDOWN_HEADING_PATTERN.match(lines[next_index].strip())
-            is not None
-        )
-        word_count = len(canonical.split())
-
-        if (
-            first_empty_title_index is not None
-            and index < first_empty_title_index
-            and in_preamble
-        ):
-            normalized_lines.append(raw_heading)
-            continue
-        if (
-            in_preamble
-            and canonical in _PDF_PREAMBLE_NOISE_HEADINGS
-            and next_is_heading
-        ):
-            continue
-        if index in empty_title_indices:
-            continue
-        if (
-            4 <= word_count <= 24
-            and len(canonical) <= 200
-            and canonical_line_counts.get(canonical, 0) >= 3
-        ):
-            normalized_lines.append(raw_heading)
-            continue
-        normalized_lines.append(line)
-
-    normalized = "\n".join(normalized_lines)
-    if str(markdown_text).endswith("\n"):
-        normalized += "\n"
-    return normalized
 
 
 def _render_transparent_pdf_markdown(pdf_path: Path) -> str:
@@ -863,7 +711,9 @@ def _normalize_pdf_markdown_image_assets(
                     source_url=source_url,
                 )
             )
-        return f"![{heading}]({_pdf_image_relative_url(path, image_dir)})"
+        return replace_markdown_image_url(
+            image, _pdf_image_relative_url(path, image_dir)
+        )
 
     rewritten = replace_markdown_images(markdown_text, replace_image)
     return PdfMarkdownRenderResult(markdown_text=rewritten, assets=assets)
@@ -877,9 +727,7 @@ def render_pdf_markdown_result(
     source_url: str | None = None,
 ) -> PdfMarkdownRenderResult:
     image_dir = _pdf_image_dir(asset_output_dir, asset_profile)
-    default_markdown = _normalize_pdf_markdown_structure(
-        _render_default_pdf_markdown(pdf_path, image_dir=image_dir)
-    )
+    default_markdown = _render_default_pdf_markdown(pdf_path, image_dir=image_dir)
     default_render = _normalize_pdf_markdown_image_assets(
         default_markdown,
         image_dir=image_dir,
@@ -894,9 +742,7 @@ def render_pdf_markdown_result(
         default_quality=default_quality,
         text_layer_stats=text_layer_stats,
     ):
-        legacy_markdown = _normalize_pdf_markdown_structure(
-            _render_transparent_pdf_markdown(pdf_path)
-        )
+        legacy_markdown = _render_transparent_pdf_markdown(pdf_path)
         legacy_quality = _pdf_markdown_quality(legacy_markdown)
         min_legacy_words = max(
             _MIN_USABLE_PDF_MARKDOWN_WORDS,
@@ -968,6 +814,10 @@ def pdf_fetch_result_from_response(
     raw_body = response.get("body", b"")
     pdf_bytes = bytes(raw_body) if isinstance(raw_body, (bytes, bytearray)) else b""
     content_type = str(response_headers.get("content-type") or "")
+    if not pdf_bytes.startswith(b"%PDF-"):
+        raise_for_paywall(
+            pdf_bytes, metadata=expected_identity, source_url=resolved_final_url
+        )
     if not isinstance(raw_body, (bytes, bytearray)) or not looks_like_pdf_payload(
         content_type,
         pdf_bytes,
@@ -1039,6 +889,19 @@ def pdf_fetch_result_from_bytes(
 ) -> PdfFetchResult:
     pdf_size = len(pdf_bytes)
     pdf_sha256 = hashlib.sha256(pdf_bytes).hexdigest()
+    document_role = non_article_pdf_reason(source_url) or non_article_pdf_reason(
+        final_url
+    )
+    if document_role:
+        raise PdfFetchFailure(
+            document_role,
+            "PDF fallback returned a preview or supplementary file, not the full article.",
+            details={
+                "source_url": source_url,
+                "final_url": final_url,
+                "pdf_sha256": pdf_sha256,
+            },
+        )
     max_bytes = pdf_max_bytes()
     if pdf_size > max_bytes:
         raise PdfFetchFailure(
@@ -1109,6 +972,23 @@ def pdf_fetch_result_from_bytes(
             )
 
         identity_evidence = _pdf_identity_evidence(pdf_path)
+        opening_lines = str(identity_evidence.get("opening_text") or "").splitlines()[
+            :8
+        ]
+        if any(
+            re.fullmatch(
+                r"(?:supplementary|supplemental|supporting)\s+(?:information|materials?|data)",
+                line.strip(),
+                re.IGNORECASE,
+            )
+            for line in opening_lines
+        ):
+            pdf_path.unlink(missing_ok=True)
+            raise PdfFetchFailure(
+                "pdf_supplement_only",
+                "The PDF identifies itself as supplementary material, not the article body.",
+                details={"pdf_sha256": pdf_sha256},
+            )
         identity_result = None
         if isinstance(expected_identity, Mapping) and expected_identity:
             identity_result = validate_extracted_identity(
@@ -1127,6 +1007,47 @@ def pdf_fetch_result_from_bytes(
                         "pdf_sha256": pdf_sha256,
                     },
                 )
+
+            # When a DOI is absent, use the requested title against bounded PDF
+            # text. This only validates identity; it never rewrites PDF output.
+            expected_title = str(expected_identity.get("title") or "")
+            if identity_result.status == "insufficient":
+
+                def identity_key(value: str) -> str:
+                    return "".join(
+                        char
+                        for char in unicodedata.normalize("NFKC", value).casefold()
+                        if char.isalnum()
+                    )
+
+                title_key = identity_key(expected_title)
+                opening_key = identity_key(
+                    str(identity_evidence.get("opening_text") or "")
+                )
+                title_score = (
+                    partial_ratio(title_key, opening_key, score_cutoff=92.0)
+                    if len(opening_key) >= len(title_key) >= 20
+                    else 0.0
+                )
+                if len(title_key) >= 20 and title_score >= 92.0:
+                    identity_result = replace(
+                        identity_result,
+                        status="match",
+                        method="pdf_opening_title",
+                        confidence="medium",
+                        title_score=round(title_score, 2),
+                        reason=None,
+                    )
+                else:
+                    pdf_path.unlink(missing_ok=True)
+                    raise PdfFetchFailure(
+                        "pdf_identity_unverified",
+                        "The PDF does not establish the requested article DOI or title.",
+                        details={
+                            "identity": identity_result.to_dict(),
+                            "pdf_sha256": pdf_sha256,
+                        },
+                    )
 
         warnings: list[str] = []
         render_cache_status = "not_started"

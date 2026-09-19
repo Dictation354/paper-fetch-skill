@@ -45,3 +45,11 @@ class AvailabilityPolicy:
     text_marker_signal_set: TextMarkerSignalSet | None = None
     overrides: AvailabilityOverrides | None = None
     access_block_text_tokens: tuple[str, ...] = ()
+    paywall_remove_selectors: str = ""
+    paywall_abstract_selector: str = ""
+    paywall_gate_selectors: str = ""
+    paywall_gate_pattern: str = ""
+    paywall_gate_text: str = ""
+    paywall_body_selector: str = ""
+    paywall_paragraph_selector: str = "p"
+    paywall_entitlement_signals: tuple[str, ...] = ()

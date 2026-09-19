@@ -1,10 +1,8 @@
 from __future__ import annotations
-
 import json
 import unittest
-
 from paper_fetch.resolve import query as resolve_query
-from tests.unit._paper_fetch_support import RecordingTransport
+from tests.support._paper_fetch_support import RecordingTransport
 
 
 class ResolveQueryTests(unittest.TestCase):

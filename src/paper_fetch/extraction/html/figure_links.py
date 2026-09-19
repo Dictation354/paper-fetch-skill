@@ -234,6 +234,7 @@ def inject_inline_figure_links(
     *,
     figure_assets: Sequence[Mapping[str, Any]] | None,
     clean_markdown_fn: Callable[[str], str],
+    match_unlabeled_images_by_order: bool = True,
 ) -> str:
     entries = inline_figure_markdown_entries(figure_assets)
     if not entries:
@@ -299,7 +300,10 @@ def inject_inline_figure_links(
                 entry = take_entry(index)
                 if entry is not None:
                     return entry
-        return take_entry_for_label(canonical_figure_label_from_image(alt_text, url))
+        label = canonical_figure_label_from_image(alt_text, url)
+        if label is None and not match_unlabeled_images_by_order:
+            return None
+        return take_entry_for_label(label)
 
     caption_label_keys: set[str] = set()
     existing_image_label_keys: set[str] = set()

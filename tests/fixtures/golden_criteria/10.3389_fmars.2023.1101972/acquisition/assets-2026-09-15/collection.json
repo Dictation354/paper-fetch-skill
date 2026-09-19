@@ -1,0 +1,216 @@
+{
+  "provider": "frontiers",
+  "doi": "10.3389/fmars.2023.1101972",
+  "sample_id": "10.3389_fmars.2023.1101972",
+  "source_url": "https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/xml",
+  "source_input": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/original.xml",
+  "include_supplementary": false,
+  "include_body": true,
+  "source_sha256": "54be5357383c7c3973289613058ebb3c2a9ac432ac65db82e5c15add0e171ac7",
+  "targets": [
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "f1",
+        "anchor_key": "f1",
+        "heading": "Figure 1",
+        "caption": "Effects of temperature and pH on the survival rate of *A. alba* and *L. conchilega* during the 6-week incubation period. Error bars represent standard errors (± SE, n = 36).",
+        "section": "body",
+        "render_state": "inline",
+        "link": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g001.webp",
+        "original_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g001.webp",
+        "alternatives": [
+          {
+            "url": "https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/fmars-10-1101972-g001.tif",
+            "original_url": "https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/fmars-10-1101972-g001.tif",
+            "content_type": "image/tiff",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "download_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g001.webp",
+        "full_size_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g001.webp",
+        "url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g001.webp"
+      },
+      "download_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g001.webp",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/8eb9bb6dea88064e-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/8eb9bb6dea88064e-http-1.bin",
+      "validation": {
+        "valid": true,
+        "width": 1417,
+        "height": 850,
+        "format": "webp",
+        "decoder": "headless browser Image.decode and canvas readback (local data URI)"
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "fmars-10-1101972-g001.webp",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "f2",
+        "anchor_key": "f2",
+        "heading": "Figure 2",
+        "caption": "Temperature and pH effect on the oxygen penetration depth in the presence (orange circles) and absence (grey triangles) of *L. conchilega* and *A. alba*. Error bars represent the standard errors (± SE, n = 4).",
+        "section": "body",
+        "render_state": "inline",
+        "link": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g002.webp",
+        "original_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g002.webp",
+        "alternatives": [
+          {
+            "url": "https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/fmars-10-1101972-g002.tif",
+            "original_url": "https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/fmars-10-1101972-g002.tif",
+            "content_type": "image/tiff",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "download_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g002.webp",
+        "full_size_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g002.webp",
+        "url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g002.webp"
+      },
+      "download_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g002.webp",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/4a9f5f4074b48662-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/4a9f5f4074b48662-http-1.bin",
+      "validation": {
+        "valid": true,
+        "width": 1417,
+        "height": 858,
+        "format": "webp",
+        "decoder": "headless browser Image.decode and canvas readback (local data URI)"
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "fmars-10-1101972-g002.webp",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "f3",
+        "anchor_key": "f3",
+        "heading": "Figure 3",
+        "caption": "Effect of *Lanice conchilega* presence (present: orange bars, absent: grey bars) on sediment community oxygen consumption (SCOC, mmol O<sub>2</sub> m<sup>-2</sup> d<sup>-1</sup>), nitrification, and denitrification rates (mmol N m<sup>-2</sup> d<sup>-1</sup>), in 4 different treatments, with different times pooled because experiment duration did not affect the fluxes and processes. Error bars represent standard errors (± SE).",
+        "section": "body",
+        "render_state": "inline",
+        "link": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g003.webp",
+        "original_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g003.webp",
+        "alternatives": [
+          {
+            "url": "https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/fmars-10-1101972-g003.tif",
+            "original_url": "https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/fmars-10-1101972-g003.tif",
+            "content_type": "image/tiff",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "download_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g003.webp",
+        "full_size_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g003.webp",
+        "url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g003.webp"
+      },
+      "download_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g003.webp",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/6e8c7bb099c3b846-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/6e8c7bb099c3b846-http-1.bin",
+      "validation": {
+        "valid": true,
+        "width": 1299,
+        "height": 1297,
+        "format": "webp",
+        "decoder": "headless browser Image.decode and canvas readback (local data URI)"
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "fmars-10-1101972-g003.webp",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    },
+    {
+      "asset": {
+        "kind": "figure",
+        "key": "f4",
+        "anchor_key": "f4",
+        "heading": "Figure 4",
+        "caption": "Effect of *Abra alba* presence (present: orange bars, absent: grey bars) on sediment community oxygen consumption (SCOC, mmol O<sub>2</sub> m<sup>-2</sup> d<sup>-1</sup>), nitrification and denitrification rates (mmol N m<sup>-2</sup> d<sup>-1</sup>), in 4 different treatments at 2 different times. Error bars represent standard errors (± SE).",
+        "section": "body",
+        "render_state": "inline",
+        "link": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g004.webp",
+        "original_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g004.webp",
+        "alternatives": [
+          {
+            "url": "https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/fmars-10-1101972-g004.tif",
+            "original_url": "https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/fmars-10-1101972-g004.tif",
+            "content_type": "image/tiff",
+            "media_type": "graphic",
+            "specific_use": null,
+            "source_id": null,
+            "panel_index": 1
+          }
+        ],
+        "download_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g004.webp",
+        "full_size_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g004.webp",
+        "url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g004.webp"
+      },
+      "download_url": "https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g004.webp",
+      "state": "file_verified",
+      "attempt_records": [
+        "acquisition/assets-2026-09-15/fedad6eef708ae37-http-1.bin"
+      ],
+      "record": "acquisition/assets-2026-09-15/fedad6eef708ae37-http-1.bin",
+      "validation": {
+        "valid": true,
+        "width": 1299,
+        "height": 1289,
+        "format": "webp",
+        "decoder": "headless browser Image.decode and canvas readback (local data URI)"
+      },
+      "replay_verified": true,
+      "file_role": "figure",
+      "outcome": "complete",
+      "output_filename": "fmars-10-1101972-g004.webp",
+      "download_tier": "full_size",
+      "final_article_link_verified": true
+    }
+  ],
+  "counts": {
+    "discovered_references": 4,
+    "unique_files": 4,
+    "verified_files": 4,
+    "replayed_files": 4,
+    "complete_received_files": 4,
+    "index_only_files": 0
+  },
+  "collection_file": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/acquisition/assets-2026-09-15/collection.json",
+  "replay_receipt": "tests/fixtures/golden_criteria/10.3389_fmars.2023.1101972/acquisition/assets-2026-09-15/replay-receipt.json",
+  "outcome": "complete",
+  "blocking_evidence": [],
+  "historical_counts_before_supplementary_removal": {
+    "discovered_references": 4,
+    "unique_files": 4,
+    "verified_files": 4,
+    "replayed_files": 4,
+    "complete_received_files": 4
+  },
+  "historical_outcome_before_supplementary_removal": "complete"
+}

@@ -1,0 +1,46 @@
+{
+  "records": [
+    {
+      "requested_url": "https://iopscience.iop.org/article/10.1088/1681-7575/ae1dfc",
+      "final_url": "https://iopscience.iop.org/article/10.1088/1681-7575/ae1dfc",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Tue, 15 Sep 2026 06:25:05 GMT",
+        "permissions-policy": "usb=(), payment=(), geolocation=(), microphone=(), camera=()",
+        "referrer-policy": "origin-when-cross-origin",
+        "cross-origin-resource-policy": "same-origin",
+        "access-control-allow-origin": "https://iopscience.iop.org",
+        "x-frame-options": "DENY",
+        "iop_primary_institution_identity_id": "guest",
+        "iop_session_id": "c2180b5d-8393-4956-aa89-da223a1b08e1",
+        "iop_associated_identity_ids": "guest, ",
+        "iop_session_map": "iop_session_id=c2180b5d-8393-4956-aa89-da223a1b08e1&identity_ids=guest%2C&ics_session_id=0ae14d87-60f7-40e1-a711-72c29a9c1aa8&request_id=bc0ccc82-7de6-4624-bdfb-7ece864f2ff5&identity_id_primary=guest&",
+        "cache-control": "private, max-age=0, no-cache, s-max-age=0, must-revalidate, proxy-revalidate",
+        "pragma": "no-cache",
+        "iop_page_type": "FULLTEXT_ARTICLE",
+        "tdm-reservation": "1",
+        "tdm-policy": "https://iopscience.iop.org/tdmrep.json",
+        "iop_is_vor": "yes",
+        "iop_cachedhtml": "false",
+        "vary": "accept-encoding",
+        "content-language": "en-US",
+        "strict-transport-security": "max-age=31536000",
+        "content-encoding": "gzip",
+        "x-firefox-spdy": "h2"
+      },
+      "capture_kind": "http_response_entity",
+      "transport": "Headed Camoufox requestfinished response.body()",
+      "body_file": "raw.html",
+      "size": 179498,
+      "sha256": "2d131729752e73df53f82cf03c2157e1d188a6a991f6baf46423f459264041e8",
+      "captured_at_utc": "2026-09-15T06:25:04.936355+00:00",
+      "headless": false,
+      "network_context": "User reports current network has no subscription access; not independently verified. Existing configured API credentials and provider storage state retained.",
+      "capture_scope": "Real HTTP200 subscription HTML. The same DOI live CLI also requested /pdf and received subscription HTML; current terminal result is recorded separately in associated_live_capture.",
+      "doi": "10.1088/1681-7575/ae1dfc",
+      "provider": "iop",
+      "associated_live_capture": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/subscription-2026-09-15/capture.json"
+    }
+  ]
+}

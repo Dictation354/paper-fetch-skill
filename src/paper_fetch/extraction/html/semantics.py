@@ -402,7 +402,10 @@ def heading_category(node_name: str, text: str, *, title: str | None = None) -> 
         return "code_availability"
     if any(normalized.startswith(token) for token in BACK_MATTER_HEADINGS):
         return "references_or_back_matter"
-    if any(normalized.startswith(token) for token in ANCILLARY_HEADINGS):
+    if any(
+        normalized == token if token == "metrics" else normalized.startswith(token)
+        for token in ANCILLARY_HEADINGS
+    ):
         return "ancillary"
     if normalized in FRONT_MATTER_HEADINGS:
         return "front_matter"

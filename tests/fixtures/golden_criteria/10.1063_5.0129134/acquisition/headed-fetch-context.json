@@ -1,0 +1,31 @@
+{
+  "doi": "10.1063/5.0129134",
+  "attempt": 2,
+  "effective_headless": false,
+  "configured_browser_timeout_ms": 120000,
+  "change_from_previous_attempt": "PAPER_FETCH_BROWSER_HEADLESS=false; other standard CLI parameters unchanged.",
+  "human_assistance": {
+    "occurred": true,
+    "action": "User manually completed the human verification challenge in the headed browser.",
+    "evidence_basis": "User confirmed: 手动完成了验证",
+    "scope": "Human-assisted success; not evidence of unattended headed-mode success."
+  },
+  "observed_browser_processes": [
+    {
+      "pid": 59803,
+      "headless_flag_present": false
+    }
+  ],
+  "result": {
+    "overall": "complete",
+    "content": "fulltext",
+    "acquisition": {
+      "provider": "aip",
+      "route": "browser_html",
+      "representation": "html",
+      "transport": "browser",
+      "fallback_used": false
+    },
+    "run_id": "e5bef948-63b5-4167-ad20-c8df1e8e3ed1"
+  }
+}
