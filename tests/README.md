@@ -31,9 +31,6 @@ shell、fork）、真实 PDF 转换后端、整篇构建器及 canonical 全文�
 可供 unit 读取。安全检查不导入 PDF 转换后端；转换单测可注入 fake module。
 这些失败路径由 integration 中的子 pytest 验证。
 
-迁移逐用例对应关系见 [test-layer-migration.json](../docs/test-layer-migration.json)，
-测试计数、耗时与限制见 [验证记录](../docs/test-layer-verification.md)。
-
 `test-evidence.json` 是内部 v2 台账：每个模块声明默认分类，仅不同契约的测试
 使用 `overrides`，新增普通测试无需逐函数登记。收集时直接应用分类；独立的
 `test_evidence_ledger_integrity` 检查失效模块、例外和跨模块模板引用。
@@ -51,4 +48,7 @@ provenance 中每次采集的 URL、时间、状态和 headers 保持独立，`b
 `original_body_file` 保留被合并的采集名称。URL 回放默认精确匹配；仅 ACS、AIP、
 Oxford Academic、Royal Society 各自 Silverchair CDN 的签名回放忽略已知过期签名参数，
 保留对象、尺寸及其他 query。
-日期报告、迁移清单及旧日志仅用于历史审计，不作为当前测试的执行输入。
+退役 provider 的来源负例保存在 `tests/fixtures/golden_criteria/_scenarios/`，在 manifest 中登记为
+`synthetic` / `infrastructure`；`rejected_sources` 保留路径和拒绝哈希，
+来源验证测试确保这些字节不能重新登记为真实原文。
+测试运行结果保存在仓库外或已忽略的本地运行目录，不作为当前测试的执行输入。

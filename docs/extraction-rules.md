@@ -826,7 +826,7 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
 
 ### PDF 引用与科学后置内容的分离
 
-此旧规则已撤销，统一遵守 [PDF 转换边界](#rule-pdf-conversion-boundary)。不再要求从 PDF 转换文本恢复引用分条、拼接续行、清理页脚、调整编号或重建后置内容。已有 metadata／官方结构化引用按既有来源契约使用，不据此清洗 PDF 文本。历史测试入口保留在 [案例覆盖清单](fixture-content-coverage.md)，不作为 PDF 解析质量验收目标。
+此旧规则已撤销，统一遵守 [PDF 转换边界](#rule-pdf-conversion-boundary)。不再要求从 PDF 转换文本恢复引用分条、拼接续行、清理页脚、调整编号或重建后置内容。已有 metadata／官方结构化引用按既有来源契约使用，不据此清洗 PDF 文本。
 
 <a id="rule-elsevier-xml-references"></a>
 ### Elsevier XML 参考文献必须优先使用结构化 bibliography，保持编号和作者信息
@@ -854,7 +854,7 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
 
 ## Wiley
 
-- Wiley `.fallback__mathEquation[data-altimg]` 与紧邻的 `mjx-container` 内唯一 MathML 属于同一公式；provider 预处理将该图片地址绑定到公式并解析根相对地址。结构化数学仍优先，空 MathML 使用图片回退；不得跨正文或其他元素借用相邻公式图片。真实依据见 [gcb.16758 定向核验](fixture-records/problem-fixes-2026-09-18-p02.md) 与 [26 处公式 golden](../tests/golden/test_wiley_gcb16758_formulas.py)。链接输出验证不替代图片下载与可读性验收。
+- Wiley `.fallback__mathEquation[data-altimg]` 与紧邻的 `mjx-container` 内唯一 MathML 属于同一公式；provider 预处理将该图片地址绑定到公式并解析根相对地址。结构化数学仍优先，空 MathML 使用图片回退；不得跨正文或其他元素借用相邻公式图片。回归入口见 [26 处公式 golden](../tests/golden/test_wiley_gcb16758_formulas.py)。链接输出验证不替代图片下载与可读性验收。
 
 - 共享规则另见：
   - [HTML fulltext / abstract-only 判定必须和用户可见访问状态一致](#rule-html-availability-contract)

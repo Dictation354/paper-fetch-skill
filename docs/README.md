@@ -11,7 +11,7 @@
 | 安装、配置、MCP 注册、升级或发布 | [部署指南](deployment.md) |
 | 准备浏览器、人工认证、排障 | [browser backends](browser-backends.md) → [runtime 边界](browser-runtime.md) |
 | 修改提取、组装、渲染 | [架构](architecture/overview.md) → [提取规则](extraction-rules.md) |
-| 新增 provider | [快速流程](adding-a-provider.md) → [开发契约](provider-development.md) |
+| 新增 provider | [开发流程与契约](adding-a-provider.md) |
 | 检查探测与验收 | [probe 语义](architecture/probe-semantics.md) → [测试分层与证据](../tests/README.md) |
 | 修改 macOS/Unix 安装或浏览器边界 | [适配说明](macos-adaptation-audit.md) → [机器契约](macos-adaptation-contract.toml) |
 
@@ -24,9 +24,6 @@
 - 当前可执行样本、来源选择、拒绝/撤回记录在
   [fixture manifest](../tests/fixtures/golden_criteria/manifest.json)，预期在各样本 expected，
   采集事件在 acquisition/provenance。[测试说明](../tests/README.md) 定义证据审计。
-- [fixture-content-coverage.md](fixture-content-coverage.md)、
-  [fixture-records](fixture-records/README.md)、迁移清单与日期验证报告属于历史审计，
-  不作为当前覆盖率或样本选择的依据。历史报告中的旧路径可能已合并或撤回。
 - 发布构建、安装验收与平台证据统一见 [发布前检查](deployment.md#release-checklist)。
   协作要求见 [AGENTS.md](../AGENTS.md)；早期大版本变更见 [6.0 迁移](migration-v6.md)。
 

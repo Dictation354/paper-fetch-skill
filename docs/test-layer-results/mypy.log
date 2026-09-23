@@ -1,7 +1,0 @@
-src/paper_fetch/models/builders.py:308: error: Item "None" of "Mapping[str, Any] | None" has no attribute "get"  [union-attr]
-src/paper_fetch/models/builders.py:318: error: Unpacked dict entry 0 has incompatible type "Mapping[str, Any] | None"; expected "SupportsKeysAndGetItem[str, Any]"  [dict-item]
-src/paper_fetch/models/builders.py:454: error: Item "None" of "Mapping[str, Any] | None" has no attribute "get"  [union-attr]
-src/paper_fetch/models/builders.py:463: error: Unpacked dict entry 0 has incompatible type "Mapping[str, Any] | None"; expected "SupportsKeysAndGetItem[str, Any]"  [dict-item]
-src/paper_fetch/providers/plos.py:721: error: Argument 1 to "get" of "dict" has incompatible type "Any | None"; expected "str"  [arg-type]
-src/paper_fetch/workflow/fulltext.py:276: error: Item "None" of "ProviderContent | None" has no attribute "diagnostics"  [union-attr]
-Found 6 errors in 3 files (checked 303 source files)

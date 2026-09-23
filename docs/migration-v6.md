@@ -20,7 +20,7 @@ Provider extension 不再声明 `ProviderSpec.client_factory_path`。在模块�
 
 ## Provider 开发工具
 
-旧的 source-tree quality/review 包、provider manifest/review、capture/scaffold/snapshot/sync-back 和 drift/benchmark 入口均已删除。新增 provider 直接维护 runtime bundle、provider-local 测试与 golden fixture manifest；见 [`provider-development.md`](provider-development.md)。
+旧的 source-tree quality/review 包、provider manifest/review、capture/scaffold/snapshot/sync-back 和 drift/benchmark 入口均已删除。新增 provider 直接维护 runtime bundle、provider-local 测试与 golden fixture manifest；见 [`adding-a-provider.md`](adding-a-provider.md)。
 
 ## Release 资产
 

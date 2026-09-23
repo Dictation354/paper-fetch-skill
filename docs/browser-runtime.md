@@ -64,25 +64,10 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
   route/profile/storage/page SHA 立即停止，只有候选 URL、profile 或 storage-state
   确实变化时才允许一次重试。
 
-### PNAS 性能与无浏览器获取的已知边界
+### PNAS 获取边界
 
-2026-09-05 对 DOI `10.1073/pnas.2406303121` 的三组冷会话对照没有证明侧栏统计
-拦截带来稳定提速。追加采样中，预检约 26.77 秒、正式抓取约 16.26 秒；预检的
-DOM readiness 和 HTML 读取分别约 9.12、6.93 秒，正式抓取的正文与资产解析
-合计约 5.95 秒。浏览器主线程约 80% 的非空采样栈涉及 HTML 解析，图片下载累计
-仅约 0.72 秒。以上为单篇、带采样器的诊断结果，不作为性能保证。
-
-同次浏览器响应的原始 HTML 与最终 DOM 经现有解析器生成的 Markdown 逐字相同；
-不带 profiler 的离线解析分别约 2.35、3.91 秒。这是待验证的优化方向，当前流程
-仍使用 DOM，也没有把原始响应获取改为普通 HTTP。
-
-该环境中，普通 HTTP 请求 PNAS 正文、全文和 PDF 入口均返回 403，复用已有会话
-cookie 也未成功。同一 DOI 经 [PMC 官方 API](https://pmc.ncbi.nlm.nih.gov/tools/oai/)
-和 [Cloud 数据服务](https://pmc.ncbi.nlm.nih.gov/tools/pmcaws/) 可无需浏览器取得
-发表版本 XML、PDF、四张图及补充材料，文件通过官方校验值核对。但 PMC 图像分辨率
-低于 PNAS 原图，例如图 1 为 689×504，而 PNAS 原图为 2067×1512。已知 PNAS 原图
-URL 可以直接 HTTP 下载，完全无浏览器发现这些 URL 的冷启动路径尚未证实。
-项目尚未接入 PMC 获取路径，不能将归档图视为现有原图验收的等价替代。
+PNAS 正文使用浏览器 DOM；侧栏统计请求拦截不构成性能保证。项目尚未接入 PMC
+获取路径，不将第三方归档图视为 PNAS 原图验收的等价替代。
 
 ### 主文档诊断
 

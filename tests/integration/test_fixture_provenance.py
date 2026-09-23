@@ -26,18 +26,15 @@ class FixtureProvenanceTests(unittest.TestCase):
         rows = golden_criteria_manifest()["rejected_sources"]
         for row in rows:
             if row.get("retired"):
-                # Archived mislabels remain rejected by hash, even though they
-                # no longer belong to the active fixture catalog.
-                self.assertNotIn(row["legacy_path"], catalog)
+                # Retired publisher bytes are registered only as synthetic
+                # infrastructure inputs, never as active paper content.
+                record = catalog[row["legacy_path"]]
+                self.assertEqual(record.usage_kind, "infrastructure")
+                self.assertEqual(record.fixture_family, "scenario")
                 self.assertNotIn(
                     row["sample_id"], golden_criteria_manifest()["samples"]
                 )
                 self.assertFalse((GOLDEN_CRITERIA_ROOT / row["sample_id"]).exists())
-                record = replace(
-                    next(iter(catalog.values())),
-                    fixture_path=row["legacy_path"],
-                    origin_kind=row["classification"],
-                )
             else:
                 record = catalog[row["legacy_path"]]
             with self.subTest(path=record.fixture_path):

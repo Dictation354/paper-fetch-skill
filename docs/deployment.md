@@ -171,8 +171,6 @@ Windows 安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管
 
 Windows 耗时步骤有进度窗口和控制台结果，可用 Ctrl+C 取消当前可选步骤；官方 Ghostscript 向导及 UAC 可直接取消。完成后显示汇总，并写入不含凭据的 `optional-setup-results.txt`。Unix 汇总输出到终端。重启已运行的宿主/MCP 后配置生效。需要重试时可使用安装目录绝对运行时执行 `-m paper_fetch.offline_setup --install-root <install-dir>`（Unix）；Windows 重新运行 EXE 向导。
 
-本次实施的已完成验证与尚未完成的原生终验见 [可选向导验证记录](offline-optional-setup-validation.md)。
-
 离线更新：
 
 - Windows：下载新版 `paper-fetch-skill-windows-x86_64-setup.exe` 并直接运行。安装路径和 `AppId` 固定；安装器先备份 `offline.env`，再通过固定版本与摘要的 UninsIS 1.7.0 静默运行同 `AppId` 的既有卸载器，并等待 Inno 的 TEMP 第二阶段删除原卸载器 EXE 后才覆盖新版 runtime-only payload。旧卸载器只移除自身管理的文件，不递归清空目录，因此 `offline.env`、`downloads/` 和其它用户自建文件会保留；UninsIS 的 LGPL 与 provenance notice 随安装器分发，新版 helper 只替换 managed runtime block，并重新写入 PATH、skill 和 MCP 注册。
@@ -235,6 +233,23 @@ Windows 构建在 PowerShell 中执行：
 **Payload 所有权。** Linux 产物是 shell stub 与压缩 payload 组成的单文件 `.sh` 安装器，macOS 产物是 `.tar.gz` bundle；两者都把项目和依赖安装进 `runtime/site-packages`，预编译 bytecode，并写入私有 launcher 与 paper-fetch 命令启动器。`bin/` 不包含通用 `python` wrapper，payload 不携带源码树或 wheelhouse。离线构建只从 repo-local 可重定位 runtime 暂存 Ghostscript/libvips；macOS 还会实体化 texmath、收集非系统动态库、重写 Mach-O install name 并执行 ad-hoc codesign。Windows 把 Python 包安装进 `runtime/Lib/site-packages`，Inno Setup 安装器只包含 embedded runtime、命令启动器、静态 skill、formula tools、image-tools、installer manifest、Windows helper 和离线元数据；安装后不携带顶层 `src/`、`tests/`、`.github/`、`wheelhouse/`、`dist/` 或 `pyproject.toml`。
 
 **Evidence 所有权。** GitHub Actions 中 POSIX builder 使用 `.venv/bin/python`，Windows builder 使用 `.venv/Scripts/python.exe`，使 evidence generator 复用已锁定并安装 CycloneDX CLI 的开发环境；该控制解释器不进入目标 runtime。三个平台都从最终 staging 生成 `dependency-manifest.json`、经 CycloneDX 工具校验的 `paper-fetch-sbom.cdx.json` 和目标唯一的 `dist/paper-fetch-evidence-<target>.*` sidecar，盘点实际安装的 Python distribution、Node/Playwright、Camoufox、公式/图像/native 文件及 Windows embedded runtime digest。
+
+**可选配置向导的原生验证。** 使用正式发行包，在目标平台分别验证全部跳过、各组件独立选择、
+断网或取消、升级和卸载。macOS 覆盖 Homebrew 选择、quarantine 拒绝与 Camoufox 本地启动；
+Windows 覆盖凭据输入及实际 DACL、Ghostscript 安装/卸载与 UAC 取消、安装目录变更和注册冲突。
+临时 payload、mock 或 Linux portable 检查不能替代对应平台的正式包验证。
+
+图片工具已准备好时，显式指定绝对路径运行真实转换测试；Windows 使用 PowerShell 设置
+相同环境变量，分别指向 `gswin64c.exe` 和 `vips.exe`：
+
+```bash
+PAPER_FETCH_TEST_GHOSTSCRIPT_BIN=/absolute/path/to/gs \
+PAPER_FETCH_TEST_VIPS_BIN=/absolute/path/to/vips \
+PYTHONPATH=src uv run python -m pytest tests/integration/test_offline_optional_tools.py -q
+```
+
+该测试不下载或安装工具。原生 macOS 浏览器验证沿用
+`PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST=1`，须事先准备缓存。
 
 **Release 终验。** 操作顺序见 [发布前检查](#release-checklist)。构建、安装、证据与发布
 必须对应同一不可变 source SHA，平台和验证器限制如下。
@@ -591,7 +606,7 @@ PYTHONPATH=src uv run python -m pytest tests/integration -q
 PYTHONPATH=src uv run python -m pytest tests/golden -q
 ```
 
-默认 pytest 的 `testpaths` 只包含 unit＋integration；显式指定 `tests/golden` 就会执行全部可执行样本，无需环境开关。旧 full/shard 开关及分片逻辑已移除；定向调试使用路径、nodeid 或 `-k`。普通 PR/push 不运行 golden，也不新增 golden workflow。分层边界、迁移清单和实测见 [测试说明](../tests/README.md)。
+默认 pytest 的 `testpaths` 只包含 unit＋integration；显式指定 `tests/golden` 就会执行全部可执行样本，无需环境开关。旧 full/shard 开关及分片逻辑已移除；定向调试使用路径、nodeid 或 `-k`。普通 PR/push 不运行 golden，也不新增 golden workflow。分层边界和证据要求见 [测试说明](../tests/README.md)。
 
 未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live 时，`arxiv` 不需要 browser runtime；包括 `ams` 在内的 browser-backed provider 先按静态报告中的 `browser_runtime.available` 检查本地能力，再启动 Camoufox 做真实页面预检。pytest 隔离 XDG data/runtime、通用 profile 和所有 provider storage-state；Camoufox 的 browser bundle、版本元数据、字体和默认 addon 则复用隔离前由官方包管理器确认的 dependency cache，避免 live/MCP 子进程重复下载 runtime。每家 provider 的状态仍写入临时 `<provider>-camoufox/storage-state.json`，不会进入该共享 dependency cache。
 

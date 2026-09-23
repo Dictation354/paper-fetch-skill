@@ -18,7 +18,7 @@
 Browser HTML/PDF fallback、HTTP streaming 和 HTML assets 的高参数入口内部以现有 request/options dataclass 收敛，并把网络策略、候选准备、预算状态和 batch 生命周期拆成可单测 helper；旧公开关键字调用保持兼容。Catalog 编译 timeout/retry/QPS/acceptance/asset cap，但 host/sensitive-header 声明不自动成为授权 allowlist；维护 helper 时不得绕过显式 `SafeRemoteUrlPolicy`、HTTP(S)/标准端口/公网 DNS/userinfo/HTTPS downgrade、redirect 逐跳与跨域标准敏感头剥离、Content-Length/实际字节预算或 RuntimeContext 取消边界。
 
 <a id="provider-canonical-sources"></a>
-`references/api_notes.md` 和 `references/routing_rules.md` 只保留 API 约束和补充说明；provider/routing/waterfall 的 canonical 事实来源是本文档和 `paper_fetch.provider_catalog.PROVIDER_CATALOG`。
+provider 能力、API 约束、路由和 waterfall 的文档说明集中在本文；运行时身份与能力由 `paper_fetch.provider_catalog.PROVIDER_CATALOG` 及各 provider 的 `ProviderBundle` 管理。
 
 ## 已确认正文付费墙的终态
 
@@ -220,6 +220,21 @@ resolve DOI / landing URL
 - 动态 HTML 中的正文图片、表格图片和公式节点按普通 `asset_profile=body|all` 语义接入；`asset_profile=all` 会额外下载明确 Supplementary / Supporting Material / Multimedia 附件区域中的文件，或 landing metadata 明确暴露 `sections.multimedia=true` 后从 `/rest/document/{article_number}/multimedia` payload 识别出的文件，且不局限于图片 content-type；普通正文里的 `data` / `dataset` / `code` / `media` 链接不会仅凭文本或后缀被归类为 supplementary。
 - IEEE PDF fallback 的正文 Markdown 仍来自共享 PDF 转换；`body/all` 且允许 artifact 落盘时可保存 PDF 导出的正文图片。资产下载失败不应把已成功的正文 Markdown 判为失败。
 
+## 官方 API 入口
+
+| Provider | 入口 | 访问约束 |
+| --- | --- | --- |
+| Elsevier | 元数据：`https://api.elsevier.com/content/abstract/doi/{doi}`；全文：`https://api.elsevier.com/content/article/doi/{doi}`；PII 全文：`https://api.elsevier.com/content/article/pii/{pii}` | 需要 `ELSEVIER_API_KEY`；可选 entitlement 凭据为 `ELSEVIER_INSTTOKEN`、`ELSEVIER_AUTHTOKEN`、`ELSEVIER_CLICKTHROUGH_TOKEN`。API key 本身不保证全文权限；全文优先请求 `text/xml`。 |
+| Crossref | DOI 元数据：`https://api.crossref.org/works/{doi}`；已知论文身份查询：`https://api.crossref.org/works` | 推荐配置 `CROSSREF_MAILTO`；只提供元数据和路由信号，不作为通用全文下载器。 |
+
+接口参考见 [Elsevier Developer Portal](https://dev.elsevier.com/) 和
+[Crossref REST API](https://www.crossref.org/documentation/retrieve-metadata/rest-api/)。
+IEEE 的动态 HTML、references、multimedia 与 PDF 入口见 [IEEE](#ieee)；无需 IEEE API key。
+Wiley 的 `WILEY_TDM_CLIENT_TOKEN` 仅用于可选 TDM PDF 路线，缺失时不禁用已有 HTML
+和 browser PDF/ePDF 路线，顺序见[全文主路径](#3-provider-全文主路径)。
+Springer 使用 publisher landing HTML 和 direct HTTP PDF，不调用 Springer Nature API；
+Science、PNAS 和 Copernicus 的既有路线也不要求 publisher API 凭据。
+
 ## 路由规则
 
 当前 provider 决策统一按更强信号优先：
@@ -238,6 +253,10 @@ domain > publisher > DOI fallback
   - 在前两类信号都不够时，才使用 DOI 前缀兜底。
 
 这些 provider 身份与能力配置统一来自 `paper_fetch.provider_catalog.PROVIDER_CATALOG`。Catalog 固定记录 provider 名称、展示名、official 标记、domain / DOI prefix / publisher alias、默认 asset 策略、probe 能力、abstract-only 策略和 MCP status 顺序；`publisher_identity`、workflow routing、默认 asset profile 与 provider status 列表都从这里派生。client factory 和 metadata probe short-circuit 是对应 `ProviderBundle` 持有的 typed callable，仅供 runtime registry 使用，不属于 catalog 的可序列化事实。
+
+只有在 catalog、派生路由、registry、status 和测试中完成接入的 provider 才属于全文支持范围。
+未选中支持的官方 provider 时保持 Crossref metadata-only；选中后按该 provider 自有
+waterfall 获取或降级，不转入通用全文下载器。
 
 ### `provider_hint` 的含义
 
