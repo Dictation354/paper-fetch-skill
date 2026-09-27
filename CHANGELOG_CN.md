@@ -6,6 +6,14 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.0.2 - 2026-09-27
+
+### 依赖兼容性
+
+- 允许 filelock 4.x 和 Playwright `<1.64`；开发锁文件更新为 filelock 4.0.4、Camoufox 0.5.6、Playwright 1.62.0。Camoufox 当前仍要求 Playwright `<1.63`。使用 Playwright 1.61 及以上版本时，需要准备 beta.30 或更新的 Camoufox 浏览器；下载前拒绝不兼容的候选，旧固定版本需要显式重新指定。原生 macOS gate 同步准备 beta.30。
+- 固定的 Haskell setup action 更新至 2.12.1。
+- 刷新所有可解析的 Python 依赖及 npm 锁文件，包括 MCP 2.2.0、Pydantic 2.13.5、urllib3 2.8.0 和 xmldom 0.9.12。setup-uv 升级至 10.2.0，texmath 升级至 0.13.3，配套 GHC 9.14.1 / Cabal 3.18.1.0；Windows 内嵌 CPython 和 libvips 的已校验资产分别更新至 3.13.15 / 8.18.7。
+
 ## 7.0.1 - 2026-09-27
 
 ### 修复——出版社图片与资产诊断

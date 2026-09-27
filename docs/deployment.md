@@ -67,6 +67,15 @@ paper-fetch-skill-windows-x86_64-setup.exe
 
 `pyproject.toml` 的大多数依赖保留兼容范围；browser/full extra 使用 `camoufox>=0.5.5,<0.6`，允许后续兼容版本提供新的浏览器能力。`uv.lock` 固定普通开发和 CI 实际使用的版本；POSIX 离线构建不再对 Camoufox 增加单独的 lockfile 精确约束，而是读取依赖 wheelhouse 中唯一 Camoufox wheel 的 METADATA，验证安装后的 distribution 与该版本一致，并在 `offline-manifest.json` 的 `components.camoufox.python_package_version` 记录实际值。quality job 在其它静态门禁之前通过独立的 `Check lockfile freshness` 步骤执行 `uv lock --check`，项目版本、依赖声明或 lock metadata 的陈旧状态会直接令 CI 失败；后续 `uv sync --frozen` 只消费已验证的锁文件，不会在常规运行中重新选择版本。Dependabot 每周为 pip、npm 和 GitHub Actions 更新创建可跟进的 PR；普通 PR 继续由 `verify.yml` 对锁定依赖执行全 extras 漏洞审计。离线 wheelhouse/hash manifest 继续负责跨平台离线资产，不替代开发锁文件。
 
+当前锁定的浏览器组合为 Camoufox 0.5.6 / Playwright 1.62.0。项目允许
+`playwright>=1.47,<1.64`，但解析时仍受 Camoufox 自身的 `<1.63` 约束，不能强制
+安装 1.63。Playwright 1.61 起要求 Camoufox browser beta.30 或更新版本；已固定
+旧 browser 的环境需要显式重新指定兼容版本，不能依赖失败回退继续使用旧包。
+原生 macOS gate 固定准备 `official/152.0.4-beta.30`，Linux 测试不替代该证据。
+
+CI 的 setup-uv 固定为 10.2.0 的完整 SHA。缓存使用该版本的 `auto` 事件策略，
+并显式保留 `prune-cache: true`，避免跨主版本升级改变缓存清理行为。
+
 主包版本号同步清单：
 
 - `pyproject.toml` 的 `[project].version` 是 Python 包和离线构建脚本读取的主版本来源。
@@ -164,7 +173,7 @@ Windows 安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管
 - Elsevier API Key 与 Wiley TDM Token 隐藏输入，留空保留旧值，只更新明确填写的 `ELSEVIER_API_KEY` / `WILEY_TDM_CLIENT_TOKEN`。凭据按 dotenv 转义、去重并原子保存，POSIX 文件权限为 `0600`，Windows 使用用户专属 DACL；不会进入命令行、日志或宿主注册参数。`--reuse-env-file` 的外部文件保持只读，向导提供手动配置说明。
 - Linux 实际加载 GTK、X11/XCB、音频等共享库；不能确认时报告“未验证”。Debian/Ubuntu 根据当前 APT sources 的候选解析 `t64` 包名，先显示确切清单和命令，再分别询问浏览器系统库、Ghostscript 和 libvips 安装。仅 APT 子进程使用 sudo（由 sudo 收取密码），不刷新软件源、不全系统升级。缺包时给出建议，包锁/权限失败保留现有结果并重新检测；其它发行版仅检测和提示。
 - macOS 保持 15+ arm64、CPython ABI、quarantine 和原生验证边界。已有 Homebrew 时可分别安装 `ghostscript`、`vips`，使用实际 prefix 下的绝对路径，无 `sudo brew`；无 Homebrew 时仅提供 [官方说明](https://brew.sh/)，不安装 Homebrew/Xcode/CLT，不清除 quarantine。
-- Windows 图片工具固定于 `installer/manifest.json`：已从官方 release 下载并核验 [Ghostscript 10.08.0 x64 EXE](https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/tag/gs10080)、[libvips 8.18.6 x64 all ZIP](https://github.com/libvips/build-win64-mxe/releases/tag/v8.18.6) 的 SHA-256；用户安装时不查询 latest。下载先进入临时目录，摘要通过后才执行或解压；ZIP 拒绝路径逃逸、链接、重复路径及特殊文件，保留完整 DLL 和资源。
+- Windows 图片工具固定于 `installer/manifest.json`：已从官方 release 下载并核验 [Ghostscript 10.08.0 x64 EXE](https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/tag/gs10080)、[libvips 8.18.7 x64 all ZIP](https://github.com/libvips/build-win64-mxe/releases/tag/v8.18.7) 的 SHA-256；用户安装时不查询 latest。下载先进入临时目录，摘要通过后才执行或解压；ZIP 拒绝路径逃逸、链接、重复路径及特殊文件，保留完整 DLL 和资源。
 - Ghostscript 使用 [官方安装器](https://github.com/ArtifexSoftware/ghostpdl/blob/master/psi/nsisinst.nsi)，可见运行，使用末尾 `/D=<install-dir>\image-tools\ghostscript\<version>`；官方安装器要求管理员权限并写系统注册表。检测 PATH、配置和官方注册位置，优先复用有效工具；目标版本已注册但失效时仅给出修复提示。用户在官方向导更改目录时，以注册及转换验证确认的位置为准，外部目录不归 paper-fetch 清理。libvips 完整解压到 `image-tools\libvips\<version>`。
 - 图片工具必须完成真实 EPS/TIFF → PNG 转换、PNG 解码与像素检查，才将绝对路径保存到既有 `PAPER_FETCH_GHOSTSCRIPT_BIN` / `PAPER_FETCH_VIPS_BIN`。版本探测成功不等于转换就绪。Windows 用独立 `optional-tools.json` 记录版本、来源、目录、归属、文件摘要及验证状态，与 release payload 清单分开。
 - Camoufox 以普通用户使用既有 channel/pin/cache 准备规则；已有有效版本直接复用，不默认更新。随后只启动本地 `about:blank` 验证，分别报告准备、启动与“站点访问未测试”，不访问出版社、不登录、不保存 provider state。**跳过仅影响本次安装，后续运行时自动准备仍启用**；不代表预置后已验证完全断网的浏览器支持。
@@ -199,11 +208,11 @@ Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的
 - Linux / macOS 安装器会校验 `offline-manifest.json` 的 `target.platform` 和 `target.arch`；本轮发布的 Mac 包只支持 arm64
 - macOS manifest 额外声明 `target.minimum_os_version = "15.0"`；安装器通过系统版本检查确认目标机满足最低版本，并在 shell、skill、MCP 和用户配置写入前完成所有平台、ABI、checksum 与整个 bundle 的递归 quarantine 预检
 - Linux / macOS 安装时会把通过 `PAPER_FETCH_OFFLINE_PYTHON_BIN` / `python3` 选中的解释器路径写入 `runtime/python-bin`，后续 `runtime/paper-fetch-python` 私有 launcher、CLI wrapper 和 MCP 都复用该解释器；`bin/` 不暴露通用 `python` wrapper，避免全局 PATH 前置后遮蔽用户自己的 Python
-- Windows 安装器固定使用包内 CPython 3.13.13 x64 embeddable runtime；版本、python.org URL 与官方 SHA-256 `8766a8775746235e23cf5aee5027ab1060bb981d93110577adcf3508aa0cbd55` 均来自 `installer/manifest.json`，构建器在解压前校验，目标机不需要预装 Python
+- Windows 安装器固定使用包内 CPython 3.13.15 x64 embeddable runtime；版本、python.org URL 与官方 SHA-256 `d1f04d990aee1253d8569e8e5104e30fa9f5fa830899f14843448872d936a2cf` 均来自 `installer/manifest.json`，构建器在解压前校验，目标机不需要预装 Python
 - Linux 构建阶段用临时 wheelhouse 把项目和依赖安装进 `runtime/site-packages`，然后只把安装后的 runtime、`bin/` 启动器、公式工具和 skill 放进自解压 `.sh` payload；目标机安装阶段不运行 pip，不包含源码树、`dist/` 或 `wheelhouse/`
 - Playwright 和 Camoufox Python 依赖随 Linux / macOS `runtime/site-packages` 和 Windows embedded runtime 分发；Camoufox 浏览器 binary 不随包分发，核心安装和静态诊断不下载，可选向导仅在用户明确选择时下载；fetch、auth 和 preflight 在实际启动浏览器前自动补全或更新 managed runtime。未固定版本时检查所选渠道最新兼容版本，固定时只补全对应版本；更新失败且本地版本有效时提示并继续使用，否则报告准备失败。显式 binary 由用户维护。进入受限网络或离线环境前应在联网阶段运行 `python -m camoufox fetch` 预置 binary，并运行 preflight 做启动/provider 验证。当前验证尚未覆盖预置后真正断网的 Camoufox launch，因此不能宣称完整离线浏览器支持
 - Linux `.sh` payload 不包含仓库源码快照和 `tests/` 目录；离线安装目标是运行已打包工具，不在目标机执行项目测试
-- Linux、macOS、Windows 离线包都携带原生 texmath 0.13.2，分别位于 `formula-tools/bin/texmath` 和 `formula-tools/bin/texmath.exe`，并将它作为首选公式后端；`mathml-to-latex>=1.8.0,<2.0.0` 和随 Playwright 分发的 Node 作为二级转换回退。项目不随包安装或调用 KaTeX renderer/validator；KaTeX 只描述 LaTeX 规范化的兼容目标。`src/paper_fetch/resources/formula` 是 Node manifest、lockfile 和转换脚本的唯一源码位置；checkout runtime 直接引用它，Python 安装器和离线构建将它暂存到 `formula-tools`。lockfile 当前解析为 `mathml-to-latex` 1.8.0 及其实际传递依赖，unit test 会拒绝声明或解析结果漂移。目标机不编译 texmath，也不运行 `npm install`。CI / release 公式构建固定使用 `haskell-actions/setup` v2.12.0 的完整 SHA、GHC 9.10.3 和 Cabal 3.12.1.0；v2.12.0 随附的 GHCup 0.2.6.2 只更新构建工具链，不改变 texmath 0.13.2、公式入口、安装布局或产物接口。macOS 构建会把非系统 Mach-O dylib 复制到 `formula-tools/lib`，用 `@rpath` / `@loader_path` 重写引用，并对 texmath 与随包 dylib 做 ad-hoc codesign
+- Linux、macOS、Windows 离线包都携带原生 texmath 0.13.3，分别位于 `formula-tools/bin/texmath` 和 `formula-tools/bin/texmath.exe`，并将它作为首选公式后端；`mathml-to-latex>=1.8.0,<2.0.0` 和随 Playwright 分发的 Node 作为二级转换回退。项目不随包安装或调用 KaTeX renderer/validator；KaTeX 只描述 LaTeX 规范化的兼容目标。`src/paper_fetch/resources/formula` 是 Node manifest、lockfile 和转换脚本的唯一源码位置；checkout runtime 直接引用它，Python 安装器和离线构建将它暂存到 `formula-tools`。lockfile 当前解析为 `mathml-to-latex` 1.8.0 及其实际传递依赖，unit test 会拒绝声明或解析结果漂移。目标机不编译 texmath，也不运行 `npm install`。CI / release 公式构建固定使用 `haskell-actions/setup` v2.12.1 的完整 SHA、GHC 9.14.1 和 Cabal 3.18.1.0。macOS 构建会把非系统 Mach-O dylib 复制到 `formula-tools/lib`，用 `@rpath` / `@loader_path` 重写引用，并对 texmath 与随包 dylib 做 ad-hoc codesign
 - Linux / macOS 会配置安装目录内 `image-tools` 作为图片转换工具查找目录；离线构建不会把构建机 PATH 上的 Ghostscript/libvips 符号链接固化进包内。运行时找到 Ghostscript 时可转 EPS，找到 libvips 时可转 TIFF；缺少对应工具时只影响 AMS `Download Figure` 源图转换，网页 JPG/PNG 候选仍可回退
 - Linux / macOS 默认写固定安装目录内的 `offline.env`、生成可在 bash/zsh 中 `source` 的 `activate-offline.sh`、复制三份 host skill，并把离线 CLI PATH、工具路径、`PAPER_FETCH_ENV_FILE`、`PYTHONUTF8`、`PYTHONIOENCODING` 等写入当前 shell 启动文件；`offline.env` 的 managed block 写入 `PAPER_FETCH_BROWSER_HEADLESS=true`，不覆盖 Camoufox 生成的 Firefox UA/指纹。只有显式传 `--user-config` 才会把受标记管理的运行时块合并到用户配置；Linux 目标是 `~/.config/paper-fetch/.env`，macOS 目标是 `~/Library/Application Support/paper-fetch/.env`
 - Linux / macOS `--install-dir <path>` 只接受不存在、空目录，或同时带 schema 3 ownership manifest 与 `runtime/python-bin` marker 的既有安装目录；拒绝 HOME/祖先、非空未拥有目录及指向它的 symlink。合法升级会清理 `src/`、`tests/`、`wheelhouse/`、`dist/`、`.github/` 等残留，保留安装目录内 `offline.env`，并保留用户配置中非 managed 内容
@@ -228,7 +237,7 @@ Windows 构建在 PowerShell 中执行：
 
 **包命名与路径安全。** Linux / macOS 构建脚本会从当前平台、架构和 Python 推导包名；例如 Linux x86_64 上 `PYTHON_BIN=python3.13 scripts/build-offline-package.sh` 会默认生成 `paper-fetch-skill-offline-linux-x86_64-cp313.sh`，原生 Darwin arm64 上会生成 `paper-fetch-skill-offline-macos-arm64-cp313.tar.gz`。显式和 manifest 派生的包名都只能是安全单路径组件。构建根会 canonicalize 并拒绝 `/`、HOME、仓库及其祖先；非空 staging 只有携带匹配仓库、canonical 路径和包名的 `.paper-fetch-offline-staging-owner` 才可清理。临时 wheelhouse/project wheel 位于 owned staging，marker 与临时目录均不进入产物；output dir 不得位于 staging，正式 artifact 先写同目录临时文件再原子 rename，失败不会覆盖已有正式文件。
 
-**平台构建范围。** 构建解释器必须是标准 GIL CPython，架构须与宿主目标一致。macOS 构建只接受 Darwin arm64，并把最低 deployment target 固定为 15.0；Linux / WSL 交叉构建不能充当发布证据。Windows 构建必须在 CPython 3.13 x64 上运行，并按 manifest 下载和校验官方 CPython 3.13.13 embeddable x64 runtime。
+**平台构建范围。** 构建解释器必须是标准 GIL CPython，架构须与宿主目标一致。macOS 构建只接受 Darwin arm64，并把最低 deployment target 固定为 15.0；Linux / WSL 交叉构建不能充当发布证据。Windows 构建必须在 CPython 3.13 x64 上运行，并按 manifest 下载和校验官方 CPython 3.13.15 embeddable x64 runtime。
 
 **Payload 所有权。** Linux 产物是 shell stub 与压缩 payload 组成的单文件 `.sh` 安装器，macOS 产物是 `.tar.gz` bundle；两者都把项目和依赖安装进 `runtime/site-packages`，预编译 bytecode，并写入私有 launcher 与 paper-fetch 命令启动器。`bin/` 不包含通用 `python` wrapper，payload 不携带源码树或 wheelhouse。离线构建只从 repo-local 可重定位 runtime 暂存 Ghostscript/libvips；macOS 还会实体化 texmath、收集非系统动态库、重写 Mach-O install name 并执行 ad-hoc codesign。Windows 把 Python 包安装进 `runtime/Lib/site-packages`，Inno Setup 安装器只包含 embedded runtime、命令启动器、静态 skill、formula tools、image-tools、installer manifest、Windows helper 和离线元数据；安装后不携带顶层 `src/`、`tests/`、`.github/`、`wheelhouse/`、`dist/` 或 `pyproject.toml`。
 

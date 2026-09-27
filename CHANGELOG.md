@@ -6,6 +6,14 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.0.2 - 2026-09-27
+
+### Dependency compatibility
+
+- Allow filelock 4.x and Playwright below 1.64; update the development lock to filelock 4.0.4, Camoufox 0.5.6, and Playwright 1.62.0. Camoufox currently requires Playwright below 1.63. With Playwright 1.61 or newer, prepare Camoufox browser beta.30 or newer; reject incompatible browser candidates before download, and explicitly repin older pinned bundles. The native macOS gate now stages beta.30.
+- Update the pinned Haskell setup action to 2.12.1.
+- Refresh all resolvable Python dependencies and the npm lockfile, including MCP 2.2.0, Pydantic 2.13.5, urllib3 2.8.0, and xmldom 0.9.12. Upgrade setup-uv to 10.2.0, texmath to 0.13.3 with GHC 9.14.1 / Cabal 3.18.1.0, and the verified Windows embedded CPython / libvips assets to 3.13.15 / 8.18.7.
+
 ## 7.0.1 - 2026-09-27
 
 ### Fixed — publisher images and asset diagnostics

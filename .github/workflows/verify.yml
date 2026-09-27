@@ -66,15 +66,15 @@ jobs:
           full: "true"
       - name: Set up pinned Haskell toolchain
         id: formula-haskell
-        uses: haskell-actions/setup@6037f33647c3f17758a2356c80fc4a53d7e0685d # v2.12.0
+        uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
         with:
-          ghc-version: "9.10.3"
-          cabal-version: "3.12.1.0"
+          ghc-version: "9.14.1"
+          cabal-version: "3.18.1.0"
       - name: Cache Cabal formula dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.formula-haskell.outputs.cabal-store }}
-          key: cabal-${{ runner.os }}-${{ runner.arch }}-ghc-9.10.3-texmath-0.13.2
+          key: cabal-${{ runner.os }}-${{ runner.arch }}-ghc-9.14.1-texmath-0.13.3
       - name: Prepare both real formula backends
         run: |
           PYTHONPATH=src uv run python - <<'PY'
@@ -162,7 +162,7 @@ jobs:
       - name: Prepare pinned official Camoufox runtime explicitly
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: uv run python -m camoufox fetch official/152.0.4-beta.28
+        run: uv run python -m camoufox fetch official/152.0.4-beta.30
       - name: Verify official Camoufox macOS bundle contexts
         env:
           PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST: "1"
@@ -182,15 +182,15 @@ jobs:
             -q
       - name: Set up pinned Haskell toolchain
         id: formula-haskell
-        uses: haskell-actions/setup@6037f33647c3f17758a2356c80fc4a53d7e0685d # v2.12.0
+        uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
         with:
-          ghc-version: "9.10.3"
-          cabal-version: "3.12.1.0"
+          ghc-version: "9.14.1"
+          cabal-version: "3.18.1.0"
       - name: Cache Cabal formula dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.formula-haskell.outputs.cabal-store }}
-          key: cabal-macOS-ARM64-ghc-9.10.3-texmath-0.13.2
+          key: cabal-macOS-ARM64-ghc-9.14.1-texmath-0.13.3
       - name: Build native macOS arm64 offline package
         env:
           PYTHON_BIN: .venv/bin/python

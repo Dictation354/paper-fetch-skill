@@ -694,7 +694,7 @@ source "$INSTALL_ROOT/activate-offline.sh"
 
 log "Verifying command entrypoints"
 paper-fetch --help >/dev/null
-test "$(texmath --version 2>&1)" = "Version 0.13.2"
+test "$(texmath --version 2>&1)" = "Version 0.13.3"
 test "$(
   printf '%s' '<math xmlns="http://www.w3.org/1998/Math/MathML"><mfrac><msub><mi>x</mi><mn>1</mn></msub><msqrt><mrow><mi>y</mi><mo>+</mo><mn>1</mn></mrow></msqrt></mfrac></math>' \
     | texmath -f mathml -t tex

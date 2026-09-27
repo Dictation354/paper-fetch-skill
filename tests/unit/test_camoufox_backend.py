@@ -2666,10 +2666,10 @@ def managed_camoufox(monkeypatch, tmp_path):
     monkeypatch.setattr(multiversion.os, "system", lambda _command: 0)
 
     old = pkgman.AvailableVersion(
-        pkgman.Version("beta.27", "152.0.3"), "https://example.test/old.zip", False
+        pkgman.Version("beta.30", "152.0.4"), "https://example.test/old.zip", False
     )
     latest = pkgman.AvailableVersion(
-        pkgman.Version("beta.28", "152.0.4"), "https://example.test/latest.zip", False
+        pkgman.Version("beta.31", "152.0.4"), "https://example.test/latest.zip", False
     )
     query = mock.Mock(return_value=[latest, old])
     monkeypatch.setattr(pkgman, "list_available_versions", query)
@@ -2677,7 +2677,7 @@ def managed_camoufox(monkeypatch, tmp_path):
     def download(file, _url):
         print("fake download progress")
         with zipfile.ZipFile(file, "w") as archive:
-            archive.writestr("camoufox-bin", "dummy executable")
+            archive.writestr(zipfile.ZipInfo("camoufox-bin"), "dummy executable")
         file.seek(0)
         return file
 
@@ -2975,9 +2975,13 @@ def test_camoufox_missing_python_dependency_still_rejected(monkeypatch, tmp_path
 
 
 def test_managed_camoufox_pin_sha_does_not_reuse_different_asset(managed_camoufox):
+    import hashlib
+    import io
+
     env = managed_camoufox
     old_path = env.install_local()
-    env.old.sha256 = "a" * 64
+    archive = env.download.side_effect(io.BytesIO(), "https://example.test/old.zip")
+    env.old.sha256 = hashlib.sha256(archive.getvalue()).hexdigest()
     env.multi.save_config(
         {
             "active_version": old_path.relative_to(env.root).as_posix(),
@@ -2987,7 +2991,7 @@ def test_managed_camoufox_pin_sha_does_not_reuse_different_asset(managed_camoufo
         }
     )
     result = preparation.prepare_camoufox_managed_runtime()
-    assert result.valid and result.runtime_path.name.endswith("-aaaaaaaa")
+    assert result.valid and result.runtime_path.name.endswith(f"-{env.old.sha256[:8]}")
     assert env.multi.load_config()["pinned_sha"] == env.old.sha256
     env.download.assert_called_once()
     assert old_path.is_dir()

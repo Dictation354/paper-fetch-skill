@@ -38,11 +38,11 @@
   "embedded_runtimes": {
     "windows_cpython_x86_64": {
       "implementation": "CPython",
-      "version": "3.13.13",
+      "version": "3.13.15",
       "architecture": "x86_64",
-      "archive": "python-3.13.13-embed-amd64.zip",
-      "url": "https://www.python.org/ftp/python/3.13.13/python-3.13.13-embed-amd64.zip",
-      "sha256": "8766a8775746235e23cf5aee5027ab1060bb981d93110577adcf3508aa0cbd55"
+      "archive": "python-3.13.15-embed-amd64.zip",
+      "url": "https://www.python.org/ftp/python/3.13.15/python-3.13.15-embed-amd64.zip",
+      "sha256": "d1f04d990aee1253d8569e8e5104e30fa9f5fa830899f14843448872d936a2cf"
     }
   },
   "setup_components": {
@@ -77,10 +77,10 @@
       "requires_admin": true
     },
     "libvips": {
-      "version": "8.18.6",
+      "version": "8.18.7",
       "architecture": "x86_64",
-      "url": "https://github.com/libvips/build-win64-mxe/releases/download/v8.18.6/vips-dev-x64-all-8.18.6.zip",
-      "sha256": "e36b34f9c955e66fa47ec7c02b756026fad5560c5db6ff7884123be04792f89c",
+      "url": "https://github.com/libvips/build-win64-mxe/releases/download/v8.18.7/vips-dev-x64-all-8.18.7.zip",
+      "sha256": "78e56ba30c267ba32ff965200534bd5721364cadbead8c4d595e44b58dfeff15",
       "installation": "complete-zip",
       "requires_admin": false
     }

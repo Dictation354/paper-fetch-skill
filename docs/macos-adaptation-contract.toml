@@ -15,6 +15,8 @@ runner = "macos-15"
 requires_admin = false
 
 [evidence.native]
+# 公式工具链升级后的原生 texmath、动态库收集与签名仍由原生 gate 验证；
+# Linux 编译及公式回归不能替代 macOS 打包/安装证据。版本由 workflow 和工具 owner 维护。
 runner = "macos-15"
 python_version = "3.14"
 release_matrix_workflow = ".github/workflows/offline.yml"
@@ -31,6 +33,9 @@ reject_symlinks = true
 validated_purge_paths = true
 
 [browser]
+# Playwright >=1.61 要求 Camoufox browser >=beta.30；版本兼容性由 Camoufox
+# Python 包判定，旧 pin 不能绕过检查。verify.yml 显式准备 beta.30，
+# Linux 的依赖/旧 runtime 拒绝测试不替代 macos-15 原生双 context gate。
 # 确认同篇正文付费墙后在现有 provider 结果边界停止；正文请求显式携带检查 provider，
 # 资产拒绝仍走资产结果；这些 Linux 回放证据不替代原生 macOS gate。
 # Provider 的响应选择、请求阻断及临时资产标签复用既有 Camoufox runtime；

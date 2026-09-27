@@ -24,10 +24,10 @@ def managed_camoufox(monkeypatch, tmp_path):
     monkeypatch.setattr(multiversion.os, "system", lambda _command: 0)
 
     old = pkgman.AvailableVersion(
-        pkgman.Version("beta.27", "152.0.3"), "https://example.test/old.zip", False
+        pkgman.Version("beta.30", "152.0.4"), "https://example.test/old.zip", False
     )
     latest = pkgman.AvailableVersion(
-        pkgman.Version("beta.28", "152.0.4"), "https://example.test/latest.zip", False
+        pkgman.Version("beta.31", "152.0.4"), "https://example.test/latest.zip", False
     )
     query = mock.Mock(return_value=[latest, old])
     monkeypatch.setattr(pkgman, "list_available_versions", query)
@@ -101,3 +101,34 @@ def test_managed_camoufox_process_lock_prevents_duplicate_install(
                 process.join(timeout=5)
     assert downloads.read_text() == "download\n"
     assert preparation.probe_camoufox_managed_runtime().valid
+
+
+@pytest.mark.parametrize("pinned", [False, True])
+def test_managed_camoufox_rejects_runtime_below_playwright_floor(
+    managed_camoufox, pinned
+):
+    """An existing executable cannot bypass the installed driver's protocol floor."""
+    env = managed_camoufox
+    incompatible = env.pkgman.AvailableVersion(
+        env.pkgman.Version("beta.29", "152.0.4"),
+        "https://example.test/incompatible.zip",
+        False,
+    )
+    assert not incompatible.version.is_supported()
+    path = env.install_local(incompatible)
+    config = env.multi.load_config()
+    if pinned:
+        config["pinned"] = incompatible.version.full_string
+        env.multi.save_config(config)
+    env.query.return_value = [env.latest, incompatible]
+    if not pinned:
+        env.query.side_effect = OSError("offline")
+
+    probe = preparation.probe_camoufox_managed_runtime()
+    assert probe.state == "incompatible" and not probe.valid
+    with pytest.raises(RuntimeError, match="Camoufox browser preparation failed"):
+        preparation.prepare_camoufox_managed_runtime()
+
+    env.download.assert_not_called()
+    assert env.multi.load_config() == config
+    assert (path / "camoufox-bin").read_text() == "old executable"

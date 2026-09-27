@@ -287,6 +287,7 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                     v
                     for v in versions
                     if v.is_prerelease == (channel_type == "prerelease")
+                    and v.version.is_supported()
                     and (not pinned or v.version.full_string == pinned)
                     and (not pinned_sha or v.sha256 == pinned_sha)
                 ),

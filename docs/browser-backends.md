@@ -27,7 +27,7 @@ python -m pip install "paper-fetch-skill[full]"
 可在联网时显式运行 `python -m camoufox fetch` 提前准备。
 
 使用 Camoufox 的 `python -m camoufox set official/stable` 选择渠道，或
-`python -m camoufox set official/stable/152.0.4-beta.28` 固定版本。未固定时每次
+`python -m camoufox set official/stable/152.0.4-beta.30` 固定版本。未固定时每次
 启动前检查该渠道的最新兼容版本；固定时只补全对应版本。更新失败但本地版本
 校验有效时提示并继续使用；没有可用版本则报告浏览器准备失败。下载进度写 stderr。
 

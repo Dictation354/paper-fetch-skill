@@ -345,7 +345,7 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("mcp_config.json", script)
         self.assertIn("activate-offline.sh executed shell code", script)
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
-        self.assertIn('texmath --version 2>&1)" = "Version 0.13.2"', script)
+        self.assertIn('texmath --version 2>&1)" = "Version 0.13.3"', script)
         self.assertIn(r"\frac{x_{1}}{\sqrt{y + 1}}", script)
         self.assertIn(r"\sum\limits_{i}^{n}x^{i}", script)
         self.assertIn("PYTHONUTF8", script)
@@ -404,14 +404,14 @@ class OfflinePackageBuildTests(unittest.TestCase):
         )
         runtime = manifest["embedded_runtimes"]["windows_cpython_x86_64"]
 
-        self.assertEqual(runtime["version"], "3.13.13")
+        self.assertEqual(runtime["version"], "3.13.15")
         self.assertEqual(
             runtime["url"],
-            "https://www.python.org/ftp/python/3.13.13/python-3.13.13-embed-amd64.zip",
+            "https://www.python.org/ftp/python/3.13.15/python-3.13.15-embed-amd64.zip",
         )
         self.assertEqual(
             runtime["sha256"],
-            "8766a8775746235e23cf5aee5027ab1060bb981d93110577adcf3508aa0cbd55",
+            "d1f04d990aee1253d8569e8e5104e30fa9f5fa830899f14843448872d936a2cf",
         )
         self.assertNotIn("[string]$EmbeddedPythonVersion", script)
         digest_check = script.index("CPython embeddable archive SHA-256 mismatch")

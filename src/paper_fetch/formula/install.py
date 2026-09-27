@@ -20,7 +20,7 @@ from .paths import (
     TEXMATH_EXECUTABLE_NAMES,
 )
 
-TEXMATH_VERSION = "0.13.2"
+TEXMATH_VERSION = "0.13.3"
 _TEXMATH_VERSION_PATTERN = re.compile(r"(?m)^Version ([0-9]+(?:\.[0-9]+)+)\s*$")
 
 
