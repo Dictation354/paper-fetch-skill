@@ -42,6 +42,11 @@ validated_purge_paths = true
 # stamp 失败后允许同篇文章页的可见 PDF 点击及 popup；Science 引用展开仅用页面可见控件。
 # IEEE direct PDF 的 HTTP 502 可进入上述既有浏览器回退，不改变 runtime 或身份验收边界。
 # Linux 浏览器回放验证响应契约，不代替 macos-15 原生 runtime gate。
+# Wiley 正文资产在同一自有 context/page 串行导航图片 URL；每逻辑资产共享 30 秒，
+# cookies 仅初始化注入，挑战可自然恢复；只捕获当前导航/重定向链的原始图片字节。
+# 页面与监听器在所属线程清理，不借用或关闭其它会话，不新增 runtime 执行面。
+# T&F 图片导航在 commit 后验收原始响应，避免图片文档 DOMContentLoaded 超时；
+# 沿用 Camoufox、同一资产预算和 MIME/字节验收，Linux 浏览器测试不替代原生 gate。
 runtime_bundle_built_in = false
 core_install_downloads_runtime = false
 optional_install_download_requires_consent = true

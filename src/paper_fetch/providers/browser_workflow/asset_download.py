@@ -168,6 +168,8 @@ def retry_failed_browser_assets(
     )
     if recovery.provider == "wiley":
         failed_supplementary_assets = []
+    if plan.fetch_policy == "browser_only":
+        failed_body_assets = []
     if not failed_body_assets and not failed_supplementary_assets:
         return previous
     if recovery.runtime is None:
@@ -439,7 +441,9 @@ def _annotate_split_preview_fallback(
                 or ""
             )
         )
-        attempts: list[dict[str, Any]] = []
+        attempts: list[dict[str, Any]] = (
+            list(outcome.get("recovery_attempts") or []) if provider == "wiley" else []
+        )
         if direct_failure is not None and provider != "wiley":
             attempts.append(_attempt_from_failure("direct", direct_failure))
         if browser_failure is not None:
@@ -713,7 +717,7 @@ def _run_browser_asset_download_attempt(
                 host_recovery_circuit=host_recovery_circuit,
             )
             if plan.fetch_policy != "direct_then_browser" or not serial_browser_assets:
-                return deps.download_assets(
+                result = deps.download_assets(
                     FIGURE_KIND,
                     attempt_settings.get("transport"),
                     assets=body_assets,
@@ -726,6 +730,20 @@ def _run_browser_asset_download_attempt(
                     ),
                     **common_kwargs,
                 )
+                if recovery.provider == "wiley" and plan.fetch_policy == "browser_only":
+                    for asset in result.get("assets", []):
+                        if (
+                            asset.get("kind") == "figure"
+                            and asset.get("download_tier") == "preview"
+                        ):
+                            annotated = _annotate_split_preview_fallback(
+                                {"assets": [asset]},
+                                direct_failures=[],
+                                browser_failures=[],
+                                provider="wiley",
+                            )
+                            asset.update(annotated["assets"][0])
+                return result
 
             full_candidate_builder = _tier_candidate_builder(
                 base_candidate_builder, preview=False

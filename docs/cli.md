@@ -217,7 +217,7 @@ paper-fetch fetch --query-file ./queries.txt \
 | `output_artifacts` | 每个最终输出的 `path/kind/size/sha256/mtime/completed_at/verification_status` |
 全文成功通常是 `acceptance.overall=complete` 或 `degraded`；preview、资产失败或语义损失可使其为 `degraded`；abstract-only / metadata-only 是 `limited`；工具或必需输出失败是 `failed` 或 `action_required`。调用终态和内容质量分别读取 `record_status` 与 `acceptance`。
 
-Identity acceptance 不再把普通 title 当作唯一论文证明。DOI-less 结果只有在 runtime 同时提供 canonical landing URL、已验证标记和唯一性标记时才是 `resolved`；否则为 `unavailable/action_required`。MCP `get_cached.asset_summary` 的 advertised v2 schema 覆盖完整 acceptance asset facet（含 audit/discovered/attempted/preview/issue facts），`batch_fetch.output_artifacts[]` 的 schema 同样声明实际返回的 `route` 与 `failure_code`。
+Identity acceptance 不再把普通 title 当作唯一论文证明。DOI-less 结果只有在 runtime 同时提供 canonical landing URL、已验证标记和唯一性标记时才是 `resolved`；否则为 `unavailable/action_required`。MCP 的版本化 payload 与协议级 `outputSchema` 是不同契约，见 [MCP 层](architecture/overview.md#2-mcp-层)。
 
 下面是为阅读裁剪过的一条完成记录；真实 JSONL 还会包含表中列出的全部验收子字段：
 
@@ -241,7 +241,7 @@ Identity acceptance 不再把普通 title 当作唯一论文证明。DOI-less �
   "request_fingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   "record_status": "completed",
   "doi": "10.1186/1471-2105-11-421",
-  "source": "publisher_html",
+  "source": "springer_html",
   "acceptance": {
     "overall": "complete",
     "content": {"status": "fulltext", "has_fulltext": true},
@@ -350,16 +350,15 @@ CLI 默认：
 
 `--artifact-mode all` 保留完整调试 artifact，包括 provider HTML/PDF、辅助 artifact和调试 JSON sidecar。已到达页面但 extraction/availability 失败时，另在 `diagnostics/<provider>/<doi-or-url-digest>/<route>-<attempt>/` 保存 `diagnostic.json` 与 `page-sanitized.html`；后者删除脚本、表单、事件属性、email 和 URL query/userinfo，不保存原始失败 HTML 或截图。批量成功与终态失败 record 都将这些文件列为 `kind=diagnostic` 并快照 size/SHA-256。
 
-`--artifact-mode none` 不保存 provider artifact 或资产；显式 `--output <path>`、`--save-markdown`，以及未显式 `--output` 时由 `--output-dir` 承接的主输出仍可写文件。
-
 `--artifact-mode none` 关闭 provider artifact 和资产归档，但不会阻止显式 `--output <path>`、由 `--output-dir` 承接的主输出或 `--save-markdown`。如果同时不需要下载资产，应显式传 `--asset-profile none`。
 
 ## 资产下载
 
 `--asset-profile` 只控制本地内容资产下载范围，不决定主输出是否写文件。
 
-省略该选项时使用获胜 provider route 编译后的 `asset_scope`；显式传入
-`none`、`body` 或 `all` 时以用户选择为准，不会被 route 默认值扩大或缩小。
+CLI 省略该选项时仍显式使用 `body`。Python API / MCP 的
+`strategy.asset_profile=null` 才使用获胜 provider route 编译后的 `asset_scope`；
+显式传入 `none`、`body` 或 `all` 时不会被 route 默认值扩大或缩小。
 
 - `none`：不下载本地资产；不主动清除 Markdown 中已有或 provider 可解析出的远程图片链接。
 - `body`：默认值，保存正文图片、图表、公式图片等。
@@ -417,7 +416,6 @@ paper-fetch fetch --query "10.1016/test" \
 | `paper-fetch fetch --query ... --output - --output-dir ./papers --artifact-mode markdown-assets --asset-profile body` | 打印 Markdown | 无默认主输出文件 | `./papers` 只用于 Markdown artifact/PDF fallback/正文资产 |
 | `paper-fetch fetch --query ... --output ./result.md --output-dir ./papers --artifact-mode none --asset-profile none` | 不打印正文 | `./result.md` | 不保存额外 artifact/资产 |
 | `paper-fetch fetch --query ... --format json --output-dir ./papers --artifact-mode none --asset-profile none` | 不打印正文 | `./papers/<paper-stem>.json` | 不保存 artifact/资产 |
-| `paper-fetch fetch --query ... --output - --artifact-mode none --asset-profile none` | 打印 Markdown | 无 | 不保存论文文件；仍准备工作目录 |
 | `paper-fetch fetch --query-file ./queries.txt --output-dir ./papers --artifact-mode none --asset-profile none` | 不打印正文 | 每篇 `./papers/<paper-stem>.md`，另有 `batch-results.jsonl` | 文本批量归档，不保存额外 artifact/资产 |
 | `paper-fetch doctor --group browser --json` | 打印静态诊断 JSON | 无 | 不访问网络、不启动浏览器、不写 storage-state |
 

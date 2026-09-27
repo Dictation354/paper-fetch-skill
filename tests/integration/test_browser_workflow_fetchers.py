@@ -263,3 +263,79 @@ def test_wiley_click_survives_collapsed_panel_redraw_in_browser(
         assert file_url in finished, "download request does not emit requestfinished"
         assert reclosed == ([True] if reclose_after_visible else [])
         context.close()
+
+
+@pytest.mark.browser
+def test_tandf_image_navigation_preserves_response_bytes_without_dom_event_wait(
+    monkeypatch,
+    tmp_path,
+):
+    import json
+    import os
+    from pathlib import Path
+
+    from paper_fetch.providers.browser_runtime import BrowserRuntimeConfig
+    from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
+    from tests.support.wiley_page_assets import png_bytes
+
+    executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
+    if not executable or not Path(executable).is_file():
+        pytest.skip("requires the existing local Camoufox executable")
+    camoufox = pytest.importorskip("camoufox.sync_api")
+    from camoufox import DefaultAddons, utils
+
+    version_file = next(
+        parent / "version.json"
+        for parent in Path(executable).parents
+        if (parent / "version.json").is_file()
+    )
+    monkeypatch.setattr(
+        utils,
+        "installed_verstr",
+        lambda: json.loads(version_file.read_text())["version"],
+    )
+    monkeypatch.setattr(utils, "get_path", lambda file: str(version_file.parent / file))
+    target = "https://example.test/full.png"
+    body = png_bytes(640, 480)
+    config = BrowserRuntimeConfig(
+        provider="tandf",
+        doi="10.1080/test",
+        artifact_dir=tmp_path,
+        headless=True,
+        user_agent=None,
+    )
+    fetcher = image_fetchers._SharedBrowserImageDocumentFetcher(
+        browser_context_seed_getter=lambda: {},
+        seed_urls_getter=lambda: [],
+        browser_options=fetcher_context.BrowserDocumentFetcherOptions(
+            runtime_config=config
+        ),
+    )
+    # Isolate the navigation fallback after earlier asset transports were unavailable.
+    for name in (
+        "_payload_from_warmed_article_image",
+        "_payload_from_page_fetch_url",
+        "_payload_from_context_request",
+    ):
+        monkeypatch.setattr(fetcher, name, lambda *args, **kwargs: None)
+    monkeypatch.setattr(image_fetchers, "_IMAGE_DOCUMENT_NAVIGATION_TIMEOUT_MS", 1500)
+    with camoufox.Camoufox(
+        headless=True,
+        executable_path=executable,
+        exclude_addons=list(DefaultAddons),
+    ) as browser:
+        context = browser.new_context()
+        context.route(
+            target, lambda route: route.fulfill(body=body, content_type="image/png")
+        )
+        fetcher._context = context
+        fetcher._page = context.new_page()
+        with mock.patch.object(
+            fetcher._page, "goto", wraps=fetcher._page.goto
+        ) as navigation:
+            result = fetcher._fetch_with_page(target)
+        assert result is not None
+        assert result["body"] == body
+        assert result["url"] == target
+        assert navigation.call_args.kwargs["wait_until"] == "commit"
+        context.close()

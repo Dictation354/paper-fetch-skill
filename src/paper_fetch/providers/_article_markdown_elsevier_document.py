@@ -51,7 +51,7 @@ class ArticleStructure:
     body_lines: list[str]
     figure_entries: list[dict[str, Any]]
     table_entries: list[dict[str, Any]]
-    supplement_entries: list[dict[str, str]]
+    supplement_entries: list[dict[str, Any]]
     conversion_notes: list[str]
     references: list[Reference]
     semantic_losses: SemanticLosses

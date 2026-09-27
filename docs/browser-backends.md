@@ -1,6 +1,6 @@
 # Browser backend
 
-paper-fetch 4.0 仅支持 Camoufox。所有 browser-backed provider 都通过
+当前仅支持 Camoufox。所有 browser-backed provider 都通过
 `paper_fetch.providers.browser_runtime` facade 获取 Firefox/Juggler context；
 provider 不得直接创建 Playwright 或 Camoufox 生命周期。
 
@@ -21,7 +21,9 @@ python -m pip install "paper-fetch-skill[full]"
 离线安装包始终按 `full` 构建，但不重新分发浏览器 binary。完全离线环境需提前
 准备 Camoufox active runtime，包括相邻配置、addons 和字体；只复制可执行文件
 不足以组成可用 runtime。普通 fetch、auth 和 preflight 在实际启动浏览器前自动
-补全或更新 managed runtime；安装器不下载 runtime，也不自动安装缺失的 Python 依赖。
+补全或更新 managed runtime；运行时不自动安装缺失的 Python 依赖。
+核心安装不下载浏览器，可选安装向导仅在用户明确选择后预置并验证本地启动，
+详见 [离线包](deployment.md#离线包)。
 可在联网时显式运行 `python -m camoufox fetch` 提前准备。
 
 使用 Camoufox 的 `python -m camoufox set official/stable` 选择渠道，或
@@ -68,7 +70,7 @@ runtime、不访问出版社页面。CLI 与 MCP `browser_preflight` 在实际�
 自动认证、绕过 challenge/paywall，也不会调用 PDF fallback。
 
 Preflight 只报告本次 live 检查；正式 fetch 独立导航并重新执行身份、阻断与正文验收。
-图片、附件或 PDF 的 direct 401/403 只允许一次 browser-byte 恢复；
+共享 direct-first 路径中，图片、附件或 PDF 的 direct 401/403 只允许一次 browser-byte 恢复；
 `response.body()`、page `arrayBuffer()`、canvas 或 download/file bytes 都会先进入统一
 MIME、大小、像素、预算、staging 与原子发布检查。
 

@@ -4236,6 +4236,27 @@
         "scope": "PNAS current document ownership and candidate readiness in real offline Camoufox",
         "reason": "真实离线浏览器与最小页面验证导航响应归属和候选等待，不证明线上可用性。"
       }
+    },
+    "tests/unit/test_wiley_page_assets.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Wiley serial image URL navigation and raw response capture",
+        "reason": "最小场景验证同 URL 挑战恢复、30 秒共享预算、响应归属、原始图片和会话清理；不证明出版社全文完整性。"
+      }
+    },
+    "tests/integration/test_wiley_page_assets.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Wiley serial image URL navigation and raw response capture",
+        "reason": "最小场景验证同 URL 挑战恢复、30 秒共享预算、响应归属、原始图片和会话清理；不证明出版社全文完整性。"
+      }
+    },
+    "tests/live/test_live_wiley_page_assets.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Wiley live article assets",
+        "reason": "三个既有样本的 headed/headless 串行复测，检查全文 acceptance、全部公式/正文图计数、MIME/尺寸/SHA-256、会话复用及挑战恢复；不替代 committed golden 原文证据。"
+      }
     }
   }
 }

@@ -28,8 +28,11 @@ Provider 必须返回现有 typed payload，并让统一 acceptance 决定最终
 
 - bundle 导出、身份和 route；
 - 主全文路径与必要 fallback；
-- 正文结构及适用的 figure/table/formula/supplementary/reference；
+- HTML/XML 正文结构及适用的 figure/table/formula/supplementary/reference；
 - challenge、非全文 wrapper、身份不匹配等 fail-closed 边界。
+
+PDF 测试仅覆盖获取、身份/完整性、来源、落盘与转换输出透传，不新增排版或内容修复
+验收目标；见 [PDF 转换边界](extraction-rules.md#rule-pdf-conversion-boundary)。
 
 ## 4. 添加代表性 golden replay
 

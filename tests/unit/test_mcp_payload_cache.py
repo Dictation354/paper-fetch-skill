@@ -283,10 +283,22 @@ class McpPayloadCacheTests(unittest.TestCase):
             "probe": "unit_test",
             "packages": {"playwright": False, "camoufox": False},
         }
-        with mock.patch.object(
-            camoufox_backend,
-            "_dependency_details",
-            return_value=missing_dependencies,
+        # This scenario is intentionally unconfigured; host-installed image
+        # binaries must not turn this unit contract into a subprocess probe.
+        with (
+            mock.patch.object(
+                camoufox_backend,
+                "_dependency_details",
+                return_value=missing_dependencies,
+            ),
+            mock.patch(
+                "paper_fetch.image_tools.convert.ghostscript_binary_candidates",
+                return_value=[],
+            ),
+            mock.patch(
+                "paper_fetch.image_tools.convert.vips_binary_candidates",
+                return_value=[],
+            ),
         ):
             result = provider_status_tool(
                 deps=mcp_test_deps(build_runtime_env=lambda _env=None: blank_env)

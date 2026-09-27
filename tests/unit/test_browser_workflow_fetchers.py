@@ -1041,3 +1041,19 @@ def test_wiley_file_click_caps_operations_by_remaining_request_budget():
             is None
         )
     assert 0 < wait.call_args.kwargs["timeout_seconds"] <= 2
+
+
+@pytest.mark.parametrize(
+    "factory",
+    [
+        image_fetchers._SharedBrowserImageDocumentFetcher,
+        image_fetchers._ThreadLocalSharedBrowserImageDocumentFetcher,
+    ],
+)
+def test_image_fetcher_memo_preserves_actual_camoufox_backend(factory):
+    fetcher = factory(
+        browser_context_seed_getter=lambda: {}, seed_urls_getter=lambda: []
+    )
+    memo = browser_workflow._MemoizedImageDocumentFetcher(fetcher)
+    assert memo.browser_backend == "camoufox"
+    memo.close()

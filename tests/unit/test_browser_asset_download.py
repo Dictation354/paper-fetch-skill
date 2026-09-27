@@ -1886,3 +1886,30 @@ def test_ieee_merge_resolves_only_matching_image_failure():
         provider="ieee",
     )
     assert result["asset_failures"] == [second]
+
+
+@pytest.mark.parametrize("backend", [None, "", "camoufox"])
+def test_browser_recovery_preserves_optional_backend_without_stringifying_none(backend):
+    from paper_fetch.extraction.html.assets.download import (
+        _fetch_document_fallback,
+        _with_browser_recovery_diagnostics,
+    )
+
+    url = "https://example.test/figure.png"
+    fetcher = mock.Mock(
+        return_value={
+            "status_code": 200,
+            "headers": {"content-type": "image/png"},
+            "body": png_header(640, 480),
+            "url": url,
+        }
+    )
+    fetcher.browser_backend = backend
+    response = _fetch_document_fallback(FIGURE_KIND, fetcher, url, {"kind": "figure"})
+    assert response is not None
+    result = _with_browser_recovery_diagnostics(response, None)
+    assert result.get("_paper_fetch_browser_backend") == (backend or None)
+    assert result["_paper_fetch_final_fetcher"] == (backend or "selected_browser")
+    assert result["_paper_fetch_recovery_attempts"][-1].get("browser_backend") == (
+        backend or None
+    )

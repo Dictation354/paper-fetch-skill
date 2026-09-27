@@ -1320,3 +1320,68 @@ def test_supplement_identity_survives_asset_order_and_article_rendering(tmp_path
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_elsevier_download_diagnostics_survive_structure_and_article():
+    from paper_fetch.providers._article_markdown_elsevier import (
+        elsevier_figure_registry,
+        elsevier_supplement_entries,
+        elsevier_table_registry,
+    )
+
+    root = ET.fromstring("""<article>
+      <figure id="f1"><label>Figure 1</label><link locator="gr1"/></figure>
+      <table id="t1"><label>Table 1</label><link locator="tbl1"/></table>
+      <e-component><label>Data</label><link locator="mmc1"/></e-component>
+    </article>""")
+    diagnostics = {
+        "asset_timing": {"total_ms": 123.5, "body_stream_ms": 100.0, "status": "saved"},
+        "download_tier": "object_reference",
+        "final_fetcher": "direct_http",
+        "content_type": "image/png",
+        "downloaded_bytes": 1024,
+        "width": 640,
+        "height": 480,
+    }
+    assets = [
+        {
+            **diagnostics,
+            "asset_type": kind,
+            "source_ref": ref,
+            "path": f"/tmp/{ref}.png",
+            "source_url": f"https://example.test/{ref}.png",
+        }
+        for kind, ref in [
+            ("image", "gr1"),
+            ("image", "gr2"),
+            ("table_asset", "tbl1"),
+            ("supplementary", "mmc1"),
+            ("supplementary", "mmc2"),
+        ]
+    ]
+    _, figures = elsevier_figure_registry(root, assets, Path("/tmp/article.md"))
+    _, tables = elsevier_table_registry(root, assets, Path("/tmp/article.md"))
+    supplements = elsevier_supplement_entries(root, assets, Path("/tmp/article.md"))
+    article = article_from_structure(
+        source="elsevier_xml",
+        metadata={"title": "Example"},
+        doi="10.1016/test",
+        abstract_lines=[],
+        body_lines=["Body"],
+        figure_entries=figures,
+        table_entries=tables,
+        supplement_entries=supplements,
+        conversion_notes=[],
+    )
+    assert len(article.assets) == 5
+    for asset in article.assets:
+        assert {
+            key: asset.asset_timing[key] for key in diagnostics["asset_timing"]
+        } == diagnostics["asset_timing"]
+        assert asset.download_tier == "object_reference"
+        assert asset.final_fetcher == "direct_http"
+        assert asset.downloaded_bytes == 1024
+        assert asset.width == 640 and asset.height == 480
+    assert figures[0]["heading"] == "Figure 1"
+    assert tables[0]["heading"] == "Table 1"
+    assert supplements[0]["heading"] == "Data"

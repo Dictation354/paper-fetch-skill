@@ -26,6 +26,14 @@
   采集事件在 acquisition/provenance。[测试说明](../tests/README.md) 定义证据审计。
 - 发布构建、安装验收与平台证据统一见 [发布前检查](deployment.md#release-checklist)。
   协作要求见 [AGENTS.md](../AGENTS.md)；早期大版本变更见 [6.0 迁移](migration-v6.md)。
+- [fixture 约定](../tests/fixtures/README.md) 只维护来源和资产证据规则；测试命令与
+  台账维护留在 [测试说明](../tests/README.md)，不另抄样本篇数或逐函数分类清单。
+- CLI 参数以 `paper-fetch <command> --help` 与 `cli.py` 为准，MCP 入参与返回值以
+  `mcp/schemas.py`、tool adapter 和契约测试为准。文档解释行为，示例不替代完整 schema。
+- 安装后的 [skill bundle](../skills/paper-fetch-skill/SKILL.md) 必须自包含，因此其
+  预设、环境与验收摘要保留必要重复；不能改成依赖未随包安装的 `docs/` 链接。
+- 更新日志、迁移说明和专项审计记录描述对应版本或一次运行；其中本机证据路径、
+  测试数量与性能数据不作为当前能力承诺。当前规范通过上面的主题入口维护。
 
 ## 术语表
 

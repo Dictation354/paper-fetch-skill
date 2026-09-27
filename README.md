@@ -156,7 +156,7 @@ Paper Fetch 不绕过付费墙或访问授权。可用性取决于 provider、�
 
 - Elsevier 官方 XML/API 和部分 PDF fallback 需要从 <https://dev.elsevier.com/> 申请 `ELSEVIER_API_KEY`。
 - 部分 provider 需要 Camoufox browser runtime 或用户已有的合法登录状态。
-- 安装器不下载 Camoufox binary。CLI/MCP/库抓取、`auth` 和 `browser-preflight` 每次实际启动浏览器前自动补全或更新 managed runtime；无浏览器抓取与静态诊断不检查更新，同一浏览器生命周期只检查一次。尊重 Camoufox 渠道与版本固定配置；更新失败时提示并使用校验有效的本地版本，无可用版本则报告准备失败。显式 binary 路径仍由用户维护；离线使用需在联网阶段预置 runtime。
+- 核心安装不下载 Camoufox binary；离线安装后的可选向导可在用户明确选择后预置。实际启动浏览器前会自动准备 managed runtime；渠道、固定版本、更新失败处理和离线准备见 [浏览器安装](docs/browser-backends.md#安装)。
 - `paper-fetch doctor` 只做本地静态诊断；`paper-fetch browser-preflight` 才会启动浏览器并访问 provider 页面；只有结果明确要求认证时才运行 `paper-fetch auth <provider>`。
 
 ```bash
@@ -173,7 +173,7 @@ paper-fetch auth wiley
 - 只访问用户本来就有权访问的内容，不绕过 challenge、付费墙或机构权限。
 - 官方 HTML/XML、浏览器路径和 PDF fallback 都受 provider、凭据和运行环境限制；“已找到论文”不等于“一定能取得完整全文”。
 - 结构化公式转换依赖源站提供 MathML/TeX；只有图片或 PDF 排版信息时，不承诺恢复可靠 LaTeX。
-- 新 provider 以 runtime bundle、provider-local 测试和代表性 golden replay 验证全文及转换质量；见 [`docs/adding-a-provider.md`](docs/adding-a-provider.md)。
+- 新 provider 以 runtime bundle、provider-local 测试和代表性 golden replay 验证获取契约及 HTML/XML 内容；PDF 转换输出保持原样，质量不属于项目修复或验收目标。见 [`docs/adding-a-provider.md`](docs/adding-a-provider.md) 和 [PDF 转换边界](docs/extraction-rules.md#rule-pdf-conversion-boundary)。
 
 ## 文档
 

@@ -37,8 +37,8 @@ provider 只读取显式 `BrowserRuntimeConfig`，不探测 backend、不持有�
 browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默认 profile 仍保留
 既有 fast attempt、readiness 和资源加载行为；只有明确 opt-in 的 provider 才覆盖：
 
-- PNAS 只执行一次完整 HTML attempt，候选依次为 canonical `/doi/{doi}`、
-  `/doi/full/{doi}` 和 DOI resolver。它不再等待失效的 bodymatter selector，而是在
+- PNAS 只执行一次完整 HTML attempt，候选依次为 `/doi/full/{doi}`、
+  `/doi/{doi}` 和 DOI resolver。它使用与解析器一致的 bodymatter selector，并在
   配置为 8 秒的 readiness 预算内检查正文长度、段落数和连续两次稳定指纹；预算
   检查在同步浏览器调用返回后执行，不能打断正在等待的 `evaluate`，因此实际耗时
   可能超过预算。预算耗尽后仍对最后一份 HTML 做 block detection 与正文抽取。
@@ -114,7 +114,8 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
 - IEEE 浏览器恢复复用已就绪的文章页，按原图 URL 匹配文章入口并提前监听响应。
   图片点击站内查看器；普通表格链接用浏览器原生新标签动作打开，取得原始图像字节后
   关闭临时标签。逐资产串行操作，保留文章页和原有预览降级、失败报告及质量验收。
-- 图片、附件和 PDF 默认先按 URL 走共享 hostname pool 的 direct stream。direct
+- 共享图片、附件和 PDF 下载默认先按 URL 走 hostname pool 的 direct stream；Wiley 正文资产
+  使用 provider 专用的同会话串行导航，详见 [provider 说明](providers.md#wiley-正文资产)。direct
   401/403 最多进入一次真正的 browser-byte recovery；同一 URL/同一会话状态不再先经
   cookie opener 再重复 direct。恢复可使用 browser `response.body()`、page-context
   `arrayBuffer()`、已加载图像 canvas、`bodyB64`、download/file bytes 或 PDF viewer

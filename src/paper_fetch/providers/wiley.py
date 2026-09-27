@@ -40,6 +40,7 @@ from ..provider_catalog import (
 from ..pdf_limits import pdf_max_bytes
 from ..quality.html_signals import WILEY_SIGNAL_SET
 from ..runtime import RuntimeContext
+from ..models import AssetProfile
 from ..tracing import fulltext_marker, trace_event
 from ..utils import normalize_text
 from . import _wiley_html, browser_workflow
@@ -260,6 +261,42 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                 "Wiley TDM API URL template is not declared in provider catalog.",
             )
         return template.format(doi=urllib.parse.quote(doi, safe=""))
+
+    def download_related_assets(
+        self,
+        doi,
+        metadata,
+        raw_payload,
+        output_dir,
+        *,
+        asset_profile: AssetProfile = "all",
+        context: RuntimeContext | None = None,
+    ) -> dict[str, list[dict[str, Any]]]:
+        return self._download_browser_backed_related_assets(
+            doi,
+            metadata,
+            raw_payload,
+            output_dir,
+            asset_profile=asset_profile,
+            context=context,
+            body_fetch_policy="browser_only",
+        )
+
+    def _browser_asset_image_fetcher(self, context: RuntimeContext, **request):
+        from ._wiley_page_assets import WileyPageAssetFetcher
+        from .browser_workflow.fetchers.context import BrowserDocumentFetcherOptions
+
+        return WileyPageAssetFetcher(
+            assets=request["attempt_body_assets"],
+            browser_context_seed_getter=request["browser_context_seed_getter"],
+            seed_urls_getter=request["seed_urls_getter"],
+            browser_user_agent=request["browser_user_agent"],
+            headless=request["headless"],
+            runtime_context=context,
+            browser_options=BrowserDocumentFetcherOptions(
+                runtime_config=request.get("browser_config")
+            ),
+        )
 
     def _tdm_api_headers(self) -> dict[str, str]:
         return {

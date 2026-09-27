@@ -662,6 +662,9 @@ def elsevier_table_registry(
                 "_table_layout_degraded_count": 0,
             }
 
+        # Keep the download owner's timing and provenance through XML assembly.
+        if asset and link:
+            entry = {**asset, **entry}
         entry["section"] = (
             "appendix"
             if table_id in appendix_table_ids or locator in appendix_table_locators
@@ -740,6 +743,7 @@ def elsevier_figure_registry(
             or link
         )
         entry = {
+            **asset,
             "key": entry_key,
             "heading": label,
             "caption": caption,
@@ -779,6 +783,7 @@ def elsevier_figure_registry(
         used_asset_links.add(relative_path)
         entries.append(
             {
+                **asset,
                 "key": str(asset["path"]),
                 "heading": Path(asset["path"]).name,
                 "caption": "",
@@ -794,7 +799,7 @@ def elsevier_figure_registry(
 
 def elsevier_supplement_entries(
     root: ET.Element, assets: list[dict[str, Any]], markdown_path: Path
-) -> list[dict[str, str]]:
+) -> list[dict[str, Any]]:
     supplementary_assets: dict[str, dict[str, Any]] = {}
     for asset in assets:
         if asset.get("asset_type") != "supplementary" or not asset.get("path"):
@@ -804,7 +809,7 @@ def elsevier_supplement_entries(
             supplementary_assets[source_ref] = asset
             supplementary_assets[normalize_text(source_ref)] = asset
 
-    entries: list[dict[str, str]] = []
+    entries: list[dict[str, Any]] = []
     used_paths: set[str] = set()
     for component in root.iter():
         if (
@@ -828,6 +833,7 @@ def elsevier_supplement_entries(
         used_paths.add(matched_asset["path"])
         entries.append(
             {
+                **matched_asset,
                 "heading": label or Path(matched_asset["path"]).name,
                 "caption": caption,
                 "link": path_relative_to(markdown_path.parent, matched_asset["path"]),
@@ -845,6 +851,7 @@ def elsevier_supplement_entries(
             continue
         entries.append(
             {
+                **asset,
                 "heading": Path(asset["path"]).name,
                 "caption": "",
                 "link": path_relative_to(markdown_path.parent, asset["path"]),

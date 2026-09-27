@@ -25,6 +25,7 @@ from ....http import (
     HttpRequestPolicy,
     HttpStreamOptions,
     HttpTransport,
+    RequestCancelledError,
     RequestFailure,
     is_retryable_network_error,
     is_transient_http_status,
@@ -87,7 +88,7 @@ from .state import (
 
 ImageDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
 FileDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
-AssetFetchPolicy = Literal["browser_first", "direct_then_browser"]
+AssetFetchPolicy = Literal["browser_first", "direct_then_browser", "browser_only"]
 
 
 def _with_asset_timing(
@@ -301,6 +302,13 @@ def _fetch_document_fallback(
     try:
         browser_started_at = time.monotonic()
         response = fetcher(candidate_url, asset)
+    except (RequestCancelledError, AssetBudgetExceeded):
+        if (
+            request_context is not None
+            and request_context.fetch_policy == "browser_only"
+        ):
+            raise
+        return None
     except Exception:
         return None
     if not response:
@@ -317,7 +325,8 @@ def _fetch_document_fallback(
         "browser_recovery",
         time.monotonic() - browser_started_at,
     )
-    browser_backend = normalize_text(str(getattr(fetcher, "browser_backend", "")))
+    backend = getattr(fetcher, "browser_backend", None)
+    browser_backend = normalize_text(backend) if isinstance(backend, str) else ""
     if browser_backend:
         recovered["_paper_fetch_browser_backend"] = browser_backend
     if request_context is None:
@@ -1093,11 +1102,13 @@ def _browser_first_candidate_recovery(
             )
         )
     try:
-        converted, _source_format = _converted_figure_response(
-            response,
-            source_url=candidate.url,
-            asset_budget=request_context.asset_budget,
-        )
+        converted = response
+        if request_context.fetch_policy != "browser_only":
+            converted, _source_format = _converted_figure_response(
+                response,
+                source_url=candidate.url,
+                asset_budget=request_context.asset_budget,
+            )
     except AssetBudgetExceeded as exc:
         return _CandidateRecoveryResult(
             budget_error=exc,
@@ -1320,7 +1331,11 @@ def _resolve_asset_download_impl(
     def staged_candidates():
         nonlocal full_size_url
         yield from candidate_urls
-        fallback = active_options._fallback_candidate_url_resolver
+        fallback = (
+            None
+            if fetch_policy == "browser_only"
+            else active_options._fallback_candidate_url_resolver
+        )
         if fallback is not None:
             if active_budget.internally_cancelled:
                 return
@@ -1347,7 +1362,7 @@ def _resolve_asset_download_impl(
             )
             continue
 
-        if (
+        if fetch_policy == "browser_only" or (
             fetch_policy == "browser_first"
             and _should_use_document_fetcher_for_candidate(
                 kind,
@@ -2056,7 +2071,11 @@ def download_assets(
     active_options = options or AssetDownloadOptions()
     headers = active_options.headers
     browser_context_seed = active_options.browser_context_seed
-    figure_page_fetcher = active_options.figure_page_fetcher
+    figure_page_fetcher = (
+        None
+        if active_options.fetch_policy == "browser_only"
+        else active_options.figure_page_fetcher
+    )
     candidate_builder = active_options.candidate_builder
     document_fetcher = active_options.document_fetcher
     image_document_fetcher = active_options.image_document_fetcher
@@ -2208,6 +2227,10 @@ def download_assets(
     def candidate_url_resolver(asset: Mapping[str, Any]) -> list[str]:
         if kind.name != "figure":
             return kind.candidate_url_resolver(asset)
+        if fetch_policy == "browser_only":
+            asset = {
+                key: value for key, value in asset.items() if key != "figure_page_url"
+            }
         return active_candidate_builder(
             transport,
             asset=asset,

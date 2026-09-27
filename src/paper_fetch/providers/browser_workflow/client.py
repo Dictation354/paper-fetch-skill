@@ -5,6 +5,7 @@ from __future__ import annotations
 from ...quality.access_boundary import propagate_paywall
 
 from functools import partial
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, cast
 from collections.abc import Mapping
@@ -15,6 +16,7 @@ from ...config import (
     resolve_asset_download_concurrency,
 )
 from ...extraction.html import decode_html
+from ...extraction.html.assets import AssetFetchPolicy
 from ...extraction.html.signals import HtmlExtractionFailure
 from ...metadata.types import ProviderMetadata
 from ...models import AssetProfile
@@ -530,6 +532,7 @@ class BrowserWorkflowClient(ProviderClient):
         asset_profile: AssetProfile = "all",
         context: RuntimeContext | None = None,
         assets: list[Mapping[str, Any]] | None = None,
+        body_fetch_policy: AssetFetchPolicy | None = None,
     ) -> dict[str, list[dict[str, Any]]]:
         context = self._runtime_context(context, output_dir=output_dir)
         if output_dir is None or asset_profile == "none":
@@ -575,6 +578,16 @@ class BrowserWorkflowClient(ProviderClient):
             )
         except HtmlExtractionFailure:
             return empty_asset_results()
+        if body_fetch_policy is not None:
+            plan = replace(plan, fetch_policy=body_fetch_policy)
+        if body_fetch_policy == "browser_only":
+            plan = replace(
+                plan,
+                figure_page_discovery=False,
+                body_assets=sorted(
+                    plan.body_assets, key=lambda asset: asset.get("kind") != "formula"
+                ),
+            )
         if not plan.body_assets and not plan.supplementary_assets:
             return empty_asset_results()
 
@@ -582,6 +595,8 @@ class BrowserWorkflowClient(ProviderClient):
             dict(content.browser_context_seed or {}) if content is not None else {}
         )
         direct_http_asset_mode = self._direct_http_asset_mode(raw_browser_context_seed)
+        if body_fetch_policy == "browser_only":
+            direct_http_asset_mode = False
         browser_context_seed = merge_browser_context_seeds(raw_browser_context_seed)
         if direct_http_asset_mode:
             browser_context_seed["paper_fetch_html_fetcher"] = "direct_http"

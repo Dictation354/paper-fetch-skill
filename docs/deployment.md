@@ -550,7 +550,7 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 python3 -m pip install --upgrade .
 ```
 
-使用 MCP SDK 2.x 的源码环境，源码开发环境应重新执行 `uv sync --frozen`；在线
+使用 MCP SDK 2.x 的源码环境，源码开发环境应重新执行 `uv sync --frozen --extra dev --extra full`；在线
 安装应使用上面的 `--upgrade` 命令。安装完成后可用
 `python3 -c "from importlib.metadata import version; print(version('mcp'))"`
 确认主版本为 2，并重启所有已经运行的 MCP host。
@@ -572,41 +572,23 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421"
 
 CLI 默认打印 Markdown 到终端；如果指定 `--output-dir` 且未显式传 `--output`，主输出会用安全化论文 stem 加 `.md`、`.json` 或 `.both.json` 后缀写入该目录，正文不会打印到终端。完整输出、artifact、资产下载和错误码语义见 [`cli.md`](cli.md)。
 
-如果你在仓库源码目录里做 repo-local 验证，先从 lockfile 同步并激活仓库 `.venv`。不要使用系统 site-packages 代替项目环境；当前项目要求 MCP 2.x，而系统解释器中残留的 MCP 1.x 会在测试收集前产生不兼容。完整 unit 命令复用 `pyproject.toml` 的 xdist 配置：
+源码 checkout 使用锁定的开发与完整依赖，再运行本地门禁：
 
 ```bash
-uv sync --frozen
-source .venv/bin/activate
-PYTHONPATH=src uv run python -m pytest tests/unit -q
-```
-
-完整本地门和其它分层验证继续使用：
-
-```bash
+uv sync --frozen --extra dev --extra full
 bash scripts/dev-preflight.sh
-PYTHONPATH=src uv run python -m pytest tests/unit/test_cli.py tests/unit/test_service_*.py tests/unit/test_mcp_*.py
-PYTHONPATH=src uv run python -m pytest
 ```
 
-`scripts/dev-preflight.sh` 是显式本地完整门禁入口：优先使用 repo-local `.venv/bin/python`，不存在时退回 `python3`，也可显式设置 `PYTHON_BIN=/path/to/python`。脚本依次运行 `ruff format --check`、`ruff check`、完整生产包 `mypy`、版本一致性、`tests/unit --durations=30` 和 `tests/integration --durations=30`；`--with-golden` 追加完整 `tests/golden`，与 `--fast`、`--skip-integration` 冲突时立即报错；如果缺少 ruff / mypy / pytest，会提示先运行 `scripts/dev-bootstrap.sh` 或指定已安装依赖的解释器。快速迭代可用 `--fast`，需要单独排除 integration 或 type check 时使用 `--skip-integration` / `--skip-typecheck`。
+不要用系统 site-packages 代替项目环境；旧 MCP SDK 1.x 与当前入口不兼容。
+preflight 优先使用 `.venv/bin/python`，没有时退回 `python3`，可通过
+`PYTHON_BIN=/path/to/python` 显式选择已准备好的解释器。它检查格式、lint、完整生产包
+mypy、版本一致性及完整 unit＋integration。`--fast` / `--skip-integration` 跳过
+integration，`--skip-typecheck` 跳过 mypy。发布前使用 `--with-golden`，它与
+`--fast` / `--skip-integration` 互斥。
 
-验证分层如下：
-
-- 本地完整门：`scripts/dev-preflight.sh`，包含完整并行 unit、integration、Ruff 和 mypy；发布前必须使用 `--with-golden` 完成三层、版本一致性及既有 build/install 终验。
-- 普通默认分支 `push` / `pull_request` CI 门：完整并行 unit、integration、Ruff、完整生产包 mypy、版本/漏洞门禁，以及 Python 3.11/3.14 的 core/full wheel smoke。
-- 本地 opt-in 门：live publisher/MCP 和完整 golden corpus 只由开发者通过下文命令显式运行，不配置 GitHub Actions schedule 或 dispatch；offline/release 仍只走相应 dispatch 或 `v*` tag。普通 push/PR 不运行真实 publisher 或认证 browser。
-
-所有常规 pytest 步骤继续复用 `pyproject.toml` 的 xdist 并行配置，不传 `-n 0`。CI 能力与触发边界以当前 workflow 为准。
-
-三层测试各有独立入口，均复用默认并行配置：
-
-```bash
-PYTHONPATH=src uv run python -m pytest tests/unit -q
-PYTHONPATH=src uv run python -m pytest tests/integration -q
-PYTHONPATH=src uv run python -m pytest tests/golden -q
-```
-
-默认 pytest 的 `testpaths` 只包含 unit＋integration；显式指定 `tests/golden` 就会执行全部可执行样本，无需环境开关。旧 full/shard 开关及分片逻辑已移除；定向调试使用路径、nodeid 或 `-k`。普通 PR/push 不运行 golden，也不新增 golden workflow。分层边界和证据要求见 [测试说明](../tests/README.md)。
+独立测试命令、默认并行配置和证据分层统一见 [测试说明](../tests/README.md)，
+CI 平台门禁见 [CI / GitHub Actions](#ci--github-actions)，发布终验见
+[发布前检查](#release-checklist)。下面的 live 命令只在本地显式执行，不能替代离线回归。
 
 未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live 时，`arxiv` 不需要 browser runtime；包括 `ams` 在内的 browser-backed provider 先按静态报告中的 `browser_runtime.available` 检查本地能力，再启动 Camoufox 做真实页面预检。pytest 隔离 XDG data/runtime、通用 profile 和所有 provider storage-state；Camoufox 的 browser bundle、版本元数据、字体和默认 addon 则复用隔离前由官方包管理器确认的 dependency cache，避免 live/MCP 子进程重复下载 runtime。每家 provider 的状态仍写入临时 `<provider>-camoufox/storage-state.json`，不会进入该共享 dependency cache。
 

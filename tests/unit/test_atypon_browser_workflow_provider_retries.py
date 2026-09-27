@@ -366,7 +366,7 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
         )
         self.assertEqual(result["asset_failures"], [])
 
-    def test_wiley_provider_download_related_assets_uses_shared_browser_primary_path(
+    def test_wiley_provider_download_related_assets_uses_page_browser_primary_path(
         self,
     ) -> None:
         """asset-download-contract: provider=wiley"""
@@ -414,12 +414,16 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                 markdown_text="# Title\n\n## Results\n\n" + ("Body text " * 120),
                 browser_context_seed=seed,
             )
-            mocked_builder = mock.Mock(return_value=shared_fetcher)
+            mocked_builder = self.enterContext(
+                mock.patch(
+                    "paper_fetch.providers._wiley_page_assets.WileyPageAssetFetcher",
+                    return_value=shared_fetcher,
+                )
+            )
             install_browser_workflow_deps(
                 client,
                 load_runtime_config=mock.Mock(return_value=runtime),
                 ensure_runtime_ready=mock.Mock(),
-                _build_shared_browser_image_fetcher=mocked_builder,
             )
             result = client.download_related_assets(
                 "10.1111/gcb.16011",
@@ -431,7 +435,9 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
             saved_bytes = Path(result["assets"][0]["path"]).read_bytes()
 
         mocked_builder.assert_called_once()
-        self.assertTrue(mocked_builder.call_args.kwargs["use_runtime_shared_browser"])
+        self.assertIs(
+            mocked_builder.call_args.kwargs["browser_options"].runtime_config, runtime
+        )
         shared_fetcher.assert_called_once()
         self.assertEqual(shared_fetcher.call_args.args[0], full_size_url)
         self.assertEqual(len(result["assets"]), 1)
@@ -439,7 +445,7 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
         self.assertEqual(result["assets"][0]["download_tier"], "full_size")
         self.assertEqual(saved_bytes, b"\xff\xd8\xffprimary-image")
 
-    def test_wiley_provider_download_related_assets_reuses_shared_browser_fetcher_across_assets(
+    def test_wiley_provider_download_related_assets_reuses_page_fetcher_across_assets(
         self,
     ) -> None:
         first_url = "https://onlinelibrary.wiley.com/cms/asset/full/figure1.jpg"
@@ -499,12 +505,16 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                 markdown_text="# Title\n\n## Results\n\n" + ("Body text " * 120),
                 browser_context_seed=seed,
             )
-            mocked_builder = mock.Mock(return_value=shared_fetcher)
+            mocked_builder = self.enterContext(
+                mock.patch(
+                    "paper_fetch.providers._wiley_page_assets.WileyPageAssetFetcher",
+                    return_value=shared_fetcher,
+                )
+            )
             install_browser_workflow_deps(
                 client,
                 load_runtime_config=mock.Mock(return_value=runtime),
                 ensure_runtime_ready=mock.Mock(),
-                _build_shared_browser_image_fetcher=mocked_builder,
             )
             result = client.download_related_assets(
                 "10.1111/gcb.16011",

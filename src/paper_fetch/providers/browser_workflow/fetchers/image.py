@@ -145,6 +145,9 @@ def _copy_image_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
 
 
 class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
+    # _new_browser_context opens the existing Camoufox runtime exclusively.
+    browser_backend = "camoufox"
+
     def __init__(
         self,
         *,
@@ -282,6 +285,14 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
             and self._browser_config is not None
             and self._browser_config.provider == "wiley"
         )
+        # Firefox image documents on T&F do not reliably emit DOMContentLoaded.
+        # Keep the response at commit instead of spending ten seconds per image
+        # and then losing its original bytes to the canvas fallback. Response
+        # body validation and the existing image readiness fallback still apply.
+        commit_image_navigation = wait_for_image_before_body or bool(
+            self._browser_config is not None
+            and self._browser_config.provider == "tandf"
+        )
         budget = self._active_budget()
         previous_budget: _ImageFetchBudget | None = self._active_image_fetch_budget
         self._active_image_fetch_budget = budget
@@ -319,7 +330,7 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
                 navigation_response = page.goto(
                     image_url,
                     wait_until="commit"
-                    if wait_for_image_before_body
+                    if commit_image_navigation
                     else "domcontentloaded",
                     timeout=timeout_ms,
                 )
@@ -861,6 +872,8 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
 
 
 class _ThreadLocalSharedBrowserImageDocumentFetcher(_ThreadLocalSharedDocumentFetcher):
+    browser_backend = _SharedBrowserImageDocumentFetcher.browser_backend
+
     def __init__(
         self,
         *,

@@ -6,6 +6,18 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.0.1 - 2026-09-27
+
+### Fixed — publisher images and asset diagnostics
+
+- Wiley body images and formula bitmaps now use serial image navigation in one dedicated Camoufox session, preserving original response bytes and matching each response to its navigation and loaded image. Formula assets run first; candidates share per-asset and request budgets, retain challenge recovery and preview-fallback evidence, and clean up on cancellation. This path no longer adds direct HTTP retries, canvas exports, or separate figure-page discovery. Existing formula semantics and acceptance criteria remain unchanged.
+- Taylor & Francis image navigation now waits for response commit before validating image bytes, avoiding repeated `DOMContentLoaded` timeouts that could discard the original response and fall back to canvas output.
+- Elsevier XML assembly now preserves downloaded figure, table, and supplementary-file timing, dimensions, download tier, fetcher, and provenance. Browser image diagnostics report the actual Camoufox backend instead of the string `"None"`.
+
+### Maintenance
+
+- Consolidate provider, browser, deployment, and test-fixture documentation, and record the scope and limits of asset audits. Add Wiley browser-session and raw-image response regression coverage; isolate local tool discovery in the MCP cache unit test.
+
 ## 7.0.0 - 2026-09-19
 
 ### Upgrade behavior
