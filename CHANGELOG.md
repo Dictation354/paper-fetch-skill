@@ -15,8 +15,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ### Maintenance
 
-- Refresh locked Python dependencies, including MCP 2.3.0, trafilatura 2.3.0, filelock 4.0.11, Ruff 0.16.10, and mypy 2.4.0. Camoufox now uses fpgen in place of BrowserForge.
-- Initialize test configuration after isolating application directories, adapt explicit-channel browser fixtures, isolate PDF fallback DNS mocks, and add the type annotation required by the updated mypy version.
+- Refresh locked Python dependencies, including MCP 2.3.0, filelock 4.0.11, Ruff 0.16.10, and mypy 2.4.0. Camoufox now uses fpgen in place of BrowserForge. Restrict trafilatura to `>=2.0,<2.3` (locked to 2.2.0) because 2.3.0 changes Markdown escaping in existing formulas and table citations.
+- Initialize test configuration after isolating application directories, adapt explicit-channel browser fixtures, isolate PDF fallback DNS mocks, declare the known UTF-8 encoding of captured source fixtures, and add the type annotation required by the updated mypy version.
 
 ## 7.0.2 - 2026-09-27
 

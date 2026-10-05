@@ -2041,8 +2041,8 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6,<7" },
     { name = "rapidfuzz", specifier = ">=3,<4" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8,<1" },
-    { name = "trafilatura", marker = "extra == 'browser'", specifier = ">=2.0,<3" },
-    { name = "trafilatura", marker = "extra == 'full'", specifier = ">=2.0,<3" },
+    { name = "trafilatura", marker = "extra == 'browser'", specifier = ">=2.0,<2.3" },
+    { name = "trafilatura", marker = "extra == 'full'", specifier = ">=2.0,<2.3" },
     { name = "urllib3", specifier = ">=2.2,<3" },
 ]
 provides-extras = ["browser", "pdf", "full", "dev"]
@@ -3277,7 +3277,7 @@ wheels = [
 
 [[package]]
 name = "trafilatura"
-version = "2.3.0"
+version = "2.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "certifi" },
@@ -3288,9 +3288,9 @@ dependencies = [
     { name = "lxml" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f3/fa/5d9a80eeaad90ab1c4e20a7126fc597367dedc2029d71aa85e19ba567864/trafilatura-2.3.0.tar.gz", hash = "sha256:6790dbf7f56a8fc761859687db61e1dda5ace89a932854b7ae8107761880f02a", size = 345145, upload-time = "2026-10-02T16:53:13.788Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a3/96/737133a93e73e967f9c888e6cfb1f2c31b2083d27263edb19fd65a9aca02/trafilatura-2.2.0.tar.gz", hash = "sha256:8c2cabb84066465228d03183fb698ce0b1245b81c58140b8ae0de57fddf3aae7", size = 314748, upload-time = "2026-07-31T16:06:49.444Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f3/19/f6cfa26d913ac69d2108a58f9b3f7d3c6cd867ce6a9fb7436548e863e4da/trafilatura-2.3.0-py3-none-any.whl", hash = "sha256:8b2458eca219032d9dff65a353fad436c05889e2f346338fd897589d3a8de7fd", size = 157616, upload-time = "2026-10-02T16:53:11.079Z" },
+    { url = "https://files.pythonhosted.org/packages/c3/01/af18878398102a5a5afa0811f4f8f2a8a94a60cc16e8e9cf54bc95f96808/trafilatura-2.2.0-py3-none-any.whl", hash = "sha256:ac43592a6201264dfc4f9c361cbe3eb3fea96e54437010a159d5e7365360ed98", size = 151906, upload-time = "2026-07-31T16:06:46.485Z" },
 ]
 
 [[package]]

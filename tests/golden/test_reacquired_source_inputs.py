@@ -61,7 +61,9 @@ def test_reacquired_article_uses_captured_identity_and_body(
     path = "acquisition/provenance-repair-2026-09-17/" + filename
     record, body = _record(doi, path)
     sample = golden_criteria_sample_for_doi(doi)
-    soup = BeautifulSoup(body, "lxml")
+    # Captured DOM/response fixtures are UTF-8, including non-ASCII body text
+    # beyond the encoding detector's sample of large script/style sections.
+    soup = BeautifulSoup(body.decode("utf-8"), "lxml")
     # Do not establish identity from a target DOI injected into the model.
     declared = soup.select_one('meta[name="citation_doi"], meta[name="DOI"]')
     assert declared is not None and declared["content"].casefold() == doi.casefold()

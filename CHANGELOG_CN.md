@@ -15,8 +15,8 @@
 
 ### 维护
 
-- 刷新锁定的 Python 依赖，包括 MCP 2.3.0、trafilatura 2.3.0、filelock 4.0.11、Ruff 0.16.10 和 mypy 2.4.0。Camoufox 使用 fpgen 替代 BrowserForge。
-- 在隔离应用目录后初始化测试配置，适配显式渠道浏览器 fixture，隔离 PDF fallback 的 DNS mock，并补齐新版 mypy 要求的类型标注。
+- 刷新锁定的 Python 依赖，包括 MCP 2.3.0、filelock 4.0.11、Ruff 0.16.10 和 mypy 2.4.0。Camoufox 使用 fpgen 替代 BrowserForge。trafilatura 限定为 `>=2.0,<2.3`（锁定 2.2.0），避免 2.3.0 改变既有公式及表格引用的 Markdown 转义。
+- 在隔离应用目录后初始化测试配置，适配显式渠道浏览器 fixture，隔离 PDF fallback 的 DNS mock，声明已采集源文件的 UTF-8 编码，并补齐新版 mypy 要求的类型标注。
 
 ## 7.0.2 - 2026-09-27
 
