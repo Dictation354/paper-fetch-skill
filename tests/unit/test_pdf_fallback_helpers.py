@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import socket
 import sys
 import threading
 import tempfile
@@ -15,6 +16,7 @@ from paper_fetch.providers import (
     _pdf_fallback,
 )
 from paper_fetch.providers.browser_workflow import pdf_fallback as browser_pdf_fallback
+from paper_fetch.http import DEFAULT_SAFE_REMOTE_URL_POLICY
 from paper_fetch.runtime import RuntimeContext
 from tests.support._browser_workflow_deps import browser_workflow_deps
 from tests.support._paper_fetch_support import (
@@ -1482,6 +1484,13 @@ class PdfFallbackHelperTests(unittest.TestCase):
 
         with (
             mock.patch.object(
+                DEFAULT_SAFE_REMOTE_URL_POLICY,
+                "_resolver",
+                return_value=[
+                    (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("8.8.8.8", 443))
+                ],
+            ),
+            mock.patch.object(
                 _pdf_fallback.urllib.request, "build_opener", return_value=FakeOpener()
             ),
             mock.patch.object(
@@ -1545,6 +1554,13 @@ class PdfFallbackHelperTests(unittest.TestCase):
                 )
 
         with (
+            mock.patch.object(
+                DEFAULT_SAFE_REMOTE_URL_POLICY,
+                "_resolver",
+                return_value=[
+                    (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("8.8.8.8", 443))
+                ],
+            ),
             mock.patch.object(
                 _pdf_fallback,
                 "pdf_fetch_result_from_bytes",

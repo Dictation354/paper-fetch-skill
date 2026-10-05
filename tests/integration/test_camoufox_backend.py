@@ -12,6 +12,7 @@ def managed_camoufox(monkeypatch, tmp_path):
     import zipfile
     from camoufox import multiversion, pkgman
 
+    monkeypatch.setattr(preparation, "_browser_pin", lambda _config: None)
     root = tmp_path / "managed"
     monkeypatch.setattr(pkgman, "INSTALL_DIR", root)
     monkeypatch.setattr(multiversion, "INSTALL_DIR", root)
@@ -132,3 +133,34 @@ def test_managed_camoufox_rejects_runtime_below_playwright_floor(
     env.download.assert_not_called()
     assert env.multi.load_config() == config
     assert (path / "camoufox-bin").read_text() == "old executable"
+
+
+@pytest.mark.parametrize("local", [False, True])
+def test_managed_camoufox_pairing_agrees_with_upstream_path_resolution(
+    managed_camoufox, monkeypatch, local
+):
+    browser_pin = pytest.importorskip("camoufox.browser_pin")
+    env = managed_camoufox
+    pin = browser_pin.BrowserPin(
+        tag="v152.0.4-beta.31",
+        repo="daijro/camoufox",
+        repo_name="official",
+        version="152.0.4",
+        build="beta.31",
+    )
+    monkeypatch.setattr(browser_pin, "load_pin", lambda: pin)
+    monkeypatch.setattr(preparation, "_browser_pin", browser_pin.effective_pin)
+    env.install_local()
+    if local:
+        env.install_local(env.latest, active=False)
+    before = env.multi.CONFIG_FILE.read_bytes()
+
+    probe = preparation.probe_camoufox_managed_runtime()
+    assert probe.valid is local
+    assert env.multi.CONFIG_FILE.read_bytes() == before
+    result = preparation.prepare_camoufox_managed_runtime()
+
+    assert result.valid and result.version == pin.spec
+    assert env.pkgman.camoufox_path(download_if_missing=False) == result.runtime_path
+    assert env.multi.get_active_path() == result.runtime_path
+    assert env.download.call_count == int(not local)

@@ -159,10 +159,10 @@ jobs:
         run: uv run python scripts/validate_macos_adaptation.py
       - name: Require native Apple Silicon runner
         run: test "$(uname -m)" = "arm64"
-      - name: Prepare pinned official Camoufox runtime explicitly
+      - name: Prepare release-paired official Camoufox runtime and fingerprint model
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: uv run python -m camoufox fetch official/152.0.4-beta.30
+        run: uv run python -m camoufox fetch
       - name: Verify official Camoufox macOS bundle contexts
         env:
           PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST: "1"

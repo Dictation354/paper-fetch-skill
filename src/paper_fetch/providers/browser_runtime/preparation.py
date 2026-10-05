@@ -96,6 +96,17 @@ def _read_config(install_dir: Path, config_path: Path) -> dict[str, Any]:
     return payload
 
 
+def _browser_pin(config: dict[str, Any]) -> Any:
+    """Honor release pairing while retaining support for Camoufox 0.5.5/0.5.6."""
+    try:
+        browser_pin = import_module("camoufox.browser_pin")
+    except ModuleNotFoundError as exc:
+        if exc.name != "camoufox.browser_pin":
+            raise
+        return None
+    return browser_pin.effective_pin(config)
+
+
 def probe_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
     """Inspect the active managed runtime without downloading or writing state."""
 
@@ -125,6 +136,26 @@ def probe_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
     elif (install_dir / "version.json").is_file():
         runtime_path = install_dir
         managed_path_safe = not _is_link_or_reparse(install_dir)
+
+    if runtime_path is not None and not managed_path_safe:
+        return _probe_runtime(pkgman, runtime_path, active_spec, False)
+
+    pin = _browser_pin(config)
+    if pin is not None:
+        # Upstream get_active_path may write config or select a different build.
+        # Resolve the same pairing through local metadata without those writes.
+        runtime_path, active_spec, managed_path_safe = None, None, False
+        try:
+            installed = multiversion.list_installed()
+        except (OSError, ValueError, KeyError, TypeError):
+            installed = []
+        for item in installed:
+            if item.repo_name == pin.repo_name and item.version.full_string == pin.spec:
+                active_spec = item.relative_path
+                runtime_path, managed_path_safe = _managed_candidate(
+                    install_dir, active_spec
+                )
+                break
 
     return _probe_runtime(pkgman, runtime_path, active_spec, managed_path_safe)
 
@@ -234,9 +265,12 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
             raise RuntimeError(
                 f"Camoufox browser preparation failed: {previous.message}"
             )
+        release_pin = _browser_pin(config)
         channel = config.get("channel") or multiversion.get_default_channel()
         parts = channel.lower().split("/")
         repo_name, channel_type = parts if len(parts) == 2 else (parts[0], "stable")
+        if release_pin is not None:
+            repo_name = release_pin.repo_name
         repo = pkgman.RepoConfig.find_by_name(repo_name)
         if (
             len(parts) > 2
@@ -246,9 +280,10 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
             raise RuntimeError(
                 "Camoufox browser preparation failed: invalid configured channel."
             )
-        pinned, pinned_sha = config.get("pinned"), config.get("pinned_sha")
+        pinned = release_pin.spec if release_pin is not None else config.get("pinned")
+        pinned_sha = None if release_pin is not None else config.get("pinned_sha")
 
-        # Local metadata is sufficient for a pin; tracking a channel always queries.
+        # A package pairing, like a user pin, reuses its local build without a query.
         if pinned:
             try:
                 installed = multiversion.list_installed()
@@ -259,7 +294,10 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                 if (
                     item.repo_name == repo_name
                     and item.version.full_string == pinned
-                    and item.is_prerelease == (channel_type == "prerelease")
+                    and (
+                        release_pin is not None
+                        or item.is_prerelease == (channel_type == "prerelease")
+                    )
                     and (not pinned_sha or item.sha256 == pinned_sha)
                 ):
                     path, safe = _managed_candidate(root, item.relative_path)
@@ -280,13 +318,18 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                 file=sys.stderr,
             )
             versions = pkgman.list_available_versions(
-                repo, include_prerelease=channel_type == "prerelease"
+                repo,
+                include_prerelease=release_pin is not None
+                or channel_type == "prerelease",
             )
             selected = next(
                 (
                     v
                     for v in versions
-                    if v.is_prerelease == (channel_type == "prerelease")
+                    if (
+                        release_pin is not None
+                        or v.is_prerelease == (channel_type == "prerelease")
+                    )
                     and v.version.is_supported()
                     and (not pinned or v.version.full_string == pinned)
                     and (not pinned_sha or v.sha256 == pinned_sha)

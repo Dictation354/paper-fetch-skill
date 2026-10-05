@@ -564,7 +564,7 @@ def _attach_browser_recovery_diagnostics(
     if not normalized_attempts:
         return
     download["recovery_attempts"] = normalized_attempts
-    browser_attempt = next(
+    browser_attempt: dict[str, Any] = next(
         (
             attempt
             for attempt in reversed(normalized_attempts)

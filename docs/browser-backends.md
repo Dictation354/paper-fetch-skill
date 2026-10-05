@@ -19,16 +19,21 @@ python -m pip install "paper-fetch-skill[full]"
 ```
 
 离线安装包始终按 `full` 构建，但不重新分发浏览器 binary。完全离线环境需提前
-准备 Camoufox active runtime，包括相邻配置、addons 和字体；只复制可执行文件
+准备 Camoufox runtime，包括相邻配置、addons、字体和 fpgen 指纹模型；只复制可执行文件
 不足以组成可用 runtime。普通 fetch、auth 和 preflight 在实际启动浏览器前自动
 补全或更新 managed runtime；运行时不自动安装缺失的 Python 依赖。
 核心安装不下载浏览器，可选安装向导仅在用户明确选择后预置并验证本地启动，
 详见 [离线包](deployment.md#离线包)。
 可在联网时显式运行 `python -m camoufox fetch` 提前准备。
 
-使用 Camoufox 的 `python -m camoufox set official/stable` 选择渠道，或
-`python -m camoufox set official/stable/152.0.4-beta.30` 固定版本。未固定时每次
-启动前检查该渠道的最新兼容版本；固定时只补全对应版本。更新失败但本地版本
+Camoufox 0.5.7 默认使用与 Python 包配对的 browser；已安装时直接复用，
+缺失时只准备配对版本，不回退到旧 active browser。`python -m camoufox fetch`
+同时准备 fpgen 模型；首次生成指纹也可能下载模型到 fpgen 包目录，完全离线前
+需确认该目录可写并完成准备。只读预检按同一配对规则检查本地 runtime，不更改配置。
+使用 `python -m camoufox set --release` 恢复默认配对，或
+`python -m camoufox set official/stable` 显式跟踪渠道；也可用
+`python -m camoufox set official/stable/156.0.1-beta.34` 固定版本。
+显式渠道在启动前检查最新兼容版本；显式 pin 只补全对应版本。渠道更新失败但本地版本
 校验有效时提示并继续使用；没有可用版本则报告浏览器准备失败。下载进度写 stderr。
 
 ## 选择与配置

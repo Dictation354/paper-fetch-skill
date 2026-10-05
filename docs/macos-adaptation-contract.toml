@@ -34,7 +34,9 @@ validated_purge_paths = true
 
 [browser]
 # Playwright >=1.61 要求 Camoufox browser >=beta.30；版本兼容性由 Camoufox
-# Python 包判定，旧 pin 不能绕过检查。verify.yml 显式准备 beta.30，
+# Python 包判定，旧 pin 不能绕过检查。verify.yml 准备锁定包配对的 browser 和 fpgen 模型，
+# 默认配对以同一版本进行只读探测及准备；缺失时不回退到旧 active browser。
+# 用户显式渠道/pin 仍覆盖配对，模型下载写入上游 fpgen 包目录，离线前须准备。
 # Linux 的依赖/旧 runtime 拒绝测试不替代 macos-15 原生双 context gate。
 # 确认同篇正文付费墙后在现有 provider 结果边界停止；正文请求显式携带检查 provider，
 # 资产拒绝仍走资产结果；这些 Linux 回放证据不替代原生 macOS gate。

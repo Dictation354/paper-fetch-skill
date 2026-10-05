@@ -77,12 +77,19 @@ def _preserve_installed_camoufox_executable() -> None:
         return
     try:
         from camoufox import pkgman
+        from paper_fetch.providers.browser_runtime.preparation import (
+            probe_camoufox_managed_runtime,
+        )
 
         if preserved_executable:
             executable = Path(preserved_executable)
         else:
-            runtime_path = pkgman.camoufox_path(download_if_missing=False)
-            executable = Path(pkgman.launch_path(runtime_path))
+            # Upstream path resolution can update the active config after a
+            # package upgrade. Preserve user caches through the read-only probe.
+            probe = probe_camoufox_managed_runtime()
+            if not probe.valid or probe.executable_path is None:
+                return
+            executable = probe.executable_path
     except Exception:
         return
     if executable.is_file() and (os.name == "nt" or os.access(executable, os.X_OK)):
@@ -122,14 +129,18 @@ def pytest_configure(config: pytest.Config) -> None:
 
     layer_policy.install()
     worker = _worker_id(config)
-    _preserve_installed_camoufox_executable()
     _preserve_explicit_formula_tools_dir()
     isolated_root = Path(tempfile.mkdtemp(prefix=f"paper-fetch-tests-{worker}-"))
     config._paper_fetch_isolated_root = isolated_root
     for name in _ISOLATED_ENV_VARS:
         value = isolated_root / name.lower().replace("_", "-")
-        value.mkdir(parents=True, exist_ok=True)
-        os.environ[name] = str(value)
+        value.mkdir(mode=0o700, parents=True, exist_ok=True)
+        if name != "XDG_CACHE_HOME":
+            os.environ[name] = str(value)
+    # Probe after isolating application paths, while upstream still sees the
+    # original dependency cache. Importing the probe initializes config defaults.
+    _preserve_installed_camoufox_executable()
+    os.environ["XDG_CACHE_HOME"] = str(isolated_root / "xdg-cache-home")
     os.environ["TEXMATH_BIN"] = str(isolated_root / "unavailable-texmath")
     os.environ["MATHML_TO_LATEX_NODE_BIN"] = str(isolated_root / "unavailable-node")
     os.environ["PAPER_FETCH_GHOSTSCRIPT_BIN"] = str(

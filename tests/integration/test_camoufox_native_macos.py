@@ -6,7 +6,6 @@ import platform
 from pathlib import Path
 
 import pytest
-from browserforge.fingerprints import Screen
 
 from paper_fetch.providers.browser_runtime.camoufox_manager import (
     CamoufoxBrowserManager,
@@ -52,8 +51,11 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
         pytest.skip("native Camoufox bundle evidence requires Darwin arm64")
 
     import camoufox.addons as camoufox_addons
+    import camoufox.fpgen_model as camoufox_fpgen_model
     import camoufox.sync_api as camoufox_sync_api
     from camoufox import DefaultAddons, multiversion, pkgman
+    from camoufox.browser_pin import load_pin
+    from camoufox.fingerprints import Screen
 
     install_dir, expected_runtime_path = _prepared_managed_install()
     # Global pytest policy isolates XDG_CACHE_HOME. Point only this opt-in
@@ -71,6 +73,11 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
     # This gate proves the explicitly staged bundle, independent of new releases.
     # Launch-time preparation still runs, with discovery limited to this asset.
     version_data = json.loads((expected_runtime_path / "version.json").read_text())
+    release_pin = load_pin()
+    assert release_pin is not None
+    assert (
+        pkgman.Version.from_path(expected_runtime_path).full_string == release_pin.spec
+    )
     staged_version = pkgman.AvailableVersion(
         version=pkgman.Version.from_path(expected_runtime_path),
         url="https://example.invalid/staged-camoufox.zip",
@@ -110,6 +117,13 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
         camoufox_addons,
         "download_and_extract",
         reject_addon_download,
+    )
+    monkeypatch.setattr(
+        camoufox_fpgen_model,
+        "_install",
+        lambda *_args, **_kwargs: pytest.fail(
+            "native bundle test must reuse the model prepared by camoufox fetch"
+        ),
     )
 
     runtime_path = Path(pkgman.camoufox_path(download_if_missing=False))
