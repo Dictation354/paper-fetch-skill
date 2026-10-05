@@ -6,6 +6,18 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.0.3 - 2026-10-05
+
+### Browser runtime compatibility
+
+- Update locked Camoufox to 0.5.7 and prepare the browser paired with the Python package (`official/156.0.1-beta.34` by default). Reuse an installed paired build without querying releases; a missing paired build no longer falls back to an older active browser. Explicit channel and version choices continue to override the default pairing.
+- Keep browser probes read-only when selecting the paired runtime. The native macOS gate now prepares the paired browser and fpgen fingerprint model before validating both context modes. The model is downloaded into the fpgen package directory rather than bundled in Python wheels; complete preparation while that directory is writable before using the browser offline.
+
+### Maintenance
+
+- Refresh locked Python dependencies, including MCP 2.3.0, trafilatura 2.3.0, filelock 4.0.11, Ruff 0.16.10, and mypy 2.4.0. Camoufox now uses fpgen in place of BrowserForge.
+- Initialize test configuration after isolating application directories, adapt explicit-channel browser fixtures, isolate PDF fallback DNS mocks, and add the type annotation required by the updated mypy version.
+
 ## 7.0.2 - 2026-09-27
 
 ### Dependency compatibility

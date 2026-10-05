@@ -6,6 +6,18 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.0.3 - 2026-10-05
+
+### 浏览器运行时兼容性
+
+- 锁定的 Camoufox 更新至 0.5.7，默认准备与 Python 包配对的浏览器（本版为 `official/156.0.1-beta.34`）。已安装的配对版本直接复用，不查询上游 release；缺少配对版本时不再回退到旧 active browser。用户显式选择的渠道或固定版本继续覆盖默认配对。
+- 浏览器预检按配对规则检查本地 runtime，保持只读，不修改 active 配置。原生 macOS gate 改为先准备配对浏览器及 fpgen 指纹模型，再验证两种 context 模式。模型下载到 fpgen 包目录，不包含在 Python wheel 中；离线使用浏览器前须在该目录可写时完成准备。
+
+### 维护
+
+- 刷新锁定的 Python 依赖，包括 MCP 2.3.0、trafilatura 2.3.0、filelock 4.0.11、Ruff 0.16.10 和 mypy 2.4.0。Camoufox 使用 fpgen 替代 BrowserForge。
+- 在隔离应用目录后初始化测试配置，适配显式渠道浏览器 fixture，隔离 PDF fallback 的 DNS mock，并补齐新版 mypy 要求的类型标注。
+
 ## 7.0.2 - 2026-09-27
 
 ### 依赖兼容性
