@@ -25,14 +25,13 @@ def test_batch_runner_keeps_ordered_results_and_separate_completion_events() -> 
 
     def worker(item: str) -> str:
         if item == "first":
-            assert release_first.wait(timeout=1)
-            time.sleep(0.03)
-        elif item == "second":
-            release_first.set()
+            assert release_first.wait(timeout=5)
         return item.upper()
 
     def on_completion(event) -> None:
         callback_items.append(event.result.item)
+        if event.result.item == "third":
+            release_first.set()
 
     async def on_progress(snapshot: BatchProgress[str, str]) -> None:
         progress.append(

@@ -451,6 +451,9 @@ Mach-O、Zsh、xattr、Gatekeeper 与原生安装须由相应平台提供证据�
 
 Windows 构建任务在 checkout 前启用 Git `core.longpaths`，以完整检出保留原始采集文件名的 fixture；该设置仅作用于临时 CI runner。
 Integration CI 使用同一固定 Haskell 工具链和现有安装器准备 texmath、Node 公式后端，再运行真实进程契约测试。
+公式安装器对 `cabal update` 最多尝试三次，失败后分别等待 2、4 秒；连续失败时
+不执行 Cabal 编译，离线构建仍拒绝缺失 texmath。编译本身不重试。外部工具失败时
+保留完整临时日志，并向终端输出最后至多 40 行、8 KiB，供本机或 CI 排查。
 
 <a id="release-checklist"></a>
 ### 发布前检查

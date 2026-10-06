@@ -15,8 +15,9 @@
 
 ### 维护
 
+- 准备 texmath 时，`cabal update` 最多尝试三次，失败后分别等待 2、4 秒。连续更新失败仍停止 Cabal 编译，离线构建仍拒绝缺失 texmath；编译本身不重试。外部工具失败时输出受限长度的日志尾部，同时保留完整临时构建日志，便于排查发布失败。
 - 刷新锁定的 Python 依赖，包括 MCP 2.3.0、filelock 4.0.11、Ruff 0.16.10 和 mypy 2.4.0。Camoufox 使用 fpgen 替代 BrowserForge。trafilatura 限定为 `>=2.0,<2.3`（锁定 2.2.0），避免 2.3.0 改变既有公式及表格引用的 Markdown 转义。
-- 在隔离应用目录后初始化测试配置，适配显式渠道浏览器 fixture，隔离 PDF fallback 的 DNS mock，声明已采集源文件的 UTF-8 编码，并补齐新版 mypy 要求的类型标注。
+- 在隔离应用目录后初始化测试配置，适配显式渠道浏览器 fixture，隔离 PDF fallback 的 DNS mock，声明已采集源文件的 UTF-8 编码，并补齐新版 mypy 要求的类型标注。批处理完成顺序测试改用明确的事件同步，避免依赖短暂休眠推断线程调度顺序。
 
 ## 7.0.2 - 2026-09-27
 

@@ -1615,6 +1615,13 @@
         "scope": "fixture provenance"
       }
     },
+    "tests/integration/test_formula_install.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "公式安装器 Cabal 索引更新的进程重试、终止和失败日志契约。",
+        "reason": "受控 Cabal 替身与真实子进程，只证明安装流程和诊断，不提供原生 texmath 构建或出版社内容证据。"
+      }
+    },
     "tests/integration/test_formula_conversion.py": {
       "default": {
         "kind": "mechanism",

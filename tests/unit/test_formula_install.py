@@ -113,6 +113,78 @@ class FormulaInstallTests(unittest.TestCase):
                 run.call_args.args[1],
             )
 
+    def test_cabal_update_recovers_before_installing(self) -> None:
+        with (
+            mock.patch.object(formula_install.shutil, "which", return_value="cabal"),
+            mock.patch.object(
+                formula_install, "_run_with_log", side_effect=[False, False, True, True]
+            ) as run,
+            mock.patch.object(formula_install.time, "sleep") as sleep,
+        ):
+            self.assertTrue(formula_install.install_texmath_with_cabal(Path("tools")))
+
+        self.assertEqual(
+            [call.args[1][1] for call in run.call_args_list],
+            ["update", "update", "update", "install"],
+        )
+        self.assertEqual(sleep.call_args_list, [mock.call(2), mock.call(4)])
+
+    def test_cabal_update_exhaustion_does_not_compile(self) -> None:
+        with (
+            mock.patch.object(formula_install.shutil, "which", return_value="cabal"),
+            mock.patch.object(
+                formula_install, "_run_with_log", return_value=False
+            ) as run,
+            mock.patch.object(formula_install.time, "sleep") as sleep,
+        ):
+            self.assertFalse(formula_install.install_texmath_with_cabal(Path("tools")))
+
+        self.assertEqual(run.call_count, 3)
+        self.assertTrue(
+            all(call.args[1] == ["cabal", "update"] for call in run.call_args_list)
+        )
+        self.assertEqual(sleep.call_args_list, [mock.call(2), mock.call(4)])
+
+    def test_cabal_compile_failure_is_not_retried(self) -> None:
+        with (
+            mock.patch.object(formula_install.shutil, "which", return_value="cabal"),
+            mock.patch.object(
+                formula_install, "_run_with_log", side_effect=[True, False]
+            ) as run,
+            mock.patch.object(formula_install.time, "sleep") as sleep,
+        ):
+            self.assertFalse(formula_install.install_texmath_with_cabal(Path("tools")))
+
+        self.assertEqual(run.call_count, 2)
+        sleep.assert_not_called()
+
+    def test_failure_log_tail_limits_bytes_and_lines_and_replaces_invalid_utf8(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            log_file = Path(tmpdir) / "build.log"
+            log_file.write_bytes(
+                b"old output" * 2000 + b"\n" + b"line\n" * 50 + b"error\xff\n"
+            )
+            with mock.patch.object(formula_install, "warn") as warn:
+                formula_install._warn_log_tail(log_file)
+
+            output = warn.call_args.args[0]
+            self.assertNotIn("old output", output)
+            self.assertEqual(len(output.splitlines()), 41)
+            self.assertIn("error\ufffd", output)
+
+            log_file.write_bytes(b"x" * 10000 + b"failure")
+            with mock.patch.object(formula_install, "warn") as warn:
+                formula_install._warn_log_tail(log_file)
+            self.assertEqual(len(warn.call_args.args[0].split("\n", 1)[1]), 8192)
+            self.assertTrue(warn.call_args.args[0].endswith("failure"))
+
+    def test_unreadable_failure_log_is_reported(self) -> None:
+        with mock.patch.object(formula_install, "warn") as warn:
+            formula_install._warn_log_tail(Path("missing-build-log"))
+        self.assertIn("Could not read build log", warn.call_args.args[0])
+
     def test_bundled_formula_resources_are_packaged(self) -> None:
         root = formula_paths.bundled_formula_resources()
 

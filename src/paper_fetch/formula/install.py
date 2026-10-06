@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from collections.abc import Sequence
 
@@ -22,6 +23,7 @@ from .paths import (
 
 TEXMATH_VERSION = "0.13.3"
 _TEXMATH_VERSION_PATTERN = re.compile(r"(?m)^Version ([0-9]+(?:\.[0-9]+)+)\s*$")
+_CABAL_UPDATE_ATTEMPTS = 3
 
 
 def log(message: str) -> None:
@@ -45,6 +47,17 @@ def _remove_log_file(log_file: Path) -> None:
         warn(f"Could not remove build log {log_file}: {exc}")
 
 
+def _warn_log_tail(log_file: Path) -> None:
+    try:
+        with log_file.open("rb") as handle:
+            handle.seek(0, os.SEEK_END)
+            handle.seek(max(0, handle.tell() - 8192))
+            tail = handle.read().decode("utf-8", errors="replace")
+        warn("Build log tail:\n" + "\n".join(tail.splitlines()[-40:]))
+    except OSError as exc:
+        warn(f"Could not read build log {log_file}: {exc}")
+
+
 def _run_with_log(log_prefix: str, args: list[str], *, cwd: Path | None = None) -> bool:
     log_file = _temporary_log_path(log_prefix)
     try:
@@ -61,6 +74,7 @@ def _run_with_log(log_prefix: str, args: list[str], *, cwd: Path | None = None) 
             _remove_log_file(log_file)
             return True
         warn(f"{' '.join(args[:2])} failed. Build log: {log_file}")
+        _warn_log_tail(log_file)
         return False
     except OSError as exc:
         warn(f"Could not run {' '.join(args)}: {exc}")
@@ -143,8 +157,17 @@ def install_texmath_with_cabal(target_dir: Path) -> bool:
     if not cabal:
         return False
     log(f"Attempting to install texmath {TEXMATH_VERSION} with cabal")
-    if not _run_with_log("texmath-cabal-update-", [cabal, "update"]):
-        return False
+    for attempt in range(1, _CABAL_UPDATE_ATTEMPTS + 1):
+        if _run_with_log("texmath-cabal-update-", [cabal, "update"]):
+            break
+        if attempt == _CABAL_UPDATE_ATTEMPTS:
+            return False
+        delay = 2**attempt
+        warn(
+            f"cabal update attempt {attempt}/{_CABAL_UPDATE_ATTEMPTS} failed; "
+            f"retrying in {delay} seconds."
+        )
+        time.sleep(delay)
     return _run_with_log(
         "texmath-cabal-",
         [

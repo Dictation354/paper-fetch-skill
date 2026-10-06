@@ -15,8 +15,9 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ### Maintenance
 
+- Retry `cabal update` up to three times when preparing texmath, waiting 2 and 4 seconds between attempts. Repeated update failures still stop Cabal compilation and prevent offline builds from accepting a missing texmath binary; compilation itself is not retried. Failed external tools now print a bounded log tail while retaining the complete temporary build log for release diagnostics.
 - Refresh locked Python dependencies, including MCP 2.3.0, filelock 4.0.11, Ruff 0.16.10, and mypy 2.4.0. Camoufox now uses fpgen in place of BrowserForge. Restrict trafilatura to `>=2.0,<2.3` (locked to 2.2.0) because 2.3.0 changes Markdown escaping in existing formulas and table citations.
-- Initialize test configuration after isolating application directories, adapt explicit-channel browser fixtures, isolate PDF fallback DNS mocks, declare the known UTF-8 encoding of captured source fixtures, and add the type annotation required by the updated mypy version.
+- Initialize test configuration after isolating application directories, adapt explicit-channel browser fixtures, isolate PDF fallback DNS mocks, declare the known UTF-8 encoding of captured source fixtures, and add the type annotation required by the updated mypy version. Replace timing-based batch completion assertions with explicit event synchronization.
 
 ## 7.0.2 - 2026-09-27
 
