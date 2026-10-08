@@ -624,7 +624,7 @@
         "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
         "template_review": {
           "status": "mechanism",
-          "scope": "通用清理、postprocess 及 sidecar 返回约定；手写输入用于隔离 renderer 组合机制。",
+          "scope": "通用清理、postprocess、sidecar 返回约定与 trafilatura 的公式下划线及表格引用方括号兼容性；手写输入用于隔离 renderer 组合机制。",
           "evidence_tests": [],
           "remaining": []
         }
@@ -4228,6 +4228,20 @@
         "kind": "mechanism",
         "scope": "Science visible bibliography loading with real offline Camoufox",
         "reason": "真实浏览器验证最小分页/懒加载与缺失报告契约，不声明线上可用性。"
+      }
+    },
+    "tests/unit/test_science_reference_loading.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Science DOM reference coverage, delayed bibliography and shared preparation deadline",
+        "reason": "DOM 快照与边界 mock 验证分批加载、动作超时恢复及真实缺失报告；不声明线上可用性或原文完整性。"
+      }
+    },
+    "tests/live/test_live_science_reference_loading.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Science ady3136 live references and local body images in headless and headed modes",
+        "primary": ["live_response"]
       }
     },
     "tests/unit/test_refetch_quality_regressions.py": {

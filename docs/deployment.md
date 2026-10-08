@@ -68,15 +68,16 @@ paper-fetch-skill-windows-x86_64-setup.exe
 `pyproject.toml` 的大多数依赖保留兼容范围；browser/full extra 使用 `camoufox>=0.5.5,<0.6`，允许后续兼容版本提供新的浏览器能力。`uv.lock` 固定普通开发和 CI 实际使用的版本；POSIX 离线构建不再对 Camoufox 增加单独的 lockfile 精确约束，而是读取依赖 wheelhouse 中唯一 Camoufox wheel 的 METADATA，验证安装后的 distribution 与该版本一致，并在 `offline-manifest.json` 的 `components.camoufox.python_package_version` 记录实际值。quality job 在其它静态门禁之前通过独立的 `Check lockfile freshness` 步骤执行 `uv lock --check`，项目版本、依赖声明或 lock metadata 的陈旧状态会直接令 CI 失败；后续 `uv sync --frozen` 只消费已验证的锁文件，不会在常规运行中重新选择版本。Dependabot 每周为 pip、npm 和 GitHub Actions 更新创建可跟进的 PR；普通 PR 继续由 `verify.yml` 对锁定依赖执行全 extras 漏洞审计。离线 wheelhouse/hash manifest 继续负责跨平台离线资产，不替代开发锁文件。
 
 HTML 提取依赖 trafilatura 暂限 `>=2.0,<2.3`，开发锁定 2.2.0。
-2.3.0 的 Markdown 转义会改写既有 `$...$` 公式中的下划线及表格引用；
+2.3.0 和 2.3.1 的 Markdown 转义会改写既有 `$...$` 公式中的下划线及表格引用；
 在线安装与离线构建沿用这一兼容上限，保留现有公式和表格输出契约。
+最小 HTML renderer 回归覆盖公式下划线和表格引用方括号；2.3.1 仍不能通过这两项契约。
 
-当前锁定的浏览器组合为 Camoufox 0.5.7 / Playwright 1.62.0。项目允许
+当前锁定的浏览器组合为 Camoufox 0.5.8 / Playwright 1.62.0。项目允许
 `playwright>=1.47,<1.64`，但解析时仍受 Camoufox 自身的 `<1.63` 约束，不能强制
 安装 1.63。Playwright 1.61 起要求 Camoufox browser beta.30 或更新版本；已固定
 旧 browser 的环境需要显式重新指定兼容版本，不能依赖失败回退继续使用旧包。
-Camoufox 0.5.7 默认使用随 Python 包配对的 browser（本版为
-`official/156.0.1-beta.34`），本地已安装配对版本时直接复用；显式设置渠道或 pin
+Camoufox 0.5.8 默认使用随 Python 包配对的 browser（本版为
+`official/156.0.1-beta.36`），本地已安装配对版本时直接复用；显式设置渠道或 pin
 才覆盖配对选择。预检只读取本地元数据，不写 active 配置；缺少配对版本时不能
 回退到旧 active browser。原生 macOS gate 通过 `python -m camoufox fetch` 准备
 锁定 Python 包配对的 browser 和 fpgen 模型，再验证双 context，Linux 测试不替代该证据。

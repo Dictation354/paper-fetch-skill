@@ -6,6 +6,16 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### 修复——Science 引用加载
+
+- 使用 DOM 引用覆盖检查和一次原生滚动，等待延迟出现的 Science 参考文献列表及分批加载的引用。展开控件和轮询共用剩余请求预算，最多等待 10 秒；展开动作超时后继续检查，预算耗尽时报告实际缺失的引用目标。
+- 增加延迟加载、列表持续增高的 unit 和离线 Camoufox 回归，以及 `10.1126/science.ady3136` 的 headless、headed live 验收：71 条引用、5 张本地正文图片和完整 acceptance。
+
+### 维护
+
+- 锁定的 Camoufox 更新至 0.5.8，同步其配对浏览器 `official/156.0.1-beta.36` 的说明。兼容范围内的锁定依赖更新为 cachetools 7.2.1、filelock 4.0.12、platformdirs 4.12.4、iniconfig 2.3.1、jsonpointer 3.2.0、opentelemetry-api 1.45.1、orjson 3.13.0 和 tomli 2.5.0。
+- 保留 trafilatura 2.2.0 和现有 `<2.3` 上限：隔离验证确认 2.3.1 仍会改变行内 LaTeX 公式和表格引用的 Markdown 转义。新增公式下划线和引用方括号的最小 renderer 回归，并同步兼容性说明。
+
 ## 7.0.3 - 2026-10-05
 
 ### 浏览器运行时兼容性

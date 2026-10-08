@@ -66,46 +66,85 @@ def _reference_coverage(soup: BeautifulSoup) -> tuple[set[str], set[str]]:
 
 def prepare_browser_page(page: Any, *, timeout_ms: int) -> Mapping[str, Any]:
     """Expand Science's bibliography through its own visible controls."""
-    deadline = time.monotonic() + min(timeout_ms, 10000) / 1000
-    before, cited = _reference_coverage(BeautifulSoup(page.content(), choose_parser()))
+    from contextlib import suppress
+    from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+
+    deadline = time.monotonic() + max(0, min(timeout_ms, 10000)) / 1000
+
+    def coverage() -> tuple[set[str], set[str]]:
+        snapshot = page.evaluate(
+            r"""() => ({
+                available: Array.from(document.querySelectorAll(
+                    '#bibliography .citations[id]'), node => node.id),
+                cited: Array.from(document.querySelectorAll(
+                    'a[role="doc-biblioref"], a[data-xml-rid]'), node =>
+                    node.getAttribute('data-xml-rid') ||
+                    (node.getAttribute('href') || '').split('#').pop()
+                ).filter(value => /^R\d+$/.test(value))
+            })"""
+        )
+        return set(snapshot["available"]), set(snapshot["cited"])
+
+    before, cited = coverage()
     available = before
     bibliography = page.locator("#bibliography")
-    if bibliography.count():
-        scrolled = False
-        while time.monotonic() < deadline:
+    scrolled = False
+    timed_out = False
+    while True:
+        poll_started = time.monotonic()
+        control = None
+        if bibliography.count():
             controls = bibliography.locator("button, a").filter(
                 has_text=re.compile(
                     r"^(?:show|view|load)\s+(?:all|more|remaining)(?:\s+references)?(?:\s*\(\d+\))?$",
                     re.I,
                 )
             )
-            control = next(
-                (
-                    controls.nth(i)
-                    for i in range(controls.count())
-                    if controls.nth(i).is_visible() and controls.nth(i).is_enabled()
-                ),
-                None,
+            # A control can disappear while another reference batch arrives.
+            with suppress(PlaywrightTimeoutError):
+                for i in range(controls.count()):
+                    remaining_ms = int((deadline - time.monotonic()) * 1000)
+                    if remaining_ms <= 0:
+                        break
+                    candidate = controls.nth(i)
+                    if candidate.is_visible() and candidate.is_enabled(
+                        timeout=min(200, remaining_ms)
+                    ):
+                        control = candidate
+                        break
+        if control is None and not cited - available:
+            break
+        remaining_ms = int((deadline - time.monotonic()) * 1000)
+        if remaining_ms <= 0:
+            available, cited = coverage()
+            timed_out = bool(cited - available or control is not None)
+            break
+        if not scrolled:
+            # Native scrolling does not wait for a growing list to become stable.
+            scrolled = page.evaluate(
+                """() => {
+                    const bibliography = document.querySelector('#bibliography');
+                    if (!bibliography) return false;
+                    bibliography.scrollIntoView();
+                    return true;
+                }"""
             )
-            if control is None and not cited - available:
-                break
-            if not scrolled:
-                bibliography.scroll_into_view_if_needed(
-                    timeout=max(1, min(timeout_ms, 2000))
-                )
-                scrolled = True
-            if control is not None:
-                control.click(timeout=max(1, int((deadline - time.monotonic()) * 1000)))
-            page.wait_for_timeout(
-                min(200, max(1, int((deadline - time.monotonic()) * 1000)))
-            )
-            available, cited = _reference_coverage(
-                BeautifulSoup(page.content(), choose_parser())
-            )
+        remaining_ms = int((deadline - time.monotonic()) * 1000)
+        if control is not None and remaining_ms > 0:
+            # Retry transient actionability failures within the same budget.
+            with suppress(PlaywrightTimeoutError):
+                control.click(timeout=min(200, remaining_ms))
+        remaining_ms = int((deadline - time.monotonic()) * 1000)
+        poll_remaining_ms = 200 - int((time.monotonic() - poll_started) * 1000)
+        if remaining_ms > 0 and poll_remaining_ms > 0:
+            page.wait_for_timeout(min(poll_remaining_ms, remaining_ms))
+        # Also read after an action exhausts the budget: it may have loaded refs.
+        available, cited = coverage()
     return {
         "references_before": len(before),
         "references_after": len(available),
         "missing_reference_targets": sorted(cited - available),
+        "timed_out": timed_out,
     }
 
 

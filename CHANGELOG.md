@@ -6,6 +6,16 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### Fixed — Science reference loading
+
+- Wait for delayed Science bibliographies and reference batches using DOM coverage checks and one native scroll. Keep expansion controls and polling within the remaining request budget, capped at 10 seconds; recover from expansion timeouts and report the actual missing reference targets when the budget expires.
+- Add unit and offline Camoufox coverage for delayed, growing reference lists, plus headless and headed live acceptance checks for `10.1126/science.ady3136`: 71 references, five local body images, and complete acceptance.
+
+### Maintenance
+
+- Update locked Camoufox to 0.5.8 and document its paired browser, `official/156.0.1-beta.36`. Refresh compatible locked dependencies to cachetools 7.2.1, filelock 4.0.12, platformdirs 4.12.4, iniconfig 2.3.1, jsonpointer 3.2.0, opentelemetry-api 1.45.1, orjson 3.13.0, and tomli 2.5.0.
+- Keep trafilatura at 2.2.0 with the existing `<2.3` limit: isolated checks confirm that 2.3.1 still changes Markdown escaping in inline LaTeX formulas and table references. Add minimal renderer regressions for formula underscores and reference brackets, and update the compatibility documentation.
+
 ## 7.0.3 - 2026-10-05
 
 ### Browser runtime compatibility
