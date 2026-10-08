@@ -6,6 +6,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.0.4 - 2026-10-08
+
 ### Fixed — Science reference loading
 
 - Wait for delayed Science bibliographies and reference batches using DOM coverage checks and one native scroll. Keep expansion controls and polling within the remaining request budget, capped at 10 seconds; recover from expansion timeouts and report the actual missing reference targets when the budget expires.
