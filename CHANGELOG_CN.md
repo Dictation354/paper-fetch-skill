@@ -6,6 +6,20 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.1.0 - 2026-10-11
+
+### 调整——浏览器补充文件下载
+
+- Science、Wiley、PNAS、IEEE、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、AIP 和 Taylor & Francis 的浏览器补充文件改为串行点击文章页或附件目录中已有的控件下载。点击失败保留逐文件诊断，不再回退 HTTP 直链或 browser context request；纯 HTTP 分支和正文图片下载策略沿用现有行为。
+- 下载事件和内联文件响应必须匹配本次控件目标及其重定向链。记录点击页、原始链接和最终地址，复用请求期限、取消、字节与类型验收、下载预算及原子落盘；每次尝试结束后恢复文章页、关闭本次 popup 并移除监听器。
+- 保留各出版社的控件处理：Wiley supporting accordion、IOP 附件目录与 ID、IEEE Media 标签及文件名／附件 DOI 控件、Annual Reviews Supplemental 标签，以及 MDPI 可见链接或 supplementary modal。IEEE 跟踪参数不同的下载地址对应到已发现的同一附件，MDPI 保留模态框中实际点击的原始版本链接。
+- 增加 unit、离线 Camoufox integration、golden 覆盖，以及可显式启用的串行 live 专项验收，记录已验收文件、哈希、点击来源和失败。访问阻断、缺少附件及缓存结果不计为 live 下载成功。
+
+### 维护
+
+- 刷新兼容范围内的 Python 锁定依赖：filelock 4.1.0、platformdirs 4.13.0、Pydantic 2.14.0 / pydantic-core 2.50.0、Ruff 0.17.0、SoupSieve 3.0.1、jsonpointer 3.2.1、pycparser 3.11、Python 3.12+ 的 NumPy 2.5.4，以及 ONNX Runtime 1.31.0。trafilatura 保留 2.2.0，Playwright 按 Camoufox 兼容约束保留 1.62.0。
+- 固定的 GitHub Actions 更新至 upload-artifact 7.0.2、download-artifact 8.0.2 和 setup-uv 10.3.0。
+
 ## 7.0.4 - 2026-10-08
 
 ### 修复——Science 引用加载

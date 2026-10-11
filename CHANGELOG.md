@@ -6,6 +6,15 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.1.0 - 2026-10-11
+
+### Changed — browser supplementary downloads
+
+- Science, Wiley, PNAS, IEEE, AMS, MDPI, Royal Society, Annual Reviews, ACS, IOP, AIP, and Taylor & Francis now download browser supplementary files by serially clicking existing article or attachment-directory controls. Click failures retain per-file diagnostics without falling back to direct HTTP or browser context requests. HTTP-only routes and body-image download policies retain their existing behavior.
+- Accept download events and inline file responses only when they match the selected control target and its redirect chain. Record the click page, original link, and final URL; retain shared request deadlines, cancellation, byte/type checks, download budgets, and atomic file writes. Restore the article page, close owned popups, and remove listeners after each attempt.
+- Preserve publisher-specific controls: Wiley supporting accordions, IOP attachment directories and IDs, IEEE media tabs and filename/attachment-DOI controls, Annual Reviews supplemental tabs, and MDPI visible links or supplementary modals. Reconcile IEEE tracking-query variants with the discovered attachment and retain MDPI's original versioned modal link.
+- Add unit, offline Camoufox integration, and golden coverage, plus an opt-in serial live audit that records accepted files, hashes, click provenance, and failures. Access blocks, missing attachments, and cached results do not count as successful live downloads.
+
 ### Maintenance
 
 - Refresh compatible locked Python dependencies, including filelock 4.1.0, platformdirs 4.13.0, Pydantic 2.14.0 / pydantic-core 2.50.0, Ruff 0.17.0, SoupSieve 3.0.1, jsonpointer 3.2.1, pycparser 3.11, NumPy 2.5.4 on Python 3.12+, and ONNX Runtime 1.31.0. Keep trafilatura at 2.2.0 and preserve the Camoufox-compatible Playwright 1.62.0 lock.
