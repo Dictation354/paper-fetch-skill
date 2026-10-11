@@ -4278,6 +4278,33 @@
         "scope": "Wiley live article assets",
         "reason": "三个既有样本的 headed/headless 串行复测，检查全文 acceptance、全部公式/正文图计数、MIME/尺寸/SHA-256、会话复用及挑战恢复；不替代 committed golden 原文证据。"
       }
+    },
+    "tests/integration/test_supplement_click.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Camoufox supplementary page click, target correlation, cleanup and binary acceptance",
+        "reason": "本地响应验证真实浏览器下载机制，不证明出版社 live 可访问性。"
+      }
+    },
+    "tests/live/test_live_supplement_click.py": {
+      "default": {
+        "kind": "content",
+        "scope": "fresh publisher supplementary click, complete files, types and SHA-256",
+        "primary": [
+          "live_response"
+        ],
+        "auxiliary": []
+      }
+    },
+    "tests/golden/test_supplement_click_identity.py": {
+      "default": {
+        "kind": "content",
+        "scope": "captured publisher body scopes and original supplementary link identities",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": []
+      }
     }
   }
 }

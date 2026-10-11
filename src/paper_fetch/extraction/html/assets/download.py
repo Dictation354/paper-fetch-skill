@@ -1940,6 +1940,8 @@ def save_asset_resolution(
         }
         for key in (
             "asset_type",
+            "source_href",
+            "source_page_url",
             "source_kind",
             "source_ref",
             "filename_hint",

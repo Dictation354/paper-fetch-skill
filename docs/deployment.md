@@ -85,7 +85,7 @@ Camoufox 0.5.8 默认使用随 Python 包配对的 browser（本版为
 `camoufox fetch` 或首次生成指纹会按上游校验下载并写入 fpgen 包目录。
 进入完全离线环境前需以该目录可写的普通用户完成准备，再验证实际浏览器启动。
 
-CI 的 setup-uv 固定为 10.2.0 的完整 SHA。缓存使用该版本的 `auto` 事件策略，
+CI 的 setup-uv 固定为 10.3.0 的完整 SHA。缓存使用该版本的 `auto` 事件策略，
 并显式保留 `prune-cache: true`，避免跨主版本升级改变缓存清理行为。
 
 主包版本号同步清单：

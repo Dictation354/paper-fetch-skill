@@ -481,9 +481,8 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                         "dimensions": {"width": 640, "height": 480},
                     },
                 ),
-                mock.patch.object(
-                    browser_workflow._SharedBrowserFileDocumentFetcher,
-                    "_fetch_with_context_request",
+                mock.patch(
+                    "paper_fetch.providers.browser_workflow.fetchers.file.fetch_file_with_page_click",
                     return_value={
                         "status_code": 200,
                         "headers": {"content-type": "application/pdf"},

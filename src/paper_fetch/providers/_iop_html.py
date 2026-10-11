@@ -906,6 +906,7 @@ def extract_supplementary_data_assets(
             "section": "supplementary",
             "url": attachment_url,
             "source_ref": source_ref,
+            "source_href": href,
             "source_kind": "iop_supplementary_data_page",
             "source_page_url": source_url,
             "referer_url": source_url,

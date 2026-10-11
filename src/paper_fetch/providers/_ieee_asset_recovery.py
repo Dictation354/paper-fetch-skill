@@ -455,7 +455,8 @@ def download_ieee_assets_with_browser(
             runtime_context=runtime_context,
             use_runtime_shared_browser=True,
             browser_options=BrowserDocumentFetcherOptions(
-                runtime_config=request.get("browser_config")
+                runtime_config=request.get("browser_config"),
+                file_fetch_mode="page_click",
             ),
             thread_local=True,
         )

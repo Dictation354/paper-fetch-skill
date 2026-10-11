@@ -172,6 +172,12 @@ def _supplementary_assets_from_ieee_multimedia_payload(
             "url": url,
             "section": "supplementary",
         }
+        asset["source_href"] = url
+        article_number = _article_number_from_url(source_url)
+        if article_number:
+            asset["source_page_url"] = IEEE_DOCUMENT_URL_TEMPLATE.format(
+                article_number=article_number
+            )
         if filename:
             asset["filename_hint"] = filename
         media_type = normalize_text(str(item.get("mediaType") or ""))
@@ -379,6 +385,8 @@ def _ieee_supplementary_asset_from_anchor(
         or "Supplementary Material",
         "caption": "",
         "url": _absolute_ieee_asset_url(href, source_url),
+        "source_href": href,
+        "source_page_url": source_url,
         "section": "supplementary",
     }
 

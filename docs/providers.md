@@ -66,6 +66,9 @@ PDF 正文作为一个原样 section 保存；获取、组装、序列化和输�
 - publisher 差异通过各 provider 模块 callback 下沉；browser-PDF executor 继续共享 `_pdf_fallback`。内部 helper 应从 `browser_workflow` 对应子模块导入，不属于包入口公开契约。
 - browser-workflow 的 HTML bootstrap 通过 `RuntimeContext` 复用所选 backend manager；每次操作使用隔离 context，Camoufox 同步对象保持 caller-thread 绑定。
 - Live smoke 与 provider regression 的代表性 DOI 由 `tests/provider_benchmark_samples.py` 和 golden fixture manifest 维护；它们不构成第二套运行时能力 catalog。
+- Science、Wiley、PNAS、IEEE、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、AIP、Taylor & Francis 的浏览器补充文件统一使用 `page_click`，从所在文章页或附件目录的已有链接/按钮串行下载。点击失败报告逐项诊断，不回退 HTTP 直链或 `BrowserContext.request.get()`；AMS 等纯 HTTP 分支及正文图片下载策略保持原行为。IOP 目录 HTML 与 IEEE multimedia JSON 是发现请求，继续使用 `context_request`。
+- 点击下载支持下载事件与内联文件响应，只捕获当前控件目标及其重定向链；结束后恢复文章页、关闭本次 popup、移除监听器。Wiley 保留 supporting accordion 的重绘/展开处理，IOP 保留目录页与附件 ID，IEEE 通过 Media/Multimedia/Supplemental Items 标签、文件名或附件 DOI 定位已有附件控件，并限定同源文件路径的跟踪参数差异，Annual Reviews 打开 Supplemental Material 标签，MDPI 优先点击页面可见的既有文件链接，附件仅在 supplementary modal 中时先展开该模态框，并保留实际点击的原始链接以对应资产 URL。成功与失败均记录点击页、原始链接及最终地址，成功记录在资产 `recovery_attempts` 中保留点击关联证据；所有文件仍经共享验收、预算与原子落盘。
+- 专项 live 验收使用 `PAPER_FETCH_RUN_SUPPLEMENT_CLICK=1 PYTHONPATH=src uv run python -m pytest tests/live/test_live_supplement_click.py -q -n 0`，通过 `PAPER_FETCH_LIVE_ARTIFACT_DIR` 指定每轮新的目录；因共享外部浏览器状态而串行运行。可用 `PAPER_FETCH_LIVE_STORAGE_STATE_SOURCE` 指定已有合法会话的 publisher profile 根目录，测试仅复制其 storage state 到隔离 profile。每个 provider 保存文件、字节数、类型、SHA-256、点击证据和失败报告；无附件、缓存、skip 或访问阻断不计为成功。Science 可通过 `PAPER_FETCH_SCIENCE_SUPPLEMENT_REFERENCE` 对照先前取得的 43 页文件。
 
 ### Copernicus
 

@@ -2,16 +2,9 @@
 
 from __future__ import annotations
 
-import contextlib
-import json
-from pathlib import Path
-import time
-from urllib.parse import urlsplit, urlunsplit
-
 from typing import Any
 from collections.abc import Callable, Mapping
 
-from ....asset_budget import DEFAULT_ASSET_MAX_BYTES_PER_ASSET
 from ....extraction.html.assets import supplementary_response_block_reason
 from ....extraction.html.shared import (
     html_text_snippet as _html_text_snippet,
@@ -19,7 +12,7 @@ from ....extraction.html.shared import (
 )
 from ....runtime import RuntimeContext
 from ....utils import normalize_text
-from .readiness import wait_for_atypon_body_dom_ready
+from .click import fetch_file_with_page_click
 from .context import (
     BrowserDocumentFetcherOptions,
     _BaseBrowserDocumentFetcher,
@@ -41,6 +34,9 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
         use_runtime_shared_browser: bool = True,
         browser_options: BrowserDocumentFetcherOptions | None = None,
     ) -> None:
+        self._file_fetch_mode = (
+            browser_options or BrowserDocumentFetcherOptions()
+        ).file_fetch_mode
         super().__init__(
             browser_context_seed_getter=browser_context_seed_getter,
             seed_urls_getter=seed_urls_getter,
@@ -61,197 +57,10 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
             return None
 
         self._sync_context_cookies()
-        if getattr(self._browser_config, "provider", None) == "wiley":
-            return self._fetch_wiley_with_page_click(normalized_url, asset)
+        if self._file_fetch_mode == "page_click":
+            return fetch_file_with_page_click(self, normalized_url, asset)
         self._warm_seed_urls(force=False)
         return self._fetch_with_context_request(normalized_url, asset)
-
-    def _fetch_wiley_with_page_click(
-        self, file_url: str, asset: Mapping[str, Any]
-    ) -> dict[str, Any] | None:
-        page = self._page
-        if page is None:
-            self._record_failure(file_url, reason="wiley_supplement_page_unavailable")
-            return None
-        deadline = time.monotonic() + 60.0
-        response = None
-        download = None
-        phase = "article_not_ready"
-
-        def remaining_ms() -> int:
-            remaining = deadline - time.monotonic()
-            if self._runtime_context is not None:
-                remaining = self._runtime_context.remaining_seconds(remaining)
-            if remaining <= 0:
-                raise TimeoutError("Wiley supplementary download deadline exceeded.")
-            return max(1, int(remaining * 1000))
-
-        def capture_response(candidate: Any) -> None:
-            nonlocal response
-            request = candidate.request
-            while request is not None:
-                if request.url == file_url:
-                    if not 300 <= candidate.status < 400:
-                        response = candidate
-                    return
-                request = request.redirected_from
-
-        try:
-            seed_url = str(self._current_seed().get("browser_final_url") or "")
-            if not seed_url:
-                seed_url = next(iter(self._seed_urls()), "")
-            if seed_url and page.url != seed_url:
-                page.goto(seed_url, wait_until="commit", timeout=remaining_ms())
-            readiness = wait_for_atypon_body_dom_ready(
-                page, "wiley", timeout_seconds=remaining_ms() / 1000.0
-            )
-            if not readiness.ready:
-                body = page.content().encode()
-                self._record_response_failure(
-                    file_url,
-                    status=None,
-                    content_type="text/html",
-                    final_url=page.url,
-                    body=body,
-                    reason=supplementary_response_block_reason("text/html", body)
-                    or "wiley_supplement_article_not_ready",
-                )
-                return None
-            phase = "panel_not_ready"
-            supporting = page.locator("section.article-section__supporting")
-            supporting.first.wait_for(state="attached", timeout=remaining_ms())
-            parsed = urlsplit(file_url)
-            relative_url = urlunsplit(
-                ("", "", parsed.path, parsed.query, parsed.fragment)
-            )
-            selector = (
-                f"a[href={json.dumps(file_url)}], a[href={json.dumps(relative_url)}]"
-            )
-            link = supporting.locator(selector).first
-            phase = "link_missing"
-            link.wait_for(state="attached", timeout=remaining_ms())
-            panel = link.locator(
-                "xpath=ancestor::div[contains(concat(' ', normalize-space(@class), ' '), ' accordion ')][1]"
-            )
-            phase = "panel_not_ready"
-            for attempt in range(3):
-                if link.is_visible():
-                    break
-                # Resolve the control again after a redraw or an ignored click.
-                control = panel.locator("a.accordion__control").first
-                if (
-                    control.get_attribute(
-                        "aria-expanded", timeout=min(5000, remaining_ms())
-                    )
-                    != "true"
-                ):
-                    control.click(timeout=min(5000, remaining_ms()))
-                try:
-                    link.wait_for(state="visible", timeout=min(5000, remaining_ms()))
-                    break
-                except Exception:
-                    if attempt == 2:
-                        raise
-            phase = "download_timeout"
-            page.on("response", capture_response)
-            with page.expect_event(
-                "requestfinished",
-                predicate=lambda request: (
-                    response is not None and request == response.request
-                ),
-                timeout=remaining_ms(),
-            ):
-                with page.expect_download(timeout=remaining_ms()) as pending:
-                    # The panel can hide again during its opening animation.
-                    # Activate the discovered link without another layout wait.
-                    link.evaluate("(anchor) => anchor.click()", timeout=remaining_ms())
-                download = pending.value
-            remaining_ms()
-            path = download.path()
-            remaining_ms()
-            if path is None:
-                self._record_failure(
-                    file_url, reason="wiley_supplement_download_failed"
-                )
-                return None
-            if response is None:
-                self._record_failure(
-                    file_url, reason="wiley_supplement_response_missing"
-                )
-                return None
-            headers = _browser_response_headers(response)
-            status = _browser_response_status(response)
-            final_url = str(response.url)
-            maximum = DEFAULT_ASSET_MAX_BYTES_PER_ASSET
-            if (
-                self._runtime_context is not None
-                and self._runtime_context.asset_budget is not None
-            ):
-                maximum = self._runtime_context.asset_budget.max_bytes_per_asset
-            if Path(path).stat().st_size > maximum:
-                self._record_failure(
-                    file_url, reason="asset_bytes_per_asset_exceeded", status=status
-                )
-                return None
-            body = Path(path).read_bytes()
-            content_type = headers.get("content-type", "")
-            reason = supplementary_response_block_reason(content_type, body)
-            if reason or (status is not None and status >= 400) or not body:
-                self._record_response_failure(
-                    file_url,
-                    status=status,
-                    content_type=content_type,
-                    final_url=final_url,
-                    body=body,
-                    reason=reason or "wiley_supplement_download_failed",
-                )
-                return None
-            return {
-                "status_code": status,
-                "headers": headers,
-                "body": body,
-                "url": final_url,
-            }
-        except Exception as exc:
-            if response is not None:
-                headers = _browser_response_headers(response)
-                if "html" in headers.get("content-type", "").lower():
-                    with contextlib.suppress(Exception):
-                        body = response.body()
-                        reason = supplementary_response_block_reason(
-                            headers.get("content-type"), body
-                        )
-                        if reason:
-                            self._record_response_failure(
-                                file_url,
-                                status=_browser_response_status(response),
-                                content_type=headers.get("content-type", ""),
-                                final_url=response.url,
-                                body=body,
-                                reason=reason,
-                            )
-                            return None
-            self._record_failure(
-                file_url,
-                reason=f"wiley_supplement_{phase}",
-                status=_browser_response_status(response)
-                if response is not None
-                else None,
-                content_type=_browser_response_headers(response).get("content-type", "")
-                if response is not None
-                else "",
-                final_url=str(response.url) if response is not None else str(page.url),
-                error_message=normalize_text(str(exc)),
-            )
-            return None
-        finally:
-            with contextlib.suppress(Exception):
-                page.remove_listener("response", capture_response)
-            if download is not None:
-                with contextlib.suppress(Exception):
-                    download.cancel()
-                with contextlib.suppress(Exception):
-                    download.delete()
 
     def _record_response_failure(
         self,

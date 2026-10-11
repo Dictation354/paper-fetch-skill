@@ -14,6 +14,33 @@ from tests.support._ieee_provider_support import *
 
 
 class IeeeProviderAssetDownloadTests(unittest.TestCase):
+    def test_ieee_clicked_supplement_overlays_tracking_query_on_original(self):
+        url = "https://ieeexplore.ieee.org/ielx8/1/2/3/supp1.pdf"
+        other = "https://ieeexplore.ieee.org/ielx8/1/2/4/supp1.pdf"
+        extracted = [
+            {"kind": "supplementary", "url": url, "source_href": url},
+            {"kind": "supplementary", "url": other},
+        ]
+        downloaded = [
+            {
+                "kind": "supplementary",
+                "download_url": url,
+                "source_url": url + "?arnumber=3",
+                "original_url": url + "?arnumber=3",
+                "path": "/tmp/supp1.pdf",
+                "downloaded_bytes": 123,
+                "recovery_attempts": [{"stage": "page_click"}],
+            }
+        ]
+        result = _ieee_asset_identity.reconcile_ieee_downloaded_assets(
+            extracted, downloaded
+        )
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]["path"], "/tmp/supp1.pdf")
+        self.assertEqual(result[0]["source_href"], url)
+        self.assertEqual(result[0]["source_url"], url + "?arnumber=3")
+        self.assertNotIn("path", result[1])
+
     def test_ieee_reconciliation_overlays_large_recovery_on_one_logical_figure(
         self,
     ) -> None:
@@ -556,7 +583,19 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                 }
             raise AssertionError(f"Unexpected supplementary request: {url}")
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            mock.patch(
+                "paper_fetch.providers.browser_workflow.fetchers.file.fetch_file_with_page_click",
+                side_effect=lambda _fetcher, url, _asset: transport.responses[
+                    ("GET", url)
+                ],
+            ),
+            mock.patch(
+                "paper_fetch.providers.browser_workflow.fetchers.file._SharedBrowserFileDocumentFetcher._ensure_context",
+                return_value=mock.Mock(),
+            ),
+        ):
             result = client.download_related_assets(
                 doi,
                 {"doi": doi, "landing_page_url": landing_url},

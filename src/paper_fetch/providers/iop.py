@@ -150,6 +150,7 @@ def _redact_iop_supplementary_urls(
                 "source_url",
                 "final_url",
                 "original_url",
+                "source_href",
             ):
                 value = item.get(key)
                 if isinstance(value, str):

@@ -333,6 +333,24 @@ def reconcile_ieee_downloaded_assets(
             ),
             None,
         )
+        if (
+            existing_index is None
+            and _ieee_asset_kind(downloaded_asset) == "supplementary"
+        ):
+            # Media controls add arnumber/tag queries. Reuse the existing IEEE
+            # retry identity to overlay the accepted file on its discovered
+            # attachment rather than creating a second remote-only record.
+            attachment_key = _ieee_asset_retry_key(downloaded_asset)
+            existing_index = next(
+                (
+                    index
+                    for index, existing in enumerate(reconciled)
+                    if _ieee_asset_kind(existing) == "supplementary"
+                    and attachment_key != ("",)
+                    and _ieee_asset_retry_key(existing) == attachment_key
+                ),
+                None,
+            )
         if existing_index is None:
             kind = _ieee_asset_kind(downloaded_asset)
             section = normalize_text(str(downloaded_asset.get("section") or "")).lower()

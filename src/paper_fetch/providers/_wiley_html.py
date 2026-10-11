@@ -682,6 +682,8 @@ def extract_supplementary_assets(
                 "caption": "",
                 "section": "supplementary",
                 "url": absolute_href,
+                "source_href": href,
+                "source_page_url": source_url,
             }
             if filename_hint:
                 asset["filename_hint"] = filename_hint

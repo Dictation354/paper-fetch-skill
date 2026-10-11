@@ -351,6 +351,19 @@ def test_supplementary_files_download_and_render_with_partial_failures(
                 "url": url,
             }
         )
+
+    def click_response(url, _asset):
+        response = responses[("GET", url)]
+        return None if isinstance(response, RequestFailure) else response
+
+    click_fetcher = mock.Mock(side_effect=click_response, requires_caller_thread=True)
+    click_fetcher.failure_for.side_effect = lambda url: {
+        "reason": "missing_supplement",
+        "status": 404,
+        "source_url": url,
+        "click_page_url": source_url,
+    }
+    file_builder = mock.Mock(return_value=click_fetcher)
     transport = AssetTransport(responses)
     client = AnnualreviewsClient(transport=transport, env={})
     install_browser_workflow_deps(
@@ -360,7 +373,7 @@ def test_supplementary_files_download_and_render_with_partial_failures(
         ),
         ensure_runtime_ready=mock.Mock(),
         _build_shared_browser_image_fetcher=mock.Mock(return_value=None),
-        _build_shared_browser_file_fetcher=mock.Mock(return_value=None),
+        _build_shared_browser_file_fetcher=file_builder,
     )
     markdown, _ = client.extract_markdown(
         html, source_url, metadata={"doi": SUPPLEMENTARY_DOI}
@@ -381,6 +394,11 @@ def test_supplementary_files_download_and_render_with_partial_failures(
         tmp_path,
         asset_profile="all",
     )
+    assert (
+        file_builder.call_args.kwargs["browser_options"].file_fetch_mode == "page_click"
+    )
+    assert click_fetcher.call_count == len(supplements)
+    assert not transport.calls
     assert len(result["assets"]) == (5 if failed_index is None else 4)
     assert len(result["asset_failures"]) == int(failed_index is not None)
     if failed_index is not None:

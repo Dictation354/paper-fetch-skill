@@ -115,6 +115,8 @@ def _supplementary_asset_from_anchor(
         "caption": "",
         "section": "supplementary",
         "url": absolute_href,
+        "source_href": href,
+        "source_page_url": source_url,
     }
 
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import threading
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 from collections.abc import Callable, Mapping
 
 from ....logging_utils import emit_structured_log
@@ -35,6 +35,7 @@ class BrowserDocumentFetcherOptions:
     """Browser runtime options shared by document fetchers."""
 
     runtime_config: BrowserRuntimeConfig | None = None
+    file_fetch_mode: Literal["context_request", "page_click"] = "context_request"
 
 
 class _SharedBrowserPageSession:

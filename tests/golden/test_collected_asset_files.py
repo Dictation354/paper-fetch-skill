@@ -28,6 +28,7 @@ from tests.support.acquired_publisher_inputs import (
     _response,
 )
 from tests.paths import REPO_ROOT
+from tests.support.markdown_links import local_markdown_paths
 from tests.support._paper_fetch_support import FixtureHtmlTransport
 
 
@@ -283,8 +284,14 @@ def test_xml_provider_owns_the_complete_download_and_article_chain(doi, tmp_path
     rendered = article.to_ai_markdown(
         include_refs="none", max_tokens="full_text", asset_profile="all"
     )
-    for a in result["assets"]:
-        assert a["path"] in rendered
+    if provider == "elsevier":
+        # XML document links are relative; verify their actual file targets.
+        linked_paths = local_markdown_paths(rendered, base_dir=Path.cwd())
+        for a in result["assets"]:
+            assert Path(a["path"]).resolve() in linked_paths
+    else:
+        for a in result["assets"]:
+            assert a["path"] in rendered
     if provider == "plos":
         assert len([a for a in result["assets"] if a["kind"] == "formula"]) == 4
         assert len([a for a in result["assets"] if a["kind"] == "table"]) == 5

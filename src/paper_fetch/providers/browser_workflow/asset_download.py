@@ -37,6 +37,23 @@ from .assets import (
 )
 from .shared import BrowserWorkflowDeps
 
+_CLICK_SUPPLEMENT_PROVIDERS = frozenset(
+    {
+        "science",
+        "wiley",
+        "pnas",
+        "ieee",
+        "ams",
+        "mdpi",
+        "royalsocietypublishing",
+        "annualreviews",
+        "acs",
+        "iop",
+        "aip",
+        "tandf",
+    }
+)
+
 _FIGURE_PAGE_BROWSER_WAIT_SECONDS = 2
 _SILVERCHAIR_FIGURE_PAGE_BROWSER_WAIT_SECONDS = 2
 _SILVERCHAIR_FIGURE_PAGE_READY_SELECTOR = (
@@ -948,12 +965,15 @@ def _run_browser_asset_download_attempt(
                 provider_name=recovery.provider,
                 runtime_context=recovery.runtime_context,
             )
-            if recovery.provider == "wiley":
+            if (
+                recovery.runtime is not None
+                and recovery.provider in _CLICK_SUPPLEMENT_PROVIDERS
+            ):
                 if file_document_fetcher is None:
                     return {
                         "assets": [],
                         "asset_failures": [
-                            {**asset, "reason": "wiley_supplement_page_unavailable"}
+                            {**asset, "reason": "supplement_page_unavailable"}
                             for asset in attempt_supplementary_assets
                         ],
                     }
@@ -965,7 +985,7 @@ def _run_browser_asset_download_attempt(
                         common_options,
                         file_document_fetcher=file_document_fetcher,
                         asset_download_concurrency=1,
-                        fetch_policy="browser_first",
+                        fetch_policy="browser_only",
                     ),
                     **common_kwargs,
                 )

@@ -6,6 +6,7 @@ from paper_fetch.providers import elsevier, oxfordacademic
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
+from tests.support.markdown_links import local_markdown_paths
 from tests.support._paper_fetch_support import FixtureHtmlTransport
 from tests.support.acquired_publisher_inputs import _record, _response
 
@@ -51,7 +52,9 @@ def test_elsevier_original_xml_object_download_and_final_article(tmp_path):
         include_refs="all", max_tokens="full_text", asset_profile="body"
     )
     assert article.quality.has_fulltext
-    assert downloaded["path"] in rendered
+    assert Path(downloaded["path"]).resolve() in local_markdown_paths(
+        rendered, base_dir=Path.cwd()
+    )
     assert "Fig. 1" in rendered
     assert "health risk increments" in rendered
 

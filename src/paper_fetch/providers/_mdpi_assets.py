@@ -160,7 +160,37 @@ def extract_scoped_html_assets(
         assets.extend(
             _extract_mdpi_supplementary_assets(supplementary_html, source_url)
         )
-    return _dedupe_assets(assets)
+    assets = _dedupe_assets(assets)
+    if asset_profile == "all":
+        _bind_supplementary_modal_links(html_text, source_url, assets)
+    return assets
+
+
+def _bind_supplementary_modal_links(
+    html_text: str, source_url: str, assets: list[dict[str, str]]
+) -> None:
+    """Retain the explicit versioned modal link for a DOI-form attachment."""
+    soup = BeautifulSoup(html_text, choose_parser())
+    article = urllib.parse.urlsplit(source_url)
+    for asset in assets:
+        if asset.get("kind") != "supplementary":
+            continue
+        target = urllib.parse.urlsplit(asset.get("url") or "")
+        suffix = target.path.rsplit("/", 1)[-1]
+        if not re.fullmatch(r"s[0-9]+", suffix):
+            continue
+        candidates = []
+        for anchor in soup.select("#supplementaryModal a[href]"):
+            href = str(anchor.get("href") or "")
+            candidate = urllib.parse.urlsplit(urllib.parse.urljoin(source_url, href))
+            if (
+                candidate.netloc == article.netloc
+                and candidate.path == article.path.rstrip("/") + "/" + suffix
+            ):
+                candidates.append(href)
+        if len(set(candidates)) == 1:
+            asset["source_href"] = candidates[0]
+            asset["source_page_url"] = source_url
 
 
 def _bind_explicit_cdn_download_urls(
@@ -219,6 +249,8 @@ def _extract_mdpi_supplementary_assets(
                 "caption": context,
                 "section": "supplementary",
                 "url": urllib.parse.urljoin(source_url, href),
+                "source_href": href,
+                "source_page_url": source_url,
             }
         )
     return assets

@@ -54,6 +54,10 @@ validated_purge_paths = true
 # 页面与监听器在所属线程清理，不借用或关闭其它会话，不新增 runtime 执行面。
 # T&F 图片导航在 commit 后验收原始响应，避免图片文档 DOMContentLoaded 超时；
 # 沿用 Camoufox、同一资产预算和 MIME/字节验收，Linux 浏览器测试不替代原生 gate。
+# 12 个 provider 的浏览器补充文件仅点击页面已有控件，串行捕获本次请求及重定向链；
+# 目录 HTML / multimedia JSON 发现继续用 context request，HTTP-only 分支保持原策略。
+# 下载/响应/popup 监听提前注册，清理自有 popup 并恢复文章页；点击失败无直链回退。
+# 同一请求期限、取消、预算和原子验收适用，Linux 回放不能替代原生 macOS gate。
 runtime_bundle_built_in = false
 core_install_downloads_runtime = false
 optional_install_download_requires_consent = true

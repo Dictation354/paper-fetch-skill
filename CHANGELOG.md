@@ -6,6 +6,11 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### Maintenance
+
+- Refresh compatible locked Python dependencies, including filelock 4.1.0, platformdirs 4.13.0, Pydantic 2.14.0 / pydantic-core 2.50.0, Ruff 0.17.0, SoupSieve 3.0.1, jsonpointer 3.2.1, pycparser 3.11, NumPy 2.5.4 on Python 3.12+, and ONNX Runtime 1.31.0. Keep trafilatura at 2.2.0 and preserve the Camoufox-compatible Playwright 1.62.0 lock.
+- Update pinned GitHub Actions to upload-artifact 7.0.2, download-artifact 8.0.2, and setup-uv 10.3.0.
+
 ## 7.0.4 - 2026-10-08
 
 ### Fixed — Science reference loading

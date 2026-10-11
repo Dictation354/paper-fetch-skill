@@ -697,7 +697,8 @@ class BrowserWorkflowClient(ProviderClient):
             runtime_context=context,
             use_runtime_shared_browser=True,
             browser_options=BrowserDocumentFetcherOptions(
-                runtime_config=request.get("browser_config")
+                runtime_config=request.get("browser_config"),
+                file_fetch_mode="page_click",
             ),
             thread_local=True,
         )

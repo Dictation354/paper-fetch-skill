@@ -852,6 +852,8 @@ def extract_scoped_html_assets(
                     else "",
                     "section": "supplementary",
                     "url": url,
+                    "source_href": str(anchor.get("href") or ""),
+                    "source_page_url": source_url,
                 }
             )
     return _dedupe_assets(assets)

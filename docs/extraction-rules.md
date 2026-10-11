@@ -101,6 +101,8 @@
 | Copernicus | NLM/JATS XML 中的 `supplementary-material`、`inline-supplementary-material` 和明确 `xlink:href` 附件节点。 | 正文 Data/Code Availability 普通仓库链接不凭文本或后缀升级为 supplementary。 |
 | IOP | 正文页的 `#supplDataLink` 或同 DOI `/article/{doi}/data[N]` 入口只是索引；复用文章浏览器 cookie/Referer 打开索引页后，只接受 `#supplementarydata` 内 `id=SM数字` 的真实附件。 | `/data` HTML 本身、正文 figure 的 Standard/High-resolution 控件、页脚 WeChat QR 和未编号链接都不归 supplementary；索引 challenge、DOI 不匹配或空附件必须记录 asset failure。 |
 
+- 浏览器补充文件下载须从页面已有控件点击开始，不注入下载链接。[12 个 browser provider](providers.md) 的附件使用串行 `browser_only`，失败不得回退 HTTP 直链或 context request。发现目录/JSON 与正文图片独立使用原策略；纯 HTTP 分支保留现有行为。点击页、原始链接和最终下载地址形成来源证据，下载事件/内联响应须关联本次目标及其重定向链，并通过统一字节、类型、预算与原子落盘验收。
+
 - 边界说明：
   - 这条规则不定义每个 publisher 的完整 DOM selector、REST endpoint 或 URL allowlist；这些细节由 provider-specific helper 维护，本文只保留用户可见 contract。
   - 它也不限制附件文件类型。只要来源 scope 明确，supplementary 可以是 PDF、Office 文档、压缩包、数据表、图片或视频。

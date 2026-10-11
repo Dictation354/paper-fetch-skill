@@ -174,9 +174,15 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                     ),
                     refresh_browser_context_seed=mocked_warm,
                     download_assets=mocked_download_assets,
+                    _build_shared_browser_file_fetcher=mock.Mock(
+                        return_value=mock.Mock(requires_caller_thread=True)
+                    ),
                 ),
             )
             client.name = "science"
+            client._browser_asset_file_fetcher = mock.Mock(
+                return_value=mock.Mock(requires_caller_thread=True)
+            )
             raw_payload = _typed_raw_payload(
                 provider="science",
                 source_url=article_url,
@@ -193,7 +199,7 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                 asset_profile="all",
             )
 
-        mocked_warm.assert_not_called()
+        mocked_warm.assert_called_once()
         figure_calls = [
             call
             for call in mocked_download_assets.call_args_list
@@ -318,9 +324,15 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                     ),
                     refresh_browser_context_seed=mocked_warm,
                     download_assets=mocked_download_assets,
+                    _build_shared_browser_file_fetcher=mock.Mock(
+                        return_value=mock.Mock(requires_caller_thread=True)
+                    ),
                 ),
             )
             client.name = "science"
+            client._browser_asset_file_fetcher = mock.Mock(
+                return_value=mock.Mock(requires_caller_thread=True)
+            )
             raw_payload = _typed_raw_payload(
                 provider="science",
                 source_url=article_url,

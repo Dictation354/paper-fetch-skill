@@ -849,198 +849,83 @@ def test_wiley_figure_target_match_recovery_order(recovery) -> None:
     page.wait_for_timeout.assert_not_called()
 
 
-@pytest.mark.parametrize(
-    "collapsed, outcome",
-    [
-        (True, "download"),
-        (False, "download"),
-        (True, "transfer_timeout"),
-        (False, "challenge"),
-        (True, "first_click_ignored"),
-        (True, "delayed_links"),
-        (True, "never_expands"),
-    ],
-)
-def test_wiley_file_fetcher_clicks_supporting_panel_and_preserves_response(
-    tmp_path, collapsed, outcome
-):
+@pytest.mark.parametrize("provider", ["wiley", "science", "iop", "ieee"])
+def test_file_download_mode_is_explicit_and_isolated_from_discovery(provider):
     from types import SimpleNamespace
 
-    url = "https://onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1111/test&file=si.docx"
-    article_url = "https://onlinelibrary.wiley.com/doi/full/10.1111/test"
-    file_path = tmp_path / "browser-download"
-    file_path.write_bytes(b"PK\x03\x04supplement")
-    response = _BrowserResponse(url, file_path.read_bytes(), "application/octet-stream")
-    if outcome == "challenge":
-        response = _BrowserResponse(
-            url, b"<title>Just a moment...</title>", "text/html", status=403
+    for mode in ("context_request", "page_click"):
+        fetcher = file_fetchers._SharedBrowserFileDocumentFetcher(
+            browser_context_seed_getter=lambda: {},
+            seed_urls_getter=lambda: [],
+            browser_options=fetcher_context.BrowserDocumentFetcherOptions(
+                runtime_config=SimpleNamespace(provider=provider),
+                file_fetch_mode=mode,
+            ),
         )
-    response.request = SimpleNamespace(url=url, redirected_from=None)
-    page = mock.Mock(url=article_url)
-    link = page.locator.return_value.locator.return_value.first
-    link.is_visible.return_value = not collapsed
-    control = link.locator.return_value.locator.return_value.first
-    control.get_attribute.return_value = "false"
-    visible_waits = 0
-
-    def wait_for_link(*, state, timeout):
-        nonlocal visible_waits
-        if state != "visible":
-            return
-        visible_waits += 1
-        if outcome == "never_expands" or (
-            outcome in {"first_click_ignored", "delayed_links"} and visible_waits == 1
+        fetcher._context = mock.Mock()
+        fetcher._page = mock.Mock()
+        with (
+            mock.patch.object(
+                file_fetchers, "fetch_file_with_page_click", return_value=None
+            ) as click,
+            mock.patch.object(
+                fetcher, "_fetch_with_context_request", return_value=None
+            ) as request,
         ):
-            assert 0 < timeout <= 5000
-            if outcome == "delayed_links":
-                control.get_attribute.return_value = "true"
-            raise TimeoutError("panel not ready")
-        link.is_visible.return_value = True
+            assert fetcher("https://example.test/file", {}) is None
+        assert click.call_count == int(mode == "page_click")
+        assert request.call_count == int(mode == "context_request")
 
-    link.wait_for.side_effect = wait_for_link
-    download = mock.Mock(url=url)
-    download.path.return_value = str(file_path)
-    page.expect_event.return_value.__enter__ = mock.Mock()
-    page.expect_event.return_value.__exit__ = mock.Mock(return_value=False)
-    page.expect_download.return_value.__enter__ = mock.Mock(
-        return_value=SimpleNamespace(value=download)
-    )
-    page.expect_download.return_value.__exit__ = mock.Mock(return_value=False)
-    if outcome == "transfer_timeout":
-        page.expect_event.return_value.__exit__.side_effect = TimeoutError(
-            "transfer stalled"
-        )
-    elif outcome == "challenge":
-        page.expect_download.return_value.__exit__.side_effect = TimeoutError(
-            "no download"
-        )
-    callbacks = {}
-    page.on.side_effect = lambda event, callback: callbacks.update({event: callback})
 
-    def activate_link(expression, **kwargs):
-        callbacks["response"](response)
+def test_click_failure_keeps_original_target_and_never_requests_directly():
+    from types import SimpleNamespace
 
-    link.evaluate.side_effect = activate_link
     fetcher = file_fetchers._SharedBrowserFileDocumentFetcher(
-        browser_context_seed_getter=lambda: {"browser_final_url": article_url},
-        seed_urls_getter=lambda: [article_url],
+        browser_context_seed_getter=lambda: {
+            "browser_final_url": "https://example.test/article"
+        },
+        seed_urls_getter=lambda: [],
         browser_options=fetcher_context.BrowserDocumentFetcherOptions(
-            runtime_config=SimpleNamespace(provider="wiley")
+            runtime_config=SimpleNamespace(provider="science"),
+            file_fetch_mode="page_click",
         ),
     )
-    fetcher._page = page
     fetcher._context = mock.Mock()
+    fetcher._page = mock.Mock(url="https://example.test/article")
+    fetcher._page.locator.return_value.evaluate_all.return_value = None
+    fetcher._page.wait_for_timeout.side_effect = TimeoutError("link missing")
+    url = "https://example.test/si.pdf"
+    assert fetcher(url, {"source_href": "/si.pdf"}) is None
+    diagnostic = fetcher.failure_for(url)
+    assert diagnostic["reason"] == "supplement_click_link_missing"
+    assert diagnostic["click_page_url"] == "https://example.test/article"
+    assert diagnostic["original_href"] == "/si.pdf"
+    fetcher._context.request.get.assert_not_called()
+
+
+def test_wiley_panel_re_resolves_control_after_redraw():
+    from types import SimpleNamespace
+    from paper_fetch.providers.browser_workflow.fetchers import click
+
+    page = mock.Mock()
+    link = page.locator.return_value.first.locator.return_value.first
+    link.is_visible.return_value = False
+    link.wait_for.side_effect = [None, TimeoutError("redraw"), None]
+    control = link.locator.return_value.locator.return_value.first
+    control.get_attribute.return_value = "false"
     with mock.patch.object(
-        file_fetchers,
+        click,
         "wait_for_atypon_body_dom_ready",
         return_value=SimpleNamespace(ready=True),
     ):
-        result = fetcher(url, {"kind": "supplementary"})
-    if outcome in {"download", "first_click_ignored", "delayed_links"}:
-        assert result == {
-            "status_code": 200,
-            "headers": response.headers,
-            "body": file_path.read_bytes(),
-            "url": url,
-        }
-    elif outcome == "never_expands":
-        assert result is None
-        assert fetcher.failure_for(url)["reason"] == "wiley_supplement_panel_not_ready"
-        assert control.click.call_count == 3
-        link.click.assert_not_called()
-        link.evaluate.assert_not_called()
-        page.expect_download.assert_not_called()
-        return
-    else:
-        assert result is None
-        assert fetcher.failure_for(url)["reason"] == (
-            "cloudflare_challenge"
-            if outcome == "challenge"
-            else "wiley_supplement_download_timeout"
-        )
-        assert fetcher.failure_for(url)["status"] == response.status
-        download.path.assert_not_called()
-    assert control.click.call_count == (
-        2 if outcome == "first_click_ignored" else int(collapsed)
-    )
-    link.click.assert_not_called()
-    link.evaluate.assert_called_once()
-    fetcher._context.request.get.assert_not_called()
-    page.goto.assert_not_called()
-    if outcome != "challenge":
-        download.cancel.assert_called_once()
-        download.delete.assert_called_once()
-    page.remove_listener.assert_called_once()
-
-
-@pytest.mark.parametrize(
-    "ready, challenge, expected",
-    [
-        (False, True, "cloudflare_challenge"),
-        (False, False, "wiley_supplement_article_not_ready"),
-        (True, False, "wiley_supplement_download_timeout"),
-    ],
-)
-def test_wiley_file_click_reports_challenge_readiness_and_timeout(
-    ready, challenge, expected
-):
-    from types import SimpleNamespace
-
-    page = mock.Mock(url="https://onlinelibrary.wiley.com/doi/full/10.1111/test")
-    page.content.return_value = (
-        "<title>Just a moment...</title>"
-        if challenge
-        else "<article>Not ready</article>"
-    )
-    page.locator.return_value.locator.return_value.first.is_visible.return_value = True
-    page.expect_event.side_effect = TimeoutError("download timed out")
-    fetcher = file_fetchers._SharedBrowserFileDocumentFetcher(
-        browser_context_seed_getter=lambda: {},
-        seed_urls_getter=lambda: [],
-    )
-    fetcher._page = page
-    with mock.patch.object(
-        file_fetchers,
-        "wait_for_atypon_body_dom_ready",
-        return_value=SimpleNamespace(ready=ready),
-    ):
         assert (
-            fetcher._fetch_wiley_with_page_click(
-                "https://onlinelibrary.wiley.com/si.docx", {}
+            click._wiley_link(
+                page, ["https://example.test/si.zip"], lambda: 2000, lambda _: None
             )
-            is None
+            is link
         )
-    assert (
-        fetcher.failure_for("https://onlinelibrary.wiley.com/si.docx")["reason"]
-        == expected
-    )
-
-
-def test_wiley_file_click_caps_operations_by_remaining_request_budget():
-    from types import SimpleNamespace
-
-    context = RuntimeContext(env={})
-    context.initialize_deadline(2)
-    page = mock.Mock(url="https://onlinelibrary.wiley.com/doi/full/10.1111/test")
-    fetcher = file_fetchers._SharedBrowserFileDocumentFetcher(
-        browser_context_seed_getter=lambda: {},
-        seed_urls_getter=lambda: [],
-        runtime_context=context,
-    )
-    fetcher._page = page
-    page.content.return_value = "<article>Not ready</article>"
-    with mock.patch.object(
-        file_fetchers,
-        "wait_for_atypon_body_dom_ready",
-        return_value=SimpleNamespace(ready=False),
-    ) as wait:
-        assert (
-            fetcher._fetch_wiley_with_page_click(
-                "https://onlinelibrary.wiley.com/si.docx", {}
-            )
-            is None
-        )
-    assert 0 < wait.call_args.kwargs["timeout_seconds"] <= 2
+    assert control.click.call_count == 2
+    assert all(call.kwargs["timeout"] <= 2000 for call in control.click.call_args_list)
 
 
 @pytest.mark.parametrize(

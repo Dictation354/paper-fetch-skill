@@ -854,7 +854,11 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             plan,
             recovery,
             image_fetcher_factory=mock.Mock(return_value=None),
-            file_fetcher_factory=mock.Mock(return_value=None),
+            file_fetcher_factory=mock.Mock(
+                return_value=SimpleNamespace(
+                    requires_caller_thread=False, close=lambda: None
+                )
+            ),
             download_settings={},
             deps=browser_workflow_deps(download_assets=download_assets),
         )
@@ -919,7 +923,11 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             plan,
             recovery,
             image_fetcher_factory=mock.Mock(return_value=None),
-            file_fetcher_factory=mock.Mock(return_value=None),
+            file_fetcher_factory=mock.Mock(
+                return_value=SimpleNamespace(
+                    requires_caller_thread=False, close=lambda: None
+                )
+            ),
             download_settings={"serial_browser_assets": True},
             deps=browser_workflow_deps(download_assets=download_assets),
         )
@@ -989,7 +997,11 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             plan,
             recovery,
             image_fetcher_factory=mock.Mock(return_value=image_fetcher),
-            file_fetcher_factory=mock.Mock(return_value=None),
+            file_fetcher_factory=mock.Mock(
+                return_value=SimpleNamespace(
+                    requires_caller_thread=False, close=lambda: None
+                )
+            ),
             download_settings={},
             deps=browser_workflow_deps(download_assets=download_assets),
         )
@@ -1913,3 +1925,77 @@ def test_browser_recovery_preserves_optional_backend_without_stringifying_none(b
     assert result["_paper_fetch_recovery_attempts"][-1].get("browser_backend") == (
         backend or None
     )
+
+
+@pytest.mark.parametrize(
+    "provider",
+    [
+        "science",
+        "wiley",
+        "pnas",
+        "ieee",
+        "ams",
+        "mdpi",
+        "royalsocietypublishing",
+        "annualreviews",
+        "acs",
+        "iop",
+        "aip",
+        "tandf",
+    ],
+)
+def test_browser_supplement_failure_has_no_direct_fallback(provider, tmp_path):
+    class ClickFailure:
+        requires_caller_thread = True
+
+        def __init__(self):
+            self.calls = []
+
+        def __call__(self, url, asset):
+            self.calls.append((url, asset))
+            return None
+
+        def failure_for(self, url):
+            return {
+                "source_url": url,
+                "reason": "supplement_click_link_missing",
+                "click_page_url": "https://example.test/article",
+                "original_href": "/si.zip",
+            }
+
+        def close(self):
+            pass
+
+    fetcher = ClickFailure()
+    transport = mock.Mock()
+    plan = BrowserAssetDownloadPlan(
+        article_id="10.5555/click",
+        output_dir=tmp_path,
+        asset_profile="all",
+        body_assets=[],
+        supplementary_assets=[
+            {"kind": "supplementary", "url": "https://example.test/si.zip"}
+        ],
+    )
+    recovery = BrowserAssetRecoveryContext(
+        runtime=SimpleNamespace(headless=True),
+        provider=provider,
+        user_agent="test",
+        browser_context_seed={},
+        browser_cookies=[],
+        active_seed_urls=[],
+    )
+    result = run_browser_asset_download_attempt(
+        plan,
+        recovery,
+        image_fetcher_factory=lambda **_: None,
+        file_fetcher_factory=lambda **_: fetcher,
+        download_settings={"transport": transport},
+        deps=browser_workflow_deps(),
+    )
+    assert not result.supplementary_results
+    assert len(result.failures) == 1
+    assert result.failures[0]["reason"] == "supplement_click_link_missing"
+    assert len(fetcher.calls) == 1
+    transport.request.assert_not_called()
+    assert not list(tmp_path.rglob("*.zip"))

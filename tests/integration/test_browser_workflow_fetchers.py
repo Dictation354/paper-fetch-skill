@@ -246,7 +246,8 @@ def test_wiley_click_survives_collapsed_panel_redraw_in_browser(
             browser_context_seed_getter=lambda: {"browser_final_url": article_url},
             seed_urls_getter=lambda: [article_url],
             browser_options=fetcher_context.BrowserDocumentFetcherOptions(
-                runtime_config=SimpleNamespace(provider="wiley")
+                runtime_config=SimpleNamespace(provider="wiley"),
+                file_fetch_mode="page_click",
             ),
         )
         fetcher._page = page
