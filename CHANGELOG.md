@@ -6,6 +6,20 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.1.1 - 2026-10-15
+
+### Fixed — browser readiness and asset recovery
+
+- Science uses one normal HTML attempt and checks actual reference target IDs for nonempty, extractable text. Batch reference and expansion-control reads within the existing 10-second preparation budget; retain missing-reference diagnostics when the budget expires.
+- End AIP body polling when the governor validation URL and visible validation evidence both confirm a terminal challenge, preserving diagnostics in headed and headless modes.
+- Download IOP body assets with at most two HTTP workers while keeping browser recovery and cleanup on the owning thread. After successful recovery, route pending assets on the same host through the verified browser path; retain cancellation and download-budget cleanup.
+- Reuse IEEE original-image link indexes only within the same article document and invalidate them on navigation. Batch Taylor & Francis table-control reads and DOM injection while preserving per-table failures and existing limits.
+
+### Maintenance
+
+- Bound optional arXiv Atom enrichment to one request attempt with a 10-second I/O timeout; ordinary network failures preserve the fetched full text, while cancellation and access restrictions still propagate. Independent metadata queries retain their existing policy.
+- Reuse HTML availability and paywall analysis within the current fetch, add request and browser-stage timing diagnostics, and hide runtime environment values from object representations. Add offline browser, scheduling, privacy, and live-acceptance regression coverage.
+
 ## 7.1.0 - 2026-10-11
 
 ### Changed — browser supplementary downloads
