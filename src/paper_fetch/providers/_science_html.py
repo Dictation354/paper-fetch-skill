@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 import time
 from typing import Any
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 
 from bs4 import BeautifulSoup, Tag
 from ..extraction.html.parsing import choose_parser
@@ -28,7 +28,12 @@ from ._html_authors import (
     extract_property_authors,
     normalized_author_tokens,
 )
-from ._html_references import extract_numbered_references_from_html
+from ._html_references import (
+    NUMBERED_BIBLIOGRAPHY_SELECTORS,
+    _candidate_reference_nodes,
+    _reference_text,
+    extract_numbered_references_from_soup,
+)
 from ._retained_object_links import resolve_retained_object_links
 from ._script_json import extract_assignment_json
 
@@ -53,10 +58,23 @@ SCIENCE_CITATION_ITALIC_PATTERNS = (
 )
 
 
+def _usable_reference_targets(nodes: Sequence[Tag]) -> set[str]:
+    # Only targets in the candidate list used by extraction count as available.
+    available: set[str] = set()
+    for node in nodes:
+        if not _reference_text(node):
+            continue
+        targets = [node, *node.select(".citations[id]")]
+        available.update(
+            str(target["id"])
+            for target in targets
+            if target.get("id") and re.fullmatch(r"R\d+", str(target["id"]))
+        )
+    return available
+
+
 def _reference_coverage(soup: BeautifulSoup) -> tuple[set[str], set[str]]:
-    available = {
-        str(node["id"]) for node in soup.select("#bibliography .citations[id]")
-    }
+    available = _usable_reference_targets(_candidate_reference_nodes(soup))
     cited = {
         str(node.get("data-xml-rid") or str(node.get("href") or "").split("#")[-1])
         for node in soup.select("a[role='doc-biblioref'], a[data-xml-rid]")
@@ -64,63 +82,94 @@ def _reference_coverage(soup: BeautifulSoup) -> tuple[set[str], set[str]]:
     return available, {value for value in cited if re.fullmatch(r"R\d+", value)}
 
 
-def prepare_browser_page(page: Any, *, timeout_ms: int) -> Mapping[str, Any]:
-    """Expand Science's bibliography through its own visible controls."""
+_SCIENCE_REFERENCE_SNAPSHOT = r"""selectors => {
+    let candidates = [];
+    for (const selector of selectors) {
+        candidates = Array.from(document.querySelectorAll(selector));
+        if (candidates.length) break;
+    }
+    const bibliography = document.querySelector('#bibliography');
+    const controls = bibliography ? Array.from(bibliography.querySelectorAll('button, a')) : [];
+    const pattern = /^(?:show|view|load)\s+(?:all|more|remaining)(?:\s+references)?(?:\s*\(\d+\))?$/i;
+    const control = controls.findIndex(node => {
+        const style = getComputedStyle(node);
+        return pattern.test((node.textContent || '').replace(/\s+/g, ' ').trim())
+            && node.getClientRects().length > 0
+            && style.visibility !== 'hidden' && style.visibility !== 'collapse'
+            && !node.matches(':disabled') && node.getAttribute('aria-disabled') !== 'true';
+    });
+    return {
+        reference_html: candidates.map(node => node.outerHTML).join(''),
+        reference_ids: Array.from(document.querySelectorAll('#bibliography .citations[id]'), node => node.id),
+        cited: Array.from(document.querySelectorAll('a[role="doc-biblioref"], a[data-xml-rid]'), node =>
+            node.getAttribute('data-xml-rid') || (node.getAttribute('href') || '').split('#').pop()
+        ).filter(value => /^R\d+$/.test(value)),
+        bibliography_present: Boolean(bibliography), control_index: control,
+    };
+}"""
+
+
+def prepare_browser_page(
+    page: Any,
+    *,
+    timeout_ms: int,
+    cancel_check: Callable[[], None] | None = None,
+) -> Mapping[str, Any]:
+    """Wait for extractable references and expand only visible publisher controls."""
     from contextlib import suppress
     from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
-    deadline = time.monotonic() + max(0, min(timeout_ms, 10000)) / 1000
+    started = time.monotonic()
+    budget_ms = max(0, min(timeout_ms, 10000))
+    deadline = started + budget_ms / 1000
+    previous_fragment: str | None = None
+    previous_available: set[str] = set()
 
-    def coverage() -> tuple[set[str], set[str]]:
-        snapshot = page.evaluate(
-            r"""() => ({
-                available: Array.from(document.querySelectorAll(
-                    '#bibliography .citations[id]'), node => node.id),
-                cited: Array.from(document.querySelectorAll(
-                    'a[role="doc-biblioref"], a[data-xml-rid]'), node =>
-                    node.getAttribute('data-xml-rid') ||
-                    (node.getAttribute('href') || '').split('#').pop()
-                ).filter(value => /^R\d+$/.test(value))
-            })"""
+    def snapshot() -> tuple[Mapping[str, Any], set[str], set[str], set[str]]:
+        nonlocal previous_fragment, previous_available
+        if cancel_check is not None:
+            cancel_check()
+        state = page.evaluate(
+            _SCIENCE_REFERENCE_SNAPSHOT, list(NUMBERED_BIBLIOGRAPHY_SELECTORS)
         )
-        return set(snapshot["available"]), set(snapshot["cited"])
+        # Reuse the actual extractor's candidate/text rules, including noise-only
+        # entries, instead of treating an early ID or linkout as a loaded citation.
+        reference_html = state["reference_html"]
+        if reference_html != previous_fragment:
+            fragment = BeautifulSoup(
+                '<div id="reference-snapshot">' + reference_html + "</div>",
+                choose_parser(),
+            )
+            root = fragment.find(id="reference-snapshot")
+            # These nodes were already selected in the real document. Do not
+            # select them again after losing ancestors such as .ref-list or ol.
+            previous_available = _usable_reference_targets(
+                [node for node in root.children if isinstance(node, Tag)]
+                if root is not None
+                else []
+            )
+            previous_fragment = reference_html
+        available = previous_available
 
-    before, cited = coverage()
-    available = before
-    bibliography = page.locator("#bibliography")
+        return state, set(state["reference_ids"]), available, set(state["cited"])
+
+    state, before, available, cited = snapshot()
+    extractable_before = len(available)
+    ids = before
     scrolled = False
     timed_out = False
     while True:
         poll_started = time.monotonic()
-        control = None
-        if bibliography.count():
-            controls = bibliography.locator("button, a").filter(
-                has_text=re.compile(
-                    r"^(?:show|view|load)\s+(?:all|more|remaining)(?:\s+references)?(?:\s*\(\d+\))?$",
-                    re.I,
-                )
-            )
-            # A control can disappear while another reference batch arrives.
-            with suppress(PlaywrightTimeoutError):
-                for i in range(controls.count()):
-                    remaining_ms = int((deadline - time.monotonic()) * 1000)
-                    if remaining_ms <= 0:
-                        break
-                    candidate = controls.nth(i)
-                    if candidate.is_visible() and candidate.is_enabled(
-                        timeout=min(200, remaining_ms)
-                    ):
-                        control = candidate
-                        break
-        if control is None and not cited - available:
+        control_index = state["control_index"]
+        if control_index < 0 and not cited - available:
             break
-        remaining_ms = int((deadline - time.monotonic()) * 1000)
+        remaining_ms = int(round((deadline - time.monotonic()) * 1000))
         if remaining_ms <= 0:
-            available, cited = coverage()
-            timed_out = bool(cited - available or control is not None)
+            timed_out = bool(cited - available or control_index >= 0)
             break
-        if not scrolled:
-            # Native scrolling does not wait for a growing list to become stable.
+        if cancel_check is not None:
+            cancel_check()
+        if not scrolled and state["bibliography_present"]:
             scrolled = page.evaluate(
                 """() => {
                     const bibliography = document.querySelector('#bibliography');
@@ -129,21 +178,31 @@ def prepare_browser_page(page: Any, *, timeout_ms: int) -> Mapping[str, Any]:
                     return true;
                 }"""
             )
-        remaining_ms = int((deadline - time.monotonic()) * 1000)
-        if control is not None and remaining_ms > 0:
-            # Retry transient actionability failures within the same budget.
+        remaining_ms = int(round((deadline - time.monotonic()) * 1000))
+        if control_index >= 0 and remaining_ms > 0:
             with suppress(PlaywrightTimeoutError):
-                control.click(timeout=min(200, remaining_ms))
-        remaining_ms = int((deadline - time.monotonic()) * 1000)
+                page.locator("#bibliography").locator("button, a").nth(
+                    control_index
+                ).filter(
+                    has_text=re.compile(
+                        r"^(?:show|view|load)\s+(?:all|more|remaining)(?:\s+references)?(?:\s*\(\d+\))?$",
+                        re.I,
+                    )
+                ).click(timeout=min(200, remaining_ms))
+        remaining_ms = int(round((deadline - time.monotonic()) * 1000))
         poll_remaining_ms = 200 - int((time.monotonic() - poll_started) * 1000)
         if remaining_ms > 0 and poll_remaining_ms > 0:
             page.wait_for_timeout(min(poll_remaining_ms, remaining_ms))
-        # Also read after an action exhausts the budget: it may have loaded refs.
-        available, cited = coverage()
+        state, ids, available, cited = snapshot()
     return {
         "references_before": len(before),
-        "references_after": len(available),
+        "references_after": len(ids),
+        "extractable_references_before": extractable_before,
+        "extractable_references_after": len(available),
+        "empty_reference_ids": sorted(ids - available),
         "missing_reference_targets": sorted(cited - available),
+        "preparation_budget_ms": budget_ms,
+        "preparation_elapsed_ms": round((time.monotonic() - started) * 1000, 3),
         "timed_out": timed_out,
     }
 
@@ -545,17 +604,14 @@ def finalize_extraction(
     extracted_authors = extract_authors(html_text)
     if extracted_authors:
         finalized["extracted_authors"] = extracted_authors
-    extracted_references = extract_numbered_references_from_html(html_text)
+    soup = BeautifulSoup(html_text, choose_parser())
+    extracted_references = extract_numbered_references_from_soup(soup)
     if extracted_references:
         finalized["references"] = extracted_references
     if needs_frontmatter_flatten:
         markdown_text = _flatten_structured_abstract_markdown(markdown_text)
-    soup = BeautifulSoup(html_text, choose_parser())
     available, cited = _reference_coverage(soup)
-    missing = sorted(
-        (cited - available)
-        | {target for target in cited if int(target[1:]) > len(extracted_references)}
-    )
+    missing = sorted(cited - available)
     if missing:
         finalized["quality_flags"] = [
             *finalized.get("quality_flags", []),

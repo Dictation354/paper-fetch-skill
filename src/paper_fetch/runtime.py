@@ -101,7 +101,7 @@ class RuntimeCommitGuard:
 class RuntimeContext:
     """Holds runtime dependencies shared across service, workflow, and adapters."""
 
-    env: Mapping[str, str] | None = None
+    env: Mapping[str, str] | None = field(default=None, repr=False)
     transport: HttpTransport | None = None
     clients: Mapping[str, object] | None = None
     download_dir: Path | None = None

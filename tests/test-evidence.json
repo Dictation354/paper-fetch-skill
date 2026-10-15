@@ -4241,7 +4241,9 @@
       "default": {
         "kind": "content",
         "scope": "Science ady3136 live references and local body images in headless and headed modes",
-        "primary": ["live_response"]
+        "primary": [
+          "live_response"
+        ]
       }
     },
     "tests/unit/test_refetch_quality_regressions.py": {
@@ -4304,6 +4306,40 @@
           "source"
         ],
         "auxiliary": []
+      }
+    },
+    "tests/unit/test_performance_boundaries.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "AIP readiness, optional Atom policy and isolated HTML analysis",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_iop_asset_scheduling.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "IOP HTTP scheduling, owner-thread recovery and cancellation cleanup",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_aip_terminal_readiness.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "AIP terminal validation URL and DOM evidence in headed/headless Camoufox",
+        "reason": "本地路由页面证明浏览器契约，不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_runtime_repr_privacy.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "真实 pytest 失败进程的 RuntimeContext repr、traceback、JUnit 与诊断凭据隔离；不证明论文内容。"
+      }
+    },
+    "tests/integration/test_provider_browser_batching.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "原生 Linux Camoufox 中 IEEE 文档索引导航失效、精确 URL 与 T&F 批量表格部分失败；不证明原生 macOS 或出版社内容。",
+        "reason": "本地浏览器页面与受控路由，仅验证操作边界。"
       }
     }
   }

@@ -7,6 +7,8 @@ Evidence travels in existing provider/availability diagnostics.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
 import re
 import json
 from typing import TYPE_CHECKING, Any
@@ -21,6 +23,21 @@ if TYPE_CHECKING:
     from ..runtime import RuntimeContext
 
 CONFIRMED_PAYWALL = "confirmed_article_paywall"
+_HTML_ANALYSIS_CONTEXT: ContextVar[RuntimeContext | None] = ContextVar(
+    "paper_fetch_html_analysis_context", default=None
+)
+
+
+@contextmanager
+def use_html_analysis_context(context: RuntimeContext):
+    """Share analysis only inside this fetch's extraction call tree."""
+    token = _HTML_ANALYSIS_CONTEXT.set(context)
+    try:
+        yield
+    finally:
+        _HTML_ANALYSIS_CONTEXT.reset(token)
+
+
 _DENIAL = re.compile(
     r"you (?:do not|don't) (?:currently )?have access(?: to (?:this|the) (?:article|content))?"
     r"|not (?:registered by an institution with a subscription to this article|entitled to (?:access |view )?(?:the |this )?(?:full.?text|article))"
@@ -88,6 +105,40 @@ def _visible_soup(html: str) -> BeautifulSoup:
 
 
 def html_paywall_diagnostics(
+    html: str | bytes,
+    *,
+    metadata: Mapping[str, Any] | None = None,
+    source_url: str = "",
+    provider: str | None = None,
+    context: RuntimeContext | None = None,
+) -> dict[str, Any]:
+    context = context if context is not None else _HTML_ANALYSIS_CONTEXT.get()
+    if isinstance(html, bytes):
+        html = html.decode("utf-8", errors="replace")
+
+    def detect() -> dict[str, Any]:
+        return _html_paywall_diagnostics(
+            html, metadata=metadata, source_url=source_url, provider=provider
+        )
+
+    if context is None:
+        return detect()
+    key = context.build_parse_cache_key(
+        provider=provider or "",
+        role="article_paywall",
+        source=source_url,
+        body=html,
+        parser="html.parser",
+        config={
+            "doi": normalize_doi(str((metadata or {}).get("doi") or "")),
+            "article_number": str((metadata or {}).get("article_number") or ""),
+            "abstract": (metadata or {}).get("abstract"),
+        },
+    )
+    return context.get_or_set_parse_cache(key, detect)
+
+
+def _html_paywall_diagnostics(
     html: str | bytes,
     *,
     metadata: Mapping[str, Any] | None = None,
@@ -312,9 +363,14 @@ def raise_for_paywall(
     metadata: Mapping[str, Any] | None = None,
     source_url: str = "",
     provider: str | None = None,
+    context: RuntimeContext | None = None,
 ) -> None:
     diagnostics = html_paywall_diagnostics(
-        body, metadata=metadata, source_url=source_url, provider=provider
+        body,
+        metadata=metadata,
+        source_url=source_url,
+        provider=provider,
+        context=context,
     )
     if diagnostics:
         raise paywall_failure(diagnostics, body=body)
@@ -449,30 +505,13 @@ def check_payload_paywall(
         *(merged.get(key) for key in ("doi", "article_number", "abstract")),
     )
     if current_input != checked_input and "html" in content.content_type.lower():
-
-        def detect() -> dict[str, Any]:
-            return html_paywall_diagnostics(
-                content.body,
-                metadata=merged,
-                source_url=content.source_url,
-                provider=payload.provider,
-            )
-
-        if context is None:
-            detected = detect()
-        else:
-            key = context.build_parse_cache_key(
-                provider=payload.provider,
-                role="article_paywall",
-                source=content.source_url,
-                body=content.body,
-                parser="html.parser",
-                config={
-                    key: merged.get(key)
-                    for key in ("doi", "article_number", "abstract")
-                },
-            )
-            detected = context.get_or_set_parse_cache(key, detect)
+        detected = html_paywall_diagnostics(
+            content.body,
+            metadata=merged,
+            source_url=content.source_url,
+            provider=payload.provider,
+            context=context,
+        )
         if detected:
             raise paywall_failure(detected, body=content.body)
     if confirmed_paywall(diagnostics) or confirmed_paywall(availability):

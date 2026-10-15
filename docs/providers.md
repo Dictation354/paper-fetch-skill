@@ -936,7 +936,7 @@ arXiv 路线当前不需要 publisher 凭证；official HTML 主路径不依赖�
 - `provider_status()` 中 `metadata_api`、`html_route` 与 `pdf_fallback` 不依赖额外 env。
 - `html_route` 固定标为 `ok`，表示可直接请求 arXiv official HTML 主路径。
 - HTML 不可用、非 HTML、正文不足或质量门控失败时，直接进入 PDF fallback。
-- metadata enrichment 默认启用，使用项目内部 Atom API client 调用 `https://export.arxiv.org/api/query` 的 `id_list` 精确查询，不依赖 PyPI `arxiv` / `feedparser` 包，也不实现关键词搜索、作者搜索或分页搜索；API 失败只产生 warning，不会阻断已经成功的 HTML/PDF 正文 payload。
+- metadata enrichment 默认启用，使用项目内部 Atom API client 调用 `https://export.arxiv.org/api/query` 的 `id_list` 精确查询，不依赖 PyPI `arxiv` / `feedparser` 包，也不实现关键词搜索、作者搜索或分页搜索；普通 API/网络失败只产生 warning，不会阻断已经成功的 HTML/PDF 正文 payload；取消与访问限制继续传播。
 - 资产默认仍为 `body`。`asset_profile=all` 且允许资产落盘时，先读取官方 `/abs/{id}` 核对身份；无版本输入使用页面明确的本版本链接固定本次正文及附件版本，显式 `vN` 严格保留，后续 API enrichment 不改写版本。`none/body` 或禁止资产落盘不增加附件发现请求。
 - 从摘要页 Ancillary files 区域进入 `/src/{版本化ID}/anc`，按详情页完整列表下载同论文、同版本的官方 `a.anc-file-name` 链接；支持 `.nb`、`.m`、PDF 和嵌套路径，按规范化 URL 去重并保留来源路径。本地文件沿用安全文件名与重名处理，不按远端目录建树。
 - HTML 和 PDF fallback 都会将独立附件各登记一次并展示在 `Supplementary Materials`；PDF 正文图继续保留，只有附件的结果也不再标为 text-only。附件齐全不改变 PDF fallback 的降级与 trace。
@@ -949,6 +949,8 @@ arXiv 路线当前不需要 publisher 凭证；official HTML 主路径不依赖�
 - 带 `SITE_UI_COPY_REGRESSION_MARKER` 的 fatal/error 或 publisher UI copy 常量表示站点改版敏感文案，调整时需要回归 extraction rules 单测。
 - HTML 资产下载失败会优先读取 transport 层 `RequestErrorCategory` 判定是否可重试；诊断 payload 的 substring fallback 只用于缺少结构化分类的失败记录。
 
+- 全文成功后的可选 Atom 元数据补充使用 10 秒单次 I/O 超时和一次请求尝试，关闭该调用的瞬时错误与限流重试，保留 3 秒节流。超时或普通网络失败保留 HTML 元数据、正文及已有 warning，诊断记录补充耗时和回退原因；取消与访问限制继续传播。独立 metadata 查询维持 60 秒及原重试策略，成功补充维持原合并顺序和版本身份检查。10 秒不是严格墙钟上限。HTTP 结构化 `http_request_start` 日志另记 `rate_limit_wait_ms`，用于区分节流等待与网络时间；不改变 3 秒节流、并发上限或请求次数。
+
 ### IEEE
 
 IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当前没有额外必填 publisher env：
@@ -960,7 +962,7 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 - selected-browser HTML recovery 会同时等待当前文章号的 `/rest/document/{article_number}/` 响应和页面 DOM `#article`。REST 候选只有在状态为 2xx（或运行时未提供状态）、content type 为 HTML/XML（或未提供）、正文包含 `#article` 且文章号匹配时才可用；所有已捕获候选都会按新到旧检查，因此较新的 shell/error 或其它文章响应不会覆盖较早的有效全文。
 - readiness 窗口内 REST 未就绪但 DOM 已出现 `#article` 时直接使用 DOM；若只收到无效 REST，则分类为可重试的 `browser_rest_wait_timeout`，完全没有有效 REST/DOM 时分类为 `browser_article_not_ready`。已知 challenge/access 页面仍优先保留原 block 分类。`artifact_mode=all` 时会通过共享 page diagnostics 保存脱敏后的无效 REST 与 DOM 证据。
 - IEEE 资产共享页使用同样的 15 秒 seed readiness 窗口：必须出现包含当前文章号的 `#article` 才能开始 large 恢复，performance resource 中仅出现 `/rest/document/{article_number}/` 不会提前放行。首次 large 恢复前只预热一次对应 preview；最终资产通过可选的 `browser_backend`、`final_fetcher` 和 `recovery_attempts` 保留 direct 失败、browser large 恢复以及必要时的 preview fallback。
-- IEEE 原图恢复按 URL 匹配已就绪文章页的实际链接，提前监听原始图像响应；图片点击站内查看器，普通表格链接用原生新标签动作打开并在取回后关闭。逐资产串行操作并保留文章页，入口失败记入 `recovery_attempts` 后继续既有恢复路径。
+- IEEE 原图恢复按 URL 匹配已就绪文章页的实际链接，提前监听原始图像响应；图片点击站内查看器，普通表格链接用原生新标签动作打开并在取回后关闭。同一文章文档一次建立全部原图链接索引，主框架导航或共享页导航代数变化后失效，目标缺失时重新读取；精确匹配完整 URL，继续在所属线程逐资产串行操作并保留文章页，入口失败记入 `recovery_attempts` 后继续既有恢复路径。
 - IEEE multimedia discovery 在同一 `RuntimeContext` 内按文章号和脱敏后的规范 URL memoize；重复 URL 或仅签名参数轮换不会重复请求，成功的 direct/browser discovery 可被后续资产阶段复用，签名原文不进入 memo key。
 - 页面自身的 REST 子请求保持正常放行；DOM-only 验证可以不消费 REST response body，但不能通过网络拦截制造不符合真实页面行为的失败。IEEE block-page 检测只扫描去除 `script/style/svg/noscript/template` 后的可见文本，因此内联脚本中的 `captcha` 不会覆盖已经就绪的真实 `#article`；可见 challenge/access 文案仍会被拒绝。
 - 原始 HTML 中的 `*.token.awswaf.com` / `awswaf` 或响应头 `x-amzn-waf-action` 会把持续存在的验证页精确分类为 `aws_waf_challenge`，同时在 diagnostics 保留 `challenge_provider=aws_waf` 与兼容字段 `legacy_reason_code=cloudflare_challenge`；对外 `status` 仍为 `challenge`。该分类基于等待结束后的页面证据，不会把已恢复为匹配文章 DOM 的初始 HTTP 202 误判成最终失败。
@@ -1013,11 +1015,11 @@ Camoufox 使用自身生成的 UA；direct HTTP 的可选覆盖见
 #### Browser HTML readiness
 
 - `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 的 browser HTML fetch 会先等待 provider 正文 DOM 命中并连续两次轮询稳定，再执行 pre-extraction challenge / paywall 判定。
-- PNAS 是明确例外于通用 fast attempt 的单次完整导航：候选固定按 `/doi/full/{doi}`、`/doi/{doi}`、DOI resolver 排序；readiness 与解析器统一使用 `#bodymatter`、`#bodymatter .bodymatter`、`#bodymatter .core-container` 和 `#bodymatter .article__body`，正文已满足抽取条件时不再等待站点上不存在的顶层 `.core-container`。每个候选的 readiness 预算配置为 8 秒，并受整体请求剩余预算约束；前一候选耗尽 readiness 不会跳过下一候选的正文等待。但同步浏览器调用不能被预算检查打断，实际耗时可能超出；超时后继续检查最后 HTML，不跳过 block detection 或抽取。
-- AIP 直接进入正常 HTML attempt，正文 readiness 最长等待 90 秒，并受请求剩余总预算限制；正文连续两次轮询稳定后提前结束等待。超时后保留 readiness timeout 诊断并验收最后 HTML，后续 PDF 路线继续使用剩余预算；同步浏览器调用可能使实际耗时超出预算。不启用媒体拦截或 Adzerk/Crossmark 空脚本替换，保持非持久会话。
+- PNAS 是明确例外于通用 fast attempt 的单次完整导航：候选固定按 `/doi/full/{doi}`、`/doi/{doi}`、DOI resolver 排序；readiness 与解析器统一使用 `#bodymatter`、`#bodymatter .bodymatter`、`#bodymatter .core-container` 和 `#bodymatter .article__body`，正文已满足抽取条件时不再等待站点上不存在的顶层 `.core-container`。外部导航与等待分别记入 `navigation_seconds`、`dom_readiness_seconds`，本地 HTML 抽取另记 `html_parse_seconds`。每个候选的 readiness 预算配置为 8 秒，并受整体请求剩余预算约束；前一候选耗尽 readiness 不会跳过下一候选的正文等待。但同步浏览器调用不能被预算检查打断，实际耗时可能超出；超时后继续检查最后 HTML，不跳过 block detection 或抽取。
+- AIP 直接进入正常 HTML attempt，正文 readiness 最长等待 90 秒，并受请求剩余总预算限制；正文连续两次轮询稳定后提前结束等待。仅当最终页面为 `pubs.aip.org/crawlprevention/governor` 且标题或可见正文同时出现 `Validate User` / `not a robot` / `不是机器人` 证据时，立即结束正文轮询，记录 readiness `blocked` 与 `cloudflare_challenge`，沿用页面诊断和候选处理；headed/headless 规则相同。短暂的 `Just a moment…` 和单独 HTTP 403 仍继续等待。超时后保留 readiness timeout 诊断并验收最后 HTML，后续 PDF 路线继续使用剩余预算；同步浏览器调用可能使实际耗时超出预算。不启用媒体拦截或 Adzerk/Crossmark 空脚本替换，保持非持久会话。
 - Wiley 优先尝试已验证的 `/doi/{doi}`。导航返回 401/403 时继续执行有界正文 readiness 和 DOI/阻断信号复核；未确认的候选保持 fail closed 并继续下一 URL，已确认候选还须通过 Markdown/全文 availability，且始终保留真实 HTTP 状态。Science 在保持正文/资源发现回归通过的前提下阻断 image/font/media。
 - Science 与 PNAS 的最终状态取自当前候选中最新、已完成且与当前 URL、出版社域名和目标 DOI 匹配的主框架导航响应；初始响应保留在 trace 中，iframe、未完成或无关响应不能覆盖文章状态。
-- Science 在请求剩余预算内最多用 10 秒展开 bibliography 的可见引用控件；仍缺正文引用目标时记录 `reference_targets_missing` 和缺失 ID，统一 acceptance 为降级，不能将前几条引用当作完整书目。
+- Science 直接进入单次正常 HTML attempt，避免 15 秒 fast attempt 挤占后置引用准备时间。在请求剩余预算内最多用 10 秒展开 bibliography 的可见引用控件；仍缺正文引用目标时记录 `reference_targets_missing` 和缺失 ID，统一 acceptance 为降级，不能将前几条引用当作完整书目。 完成条件按实际引用目标 ID 及当前候选列表中非空、可抽取的引用文本判断，ID 先到、空节点或仅含链接工具的节点不算完成，也不按列表长度推断编号。每轮合并读取引用与控件状态，未变化的引用片段复用已有文本判定，已选候选不会因序列化丢失祖先而被二次筛选；diagnostics 保留节点数并追加可抽取数、空引用 ID、缺失目标和准备预算。
 - Royal Society 的 Silverchair `.widget-ArticleFulltext .article-body`、`.widget-ArticleFulltext`、`.article-body` 与 `.article-content` 已进入稳定正文 selector 表，正文出现后不再落入固定 8 秒等待。
 - 快速 HTML attempt 已确认同篇正文付费墙时直接停止；其他 challenge/access-boundary 失败在保守重试随后耗尽共享 deadline 时，最终保留首个稳定 reason code，并把重试 timeout 与两轮 attempt 写入 diagnostics；不会用后续超时覆盖可执行的 `auth`/entitlement 结论。
 - browser HTML fast path 失败后的正常重试复用首轮内存 `BrowserContextSeed` 中与目标 provider 匹配的 cookies，不覆盖 Camoufox 指纹/User-Agent，也不提前提交未通过正文验收的 storage-state；诊断保留两轮状态、HTTP status、DOM readiness 和脱敏页面形态。
@@ -1026,6 +1028,7 @@ Camoufox 使用自身生成的 UA；direct HTTP 的可选覆盖见
 
 #### Browser 导航策略
 
+- 同次抓取的 HTML 访问权限诊断复用 `RuntimeContext.parse_cache`，按 HTML 摘要、provider、URL、检查身份和影响诊断的 metadata 区分，返回独立副本。正文提取的 DOM 副本仍由 availability 自己选容器、清理和判断证据；浏览器提取清理不代表验收完成。该缓存不跨抓取共享，也不共享可变 DOM。
 - `browser_preflight` 只报告本次预检，不缓存 HTML、候选 URL 或 runtime/storage fingerprint 供正式 fetch 复用。正式 fetch 独立导航并重新执行身份、阻断和正文验收；PDF fallback、challenge、空壳或失败结果同样不形成 route hint。
 - PNAS、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、T&F 与 Science 的正文导航阻断 image/font/media，但继续加载 document、stylesheet、JavaScript、XHR/fetch；IEEE 自定义 HTML route 使用同一重资源集合。Wiley 与 AIP 不新增资源阻断。diagnostics/source trail 记录实际阻断类型、导航数与 readiness。
 - PNAS 额外精确拦截 `www.pnas.org/pb/widgets/fullSideBarMetric/getResponse`，按 hostname/pathname 匹配并记录 `blocked_sidebar_metrics_count`。该改动尚未证明稳定提速；PMC 无浏览器实验及原图质量限制见 [browser runtime 说明](browser-runtime.md#pnas-获取边界)，当前获取流程尚未接入 PMC。
@@ -1044,7 +1047,10 @@ Camoufox 使用自身生成的 UA；direct HTTP 的可选覆盖见
 - publisher 返回的 AWS 签名附件 URL 仅用于即时下载，不持久化；附件按 `source_ref + 脱敏 URL` 去重，最终资产和失败诊断会脱敏 `X-Amz-*`、`Signature`、`AWSAccessKeyId` 参数。独立 Radware/hCaptcha 页面仍 fail closed，HTML/PDF 成功 source 分别是 `iop_html` / `iop_pdf`。
 - 当前没有注册 IOP TDM XML/API route；provider status 只汇总实际可执行的 metadata、`iop_html`、`iop_pdf` 与 supplementary 能力，不会因不存在的占位 route 被降为 partial。
 
+- 正文图片的 HTTP 下载按配置、资产预算和 route 上限启动，最多并发 2，不再等待首图完整下载完成才启动后续图片。HTTP 工作线程不调用浏览器；主线程消费完成结果并执行符合既有条件的浏览器恢复，恢复期间暂停提交新任务，已在途 HTTP 可继续完成。浏览器恢复成功后，同 host 待处理资产沿用已验证路线，其它 host 继续 HTTP；保留输入顺序、逐资产排队计时、失败来源、preview 与文件验收。其他 provider 维持首图探测策略。
+
 <a id="royalsocietypublishing"></a>
+
 ### Royal Society Publishing
 
 - routing: 通过 `10.1098/` DOI prefix、`royalsocietypublishing.org` domain 和 Royal Society publisher alias 命中。
@@ -1054,6 +1060,8 @@ Camoufox 使用自身生成的 UA；direct HTTP 的可选覆盖见
 
 <a id="annualreviews"></a>
 ### Annual Reviews
+
+- 同次正文、引用与正文资产抽取复用已清理的正文 HTML，资产阶段不再触发第二轮完整清理。共享 availability 清理中每条删除选择器只扫描一次，后续节点遍历只做本地分类，保持原删除顺序和独立 DOM。
 
 - routing: 通过 `10.1146/` DOI prefix、`annualreviews.org` / `www.annualreviews.org` domain 和 Annual Reviews publisher alias 命中；Knowable Magazine、issue page 和非 article landing page 不作为该 provider 的成功全文路线。
 - waterfall: selected browser 渲染 `/content/journals/{doi}` 或 `/doi/{doi}` landing/full-text HTML，并要求 `#html_fulltext` 或 `#itemFullTextId` 填充；HTML 不足时使用 Crossref / landing PDF URL 或 `/doi/pdf/{doi}` 执行 browser-seeded PDF fallback；仍失败时进入 provider-managed `abstract_only`，最后交给 metadata-only fallback。
@@ -1067,7 +1075,7 @@ Camoufox 使用自身生成的 UA；direct HTTP 的可选覆盖见
 
 - routing: 通过 `10.1080/` DOI prefix、`tandfonline.com` domain suffix，以及 Taylor & Francis / Informa UK Limited publisher alias 命中；`taylorfrancis.com` 图书站不会仅凭相似名称误路由。
 - waterfall: Camoufox selected-browser 依次尝试同站 landing、`/doi/full/{doi}`、`/doi/abs/{doi}` 与 `/doi/{doi}`；完整正文不可用时尝试 browser-seeded `/doi/epdf/{doi}` / `/doi/pdf/{doi}`，再进入 provider-managed `abstract_only`，最后 metadata fallback。challenge、登录或购买页面没有正文时 fail closed；已经稳定出现实质正文时，页面中残留的 Cloudflare script 不单独否定正文。
-- table rendering: T&F 动态 table viewer 不把数据直接放在初始 DOM。正文 readiness 通过后，provider hook 将当前文章页明确给出的 `/action/downloadTable?...downloadType=CSV` 同源链接按每批 24 表处理，批内固定并发 4、每表 2 秒，并持续到全部已发现表完成或页面准备总 deadline 到期；结果按输入顺序注入 DOM。失败表继续分批读取页面已加载的 `tandf.tfviewerdata.tables` 同页 payload，不产生跨站请求。deadline 中断会标记 `timed_out/truncated` 并记录未完成数；两条路径都保留每表字符、1000 行和 100 列上限。离线 replay 会复用捕获页中的全部同页 payload 恢复 `rowspan` / `colspan` 与表格脚注，再交给共享表格归一化器生成多级 Markdown 表头。失败只写 trace，不尝试绕过访问控制。
+- table rendering: T&F 动态 table viewer 不把数据直接放在初始 DOM。正文 readiness 通过后，provider hook 将当前文章页明确给出的 `/action/downloadTable?...downloadType=CSV` 同源链接按每批 24 表处理，批内固定并发 4、每表 2 秒，并持续到全部已发现表完成或页面准备总 deadline 到期；控件属性每批一次读取，结果按输入顺序每批一次注入 DOM，保留逐项失败统计。失败表继续分批读取页面已加载的 `tandf.tfviewerdata.tables` 同页 payload，不产生跨站请求。deadline 中断会标记 `timed_out/truncated` 并记录未完成数；两条路径都保留每表字符、1000 行和 100 列上限。离线 replay 会复用捕获页中的全部同页 payload 恢复 `rowspan` / `colspan` 与表格脚注，再交给共享表格归一化器生成多级 Markdown 表头。失败只写 trace，不尝试绕过访问控制。
 - asset_profile: 默认 `body` 保留并可下载正文 figures；文章正文范围内由 `tandfonline.com/cms/asset/` 提供的官方 figure rendition 明确标记为 accepted preview，使 500×175 这类真实宽图不因共享宽高阈值误报保真度降级；`all` 额外接受当前文章范围内的官方 `/action/downloadSupplement` 附件。共享下载器支持 T&F 常见的 DOC/DOCX supplementary；`none` 不下载资产。figure replay 基线提交 9 张经共享 direct-first/browser recovery 下载的真实 JPEG，并把正文图片改写为 fixture 内本地路径。PDF fallback 在 `body/all` 且允许落盘时继续复用共享 PDF 图片提取。
 - extraction: provider-owned cleanup 保留多语言摘要、正文层级、MathML 公式、hydrated Markdown tables、figure captions、Supplemental material、Funding、Additional information / Notes on contributors 和编号 references，移除 article tools、metrics、related-content、modal/viewer 与 citation chrome。当前文章 `#infos-holder` 中位于正文容器外的 funding statement 与 contributor biographies 会并回正文；贡献者姓名以加粗标签保留，使 biography 归属 `Notes on contributors`，而不被通用 section parser 拆成孤立的空父标题。对源页中误标为 inline 的复杂 `mtable` 公式以及重复/缺失的 MathML 闭合符，provider hook 会先做有界结构修复，再复用共享 MathML→LaTeX 转换器，避免矩阵退化为数字串或粘连后续正文；同一 prose 文本节点中完全相同且紧邻的长句会去重，不做近似文本改写。
 - formula rendering: HTML 公式分类由共享 `formula_rules.py` 按完整 class token、语义属性及最近公式容器判断；明确的行内标记优先于外层块容器，公式交叉引用保留原文文字。Wiley 的带编号 `div.inline-equation` 在 provider hook 中映射为块公式。T&F 只删除与公式引用 `data-rid` 匹配且紧邻引用的隐藏预览，保留唯一的隐藏数学表示；`.disp_formula_label_div` 映射为 `Equation n.`，布局表格中的字母子项合并为加粗标题。转换时记录公式缺失和图片/文本回退，并经现有 `semantic_losses` 传入统一验收。旧修订 sidecar 按既有失配规则重新提取，7.0 缓存升级统一见上文下载行为。

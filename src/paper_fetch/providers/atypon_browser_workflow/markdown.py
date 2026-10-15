@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import asdict
+import copy
 
 from ...models import SemanticLosses
 from typing import Any
@@ -71,7 +72,8 @@ def extract_browser_workflow_markdown(
     clean_container(
         container, publisher, drop_profile=HTML_CONTAINER_DROP_BROWSER_WORKFLOW
     )
-    availability_container_html = str(container)
+    availability_dom = BeautifulSoup("", choose_parser())
+    availability_dom.append(copy.deepcopy(container))
     from ...extraction.html.assets import extract_figure_assets
 
     profile = _publisher_profile(publisher)
@@ -139,7 +141,7 @@ def extract_browser_workflow_markdown(
         markdown,
         quality_metadata,
         html_text=html_text,
-        structure_html_text=availability_container_html,
+        structure_dom=availability_dom,
         title=title,
         final_url=source_url,
         container_tag=container.name,
@@ -201,23 +203,7 @@ def _preferred_title_from_metadata(
 
 
 def _clone_container(container: Tag) -> Tag:
-    clone_soup = BeautifulSoup(
-        f'<div data-paper-fetch-clone-root="1">{container}</div>',
-        choose_parser(),
-    )
-    clone_root = clone_soup.select_one('[data-paper-fetch-clone-root="1"]')
-    if not isinstance(clone_root, Tag):
-        raise HtmlExtractionFailure(
-            "article_container_clone_failed",
-            "Could not prepare an isolated article container for extraction.",
-        )
-    for child in clone_root.children:
-        if isinstance(child, Tag):
-            return child
-    raise HtmlExtractionFailure(
-        "article_container_clone_failed",
-        "Could not prepare an isolated article container for extraction.",
-    )
+    return copy.deepcopy(container)
 
 
 def _title_is_doi(title: str | None, metadata: Mapping[str, Any]) -> bool:

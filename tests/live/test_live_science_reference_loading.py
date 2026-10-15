@@ -4,13 +4,15 @@ from functools import wraps
 from dataclasses import replace
 import json
 import os
+import time
 from pathlib import Path
 
 import pytest
 
 from paper_fetch.browser_preflight import static_browser_capabilities
 from paper_fetch.config import BROWSER_HEADLESS_ENV_VAR
-from paper_fetch.http import redact_text_for_diagnostics
+from paper_fetch.logging_utils import redact_log_value
+from paper_fetch.page_diagnostics import sanitize_page_html
 from paper_fetch.providers import browser_runtime
 from paper_fetch.providers.science import ScienceClient
 from paper_fetch.runtime import RuntimeContext
@@ -24,8 +26,9 @@ DOI = "10.1126/science.ady3136"
 
 
 @pytest.mark.parametrize("mode", ["headless", "headed"])
+@pytest.mark.parametrize("attempt", [1, 2, 3])
 def test_science_complete_references_and_body_images(
-    monkeypatch, record_property, mode
+    monkeypatch, record_property, mode, attempt
 ):
     if os.environ.get("PAPER_FETCH_RUN_LIVE") != "1":
         pytest.skip("Set PAPER_FETCH_RUN_LIVE=1 for live Science acceptance.")
@@ -37,14 +40,13 @@ def test_science_complete_references_and_body_images(
             )
         )
         / mode
+        / f"attempt-{attempt}"
     )
     root.mkdir(parents=True, exist_ok=True)
 
     def save(name, payload):
         (root / name).write_text(
-            redact_text_for_diagnostics(
-                json.dumps(payload, ensure_ascii=False, indent=2)
-            ),
+            json.dumps(redact_log_value(payload), ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
 
@@ -62,6 +64,8 @@ def test_science_complete_references_and_body_images(
             raise
         else:
             browser_traces.append(dict(result.diagnostics or {}))
+            sanitized, _ = sanitize_page_html(result.html)
+            (root / "page-sanitized.html").write_text(sanitized, encoding="utf-8")
             return result
         finally:
             save("browser-trace.json", browser_traces)
@@ -75,6 +79,8 @@ def test_science_complete_references_and_body_images(
 
     monkeypatch.setattr(ScienceClient, "__init__", observed_init)
     context = RuntimeContext(env=env, download_dir=root / "paper", artifact_mode="all")
+    started_at = time.monotonic()
+    terminal = {"status": "failed", "reason_code": "terminated_before_acceptance"}
     try:
         capabilities = static_browser_capabilities(env, provider="science")
         save("static-capabilities.json", capabilities)
@@ -142,6 +148,23 @@ def test_science_complete_references_and_body_images(
         assert "fulltext:science_html_ok" in article.quality.source_trail
         assert acceptance.overall == "complete", acceptance.to_json()
         assert browser_traces
+        terminal = {"status": "complete", "reason_code": "accepted"}
+    except BaseException as exc:
+        terminal = {
+            "status": "skipped" if isinstance(exc, pytest.skip.Exception) else "failed",
+            "reason_code": getattr(exc, "status", None) or type(exc).__name__,
+        }
+        raise
     finally:
+        save(
+            "terminal.json",
+            {
+                "doi": DOI,
+                "mode": mode,
+                "attempt": attempt,
+                "terminal": terminal,
+                "total_seconds": round(time.monotonic() - started_at, 3),
+            },
+        )
         context.close()
         temporary.cleanup()

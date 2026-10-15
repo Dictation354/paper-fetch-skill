@@ -2057,6 +2057,26 @@ def _asset_items_for_kind(
     return items
 
 
+def asset_work_key(kind: AssetDownloadKind, asset: Mapping[str, Any]) -> str:
+    """Stable logical-file admission key, shared with bounded provider schedulers."""
+    return "|".join(
+        (
+            kind.name,
+            normalize_text(str(asset.get("source_ref") or "")),
+            normalize_text(
+                str(
+                    asset.get("original_url")
+                    or asset.get("url")
+                    or asset.get("link")
+                    or asset.get("filename_hint")
+                    or ""
+                )
+            ),
+            normalize_text(str(asset.get("heading") or "")),
+        )
+    )
+
+
 def download_assets(
     kind: AssetDownloadKind,
     transport: HttpTransport,
@@ -2137,25 +2157,7 @@ def download_assets(
     )
     if artifact_store is None and runtime_context is not None:
         artifact_store = getattr(runtime_context, "artifact_store", None)
-    work_keys = [
-        "|".join(
-            (
-                kind.name,
-                normalize_text(str(asset.get("source_ref") or "")),
-                normalize_text(
-                    str(
-                        asset.get("original_url")
-                        or asset.get("url")
-                        or asset.get("link")
-                        or asset.get("filename_hint")
-                        or ""
-                    )
-                ),
-                normalize_text(str(asset.get("heading") or "")),
-            )
-        )
-        for asset in asset_items
-    ]
+    work_keys = [asset_work_key(kind, asset) for asset in asset_items]
     admitted = active_budget.admit_work(work_keys)
     rejected_failures = [
         {

@@ -576,6 +576,11 @@ class HttpTransportCacheTests(unittest.TestCase):
                 "url": "https://example.test/article",
                 "status": "attempt",
                 "elapsed_ms": 0.0,
+                "rate_limit_wait_ms": next(
+                    payload["rate_limit_wait_ms"]
+                    for payload in payloads
+                    if payload.get("event") == "http_request_start"
+                ),
                 "attempt": 1,
             },
             payloads,

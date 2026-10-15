@@ -617,7 +617,9 @@ def test_payload_html_cache_reuses_inputs_but_checks_new_diagnostics():
     )
     context = RuntimeContext(env={})
     with mock.patch.object(
-        access_boundary, "html_paywall_diagnostics", wraps=html_paywall_diagnostics
+        access_boundary,
+        "_html_paywall_diagnostics",
+        wraps=access_boundary._html_paywall_diagnostics,
     ) as detect:
         for _ in range(3):
             access_boundary.check_payload_paywall(
@@ -632,7 +634,9 @@ def test_payload_html_cache_reuses_inputs_but_checks_new_diagnostics():
                 payload, {"doi": DOI}, context=context
             )
         assert confirmed_paywall(exc.value)
-        assert detect.call_count == 1
+        # Constructing fresh diagnostic evidence performs one additional parse;
+        # checking unchanged payload HTML still reuses the cached result.
+        assert detect.call_count == 2
 
 
 @pytest.mark.parametrize(

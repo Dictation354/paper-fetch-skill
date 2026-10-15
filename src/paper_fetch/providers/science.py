@@ -85,6 +85,7 @@ SCIENCE_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     catalog=_PROVIDER_SPEC,
     fallback_author_extractor=_science_html.extract_authors,
     policy=browser_workflow.BrowserWorkflowPolicy(
+        fast_html_attempt=False,
         blocked_resource_types=("image", "font", "media"),
     ),
 )

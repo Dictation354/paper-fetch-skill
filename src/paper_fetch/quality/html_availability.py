@@ -5,6 +5,7 @@ from __future__ import annotations
 from .access_boundary import CONFIRMED_PAYWALL, html_paywall_diagnostics
 
 import re
+import copy
 from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 from collections.abc import Callable, Mapping
@@ -221,6 +222,7 @@ def _extract_article_type(
     *,
     provider: str | None = None,
     html_text: str | None = None,
+    soup: BeautifulSoup | None = None,
 ) -> str | None:
     del provider
     metadata_map = dict(metadata or {})
@@ -228,9 +230,10 @@ def _extract_article_type(
         value = normalize_text(metadata_map.get(key))
         if value:
             return value
-    if not html_text:
-        return None
-    soup = BeautifulSoup(html_text, choose_parser())
+    if soup is None:
+        if not html_text:
+            return None
+        soup = BeautifulSoup(html_text, choose_parser())
     for selector in (
         "meta[name='citation_article_type']",
         "meta[property='article:section']",
@@ -609,22 +612,7 @@ def should_drop_node(
     )
     if decision.action == "drop":
         return True
-    try:
-        return any(
-            classify_availability_node(
-                node,
-                rules,
-                identity=identity,
-                text=text,
-                matched_selector=selector,
-                is_mathml_script=_is_mathml_script(node),
-            ).action
-            == "drop"
-            for selector in rules.remove_selectors
-            if node.select_one(selector) is node
-        )
-    except Exception:
-        return False
+    return False
 
 
 def _is_figure_media_node(node: Tag) -> bool:
@@ -861,13 +849,30 @@ def _analyze_html_structure(
     metadata: Mapping[str, Any] | None,
     final_url: str | None,
 ) -> tuple[StructuredBodyAnalysis, HtmlContainerEvidence | None, int | None]:
-    analysis = StructuredBodyAnalysis(
-        narrative_article_type=_is_narrative_article_type(
-            _extract_article_type(metadata, provider=provider, html_text=html_text)
-        )
+    return _analyze_html_structure_dom(
+        BeautifulSoup(html_text, choose_parser()),
+        provider=provider,
+        title=title,
+        metadata=metadata,
+        final_url=final_url,
     )
 
-    soup = BeautifulSoup(html_text, choose_parser())
+
+def _analyze_html_structure_dom(
+    soup: BeautifulSoup,
+    *,
+    provider: str | None,
+    title: str | None,
+    metadata: Mapping[str, Any] | None,
+    final_url: str | None,
+) -> tuple[StructuredBodyAnalysis, HtmlContainerEvidence | None, int | None]:
+    """Analyze an independent DOM with availability selection and cleanup."""
+    analysis = StructuredBodyAnalysis(
+        narrative_article_type=_is_narrative_article_type(
+            _extract_article_type(metadata, provider=provider, soup=soup)
+        )
+    )
+    page_text = normalize_text(" ".join(soup.stripped_strings))
     container = select_best_container(soup, provider)
     if container is None:
         _apply_availability_override_policy(
@@ -888,7 +893,6 @@ def _analyze_html_structure(
     )
     analysis.explicit_body_container = analysis.substantive_body_container
     container_text = normalize_text(container.get_text(" ", strip=True))
-    page_text = _normalized_page_text(html_text)
     analysis.page_has_paywall_text = contains_access_gate_text(page_text)
     analysis.container_has_paywall_text = contains_access_gate_text(container_text)
 
@@ -1206,11 +1210,13 @@ def _dom_access_hints(
     structure: StructuredBodyAnalysis,
     final_url: str | None,
     metadata: Mapping[str, Any] | None,
+    soup: BeautifulSoup | None = None,
 ) -> tuple[list[str], list[str], list[str]]:
     hard_negative_signals: list[str] = []
     abstract_only_hints: list[str] = []
     blocking_fallback_signals: list[str] = []
-    soup = BeautifulSoup(html_text, choose_parser())
+    if soup is None:
+        soup = BeautifulSoup(html_text, choose_parser())
     if soup.select_one(".accessDenialWidget"):
         hard_negative_signals.append(PUBLISHER_PAYWALL)
         blocking_fallback_signals.append(PUBLISHER_PAYWALL)
@@ -1283,8 +1289,11 @@ def _dom_access_hints(
     )
 
 
-def _count_figures_from_html(html_text: str) -> int:
-    soup = BeautifulSoup(html_text, choose_parser())
+def _count_figures_from_html(
+    html_text: str, *, soup: BeautifulSoup | None = None
+) -> int:
+    if soup is None:
+        soup = BeautifulSoup(html_text, choose_parser())
     figure_count = len(soup.find_all("figure"))
     if figure_count:
         return figure_count
@@ -1298,6 +1307,7 @@ def assess_html_fulltext_availability(
     provider: str | None = None,
     html_text: str | None = None,
     structure_html_text: str | None = None,
+    structure_dom: BeautifulSoup | None = None,
     title: str | None = None,
     response_status: int | None = None,
     requested_url: str | None = None,
@@ -1306,6 +1316,7 @@ def assess_html_fulltext_availability(
     container_text_length: int | None = None,
     container_evidence: HtmlContainerEvidence | None = None,
     section_hints: Any = None,
+    context: Any = None,
 ) -> FulltextAvailabilityDiagnostics:
     metadata_map = dict(metadata or {})
     boundary = html_paywall_diagnostics(
@@ -1313,11 +1324,13 @@ def assess_html_fulltext_availability(
         metadata=metadata_map,
         source_url=final_url or requested_url or "",
         provider=provider,
+        context=context,
     )
     normalized_title = normalize_text(title or metadata_map.get("title") or "") or None
+    page_soup = BeautifulSoup(html_text, choose_parser()) if html_text else None
     page_text = (
-        _normalized_page_text(html_text or "")
-        if html_text
+        normalize_text(" ".join(page_soup.stripped_strings))
+        if page_soup is not None
         else normalize_text(markdown_text)
     )
     hard_negative_signals = _detect_html_hard_negative_signals_impl(
@@ -1334,11 +1347,15 @@ def assess_html_fulltext_availability(
     resolved_container_tag = container_tag
     resolved_container_text_length = container_text_length
     resolved_container_evidence = container_evidence
-    analyzed_html_text = structure_html_text or html_text
+    analyzed_html_text = structure_dom is not None or structure_html_text or html_text
     if analyzed_html_text:
         structure, inferred_container_evidence, inferred_container_text_length = (
-            _analyze_html_structure(
-                analyzed_html_text,
+            _analyze_html_structure_dom(
+                copy.deepcopy(structure_dom)
+                if structure_dom is not None
+                else BeautifulSoup(structure_html_text, choose_parser())
+                if structure_html_text
+                else copy.deepcopy(page_soup),
                 provider=provider,
                 title=normalized_title,
                 metadata=metadata_map,
@@ -1408,7 +1425,9 @@ def assess_html_fulltext_availability(
     soft_positive_signals: list[str] = []
     abstract_only_hints: list[str] = []
     blocking_fallback_signals: list[str] = list(hard_negative_signals)
-    figure_count = _count_figures_from_html(html_text or "") if html_text else 0
+    figure_count = (
+        _count_figures_from_html(html_text or "", soup=page_soup) if html_text else 0
+    )
     if body_ok:
         strong_positive_signals.append(BODY_SUFFICIENT)
     if structure.explicit_body_container:
@@ -1451,6 +1470,7 @@ def assess_html_fulltext_availability(
             structure=structure,
             final_url=final_url,
             metadata=metadata_map,
+            soup=page_soup,
         )
         hard_negative_signals.extend(dom_hard_negative_signals)
         hard_negative_signals.extend(structure.provider_hard_negative_signals)

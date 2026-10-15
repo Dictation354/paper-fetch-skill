@@ -18,6 +18,8 @@ from typing import TYPE_CHECKING, Any
 from bs4 import BeautifulSoup
 
 from ..extraction.html.signals import (
+    HtmlExtractionFailure,
+    html_failure_message,
     detect_html_block,
     summarize_html,
     summarize_visible_html,
@@ -940,10 +942,14 @@ def _wait_for_browser_html_readiness(
             if readiness_timeout_seconds is not None
             else min(max(float(wait_seconds), 20.0), remaining_timeout_seconds)
         )
+        readiness_kwargs: dict[str, Any] = {}
+        if runtime_context is not None:
+            readiness_kwargs["cancel_check"] = runtime_context.raise_if_cancelled
         body_readiness = wait_for_atypon_body_dom_ready(
             page,
             publisher,
             timeout_seconds=max(0.0, body_timeout_seconds),
+            **readiness_kwargs,
         )
         candidate_trace["dom_readiness_seconds"] = round(
             time.monotonic() - readiness_started, 3
@@ -965,11 +971,20 @@ def _wait_for_browser_html_readiness(
         candidate_trace["dom_readiness_fingerprint_present"] = bool(
             normalize_text(str(getattr(body_readiness, "fingerprint", "") or ""))
         )
+        blocking_reason = getattr(body_readiness, "blocking_reason", None)
         candidate_trace["dom_readiness_result"] = (
             "ready"
             if body_readiness.ready
-            else ("timeout" if body_readiness.attempted else "unsupported")
+            else (
+                "blocked"
+                if blocking_reason
+                else "timeout"
+                if body_readiness.attempted
+                else "unsupported"
+            )
         )
+        if blocking_reason:
+            candidate_trace["dom_readiness_blocking_reason"] = blocking_reason
     elif normalized_selector and wait_seconds > 0:
         if runtime_context is not None:
             runtime_context.raise_if_cancelled()
@@ -1070,15 +1085,21 @@ def _prepare_provider_browser_page(
     publisher: str,
     timeout_ms: int,
     candidate_trace: dict[str, Any],
+    runtime_context: RuntimeContext | None = None,
 ) -> None:
     prepare_browser_page = publisher_profile(publisher).prepare_browser_page
     if prepare_browser_page is None:
         return
     preparation_started = time.monotonic()
     try:
-        preparation = prepare_browser_page(page, timeout_ms=timeout_ms)
+        kwargs: dict[str, Any] = {}
+        if publisher == "science" and runtime_context is not None:
+            kwargs["cancel_check"] = runtime_context.raise_if_cancelled
+        preparation = prepare_browser_page(page, timeout_ms=timeout_ms, **kwargs)
         if isinstance(preparation, Mapping):
             candidate_trace["provider_page_preparation"] = dict(preparation)
+    except RequestCancelledError:
+        raise
     except Exception as exc:
         propagate_paywall(exc)
         candidate_trace["provider_page_preparation"] = {
@@ -1492,6 +1513,7 @@ def _wiley_http_access_status_review(
     html_text: str,
     title: str,
     body_ready: bool,
+    runtime_context: RuntimeContext | None = None,
 ) -> dict[str, Any] | None:
     if (
         normalize_text(publisher).lower() != "wiley"
@@ -1516,6 +1538,7 @@ def _wiley_http_access_status_review(
         response_status=None,
         requested_url=requested_url,
         final_url=final_url,
+        context=runtime_context,
     )
     blocking_signals = list(
         dict.fromkeys(
@@ -2019,12 +2042,14 @@ def fetch_html_with_playwright(
                         metadata={"doi": config.doi},
                         source_url=str(getattr(page, "url", "") or normalized_url),
                         provider=publisher,
+                        context=runtime_context,
                     )
                 _prepare_provider_browser_page(
                     page,
                     publisher=publisher,
                     timeout_ms=remaining_timeout_ms(),
                     candidate_trace=candidate_trace,
+                    runtime_context=runtime_context,
                 )
                 final_url = (
                     normalize_text(str(getattr(page, "url", "") or ""))
@@ -2165,6 +2190,7 @@ def fetch_html_with_playwright(
                     metadata={"doi": config.doi},
                     source_url=final_url,
                     provider=publisher,
+                    context=runtime_context,
                 )
             required_selector_ready = bool(
                 readiness.require_selector
@@ -2191,6 +2217,7 @@ def fetch_html_with_playwright(
                 html_text=html,
                 title=title or "",
                 body_ready=stable_wiley_body_ready,
+                runtime_context=runtime_context,
             )
             wiley_candidate_confirmed = _record_wiley_http_access_status_review(
                 candidate_trace,
@@ -2205,6 +2232,9 @@ def fetch_html_with_playwright(
                 html_text="" if required_selector_ready else html,
                 response_headers={} if required_selector_ready else headers,
             )
+            if candidate_trace.get("dom_readiness_blocking_reason"):
+                reason = candidate_trace["dom_readiness_blocking_reason"]
+                detected = HtmlExtractionFailure(reason, html_failure_message(reason))
             if detected is not None and not return_image_payload:
                 _reject_wiley_http_access_status_review(
                     http_access_status_review,

@@ -824,6 +824,7 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         try:
             with host_semaphore if host_semaphore is not None else nullcontext():
                 while True:
+                    rate_wait_started = time.monotonic()
                     self._wait_for_rate_slot(
                         cooldown_key,
                         policy.minimum_interval_seconds,
@@ -832,6 +833,19 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                     self._check_cancelled()
                     attempt += 1
                     request_started_at = time.monotonic()
+                    emit_structured_log(
+                        logger,
+                        logging.DEBUG,
+                        "http_request_start",
+                        method=method.upper(),
+                        url=redact_url_for_cache(url),
+                        status="attempt",
+                        elapsed_ms=0.0,
+                        attempt=attempt,
+                        rate_limit_wait_ms=round(
+                            (request_started_at - rate_wait_started) * 1000, 3
+                        ),
+                    )
                     try:
                         response = self._perform_request(
                             prepared, timeout=effective_timeout
@@ -1144,6 +1158,7 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         cooldown_key = self._cooldown_key_for_url(url, policy.cooldown_scope)
         with host_semaphore if host_semaphore is not None else nullcontext():
             while True:
+                rate_wait_started = time.monotonic()
                 self._wait_for_rate_slot(
                     cooldown_key,
                     policy.minimum_interval_seconds,
@@ -1161,6 +1176,9 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
                     url=redacted_url,
                     status="attempt",
                     elapsed_ms=0.0,
+                    rate_limit_wait_ms=round(
+                        (request_started_at - rate_wait_started) * 1000, 3
+                    ),
                     attempt=attempt,
                 )
                 request = _PreparedRequest(

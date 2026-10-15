@@ -1072,7 +1072,14 @@ def _collect_tandf_csv_table_entries(
     result: dict[str, Any],
 ) -> list[dict[str, str]]:
     entries: list[dict[str, str]] = []
-    for index in range(start, stop):
+    controls = links.evaluate_all(
+        """(nodes, bounds) => nodes.slice(bounds.start, bounds.stop).map(node => ({
+            controlsId: node.id || (node.parentElement && node.parentElement.id) || '',
+            href: node.getAttribute('href') || ''
+        }))""",
+        {"start": start, "stop": stop},
+    )
+    for index, control in enumerate(controls, start=start):
         if deadline is not None and time.monotonic() >= deadline:
             result["timed_out"] = True
             result["truncated"] = True
@@ -1080,16 +1087,10 @@ def _collect_tandf_csv_table_entries(
                 stop - index
             )
             break
-        link = links.nth(index)
-        controls_id = normalize_text(
-            str(
-                link.get_attribute("id")
-                or link.evaluate("node => node.parentElement.id")
-                or ""
-            )
+        table_id = normalize_text(str(control.get("controlsId") or "")).removesuffix(
+            "-table-wrapper"
         )
-        table_id = controls_id.removesuffix("-table-wrapper")
-        href = normalize_text(str(link.get_attribute("href") or ""))
+        href = normalize_text(str(control.get("href") or ""))
         if not re.fullmatch(r"[A-Za-z0-9_-]+", table_id):
             result["table_failures"] += 1
             continue
@@ -1169,6 +1170,41 @@ def _tandf_csv_rows(response: Mapping[str, Any]) -> list[list[str]]:
     return rows
 
 
+_TANDF_INJECT_TABLE_BATCH_SCRIPT = (
+    """entries => {
+    const inject = ("""
+    + _TANDF_INJECT_TABLE_SCRIPT
+    + """);
+    return entries.map(entry => { try { return Boolean(inject(entry)); } catch (error) { return false; } });
+}"""
+)
+
+
+def _apply_tandf_table_batch(
+    page: Any,
+    payloads: list[dict[str, Any]],
+    result: dict[str, Any],
+    counter: str,
+) -> set[str]:
+    if not payloads:
+        return set()
+    try:
+        applied = page.evaluate(_TANDF_INJECT_TABLE_BATCH_SCRIPT, payloads)
+    except Exception:
+        applied = []
+    if not isinstance(applied, list):
+        applied = []
+    hydrated: set[str] = set()
+    for index, payload in enumerate(payloads):
+        if index < len(applied) and applied[index]:
+            result["tables_hydrated"] += 1
+            result[counter] += 1
+            hydrated.add(payload["tableId"])
+        else:
+            result["table_failures"] += 1
+    return hydrated
+
+
 def _hydrate_tandf_csv_table_batch(
     page: Any,
     entries: list[dict[str, str]],
@@ -1176,7 +1212,7 @@ def _hydrate_tandf_csv_table_batch(
     deadline: float | None,
     result: dict[str, Any],
 ) -> set[str]:
-    hydrated_table_ids: set[str] = set()
+    payloads: list[dict[str, Any]] = []
     for index, entry in enumerate(entries):
         if deadline is not None and time.monotonic() >= deadline:
             result["timed_out"] = True
@@ -1186,33 +1222,26 @@ def _hydrate_tandf_csv_table_batch(
             )
             break
         response = batch_results[index] if index < len(batch_results) else None
-        table_id = entry["tableId"]
         try:
             if not isinstance(response, Mapping):
                 raise ValueError("T&F table CSV request was not successful")
-            rows = _tandf_csv_rows(response)
-            hydrated = bool(
-                page.evaluate(
-                    _TANDF_INJECT_TABLE_SCRIPT,
-                    {
-                        "tableId": table_id,
-                        "caption": _clean_tandf_accessible_control_text(
-                            response.get("caption")
-                        ),
-                        "rows": rows,
-                    },
-                )
+            payloads.append(
+                {
+                    "tableId": entry["tableId"],
+                    "caption": _clean_tandf_accessible_control_text(
+                        response.get("caption")
+                    ),
+                    "rows": _tandf_csv_rows(response),
+                }
             )
         except Exception:
             result["table_failures"] += 1
-            continue
-        if not hydrated:
-            result["table_failures"] += 1
-            continue
-        result["tables_hydrated"] += 1
-        result["csv_tables_hydrated"] += 1
-        hydrated_table_ids.add(table_id)
-    return hydrated_table_ids
+    if deadline is not None and time.monotonic() >= deadline:
+        result["timed_out"] = True
+        result["table_failures"] += len(payloads)
+        result["tables_unfinished"] = result.get("tables_unfinished", 0) + len(payloads)
+        return set()
+    return _apply_tandf_table_batch(page, payloads, result, "csv_tables_hydrated")
 
 
 def _tandf_embedded_rows(value: Any) -> list[list[str]]:
@@ -1271,6 +1300,7 @@ def _hydrate_tandf_embedded_tables_from_page(
         entries = embedded.get("tables")
         if not isinstance(entries, list):
             return
+        payloads: list[dict[str, Any]] = []
         for entry in entries:
             if not isinstance(entry, Mapping):
                 result["table_failures"] += 1
@@ -1282,27 +1312,25 @@ def _hydrate_tandf_embedded_tables_from_page(
             if not re.fullmatch(r"[A-Za-z0-9_-]+", table_id) or not rows:
                 result["table_failures"] += 1
                 continue
-            try:
-                hydrated = bool(
-                    page.evaluate(
-                        _TANDF_INJECT_TABLE_SCRIPT,
-                        {
-                            "tableId": table_id,
-                            "caption": _clean_tandf_accessible_control_text(
-                                entry.get("caption")
-                            ),
-                            "rows": rows,
-                        },
-                    )
-                )
-            except Exception:
-                hydrated = False
-            if hydrated:
-                result["tables_hydrated"] += 1
-                result["embedded_tables_hydrated"] += 1
-                hydrated_table_ids.add(table_id)
-            else:
-                result["table_failures"] += 1
+            payloads.append(
+                {
+                    "tableId": table_id,
+                    "caption": _clean_tandf_accessible_control_text(
+                        entry.get("caption")
+                    ),
+                    "rows": rows,
+                }
+            )
+        if deadline is not None and time.monotonic() >= deadline:
+            result["timed_out"] = True
+            result["truncated"] = True
+            result["tables_unfinished"] = result.get("tables_unfinished", 0) + len(
+                payloads
+            )
+            return
+        hydrated_table_ids.update(
+            _apply_tandf_table_batch(page, payloads, result, "embedded_tables_hydrated")
+        )
         start += _TANDF_TABLE_BATCH_SIZE
 
 

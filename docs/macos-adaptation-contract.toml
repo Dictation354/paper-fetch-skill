@@ -33,6 +33,14 @@ reject_symlinks = true
 validated_purge_paths = true
 
 [browser]
+# Science 单次正常 HTML attempt，引用与可见控件每轮合并读取；按候选列表中实际 ID
+# 的可抽取非空文本等待，最长 10 秒并受请求期限/取消约束。IEEE 原图索引仅在同一
+# 文档复用，主框架导航即失效；T&F 表格批量读取/注入保持原并发、预算及逐项失败。
+# 这些优化仍在所属线程使用既有浏览器执行面，Linux 回放不替代原生 macOS gate。
+# AIP governor 终态验证页仅在 URL 与 Validate User/不是机器人证据同时成立时结束正文等待；
+# headed/headless 规则相同，仍保存挑战诊断。IOP 仅并发 HTTP（最多 2），浏览器恢复与清理
+# 留在所属线程；恢复成功后同 host 待处理资产切换已有路线。Linux portable/浏览器证据
+# 不替代 macos-15 原生 gate，不新增浏览器执行面。
 # Playwright >=1.61 要求 Camoufox browser >=beta.30；版本兼容性由 Camoufox
 # Python 包判定，旧 pin 不能绕过检查。verify.yml 准备锁定包配对的 browser 和 fpgen 模型，
 # 默认配对以同一版本进行只读探测及准备；缺失时不回退到旧 active browser。

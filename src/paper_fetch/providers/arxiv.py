@@ -10,6 +10,7 @@ from typing import Any
 from collections.abc import Mapping, Sequence
 import urllib.parse
 import re
+import time
 
 from ..arxiv_id import (
     arxiv_id_from_doi,
@@ -29,6 +30,7 @@ from ..http import (
     HttpTransport,
     PDF_MIME_TYPE,
     RequestFailure,
+    RequestCancelledError,
     classify_network_error,
 )
 from ..metadata.types import ProviderMetadata
@@ -86,7 +88,7 @@ from ._waterfall import (
     ProviderWaterfallState,
     run_provider_waterfall,
 )
-from ..reason_codes import ERROR, NO_RESULT, NOT_SUPPORTED, OK, PDF_FALLBACK
+from ..reason_codes import ERROR, NO_ACCESS, NO_RESULT, NOT_SUPPORTED, OK, PDF_FALLBACK
 from .base import (
     ProviderArtifacts,
     ProviderClient,
@@ -170,7 +172,9 @@ class ArxivClient(ProviderClient):
     def _pdf_headers(self, *, referer: str | None = None) -> dict[str, str]:
         return default_pdf_headers(self.user_agent, referer=referer)
 
-    def fetch_metadata(self, query: Mapping[str, str | None]) -> ProviderMetadata:
+    def fetch_metadata(
+        self, query: Mapping[str, str | None], *, _optional_enrichment: bool = False
+    ) -> ProviderMetadata:
         arxiv_id = (
             normalize_arxiv_id(query.get("arxiv_id"))
             or arxiv_id_from_doi(query.get("doi"))
@@ -184,11 +188,32 @@ class ArxivClient(ProviderClient):
             )
         try:
             search = _ArxivSearch(id_list=[arxiv_id], max_results=1)
-            results = list(self.api_client.results(search))
+            results = list(
+                self.api_client.results(search, optional_enrichment=True)
+                if _optional_enrichment
+                and isinstance(self.api_client, _InternalArxivApiClient)
+                else self.api_client.results(search)
+            )
+        except RequestCancelledError:
+            raise
         except ProviderFailure:
             raise
         except Exception as exc:
             propagate_paywall(exc)
+            if (
+                _optional_enrichment
+                and isinstance(exc, RequestFailure)
+                and exc.status_code in {401, 402, 403}
+            ):
+                if exc.status_code == 402:
+                    raise ProviderFailure(
+                        NO_ACCESS,
+                        str(exc),
+                        diagnostics=FailureDiagnostics(
+                            http_status=402, retryable=False
+                        ),
+                    ) from exc
+                raise map_request_failure(exc) from exc
             error_category = classify_network_error(exc)
             raise ProviderFailure(
                 ERROR,
@@ -229,9 +254,13 @@ class ArxivClient(ProviderClient):
         self, arxiv_id: str
     ) -> tuple[ProviderMetadata | None, list[str]]:
         try:
-            return self.fetch_metadata({"arxiv_id": arxiv_id}), []
+            return self.fetch_metadata(
+                {"arxiv_id": arxiv_id}, _optional_enrichment=True
+            ), []
         except ProviderFailure as exc:
             propagate_paywall(exc)
+            if exc.code in {"no_access", "publisher_access_denied"}:
+                raise
             warning = (
                 "arXiv API metadata retrieval failed; using official HTML front matter and derived "
                 f"arXiv URLs from identifier {arxiv_id} ({exc.message})."
@@ -496,7 +525,25 @@ class ArxivClient(ProviderClient):
             )
         if not self.api_enrichment_enabled:
             return payload
+        context.raise_if_cancelled()
+        enrichment_started = time.monotonic()
         api_metadata, metadata_warnings = self._fetch_api_metadata_optional(arxiv_id)
+        context.raise_if_cancelled()
+        payload.content = replace(
+            payload.content,
+            diagnostics={
+                **payload.content.diagnostics,
+                "arxiv_optional_metadata": {
+                    "elapsed_seconds": round(time.monotonic() - enrichment_started, 3),
+                    "io_timeout_seconds": 10,
+                    "request_attempts": 1,
+                    "result": "merged" if api_metadata else "fallback",
+                    "fallback_reason": metadata_warnings[0]
+                    if metadata_warnings
+                    else None,
+                },
+            },
+        )
         return self._payload_with_api_metadata(
             payload,
             derived_metadata=derived_metadata,

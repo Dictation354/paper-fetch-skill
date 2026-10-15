@@ -18,6 +18,7 @@ from paper_fetch.http import (
     diagnostic_url_payload,
     redact_text_for_diagnostics,
 )
+from paper_fetch.logging_utils import redact_log_value
 from paper_fetch.provider_catalog import provider_has_browser_route
 from paper_fetch.publisher_identity import normalize_doi
 from paper_fetch.reason_codes import NO_ACCESS
@@ -32,6 +33,10 @@ from paper_fetch.workflow.acceptance import (
     OverallAcceptanceStatus,
     OutputAcceptanceStatus,
     evaluate_fetch_acceptance,
+)
+from tests.support.live_acceptance import (
+    catalog_acceptance_report,
+    preserve_terminal_record,
 )
 from tests.live._runtime_env import (
     build_isolated_live_env,
@@ -142,37 +147,6 @@ def catalog_live_artifact_root() -> Path:
     return root
 
 
-def _catalog_acceptance_report(
-    records: list[dict[str, object]],
-) -> dict[str, object]:
-    overall = Counter(str(record["acceptance"]["overall"]) for record in records)
-    catalog_providers = [
-        sample.provider for sample in iter_provider_benchmark_samples()
-    ]
-    recorded_providers = {str(record["provider"]) for record in records}
-    unrecorded_providers = [
-        provider for provider in catalog_providers if provider not in recorded_providers
-    ]
-    all_recorded_complete = bool(records) and set(overall) == {"complete"}
-    return {
-        "schema_version": 2,
-        "task": "catalog_body_asset_acceptance",
-        "requested_asset_profile": "body",
-        "summary": {
-            "catalog_provider_count": len(catalog_providers),
-            "recorded_provider_count": len(records),
-            "unrecorded_provider_count": len(unrecorded_providers),
-            "unrecorded_providers": unrecorded_providers,
-            "overall": dict(sorted(overall.items())),
-            "all_recorded_complete": all_recorded_complete,
-            "all_catalog_providers_complete": (
-                all_recorded_complete and not unrecorded_providers
-            ),
-        },
-        "providers": records,
-    }
-
-
 def _browser_runtime_trace(
     diagnostics: Mapping[str, object] | None,
 ) -> dict[str, object]:
@@ -259,9 +233,9 @@ def _asset_performance_summary(article) -> dict[str, object]:
 def catalog_live_report(catalog_live_artifact_root: Path):
     records: list[dict[str, object]] = []
     yield records
-    payload = _catalog_acceptance_report(records)
+    payload = catalog_acceptance_report(records)
     (catalog_live_artifact_root / "live-acceptance.json").write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+        json.dumps(redact_log_value(payload), ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
 
@@ -301,210 +275,255 @@ def test_catalog_provider_sample_live_body_acceptance(
         "asset_paths": [],
     }
     catalog_live_report.append(terminal_record)
-    missing = [
-        key for key in sample.required_env if not catalog_live_env.get(key, "").strip()
-    ]
-    if missing:
-        terminal_record["terminal"] = {
-            "status": "skipped",
-            "reason_code": "missing_required_environment",
-            "missing_names": sorted(missing),
-        }
-        terminal_record["acceptance"] = {
-            "overall": "failed",
-            "reason_code": "missing_required_environment",
-        }
-        terminal_record["performance"] = {
-            "total_seconds": round(time.monotonic() - sample_started_at, 3)
-        }
-        pytest.skip(
-            "Missing required environment variables for live test: "
-            + ", ".join(missing)
-        )
-    preflight_payload = None
-    if provider_has_browser_route(sample.provider):
-        preflight_started_at = time.monotonic()
-        preflight = preflight_selected_browser_or_skip(
-            _PytestSkipper(),
-            provider=sample.provider,
-            env=catalog_live_env,
-            cache=catalog_live_preflight_cache,
-            artifact_root=catalog_live_artifact_root / "preflight",
-            doi=sample.doi,
-            target_url=sample.landing_url,
-            return_terminal_result=True,
-        )
-        preflight_seconds = round(time.monotonic() - preflight_started_at, 3)
-        preflight_trace = _browser_runtime_trace(preflight.diagnostics)
-        record_property("preflight_status", preflight.status)
-        record_property("preflight_reason_code", preflight.reason_code)
-        record_property("preflight_stage", preflight.stage or "")
-        record_property(
-            "preflight_final_url",
-            diagnostic_url_payload(preflight.final_url or "").get("url", ""),
-        )
-        record_property(
-            "preflight_storage_state_path",
-            str(preflight.storage_state_path or ""),
-        )
-        diagnostic_path = str(
-            (preflight.diagnostics or {}).get("diagnostic_path") or ""
-        )
-        record_property("preflight_diagnostic_path", diagnostic_path)
-        record_property("preflight_seconds", preflight_seconds)
-        record_property(
-            "preflight_navigation_count",
-            int(preflight_trace.get("navigation_count") or 0),
-        )
-        preflight_payload = {
-            "status": preflight.status,
-            "reason_code": preflight.reason_code,
-            "stage": preflight.stage,
-            "target": diagnostic_url_payload(preflight.target_url or "") or None,
-            "final": diagnostic_url_payload(preflight.final_url or "") or None,
-            "storage_state_path": str(preflight.storage_state_path or "") or None,
-            "diagnostic_path": diagnostic_path or None,
-            "browser_runtime_trace": preflight_trace,
-        }
-        terminal_record["preflight"] = preflight_payload
-        if preflight.status != "ready":
+    with preserve_terminal_record(
+        terminal_record,
+        catalog_live_report,
+        catalog_live_artifact_root,
+        sample_started_at,
+        record_property,
+    ):
+        missing = [
+            key
+            for key in sample.required_env
+            if not catalog_live_env.get(key, "").strip()
+        ]
+        if missing:
             terminal_record["terminal"] = {
-                "status": (
-                    "skipped"
-                    if preflight.status in {"challenge", "auth_required"}
-                    else "failed"
-                ),
+                "status": "skipped",
+                "reason_code": "missing_required_environment",
+                "missing_names": sorted(missing),
+            }
+            terminal_record["acceptance"] = {
+                "overall": "failed",
+                "reason_code": "missing_required_environment",
+            }
+            terminal_record["performance"] = {
+                "total_seconds": round(time.monotonic() - sample_started_at, 3)
+            }
+            pytest.skip(
+                "Missing required environment variables for live test: "
+                + ", ".join(missing)
+            )
+        preflight_payload = None
+        if provider_has_browser_route(sample.provider):
+            preflight_started_at = time.monotonic()
+            preflight = preflight_selected_browser_or_skip(
+                _PytestSkipper(),
+                provider=sample.provider,
+                env=catalog_live_env,
+                cache=catalog_live_preflight_cache,
+                artifact_root=catalog_live_artifact_root / "preflight",
+                doi=sample.doi,
+                target_url=sample.landing_url,
+                return_terminal_result=True,
+            )
+            preflight_seconds = round(time.monotonic() - preflight_started_at, 3)
+            preflight_trace = _browser_runtime_trace(preflight.diagnostics)
+            record_property("preflight_status", preflight.status)
+            record_property("preflight_reason_code", preflight.reason_code)
+            record_property("preflight_stage", preflight.stage or "")
+            record_property(
+                "preflight_final_url",
+                diagnostic_url_payload(preflight.final_url or "").get("url", ""),
+            )
+            record_property(
+                "preflight_storage_state_path",
+                str(preflight.storage_state_path or ""),
+            )
+            diagnostic_path = str(
+                (preflight.diagnostics or {}).get("diagnostic_path") or ""
+            )
+            record_property("preflight_diagnostic_path", diagnostic_path)
+            record_property("preflight_seconds", preflight_seconds)
+            record_property(
+                "preflight_navigation_count",
+                int(preflight_trace.get("navigation_count") or 0),
+            )
+            preflight_payload = {
+                "status": preflight.status,
                 "reason_code": preflight.reason_code,
                 "stage": preflight.stage,
-                "message": redact_text_for_diagnostics(preflight.message or "")[:1000]
-                or None,
+                "target": diagnostic_url_payload(preflight.target_url or "") or None,
+                "final": diagnostic_url_payload(preflight.final_url or "") or None,
+                "storage_state_path": str(preflight.storage_state_path or "") or None,
+                "diagnostic_path": diagnostic_path or None,
+                "browser_runtime_trace": preflight_trace,
+            }
+            terminal_record["preflight"] = preflight_payload
+            if preflight.status != "ready":
+                terminal_record["terminal"] = {
+                    "status": (
+                        "skipped"
+                        if preflight.status in {"challenge", "auth_required"}
+                        else "failed"
+                    ),
+                    "reason_code": preflight.reason_code,
+                    "stage": preflight.stage,
+                    "message": redact_text_for_diagnostics(preflight.message or "")[
+                        :1000
+                    ]
+                    or None,
+                }
+                terminal_record["performance"] = {
+                    "preflight_seconds": preflight_seconds,
+                    "total_seconds": round(time.monotonic() - sample_started_at, 3),
+                }
+                if preflight.status in {"challenge", "auth_required"}:
+                    pytest.skip(
+                        f"{sample.provider} preflight requires legal access setup "
+                        f"({preflight.reason_code}); next action: paper-fetch auth "
+                        f"{sample.provider}"
+                    )
+                if preflight.status != "cancelled" and (
+                    not diagnostic_path or not Path(diagnostic_path).is_file()
+                ):
+                    pytest.fail(
+                        f"{sample.provider} preflight {preflight.status} did not preserve "
+                        "a readable diagnostic artifact "
+                        f"(code={preflight.reason_code}, stage={preflight.stage})."
+                    )
+                pytest.fail(
+                    f"{sample.provider} preflight failed "
+                    f"({preflight.reason_code}, stage={preflight.stage}, "
+                    f"diagnostic={diagnostic_path}): "
+                    f"{redact_text_for_diagnostics(preflight.message or '')}"
+                )
+
+        fetch_telemetry: dict[str, object] = {}
+        try:
+            envelope = fetch_envelope(
+                sample.doi,
+                transport=HttpTransport(),
+                env=catalog_live_env,
+                download_dir=catalog_live_artifact_root / "providers" / sample.provider,
+                artifact_mode="all",
+                preferred_provider=sample.provider,
+                asset_profile="body",
+                telemetry=fetch_telemetry,
+            )
+        except PaperFetchFailure as exc:
+            terminal_record["terminal"] = {
+                "status": "failed",
+                "reason_code": exc.status,
+                "stage": exc.stage,
+                "message": redact_text_for_diagnostics(exc.reason)[:1000],
             }
             terminal_record["performance"] = {
                 "preflight_seconds": preflight_seconds,
                 "total_seconds": round(time.monotonic() - sample_started_at, 3),
             }
-            if preflight.status in {"challenge", "auth_required"}:
-                pytest.skip(
-                    f"{sample.provider} preflight requires legal access setup "
-                    f"({preflight.reason_code}); next action: paper-fetch auth "
-                    f"{sample.provider}"
-                )
-            if preflight.status != "cancelled" and (
-                not diagnostic_path or not Path(diagnostic_path).is_file()
-            ):
-                pytest.fail(
-                    f"{sample.provider} preflight {preflight.status} did not preserve "
-                    "a readable diagnostic artifact "
-                    f"(code={preflight.reason_code}, stage={preflight.stage})."
-                )
-            pytest.fail(
-                f"{sample.provider} preflight failed "
-                f"({preflight.reason_code}, stage={preflight.stage}, "
-                f"diagnostic={diagnostic_path}): "
-                f"{redact_text_for_diagnostics(preflight.message or '')}"
-            )
-
-    fetch_telemetry: dict[str, object] = {}
-    try:
-        envelope = fetch_envelope(
-            sample.doi,
-            transport=HttpTransport(),
-            env=catalog_live_env,
-            download_dir=catalog_live_artifact_root / "providers" / sample.provider,
-            artifact_mode="all",
-            preferred_provider=sample.provider,
+            terminal_record["source_trail"] = list(exc.source_trail or [])
+            terminal_record["failure_details"] = exc.details
+            _skip_legal_access_boundary(sample.provider, exc)
+            raise
+        assert envelope.article is not None
+        article = envelope.article
+        acceptance = evaluate_fetch_acceptance(
+            envelope,
             asset_profile="body",
-            telemetry=fetch_telemetry,
+            requested_outputs={"article"},
+            expected_doi=sample.doi,
         )
-    except PaperFetchFailure as exc:
-        terminal_record["terminal"] = {
-            "status": "failed",
-            "reason_code": exc.status,
-            "stage": exc.stage,
-            "message": redact_text_for_diagnostics(exc.reason)[:1000],
-        }
-        terminal_record["performance"] = {
-            "preflight_seconds": preflight_seconds,
-            "total_seconds": round(time.monotonic() - sample_started_at, 3),
-        }
-        _skip_legal_access_boundary(sample.provider, exc)
-        raise
-    assert envelope.article is not None
-    article = envelope.article
-    acceptance = evaluate_fetch_acceptance(
-        envelope,
-        asset_profile="body",
-        requested_outputs={"article"},
-        expected_doi=sample.doi,
-    )
-    record_property("fetch_source", article.source)
-    record_property(
-        "fetch_source_trail",
-        json.dumps(article.quality.source_trail, ensure_ascii=False),
-    )
-    record_property("fetch_acceptance", acceptance.to_json())
-    total_seconds = round(time.monotonic() - sample_started_at, 3)
-    readiness = _last_browser_candidate(preflight_trace)
-    performance_warning = None
-    if sample.provider == "pnas" and total_seconds > 45:
-        performance_warning = (
-            "PNAS preflight+fetch exceeded the observational 45 second target: "
-            f"{total_seconds:.3f}s"
+        record_property("fetch_source", article.source)
+        record_property(
+            "fetch_source_trail",
+            json.dumps(article.quality.source_trail, ensure_ascii=False),
         )
-        warnings.warn(performance_warning, RuntimeWarning, stacklevel=1)
-    record_property("fetch_wall_seconds", fetch_telemetry["fetch_wall_seconds"])
-    record_property(
-        "browser_navigation_count", int(preflight_trace.get("navigation_count") or 0)
-    )
-    record_property("dom_readiness_result", readiness.get("dom_readiness_result") or "")
-    record_property(
-        "dom_readiness_seconds", readiness.get("dom_readiness_seconds") or 0
-    )
-    record_property("sample_total_seconds", total_seconds)
-    record_property("performance_warning", performance_warning or "")
-    success_record = {
-        "provider": sample.provider,
-        "doi": normalize_doi(sample.doi),
-        "terminal": {"status": "complete", "reason_code": "accepted"},
-        "preflight": preflight_payload,
-        "source": article.source,
-        "source_trail": list(article.quality.source_trail),
-        "acceptance": acceptance.model_dump(mode="json"),
-        "performance": {
-            "preflight_seconds": preflight_seconds,
-            "fetch_wall_seconds": fetch_telemetry["fetch_wall_seconds"],
-            "total_seconds": total_seconds,
-            "preflight_navigation_count": int(
-                preflight_trace.get("navigation_count") or 0
+        record_property("fetch_acceptance", acceptance.to_json())
+        total_seconds = round(time.monotonic() - sample_started_at, 3)
+        readiness = _last_browser_candidate(preflight_trace)
+        performance_warning = None
+        if sample.provider == "pnas" and total_seconds > 45:
+            performance_warning = (
+                "PNAS preflight+fetch exceeded the observational 45 second target: "
+                f"{total_seconds:.3f}s"
+            )
+            warnings.warn(performance_warning, RuntimeWarning, stacklevel=1)
+        record_property("fetch_wall_seconds", fetch_telemetry["fetch_wall_seconds"])
+        record_property(
+            "browser_navigation_count",
+            int(preflight_trace.get("navigation_count") or 0),
+        )
+        record_property(
+            "dom_readiness_result", readiness.get("dom_readiness_result") or ""
+        )
+        record_property(
+            "dom_readiness_seconds", readiness.get("dom_readiness_seconds") or 0
+        )
+        record_property("sample_total_seconds", total_seconds)
+        record_property("performance_warning", performance_warning or "")
+        success_record = {
+            "provider": sample.provider,
+            "doi": normalize_doi(sample.doi),
+            "terminal": {"status": "failed", "reason_code": "validation_pending"},
+            "preflight": preflight_payload,
+            "source": article.source,
+            "source_trail": list(article.quality.source_trail),
+            "acceptance": acceptance.model_dump(mode="json"),
+            "performance": {
+                "preflight_seconds": preflight_seconds,
+                "fetch_wall_seconds": fetch_telemetry["fetch_wall_seconds"],
+                "total_seconds": total_seconds,
+                "preflight_navigation_count": int(
+                    preflight_trace.get("navigation_count") or 0
+                ),
+                "dom_readiness_result": readiness.get("dom_readiness_result"),
+                "dom_readiness_seconds": readiness.get("dom_readiness_seconds"),
+                "downloaded_asset_count": sum(
+                    bool(asset.path) for asset in article.assets
+                ),
+                "assets": _asset_performance_summary(article),
+                "warning": performance_warning,
+            },
+            "output_dir": str(
+                catalog_live_artifact_root / "providers" / sample.provider
             ),
-            "dom_readiness_result": readiness.get("dom_readiness_result"),
-            "dom_readiness_seconds": readiness.get("dom_readiness_seconds"),
-            "downloaded_asset_count": sum(bool(asset.path) for asset in article.assets),
-            "assets": _asset_performance_summary(article),
-            "warning": performance_warning,
-        },
-        "output_dir": str(catalog_live_artifact_root / "providers" / sample.provider),
-        "asset_paths": [str(asset.path) for asset in article.assets if asset.path],
-    }
+            "asset_paths": [str(asset.path) for asset in article.assets if asset.path],
+        }
+        terminal_record.clear()
+        terminal_record.update(success_record)
 
-    assert normalize_doi(article.doi or "") == normalize_doi(sample.doi)
-    assert article.quality.has_fulltext
-    assert article.sections
-    assert sample.accepts_live_result(
-        source=article.source,
-        source_trail=article.quality.source_trail,
-    ), article.quality.source_trail
-    assert acceptance.identity.status == IdentityAcceptanceStatus.RESOLVED
-    assert acceptance.fetch.status == FetchAcceptanceStatus.OK
-    assert acceptance.content.status == ContentAcceptanceStatus.FULLTEXT
-    assert acceptance.asset.status in {
-        AssetAcceptanceStatus.COMPLETE,
-        AssetAcceptanceStatus.NOT_APPLICABLE,
-    }
-    assert acceptance.output.status == OutputAcceptanceStatus.COMPLETE
-    assert acceptance.overall == OverallAcceptanceStatus.COMPLETE, acceptance.to_json()
-    terminal_record.clear()
-    terminal_record.update(success_record)
+        # Preserve the complete rendered body beside the original provider payload
+        # and assets, so performance observations can be audited without refetching.
+        markdown_path = (
+            catalog_live_artifact_root / "providers" / sample.provider / "article.md"
+        )
+        markdown_path.parent.mkdir(parents=True, exist_ok=True)
+        markdown_path.write_text(
+            article.to_ai_markdown(
+                include_refs="all", asset_profile="body", max_tokens="full_text"
+            ),
+            encoding="utf-8",
+        )
+        success_record["markdown_path"] = str(markdown_path)
+        article_path = markdown_path.with_suffix(".json")
+        article_path.write_text(
+            json.dumps(
+                redact_log_value(article.to_dict()), ensure_ascii=False, indent=2
+            ),
+            encoding="utf-8",
+        )
+        success_record["article_path"] = str(article_path)
+
+        assert normalize_doi(article.doi or "") == normalize_doi(sample.doi)
+        assert article.quality.has_fulltext
+        assert article.sections
+        assert sample.accepts_live_result(
+            source=article.source,
+            source_trail=article.quality.source_trail,
+        ), article.quality.source_trail
+        assert acceptance.identity.status == IdentityAcceptanceStatus.RESOLVED
+        assert acceptance.fetch.status == FetchAcceptanceStatus.OK
+        assert acceptance.content.status == ContentAcceptanceStatus.FULLTEXT
+        assert acceptance.asset.status in {
+            AssetAcceptanceStatus.COMPLETE,
+            AssetAcceptanceStatus.NOT_APPLICABLE,
+        }
+        assert acceptance.output.status == OutputAcceptanceStatus.COMPLETE
+        assert acceptance.overall == OverallAcceptanceStatus.COMPLETE, (
+            acceptance.to_json()
+        )
+        terminal_record["terminal"] = {"status": "complete", "reason_code": "accepted"}
 
 
 def test_aip_cold_start_stability_uses_html_for_five_fresh_profiles(

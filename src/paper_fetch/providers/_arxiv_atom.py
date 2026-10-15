@@ -163,7 +163,9 @@ class InternalArxivApiClient:
         self.transport = transport
         self.user_agent = user_agent
 
-    def results(self, search: ArxivSearch) -> list[ArxivApiResult]:
+    def results(
+        self, search: ArxivSearch, *, optional_enrichment: bool = False
+    ) -> list[ArxivApiResult]:
         requested_ids = [
             normalized
             for raw_id in getattr(search, "id_list", [])
@@ -184,14 +186,22 @@ class InternalArxivApiClient:
                 "id_list": ",".join(requested_ids),
                 "max_results": str(max_results),
             },
-            timeout=execution_policy.timeout_seconds,
-            retry_on_rate_limit=execution_policy.retry_on_rate_limit,
-            rate_limit_retries=execution_policy.rate_limit_retries,
+            timeout=10 if optional_enrichment else execution_policy.timeout_seconds,
+            retry_on_rate_limit=False
+            if optional_enrichment
+            else execution_policy.retry_on_rate_limit,
+            rate_limit_retries=0
+            if optional_enrichment
+            else execution_policy.rate_limit_retries,
             max_rate_limit_wait_seconds=int(
                 execution_policy.rate_limit_wait_budget_seconds
             ),
-            retry_on_transient=execution_policy.retry_on_transient,
-            transient_retries=execution_policy.transient_retries,
+            retry_on_transient=False
+            if optional_enrichment
+            else execution_policy.retry_on_transient,
+            transient_retries=0
+            if optional_enrichment
+            else execution_policy.transient_retries,
             request_policy=provider_request_policy("arxiv", "atom_metadata"),
         )
         status_code = int(response.get("status_code") or 0)

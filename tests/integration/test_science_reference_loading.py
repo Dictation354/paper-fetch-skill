@@ -1,8 +1,6 @@
 """Offline browser contract for the publisher's visible bibliography controls."""
 
 import json
-import os
-from pathlib import Path
 
 import pytest
 
@@ -10,31 +8,13 @@ from paper_fetch.providers._science_html import (
     prepare_browser_page,
     finalize_extraction,
 )
-from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
 
 
 @pytest.fixture
 def science_page(monkeypatch):
-    executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
-    if not executable or not Path(executable).is_file():
-        pytest.skip("requires the existing local Camoufox executable")
-    camoufox = pytest.importorskip("camoufox.sync_api")
-    from camoufox import DefaultAddons, utils
+    from tests.support.offline_camoufox import prepared_browser
 
-    version_file = next(
-        parent / "version.json"
-        for parent in Path(executable).parents
-        if (parent / "version.json").is_file()
-    )
-    monkeypatch.setattr(
-        utils,
-        "installed_verstr",
-        lambda: json.loads(version_file.read_text())["version"],
-    )
-    monkeypatch.setattr(utils, "get_path", lambda file: str(version_file.parent / file))
-    with camoufox.Camoufox(
-        headless=True, executable_path=executable, exclude_addons=list(DefaultAddons)
-    ) as browser:
+    with prepared_browser(monkeypatch) as browser:
         context = browser.new_context()
         yield context.new_page()
         context.close()
@@ -111,16 +91,16 @@ def test_science_waits_for_growing_unstable_bibliography(
                 let nextReference = 2;
                 const timer = setInterval(() => {
                     this.insertAdjacentHTML('beforeend',
-                        `<div class="citations" id="R${nextReference}">
+                        `<div class="biblioentry"><div class="citations" id="R${nextReference}">
                             <div class="citation-content">Study ${nextReference}</div>
-                        </div>`);
+                        </div></div>`);
                     if (++nextReference > 4) clearInterval(timer);
                 }, 200);
             };
             function insertBibliography() {
                 document.body.insertAdjacentHTML('beforeend',
-                    '<section id="bibliography"><div class="citations" id="R1">'
-                    + '<div class="citation-content">Study 1</div></div></section>');
+                    '<section id="bibliography"><div class="biblioentry"><div class="citations" id="R1">'
+                    + '<div class="citation-content">Study 1</div></div></div></section>');
             }
         </script>
     """
@@ -136,10 +116,83 @@ def test_science_waits_for_growing_unstable_bibliography(
         bibliography_delay,
     )
     preparation = prepare_browser_page(page, timeout_ms=3000)
-    assert preparation == {
+    assert {
+        key: preparation[key]
+        for key in (
+            "references_before",
+            "references_after",
+            "missing_reference_targets",
+            "timed_out",
+        )
+    } == {
         "references_before": 0 if bibliography_delay else 1,
         "references_after": 4,
         "missing_reference_targets": [],
         "timed_out": False,
     }
     assert page.evaluate("window.scrollRequests") == 1
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize("load_text", [True, False])
+def test_science_ids_and_noise_links_arrive_before_reference_text(
+    science_page, load_text
+):
+    page = science_page
+    page.set_content(
+        '<p><a role="doc-biblioref" href="#R71">71</a></p><section id="bibliography"><div class="biblioentry"><div class="citations" id="R71"><div class="citation-content"><span class="citation-links">Crossref</span></div></div></div><button>View all references</button></section>'
+    )
+    page.evaluate(
+        """loadText => {
+        document.querySelector('button').addEventListener('click', event => {
+            event.target.remove();
+            if (loadText) setTimeout(() => document.querySelector('.citation-content').textContent = 'Actual study (2026)', 400);
+        });
+    }""",
+        load_text,
+    )
+    result = prepare_browser_page(page, timeout_ms=5000 if load_text else 500)
+    _, extraction = finalize_extraction(
+        page.content(), "https://www.science.org/doi/example", "Body", {}
+    )
+    assert result["references_before"] == 1
+    assert result["extractable_references_before"] == 0
+    assert result["extractable_references_after"] == int(load_text)
+    assert result["empty_reference_ids"] == ([] if load_text else ["R71"])
+    assert result["missing_reference_targets"] == ([] if load_text else ["R71"])
+    assert result["timed_out"] is (not load_text)
+    assert len(extraction.get("references", [])) == int(load_text)
+
+
+@pytest.mark.browser
+def test_science_disappearing_controls_never_click_unrelated_links(science_page):
+    page = science_page
+    page.set_content(
+        '<p><a role="doc-biblioref" href="#R2">2</a></p><section id="bibliography"><div class="biblioentry"><div class="citations" id="R2"><div class="citation-content"></div></div></div><a id="first">Crossref</a><button>View all references</button><a id="last">Related article</a></section>'
+    )
+    page.evaluate("""() => {
+        window.unrelatedClicks = 0;
+        document.querySelector('#last').addEventListener('click', () => window.unrelatedClicks++);
+        document.querySelector('button').addEventListener('click', event => {
+            document.querySelector('.citation-content').textContent = 'Actual study';
+            event.target.remove();
+        });
+    }""")
+
+    class ChangingPage:
+        changed = False
+
+        def __getattr__(self, name):
+            return getattr(page, name)
+
+        def evaluate(self, script, *args):
+            state = page.evaluate(script, *args)
+            if args and not self.changed:
+                page.evaluate("document.querySelector('#first').remove()")
+                self.changed = True
+            return state
+
+    result = prepare_browser_page(ChangingPage(), timeout_ms=5000)
+    assert result["missing_reference_targets"] == []
+    assert not result["timed_out"]
+    assert page.evaluate("window.unrelatedClicks") == 0

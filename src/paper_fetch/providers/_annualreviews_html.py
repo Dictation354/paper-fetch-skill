@@ -775,6 +775,23 @@ def extract_scoped_html_assets(
     asset_profile: AssetProfile,
 ) -> list[dict[str, str]]:
     body_html, supplementary_html = extract_asset_html_scopes(html_text, source_url)
+    return _extract_assets_from_scopes(
+        body_html,
+        supplementary_html,
+        html_text,
+        source_url,
+        asset_profile=asset_profile,
+    )
+
+
+def _extract_assets_from_scopes(
+    body_html: str,
+    supplementary_html: str,
+    html_text: str,
+    source_url: str,
+    *,
+    asset_profile: AssetProfile,
+) -> list[dict[str, str]]:
     body_html = promote_silverchair_srcset_originals(body_html)
     assets = extract_provider_neutral_scoped_assets(
         body_html,
@@ -943,8 +960,10 @@ def extract_markdown(
     references = extract_references(article_html)
     if references and not merged_metadata.get("references"):
         merged_metadata["references"] = references
-    extracted_assets = extract_scoped_html_assets(
+    extracted_assets = _extract_assets_from_scopes(
         article_html,
+        "",
+        html_text,
         source_url,
         asset_profile="body",
     )

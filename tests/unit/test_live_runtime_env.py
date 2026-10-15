@@ -27,7 +27,7 @@ from tests._environment import (
     PRESERVED_FORMULA_TOOLS_DIR_ENV_VAR,
 )
 from tests.live import _runtime_env
-from tests.live.test_live_publishers import _catalog_acceptance_report
+from tests.support.live_acceptance import catalog_acceptance_report
 from tests.provider_benchmark_samples import iter_provider_benchmark_samples
 
 
@@ -118,11 +118,12 @@ def test_catalog_acceptance_report_does_not_hide_unrecorded_provider() -> None:
     catalog_providers = [
         sample.provider for sample in iter_provider_benchmark_samples()
     ]
-    report = _catalog_acceptance_report(
+    report = catalog_acceptance_report(
         [
             {
                 "provider": "elsevier",
                 "acceptance": {"overall": "complete"},
+                "terminal": {"status": "complete"},
             }
         ]
     )
@@ -296,3 +297,68 @@ def test_live_preflight_rejects_malformed_static_capability_report() -> None:
             env={},
             cache={},
         )
+
+
+@pytest.mark.parametrize("skip", [False, True])
+def test_live_report_keeps_actual_data_after_assertion_or_skip(tmp_path, skip):
+    import json
+    import time
+    from tests.support.live_acceptance import preserve_terminal_record
+
+    record = {
+        "provider": "science",
+        "source": "science_html",
+        "source_trail": ["fulltext:science_html_ok"],
+        "acceptance": {"overall": "degraded"},
+        "asset_paths": ["figure.png"],
+        "performance": {"fetch_wall_seconds": 1.25},
+        "terminal": {"status": "failed", "reason_code": "validation_pending"},
+    }
+    with pytest.raises(pytest.skip.Exception if skip else AssertionError):
+        with preserve_terminal_record(
+            record, [record], tmp_path, time.monotonic() - 2, lambda *args: None
+        ):
+            if skip:
+                pytest.skip("legal challenge")
+            assert record["acceptance"]["overall"] == "complete"
+    saved = json.loads((tmp_path / "live-acceptance.json").read_text())["providers"][0]
+    assert saved["terminal"]["status"] == ("skipped" if skip else "failed")
+    assert saved["acceptance"] == {"overall": "degraded"}
+    assert saved["source"] == "science_html"
+    assert saved["asset_paths"] == ["figure.png"]
+    assert saved["performance"]["fetch_wall_seconds"] == 1.25
+    assert saved["performance"]["total_seconds"] >= 2
+
+
+def test_catalog_summary_requires_assertions_to_pass():
+    report = catalog_acceptance_report(
+        [
+            {
+                "provider": "science",
+                "acceptance": {"overall": "complete"},
+                "terminal": {"status": "failed", "reason_code": "assertion_failed"},
+            }
+        ]
+    )
+    assert report["summary"]["all_recorded_complete"] is False
+    assert report["providers"][0]["acceptance"]["overall"] == "complete"
+
+
+def test_live_report_redaction_keeps_json_quoting_valid(tmp_path):
+    import json
+    import time
+    from tests.support.live_acceptance import preserve_terminal_record
+
+    record = {
+        "provider": "science",
+        "acceptance": {"overall": "complete"},
+        "terminal": {"status": "complete"},
+        "reference": 'Quoted "https://example.test/source?api_key=private-test-token" study',
+    }
+    with preserve_terminal_record(
+        record, [record], tmp_path, time.monotonic(), lambda *args: None
+    ):
+        pass
+    saved = json.loads((tmp_path / "live-acceptance.json").read_text())
+    assert "private-test-token" not in json.dumps(saved)
+    assert "Quoted" in saved["providers"][0]["reference"]

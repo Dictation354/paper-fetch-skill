@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from contextvars import copy_context
 from dataclasses import dataclass, replace
 from functools import partial
 from pathlib import Path
 import threading
+import time
 from typing import Any
 from collections.abc import Callable, Mapping
 
@@ -18,8 +19,13 @@ from ...extraction.html.assets import (
     AssetFetchPolicy,
     extract_scoped_html_assets,
 )
-from ...extraction.html.assets.download import browser_asset_recovery_allowed
+from ...extraction.html.assets.download import (
+    browser_asset_recovery_allowed,
+    asset_work_key,
+)
 from ...extraction.html.assets.state import AssetHostRecoveryCircuit
+from ...asset_budget import AssetBudget, current_asset_budget
+from ...provider_catalog import compile_route_execution_policy_for_kind
 from ...models import AssetProfile
 from ...http import RequestCancelledError
 from ...utils import dedupe_normalized, empty_asset_results, normalize_text
@@ -733,7 +739,19 @@ def _run_browser_asset_download_attempt(
                 runtime_context=recovery.runtime_context,
                 host_recovery_circuit=host_recovery_circuit,
             )
-            if plan.fetch_policy != "direct_then_browser" or not serial_browser_assets:
+            if recovery.provider == "iop" and common_options.asset_budget is None:
+                common_options = replace(
+                    common_options,
+                    asset_budget=current_asset_budget()
+                    or AssetBudget(
+                        route_concurrency_cap=compile_route_execution_policy_for_kind(
+                            "iop", "assets"
+                        ).asset_concurrency_cap
+                    ),
+                )
+            if plan.fetch_policy != "direct_then_browser" or (
+                not serial_browser_assets and recovery.provider != "iop"
+            ):
                 result = deps.download_assets(
                     FIGURE_KIND,
                     attempt_settings.get("transport"),
@@ -765,132 +783,150 @@ def _run_browser_asset_download_attempt(
             full_candidate_builder = _tier_candidate_builder(
                 base_candidate_builder, preview=False
             )
-            # A caller-thread browser cannot safely join the HTTP worker pool.
-            # Probe one asset synchronously first so a verified browser recovery
-            # can route the remaining same-host assets through the verified
-            # browser path without repeated direct timeouts or 403 responses.
-            # Other hosts still retain their own direct probe decision.
-            probe_result = deps.download_assets(
-                FIGURE_KIND,
-                attempt_settings.get("transport"),
-                assets=body_assets[:1],
-                options=replace(
-                    common_options,
-                    candidate_builder=full_candidate_builder,
-                    image_document_fetcher=image_document_fetcher,
-                    asset_download_concurrency=1,
-                    fetch_policy="direct_then_browser",
-                ),
-                **common_kwargs,
-            )
-            probe_used_browser = any(
-                normalize_text(str(asset.get("final_fetcher") or ""))
-                not in {"", "direct_http"}
-                or normalize_text(
-                    str((asset.get("asset_route") or {}).get("route") or "")
-                )
-                == "browser"
-                for asset in list(probe_result.get("assets") or [])
-                if isinstance(asset, Mapping)
-            )
-            probe_failures = [
-                dict(failure)
-                for failure in list(probe_result.get("asset_failures") or [])
-                if _asset_failure_allows_browser_recovery(failure)
-            ]
-            remaining_body_assets = body_assets[1:]
-            if probe_used_browser:
-                routed_remainder = (
-                    deps.download_assets(
-                        FIGURE_KIND,
-                        attempt_settings.get("transport"),
-                        assets=remaining_body_assets,
+            if recovery.provider == "iop":
+                merged_result, eligible_failures, browser_failures = (
+                    _download_iop_body_assets(
+                        body_assets,
+                        deps=deps,
+                        transport=attempt_settings.get("transport"),
+                        common_kwargs=common_kwargs,
                         options=replace(
-                            common_options,
-                            candidate_builder=full_candidate_builder,
-                            image_document_fetcher=image_document_fetcher,
-                            asset_download_concurrency=body_asset_download_concurrency,
-                            fetch_policy="direct_then_browser",
+                            common_options, candidate_builder=full_candidate_builder
                         ),
-                        **common_kwargs,
+                        image_document_fetcher=image_document_fetcher,
+                        configured_concurrency=body_asset_download_concurrency,
+                        merge_results=merge_results,
                     )
-                    if remaining_body_assets
-                    else empty_asset_results()
                 )
-                merged_result = merge_results(probe_result, routed_remainder)
-                eligible_failures = probe_failures
-                browser_failures = [
-                    *probe_failures,
-                    *[
-                        dict(failure)
-                        for failure in list(
-                            routed_remainder.get("asset_failures") or []
-                        )
-                    ],
-                ]
             else:
-                direct_remainder = (
-                    deps.download_assets(
-                        FIGURE_KIND,
-                        attempt_settings.get("transport"),
-                        assets=remaining_body_assets,
-                        options=replace(
-                            common_options,
-                            candidate_builder=full_candidate_builder,
-                            image_document_fetcher=None,
-                            asset_download_concurrency=body_asset_download_concurrency,
-                            fetch_policy="direct_then_browser",
-                        ),
-                        **common_kwargs,
-                    )
-                    if remaining_body_assets
-                    else empty_asset_results()
+                # A caller-thread browser cannot safely join the HTTP worker pool.
+                # Probe one asset synchronously first so a verified browser recovery
+                # can route the remaining same-host assets through the verified
+                # browser path without repeated direct timeouts or 403 responses.
+                # Other hosts still retain their own direct probe decision.
+                probe_result = deps.download_assets(
+                    FIGURE_KIND,
+                    attempt_settings.get("transport"),
+                    assets=body_assets[:1],
+                    options=replace(
+                        common_options,
+                        candidate_builder=full_candidate_builder,
+                        image_document_fetcher=image_document_fetcher,
+                        asset_download_concurrency=1,
+                        fetch_policy="direct_then_browser",
+                    ),
+                    **common_kwargs,
                 )
-                direct_result = merge_results(probe_result, direct_remainder)
-                direct_remainder_failures = [
+                probe_used_browser = any(
+                    normalize_text(str(asset.get("final_fetcher") or ""))
+                    not in {"", "direct_http"}
+                    or normalize_text(
+                        str((asset.get("asset_route") or {}).get("route") or "")
+                    )
+                    == "browser"
+                    for asset in list(probe_result.get("assets") or [])
+                    if isinstance(asset, Mapping)
+                )
+                probe_failures = [
                     dict(failure)
-                    for failure in list(direct_remainder.get("asset_failures") or [])
+                    for failure in list(probe_result.get("asset_failures") or [])
                     if _asset_failure_allows_browser_recovery(failure)
                 ]
-                eligible_failures = [
-                    *probe_failures,
-                    *direct_remainder_failures,
-                ]
-                browser_assets = deps._assets_matching_download_failures(
-                    remaining_body_assets,
-                    direct_remainder_failures,
-                    retry_scope="body",
-                )
-                merged_result = dict(direct_result)
-                if browser_assets:
-                    browser_result = deps.download_assets(
-                        FIGURE_KIND,
-                        attempt_settings.get("transport"),
-                        assets=browser_assets,
-                        options=replace(
-                            common_options,
-                            candidate_builder=full_candidate_builder,
-                            image_document_fetcher=image_document_fetcher,
-                            asset_download_concurrency=1,
-                            fetch_policy="browser_first",
-                        ),
-                        **common_kwargs,
+                remaining_body_assets = body_assets[1:]
+                if probe_used_browser:
+                    routed_remainder = (
+                        deps.download_assets(
+                            FIGURE_KIND,
+                            attempt_settings.get("transport"),
+                            assets=remaining_body_assets,
+                            options=replace(
+                                common_options,
+                                candidate_builder=full_candidate_builder,
+                                image_document_fetcher=image_document_fetcher,
+                                asset_download_concurrency=body_asset_download_concurrency,
+                                fetch_policy="direct_then_browser",
+                            ),
+                            **common_kwargs,
+                        )
+                        if remaining_body_assets
+                        else empty_asset_results()
                     )
+                    merged_result = merge_results(probe_result, routed_remainder)
+                    eligible_failures = probe_failures
                     browser_failures = [
                         *probe_failures,
                         *[
                             dict(failure)
                             for failure in list(
-                                browser_result.get("asset_failures") or []
+                                routed_remainder.get("asset_failures") or []
                             )
                         ],
                     ]
-                    browser_result = _annotate_split_browser_recovery(
-                        browser_result, eligible_failures
-                    )
-                    merged_result = merge_results(direct_result, browser_result)
                 else:
-                    browser_failures = probe_failures
+                    direct_remainder = (
+                        deps.download_assets(
+                            FIGURE_KIND,
+                            attempt_settings.get("transport"),
+                            assets=remaining_body_assets,
+                            options=replace(
+                                common_options,
+                                candidate_builder=full_candidate_builder,
+                                image_document_fetcher=None,
+                                asset_download_concurrency=body_asset_download_concurrency,
+                                fetch_policy="direct_then_browser",
+                            ),
+                            **common_kwargs,
+                        )
+                        if remaining_body_assets
+                        else empty_asset_results()
+                    )
+                    direct_result = merge_results(probe_result, direct_remainder)
+                    direct_remainder_failures = [
+                        dict(failure)
+                        for failure in list(
+                            direct_remainder.get("asset_failures") or []
+                        )
+                        if _asset_failure_allows_browser_recovery(failure)
+                    ]
+                    eligible_failures = [
+                        *probe_failures,
+                        *direct_remainder_failures,
+                    ]
+                    browser_assets = deps._assets_matching_download_failures(
+                        remaining_body_assets,
+                        direct_remainder_failures,
+                        retry_scope="body",
+                    )
+                    merged_result = dict(direct_result)
+                    if browser_assets:
+                        browser_result = deps.download_assets(
+                            FIGURE_KIND,
+                            attempt_settings.get("transport"),
+                            assets=browser_assets,
+                            options=replace(
+                                common_options,
+                                candidate_builder=full_candidate_builder,
+                                image_document_fetcher=image_document_fetcher,
+                                asset_download_concurrency=1,
+                                fetch_policy="browser_first",
+                            ),
+                            **common_kwargs,
+                        )
+                        browser_failures = [
+                            *probe_failures,
+                            *[
+                                dict(failure)
+                                for failure in list(
+                                    browser_result.get("asset_failures") or []
+                                )
+                            ],
+                        ]
+                        browser_result = _annotate_split_browser_recovery(
+                            browser_result, eligible_failures
+                        )
+                        merged_result = merge_results(direct_result, browser_result)
+                    else:
+                        browser_failures = probe_failures
 
             if not plan.preview_fallback:
                 return merged_result
@@ -1050,6 +1086,7 @@ def _run_browser_asset_download_attempt(
 
         serial_browser_assets = bool(
             attempt_settings.get("serial_browser_assets")
+            or recovery.provider == "iop"
             or _requires_caller_thread(image_document_fetcher)
             or _requires_caller_thread(file_document_fetcher)
             or figure_page_browser_requires_caller_thread
@@ -1095,6 +1132,215 @@ def _run_browser_asset_download_attempt(
             close_fetcher = getattr(fetcher, "close", None)
             if callable(close_fetcher):
                 close_fetcher()
+
+
+def _download_iop_body_assets(
+    assets: list[dict[str, Any]],
+    *,
+    deps: BrowserWorkflowDeps,
+    transport: Any,
+    common_kwargs: Mapping[str, Any],
+    options: AssetDownloadOptions,
+    image_document_fetcher: Any,
+    configured_concurrency: int | None,
+    merge_results: Callable[..., Any],
+) -> tuple[Mapping[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Run bounded HTTP work; consume and recover on the browser's caller thread."""
+    route = compile_route_execution_policy_for_kind("iop", "assets")
+    budget = (
+        options.asset_budget
+        or current_asset_budget()
+        or AssetBudget(route_concurrency_cap=route.asset_concurrency_cap)
+    )
+    options = replace(options, asset_budget=budget, asset_download_concurrency=1)
+    budget.admit_work([asset_work_key(FIGURE_KIND, asset) for asset in assets])
+    workers = min(
+        2,
+        budget.effective_concurrency(
+            configured_concurrency, route_concurrency_cap=route.asset_concurrency_cap
+        ),
+    )
+    queued_at = time.monotonic()
+    results: dict[int, Mapping[str, Any]] = {}
+    direct_failures: list[dict[str, Any]] = []
+    browser_failures: list[dict[str, Any]] = []
+    browser_hosts: set[str] = set()
+    pending = list(enumerate(assets))
+    futures: dict[Any, int] = {}
+    executor = ThreadPoolExecutor(max_workers=workers)
+
+    def host(asset: Mapping[str, Any]) -> str:
+        return AssetHostRecoveryCircuit.host_for_url(
+            str(
+                asset.get("original_url")
+                or asset.get("full_size_url")
+                or asset.get("url")
+                or ""
+            )
+        )
+
+    def download(index: int, *, browser: bool) -> Mapping[str, Any]:
+        _raise_if_cancelled(options.runtime_context)
+        budget.raise_if_cancelled()
+        started = time.monotonic()
+        result = deps.download_assets(
+            FIGURE_KIND,
+            transport,
+            assets=[assets[index]],
+            options=replace(
+                options,
+                # HTTP workers must never call a page/figure browser fetcher or
+                # wait on the serial first-probe circuit.
+                figure_page_fetcher=options.figure_page_fetcher if browser else None,
+                image_document_fetcher=image_document_fetcher if browser else None,
+                host_recovery_circuit=options.host_recovery_circuit
+                if browser
+                else None,
+                fetch_policy="browser_first" if browser else "direct_then_browser",
+            ),
+            **common_kwargs,
+        )
+        for outcome in [*result.get("assets", []), *result.get("asset_failures", [])]:
+            timing = outcome.get("asset_timing")
+            if isinstance(timing, Mapping):
+                outcome["asset_timing"] = {
+                    **timing,
+                    "queue_ms": round(
+                        float(timing.get("queue_ms", 0)) + (started - queued_at) * 1000,
+                        3,
+                    ),
+                    "total_ms": round((time.monotonic() - queued_at) * 1000, 3),
+                }
+        return result
+
+    def recover(index: int, direct: Mapping[str, Any]) -> Mapping[str, Any]:
+        eligible = [
+            dict(f)
+            for f in direct.get("asset_failures", [])
+            if _asset_failure_allows_browser_recovery(f)
+        ]
+        if not eligible or image_document_fetcher is None:
+            return direct
+        direct_failures.extend(eligible)
+        browser_result = download(index, browser=True)
+        browser_failures.extend(
+            dict(f) for f in browser_result.get("asset_failures", [])
+        )
+        browser_result = _annotate_split_browser_recovery(browser_result, eligible)
+        for failure in browser_result.get("asset_failures", []):
+            direct_failure = _matching_failure(failure, eligible)
+            if direct_failure is not None:
+                failure["recovery_attempts"] = [
+                    _attempt_from_failure("direct", direct_failure),
+                    _attempt_from_failure("browser", failure),
+                ]
+        for outcome in [
+            *browser_result.get("assets", []),
+            *browser_result.get("asset_failures", []),
+        ]:
+            direct_failure = _matching_failure(outcome, eligible)
+            if direct_failure is None:
+                continue
+            original_timing = direct_failure.get("asset_timing") or {}
+            timing = outcome.get("asset_timing") or {}
+            if timing:
+                outcome["asset_timing"] = {
+                    **timing,
+                    **{
+                        key: round(float(timing.get(key, 0)) + float(value), 3)
+                        for key, value in original_timing.items()
+                        if key.endswith("_ms") and key not in {"total_ms", "queue_ms"}
+                    },
+                    "queue_ms": original_timing.get("queue_ms", 0),
+                }
+        if browser_result.get("assets"):
+            for asset in browser_result["assets"]:
+                verified_url = str(
+                    asset.get("source_url")
+                    or asset.get("original_url")
+                    or assets[index].get("original_url")
+                    or assets[index].get("url")
+                    or ""
+                )
+                verified_host = AssetHostRecoveryCircuit.host_for_url(verified_url)
+                browser_hosts.add(verified_host)
+                if options.host_recovery_circuit is not None:
+                    decision = options.host_recovery_circuit.begin(verified_url)
+                    options.host_recovery_circuit.observe(
+                        decision, browser_recovery_succeeded=True
+                    )
+        return merge_results(direct, browser_result)
+
+    try:
+        while pending or futures:
+            _raise_if_cancelled(options.runtime_context)
+            if budget.internally_cancelled:
+                # Reuse the downloader's budget-terminal diagnostics for queued
+                # assets without submitting additional HTTP work.
+                for index, _asset in pending:
+                    results[index] = deps.download_assets(
+                        FIGURE_KIND,
+                        transport,
+                        assets=[assets[index]],
+                        options=replace(
+                            options,
+                            figure_page_fetcher=None,
+                            image_document_fetcher=None,
+                            host_recovery_circuit=None,
+                        ),
+                        **common_kwargs,
+                    )
+                pending.clear()
+            else:
+                budget.raise_if_cancelled()
+            # Do not replenish the pool until completed failures have been
+            # consumed. Recovery pauses submissions; in-flight HTTP can finish.
+            completed = [future for future in futures if future.done()]
+            if not completed:
+                while pending and len(futures) < workers:
+                    index, asset = pending.pop(0)
+                    if host(asset) in browser_hosts:
+                        results[index] = download(index, browser=True)
+                    else:
+                        future = executor.submit(
+                            copy_context().run, download, index, browser=False
+                        )
+                        futures[future] = index
+                if futures:
+                    done, _ = wait(futures, timeout=0.1, return_when=FIRST_COMPLETED)
+                    completed = list(done)
+            for future in completed:
+                index = futures.pop(future)
+                direct = future.result()
+                results[index] = direct
+                if not budget.internally_cancelled:
+                    results[index] = recover(index, direct)
+        merged = empty_asset_results()
+        for index in range(len(assets)):
+            merged = merge_results(merged, results.get(index, empty_asset_results()))
+        return merged, direct_failures, browser_failures
+    except BaseException:
+        budget.cancel("asset_cancelled", diagnostic={"boundary": "iop_asset_worker"})
+        for future in futures:
+            future.cancel()
+        raise
+    finally:
+        executor.shutdown(wait=True, cancel_futures=True)
+        if budget.cancelled:
+            budget.rollback_active()
+            completed_results = [*results.values()]
+            for future in futures:
+                if (
+                    future.done()
+                    and not future.cancelled()
+                    and future.exception() is None
+                ):
+                    completed_results.append(future.result())
+            for result in completed_results:
+                for asset in result.get("assets", []):
+                    path = asset.get("path")
+                    if path:
+                        Path(path).unlink(missing_ok=True)
 
 
 def _raise_if_cancelled(runtime_context: Any | None) -> None:

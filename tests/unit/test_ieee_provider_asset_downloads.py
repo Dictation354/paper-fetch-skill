@@ -870,10 +870,14 @@ class IeeeArticleOriginalTests(unittest.TestCase):
         preview = original.replace("large", "small")
         for figure in (True, False, True):
             with self.subTest(figure=figure):
-                page.locator.return_value.evaluate_all.return_value = {
-                    "href": "/mediastore/fig-large.gif",
-                    "figure": figure,
-                }
+                page.locator.return_value.evaluate_all.return_value = [
+                    {
+                        "url": original,
+                        "href": "/mediastore/fig-large.gif",
+                        "figure": figure,
+                    }
+                ]
+                session.mark_navigation()
                 response = mock.Mock(url=original, status=200)
                 response.all_headers.return_value = {"content-type": "image/png"}
                 response.body.return_value = png_header(820, 219)
@@ -904,7 +908,11 @@ class IeeeArticleOriginalTests(unittest.TestCase):
                     preserve_seed_page=True
                 )
                 session.bind(manager=None, context=context, page=page)
-                page.locator.return_value.evaluate_all.return_value = entry
+                page.locator.return_value.evaluate_all.return_value = (
+                    [{**entry, "url": "https://ieeexplore.ieee.org/large.gif"}]
+                    if entry
+                    else []
+                )
                 response = mock.Mock(
                     url="https://ieeexplore.ieee.org/large.gif", status=200
                 )

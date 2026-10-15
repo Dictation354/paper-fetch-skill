@@ -82,6 +82,10 @@ class _IeeePreviewWarmImageFetcher:
         self._preview_warm_attempted = False
         self._shared_page_session = shared_page_session
         self._article_failures: dict[str, dict[str, Any]] = {}
+        self._article_link_index: dict[str, Mapping[str, Any]] | None = None
+        self._article_index_page: Any = None
+        self._article_index_navigation: int | None = None
+        self._article_index_listener = self._invalidate_article_index
 
     def __call__(
         self, image_url: str, asset: Mapping[str, Any]
@@ -105,6 +109,43 @@ class _IeeePreviewWarmImageFetcher:
                     return payload
             return self._fetcher(normalized_url or image_url, asset)
 
+    def _invalidate_article_index(self, frame: Any = None) -> None:
+        if frame is None or frame == self._article_index_page.main_frame:
+            self._article_link_index = None
+
+    def _article_original_entry(
+        self,
+        page: Any,
+        navigation: int,
+        image_url: str,
+    ) -> Mapping[str, Any] | None:
+        if page is not self._article_index_page:
+            if self._article_index_page is not None:
+                self._article_index_page.remove_listener(
+                    "framenavigated", self._article_index_listener
+                )
+            self._article_index_page = page
+            page.on("framenavigated", self._article_index_listener)
+            self._article_link_index = None
+        if self._article_index_navigation != navigation:
+            self._article_link_index = None
+            self._article_index_navigation = navigation
+        if (
+            self._article_link_index is None
+            or image_url not in self._article_link_index
+        ):
+            entries = page.locator("#article a[href]").evaluate_all(
+                """nodes => nodes.filter(node => node.querySelector('img')).map(node => ({
+                    url: node.href, href: node.getAttribute('href'),
+                    figure: Boolean(node.dataset.figId)
+                }))"""
+            )
+            self._article_link_index = {}
+            for entry in entries:
+                if isinstance(entry, Mapping) and entry.get("url"):
+                    self._article_link_index.setdefault(str(entry["url"]), entry)
+        return self._article_link_index.get(image_url)
+
     def _fetch_article_original(self, image_url: str) -> dict[str, Any] | None:
         session = self._shared_page_session
         if session is None or session.page is None or session.context is None:
@@ -116,13 +157,8 @@ class _IeeePreviewWarmImageFetcher:
         try:
             # Match the actual original URL, including table links without a
             # data-fig-id. An asset label alone cannot establish this identity.
-            entry = page.locator("#article a[href]").evaluate_all(
-                """(nodes, target) => {
-                    const node = nodes.find(n => n.href === target && n.querySelector('img'));
-                    return node ? {href: node.getAttribute('href'),
-                                   figure: Boolean(node.dataset.figId)} : null;
-                }""",
-                image_url,
+            entry = self._article_original_entry(
+                page, session.navigation_count, image_url
             )
             if not isinstance(entry, Mapping):
                 self._article_failures[image_url] = {
@@ -208,6 +244,13 @@ class _IeeePreviewWarmImageFetcher:
         return failure
 
     def close(self) -> None:
+        if self._article_index_page is not None:
+            with contextlib.suppress(Exception):
+                self._article_index_page.remove_listener(
+                    "framenavigated", self._article_index_listener
+                )
+            self._article_index_page = None
+        self._article_link_index = None
         self._fetcher.close()
 
 

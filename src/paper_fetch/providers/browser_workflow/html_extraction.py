@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ...quality.access_boundary import propagate_paywall
 
-from ...quality.access_boundary import raise_for_paywall
+from ...quality.access_boundary import raise_for_paywall, use_html_analysis_context
 
 import hashlib
 import logging
@@ -463,19 +463,19 @@ def _cached_browser_workflow_markdown(
         parser="BeautifulSoup:browser_workflow",
         config={
             "publisher": client.name,
-            "doi": normalize_text(str(metadata.get("doi") or "")),
-            "title": normalize_text(str(metadata.get("title") or "")),
+            "metadata": dict(metadata),
         },
     )
-    markdown_text, extraction = context.get_or_set_parse_cache(
-        key,
-        lambda: client.extract_markdown(
-            html_text,
-            final_url,
-            metadata=cast(ProviderMetadata, metadata),
-        ),
-        copy_value=True,
-    )
+    with use_html_analysis_context(context):
+        markdown_text, extraction = context.get_or_set_parse_cache(
+            key,
+            lambda: client.extract_markdown(
+                html_text,
+                final_url,
+                metadata=cast(ProviderMetadata, metadata),
+            ),
+            copy_value=True,
+        )
     return str(markdown_text or ""), dict(extraction or {})
 
 
@@ -643,6 +643,7 @@ def _fetch_browser_html_payload(
         metadata=metadata,
         source_url=html_result.final_url,
         provider=client.name,
+        context=context,
     )
     html_result = _with_browser_runtime_trace_history(
         html_result,
@@ -669,6 +670,7 @@ def _fetch_browser_html_payload(
     }
     result_diagnostics["html_attempts"] = [*attempt_history, attempt_record]
     html_result = replace(html_result, diagnostics=result_diagnostics)
+    parsing_started_at = time.monotonic()
     try:
         markdown_text, extraction = _cached_browser_workflow_markdown(
             client,
@@ -678,6 +680,10 @@ def _fetch_browser_html_payload(
             context=context,
         )
     except HtmlExtractionFailure as exc:
+        result_diagnostics["html_parse_seconds"] = round(
+            time.monotonic() - parsing_started_at, 3
+        )
+        html_result = replace(html_result, diagnostics=result_diagnostics)
         propagate_paywall(exc)
         if exc.reason == "article_container_not_found" and is_empty_article_shell(
             html_result.html,
@@ -766,6 +772,9 @@ def _fetch_browser_html_payload(
         reason="fulltext_accepted",
     )
     result_diagnostics = dict(html_result.diagnostics or {})
+    result_diagnostics["html_parse_seconds"] = round(
+        time.monotonic() - parsing_started_at, 3
+    )
     attempt_record["result"] = "success"
     result_diagnostics["html_attempts"] = [*attempt_history, attempt_record]
     html_result = replace(html_result, diagnostics=result_diagnostics)
