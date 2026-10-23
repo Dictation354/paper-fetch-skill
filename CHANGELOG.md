@@ -23,6 +23,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ### Maintenance
 
+- Update locked certifi to 2026.10.19 to address PYSEC-2026-4320 reported by the release dependency audit.
+
 - Keep provider-specific DOM/Markdown behavior in typed hooks and share the Science/PNAS supplementary-scope splitter and verified source-object link owner. Preserve existing provider routes, access boundaries, presets and unified acceptance.
 - Move executable review contracts, sample inventories, source hashes and formula replay evidence into registered scenario fixtures. Retain stable case IDs and positive source assertions, remove dependencies on historical review reports and fixed corpus counts, and consolidate duplicated maintenance documentation.
 
