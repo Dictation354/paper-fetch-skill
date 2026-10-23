@@ -183,6 +183,23 @@ def pytest_make_collect_report(collector):
 
 
 @pytest.fixture(autouse=True)
+def _mock_fetch_browser_preparation(request, monkeypatch):
+    """Offline fetch tests mock updates independently of browser launch.
+
+    Dedicated preparation contracts restore this method or exercise the managed
+    preparer directly with isolated version discovery and download stubs.
+    """
+    if request.node.get_closest_marker("live"):
+        return
+    from paper_fetch.providers.browser_runtime.preparation import FetchBrowserPreparation
+
+    def prepare(self, env, cancel_check):
+        cancel_check()
+
+    monkeypatch.setattr(FetchBrowserPreparation, "prepare", prepare)
+
+
+@pytest.fixture(autouse=True)
 def _paper_fetch_test_safety(request, monkeypatch):
     """Unit tests cannot opt out of process, replay, or conversion boundaries."""
     from tests.support import layer_policy

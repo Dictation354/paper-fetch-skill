@@ -20,21 +20,39 @@ python -m pip install "paper-fetch-skill[full]"
 
 离线安装包始终按 `full` 构建，但不重新分发浏览器 binary。完全离线环境需提前
 准备 Camoufox runtime，包括相邻配置、addons、字体和 fpgen 指纹模型；只复制可执行文件
-不足以组成可用 runtime。普通 fetch、auth 和 preflight 在实际启动浏览器前自动
-补全或更新 managed runtime；运行时不自动安装缺失的 Python 依赖。
+不足以组成可用 runtime。CLI、MCP 和 Python API 在每次抓取请求开始时检查并
+准备 managed runtime，包括纯 HTTP 和缓存命中；批量任务在调度前统一检查一次，
+子任务和后续浏览器启动复用本次结果。`auth` 和 preflight 在启动浏览器前检查。
+运行时不自动安装缺失的 Python 依赖；core 安装缺少 browser extra，或指定
+`PAPER_FETCH_BROWSER_BINARY_PATH` 时，跳过托管更新。
 核心安装不下载浏览器，可选安装向导仅在用户明确选择后预置并验证本地启动，
 详见 [离线包](deployment.md#离线包)。
-可在联网时显式运行 `python -m camoufox fetch` 提前准备。
 
-Camoufox 0.5.7 默认使用与 Python 包配对的 browser；已安装时直接复用，
-缺失时只准备配对版本，不回退到旧 active browser。`python -m camoufox fetch`
-同时准备 fpgen 模型；首次生成指纹也可能下载模型到 fpgen 包目录，完全离线前
-需确认该目录可写并完成准备。只读预检按同一配对规则检查本地 runtime，不更改配置。
-使用 `python -m camoufox set --release` 恢复默认配对，或
-`python -m camoufox set official/stable` 显式跟踪渠道；也可用
-`python -m camoufox set official/stable/156.0.1-beta.34` 固定版本。
-显式渠道在启动前检查最新兼容版本；显式 pin 只补全对应版本。渠道更新失败但本地版本
-校验有效时提示并继续使用；没有可用版本则报告浏览器准备失败。下载进度写 stderr。
+browser/full extras 固定 `camoufox==0.5.8`，不自动升级 Python 包。未显式指定
+渠道或 browser pin 时，默认跟踪 `official/prerelease`，由 Camoufox 官方版本
+发现和兼容判断选择当前平台最新兼容 prerelease，不再使用 Python 包的隐式配对。
+准备时在缓存锁内补写默认渠道，旧 active 配置自动迁移；静态探测不写配置。
+用户已有渠道、版本 pin、SHA 和自定义 executable 保持优先。可用
+`python -m camoufox set official/stable` 跟踪 stable，或用
+`python -m camoufox set official/prerelease/<version>` 固定版本。
+显式 pin 只准备对应版本，有效本地 pin 直接复用；未 pin 时每次抓取均查询，
+没有跨调用更新间隔。更新失败且本地版本校验有效时提示并继续使用；没有可用版本
+则记录准备失败并继续 HTTP／缓存流程，实际需要浏览器时报告该失败，同次请求不
+重复更新。进度和错误写 stderr，取消继续传播。
+
+联网阶段可先用项目准备逻辑预置 prerelease 和 fpgen 模型：
+
+```bash
+python - <<'PYCODE'
+from paper_fetch.providers.browser_runtime.preparation import prepare_camoufox_managed_runtime
+from camoufox.fpgen_model import ensure_fpgen_model
+assert prepare_camoufox_managed_runtime().valid
+ensure_fpgen_model()
+PYCODE
+```
+
+fpgen 模型不包含在 Python wheel 中；首次生成指纹也可能下载模型到 fpgen 包目录，
+完全离线前需确认该目录可写并完成准备。
 
 ## 选择与配置
 
@@ -59,7 +77,7 @@ macOS 官方 managed app bundle 把 executable 放在 `Contents/MacOS`，把运�
 放在 `Contents/Resources`。不要把官方 cache 内的
 `Contents/MacOS/camoufox` 配置为 `PAPER_FETCH_BROWSER_BINARY_PATH`；这样会把
 managed bundle 错当成 custom executable。官方 runtime 应保持该变量未设置，
-由启动前自动准备和 Camoufox active-version 配置共同管理。只有自定义
+由请求准备和 Camoufox active-version 配置共同管理。只有自定义
 runtime 明确实现 Camoufox 的 custom-path metadata 布局时才使用该覆盖。
 
 ## 生命周期

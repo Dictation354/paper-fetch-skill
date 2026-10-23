@@ -1,8 +1,8 @@
 # Browser runtime ownership
 
-生产 browser runtime 只有 Camoufox；browser/full extra 接受
-`camoufox>=0.5.5,<0.6`。开发和常规 CI 使用 `uv.lock` 中的具体版本，离线构建使用
-依赖 wheelhouse 实际解析出的兼容版本，并由 `paper_fetch.providers.browser_runtime`
+生产 browser runtime 只有 Camoufox；browser/full extra 固定
+`camoufox==0.5.8`。开发和常规 CI 使用 `uv.lock` 中的具体版本，离线构建使用
+依赖 wheelhouse 中的同一固定版本，并由 `paper_fetch.providers.browser_runtime`
 统一管理。
 
 ## 依赖方向
@@ -159,21 +159,26 @@ browser runtime 固定为 Camoufox。可使用：
 `PAPER_FETCH_BROWSER_USER_AGENT` 只用于允许覆盖 UA 的 direct publisher request；
 Camoufox 启动不接受固定 UA，以避免生成的 Firefox 指纹内部不一致。
 
-普通 fetch、auth 和 preflight 每次实际启动浏览器前自动准备 managed runtime。
-未固定版本时查询所选渠道的最新兼容版本；固定版本时只补全该版本，有效本地
-固定版本不联网查询。有效目标直接复用，损坏目标只修复经路径校验的版本目录。
-共享 cache 的准备使用进程锁串行化，并在锁内重新探测；不会清空整个 cache。
-查询或安装失败时提示并恢复有效本地版本；没有可用版本时沿用 provider 失败处理。
+CLI、MCP 和 Python API 每次抓取请求开始时自动准备 managed runtime，包括
+纯 HTTP 和缓存命中；批量任务调度前统一准备一次，子任务及后续浏览器启动复用
+本次结果。不同调用重新检查，不设置更新间隔。`auth` 和 preflight 仍在启动前检查。
+默认渠道为 `official/prerelease`，通过 Camoufox 0.5.8 官方发现和兼容判断选择
+当前平台最新兼容 prerelease，不使用包配套浏览器隐式 pin，不自动升级 Python 包。
+已有显式渠道、版本 pin、SHA、自定义 executable 优先；本地有效 pin 不联网查询。
+共享 cache 的准备使用进程锁，并在锁内补写默认渠道，旧 active 配置自动迁移。
+有效目标直接复用，损坏目标只修复经路径校验的版本目录，不清空整个 cache。
+更新失败时提示并恢复有效本地版本；没有可用版本时先记录失败，继续 HTTP／缓存
+流程，实际需要浏览器时报告失败，同次请求不重试准备。取消继续传播。
 配置损坏、路径越界或 symlink/reparse 路径会明确报错，不通过删除配置修复。
-下载进度写入 stderr，Python 依赖缺失仍报告配置错误，不自动安装依赖。
-无浏览器的抓取不检查更新；正文、图片和附件在同一浏览器生命周期内复用 runtime。
+下载进度和错误写 stderr；core 安装缺少 browser extra 或显式 executable 时
+跳过托管更新，不自动安装 Python 依赖。
 准备完成后由 Camoufox package 自行解析 active browser version。paper-fetch 不会把官方 macOS app 内的 `Contents/MacOS/camoufox` 再当成
 custom executable 传回去，因为 Camoufox 的 bundle metadata 位于
 `Contents/Resources`。只有显式 `PAPER_FETCH_BROWSER_BINARY_PATH` 才作为 custom
 `executable_path` 透传；在 macOS 上优先使用 managed runtime，除非 custom bundle
 明确支持 Camoufox 的 executable-path metadata 语义。
 
-准备好官方 Mac runtime 后，可执行不访问远端 publisher 的原生双 context
+按 [浏览器预置说明](browser-backends.md#安装) 准备官方 prerelease 和 fpgen 模型后，可执行不访问远端 publisher 的原生双 context
 回归：
 
 ```bash
@@ -193,8 +198,8 @@ WindowServer 或物理显示器。
 
 ## 诊断边界
 
-`doctor`/`provider_status` 保持只读，不联网查询或准备 runtime。`fetch`、`auth` 和
-`browser-preflight` 在实际启动前自动准备 managed runtime；显式 executable 不参与
+`doctor`/`provider_status`、解析和帮助命令保持只读，不联网查询或准备 runtime。
+`fetch` 在请求开始时准备；`auth` 和 `browser-preflight` 在实际启动前准备；显式 executable 不参与
 自动管理。预检随后执行 live 页面访问和可选 storage-state 保存。challenge、登录、验证码、付费和 entitlement
 边界始终需要合法用户操作，工具不会自动绕过。
 

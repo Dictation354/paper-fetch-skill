@@ -1,0 +1,113 @@
+{
+  "capture_method": "HttpTransport GET of explicit full_size_url from captured original.html",
+  "records": [
+    {
+      "doi": "10.1093/nsr/nwae442",
+      "provider": "oxfordacademic",
+      "capture_kind": "http_response_entity",
+      "captured_at_utc": "2026-10-23T07:12:58.990863+00:00",
+      "requested_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/nsr/12/2/10.1093_nsr_nwae442/7/nwae442fig1.jpeg?Expires=1794967378&Signature=Ezk8zQu3X7cjfRLIWI-GAXgvi-gSChHTBFsi-kj9qa2V-QJbY4xe5I8aLR3WH7YfZgiB2Z1R3CDhfwAX6LRgwgzpb5jOKbglpRpgVlyiYJnbXbXC7bs-~UMVaNeuObl1wTBDNtLhIKrL2ECSvjCJL-C1-WZXkNbHRS7~K1ZOiESasmx-qDsxdceWVx7Ti7PJ79NLrxAoGNUToiSJJl3Fqc5JcE4e6Tj0E94HlNDjBRrqgY-5RWkuyhRonATAwUwmd4rNfGbYY~sfYodPMUvAhADMzq-uHbzHmzc5JUS2FPk3EgtSNQZRZPtbGic8dOaylwuYjHADerJeSmkHxGZaqQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/nsr/12/2/10.1093_nsr_nwae442/7/nwae442fig1.jpeg?Expires=1794967378&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg"
+      },
+      "body_file": "images/nwae442fig1.jpeg",
+      "size": 98157,
+      "sha256": "3113306852ae5d7cb97a914064e58d4cece400b31507ee5344d2554bcca4eac1",
+      "width": 1141,
+      "height": 499,
+      "asset_kind": "figure"
+    },
+    {
+      "doi": "10.1093/nsr/nwae442",
+      "provider": "oxfordacademic",
+      "capture_kind": "http_response_entity",
+      "captured_at_utc": "2026-10-23T07:12:58.990863+00:00",
+      "requested_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/nsr/12/2/10.1093_nsr_nwae442/7/nwae442fig2.jpeg?Expires=1794967378&Signature=WQy7qYOJYEX3aNoHwxTxad--EWrHpFu8u3UCGVUbyYqG~EklU6hSmfleeTIOBS7W5pUmFhIUccSLDlRdXZehwQ78LZLnhjR7IcP~ClqJB2HkuLExGgbrGTvwTThsbEXC9N6uN7takdGjvyF7mvc3PFdkfQ-K-ZIxsPyXgVGFDaB8hp3yiQzG89Ef6SrHbk4mvPB4AgU4m9pPFWGSens6u0qT~4w6BSpbIdqicVc~1epSPWmSbUAc7Q8RyUQjaSWzBeTMBd6wGHuu-1DzKVewaikpuVkMN24fCh9TolV0QE1YSiQkD8pDBDn9Njcze26mVyV7LEfIh4X7Y7gxHeonhw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/nsr/12/2/10.1093_nsr_nwae442/7/nwae442fig2.jpeg?Expires=1794967378&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg"
+      },
+      "body_file": "images/nwae442fig2.jpeg",
+      "size": 463367,
+      "sha256": "a739ef0fa7b0b6b0e4bc9f7981838f9daf6a93d473a865d291a6b401e4ff7391",
+      "width": 2008,
+      "height": 1004,
+      "asset_kind": "figure"
+    },
+    {
+      "doi": "10.1093/nsr/nwae442",
+      "provider": "oxfordacademic",
+      "capture_kind": "http_response_entity",
+      "captured_at_utc": "2026-10-23T07:12:58.990863+00:00",
+      "requested_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/nsr/12/2/10.1093_nsr_nwae442/7/nwae442fig3.jpeg?Expires=1794967378&Signature=HSznguojfcqjqu0ESfzUHcd6HUiQVAIREyOzUmZKf-m8Vg3xkbaF-f8R3lhV607CiwAc6I9JyV1q-ikUt8EzuBpFkxI73t5Qiy-X9~c1BQ66RyFrJEpL8zK-ZdTmjo8gRbzd9H07yAFnYOpJKwo3u9kA19KDIWFeuYCitug4Mr7YM9ChYllSPvcnz1bYa7G0XmHUUqml~iZD2aGI5CsESsEFqYoEbyfdg7BGdmAB28n2TRcDANA2rOkYBc9b~2uV7ujTlFyx2APirktmC~51bQQUzUiJclGE1sV~ypfz87N-~TP~t3p3TKn4y0RxzIlCCrTyLIckG8-vuAv-zAzXnw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/nsr/12/2/10.1093_nsr_nwae442/7/nwae442fig3.jpeg?Expires=1794967378&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg"
+      },
+      "body_file": "images/nwae442fig3.jpeg",
+      "size": 203042,
+      "sha256": "48fa990911c484049eab0c6587d1c8c6dcb0fc283e1ee7b6796635742a191954",
+      "width": 1629,
+      "height": 958,
+      "asset_kind": "figure"
+    },
+    {
+      "doi": "10.1093/nsr/nwae442",
+      "provider": "oxfordacademic",
+      "capture_kind": "http_response_entity",
+      "captured_at_utc": "2026-10-23T07:12:58.990863+00:00",
+      "requested_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/nsr/12/2/10.1093_nsr_nwae442/7/nwae442fig4.jpeg?Expires=1794967378&Signature=JOrizJeszy-Pj7qKGHfgIQRnqHewCNb-KGLpi1lQGQJmAyTf2BtUEmr-WLgwkthtwrHxMKI2ygARSJ-hjdnFG2Q2U8z9aB4vEzRP2Gm2hYku23weTmXU-CAfsS6EZ3nnLcMKhhPO~gku67PiKJz3-5eQR3qp6m8z-cnJpfn0eYw5gAbfRXebX9VyUGezRxCW~jrm9tAS1ZQncjnpFlUFsxgVq13uVEHbOfbQiIfpjYA0Bqskg1Nc9UK4V4YJR-f-EErMxQ3JVnR-PtWL~pJiAfVM1caym~RbJ6hbaB39n0c6Cdo0PHvz1XCBdvpF9jSsNRXlQKv56WRwP0D-~cJLvw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/nsr/12/2/10.1093_nsr_nwae442/7/nwae442fig4.jpeg?Expires=1794967378&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg"
+      },
+      "body_file": "images/nwae442fig4.jpeg",
+      "size": 458161,
+      "sha256": "b886489b73c1e26653b4fdd9c8c44b363d5b52b87e29112bfcd70dbb45604635",
+      "width": 2008,
+      "height": 1004,
+      "asset_kind": "figure"
+    },
+    {
+      "doi": "10.1093/nsr/nwae442",
+      "provider": "oxfordacademic",
+      "capture_kind": "http_response_entity",
+      "captured_at_utc": "2026-10-23T07:12:58.990863+00:00",
+      "requested_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/nsr/12/2/10.1093_nsr_nwae442/7/nwae442fig5.jpeg?Expires=1794967378&Signature=do4KhmJxAf1S3XCs4DGpKHyppmJfSXGsAbRlsKk45ckscE9j3sTARgV5O6jKmHECPUTd~jZkNHP1ra6LV6vjDor6v7vaLeXam3wSjhnS9i8LmQ1fTx4yC60qLovZalRKtitd1m6uEAv~xpyDFWelAcSJr6ShO6zKMogPGN9WIjFD-ejWW3WVWubdb6ffCrieOT5GsSM78G6joOYkUv~8WelA053DABmURRMcUHmImx5tPD~UxKm4-u~-7JBFpEVCFGZzslxs1HSsl33hUE-Fs6wj8nf18zt4cA0Y7OzG1kROg85b8jScmx18ezaqNfA0~ZJk~T9-zNXqqnIAOTjn-w__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/nsr/12/2/10.1093_nsr_nwae442/7/nwae442fig5.jpeg?Expires=1794967378&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg"
+      },
+      "body_file": "images/nwae442fig5.jpeg",
+      "size": 622389,
+      "sha256": "c9230c7283f0cf5723683a320557853660f374bc259e0823cdf39320feb809bf",
+      "width": 1964,
+      "height": 1005,
+      "asset_kind": "figure"
+    },
+    {
+      "doi": "10.1093/nsr/nwae442",
+      "provider": "oxfordacademic",
+      "capture_kind": "http_response_entity",
+      "captured_at_utc": "2026-10-23T07:12:58.990863+00:00",
+      "requested_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/nsr/12/2/10.1093_nsr_nwae442/7/nwae442fig6.jpeg?Expires=1794967378&Signature=FtSQlHm4JmsozKuvYg0IWac2equ6ruQIUUexSYvf0Pam5HuyDVA2ggYQF~83IYOuaqpTXV~cTEsC4zjh57onuEv~9jxy~JymlYgGtQZgm1YoiYB9ogJyitoTfWv1kaGfzpiIgok8cplY3cV3zA6WW8cZ20FGBIFUiBDE8canVP0aiLWxIecs0W~NEXME2mulUnu7IOqt1Ktpz-OLKGkFsCSn89Y8Wjef9zZp7RajWyyFsE0mz7-6OER99aHt4XE9K9oxslkLY2PJeYioRlw5Kzx7x-rZdHqTyFZDVXT0lkvw9UtLFWF99fr6W4Wz3fdTbkqZFnfJxRdGhTQrqg9qXw__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "final_url": "https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/nsr/12/2/10.1093_nsr_nwae442/7/nwae442fig6.jpeg?Expires=1794967378&Signature=%2A%2A%2A&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "image/jpeg"
+      },
+      "body_file": "images/nwae442fig6.jpeg",
+      "size": 346433,
+      "sha256": "4f8986afcf1be54f8d1ad8b3115f4b8cebcb005175da8c1bf73eae07a2c7285d",
+      "width": 1112,
+      "height": 2048,
+      "asset_kind": "figure"
+    }
+  ]
+}

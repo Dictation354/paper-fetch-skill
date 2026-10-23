@@ -315,8 +315,9 @@ def build_server() -> PaperFetchMCPServer:
             "manifest/acceptance results. It may access remote services and write the "
             "same cache, artifacts, or Markdown as fetch_paper. detail=bounded returns "
             "only a batch-wide bounded text sample. batch_results atomically writes "
-            "the final input-ordered JSONL result; overwrite defaults false. Browser "
-            "routes automatically prepare/update managed Camoufox before browser launch."
+            "the final input-ordered JSONL result; overwrite defaults false. "
+            "Each batch checks managed Camoufox once at start, including HTTP/cache "
+            "hits (default official/prerelease; explicit channel/pins take priority)."
         ),
         annotations=_fetch_annotations(),
         structured_output=False,

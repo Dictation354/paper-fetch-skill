@@ -1212,6 +1212,8 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 
 ### Oxford Academic 层级、引用身份与后置内容
 
+- 图资产按同一 DOM 图片关联 `figure`、外层 `.fig-section` 和嵌套 `.graphic-wrap` 的发现结果，在下载前合并为一条逻辑资产；不同子图分别保留。原图候选只来自页面显式属性／链接（含 Silverchair 下载控件），沿用原签名，不通过去掉文件名 `m_` 猜测地址，也不改变不同尺寸 URL 的请求身份。
+- 正文原位使用显式原图 URL；下载成功后替换为本地原图，未下载时保留远程原图，不追加重复 Figures。只有原图缺失或获取失败才尝试预览；预览成功仍原位内联，记录 `download_tier=preview`、Oxford `preview_fallback` 和 `preview_accepted=false`。即使尺寸达标也保留 `asset_fidelity_degraded`，资产与整体验收为 degraded，全文获取保持成功；降级只进入报告／诊断，正文不增加提示。两种图片都失败时沿用资产失败报告。
 - 渲染列表前删除 `#Toolbar`、工具栏包装及引用／分享弹窗，并显式使用 Oxford noise profile；正文中的 `PDF`、`Share` 等操作词不作为全局删词规则。共享容器、普通节点和行内渲染均忽略 HTML `Comment`。
 - 附件区保留可点击链接，以文章 URL 解析相对地址；附件去重、资产范围与下载语义沿用现有契约。结构化摘要复用行内渲染保留上下标和公式，并保留段落、语言、顺序和来源信息，组装时不再用纯文本摘要覆盖。
 - 清理作者信息卡前按显式脚注目标 ID 采集作者关联，输出姓名与注释；没有关联信息时保留原注释，不根据作者顺序推断。`nwae442` 原网页没有共同贡献脚注的作者关联。

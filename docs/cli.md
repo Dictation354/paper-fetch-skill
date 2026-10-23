@@ -456,3 +456,12 @@ CLI 会在开始抓取前创建最终输出目录，包括显式 `--output-dir` 
 | `2` | 查询歧义或 argparse 参数错误 |
 | `3` | 无访问权限 |
 | `4` | 被限速 |
+
+CLI 抓取在每次请求开始时检查 managed Camoufox，包括 HTTP 抓取和缓存命中；
+批量任务在调度前统一检查一次，子任务和浏览器启动复用该结果。browser/full
+固定 `camoufox==0.5.8`，默认渠道 `official/prerelease`，跟踪当前平台最新兼容
+浏览器，不自动升级 Python 包。显式渠道、pin、SHA 和自定义 executable 优先；
+core 缺少 browser extra 或显式 executable 时跳过托管更新。更新失败可复用有效
+本地版本；无可用浏览器则记录失败并继续 HTTP／缓存流程，实际需要浏览器时报告
+失败，本次不重复准备。进度和错误写 stderr。`auth` 和 `browser-preflight` 在
+启动前检查；`doctor`、状态查询、解析和帮助命令保持只读。

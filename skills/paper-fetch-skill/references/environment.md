@@ -31,7 +31,7 @@
 
 ## 运行时准备与授权
 
-普通 MCP/CLI/library 工具在每次实际启动浏览器前自动补全或更新 managed Camoufox；无浏览器抓取和静态诊断不检查更新，同一浏览器生命周期不重复检查。未固定版本时查询所选渠道最新兼容版本，固定时只补全对应版本。更新失败但本地版本有效时提示并继续使用，无可用版本则报告准备失败。下载进度写 stderr；显式 binary 路径仍由用户维护。缺失 Python 依赖、损坏配置或不安全路径不会通过自动安装依赖或删除配置修复；代理根据具体诊断报告限制，额外环境修复仍需当前任务已有适用授权。离线使用前可在联网阶段显式运行 `python -m camoufox fetch` 预置 runtime。
+普通 MCP/CLI/library 工具在每次抓取请求开始时检查并准备 managed Camoufox，包括纯 HTTP 和缓存命中；批量任务调度前统一检查一次，子任务及启动复用该结果。browser/full 固定 `camoufox==0.5.8`，默认跟踪 `official/prerelease` 的当前平台最新兼容版本，不自动升级 Python 包，也不使用包配套 browser 隐式 pin。已有显式渠道、版本 pin、SHA、自定义 executable 优先；pin 只准备对应版本。准备时在缓存锁内补写默认渠道，静态探测不写配置。更新失败但本地有效时继续使用；无可用浏览器时记录失败并继续 HTTP／缓存流程，需要浏览器时报告本次失败，同次不重复更新。进度和错误写 stderr，取消继续传播。core 缺少 browser extra 或显式 executable 时跳过托管更新，不自动安装 Python 依赖。`auth` 和 preflight 仍在启动前准备；`doctor`、状态查询、解析和帮助保持只读。联网预置 prerelease 和 fpgen 的项目准备命令使用 `python -c "from paper_fetch.providers.browser_runtime.preparation import prepare_camoufox_managed_runtime; from camoufox.fpgen_model import ensure_fpgen_model; prepare_camoufox_managed_runtime(); ensure_fpgen_model()"`。额外环境修复沿用当前任务已有适用授权。
 
 运行时准备不授予出版社访问权限。只有实际 fetch 或按需 preflight 明确返回 `challenge` / `auth_required` 时才由用户执行人工 auth；不自动登录或绕过访问控制。
 

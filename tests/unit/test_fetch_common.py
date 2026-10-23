@@ -111,7 +111,7 @@ class FetchCommonTests(unittest.TestCase):
                 for dependency in optional_dependencies[extra_name]
                 if Requirement(dependency).name.casefold() == "camoufox"
             ]
-            self.assertEqual(camoufox_requirements, ["camoufox>=0.5.5,<0.6"])
+            self.assertEqual(camoufox_requirements, ["camoufox==0.5.8"])
 
         camoufox_packages = [
             package
@@ -122,7 +122,7 @@ class FetchCommonTests(unittest.TestCase):
         locked_version = Version(camoufox_packages[0]["version"])
         self.assertIn(
             locked_version,
-            Requirement("camoufox>=0.5.5,<0.6").specifier,
+            Requirement("camoufox==0.5.8").specifier,
         )
 
         project_package = next(
@@ -142,7 +142,7 @@ class FetchCommonTests(unittest.TestCase):
             self.assertEqual(len(camoufox_edges), 1)
             self.assertEqual(
                 camoufox_edges[0].get("specifier"),
-                ">=0.5.5,<0.6",
+                "==0.5.8",
             )
 
     def test_pdf_extras_require_current_pymupdf4llm_compatibility_line(self) -> None:
@@ -171,7 +171,7 @@ class FetchCommonTests(unittest.TestCase):
             Requirement("pymupdf4llm>=1.28.2,<2").specifier,
         )
 
-    def test_all_declared_python_dependencies_use_non_exact_constraints(self) -> None:
+    def test_only_camoufox_uses_an_exact_dependency_constraint(self) -> None:
         with (REPO_ROOT / "pyproject.toml").open("rb") as handle:
             pyproject = tomllib.load(handle)
 
@@ -187,7 +187,10 @@ class FetchCommonTests(unittest.TestCase):
             requirement = Requirement(dependency)
             operators = {specifier.operator for specifier in requirement.specifier}
             self.assertTrue(requirement.specifier, dependency)
-            self.assertTrue(operators.isdisjoint({"==", "==="}), dependency)
+            if requirement.name.casefold() == "camoufox":
+                self.assertEqual(str(requirement.specifier), "==0.5.8")
+            else:
+                self.assertTrue(operators.isdisjoint({"==", "==="}), dependency)
 
     def test_article_markdown_common_reexports_shared_normalize_text(self) -> None:
         self.assertIs(markdown_common.normalize_text, utils.normalize_text)

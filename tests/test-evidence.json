@@ -446,6 +446,13 @@
         "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
       }
     },
+    "tests/unit/test_fetch_browser_preparation.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "fetch-scoped browser preparation and entrypoint reuse",
+        "reason": "边界 mock 验证准备时机、批量复用、失败与取消传播，不证明真实浏览器或出版社访问。"
+      }
+    },
     "tests/unit/test_fetch_common.py": {
       "default": {
         "kind": "mechanism",
@@ -4373,6 +4380,19 @@
           "source"
         ],
         "auxiliary": []
+      },
+      "overrides": {
+        "test_nwae442_downloads_six_originals_once_inline": {
+          "kind": "content",
+          "scope": "nwae442 six original binary images, single requests and inline captions without duplicate assets",
+          "primary": [
+            "source",
+            "asset"
+          ],
+          "auxiliary": [
+            "snapshot"
+          ]
+        }
       }
     },
     "tests/unit/test_extraction_problem_contracts.py": {
@@ -4514,6 +4534,13 @@
         "kind": "mechanism",
         "scope": "任意源ID、显式映射、表格、列表、脚本样式及PDF外围组装的最小片段。",
         "reason": "不读取完整论文；来源驱动断言由 golden 承担。"
+      }
+    },
+    "tests/unit/test_oxford_inline_figures.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Oxford DOM image ownership, original/preview download order, subpanels and degraded acceptance",
+        "reason": "Minimal HTML fragments and mocked binary responses; full original images replay in golden."
       }
     }
   }

@@ -27406,7 +27406,14 @@
       "purpose": "Captured Oxford HTML extraction quality replay",
       "assets": {
         "original.html": "tests/fixtures/golden_criteria/_scenarios/oxford_nwae442/original.html",
-        "source.json": "tests/fixtures/golden_criteria/_scenarios/oxford_nwae442/source.json"
+        "source.json": "tests/fixtures/golden_criteria/_scenarios/oxford_nwae442/source.json",
+        "images/nwae442fig1.jpeg": "tests/fixtures/golden_criteria/_scenarios/oxford_nwae442/images/nwae442fig1.jpeg",
+        "images/nwae442fig2.jpeg": "tests/fixtures/golden_criteria/_scenarios/oxford_nwae442/images/nwae442fig2.jpeg",
+        "images/nwae442fig3.jpeg": "tests/fixtures/golden_criteria/_scenarios/oxford_nwae442/images/nwae442fig3.jpeg",
+        "images/nwae442fig4.jpeg": "tests/fixtures/golden_criteria/_scenarios/oxford_nwae442/images/nwae442fig4.jpeg",
+        "images/nwae442fig5.jpeg": "tests/fixtures/golden_criteria/_scenarios/oxford_nwae442/images/nwae442fig5.jpeg",
+        "images/nwae442fig6.jpeg": "tests/fixtures/golden_criteria/_scenarios/oxford_nwae442/images/nwae442fig6.jpeg",
+        "acquisition/provenance.json": "tests/fixtures/golden_criteria/_scenarios/oxford_nwae442/acquisition/provenance.json"
       }
     },
     "10.48550_arxiv.0811.2625v2": {

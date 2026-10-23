@@ -86,55 +86,56 @@ def fetch_paper(
     owns_runtime = context is None
     runtime = context or RuntimeContext()
     try:
-        requested_modes = set(modes or DEFAULT_OUTPUT_MODES)
-        active_strategy = strategy or FetchStrategy()
-        active_render = render or RenderOptions()
-        resolved_render = RenderOptions(
-            include_refs=active_render.include_refs,
-            asset_profile=(
-                active_render.asset_profile
-                if active_render.asset_profile is not None
-                else active_strategy.asset_profile
-            ),
-            max_tokens=active_render.max_tokens,
-        )
+        with runtime.fetch_browser_preparation():
+            requested_modes = set(modes or DEFAULT_OUTPUT_MODES)
+            active_strategy = strategy or FetchStrategy()
+            active_render = render or RenderOptions()
+            resolved_render = RenderOptions(
+                include_refs=active_render.include_refs,
+                asset_profile=(
+                    active_render.asset_profile
+                    if active_render.asset_profile is not None
+                    else active_strategy.asset_profile
+                ),
+                max_tokens=active_render.max_tokens,
+            )
 
-        with formula_runtime_env(runtime.env or {}), formula_validation_session():
-            article = fetch_article(
-                query,
-                strategy=active_strategy,
-                context=runtime,
-                resolve_paper_fn=resolve_paper,
-            )
-            runtime.raise_if_cancelled()
-            if not article.source.endswith("_pdf") and not (
-                article.acquisition and article.acquisition.representation == "pdf"
-            ):
-                losses = article.quality.semantic_losses
-                count_before = losses.formula_fallback_count
-                capture_formula_diagnostics(losses, count_fallbacks=True)
-                if losses.formula_fallback_count > count_before:
-                    if (
-                        QUALITY_FLAG_FORMULA_FALLBACK_PRESENT
-                        not in article.quality.flags
-                    ):
-                        article.quality.flags.append(
+            with formula_runtime_env(runtime.env or {}), formula_validation_session():
+                article = fetch_article(
+                    query,
+                    strategy=active_strategy,
+                    context=runtime,
+                    resolve_paper_fn=resolve_paper,
+                )
+                runtime.raise_if_cancelled()
+                if not article.source.endswith("_pdf") and not (
+                    article.acquisition and article.acquisition.representation == "pdf"
+                ):
+                    losses = article.quality.semantic_losses
+                    count_before = losses.formula_fallback_count
+                    capture_formula_diagnostics(losses, count_fallbacks=True)
+                    if losses.formula_fallback_count > count_before:
+                        if (
                             QUALITY_FLAG_FORMULA_FALLBACK_PRESENT
-                        )
-                    for warning in _semantic_loss_warning_messages(losses):
-                        if warning not in article.quality.warnings:
-                            article.quality.warnings.append(warning)
-                    if article.quality.confidence == "high":
-                        article.quality.confidence = "medium"
-            runtime.report_progress("stage", stage="validating")
-            envelope = build_fetch_envelope(
-                article,
-                modes=requested_modes,
-                render=resolved_render,
-                trace=list(runtime.fetch_trace),
-                diagnostic_artifacts=list(runtime.diagnostic_artifacts),
-            )
-        return envelope
+                            not in article.quality.flags
+                        ):
+                            article.quality.flags.append(
+                                QUALITY_FLAG_FORMULA_FALLBACK_PRESENT
+                            )
+                        for warning in _semantic_loss_warning_messages(losses):
+                            if warning not in article.quality.warnings:
+                                article.quality.warnings.append(warning)
+                        if article.quality.confidence == "high":
+                            article.quality.confidence = "medium"
+                runtime.report_progress("stage", stage="validating")
+                envelope = build_fetch_envelope(
+                    article,
+                    modes=requested_modes,
+                    render=resolved_render,
+                    trace=list(runtime.fetch_trace),
+                    diagnostic_artifacts=list(runtime.diagnostic_artifacts),
+                )
+            return envelope
     finally:
         if owns_runtime:
             runtime.close()

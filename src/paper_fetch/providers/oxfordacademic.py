@@ -103,7 +103,20 @@ class OxfordAcademicArticleAttempt:
 
 
 def _oxford_asset_identity(asset: Mapping[str, Any]) -> object:
-    identity = html_asset_identity_key(asset)
+    # A viewer page can contain several subpanels. Their explicit binary
+    # objects remain separate, including when they share that viewer URL.
+    identity = (
+        normalize_text(
+            str(
+                asset.get("original_url")
+                or asset.get("full_size_url")
+                or asset.get("url")
+                or ""
+            )
+        )
+        if asset.get("kind") == "figure"
+        else ""
+    ) or html_asset_identity_key(asset)
     parsed = urlparse(identity)
     # Only compare identities here: every request/provenance URL retains its
     # original signature. Preserve the full path/rendition and other parameters.
@@ -727,6 +740,21 @@ class OxfordAcademicClient(ProviderClient):
             if body_images
             else empty_asset_results()
         )
+        for asset in body_result["assets"]:
+            if (
+                asset.get("kind") == "figure"
+                and asset.get("download_tier") == "preview"
+            ):
+                asset["preview_accepted"] = False
+                asset["recovery_attempts"] = [
+                    *list(asset.get("recovery_attempts") or []),
+                    {
+                        "provider": self.name,
+                        "stage": "preview_fallback",
+                        "outcome": "ok",
+                        "reason": "full_size_unavailable",
+                    },
+                ]
         supplementary_result = (
             download_assets(
                 SUPPLEMENTARY_KIND,

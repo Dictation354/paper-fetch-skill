@@ -170,11 +170,11 @@ def _asset_provenance(asset: AssetLike) -> list[str]:
 def preview_asset_is_accepted(asset: AssetLike) -> bool:
     """Classify a preview from explicit evidence or the shared size threshold."""
 
-    # Wiley's explicit full-size failure remains a fallback even when the
-    # publisher preview exceeds the ordinary acceptable-preview dimensions.
+    # These providers retain explicit original-image degradation even when
+    # the preview exceeds the ordinary acceptable-preview dimensions.
     if _text_field(asset, "kind") == "figure" and any(
         isinstance(attempt, Mapping)
-        and attempt.get("provider") == "wiley"
+        and attempt.get("provider") in {"wiley", "oxfordacademic"}
         and attempt.get("stage") == "preview_fallback"
         for attempt in (_field(asset, "recovery_attempts") or [])
     ):

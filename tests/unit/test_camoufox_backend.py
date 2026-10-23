@@ -615,7 +615,6 @@ def test_camoufox_static_probe_reads_runtime_without_fetching(
 def test_camoufox_probe_validates_managed_executable_without_fetching(
     monkeypatch, tmp_path
 ) -> None:
-    monkeypatch.setattr(preparation, "_browser_pin", lambda _config: None)
     active_spec = "browsers/official/152.0.4-beta.28"
     runtime_path = tmp_path / active_spec
     executable = runtime_path / "camoufox"
@@ -655,7 +654,6 @@ def test_camoufox_probe_validates_managed_executable_without_fetching(
 def test_camoufox_probe_rejects_link_in_managed_runtime_path(
     monkeypatch, tmp_path
 ) -> None:
-    monkeypatch.setattr(preparation, "_browser_pin", lambda _config: None)
     real_parent = tmp_path / "real-official"
     real_parent.mkdir()
     browsers = tmp_path / "browsers"
@@ -2656,9 +2654,9 @@ def managed_camoufox(monkeypatch, tmp_path):
     import zipfile
     from camoufox import multiversion, pkgman
 
-    # Existing scenarios exercise explicit channel selection; pairing is covered below.
-    monkeypatch.setattr(preparation, "_browser_pin", lambda _config: None)
     root = tmp_path / "managed"
+    root.mkdir()
+    (root / "config.json").write_text(json.dumps({"channel": "official/stable"}))
     monkeypatch.setattr(pkgman, "INSTALL_DIR", root)
     monkeypatch.setattr(multiversion, "INSTALL_DIR", root)
     monkeypatch.setattr(multiversion, "BROWSERS_DIR", root / "browsers")
@@ -2722,109 +2720,79 @@ def test_managed_camoufox_missing_installs_and_latest_reuses(managed_camoufox, c
     assert env.multi.COMPAT_FLAG.is_file()
 
 
-def _use_release_pairing(monkeypatch, env):
-    pin = SimpleNamespace(repo_name="official", spec=env.latest.version.full_string)
-    monkeypatch.setattr(
-        preparation,
-        "_browser_pin",
-        lambda config: None if config.get("channel") or config.get("pinned") else pin,
-    )
-
-
-def test_managed_camoufox_paired_probe_does_not_change_active_config(
-    managed_camoufox, monkeypatch
+@pytest.mark.parametrize("old_active", [False, True])
+def test_managed_camoufox_defaults_to_prerelease_and_migrates_active(
+    managed_camoufox, old_active
 ):
     env = managed_camoufox
-    env.install_local()
-    paired_path = env.install_local(env.latest, active=False)
-    _use_release_pairing(monkeypatch, env)
+    if old_active:
+        env.install_local()
+    config = env.multi.load_config()
+    config.pop("channel")
+    config["unrelated"] = "preserve"
+    env.multi.save_config(config)
+    env.latest.is_prerelease = True
     before = env.multi.CONFIG_FILE.read_bytes()
-
     probe = preparation.probe_camoufox_managed_runtime()
-
-    assert probe.valid and probe.runtime_path == paired_path
+    assert probe.valid is old_active
     assert env.multi.CONFIG_FILE.read_bytes() == before
     env.query.assert_not_called()
-    env.download.assert_not_called()
-
-
-@pytest.mark.parametrize("prerelease", [False, True])
-def test_managed_camoufox_reuses_local_pair_without_network(
-    managed_camoufox, monkeypatch, prerelease
-):
-    env = managed_camoufox
-    env.latest.is_prerelease = prerelease
-    paired_path = env.install_local(env.latest, active=False)
-    env.install_local()
-    _use_release_pairing(monkeypatch, env)
-    env.query.side_effect = OSError("offline")
 
     result = preparation.prepare_camoufox_managed_runtime()
-
-    assert result.valid and result.runtime_path == paired_path
-    assert env.multi.load_config()["active_version"] == result.active_spec
-    env.query.assert_not_called()
-    env.download.assert_not_called()
-
-
-@pytest.mark.parametrize("prerelease", [False, True])
-def test_managed_camoufox_installs_pair_even_with_newer_browser_available(
-    managed_camoufox, monkeypatch, prerelease
-):
-    env = managed_camoufox
-    env.latest.is_prerelease = prerelease
-    newer = env.pkgman.AvailableVersion(
-        env.pkgman.Version("beta.32", "152.0.4"),
-        "https://example.test/newer.zip",
-        False,
-    )
-    env.query.return_value = [newer, env.latest, env.old]
-    _use_release_pairing(monkeypatch, env)
-
-    result = preparation.prepare_camoufox_managed_runtime()
-
     assert result.valid and result.version == env.latest.version.full_string
+    assert env.multi.load_config()["channel"] == "official/prerelease"
+    assert env.multi.load_config()["unrelated"] == "preserve"
     assert env.query.call_args.kwargs == {"include_prerelease": True}
+    assert env.pkgman.camoufox_path(download_if_missing=False) == result.runtime_path
+    assert preparation.prepare_camoufox_managed_runtime() == result
+    assert env.query.call_count == 2
     env.download.assert_called_once()
 
 
-@pytest.mark.parametrize("failure", ["query", "download"])
-def test_managed_camoufox_missing_pair_cannot_fall_back_to_old_active(
-    managed_camoufox, monkeypatch, failure
-):
+def test_managed_camoufox_new_prerelease_updates_next_call(managed_camoufox):
     env = managed_camoufox
-    old_path = env.install_local()
-    config = env.multi.load_config()
-    _use_release_pairing(monkeypatch, env)
-    if failure == "query":
-        env.query.side_effect = OSError("offline")
-    else:
-        env.download.side_effect = OSError("interrupted")
-
-    assert preparation.probe_camoufox_managed_runtime().state == "missing"
-    with pytest.raises(RuntimeError, match="preparation failed"):
-        preparation.prepare_camoufox_managed_runtime()
-
-    assert env.multi.load_config() == config
-    assert (old_path / "camoufox-bin").read_text() == "old executable"
+    env.multi.CONFIG_FILE.unlink()
+    env.old.is_prerelease = env.latest.is_prerelease = True
+    env.query.return_value = [env.old]
+    first = preparation.prepare_camoufox_managed_runtime()
+    env.query.return_value = [env.latest, env.old]
+    second = preparation.prepare_camoufox_managed_runtime()
+    assert first.version == env.old.version.full_string
+    assert second.version == env.latest.version.full_string
+    assert first.runtime_path.is_dir()
+    assert env.multi.load_config()["active_version"] == second.active_spec
+    assert env.download.call_count == 2
 
 
-def test_managed_camoufox_explicit_channel_overrides_release_pairing(
-    managed_camoufox, monkeypatch
-):
+def test_managed_camoufox_prerelease_filters_incompatible(managed_camoufox):
     env = managed_camoufox
-    old_path = env.install_local()
-    config = env.multi.load_config()
-    config["channel"] = "official/stable"
-    env.multi.save_config(config)
-    _use_release_pairing(monkeypatch, env)
-    env.query.side_effect = OSError("offline")
-
+    env.multi.CONFIG_FILE.unlink()
+    env.old.is_prerelease = True
+    unsupported = env.pkgman.AvailableVersion(
+        env.pkgman.Version("beta.29", "152.0.4"),
+        "https://example.test/unsupported.zip",
+        True,
+    )
+    env.query.return_value = [env.latest, unsupported, env.old]
     result = preparation.prepare_camoufox_managed_runtime()
+    assert result.version == env.old.version.full_string
 
-    assert result.valid and result.runtime_path == old_path
-    assert env.multi.load_config() == config
-    env.download.assert_not_called()
+
+@pytest.mark.parametrize("failure", ["query", "download"])
+def test_managed_camoufox_default_migration_falls_back_locally(
+    managed_camoufox, failure
+):
+    env = managed_camoufox
+    old_path = env.install_local()
+    config = env.multi.load_config()
+    config.pop("channel")
+    env.multi.save_config(config)
+    env.latest.is_prerelease = True
+    (env.query if failure == "query" else env.download).side_effect = OSError("offline")
+    result = preparation.prepare_camoufox_managed_runtime()
+    assert result.runtime_path == old_path
+    assert env.multi.load_config()["channel"] == "official/prerelease"
+    assert env.pkgman.camoufox_path(download_if_missing=False) == old_path
 
 
 def test_managed_camoufox_updates_without_removing_old(managed_camoufox):
@@ -2918,7 +2886,7 @@ def test_managed_camoufox_repairs_only_broken_target(managed_camoufox):
 )
 def test_managed_camoufox_rejects_config_without_reset(managed_camoufox, payload):
     env = managed_camoufox
-    env.root.mkdir()
+    env.root.mkdir(exist_ok=True)
     env.multi.CONFIG_FILE.write_text(payload)
     with pytest.raises(RuntimeError, match="preparation failed"):
         preparation.prepare_camoufox_managed_runtime()
@@ -2936,7 +2904,7 @@ def test_managed_camoufox_rejects_unsafe_paths(managed_camoufox, tmp_path, unsaf
     outside.mkdir()
     marker = outside / "keep"
     marker.write_text("untouched")
-    env.root.mkdir()
+    env.root.mkdir(exist_ok=True)
     if unsafe == "active":
         env.multi.save_config({"active_version": "../outside"})
     else:
@@ -2988,9 +2956,11 @@ def test_managed_camoufox_concurrent_preparation_installs_once(managed_camoufox)
 
 def test_managed_camoufox_static_status_never_prepares(managed_camoufox):
     env = managed_camoufox
+    before = env.multi.CONFIG_FILE.read_bytes()
     status = CamoufoxBackend().probe_runtime_status({}, provider="science")
     assert status.status == "not_configured"
-    assert not env.root.exists()
+    assert env.multi.CONFIG_FILE.read_bytes() == before
+    assert not env.multi.COMPAT_FLAG.exists()
     env.query.assert_not_called()
     env.download.assert_not_called()
 
@@ -3130,7 +3100,7 @@ def test_managed_camoufox_mismatched_target_metadata_is_repaired(managed_camoufo
 
 def test_managed_camoufox_update_failure_keeps_legacy_cache(managed_camoufox):
     env = managed_camoufox
-    env.root.mkdir()
+    env.root.mkdir(exist_ok=True)
     (env.root / "version.json").write_text(json.dumps(env.old.to_metadata()))
     (env.root / "camoufox-bin").write_text("legacy binary")
     env.query.side_effect = OSError("offline")
@@ -3189,3 +3159,31 @@ def test_managed_camoufox_never_deletes_valid_active_for_mismatched_catalog(
     assert result.valid and result.version == env.old.version.full_string
     assert (target / "camoufox-bin").read_text() == "old executable"
     env.download.assert_not_called()
+
+
+def test_managed_camoufox_pin_without_channel_is_preserved(managed_camoufox):
+    env = managed_camoufox
+    env.install_local()
+    config = env.multi.load_config()
+    config.pop("channel")
+    config["pinned"] = env.old.version.full_string
+    env.multi.save_config(config)
+    result = preparation.prepare_camoufox_managed_runtime()
+    assert result.valid and result.version == env.old.version.full_string
+    assert env.multi.load_config() == config
+    env.query.assert_not_called()
+    env.download.assert_not_called()
+
+
+@pytest.mark.parametrize("stage", ["query", "download"])
+def test_managed_camoufox_cancellation_does_not_fall_back(managed_camoufox, stage):
+    from paper_fetch.http import RequestCancelledError
+
+    env = managed_camoufox
+    path = env.install_local()
+    (
+        env.query if stage == "query" else env.download
+    ).side_effect = RequestCancelledError("cancelled")
+    with pytest.raises(RequestCancelledError):
+        preparation.prepare_camoufox_managed_runtime()
+    assert preparation.probe_camoufox_managed_runtime().runtime_path == path

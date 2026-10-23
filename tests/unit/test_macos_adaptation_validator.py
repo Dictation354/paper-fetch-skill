@@ -31,6 +31,10 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["browser"]["runtime_bundle_built_in"] = True
         contract["browser"]["native_bundle_gate"] = False
         contract["browser"]["managed_runtime_preparation"] = False
+        contract["browser"]["fetch_start_preparation"] = False
+        contract["browser"]["batch_prepares_once"] = False
+        contract["browser"]["default_channel"] = "official/stable"
+        contract["browser"]["python_package_spec"] = "camoufox>=0.5.8"
         contract["browser"]["cooperative_cancel_owner_thread_cleanup"] = False
 
         diagnostic = "\n".join(validator.validate_contract(contract))
@@ -38,6 +42,10 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertIn("runtime_bundle_built_in must be false", diagnostic)
         self.assertIn("native_bundle_gate must be true", diagnostic)
         self.assertIn("managed_runtime_preparation must be true", diagnostic)
+        self.assertIn("fetch_start_preparation must be true", diagnostic)
+        self.assertIn("batch_prepares_once must be true", diagnostic)
+        self.assertIn("default_channel must be official/prerelease", diagnostic)
+        self.assertIn("python_package_spec must be camoufox==0.5.8", diagnostic)
         self.assertIn(
             "cooperative_cancel_owner_thread_cleanup must be true", diagnostic
         )

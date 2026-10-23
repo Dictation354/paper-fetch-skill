@@ -243,48 +243,49 @@ def _fetch_paper_envelope(
     context: RuntimeContext,
     deps: MCPDeps = default_mcp_deps(),
 ) -> FetchEnvelope:
-    runtime_env = dict(context.env or {})
-    cache_download_dir = (
-        _resolve_download_dir(runtime_env, download_dir, deps=deps)
-        if _needs_download_dir_for_fetch(request)
-        else None
-    )
-    service_download_dir = None if request.no_download else cache_download_dir
+    with context.fetch_browser_preparation():
+        runtime_env = dict(context.env or {})
+        cache_download_dir = (
+            _resolve_download_dir(runtime_env, download_dir, deps=deps)
+            if _needs_download_dir_for_fetch(request)
+            else None
+        )
+        service_download_dir = None if request.no_download else cache_download_dir
 
-    cached_envelope = _load_cached_fetch_envelope(
-        request,
-        download_dir=cache_download_dir,
-        context=context,
-        deps=deps,
-    )
-    if cached_envelope is not None:
-        return cached_envelope
-
-    envelope = FetchPipeline(deps.service_fetch_paper).run(
-        FetchPipelineRequest(
-            query=request.query,
-            modes=_service_modes_for_fetch_request(
-                request, include_article_for_assets=include_article_for_assets
-            ),  # type: ignore[arg-type]
-            strategy=request.strategy.to_service_strategy(),
-            render=request.to_render_options(),
-        ),
-        context=context,
-    )
-    context.raise_if_cancelled()
-    final_scope = capability_scope_from_runtime_context(context)
-    # Preserve the producer scope so Markdown registration cannot become public.
-    mark_envelope_capability_scope(envelope, final_scope)
-    if not request.no_download and service_download_dir is not None and envelope.doi:
-        deps.write_cached_fetch_envelope(
-            service_download_dir,
-            envelope,
+        cached_envelope = _load_cached_fetch_envelope(
             request,
-            commit_guard=context.commit_guard,
-            credential_scope=final_scope,
+            download_dir=cache_download_dir,
+            context=context,
             deps=deps,
         )
-    return envelope
+        if cached_envelope is not None:
+            return cached_envelope
+
+        envelope = FetchPipeline(deps.service_fetch_paper).run(
+            FetchPipelineRequest(
+                query=request.query,
+                modes=_service_modes_for_fetch_request(
+                    request, include_article_for_assets=include_article_for_assets
+                ),  # type: ignore[arg-type]
+                strategy=request.strategy.to_service_strategy(),
+                render=request.to_render_options(),
+            ),
+            context=context,
+        )
+        context.raise_if_cancelled()
+        final_scope = capability_scope_from_runtime_context(context)
+        # Preserve the producer scope so Markdown registration cannot become public.
+        mark_envelope_capability_scope(envelope, final_scope)
+        if not request.no_download and service_download_dir is not None and envelope.doi:
+            deps.write_cached_fetch_envelope(
+                service_download_dir,
+                envelope,
+                request,
+                commit_guard=context.commit_guard,
+                credential_scope=final_scope,
+                deps=deps,
+            )
+        return envelope
 
 
 def _resolve_request_from_inputs(

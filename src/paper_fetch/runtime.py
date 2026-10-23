@@ -10,7 +10,7 @@ import time
 from collections.abc import Callable, Hashable, Iterator, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from .asset_budget import AssetBudget
 from .artifacts import DEFAULT_ARTIFACT_MODE, ArtifactMode, ArtifactStore
@@ -28,6 +28,9 @@ from .http import (
     HttpTransport,
     RequestCancelledError,
 )
+
+if TYPE_CHECKING:
+    from .providers.browser_runtime.preparation import FetchBrowserPreparation
 
 RUNTIME_UNSET = object()
 _PARSE_CACHE_MISSING = object()
@@ -144,6 +147,37 @@ class RuntimeContext:
     _owns_transport: bool = field(default=False, init=False, repr=False)
     _closed: bool = field(default=False, init=False, repr=False)
     _commit_guard: RuntimeCommitGuard = field(init=False, repr=False)
+    _inherited_fetch_browser_preparation: FetchBrowserPreparation | None = field(
+        default=None, init=False, repr=False
+    )
+
+    @contextlib.contextmanager
+    def fetch_browser_preparation(self, *, prepare: bool = True) -> Iterator[None]:
+        """Prepare once per fetch transaction, including nested service calls."""
+        from .providers.browser_runtime.preparation import (
+            FetchBrowserPreparation,
+            fetch_browser_preparation,
+        )
+
+        prepared = (
+            fetch_browser_preparation.get()
+            or self._inherited_fetch_browser_preparation
+            or FetchBrowserPreparation()
+        )
+        token = fetch_browser_preparation.set(prepared)
+        try:
+            if prepare:
+                self.prepare_fetch_browser()
+            yield
+        finally:
+            fetch_browser_preparation.reset(token)
+
+    def prepare_fetch_browser(self) -> None:
+        from .providers.browser_runtime.preparation import fetch_browser_preparation
+
+        prepared = fetch_browser_preparation.get()
+        assert prepared is not None
+        prepared.prepare(self.env or {}, self.raise_if_cancelled)
 
     def __post_init__(self) -> None:
         self._owns_transport = self.transport is None
@@ -193,8 +227,10 @@ class RuntimeContext:
         Request-mutated fields, parser/session caches, artifact policy, and
         browser leases stay local to the child. The transport (and therefore its
         connection pools, per-host semaphores, and HTTP caches) is intentionally
-        shared across batch items.
+        shared across batch items, along with an enclosing fetch's browser
+        preparation result.
         """
+        from .providers.browser_runtime.preparation import fetch_browser_preparation
 
         resolved_download_dir = (
             self.download_dir
@@ -211,7 +247,7 @@ class RuntimeContext:
             if cancel_check is RUNTIME_UNSET
             else cast(Callable[[], bool] | None, cancel_check)
         )
-        return RuntimeContext(
+        child = RuntimeContext(
             env=self.env,
             transport=self.transport,
             download_dir=resolved_download_dir,
@@ -219,6 +255,10 @@ class RuntimeContext:
             asset_profile=asset_profile,
             cancel_check=resolved_cancel_check,
         )
+        child._inherited_fetch_browser_preparation = (
+            fetch_browser_preparation.get() or self._inherited_fetch_browser_preparation
+        )
+        return child
 
     def report_progress(self, event: str, **data: Any) -> None:
         if self.progress_callback is not None:

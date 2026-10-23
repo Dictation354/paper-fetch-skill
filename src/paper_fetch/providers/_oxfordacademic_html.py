@@ -30,6 +30,7 @@ from ._html_section_markdown import (
     render_heading_text_from_html,
 )
 from ._html_references import extract_numbered_references_from_html
+from ._oxfordacademic_assets import extract_inline_figures
 from ._pdf_candidates import (
     extract_pdf_candidate_urls_from_html,
     extract_pdf_url_from_metadata_links,
@@ -567,12 +568,8 @@ def extract_markdown(
     body = _article_body(soup)
     # Download controls carry the original figure URL. Discover owned assets
     # before removing those controls from the reader's prose.
-    body_assets = html_assets.extract_scoped_html_assets(
-        str(body),
-        source_url,
-        asset_profile=asset_profile,
-        supplementary_html_text="",
-    )
+    formula_assets = html_assets.extract_formula_assets(str(body), source_url)
+    body_assets = [*extract_inline_figures(body, source_url), *formula_assets]
     _retain_author_footnotes(soup, body)
     for anchor in list(body.select("a[href]")):
         if anchor.get_text(strip=True) in OXFORDACADEMIC_MARKDOWN_PROMO_TOKENS:

@@ -699,17 +699,18 @@ def run_single_fetch(
     )
     token = request_cancel_check.set(active_context.cancel_check)
     try:
-        active_context.raise_if_cancelled()
-        return _run_single_fetch_with_context(
-            args,
-            query=query,
-            output_dir=output_dir,
-            runtime_env=runtime_env,
-            artifact_mode=artifact_mode,
-            transport=transport,
-            cancel_check=cancel_check,
-            context=active_context,
-        )
+        with active_context.fetch_browser_preparation():
+            active_context.raise_if_cancelled()
+            return _run_single_fetch_with_context(
+                args,
+                query=query,
+                output_dir=output_dir,
+                runtime_env=runtime_env,
+                artifact_mode=artifact_mode,
+                transport=transport,
+                cancel_check=cancel_check,
+                context=active_context,
+            )
     finally:
         request_cancel_check.reset(token)
         if owns_context:
@@ -1280,7 +1281,13 @@ def run_batch_fetch(
         download_dir=output_dir,
         artifact_mode=artifact_mode,
         cancel_check=cancel_event.is_set,
-    ) as batch_context:
+    ) as batch_context, batch_context.fetch_browser_preparation(prepare=False):
+        try:
+            batch_context.prepare_fetch_browser()
+        except RequestCancelledError:
+            # Let the batch runner emit the existing terminal record for every
+            # queued input, including cancellation before preparation starts.
+            cancel_event.set()
         item_contexts = {}
         for item in items:
 

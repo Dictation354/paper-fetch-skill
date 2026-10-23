@@ -70,7 +70,7 @@ PY
 - `--format markdown|json|both` 控制 stdout、显式 `--output` 或默认主输出格式；`--save-markdown` 是额外 Markdown 副本，不是主输出开关。
 - `--artifact-mode none` 不禁止显式主输出、`--output-dir` 默认主输出或 `--save-markdown`。
 - Runtime fetch failure 的结构化 JSON 写 stderr；argparse 参数错误仍使用标准 stderr/exit 2。歧义、访问、限流、网络和取消的重试只遵循 [`failure-handling.md`](failure-handling.md)。
-- 实际进入 browser 的 CLI fetch 在启动前自动准备 managed Camoufox；失败时按 [`environment.md`](environment.md#运行时准备与授权) 处理。该边界不影响静态 doctor，也不改变论文产物的 artifact mode。
+- CLI fetch 每次请求开始时自动准备 managed Camoufox，包括 HTTP 和缓存命中，批量只检查一次；失败时按 [`environment.md`](environment.md#运行时准备与授权) 处理。该边界不影响静态 doctor，也不改变论文产物的 artifact mode。
 - 使用 `paper-fetch --help` 和 `paper-fetch fetch|doctor|browser-preflight --help` 读取当前安装的有效枚举和默认值，不从旧安装或外部仓库文档猜测。
 - 安装/升级完整性由安装器在复制前后及三个宿主目标上直接调用独立 verifier；源码 installer 可用 `./scripts/install-codex-skill.sh [--project] --check` 做严格只读同步检查。普通 `doctor` 只报告业务 runtime/provider readiness。
 

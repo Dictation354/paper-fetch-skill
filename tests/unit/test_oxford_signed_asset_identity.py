@@ -28,3 +28,21 @@ def test_different_object_rendition_host_or_content_query_stays_separate(other):
     old = {"kind": "figure", "url": OLD}
     current = {"kind": "figure", "url": other, "path": "/captured/figure.jpeg"}
     assert _merge_oxford_assets([old], [current]) == [old, current]
+
+
+def test_subpanels_share_viewer_but_keep_binary_object_identities():
+    viewer = "https://academic.oup.com/article/figure/1"
+    panels = [
+        {"kind": "figure", "url": url, "figure_page_url": viewer}
+        for url in (OLD, OLD.replace("figure.jpeg", "figure-b.jpeg"))
+    ]
+    downloaded = [
+        {
+            **panel,
+            "url": panel["url"].replace("Signature=old", "Signature=new"),
+            "path": f"/captured/{n}.jpeg",
+        }
+        for n, panel in enumerate(panels)
+    ]
+    merged = _merge_oxford_assets(panels, downloaded)
+    assert merged == downloaded

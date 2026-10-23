@@ -57,7 +57,7 @@ from ..workflow.batch_runner import (
 from ..workflow.types import effective_asset_profile
 from ._deps import MCPDeps, default_mcp_deps
 from .acceptance_payloads import compact_acceptance_payload
-from .batch import _mcp_batch_failure, report_progress
+from .batch import _mcp_batch_failure, report_progress, run_blocking_call
 from .cache_payloads import (
     _MCP_DEFAULT_DOWNLOAD_DIR,
     _resolve_download_dir,
@@ -657,7 +657,12 @@ async def _execute_batch_fetch(
         download_dir=cache_dir,
         artifact_mode=("none" if request.no_download else request.artifact_mode),
         cancel_check=cancelled.is_set,
-    ) as runtime_context:
+    ) as runtime_context, runtime_context.fetch_browser_preparation(prepare=False):
+        await run_blocking_call(
+            runtime_context.prepare_fetch_browser,
+            cancel_event=cancelled,
+            cancel_fence=runtime_context.fence_commits,
+        )
         item_contexts = {
             item.index: runtime_context.new_request_context(
                 asset_profile=request.strategy.asset_profile,

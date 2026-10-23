@@ -252,7 +252,7 @@ class CamoufoxBackend:
                     if available
                     else (
                         "Camoufox Python packages are installed, but the browser runtime "
-                        "will be prepared automatically before browser launch."
+                        "will be prepared automatically at fetch start or before auth/preflight launch."
                         if package_ready
                         else "Camoufox browser runtime cannot be used until its Python packages are installed."
                     )
@@ -268,7 +268,12 @@ class CamoufoxBackend:
                     "runtime_path": details.get("runtime_path"),
                     "runtime_state": details.get("runtime_state"),
                     "runtime_version": details.get("runtime_version"),
-                    "prepare_command": "python -m camoufox fetch",
+                    "prepare_command": (
+                        'python -c "from paper_fetch.providers.browser_runtime.preparation '
+                        "import prepare_camoufox_managed_runtime; "
+                        "from camoufox.fpgen_model import ensure_fpgen_model; "
+                        'prepare_camoufox_managed_runtime(); ensure_fpgen_model()"'
+                    ),
                 },
             )
         )

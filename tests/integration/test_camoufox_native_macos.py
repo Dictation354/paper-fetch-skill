@@ -20,7 +20,7 @@ def _prepared_managed_install() -> tuple[Path, Path]:
     install_dir = Path.home() / "Library" / "Caches" / "camoufox"
     assert install_dir.is_absolute()
     assert not install_dir.is_symlink()
-    assert install_dir.is_dir(), "run `python -m camoufox fetch` first"
+    assert install_dir.is_dir(), "prepare managed Camoufox and fpgen model first"
 
     compat_flag = install_dir / ".0.5_FLAG"
     config_file = install_dir / "config.json"
@@ -30,6 +30,7 @@ def _prepared_managed_install() -> tuple[Path, Path]:
     assert browsers_dir.is_dir()
 
     config = json.loads(config_file.read_text(encoding="utf-8"))
+    assert config.get("channel") == "official/prerelease"
     active_version = config.get("active_version")
     assert isinstance(active_version, str) and active_version
     active_path = (install_dir / active_version).resolve(strict=True)
@@ -45,7 +46,7 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
 ) -> None:
     if os.environ.get(NATIVE_CAMOUFOX_TEST_ENV) != "1":
         pytest.skip(
-            f"set {NATIVE_CAMOUFOX_TEST_ENV}=1 after `python -m camoufox fetch`"
+            f"set {NATIVE_CAMOUFOX_TEST_ENV}=1 after preparing managed Camoufox and fpgen"
         )
     if platform.system() != "Darwin" or platform.machine() != "arm64":
         pytest.skip("native Camoufox bundle evidence requires Darwin arm64")
@@ -54,7 +55,6 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
     import camoufox.fpgen_model as camoufox_fpgen_model
     import camoufox.sync_api as camoufox_sync_api
     from camoufox import DefaultAddons, multiversion, pkgman
-    from camoufox.browser_pin import load_pin
     from camoufox.fingerprints import Screen
 
     install_dir, expected_runtime_path = _prepared_managed_install()
@@ -73,11 +73,8 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
     # This gate proves the explicitly staged bundle, independent of new releases.
     # Launch-time preparation still runs, with discovery limited to this asset.
     version_data = json.loads((expected_runtime_path / "version.json").read_text())
-    release_pin = load_pin()
-    assert release_pin is not None
-    assert (
-        pkgman.Version.from_path(expected_runtime_path).full_string == release_pin.spec
-    )
+    assert version_data.get("prerelease") is True
+    assert pkgman.Version.from_path(expected_runtime_path).is_supported()
     staged_version = pkgman.AvailableVersion(
         version=pkgman.Version.from_path(expected_runtime_path),
         url="https://example.invalid/staged-camoufox.zip",
@@ -122,7 +119,7 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
         camoufox_fpgen_model,
         "_install",
         lambda *_args, **_kwargs: pytest.fail(
-            "native bundle test must reuse the model prepared by camoufox fetch"
+            "native bundle test must reuse the prepared fingerprint model"
         ),
     )
 

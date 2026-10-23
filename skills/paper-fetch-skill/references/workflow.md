@@ -80,7 +80,7 @@
 
 ### 9. fetch
 
-- 对尚未由合格本地/cache 满足的目标执行抓取或分诊；按意图使用 `batch_check(queries=[query])`（单篇探测）或 `batch_check(...)`（批量探测）、`fetch_paper(...)` 或 `batch_fetch(...)`，CLI 只接收规范目标并按选定的批量归档参数运行。目标需要 browser 时，普通 fetch 在实际启动前自动准备 managed runtime；静态状态显示 binary 缺失不阻止该路径。准备失败时报告具体诊断。
+- 对尚未由合格本地/cache 满足的目标执行抓取或分诊；按意图使用 `batch_check(queries=[query])`（单篇探测）或 `batch_check(...)`（批量探测）、`fetch_paper(...)` 或 `batch_fetch(...)`，CLI 只接收规范目标并按选定的批量归档参数运行。普通 fetch 每次请求开始时自动准备 managed runtime，包括 HTTP 和缓存命中，批量只检查一次；静态状态显示 binary 缺失不阻止该路径。准备失败时报告具体诊断。
 - `batch_check(mode="metadata")` 只给出 `likely_yes` / `unknown` 的低成本探测；按逐项证据完成探测任务，不自动再抓全文。去重后的目标仍按每次最多 50 条调用，并映射回原始输入顺序。
 - 多篇任务需要完整阅读且没有合格本地正文时，直接对各规范目标调用单篇临时阅读预设的 `fetch_paper`；用户已允许可缓存阅读时沿用对应预设。不先调用 `batch_fetch` 再重复获取正文，也不向单篇接口传批量专用参数。
 - `batch_fetch` 是 MCP 的真实批量全文入口；单块最多 50 条，默认只返回 input-ordered compact record/acceptance，实际完成顺序另列。compact 无正文；bounded 可能截断，检查逐项 `content_truncated` 和返回字符数，不能凭片段宣称已读全文。已归档正文直接读取文件。可选 `batch_results` 只写最终 input-ordered JSONL，不提供恢复。

@@ -178,11 +178,23 @@ def validate_contract(
         "optional_install_download_requires_consent",
         "optional_install_failure_preserves_core",
         "managed_runtime_preparation",
+        "fetch_start_preparation",
+        "batch_prepares_once",
         "native_bundle_gate",
         "cooperative_cancel_owner_thread_cleanup",
     ):
         if browser.get(key) is not True:
             errors.append(f"browser.{key} must be true")
+    for key, expected in (
+        ("default_channel", "official/prerelease"),
+        ("python_package_spec", "camoufox==0.5.8"),
+    ):
+        if browser.get(key) != expected:
+            errors.append(f"browser.{key} must be {expected}")
+    extras = project.get("project", {}).get("optional-dependencies", {})
+    for extra in ("browser", "full"):
+        if browser.get("python_package_spec") not in extras.get(extra, []):
+            errors.append(f"browser.python_package_spec must match project {extra} extra")
 
     release = contract.get("release", {})
     if release.get("installer_manifest") != "installer/manifest.json":

@@ -7,11 +7,13 @@ from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
 from paper_fetch.tracing import trace_from_markers
 
 
-def build_oxford_html_article(html: str, source_url: str, doi: str = ""):
+def build_oxford_html_payload(
+    html: str, source_url: str, doi: str = "", *, asset_profile="all"
+):
     extraction = _oxfordacademic_html.extract_markdown(
-        html, source_url, metadata={"doi": doi}, asset_profile="none"
+        html, source_url, metadata={"doi": doi}, asset_profile=asset_profile
     )
-    payload = RawFulltextPayload(
+    return RawFulltextPayload(
         provider="oxfordacademic",
         content=ProviderContent(
             route_kind="html",
@@ -31,6 +33,10 @@ def build_oxford_html_article(html: str, source_url: str, doi: str = ""):
         ),
         trace=trace_from_markers(["fulltext:oxfordacademic_html_ok"]),
     )
+
+
+def build_oxford_html_article(html: str, source_url: str, doi: str = ""):
+    payload = build_oxford_html_payload(html, source_url, doi, asset_profile="none")
     return OxfordAcademicClient(HttpTransport(), {}).to_article_model(
-        extraction.metadata, payload
+        {"doi": doi}, payload
     )

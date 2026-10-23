@@ -1,21 +1,67 @@
-"""Read-only inspection and launch-time preparation of managed Camoufox."""
+"""Read-only inspection and request/launch preparation of managed Camoufox."""
 
 from __future__ import annotations
 
 from contextlib import redirect_stdout
+from contextvars import ContextVar
 from dataclasses import dataclass
 from importlib import import_module
+from importlib.util import find_spec
+from collections.abc import Callable, Mapping
 import json
 import os
 from pathlib import Path
 import stat
 import shutil
 import sys
+import threading
 from typing import Any
 
 from filelock import FileLock
 
 from ...utils import normalize_text
+from ...config import BROWSER_BINARY_PATH_ENV_VAR, browser_env_value
+from ...http import RequestCancelledError
+
+DEFAULT_CHANNEL = "official/prerelease"
+
+
+class FetchBrowserPreparation:
+    """One fetch call's result, shared with its batch children and launches."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._prepared = False
+        self.error: Exception | None = None
+
+    def prepare(self, env: Mapping[str, str], cancel_check: Callable[[], None]) -> None:
+        cancel_check()
+        with self._lock:
+            if self._prepared:
+                return
+            try:
+                if not browser_env_value(env, BROWSER_BINARY_PATH_ENV_VAR) and all(
+                    find_spec(name) is not None for name in ("camoufox", "playwright")
+                ):
+                    prepare_camoufox_managed_runtime()
+            except RequestCancelledError:
+                raise
+            except Exception as exc:
+                self.error = exc
+                print(f"Camoufox browser preparation failed: {exc}", file=sys.stderr)
+            cancel_check()
+            self._prepared = True
+
+    def require(self) -> None:
+        if self.error is not None:
+            raise RuntimeError(
+                f"Camoufox browser preparation failed: {self.error}"
+            ) from self.error
+
+
+fetch_browser_preparation: ContextVar[FetchBrowserPreparation | None] = ContextVar(
+    "fetch_browser_preparation", default=None
+)
 
 
 @dataclass(frozen=True)
@@ -96,17 +142,6 @@ def _read_config(install_dir: Path, config_path: Path) -> dict[str, Any]:
     return payload
 
 
-def _browser_pin(config: dict[str, Any]) -> Any:
-    """Honor release pairing while retaining support for Camoufox 0.5.5/0.5.6."""
-    try:
-        browser_pin = import_module("camoufox.browser_pin")
-    except ModuleNotFoundError as exc:
-        if exc.name != "camoufox.browser_pin":
-            raise
-        return None
-    return browser_pin.effective_pin(config)
-
-
 def probe_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
     """Inspect the active managed runtime without downloading or writing state."""
 
@@ -139,23 +174,6 @@ def probe_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
 
     if runtime_path is not None and not managed_path_safe:
         return _probe_runtime(pkgman, runtime_path, active_spec, False)
-
-    pin = _browser_pin(config)
-    if pin is not None:
-        # Upstream get_active_path may write config or select a different build.
-        # Resolve the same pairing through local metadata without those writes.
-        runtime_path, active_spec, managed_path_safe = None, None, False
-        try:
-            installed = multiversion.list_installed()
-        except (OSError, ValueError, KeyError, TypeError):
-            installed = []
-        for item in installed:
-            if item.repo_name == pin.repo_name and item.version.full_string == pin.spec:
-                active_spec = item.relative_path
-                runtime_path, managed_path_safe = _managed_candidate(
-                    install_dir, active_spec
-                )
-                break
 
     return _probe_runtime(pkgman, runtime_path, active_spec, managed_path_safe)
 
@@ -265,12 +283,13 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
             raise RuntimeError(
                 f"Camoufox browser preparation failed: {previous.message}"
             )
-        release_pin = _browser_pin(config)
-        channel = config.get("channel") or multiversion.get_default_channel()
+        channel = config.get("channel") or (
+            multiversion.get_default_channel()
+            if config.get("pinned")
+            else DEFAULT_CHANNEL
+        )
         parts = channel.lower().split("/")
         repo_name, channel_type = parts if len(parts) == 2 else (parts[0], "stable")
-        if release_pin is not None:
-            repo_name = release_pin.repo_name
         repo = pkgman.RepoConfig.find_by_name(repo_name)
         if (
             len(parts) > 2
@@ -280,10 +299,14 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
             raise RuntimeError(
                 "Camoufox browser preparation failed: invalid configured channel."
             )
-        pinned = release_pin.spec if release_pin is not None else config.get("pinned")
-        pinned_sha = None if release_pin is not None else config.get("pinned_sha")
+        pinned = config.get("pinned")
+        pinned_sha = config.get("pinned_sha")
+        if not config.get("channel") and not pinned:
+            # Disable upstream's implicit package pairing before any later launch.
+            config["channel"] = channel
+            multiversion.save_config(config)
 
-        # A package pairing, like a user pin, reuses its local build without a query.
+        # An explicit pin reuses its local build without a query.
         if pinned:
             try:
                 installed = multiversion.list_installed()
@@ -294,10 +317,7 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                 if (
                     item.repo_name == repo_name
                     and item.version.full_string == pinned
-                    and (
-                        release_pin is not None
-                        or item.is_prerelease == (channel_type == "prerelease")
-                    )
+                    and item.is_prerelease == (channel_type == "prerelease")
                     and (not pinned_sha or item.sha256 == pinned_sha)
                 ):
                     path, safe = _managed_candidate(root, item.relative_path)
@@ -319,17 +339,13 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
             )
             versions = pkgman.list_available_versions(
                 repo,
-                include_prerelease=release_pin is not None
-                or channel_type == "prerelease",
+                include_prerelease=channel_type == "prerelease",
             )
             selected = next(
                 (
                     v
                     for v in versions
-                    if (
-                        release_pin is not None
-                        or v.is_prerelease == (channel_type == "prerelease")
-                    )
+                    if v.is_prerelease == (channel_type == "prerelease")
                     and v.version.is_supported()
                     and (not pinned or v.version.full_string == pinned)
                     and (not pinned_sha or v.sha256 == pinned_sha)
@@ -343,6 +359,8 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
             fetcher = pkgman.CamoufoxFetcher(
                 repo_config=repo, selected_version=selected
             )
+        except RequestCancelledError:
+            raise
         except Exception as exc:
             if previous.valid and not pinned:
                 flag.touch()
@@ -395,6 +413,9 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
             # Prevent upstream launch-time legacy cache cleanup, including on reuse.
             flag.touch()
             return probe
+        except RequestCancelledError:
+            multiversion.save_config(config)
+            raise
         except Exception as exc:
             multiversion.save_config(config)
             restored = probe_camoufox_managed_runtime()

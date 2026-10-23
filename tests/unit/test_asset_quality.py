@@ -587,11 +587,11 @@ def test_asset_summary_round_trips_through_current_model() -> None:
     assert restored.asset_summary == summary
 
 
-def test_wiley_preview_failure_policy_does_not_change_other_assets():
+def test_provider_preview_failure_policy_does_not_change_other_assets():
     from paper_fetch.models.builders import _asset_from_entry
     from paper_fetch.quality.assets import preview_asset_is_accepted
 
-    for provider in ("wiley", "science", None):
+    for provider in ("wiley", "oxfordacademic", "science", None):
         for kind in ("figure", "formula", "unknown"):
             entry = {
                 "kind": kind,
@@ -603,7 +603,7 @@ def test_wiley_preview_failure_policy_does_not_change_other_assets():
                     {"stage": "preview_fallback", "provider": provider}
                 ],
             }
-            expected = not (provider == "wiley" and kind == "figure")
+            expected = not (provider in {"wiley", "oxfordacademic"} and kind == "figure")
             assert preview_asset_is_accepted(entry) is expected
             asset = _asset_from_entry(entry, kind=kind, heading_fallback="Asset")
             assert asset.preview_accepted is expected
