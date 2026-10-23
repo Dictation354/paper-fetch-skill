@@ -6,6 +6,26 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.2.0 - 2026-10-23
+
+### 原文保真与公式校验
+
+- 渲染前使用随包提供的 MathJax 4.1.3 校验源 TeX。通过时保留内部命令、空白和环境；失败时只转换同一公式节点唯一配对的 MathML，并再次校验。没有可用回退时保留原 TeX 和诊断，通过既有质量与验收结果记录校验错误、转换后端及样式降级。
+- 公式工具和离线安装包携带校验 worker、离线字形及 bbm、textcomp 支持。LitRoot 阅读器与独立 Markdown 检查器使用同步的同源引擎。保留嵌套美元符号、对齐方程、MathML 间距及控制词边界；纯货币数值保留为转义的普通文本。
+- HTML/XML 提取保留原文章节、多语摘要、段落、列表、表格与表注、图注、科学行内格式、作者、参考文献及文末内容。DOM 清理前核验源 ID 和显式别名，保留引用和对象链接；输出没有对应本地锚点时使用已验证的来源页目标。
+- PDF Markdown 以现有 pymupdf4llm 转换输出为边界，不再追加项目层的格式清洗或内容修复。刷新存档源基线，并将 extraction revision 更新为 8，避免把旧提取结果复用为当前输出。
+
+### Codex skill 安装
+
+- Codex 用户级 skill 安装到 `~/.agents/skills/paper-fetch-skill`，项目级安装到 `.agents/skills/paper-fetch-skill`；Windows 使用对应用户目录。新的 skill 目标不再由 `CODEX_HOME` 决定，MCP 配置位置保持原契约。
+- 新 bundle 校验成功后才清理同 scope 旧副本。源码安装还兼容原自定义 `CODEX_HOME` skill 路径；卸载处理新旧目录，`--check` 保持只读并检查新目录。同步 Unix/Windows 生命周期验证与 macOS 适配契约。
+- 精简 skill 触发描述和入口说明，更新 UI 元数据及浏览器准备提示；保留自包含 bundle、七份主题参考和自动发现。
+
+### 维护
+
+- Provider 专用 DOM/Markdown 行为通过 typed hooks 注册，共享 Science/PNAS 补充材料 scope 拆分与已验证来源对象链接实现。保留既有 provider 路线、访问边界、预设和统一验收。
+- 将可执行审阅契约、样本清单、源哈希及公式回放证据移入已登记的 scenario fixture，保留稳定用例 ID 和正向原文断言，移除对历史审阅报告及固定样本篇数的依赖，并归并重复维护文档。
+
 ## 7.1.1 - 2026-10-15
 
 ### 修复——浏览器正文等待与资产恢复

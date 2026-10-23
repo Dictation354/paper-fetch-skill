@@ -6,6 +6,26 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.2.0 - 2026-10-23
+
+### Source fidelity and formula validation
+
+- Validate source TeX with the bundled MathJax 4.1.3 engine before rendering. Preserve valid source commands, whitespace and environments; when validation fails, convert only the uniquely paired MathML from the same formula node and validate the result. Retain the original TeX and diagnostics when no valid fallback is available. Record validation errors, conversion backends and style degradations through existing quality and acceptance results.
+- Bundle the validation worker, offline fonts, bbm and textcomp support with formula tools and offline installers. Keep the LitRoot reader and independent Markdown checker synchronized with the same engine. Preserve nested dollar signs, aligned equations, MathML spacing and control-word boundaries; render simple currency amounts as ordinary escaped text.
+- Preserve HTML/XML source structure across headings, multilingual abstracts, paragraphs, lists, tables and notes, captions, scientific inline formatting, authors, references and back matter. Resolve retained citations and object links against verified source IDs and explicit aliases before DOM cleanup, keeping valid source-page targets when local anchors are omitted.
+- Keep PDF Markdown within the existing pymupdf4llm conversion boundary, without project-level formatting cleanup or content repair. Refresh captured-source baselines and advance the extraction revision to 8 so prior extraction results are not reused as current output.
+
+### Codex skill installation
+
+- Install Codex skills under `~/.agents/skills/paper-fetch-skill` for user scope and `.agents/skills/paper-fetch-skill` for project scope; Windows uses the corresponding user profile directory. `CODEX_HOME` no longer selects the new skill destination, while MCP configuration keeps its existing location.
+- Verify the new bundle before removing legacy copies in the same scope. Source installs also migrate the former custom `CODEX_HOME` skill path; uninstall handles new and legacy paths, and `--check` remains a read-only check of the new destination. Update Unix/Windows lifecycle verification and the macOS adaptation contract.
+- Shorten skill discovery and entrypoint instructions, update UI metadata and browser preparation guidance, and retain a self-contained bundle with seven focused references and implicit invocation enabled.
+
+### Maintenance
+
+- Keep provider-specific DOM/Markdown behavior in typed hooks and share the Science/PNAS supplementary-scope splitter and verified source-object link owner. Preserve existing provider routes, access boundaries, presets and unified acceptance.
+- Move executable review contracts, sample inventories, source hashes and formula replay evidence into registered scenario fixtures. Retain stable case IDs and positive source assertions, remove dependencies on historical review reports and fixed corpus counts, and consolidate duplicated maintenance documentation.
+
 ## 7.1.1 - 2026-10-15
 
 ### Fixed — browser readiness and asset recovery
