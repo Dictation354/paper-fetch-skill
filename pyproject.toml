@@ -60,14 +60,14 @@ browser = [
   "trafilatura>=2.0,<2.3",
 ]
 pdf = [
-  "PyMuPDF>=1.27,<2",
+  "PyMuPDF>=1.27,<3",
   "pymupdf4llm>=1.28.2,<2",
 ]
 full = [
   "camoufox==0.5.8",
   "lxml>=6,<7",
   "playwright>=1.47,<1.64",
-  "PyMuPDF>=1.27,<2",
+  "PyMuPDF>=1.27,<3",
   "pymupdf4llm>=1.28.2,<2",
   "trafilatura>=2.0,<2.3",
 ]
