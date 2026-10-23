@@ -30,6 +30,7 @@ from ._article_markdown_elsevier_tables import (
     should_render_elsevier_table_entry,
 )
 from ._article_markdown_math import FormulaRenderResult, render_display_formula_result
+from ..extraction.markdown_render import MarkdownList, render_list
 from ._elsevier_xml_rules import (
     ELSEVIER_IMAGE_ASSET_TYPES,
     get_elsevier_element_rule,
@@ -42,7 +43,14 @@ from ._elsevier_objects import (
     resolve_elsevier_formula_locator,
 )
 
-ELSEVIER_BLOCK_LOCAL_NAMES = {"display", "figure", "table", "e-component", "formula"}
+ELSEVIER_BLOCK_LOCAL_NAMES = {
+    "display",
+    "figure",
+    "table",
+    "e-component",
+    "formula",
+    "list",
+}
 
 
 def resolve_elsevier_asset_link(
@@ -159,7 +167,10 @@ def extract_elsevier_figure_refs(element: ET.Element) -> list[str]:
     refs: list[str] = []
     seen: set[str] = set()
     for node in element.iter():
-        if not isinstance(node.tag, str) or xml_local_name(node.tag) != "cross-ref":
+        if not isinstance(node.tag, str) or xml_local_name(node.tag) not in {
+            "cross-ref",
+            "float-anchor",
+        }:
             continue
         refid = normalize_text(node.get("refid"))
         if refid and refid not in seen:
@@ -306,14 +317,65 @@ def render_elsevier_blocks(
     used_keys = used_figure_keys if used_figure_keys is not None else set()
     table_entries = table_lookup or {}
     used_table_entries = used_table_keys if used_table_keys is not None else set()
+
+    def render_list_block(node: ET.Element) -> list[str]:
+        items = [item for item in node if xml_local_name(item.tag) == "list-item"]
+        ordered = bool(items) and all(
+            re.fullmatch(r"\d+[.)]?", child_text(item, "label")) for item in items
+        )
+        rendered = []
+        for item in items:
+            content = "\n".join(
+                render_elsevier_blocks(
+                    item,
+                    heading_level=heading_level,
+                    figure_lookup=lookup,
+                    figure_entries=entries,
+                    used_figure_keys=used_keys,
+                    table_lookup=table_entries,
+                    used_table_keys=used_table_entries,
+                    formula_image_lookup=formula_image_lookup,
+                    formula_renders=formula_renders,
+                    inside_appendix=inside_appendix,
+                )
+            ).strip()
+            label = child_text(item, "label")
+            rendered.append(
+                (
+                    label + " "
+                    if label and not ordered and label not in {"•", "–", "-", "▪"}
+                    else ""
+                )
+                + content
+            )
+        output = render_list(MarkdownList(items=rendered, ordered=ordered))
+        if ordered:
+            item_index = 0
+            for index, line in enumerate(output):
+                if re.match(r"^\d+\. ", line):
+                    output[index] = re.sub(
+                        r"^\d+\.",
+                        child_text(items[item_index], "label").rstrip(").") + ".",
+                        line,
+                    )
+                    item_index += 1
+        return output
+
     for child in list(parent):
         if not isinstance(child.tag, str):
             continue
         local_name = xml_local_name(child.tag)
         rule = get_elsevier_element_rule(local_name)
 
+        if local_name == "list":
+            lines.extend(render_list_block(child))
+            continue
+
         if rule.handler == "section":
-            title = child_text(child, "section-title") or child_text(child, "title")
+            title_node = first_child(child, "section-title")
+            if title_node is None:
+                title_node = first_child(child, "title")
+            title = render_inline_text(title_node)
             if should_ignore_elsevier_section_title(title):
                 continue
             child_lines = render_elsevier_blocks(
@@ -411,7 +473,9 @@ def render_elsevier_blocks(
                 nested = fragment
                 nested_name = xml_local_name(nested.tag)
                 nested_rule = get_elsevier_element_rule(nested_name)
-                if nested_rule.handler == "display":
+                if nested_name == "list":
+                    lines.extend(render_list_block(nested))
+                elif nested_rule.handler == "display":
                     lines.extend(
                         render_elsevier_display_block(
                             nested,

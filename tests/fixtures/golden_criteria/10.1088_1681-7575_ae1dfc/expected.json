@@ -1,0 +1,396 @@
+{
+  "has": {
+    "title": true,
+    "authors": true,
+    "abstract": true,
+    "body": true,
+    "figures": false,
+    "references": true,
+    "data_availability": false,
+    "code_availability": false
+  },
+  "counts": {
+    "sections": 26,
+    "abstract_sections": 1,
+    "body_sections": 24,
+    "figures": 0,
+    "tables": 0,
+    "references": 22
+  },
+  "expected_content_kind": "fulltext",
+  "source_objects": [
+    {
+      "source": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/fulltext-baselines-2026-10-21/service-001-browser_rendered_dom.html",
+      "sha256": "a6bd36d56eb8a47f8a220cef9729015de1ee5628d7bbf5daa0aeb3843910f922",
+      "method": "Independent original DOM/XML nodes; source spans and scientific scripts frozen without reading provider output.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "9cfdf7c15c44594d9cda8cb30825e862cd174ea0aa621b2fdb711e0fc6d4d38e",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1
+              ]
+            ],
+            [
+              1,
+              [
+                2,
+                3
+              ]
+            ],
+            [
+              2,
+              [
+                4,
+                5
+              ]
+            ],
+            [
+              3,
+              [
+                6,
+                7
+              ]
+            ],
+            [
+              4,
+              [
+                8,
+                9
+              ]
+            ],
+            [
+              5,
+              [
+                10,
+                11
+              ]
+            ],
+            [
+              6,
+              [
+                12,
+                13
+              ]
+            ],
+            [
+              7,
+              [
+                14,
+                15
+              ]
+            ],
+            [
+              8,
+              [
+                16,
+                17
+              ]
+            ],
+            [
+              9,
+              [
+                18,
+                19
+              ]
+            ],
+            [
+              10,
+              [
+                20,
+                21
+              ]
+            ],
+            [
+              11,
+              [
+                22,
+                23
+              ]
+            ],
+            [
+              12,
+              [
+                24,
+                25
+              ]
+            ],
+            [
+              13,
+              [
+                26,
+                26
+              ]
+            ],
+            [
+              14,
+              [
+                27,
+                28
+              ]
+            ]
+          ],
+          "cells": [
+            "Contributions",
+            "Relative uncertainty",
+            "Current correction",
+            "$5 \\cdot {10^{ - 9}}$",
+            "Beam: parasitic forces",
+            "$1.5 \\cdot {10^{ - 9}}$",
+            "Beam: ${\\text{z}}$ error",
+            "$8 \\cdot {10^{ - 9}}$",
+            "Parasitic watt ratio error",
+            "$8 \\cdot {10^{ - 9}}$",
+            "Resistance value",
+            "$5 \\cdot {10^{ - 9}}$",
+            "Velocity",
+            "$1 \\cdot {10^{ - 8}}$",
+            "Absolute gravity value",
+            "$5 \\cdot {10^{ - 9}}$",
+            "Voltage",
+            "$1 \\cdot {10^{ - 8}}$",
+            "Field gradient",
+            "$1 \\cdot {10^{ - 9}}$",
+            "Fit",
+            "$1.5 \\cdot {10^{ - 8}}$",
+            "Others",
+            "$1 \\cdot {10^{ - 8}}$",
+            "Statistical",
+            "$1.6 \\cdot {10^{ - 8}}$",
+            "",
+            "Combined uncertainty (u(DB1))",
+            "$3.1 \\cdot {10^{ - 8}}$"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "79ef1a36a78f6b8ced1ba3bd25ddb596da2d6ea8f94e47035c5f317ed08d2642",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1
+              ]
+            ],
+            [
+              1,
+              [
+                2,
+                3
+              ]
+            ],
+            [
+              2,
+              [
+                4,
+                5
+              ]
+            ],
+            [
+              3,
+              [
+                6,
+                7
+              ]
+            ],
+            [
+              4,
+              [
+                8,
+                9
+              ]
+            ],
+            [
+              5,
+              [
+                10,
+                11
+              ]
+            ],
+            [
+              6,
+              [
+                12,
+                13
+              ]
+            ],
+            [
+              7,
+              [
+                14,
+                15
+              ]
+            ],
+            [
+              8,
+              [
+                16,
+                17
+              ]
+            ],
+            [
+              9,
+              [
+                18,
+                19
+              ]
+            ],
+            [
+              10,
+              [
+                20,
+                21
+              ]
+            ],
+            [
+              11,
+              [
+                22,
+                23
+              ]
+            ],
+            [
+              12,
+              [
+                24,
+                25
+              ]
+            ],
+            [
+              13,
+              [
+                26,
+                26
+              ]
+            ],
+            [
+              14,
+              [
+                27,
+                28
+              ]
+            ]
+          ],
+          "cells": [
+            "Contributions",
+            "Relative uncertainty",
+            "Current correction",
+            "$5 \\cdot {10^{ - 9}}$",
+            "Beam: parasitic forces",
+            "$1.5 \\cdot {10^{ - 9}}$",
+            "Beam: ${\\text{z}}$ error",
+            "$8 \\cdot {10^{ - 9}}$",
+            "Parasitic watt ratio error",
+            "$8 \\cdot {10^{ - 9}}$",
+            "Resistance value",
+            "$5 \\cdot {10^{ - 9}}$",
+            "Velocity",
+            "$1 \\cdot {10^{ - 8}}$",
+            "Absolute gravity value",
+            "$5 \\cdot {10^{ - 9}}$",
+            "Voltage",
+            "$1 \\cdot {10^{ - 8}}$",
+            "Field gradient",
+            "$1 \\cdot {10^{ - 9}}$",
+            "Fit",
+            "$1.5 \\cdot {10^{ - 8}}$",
+            "Others",
+            "$1 \\cdot {10^{ - 8}}$",
+            "Statistical",
+            "$2.2 \\cdot {10^{ - 8}}$",
+            "",
+            "Combined uncertainty (u(W1))",
+            "$3.5 \\cdot {10^{ - 8}}$"
+          ]
+        }
+      ],
+      "mathml": []
+    }
+  ],
+  "source_review": {
+    "sample_id": "10.1088_1681-7575_ae1dfc",
+    "provider": "iop",
+    "doi": "10.1088/1681-7575/ae1dfc",
+    "original": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/fulltext-baselines-2026-10-21/service-001-browser_rendered_dom.html",
+    "sha256": "a6bd36d56eb8a47f8a220cef9729015de1ee5628d7bbf5daa0aeb3843910f922",
+    "format": "html",
+    "review_method": "2026-10-21: exact captured source, independent DOM/XML assertions and provider replay; PDF identity and converter passthrough",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 9,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 22,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 119,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 11,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 60,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "No structured formula in the selected original; bitmap/externally loaded formulas have only captured index/link evidence.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/provenance.json",
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 0,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  }
+}

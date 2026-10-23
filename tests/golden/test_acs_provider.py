@@ -116,7 +116,7 @@ def test_acs_silverchair_formula_fixture_preserves_mathml_and_tables() -> None:
 
     assert len(markdown) > 45_000
     assert markdown.count("$$") == 42
-    assert "S_{CNE}" in markdown
+    assert r"S_{\mathrm{CNE}}" in markdown
     assert "| *n* | PEI |" in markdown
     assert "## 3. Conclusions" in markdown
     assert len(extraction["references"]) == 20

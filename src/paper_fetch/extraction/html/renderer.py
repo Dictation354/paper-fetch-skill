@@ -34,7 +34,19 @@ class HtmlMarkdownRenderer:
     postprocessors: tuple[MarkdownPostprocessor, ...] = field(default_factory=tuple)
 
     def render(self, html_text: str, source_url: str) -> str:
-        raw_markdown = self._render_raw(str(html_text or ""), source_url)
+        from .object_links import (
+            prepare_retained_object_links,
+            resolve_retained_object_links,
+        )
+
+        soup = BeautifulSoup(str(html_text or ""), choose_parser())
+        prepare_retained_object_links(soup, source_url)
+        raw_markdown = self._render_raw(str(soup), source_url)
+        raw_markdown = resolve_retained_object_links(
+            raw_markdown,
+            source_url,
+            {str(n["id"]): str(n["id"]) for n in soup.select("[id]")},
+        )
         return clean_rendered_markdown(
             raw_markdown,
             noise_profile=self.noise_profile,

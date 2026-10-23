@@ -203,7 +203,7 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
     def test_mdpi_display_objects_are_anchored_and_deduplicated(self) -> None:
         figure_markdown, _ = _extract_fixture_markdown(MDPI_FIGURE_DOI)
         first_figure_ref = figure_markdown.index(
-            "Figure 1 illustrates the principle of satellite–earth TWSTT."
+            "illustrates the principle of satellite–earth TWSTT."
         )
         first_figure_image = figure_markdown.index("![Figure 1](")
 
@@ -213,7 +213,7 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertNotIn("\n\nFigure 1.\n\nThe principle of TWSTT.", figure_markdown)
 
         table_markdown, _ = _extract_fixture_markdown(MDPI_TABLE_DOI)
-        first_table_ref = table_markdown.index("Table 1) Thus the judgment matrix")
+        first_table_ref = table_markdown.index("Thus the judgment matrix")
         first_table_block = table_markdown.index("**Table 1.**")
 
         self.assertGreater(first_table_block, first_table_ref)

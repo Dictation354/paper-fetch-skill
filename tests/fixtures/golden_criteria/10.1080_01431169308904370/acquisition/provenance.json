@@ -502,6 +502,43 @@
       "final_url": null,
       "status_code": null,
       "response_headers": {}
+    },
+    {
+      "doi": "10.1080/01431169308904370",
+      "provider": "tandf",
+      "requested_url": "https://api.crossref.org/works/10.1080%2F01431169308904370",
+      "final_url": "https://api.crossref.org/works/10.1080%2F01431169308904370",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 21 Oct 2026 06:08:56 GMT",
+        "content-type": "application/json",
+        "content-length": "2402"
+      },
+      "captured_at_utc": "2026-10-21T06:08:55.441827+00:00",
+      "body_file": "acquisition/fulltext-baselines-2026-10-21/000-http_response_entity.bin",
+      "size": 6374,
+      "sha256": "639c87f17640979b55aa9e0334b187d187928d9f3b9155a4a7c6d28362a5e677",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1080/01431169308904370",
+      "provider": "tandf",
+      "requested_url": "https://www.tandfonline.com/doi/abs/10.1080/01431169308904370",
+      "final_url": "https://www.tandfonline.com/doi/abs/10.1080/01431169308904370",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 21 Oct 2026 06:09:35 GMT",
+        "content-type": "text/html;charset=UTF-8"
+      },
+      "captured_at_utc": "2026-10-21T06:09:54.139787+00:00",
+      "body_file": "acquisition/fulltext-baselines-2026-10-21/001-browser_rendered_dom.html",
+      "size": 219708,
+      "sha256": "0ff5d057a79b723fbe6fef88ee0ace2ceb02895e412af563d68115a1c0c16050",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
     }
   ]
 }

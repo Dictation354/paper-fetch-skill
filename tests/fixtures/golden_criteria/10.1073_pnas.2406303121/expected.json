@@ -4,7 +4,7 @@
     "body_sections": 13,
     "figures": 0,
     "references": 78,
-    "sections": 16,
+    "sections": 17,
     "tables": 0
   },
   "expected_content_kind": "fulltext",
@@ -121,7 +121,8 @@
       "tex_checked": 0,
       "mathml_checked": 5,
       "empty_excluded": 0
-    }
+    },
+    "behavior_changes": "2026-10-20: source scientific back matter and real subsection boundaries retained; supplementary sections are excluded from body sufficiency; original DOM/XML remains the expectation source."
   },
   "source_objects": [
     {
@@ -250,7 +251,7 @@
             "Death rate of productively infected cells",
             "2.17 (24.0)",
             "π (RNA copies/mL/cell/d)",
-            "Product of virus production rate and fraction of virus sampled on a swab (see ref. 10)",
+            "Product of virus production rate and fraction of virus sampled on a swab (see ref. 10 )",
             "467.7 (16.7)",
             "ϕ (/cell/d)",
             "Rate constant for conversion of target cells to refractory cells",

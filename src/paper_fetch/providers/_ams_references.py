@@ -32,8 +32,12 @@ def extract_references(html_text: str) -> list[dict[str, str | None]]:
             ),
             None,
         )
-        raw = normalize_text(node.get_text(" ", strip=True))
-        references.append({"raw": raw, "doi": doi or reference_doi(raw)})
+        from ..extraction.html.inline import render_html_inline_node
+
+        raw = normalize_text(render_html_inline_node(node))
+        references.append(
+            {"raw": raw, "doi": doi or reference_doi(node.get_text(" ", strip=True))}
+        )
     if references:
         return references
     seen: set[str] = set()

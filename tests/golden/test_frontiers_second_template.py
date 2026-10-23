@@ -1,6 +1,7 @@
 """Reviewed NLM 2.3 Frontiers article with an internal id unlike its DOI suffix."""
 
 import re
+from tests.support.canonical_content import source_reference_text
 from bs4 import BeautifulSoup
 
 from tests.golden_corpus import golden_corpus_fixture_for_doi
@@ -50,7 +51,7 @@ def test_real_frontiers_nlm23_structure_prose_references_and_tables():
     for node, ref in zip(refs, article.references, strict=True):
         for label in node.select("label"):
             label.decompose()
-        assert _words(node.get_text(" ", strip=True)) == _words(
+        assert _words(source_reference_text(fixture, node)) == _words(
             re.sub(r"^\d+\.\s*", "", ref.raw)
         )
     # All body rows of all three tables, including the complete last table.

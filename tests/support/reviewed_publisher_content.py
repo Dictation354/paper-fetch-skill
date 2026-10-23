@@ -9,7 +9,19 @@ def _words(text):
     from tests.support.scientific_content import without_latex_spacing
 
     text = without_latex_spacing(text)
-    text = re.sub(r"\[([^\]]+)\]\([^\n]*?\)", r"\1", text)
+    text = re.sub(
+        r"\\(?:mathrm|mathit|mathbf|mathsf|mathcal|operatorname|text|textit|textbf|textsf|texttt)\{([^{}]*)\}",
+        r"\1",
+        text,
+    )
+    from markdown_it import MarkdownIt
+
+    tokens = MarkdownIt().parseInline(text)[0].children or []
+    text = "".join(
+        t.content
+        for t in tokens
+        if t.type in {"text", "code_inline", "html_inline", "image"}
+    )
     text = re.sub(r"</?(?:sub|sup|br|em|strong|i|b|span)(?:\s[^<>]*?)?\s*/?>", "", text)
     text = unicodedata.normalize("NFKC", text).replace("π", "pi")
     return "".join(c for c in text.casefold() if c.isalnum())

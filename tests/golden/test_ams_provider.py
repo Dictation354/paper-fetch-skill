@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.markdown_presentation import visible_markdown
 from tests.support.test_evidence import evidence_cache as cache
 from pathlib import Path
 import tempfile
@@ -134,8 +135,11 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             self.assertIn(expected, markdown)
 
         self.assertIn("## Footnotes", markdown)
-        self.assertIn("<sup>1</sup> https://www.top500.org.", markdown)
-        self.assertIn("<sup>16</sup> The preference of open-source licensing", markdown)
+        self.assertRegex(markdown, r"<sup>\[1\]\([^)]+\)</sup>.*https://www.top500.org")
+        self.assertRegex(
+            markdown,
+            r"<sup>\[16\]\([^)]+\)</sup> The preference of open-source licensing",
+        )
         self.assertLess(
             markdown.index("## 2. The history of WAVEWATCH III"),
             markdown.index("## 6. Lessons learned"),
@@ -315,6 +319,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                     "9d",
                     "10",
                     "11",
+                    "12",
                     "13a",
                     "13b",
                     "14",
@@ -359,7 +364,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         ):
             self.assertNotIn(noise, markdown)
 
-        self.assertRegex(markdown, r"by predicting \$(?:\\mathbf\{)?\\hat\{p\}")
+        self.assertRegex(markdown, r"by predicting \$\\hat\{\\mathbf\{p\}\}")
         self.assertIn("Here, $S \\equiv", markdown)
         self.assertTrue(
             any(
@@ -371,10 +376,10 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 )
             )
         )
-        self.assertIn("(*μ*<sub>n</sub>, $\\sigma_{n}^{2}$)", markdown)
+        self.assertIn("(*μ<sub>n</sub>*, $\\sigma_{n}^{2}$)", markdown)
         self.assertIn("climatology: $\\text{BSS}", markdown)
-        self.assertIn("*ν*<sub>n</sub> > 0", markdown)
-        self.assertIn("*α*<sub>n,1</sub>", markdown)
+        self.assertIn("*ν<sub>n</sub>* &gt; 0", markdown)
+        self.assertIn("*α<sub>n</sub>*<sub>,1</sub>", markdown)
 
     def test_ams_caption_inline_markup_is_preserved(self) -> None:
         cases = (
@@ -388,14 +393,14 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 ("γ 1", "A N", "ϕ ON", "ϕ 2", "</sub>(blue)"),
                 (
                     "*γ*<sub>1</sub>",
-                    "*A*<sub>N</sub>",
-                    "*ϕ*<sub>ON</sub>",
+                    "*A<sub>N</sub>*",
+                    "***ϕ***<sub>ON</sub>",
                     (
                         "$\\overset{\\cdot}{q}(q, \\phi_{2})$ (blue)",
                         "$\\overset{\\cdot}{q}(q,\\phi_{2})$ (blue)",
                         "$\\overset{˙}{q}{({q,\\phi_{2}})}$ (blue)",
                     ),
-                    "*ϕ*<sub>OFF</sub> (blue)",
+                    "***ϕ***<sub>OFF</sub> (blue)",
                 ),
             ),
             (
@@ -420,7 +425,9 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                             any(candidate in markdown for candidate in expected)
                         )
                     else:
-                        self.assertIn(expected, markdown)
+                        self.assertIn(
+                            visible_markdown(expected), visible_markdown(markdown)
+                        )
 
     def test_ams_inline_renderer_preserves_body_subscripts_and_spacing(self) -> None:
         cases = (
@@ -432,7 +439,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             (
                 "10.1175/jamc-d-24-0048.1",
                 "</sub>(low-level",
-                "*T*<sub>b</sub> (low-level water vapor channel)",
+                "*T<sub>b</sub>* (low-level water vapor channel)",
             ),
             (
                 "10.1175/mwr-d-24-0060.1",
@@ -445,7 +452,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 markdown, _ = _extract_fixture_markdown(doi)
 
                 self.assertNotIn(forbidden, markdown)
-                self.assertIn(expected, markdown)
+                self.assertIn(visible_markdown(expected), visible_markdown(markdown))
 
     def test_ams_inline_spacing_repairs_prose_parentheses_conservatively(self) -> None:
         """ """
@@ -466,19 +473,42 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             self.assertNotIn(forbidden, jpo_markdown)
             self.assertNotIn(forbidden, mwr_markdown)
 
-        self.assertIn("*ϕ*<sub>3</sub> (i.e., *S*<sub>S</sub>)", jpo_markdown)
-        self.assertIn("*qϕ*<sub>2</sub>", jpo_markdown)
-        self.assertIn("*K*<sub>DP</sub> (and therefore lightning)", mwr_markdown)
-        self.assertIn("*K*<sub>DP</sub> (Fig. 7b)", mwr_markdown)
-        self.assertIn("*K*<sub>DP</sub> (Reimel and Kumjian 2021)", mwr_markdown)
-        self.assertIn("10<sup>−5</sup>", mwr_markdown)
-        self.assertIn("*K*<sub>DP</sub>", mwr_markdown)
+        self.assertIn(
+            visible_markdown("*ϕ*<sub>3</sub> (i.e., *S<sub>S</sub>*)"),
+            visible_markdown(jpo_markdown),
+        )
+        self.assertIn(
+            visible_markdown("*qϕ*<sub>2</sub>"), visible_markdown(jpo_markdown)
+        )
+        self.assertIn(
+            visible_markdown("*K*<sub>DP</sub> (and therefore lightning)"),
+            visible_markdown(mwr_markdown),
+        )
+        self.assertIn(
+            visible_markdown("*K*<sub>DP</sub> (Fig. 7b)"),
+            visible_markdown(mwr_markdown),
+        )
+        self.assertIn(
+            visible_markdown("*K*<sub>DP</sub> (Reimel and Kumjian 2021)"),
+            visible_markdown(mwr_markdown),
+        )
+        self.assertIn(
+            visible_markdown("10<sup>−5</sup>"), visible_markdown(mwr_markdown)
+        )
+        self.assertIn(
+            visible_markdown("*K*<sub>DP</sub>"), visible_markdown(mwr_markdown)
+        )
 
         normalized = _ams_markdown._normalize_ams_markdown_text(
             "*Z*<sub>H</sub>(Montazeri et al. 2025) and *f*<sub>n</sub>(x)."
         )
-        self.assertIn("*Z*<sub>H</sub> (Montazeri et al. 2025)", normalized)
-        self.assertIn("*f*<sub>n</sub>(x)", normalized)
+        self.assertIn(
+            visible_markdown("*Z*<sub>H</sub> (Montazeri et al. 2025)"),
+            visible_markdown(normalized),
+        )
+        self.assertIn(
+            visible_markdown("*f*<sub>n</sub>(x)"), visible_markdown(normalized)
+        )
 
         for doi, markdown, extraction in (
             ("10.1175/jpo-d-23-0234.1", jpo_markdown, jpo_extraction),

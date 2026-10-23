@@ -1,0 +1,24 @@
+{
+  "doi": "10.1093/nsr/nwae442",
+  "provider": "oxfordacademic",
+  "captured_at": "2026-10-20T02:49:58.497869+00:00",
+  "requested_url": "https://doi.org/10.1093/nsr/nwae442",
+  "source_url": "https://academic.oup.com/nsr/article/12/2/nwae442/7914333",
+  "status": 200,
+  "content_type": "text/html; charset=utf-8",
+  "capture_method": "OxfordAcademicClient._fetch_article_attempt; decoded HTTP HTML, without extraction cleanup",
+  "file": "original.html",
+  "size": 431741,
+  "sha256": "e86ce566259eda5c7578fa9f9443d37c9f294122222b3971edd6d5347ad430e4",
+  "identity": {
+    "format": "html",
+    "identity": "matched",
+    "identifiers": [
+      "10.1093/nsr/nwae442"
+    ],
+    "canonical": [
+      "https://academic.oup.com/nsr/article/12/2/nwae442/7914333"
+    ],
+    "title": "Principle-based adept predictions of global warming from climate mean states"
+  }
+}

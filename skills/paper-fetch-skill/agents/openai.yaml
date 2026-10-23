@@ -1,4 +1,6 @@
 interface:
-  display_name: "Paper Fetch Skill"
-  short_description: "Fetch verified paper text or probe full-text availability"
-  default_prompt: "Use $paper-fetch-skill to fetch and verify the full text of the papers I provide, or probe their full-text availability if I only request a check."
+  display_name: "Paper Fetch"
+  short_description: "Fetch known papers and verify full-text availability"
+  default_prompt: "Use $paper-fetch-skill to fetch and verify the papers I provide, or check full-text availability when I request a probe."
+policy:
+  allow_implicit_invocation: true

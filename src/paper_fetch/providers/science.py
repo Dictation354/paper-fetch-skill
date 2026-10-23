@@ -122,6 +122,8 @@ PROVIDER_BUNDLE = ProviderBundle(
         ),
         dom_hooks=DomHooks(
             before_block_normalization=_science_html.science_before_block_normalization,
+            render_table=_science_html.render_table_with_missing_trailing_cells,
+            body_container=_science_html.science_body_container,
             asset_body_container=_science_html.science_asset_body_container,
             asset_figure_extraction=_science_html.science_asset_figure_extraction,
         ),
@@ -129,6 +131,7 @@ PROVIDER_BUNDLE = ProviderBundle(
             classify_heading=_science_html.science_classify_heading,
             normalize_markdown=_science_html.science_normalize_markdown,
             keep_unknown_abstract_block=_science_html.science_keep_unknown_abstract_block,
+            keep_leading_auxiliary_block=_science_html.science_keep_leading_auxiliary_block,
         ),
     ),
     sources=("science",),

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from collections.abc import Sequence
 from typing import Any
 from collections.abc import Mapping
@@ -170,11 +172,23 @@ def _apply_provider_render_policy(
     return markdown_text
 
 
+def _plain_metadata_abstract(value: Any) -> str:
+    text = safe_text(value)
+    if re.search(r"</?[a-z][^>]*>", text, re.I):
+        from bs4 import BeautifulSoup
+
+        text = BeautifulSoup(text, "html.parser").get_text(" ", strip=True)
+    return text
+
+
 def build_metadata(metadata: Mapping[str, Any]) -> Metadata:
     return Metadata(
         title=normalize_inline_html_text(metadata.get("title")) or None,
         authors=normalize_authors(metadata.get("authors")),
-        abstract=normalize_abstract_text(metadata.get("abstract")) or None,
+        abstract=normalize_abstract_text(
+            _plain_metadata_abstract(metadata.get("abstract"))
+        )
+        or None,
         journal=normalize_inline_html_text(
             metadata.get("journal_title") or metadata.get("journal")
         )

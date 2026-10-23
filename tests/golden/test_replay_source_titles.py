@@ -85,7 +85,7 @@ def test_legacy_replay_json_yaml_h1_use_original_title(
         # section Methods; this repair does not change that convention.
         expected_headings[2] = "Methods"
         assert list(map(_words, body_headings)) == list(map(_words, expected_headings))
-        assert len(article.sections) == 9  # eight body sections plus Abstract
+        assert len(article.sections) == 10  # source body, Abstract and Extended Data
 
 
 def test_plos_scientific_identifier_survives_source_to_yaml_and_rendered_title():

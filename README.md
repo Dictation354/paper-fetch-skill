@@ -78,7 +78,7 @@ CLI 仍会准备显式工作目录；需要真正无落盘的临时读取时，�
 
 ## 效果展示
 
-agent 安装 skill 后，可以识别 Paper Fetch 的适用边界，并在抓取前确认是否保存全文和图表资源。
+agent 安装 skill 后，可以识别 Paper Fetch 的适用边界，按用户意图选择临时阅读、归档或探测，并核验实际正文和资产。
 
 ![agent 识别 paper-fetch-skill 能力范围](figures/agent-skill-overview.png)
 

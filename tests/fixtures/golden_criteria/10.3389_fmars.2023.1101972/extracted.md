@@ -8,7 +8,7 @@ source: "frontiers_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 9329
+token_estimate: 9620
 ---
 
 # Ocean acidification and warming modify stimulatory benthos effects on sediment functioning: An experimental study on two ecosystem engineers
@@ -19,7 +19,7 @@ Many macrofauna have a stimulatory effect on sediment functioning through their 
 
 ## 1 Introduction
 
-The important role of macrofauna species as benthic ecosystem engineers has long been recognized. Infaunal macrobenthic species are known to alter both the physical structure of and the chemical fluxes within sediments (Laverock et al., 2011). The foraging movements of macrobenthic species rework the top layer of the sediment [i.e. bioturbation (Meysman et al., 2006; Kristensen et al., 2012)], facilitating transport of oxygen and organic matter into deeper layers and of excretion products in and out of the sediment towards the water column. This altered transport of solutes and solids that is driven by physiological and behavioral processes stimulate microbial activity and organic matter mineralization and thus increase turnover of nutrients (Mermillod-Blondin et al., 2004).
+The important role of macrofauna species as benthic ecosystem engineers has long been recognized. Infaunal macrobenthic species are known to alter both the physical structure of and the chemical fluxes within sediments (Laverock et al., 2011). The foraging movements of macrobenthic species rework the top layer of the sediment \[i.e. bioturbation (Meysman et al., 2006; Kristensen et al., 2012)\], facilitating transport of oxygen and organic matter into deeper layers and of excretion products in and out of the sediment towards the water column. This altered transport of solutes and solids that is driven by physiological and behavioral processes stimulate microbial activity and organic matter mineralization and thus increase turnover of nutrients (Mermillod-Blondin et al., 2004).
 
 Over the last decades, human activities have strongly increased the atmospheric carbon dioxide (CO<sub>2</sub>) levels. If no drastic CO<sub>2</sub> mitigation measures are taken, this increase is predicted to continue up to atmospheric CO<sub>2</sub> concentrations of ca. 940 ppm by the end of this century compared to a current value of ca. 416 ppm (NOAA; Collins et al., 2013). Oceans are counteracting this increase by absorbing CO<sub>2</sub> at a current rate of 10<sup>6</sup> tons per hour (Brewer, 2009). This absorbing capacity, however, has already led to a decrease in surface-ocean pH of 0.1 units since the start of the industrial revolution (Caldeira and Wickett, 2003). A further decline of about 0.29 pH units by the end of the 21<sup>st</sup> century is predicted for the open ocean (Collins et al., 2013; Bindoff et al., 2019; Allan, 2021). In coastal shallow waters, acidification rates often follow different trends. These areas are subject to other stressors, such as freshwater inputs (Carstensen and Duarte, 2019), eutrophication (Cai et al., 2017) and seasonal variations (Hartman et al., 2019; Omar et al., 2019) which may lead to higher acidification rates (Provoost et al., 2010). On top of their effect on ocean pH, higher concentrations of atmospheric CO<sub>2</sub> and methane enhance the greenhouse effect, thus impacting ocean surface temperature. This is expected to lead to an increase of global (0 – 200 m depth) ocean temperature of 1.0 up to 3.2°C by the end of this century (Collins et al., 2013). These alterations in both seawater temperature and pH may challenge marine benthic species and the way in which they affect their environment (Fabry et al., 2008; Byrne, 2011; Dupont and Pörtner, 2013; Nagelkerken and Munday, 2016). Ocean acidification (OA) disrupts acid-base regulations of marine species through the intake of acidified water and calcifying organisms in particular are negatively affected as OA causes the dissolution of their CaCO<sub>3</sub> shells (Matoo et al., 2013; Thomsen et al., 2015; Lemasson et al., 2017; Hurd et al., 2019; Figuerola et al., 2021), whereas changing temperatures may move organisms away from their thermal optima (Pörtner et al., 2004; Sokolova et al., 2012; Reddin et al., 2022). The consecutive behavioral and physiological acclimation and adaptation to climate change is well documented for macrobenthic species (e.g. Tuomainen and Candolin, 2011; Ong et al., 2017; Vlaminck et al., 2022a; Vlaminck et al., 2022b). Alma et al. (2020) for example, found reduced shell strength when the purple-hinge rock scallop was exposed to a pCO<sub>2</sub> of 1050 µatm, while Steeves et al. (2018) predicted increased growth rates of two bivalve species; *Crassostrea virginica* and *Mytilus edulis*, in a warmer climate. Van Colen et al. (2020) identified a shift in feeding mode of *Scrobicularia plana* from predominantly suspension feeding to deposit feeding, in a warmer and acidified environment. Little research has investigated the cascading effect on ecosystem functioning. For example, previous research has demonstrated that OW increased and OA decreased microbial gene abundance and thus modify structure and functioning of nitrogen cycling microbial communities (Currie et al., 2017; Seidel et al., 2022). However, it remains largely unexplored to what extent climate change induced alteration in macrofauna behavior that shape the habitat conditions for the microbial community, i.e. ecosystem engineering, also affect functioning.
 
@@ -39,27 +39,27 @@ Water chemistry over the duration of the experiments: temperature, total pH, sal
 
 *Lanice conchilega*
 
-| Treatment                                           | Control        | Acidification  | Temperature    | Climate Change |
-| --------------------------------------------------- | -------------- | -------------- | -------------- | -------------- |
-| **Temperature (° C)**                               | 18.3 ± 0.8     | 19.4 ± 0.9     | 21.1 ± 0.9     | 21.9 ± 1.4     |
+| Treatment                                        | Control        | Acidification  | Temperature    | Climate Change |
+| ------------------------------------------------ | -------------- | -------------- | -------------- | -------------- |
+| **Temperature (° C)**                            | 18.3 ± 0.8     | 19.4 ± 0.9     | 21.1 ± 0.9     | 21.9 ± 1.4     |
 | **pH<sub>T</sub>** | 8.1 ± 0.2 | 7.7 ± 0.3 | 8.1 ± 0.2 | 7.7 ± 0.2 |
-| **Salinity**                                        | 37.1 ± 1.4     | 37.4 ± 1.9     | 37.4 ± 1.7     | 37.9 ± 1.7     |
-| **pCO<sub>2</sub>(μatm)** | 496.3 ± 65.0 | 1515.7 ± 420.5 | 488.4 ± 67.8 | 1297.2 ± 195.2 |
+| **Salinity**                                     | 37.1 ± 1.4     | 37.4 ± 1.9     | 37.4 ± 1.7     | 37.9 ± 1.7     |
+| **pCO<sub>2</sub> (μatm)** | 496.3 ± 65.0 | 1515.7 ± 420.5 | 488.4 ± 67.8 | 1297.2 ± 195.2 |
 | **TA (μmol kg<sup>-1</sup>)** | 2608.8 ± 3.4 | 2608.6 ± 4.3 | 2607.8 ± 4.1 | 2606.7 ± 3.0 |
 | $\text{HCO}_{3}^{-}$ **(μmol kg<sup>-1</sup>)** | 2094.5 ± 163.8 | 2326.3 ± 42.9 | 2039.7 ± 173.3 | 2315.2 ± 34.4 |
 | $\text{CO}_{3}^{2 -}$ **(μmol kg<sup>-1</sup>)** | 210.5 ± 19.5 | 115.3 ± 17.4 | 232.9 ± 20.6 | 119.0 ± 14.2 |
-| **Ωar**                                             | 3.2 ± 1.1      | 1.8 ± 0.8      | 3.6 ± 1.1      | 1.8 ± 0.8      |
-| **Ωc**                                              | 4.7 ± 1.5      | 2.6 ± 1.2      | 5.2 ± 1.7      | 2.7 ± 1.1      |
-| ***Abra alba***                                     |                |                |                |                |
-| **Temperature (° C)**                               | 19.3 ± 0.5     | 19.4 ± 0.4     | 22.1 ± 0.8     | 22.4 ± 0.7     |
+| **Ωar**                                          | 3.2 ± 1.1      | 1.8 ± 0.8      | 3.6 ± 1.1      | 1.8 ± 0.8      |
+| **Ωc**                                           | 4.7 ± 1.5      | 2.6 ± 1.2      | 5.2 ± 1.7      | 2.7 ± 1.1      |
+| <strong>*Abra alba*</strong>                     |                |                |                |                |
+| **Temperature (° C)**                            | 19.3 ± 0.5     | 19.4 ± 0.4     | 22.1 ± 0.8     | 22.4 ± 0.7     |
 | **pH<sub>T</sub>** | 8.2 ± 0.03 | 7.9 ± 0.08 | 8.2 ± 0.8 | 7.9 ± 0.07 |
-| **Salinity**                                        | 34.2 ± 0.9     | 34.0 ± 0.8     | 34.7 ± 1.3     | 35.0 ± 1.5     |
-| **pCO<sub>2</sub>(μatm)** | 316.9 ± 21.9 | 632.9 ± 126.5 | 285.5 ± 21.7 | 611.4 ± 105.6 |
+| **Salinity**                                     | 34.2 ± 0.9     | 34.0 ± 0.8     | 34.7 ± 1.3     | 35.0 ± 1.5     |
+| **pCO<sub>2</sub> (μatm)** | 316.9 ± 21.9 | 632.9 ± 126.5 | 285.5 ± 21.7 | 611.4 ± 105.6 |
 | **TA (μmol kg<sup>-1</sup>)** | 2605 ± 1.3 | 2605.8 ± 0.9 | 2604.5 ± 2.8 | 2603.8 ± 0.5 |
 | $\text{HCO}_{3}^{-}$ **(μmol kg<sup>-1</sup>)** | 1986 ± 30.6 | 2210.4 ± 57.5 | 1889.7 ± 41.3 | 2153.3 ± 61.2 |
-| $\text{CO}_{3}^{2 -}$<br>**(μmol kg<sup>-1</sup>)** | 257.2 ± 13.2 | 164.2 ± 24.5 | 297.4 ± 17.2 | 187.0 ± 25.6 |
-| **Ωar**                                             | 3.9 ± 0.2      | 2.5 ± 0.4      | 4.5 ± 0.3      | 2.9 ± 0.4      |
-| **Ωca**                                             | 5.7 ± 0.3      | 3.6 ± 0.5      | 6.6 ± 0.4      | 4.1 ± 0.6      |
+| $\text{CO}_{3}^{2 -}$ **(μmol kg<sup>-1</sup>)** | 257.2 ± 13.2 | 164.2 ± 24.5 | 297.4 ± 17.2 | 187.0 ± 25.6 |
+| **Ωar**                                          | 3.9 ± 0.2      | 2.5 ± 0.4      | 4.5 ± 0.3      | 2.9 ± 0.4      |
+| **Ωca**                                          | 5.7 ± 0.3      | 3.6 ± 0.5      | 6.6 ± 0.4      | 4.1 ± 0.6      |
 
 Standard deviation is given for each value. All tanks were kept at control values before manipulation.
 
@@ -99,12 +99,11 @@ Differences in survival of study organisms between treatments at the end of incu
 
 ### 3.1 Macrofauna survival
 
-There was no significant temperature, pH or interaction effect on the survival of *L. conchilega.* Increased seawater temperature did, however, significantly reduce the survival of *A. alba* (p-value< 0.05), decreasing its survival by 34 (± 0.08) % after 6 weeks of incubation under both warmed conditions (i.e. warming; 50 ± 19%,and climate change: 42 ± 13%) compared to the control (67 ± 15%) and ocean acidification (72 ± 11%) conditions (**Figure 1**;
-**Table 2**).
+There was no significant temperature, pH or interaction effect on the survival of *L. conchilega.* Increased seawater temperature did, however, significantly reduce the survival of *A. alba* (p-value< 0.05), decreasing its survival by 34 (± 0.08) % after 6 weeks of incubation under both warmed conditions (i.e. warming; 50 ± 19%,and climate change: 42 ± 13%) compared to the control (67 ± 15%) and ocean acidification (72 ± 11%) conditions (**Figure 1**; **Table 2**).
 
 Table 2
 
-Linear mixed effects models comparing OPD and biogeochemical cycling in different treatments; seawater temperature, seawater pH*, Abra alba* presence and experimental duration.
+Linear mixed effects models comparing OPD and biogeochemical cycling in different treatments; seawater temperature, seawater pH<em>, Abra alba</em> presence and experimental duration.
 
 |                    | NDF | DDF    | F value | p-value  |
 | ------------------ | --- | ------ | ------- | -------- |
@@ -138,13 +137,11 @@ Effects of temperature and pH on the survival rate of *A. alba* and *L. conchile
 
 #### 3.2.1 Lanice conchilega
 
-The presence of *L. conchilega* significantly increased OPD by 31 (± 1) %, compared to cores with no *L. conchilega* individuals present (**Figure 2**). Furthermore, *L. conchilega* increased SCOC by 28% under ambient conditions, whereas stimulation in an acidified environment was even greater with a 37 (± 8) % increase (**Table 3**, interaction effect of OA and organism presence;
-**Figure 3**; pairwise p-value< 0.001). Similarly, acidified conditions increased the stimulatory effect of *L. conchilega* on nitrification and denitrification, with respective increases of 41 (± 7) % and 25 (± 7) %, when comparing all non-acidified treatments with all acidified treatments (**Table 3**, interaction effect of OA and organism;
-**Figure 3**; pairwise p-values< 0.001). On average the highest stimulation was found in the CC treatment, although this effect was not significant (p-value = 0.842). Experimental duration did not affect fluxes, therefore time was pooled in the graphic representation of the results (**Figure 3**).
+The presence of *L. conchilega* significantly increased OPD by 31 (± 1) %, compared to cores with no *L. conchilega* individuals present (**Figure 2**). Furthermore, *L. conchilega* increased SCOC by 28% under ambient conditions, whereas stimulation in an acidified environment was even greater with a 37 (± 8) % increase (**Table 3**, interaction effect of OA and organism presence; **Figure 3**; pairwise p-value< 0.001). Similarly, acidified conditions increased the stimulatory effect of *L. conchilega* on nitrification and denitrification, with respective increases of 41 (± 7) % and 25 (± 7) %, when comparing all non-acidified treatments with all acidified treatments (**Table 3**, interaction effect of OA and organism; **Figure 3**; pairwise p-values< 0.001). On average the highest stimulation was found in the CC treatment, although this effect was not significant (p-value = 0.842). Experimental duration did not affect fluxes, therefore time was pooled in the graphic representation of the results (**Figure 3**).
 
 Table 3
 
-Linear mixed effects models comparing OPD and biogeochemical cycling in different treatments; seawater temperature, seawater pH*, Lanice conchilega* presence and experimental duration.
+Linear mixed effects models comparing OPD and biogeochemical cycling in different treatments; seawater temperature, seawater pH<em>, Lanice conchilega</em> presence and experimental duration.
 
 |                 | NDF | DDF    | F value | p-value  |
 | --------------- | --- | ------ | ------- | -------- |
@@ -173,17 +170,11 @@ Effect of *Lanice conchilega* presence (present: orange bars, absent: grey bars)
 
 #### 3.2.2 Abra alba
 
-Experimental duration significantly affected nitrification and denitrification rates, with respective decreases of 23 (± 6) % and 22 (± 1) % after six weeks of incubation compared to three weeks of incubation (**Table 2**, Time effect;
-**Figure 1**).
+Experimental duration significantly affected nitrification and denitrification rates, with respective decreases of 23 (± 6) % and 22 (± 1) % after six weeks of incubation compared to three weeks of incubation (**Table 2**, Time effect; **Figure 1**).
 
-*Abra alba* presence increased OPD by 27 (± 6) % in all treatments, when compared to all cores without *A. alba* presence (**Table 2**, organism effect;
-**Figure 2**). Irrespective of the presence of *A. alba*, the interaction of seawater pH and temperature significantly affected OPD (**Table 2**, interaction effect of OA and OW;
-**Figure 2**). On average, OPD in sediments with Abra was deeper in CTRL when compared to OW, OA or CC (17%, 19%, and 6%, respectively).
+*Abra alba* presence increased OPD by 27 (± 6) % in all treatments, when compared to all cores without *A. alba* presence (**Table 2**, organism effect; **Figure 2**). Irrespective of the presence of *A. alba*, the interaction of seawater pH and temperature significantly affected OPD (**Table 2**, interaction effect of OA and OW; **Figure 2**). On average, OPD in sediments with Abra was deeper in CTRL when compared to OW, OA or CC (17%, 19%, and 6%, respectively).
 
-In non-acidified conditions, *A. alba* significantly stimulated SCOC resulting in an increase of 35 (± 15) % averaged over time (**Table 2**, interaction effect of OA and organism;
-**Figure 4**; pairwise p-value< 0.001). Although the stimulation was on average larger in the CC treatment with *A. alba*, the statistical comparison revealed that SCOC rates did not differ significantly between the sediment with and without *A.alba* in the CC treatment (p = 0.086). This stimulatory effect was absent under acidified conditions. Nitrification and denitrification were both stimulated by the presence of *A. alba* in a control environment (pairwise p-value = 0.001 and 0.010 respectively). This stimulatory effect was absent when either seawater temperature was raised (OW) or pH was lowered (OA) (pairwise p-values all< 0.05). However, nitrification and denitrification rates were stimulated by the presence of *A. alba* under combined warming and acidification, i.e. the CC scenario, with an increase of 61 (± 5) % and 110 (± 1) % averaged over time respectively (pairwise p-values: 0.008 and 0.010 respectively;
-**Table 2**: OW, OA and organism interaction effect;
-**Figure 4**).
+In non-acidified conditions, *A. alba* significantly stimulated SCOC resulting in an increase of 35 (± 15) % averaged over time (**Table 2**, interaction effect of OA and organism; **Figure 4**; pairwise p-value< 0.001). Although the stimulation was on average larger in the CC treatment with *A. alba*, the statistical comparison revealed that SCOC rates did not differ significantly between the sediment with and without *A.alba* in the CC treatment (p = 0.086). This stimulatory effect was absent under acidified conditions. Nitrification and denitrification were both stimulated by the presence of *A. alba* in a control environment (pairwise p-value = 0.001 and 0.010 respectively). This stimulatory effect was absent when either seawater temperature was raised (OW) or pH was lowered (OA) (pairwise p-values all< 0.05). However, nitrification and denitrification rates were stimulated by the presence of *A. alba* under combined warming and acidification, i.e. the CC scenario, with an increase of 61 (± 5) % and 110 (± 1) % averaged over time respectively (pairwise p-values: 0.008 and 0.010 respectively; **Table 2**: OW, OA and organism interaction effect; **Figure 4**).
 
 ![Figure 4](https://www.frontiersin.org/files/Articles/1101972/xml-images/fmars-10-1101972-g004.webp)
 
@@ -205,389 +196,176 @@ In conclusion, we show that ocean warming and acidification change the contribut
 
 The raw data supporting the conclusions of this article will be made available by the authors, without undue reservation.
 
+## Author contributions
+
+EV and CC contributed to conception and design of the study. EV acquired the data and performed the statistical analysis with the input of UB and CC. EV, CC, UB and TM performed the interpretation of the data. EV wrote the first draft of the manuscript. All authors contributed to the article and approved the submitted version.
+
+## Funding
+
+Funding for the research leading to this publication was provided through the BRAIN-be project BR/175/A1/PERSUADE of the Belgian Science Policy Office. Additional funding was obtained from the Special Research Fund (BOF) of Ghent University through GOA project 01G02617. Experiments used infrastructure funded by the Flemish Science Fund FWO through project GOH3817N in the framework of EMBRC-Belgium.
+
+## Acknowledgments
+
+Sampling at sea was performed with logistic support from the Research Vessel Simon Stevin. The authors thank Helena Voet, Hannelore Theetaert, Bart Beuselinck, Bruno Vlaeminck, Annick Van Kenhove, Guy De Smet and Elise Toussaint for their practical and analytical support.
+
+## Conflict of interest
+
+The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest.
+
+## Supplementary material
+
+The Supplementary Material for this article can be found online at: [https://www.frontiersin.org/articles/10.3389/fmars.2023.1101972/full#supplementary-material](https://www.frontiersin.org/articles/10.3389/fmars.2023.1101972/full#supplementary-material)
+
+## Supplementary Materials
+
+- [Supplementary material (Table_1.docx)](https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/full#supplementary-material)
+
 ## References (74 total, showing 74)
 
-1. Allan R. P.
-Hawkins E.
-Bellouin N.
-Collins B.
-( 2021 ). IPCC, 2021: Summary for Policymakers. Global Warming of 1.5 °C . An IPCC Special Report on the Impacts of Global Warming of 1.5 °C above Pre-Industrial Levels and Related Global Greenhouse Gas Emission Pathways, in the Context of Strengthening the Global Res . IPCC : Geneva, Switzerland , 2018.
-2. Alma L.
-Kram K. E.
-Holtgrieve G. W.
-Barbarino A.
-Fiamengo C. J.
-Padilla-Gamiño J. L.
-( 2020 ). Ocean acidification and warming effects on the physiology, skeletal properties, and microbiome of the purple-hinge rock scallop . Comp. Biochem. Physiol. Part A Mol. Integr. Physiol. 240 , 110579 . doi: 10.1016/j.cbpa.2019.110579
-3. Alves R. M. S.
-Van Colen C.
-Vincx M.
-Vanaverbeke J.
-De Smet B.
-Guarini J.-M.
-. ( 2017 ). A case study on the growth of lanice conchilega (Pallas 1766) aggregations and their ecosystem engineering impact on sedimentary processes . J. Exp. Mar. Bio. Ecol. 489 , 15 – 23 . doi: 10.1016/j.jembe.2017.01.005
-4. Barton K.
-( 2010 ). MuMIn: multi-model inference. 2020 . R package version 1.1.
-5. Bates D.
-Mächler M.
-Bolker B. M.
-Walker S. C.
-( 2014 ). Fitting linear mixed-effects models using lme4 . J. Stat. Software 67 . doi: 10.18637/jss.v067.i01
-6. Bernard G.
-Grémare A.
-Maire O.
-Lecroart P.
-Meysman F. J. R.
-Ciutat A.
-. ( 2012 ). Experimental assessment of particle mixing fingerprints in the deposit-feeding bivalve abra alba (wood) . J. Mar. Res. 70 , 689 – 718 . doi: 10.1357/002224012806290705
-7. Bindoff N. L.
-Cheung W. W. L.
-Kairo J. G.
-Arístegui J.
-Guinder V. A.
-Hallberg R.
-. ( 2019 ). Changing ocean, marine ecosystems, and dependent communities . Eds.
-Pörtner H.-O.
-Roberts D.
-Masson-Delmotte V.
-Zhai P.
-Tignor M.
-Poloczanska E.
-( Switzerland : Intergovernmental Panel on Climate Change ).
-8. Braeckman U.
-Foshtomi M. Y.
-Van Gansbeke D.
-Meysman F.
-Soetaert K.
-Vincx M.
-. ( 2014 ). Variable importance of macrofaunal functional biodiversity for biogeochemical cycling in temperate coastal sediments . Ecosystems 17 , 720 – 737 . doi: 10.1007/S10021-014-9755-7
-9. Braeckman U.
-Provoost P.
-Gribsholt B.
-Van Gansbeke D.
-Middelburg J. J.
-Soetaert K.
-. ( 2010 ). Role of macrofauna functional traits and density in biogeochemical fluxes and bioturbation . Mar. Ecol. Prog. Ser. 399 , 173 – 186 . doi: 10.3354/meps08336
-10. Brewer P. G.
-( 2009 ). A changing ocean seen with clarity . Proc. Natl. Acad. Sci. U. S. A. 106 , 12213 – 12214 . doi: 10.1073/pnas.0906815106
-11. Briffa M.
-de la Haye K.
-Munday P. L.
-( 2012 ). High CO 2 and marine animal behaviour: Potential mechanisms and ecological consequences . Mar. pollut. Bull. 64 , 1519 – 1528 . doi: 10.1016/j.marpolbul.2012.05.032
-12. Byrne M.
-( 2011 ). Impact of ocean warming and acidification on marine invertebrate life histroy stages: vulnerabilities and potential for persistence in a changing ocean . Oceanogr. Mar. Biol. Annu. Rev. 49 , 1 – 42 .
-13. Cai W.-J.
-Huang W.-J.
-Luther G. W.
-Pierrot D.
-Li M.
-Testa J.
-. ( 2017 ). Redox reactions and weak buffering capacity lead to acidification in the Chesapeake bay . Nat. Commun. 8 , 1 – 12 . doi: 10.1038/s41467-017-00417-7
-14. Caldeira K.
-Wickett M. E. M. E.
-( 2003 ). Anthropogenic carbon and ocean pH . Nature 425 , 365 . doi: 10.1038/425365a
-15. Carstensen J.
-Duarte C. M.
-( 2019 ). Drivers of pH variability in coastal ecosystems . Environ. Sci. Technol. 53 , 4020 – 4029 . doi: 10.1021/ACS.EST.8B03655
-16. Clarke A.
-( 1993 ). Temperature and extinction in the sea: a physiologist’s view . Paleobiology 19 , 499 – 518 . doi: 10.1017/S0094837300014111
-17. Collins M.
-Knutti R.
-Arblaster J.
-Dufresne J.
-Fichefet T.
-Friedlingstein P.
-. ( 2013 ). Long-term climate change: Projections, commitments and irreversibility. clim. chang. 2013 phys. sci. basis work. gr. I contrib. to fifth assess. rep. intergov. panel clim. Chang . 1029 – 1136 .
-18. Currie A. R.
-Tait K.
-Parry H.
-de Francisco-Mora B.
-Hicks N.
-Osborn A. M.
-. ( 2017 ). Marine microbial gene abundance and community composition in response to ocean acidification and elevated temperature in two contrasting coastal marine sediments . Front. Microbiol. 8 , 1599 . doi: 10.3389/fmicb.2017.01599
-19. Day J. H.
-( 1968 ). A Monograph on the Polychaeta of Southern Africa Part 1, Errantia: Part 2, Sedentaria Published by the Trustees of the British Museum (Natural History), London, 1967 Publication no. 656. Pp. viii+ 878. Price£ 15 . J Mar Biol Assoc UK 48 ( 3 ), 836 – 836 .
-20. De Smet B.
-D’Hondt A. S.
-Verhelst P.
-Fournier J.
-Godet L.
-Desroy N.
-. ( 2015 ). Biogenic reefs affect multiple components of intertidal soft-bottom benthic assemblages: The lanice conchilega case study . Estuar. Coast. Shelf Sci. 152 , 44 – 55 . doi: 10.1016/j.ecss.2014.11.002
-21. Dickson A. G.
-( 2010 ). The carbon dioxide system in seawater: Equilibrium chemistry and measurements . In
-Riebesell U.
-Fabry V. J
-Hansson L.
-Eds. Guide to best practices for ocean acidification research and data reporting ( Luxembourg : Publications Office of the European Union ) 1 , 17 – 40 .
-22. Dupont S.
-Pörtner H.
-( 2013 ). Marine science: Get ready for ocean acidification . Nature 498 , 429 . doi: 10.1038/498429a
-23. Ehrnsten E.
-Sun X.
-Humborg C.
-Norkko A.
-Savchuk O. P.
-Slomp C. P.
-. ( 2020 ). Understanding environmental changes in temperate coastal seas: Linking models of benthic fauna to carbon and nutrient fluxes . Front. Mar. Sci. 7 . doi: 10.3389/FMARS.2020.00450
-24. Fabry V. J.
-Seibel B. A.
-Feely R. A.
-Orr J. C.
-( 2008 ). Impacts of ocean acidification on marine fauna and ecosystem processes . ICES J. Mar. Sci. 65 , 414 – 432 . doi: 10.1093/icesjms/fsn048
-25. Figuerola B.
-Hancock A. M.
-Bax N.
-Cummings V. J.
-Downey R.
-Griffiths H. J.
-. ( 2021 ). A review and meta-analysis of potential impacts of ocean acidification on marine calcifiers from the southern ocean . Front. Mar. Sci. 8 . doi: 10.3389/fmars.2021.584445
-26. Forster S.
-Glud R. N.
-Gundersen J. K.
-Huettel M.
-( 1999 ).
-In situ study of bromide tracer and oxygen flux in coastal sediments . Estuar. Coast. Shelf Sci. 49 , 813 – 827 . doi: 10.1006/ecss.1999.0557
-27. Forster S.
-Graf G.
-( 1995 ). Impact of irrigation on oxygen flux into the sediment: intermittent pumping by callianassa subterranea and “piston-pumping” by lanice conchilega . Mar. Biol. 123 , 335 – 346 . doi: 10.1007/BF00353625
-28. Foshtomi M. Y.
-Leliaert F.
-Derycke S.
-Willems A.
-Vincx M.
-Vanaverbeke J.
-( 2018 ). The effect of bio-irrigation by the polychaete Lanice conchilega on active denitrifiers: distribution, diversity and composition of nosZ gene . PLoS One 13 ( 2 ), e0192391 .
-29. Godbold J. A. J. A.
-Solan M.
-( 2013 ). Long-term effects of warming and ocean acidification are modified by seasonal variation in species responses and environmental conditions . Philos. Trans. R. Soc B 368 , 20130186 . doi: 10.1098/rstb.2013.0186
-30. Hartman S. E.
-Humphreys M. P.
-Kivimäe C.
-Woodward E. M. S.
-Kitidis V.
-McGrath T.
-. ( 2019 ). Seasonality and spatial heterogeneity of the surface ocean carbonate system in the northwest European continental shelf . Prog. Oceanogr. 177 , 101909 . doi: 10.1016/j.pocean.2018.02.005
-31. Hartmann-Schröder G.
-( 1996 ). Annelida, Borstenwürmer, Polychaeta . Jena, Germany : Gustav Fisher Verlag .
-32. Hurd C. L.
-Beardall J.
-Comeau S.
-Cornwall C. E.
-Havenhand J. N.
-Munday P. L.
-. ( 2019 ). Ocean acidification as a multiple driver: how interactions between changing seawater carbonate parameters affect marine life . Mar. Freshw. Res. 71 , 263 – 274 . doi: 10.1071/MF19267
-33. Kristensen E.
-( 1983 ). Ventilation and oxygen uptake by three species of nereis (Annelida : Polychaeta). 11. effects of temperature and salinity changes . Mar. Ecol. Prog. Ser. 12 , 299 – 306 . doi: 10.3354/meps012299
-34. Kristensen E.
-Penha-Lopes G.
-Delefosse M.
-Valdemarsen T.
-Quintana C. O.
-Banta G. T.
-( 2012 ). What is bioturbation? the need for a precise definition for fauna in aquatic sciences . Mar. Ecol. Prog. Ser. 446 , 285 – 302 . doi: 10.3354/meps09506
-35. Kuznetsova A.
-Brockhoff P. B.
-Christensen R. H. B.
-( 2017 ). lmerTest package: Tests in linear mixed effects models . J. Stat. Software 82 , 1 – 26 . doi: 10.18637/JSS.V082.I13
-36. Laverock B.
-Gilbert J.
-Tait K.
-Osborn A. M.
-Widdicombe S.
-( 2011 ). Bioturbation: impact on the marine nitrogen cycle . Biochem. Soc Trans. 39 , 315 – 320 . doi: 10.1042/BST0390315
-37. Lemasson A. J.
-Fletcher S.
-Hall-Spencer J. M.
-Knights A. M.
-( 2017 ). Linking the biological impacts of ocean acidification on oysters to changes in ecosystem services: a review . J. Exp. Mar. Bio. Ecol. 492 , 49 – 62 . doi: 10.1016/j.jembe.2017.01.019
-38. Lewinsohn C.
-Fishelson L.
-( 1967 ). The second Israel south red Sea expedition 1965, (General report) . Isr. J. Zool. 16 , 59 – 68 .
-39. Mancuso A.
-Stagioni M.
-Prada F.
-Scarponi D.
-Piccinetti C.
-Goffredo S.
-( 2019 ). Environmental influence on calcification of the bivalve chamelea gallina along a latitudinal gradient in the Adriatic Sea . Sci. Rep. 9 , 1 – 11 . doi: 10.1038/s41598-019-47538-1
-40. Matoo O. B.
-Ivanina A. V.
-Ullstad C.
-Beniash E.
-Sokolova I. M.
-( 2013 ). Interactive effects of elevated temperature and (CO2) levels on metabolism and oxidative stress in two common marine bivalves (Crassostrea virginica and mercenaria mercenaria) . Comp. Biochem. Physiol. Part A Mol. Integr. Physiol. 164 , 545 – 553 . doi: 10.1016/j.cbpa.2012.12.025
-41. Mermillod-Blondin F.
-Rosenberg R.
-François-Carcaillet F.
-Norling K.
-Mauclaire L.
-( 2004 ). Influence of bioturbation by three benthic infaunal species on microbial communities and biogeochemical processes in marine sediment . Aquat. Microb. Ecol. 36 , 271 – 284 . doi: 10.3354/ame036271
-42. Meysman F.
-Middelburg J.
-Heip C.
-( 2006 ). Bioturbation: a fresh look at darwin’s last idea . Trends Ecol. Evol. 21 , 688 – 695 . doi: 10.1016/j.tree.2006.08.002
-43. Nagelkerken I.
-Munday P. L. P. L.
-( 2016 ). Animal behaviour shapes the ecological effects of ocean acidification and warming: moving from individual to community-level responses . Glob. Change Biol. 22 , 974 – 989 . doi: 10.1111/gcb.13167
-44. NOAA
-Daily CO2 (Accessed August 1, 2022 ).
-45. Omar A. M.
-Thomas H.
-Olsen A.
-Becker M.
-Skjelvan I.
-Reverdin G.
-( 2019 ). Trends of ocean acidification and pCO2 in the northern north Sea 2003–2015 . J. Geophys. Res. Biogeosci. 124 , 3088 – 3103 . doi: 10.1029/2018JG004992
-46. Ong E. Z.
-Briffa M.
-Moens T.
-Van Colen C.
-( 2017 ). Physiological responses to ocean acidification and warming synergistically reduce condition of the common cockle cerastoderma edule . Mar. Environ. Res. 130 , 38 – 47 . doi: 10.1016/j.marenvres.2017.07.001
-47. Ouellette D.
-Desrosiers G.
-Gagne J. P.
-Gilbert F.
-Poggiale J. C.
-Blier P. U.
-. ( 2004 ). Effects of temperature on in vitro sediment reworking processes by a gallery biodiffusor, the polychaete neanthes virens . Mar. Ecol. Prog. Ser. 266 , 185 – 193 . doi: 10.3354/meps266185
-48. Pierrot D. E.
-Wallace D. W. R.
-Lewis E.
-( 2011 ). MS excel program developed for CO2 system calculations . doi: 10.3334/CDIAC/OTG.CO2SYS_XLS_CDIAC105A
-49. Pörtner H. O.
-Langenbuch M.
-Reipschläger A.
-( 2004 ). Biological impact of elevated ocean CO2 concentrations: Lessons from animal physiology and earth history . J. Oceanogr. 60 , 705 – 718 . doi: 10.1007/s10872-004-5763-0
-50. Provoost P.
-Van Heuven S.
-Soetaert K.
-Laane R.
-Middelburg J. J.
-( 2010 ). Long-term record of pH in the Dutch coastal zone: a major role for eutrophication-induced changes . Biogeosci. Discuss 7 , 4127 – 4152 . doi: 10.5194/bgd-7-4127-2010
-51. Rabaut M.
-Guilini K.
-Van Hoey G.
-Vincx M.
-Degraer S.
-( 2007 ). A bio-engineered soft-bottom environment: The impact of lanice conchilega on the benthic species-specific densities and community structure . Estuar. Coast. Shelf Sci. 75 , 525 – 536 . doi: 10.1016/j.ecss.2007.05.041
-52. R Core Team
-( 2014 ). R: A language and environment for statistical computing . Vienna, Austria : R Foundation for Statistical Computing . Available at: http://www.R-project.org/ .
-53. Reddin C. J.
-Aberhan M.
-Raja N. B.
-Kocsis Á.T.
-( 2022 ). Global warming generates predictable extinctions of warm-and cold-water marine benthic invertebrates via thermal habitat loss . Glob. Change Biol. 28 , 5793 – 5807 . doi: 10.1111/gcb.16333
-54. Seidel L.
-Ketzer M.
-Broman E.
-Shahabi-Ghahfarokhi S.
-Rahmati-Abkenar M.
-Turner S.
-. ( 2022 ). Weakened resilience of benthic microbial communities in the face of climate change . ISME Commun. 2 , 1 – 9 . doi: 10.1038/s43705-022-00104-9
-55. Snelgrove P. V. R.
-Soetaert K.
-Solan M.
-Thrush S.
-Wei C.-L.
-Danovaro R.
-. ( 2018 ). Global carbon cycling on a heterogeneous seafloor . Trends Ecol. Evol. 33 , 96 – 105 . doi: 10.1016/J.TREE.2017.11.004
-56. Soetaert K.
-Herman P. M. J.
-Middelburg J. J.
-Heip C.
-Smith C. L.
-Tett P.
-. ( 2001 ). Numerical modelling of the shelf break ecosystem: reproducing benthic and pelagic measurements . Deep Sea Res. Part II Top. Stud. Oceanogr. 48 ( 14–15 ), 3141 – 3177 . doi: 10.1016/S0967-0645(01)00035-2
-57. Soetaert K.
-Van den Meersche K.
-( 2009 ). Package limSolve, solving linear inverse models in r. sunsite.icm.edu.pl .
-58. Sokolova I. M.
-Frederich M.
-Bagwe R.
-Lannig G.
-Sukhotin A. A.
-( 2012 ). Energy homeostasis as an integrative tool for assessing limits of environmental stress tolerance in aquatic invertebrates . Mar. Environ. Res. 79 , 1 – 15 . doi: 10.1016/j.marenvres.2012.04.003
-59. Soetaert K.
-Van den Meersche K.
-van Oevelen D.
-Soetaert M. K.
-( 2017 ). Package ‘limSolve’ .
-60. Steeves L. E.
-Filgueira R. R.
-Guyondet T.
-Chasse J.
-Comeau L.
-Chassé J.
-. ( 2018 ). Past, present, and future: performance of two bivalve species under changing environmental conditions . Front. Mar. Sci. 5 . doi: 10.3389/FMARS.2018.00184
-61. Sweetman A. K.
-Thurber A. R.
-Smith C. R.
-Levin L. A.
-Mora C.
-Wei C.-L.
-. ( 2017 ). Major impacts of climate change on deep-sea benthic ecosystems . Elem. Sci. Anthr. 5 . doi: 10.1525/ELEMENTA.203
-62. Tebble N.
-( 1976 ). British Bivalve seashells. a handbook for identification ( Edinburgh : British Museum (Natural History), Her Majesty’s Stationary Office ).
-63. Thomsen J.
-Haynert K.
-Wegner K. M.
-Melzner F.
-( 2015 ). Impact of seawater carbonate chemistry on the calcification of marine bivalves . Biogeosciences 12 , 4209 – 4220 . doi: 10.5194/bg-12-4209-2015
-64. Toussaint E.
-De Borger E.
-Braeckman U.
-De Backer A.
-Soetaert K.
-Vanaverbeke J.
-( 2021 ). Faunal and environmental drivers of carbon and nitrogen cycling along a permeability gradient in shallow north Sea sediments . Sci. Total Environ. 767 , 144994 . doi: 10.1016/j.scitotenv.2021.144994
-65. Tuomainen U.
-Candolin U.
-( 2011 ). Behavioural responses to human-induced environmental change . Biol. Rev. 86 , 640 – 657 . doi: 10.1111/j.1469-185X.2010.00164.x
-66. Turner L. M.
-Ricevuto E.
-Massa-Gallucci A.
-Gambi M. C.
-Calosi P.
-( 2015 ). Energy metabolism and cellular homeostasis trade-offs provide the basis for a new type of sensitivity to ocean acidification in a marine polychaete at a high-CO2 vent: Adenylate and phosphagen energy pools versus carbonic anhydrase . J. Exp. Biol. 218 , 2148 – 2151 . doi: 10.1242/jeb.117705
-67. Van Colen C.
-Ong E. Z.
-Briffa M.
-Wethey D. S.
-Abatih E.
-Moens T.
-. ( 2020 ). Clam feeding plasticity reduces herbivore vulnerability to ocean warming and acidification . Nat. Climate Change 10 ( 2 ), 162 – 166 . doi: 10.1038/s41558-019-0679-2
-68. Van Hoey G.
-Birchenough S. N. R.
-Hostens K.
-( 2014 ). Estimating the biological value of soft-bottom sediments with sediment profile imaging and grab sampling . J. Sea Res. 86 , 1 – 12 . doi: 10.1016/J.SEARES.2013.10.010
-69. Van Hoey G.
-Guilini K.
-Rabaut M.
-Vincx M.
-Degraer S.
-( 2008 ). Ecological implications of the presence of the tube-building polychaete lanice conchilega on soft-bottom benthic ecosystems . Mar. Biol. 154 , 1009 – 1019 . doi: 10.1007/s00227-008-0992-1
-70. Vlaminck E.
-Cepeda E.
-Moens T.
-Van Colen C.
-( 2022 a). Ocean acidification modifies behaviour of shelf seabed macrofauna: A laboratory study on two ecosystem engineers, abra alba and lanice conchilega . J. Exp. Mar. Bio. Ecol. 558 , 151831 . doi: 10.1016/j.jembe.2022.151831
-71. Vlaminck E.
-Moens T.
-Vanaverbeke J.
-Van Colen C.
-( 2022 b). Physiological response to seawater pH of the bivalve abra alba, a benthic ecosystem engineer, is modulated by low pH . Mar. Environ. Res. 179 , 105704 . doi: 10.1016/j.marenvres.2022.105704
-72. Voet H.
-Van Colen C.
-Vanaverbeke J.
-( 2022 ). Climate change effects on the ecophysiology and ecological functioning of an offshore wind farm artificial hard substrate community . Sci. Total Environ. 810 , 152194 . doi: 10.1016/j.scitotenv.2021.152194
-73. Volkenborn N.
-Meile C.
-Polerecky L.
-Pilditch C. A.
-Norkko A.
-Norkko J.
-. ( 2012 ). Intermittent bioirrigation and oxygen dynamics in permeable sediments: An experimental and modeling study of three tellinid bivalves . J. Mar. Res. 70 , 794 – 823 . doi: 10.1357/002224012806770955
-74. Widdicombe S.
-Needham H. R.
-( 2007 ). Impact of CO2-induced seawater acidification on the burrowing activity of nereis virens and sediment nutrient flux . Mar. Ecol. Prog. Ser. 341 , 111 – 122 . doi: 10.3354/meps341111
+1. Allan R. P. Hawkins E. Bellouin N. Collins B. (2021). IPCC, 2021: Summary for Policymakers. Global Warming of 1.5 °C. An IPCC Special Report on the Impacts of Global Warming of 1.5 °C above Pre-Industrial Levels and Related Global Greenhouse Gas Emission Pathways, in the Context of Strengthening the Global Res. IPCC: Geneva, Switzerland, 2018.
+
+2. Alma L. Kram K. E. Holtgrieve G. W. Barbarino A. Fiamengo C. J. Padilla-Gamiño J. L. (2020). Ocean acidification and warming effects on the physiology, skeletal properties, and microbiome of the purple-hinge rock scallop. Comp. Biochem. Physiol. Part A Mol. Integr. Physiol. 240, 110579. doi: 10.1016/j.cbpa.2019.110579
+
+3. Alves R. M. S. Van Colen C. Vincx M. Vanaverbeke J. De Smet B. Guarini J.-M. et al. . (2017). A case study on the growth of lanice conchilega (Pallas 1766) aggregations and their ecosystem engineering impact on sedimentary processes. J. Exp. Mar. Bio. Ecol. 489, 15–23. doi: 10.1016/j.jembe.2017.01.005
+
+4. Barton K. (2010). MuMIn: multi-model inference. 2020. R package version 1.1.
+
+5. Bates D. Mächler M. Bolker B. M. Walker S. C. (2014). Fitting linear mixed-effects models using lme4. J. Stat. Software 67. doi: 10.18637/jss.v067.i01
+
+6. Bernard G. Grémare A. Maire O. Lecroart P. Meysman F. J. R. Ciutat A. et al. . (2012). Experimental assessment of particle mixing fingerprints in the deposit-feeding bivalve abra alba (wood). J. Mar. Res. 70, 689–718. doi: 10.1357/002224012806290705
+
+7. Bindoff N. L. Cheung W. W. L. Kairo J. G. Arístegui J. Guinder V. A. Hallberg R. et al. . (2019). Changing ocean, marine ecosystems, and dependent communities. Eds. Pörtner H.-O. Roberts D. Masson-Delmotte V. Zhai P. Tignor M. Poloczanska E. (Switzerland: Intergovernmental Panel on Climate Change).
+
+8. Braeckman U. Foshtomi M. Y. Van Gansbeke D. Meysman F. Soetaert K. Vincx M. et al. . (2014). Variable importance of macrofaunal functional biodiversity for biogeochemical cycling in temperate coastal sediments. Ecosystems 17, 720–737. doi: 10.1007/S10021-014-9755-7
+
+9. Braeckman U. Provoost P. Gribsholt B. Van Gansbeke D. Middelburg J. J. Soetaert K. et al. . (2010). Role of macrofauna functional traits and density in biogeochemical fluxes and bioturbation. Mar. Ecol. Prog. Ser. 399, 173–186. doi: 10.3354/meps08336
+
+10. Brewer P. G. (2009). A changing ocean seen with clarity. Proc. Natl. Acad. Sci. U. S. A. 106, 12213–12214. doi: 10.1073/pnas.0906815106
+
+11. Briffa M. de la Haye K. Munday P. L. (2012). High CO 2 and marine animal behaviour: Potential mechanisms and ecological consequences. Mar. pollut. Bull. 64, 1519–1528. doi: 10.1016/j.marpolbul.2012.05.032
+
+12. Byrne M. (2011). Impact of ocean warming and acidification on marine invertebrate life histroy stages: vulnerabilities and potential for persistence in a changing ocean. Oceanogr. Mar. Biol. Annu. Rev. 49, 1–42.
+
+13. Cai W.-J. Huang W.-J. Luther G. W. Pierrot D. Li M. Testa J. et al. . (2017). Redox reactions and weak buffering capacity lead to acidification in the Chesapeake bay. Nat. Commun. 8, 1–12. doi: 10.1038/s41467-017-00417-7
+
+14. Caldeira K. Wickett M. E. M. E. (2003). Anthropogenic carbon and ocean pH. Nature 425, 365. doi: 10.1038/425365a
+
+15. Carstensen J. Duarte C. M. (2019). Drivers of pH variability in coastal ecosystems. Environ. Sci. Technol. 53, 4020–4029. doi: 10.1021/ACS.EST.8B03655
+
+16. Clarke A. (1993). Temperature and extinction in the sea: a physiologist’s view. Paleobiology 19, 499–518. doi: 10.1017/S0094837300014111
+
+17. Collins M. Knutti R. Arblaster J. Dufresne J. Fichefet T. Friedlingstein P. et al. . (2013). Long-term climate change: Projections, commitments and irreversibility. clim. chang. 2013 phys. sci. basis work. gr. I contrib. to fifth assess. rep. intergov. panel clim. Chang. 1029–1136.
+
+18. Currie A. R. Tait K. Parry H. de Francisco-Mora B. Hicks N. Osborn A. M. et al. . (2017). Marine microbial gene abundance and community composition in response to ocean acidification and elevated temperature in two contrasting coastal marine sediments. Front. Microbiol. 8, 1599. doi: 10.3389/fmicb.2017.01599
+
+19. Day J. H. (1968). A Monograph on the Polychaeta of Southern Africa Part 1, Errantia: Part 2, Sedentaria Published by the Trustees of the British Museum (Natural History), London, 1967 Publication no. 656. Pp. viii+ 878. Price£ 15. J Mar Biol Assoc UK 48 (3), 836–836.
+
+20. De Smet B. D’Hondt A. S. Verhelst P. Fournier J. Godet L. Desroy N. et al. . (2015). Biogenic reefs affect multiple components of intertidal soft-bottom benthic assemblages: The lanice conchilega case study. Estuar. Coast. Shelf Sci. 152, 44–55. doi: 10.1016/j.ecss.2014.11.002
+
+21. Dickson A. G. (2010). The carbon dioxide system in seawater: Equilibrium chemistry and measurements. In Riebesell U. Fabry V. J Hansson L. Eds. Guide to best practices for ocean acidification research and data reporting (Luxembourg: Publications Office of the European Union) 1, 17–40.
+
+22. Dupont S. Pörtner H. (2013). Marine science: Get ready for ocean acidification. Nature 498, 429. doi: 10.1038/498429a
+
+23. Ehrnsten E. Sun X. Humborg C. Norkko A. Savchuk O. P. Slomp C. P. et al. . (2020). Understanding environmental changes in temperate coastal seas: Linking models of benthic fauna to carbon and nutrient fluxes. Front. Mar. Sci. 7. doi: 10.3389/FMARS.2020.00450
+
+24. Fabry V. J. Seibel B. A. Feely R. A. Orr J. C. (2008). Impacts of ocean acidification on marine fauna and ecosystem processes. ICES J. Mar. Sci. 65, 414–432. doi: 10.1093/icesjms/fsn048
+
+25. Figuerola B. Hancock A. M. Bax N. Cummings V. J. Downey R. Griffiths H. J. et al. . (2021). A review and meta-analysis of potential impacts of ocean acidification on marine calcifiers from the southern ocean. Front. Mar. Sci. 8. doi: 10.3389/fmars.2021.584445
+
+26. Forster S. Glud R. N. Gundersen J. K. Huettel M. (1999). *In situ* study of bromide tracer and oxygen flux in coastal sediments. Estuar. Coast. Shelf Sci. 49, 813–827. doi: 10.1006/ecss.1999.0557
+
+27. Forster S. Graf G. (1995). Impact of irrigation on oxygen flux into the sediment: intermittent pumping by callianassa subterranea and “piston-pumping” by lanice conchilega. Mar. Biol. 123, 335–346. doi: 10.1007/BF00353625
+
+28. Foshtomi M. Y. Leliaert F. Derycke S. Willems A. Vincx M. Vanaverbeke J. (2018). The effect of bio-irrigation by the polychaete Lanice conchilega on active denitrifiers: distribution, diversity and composition of nosZ gene. PLoS One 13 (2), e0192391.
+
+29. Godbold J. A. J. A. Solan M. (2013). Long-term effects of warming and ocean acidification are modified by seasonal variation in species responses and environmental conditions. Philos. Trans. R. Soc B 368, 20130186. doi: 10.1098/rstb.2013.0186
+
+30. Hartman S. E. Humphreys M. P. Kivimäe C. Woodward E. M. S. Kitidis V. McGrath T. et al. . (2019). Seasonality and spatial heterogeneity of the surface ocean carbonate system in the northwest European continental shelf. Prog. Oceanogr. 177, 101909. doi: 10.1016/j.pocean.2018.02.005
+
+31. Hartmann-Schröder G. (1996). Annelida, Borstenwürmer, Polychaeta. Jena, Germany: Gustav Fisher Verlag.
+
+32. Hurd C. L. Beardall J. Comeau S. Cornwall C. E. Havenhand J. N. Munday P. L. et al. . (2019). Ocean acidification as a multiple driver: how interactions between changing seawater carbonate parameters affect marine life. Mar. Freshw. Res. 71, 263–274. doi: 10.1071/MF19267
+
+33. Kristensen E. (1983). Ventilation and oxygen uptake by three species of nereis (Annelida : Polychaeta). 11. effects of temperature and salinity changes. Mar. Ecol. Prog. Ser. 12, 299–306. doi: 10.3354/meps012299
+
+34. Kristensen E. Penha-Lopes G. Delefosse M. Valdemarsen T. Quintana C. O. Banta G. T. (2012). What is bioturbation? the need for a precise definition for fauna in aquatic sciences. Mar. Ecol. Prog. Ser. 446, 285–302. doi: 10.3354/meps09506
+
+35. Kuznetsova A. Brockhoff P. B. Christensen R. H. B. (2017). lmerTest package: Tests in linear mixed effects models. J. Stat. Software 82, 1–26. doi: 10.18637/JSS.V082.I13
+
+36. Laverock B. Gilbert J. Tait K. Osborn A. M. Widdicombe S. (2011). Bioturbation: impact on the marine nitrogen cycle. Biochem. Soc Trans. 39, 315–320. doi: 10.1042/BST0390315
+
+37. Lemasson A. J. Fletcher S. Hall-Spencer J. M. Knights A. M. (2017). Linking the biological impacts of ocean acidification on oysters to changes in ecosystem services: a review. J. Exp. Mar. Bio. Ecol. 492, 49–62. doi: 10.1016/j.jembe.2017.01.019
+
+38. Lewinsohn C. Fishelson L. (1967). The second Israel south red Sea expedition 1965, (General report). Isr. J. Zool. 16, 59–68.
+
+39. Mancuso A. Stagioni M. Prada F. Scarponi D. Piccinetti C. Goffredo S. (2019). Environmental influence on calcification of the bivalve chamelea gallina along a latitudinal gradient in the Adriatic Sea. Sci. Rep. 9, 1–11. doi: 10.1038/s41598-019-47538-1
+
+40. Matoo O. B. Ivanina A. V. Ullstad C. Beniash E. Sokolova I. M. (2013). Interactive effects of elevated temperature and (CO2) levels on metabolism and oxidative stress in two common marine bivalves (Crassostrea virginica and mercenaria mercenaria). Comp. Biochem. Physiol. Part A Mol. Integr. Physiol. 164, 545–553. doi: 10.1016/j.cbpa.2012.12.025
+
+41. Mermillod-Blondin F. Rosenberg R. François-Carcaillet F. Norling K. Mauclaire L. (2004). Influence of bioturbation by three benthic infaunal species on microbial communities and biogeochemical processes in marine sediment. Aquat. Microb. Ecol. 36, 271–284. doi: 10.3354/ame036271
+
+42. Meysman F. Middelburg J. Heip C. (2006). Bioturbation: a fresh look at darwin’s last idea. Trends Ecol. Evol. 21, 688–695. doi: 10.1016/j.tree.2006.08.002
+
+43. Nagelkerken I. Munday P. L. P. L. (2016). Animal behaviour shapes the ecological effects of ocean acidification and warming: moving from individual to community-level responses. Glob. Change Biol. 22, 974–989. doi: 10.1111/gcb.13167
+
+44. NOAA Daily CO2 (Accessed August 1, 2022).
+
+45. Omar A. M. Thomas H. Olsen A. Becker M. Skjelvan I. Reverdin G. (2019). Trends of ocean acidification and pCO2 in the northern north Sea 2003–2015. J. Geophys. Res. Biogeosci. 124, 3088–3103. doi: 10.1029/2018JG004992
+
+46. Ong E. Z. Briffa M. Moens T. Van Colen C. (2017). Physiological responses to ocean acidification and warming synergistically reduce condition of the common cockle cerastoderma edule. Mar. Environ. Res. 130, 38–47. doi: 10.1016/j.marenvres.2017.07.001
+
+47. Ouellette D. Desrosiers G. Gagne J. P. Gilbert F. Poggiale J. C. Blier P. U. et al. . (2004). Effects of temperature on *in vitro* sediment reworking processes by a gallery biodiffusor, the polychaete neanthes virens. Mar. Ecol. Prog. Ser. 266, 185–193. doi: 10.3354/meps266185
+
+48. Pierrot D. E. Wallace D. W. R. Lewis E. (2011). MS excel program developed for CO2 system calculations. doi: 10.3334/CDIAC/OTG.CO2SYS\_XLS\_CDIAC105A
+
+49. Pörtner H. O. Langenbuch M. Reipschläger A. (2004). Biological impact of elevated ocean CO2 concentrations: Lessons from animal physiology and earth history. J. Oceanogr. 60, 705–718. doi: 10.1007/s10872-004-5763-0
+
+50. Provoost P. Van Heuven S. Soetaert K. Laane R. Middelburg J. J. (2010). Long-term record of pH in the Dutch coastal zone: a major role for eutrophication-induced changes. Biogeosci. Discuss 7, 4127–4152. doi: 10.5194/bgd-7-4127-2010
+
+51. Rabaut M. Guilini K. Van Hoey G. Vincx M. Degraer S. (2007). A bio-engineered soft-bottom environment: The impact of lanice conchilega on the benthic species-specific densities and community structure. Estuar. Coast. Shelf Sci. 75, 525–536. doi: 10.1016/j.ecss.2007.05.041
+
+52. R Core Team (2014). R: A language and environment for statistical computing. Vienna, Austria: R Foundation for Statistical Computing. Available at: http://www.R-project.org/.
+
+53. Reddin C. J. Aberhan M. Raja N. B. Kocsis Á.T. (2022). Global warming generates predictable extinctions of warm-and cold-water marine benthic invertebrates *via* thermal habitat loss. Glob. Change Biol. 28, 5793–5807. doi: 10.1111/gcb.16333
+
+54. Seidel L. Ketzer M. Broman E. Shahabi-Ghahfarokhi S. Rahmati-Abkenar M. Turner S. et al. . (2022). Weakened resilience of benthic microbial communities in the face of climate change. ISME Commun. 2, 1–9. doi: 10.1038/s43705-022-00104-9
+
+55. Snelgrove P. V. R. Soetaert K. Solan M. Thrush S. Wei C.-L. Danovaro R. et al. . (2018). Global carbon cycling on a heterogeneous seafloor. Trends Ecol. Evol. 33, 96–105. doi: 10.1016/J.TREE.2017.11.004
+
+56. Soetaert K. Herman P. M. J. Middelburg J. J. Heip C. Smith C. L. Tett P. et al. . (2001). Numerical modelling of the shelf break ecosystem: reproducing benthic and pelagic measurements. Deep Sea Res. Part II Top. Stud. Oceanogr. 48 (14–15), 3141–3177. doi: 10.1016/S0967-0645(01)00035-2
+
+57. Soetaert K. Van den Meersche K. (2009). Package limSolve, solving linear inverse models in r. sunsite.icm.edu.pl.
+
+58. Sokolova I. M. Frederich M. Bagwe R. Lannig G. Sukhotin A. A. (2012). Energy homeostasis as an integrative tool for assessing limits of environmental stress tolerance in aquatic invertebrates. Mar. Environ. Res. 79, 1–15. doi: 10.1016/j.marenvres.2012.04.003
+
+59. Soetaert K. Van den Meersche K. van Oevelen D. Soetaert M. K. (2017). Package ‘limSolve’.
+
+60. Steeves L. E. Filgueira R. R. Guyondet T. Chasse J. Comeau L. Chassé J. et al. . (2018). Past, present, and future: performance of two bivalve species under changing environmental conditions. Front. Mar. Sci. 5. doi: 10.3389/FMARS.2018.00184
+
+61. Sweetman A. K. Thurber A. R. Smith C. R. Levin L. A. Mora C. Wei C.-L. et al. . (2017). Major impacts of climate change on deep-sea benthic ecosystems. Elem. Sci. Anthr. 5. doi: 10.1525/ELEMENTA.203
+
+62. Tebble N. (1976). British Bivalve seashells. a handbook for identification (Edinburgh: British Museum (Natural History), Her Majesty’s Stationary Office).
+
+63. Thomsen J. Haynert K. Wegner K. M. Melzner F. (2015). Impact of seawater carbonate chemistry on the calcification of marine bivalves. Biogeosciences 12, 4209–4220. doi: 10.5194/bg-12-4209-2015
+
+64. Toussaint E. De Borger E. Braeckman U. De Backer A. Soetaert K. Vanaverbeke J. (2021). Faunal and environmental drivers of carbon and nitrogen cycling along a permeability gradient in shallow north Sea sediments. Sci. Total Environ. 767, 144994. doi: 10.1016/j.scitotenv.2021.144994
+
+65. Tuomainen U. Candolin U. (2011). Behavioural responses to human-induced environmental change. Biol. Rev. 86, 640–657. doi: 10.1111/j.1469-185X.2010.00164.x
+
+66. Turner L. M. Ricevuto E. Massa-Gallucci A. Gambi M. C. Calosi P. (2015). Energy metabolism and cellular homeostasis trade-offs provide the basis for a new type of sensitivity to ocean acidification in a marine polychaete at a high-CO2 vent: Adenylate and phosphagen energy pools versus carbonic anhydrase. J. Exp. Biol. 218, 2148–2151. doi: 10.1242/jeb.117705
+
+67. Van Colen C. Ong E. Z. Briffa M. Wethey D. S. Abatih E. Moens T. et al. . (2020). Clam feeding plasticity reduces herbivore vulnerability to ocean warming and acidification. Nat. Climate Change 10 (2), 162–166. doi: 10.1038/s41558-019-0679-2
+
+68. Van Hoey G. Birchenough S. N. R. Hostens K. (2014). Estimating the biological value of soft-bottom sediments with sediment profile imaging and grab sampling. J. Sea Res. 86, 1–12. doi: 10.1016/J.SEARES.2013.10.010
+
+69. Van Hoey G. Guilini K. Rabaut M. Vincx M. Degraer S. (2008). Ecological implications of the presence of the tube-building polychaete lanice conchilega on soft-bottom benthic ecosystems. Mar. Biol. 154, 1009–1019. doi: 10.1007/s00227-008-0992-1
+
+70. Vlaminck E. Cepeda E. Moens T. Van Colen C. (2022a). Ocean acidification modifies behaviour of shelf seabed macrofauna: A laboratory study on two ecosystem engineers, abra alba and lanice conchilega. J. Exp. Mar. Bio. Ecol. 558, 151831. doi: 10.1016/j.jembe.2022.151831
+
+71. Vlaminck E. Moens T. Vanaverbeke J. Van Colen C. (2022b). Physiological response to seawater pH of the bivalve abra alba, a benthic ecosystem engineer, is modulated by low pH. Mar. Environ. Res. 179, 105704. doi: 10.1016/j.marenvres.2022.105704
+
+72. Voet H. Van Colen C. Vanaverbeke J. (2022). Climate change effects on the ecophysiology and ecological functioning of an offshore wind farm artificial hard substrate community. Sci. Total Environ. 810, 152194. doi: 10.1016/j.scitotenv.2021.152194
+
+73. Volkenborn N. Meile C. Polerecky L. Pilditch C. A. Norkko A. Norkko J. et al. . (2012). Intermittent bioirrigation and oxygen dynamics in permeable sediments: An experimental and modeling study of three tellinid bivalves. J. Mar. Res. 70, 794–823. doi: 10.1357/002224012806770955
+
+74. Widdicombe S. Needham H. R. (2007). Impact of CO2-induced seawater acidification on the burrowing activity of nereis virens and sediment nutrient flux. Mar. Ecol. Prog. Ser. 341, 111–122. doi: 10.3354/meps341111

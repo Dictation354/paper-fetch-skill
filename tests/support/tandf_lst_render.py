@@ -97,9 +97,14 @@ def assert_formulas(markdown):
         for part in FORMULA_PARTS[int(number)]:
 
             def canonical(value):
-                return re.sub(r"\\(?:;|,|limits)|[{}\s\u2061]", "", value).replace(
-                    r"\cos", "cos"
+                value = re.sub(
+                    r"\\(?:mathrm|mathbf|mathit|mathsf|boldsymbol|operatorname)\{([^{}]*)\}",
+                    r"\1",
+                    value,
                 )
+                return re.sub(
+                    r"\\(?:;|,|limits)|[{}\s\u2061]", "", value.replace("Δ", r"\Delta")
+                ).replace(r"\cos", "cos")
 
             assert canonical(part) in canonical(formula), (number, part, formula)
         assert "=" in formula

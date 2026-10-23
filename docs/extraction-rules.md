@@ -15,7 +15,7 @@
 - 所有 PDF 解析与转换质量问题均不纳入改进、fixture 补齐或验收目标，以现有 `pymupdf4llm` 的转换输出为边界。
 - 禁止在该输出之上做任何格式清洗或内容修复，包括标题层级修复、封面／页眉／页脚／水印删除、空白或断行整理、跨栏内容拼接或重排、引用分条／编号归一化／去重／重排、正文与后置内容重建、公式／OCR／表格修复及导出占位图修复。
 - 禁令覆盖 shared 转换包装、provider、文章组装、最终渲染及其他后处理层；不得以通用规则、单篇 DOI 特判、已有实现或测试要求为例外。本文 HTML／XML 清洗规则不得套用于 PDF 输出。
-- PDF 获取、合法访问、真实文件及完整论文身份校验、统一 acceptance、候选回退／降级、原始文件与转换器导出资产落盘、必要的本地资产路径改写和来源记录仍按既有契约执行；这些操作不得借机改写 PDF 转换内容，也不得新增 PDF 排版或解析保真验收要求。
+- PDF 元数据的缺失题名和作者可由文件 Info 经现有元数据链路补入；网页摘要去除 HTML 标记，不在已有 PDF 正文之前重复渲染。PDF 获取、合法访问、真实文件及完整论文身份校验、统一 acceptance、候选回退／降级、原始文件与转换器导出资产落盘、必要的本地资产路径改写和来源记录仍按既有契约执行；这些操作不得借机改写 PDF 转换内容，也不得新增 PDF 排版或解析保真验收要求。
 - 正文 PDF 候选排除参考文献、站点页脚中的 PDF 链接，以及明确的预览／补充材料链接。下载后仍检查原始及最终 URL、文件开头的补充材料标记和论文身份；DOI 不足以确认身份时，传入的目标标题必须得到文件内标题或开头文本支持。未核实文件不得因 `allow_pdf_only`、有效 PDF 文件头或可转换为 Markdown 而被接受为正文；失败后继续既有候选回退，最终按现有流程降级。此检查不改写转换内容，也不按 PDF 页数短就认定为预览。
 - 旧版标题修复、共享 PDF 引用分离及 AIP 上标编号归一化规则自本修订起撤销。历史代码、样本和质量断言仅说明已有实现，不构成有效规则或继续维护清洗的依据。相关清洗实现及其质量断言已移除，当前测试验证转换器输出原样通过组装和渲染。
 
@@ -25,6 +25,14 @@
 - 它只表示 shared extraction logic，不表示可被路由命中的独立 provider 或 public source。
 - Front matter 的 publication watermark 只匹配短 masthead 标签：必须是短文本、无句子标点、token 数受限，并且呈标题式或全大写；`science` / `pnas` / `ams` / `bams` / `acs` / `iopscience` 等 provider 词面只作为 provider-scoped keyword 参与判断，长正文句子里出现这些词不能被当作 front matter。
 - 反爬 / 访问阻断文本中的通用 token 统一维护在 `COMMON_ACCESS_BLOCK_TOKENS`，provider 规则只追加自身增量，避免把通用 challenge 语义复制到单个 provider。
+- HTML/XML 按源节点顺序保留段落中的公式、图表与列表；多段列表及其公式、嵌套项目保留 Markdown 缩进。源文本的星号不能成为意外的强调或列表标记，相邻行内公式之间须分隔定界符。
+- MathML 的空底数保留显式空组，可见花括号保留为可见定界符；组合公式保留各行的原始标签。源缩进空白不转换为由波浪符组成的运算符名，显式间距继续按源单位处理。
+- LaTeXML 方程表按源行列组装对齐公式并保留编号；算法保留可排版数学和源层级，列表保留显式标签、续段与嵌套。HTML/XML 文末的致谢、基金、贡献及利益声明按源顺序保留，图形摘要独立于摘要文字呈现。
+- 已转换的公式节点作为不透明内容保留，不因外围来源容器仍带公式类名而再次转成缺失占位。MathML 的普通可访问性描述不当作 TeX；显式 TeX 节点、注解及含 TeX 命令的 alttext 沿既有验证链路使用。行内数学及反斜杠分隔符不跨段落吞并正文标题。
+- 图像候选不使用同篇书目或章节的 fragment 地址。浮动图引用复用来源对象 ID，保留仅显示局部标签的成组引用；脚注控件规范化保留来源上下标，重复调用不叠加括号。
+- arXiv 与 Copernicus 的正文脚注保留上标注号，注释集中到参考文献前的 `Notes` 节，不把脚注正文或重复回引拼进主句。arXiv 附录中的 SVG 图文块保持原位，复用现有 SVG 资产保存路径。
+- 表格保留单元格图片和表注。Science 中由同一统计量跨行覆盖的模型协变量续行按源顺序合并，每组统计值只输出一次；Springer 已捕获的独立表页通过完整获取路径回放。
+- 有效的图注 `Source data` 链接保留官方目标；站点控件按 DOM 结构过滤。原文已有的重复、残缺、数值及公式符号问题保持原样。
 
 资产渲染与诊断 contract 由 [正文已内联 figure 时避免重复追加尾部 Figures 附录](#rule-no-trailing-figures-appendix)、[Markdown 图片 alt 只保留短标签](#rule-short-markdown-image-alt-labels)、[已下载的正文图片和公式图片要改写成正文附近的本地链接](#rule-rewrite-inline-figure-links) 和 [下载资产必须保留诊断字段](#rule-asset-download-diagnostic-fields) 共同维护；[图片下载必须验证真实图片内容](#rule-image-download-validates-real-images) 独立约束 payload 真实性和 preview acceptance。
 
@@ -106,6 +114,7 @@
 - 边界说明：
   - 这条规则不定义每个 publisher 的完整 DOM selector、REST endpoint 或 URL allowlist；这些细节由 provider-specific helper 维护，本文只保留用户可见 contract。
   - 它也不限制附件文件类型。只要来源 scope 明确，supplementary 可以是 PDF、Office 文档、压缩包、数据表、图片或视频。
+  - Frontiers 未下载的补充材料保留已知官方入口及来源名称；多个来源对象共用入口时仍保留各自身份，不输出无链接的重复占位。
   - IOP 附件下载仍即时使用 publisher 返回的 AWS 签名 URL，但最终资产/失败诊断会复用 HTTP URL 脱敏规则隐藏 `X-Amz-*`、`Signature` 和 `AWSAccessKeyId` 值。
 
 <a id="rule-filter-publisher-ui-noise"></a>
@@ -160,12 +169,15 @@
   - Most Read、Most Cited、Recommended 和 Related 等 auxiliary section 后的卡片不计入正文；重复这些 UI 不能把拒绝翻成接受，把相同 UI 附加到真实正文也不能把接受翻成拒绝。
   - Publisher 私有的 availability override（例如 Science perspective、Elsevier canonical abstract URL、Springer preview wall vs body run、Springer/Nature article-in-press notice）必须通过 provider `AvailabilityPolicy` / `ProviderHtmlRules.availability` 注册；access-gate 文案统一来自 `paper_fetch.extraction.html.signals.ACCESS_GATE_LABELS` / `ACCESS_GATE_PATTERNS`，Markdown 降噪只引用 `MARKDOWN_ACCESS_NOISE_LABELS`，不得在 provider 后处理或 runtime 中复制。
   - Springer/Nature 的 `We are providing an unedited version of this manuscript` 只是 Article-in-Press 访问提示；没有真实 `post_abstract_body_run` 时必须作为 blocking fallback signal，触发 provider 内部 PDF fallback，不能用这段提示撑起 HTML fulltext 判定。
+  - Nature 的 `We’re sharing this article early` 页面若仅有摘要与补充材料说明，Springer 内部判为 abstract-only 并进入官方正文 PDF fallback。明确的 `data-test="access-message"` 同篇机构全文授权可以排除残留的 `institution-access-preview` 提示；没有明确授权时保留访问限制。真实回放见 [`test_completed_fulltext_baselines.py`](../tests/golden/test_completed_fulltext_baselines.py)。
   - Springer 的准备／PDF 恢复路径必须保留已有 HTML 失败的具体诊断：`springer_html` trace 携带诊断失败码（例如 `abstract_only`）、说明和 HTTP 状态；有落盘诊断时以 `target` 关联其路径。PDF 成功后仍保留该事件及 `content.diagnostics.html_failure`，供最终失败原因与降级验收使用。
 
 <a id="rule-provider-owned-authors"></a>
 ### Provider 自有作者与摘要信号必须进入最终文章元数据
 
 作者备用结构的真实依据须区分自然触发与共存：arXiv 单个 creator 的 person-names 回退有原文；Wiley/Springer/Science/PNAS 的备用结构可与首选来源共存，不因此证明首选字段自然缺失；Springer 表格子页的 JSON-LD 不作为文章页回退证据。保留既有 pipeline 顺序。Springer DOM 遍历命中作者 li 时，若含显式姓名节点，复用该节点文本，避免带单位序号的外层文本再次作为作者输出。对应真实断言见 [test_original_author_branches.py](../tests/golden/test_original_author_branches.py)。
+
+arXiv 旧版单个 `ltx_personname` 内可以包含多个逗号分隔姓名及各自的上标单位标记；按真实姓名边界保留全部作者及顺序。`0905.2326v2` 固定版本的完整 HTML 覆盖此结构。
 
 - publisher 自己暴露的作者与摘要信号，一旦已经被识别出来，就要稳定进入最终文章模型；优先使用更结构化的 provider-owned 信号，缺失时再回退到 DOM。
 - 代表性 HTML / XML：
@@ -240,7 +252,7 @@
 <a id="rule-markdown-inline-citation-normalization"></a>
 ### Markdown inline citation normalize 不能破坏非引用语义和图片块边界
 
-- HTML-derived Markdown 中已经识别出的数字引用 sentinel 要稳定渲染为 `<sup>...</sup>`；引用前缀和周边标点要清理到可读形态；同时不能把普通数字文本、年份范围、同位素上标或 Markdown 图片 opener `![...]` 当成引用标点处理。
+- HTML-derived Markdown 保留源文献链接和原有括号、前缀及分隔；使用源 ID、别名与显式弹窗映射解析书目、图表、公式、章节及脚注目标。对象 ID 未在输出中保留时，使用已核实的来源对象地址；缺少目标的空 `#` 控件只保留文字。没有目标关系的数字引用 sentinel 继续渲染为 `<sup>...</sup>`，不把普通数字、年份范围、科学指数或图片 opener `![...]` 当作引用。
 - 代表性 HTML / Markdown：
   - 当前以 shared citation unit tests 覆盖；真实 provider 回放中出现的 DOI 级 citation DOM 归各 provider 结构规则承载。
 - 边界说明：
@@ -329,9 +341,11 @@
 <a id="rule-table-flatten-or-list"></a>
 ### 表格能展平就转 Markdown 表，展不平就退成可读列表
 
+- GFM 单元格的竖线转义须避免重复追加反斜杠；已有 `\|`（包括 TeX 范数定界）不能变成会重新分列的偶数反斜杠。
+
 - HTML、JATS 和 CALS 表格先进入同一个 provider-neutral cell/row IR 与占位网格规范化器；多级表头、rowspan 和局部 colspan 能安全展开时生成 Markdown 表并归为正常规范化，重叠、越界、ragged 或超限网格则退成保留 cell 文本的可读列表。无可靠编号和 caption 的表格不能额外输出孤立 `**Table**` 标题；无可靠表头时不能把 `Column 1` 这类内部占位当成用户可见表头。表头前覆盖整表宽度的标题提升为普通文本，正文中的整表宽度分组保留为首列分组行；不同分组下的列名仍要扁平化为 `Configuration / n_r`、`Inference / MMLU` 这类可读表头。
 - Science 对明确单行表头、无嵌套表及无 `rowspan` / `colspan` 的源表，可将短数据行缺失的尾格留空，保留浏览器的列顺序；必须附源缺格说明，不能补造缺失文本。`sciadv.abj3309` 表 3 末行只有两个源单元格，原文第二格止于 “at year”，第三格缺失；输出保留三列并留空第三格，三项表格退化/语义损失计数为零，因为已有字段及列结构均被保留。复杂跨度与其他 provider 继续使用既有规则。回归见 [`../tests/golden/test_science_springer_source_boundaries.py`](../tests/golden/test_science_springer_source_boundaries.py)。
-- Science 的局部 HTML 归一化将超出 `thead` / `tbody` / `tfoot` 实际剩余行数的 rowspan 限定在当前行组内；`sciadv.adm9732` 最后 3 行误写 rowspan=4，修复后 Covariates 续行保留在所属模型的第 7 列。回归：[`test_science_real_tables_preserve_headers_cells_and_scripts`](../tests/golden/test_atypon_browser_workflow_markdown.py)，输入为 [`original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.adm9732/original.html)。共享表格的非法 span 降级规则不变。
+- Science 的单样本引出的结构规则由 `_science_html._normalize_science_table_row_groups` 局部持有：HTML 归一化将超出 `thead` / `tbody` / `tfoot` 实际剩余行数的 rowspan 限定在当前行组内；`sciadv.adm9732` 最后 3 行误写 rowspan=4，修复后 Covariates 续行保留在所属模型的第 7 列。回归：[`test_science_real_tables_preserve_headers_cells_and_scripts`](../tests/golden/test_atypon_browser_workflow_markdown.py)，输入为 [`original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.adm9732/original.html)。共享表格的非法 span 降级规则不变。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/_scenarios/table_flatten_or_list/complex_table.html`](../tests/fixtures/golden_criteria/_scenarios/table_flatten_or_list/complex_table.html)
   - `_scenarios/table_flatten_or_list` 锁住无法安全展平时的列表降级；它不是 DOI 级真实 replay。
@@ -361,6 +375,8 @@
 
 <a id="rule-html-list-marker-rendering"></a>
 ### HTML 列表必须只保留一层 Markdown marker
+
+- 列表项若已经由提取阶段生成 Markdown，应直接消费该表示，保留其中公式、链接、强调与上下标，不能再按普通字符数据转义。
 
 - HTML `<ol>` 应渲染为 Markdown `1. item` / `2. item` 编号列表，不能先把 LaTeXML 或 publisher 的可见 item marker 当正文，再额外套一层 bullet，形成 `- 1.` 后接正文的坏列表；HTML `<ul>` 应保留 Markdown `- item` bullet，但要去掉条目开头由上游 HTML 显式输出的 `•` / `◦` / `▪` 这类无序列表 marker，不能形成 `- •` 后接正文的双 marker。
 - 代表性 HTML / XML：
@@ -415,7 +431,7 @@
 <a id="rule-arxiv-html-artifact-cleanup"></a>
 ### arXiv LaTeXML HTML 伪影不能泄漏到最终 Markdown
 
-- arXiv official HTML 路径需要清理明确的 LaTeXML 转换伪影，包括 `Refer to caption` 图片占位 alt、重复 footnote marker、裸 `****` 表格标题、`Column N` 占位表头、重复分组行、可见 list marker、TeX annotation 内部嵌套 `$...$` 定界符、普通 prose 的源 HTML 硬换行和未定义宏噪声。
+- arXiv official HTML 路径需要清理明确的 LaTeXML 转换伪影，包括 `Refer to caption` 图片占位 alt、重复 footnote marker、裸 `****` 表格标题、`Column N` 占位表头、重复分组行、可见 list marker、普通 prose 的源 HTML 硬换行和仅表示未定义宏的 LaTeXML 错误节点；公式内部命令不在此清理范围。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/original.html`](../tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/original.html)
   - 这个样本覆盖 footnote marker、空 label 表格、首行标题推断和多图 caption。
@@ -441,7 +457,7 @@
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html`](../tests/fixtures/golden_criteria/10.1111_gcb.16386/bilingual.html)
   - [`../tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html`](../tests/fixtures/golden_criteria/10.1007_s13158-025-00473-x/bilingual.html)
-  - [`../tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml`](<../tests/fixtures/golden_criteria/10.1016_S1575-1813(18)30261-4/bilingual.xml>)
+  - [`../tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/original.xml)
   - 这些样本覆盖 Wiley、Springer 和 Elsevier 的稳定双语摘要场景；其他 provider 的并行摘要直接见对应测试。
 - 边界说明：
   - 这条规则只约束结构上已经能识别为并行语言变体的块，不承诺自动识别所有翻译关系。
@@ -562,27 +578,24 @@
   - 普通 figure 的文件名或图注只是提到 equation 时仍属于 figure；figure caption 中显式命中 `math-N`、`_IEqN` 或 `_EquN` 的图片才覆盖 figure-context 排除。
 
 <a id="rule-formula-latex-normalization"></a>
-### LaTeX normalization 必须产出 KaTeX 可渲染表达
+### 源 TeX 保真与 MathML 转换边界
 
-- 公式转换后的 LaTeX 要在公共 normalize 层修复 publisher-specific 输出，例如 MathML `mtext` 里出版商转义的标识符下划线、`\updelta` 这类 upright Greek 宏、`\mspace{Nmu}` 这类 KaTeX 不兼容间距，以及无语义的零宽 spacing（如 `\hspace{0pt}` 和 MathML 零宽连接符）。
+- 内部 MathML renderer 在相邻节点拼接处保留 TeX 控制词边界：`∫` 后接 `SMB`、`D` 或 `∑` / `∬` / `∞` 后接 `x`，分别输出 `\int SMB`、`\int D`、`\sum x`、`\iint x`、`\infty x`；嵌套行、根式和表格单元同样适用。不得对已经成形的源 TeX 按命令前缀猜拆，变量与源节点顺序保持不变。
+- MathML 叶节点中的字面 `%` 必须转义，不能变成 TeX 注释；源 TeX 的注释语义不据此重写。HTML 的块级公式以独占行的 `$$` 保留到最终渲染，不能在 inline token 空白压缩时退化为行内公式；列表中的公式续行按项目缩进。arXiv `ltx_eqn_cell` 明确建立块级公式上下文，即使其内部 MathML 标为 `display="inline"`；纯货币数值（例如 `\$75`）保留为转义的普通文本；其它行内 TeX 含美元符号（包括单独 `\$` 和文本参数里的 `$…$`）时，共享渲染入口使用比内部最长连续美元符号串更长的外层定界，保持原始 TeX 与行内位置，不改写内部定界符。
+- HTML、XML、arXiv 和 Atypon 的公式统一按“源 TeX → MathJax 校验 → 必要时同节点 MathML 转换 → 再校验”选择。源 TeX 通过时原样保留内部内容；失败时只使用同一公式节点唯一可配对的 MathML，不猜选多节点配对。转换副本移除 annotation、alttext 等 TeX 提示，原始捕获不变；沿用既有后端顺序，转换输出须通过 MathJax 编译及 SVG 排版。全部失败时保留原 TeX 和失败诊断；无源 TeX 时沿用图片、文字、缺失回退。PDF 转换结果不进入此流程。
+- `normalize_latex()` 只处理公式外侧空白和成对数学定界符；HTML 入口另外识别 Oxford `|$…$|` 包装。内部命令、字符、空格、注释换行、零宽间距和反斜杠原样保留，包括 `\up…`、`\mspace`、`\unicode`、`\mathop`、`\begin{equation}` 等环境；不添加 `\limits`，不改写字符别名。
+- 公式复用原始 Markdown token 保护机制，避开正文、引用清理和最终文章组装中的空白压缩；列表续行缩进、表格的 `<br>` 与竖线转义仍按 Markdown 容器要求编码。
+- MathML 后端转换产物修正仅适用于私有 MathML 转换入口，例如后端拆分标识符、标识符中转义的下划线及空 delimiter；源 TeX 不经过该入口。MathML 生成合法 TeX 必需的分组、字面字符转义和控制词边界继续保留。
+- MathJax 4.1.3 纳入公式工具与离线包，预载既有扩展以及 `bbm`、`textcomp` 和本地 bbm 字形；不启用 `noerrors`、`noundefined`，不增加公式宏别名。唯一引擎源码是 `resources/formula/mathjax_engine.mjs`，LitRoot 副本由 `scripts/sync_mathjax_engine.py` 生成并检查内容一致性。Node worker 按文档维护宏，结束时清理。质量结果 `semantic_losses.formula_diagnostics` 记录节点、原 TeX、最终 LaTeX、校验错误、转换后端及样式降级，并复用公式 fallback 计数与 warning。Markdown 只保存最终 LaTeX，不嵌入 MathML 或增加旁车文件；检查器与 LitRoot 使用同源引擎。旧 Markdown 没有同节点 MathML 时须从存档源重新提取，阅读器不猜修。
 - HTML MathML 的 `merror` 仅保留源中仍可读取的子结构（包括分数、指数及括号），不猜补或宣称修复上游公式；转换结果保留原始 `raw_mathml`，OUP 另在提取诊断与文章 warning 中保留源 `merror` 数量。
 - `mspace` 的已知尺寸在真实转换 backend 入口统一保护并恰一次恢复：物理单位直接保留（例如 `40pt` → `\hspace{40pt}`），`em`/`ex` 保持相对单位，CSS `px` 按 `0.75bp` 换算；不能把 `pt` 当 `em` 生成异常 `mu` 间距。命名数学间距保留对应 `mu`，未知单位沿用既有转换行为。预处理复用有界安全 MathML 解析；标记恢复失败不得泄漏标记或静默删去间距。
 - 两项真实全文回放见 [`../tests/golden/test_mathml_semantics.py`](../tests/golden/test_mathml_semantics.py)：OUP `btaa153` 与 PNAS `2310157121` 分别通过已安装的 `texmath` 和 `mathml-to-latex` backend；最小实际进程边界归 integration，尺寸及安全边界归 unit。
-- 代表性 HTML / XML：
-  - [`../tests/fixtures/golden_criteria/_scenarios/formula_latex_normalization/samples.json`](../tests/fixtures/golden_criteria/_scenarios/formula_latex_normalization/samples.json)
-  - `_scenarios/formula_latex_normalization` 锁住 publisher-specific LaTeX normalize 分支；它不是 DOI 级真实 replay。
-    - [`../tests/unit/test_formula_conversion.py`](../tests/unit/test_formula_conversion.py) 中的 `test_normalize_latex_repairs_identifier_escaped_underscores`
-    - [`../tests/unit/test_formula_conversion.py`](../tests/unit/test_formula_conversion.py) 中的 `test_normalize_latex_does_not_globally_replace_textbackslash`
-    - [`../tests/unit/test_formula_conversion.py`](../tests/unit/test_formula_conversion.py) 中的 `test_normalize_latex_rewrites_upgreek_macros`
-    - [`../tests/unit/test_formula_conversion.py`](../tests/unit/test_formula_conversion.py) 中的 `test_normalize_latex_rewrites_mspace_for_katex`
-    - [`../tests/unit/test_formula_conversion.py`](../tests/unit/test_formula_conversion.py) 中的 `test_normalize_latex_removes_only_zero_width_spacing`
-    - [`../tests/unit/test_formula_conversion.py`](../tests/unit/test_formula_conversion.py) 中的 `test_normalize_latex_scenario_samples_are_katex_compatible`
-    - [`../tests/golden/test_arxiv_provider.py`](../tests/golden/test_arxiv_provider.py) 中的 `test_html_route_normalizes_math_without_duplicate_fallback_text`
-- 边界说明：
-  - 这条规则不承诺所有 MathML 都能转换成功；失败占位和 provider-specific inline/display 行为由具体公式渲染规则约束。
-  - `\textbackslash\_` 只修复夹在标识符字符之间的窄范围场景，不能全局替换正常文本里的 `\textbackslash`。`\mspace{Nmu}` 只在 `mu` 单位时改写为 `\mkernNmu`，其它单位保留原样；`\hspace{0pt}` 这类零宽 spacing 会移除，但非零宽 `\hspace{...}` 必须保留。
+- 源 TeX 保留、空 TeX 回退及容器组装边界见 [`../tests/unit/test_source_tex.py`](../tests/unit/test_source_tex.py) 和 [`../tests/unit/test_formula_conversion.py`](../tests/unit/test_formula_conversion.py)。代表性原始表达保存在 [`../tests/fixtures/golden_criteria/_scenarios/formula_latex_normalization/samples.json`](../tests/fixtures/golden_criteria/_scenarios/formula_latex_normalization/samples.json)；它是最小片段，不是 DOI 级真实 replay。
+- 这条规则不承诺所有 MathML 都能转换成功；失败占位和 provider-specific inline/display 行为由具体公式渲染规则约束。
 
 ## Springer
+
+Nature 新闻图注用 margin 样式将说明与 Credit 分开时，纯文本输出保留这个显式间隔，避免句号与 Credit 粘连；仅作用于图注对应的样式节点。
 
 Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Methods（或 Materials and methods / Methodology）section，须保留为正文小节，完整保留机构、许可编号、数字及相邻节顺序。该例外只作用于 provider 的 section hints；页尾 Ethics declarations、Competing interests 和全局伦理分类不变。真实两篇全文及同名页尾边界见 [`../tests/golden/test_science_springer_source_boundaries.py`](../tests/golden/test_science_springer_source_boundaries.py)。
 
@@ -711,7 +724,7 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
   - [Availability section contract 必须保留、归类、排除正文度量并适配 hints](#rule-keep-data-availability-once)
   - [正文已内联 figure 时避免重复追加尾部 Figures 附录](#rule-no-trailing-figures-appendix)
   - [已下载的正文图片和公式图片要改写成正文附近的本地链接](#rule-rewrite-inline-figure-links)
-  - [LaTeX normalization 必须产出 KaTeX 可渲染表达](#rule-formula-latex-normalization)
+  - [源 TeX 保真与 MathML 转换边界](#rule-formula-latex-normalization)
 - 不适用 / 部分适用说明：
   - [HTML fulltext / abstract-only 判定必须和用户可见访问状态一致](#rule-html-availability-contract) 不适用于 Elsevier XML 主路径；PDF fallback 的正文 Markdown 仍走共享 PDF 转换。
   - [出版社站点 UI 噪声不能泄漏进最终 markdown](#rule-filter-publisher-ui-noise) 和 [HTML 公式图片 fallback 必须保留并进入资产链路](#rule-preserve-formula-image-fallbacks) 不适用于 Elsevier XML 主路径。
@@ -732,7 +745,7 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
   - 这条规则不是保证所有 Elsevier MathML 都能被完美转成 LaTeX。
   - locator 图片属于诚实的保真 fallback，不做 OCR、不伪造 LaTeX：每张图片计一次 `formula_fallback_count`，不计 `formula_missing_count`，文章总体质量仍为 `degraded`。
   - 公式上下文中的 `fx*` 按正文 `image` 处理；普通附录 Figure 使用的 `fx*` 仍保持 `appendix_image`，不能因公式兼容逻辑改变其位置或分类。
-  - 它约束的是“行内和 display 数学不能混渲，失败时不能静默丢失”；公共 LaTeX 宏兼容处理见 [LaTeX normalization 必须产出 KaTeX 可渲染表达](#rule-formula-latex-normalization)。
+  - 它约束的是“行内和 display 数学不能混渲，失败时不能静默丢失”；源 TeX 保留及转换处理见 [源 TeX 保真与 MathML 转换边界](#rule-formula-latex-normalization)。
 
 <a id="rule-elsevier-supplementary-materials"></a>
 ### Supplementary data 不进正文，统一收进 `## Supplementary Materials`
@@ -874,7 +887,7 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
   - [HTML 公式图片 fallback 必须保留并进入资产链路](#rule-preserve-formula-image-fallbacks)
   - [公式块和图注句子的块间距必须可读](#rule-readable-equation-caption-spacing)
 - 不适用 / 部分适用说明：
-  - [LaTeX normalization 必须产出 KaTeX 可渲染表达](#rule-formula-latex-normalization) 只在 Wiley HTML MathML 成功进入 LaTeX 转换时适用；公式图片 fallback 仍由 HTML 公式图片规则约束。
+  - [源 TeX 保真与 MathML 转换边界](#rule-formula-latex-normalization) 同时约束 Wiley 源 TeX 与 MathML 转换；公式图片 fallback 仍由 HTML 公式图片规则约束。
 
 <a id="rule-wiley-abbreviations-trailing"></a>
 ### Abbreviations 只在正文后保留，不得提前打断正文结构
@@ -925,7 +938,7 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
   - [公式块和图注句子的块间距必须可读](#rule-readable-equation-caption-spacing)
   - [HTML 公式图片 fallback 必须保留并进入资产链路](#rule-preserve-formula-image-fallbacks)
 - 不适用 / 部分适用说明：
-  - [LaTeX normalization 必须产出 KaTeX 可渲染表达](#rule-formula-latex-normalization) 只在 MathML 进入 LaTeX 转换时适用；纯公式图片 fallback 仍按 HTML 公式图片规则处理。
+  - [源 TeX 保真与 MathML 转换边界](#rule-formula-latex-normalization) 同时约束源 TeX 与 MathML 转换；纯公式图片 fallback 仍按 HTML 公式图片规则处理。
   - Science / Atypon 正文中的 boxed text（例如 `Box 1`）必须作为普通内容块保留，不能因为内部正文引用 `Fig. N` 就被误标成 figure caption 或触发 figure 图片注入。
 
 ## PNAS
@@ -951,7 +964,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
   - [公式块和图注句子的块间距必须可读](#rule-readable-equation-caption-spacing)
   - [HTML 公式图片 fallback 必须保留并进入资产链路](#rule-preserve-formula-image-fallbacks)
 - 不适用 / 部分适用说明：
-  - [LaTeX normalization 必须产出 KaTeX 可渲染表达](#rule-formula-latex-normalization) 只在 MathML 进入 LaTeX 转换时适用；PNAS 公式图片 fallback 仍按 HTML 公式图片规则处理。
+  - [源 TeX 保真与 MathML 转换边界](#rule-formula-latex-normalization) 同时约束源 TeX 与 MathML 转换；PNAS 公式图片 fallback 仍按 HTML 公式图片规则处理。
 
 ## AMS
 
@@ -979,7 +992,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
   - [正文已内联 figure 时避免重复追加尾部 Figures 附录](#rule-no-trailing-figures-appendix)
   - [已下载的正文图片和公式图片要改写成正文附近的本地链接](#rule-rewrite-inline-figure-links)
   - [表格能展平就转 Markdown 表，展不平就退成可读列表](#rule-table-flatten-or-list)
-  - [LaTeX normalization 必须产出 KaTeX 可渲染表达](#rule-formula-latex-normalization)
+  - [源 TeX 保真与 MathML 转换边界](#rule-formula-latex-normalization)
   - [浏览器工作流图片下载必须使用 shared browser 主链路](#rule-browser-primary-image-download-path)
 
 ## Annual Reviews
@@ -1046,7 +1059,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 - 共享规则另见：
   - [出版社站点 UI 噪声不能泄漏进最终 markdown](#rule-filter-publisher-ui-noise)
   - [表格能展平就转 Markdown 表，展不平就退成可读列表](#rule-table-flatten-or-list)
-  - [LaTeX normalization 必须产出 KaTeX 可渲染表达](#rule-formula-latex-normalization)
+  - [源 TeX 保真与 MathML 转换边界](#rule-formula-latex-normalization)
   - [Markdown 图片 alt 只保留短标签](#rule-short-markdown-image-alt-labels)
   - [Supplementary discovery 必须来自明确附件 scope](#rule-supplementary-discovery-explicit-scope)
   - [浏览器工作流图片下载必须使用 shared browser 主链路](#rule-browser-primary-image-download-path)
@@ -1057,6 +1070,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 <a id="rule-acs-silverchair-body-assets-references"></a>
 ### ACS 当前 Silverchair 页面必须保留完整正文并隔离嵌入 viewer
 
+- ACS 表注中的补充材料链接按出版社站点解析为绝对 URL；例如 `/acsodf/article-supplement/…` 保留在 `https://pubs.acs.org` 下，不能在 Markdown 中变成本地绝对路径。
 - ACS selected-browser HTML 必须把当前 `.article-body` 作为完整提取根，等待 `.article-body` / `.widget-ArticleFulltext` 稳定，并保留正文 section、table、`.fig.fig-section`、MathML formula 与 `.ref-list .ref`；Supporting Information 中动态加载的 Figshare `<article>` 不能被通用 content selector 误选为正文。
 - 代表性 replay：
   - [`../tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/original.html`](../tests/fixtures/golden_criteria/10.1021_acsomega.4c03987/original.html)：当前 Silverchair structure/table/figure/supplementary/reference 页面，8 个 figures、3 个 tables、45 条 references。
@@ -1088,6 +1102,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
   - [`../tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/original.pdf`](../tests/fixtures/golden_criteria/10.1088_1748-9326_aa9f73/original.pdf)
 - 边界说明：
   - IOP PDF fallback 只接受真实 PDF magic bytes 或 `application/pdf` payload；Radware/hCaptcha HTML wrapper 必须被拒绝。
+  - IOP 图注内的下载提示与按钮必须在 DOM 范围一并清除，不能只删按钮而留下 `Download figure:`；科学图注及正文中正常讨论下载的文字保留。
   - IOP `math/tex` 公式已经渲染成 Markdown LaTeX 时，公式 GIF fallback 不作为 body asset 下载；正文 `_online` figure preview 作为已接受的 figure 资产诊断处理。
   - IOP Appendix figure caption 已经出现在正文时，尾部 fallback `Figures` 可以保留图片，但不能重复整段 caption；已原位内联的正文 figure 资产仍保留其 caption 诊断字段。
   - 本 provider 不实现未授权的 IOP XML/PDF TDM route。
@@ -1133,7 +1148,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 <a id="rule-ieee-html-structure"></a>
 ### IEEE REST HTML 必须保留正文结构和标题层级
 
-- IEEE Xplore REST `#article` HTML 要按真实 DOM 结构抽取正文，而不是依赖 synthetic 片段。`SECTION I.` 这类裸 marker 必须清理；`div.section` / `div.section_2` 嵌套层级必须保留为主节 `##`、字母子节 `###`、数字子节 `####`；`tex-math` / `disp-formula` 必须渲染成可见 LaTeX，不能输出 `[Formula unavailable]`。
+- IEEE Xplore REST `#article` HTML 要按真实 DOM 结构抽取正文，而不是依赖 synthetic 片段。`SECTION I.` 这类裸 marker 必须清理；`div.section` / `div.section_2` 嵌套层级必须保留为主节 `##`、字母子节 `###`、数字子节 `####`；`tex-math` / `disp-formula` 必须渲染成可见 LaTeX，不能输出 `[Formula unavailable]`。Xplore 表题中作为字符数据提供的 `$…$` 同样按公式处理，不能二次转义为字面 TeX。
 - 代表性 HTML：
   - [`../tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/original.html`](../tests/fixtures/golden_criteria/10.1109_ACCESS.2024.3352924/original.html)
   - [`../tests/fixtures/golden_criteria/10.1109_CICTN64563.2025.10932570/original.html`](../tests/fixtures/golden_criteria/10.1109_CICTN64563.2025.10932570/original.html)
@@ -1180,7 +1195,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
   - [全文 references 优先于 metadata/Crossref fallback](#rule-fulltext-reference-priority)
   - [Supplementary discovery 必须来自明确附件 scope](#rule-supplementary-discovery-explicit-scope)
   - [表格能展平就转 Markdown 表，展不平就退成可读列表](#rule-table-flatten-or-list)
-  - [LaTeX normalization 必须产出 KaTeX 可渲染表达](#rule-formula-latex-normalization)
+  - [源 TeX 保真与 MathML 转换边界](#rule-formula-latex-normalization)
   - [Availability section contract 必须保留、归类、排除正文度量并适配 hints](#rule-keep-data-availability-once)
 
 <a id="rule-copernicus-xml-jats-rendering"></a>
@@ -1197,6 +1212,11 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 
 ### Oxford Academic 层级、引用身份与后置内容
 
+- 渲染列表前删除 `#Toolbar`、工具栏包装及引用／分享弹窗，并显式使用 Oxford noise profile；正文中的 `PDF`、`Share` 等操作词不作为全局删词规则。共享容器、普通节点和行内渲染均忽略 HTML `Comment`。
+- 附件区保留可点击链接，以文章 URL 解析相对地址；附件去重、资产范围与下载语义沿用现有契约。结构化摘要复用行内渲染保留上下标和公式，并保留段落、语言、顺序和来源信息，组装时不再用纯文本摘要覆盖。
+- 清理作者信息卡前按显式脚注目标 ID 采集作者关联，输出姓名与注释；没有关联信息时保留原注释，不根据作者顺序推断。`nwae442` 原网页没有共同贡献脚注的作者关联。
+- 参考文献仅依据明确 DOI 超链接修复同一 DOI 的断裂空格并合并重复表示；保留编号、条目顺序、书目信息及不同 DOI。共享图注渲染仅在同一逻辑图内合并相同规范图注的有号／无号候选，优先保留明确图号；不同图号、不同图注与子图说明继续保留。
+- 原始 HTML 与身份／来源记录见 [`nwae442`](../tests/fixtures/golden_criteria/_scenarios/oxford_nwae442/source.json)；[`Oxford HTML 回放`](../tests/golden/test_oxford_html_quality.py) 覆盖该篇及现有五篇样本。该篇六幅图各保留一份图注，50 条引用顺序不变，第 21 条 DOI 合并为一个正确表示。上述行为仅适用于 HTML，不处理 PDF 转换输出。
 - Silverchair 原文的同级 DOM `h2` / `h3` / `h4` 必须按各自层级渲染，防止组装时丢弃没有直属段落的父章节；同名标题按原文出现顺序处理。
 - 引用 Crossref 控件中的期刊 `(ISSN)` DOI 不能作为被引论文 DOI；保留原文可见作者、题名和出版信息。
 - Oxford Academic 的 Acknowledgements / Funding，以及 Frontiers XML 的 Author contributions / Acknowledgments 必须保留在 References 前。沿用现有 provider 的 `body` hint 作为保留渲染类别，不表示这些后置内容是科学正文；它们不得混入参考文献列表。
@@ -1227,7 +1247,7 @@ Taylor & Francis 的相邻 `.NLM_disp-formula-image`／`.NLM_disp-formula` 属�
 
 - PDF 请求带有目标身份且身份结果为 `insufficient` 时，必须通过既有标题匹配才能接受；缺少、空白或不匹配的标题均返回 `pdf_identity_unverified`，清理临时文件并继续既有回退。独立 DOI 成功不要求标题；底层无目标身份调用契约保持。`allow_pdf_only` 不绕过身份验收，也不改写转换器输出。
 - Oxford Academic `.table-wrap-foot` 按 DOM 顺序紧跟对应表格，位于下一正文块之前；保留标记、强调、公式和链接，移除下载控件。
-- Science 仅提升致谢区中以明确数据／代码可用性粗体标签开头的可见独立段落。保留原文标题、正文和链接；混合数据／代码声明归 `data_availability`，纯代码归 `code_availability`。该节不增加正文充分性，普通致谢、资助及段落中途标签仍按原规则处理。
+- Science 按致谢区明确、可见的同级粗体声明标签切分数据、代码及材料可用性内容；标签可以位于混合段落中，内容截止于下一个同级声明标签。保留原文标题、链接、引用和行内格式；混合数据／代码声明归 `data_availability`，纯代码归 `code_availability`。普通致谢、基金、贡献和利益声明保留原有标题、正文及源顺序；可用性声明不增加正文充分性。
 - Science 保留声明中的书目 fragment 仅按原 DOM `.citations[id]` 核验后转换为同篇来源页对象地址，无有效 HTTP(S) 来源基址时保留无跳转文字；不依赖最终 `include_refs` 筛选，也不把普通同名 ID 当成书目。真实 `science.abp8622` R43 与 `science.adp0212` R49 见 `tests/golden/test_retained_object_links.py`。
 - AIP HTML 的 `.fig-modal` 是正文图的弹窗副本，在该 provider 的 DOM 清理阶段移除；保留 `.fig-section` 中完整图注和正文讨论。原文 `10.1063/5.0188905` 的图一、图五在最终文章中只出现一份图注，不扩大为全局相似段落去重。
 - arXiv 源码图发现支持 `figure` / `figure*` 与已由原始 TeX 验证的 `extdatafigure` 环境，后者使用 `extdatacaption`；保留原始图路径、caption 和 label。`2606.00587v2` 的五张普通图与两张扩展数据图以已有源码成员和真实 PNG 回归；不声称通用自定义 LaTeX 环境展开或新的源码下载链已经验收。
@@ -1251,6 +1271,7 @@ Taylor & Francis 的相邻 `.NLM_disp-formula-image`／`.NLM_disp-formula` 属�
 ### arXiv LaTeXML 图形表示与合法重复位置
 
 - arXiv HTML 的正文 `object[data]` SVG 和 figure 内 `svg.ltx_picture` 是图形内容，须接入现有图片/资产管线，保留 DOM/子图身份、源顺序与图注；不把 frontmatter 图标和普通行内数学 glyph 作为正文图。
+- 原文扩展图以无图片的 `p.ltx_figure_panel` 承载 `Extended Data Figure N` 图注时，将该已有图注接入同一 figure 的 caption 路线，保留其中公式，不生成新图注。
 - `object` URL 和普通图片相对 URL 先按原响应来源解析，再提取语义表格；表格 cell 中图片仍须输出。内联 SVG 保留原路径、文本与命名空间，可由已有 ArtifactStore/AssetBudget 落盘；远程链接不能当成本地下载证据。
 - 相同 URL 在不同原文 figure 中可合法重复。DDPM 原文 `A4.F13/A4.F14` 及正文引用均存在，Figure 1/6/13/14 各原位保留一次；禁止因共享 URL 删除独立源对象。
 - 标题提取排除 `h1.ltx_title_document .ltx_pubnotes`，metadata、YAML 与 H1 一致；仅删除无内容、无图形且不在正文 section/figure 内的 frontmatter 排版表，保留有效内容表。
@@ -1258,11 +1279,24 @@ Taylor & Francis 的相邻 `.NLM_disp-formula-image`／`.NLM_disp-formula` 属�
 ### 来源对象与访问边界回归约束
 
 - HTML 表格中的相同值仍属于各自单元格，不能按文本去重或移到首列；表格内图片不拆为独立 Markdown 段落。
-- Springer 的 Reporting summary 保留在正文原位置，不作为摘要前置；只有官方入口的 Extended Data Table 保留题注和表页链接，不据此声称取得表格内容。`body/none` 跳过附表下载时，准备 HTML 到最终 Markdown 的整条路径仍保留说明与入口，包括主文容器外的节点。
+- Springer 的 Reporting summary 保留在正文原位置，不作为摘要前置；只有官方入口的 Extended Data Table 保留题注和表页链接，不据此声称取得表格内容。Extended Data 统一属于现有 `supplementary` 语义，完整输出按原编号及内部顺序保留图、表、说明与入口，包括主文容器外的节点；受 `include_supplementary`、`asset_profile` 和既有预算控制，不增加正文充分性。关闭补充内容也排除所属图表资产；已在该章节呈现的同一资产不再追加图注。已取得同篇官方表页及真实表图时，沿用既有资产链路保留图片和来源，不将图片内容转写为表格。只有入口时不据此声称取得表格内容。
 - Wiley 参考文献的显示编号不进入引用正文；Royal Society 优先使用 HTML 完整书目；PLOS XML 作者姓名与相邻作者之间保留边界。
 - Copernicus 的空图表 xref 按明确 rid 对应的 label 恢复文字，保留已有文字；章节标题经现有公式渲染器保留 MathML。PDF 身份比较仅去除该 provider 元数据题名中的 HTML 标记，不改变 PDF 转换结果或降低身份阈值。
 - Oxford Academic 的 Abstract 标题和下载幻灯片控件不构成摘要内容；ACS 图像式表格计入正文资产发现和严格本地验收。ACS 表图使用所属表格标签区分身份；同为通用 `Graphic` alt 的不同表图不能在下载结果合并时互相覆盖。
 - Science 在浏览器中展开可见参考文献控件；仍缺正文引用目标时输出 `reference_targets_missing` 及缺失列表，统一验收降级。
+- Science 已加载的 `.biblioentry` 书目保留引用正文及其相邻外部 DOI 链接。IOP `citation_reference` 的会议名称和学位授予机构与其余书目字段一并保留。
 - IEEE 直接 stamp 路线未取得 PDF 时，可从同篇官方文章页点击可见 PDF 链接，捕获同篇 stamp/getPDF 的文档或下载响应（含 popup）；direct PDF 的 HTTP 502 允许进入该恢复路径。继续执行既有大小、身份和权限验收，保留 HTML 失败及 PDF 降级来源。
 - arXiv HTML 作者列表短于官方 Atom 列表时保留 Atom 的完整有序列表；长度相同仍优先 HTML，不拼接不同拼写以免重复作者。
 - Royal Society、T&F、ACS 等 browser-workflow HTML 题名的源换行作为空白归一为单行 H1；ACS HTML 小节标题同样不因源换行拆成普通段落。此行为只作用于 HTML 路线，不改写 PDF 转换器输出。
+
+
+<a id="rule-source-inline-and-supplementary-fidelity"></a>
+### HTML/XML 科学格式与补充内容保留
+
+- MathML 的缺省 `mfenced separators` 使用默认逗号；显式空值表示不插入分隔符。保留源节点中的数字间隔、可见 `~` 关系符、函数运算符和 `mathvariant` 字形，包括向量的粗体数字及文字标签的斜体；保留原有脚标后间隔和列表续段缩进。内部 fallback 与外部转换进程共用节点语义；不猜补操作符、变量或矩阵列，不改写任意源 TeX。
+- 正文、图注、表注和参考文献保留强调及上下标；Elsevier `ce:inf` 按下标处理。普通文本中的 Markdown 字面字符与已有公式、链接、代码分别渲染；相邻、嵌套或词内强调使用无歧义的 `<em>/<strong>`。不因行内标签边界插入词内空格，也不将无标记的普通数字猜成下标。
+- 列表保留源编号、续段、子项及附属表格／公式；缩略语表保留行列关系，意义声明和真实小节保留独立标题。保留标题大小写、缩略语及所有格。
+- 引用条目以段落或列表保持独立；保留强调、科学脚标、`etal` 作者省略标记及唯一定位链接。`monospace`、`code`、`pre` 按源代码结构输出，保留提示符、`<NA>` 等缺失值和原始字符。
+- 图、表、图注按源对象归属；同一对象的尺寸副本不重复发出，图注内公式不提升为正文插图；不同源对象可合法复用相同 URL。补充入口按解析后的目标去重，下载成功使用持久相对路径，否则保留有效来源链接（包括 JATS `info:doi/` 的 HTTPS DOI 地址）。不把补充 PDF 转换成正文。
+- 同类 availability 最终合为一个对应章节，保留不同原文内容；不以语义相近为由删改作者陈述。补充入口及已呈现资产按结构和资产身份去重，不按作者措辞去重。
+- 上述规则仅适用于 HTML/XML；PDF 仍严格遵守 [PDF 转换边界](#rule-pdf-conversion-boundary)。原文的错误、矛盾、重复措辞和异常数学表达式保留原样。

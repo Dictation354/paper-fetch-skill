@@ -22,6 +22,8 @@ Provider 必须返回现有 typed payload，并让统一 acceptance 决定最终
 
 `ProviderRenderPolicy.rewrite_asset_links` 默认为 `None`，沿用通用资产链接匹配。需要精确对象身份的 provider 可提供 `(markdown_text, assets, doi) -> str` 函数，在现有 builder 内直接改写；PLOS 以论文 DOI 和对象 ID 绑定本地路径或官方远程 URL。该 callable 不进入公开序列化结果。
 
+HTML 后处理通过 `ProviderHtmlRules.dom_hooks` / `markdown_hooks` 注册 typed callable；未配置的 hook 为 `None`，不使用字符串 stage dispatch 或反射注册表。补充材料由 provider 显式切出 scope，再复用共享资产解析器；Science/PNAS 使用已有 `asset_scopes.extract_body_and_supplementary_html`。来源对象链接统一由 `extraction.html.object_links` 在原 DOM 清理前核验 ID 和别名，不伪造 Markdown 本地锚点。调用阶段及 owner 见 [提取架构](architecture/overview.md)。
+
 ## 3. 添加行为测试
 
 最小片段与边界 mock 放在 `tests/unit/test_<provider>_provider.py`，真实进程和浏览器契约放在 `tests/integration/`，整篇内容回放放在 `tests/golden/`。至少覆盖：

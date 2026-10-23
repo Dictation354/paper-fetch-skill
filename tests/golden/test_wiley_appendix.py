@@ -1,5 +1,7 @@
 """Reviewed Appendix A content, independent of the extractor's summary baseline."""
 
+from tests.support.markdown_presentation import visible_markdown
+
 import re
 
 import pytest
@@ -68,8 +70,12 @@ CITATIONS = {
 def test_reviewed_wiley_appendix_complete_paragraph_and_citations(asset):
     html = golden_criteria_asset(DOI, asset).read_text()
     source = BeautifulSoup(html, "html.parser").select_one("#gbc1137-app-0001")
-    assert source.find("h2").get_text(strip=True) == "Appendix A"
-    assert source.find("p").get_text(" ", strip=True) == APPENDIX_PARAGRAPH
+    assert visible_markdown(source.find("h2").get_text(strip=True)) == visible_markdown(
+        "Appendix A"
+    )
+    assert visible_markdown(
+        source.find("p").get_text(" ", strip=True)
+    ) == visible_markdown(APPENDIX_PARAGRAPH)
     assert {
         a["href"].removeprefix("#") for a in source.select("a.bibLink")
     } == CITATIONS
@@ -79,13 +85,15 @@ def test_reviewed_wiley_appendix_complete_paragraph_and_citations(asset):
         metadata={"doi": DOI},
     )
     assert markdown.count("## Appendix A") == 1
-    appendix = markdown.split("## Appendix A", 1)[1].split("## References", 1)[0]
+    appendix = re.split(r"(?m)^## ", markdown.split("## Appendix A", 1)[1], maxsplit=1)[
+        0
+    ]
     # Ignore only Markdown emphasis/link syntax and whitespace for comparison.
     visible = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", appendix)
     visible = re.sub(r"</?sub>", "", visible.replace("*", ""))
 
     def compact(text):
-        return re.sub(r"\s+", "", text)
+        return re.sub(r"\s+", "", visible_markdown(text))
 
     assert compact(APPENDIX_PARAGRAPH) == compact(visible)
     assert len(extraction["references"]) == 75
@@ -94,8 +102,8 @@ def test_reviewed_wiley_appendix_complete_paragraph_and_citations(asset):
     soup = BeautifulSoup(html, "html.parser")
     for target in CITATIONS:
         ref = extraction["references"][int(target.rsplit("-", 1)[1]) - 1]
-        assert compact(ref["raw"]) in compact(
-            soup.find(attrs={"data-bib-id": target}).get_text(" ", strip=True)
+        assert visible_markdown(compact(ref["raw"])) in visible_markdown(
+            compact(soup.find(attrs={"data-bib-id": target}).get_text(" ", strip=True))
         )
     url = "https://agupubs.onlinelibrary.wiley.com/doi/full/" + DOI
     payload = RawFulltextPayload(
@@ -117,4 +125,4 @@ def test_reviewed_wiley_appendix_complete_paragraph_and_citations(asset):
         < rendered.index("## Appendix A")
         < rendered.index("## References")
     )
-    assert "We have benefited from stimulating discussions" not in markdown
+    assert "We have benefited from stimulating discussions" in markdown

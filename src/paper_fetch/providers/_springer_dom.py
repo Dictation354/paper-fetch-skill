@@ -64,6 +64,49 @@ from ._html_section_markdown import (
 
 from bs4 import BeautifulSoup, Tag
 
+
+def access_check_html(html_text: str) -> str:
+    """An explicit institution grant supersedes Nature's residual preview notice."""
+    if "institution-access-preview" not in html_text:
+        return html_text
+    soup = BeautifulSoup(html_text, choose_parser())
+    granted = any(
+        normalize_text(node.get_text(" ", strip=True)).startswith(
+            "You have full access to this article via "
+        )
+        for node in soup.select('[data-test="access-message"]')
+    )
+    if not granted:
+        return html_text
+    for node in soup.select('[data-test="institution-access-preview"]'):
+        node.decompose()
+    return str(soup)
+
+
+def early_access_without_body(html_text: str) -> bool:
+    """Accepted-manuscript landing pages can contain only abstract and attachments."""
+    if "We’re sharing this article early" not in html_text:
+        return False
+    soup = BeautifulSoup(html_text, choose_parser())
+    body = soup.select_one(".c-article-body")
+    if body is None:
+        return True
+    auxiliary = {
+        "abstract",
+        "inline recommendations",
+        "author information",
+        "supplementary information",
+        "rights and permissions",
+        "about this article",
+    }
+    return not any(
+        normalize_text(section.get("data-title")).casefold() not in auxiliary
+        and section.get("data-title")
+        and section.find(["p", "table", "figure"])
+        for section in body.select("section[data-title]")
+    )
+
+
 SPRINGER_MEDIA_SIZE_SEGMENT_PATTERN = re.compile(r"^(?:lw|w|m|h)\d+(?:h\d+)?$")
 SPRINGER_INLINE_FIGURE_SELECTORS = (".c-article-section__figure-item",)
 SPRINGER_FIGURE_DESCRIPTION_SELECTORS = (".c-article-section__figure-description",)
@@ -368,6 +411,16 @@ def _normalized_root_html(html_text: str) -> tuple[str, Any]:
     if root is None:
         root = soup.body or soup
     active_root = copy.deepcopy(root)
+    # Nature magazine captions use a margin utility to separate the caption
+    # from its credit. Preserve that explicit gap when CSS is no longer present.
+    for caption_text in active_root.select("figcaption .figure__caption > .u-mr-8"):
+        sibling = caption_text.next_sibling
+        if (
+            sibling is not None
+            and not str(sibling).startswith((" ", "\n", "\t"))
+            and not caption_text.get_text().endswith((" ", "\n", "\t"))
+        ):
+            caption_text.insert_after(" ")
     for expandable_box in active_root.select(
         '[data-expandable-box="true"][aria-hidden="true"]'
     ):
@@ -474,6 +527,8 @@ def _springer_section_hints(root: Tag, *, title: str | None) -> list[dict[str, A
         ):
             methods_ethics.add((label, node_source_selector(heading.parent)))
     for hint in hints:
+        if str(hint["heading"]).casefold().startswith("extended data"):
+            hint["kind"] = "supplementary"
         if (hint["heading"], hint["source_selector"]) in methods_ethics:
             hint["kind"] = "body"
     return hints

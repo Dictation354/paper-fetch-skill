@@ -53,7 +53,7 @@ def test_numbered_bibliography_preserves_citations_and_skips_empty_content(attri
     assert extract_numbered_references_from_html(html) == [
         {
             "label": "7",
-            "raw": "A. Author, A source title. Journal 2, 3–9 (2024).",
+            "raw": "A. Author, A source title. *Journal* **2**, 3–9 (2024).",
             "doi": "10.1234/source",
             "year": "2024",
         },
@@ -785,7 +785,7 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             metadata={"doi": "10.1126/test-citation-regression"},
         )
 
-        self.assertIn("<sup>1–3</sup>", markdown)
+        self.assertIn("[1](#core-collateral-R1) – [3](#core-collateral-R3)", markdown)
         self.assertIn("stations (9)", markdown)
         self.assertNotIn("(*1–3*)", markdown)
         self.assertNotIn("<sup>9</sup>", markdown)
@@ -819,7 +819,10 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             metadata={"doi": "10.1073/pnas.test-citation-regression"},
         )
 
-        self.assertIn("<sup>8, 10, 11</sup>", markdown)
+        self.assertIn(
+            "[8](#core-collateral-r8), [10](#core-collateral-r10), [11](#core-collateral-r11)",
+            markdown,
+        )
 
     def test_wiley_author_year_bibliography_links_remain_body_text(self) -> None:
         html = """
@@ -854,7 +857,7 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             metadata={"doi": "10.1111/test-author-year-regression"},
         )
 
-        self.assertIn("Zhu et al. (2016)", markdown)
+        self.assertIn("Zhu et al. ([2016](#gcb-test-bib-0059))", markdown)
         self.assertNotIn("<sup>2016</sup>", markdown)
 
 

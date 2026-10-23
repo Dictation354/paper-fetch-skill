@@ -2062,7 +2062,7 @@ Learn more
             r"""
 <table>
   <tr><th colspan="5">Probability of quota violations
-  with $(1,x,y)$ uniform on $\{1&lt;x&lt;y\}$</th></tr>
+  with <span data-paper-fetch-markdown="1">$(1,x,y)$</span> uniform on <span data-paper-fetch-markdown="1">$\{1&lt;x&lt;y\}$</span></th></tr>
   <tr><th>Method</th><td>M</td><td>Theoretical Probability</td><td>Sample Probability</td><td>95% Confidence Interval</td></tr>
   <tr><th>Huntington-Hill</th><td>10</td><td>0.257</td><td>0.257</td><td>(0.254, 0.260)</td></tr>
 </table>
@@ -2124,7 +2124,7 @@ Learn more
 
         markdown = render_table_markdown(soup.table, label="", caption="")
 
-        self.assertIn("Configuration / n_r", markdown)
+        self.assertIn(r"Configuration / n\_r", markdown)
         self.assertIn("Inference / MMLU", markdown)
 
     def test_section_renderer_collapses_prose_hard_linebreaks_without_touching_blocks(

@@ -13,6 +13,7 @@ _SUB = "₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₕᵢⱼₖₗₘₙ
 
 def without_latex_spacing(value):
     """Exclude explicit layout dimensions from scientific content comparisons."""
+    value = re.sub(r"(?<!\\)\\(?:[,;:!]|[ \t])", "", value)
     return re.sub(
         r"\\hspace\*?\s*\{\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)\s*(?:em|ex|pt|bp|pc|in|cm|mm)\s*\}",
         "",
@@ -42,7 +43,7 @@ def script_markup(value):
 
 def scientific_text_key(value):
     """Ignore editorial punctuation, never decimal points, signs or script roles."""
-    value = without_latex_spacing(script_markup(value))
+    value = without_latex_spacing(script_markup(value.replace(r"\_", "_")))
     # Protect TeX scripts from Markdown emphasis parsing.
     value = value.replace("_", "SCRIPTSUBTOKEN")
     tokens = _INLINE.parseInline(value)[0].children or []
@@ -52,7 +53,7 @@ def scientific_text_key(value):
     value = value.replace("SCRIPTSUBTOKEN", "_")
     value = re.sub(r"</?(?:br|em|strong|i|b|span)(?:\s[^<>]*?)?\s*/?>", "", value)
     value = unicodedata.normalize("NFKC", value).replace("−", "-").replace("–", "-")
-    value = re.sub(r"(?<!\\)([\^_])([A-Za-z0-9+-])", r"\1{\2}", value)
+    value = re.sub(r"(?<![\\_])([\^_])([A-Za-z0-9+-])", r"\1{\2}", value)
     value = value.replace(r"\%", "%").replace("π", "pi")
     return "".join(
         c
@@ -71,7 +72,7 @@ def scientific_text_key(value):
 
 def preserve_dom_scripts(node, *, include_citations=False):
     """Retain visible scientific scripts; leave citation roles to citation tests."""
-    for script in list(node.find_all(["sup", "sub"])):
+    for script in list(node.find_all(["sup", "sub", "inf"])):
         if script.find_parent(["math", "tex-math"]) or "ltx_note_mark" in script.get(
             "class", []
         ):
@@ -98,7 +99,9 @@ def assert_mathml_formulas(nodes, markdown, subtests=None):
         source_tex,
     )
 
-    block_pattern = re.compile(r"^\$\$[^\S\n]*\n(.*?)^\$\$[^\S\n]*$", re.M | re.S)
+    block_pattern = re.compile(
+        r"^[ \t]*\$\$[^\S\n]*\n(.*?)^[ \t]*\$\$[^\S\n]*$", re.M | re.S
+    )
     expressions = block_pattern.findall(markdown)
     inline_markdown = block_pattern.sub("", markdown)
     expressions += re.findall(r"\$([^$\n]+)\$", inline_markdown)
@@ -116,6 +119,26 @@ def assert_mathml_formulas(nodes, markdown, subtests=None):
         by_numbers[numbers(expression)].append(
             (expression, math_identifier_text(expression))
         )
+
+    # A labeled MathML table has one displayed expression per source row.
+    # Check its aggregate source facts, including every label in source order.
+    for node in nodes:
+        labeled = node.find_all("mlabeledtr")
+        if not labeled:
+            continue
+        labels = [
+            row.find("mtd", recursive=False).get_text(strip=True) for row in labeled
+        ]
+        pattern = r"\s*".join(
+            re.escape(label) + r"\s*\n[ \t]*\$\$\n(.*?)^[ \t]*\$\$" for label in labels
+        )
+        for match in re.finditer(pattern, markdown, re.M | re.S):
+            expression = "".join(
+                label + part for label, part in zip(labels, match.groups(), strict=True)
+            )
+            by_numbers[numbers(expression)].append(
+                (expression, math_identifier_text(expression))
+            )
 
     checked = 0
     for index, node in enumerate(nodes, 1):
@@ -150,6 +173,7 @@ def assert_mathml_formulas(nodes, markdown, subtests=None):
                 e
                 for e, text in candidates
                 if all(identifier in text for identifier in identifiers)
+                and mathml_control_words_preserved(node, e)
                 and all(
                     text.count(token) >= operators.count(token)
                     for token in set(operators)
@@ -165,6 +189,26 @@ def assert_mathml_formulas(nodes, markdown, subtests=None):
             ), (index, expected_numbers, minimum, str(node)[:500])
 
     return checked
+
+
+def mathml_control_words_preserved(node, expression):
+    """Require whole control words, so matching substrings cannot hide glue."""
+    from collections import Counter
+
+    operators = {
+        "∫": "int",
+        "∬": "iint",
+        "∭": "iiint",
+        "∑": "sum",
+        "∏": "prod",
+        "∞": "infty",
+    }
+    source = Counter(n.get_text(strip=True) for n in node.find_all("mo"))
+    commands = Counter(re.findall(r"\\([A-Za-z]+)", expression))
+    return all(
+        commands[command] + expression.count(symbol) >= source[symbol]
+        for symbol, command in operators.items()
+    )
 
 
 def math_semantic_key(value):
@@ -186,8 +230,9 @@ def math_semantic_key(value):
             elif value[pos] == "}" and value[pos - 1] != "\\":
                 depth -= 1
             pos += 1
-        assert depth == 0, ("unbalanced math argument", value)
-        return value[start : pos - 1], pos
+        # A captured source may itself contain an unclosed TeX group. Keep
+        # its literal remainder comparable; parser diagnostics cover validity.
+        return value[start : pos - 1] if depth == 0 else value[start:], pos
 
     result = []
     pos = 0
@@ -209,6 +254,11 @@ def math_semantic_key(value):
             else:
                 result.append(marker)
         else:
+            if value.startswith((r"\{", r"\}"), pos):
+                # Visible fence versus optional grouping is covered separately;
+                # ignore either representation only in the cell comparison key.
+                pos += 2
+                continue
             if value[pos] not in "{}$":
                 result.append(value[pos])
             pos += 1

@@ -88,10 +88,16 @@ def test_springer_excluded_table_survives_prepare_and_final_render(
         section_hints=extraction["section_hints"],
     )
     md = article.to_ai_markdown(asset_profile=profile, max_tokens="full_text")
-    assert md.count("Extended Data Table 1 Observed water yield") == 1
+    assert "Extended Data Table 1" not in md
+    full = article.to_ai_markdown(asset_profile="all")
+    assert full.count("Extended Data Table 1 Observed water yield") == 1
     assert (
         "[Extended Data Table 1 Observed water yield](https://www.nature.com/articles/example/tables/1)"
-        in md
+        in full
+    )
+    assert (
+        next(s for s in article.sections if s.heading == "Extended Data").kind
+        == "supplementary"
     )
 
 
@@ -132,7 +138,7 @@ def test_acs_multiline_heading_keeps_complete_text():
     )
     heading = next(h for h in headings(md) if h.startswith("4.1."))
     assert "Nanomaterials" in heading
-    assert "C–N Coupling Using Carbon Nanomaterials" in heading
+    assert "C–N Coupling Using *Carbon* Nanomaterials" in heading
 
 
 @pytest.mark.parametrize("missing_table", [False, True])

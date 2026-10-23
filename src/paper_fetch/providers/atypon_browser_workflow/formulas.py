@@ -10,7 +10,7 @@ from ...extraction.html.formula_rules import (
     display_formula_nodes,
     formula_image_url_from_node,
     is_display_formula_node,
-    is_tex_formula_script_node,
+    is_formula_container,
     looks_like_formula_image,
     mathml_element_from_html_node,
 )
@@ -58,16 +58,12 @@ def _mathml_element_from_node(node: Tag | None):
 
 
 def _structured_latex_from_math_node(node: Tag, *, display_mode: bool) -> str:
-    element = _mathml_element_from_node(node)
-    if element is not None:
-        expression = normalize_text(
-            render_external_mathml_expression(element, display_mode=display_mode)
-        )
-        if expression:
-            return expression
-    expression = normalize_text(html_formula_latex_from_node(node))
+    expression = html_formula_latex_from_node(node)
     if expression:
         return expression
+    element = _mathml_element_from_node(node)
+    if element is not None:
+        return render_external_mathml_expression(element, display_mode=display_mode)
     return ""
 
 
@@ -117,22 +113,28 @@ def _equation_label(node: Tag) -> str:
         return ""
 
     candidates: list[str] = []
+    owner_label = None
+    if isinstance(node.parent, Tag) and "formula-wrap" in node.parent.get("class", []):
+        formulas = node.parent.select(":scope > .disp-formula")
+        if len(formulas) == 1 and formulas[0] is node:
+            owner_label = node.parent.select_one(":scope > .label")
     for candidate in (
         node.select_one(".label"),
+        node.find("label"),
         node.find_previous_sibling(class_="label"),
+        owner_label,
     ):
         if isinstance(candidate, Tag):
             candidates.append(_short_text(candidate))
     node_id = normalize_text(str(attrs.get("id") or ""))
     if node_id:
         id_match = re.search(
-            r"(?:disp|eqn?|equation)[-_]?0*([0-9]+[A-Za-z]?)$",
+            r"(?:^|[-_])(?:disp|eqn?|equation)[-_]?0*([0-9]+[A-Za-z]?)$",
             node_id,
             flags=re.IGNORECASE,
         )
         if id_match:
             return f"Equation {id_match.group(1)}."
-        candidates.append(node_id)
     for text in candidates:
         match = EQUATION_NUMBER_PATTERN.search(text)
         if match:
@@ -144,7 +146,7 @@ def _display_formula_replacement(
     node: Tag, soup: BeautifulSoup, losses: SemanticLosses | None = None
 ) -> Tag | None:
     latex = _structured_latex_from_math_node(node, display_mode=True)
-    replacement = soup.new_tag("div")
+    replacement = soup.new_tag("div", attrs={"data-paper-fetch-markdown": "1"})
     label = _equation_label(node)
     if label:
         _append_text_block(replacement, f"**{label}**", soup=soup)
@@ -261,6 +263,11 @@ def _is_display_formula_math(node: Tag) -> bool:
 
 
 def _inline_math_replacement_target(node: Tag) -> Tag:
+    # Native TeX can be a sibling of the presentation MathML. Replace their
+    # shared formula wrapper once instead of converting its MathML first.
+    for parent in node.parents:
+        if is_formula_container(parent) and html_formula_latex_from_node(parent):
+            return parent
     for current in (
         node.find_parent("mjx-container"),
         node.find_parent("mjx-assistive-mml"),
@@ -268,6 +275,12 @@ def _inline_math_replacement_target(node: Tag) -> Tag:
         if isinstance(current, Tag):
             return current
     return node
+
+
+def _raw_markdown_node(node: Tag, markdown: str) -> Tag:
+    replacement = Tag(name="span", attrs={"data-paper-fetch-markdown": "1"})
+    replacement.string = markdown
+    return replacement
 
 
 def _normalize_inline_math_nodes(
@@ -278,10 +291,12 @@ def _normalize_inline_math_nodes(
             continue
         if _is_display_formula_math(math_node):
             continue
-        latex = _structured_latex_from_math_node(math_node, display_mode=False)
         target = _inline_math_replacement_target(math_node)
+        latex = _structured_latex_from_math_node(target, display_mode=False)
         if latex:
-            target.replace_with(f"${latex}$")
+            target.replace_with(
+                _raw_markdown_node(target, render_inline_latex_markdown(latex))
+            )
             continue
         image = _formula_image_markdown(math_node)
         if losses is not None:
@@ -289,44 +304,13 @@ def _normalize_inline_math_nodes(
                 losses.formula_fallback_count += 1
             else:
                 losses.formula_missing_count += 1
-        target.replace_with(image or "[Formula unavailable]")
-
-
-def _has_class_token(node: Tag, token: str) -> bool:
-    raw_classes = (getattr(node, "attrs", None) or {}).get("class") or []
-    if isinstance(raw_classes, str):
-        class_values = raw_classes.split()
-    else:
-        class_values = [str(value) for value in raw_classes]
-    return token in {normalize_text(value).lower() for value in class_values}
+        target.replace_with(
+            _raw_markdown_node(target, image or "[Formula unavailable]")
+        )
 
 
 def _inline_latex_markdown(value: str) -> str:
     return render_inline_latex_markdown(value)
-
-
-def _latex_from_tex_script_container(node: Tag) -> str:
-    for script in node.find_all("script"):
-        if not isinstance(script, Tag) or not is_tex_formula_script_node(script):
-            continue
-        latex = normalize_text(html_formula_latex_from_node(script))
-        if latex:
-            return latex
-    return ""
-
-
-def _normalize_iop_inline_tex_formula_nodes(container: Tag) -> None:
-    nodes = _dedupe_top_level_nodes(
-        [node for node in container.select(".inline-eqn") if isinstance(node, Tag)]
-    )
-    for node in nodes:
-        if not isinstance(node, Tag) or node.parent is None:
-            continue
-        if _is_display_formula_math(node) or _has_class_token(node, "display-eqn"):
-            continue
-        markdown = _inline_latex_markdown(_latex_from_tex_script_container(node))
-        if markdown:
-            node.replace_with(markdown)
 
 
 def _normalize_inline_formula_image_nodes(
@@ -339,18 +323,18 @@ def _normalize_inline_formula_image_nodes(
             continue
         latex = _latex_from_nearest_formula_container(image)
         if latex:
-            image.replace_with(_inline_latex_markdown(latex))
+            image.replace_with(_raw_markdown_node(image, _inline_latex_markdown(latex)))
             continue
         if losses is not None:
             losses.formula_fallback_count += 1
-        image.replace_with(_formula_image_markdown(image))
+        image.replace_with(_raw_markdown_node(image, _formula_image_markdown(image)))
 
 
 def _latex_from_nearest_formula_container(node: Tag) -> str:
     current: Tag | None = node
     depth = 0
     while isinstance(current, Tag) and depth < 6:
-        latex = normalize_text(html_formula_latex_from_node(current))
+        latex = html_formula_latex_from_node(current)
         if latex:
             return latex
         current = current.parent if isinstance(current.parent, Tag) else None

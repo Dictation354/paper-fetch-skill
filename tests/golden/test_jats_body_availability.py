@@ -2,6 +2,7 @@ from __future__ import annotations
 from paper_fetch.providers._article_markdown_jats import (
     parse_jats_xml,
 )
+from paper_fetch.providers._article_markdown_copernicus import parse_copernicus_xml
 from tests.golden_criteria import golden_criteria_asset
 
 
@@ -11,8 +12,9 @@ def test_shared_jats_renderer_normalizes_real_frontiers_and_copernicus_wrapping(
     frontiers = parse_jats_xml(
         golden_criteria_asset("10.3389/fmars.2023.1101972", "original.xml").read_bytes()
     )
-    copernicus = parse_jats_xml(
-        golden_criteria_asset("10.5194/acp-1-1-2001", "original.xml").read_bytes()
+    copernicus = parse_copernicus_xml(
+        golden_criteria_asset("10.5194/acp-1-1-2001", "original.xml").read_bytes(),
+        source_url="https://acp.copernicus.org/articles/1/1/2001/",
     )
 
     assert frontiers is not None

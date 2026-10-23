@@ -75,7 +75,7 @@ def test_gan_panel_table_rows_survive_final_rendering():
         metadata={"title": fixture.title},
         markdown_text=extraction.markdown_text,
     )
-    md = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+    md = article.to_ai_markdown(asset_profile="all", max_tokens="full_text")
     for figure_id in ["S3.F1", "S5.F2"]:
         figure = soup.find(id=figure_id)
         for row in figure.select("table tr"):
@@ -99,7 +99,7 @@ def test_forest_body_order_and_extended_table_entry_match_source():
     fixture = golden_corpus_fixture_for_doi("10.1038/s41586-020-1941-5")
     soup = BeautifulSoup(fixture.raw_path.read_text(), "lxml")
     article = build_article_from_fixture(fixture)
-    md = article.to_ai_markdown(max_tokens="full_text")
+    md = article.to_ai_markdown(max_tokens="full_text", asset_profile="all")
     assert (
         md.index("Arising from:")
         < md.index("Planting and removal")
@@ -137,7 +137,7 @@ def test_forest_body_order_and_extended_table_entry_match_source():
         section_hints=extraction["section_hints"],
     )
     prepared_md = prepared_article.to_ai_markdown(
-        asset_profile="body", max_tokens="full_text"
+        asset_profile="all", max_tokens="full_text"
     )
     assert caption in prepared_md
     assert "https://www.nature.com/articles/s41586-020-1941-5/tables/1" in prepared_md
@@ -510,7 +510,7 @@ def test_acs_table_graphic_counts_toward_strict_local_acceptance(
     images = [a for a in article.assets if "ao4c03987_0009" in str(a.original_url)]
     assert len(images) == 1
     assert len(article.assets) == 10
-    rendered = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+    rendered = article.to_ai_markdown(asset_profile="all", max_tokens="full_text")
     if not missing_table:
         assert "silverchair-cdn.com" not in rendered
         assert images[0].path in rendered

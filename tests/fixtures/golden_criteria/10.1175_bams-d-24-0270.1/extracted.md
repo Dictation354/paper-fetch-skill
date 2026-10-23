@@ -8,76 +8,82 @@ source: "ams_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 6387
+token_estimate: 7529
 ---
 
 # Integrating High-Resolution Modeling with Diverse Field Campaign Observations through an Open Science Summer School
 
-Maxwell A. Grover<sup>a</sup>, Scott Collis<sup>a,b</sup>, Daniel Feldman<sup>c</sup>, Ann Fridlind<sup>d</sup>, Ya-Chien Feng<sup>e</sup>, Michael Giansiracusa<sup>f</sup>, Sujata Goswami<sup>f</sup>, William I. Gustafson Jr.<sup>e</sup>, Thijs Heus<sup>g</sup>, Robert C.
+# **Integrating High-Resolution Modeling with Diverse Field Campaign Observations through an Open Science Summer School** 
 
-Jackson<sup>a,b</sup>, Timothy W. Juliano<sup>i</sup>, Lishan Li<sup>h</sup>, Joseph R. O’Brien<sup>a</sup>, Damao Zhang<sup>e</sup>
+Maxwell A. Grover<sup>a</sup> , Scott Collis<sup>a,b</sup> , Daniel Feldman<sup>c</sup> , Ann Fridlind<sup>d</sup> , Ya-Chien Feng<sup>e</sup> , Michael Giansiracusa<sup>f</sup> , Sujata Goswami<sup>f</sup> , William I. Gustafson Jr.<sup>e</sup> , Thijs Heus<sup>g</sup> , Robert C. 
 
-> a _Argonne National Laboratory, Lemont, Illinois_
+Jackson<sup>a,b</sup> , Timothy W. Juliano<sup>i</sup> , Lishan Li<sup>h</sup> , Joseph R. O’Brien<sup>a</sup> ,  Damao Zhang<sup>e</sup> 
 
-> b _Northwestern University, Evanston, Illinois_
+> a _Argonne National Laboratory, Lemont, Illinois_ 
 
-> c _Lawrence Berkeley National Laboratory, Berkeley, California_
+> b _Northwestern University, Evanston, Illinois_ 
 
-- d _NASA Goddard Institute for Space Studies, New York, NY_
+> c _Lawrence Berkeley National Laboratory, Berkeley, California_ 
 
-- e _Pacific Northwest National Laboratory, Richland, WA_
+- d _NASA Goddard Institute for Space Studies, New York, NY_ 
 
-   - f _Oak Ridge National Laboratory, Oak Ridge, TN_
+- e _Pacific Northwest National Laboratory, Richland, WA_ 
 
-      - g _Cleveland State University, Cleveland, OH_
+   - f _Oak Ridge National Laboratory, Oak Ridge, TN_ 
 
-> h _The University of Oklahoma, Norman, OK_
+      - g _Cleveland State University, Cleveland, OH_ 
 
-> i _NSF National Center for Atmospheric Research, Boulder, CO_
+> h _The University of Oklahoma, Norman, OK_ 
 
-_Corresponding author_: Maxwell A. Grover, mgrover@anl.gov
+> i _NSF National Center for Atmospheric Research, Boulder, CO_ 
 
-1
+_Corresponding author_ : Maxwell A. Grover, mgrover@anl.gov 
 
-**Early Online Release:** This preliminary version has been accepted for publication in _Bulletin of the American Meteorological Society_, may be fully cited, and has been assigned DOI 10.1175/BAMS-D-24-0270.1. The final typeset copyedited article will replace the EOR at the above DOI when it is published.
+1 
 
-© 2024 American Meteorological Society. This is an Author Accepted Manuscript distributed under the terms of the default AMS reuse license. For information
+**Early Online Release:** This preliminary version has been accepted for publication in _Bulletin of the American Meteorological Society_ , may be fully cited, and has been assigned DOI 10.1175/BAMS-D-24-0270.1. The final typeset copyedited article will replace the EOR at the above DOI when it is published. 
 
-regarding reuse and general copyright information, consult the AMS Copyright Policy (www.ametsoc.org/PUBSReuseLicenses).
+© 2024 American Meteorological Society. This is an Author Accepted Manuscript distributed under the terms of the default AMS reuse license. For information 
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+regarding reuse and general copyright information, consult the AMS Copyright Policy (www.ametsoc.org/PUBSReuseLicenses). 
 
-WHAT: To advance atmospheric science workforce development, twenty-three undergraduate, graduate, and early career scientists from around the world came together to learn about ARM data and open-science tools, utilizing observations and simulations to answer scientific questions and test their hypotheses.
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 
-WHEN: 19-24 May 2024
+WHAT: To advance atmospheric science workforce development, twenty-three undergraduate, graduate, and early career scientists from around the world came together to learn about ARM data and open-science tools, utilizing observations and simulations to answer scientific questions and test their hypotheses. 
 
-WHERE: Cleveland State University, Cleveland, Ohio
+WHEN: 19-24 May 2024 
 
-## **1. The Summer School**
+WHERE: Cleveland State University, Cleveland, Ohio 
 
-The Atmospheric Radiation Measurement (ARM) user facility (Mather and Voyles 2013) is a U.S. Department of Energy user facility that collects diverse earth system measurements aimed at improving the representation of radiatively important processes in models across scales. High-resolution modeling efforts, specifically the Large Eddy Simulation ARM Symbiotic Simulation and Observation (LASSO, Gustafson et al. 2020) activity, complement and contextualize these observations by generating petabytes of simulations of the evolving atmospheric and surface structure around ARM observations. LASSO simulations currently focus on the ARM Southern Great Plains (SGP) atmospheric observatory and Sierras de Córdoba region of Argentina, which was the location of the mobile ARM facility during the Cloud, Aerosol, and Complex Terrain Interactions (CACTI) field campaign (Varble et al. 2021). ARM’s workforce development efforts include hosting a summer school to foster a rising class of atmospheric scientists to use the existing suite of ARM observations to advance scientific understanding of the Earth system and create a runway for them to ideate on how ARM observations can, in the future, further advance and inform this understanding of the Earth system.
+# **1. The Summer School** 
 
-The summer school was sponsored by the ARM user facility, wherein travel support was provided for a majority of the attendees. The summer school student cohort consisted of undergraduate (1), graduate (18), and early career scientists (4) who were selected from a highly competitive pool of candidates, with scientific interest and financial need being the key criteria for invitations to attend (Figure 1). A total of 23 students attended and 12 instructors participated, representing 22 institutions both domestic and abroad (Figure 2).
+The Atmospheric Radiation Measurement (ARM) user facility (Mather and Voyles 2013) is a U.S. Department of Energy user facility that collects diverse earth system measurements aimed at improving the representation of radiatively important processes in models across scales.  High-resolution modeling efforts, specifically the Large Eddy Simulation ARM Symbiotic Simulation and Observation (LASSO, Gustafson et al. 2020) activity, complement and contextualize these observations by generating petabytes of simulations of the evolving atmospheric and surface structure around ARM observations. LASSO simulations currently focus on the ARM Southern Great Plains (SGP) atmospheric observatory and Sierras de Córdoba region of Argentina, which was the location of the mobile ARM facility during the Cloud, Aerosol, and Complex Terrain Interactions (CACTI) field campaign (Varble et al. 2021). ARM’s workforce development efforts include hosting a summer school to foster a rising class of atmospheric scientists to use the existing suite of ARM observations to advance scientific understanding of the Earth system and create a runway for them to ideate on how ARM observations can, in the future, further advance and inform this understanding of the Earth system. 
 
-2
+The summer school was sponsored by the ARM user facility, wherein travel support was provided for a majority of the attendees. The summer school student cohort consisted of undergraduate (1), graduate (18), and early career scientists (4) who were selected from a highly competitive pool of candidates, with scientific interest and financial need being the key criteria for invitations to attend (Figure 1). A total of 23 students attended and 12 instructors participated, representing 22 institutions both domestic and abroad (Figure 2). 
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
+2 
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
 
-**Figure 1.** A picture of all the participants and instructors in 2024 ARM Summer School at Cleveland State University.
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 
-3
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+**Figure 1.** A picture of all the participants and instructors in 2024 ARM Summer School at Cleveland State University. 
 
-**Figure 2.** A map of participants’ home institutions, with 1 undergraduate student, 2 masters students, 16 PhD students, 4 early career researchers, and 12 instructors.
 
-While ARM has hosted summer school events in the past (Ghate et al. 2019), this was the first event to focus specifically on open-science and the use of state-of-the-art open source tools to analyze ARM measurements and share results. Instructors shared their expertise as it relates to the core software tools such as the Python ARM Radar Toolkit (Py-ART) (Helmus and Collis 2016) and Atmospheric data Community Toolkit (ACT) (Theisen et al. 2024), atmospheric instrumentation, and core ARM data products. The schedule was designed such that it was a blend of scientific and technical lectures in the mornings, with dedicated group work time in the afternoon wherein students applied the principles from the morning lectures to their scientific projects (Table 1).
 
-Instructors represented a wide range of scientific expertise and covered the full data workflow, including ARM instrument mentors (responsible for ensuring instruments are operational), individuals from the ARM data quality office (DQO) (responsible for ensuring quality assurance and quality control are applied properly), and individuals from the ARM Data Center (ADC) (responsible for ensuring all ARM data is findable, accessible, interoperable, and reproducible). Open-source software to work with the data was extensively utilized. The event served as a venue for instructors to gather feedback from and collaborate with scientific users, and to ensure that the students learn new tools available from the ARM user facility. Instructors served as project mentors, collaborating with the individual teams and offered advice and feedback on students’ own research.
+3 
+
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
+
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
+
+**Figure 2.** A map of participants’ home institutions, with 1 undergraduate student, 2 masters students, 16 PhD students, 4 early career researchers, and 12 instructors. 
+
+While ARM has hosted summer school events in the past (Ghate et al. 2019), this was the first event to focus specifically on open-science and the use of state-of-the-art open source tools to analyze ARM measurements and share results. Instructors shared their expertise as it relates to the core software tools such as the Python ARM Radar Toolkit (Py-ART) (Helmus and Collis 2016) and Atmospheric data Community Toolkit (ACT) (Theisen et al. 2024), atmospheric instrumentation, and core ARM data products. The schedule was designed such that it was a blend of scientific and technical lectures in the mornings, with dedicated group work time in the afternoon wherein students applied the principles from the morning lectures to their scientific projects (Table 1). 
+
+Instructors represented a wide range of scientific expertise and covered the full data workflow, including ARM instrument mentors (responsible for ensuring instruments are operational), individuals from the ARM data quality office (DQO) (responsible for ensuring quality assurance and quality control are applied properly), and individuals from the ARM Data Center (ADC) (responsible for ensuring all ARM data is findable, accessible, interoperable, and reproducible). Open-source software to work with the data was extensively utilized. The event served as a venue for instructors to gather feedback from and collaborate with scientific users, and to ensure that the students learn new tools available from the ARM user facility. Instructors served as project mentors, collaborating with the individual teams and offered advice and feedback on students’ own research. 
 
 |Date|Time|Topic|Presenter|
 |---|---|---|---|
@@ -86,11 +92,13 @@ Instructors represented a wide range of scientific expertise and covered the ful
 |Monday<br>20 May 2024|09:30 AM - 10:00<br>AM|Coffee Break||
 |Monday<br>20 May 2024|10:00 AM - 11:00<br>AM|Intro to ARM Data<br>Workbench|Sujata Goswami and<br>Michael<br>Giansiracusa|
 
-4
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+4 
+
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
+
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 
 |Monday<br>20 May 2024|11:00 AM - 12:00<br>PM|Intro to ARM Open<br>Source Software|Scott Collis and<br>Joseph O'Brien|
 |---|---|---|---|
@@ -110,11 +118,13 @@ Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:2
 |Wednesday<br>22 May 2024|09:30 AM - 10:00<br>AM|Coffee Break||
 |Wednesday<br>22 May 2024|10:00 AM - 11:15<br>AM|Analyzing Data from<br>LASSO at Scale|William Gustafson<br>and Maxwell Grover|
 
-5
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+5 
+
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
+
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 
 |Wednesday<br>22 May 2024|11:15 AM - 12:00<br>PM|Instrument<br>Simulators 101 with<br>COMBLE|Robert Jackson|
 |---|---|---|---|
@@ -132,236 +142,293 @@ Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:2
 |Friday<br>24 May 2024|12:00 PM - 01:00<br>PM|Working Lunch:<br>Contribute to Pythia|Maxwell Grover|
 ||01:00 PM - 01:30<br>PM|Closing Remarks|Maxwell Grover and<br>Scott Collis|
 
-**Table 1.** Schedule from the 2024 ARM Summer School including date, time, titles and associated links to the presentations as well as the presenter(s).
 
-6
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
+**Table 1.** Schedule from the 2024 ARM Summer School including date, time, titles and associated links to the presentations as well as the presenter(s). 
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+6 
 
-## **2. The Projects**
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
 
-On the afternoon of the first day, students were encouraged to separate into groups and present a project pitch with the following constraints:
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 
-- ARM data needs to be used for at least part of the project.
+# **2. The Projects** 
 
-- Scientific questions and associated hypotheses needed to be formed around the available data.
+On the afternoon of the first day, students were encouraged to separate into groups and present a project pitch with the following constraints: 
 
-- All materials needed to be developed using Jupyter Notebooks (Granger and Pérez 2021).
+- ARM data needs to be used for at least part of the project. 
 
-- Both observations and simulation data need to be used.
+- Scientific questions and associated hypotheses needed to be formed around the available data. 
 
-Students gained valuable experience forming testable scientific hypotheses and crafting science questions to address these hypotheses. Following the project pitches and receiving feedback from instructors, students began refining their questions. They then located associated datasets and created Github repositories following the Project Pythia cookbook template (Rose et al. 2023). Throughout the week, students wrote computational workflows that aimed to answer their questions and test their hypotheses, with daily updates at the conclusion of each day. Instructors served as mentors throughout the process, providing feedback on preliminary results and responding to technical difficulties related to cyberinfrastructure or associated open-source tools. The projects are described below, including the members of the group, scientific questions, hypotheses, and ultimate outcome from the project.
+- All materials needed to be developed using Jupyter Notebooks (Granger and Pérez 2021). 
 
-7
+- Both observations and simulation data need to be used. 
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
+Students gained valuable experience forming testable scientific hypotheses and crafting science questions to address these hypotheses. Following the project pitches and receiving feedback from instructors, students began refining their questions. They then located associated datasets and created Github repositories following the Project Pythia cookbook template (Rose et al. 2023). Throughout the week, students wrote computational workflows that aimed to answer their questions and test their hypotheses, with daily updates at the conclusion of each day. Instructors served as mentors throughout the process, providing feedback on preliminary results and responding to technical difficulties related to cyberinfrastructure or associated open-source tools. The projects are described below, including the members of the group, scientific questions, hypotheses, and ultimate outcome from the project. 
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+7 
 
-**Figure 3.** Key figures from each group project: (a) Large Scale Forcing Impact on Shallow Cumulus Fields over SGP, (b) CACTI Deep Convection Initiation, (c) Comparing Cold-Air Outbreak Conditions at COMBLE and the North Slope of Alaska (NSA), (d) Aerosol Influence on Snow Albedo During SAIL.
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
 
-## _a. Large Scale Forcing Impact on Shallow Cumulus Fields over SGP_
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 
-The SGP-oriented group worked with LES simulations over the SGP site, with a specific focus on shallow cumulus clouds and the factors controlling the evolution of these cloud fields in the simulations (Raghunathan et al. 2024).
 
-1) TEAM MEMBERS
 
-   - Theresa Lincheck, University of Oklahoma
+**Figure 3.** Key figures from each group project: (a) Large Scale Forcing Impact on Shallow Cumulus Fields over SGP, (b) CACTI Deep Convection Initiation, (c) Comparing Cold-Air Outbreak Conditions at COMBLE and the North Slope of Alaska (NSA), (d) Aerosol Influence on Snow Albedo During SAIL. 
 
-   - Xena Mansoura, Pacific Northwest National Laboratory
+# _a. Large Scale Forcing Impact on Shallow Cumulus Fields over SGP_ 
 
-   - Tessa Rosenberger, Cleveland State University
+The SGP-oriented group worked with LES simulations over the SGP site, with a specific focus on shallow cumulus clouds and the factors controlling the evolution of these cloud fields in the simulations (Raghunathan et al. 2024). 
 
-   - Girish Nigamanth Raghunathan, Cleveland State University
+1) TEAM MEMBERS 
 
-   - Kyoungho Ryu, Boston University
+   - Theresa Lincheck, University of Oklahoma 
 
-- 2) SCIENCE QUESTIONS
+   - Xena Mansoura, Pacific Northwest National Laboratory 
 
-   - What does the organization and structure of the shallow cumulus field look like in LASSO simulations on April 4, 2019?
+   - Tessa Rosenberger, Cleveland State University 
 
-8
+   - Girish Nigamanth Raghunathan, Cleveland State University 
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
+   - Kyoungho Ryu, Boston University 
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+- 2) SCIENCE QUESTIONS 
 
-- How does this organization and structure of shallow cumulus differ from observations on April 4, 2019?
+   - What does the organization and structure of the shallow cumulus field look like in LASSO simulations on April 4, 2019? 
 
-- How does near-surface moisture influence evolution of shallow cumulus?
+8 
 
-## 3) HYPOTHESES
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
 
-- The scale of large-scale forcing that will yield results closest to observations depends on the date—there is no “one-size-fits-all” scale size.
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 
-- Increased surface moisture will cause earlier timing of shallow cumulus creation and deeper clouds (looking at observations on LASSO case dates).
+- How does this organization and structure of shallow cumulus differ from observations on April 4, 2019? 
 
-## 4) OUTCOMES
+- How does near-surface moisture influence evolution of shallow cumulus? 
 
-Varying large-scale forcing scenarios, indicated by Sim 6-8 in Figure 3a, impact cloud core fraction due to differences in turbulent kinetic energy. The model should carefully choose the large-forcing length scale to represent the environment appropriately on a given day.
+# 3) HYPOTHESES 
 
-_b. CACTI Deep Convection Initiation_
+- The scale of large-scale forcing that will yield results closest to observations depends on the date—there is no “one-size-fits-all” scale size. 
 
-The CACTI group utilized ground-based precipitation and cloud radar data to investigate convection near complex terrain and the associated meteorological forcing mechanisms. They combined LASSO-CACTI simulations (Gustafson et al. 2023) with the observations from ARM’s mobile facility and NOAA remote sensing data (Henao-Roldan et al. 2024).
+- Increased surface moisture will cause earlier timing of shallow cumulus creation and deeper clouds (looking at observations on LASSO case dates). 
 
-## 1) TEAM MEMBERS
+# 4) OUTCOMES 
 
-- Alfonso Ladino, University of Illinois Urbana-Champaign
+Varying large-scale forcing scenarios, indicated by Sim 6-8 in Figure 3a, impact cloud core fraction due to differences in turbulent kinetic energy. The model should carefully choose the large-forcing length scale to represent the environment appropriately on a given day. 
 
-   - Dhwanit Mise, University of Oklahoma
+_b. CACTI Deep Convection Initiation_ 
 
-   - Victor Ojo, University of North Dakota
+The CACTI group utilized ground-based precipitation and cloud radar data to investigate convection near complex terrain and the associated meteorological forcing mechanisms. They combined LASSO-CACTI simulations (Gustafson et al. 2023) with the observations from ARM’s mobile facility and NOAA remote sensing data (Henao-Roldan et al. 2024). 
 
-   - Natalia Roldan, University of Maryland
+# 1) TEAM MEMBERS 
 
-   - Eddie Wolff, University of Illinois Urbana-Champaign
+   - Alfonso Ladino, University of Illinois Urbana-Champaign 
 
-- 2) SCIENCE QUESTION
+   - Dhwanit Mise, University of Oklahoma 
 
-9
+   - Victor Ojo, University of North Dakota 
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
+   - Natalia Roldan, University of Maryland 
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+   - Eddie Wolff, University of Illinois Urbana-Champaign 
 
-- How is deep convection initiation controlled by local and regional meteorological conditions (thunderstorm life cycle) as well as geography?
+- 2) SCIENCE QUESTION 
 
-## 3) HYPOTHESIS
+9 
 
-- Convection initiation near the ARM site is caused largely by orographic effects, surface heating, and advection of moisture from the Pacific.
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
 
-## 4) OUTCOMES
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 
-Based on LASSO data, it appears that the terrain is playing a role in initiating convection with convergence along the ridge of the Sierras de Córdoba range (Argentina) adding lift to initiate convection (Fig. 3b). Subsequently, outflow from the initial storms generates more convergence and lift to help initiate more convection.
+- How is deep convection initiation controlled by local and regional meteorological conditions (thunderstorm life cycle) as well as geography? 
 
-_c. Comparing Cold-Air Outbreak Conditions at COMBLE and the North Slope of Alaska (NSA)_
+# 3) HYPOTHESIS 
 
-Cold air outbreaks were the primary focus for the COMBLE group, with a specific investigation into the role of aerosol conditions at the various ARM sites. They also looked into planetary boundary layer characteristics as they relate to cloud structure (Seppala et al. 2024).
+- Convection initiation near the ARM site is caused largely by orographic effects, surface heating, and advection of moisture from the Pacific. 
 
-## 1) TEAM MEMBERS
+# 4) OUTCOMES 
 
-- Jordan Eissner, University of Kansas
+Based on LASSO data, it appears that the terrain is playing a role in initiating convection with convergence along the ridge of the Sierras de Córdoba range (Argentina) adding lift to initiate convection (Fig. 3b). Subsequently, outflow from the initial storms generates more convergence and lift to help initiate more convection. 
 
-- Oye Ideki, Howard University
+_c. Comparing Cold-Air Outbreak Conditions at COMBLE and the North Slope of Alaska (NSA)_ 
 
-- Hannah Seppala, University of Maryland Baltimore County
+Cold air outbreaks were the primary focus for the COMBLE group, with a specific investigation into the role of aerosol conditions at the various ARM sites. They also looked into planetary boundary layer characteristics as they relate to cloud structure (Seppala et al. 2024). 
 
-- Shivesh Sharma, Cleveland State University
+# 1) TEAM MEMBERS 
 
-- Nirmal Mathew Alex, Florida Institute of Technology
+- Jordan Eissner, University of Kansas 
 
-- Ines Zabala, University of Granada
+- Oye Ideki, Howard University 
 
-## 2) SCIENCE QUESTIONS
+- Hannah Seppala, University of Maryland Baltimore County 
 
-- How do aerosol (concentration, cloud condensation nuclei, ice nuclei) conditions vary between the sites?
+- Shivesh Sharma, Cleveland State University 
 
-10
+- Nirmal Mathew Alex, Florida Institute of Technology 
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
+- Ines Zabala, University of Granada 
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+# 2) SCIENCE QUESTIONS 
 
-- How do boundary-layer (surface fluxes, turbulence) and cloud structures (cell type, characteristic size, phase) vary between the sites?
+- How do aerosol (concentration, cloud condensation nuclei, ice nuclei) conditions vary between the sites? 
 
-## 3) HYPOTHESES
+10 
 
-- Cloud condensation nuclei and aerosol concentration will be smaller than average the day after cold-air outbreak (CAO) events due to precipitation scavenging.
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
 
-- CAO index will be positively correlated with surface flux and wind direction/intensity.
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 
-- Clouds at the NSA will have different physical formation and be less glaciated due to younger age.
+- How do boundary-layer (surface fluxes, turbulence) and cloud structures (cell type, characteristic size, phase) vary between the sites? 
 
-## 4) OUTCOMES
+# 3) HYPOTHESES 
 
-Sites have significantly different cloud types (stratiform at the NSA, cellular at COMBLE) and phase (mixed phase at the NSA, ice at COMBLE) due to location within CAO events.
+- Cloud condensation nuclei and aerosol concentration will be smaller than average the day after cold-air outbreak (CAO) events due to precipitation scavenging. 
 
-Events sampled during COMBLE correspond with winds that are more northerly than average. CAO events in COMBLE can affect aerosol and CCN concentrations as well as aerosol activation properties. Both sensible and latent heat fluxes are correlated with the CAO index. Strong CAO events show higher surface fluxes and comparatively stronger diurnal cycles than weak CAO events (Fig. 3c). LES can be used to help explain cloud microphysical properties associated with differing event strengths and locations.
+- CAO index will be positively correlated with surface flux and wind direction/intensity. 
 
-_d. Aerosol Influence on Ground Snow Properties During SAIL_
+- Clouds at the NSA will have different physical formation and be less glaciated due to younger age. 
 
-One group focused on the SAIL campaign (Feldman et al. 2023), a field campaign focused on the Colorado River Basin in Gunnison, Colorado. Their analysis utilized observations and simulations from the campaign to study changes in snow properties, specifically snow albedo, due to high aerosol loading events. Two case studies were used, 25 January 2022 and 3 April 2023, contrasting the earlier date that saw a high black carbon concentration event to the later date that saw more dust loading. This work is motivated by interest in aerosol-surface and aerosol-cloud interactions and their influence on the hydrology cycle, especially in a region of such ecological importance (Gasparik et al. 2024).
+# 4) OUTCOMES 
 
-11
+Sites have significantly different cloud types (stratiform at the NSA, cellular at COMBLE) and phase (mixed phase at the NSA, ice at COMBLE) due to location within CAO events. 
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
+Events sampled during COMBLE correspond with winds that are more northerly than average. CAO events in COMBLE can affect aerosol and CCN concentrations as well as aerosol activation properties. Both sensible and latent heat fluxes are correlated with the CAO index. Strong CAO events show higher surface fluxes and comparatively stronger diurnal cycles than weak CAO events (Fig. 3c). LES can be used to help explain cloud microphysical properties associated with differing event strengths and locations. 
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+_d. Aerosol Influence on Ground Snow Properties During SAIL_ 
 
-## 1) TEAM MEMBERS
+One group focused on the SAIL campaign (Feldman et al. 2023), a field campaign focused on the Colorado River Basin in Gunnison, Colorado. Their analysis utilized observations and simulations from the campaign to study changes in snow properties, specifically snow albedo, due to high aerosol loading events. Two case studies were used, 25 January 2022 and 3 April 2023, contrasting the earlier date that saw a high black carbon concentration event to the later date that saw more dust loading. This work is motivated by interest in aerosol-surface and aerosol-cloud interactions and their influence on the hydrology cycle, especially in a region of such ecological importance (Gasparik et al. 2024). 
 
-- Adrian Cortes Santos, University of Puerto Rico
+11 
 
-   - Jessica Gasparik, Brookhaven National Laboratory
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
 
-   - Joy Lai, Pacific Northwest National Laboratory
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 
-   - Ryan Poland, University of Georgia
+# 1) TEAM MEMBERS 
 
-   - Hayden Webb, University of Oklahoma
+   - Adrian Cortes Santos, University of Puerto Rico 
 
-   - Yan Xie, University of Michigan
+   - Jessica Gasparik, Brookhaven National Laboratory 
 
-   - Maggie Zhang, Washington University in St. Louis
+   - Joy Lai, Pacific Northwest National Laboratory 
 
-- 2) SCIENCE QUESTIONS
+   - Ryan Poland, University of Georgia 
 
-   - Where do peak dust and black carbon events occur?
+   - Hayden Webb, University of Oklahoma 
 
-   - How do these peaks correlate with changes in surface albedo/surface shortwave radiation?
+   - Yan Xie, University of Michigan 
 
-   - How does snowpack change around these events?
+   - Maggie Zhang, Washington University in St. Louis 
 
-## 3) HYPOTHESES
+- 2) SCIENCE QUESTIONS 
 
-- Decreases in local surface albedo will correlate with high aerosol loading events.
+   - Where do peak dust and black carbon events occur? 
 
-- Increased surface heating results in snowpack depth decrease following high aerosol loading events.
+   - How do these peaks correlate with changes in surface albedo/surface shortwave radiation? 
 
-- The Weather Research and Forecasting (WRF) model does not implement aerosols in simulations and, therefore, could mispredict the snow radiation fluxes following aerosol events.
+   - How does snowpack change around these events? 
 
-## 4) OUTCOMES
+# 3) HYPOTHESES 
 
-The team used the SAIL campaign measurements to perform a case study of three total events, including one control event and two high aerosol loading events. In situ measurements and back-trajectory model output were used to evaluate the number concentration and size distribution of aerosols and their black carbon levels. Analysis of longwave radiation measurements further confirmed that there was a high concentration of black carbon/aerosols in the atmosphere. Snow albedo decreases were observed in the two high aerosol loading events. Meanwhile, WRF simulations did not capture such decreases in surface albedo for the dust event (Fig. 3d). Because the WRF simulations used in this project
+- Decreases in local surface albedo will correlate with high aerosol loading events. 
 
-12
+- Increased surface heating results in snowpack depth decrease following high aerosol loading events. 
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
+- The Weather Research and Forecasting (WRF) model does not implement aerosols in simulations and, therefore, could mispredict the snow radiation fluxes following aerosol events. 
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+# 4) OUTCOMES 
 
-did not incorporate aerosols, the team expects aerosols, along with other factors, can contribute to such a discrepancy between measurements and WRF simulations in terms of the snow-darkening effect of aerosols/black carbon. The hypotheses of this group were confirmed and showed that models like WRF that do not explicitly include aerosol entrainment, transport, and deposition will need corrections to their atmospheric radiation and surface albedo fields. Only with such corrections can they be fit-for-purpose for snow evolution, snowmelt, and land-atmosphere interaction studies in the winter and spring in complex terrain.
+The team used the SAIL campaign measurements to perform a case study of three total events, including one control event and two high aerosol loading events. In situ measurements and back-trajectory model output were used to evaluate the number concentration and size distribution of aerosols and their black carbon levels. Analysis of longwave radiation measurements further confirmed that there was a high concentration of black carbon/aerosols in the atmosphere. Snow albedo decreases were observed in the two high aerosol loading events. Meanwhile, WRF simulations did not capture such decreases in surface albedo for the dust event (Fig. 3d). Because the WRF simulations used in this project 
 
-## **3. Conclusions and Feedback**
+12 
 
-Over 15 years ago, the atmospheric science community received a wake-up call on the need to augment its research advancements and scientific acumen with a strong commitment to education and workforce development (Charlevoix 2008). More recently, the community recognized the importance of combining traditional education approaches with new tools to assist this development (McNeal et al. 2022). However, there can be a tension between, on the one hand pushing into new frontiers of atmospheric science with the latest and greatest technology and science, and on the other fostering and growing the body of scientists who will ultimately advance the science much further than the current set of mid-career and senior scientists can. To that end, the importance of deploying state-of-the-art multivariate instrumentation in the field to advance the understanding of atmospheric processes cannot be understated. ARM regularly does this with its multiple, simultaneous observations of the atmosphere and surface using a wide range of technologies. With this advanced instrumentation, the question naturally arises as to what are viable approaches to atmospheric science education that entrain information available from such instrumentation.
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
 
-With the 2024 ARM Summer School, an approach to atmospheric science education was taken that focused on in-person instruction followed by collaborative group researchfocused activities, all supported by a strong foundation of open science tools. The results of the Summer School were shown here and indicated that the approach taken here was one that the atmospheric science community should strongly consider for field science educational advancement.
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 
-Finally, as part of its commitment to workforce development, the Atmospheric Radiation Measurement (ARM) user facility plans another summer school event in 2025, with the focus turning to the Bankhead National Forest site. To guide improvements, the team
+did not incorporate aerosols, the team expects aerosols, along with other factors, can contribute to such a discrepancy between measurements and WRF simulations in terms of the snow-darkening effect of aerosols/black carbon. The hypotheses of this group were confirmed and showed that models like WRF that do not explicitly include aerosol entrainment, transport, and deposition will need corrections to their atmospheric radiation and surface albedo fields.  Only with such corrections can they be fit-for-purpose for snow evolution, snowmelt, and land-atmosphere interaction studies in the winter and spring in complex terrain. 
 
-13
+# **3. Conclusions and Feedback** 
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
+Over 15 years ago, the atmospheric science community received a wake-up call on the need to augment its research advancements and scientific acumen with a strong commitment to education and workforce development (Charlevoix 2008). More recently, the community recognized the importance of combining traditional education approaches with new tools to assist this development (McNeal et al. 2022).  However, there can be a tension between, on the one hand pushing into new frontiers of atmospheric science with the latest and greatest technology and science, and on the other fostering and growing the body of scientists who will ultimately advance the science much further than the current set of mid-career and senior scientists can.   To that end, the importance of deploying state-of-the-art multivariate instrumentation in the field to advance the understanding of atmospheric processes cannot be understated. ARM regularly does this with its multiple, simultaneous observations of the atmosphere and surface using a wide range of technologies.  With this advanced instrumentation, the question naturally arises as to what are viable approaches to atmospheric science education that entrain information available from such instrumentation. 
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+With the 2024 ARM Summer School, an approach to atmospheric science education was taken that focused on in-person instruction followed by collaborative group researchfocused activities, all supported by a strong foundation of open science tools. The results of the Summer School were shown here and indicated that the approach taken here was one that the atmospheric science community should strongly consider for field science educational advancement. 
 
-gathered feedback from this year's event, including how students received information about the application process and their experience at the event. Over 60% of students received information about the event from a professor or colleague. All outgoing students indicated that they now had a better understanding of the ARM user facility, data products, open-source computing tools and resources, with 90% of students indicating they strongly agree they left with a better understanding of ARM’s capabilities and associated data products. Most students mentioned they most enjoyed the group projects, especially the hands-on experience and collaboration with others. It is planned that the group projects will continue to be a central pillar of the summer school. Key areas of potential improvement include instruction on collaborative project management using Github/Git and modifying the daily working lunch to a break, allowing students to step away from the content in the middle of the day. The ARM workforce development team looks forward to next year’s event, where they will incorporate changes based on feedback and suggestions from this year’s cohort, thereby improving the ARM Summer School for future participants. Students interested in future workforce development efforts should sign up for the ARM newsletter on <u>https://www.arm.gov/.</u>
+Finally, as part of its commitment to workforce development, the Atmospheric Radiation Measurement (ARM) user facility plans another summer school event in 2025, with the focus turning to the Bankhead National Forest site. To guide improvements, the team 
 
-_Acknowledgements._
+13 
 
-Funding has been provided by the U.S. Department of Energy, Office of Science Biological and Environmental Research, via the Atmospheric Radiation Measurement user facility. We acknowledge the advice from the Summer School Science Advisory Group: Ann Fridlind, William Gustafson, Thijs Heus, and Daniel Feldman. Pacific Northwest National Laboratory (PNNL)—Battelle Memorial Institute operates PNNL under contract DEAC0576RL01830.
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
 
-The authors wish to thank Jeri Knepper of Argonne National Laboratory, as well as Katie Doersey, Rolanda Jundt, and Dawn Stringer of Pacific Northwest National Laboratory for their assistance in organizing and communicating about the event. We would also like to thank the students and faculty at Cleveland State University for being gracious hosts, providing the workspace and assisting with logistics for the summer school. Data were obtained from the ARM user facility.
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 
-14
+gathered feedback from this year's event, including how students received information about the application process and their experience at the event. Over 60% of students received information about the event from a professor or colleague. All outgoing students indicated that they now had a better understanding of the ARM user facility, data products, open-source computing tools and resources, with 90% of students indicating they strongly agree they left with a better understanding of ARM’s capabilities and associated data products. Most students mentioned they most enjoyed the group projects, especially the hands-on experience and collaboration with others. It is planned that the group projects will continue to be a central pillar of the summer school. Key areas of potential improvement include instruction on collaborative project management using Github/Git and modifying the daily working lunch to a break, allowing students to step away from the content in the middle of the day. The ARM workforce development team looks forward to next year’s event, where they will incorporate changes based on feedback and suggestions from this year’s cohort, thereby improving the ARM Summer School for future participants. Students interested in future workforce development efforts should sign up for the ARM newsletter on <u>https://www.arm.gov/.</u> 
 
-Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1.
+_Acknowledgements._ 
 
-Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC
+Funding has been provided by the U.S. Department of Energy, Office of Science Biological and Environmental Research, via the Atmospheric Radiation Measurement user facility. We acknowledge the advice from the Summer School Science Advisory Group: Ann Fridlind, William Gustafson, Thijs Heus, and Daniel Feldman. Pacific Northwest National Laboratory (PNNL)—Battelle Memorial Institute operates PNNL under contract DEAC0576RL01830. 
 
-## _Data Availability Statement._
+The authors wish to thank Jeri Knepper of Argonne National Laboratory, as well as Katie Doersey, Rolanda Jundt, and Dawn Stringer of Pacific Northwest National Laboratory for their assistance in organizing and communicating about the event. We would also like to thank the students and faculty at Cleveland State University for being gracious hosts, providing the workspace and assisting with logistics for the summer school. Data were obtained from the ARM user facility. 
 
-All materials from the event are openly available to the community, hosted on Github <u>https://github.com/ARM-Development/arm-summer-school-2024.</u>
+14 
+
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
+
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
+
+# _Data Availability Statement._ 
+
+All materials from the event are openly available to the community, hosted on Github <u>https://github.com/ARM-Development/arm-summer-school-2024.</u> 
+
+# REFERENCES 
+
+- Charlevoix, D. J., 2008: Improving Teaching and Learning through Classroom Research. _Bull. Amer. Meteor. Soc._ , **89,** 1659– 
+
+   - 1664, <u>https://doi.org/10.1175/2008BAMS2162.1.</u> 
+
+- Feldman, D. R., and Coauthors, 2023: The Surface Atmosphere Integrated Field Laboratory (SAIL) Campaign. Bull. Amer. Meteor. Soc., **104** , E2192–E2222, https://doi.org/10.1175/BAMS-D-22-0049.1. 
+
+- Gasparik, J. T., Y. Xie, H. Webb, R. Poland, Z. Lai, A. J. Cortes-Santos, M. Zhang, 2024: Aerosol influence on ground snow properties during SAIL: Version v2024.05.24. <u>https://doi.org/10.5281/zenodo.11282356.</u> 
+
+- Ghate, V. P., and Coauthors, 2019: The Second ARM Training and Science Application Event: Training the Next Generation of Atmospheric Scientists. Bull. Amer. Meteor. Soc., **100** , ES5–ES9, https://doi.org/10.1175/BAMS-D-18-0242.1. 
+
+- Granger, B. E., and F. Pérez, 2021: Jupyter: Thinking and Storytelling With Code and Data. Computing in Science & Engineering, **23,** 7–14, https://doi.org/10.1109/MCSE.2021.3059263. 
+
+- Gustafson, W. I., and Coauthors, 2020: The Large-Eddy Simulation (LES) Atmospheric Radiation Measurement (ARM) Symbiotic Simulation and Observation (LASSO) Activity for Continental Shallow Convection. _Bull. Amer. Meteor. Soc._ , **101** , E462– E479, <u>https://doi.org/10.1175/BAMS-D-19-0065.1.</u> 
+
+- Gustafson, W. I., A. M. Vogelmann, M. M. Delgado, S. Endo, K. L. Johnson, E. K. 
+
+   - Schumann, A. C. Varble, and H. Xiao, 2023: LASSO-CACTI Data Set, 2023: Subset: 29 January 2019. ARM DOE Data Center: Oak Ridge, Tennessee, USA, accessed 23 May 2024, <u>https://doi.org/10.5439/1905789.</u> 
+
+- Helmus, J. J., and S. M. Collis, 2016: The Python ARM Radar Toolkit (Py-ART), a Library for Working with Weather Radar Data in the Python Programming Language. Journal of Open Research Software, **4** , https://doi.org/10.5334/jors.119. 
+
+15 
+
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
+
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
+
+- Henao-Roldan, N., E. Wolf, D. Mise, V. Ojo, A. Ladino-Rincon, and M. Grover, 2024: CACTI Deep Convection initiation: Version v0.0.3. https://doi.org/10.5281/zenodo.11265276 
+
+- Mather, J. H., and J. W. Voyles, 2013: The Arm Climate Research Facility: A Review of Structure and Capabilities. _Bull. Amer. Meteor. Soc._ , **94** , 377– 392, <u>https://doi.org/10.1175/BAMS-D-11-00218.1.</u> 
+
+- McNeal, P., W. Flynn, C. Kirkpatrick, D. Kopacz, D. LaDue, and L. C. Maudlin, 2022: How Undergraduate Students Learn Atmospheric Science: Characterizing the Current Body of Research. _Bull. Amer. Meteor. Soc._ , **103** , E389–E401, <u>https://doi.org/10.1175/BAMS-D20-0023.1.</u> 
+
+- Raghunathan, G. N., K. Ryu, T. Rosenberger, X. Mansoura, and T. Lincheck, 2024: Large Scale Forcing Impact on Shallow Cumulus Fields over SGP: Version v2024.05.24.03. https://doi.org/10.5281/zenodo.11284156. 
+
+- Rose, B. E. J., J. Clyne, R. May, J. Munroe, A. Snyder, O. Eroglu, and K. Tyle, 2023: Collaborative Research: GEO OSE TRACK 2: Project Pythia and Pangeo: Building an inclusive geoscience community through accessible, reusable, and reproducible workflows: Version v1. https://doi.org/10.5281/zenodo.8184298. 
+
+- Seppala, H., S. Sharma, N. M. Alex, I. Zabala, J. Eissner, and O. Ideki, 2024: High Latitude ARM Site Comparison Cookbook: Version v2024.05.24.2. https://doi.org/10.5281/zenodo.11282878 
+
+- Theisen, A., and Coauthors, 2024: ARM-DOE/ACT: Version 2.1.4. https://doi.org/10.5281/zenodo.13685523. 
+
+- Varble, A. C., and Coauthors, 2021: Utilizing a Storm-Generating Hotspot to Study Convective Cloud Transitions: The CACTI Experiment. _Bull. Amer. Meteor. Soc._ , **102** , E1597–E1620, <u>https://doi.org/10.1175/BAMS-D-20-0030.1.</u> 
+
+16 
+
+Accepted for publication in _Bulletin of the American Meteorological Society._ DOI 10.1175/BAMS-D-24-0270.1. 
+
+Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
+
+
+

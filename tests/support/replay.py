@@ -43,3 +43,24 @@ def build_article_from_fixture(fixture):
     article, reads = _build(json.dumps(fixture.sample, sort_keys=True))
     observe(reads)
     return deepcopy(article)
+
+
+def persisted_fixture_markdown(fixture, article):
+    """Use the production persistence rewrite relative to this baseline's directory."""
+    from paper_fetch.models import FetchEnvelope, RenderOptions
+    from paper_fetch.workflow.rendering import rewrite_markdown_asset_links
+    from tests.golden_criteria import golden_criteria_asset
+
+    markdown = article.to_ai_markdown(
+        include_refs="all", max_tokens="full_text", asset_profile="all"
+    )
+    return rewrite_markdown_asset_links(
+        markdown,
+        FetchEnvelope(
+            doi=fixture.doi, source=article.source, article=article, has_fulltext=True
+        ),
+        target_path=golden_criteria_asset(fixture.doi, "extracted.md"),
+        render=RenderOptions(
+            include_refs="all", asset_profile="all", max_tokens="full_text"
+        ),
+    )

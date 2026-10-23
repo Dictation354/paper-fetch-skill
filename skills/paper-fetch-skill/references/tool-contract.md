@@ -127,7 +127,7 @@ batch_fetch(
 - 可选 `strategy.inline_image_budget={max_images,max_bytes_per_image,max_total_bytes}` 用于调节默认内联图像上限：`3` 张图、每张 `2 MiB`、总计 `8 MiB`；任一最终值为 `0` 都会禁用内联图像。
 - 如果返回了资源，判断图片缺失前先检查 `article.assets[*].render_state`、`download_tier`、`preview_accepted`、`content_type`、`downloaded_bytes`、`width` 和 `height`。发生 direct/browser 恢复时还可读取向后兼容的 `browser_backend`、`final_fetcher` 和 `recovery_attempts`；CLI JSON、MCP 与 cache sidecar 原样往返这些字段。资产摘要满足 `preview = accepted_preview + fallback_preview`；跨 adapter 机器分类只读取 `issue_codes`，不从 warning 文案重分类。
 - `article.quality.semantic_losses.table_layout_degraded_count` 表示源表 span/列定义异常导致布局无法可靠验证；合法合并单元格成功展开只属于规范化，不计为降级；`table_semantic_loss_count` 才是表格内容可能真的丢失的更强信号。
-- 返回 Markdown 前，公式中的 LaTeX 会先对常见出版商宏做规范化处理，例如 `\updelta`、`\mspace{Nmu}`。
+- HTML/XML 公式先校验源 TeX，通过时保留内部命令、空白和环境；失败时只从同节点唯一配对的 MathML 转换并再校验。全部失败保留源 TeX，无源 TeX 时沿用图片、文字或缺失回退。`article.quality.semantic_losses.formula_diagnostics` 保留源 TeX、最终 LaTeX、校验错误、后端和样式降级，降级沿用统一 acceptance。PDF 正文不进入此流程。
 
 ## Local Markdown and Cache Identity
 

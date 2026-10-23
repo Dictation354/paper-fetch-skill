@@ -42,6 +42,20 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             "cooperative_cancel_owner_thread_cleanup must be true", diagnostic
         )
 
+    def test_codex_discovery_and_migration_contract_drift_is_rejected(self) -> None:
+        contract = validator.load_contract()
+        contract["skills"]["codex"]["user_directory"] = (
+            "~/.codex/skills/paper-fetch-skill"
+        )
+        contract["skills"]["codex"]["project_directory"] = (
+            ".codex/skills/paper-fetch-skill"
+        )
+        contract["skills"]["codex"]["verify_before_legacy_cleanup"] = False
+        contract["skills"]["codex"]["check_is_read_only"] = False
+        diagnostics = "\n".join(validator.validate_contract(contract))
+        for key in contract["skills"]["codex"]:
+            self.assertIn(f"skills.codex.{key} must be", diagnostics)
+
     def test_release_policy_keeps_build_evidence_private(self) -> None:
         contract = validator.load_contract()
         contract["release"]["build_evidence_is_not_public"] = False

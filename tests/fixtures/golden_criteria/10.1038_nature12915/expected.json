@@ -4,7 +4,7 @@
     "body_sections": 8,
     "figures": 0,
     "references": 51,
-    "sections": 9,
+    "sections": 10,
     "tables": 0
   },
   "expected_content_kind": "fulltext",
@@ -97,7 +97,8 @@
       "tex_checked": 0,
       "mathml_checked": 0,
       "empty_excluded": 0
-    }
+    },
+    "behavior_changes": "2026-10-20: source scientific back matter and real subsection boundaries retained; supplementary sections are excluded from body sufficiency; original DOM/XML remains the expectation source."
   },
   "source_objects": [
     {

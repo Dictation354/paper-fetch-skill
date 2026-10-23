@@ -174,6 +174,7 @@ def coerce_semantic_losses(
             table_semantic_loss_count=int(value.table_semantic_loss_count or 0),
             formula_fallback_count=int(value.formula_fallback_count or 0),
             formula_missing_count=int(value.formula_missing_count or 0),
+            formula_diagnostics=[dict(item) for item in value.formula_diagnostics],
         )
     if isinstance(value, Mapping):
         if "table_lossy_count" in value:
@@ -186,6 +187,9 @@ def coerce_semantic_losses(
             table_semantic_loss_count=int(value.get("table_semantic_loss_count") or 0),
             formula_fallback_count=int(value.get("formula_fallback_count") or 0),
             formula_missing_count=int(value.get("formula_missing_count") or 0),
+            formula_diagnostics=[
+                dict(item) for item in value.get("formula_diagnostics", [])
+            ],
         )
     return SemanticLosses()
 

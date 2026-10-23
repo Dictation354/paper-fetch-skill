@@ -181,6 +181,13 @@ class AnnualreviewsClient(browser_workflow.BrowserWorkflowClient):
             not current_title or (doi and normalize_doi(current_title) == doi)
         ):
             effective_metadata["title"] = title
+        if content is not None and content.route_kind == "html":
+            downloaded_assets = [
+                dict(asset, render_state="inline")
+                if asset.get("kind") == "figure"
+                else asset
+                for asset in (downloaded_assets or [])
+            ]
         return super().to_article_model(
             effective_metadata,
             raw_payload,

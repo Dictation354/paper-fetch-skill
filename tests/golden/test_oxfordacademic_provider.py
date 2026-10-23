@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.markdown_presentation import visible_markdown
 import re
 from pathlib import Path
 from tests.golden_criteria import golden_criteria_asset
@@ -142,9 +143,17 @@ def test_markdown_contract_formula_fixture() -> None:
     markdown = _extract_html_fixture().markdown_text
     # original.html jumplink-e1: baseline subscript is the letter o.
     equation = markdown.split("$$", 2)[1]
-    assert r"λ(t|z) = {λ}_{o}(t)\text{exp}(\beta′z)" in equation
-    assert r"Λ(t|z) = {Λ}_{o}(t)\text{exp}(\beta′z)" in equation
-    assert "$$\n(1)\nwhere t > 0" in markdown
+    from tests.support.canonical_content import comparable_cell
+
+    assert comparable_cell(
+        r"λ(t|\mathbf{z}) = {λ}_{o}(t)\ {}\text{exp}(\boldsymbol{\beta}′\mathbf{z})"
+    ) in comparable_cell(equation)
+    assert comparable_cell(
+        r"Λ(t|\mathbf{z}) = {Λ}_{o}(t)\ {}\text{exp}(\boldsymbol{\beta}′\mathbf{z})"
+    ) in comparable_cell(equation)
+    from tests.support.markdown_presentation import visible_markdown
+
+    assert re.search(r"\(1\)\s*where t\s*>\s*0", visible_markdown(markdown))
     assert "Kullback" in markdown
     assert re.search(r"(?:Equation|\$\$|R\^\{2\}|I _\{YP\})", markdown)
     assert "[Formula unavailable]" not in markdown
@@ -158,10 +167,14 @@ def test_oxford_formula_paragraphs_keep_inline_prose_together() -> None:
     assert "at time\n\nt\n\nfor covariate" not in markdown
     assert "\n\nz, with\n\n" not in markdown
     assert "\n\nB\n\n-spline" not in markdown
-    assert "$$" in markdown
-    assert "(1)" in markdown
-    assert "at time t for covariate vector z, with" in markdown
-    assert "cubic B-spline approximation" in markdown
+    assert visible_markdown("$$") in visible_markdown(markdown)
+    assert visible_markdown("(1)") in visible_markdown(markdown)
+    assert visible_markdown(
+        "at time t for covariate vector z, with"
+    ) in visible_markdown(markdown)
+    assert visible_markdown("cubic B-spline approximation") in visible_markdown(
+        markdown
+    )
 
 
 def test_markdown_contract_figure_fixture() -> None:
@@ -185,18 +198,20 @@ def test_figure_fixture_stage_asset_contract_is_inline_body_image() -> None:
         r"!\[(?:Figure|Image)[^\]]*\]\(([^)]+)\)", body_before_references
     )
 
-    assert not (
-        golden_criteria_asset(FIGURE_DOI, "extracted.md").parent / "body_assets"
-    ).exists()
     assert image_match is not None
-    assert "oup.silverchair-cdn.com" in image_match.group(1)
+    path = Path(image_match.group(1))
+    assert path.is_file() and path.stat().st_size > 0
+    article = build_article_from_fixture(golden_corpus_fixture_for_doi(FIGURE_DOI))
+    asset = next(a for a in article.assets if str(a.path) == str(path))
+    assert "oup.silverchair-cdn.com" in asset.original_url
+    assert asset.downloaded_bytes == path.stat().st_size
 
 
 def test_markdown_contract_supplementary_fixture() -> None:
     # markdown-review: purpose=supplementary doi=10.1093/bioinformatics/btaa161
     markdown = _render_markdown_for_fixture(HTML_DOI)
     assert "Supplementary data" in markdown
-    assert "btaa161_Supplementary_Materials" in markdown
+    assert "btaa161_Supplementary_Materials" in visible_markdown(markdown)
     assert "Download Citation" not in markdown
     assert "Google Scholar" not in markdown
 

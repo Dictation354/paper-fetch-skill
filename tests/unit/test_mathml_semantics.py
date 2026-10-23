@@ -13,6 +13,55 @@ from paper_fetch.providers._article_markdown_math import render_mathml_expressio
 
 
 @pytest.mark.parametrize(
+    "body, expected",
+    [
+        ("<mo>∫</mo><mi>SMB</mi><mi>d</mi><mi>t</mi>", r"\int\mathrm{SMB}dt"),
+        ("<mo>∫</mo><mi>D</mi><mi>d</mi><mi>t</mi>", r"\int Ddt"),
+        ("<mo>∑</mo><mi>x</mi>", r"\sum x"),
+        ("<mo>∬</mo><mi>x</mi>", r"\iint x"),
+        ("<mo>∞</mo><mi>x</mi>", r"\infty x"),
+        ("<mi>α</mi><mi>x</mi>", r"\alpha x"),
+        ("<mrow><mo>∫</mo></mrow><mrow><mrow/><mi>x</mi></mrow>", r"\int x"),
+        ("<mo>∫</mo><mrow/><mi>x</mi>", r"\int x"),
+        ("<msqrt><mo>∑</mo><mi>x</mi></msqrt>", r"\sqrt{\sum x}"),
+        (
+            "<mfrac><mrow><mo>∫</mo><mi>x</mi></mrow><mi>y</mi></mfrac>",
+            r"\frac{\int x}{y}",
+        ),
+        ("<msub><mo>∑</mo><mi>i</mi></msub><mi>x</mi>", r"\sum_{i}x"),
+        ("<mo>∫</mo><mi>α</mi><mi>x</mi>", r"\int\alpha x"),
+        ("<mi>\\alphax</mi>", r"\alphax"),
+        ("<mi>\\inftyx</mi>", r"\inftyx"),
+        ("<mtext>89%</mtext>", r"\text{89\%}"),
+        ("<mi>%</mi><mo>%</mo>", r"\%\%"),
+    ],
+)
+def test_mathml_node_boundaries_terminate_control_words_without_splitting_source(
+    body, expected
+):
+    assert render_mathml_expression(ET.fromstring(f"<math>{body}</math>")) == expected
+
+
+@pytest.mark.parametrize(
+    "symbol, good, bad",
+    [
+        ("∫", r"\int\mathrm{SMB}dt", r"\intSMBdt"),
+        ("∫", r"\int Ddt", r"\intDdt"),
+        ("∑", r"\sum x", r"\sumx"),
+        ("∬", r"\iint x", r"\iintx"),
+        ("∞", r"\infty x", r"\inftyx"),
+    ],
+)
+def test_source_operator_check_rejects_command_glue(symbol, good, bad):
+    from bs4 import BeautifulSoup
+    from tests.support.scientific_content import mathml_control_words_preserved
+
+    source = BeautifulSoup(f"<math><mo>{symbol}</mo><mi>x</mi></math>", "xml").math
+    assert mathml_control_words_preserved(source, good)
+    assert not mathml_control_words_preserved(source, bad)
+
+
+@pytest.mark.parametrize(
     "width, expected",
     [
         ("40pt", r"\hspace{40pt}"),
@@ -35,9 +84,12 @@ def test_mspace_preserves_known_dimensions_without_font_size_assumptions(
 ):
     assert mathml_space_latex(width) == expected
     if expected is not None:
-        assert render_mathml_expression(
-            ET.fromstring(f'<math><mspace width="{width}"/></math>')
-        ) == ("" if width == "0pt" else expected.strip())
+        assert (
+            render_mathml_expression(
+                ET.fromstring(f'<math><mspace width="{width}"/></math>')
+            )
+            == expected.strip()
+        )
 
 
 def test_merror_children_keep_fraction_structure_and_closing_parenthesis():

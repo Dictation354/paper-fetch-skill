@@ -39,8 +39,14 @@ def test_real_acp_figure_and_numbered_equations() -> None:
     assert markdown.index(image) < markdown.index(
         "DOC-normalized mass absorption coefficients"
     )
-    assert "\n6\n\n$$\n" + r"\Phi_{Ox} = \frac{P_{Ox}}{R_{abs}}," + "\n$$" in markdown
-    assert "\n8\n\n$$\n" + r"[Ox] = \frac{P_{Ox}}{k_{Ox}^{′}}," + "\n$$" in markdown
+    from tests.support.canonical_content import comparable_cell
+
+    for number, expected in [
+        (6, r"\mathrm{\Phi}_{\mathrm{Ox}} = \frac{P_{\mathrm{Ox}}}{R_{\mathrm{abs}}},"),
+        (8, r"[\mathrm{Ox}] = \frac{P_{\mathrm{Ox}}}{k_{\mathrm{Ox}}^{′}},"),
+    ]:
+        equation = re.search(r"\n" + str(number) + r"\s*\$\$(.*?)\$\$", markdown, re.S)
+        assert equation and comparable_cell(expected) == comparable_cell(equation[1])
 
 
 def test_real_bg_table_preserves_cals_column_associations() -> None:

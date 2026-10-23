@@ -59,7 +59,7 @@ def discover_assets(row):
         if provider == "plos":
             for a in assets:
                 url = a.get("url") or a.get("original_url") or ""
-                aid = url.removeprefix("info:doi/")
+                aid = plos._doi_asset_id(url)
                 if not aid:
                     continue
                 if a["kind"] == "supplementary":

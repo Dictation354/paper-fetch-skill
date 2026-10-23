@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ..markdown.math import protect_markdown_math, restore_markdown_math
+from ..formula.convert import normalize_latex
+from ..formula.validation import formula_document
+
 import re
 from copy import deepcopy
 from urllib.parse import urljoin
@@ -30,7 +34,6 @@ from ..extraction.markdown_render.formulas import (
     is_html_display_formula_node as _is_display_formula_node,
     is_html_formula_image_node as _is_formula_image_node,
     is_mathjax_tex_node as _is_mathjax_tex_node,
-    normalize_tex_formula_text as _normalize_tex_formula_text,
     render_inline_latex_markdown as _render_inline_latex_markdown,
     render_html_formula_container as _render_formula_container,
     render_html_formula_image_node as _render_formula_image_node,
@@ -44,8 +47,9 @@ from ..extraction.html._runtime import (
 )
 from ..models import normalize_text
 from ..markdown.citations import numeric_citation_payload_from_html_node
+from ..markdown.images import render_markdown_image
 
-from bs4 import NavigableString, Tag
+from bs4 import BeautifulSoup, Comment, NavigableString, Tag
 
 INLINE_IMAGE_SPACING_PATTERN = re.compile(r"(?<=[^\s])(!\[)")
 LINE_EDGE_WHITESPACE_PATTERN = re.compile(r" *\n *")
@@ -58,7 +62,21 @@ MARKDOWN_LIST_ITEM_PATTERN = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+")
 
 
 def _render_heading_inline_node(node: Any, *, text_style: str | None = None) -> str:
-    return render_html_inline_node(node, policy="heading", text_style=text_style)
+    if isinstance(node, Tag):
+        node = deepcopy(node)
+        for label in node.select("span"):
+            if (
+                re.fullmatch(r"\d+(?:\.\d+)*\.?", label.get_text(strip=True))
+                and label.next_sibling is not None
+                and not str(label.next_sibling).startswith(" ")
+            ):
+                label.insert_after(" ")
+    return render_html_inline_node(
+        node,
+        policy="heading",
+        text_style=text_style,
+        raw_markdown_from_node=_raw_inline_markdown_from_node,
+    )
 
 
 def render_heading_text_from_html(node: Any) -> str:
@@ -93,6 +111,8 @@ def section_has_direct_renderable_content(
         return False
     content_root = _select_first(section, section_content_selectors) or section
     for child in content_root.children:
+        if isinstance(child, Comment):
+            continue
         if isinstance(child, NavigableString):
             if normalize_text(str(child)):
                 return True
@@ -138,10 +158,17 @@ def render_section_markdown(
     if not rendered_content:
         return
     if heading:
-        lines.extend([f"{'#' * max(2, min(level, 6))} {heading}", ""])
+        source_heading = section.find(HEADING_TAG_PATTERN)
+        heading_level = (
+            int(source_heading.name[1])
+            if preserve_heading_levels and source_heading is not None
+            else level
+        )
+        lines.extend([f"{'#' * max(2, min(heading_level, 6))} {heading}", ""])
     lines.extend(rendered_content)
 
 
+@formula_document
 def render_container_markdown(
     node: Any,
     lines: list[str],
@@ -154,17 +181,78 @@ def render_container_markdown(
     if node is None:
         return
 
+    pending_inline: list[Any] = []
+
+    def flush_inline() -> None:
+        if not pending_inline:
+            return
+        span = BeautifulSoup("<span></span>", "html.parser").span
+        for inline in pending_inline:
+            span.append(deepcopy(inline))
+        text = render_clean_text_from_html(span, collapse_prose_line_breaks=True)
+        pending_inline.clear()
+        if text:
+            lines.extend([text, ""])
+
     for child in node.children:
+        if isinstance(child, Comment):
+            continue
         if isinstance(child, NavigableString):
-            text = normalize_prose_markdown_line_breaks(str(child))
-            if text:
-                lines.extend([text, ""])
+            if _is_linebreak_sensitive_markdown_block(str(child)):
+                flush_inline()
+                text = normalize_prose_markdown_line_breaks(str(child))
+                if text:
+                    lines.extend([text, ""])
+                continue
+            pending_inline.append(child)
             continue
         if not isinstance(child, Tag):
+            continue
+        if child.get("data-paper-fetch-markdown") is not None:
+            if child.name == "span":
+                pending_inline.append(child)
+            else:
+                flush_inline()
+                lines.extend([child.get_text("\n\n", strip=False), ""])
             continue
         if child.name in {"header", "footer"}:
             continue
         if child.name in HTML_DROP_TAGS or should_drop_html_element(child):
+            continue
+        if (
+            child.name
+            in {
+                "a",
+                "span",
+                "i",
+                "em",
+                "b",
+                "strong",
+                "sub",
+                "sup",
+                "br",
+                "code",
+                "monospace",
+                "inline-formula",
+                "tex-math",
+                "math",
+                "img",
+            }
+            and not _is_display_formula_node(child)
+            and child.get("role") not in {"list", "listitem"}
+            and (
+                child.name in {"math", "tex-math", "inline-formula"}
+                or child.find(["p", "div", "ul", "ol", "h2", "h3", "h4", "section"])
+                is None
+            )
+        ):
+            pending_inline.append(child)
+            continue
+        flush_inline()
+        if _is_mathjax_tex_node(child) or _is_formula_container(child):
+            text = render_clean_text_from_html(child)
+            if text:
+                lines.extend([text, ""])
             continue
         if child.name == "section":
             render_section_markdown(
@@ -196,36 +284,28 @@ def render_container_markdown(
                     [f"{'#' * max(2, min(heading_level, 6))} {heading_text}", ""]
                 )
             continue
+        if (
+            child.name in {"p", "blockquote"}
+            and child.find(["ul", "ol", "table", "div", "p", "figure", "section"])
+            is not None
+        ):
+            render_container_markdown(child, lines, level=level)
+            continue
         if child.name in {"p", "blockquote"}:
             text = render_clean_text_from_html(child, collapse_prose_line_breaks=True)
             if text:
                 lines.extend([text, ""])
             continue
         if child.name == "pre":
-            text = normalize_text(child.get_text("\n", strip=False))
+            text = child.get_text("", strip=False).strip("\n")
+            fence = "`" * max(
+                3, max((len(m[0]) + 1 for m in re.finditer(r"`+", text)), default=0)
+            )
             if text:
-                lines.extend([text, ""])
+                lines.extend([fence, text, fence, ""])
             continue
-        if child.name in {"ul", "ol"}:
-            start = 1
-            if child.name == "ol":
-                try:
-                    start = int(normalize_text(str(child.get("start") or "1")) or "1")
-                except ValueError:
-                    start = 1
-            for index, item in enumerate(child.find_all("li", recursive=False)):
-                text = render_clean_text_from_html(
-                    item, collapse_prose_line_breaks=True
-                )
-                if text:
-                    if child.name == "ol":
-                        text = ORDERED_LIST_PREFIX_PATTERN.sub("", text)
-                        lines.append(f"{start + index}. {text}")
-                    else:
-                        text = UNORDERED_LIST_PREFIX_PATTERN.sub("", text)
-                        lines.append(f"- {text}")
-            if lines and lines[-1]:
-                lines.append("")
+        if child.name in {"ul", "ol"} or child.get("role") == "list":
+            lines.extend(_render_html_list(child, level=level))
             continue
         if _is_figure_container(child):
             render_figure_markdown(child, lines)
@@ -233,7 +313,14 @@ def render_container_markdown(
         if child.name == "figure":
             continue
         if child.name == "table":
-            text = render_clean_text_from_html(child)
+            from ..extraction.html.tables import render_table_markdown
+
+            text = render_table_markdown(
+                child,
+                label="",
+                caption="",
+                render_inline_text=render_clean_text_from_html,
+            )
             if text:
                 lines.extend([text, ""])
             continue
@@ -247,9 +334,101 @@ def render_container_markdown(
                 preserve_heading_levels=preserve_heading_levels,
             )
             continue
+        if (
+            child.find(["p", "div", "ul", "ol", "h2", "h3", "h4", "h5", "section"])
+            is not None
+        ):
+            render_container_markdown(
+                child,
+                lines,
+                level=level,
+                preserve_heading_levels=preserve_heading_levels,
+            )
+            continue
         text = render_clean_text_from_html(child)
         if text:
             lines.extend([text, ""])
+    flush_inline()
+
+
+def _render_html_list(node: Tag, *, level: int) -> list[str]:
+    lines = []
+    try:
+        number = int(node.get("start", "1"))
+    except ValueError:
+        number = 1
+    ordered = node.name == "ol"
+    items = (
+        node.find_all("li", recursive=False)
+        if node.name in {"ul", "ol"}
+        else node.find_all(attrs={"role": "listitem"}, recursive=False)
+    )
+    for item in items:
+        try:
+            number = int(item.get("value", number))
+        except ValueError:
+            number = 1
+        item = deepcopy(item)
+        if "label-provided" in node.get("class", []):
+            supplied = item.find("span", recursive=False)
+            if supplied is not None:
+                item["data-list-item-label"] = supplied.get_text(strip=True)
+                supplied.decompose()
+        label_node = item.select_one(".ltx_tag_item, .indices-id, :scope > .label")
+        source_label = (
+            label_node.get_text("", strip=True) if label_node is not None else ""
+        )
+        indices_label = label_node is not None and "indices-id" in label_node.get(
+            "class", []
+        )
+        if label_node is not None:
+            label = label_node.get_text("", strip=True)
+            if ordered and re.fullmatch(r"[\[(]?\d+[.)\]]?", label):
+                number_match = re.search(r"\d+", label)
+                assert number_match is not None
+                number = int(number_match[0])
+                label_node.decompose()
+            elif (
+                indices_label
+                or item.get("data-list-item-label")
+                or (not ordered and label in {"•", "—", "–", "-", "▪"})
+            ):
+                label_node.decompose()
+        blocks = []
+        if item.get("data-paper-fetch-markdown") is not None:
+            blocks.append(item.get_text("\n\n", strip=False))
+        else:
+            render_container_markdown(item, blocks, level=level)
+        while blocks and not blocks[-1]:
+            blocks.pop()
+        if not blocks:
+            continue
+        explicit = str(item.get("data-list-item-label") or "")
+        if (
+            indices_label
+            and not explicit
+            and not re.fullmatch(r"\d+[.)]?", source_label)
+        ):
+            explicit = source_label
+        marker = f"{number}." if ordered and not explicit else "-"
+        blocks = [
+            line for block in blocks for line in (block.splitlines() if block else [""])
+        ]
+        first, *rest = blocks
+        first = (
+            ORDERED_LIST_PREFIX_PATTERN.sub("", first)
+            if ordered
+            else UNORDERED_LIST_PREFIX_PATTERN.sub("", first)
+        )
+        if explicit and not re.fullmatch(r"\d+[.)]?", explicit):
+            first = explicit + " " + first
+        lines.append(f"{marker} {first}")
+        indent = " " * (len(marker) + 1)
+        lines.extend(indent + value if value else "" for value in rest)
+        number += 1
+    if lines:
+        lines.append("")
+    return lines
 
 
 def _is_div_section_container(node: Any) -> bool:
@@ -273,6 +452,22 @@ def render_figure_markdown(node: Any, lines: list[str]) -> None:
 
 
 def _numeric_citation_payload_from_html(node: Any) -> str | None:
+    if isinstance(node, Tag) and any(
+        set(parent.get("class", []))
+        & {
+            "notes",
+            "table-wrap-foot",
+            "html-table_foot",
+            "data-availability",
+            "code-availability",
+        }
+        for parent in node.parents
+        if isinstance(parent, Tag)
+    ):
+        return None
+    # Preserve source links, including wrappers containing linked citations.
+    if isinstance(node, Tag) and (node.get("href") or node.find("a", href=True)):
+        return None
     return numeric_citation_payload_from_html_node(
         node,
         wrapper_tags=("sup", "i", "em"),
@@ -293,6 +488,7 @@ def _is_linebreak_sensitive_markdown_block(block: str) -> bool:
 
 
 def normalize_prose_markdown_line_breaks(text: str) -> str:
+    text, protected = protect_markdown_math(text)
     normalized = MARKDOWN_BLANK_RUN_PATTERN.sub(
         "\n\n", text.replace("\r\n", "\n").replace("\r", "\n")
     )
@@ -308,20 +504,20 @@ def normalize_prose_markdown_line_breaks(text: str) -> str:
             collapsed.append(normalize_text(part))
             continue
         collapsed.append(normalize_text(re.sub(r"\s*\n\s*", " ", part)))
-    return normalize_text("".join(collapsed))
+    return restore_markdown_math(normalize_text("".join(collapsed)), protected)
 
 
 def render_clean_text_from_html(
     node: Any, *, collapse_prose_line_breaks: bool = False
 ) -> str:
-    rendered = render_clean_html_node(node)
+    rendered, protected = protect_markdown_math(render_clean_html_node(node))
     rendered = INLINE_IMAGE_SPACING_PATTERN.sub(r" \1", rendered)
     rendered = INLINE_WHITESPACE_PATTERN.sub(" ", rendered)
     rendered = LINE_EDGE_WHITESPACE_PATTERN.sub("\n", rendered)
     rendered = MARKDOWN_BLANK_RUN_PATTERN.sub("\n\n", rendered)
     if collapse_prose_line_breaks:
         rendered = normalize_prose_markdown_line_breaks(rendered)
-    return normalize_text(rendered)
+    return restore_markdown_math(normalize_text(rendered), protected)
 
 
 def render_retained_text_from_html(node: Any, *, source_url: str = "") -> str:
@@ -331,64 +527,27 @@ def render_retained_text_from_html(node: Any, *, source_url: str = "") -> str:
     Publishers remain responsible for removing UI and selecting the section.
     """
     clone = deepcopy(node)
-    if not isinstance(clone, Tag):
-        return render_clean_text_from_html(clone)
-
-    def raw_inline(child: Any) -> str | None:
-        if isinstance(child, Tag) and child.name == "a" and child.get("href"):
-            label = render_inline_tokens(
-                html_inline_tokens_for_children(child), break_render="\n"
-            )
-            return f"[{label}]({urljoin(source_url, str(child['href']))})"
-        return _raw_inline_markdown_from_node(child)
-
-    def html_inline_tokens_for_children(parent: Tag) -> list[InlineToken]:
-        return [
-            token
-            for child in parent.children
-            for token in html_inline_tokens(
-                child, raw_markdown_from_node=raw_inline, drop_node=_drop_inline_node
-            )
-        ]
-
-    # Replacing an outer inline node already handles nested links/styles once.
-    for child in list(clone.select("a[href], em, i, strong, b")):
-        if child.parent is None:
-            continue
-        if any(
-            parent.name in {"a", "em", "i", "strong", "b"}
-            for parent in child.parents
-            if parent is not clone
-        ):
-            continue
-        child.replace_with(
-            render_html_inline_node(
-                child,
-                raw_markdown_from_node=raw_inline,
-                drop_node=_drop_inline_node,
-                render_text_styles=True,
-                break_render="\n",
-            )
-        )
+    if isinstance(clone, Tag):
+        for link in clone.select("a[href]"):
+            link["href"] = urljoin(source_url, str(link["href"]))
     return render_clean_text_from_html(clone, collapse_prose_line_breaks=True)
 
 
 def render_clean_html_node(node: Any) -> str:
-    if node is None:
+    if node is None or isinstance(node, Comment):
         return ""
     if isinstance(node, NavigableString):
-        return str(node)
+        from ..extraction.html.inline import escape_markdown_text
+
+        return escape_markdown_text(str(node))
     if not isinstance(node, Tag):
         return ""
+    if node.get("data-paper-fetch-markdown") is not None:
+        return node.get_text("\n\n", strip=False)
     if node.name in HTML_DROP_TAGS:
         return ""
     if _is_mathjax_tex_node(node):
-        latex = _normalize_tex_formula_text(node.get_text("", strip=False))
-        return (
-            latex
-            if _is_display_formula_node(node)
-            else _render_inline_latex_markdown(latex)
-        )
+        return _render_html_tex_node(node)
     if normalize_text(node.name or "").lower() == "math":
         return _render_mathml_node(node)
     if _is_formula_image_node(node):
@@ -427,15 +586,37 @@ def _is_inline_html_node(node: Any) -> bool:
 def _raw_inline_markdown_from_node(node: Any) -> str | None:
     if not isinstance(node, Tag):
         return None
-    if _is_mathjax_tex_node(node):
-        latex = _normalize_tex_formula_text(node.get_text("", strip=False))
-        if not latex:
-            return None
-        return (
-            latex
-            if _is_display_formula_node(node)
-            else _render_inline_latex_markdown(latex)
+    if node.get("data-paper-fetch-markdown") is not None:
+        return node.get_text("\n\n", strip=False)
+    if (
+        node.name == "a"
+        and node.get("href")
+        and not str(node["href"]).startswith("javascript:")
+    ):
+        content = deepcopy(node)
+        content.name = "span"
+        label = render_html_inline_node(
+            content, raw_markdown_from_node=_raw_inline_markdown_from_node
         )
+        if node["href"] == "#":
+            return label
+        from urllib.parse import quote
+
+        href = quote(str(node["href"]), safe="/:#?=&%+@;,~!$*'[]")
+        return f"[{label}]({href})"
+    if node.name == "img" and (
+        re.search(r"_IEq\d+", str(node.get("src") or ""), re.I)
+        or set(node.get("class", [])) & {"inline-equation", "inline-formula"}
+    ):
+        return render_markdown_image("formula", "Formula", str(node["src"]))
+    if node.name == "img" and (node.get(INLINE_FIGURE_SRC_ATTR) or node.get("src")):
+        return render_markdown_image(
+            "figure" if node.get(INLINE_FIGURE_SRC_ATTR) else "image",
+            str(node.get(INLINE_FIGURE_ALT_ATTR) or node.get("alt") or "Image"),
+            str(node.get(INLINE_FIGURE_SRC_ATTR) or node["src"]),
+        )
+    if _is_mathjax_tex_node(node):
+        return _render_html_tex_node(node) or None
     if normalize_text(node.name or "").lower() == "math":
         return _render_mathml_node(node) or None
     if _is_formula_image_node(node):
@@ -449,6 +630,17 @@ def _drop_inline_node(node: Any) -> bool:
     return isinstance(node, Tag) and node.name in HTML_DROP_TAGS
 
 
+def _render_html_tex_node(node: Tag) -> str:
+    from ..extraction.markdown_render.formulas import html_formula_latex_from_node
+
+    latex = html_formula_latex_from_node(node)
+    if not latex:
+        return ""
+    if _is_display_formula_node(node):
+        return f"\n\n$$\n{normalize_latex(latex)}\n$$\n\n"
+    return _render_inline_latex_markdown(latex)
+
+
 def _render_clean_inline_node(node: Any) -> str:
     return render_html_inline_node(
         node,
@@ -456,7 +648,7 @@ def _render_clean_inline_node(node: Any) -> str:
         citation_payload_from_node=_numeric_citation_payload_from_html,
         raw_markdown_from_node=_raw_inline_markdown_from_node,
         drop_node=_drop_inline_node,
-        render_text_styles=False,
+        render_text_styles=True,
         break_render="\n",
     )
 
@@ -497,7 +689,7 @@ def render_clean_children(node: Any) -> str:
                     citation_payload_from_node=_numeric_citation_payload_from_html,
                     raw_markdown_from_node=_raw_inline_markdown_from_node,
                     drop_node=_drop_inline_node,
-                    render_text_styles=False,
+                    render_text_styles=True,
                 )
             )
             continue
@@ -514,3 +706,16 @@ def render_clean_children(node: Any) -> str:
         text += rendered
     flush_inline_tokens()
     return text
+
+
+def render_html_fragment_markdown(html_text: str, source_url: str) -> str:
+    """Render a publisher-selected fragment with the shared structural renderer."""
+    soup = BeautifulSoup(html_text, "lxml")
+    for anchor in soup.select("a[href]"):
+        if not str(anchor["href"]).startswith("#"):
+            anchor["href"] = urljoin(source_url, str(anchor["href"]))
+    lines: list[str] = []
+    render_container_markdown(
+        soup.body or soup, lines, level=2, preserve_heading_levels=True
+    )
+    return "\n".join(lines)

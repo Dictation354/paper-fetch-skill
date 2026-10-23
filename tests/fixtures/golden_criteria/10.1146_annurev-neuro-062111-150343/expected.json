@@ -10,9 +10,9 @@
     "code_availability": false
   },
   "counts": {
-    "sections": 22,
+    "sections": 27,
     "abstract_sections": 1,
-    "body_sections": 20,
+    "body_sections": 25,
     "figures": 4,
     "tables": 0,
     "references": 151
@@ -97,7 +97,8 @@
       "tex_checked": 0,
       "mathml_checked": 0,
       "empty_excluded": 0
-    }
+    },
+    "behavior_changes": "2026-10-20: source scientific back matter and real subsection boundaries retained; supplementary sections are excluded from body sufficiency; original DOM/XML remains the expectation source."
   },
   "source_objects": [
     {
@@ -118,7 +119,7 @@
             ]
           ],
           "cells": [
-            "Terms These only partially overlap and are not synonymous. Regenerative event: a self-driven event (waveform) involving a positive feedback loop, e.g., between voltage and current (or calcium and voltage, or calcium-induced calcium release). Spike: a voltage transient; in the wider world, many shapes and sizes; generally agreed it must go up then down (or vice versa, i.e. be self-terminating). In neuroscience, by convention, a spike usually has a threshold of some kind across which the response jumps qualitatively/substantially in size/shape, in a biologically/computationally significant manner. Threshold can be voltage or an input variable such as glutamate, or indeed it can be multidimensional. Threshold does not need to be fixed (e.g., strength-duration trade-offs, relative refractory periods) and may need to be teased out: It may not be apparent in all input-output (I-O) relations, even though the voltage waveform is spike-like and very similar to a supra-threshold waveform from another I-O relation that does exhibit a clear threshold (see section on Sharpness of Threshold and Spike-Sigmoid Duality below). Action potential (AP): a membrane-voltage transient that normally results in some distinct biological action (e.g., a muscle contraction or release of neurotransmitter); usually, but not necessarily, all-or-none. The term action potential has a broader meaning than many neuroscientists may assume: for example, cardiac action potential = slow spike + plateau; Nitella (algae) chloride-mediated action potential; negative-going action potentials in Ascaris (roundworm) pharyngeal muscle ( Byerly & Masuda 1979 ). All-or-none: an event that, once started (i.e., by some threshold being exceeded), proceeds by itself to completion; if not started (i.e., threshold not reached), a substantially different (smaller/briefer) event results. However, all-or-none does not mean completely stereotyped in size and shape (or threshold). Electrogenic: causing an electrical change. Includes positive feedback, negative feedback (such as sag, undershoot, after-hyperpolarizations), and delayed combinations of the two (e.g., oscillations, pacemaking)."
+            "TERMS These only partially overlap and are not synonymous. Regenerative event: a self-driven event (waveform) involving a positive feedback loop, e.g., between voltage and current (or calcium and voltage, or calcium-induced calcium release). Spike: a voltage transient; in the wider world, many shapes and sizes; generally agreed it must go up then down (or vice versa, i.e. be self-terminating). In neuroscience, by convention, a spike usually has a threshold of some kind across which the response jumps qualitatively/substantially in size/shape, in a biologically/computationally significant manner. Threshold can be voltage or an input variable such as glutamate, or indeed it can be multidimensional. Threshold does not need to be fixed (e.g., strength-duration trade-offs, relative refractory periods) and may need to be teased out: It may not be apparent in all input-output (I-O) relations, even though the voltage waveform is spike-like and very similar to a supra-threshold waveform from another I-O relation that does exhibit a clear threshold (see section on Sharpness of Threshold and Spike-Sigmoid Duality below). Action potential (AP): a membrane-voltage transient that normally results in some distinct biological action (e.g., a muscle contraction or release of neurotransmitter); usually, but not necessarily, all-or-none. The term action potential has a broader meaning than many neuroscientists may assume: for example, cardiac action potential = slow spike + plateau; Nitella (algae) chloride-mediated action potential; negative-going action potentials in Ascaris (roundworm) pharyngeal muscle ( Byerly & Masuda 1979 ). All-or-none: an event that, once started (i.e., by some threshold being exceeded), proceeds by itself to completion; if not started (i.e., threshold not reached), a substantially different (smaller/briefer) event results. However, all-or-none does not mean completely stereotyped in size and shape (or threshold). Electrogenic: causing an electrical change. Includes positive feedback, negative feedback (such as sag, undershoot, after-hyperpolarizations), and delayed combinations of the two (e.g., oscillations, pacemaking)."
           ]
         }
       ],

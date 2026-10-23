@@ -426,6 +426,32 @@ def test_iop_appendix_figure_caption_match_prevents_duplicate_append() -> None:
     assert updated.count("Visualization of four elements") == 1
 
 
+def test_iop_caption_dom_cleanup_removes_prompt_before_download_buttons():
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(
+        """
+    <article><p>Download figure: is a term discussed in the article.</p>
+    <figure><figcaption><div class="figure-caption"><p>Figure 1. Scientific caption with <em>emphasis</em> and a download comparison.</p></div>
+    <p class="mb-05 print-hide">Download figure:</p>
+    <span class="btn-multi-block print-hide">
+    <a class="fig-dwnld-std-img" href="/f1_lr.jpg">Standard image</a>
+    <a class="fig-dwnld-hi-img" href="/f1_hr.jpg">High-resolution image</a>
+    </span></figcaption></figure></article>
+    """,
+        "html.parser",
+    )
+    captions = _iop_html._extract_figure_captions_from_soup(soup)
+    assert captions == [
+        "Figure 1. Scientific caption with emphasis and a download comparison."
+    ]
+    _iop_html.iop_body_container(soup.article)
+    assert soup.em.get_text() == "emphasis"
+    assert soup.article.p.get_text().startswith("Download figure: is a term")
+    assert "Download figure:" not in soup.figcaption.get_text()
+    assert soup.figcaption.find("a") is None
+
+
 def test_iop_suppresses_only_non_inline_asset_captions_already_in_markdown() -> None:
     markdown = """
 ![Figure 1](https://content.cld.iop.org/example/f1_online.jpg)
@@ -775,3 +801,13 @@ def test_iop_abstract_only_and_metadata_only_contract_are_provider_managed() -> 
     assert "abstract_only" in IopClient.route_order
     assert "metadata_only" in IopClient.route_order
     assert PROVIDER_CATALOG["iop"].provider_managed_abstract_only is True
+
+
+def test_citation_metadata_keeps_conference_and_dissertation_institution():
+    from paper_fetch.providers._iop_html import _parse_citation_reference_meta
+
+    reference = _parse_citation_reference_meta(
+        "citation_author=Author; citation_publication_date=2024; citation_title=Thesis; citation_conference_title=Conference 2024; citation_dissertation_institution=University"
+    )
+    assert "Conference 2024" in reference["raw"]
+    assert "University" in reference["raw"]

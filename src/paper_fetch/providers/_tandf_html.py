@@ -672,6 +672,7 @@ def _prefer_mathml_over_formula_placeholders(container: Any) -> None:
 
                     sibling.clear()
                     sibling.append(render_inline_latex_markdown(latex))
+                    sibling["data-paper-fetch-markdown"] = "1"
                     sibling.attrs.pop("data-tandf-formula-placeholder", None)
             image_fallback.decompose()
 
@@ -881,9 +882,7 @@ def _normalize_tandf_reference_controls(container: Any) -> None:
         node.decompose()
     for node in list(container.select("a[data-label='footnote']")):
         label = normalize_text(node.get_text(" ", strip=True))
-        if label:
-            node.replace_with(f"[{label}]")
-        else:
+        if not label:
             node.decompose()
     for node in list(container.select("button.ref.show-table-fig-ref")):
         label = normalize_text(node.get_text(" ", strip=True))
@@ -941,18 +940,36 @@ def tandf_before_block_normalization(container: Any) -> None:
     prepare_source_images(container, "")
     _drop_tandf_formula_previews(container)
     _normalize_tandf_subitem_headings(container)
-    from ._html_section_markdown import render_retained_text_from_html
-
     for table in list(container.select("table.listgroup")):
-        wrapper = BeautifulSoup("<div></div>", choose_parser()).div
-        for row in table.find_all("tr"):
-            paragraph = BeautifulSoup("<p></p>", choose_parser()).p
-            paragraph.string = " ".join(
-                render_retained_text_from_html(cell)
-                for cell in row.find_all(["td", "th"], recursive=False)
-            )
-            wrapper.append(paragraph)
+        factory = BeautifulSoup("", choose_parser())
+        rows = [
+            row for row in table.find_all("tr") if row.find_parent("table") is table
+        ]
+        labels = [row.find(["td", "th"]).get_text(strip=True) for row in rows]
+        ordered = bool(labels) and all(
+            re.fullmatch(r"\(?\d+[.)]?", label) for label in labels
+        )
+        wrapper = factory.new_tag("ol" if ordered else "ul")
+        for row, label in zip(rows, labels, strict=True):
+            cells = row.find_all(["td", "th"], recursive=False)
+            item = factory.new_tag("li")
+            if ordered:
+                match = re.search(r"\d+", label)
+                assert match is not None
+                item["value"] = match[0]
+            elif label not in {"•", "–", "-", "▪", ""}:
+                item["data-list-item-label"] = label
+            for cell in cells[1:]:
+                for child in list(cell.contents):
+                    item.append(child.extract())
+            wrapper.append(item)
         table.replace_with(wrapper)
+        if wrapper.find_parent(class_="hlFld-Abstract") is not None:
+            from ._html_section_markdown import _render_html_list
+
+            block = factory.new_tag("p", attrs={"data-paper-fetch-markdown": "1"})
+            block.string = "\n".join(_render_html_list(wrapper, level=2))
+            wrapper.replace_with(block)
     _normalize_tandf_reference_controls(container)
     _decompose_matching(container)
     _normalize_tandf_formula_containers(container)
@@ -1039,6 +1056,23 @@ def tandf_classify_heading(heading: str, title: str | None) -> str | None:
     return None
 
 
+def _append_tandf_frontnotes(selected: Tag, root: Tag) -> None:
+    if selected.select_one("#inline_frontnotes") is not None:
+        return
+    heading = root.find(id="inline_frontnotes")
+    if heading is None or heading.get_text(strip=True).casefold() != "notes":
+        return
+    section = Tag(name="section")
+    section.append(deepcopy(heading))
+    for sibling in heading.next_siblings:
+        if isinstance(sibling, Tag):
+            if sibling.name in {"h2", "section"}:
+                break
+            section.append(deepcopy(sibling))
+    if section.find(id=re.compile(r"^FN")) is not None:
+        selected.append(section)
+
+
 def refine_selected_container(node: Tag, **_kwargs: Any) -> Tag:
     """Keep T&F extraction inside the full-text fragment, not page-level chrome."""
 
@@ -1052,6 +1086,7 @@ def refine_selected_container(node: Tag, **_kwargs: Any) -> Tag:
     _hydrate_tandf_figure_originals(selected, root)
     _append_tandf_funding(selected, root)
     _append_tandf_contributor_notes(selected, root)
+    _append_tandf_frontnotes(selected, root)
     # Availability cleanup removes interactive buttons before block normalization,
     # so preserve their visible article cross-reference labels at selection time.
     _normalize_tandf_reference_controls(selected)
@@ -1409,6 +1444,13 @@ def extract_references(html_text: str) -> list[dict[str, str | None]]:
         for index, node in enumerate(
             soup.select(".summation-section > div[id^='FN']"), start=1
         ):
+            group = node.find_parent(class_="summation-section")
+            heading = group.find(["h2", "h3"]) if group is not None else None
+            if (
+                heading is not None
+                and heading.get_text(strip=True).casefold() == "notes"
+            ):
+                continue
             node.name = "li"
             node["data-bib-id"] = normalize_text(str(node.get("id") or index))
             first_text = next(

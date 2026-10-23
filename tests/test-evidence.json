@@ -3021,18 +3021,18 @@
         },
         "test_figure_fixture_stage_asset_contract_is_inline_body_image": {
           "kind": "content",
-          "scope": "原文 btaa823 未提供本地资产时，正文中保留真实远程图链接；不声称图像下载成功。",
-          "template_gap": "该注入条件没有独立的真实模板／下载字节证据；不计为真实原文或真实下载覆盖。",
+          "scope": "原文 btaa823 图像 URL 与已捕获字节绑定，正文使用持久资产路径。",
           "template_review": {
             "status": "covered",
-            "scope": "原文 btaa823 未提供本地资产时，正文中保留真实远程图链接；不声称图像下载成功。",
+            "scope": "原文 btaa823 图像 URL 与已捕获字节绑定，正文使用持久资产路径。",
             "evidence_tests": [
               "tests/golden/test_oxfordacademic_provider.py::test_figure_fixture_stage_asset_contract_is_inline_body_image"
             ],
             "remaining": []
           },
           "primary": [
-            "source"
+            "source",
+            "asset"
           ],
           "auxiliary": [
             "snapshot"
@@ -3972,7 +3972,8 @@
           "source"
         ],
         "auxiliary": [
-          "snapshot"
+          "snapshot",
+          "asset"
         ]
       }
     },
@@ -4052,6 +4053,13 @@
         "kind": "mechanism",
         "scope": "MathML semantic dimensions/error children unit boundary",
         "reason": "最小MathML片段；unit只测纯语义边界，integration运行已安装真实转换进程。"
+      }
+    },
+    "tests/integration/test_markdown_math_review.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "显式选用 LitRoot 的真实 remark/MathJax 引擎，覆盖公式容器、错误退出与文档宏隔离。",
+        "reason": "仅证明最小 Markdown 片段的真实解析契约；不证明整篇原文内容完整性。"
       }
     },
     "tests/integration/test_mathml_semantics.py": {
@@ -4340,6 +4348,172 @@
         "kind": "mechanism",
         "scope": "原生 Linux Camoufox 中 IEEE 文档索引导航失效、精确 URL 与 T&F 批量表格部分失败；不证明原生 macOS 或出版社内容。",
         "reason": "本地浏览器页面与受控路由，仅验证操作边界。"
+      }
+    },
+    "tests/unit/test_oxford_html_quality.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Oxford HTML and shared comment/caption/TeX structural boundaries",
+        "reason": "Minimal HTML snippets only; full captured article assertions are in golden.",
+        "template_review": {
+          "status": "covered",
+          "scope": "nwae442 plus existing Oxford HTML replay",
+          "evidence_tests": [
+            "tests/golden/test_oxford_html_quality.py::test_nwae442_source_and_final_markdown_contract"
+          ],
+          "remaining": []
+        }
+      }
+    },
+    "tests/golden/test_oxford_html_quality.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Captured Oxford identity, abstracts, captions, supplements, references and formula wrappers",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": []
+      }
+    },
+    "tests/unit/test_extraction_problem_contracts.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "problems.md 对应公式、脚注、列表、模型表和 HTML 行内边界的最小结构场景",
+        "reason": "仅验证最小片段转换契约；完整原文断言由 golden 回放承担。"
+      }
+    },
+    "tests/golden/test_problem_source_regressions.py": {
+      "default": {
+        "kind": "content",
+        "scope": "problems.md 中脚注、公式编号、SVG、模型表、独立表页、单元格图片和列表的本地原文回放",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/golden/test_full_read_fixes.py": {
+      "default": {
+        "kind": "content",
+        "scope": "原文契约逐项绑定本地 HTML/XML 结构与最终 Markdown；用例 ID 和源哈希来自 review_contracts 辅助快照，预期来自原文正向断言。",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_springer_early_access.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Springer 明确机构授权与残留预览文案、early access 附件说明的最小可用性契约。",
+        "reason": "最小 HTML 片段；真实整篇及 PDF fallback 由 golden 覆盖。"
+      }
+    },
+    "tests/golden/test_completed_fulltext_baselines.py": {
+      "default": {
+        "kind": "content",
+        "scope": "33 篇新增真实全文回放与完整 Markdown 落盘；Nature HTML 失败、官方 PDF 成功和 degraded acceptance。",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      },
+      "overrides": {
+        "test_completion_register_contains_every_executable_paper": {
+          "kind": "infrastructure",
+          "scope": "新增 corpus 身份去重和可执行登记数量。",
+          "reason": "登记计数不作为全文证据。"
+        }
+      }
+    },
+    "tests/unit/test_science_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Science 已加载 biblioentry 的正文引用文本与相邻 DOI 链接。",
+        "reason": "最小真实结构契约；整篇正文由 golden 同篇来源回放。"
+      }
+    },
+    "tests/unit/test_extracted_review_regressions.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "本轮缺陷的最小列表、IEEE 表题、公式定界和 GFM 表格转义片段。",
+        "reason": "只证明提取和渲染边界；完整原文回放归 golden。"
+      }
+    },
+    "tests/golden/test_extracted_review_regressions.py": {
+      "default": {
+        "kind": "content",
+        "scope": "12 份受影响正文通过已有 adapter 与 ArtifactStore 完整回放并对照更新后的正文基线。",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_source_tex.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "source TeX selection and Markdown transport",
+        "reason": "最小 TeX / MathML 片段与转换边界 mock，验证来源优先级和公式内容保留。"
+      }
+    },
+    "tests/unit/test_tex_validation.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "同节点 MathML 回退、MathJax 校验与文档宏隔离",
+        "reason": "最小片段和工具进程契约；不代替整篇原文回放。"
+      }
+    },
+    "tests/integration/test_tex_validation.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "同节点 MathML 回退、MathJax 校验与文档宏隔离",
+        "reason": "最小片段和工具进程契约；不代替整篇原文回放。"
+      }
+    },
+    "tests/golden/test_tex_validation_replay.py": {
+      "default": {
+        "kind": "content",
+        "scope": "存档源全文离线回放，历史失败表达式的同节点回退、公式计数和容器顺序；原文是 primary，review_contracts 是辅助快照。",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot",
+          "asset"
+        ]
+      }
+    },
+    "tests/golden/test_full_read_2026_10_22.py": {
+      "default": {
+        "kind": "content",
+        "scope": "来源结构、源哈希和实际渲染的正向断言，以及 current 样本的转换输出持久化回放；PDF 不做内容修复。",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_full_read_2026_10_22.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "任意源ID、显式映射、表格、列表、脚本样式及PDF外围组装的最小片段。",
+        "reason": "不读取完整论文；来源驱动断言由 golden 承担。"
       }
     }
   }

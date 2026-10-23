@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.markdown_presentation import visible_markdown
 import pytest
 from tests.support.test_evidence import evidence_cache as cache
 from pathlib import Path
@@ -136,32 +137,38 @@ def test_markdown_contract_structure_fixture() -> None:
     # markdown-review: purpose=structure doi=10.1080/15481603.2026.2667034
     markdown, extraction = _extract_fixture(STRUCTURE_DOI)
 
-    assert "## Abstract" in markdown
-    assert "## 1. Introduction" in markdown
-    assert "### 4.1 Modeling approaches and comparative performance" in markdown
-    assert "a 95.1% improvement over traditional Poisson regression" in markdown
+    assert visible_markdown("## Abstract") in visible_markdown(markdown)
+    assert visible_markdown("## 1. Introduction") in visible_markdown(markdown)
+    assert visible_markdown(
+        "### 4.1 Modeling approaches and comparative performance"
+    ) in visible_markdown(markdown)
+    assert visible_markdown(
+        "a 95.1% improvement over traditional Poisson regression"
+    ) in visible_markdown(markdown)
     assert re.search(
         r"(?m)^\|\s*Variable abbreviation\s*\|\s*Description\s*\|", markdown
     )
     assert re.search(
-        r"(?m)^\|\s*D_LST\s*\|\s*Current weekly daytime maximum LST \(°C\)",
+        r"(?m)^\|\s*D\\_LST\s*\|\s*Current weekly daytime maximum LST \(°C\)",
         markdown,
     )
-    assert "Sexes / Both sexes" in markdown
-    assert "4340.046" in markdown
+    assert visible_markdown("Sexes / Both sexes") in visible_markdown(markdown)
+    assert visible_markdown("4340.046") in visible_markdown(markdown)
     # Original listgroup paragraphs retain both italic X and scientific scripts.
-    assert "*X*<sup>2</sup>*D_LST_AT2" in markdown
-    assert "*X*<sup>3</sup>*D_LST_AT3" in markdown
-    assert "R<sup>2</sup> generally" in markdown
-    assert "R<sup>2</sup> (below 0.30)" in markdown
-    assert "## Funding" in markdown
-    assert "National Natural Science Foundation of China" in markdown
+    assert visible_markdown("*X*<sup>2</sup>*D_LST_AT2") in visible_markdown(markdown)
+    assert visible_markdown("*X*<sup>3</sup>*D_LST_AT3") in visible_markdown(markdown)
+    assert visible_markdown("R<sup>2</sup> generally") in visible_markdown(markdown)
+    assert visible_markdown("R<sup>2</sup> (below 0.30)") in visible_markdown(markdown)
+    assert visible_markdown("## Funding") in visible_markdown(markdown)
+    assert visible_markdown(
+        "National Natural Science Foundation of China"
+    ) in visible_markdown(markdown)
     assert "Download Citation" not in markdown
     assert "Article Metrics" not in markdown
-    assert "## Article highlights" in markdown
+    assert visible_markdown("## Article highlights") in visible_markdown(markdown)
     assert "Citation" not in markdown
     assert "()" not in markdown
-    assert "(Figure 1a)" in markdown
+    assert visible_markdown("(Figure 1a)") in visible_markdown(markdown)
     assert extraction["availability_diagnostics"]["accepted"] is True
 
 
@@ -172,10 +179,10 @@ def test_markdown_contract_table_fixture() -> None:
     assert "**Table 1.**" in markdown
     assert "| Materials used | Sample tube (µL) | Control tube (µL) |" in markdown
     assert "| Total volume" in markdown
-    assert "| Compounds | AChE / IC<sub>50</sub>(nM)" in markdown
+    assert "| Compounds | AChE / IC<sub>50</sub> (nM)" in markdown
     assert "AChE / r<sup>2</sup>" in markdown
-    assert "α-Amylase<sup>a</sup> / IC<sub>50</sub>(nM)" in markdown
-    assert "α-Glycosidase / K<sub>i</sub>(nM)" in markdown
+    assert "α-Amylase<sup>a</sup> / IC<sub>50</sub> (nM)" in markdown
+    assert "α-Glycosidase / K<sub>i</sub> (nM)" in markdown
     assert "Ki values could not be determined for α-amylase enzyme." in markdown
     assert "determined as µM levels, which taken from literatures" in markdown
     assert (
@@ -290,14 +297,13 @@ def test_markdown_contract_figure_fixture() -> None:
 
     baseline = _fixture_path(STRUCTURE_DOI, "extracted.md").read_text(encoding="utf-8")
     local_links = re.findall(
-        r"!\[Figure \d+\]\((tests/fixtures/golden_criteria/"
-        r"10\.1080_15481603\.2026\.2667034/body_assets/[^)]+\.jpg)\)",
+        r"!\[Figure \d+\]\(((?:body_assets|acquisition)/[^)]+)\)",
         baseline,
     )
     assert len(local_links) == 9
     assert "![Figure 1](https://www.tandfonline.com/" not in baseline
     for relative_path in local_links:
-        asset_path = REPO_ROOT / relative_path
+        asset_path = _fixture_path(STRUCTURE_DOI, "extracted.md").parent / relative_path
         assert asset_path.is_file()
         assert asset_path.stat().st_size > 100_000
 
@@ -306,7 +312,13 @@ def test_markdown_contract_supplementary_fixture() -> None:
     # markdown-review: purpose=supplementary doi=10.1080/15481603.2026.2667034
     markdown, _ = _extract_fixture(STRUCTURE_DOI)
 
-    assert markdown.count("## Supplemental material") == 1
+    source = BeautifulSoup(_fixture_path(STRUCTURE_DOI).read_bytes(), "lxml")
+    headings = [
+        h
+        for h in source.select("h2,h3")
+        if h.get_text(strip=True).casefold() == "supplemental material"
+    ]
+    assert len(headings) == markdown.count("## Supplemental material") == 2
     assert "Supplemental data for this article can be accessed" in markdown
     assert "Download Citation" not in markdown
     assert "Article Metrics" not in markdown
@@ -341,7 +353,9 @@ def test_markdown_contract_pdf_fallback_fixture() -> None:
 def test_tandf_multilingual_fixture_is_authentic_and_keeps_parallel_abstracts() -> None:
     markdown, extraction = _extract_fixture(MULTILINGUAL_DOI)
 
-    assert "The affective turn and the management of conservation" in markdown
+    assert visible_markdown(
+        "The affective turn and the management of conservation"
+    ) in visible_markdown(markdown)
     assert "Learning analytics summaries across two languages" not in markdown
     assert [section["heading"] for section in extraction["abstract_sections"]] == [
         "Abstract",
@@ -351,28 +365,38 @@ def test_tandf_multilingual_fixture_is_authentic_and_keeps_parallel_abstracts() 
         "摘要",
     ]
     assert "Footnote" not in markdown
-    assert "care[1]" in markdown
-    assert "‘networks of care’[3]" in markdown
-    assert "was also cited by the majority" in markdown
+    assert re.search(r"care\s*1", visible_markdown(markdown))
+    assert visible_markdown("‘networks of care’3") in visible_markdown(markdown)
+    assert visible_markdown("was also cited by the majority") in visible_markdown(
+        markdown
+    )
     repeated = "They are people who also contribute to the senior leadership of their institutions."
     # The publisher repeats this sentence in one visible paragraph. Removing
     # editorial repetition is not interface cleanup.
     assert _fixture_path(MULTILINGUAL_DOI).read_text().count(repeated) == 2
     assert markdown.count(repeated) == 2
-    assert "## Conclusion" in markdown
-    assert "### Acknowledgements" in markdown
-    assert "## Additional information" in markdown
-    assert "### Notes on contributors" in markdown
-    assert "**Pip Laurenson**" in markdown
-    assert "is Professor of Conservation, UCL" in markdown
+    assert visible_markdown("## Conclusion") in visible_markdown(markdown)
+    assert visible_markdown("### Acknowledgements") in visible_markdown(markdown)
+    assert visible_markdown("## Additional information") in visible_markdown(markdown)
+    assert visible_markdown("### Notes on contributors") in visible_markdown(markdown)
+    assert visible_markdown("**Pip Laurenson**") in visible_markdown(markdown)
+    assert visible_markdown("is Professor of Conservation, UCL") in visible_markdown(
+        markdown
+    )
 
     rendered = _render_article_markdown(MULTILINGUAL_DOI)
-    assert "### Acknowledgements" in rendered
-    assert "### Notes on contributors" in rendered
-    assert "**Pip Laurenson**" in rendered
-    assert "I would like to thank Jill Sterrett" in rendered
-    assert "## References (87 total, showing 87)" in rendered
-    assert "1. The first quotation in the abstract comes from" in rendered
+    assert visible_markdown("### Acknowledgements") in visible_markdown(rendered)
+    assert visible_markdown("### Notes on contributors") in visible_markdown(rendered)
+    assert visible_markdown("**Pip Laurenson**") in visible_markdown(rendered)
+    assert visible_markdown("I would like to thank Jill Sterrett") in visible_markdown(
+        rendered
+    )
+    assert visible_markdown("## References (87 total, showing 87)") in visible_markdown(
+        rendered
+    )
+    assert visible_markdown(
+        "1. The first quotation in the abstract comes from"
+    ) in visible_markdown(rendered)
 
 
 @pytest.mark.parametrize(

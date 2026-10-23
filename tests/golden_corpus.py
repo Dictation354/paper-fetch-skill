@@ -76,6 +76,7 @@ from tests.golden_corpus_adapters import (
 )
 from tests.golden_criteria import (
     golden_criteria_asset,
+    golden_criteria_dir_for_doi,
     golden_criteria_repo_path,
     golden_criteria_sample_for_doi,
     iter_manifest_samples,
@@ -236,6 +237,46 @@ def _merge_replay_source_metadata(
     return dict(merge_html_metadata(metadata, source_metadata))
 
 
+def _build_pdf_article(fixture: GoldenCorpusFixture, client_type):
+    """Convert captured original bytes through the provider's existing PDF route."""
+    metadata = _base_metadata(fixture)
+    landing_path = golden_criteria_asset(fixture.doi, "landing.html")
+    if landing_path.is_file():
+        metadata = _merge_replay_source_metadata(
+            metadata,
+            parse_html_metadata(landing_path.read_text(), fixture.landing_url),
+        )
+    converted = pdf_fetch_result_from_bytes(
+        artifact_dir=None,
+        source_url=fixture.source_url,
+        final_url=fixture.source_url,
+        pdf_bytes=fixture.raw_path.read_bytes(),
+        expected_identity={"doi": fixture.doi, "title": fixture.title},
+    )
+    payload = RawFulltextPayload(
+        provider=fixture.provider,
+        content=ProviderContent(
+            route_kind="pdf_fallback",
+            source_url=fixture.source_url,
+            content_type="application/pdf",
+            body=fixture.raw_path.read_bytes(),
+            markdown_text=converted.markdown_text,
+            merged_metadata=metadata,
+            diagnostics={"pdf_fallback": converted.diagnostics},
+        ),
+        trace=trace_from_markers(
+            [
+                f"fulltext:{fixture.provider}_html_fail",
+                f"fulltext:{fixture.provider}_pdf_fallback_ok",
+            ]
+        ),
+        warnings=[
+            f"Full text was extracted from {fixture.provider} PDF fallback after the HTML route was not usable."
+        ],
+    )
+    return client_type(HttpTransport(), {}).to_article_model(metadata, payload)
+
+
 def _build_elsevier_article(fixture: GoldenCorpusFixture):
     metadata = _base_metadata(fixture)
     body = fixture.raw_path.read_bytes()
@@ -258,7 +299,7 @@ def _build_elsevier_article(fixture: GoldenCorpusFixture):
     return client.to_article_model(metadata, raw_payload)
 
 
-def _build_springer_article(fixture: GoldenCorpusFixture):
+def _build_springer_inline_article(fixture: GoldenCorpusFixture):
     metadata = _base_metadata(fixture)
     html_text = fixture.raw_path.read_text(encoding="utf-8", errors="ignore")
     html_metadata = springer_html.parse_html_metadata(html_text, fixture.source_url)
@@ -311,6 +352,92 @@ def _build_springer_article(fixture: GoldenCorpusFixture):
     return client.to_article_model(merged_metadata, raw_payload)
 
 
+def _build_springer_article(fixture: GoldenCorpusFixture):
+    if fixture.route_kind == "pdf_fallback":
+        if fixture.sample.get("fallback_replay"):
+            return replay_springer_pdf_fallback(fixture)[0]
+        return _build_pdf_article(fixture, springer_provider.SpringerClient)
+    from tests.support.springer_table_pages import captured_table_pages
+
+    captured = captured_table_pages(fixture)
+    if not list(fixture.raw_path.parent.glob("table*.html")) and not captured:
+        return _build_springer_inline_article(fixture)
+    from urllib.parse import urljoin
+    import re
+    from tests.support._paper_fetch_support import FixtureHtmlTransport
+
+    metadata = _base_metadata(fixture)
+    body = fixture.raw_path.read_bytes()
+    responses = {
+        fixture.source_url: {"body": body, "headers": {"content-type": "text/html"}}
+    }
+    responses.update(captured)
+    landing = springer_provider.choose_public_landing_page_url(
+        fixture.landing_url, fixture.source_url
+    )
+    responses[landing] = {**responses[fixture.source_url], "url": fixture.source_url}
+    soup = BeautifulSoup(body, "lxml")
+    for anchor in soup.select("a[href]"):
+        target = urljoin(fixture.source_url, str(anchor["href"]))
+        match = re.search(r"/tables/(\d+)(?:$|[?#])", target)
+        if match:
+            capture = fixture.raw_path.parent / f"table{match[1]}.html"
+            if capture.exists():
+                responses[target] = {
+                    "body": capture.read_bytes(),
+                    "headers": {"content-type": "text/html"},
+                }
+    client = springer_provider.SpringerClient(FixtureHtmlTransport(responses), {})
+    context = RuntimeContext(asset_profile="all")
+    raw_payload = client.fetch_raw_fulltext(fixture.doi, metadata, context=context)
+    assets = _captured_body_assets(fixture, raw_payload.content.extracted_assets)
+    return client.to_article_model(
+        metadata, raw_payload, downloaded_assets=assets, context=context
+    )
+
+
+def replay_springer_pdf_fallback(fixture):
+    """Replay the captured landing page and the exact official PDF download boundary."""
+    from unittest.mock import patch
+    from tests.support._paper_fetch_support import FixtureHtmlTransport
+
+    landing = golden_criteria_asset(fixture.doi, "landing.html")
+    transport = FixtureHtmlTransport(
+        {
+            fixture.landing_url: {
+                "body": landing.read_bytes(),
+                "url": fixture.landing_url,
+                "headers": {"content-type": "text/html"},
+            }
+        }
+    )
+    calls = []
+
+    def download(_transport, urls, **kwargs):
+        assert fixture.source_url in urls
+        calls.append(list(urls))
+        return pdf_fetch_result_from_bytes(
+            artifact_dir=None,
+            source_url=fixture.source_url,
+            final_url=fixture.source_url,
+            pdf_bytes=fixture.raw_path.read_bytes(),
+            expected_identity=kwargs["expected_identity"],
+        )
+
+    client = springer_provider.SpringerClient(transport, {})
+    with RuntimeContext(asset_profile="none") as context:
+        with patch.object(
+            springer_provider, "fetch_pdf_over_http", side_effect=download
+        ):
+            payload = client.fetch_raw_fulltext(
+                fixture.doi, _base_metadata(fixture), context=context
+            )
+        article = client.to_article_model(
+            _base_metadata(fixture), payload, context=context
+        )
+    return article, payload, calls
+
+
 def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
     metadata = _base_metadata(fixture)
     client_map = {
@@ -326,6 +453,8 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
         "wiley": wiley_provider.WileyClient,
     }
     client = client_map[fixture.provider](HttpTransport(), {})
+    if fixture.route_kind == "pdf_fallback" and fixture.provider == "pnas":
+        return _build_pdf_article(fixture, pnas_provider.PnasClient)
     if fixture.route_kind == "pdf_fallback":
         body = fixture.raw_path.read_bytes()
         landing_path = golden_criteria_asset(fixture.doi, "landing.html")
@@ -352,7 +481,12 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
                 body=body,
                 markdown_text=pdf_result.markdown_text,
                 merged_metadata=metadata,
-                diagnostics={"pdf_fallback": {"fixture": "golden_corpus"}},
+                diagnostics={
+                    "pdf_fallback": {
+                        "fixture": "golden_corpus",
+                        **pdf_result.diagnostics,
+                    }
+                },
                 reason=f"Loaded {fixture.provider} PDF fallback golden fixture.",
             ),
             trace=trace_from_markers(
@@ -373,11 +507,24 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
         fixture.source_url,
         metadata=metadata,
     )
-    downloaded_assets = (
-        _captured_body_assets(fixture, list(extraction.get("extracted_assets") or []))
-        if fixture.provider == "annualreviews"
-        else []
-    )
+    extracted_assets = list(extraction.get("extracted_assets") or [])
+    if fixture.provider == "tandf":
+        from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
+            extract_browser_workflow_asset_html_scopes,
+        )
+
+        body_html, supplementary_html = extract_browser_workflow_asset_html_scopes(
+            html_text, fixture.source_url, "tandf"
+        )
+        extracted_assets = _tandf_html.scoped_asset_extractor(
+            body_html,
+            fixture.source_url,
+            asset_profile="body",
+            supplementary_html_text=supplementary_html,
+        )
+    downloaded_assets = _captured_body_assets(fixture, extracted_assets)
+    if fixture.provider == "tandf":
+        downloaded_assets = [asset for asset in downloaded_assets if asset.get("path")]
     if fixture.provider == "aip":
         downloaded_assets = _downloaded_aip_body_assets(
             fixture,
@@ -470,21 +617,63 @@ def _captured_body_assets(
     extracted_assets: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """Keep source links and attach only captured original image responses."""
-    from urllib.parse import unquote, urlsplit
     import hashlib
+    from tests.support.acquired_publisher_inputs import capture_url_identity
 
-    provenance_path = fixture.raw_path.parent / "acquisition/provenance.json"
+    fixture_dir = (
+        golden_criteria_dir_for_doi(fixture.doi)
+        if fixture.sample.get("baseline_completion")
+        else fixture.raw_path.parent
+    )
+    provenance_path = fixture_dir / "acquisition/provenance.json"
     if not provenance_path.exists():
         return [dict(item) for item in extracted_assets]
 
     def identity(url):
-        parsed = urlsplit(unquote(str(url or "")))
-        return parsed.netloc.lower(), parsed.path
+        return capture_url_identity(str(url or ""), provider=fixture.provider)
 
     responses = {}
-    for record in json.loads(provenance_path.read_text()).get("records", []):
+    records = json.loads(provenance_path.read_text()).get("records", [])
+    by_file = {record["body_file"]: record for record in records}
+    # Some historical bytes have no HTTP envelope. The manifest separately
+    # records their validated same-paper URL binding; retain that evidence.
+    for target in (fixture.sample.get("asset_collection") or {}).get("targets", []):
+        validation = target.get("validation") or {}
+        record = by_file.get(target.get("record"))
+        media_type = str(validation.get("format") or "")
+        if (
+            not record
+            or not validation.get("valid")
+            or not media_type.startswith("image/")
+        ):
+            continue
+        path = fixture_dir / record["body_file"]
+        if path.is_file():
+            urls = [target.get("download_url")]
+            urls += [
+                (target.get("asset") or {}).get(key)
+                for key in ("url", "preview_url", "full_size_url")
+            ]
+            for url in urls:
+                if url:
+                    responses[identity(url)] = (path, record, media_type)
+    for record in records:
         media_type = (record.get("response_headers") or {}).get("content-type", "")
-        path = fixture.raw_path.parent / record["body_file"]
+        path = fixture_dir / record["body_file"]
+        if (
+            fixture.provider == "arxiv"
+            and record.get("capture_kind") == "archive_member"
+            and record.get("requested_url")
+            == "https://arxiv.org/src/" + fixture.sample.get("arxiv_id", "")
+            and path.is_file()
+        ):
+            from paper_fetch.extraction.image_payloads import image_mime_type_from_bytes
+
+            media_type = image_mime_type_from_bytes(path.read_bytes()) or ""
+            if media_type.startswith("image/"):
+                member = record["archive_member"]
+                url = fixture.source_url.rstrip("/") + "/" + member
+                responses[identity(url)] = (path, record, media_type)
         if not media_type.startswith("image/") or not path.is_file():
             continue
         for url in (record.get("requested_url"), record.get("final_url")):
@@ -493,6 +682,10 @@ def _captured_body_assets(
     downloaded = []
     for item in extracted_assets:
         if item.get("kind") not in {"figure", "table", "formula"}:
+            continue
+        if fixture.provider == "annualreviews" and item.get("kind") == "formula":
+            # Formula filenames carry distinct source occurrence identities,
+            # even when historical acquisition deduplicated identical bytes.
             continue
         for key in ("full_size_url", "url", "preview_url"):
             url = item.get(key)
@@ -633,7 +826,7 @@ def _build_oxfordacademic_article(fixture: GoldenCorpusFixture):
         markdown_text=extraction.markdown_text,
         abstract_sections=[],
         section_hints=extraction.section_hints,
-        assets=extraction.extracted_assets,
+        assets=_captured_body_assets(fixture, extraction.extracted_assets),
         trace=trace_from_markers(["fulltext:oxfordacademic_html_ok"]),
         warnings=_oxfordacademic_html.source_mathml_warnings(
             extraction.source_mathml_error_count
@@ -671,7 +864,12 @@ def _build_copernicus_article(fixture: GoldenCorpusFixture):
                 body=body,
                 markdown_text=pdf_result.markdown_text,
                 merged_metadata=metadata,
-                diagnostics={"pdf_fallback": {"fixture": "golden_corpus"}},
+                diagnostics={
+                    "pdf_fallback": {
+                        "fixture": "golden_corpus",
+                        **pdf_result.diagnostics,
+                    }
+                },
                 reason="Loaded Copernicus PDF fallback golden fixture.",
             ),
             trace=trace_from_markers(
@@ -738,7 +936,12 @@ def _build_royalsocietypublishing_article(fixture: GoldenCorpusFixture):
                 body=body,
                 markdown_text=pdf_result.markdown_text,
                 merged_metadata=metadata,
-                diagnostics={"pdf_fallback": {"fixture": "golden_corpus"}},
+                diagnostics={
+                    "pdf_fallback": {
+                        "fixture": "golden_corpus",
+                        **pdf_result.diagnostics,
+                    }
+                },
                 reason="Loaded Royal Society Publishing PDF fallback golden fixture.",
             ),
             trace=trace_from_markers(
@@ -772,6 +975,7 @@ def _build_royalsocietypublishing_article(fixture: GoldenCorpusFixture):
             diagnostics={
                 "extraction": {
                     "metadata": extraction.metadata,
+                    "semantic_losses": asdict(extraction.semantic_losses),
                     "abstract_sections": extraction.abstract_sections,
                     "section_hints": extraction.section_hints,
                     "references": extraction.metadata.get("references", []),
@@ -786,7 +990,7 @@ def _build_royalsocietypublishing_article(fixture: GoldenCorpusFixture):
     return client.to_article_model(
         extraction.metadata,
         raw_payload,
-        downloaded_assets=extraction.extracted_assets,
+        downloaded_assets=_captured_body_assets(fixture, extraction.extracted_assets),
     )
 
 
@@ -883,6 +1087,22 @@ def _build_frontiers_article(fixture: GoldenCorpusFixture):
             landing_url=fixture.landing_url,
         )
     )
+    landing_capture = (
+        fixture.raw_path.parent
+        / "acquisition/regression-2026-09-16/landing-response.bin"
+    )
+    if landing_capture.exists():
+        original_graphics = (
+            frontiers_provider._frontiers_original_graphics_from_landing(
+                landing_capture.read_text()
+            )
+        )
+        normalized_assets, promoted = (
+            frontiers_provider._promote_frontiers_original_graphics(
+                normalized_assets, original_graphics=original_graphics
+            )
+        )
+        replacements.update(promoted)
     raw_payload = RawFulltextPayload(
         provider="frontiers",
         content=ProviderContent(
@@ -961,6 +1181,8 @@ def _downloaded_plos_body_assets(
 
 def _load_arxiv_fixture_metadata(fixture: GoldenCorpusFixture) -> dict[str, Any]:
     api_path = golden_criteria_asset(fixture.doi, "api.json")
+    if not api_path.is_file():
+        return _base_metadata(fixture)
     payload = json.loads(api_path.read_text(encoding="utf-8"))
     metadata = payload.get("provider_metadata") if isinstance(payload, dict) else None
     if not isinstance(metadata, dict):
@@ -988,7 +1210,12 @@ def _build_arxiv_article(fixture: GoldenCorpusFixture):
                 body=body,
                 markdown_text=pdf_result.markdown_text,
                 merged_metadata=metadata,
-                diagnostics={"pdf_fallback": {"fixture": "golden_corpus"}},
+                diagnostics={
+                    "pdf_fallback": {
+                        "fixture": "golden_corpus",
+                        **pdf_result.diagnostics,
+                    }
+                },
                 reason="Loaded arXiv PDF fallback golden fixture.",
             ),
             trace=trace_from_markers(
@@ -1029,7 +1256,11 @@ def _build_arxiv_article(fixture: GoldenCorpusFixture):
         trace=trace_from_markers(["fulltext:arxiv_html_ok"]),
         warnings=extraction.warnings,
     )
-    return client.to_article_model(extraction.merged_metadata, raw_payload)
+    return client.to_article_model(
+        extraction.merged_metadata,
+        raw_payload,
+        downloaded_assets=_captured_body_assets(fixture, extraction.extracted_assets),
+    )
 
 
 def _lightweight_arxiv_summary(fixture: GoldenCorpusFixture) -> dict[str, Any]:
@@ -1488,6 +1719,14 @@ def _register_golden_corpus_adapters() -> None:
                 source="springer_html",
                 primary_marker="fulltext:springer_html_ok",
             ),
+            fallback_contracts={
+                "pdf_fallback": ProviderGoldenContract(
+                    route_kind="pdf_fallback",
+                    content_prefix="application/pdf",
+                    source="springer_pdf",
+                    primary_marker="fulltext:springer_pdf_fallback_ok",
+                ),
+            },
         )
     )
     register_golden_corpus_adapter(
@@ -1527,6 +1766,14 @@ def _register_golden_corpus_adapters() -> None:
                 source="pnas",
                 primary_marker="fulltext:pnas_html_ok",
             ),
+            fallback_contracts={
+                "pdf_fallback": ProviderGoldenContract(
+                    route_kind="pdf_fallback",
+                    content_prefix="application/pdf",
+                    source="pnas",
+                    primary_marker="fulltext:pnas_pdf_fallback_ok",
+                ),
+            },
         )
     )
     register_golden_corpus_adapter(

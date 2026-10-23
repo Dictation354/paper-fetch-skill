@@ -66,6 +66,7 @@ from ..utils import (
     normalize_text,
 )
 from . import _springer_assets, _springer_authors, _springer_dom, _springer_markdown
+
 from ..extraction.html.assets import html_asset_identity_key
 from ._asset_retry import (
     AssetRetryPolicy,
@@ -207,6 +208,12 @@ class SpringerSiteFamilyProfile:
     name: str
     domains: tuple[str, ...]
     doi_prefixes: tuple[str, ...]
+
+
+def _raise_for_springer_paywall(html_text, **kwargs):
+    if isinstance(html_text, bytes):
+        html_text = html_text.decode("utf-8", errors="replace")
+    return raise_for_paywall(_springer_dom.access_check_html(html_text), **kwargs)
 
 
 def _springer_html_failure_code(reason: str | None) -> str:
@@ -730,7 +737,7 @@ class SpringerClient(ProviderClient):
                     retry_on_transient=True,
                 )
             except RequestFailure as exc:
-                raise_for_paywall(
+                _raise_for_springer_paywall(
                     exc.body, source_url=str(exc.url or landing_url), provider=self.name
                 )
                 raise map_request_failure(exc) from exc
@@ -768,7 +775,7 @@ class SpringerClient(ProviderClient):
                     decoder=_springer_dom.decode_html,
                     metadata_parser=_springer_dom.parse_html_metadata,
                 )
-                raise_for_paywall(
+                _raise_for_springer_paywall(
                     last_result.html_text,
                     source_url=last_result.final_url,
                     provider=self.name,
@@ -788,7 +795,7 @@ class SpringerClient(ProviderClient):
                 "Springer direct HTML retrieval exhausted the request deadline.",
             ) from exc
         except RequestFailure as exc:
-            raise_for_paywall(
+            _raise_for_springer_paywall(
                 exc.body, source_url=str(exc.url or landing_url), provider=self.name
             )
             raise map_request_failure(exc) from exc
@@ -876,6 +883,14 @@ class SpringerClient(ProviderClient):
                         None,
                     )
                 return None, reason, None
+            from ._html_section_markdown import render_retained_text_from_html
+
+            for footer in soup.select(
+                ".c-article-table-footer, .c-article-table__footer, .c-article-table-footnote, .c-article-table__footnote"
+            ):
+                note = render_retained_text_from_html(footer, source_url=response_url)
+                if note:
+                    markdown += "\n\n" + note
             return markdown, None, None
 
         if allow_image_asset:
@@ -1019,12 +1034,16 @@ class SpringerClient(ProviderClient):
                 continue
 
             if asset is not None:
+                asset["render_state"] = "inline"
                 if supplementary:
                     asset["section"] = "supplementary"
                 table_assets.append(asset)
             placeholder = table_placeholder(len(table_entries) + 1)
             block = soup.new_tag("p")
             block.string = placeholder
+            block["data-paper-fetch-markdown"] = "1"
+            if supplementary:
+                block["data-paper-fetch-supplementary"] = "1"
             node.replace_with(block)
             table_entries.append(
                 {"placeholder": placeholder, "markdown": rendered_page_markdown}
@@ -1067,7 +1086,7 @@ class SpringerClient(ProviderClient):
             response["body"],
             content_type=_springer_response_content_type(response),
         )
-        raise_for_paywall(
+        _raise_for_springer_paywall(
             html_text,
             metadata={**metadata, "doi": normalized_doi},
             source_url=response_url,
@@ -1123,13 +1142,21 @@ class SpringerClient(ProviderClient):
         diagnostics = HtmlQualityAssessor(self.name).assess(
             markdown_text,
             merged_metadata,
-            html_text=html_text,
+            html_text=_springer_dom.access_check_html(html_text),
             title=str(merged_metadata.get("title") or ""),
             requested_url=landing_url,
             final_url=response_url,
             response_status=int(response.get("status_code") or 0) or None,
             section_hints=section_hints,
         )
+        if _springer_dom.early_access_without_body(html_text):
+            diagnostics = replace(
+                diagnostics,
+                accepted=False,
+                reason="abstract_only",
+                content_kind="abstract_only",
+                strong_positive_signals=[],
+            )
         return SpringerHtmlAttempt(
             normalized_doi=normalized_doi,
             landing_url=landing_url,

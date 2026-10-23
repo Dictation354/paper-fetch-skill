@@ -714,7 +714,7 @@ def test_frontiers_unresolved_supplementary_asset_maps_to_landing_anchor(
     assert result["asset_failures"] == [
         {
             "kind": "supplementary",
-            "heading": "Supplementary material",
+            "heading": "Supplementary material (Table_1.docx)",
             "source_url": "Table_1.docx",
             "section": "supplementary",
             "reason": (

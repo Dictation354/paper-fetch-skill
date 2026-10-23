@@ -3,7 +3,12 @@
 from __future__ import annotations
 
 from .formula.convert import formula_runtime_env
+from .formula.validation import formula_validation_session, capture_formula_diagnostics
 from .models import FetchEnvelope, OutputMode, RenderOptions
+from .models.quality import (
+    QUALITY_FLAG_FORMULA_FALLBACK_PRESENT,
+    _semantic_loss_warning_messages,
+)
 from .providers.base import ProviderFailure
 from .providers.registry import build_clients
 from .resolve.query import ResolvedQuery, StructuredResolveRequest
@@ -94,7 +99,7 @@ def fetch_paper(
             max_tokens=active_render.max_tokens,
         )
 
-        with formula_runtime_env(runtime.env or {}):
+        with formula_runtime_env(runtime.env or {}), formula_validation_session():
             article = fetch_article(
                 query,
                 strategy=active_strategy,
@@ -102,6 +107,25 @@ def fetch_paper(
                 resolve_paper_fn=resolve_paper,
             )
             runtime.raise_if_cancelled()
+            if not article.source.endswith("_pdf") and not (
+                article.acquisition and article.acquisition.representation == "pdf"
+            ):
+                losses = article.quality.semantic_losses
+                count_before = losses.formula_fallback_count
+                capture_formula_diagnostics(losses, count_fallbacks=True)
+                if losses.formula_fallback_count > count_before:
+                    if (
+                        QUALITY_FLAG_FORMULA_FALLBACK_PRESENT
+                        not in article.quality.flags
+                    ):
+                        article.quality.flags.append(
+                            QUALITY_FLAG_FORMULA_FALLBACK_PRESENT
+                        )
+                    for warning in _semantic_loss_warning_messages(losses):
+                        if warning not in article.quality.warnings:
+                            article.quality.warnings.append(warning)
+                    if article.quality.confidence == "high":
+                        article.quality.confidence = "medium"
             runtime.report_progress("stage", stage="validating")
             envelope = build_fetch_envelope(
                 article,

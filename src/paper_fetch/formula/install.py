@@ -1,8 +1,9 @@
-"""Install optional external formula-conversion backends."""
+"""Install formula conversion backends and the offline MathJax validator."""
 
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import shutil
@@ -117,6 +118,8 @@ def stage_bundled_node_workspace(target_dir: Path) -> Path:
     for name in (
         FORMULA_NODE_SCRIPT_NAME,
         FORMULA_NODE_WORKER_SCRIPT_NAME,
+        "tex_validation_worker.mjs",
+        "mathjax_engine.mjs",
         "package.json",
         "package-lock.json",
     ):
@@ -221,7 +224,9 @@ def ensure_texmath(target_dir: Path) -> bool:
 
 def ensure_mathml_to_latex(target_dir: Path, *, install_node: bool) -> bool:
     if not install_node:
-        warn("Skipping mathml-to-latex fallback because --no-node was set.")
+        warn(
+            "Skipping Node formula conversion and validation because --no-node was set."
+        )
         return False
     node = shutil.which("node")
     npm = shutil.which("npm")
@@ -233,8 +238,8 @@ def ensure_mathml_to_latex(target_dir: Path, *, install_node: bool) -> bool:
         return False
 
     workspace = stage_bundled_node_workspace(target_dir)
-    if (workspace / "node_modules" / "mathml-to-latex").exists():
-        log(f"Using existing mathml-to-latex Node dependencies in {workspace}")
+    if node_dependencies_ready(workspace):
+        log(f"Using existing formula Node dependencies in {workspace}")
         return True
 
     log(f"Installing Node dependencies for mathml-to-latex fallback in {workspace}")
@@ -244,6 +249,21 @@ def ensure_mathml_to_latex(target_dir: Path, *, install_node: bool) -> bool:
         log("Formula backend ready: mathml-to-latex")
         return True
     return False
+
+
+def node_dependencies_ready(workspace: Path) -> bool:
+    dependencies = json.loads((workspace / "package.json").read_text(encoding="utf-8"))[
+        "dependencies"
+    ]
+    for name, specifier in dependencies.items():
+        manifest = workspace / "node_modules" / name / "package.json"
+        try:
+            installed = json.loads(manifest.read_text(encoding="utf-8"))["version"]
+        except (OSError, ValueError, KeyError):
+            return False
+        if name.startswith("@mathjax/") and installed != specifier:
+            return False
+    return True
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -257,7 +277,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--no-node",
         action="store_true",
-        help="Skip the Node mathml-to-latex fallback install.",
+        help="Skip Node formula conversion and MathJax validation dependencies.",
     )
     return parser
 
@@ -273,16 +293,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    if ensure_texmath(target_dir):
+    have_texmath = ensure_texmath(target_dir)
+    have_node = ensure_mathml_to_latex(target_dir, install_node=not args.no_node)
+    if have_texmath and have_node:
         return 0
-
-    warn("texmath is unavailable; falling back to mathml-to-latex.")
-    if ensure_mathml_to_latex(target_dir, install_node=not args.no_node):
-        return 0
-
-    warn(
-        "No external MathML-to-LaTeX backend is available. The built-in Python renderer will be used."
-    )
+    if not have_texmath and not have_node:
+        warn(
+            "No external MathML-to-LaTeX backend is available. The built-in Python renderer will be used."
+        )
+    if not have_node:
+        warn(
+            "MathJax TeX validation is unavailable; source TeX will be retained with a diagnostic."
+        )
     return 0
 
 

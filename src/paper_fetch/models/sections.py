@@ -17,6 +17,7 @@ from ..extraction.section_hints import (
 from ..markdown.citations import normalize_inline_citation_markdown
 from ..section_vocab import SIGNIFICANCE_ABSTRACT_HEADINGS
 from ..utils import normalize_text
+from ..markdown.math import protect_markdown_math, restore_markdown_math
 from .markdown import (
     INLINE_MARKDOWN_ABSTRACT_PREFIX_PATTERN,
     _canonical_match_text,
@@ -98,9 +99,19 @@ def section_kind_for_heading(heading: str) -> str:
     normalized = normalize_text(heading).lower()
     if not normalized:
         return "body"
+    if normalized in {"notes", "authors’ roles", "authors' roles"}:
+        return "body"
     if normalized in {"references", "bibliography"}:
         return "references"
-    if normalized in {"supplementary materials", "supplementary information"}:
+    if normalized.startswith("extended data") or normalized in {
+        "supplementary files",
+        "supplementary data",
+        "electronic supplementary material",
+        "supplementary materials",
+        "supplementary material",
+        "supplementary information",
+        "supporting information",
+    }:
         return "supplementary"
     if normalized in {"conversion notes"}:
         return "diagnostics"
@@ -110,7 +121,7 @@ def section_kind_for_heading(heading: str) -> str:
     if category in {"data_availability", "code_availability"}:
         return category
     if category == "references_or_back_matter":
-        return "references"
+        return "body"
     if category == "abstract":
         return "abstract"
     if category == "ancillary":
@@ -298,6 +309,8 @@ def lines_to_sections(
     preserve_images: bool = False,
     section_hints: Sequence[SectionHint | Mapping[str, Any]] | None = None,
 ) -> list[Section]:
+    prose, protected = protect_markdown_math("\n".join(lines))
+    lines = prose.split("\n")
     sections: list[Section] = []
     current_heading = fallback_heading
     current_level = 2
@@ -316,9 +329,18 @@ def lines_to_sections(
             Section(
                 heading=heading,
                 level=level,
-                kind=matched_hint.kind
-                if matched_hint is not None
-                else section_kind_for_heading(heading),
+                kind="supplementary"
+                if section_kind_for_heading(heading) == "supplementary"
+                else (
+                    (
+                        "body"
+                        if matched_hint.kind in {"references", "diagnostics"}
+                        and section_kind_for_heading(heading) == "body"
+                        else matched_hint.kind
+                    )
+                    if matched_hint is not None
+                    else section_kind_for_heading(heading)
+                ),
                 text="",
             )
         )
@@ -327,7 +349,7 @@ def lines_to_sections(
         nonlocal section_hint_index
         if not buffer:
             return
-        raw_text = "\n".join(buffer)
+        raw_text = restore_markdown_math("\n".join(buffer), protected)
         text = (
             normalize_markdown_text(raw_text)
             if preserve_images
@@ -344,9 +366,18 @@ def lines_to_sections(
             Section(
                 heading=current_heading,
                 level=current_level,
-                kind=matched_hint.kind
-                if matched_hint is not None
-                else section_kind_for_heading(current_heading),
+                kind="supplementary"
+                if section_kind_for_heading(current_heading) == "supplementary"
+                else (
+                    (
+                        "body"
+                        if matched_hint.kind in {"references", "diagnostics"}
+                        and section_kind_for_heading(current_heading) == "body"
+                        else matched_hint.kind
+                    )
+                    if matched_hint is not None
+                    else section_kind_for_heading(current_heading)
+                ),
                 text=text,
             )
         )
@@ -362,7 +393,10 @@ def lines_to_sections(
             flush()
             buffer = []
             current_level = next_level
-            current_heading = stripped[current_level:].strip() or fallback_heading
+            current_heading = (
+                restore_markdown_math(stripped[current_level:].strip(), protected)
+                or fallback_heading
+            )
             continue
         if stripped or buffer:
             buffer.append(line.rstrip())

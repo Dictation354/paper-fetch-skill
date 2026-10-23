@@ -60,7 +60,12 @@ def test_real_fmars_figure_and_scoc_equation() -> None:
         "Effects of temperature and pH on the survival rate"
     )
     # M1 consists of the product of two fractions, dC/dt and V/A.
-    assert "(1)\n\n$$\n" + r"\text{SCOC =}\frac{dC}{dt}\frac{V}{A}" + "\n$$" in markdown
+    from tests.support.canonical_content import comparable_cell
+
+    equation = re.search(r"\(1\)\s*\$\$(.*?)\$\$", markdown, re.S)
+    assert equation and comparable_cell(
+        r"\text{SCOC =}\frac{dC}{dt}\frac{V}{A}"
+    ) == comparable_cell(equation[1])
     assert "V is the volume of the overlying water" in markdown
     assert "A is the sediment surface area" in markdown
 
@@ -84,9 +89,11 @@ def test_real_fmars_treatment_table_preserves_species_and_cells() -> None:
     assert lanice in compact
     assert abra in compact
     assert (
-        compact.index(lanice) < compact.index("| ***Abra alba***") < compact.index(abra)
+        compact.index(lanice)
+        < compact.index("Abra alba", compact.index(lanice))
+        < compact.index(abra)
     )
     assert (
-        "| **pCO<sub>2</sub>(μatm)** | 496.3 ± 65.0 | 1515.7 ± 420.5 | 488.4 ± 67.8 | 1297.2 ± 195.2 |"
+        "| **pCO<sub>2</sub> (μatm)** | 496.3 ± 65.0 | 1515.7 ± 420.5 | 488.4 ± 67.8 | 1297.2 ± 195.2 |"
         in compact
     )

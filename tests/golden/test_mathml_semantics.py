@@ -59,13 +59,19 @@ def test_real_article_mathml_preserves_error_content_and_spacing(
         )
     if provider == "oxfordacademic":
         assert len(source.select("math merror")) == 1
+        from tests.support.canonical_content import comparable_cell
+
         formula = next(
             part
             for part in markdown.split("$")
-            if re.search(r"C,\s*w\^\{\(t\)\}", part) and r"\frac{k - 1}{K})" in part
+            if comparable_cell(r"C,w^{(t)}") in comparable_cell(part)
+            and comparable_cell(r"\Theta^{(t + \frac{k - 1}{K})}")
+            in comparable_cell(part)
         )
-        assert r"\Theta^{(t +" in formula
-        assert re.search(r"C,\s*w\^\{\(t\)\}", formula)
+        assert comparable_cell(r"C,w^{(t)}") in comparable_cell(formula)
+        assert comparable_cell(r"\Theta^{(t + \frac{k - 1}{K})}") in comparable_cell(
+            formula
+        )
         assert any("1 merror" in warning for warning in article.quality.warnings)
     else:
         assert source.select_one("math#me3 mspace")["width"] == "40pt"

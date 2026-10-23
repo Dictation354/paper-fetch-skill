@@ -8,7 +8,7 @@ source: "ieee_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 5440
+token_estimate: 5452
 ---
 
 # Deep Learning Based Model to Recommend Safe Route Navigation System
@@ -79,23 +79,23 @@ The FBI UCR database, which has carefully selected and well-balanced victim reco
 
 We have limited ourselves to modelling the algorithm with only the necessary data, understanding that users must be eager to give their data with us while also protecting their privacy. This includes the user's age, gender, and desired travel time, as these details are typically included in crime reports. Three distinct datasets are employed, each including statistical information about crimes grouped according to age, gender, and date. A careful examination of the data indicates that the aforementioned characteristics have a major impact on an individual's likelihood of becoming a victim of a specific crime.
 
-![Table](/tmp/tmp_q9cqm9s/ieee-asset-1.gif)
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg.t1-p6-garg-large.gif)
 
-Table I.- Comparison of the Current and Planned Work.
+**TABLE I.** Comparison of the Current and Planned Work.
 
 To illustrate this, we have included the graphics below. The graphs in Figures 1, 2, and 3 show the correlation between the crime rate and the age group, gender, and time, respectively.
 
-![Figure 1](/tmp/tmp_q9cqm9s/ieee-asset-2.gif)
+![Figure 1](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg1-p6-garg-large.gif)
 
-**Figure 1.** - Crime rate vs Gender/Sex
+**Figure 1.** Crime rate vs Gender/Sex
 
-![Figure 2](/tmp/tmp_q9cqm9s/ieee-asset-3.gif)
+![Figure 2](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg2-p6-garg-large.gif)
 
-**Figure 2.** - Crime rate vs Time
+**Figure 2.** Crime rate vs Time
 
-![Figure 3](/tmp/tmp_q9cqm9s/ieee-asset-4.gif)
+![Figure 3](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg3-p6-garg-large.gif)
 
-**Figure 3.** - Crime rate vs Age Group
+**Figure 3.** Crime rate vs Age Group
 
 The relationships among crime, age, sex, and the travel time, where all reflect victim data, were presented by the above charts. As noted from the example stolen property related offenses, most of the offenses were mainly committed against teenage male victims that were traveling between noon and three in the afternoon. This attribute suggests that people based on these specific qualities are more likely to fall victim to the crime than others. It also helps to establish the basis of our model, in that we present the use of a Decision Network to compute a single Risk Index score that quantitatively combines risk based on all the three factors.
 
@@ -107,29 +107,35 @@ Our suggestion is to employ a Bayesian network to determine the risk particular 
 
 With the datasets as our basis, we calculated three different kinds of conditional probabilities: the likelihood that a victim of a certain crime will fall into a given age group, gender, or time range.
 
-![Figure 4](/tmp/tmp_q9cqm9s/ieee-asset-5.gif)
+![Figure 4](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg4-p6-garg-large.gif)
 
-**Figure 4.** - Proposed Decision Network
+**Figure 4.** Proposed Decision Network
 
 Above Figure 4 depicts the complete decision network used in this work.
 
 The age, gender, and travel duration are the uncorrelated parent nodes in the previously described network. The product of the parent nodes' probabilities determines the final event, or the danger the user confronts in connection with a particular offense. We model the joint probability distribution in terms of the accompanying local conditional probabilities as prescribed by the network and following the Local Markov Independence Assumptions.
 
-The decision network provides information on the probability that a person will become a victim of a specific type of criminal activity. Additionally, it is calculated using the formula - $$ \begin{equation*}{\text{P}}({\text{Risk}}) = {\text{P}}({\text{Age}})*{\text{P}}({\text{Sex}})*{\text{P}}({\text{Time}})\tag{1}\end{equation*} $$
+The decision network provides information on the probability that a person will become a victim of a specific type of criminal activity. Additionally, it is calculated using the formula -
+$$
+\begin{equation*}{\text{P}}({\text{Risk}}) = {\text{P}}({\text{Age}})*{\text{P}}({\text{Sex}})*{\text{P}}({\text{Time}})\tag{1}\end{equation*}
+$$
 
 #### 2) Crime Score and Risk Index Calculation
 
-A quantitative assessment of the offense committed is then determined by creating a crime score. A serious crime has to be dealt with more seriously than a simple crime and therefore the degree of the crime must be taken into consideration in evaluating the level of threat an individual poses.
+*A* quantitative assessment of the offense committed is then determined by creating a crime score. A serious crime has to be dealt with more seriously than a simple crime and therefore the degree of the crime must be taken into consideration in evaluating the level of threat an individual poses.
 
 An offender's sentence and the kind of crime they committed are taken into account when assigning a crime score<sup>5</sup>.
 
-The decision network-derived risk probability and the crime score are multiplied to obtain the final risk index. The risk index can be described as a metric that expresses quantitatively the relative likelihood of a crime occurring and the level of its impact, which is computed into one singular measure that is utilized in the subsequent steps of the algorithm. $$ \begin{equation*}{\text{Risk Index}} = {\text{P}}({\text{Risk}})*{\text{Crime Score}}\tag{2}\end{equation*} $$
+The decision network-derived risk probability and the crime score are multiplied to obtain the final risk index. The risk index can be described as a metric that expresses quantitatively the relative likelihood of a crime occurring and the level of its impact, which is computed into one singular measure that is utilized in the subsequent steps of the algorithm.
+$$
+\begin{equation*}{\text{Risk Index}} = {\text{P}}({\text{Risk}})*{\text{Crime Score}}\tag{2}\end{equation*}
+$$
 
 Accordingly, the algorithm's first phase comprises evaluating the risks related to the traveller, who is linked to a certain profile. It then generates a risk index, which serves as an input for subsequent procedures.
 
-![Table](/tmp/tmp_q9cqm9s/ieee-asset-6.gif)
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg.t2-p6-garg-large.gif)
 
-Table II.- Crime Score.
+**TABLE II.** Crime Score.
 
 #### 3) Reduced Geo-Spatial Information
 
@@ -139,25 +145,32 @@ Clusters were designed in seeking to find points which could inherently portray 
 
 The K Means Clustering findings are shown as a chart in Figure 5.
 
-![Figure 5](/tmp/tmp_q9cqm9s/ieee-asset-7.gif)
+![Figure 5](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg5-p6-garg-large.gif)
 
-**Figure 5.** - K means clustering performed on a particular region in San Francisco
+**Figure 5.** K means clustering performed on a particular region in San Francisco
 
 #### 4) Optimal Route Profiling
 
 For the purpose of recommending a route, the system receives the user's location as input. The next step involves using the Google Maps API to get the three shortest paths between the origin and the destination. The routes are divided into manageable segments, with each segment designated according to the assessed safety index. Based on the route's length and safety index, the system suggests the best path. The crime total of the clusters that are situated within a given radius of each component is used to determine its own crime index. The predefined distance is represented by the radius mean of each coordinate cluster.
 
-![Figure 6](/tmp/tmp_q9cqm9s/ieee-asset-8.gif)
+![Figure 6](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg6-p6-garg-large.gif)
 
-**Figure 6.** - Selection of the Nearest Cluster
+**Figure 6.** Selection of the Nearest Cluster
 
 The cluster selection procedure that the suggested model uses is shown in Figure 6.
 
-Street risk is expressed as the number of crime counts in the nearby groups multiplied by the risk rate determined during stage one of the process. $$ \begin{equation*}Street{\text{ }}risk(S) = \sum\nolimits_{c = 1}^n \quad(count(c)*risk{\text{ }}factor(c))\tag{3}\end{equation*} $$
+Street risk is expressed as the number of crime counts in the nearby groups multiplied by the risk rate determined during stage one of the process.
+$$
+\begin{equation*}Street{\text{ }}risk(S) = \sum\nolimits_{c = 1}^n \quad (count(c)*risk{\text{ }}factor(c))\tag{3}\end{equation*}
+$$
 
 Wherefore S stands for street risk; n for the total number of crime types; c for the type of crime; count for the number of that particular crime in a defined location, such as the most relevant clusters; and risk index for the criminal risk likelihood of the user in the context of a healthy c.
 
-A weighted average of all the streets that are part of the route is used to estimate the route risk after the risk associated with each street has been evaluated. $$ \begin{equation*}{\text{Route risk }}{ = ^{1/t}}\sum\nolimits_{i = 1}^{\text{t}} {({\text{Si}})} \tag{4}\end{equation*} $$ where Si is the street risk of street i and t is the total number of streets along the route.
+A weighted average of all the streets that are part of the route is used to estimate the route risk after the risk associated with each street has been evaluated.
+$$
+\begin{equation*}{\text{Route risk }}{ = ^{1/t}}\sum\nolimits_{i = 1}^{\text{t}} {({\text{Si}})} \tag{4}\end{equation*}
+$$
+where Si is the street risk of street i and t is the total number of streets along the route.
 
 #### 5) Colour Coding Scheme
 
@@ -167,9 +180,9 @@ Following the calculation of the route risk for each street, colour coding is ap
 
 A flowchart representing the route profiling algorithm is shown in Figure 7.
 
-![Figure 7](/tmp/tmp_q9cqm9s/ieee-asset-9.gif)
+![Figure 7](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg7-p6-garg-large.gif)
 
-**Figure 7.** - Optimal Route Profiling
+**Figure 7.** Optimal Route Profiling
 
 ## IMPLEMENTATION
 
@@ -183,17 +196,19 @@ All data pre-processing, risk analysis, and data clustering functionalities are 
 
 Our system finds the safest path between two sites after being tested on San Francisco streets. Different source and destination locations, as well as a range of user data use cases, are tested for the algorithm. Figure 8 and 9 depict the user-friendly interface, which is made to adapt to the user's needs in real time.
 
-![Figure 8](/tmp/tmp_q9cqm9s/ieee-asset-10.gif)
+![Figure 8](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg8-p6-garg-large.gif)
 
-**Figure 8.** - Register form for basic user attribute storage.
+**Figure 8.** Register form for basic user attribute storage.
 
-![Figure 9](/tmp/tmp_q9cqm9s/ieee-asset-11.gif)
+![Figure 9](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg9-p6-garg-large.gif)
+
+**Figure 9.** Verify user details using the login form.
 
 The Dashboard interface serves users with intelligent notifications targeted on the street crime in a specific area and all the route info as shown in Figure 10.
 
-![Figure 10](/tmp/tmp_q9cqm9s/ieee-asset-12.gif)
+![Figure 10](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg10-p6-garg-large.gif)
 
-**Figure 10.** - Smart Alerts and Safe Route Visualization
+**Figure 10.** Smart Alerts and Safe Route Visualization
 
 The objective of our study is to create maps of safe pathways by using geospatial data analysis and a decision network on historical crime data.
 
@@ -208,17 +223,31 @@ With the model's applicability in mind, further research has the potential to ex
 ## References (15 total, showing 15)
 
 1. Soni, Shivangi, Venkatesh Gauri Shankar, and Chaurasia Sandeep. “Route-The Safe: A Secure Path Prediction Model using Crime and Accident Data.” ( 2019 ).
+
 2. Sarang Tarlekar et al, / (IJCSIT) International Journal of Computer Science and Information Technologies , Vol. 7 ( 3 ), 2016, 1536 - 1540.
+
 3. Utamima, Amalia, and Arif Djunaidy. “Be-safe travel, a web- based geographic application to explore safe-route in an area.” AIP conference proceedings. Vol. 1867. No. 1. AIP Publishing LLC, 2017.
+
 4. Zhong, Weisheng, Fanglan Chen, Kaiqun Fu, and Chang-Tien Lu. “ SAFEBIKE: A highly accurate bike-sharing route recommender coupled with availability forecast and safe routing .” arXiv preprint arXiv : 1712. 01469 ( 2017 ).
+
 5. Galbrun, Esther, Konstantinos Pelechrinis, and Evimaria Terzi. “Urban Navigation Beyond the Shortest Route: The Case of Safe Paths.” Information Systems 57 ( 2016 ): 160 - 171.
+
 6. Mata, Félix, Miguel Torres-Ruiz, Giovanni Guzman, Rolando Quintero, Roberto Zagal-Flores, Marco Moreno-Ibarra and Eduardo Loza. “Finding safe routes: a mobile information system based on crowd-sensed and official crime data.” Mexico city: case study. Mobile Information Systems 2016 ( 2016 ).
+
 7. Oh, Su Bin, Hyeok Ju Park, Byeong Ki Kang, Ill Chui Doo, and Mee Hwa Park. “Safe Route Recommendation Method to Prevent Crime Exposure.” Advanced Science Letters 23, no. 10 ( 2017 ): 9579 - 9583.
+
 8. Li, Zhaojian, Ilya Kolmanovsky, Ella Atkins, Jianbo Lu, Dimitar P. Filev, and John Michelini. “Road risk modeling and cloud-aided safety-based route planning.” IEEE transactions on cybernetics 46, no. 11 ( 2015 ): 2473 - 2483.
+
 9. Hoseinzadeh, Nima, Ramin Arvin, Asad J. Khattak, and Lee Han. “Integrating safety and mobility for pathfinding using big data generated by connected vehicles.” Journal of Intelligent Transportation Systems ( 2020 ): 1 - 17.
+
 10. Kang, Hyeon-Woo, and Hang-Bong Kang. “Prediction of crime occurrence from multi-modal datausing deep learning.” PloS one 12. 4 ( 2017 ).
+
 11. Fu, Kaiqun, Yen-Cheng Lu, and Chang-Tien Lu. “Treads: A safe route recommender using social media mining and text summarization.” Proceedings of the 22nd ACM SIGSPATIAL International Conference on Advances in Geographic Information Systems. 2014.
+
 12. Al Najada, Hamzah, and Imad Mahgoub. “Autonomous vehicles safe-optimal trajectory selection based on big data analysis and predefined user preferences.” 2016 IEEE 7th Annual Ubiquitous Computing, Electronics & Mobile Communication Conference (UEMCON) . IEEE, 2016.
+
 13. J. W. Coid et al., “Development of a Bayesian network for the risk management of violent prisoners.” Improving Risk Management for Violence inMentalHealth Services: A Multimethods Approach - NCBI Bookshelf Nov. 01, 2016.
+
 14. J. De Zoete, Μ. Sjerps, D. Lagnado, and N. Fenton, “Modelling crime linkage with Bayesian networks.” Science & Justice , vol. 55, no. 3, pp. 209 - 217, Dec. 2014, doi: 10.1016/j.scijus.2014.11.005.
+
 15. FBI UCR Database , Available (Online): https://www.fbi.gov/services/cjis/ucr ; Accessed on 15-Dec-2024

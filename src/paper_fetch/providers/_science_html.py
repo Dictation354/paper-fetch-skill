@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import urllib.parse
 import time
 from typing import Any
 from collections.abc import Callable, Mapping, Sequence
@@ -10,7 +11,6 @@ from collections.abc import Callable, Mapping, Sequence
 from bs4 import BeautifulSoup, Tag
 from ..extraction.html.parsing import choose_parser
 
-from ._html_section_markdown import render_retained_text_from_html
 
 from ..quality.html_signals import (
     AAAS_DATALAYER_PATTERN,
@@ -32,9 +32,10 @@ from ._html_references import (
     NUMBERED_BIBLIOGRAPHY_SELECTORS,
     _candidate_reference_nodes,
     _reference_text,
+    _reference_doi,
     extract_numbered_references_from_soup,
 )
-from ._retained_object_links import resolve_retained_object_links
+from ..extraction.html.object_links import resolve_retained_object_links
 from ._script_json import extract_assignment_json
 
 SCIENCE_AUTHOR_COUNT_PATTERN = ATYPON_AUTHOR_COUNT_PATTERN
@@ -385,11 +386,41 @@ def is_front_matter_teaser_figure(
 
 
 def _drop_science_front_matter_teaser_figures(container: Any) -> None:
-    from .atypon_browser_workflow.normalization import (
-        _drop_front_matter_teaser_figures,
-    )
+    # Graphical abstracts are scientific content; give them their own section
+    # so abstract text extraction cannot flatten their image/caption boundary.
+    if not isinstance(container, Tag):
+        return
+    for figure in list(
+        container.select(
+            ".abstract figure, #structured-abstract figure, section[role=doc-abstract] figure"
+        )
+    ):
+        abstract = (
+            figure.find_parent(id="abstracts")
+            or figure.find_parent(id="structured-abstract")
+            or figure.find_parent(class_="abstract")
+            or figure.find_parent("section")
+        )
+        if abstract is None:
+            continue
+        section = Tag(name="section", attrs={"class": "paper-fetch-graphical-summary"})
+        heading = Tag(name="h2")
+        heading.string = "Graphical summary"
+        section.append(heading)
+        section.append(figure.extract())
+        abstract.insert_after(section)
 
-    _drop_front_matter_teaser_figures(container)
+
+def select_content_nodes(container: Tag, **helpers: Any) -> list[Tag]:
+    abstracts = helpers["nodes_from_selectors"](
+        container, helpers["content_abstract_selectors"]
+    )
+    body = helpers["nodes_from_selectors"](container, helpers["content_body_selectors"])
+    summaries = container.select("section.paper-fetch-graphical-summary")
+    available = helpers["select_availability_nodes"](container, body)
+    return helpers["dedupe_top_level_nodes"](
+        [*abstracts, *summaries, *body, *available]
+    )
 
 
 def science_before_block_normalization(container: Any) -> None:
@@ -397,6 +428,17 @@ def science_before_block_normalization(container: Any) -> None:
     if not isinstance(container, Tag):
         return
     _promote_science_availability(container)
+    body = container.select_one("#bodymatter")
+    if body is not None:
+        root = body.select_one(":scope > .core-container") or body
+        first = next((child for child in root.children if isinstance(child, Tag)), None)
+        if (
+            first is not None
+            and first.name == "div"
+            and first.get("role") == "paragraph"
+        ):
+            heading = BeautifulSoup("<h2>Main Text</h2>", "html.parser").h2
+            root.insert(0, heading)
     from ._html_section_markdown import render_heading_text_from_html
 
     for heading in container.select("h2, h3, h4, h5, h6"):
@@ -404,16 +446,52 @@ def science_before_block_normalization(container: Any) -> None:
             text = render_heading_text_from_html(heading)
             heading.clear()
             heading.append(text)
-    # AAAS adm9732 ends its last three-row model group with rowspan=4.
-    # A span cannot extend beyond its row group; otherwise the table renderer
-    # falls back to a list and assigns continuation cells to the first header.
+            heading["data-paper-fetch-markdown"] = "1"
+    _normalize_science_table_row_groups(container)
+
+
+def _normalize_science_table_row_groups(container: Tag) -> None:
+    """Single-sample-derived structural rule, limited to Science HTML tables.
+
+    Clamp spans to their source row group and collapse only the existing model
+    statistics / single-cell covariate continuation shape, in source order.
+    """
     for group in container.select("table > thead, table > tbody, table > tfoot"):
         rows = group.find_all("tr", recursive=False)
         for index, row in enumerate(rows):
             for cell in row.find_all(["th", "td"], recursive=False):
-                span = str(cell.get("rowspan", "1"))
-                if span.isdecimal() and int(span) > len(rows) - index:
+                span_text = str(cell.get("rowspan", "1"))
+                if span_text.isdecimal() and int(span_text) > len(rows) - index:
                     cell["rowspan"] = str(len(rows) - index)
+        # Model statistics span physical continuation lines of a single
+        # covariate list. Collapse only that shape, keeping the source order.
+        if group.name != "tbody":
+            continue
+        for index, row in enumerate(rows):
+            cells = row.find_all(["th", "td"], recursive=False)
+            if len(cells) < 2:
+                continue
+            spans = [int(str(cell.get("rowspan", "1"))) for cell in cells[:-1]]
+            span = spans[0]
+            if span <= 1 or any(value != span for value in spans):
+                continue
+            continuation = rows[index + 1 : index + span]
+            tails = [
+                part.find_all(["th", "td"], recursive=False) for part in continuation
+            ]
+            if any(len(part) != 1 or part[0].has_attr("rowspan") for part in tails):
+                continue
+            for part in tails:
+                previous = cells[-1].get_text().rstrip()
+                if not previous.endswith(("*", "/", "−", "-", "+")):
+                    cells[-1].append(" ")
+                for child in list(part[0].contents):
+                    cells[-1].append(child.extract())
+            for cell in cells[:-1]:
+                cell.attrs.pop("rowspan", None)
+            cells[-1].smooth()
+            for part in continuation:
+                part.decompose()
 
 
 def render_table_with_missing_trailing_cells(
@@ -484,46 +562,81 @@ def science_classify_heading(heading: str, title: str | None = None) -> str | No
 
 
 def _promote_science_availability(container: Tag) -> None:
-    """Move only standalone, explicitly labelled acknowledgment paragraphs."""
+    """Retain explicitly labelled data/code/material statements through the next peer label."""
+    from copy import deepcopy
+
     factory = BeautifulSoup("", "html.parser")
+    peer_labels = {
+        "funding",
+        "author contributions",
+        "competing interests",
+        "acknowledgments",
+        "acknowledgements",
+    }
     for acknowledgments in container.select(
         "section#acknowledgments, section#acknowledgements"
     ):
         tail = acknowledgments
         for paragraph in list(acknowledgments.select('p, div[role="paragraph"]')):
-            children = [node for node in paragraph.contents if str(node).strip()]
-            label = children[0] if children else None
-            if not isinstance(label, Tag) or label.name not in {"b", "strong"}:
-                continue
-            if any(
-                node.has_attr("hidden")
-                or node.get("aria-hidden") == "true"
-                or re.search(
-                    r"(?:display\s*:\s*none|visibility\s*:\s*hidden)",
-                    str(node.get("style", "")),
-                    re.I,
+            children = list(paragraph.contents)
+            labels = []
+            for index, node in enumerate(children):
+                if not isinstance(node, Tag) or node.name not in {"b", "strong"}:
+                    continue
+                if any(
+                    parent.has_attr("hidden")
+                    or parent.get("aria-hidden") == "true"
+                    or re.search(
+                        r"(?:display\s*:\s*none|visibility\s*:\s*hidden)",
+                        str(parent.get("style", "")),
+                        re.I,
+                    )
+                    for parent in [node, *node.parents]
+                    if isinstance(parent, Tag)
+                ):
+                    continue
+                heading = node.get_text(" ", strip=True).rstrip(":").strip()
+                kind = science_classify_heading(heading)
+                if kind or heading.casefold() in peer_labels:
+                    labels.append((index, heading, kind))
+            for position, (index, heading, kind) in enumerate(labels):
+                if kind is None:
+                    continue
+                stop = (
+                    labels[position + 1][0]
+                    if position + 1 < len(labels)
+                    else len(children)
                 )
-                for node in [label, *label.parents]
-                if isinstance(node, Tag)
-            ):
-                continue
-            heading = label.get_text(" ", strip=True).rstrip(":").strip()
-            kind = science_classify_heading(heading)
-            if kind is None:
-                continue
-            section = factory.new_tag(
-                "section", attrs={"class": kind.replace("_", "-")}
-            )
-            heading_node = factory.new_tag("h2")
-            heading_node.string = heading
-            section.append(heading_node)
-            label.decompose()
-            retained = render_retained_text_from_html(paragraph)
-            paragraph.clear()
-            paragraph.append(retained)
-            section.append(paragraph.extract())
-            tail.insert_after(section)
-            tail = section
+                section = factory.new_tag(
+                    "section", attrs={"class": kind.replace("_", "-")}
+                )
+                heading_node = factory.new_tag("h2")
+                heading_node.string = heading
+                section.append(heading_node)
+                retained = factory.new_tag("p")
+                for child in children[index + 1 : stop]:
+                    retained.append(deepcopy(child))
+                section.append(retained)
+                for original in children[index:stop]:
+                    original.extract()
+                tail.insert_after(section)
+                tail = section
+
+
+def science_body_container(container: Any) -> None:
+    if not isinstance(container, Tag):
+        return
+    from .atypon_browser_workflow.asset_scopes import (
+        _atypon_browser_workflow_supplementary_sections,
+    )
+
+    for section in _atypon_browser_workflow_supplementary_sections(container):
+        section.decompose()
+    for node in list(
+        container.select("#eletterModal, #elettersSection, #trendmd-suggestions")
+    ):
+        if node.parent is not None:
+            node.decompose()
 
 
 def science_asset_body_container(container: Any) -> None:
@@ -536,6 +649,28 @@ def science_asset_figure_extraction(container: Any) -> None:
 
 def science_normalize_markdown(markdown_text: str) -> str:
     return merge_science_citation_italics(markdown_text)
+
+
+def science_keep_leading_auxiliary_block(
+    block: str,
+    *,
+    publisher: str,
+    figure_assets: Sequence[Mapping[str, Any]] | None,
+) -> bool:
+    from ..extraction.html.figure_links import canonical_figure_label_from_asset
+
+    # Perspectives can start with a manuscript photograph whose body asset
+    # survived the teaser filter; retain its caption before the first prose.
+    leading_figure = re.match(r"^\*\*(Figure\s+\d+)\.\*\*", block, re.I)
+    return bool(
+        publisher == "science"
+        and leading_figure is not None
+        and any(
+            canonical_figure_label_from_asset(asset) == leading_figure[1].lower()
+            for asset in figure_assets or []
+            if asset.get("section", "body") == "body"
+        )
+    )
 
 
 def science_keep_unknown_abstract_block(block: str) -> bool:
@@ -553,19 +688,17 @@ def extract_asset_html_scopes(
     atypon_browser_workflow_supplementary_sections,
 ) -> tuple[str, str]:
     del source_url, raw_body_container
-    for node in list(atypon_browser_workflow_supplementary_sections(body_container)):
-        node.decompose()
-
-    supplementary_html = "\n".join(
-        str(node)
-        for node in atypon_browser_workflow_supplementary_sections(
-            supplementary_container
-        )
-        if normalize_text(node.get_text(" ", strip=True))
+    from .atypon_browser_workflow.asset_scopes import (
+        extract_body_and_supplementary_html,
     )
-    return content_fragment_html(
-        body_container, publisher=publisher
-    ), supplementary_html
+
+    return extract_body_and_supplementary_html(
+        body_container,
+        supplementary_container,
+        publisher=publisher,
+        content_fragment_html=content_fragment_html,
+        supplementary_sections=atypon_browser_workflow_supplementary_sections,
+    )
 
 
 def merge_science_citation_italics(markdown_text: str) -> str:
@@ -606,6 +739,20 @@ def finalize_extraction(
         finalized["extracted_authors"] = extracted_authors
     soup = BeautifulSoup(html_text, choose_parser())
     extracted_references = extract_numbered_references_from_soup(soup)
+    if not extracted_references:
+        # The loaded bibliography template uses biblioentry rather than
+        # role=listitem. Its DOI links sit beside the citation text.
+        extracted_references = [
+            {
+                "label": normalize_text(node.select_one(".label").get_text())
+                if node.select_one(".label")
+                else None,
+                "raw": _reference_text(node),
+                "doi": _reference_doi(node),
+            }
+            for node in soup.select("#bibliography .biblioentry")
+            if _reference_text(node)
+        ]
     if extracted_references:
         finalized["references"] = extracted_references
     if needs_frontmatter_flatten:
@@ -623,6 +770,29 @@ def finalize_extraction(
             + ", ".join(missing),
         ]
         finalized["missing_reference_targets"] = missing
+    from .atypon_browser_workflow.asset_scopes import (
+        _atypon_browser_workflow_supplementary_sections,
+    )
+    from ._html_section_markdown import render_container_markdown
+
+    if not re.search(
+        r"(?im)^#{2,6} supplementary (?:materials?|information)\s*$", markdown_text
+    ):
+        supplementary_lines: list[str] = []
+        for section in _atypon_browser_workflow_supplementary_sections(soup):
+            for link in section.select("a[href]"):
+                link["href"] = urllib.parse.urljoin(source_url, str(link["href"]))
+            render_container_markdown(
+                section,
+                supplementary_lines,
+                level=3,
+                skip_first_heading="Supplementary Materials",
+                preserve_heading_levels=True,
+            )
+        if supplementary_lines:
+            markdown_text += "\n\n## Supplementary Materials\n\n" + "\n".join(
+                supplementary_lines
+            )
     reference_targets = {
         str(node["id"]): str(node["id"]) for node in soup.select(".citations[id]")
     }

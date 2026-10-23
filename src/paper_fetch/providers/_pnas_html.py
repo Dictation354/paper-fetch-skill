@@ -9,7 +9,6 @@ from collections.abc import Mapping
 
 from ..extraction.html.semantics import normalize_heading, parse_markdown_heading
 from ..quality.html_signals import PNAS_SIGNAL_SET, evaluate_datalayer_blocking_signals
-from ..utils import normalize_text
 from ._html_authors import (
     ATYPON_AUTHOR_COUNT_PATTERN,
     ATYPON_AUTHOR_COLLAPSE_UI_TEXT,
@@ -62,6 +61,46 @@ def pnas_before_block_normalization(container: Any) -> None:
     )
 
     _drop_promotional_blocks(container, promo_block_tokens=_promo_block_tokens("pnas"))
+    for listing in container.select('[role="list"]'):
+        items = listing.find_all(attrs={"role": "listitem"}, recursive=False)
+        labels = [item.find(class_="label", recursive=False) for item in items]
+        ordered = bool(items) and all(
+            label and re.fullmatch(r"\(?\d+[.)]?", label.get_text(strip=True))
+            for label in labels
+        )
+        listing.name = "ol" if ordered else "ul"
+        listing.attrs.pop("role", None)
+        for item, label in zip(items, labels, strict=True):
+            item.name = "li"
+            item.attrs.pop("role", None)
+            if ordered:
+                label_match = re.search(r"\d+", label.get_text())
+                assert label_match is not None
+                item["value"] = label_match[0]
+                label.decompose()
+    from bs4 import BeautifulSoup, Tag
+
+    body = container.select_one("#bodymatter")
+    if (
+        body is not None
+        and container.select_one('#abstract, .abstract, [role="doc-abstract"]')
+        is not None
+    ):
+        root = body.select_one(":scope > .core-container") or body
+        first = next((child for child in root.children if isinstance(child, Tag)), None)
+        if (
+            first is not None
+            and first.name == "div"
+            and first.get("role") == "paragraph"
+        ):
+            root.insert(0, BeautifulSoup("<h2>Main Text</h2>", "html.parser").h2)
+    from ._html_section_markdown import render_retained_text_from_html
+
+    for quote in container.select("blockquote"):
+        text = render_retained_text_from_html(quote)
+        quote.name = "p"
+        quote.clear()
+        quote.append("\n".join("> " + line for line in text.splitlines()))
     for anchor in container.select('a[href^="#eqn"]'):
         # Bold equation numbers are cross-references, not bibliography markers.
         # Prevent the legacy parenthetical citation formatter consuming them.
@@ -101,19 +140,17 @@ def extract_asset_html_scopes(
     atypon_browser_workflow_supplementary_sections,
 ) -> tuple[str, str]:
     del source_url, raw_body_container
-    for node in list(atypon_browser_workflow_supplementary_sections(body_container)):
-        node.decompose()
-
-    supplementary_html = "\n".join(
-        str(node)
-        for node in atypon_browser_workflow_supplementary_sections(
-            supplementary_container
-        )
-        if normalize_text(node.get_text(" ", strip=True))
+    from .atypon_browser_workflow.asset_scopes import (
+        extract_body_and_supplementary_html,
     )
-    return content_fragment_html(
-        body_container, publisher=publisher
-    ), supplementary_html
+
+    return extract_body_and_supplementary_html(
+        body_container,
+        supplementary_container,
+        publisher=publisher,
+        content_fragment_html=content_fragment_html,
+        supplementary_sections=atypon_browser_workflow_supplementary_sections,
+    )
 
 
 def select_content_nodes(
@@ -152,8 +189,15 @@ def select_content_nodes(
     availability_nodes = select_availability_nodes(container, body_nodes)
     selected.extend(abstract_nodes)
     selected.extend(body_nodes)
+    selected.extend(
+        container.select(
+            "section[role='doc-acknowledgments'], section#acknowledgments, section#acknowledgements"
+        )
+    )
     selected.extend(availability_nodes)
-    return dedupe_top_level_nodes(selected)
+    selected = dedupe_top_level_nodes(selected)
+    source_order = {id(node): index for index, node in enumerate(container.descendants)}
+    return sorted(selected, key=lambda node: source_order.get(id(node), -1))
 
 
 def finalize_extraction(
@@ -164,7 +208,33 @@ def finalize_extraction(
     *,
     metadata: Mapping[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any]]:
-    del source_url, metadata
+    del metadata
+    from bs4 import BeautifulSoup
+    from urllib.parse import urljoin
+    from .atypon_browser_workflow.asset_scopes import (
+        _atypon_browser_workflow_supplementary_sections,
+    )
+    from ._html_section_markdown import render_container_markdown
+
+    soup = BeautifulSoup(html_text, "lxml")
+    if not re.search(
+        r"(?im)^#{2,6} (?:supporting information|supplementary materials?)\s*$",
+        markdown_text,
+    ):
+        supplementary_lines: list[str] = []
+        for section in _atypon_browser_workflow_supplementary_sections(soup):
+            for link in section.select("a[href]"):
+                link["href"] = urljoin(source_url, str(link["href"]))
+            render_container_markdown(
+                section,
+                supplementary_lines,
+                level=3,
+                skip_first_heading="Supporting Information",
+            )
+        if supplementary_lines:
+            markdown_text += "\n\n## Supplementary Materials\n\n" + "\n".join(
+                supplementary_lines
+            )
     finalized = dict(extraction)
     extracted_authors = extract_authors(html_text)
     if extracted_authors:

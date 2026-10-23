@@ -295,7 +295,10 @@ def _render_scientific_back_matter_sections(
         seen.add(id(section))
         title_key = _section_title_key(section)
         if availability_only:
-            if not _is_availability_section_title(title_key):
+            if not _is_availability_section_title(title_key) and title_key not in {
+                "supplementary information",
+                "supplementary materials",
+            }:
                 continue
         elif not _is_scientific_back_matter_title(title_key):
             continue
@@ -429,6 +432,8 @@ def _normalize_springer_nature_inline_mathjax(root: Any) -> None:
         if not isinstance(node, Tag):
             continue
         value = node.get_text("", strip=False).strip()
+        if value.startswith("$$") and value.endswith("$$"):
+            node["class"] = [*node.get("class", []), "display-equation"]
         if value.startswith(r"\(") and value.endswith(r"\)") and len(value) > 4:
             node.string = f"${value[2:-2]}$"
 
@@ -460,9 +465,28 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
     )
     if article is None:
         return ""
+    for wrapper in article.select(".c-article-table"):
+        link = wrapper.select_one("a[data-test='table-link'][href]")
+        caption = wrapper.select_one("figcaption")
+        if wrapper.find("table") is not None or link is None:
+            continue
+        if caption is not None and caption.get_text(strip=True).casefold().startswith(
+            "extended data table"
+        ):
+            continue
+        paragraph = soup.new_tag("p")
+        target = urllib.parse.urljoin(source_url, str(link["href"]))
+        paragraph.string = f"[Full table]({target})"
+        wrapper.append(paragraph)
     _prune_springer_nature_chrome(article)
+    for anchor in article.select("figure a[href]"):
+        if normalize_text(anchor.get_text(" ", strip=True)).casefold() == "source data":
+            target = urllib.parse.urljoin(source_url, str(anchor["href"]))
+            anchor["href"] = target
     # Bare Box/news images may have no numbered asset for link injection.
     # Resolve their source URLs before rendering, preserving the rendition.
+    for anchor in article.select("a[href]"):
+        anchor["href"] = urllib.parse.urljoin(source_url, str(anchor["href"]))
     for image in article.find_all("img", src=True):
         src = str(image["src"])
         if src.startswith("//"):
@@ -470,6 +494,25 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
     _normalize_springer_nature_inline_mathjax(article)
     _separate_springer_caption_images(article)
 
+    extended_tables = []
+    for placeholder in list(article.select("[data-paper-fetch-supplementary]")):
+        extended_tables.append(placeholder.get_text())
+        placeholder.decompose()
+    for caption in list(article.select(".c-article-table__figcaption")):
+        label = caption.get_text(" ", strip=True)
+        if not label.casefold().startswith("extended data table"):
+            continue
+        figure = caption.find_parent("figure")
+        link = figure.select_one("a[data-test='table-link'][href]") if figure else None
+        if link:
+            extended_tables.append(f"[{label}]({link['href']})")
+            figure.decompose()
+    for mention in list(article.select("[data-paper-fetch-table-mention]")):
+        if "extended data table" in mention.get_text().casefold():
+            extended_tables.append(
+                render_retained_text_from_html(mention, source_url=source_url)
+            )
+            mention.decompose()
     lines: list[str] = []
     title_node = article.select_one("h1")
     title_text = render_heading_text_from_html(title_node)
@@ -484,6 +527,7 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
             mention.string = render_retained_text_from_html(
                 mention, source_url=source_url
             )
+            mention["data-paper-fetch-markdown"] = "1"
         abstract_section = select_nature_abstract_section(body)
         if abstract_section is not None:
             render_section_markdown(
@@ -513,19 +557,50 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
         for mention in retained_table_mentions:
             if main not in mention.parents:
                 lines.extend([mention.get_text(), ""])
-        # Extended tables can live outside main-content and expose only a
-        # caption plus an official table page, without an inline HTML table.
-        for caption in article.select(".c-article-table__figcaption"):
-            label = normalize_text(caption.get_text(" ", strip=True))
-            if not label.casefold().startswith("extended data table"):
+        for section in article.select("section[data-title]"):
+            if (
+                not str(section.get("data-title", ""))
+                .casefold()
+                .startswith("extended data")
+            ):
                 continue
-            figure = caption.find_parent("figure")
-            link = (
-                figure.select_one("a[data-test='table-link'][href]") if figure else None
-            )
-            if link is not None:
-                target = urllib.parse.urljoin(source_url, str(link["href"]))
-                lines.extend([f"[{label}]({target})", ""])
+            content = section.select_one(".c-article-section__content") or section
+            extended_lines = []
+            for item in content.select(".c-article-supplementary__item"):
+                heading = item.select_one(".c-article-supplementary__title")
+                if heading is None:
+                    continue
+                link = heading.find("a", href=True)
+                label = render_heading_text_from_html(heading)
+                extended_lines.extend([f"**{label}**", ""])
+                if link and link.get("data-supp-info-image"):
+                    src = urllib.parse.urljoin(
+                        source_url, str(link["data-supp-info-image"])
+                    )
+                    from ..markdown.images import render_markdown_image
+
+                    extended_lines.extend(
+                        [render_markdown_image("figure", label, src), ""]
+                    )
+                description = item.select_one(".c-article-supplementary__description")
+                if description is not None:
+                    render_container_markdown(description, extended_lines, level=3)
+                if link and not link.get("data-supp-info-image"):
+                    extended_lines.extend([f"[{label}]({link['href']})", ""])
+            if not extended_lines:
+                for caption in content.select(".c-article-table__figcaption"):
+                    figure = caption.find_parent("figure")
+                    link = (
+                        figure.select_one("a[data-test='table-link'][href]")
+                        if figure
+                        else None
+                    )
+                    if link:
+                        label = caption.get_text(" ", strip=True)
+                        extended_lines.extend([f"[{label}]({link['href']})", ""])
+            if extended_lines:
+                lines.extend(["## Extended Data", "", *extended_lines])
+
     else:
         body = article.select_one("div.c-article-body") or article
         main = body.select_one("div.main-content") or body
@@ -538,6 +613,10 @@ def extract_springer_nature_markdown(html_text: str, source_url: str) -> str:
         )
         _render_scientific_back_matter_sections(article, main, lines)
 
+    if extended_tables:
+        lines.extend(["## Extended Data", ""])
+        for table in dict.fromkeys(extended_tables):
+            lines.extend([table, ""])
     rendered = clean_markdown(
         _remove_duplicate_title_headings("\n".join(lines), title_text),
         noise_profile="springer_nature",
@@ -552,7 +631,7 @@ def postprocess_springer_nature_markdown(markdown_text: str) -> str:
         markdown_text,
         unwrap_inline_links=True,
         inline_link_patterns=SPRINGER_NATURE_INLINE_LINK_UNWRAP_PATTERNS,
-        normalize_labels=True,
+        normalize_labels=False,
         label_patterns=SPRINGER_NATURE_CITATION_LABEL_PATTERNS,
         drop_figure_lines=False,
     )

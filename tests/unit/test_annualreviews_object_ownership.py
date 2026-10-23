@@ -69,8 +69,8 @@ def test_table_label_is_bold_and_only_article_backmatter_modals_are_promoted():
         < markdown.index("Measurements.")
         < markdown.index("| Value")
     )
-    assert "## Terms And Definitions\n" in markdown
-    assert "## Footnotes\n" in markdown
+    assert "## TERMS AND DEFINITIONS\n" in markdown
+    assert "## FOOTNOTES\n" in markdown
     assert soup.select_one("section h4").get_text() == "Scientific detail"
     assert "Scientific detail" in markdown
     assert "Term definition." in markdown and "Note text." in markdown

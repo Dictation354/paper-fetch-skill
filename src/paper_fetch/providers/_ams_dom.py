@@ -14,11 +14,14 @@ from ..extraction.html.formula_rules import (
 )
 from ..extraction.html.provider_rules import cleanup_policy_for_profile
 from ..extraction.html.inline import render_html_inline_node
+from ..extraction.markdown_render.formulas import (
+    html_formula_latex_from_node,
+    render_inline_latex_markdown,
+)
 from ..extraction.html.shared import soup_root as _soup_root
 from ..utils import normalize_text
 from ._article_markdown_math import (
     render_external_mathml_expression,
-    render_mathml_expression,
 )
 from ._ams_markdown import _normalize_ams_label_text
 
@@ -110,8 +113,7 @@ def _normalize_nested_sup_sub(container: Any) -> None:
             or normalize_text(node.get_text(" ", strip=True)) != nested_text
         ):
             continue
-        node.clear()
-        node.append(nested_text)
+        nested.unwrap()
 
 
 def _normalize_ams_formula_dom(container: Any) -> None:
@@ -164,6 +166,7 @@ def _ams_equation_label(node: Any) -> str:
             candidates.append(value)
     for candidate in (
         node.select_one(".label"),
+        node.find("label"),
         node.find_previous_sibling(class_="label"),
     ):
         if isinstance(candidate, Tag):
@@ -171,7 +174,9 @@ def _ams_equation_label(node: Any) -> str:
             if text:
                 candidates.append(text)
     for text in candidates:
-        match = AMS_EQUATION_LABEL_PATTERN.search(text)
+        match = AMS_EQUATION_LABEL_PATTERN.search(text) or re.fullmatch(
+            r"\(?([0-9]+[A-Za-z]?)\)?", text
+        )
         if match:
             return f"Equation {match.group(1)}."
 
@@ -258,15 +263,14 @@ def _insert_mathml_from_script(script: Any) -> bool:
 def _render_ams_mathml_inline(node: Any) -> str:
     if not isinstance(node, Tag):
         return ""
+    source = html_formula_latex_from_node(node)
+    if source:
+        return render_inline_latex_markdown(source)
     element = mathml_element_from_html_node(node)
     if element is None:
         return ""
-    expression = normalize_text(
-        render_external_mathml_expression(element, display_mode=False)
-    )
-    if not expression:
-        expression = normalize_text(render_mathml_expression(element))
-    return f"${expression}$" if expression else ""
+    expression = render_external_mathml_expression(element, display_mode=False)
+    return render_inline_latex_markdown(expression)
 
 
 def _math_node_from_mathml_script(node: Any) -> Any:
@@ -287,6 +291,10 @@ def _ams_raw_inline_markdown_from_node(node: Any) -> str | None:
     if not isinstance(node, Tag):
         return None
     name = normalize_text(node.name or "").lower()
+    if name == "a" and node.get("href"):
+        from ._html_section_markdown import _raw_inline_markdown_from_node
+
+        return _raw_inline_markdown_from_node(node)
     if name == "inline-formula":
         math_node = node.find("math")
         if isinstance(math_node, Tag):
@@ -417,6 +425,7 @@ def _normalize_ams_figure_captions(container: Any) -> None:
             figcaption.append(
                 " ".join(part for part in [label, *caption_parts] if part)
             )
+            figcaption["data-paper-fetch-markdown"] = "1"
 
 
 def _normalize_ams_table_captions(container: Any) -> None:
@@ -443,6 +452,7 @@ def _normalize_ams_table_captions(container: Any) -> None:
                 if text:
                     paragraph.clear()
                     paragraph.append(text)
+                    paragraph["data-paper-fetch-markdown"] = "1"
 
 
 def _footnote_label_text(node: Any) -> str:
@@ -475,12 +485,15 @@ def _normalize_ams_footnotes(container: Any) -> None:
             label = _footnote_label_text(note)
             if not label:
                 continue
+            label_markup = label
             for label_node in list(note.select(".label, label")):
                 if isinstance(label_node, Tag):
+                    if label_node.find("a", href=True):
+                        label_markup = _render_ams_inline_text(label_node)
                     label_node.decompose()
             text = _render_ams_inline_text(note)
             if text:
-                notes.append((label, text))
+                notes.append((label_markup, text))
         if not notes:
             continue
         group.clear()
@@ -489,6 +502,7 @@ def _normalize_ams_footnotes(container: Any) -> None:
         group.append(heading)
         for label, text in notes:
             paragraph = soup.new_tag("p")
+            paragraph["data-paper-fetch-markdown"] = "1"
             paragraph.append(f"<sup>{label}</sup> {text}")
             group.append(paragraph)
 
@@ -544,6 +558,11 @@ def _normalize_ams_inline_markup_nodes(container: Any) -> None:
             continue
         if _is_descendant_of_any_ams_node(node, selected):
             continue
+        if (
+            node.name not in {"math", "inline-formula"}
+            or node.find_parent(attrs={"data-paper-fetch-markdown": "1"}) is not None
+        ):
+            continue
         if not _should_normalize_ams_inline_node(node):
             continue
         selected.append(node)
@@ -553,9 +572,8 @@ def _normalize_ams_inline_markup_nodes(container: Any) -> None:
         rendered = _render_ams_inline_text(node)
         if not rendered:
             continue
-        replacement = (
-            NavigableString(rendered) if NavigableString is not None else rendered
-        )
+        replacement = Tag(name="span", attrs={"data-paper-fetch-markdown": "1"})
+        replacement.string = rendered
         node.replace_with(replacement)
 
 
@@ -602,6 +620,51 @@ def _drop_ams_chrome(container: Any) -> None:
 
 
 def _normalize_ams_dom(container: Any) -> None:
+    for paragraph in container.select("div.p"):
+        paragraph["role"] = "paragraph"
+    for paragraph in container.select("p"):
+        first = next(iter(paragraph.children), None)
+        if isinstance(first, NavigableString):
+            prefix = re.match(r"^([\u2003]+)", str(first))
+            if prefix:
+                raw = Tag(name="span", attrs={"data-paper-fetch-markdown": "1"})
+                raw.string = "&emsp;" * len(prefix[1])
+                first.replace_with(raw, str(first)[len(prefix[1]) :])
+    for keywords in list(container.select("#articleBody > .keywords")):
+        keywords.decompose()
+    # In appendix algorithms the publisher uses one <p> per physical line,
+    # including the continuation of the same max-set condition.
+    for paragraph in list(container.select("app p")):
+        text = paragraph.get_text("", strip=True)
+        label = paragraph.find(["b", "strong"], recursive=False)
+        continuation = paragraph.find_next_sibling("p")
+        if (
+            label is None
+            or label.get_text(strip=True) != "with"
+            or "max{" not in text
+            or "}" in text
+        ):
+            continue
+        if continuation is None:
+            continue
+        tail = continuation.get_text("", strip=True)
+        if not tail.startswith(("<", "≤")) or not tail.endswith("}"):
+            continue
+        factory = BeautifulSoup("", choose_parser())
+        paragraph.append(factory.new_tag("br"))
+        for child in list(continuation.contents):
+            paragraph.append(child.extract())
+        continuation.decompose()
+    for heading in list(container.select(".abstract h3.abstractTitle")):
+        if heading.get_text(strip=True).casefold() != "significance statement":
+            continue
+        statement = heading.parent
+        abstract = heading.find_parent(class_="abstract")
+        if abstract is not None and statement is not abstract:
+            statement.name = "section"
+            statement["class"] = ["abstract"]
+            heading.name = "h2"
+            abstract.insert_after(statement.extract())
     _normalize_nested_sup_sub(container)
     _normalize_ams_formula_dom(container)
     _normalize_ams_figure_captions(container)

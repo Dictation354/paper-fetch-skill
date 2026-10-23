@@ -81,6 +81,8 @@ def _urljoin(base_url: str, value: str | None) -> str:
     normalized = normalize_text(value)
     if not normalized:
         return ""
+    if normalized.startswith("info:doi/"):
+        return "https://doi.org/" + normalized.removeprefix("info:doi/")
     return urllib.parse.urljoin(base_url, normalized)
 
 
@@ -365,7 +367,10 @@ def _supplementary_entries(root: ET.Element, source_url: str) -> list[dict[str, 
             continue
         text = normalize_text(render_inline_text(node))
         base_title = (
-            normalize_text(str(node.get(XLINK_TITLE) or node.get("content-type") or ""))
+            child_text(node, "label")
+            or normalize_text(
+                str(node.get(XLINK_TITLE) or node.get("content-type") or "")
+            )
             or text
             or "Supplementary material"
         )
@@ -420,14 +425,12 @@ def _render_list(
     render_item: Callable[[ET.Element], list[str]] | None = None,
 ) -> list[str]:
     items = [
-        normalize_text(
-            (
-                "\n".join(render_item(item))
-                if render_item
-                else " ".join(_render_paragraph_texts(item))
-            )
-            or render_inline_text(item)
+        (
+            "\n".join(render_item(item)).strip()
+            if render_item
+            else " ".join(_render_paragraph_texts(item))
         )
+        or render_inline_text(item)
         for item in iter_children(node, "list-item")
     ]
     return render_list(MarkdownList(items=items, ordered=ordered))

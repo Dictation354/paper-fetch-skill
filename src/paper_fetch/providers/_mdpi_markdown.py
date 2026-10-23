@@ -35,7 +35,7 @@ from ._mdpi_references import (
     extract_keywords,
     extract_references,
 )
-from ._retained_object_links import resolve_retained_object_links
+from ..extraction.html.object_links import resolve_retained_object_links
 
 _NOISY_MARKDOWN_LINES = {
     "browse figures",
@@ -74,6 +74,9 @@ def _render_mdpi_article_markdown(article_html: str, source_url: str) -> str:
     article = soup.find("article")
     if not isinstance(article, Tag):
         return ""
+    from ..extraction.html.object_links import prepare_retained_object_links
+
+    prepare_retained_object_links(article, source_url)
     _inject_mdpi_inline_figure_sources(article, source_url)
     title_node = article.find("h1")
     title = short_text(title_node) if isinstance(title_node, Tag) else ""

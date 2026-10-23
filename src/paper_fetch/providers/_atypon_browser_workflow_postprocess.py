@@ -11,9 +11,10 @@ from ..markdown.citations import (
 )
 
 EQUATION_HEADING_JOIN_PATTERN = re.compile(r"(\S)(\*\*Equation\s+\d+[A-Za-z]?\.\*\*)")
-DISPLAY_MATH_OPEN_PATTERN = re.compile(r"(?<=\S)(\$\$)")
-DISPLAY_MATH_BLOCK_PATTERN = re.compile(r"\$\$\s*(.+?)\s*\$\$", flags=re.DOTALL)
-DISPLAY_MATH_TRAILING_PATTERN = re.compile(r"(?<=\$\$)(?=[^\s\n])")
+DISPLAY_MATH_BLOCK_PATTERN = re.compile(
+    r"^(?P<indent>[ \t]*)\$\$[ \t]*\n(?P<body>.+?)\n[ \t]*\$\$[ \t]*$",
+    flags=re.DOTALL | re.MULTILINE,
+)
 
 
 def is_display_math_markdown_block(markdown_text: str) -> bool:
@@ -22,14 +23,20 @@ def is_display_math_markdown_block(markdown_text: str) -> bool:
 
 def normalize_equation_markdown_blocks(markdown_text: str) -> str:
     text = EQUATION_HEADING_JOIN_PATTERN.sub(r"\1\n\n\2", markdown_text)
-    text = DISPLAY_MATH_OPEN_PATTERN.sub(r"\n\n\1", text)
 
     def normalize_display_math(match: re.Match[str]) -> str:
-        body = match.group(1).strip()
-        return f"$$\n{body}\n$$"
+        lines = match["body"].splitlines()
+        while lines and not lines[0].strip():
+            lines.pop(0)
+        while lines and not lines[-1].strip():
+            lines.pop()
+        body = "\n".join(lines)
+        indent = match["indent"]
+        return f"{indent}$$\n{body}\n{indent}$$"
 
-    text = DISPLAY_MATH_BLOCK_PATTERN.sub(normalize_display_math, text)
-    return DISPLAY_MATH_TRAILING_PATTERN.sub("\n\n", text)
+    # Only line-delimited fences establish display math. Same-line $$…$$ is
+    # valid inline remark-math, including TeX containing its own dollar signs.
+    return DISPLAY_MATH_BLOCK_PATTERN.sub(normalize_display_math, text)
 
 
 def normalize_browser_workflow_markdown(

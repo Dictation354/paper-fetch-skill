@@ -253,6 +253,11 @@ def _pdf_identity_evidence(pdf_path: Path) -> dict[str, Any]:
         for key, value in {
             "doi": response_doi,
             "title": title or None,
+            "authors": [
+                part.strip()
+                for part in re.split(r";|,", str(metadata_mapping.get("author") or ""))
+                if part.strip()
+            ],
             "opening_text": first_pages_text[:8000],
             "method": (
                 "pdf_metadata_or_first_pages"
@@ -1104,5 +1109,10 @@ def pdf_fetch_result_from_bytes(
                     }
                 ),
                 "pdf_markdown_cache": {"status": render_cache_status},
+                "metadata": {
+                    key: identity_evidence[key]
+                    for key in ("title", "authors")
+                    if identity_evidence.get(key)
+                },
             },
         )

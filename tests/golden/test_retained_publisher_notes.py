@@ -1,5 +1,8 @@
 """Independent original-source assertions before exact baseline updates."""
 
+from paper_fetch.extraction.html.inline import escape_markdown_text
+from tests.support.markdown_presentation import visible_markdown
+
 from bs4 import BeautifulSoup
 import pytest
 from tests.golden_corpus import golden_corpus_fixture_for_doi
@@ -34,9 +37,18 @@ def test_original_oup_table_notes_complete_and_in_place(doi):
         # Compare source cells carrying footnote letters as well as the notes;
         # flattening a superscript must not silently drop its marker.
         for marker in wrapper.find("table").select("sup"):
-            if marker.get_text(strip=True) in {"a", "b", "c", "d", "e", "f"}:
+            if visible_markdown(marker.get_text(strip=True)) in {
+                "a",
+                "b",
+                "c",
+                "d",
+                "e",
+                "f",
+            }:
                 cell = marker.find_parent(["td", "th"])
-                assert _words(cell.get_text(" ", strip=True)) in rendered
+                assert visible_markdown(
+                    _words(cell.get_text(" ", strip=True))
+                ) in visible_markdown(rendered)
         table_label = _words(wrapper.select_one(".label").get_text())
         assert rendered.rfind(table_label, 0, cursor) >= 0
         following = wrapper.find_next_sibling()
@@ -48,11 +60,15 @@ def test_original_oup_table_notes_complete_and_in_place(doi):
                 >= cursor
             )
     if doi.endswith("161"):
-        assert "$p \\leq 0.05$" in md and "$q \\leq 0.25$" in md
-        assert "*p* = Number of features" in md
+        assert visible_markdown("$p \\leq 0.05$") in visible_markdown(
+            md
+        ) and visible_markdown("$q \\leq 0.25$") in visible_markdown(md)
+        assert visible_markdown("*p* = Number of features") in visible_markdown(md)
     else:
-        assert "a AND and OR query" in md
-        assert "f Ratio of *L*<sub>int</sub> and *L*<sub>tot</sub>." in md
+        assert visible_markdown("a AND and OR query") in visible_markdown(md)
+        assert visible_markdown(
+            "f Ratio of *L*<sub>int</sub> and *L*<sub>tot</sub>."
+        ) in visible_markdown(md)
 
 
 @pytest.mark.parametrize(
@@ -87,4 +103,4 @@ def test_original_science_statement_text_links_kind_and_rendering(doi):
     assert _words(md).count(expected) == 1
     assert md.count("## " + heading) == 1
     for link in original.select("a[href^=http]"):
-        assert f"[{link.get_text()}]({link['href']})" in md
+        assert f"[{escape_markdown_text(link.get_text())}]({link['href']})" in md

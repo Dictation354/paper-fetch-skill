@@ -386,9 +386,9 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         )
 
         for fragment in (
-            "where L is the distance between the piston and the cylinder head",
-            "where u′ is the instantaneous velocity fluctuation",
-            "C is a modelling constant",
+            "where *L* is the distance between the piston and the cylinder head",
+            "where *u*′ is the instantaneous velocity fluctuation",
+            "**C** is a modelling constant",
             "Sc is the Schmidt number",
             "ω<sub>eng</sub> is the engine speed in rad.s<sup>−1</sup>.",
         ):

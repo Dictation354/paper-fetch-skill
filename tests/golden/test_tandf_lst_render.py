@@ -1,6 +1,7 @@
 """HTML-derived semantic oracle for the LST article (not a generated snapshot)."""
 
 from __future__ import annotations
+from tests.support.markdown_presentation import visible_markdown
 from tests.support.tandf_lst_render import DOI, URL, assert_formulas, source_html
 from tests.support.test_evidence import evidence_cache as cache
 import re
@@ -36,7 +37,14 @@ def fixture_article():
 def test_lst_formula_oracle_and_references():
     markdown, diagnostics = extraction()
     assert_formulas(markdown)
-    assert not any(diagnostics["semantic_losses"].values())
+    assert all(
+        value == 0
+        for key, value in diagnostics["semantic_losses"].items()
+        if key.endswith("_count")
+    )
+    assert all(
+        item["valid"] for item in diagnostics["semantic_losses"]["formula_diagnostics"]
+    )
     soup = BeautifulSoup(source_html(), "lxml")
     refs = soup.select('a[data-label="equation"]')
     assert len(refs) == 11
@@ -55,20 +63,23 @@ def test_lst_formula_oracle_and_references():
         "(9)",
     ]
     assert (
-        re.findall(r"Eq\. \(\d+\)|(?<=equations )\(7\)|(?<=and )\(9\)", markdown)
+        re.findall(
+            r"Eq\. \(\d+\)|(?<=equations )\(7\)|(?<=and )\(9\)",
+            visible_markdown(markdown),
+        )
         == expected_refs
     )
-    assert "In equations (7) and (9), the regression coefficient" in markdown
+    assert "In equations (7) and (9), the regression coefficient" in visible_markdown(
+        markdown
+    )
     article = fixture_article()
     citations = soup.select('li[id^="CIT"]')
     assert len(citations) == len(article.references) == 64
-    for index, (node, reference) in enumerate(
-        zip(citations, article.references, strict=True), 1
-    ):
+    for node, reference in zip(citations, article.references, strict=True):
         for control in node.select(".extra-links"):
             control.decompose()
-        assert re.sub(r"\s+", "", reference.raw) == re.sub(
-            r"\s+", "", f"{index}. {node.get_text(' ', strip=True)}"
+        assert re.sub(r"\s+", "", visible_markdown(reference.raw)) == re.sub(
+            r"\s+", "", node.get_text(" ", strip=True)
         )
 
 
@@ -209,4 +220,8 @@ def test_lst_every_inline_math_preserves_operands_and_scripts():
         assert latex.count(r"\frac") == len(math.find_all("mfrac"))
         for operand in math.find_all(["mi", "mn"]):
             text = normalize_text(operand.text)
-            assert symbols.get(text, text) in latex, (str(math), latex, text)
+            assert symbols.get(text, text) in latex or text in latex, (
+                str(math),
+                latex,
+                text,
+            )

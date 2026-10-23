@@ -270,7 +270,7 @@ class ArxivProviderTests(unittest.TestCase):
         )
         self.assertIsNone(empty_country_pattern.search("Ada Lovelace, Portugal"))
 
-    def test_html_route_sanitizes_nested_tex_dollars_in_latexml_annotations(
+    def test_html_route_preserves_nested_tex_dollars_in_latexml_annotations(
         self,
     ) -> None:
         soup = _arxiv_html.BeautifulSoup(
@@ -287,10 +287,10 @@ class ArxivProviderTests(unittest.TestCase):
 
         markdown = _arxiv_authors._arxiv_math_markdown(soup.math)
 
-        self.assertEqual(markdown.count("$"), 2)
-        self.assertNotIn(r"for $x>x_{\tau}$", markdown)
-        self.assertIn(r"x>x_{\tau}", markdown)
-        self.assertTrue(markdown.startswith("$P(A(1,x,y)"))
+        self.assertEqual(
+            markdown,
+            r"$$P(A(1,x,y)\text{ is a quota violation for $x>x_{\tau}$})$$",
+        )
 
     def test_arxiv_complex_table_falls_back_to_key_value_without_semantic_loss(
         self,
@@ -524,3 +524,26 @@ class TestArxivAncillaryAssets(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_compact_author_list_keeps_names_after_affiliation_superscripts():
+    html = '<article><div class="ltx_authors"><span class="ltx_personname">A. Alpha<sup>a</sup>, B. Beta<sup>b</sup>, and C. Gamma<sup>a</sup></span></div></article>'
+    assert _arxiv_authors._extract_arxiv_person_authors(html) == [
+        "A. Alpha",
+        "B. Beta",
+        "C. Gamma",
+    ]
+
+
+def test_extended_data_text_panel_becomes_caption_without_losing_math():
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(
+        '<article><figure class="ltx_figure"><img src="a.png"><p class="ltx_figure_panel"><b>Extended Data Figure 1.</b> Value <math class="ltx_Math" alttext="x^2"><mi>x</mi></math>.</p></figure></article>',
+        "lxml",
+    )
+    _arxiv_authors._clean_official_html_latexml_noise(soup.article)
+    caption = soup.find("figcaption")
+    assert caption is not None
+    assert "Extended Data Figure 1." in caption.get_text()
+    assert "$x^2$" in caption.get_text()

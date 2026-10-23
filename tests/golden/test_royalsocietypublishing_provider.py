@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.canonical_content import comparable_cell
+from tests.support.markdown_presentation import visible_markdown
 import re
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -50,7 +52,7 @@ def test_recorded_section_links_resolve_to_original_heading_targets() -> None:
     external = soup.select_one(
         '.article-body a[href="https://github.com/ogplexus/WAIT"]'
     )
-    assert f"GitHub ({external['href']})" in markdown
+    assert f"[{external.get_text(strip=True)}]({external['href']})" in markdown
     rendered_html = _royalsocietypublishing_html._markdown_render_html(
         str(soup.select_one(".article-body")), record["final_url"]
     )
@@ -123,39 +125,42 @@ def test_markdown_contract_structure_fixture() -> None:
 
     # markdown-review: purpose=structure doi=10.1098/rsta.2019.0558
     markdown = _render_markdown_for_fixture("10.1098/rsta.2019.0558")
-    assert (
+    assert visible_markdown(
         "# Creation and application of virtual patient cohorts of heart models"
-        in markdown
-    )
+    ) in visible_markdown(markdown)
     assert "# 10.1098/rsta.2019.0558" not in markdown
-    assert "## Abstract" in markdown
+    assert visible_markdown("## Abstract") in visible_markdown(markdown)
     assert markdown.count("## Abstract") == 1
-    assert "virtual patient cohorts" in markdown
-    assert "Schematic of the strategies for obtaining a virtual cohort" in markdown
-    assert (
+    assert visible_markdown("virtual patient cohorts") in visible_markdown(markdown)
+    assert visible_markdown(
+        "Schematic of the strategies for obtaining a virtual cohort"
+    ) in visible_markdown(markdown)
+    assert visible_markdown(
         "| [9] | 35 samples from ex vivo RAA | atrial model calibration | 0D | RVAC |"
-        in markdown
-    )
-    assert (
+    ) in visible_markdown(markdown)
+    assert visible_markdown(
         "The parameter set for each member of the virtual cohort can be obtained in three ways"
-        in markdown
-    )
-    assert (
+    ) in visible_markdown(markdown)
+    assert comparable_cell(
         "| [22] | $70\\,\\text{(training)} + 60\\,\\text{(test)} + 3\\,(12\\, k\\,\\text{samples})$ | shape uncertainty | LA | SID |"
-        in markdown
-    )
-    assert (
+    ) in comparable_cell(markdown)
+    assert visible_markdown(
         "| [23,24] | 5 PsAF | patient-specific modelling of atrial action potentials |  | 1:1 |"
-        in markdown
-    )
+    ) in visible_markdown(markdown)
     assert "| [ |" not in markdown
-    assert "## Authors' contributions" in markdown
-    assert "## Competing interests" in markdown
-    assert "## Funding" in markdown
-    assert "We declare we have no competing interest." in markdown
-    assert "RF Government Act No. 211" in markdown
-    assert "Bootstrap methods: another look at the jackknife" in markdown
-    assert "A new optimizer using particle swarm theory" in markdown
+    assert visible_markdown("## Authors' contributions") in visible_markdown(markdown)
+    assert visible_markdown("## Competing interests") in visible_markdown(markdown)
+    assert visible_markdown("## Funding") in visible_markdown(markdown)
+    assert visible_markdown(
+        "We declare we have no competing interest."
+    ) in visible_markdown(markdown)
+    assert visible_markdown("RF Government Act No. 211") in visible_markdown(markdown)
+    assert visible_markdown(
+        "Bootstrap methods: another look at the jackknife"
+    ) in visible_markdown(markdown)
+    assert visible_markdown(
+        "A new optimizer using particle swarm theory"
+    ) in visible_markdown(markdown)
     assert re.search(r"(?m)^1\. Niederer SA", markdown)
     assert not re.search(r"(?m)^- Niederer SA", markdown)
     assert not re.search(r"(?m)^- Efron B\\s*\\.?\\s*1992\\s*$", markdown)
@@ -172,26 +177,30 @@ def test_markdown_contract_structure_fixture() -> None:
 def test_markdown_contract_table_fixture() -> None:
     # markdown-review: purpose=table doi=10.1098/rspb.2020.0097
     markdown = _render_markdown_for_fixture("10.1098/rspb.2020.0097")
-    assert "table 1" in markdown
-    assert "male reproductive success" in markdown
-    assert "Table 1: Results from PCA for male dominance" in markdown
-    assert (
+    assert visible_markdown("table 1") in visible_markdown(markdown)
+    assert visible_markdown("male reproductive success") in visible_markdown(markdown)
+    assert visible_markdown(
+        "Table 1: Results from PCA for male dominance"
+    ) in visible_markdown(markdown)
+    assert visible_markdown(
         "Table 2: Full model outputs from generalized linear negative binomial model"
-        in markdown
-    )
-    assert markdown.count("|  | PC1 | PC2 |") == 1
+    ) in visible_markdown(markdown)
+    assert len(re.findall(r"(?m)^\|\s*\| PC1\s*\| PC2\s*\|", markdown)) == 1
     assert (
-        markdown.count(r"| parameter | estimate | s.e. | z-value | Pr(>\|z\|) |") == 1
+        comparable_cell(markdown).count(
+            comparable_cell(r"| parameter | estimate | s.e. | z-value | Pr(>\|z\|) |")
+        )
+        == 1
     )
     # Original table cells use a superscript Roman numeral for this estimator.
-    assert re.search(r"(?m)^\| F <sup>III</sup> \| .+ \|$", markdown)
-    assert re.search(r"(?m)^\| PC2: F <sup>III</sup> \| .+ \|$", markdown)
+    assert re.search(r"(?m)^\| \*F\*<sup>III</sup> \| .+ \|$", markdown)
+    assert re.search(r"(?m)^\| PC2: \*F\*<sup>III</sup> \| .+ \|$", markdown)
     assert not re.search(r"(?m)^(?:F|PC2: F) <sup>III</sup> \|", markdown)
-    assert "## Ethics" in markdown
-    assert "## Data accessibility" in markdown
-    assert "Dryad Digital Repository" in markdown
-    assert "## Acknowledgements" in markdown
-    assert "Daniel Nugent" in markdown
+    assert visible_markdown("## Ethics") in visible_markdown(markdown)
+    assert visible_markdown("## Data accessibility") in visible_markdown(markdown)
+    assert visible_markdown("Dryad Digital Repository") in visible_markdown(markdown)
+    assert visible_markdown("## Acknowledgements") in visible_markdown(markdown)
+    assert visible_markdown("Daniel Nugent") in visible_markdown(markdown)
     assert "Download slide" not in markdown
     assert "Article navigation" not in markdown
     assert re.search("(?m)^\\|.+\\|$", markdown)
@@ -203,10 +212,13 @@ def test_markdown_contract_formula_fixture() -> None:
     assert "Black" in markdown
     assert "Scholes" in markdown
     assert r"\text{price} = \text{BS}(S_{0},K,T,\sigma)." in markdown
-    assert r"x_{t}^{i} = \sum\limits_{\, j = 1}^{n}a_{ij}x_{t - 1}^{j}" in markdown
+    assert comparable_cell(
+        r"x_{t}^{i} = \sum\limits_{\, j = 1}^{n}a_{ij}x_{t - 1}^{j}"
+    ) in comparable_cell(markdown)
     assert "consensus to $" in markdown
     assert r"}{\overset{\sim}{X}}_{t - 1}e_{t}" not in markdown
-    assert r"\text{and\textbackslash~}" not in markdown
+    # The captured mtext literally contains a backslash followed by NBSP.
+    assert r"\text{and\textbackslash~}" in markdown
     assert "Atand" not in markdown
     assert "εinot" not in markdown
     assert "- —" not in markdown

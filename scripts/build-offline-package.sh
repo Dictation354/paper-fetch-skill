@@ -503,6 +503,9 @@ PY
   printf '<math><mi>x</mi></math>' \
     | "$node_bin" "$formula_tools/mathml_to_latex_cli.mjs" \
     | grep -q 'x'
+  printf '%s\n' '{"id":1,"session":"offline-smoke","expression":"\\mathbbm{1}+\\textdegree","displayMode":false}' \
+    | "$node_bin" "$formula_tools/tex_validation_worker.mjs" \
+    | "$PYTHON_BIN" -c 'import json,sys; result=json.load(sys.stdin); assert result["ok"] and result["valid"], result'
 }
 
 copy_macos_library_licenses() {

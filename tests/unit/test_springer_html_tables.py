@@ -801,7 +801,9 @@ def test_nature_body_all_scope_downloads_and_missing_evidence(tmp_path):
             if missing:
                 assert acceptance.overall == "degraded"
             if not missing:
-                rendered = article.to_ai_markdown(max_tokens="full_text")
+                rendered = article.to_ai_markdown(
+                    max_tokens="full_text", asset_profile="all"
+                )
                 table_asset = next(a for a in result["assets"] if a["kind"] == "table")
                 assert Path(table_asset["path"]).is_file()
                 assert table_asset["path"] in rendered

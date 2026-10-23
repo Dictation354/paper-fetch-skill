@@ -4,7 +4,7 @@
     "authors": true,
     "abstract": true,
     "body": true,
-    "figures": false,
+    "figures": true,
     "references": true,
     "data_availability": true,
     "code_availability": false
@@ -13,7 +13,7 @@
     "sections": 32,
     "abstract_sections": 2,
     "body_sections": 29,
-    "figures": 0,
+    "figures": 9,
     "tables": 0,
     "references": 103
   },

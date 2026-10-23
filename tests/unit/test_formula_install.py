@@ -214,10 +214,12 @@ class FormulaInstallTests(unittest.TestCase):
 
             self.assertTrue((target_dir / "mathml_to_latex_cli.mjs").exists())
             self.assertTrue((target_dir / "mathml_to_latex_worker.mjs").exists())
+            self.assertTrue((target_dir / "tex_validation_worker.mjs").exists())
+            self.assertTrue((target_dir / "mathjax_engine.mjs").exists())
             self.assertTrue((target_dir / "package.json").exists())
             self.assertTrue((target_dir / "package-lock.json").exists())
 
-    def test_existing_mathml_to_latex_does_not_require_katex_or_npm_install(
+    def test_old_mathml_only_install_still_installs_mathjax(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -239,7 +241,18 @@ class FormulaInstallTests(unittest.TestCase):
                     )
                 )
 
-            run.assert_not_called()
+            run.assert_called_once()
+
+    def test_working_texmath_does_not_skip_node_validation_install(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with (
+                mock.patch.object(formula_install, "ensure_texmath", return_value=True),
+                mock.patch.object(
+                    formula_install, "ensure_mathml_to_latex", return_value=True
+                ) as install_node,
+            ):
+                self.assertEqual(formula_install.main(["--target-dir", tmpdir]), 0)
+            install_node.assert_called_once_with(Path(tmpdir), install_node=True)
 
     def test_texmath_target_path_uses_exe_on_windows(self) -> None:
         target_dir = Path("tools")

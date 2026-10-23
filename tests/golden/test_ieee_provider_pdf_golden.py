@@ -89,8 +89,8 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
                         for prefix, listing in [
                             ("standard processing system.", "Listing 1"),
                             ("post-processing.", "Listing 2"),
-                            ("NDPmulator).", "Listing 3"),
-                            ("ndaccAlloc).", "Listing 4"),
+                            ("NDPmulator)).", "Listing 3"),
+                            ("`ndaccAlloc`).", "Listing 4"),
                         ]:
                             with self.subTest(listing=listing):
                                 self.assertRegex(
@@ -106,12 +106,18 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
                         # multiplication and numbering, not just formula markers.
                         equations = markdown.split("$$")[1::2]
                         self.assertIn(
-                            r"\begin{equation*}{\text{P}}({\text{Risk}}) = {\text{P}}({\text{Age}})*{\text{P}}({\text{Sex}})*{\text{P}}({\text{Time}})\tag{1}\end{equation*}",
-                            [e.strip() for e in equations],
+                            r"{\text{P}}({\text{Risk}}) = {\text{P}}({\text{Age}})*{\text{P}}({\text{Sex}})*{\text{P}}({\text{Time}})\tag{1}",
+                            [
+                                re.sub(r"\\(?:begin|end)\{equation\*\}", "", e).strip()
+                                for e in equations
+                            ],
                         )
                         self.assertIn(
-                            r"\begin{equation*}{\text{Risk Index}} = {\text{P}}({\text{Risk}})*{\text{Crime Score}}\tag{2}\end{equation*}",
-                            [e.strip() for e in equations],
+                            r"{\text{Risk Index}} = {\text{P}}({\text{Risk}})*{\text{Crime Score}}\tag{2}",
+                            [
+                                re.sub(r"\\(?:begin|end)\{equation\*\}", "", e).strip()
+                                for e in equations
+                            ],
                         )
                         self.assertGreaterEqual(extraction.marker_counts["formulas"], 4)
                         self.assertGreaterEqual(len(article.assets), 10)

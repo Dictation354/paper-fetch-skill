@@ -7,8 +7,8 @@ import warnings
 from collections.abc import Iterator, Mapping as MappingABC, Set as SetABC
 from dataclasses import dataclass, field, replace
 from types import MappingProxyType
-from typing import Any
-from collections.abc import Callable, Mapping
+from typing import Any, Protocol
+from collections.abc import Callable, Mapping, Sequence
 
 from ...common_patterns import EXTENDED_DATA_LABEL
 from ...utils import normalize_text
@@ -384,6 +384,20 @@ class ProviderHeadingRules:
     normalizations: Mapping[str, str] = field(default_factory=dict)
 
 
+class TableRenderHook(Protocol):
+    def __call__(self, node: Any, *, label: str, caption: str) -> str | None: ...
+
+
+class LeadingAuxiliaryBlockHook(Protocol):
+    def __call__(
+        self,
+        block: str,
+        *,
+        publisher: str,
+        figure_assets: Sequence[Mapping[str, Any]] | None,
+    ) -> bool: ...
+
+
 @dataclass(frozen=True)
 class DomHooks:
     before_block_normalization: Callable[[Any], None] | None = None
@@ -391,6 +405,8 @@ class DomHooks:
     body_container: Callable[[Any], None] | None = None
     asset_body_container: Callable[[Any], None] | None = None
     asset_figure_extraction: Callable[[Any], None] | None = None
+    before_inline_formula_normalization: Callable[[Any], None] | None = None
+    render_table: TableRenderHook | None = None
 
 
 @dataclass(frozen=True)
@@ -399,6 +415,7 @@ class MarkdownHooks:
     classify_heading: Callable[[str, str | None], str | None] | None = None
     keep_unknown_abstract_block: Callable[[str], bool] | None = None
     suppress_missing_abstract: Callable[[str], bool] | None = None
+    keep_leading_auxiliary_block: LeadingAuxiliaryBlockHook | None = None
 
 
 def _empty_availability_policy() -> AvailabilityPolicy:

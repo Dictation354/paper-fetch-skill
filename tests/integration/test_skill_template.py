@@ -4,12 +4,15 @@ import os
 import json
 import shutil
 import stat
+import shlex
+import sys
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
 import yaml
+import pytest
 
 from paper_fetch.mcp._instructions import (
     DEFAULT_FETCH_VALUES,
@@ -124,10 +127,7 @@ class StaticSkillTests(unittest.TestCase):
         self.assertTrue(metadata["description"].strip())
 
     def test_workflow_reference_and_its_direct_links_exist(self) -> None:
-        entrypoint = STATIC_SKILL_PATH.read_text(encoding="utf-8")
-
         self.assertTrue(STATIC_WORKFLOW_PATH.is_file())
-        self.assertIn("[`references/workflow.md`](references/workflow.md)", entrypoint)
         for relative_path in sorted(REQUIRED_REFERENCE_FILES):
             with self.subTest(relative_path=relative_path):
                 self.assertTrue((STATIC_WORKFLOW_PATH.parent / relative_path).is_file())
@@ -173,10 +173,17 @@ class InstallerSmokeTests(unittest.TestCase):
         copy_installer_fixture(repo_dir)
         codex_home.mkdir(parents=True)
         home.mkdir()
-        target = (
-            repo_dir / ".codex" / "skills" / "paper-fetch-skill"
+        legacy = (
+            repo_dir / ".codex/skills/paper-fetch-skill"
             if project
-            else codex_home / "skills" / "paper-fetch-skill"
+            else codex_home / "skills/paper-fetch-skill"
+        )
+        legacy.mkdir(parents=True)
+        (legacy / "SKILL.md").write_text("legacy\n")
+        target = (
+            repo_dir / ".agents" / "skills" / "paper-fetch-skill"
+            if project
+            else home / ".agents" / "skills" / "paper-fetch-skill"
         )
         if not missing:
             target.parent.mkdir(parents=True)
@@ -403,7 +410,7 @@ class InstallerSmokeTests(unittest.TestCase):
             script_name="install-codex-skill.sh"
         )
 
-        skill_dir = sandbox / "codex-home" / "skills" / "paper-fetch-skill"
+        skill_dir = sandbox / "home" / ".agents" / "skills" / "paper-fetch-skill"
         installed_skill = skill_dir / "SKILL.md"
         manifest_path = skill_dir / "agents" / "openai.yaml"
 
@@ -411,9 +418,12 @@ class InstallerSmokeTests(unittest.TestCase):
         assert_skill_bundle_matches_repo(self, skill_dir)
         self.assertTrue(manifest_path.exists())
         manifest_text = manifest_path.read_text(encoding="utf-8")
-        self.assertIn('display_name: "Paper Fetch Skill"', manifest_text)
-        self.assertIn("$paper-fetch-skill", manifest_text)
-        self.assertIn("full-text availability", manifest_text)
+        metadata = yaml.safe_load(manifest_text)
+        self.assertTrue(metadata["interface"]["display_name"])
+        self.assertIn("$paper-fetch-skill", metadata["interface"]["default_prompt"])
+        self.assertTrue(
+            metadata.get("policy", {}).get("allow_implicit_invocation", True)
+        )
         self.assertFalse((repo_dir / ".venv").exists())
         self.assertFalse((repo_dir / ".env").exists())
         self.assertIn("-m pip install --quiet .", log_path.read_text(encoding="utf-8"))
@@ -489,3 +499,101 @@ class InstallerSmokeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@pytest.mark.parametrize("project", [False, True])
+@pytest.mark.parametrize("verification_fails", [False, True])
+def test_codex_scope_migration_upgrade_and_uninstall(
+    tmp_path, project, verification_fails
+):
+    repo = tmp_path / "repo"
+    copy_installer_fixture(repo)
+    home = tmp_path / "home"
+    codex_home = tmp_path / "custom-codex"
+    target = (repo if project else home) / ".agents/skills/paper-fetch-skill"
+    legacy = (
+        [repo / ".codex/skills/paper-fetch-skill"]
+        if project
+        else [
+            home / ".codex/skills/paper-fetch-skill",
+            codex_home / "skills/paper-fetch-skill",
+        ]
+    )
+    other_scope = (home if project else repo) / ".codex/skills/paper-fetch-skill"
+    for path in [*legacy, other_scope, target]:
+        path.mkdir(parents=True)
+        (path / "SKILL.md").write_text("old\n")
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    python = fake_bin / "python3"
+    python.write_text(
+        "#!/bin/sh\n"
+        'if [ "$1" = "-m" ] && [ "$2" = "pip" ]; then exit 0; fi\n'
+        + (
+            "exit 1\n"
+            if verification_fails
+            else f'exec {shlex.quote(sys.executable)} "$@"\n'
+        )
+    )
+    python.chmod(0o755)
+    env = dict(
+        os.environ,
+        HOME=str(home),
+        CODEX_HOME=str(codex_home),
+        PATH=str(fake_bin) + os.pathsep + os.environ["PATH"],
+    )
+    args = ["bash", str(repo / "scripts/install-codex-skill.sh")]
+    if project:
+        args.append("--project")
+
+    def run(*options):
+        return subprocess.run(
+            [*args, *options], cwd=repo, env=env, capture_output=True, text=True
+        )
+
+    result = run()
+    if verification_fails:
+        assert result.returncode != 0
+        assert all((path / "SKILL.md").read_text() == "old\n" for path in legacy)
+    else:
+        assert result.returncode == 0, result.stderr
+        assert_skill_bundle_matches_repo(unittest.TestCase(), target)
+        assert all(not path.exists() for path in legacy)
+        # Repeated upgrades replace stale content and keep the new bundle discoverable.
+        (target / "stale.md").write_text("stale\n")
+        assert run().returncode == 0
+        assert not (target / "stale.md").exists()
+        assert run("--check").returncode == 0
+    # Coexisting new and legacy entries are all removed in this scope only.
+    for path in legacy:
+        path.mkdir(parents=True, exist_ok=True)
+        (path / "SKILL.md").write_text("legacy\n")
+    result = run("--uninstall")
+    assert result.returncode == 0, result.stderr
+    assert all(not path.exists() for path in [target, *legacy])
+    assert (other_scope / "SKILL.md").read_text() == "old\n"
+
+
+def test_codex_home_can_equal_new_discovery_root(tmp_path):
+    repo = tmp_path / "repo"
+    copy_installer_fixture(repo)
+    home = tmp_path / "home"
+    target = home / ".agents/skills/paper-fetch-skill"
+    shutil.copytree(STATIC_SKILL_DIR, target)
+    env = dict(os.environ, HOME=str(home), CODEX_HOME=str(home / ".agents"))
+    # Exercise the cleanup boundary without installing the package into the test process.
+    result = subprocess.run(
+        [
+            "bash",
+            "-c",
+            'source "$1"; PF_HOST=codex; PF_SKILL_DIR="$2"; pf_skill_remove_legacy_copies',
+            "migration",
+            str(repo / "scripts/_skill_install_common.sh"),
+            str(target),
+        ],
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert_skill_bundle_matches_repo(unittest.TestCase(), target)

@@ -507,6 +507,55 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertFalse((bundle / "offline.env").exists())
             self.assertIn(f"Install directory: {install_root}", result.stdout)
 
+    def test_codex_skill_migration_verifies_upgrades_and_uninstalls(self) -> None:
+        for platform_name in ("linux", "macos"):
+            with (
+                self.subTest(platform=platform_name),
+                tempfile.TemporaryDirectory() as tmpdir,
+            ):
+                root = Path(tmpdir)
+                options = (
+                    {}
+                    if platform_name == "linux"
+                    else {
+                        "target_platform": "macos",
+                        "target_arch": "arm64",
+                        "uname_kernel": "Darwin",
+                        "uname_machine": "arm64",
+                    }
+                )
+                bundle, fake_bin, home = self._create_bundle(root, **options)
+                install_root = root / "installed"
+                target = home / ".agents/skills/paper-fetch-skill"
+                legacy = home / ".codex/skills/paper-fetch-skill"
+                _write_file(legacy / "SKILL.md", "old\n")
+                # Invalid new bundle must not remove the previous discovery entry.
+                skill = bundle / "skills/paper-fetch-skill/SKILL.md"
+                original = skill.read_bytes()
+                skill.write_text("corrupt\n")
+                rejected = self._run_installer(
+                    bundle, fake_bin, home, install_dir=install_root
+                )
+                self.assertNotEqual(rejected.returncode, 0)
+                self.assertEqual((legacy / "SKILL.md").read_text(), "old\n")
+                skill.write_bytes(original)
+                for _ in range(2):
+                    _write_file(target / "stale.md", "stale\n")
+                    installed = self._run_installer(
+                        bundle, fake_bin, home, install_dir=install_root
+                    )
+                    self.assertEqual(installed.returncode, 0, installed.stderr)
+                    self.assertEqual((target / "SKILL.md").read_bytes(), original)
+                    self.assertFalse((target / "stale.md").exists())
+                    self.assertFalse(legacy.exists())
+                _write_file(legacy / "SKILL.md", "legacy\n")
+                removed = self._run_installer(
+                    bundle, fake_bin, home, "--uninstall", install_dir=install_root
+                )
+                self.assertEqual(removed.returncode, 0, removed.stderr)
+                self.assertFalse(target.exists())
+                self.assertFalse(legacy.exists())
+
     def test_install_dir_upgrade_cleans_old_payload_and_preserves_offline_env(
         self,
     ) -> None:
@@ -590,6 +639,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep\n")
             self.assertFalse((home / ".bashrc").exists())
             self.assertFalse((home / ".codex").exists())
+            self.assertFalse((home / ".agents").exists())
 
     def test_install_rejects_nonempty_unowned_directory(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -611,6 +661,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertEqual(sentinel.read_text(encoding="utf-8"), "keep\n")
             self.assertFalse((home / ".bashrc").exists())
             self.assertFalse((home / ".codex").exists())
+            self.assertFalse((home / ".agents").exists())
 
     def test_install_rejects_home_ancestor_before_removing_existing_content(
         self,
@@ -634,6 +685,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertTrue(bundle.is_dir())
             self.assertFalse((home / ".bashrc").exists())
             self.assertFalse((home / ".codex").exists())
+            self.assertFalse((home / ".agents").exists())
 
     def test_install_rejects_symlink_to_nonempty_unowned_directory(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -798,6 +850,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertFalse(install_root.exists())
             self.assertFalse((home / ".zshrc").exists())
             self.assertFalse((home / ".codex").exists())
+            self.assertFalse((home / ".agents").exists())
 
     def test_macos_rejects_rosetta_python_before_writes(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -830,6 +883,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertFalse(install_root.exists())
             self.assertFalse((home / ".zshrc").exists())
             self.assertFalse((home / ".codex").exists())
+            self.assertFalse((home / ".agents").exists())
 
     def test_macos_rejects_nonstandard_cpython_abi_before_writes(self) -> None:
         cases = (
@@ -888,6 +942,7 @@ class OfflineInstallTests(unittest.TestCase):
                 self.assertFalse(install_root.exists())
                 self.assertFalse((home / ".zshrc").exists())
                 self.assertFalse((home / ".codex").exists())
+                self.assertFalse((home / ".agents").exists())
 
     def test_macos_quarantine_fails_before_user_writes(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -927,6 +982,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertFalse(install_root.exists())
             self.assertFalse((home / ".zshrc").exists())
             self.assertFalse((home / ".codex").exists())
+            self.assertFalse((home / ".agents").exists())
 
     def test_macos_checksum_failure_precedes_quarantine_check(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -988,6 +1044,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertFalse(install_root.exists())
             self.assertFalse((home / ".bashrc").exists())
             self.assertFalse((home / ".codex").exists())
+            self.assertFalse((home / ".agents").exists())
 
     @unittest.skipUnless(
         sys.platform.startswith(("linux", "darwin")),
@@ -1036,6 +1093,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertFalse(install_root.exists())
             self.assertFalse((home / ".bashrc").exists())
             self.assertFalse((home / ".codex").exists())
+            self.assertFalse((home / ".agents").exists())
 
     def test_macos_xattr_inspection_error_fails_closed_before_user_writes(
         self,
@@ -1070,6 +1128,7 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertFalse(install_root.exists())
             self.assertFalse((home / ".zshrc").exists())
             self.assertFalse((home / ".codex").exists())
+            self.assertFalse((home / ".agents").exists())
 
     def test_macos_user_config_uses_application_support(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1486,7 +1545,8 @@ class OfflineInstallTests(unittest.TestCase):
             _write_file(bundle / "offline.env", 'ELSEVIER_API_KEY="secret"\n')
             _write_file(bundle / "bin" / "paper-fetch", "installed\n")
             _write_file(
-                home / ".codex" / "skills" / "paper-fetch-skill" / "SKILL.md", "codex\n"
+                home / ".agents" / "skills" / "paper-fetch-skill" / "SKILL.md",
+                "codex\n",
             )
             _write_file(
                 home
@@ -1534,7 +1594,7 @@ class OfflineInstallTests(unittest.TestCase):
                 'ELSEVIER_API_KEY="secret"\n',
             )
             self.assertFalse(
-                (home / ".codex" / "skills" / "paper-fetch-skill").exists()
+                (home / ".agents" / "skills" / "paper-fetch-skill").exists()
             )
             self.assertFalse(
                 (
@@ -1671,7 +1731,7 @@ class OfflineInstallTests(unittest.TestCase):
             install_link = root / "installed-link"
             install_link.symlink_to(install_root, target_is_directory=True)
             installed_skill = (
-                home / ".codex" / "skills" / "paper-fetch-skill" / "SKILL.md"
+                home / ".agents" / "skills" / "paper-fetch-skill" / "SKILL.md"
             )
             self.assertTrue(installed_skill.is_file())
 
@@ -1719,7 +1779,7 @@ class OfflineInstallTests(unittest.TestCase):
             )
             sentinel = uninstalled_target / "keep.txt"
             _write_file(sentinel, "keep\n")
-            skill = home / ".codex" / "skills" / "paper-fetch-skill" / "SKILL.md"
+            skill = home / ".agents" / "skills" / "paper-fetch-skill" / "SKILL.md"
             _write_file(skill, "owned user skill\n")
 
             result = self._run_installer(
@@ -1751,7 +1811,7 @@ class OfflineInstallTests(unittest.TestCase):
                 """
             ).lstrip()
             _write_file(home / ".zshrc", managed)
-            skill = home / ".codex" / "skills" / "paper-fetch-skill" / "SKILL.md"
+            skill = home / ".agents" / "skills" / "paper-fetch-skill" / "SKILL.md"
             _write_file(skill, "owned user skill\n")
 
             result = self._run_installer(
@@ -1773,7 +1833,7 @@ class OfflineInstallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             bundle, fake_bin, home = self._create_bundle(root)
-            skill = home / ".codex" / "skills" / "paper-fetch-skill" / "SKILL.md"
+            skill = home / ".agents" / "skills" / "paper-fetch-skill" / "SKILL.md"
             _write_file(skill, "owned user skill\n")
 
             result = self._run_installer(
@@ -1797,7 +1857,7 @@ class OfflineInstallTests(unittest.TestCase):
             bundle, fake_bin, home = self._create_bundle(root)
             unowned_target = root / "unowned"
             _write_file(unowned_target / "keep.txt", "keep\n")
-            skill = home / ".codex" / "skills" / "paper-fetch-skill" / "SKILL.md"
+            skill = home / ".agents" / "skills" / "paper-fetch-skill" / "SKILL.md"
             _write_file(skill, "owned user skill\n")
 
             result = self._run_installer(

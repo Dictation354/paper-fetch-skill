@@ -7,9 +7,12 @@ import re
 from typing import Any, Literal
 from collections.abc import Callable, Sequence
 
+from bs4 import Comment
+
 from ...markdown.citations import (
     NUMERIC_CITATION_SENTINEL_PREFIX,
 )
+from ...markdown.math import protect_markdown_math
 from ...markdown.inline_spacing import normalize_inline_sup_sub_tag_bodies
 
 InlineTextPolicy = Literal["body", "heading", "table_cell"]
@@ -94,6 +97,18 @@ def _normalize_inline_text_fragment(
     return normalized
 
 
+def escape_markdown_text(text: str) -> str:
+    """Escape character data only; formulas, links and code are separate tokens."""
+    escaped = re.sub(r"([\\`*_{}\[\]$])", r"\\\1", text.replace(">", "&gt;"))
+    return re.sub(r"<(?=[A-Za-z/!])", r"\\<", escaped)
+
+
+def code_span(text: str) -> str:
+    fence = "`" * (max((len(m[0]) for m in re.finditer(r"`+", text)), default=0) + 1)
+    pad = " " if text.startswith("`") or text.endswith("`") else ""
+    return fence + pad + text + pad + fence
+
+
 def wrap_html_inline_text_fragment(text: str, marker: str | None = None) -> str:
     value = _normalize_inline_text_fragment(text, collapse_newlines=True)
     if not value.strip():
@@ -102,7 +117,10 @@ def wrap_html_inline_text_fragment(text: str, marker: str | None = None) -> str:
     has_trailing_space = value[-1:].isspace()
     normalized = value.strip()
     if marker:
-        normalized = f"{marker}{normalized}{marker}"
+        leading = re.match(r"^[,.;:!?]+\s*", normalized)
+        prefix = leading[0] if leading else ""
+        body = normalized[len(prefix) :]
+        normalized = prefix + (f"{marker}{body}{marker}" if body else "")
     if has_leading_space:
         normalized = f" {normalized}"
     if has_trailing_space:
@@ -167,15 +185,29 @@ def html_inline_tokens(
 ) -> list[InlineToken]:
     """Render an HTML inline node to structured tokens."""
 
+    if isinstance(node, Comment):
+        return []
     if _is_navigable_string(node):
-        fragment = wrap_html_inline_text_fragment(str(node), text_style)
+        fragment = wrap_html_inline_text_fragment(
+            escape_markdown_text(str(node)), text_style
+        )
         return [TextToken(fragment)] if fragment else []
     if node is None or not hasattr(node, "children"):
         return []
     if drop_node is not None and drop_node(node):
         return []
 
-    if citation_payload_from_node is not None:
+    linked = (
+        (name := _node_name(node)) == "a"
+        and node.get("href")
+        and node.get("href") != "#"
+        and not str(node["href"]).startswith("javascript:")
+    )
+    linked = linked or any(
+        a.get("href") != "#" and not str(a["href"]).startswith("javascript:")
+        for a in node.find_all("a", href=True)
+    )
+    if citation_payload_from_node is not None and not linked:
         payload = citation_payload_from_node(node)
         if payload is not None:
             return [CitationToken(payload)]
@@ -186,25 +218,67 @@ def html_inline_tokens(
             return [RawMarkdownToken(raw_markdown)]
 
     name = _node_name(node)
+    if node.get("data-paper-fetch-markdown") is not None:
+        return [RawMarkdownToken(node.get_text("\n\n", strip=False))]
+    if name in {"code", "monospace"}:
+        return [RawMarkdownToken(code_span(node.get_text("", strip=False)))]
     if name == "br":
         return [BreakToken()]
-    if render_text_styles and name in {"i", "em"}:
-        return html_inline_child_tokens(
+    if render_text_styles and name in {"i", "em", "b", "strong"}:
+        if any(_node_name(parent) in {"sub", "sup"} for parent in node.parents):
+            tag = "em" if name in {"i", "em"} else "strong"
+            body = render_inline_tokens(
+                html_inline_child_tokens(
+                    node, raw_markdown_from_node=raw_markdown_from_node
+                ),
+                strip=False,
+            )
+            return [RawMarkdownToken(f"<{tag}>{body}</{tag}>")]
+        children = html_inline_child_tokens(
             node,
-            text_style="*",
             citation_payload_from_node=citation_payload_from_node,
             raw_markdown_from_node=raw_markdown_from_node,
             drop_node=drop_node,
             render_text_styles=render_text_styles,
         )
-    if render_text_styles and name in {"b", "strong"}:
-        return html_inline_child_tokens(
-            node,
-            text_style="**",
-            citation_payload_from_node=citation_payload_from_node,
-            raw_markdown_from_node=raw_markdown_from_node,
-            drop_node=drop_node,
-            render_text_styles=render_text_styles,
+        body = render_inline_tokens(children, strip=False)
+        if not body.strip():
+            return [TextToken(body)] if body else []
+        marker = "*" if name in {"i", "em"} else "**"
+        content = [child for child in node.children if str(child).strip()]
+        equivalents = {"i", "em"} if marker == "*" else {"b", "strong"}
+        if len(content) == 1 and _node_name(content[0]) in equivalents:
+            return [RawMarkdownToken(body)] if body.strip() else []
+        neighbors = [
+            getattr(node, "previous_sibling", None),
+            getattr(node, "next_sibling", None),
+        ]
+        ambiguous = (
+            "![" in body
+            or _node_name(node.parent) in {"em", "i", "strong", "b"}
+            or node.find(["em", "i", "strong", "b"]) is not None
+            or any(
+                _node_name(other) in {"em", "i", "strong", "b"}
+                or (
+                    _is_navigable_string(other)
+                    and str(other)
+                    and (
+                        str(other)[-1:].isalnum()
+                        if index == 0
+                        else str(other)[:1].isalnum()
+                    )
+                )
+                for index, other in enumerate(neighbors)
+                if other is not None
+            )
+        )
+        if ambiguous:
+            tag = "em" if marker == "*" else "strong"
+            return [RawMarkdownToken(f"<{tag}>{body}</{tag}>")] if body.strip() else []
+        return (
+            [RawMarkdownToken(wrap_html_inline_text_fragment(body, marker))]
+            if body.strip()
+            else []
         )
     if name in {"sub", "sup"}:
         body = render_inline_tokens(
@@ -303,12 +377,26 @@ def render_inline_tokens(
 ) -> str:
     if not tokens:
         return ""
-    pieces = [
-        _render_token(
-            token, collapse_newlines=collapse_newlines, break_render=break_render
-        )
-        for token in tokens
-    ]
+    pieces = []
+    protected: dict[str, str] = {}
+    for token in tokens:
+        if isinstance(token, RawMarkdownToken) and (
+            re.search(r"(?m)^\s*(?:\$\$[ \t]*$|`{3,}|~{3,}|\|)", token.text)
+            or protect_markdown_math(token.text)[1]
+        ):
+            marker = f"PAPERFETCHDISPLAYMATH{len(protected)}TOKEN"
+            while any(marker in getattr(item, "text", "") for item in tokens):
+                marker += "X"
+            protected[marker] = token.text
+            pieces.append(marker)
+        else:
+            pieces.append(
+                _render_token(
+                    token,
+                    collapse_newlines=collapse_newlines,
+                    break_render=break_render,
+                )
+            )
     rendered = ""
     for index, (token, piece) in enumerate(zip(tokens, pieces, strict=True)):
         if not piece:
@@ -330,6 +418,8 @@ def render_inline_tokens(
     rendered = _cleanup_rendered_inline_text(
         rendered, policy=policy, collapse_newlines=collapse_newlines
     )
+    for marker, math in protected.items():
+        rendered = rendered.replace(marker, math)
     return rendered.strip() if strip else rendered
 
 
@@ -366,7 +456,6 @@ def _cleanup_rendered_inline_text(
     normalized = re.sub(r"\s*(<br>)\s*", r"\1", normalized)
     normalized = normalize_inline_sup_sub_tag_bodies(normalized)
     normalized = re.sub(r"\s+</(sub|sup)>", r"</\1>", normalized, flags=re.IGNORECASE)
-    normalized = re.sub(r"(</sub>)\s+\(", r"\1(", normalized, flags=re.IGNORECASE)
     punctuation = r"[,.;:%\]\}]" if policy == "table_cell" else r"[,.;:%\]\}\+\)]"
     normalized = re.sub(
         rf"(</(?:sub|sup)>)\s+({punctuation})", r"\1\2", normalized, flags=re.IGNORECASE
@@ -375,6 +464,10 @@ def _cleanup_rendered_inline_text(
         r"([(\[])\s+(?=<(?:sub|sup)>)", r"\1", normalized, flags=re.IGNORECASE
     )
     return normalized
+
+
+def piece_is_image(value: str) -> bool:
+    return value.startswith("![") and value.rstrip().endswith(")")
 
 
 def _needs_inserted_space(
@@ -388,20 +481,20 @@ def _needs_inserted_space(
         return False
     if left[-1:].isspace() or right[:1].isspace():
         return False
-    if isinstance(current_token, (SupSubToken, CitationToken, BreakToken)):
-        return False
-    if isinstance(previous_token, (SupSubToken, BreakToken)):
-        return False
-    left_edge = _visible_inline_edge(left, last=True)
-    right_edge = _visible_inline_edge(right, last=False)
-    if not left_edge or not right_edge:
-        return False
-    if (
-        left_edge in HTML_NO_SPACE_AFTER_CHARS
-        or right_edge in HTML_NO_SPACE_BEFORE_CHARS
+    if isinstance(current_token, RawMarkdownToken) and piece_is_image(right):
+        return left[-1:].isalnum() or left.endswith((")", ">"))
+    if isinstance(previous_token, RawMarkdownToken) and piece_is_image(
+        previous_token.text
     ):
-        return False
-    return right_edge.isalnum() or right_edge in {"*", "_", "<"}
+        return right[:1].isalnum()
+    if (
+        isinstance(previous_token, RawMarkdownToken)
+        and isinstance(current_token, RawMarkdownToken)
+        and left.endswith("$")
+        and right.startswith("$")
+    ):
+        return True
+    return False
 
 
 def _should_tighten_before_sup_sub(

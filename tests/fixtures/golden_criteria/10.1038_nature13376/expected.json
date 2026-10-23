@@ -4,17 +4,17 @@
     "authors": true,
     "abstract": true,
     "body": true,
-    "figures": false,
+    "figures": true,
     "references": true,
     "data_availability": false,
     "code_availability": false
   },
   "counts": {
-    "sections": 7,
+    "sections": 9,
     "abstract_sections": 1,
     "body_sections": 6,
-    "figures": 0,
-    "tables": 0,
+    "figures": 10,
+    "tables": 4,
     "references": 40
   },
   "expected_content_kind": "fulltext",
@@ -75,7 +75,7 @@
       "image_identity": {
         "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
         "source_count": null,
-        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests; verified same-paper captured table pages supply the four Extended Data Table image identities."
       }
     },
     "limitations": [
@@ -83,7 +83,7 @@
       "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
       "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
       "No structured formula in the selected original; bitmap/externally loaded formulas have only captured index/link evidence.",
-      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence."
+      "Extended Data: six numbered source figures and four same-paper captured table images are retained; table bitmap contents are not converted into text."
     ],
     "author_source": "meta[name=\"citation_author\"]",
     "provenance": "tests/fixtures/golden_criteria/10.1038_nature13376/acquisition/provenance.json",
@@ -137,7 +137,9 @@
       "tex_checked": 0,
       "mathml_checked": 0,
       "empty_excluded": 0
-    }
+    },
+    "behavior_changes": "2026-10-20: source scientific back matter and real subsection boundaries retained; supplementary sections are excluded from body sufficiency; original DOM/XML remains the expectation source.",
+    "extended_data_source": "Main DOM: four main figures and six .c-article-supplementary__item figure entries; acquisition/provenance.json binds four /tables/N pages and their original JPEG bytes. Existing image-capture hashes are retained above."
   },
   "source_objects": [
     {

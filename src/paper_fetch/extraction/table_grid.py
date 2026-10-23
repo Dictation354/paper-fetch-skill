@@ -14,6 +14,7 @@ from typing import Final
 from collections.abc import Iterable, Sequence
 
 from ..utils import normalize_text
+from ..markdown.math import normalize_prose_preserving_math
 
 
 MAX_TABLE_ROWS: Final = 1_000
@@ -272,7 +273,12 @@ def flatten_header_rows(rows: Sequence[Sequence[TableCell]]) -> tuple[str, ...]:
 
 
 def _header_text(text: str) -> str:
-    return normalize_text(re.sub(r"<br\s*/?>", " ", text, flags=re.IGNORECASE))
+    return normalize_prose_preserving_math(
+        text,
+        lambda prose: normalize_text(
+            re.sub(r"<br\s*/?>", " ", prose, flags=re.IGNORECASE)
+        ),
+    )
 
 
 def _row_looks_like_header(row: TableRow) -> bool:
@@ -390,7 +396,10 @@ def normalize_table(
             rows,
             reasons=(*grid.reasons, TableConversionReason.RAGGED_GRID),
             prefix_rows=[
-                normalize_text(rows[index].cells[0].text) for index in prefix_indices
+                normalize_prose_preserving_math(
+                    rows[index].cells[0].text, normalize_text
+                )
+                for index in prefix_indices
             ],
             header_indices=resolved_header_indices,
         )
@@ -401,10 +410,17 @@ def normalize_table(
         if index in skipped_indices:
             continue
         if index in full_width_groups:
-            group_text = normalize_text(rows[index].cells[0].text)
+            group_text = normalize_prose_preserving_math(
+                rows[index].cells[0].text, normalize_text
+            )
             output_rows.append((group_text, *("" for _ in range(width - 1))))
             continue
-        output_rows.append(tuple(normalize_text(cell.text) for cell in matrix_row))
+        output_rows.append(
+            tuple(
+                normalize_prose_preserving_math(cell.text, normalize_text)
+                for cell in matrix_row
+            )
+        )
 
     result_reasons = list(grid.reasons)
     if prefix_indices or full_width_groups:
@@ -437,7 +453,8 @@ def normalize_table(
         headers=headers,
         rows=tuple(output_rows),
         prefix_rows=tuple(
-            normalize_text(rows[index].cells[0].text) for index in prefix_indices
+            normalize_prose_preserving_math(rows[index].cells[0].text, normalize_text)
+            for index in prefix_indices
         ),
         status=status,
         reasons=normalized_reasons,

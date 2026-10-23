@@ -37,6 +37,7 @@ NUMBERED_BIBLIOGRAPHY_SELECTORS = (
     "#bibliography .biblioentry",
     "section[role='doc-bibliography'] [role='listitem'][data-has='label']",
     "#bibliography [role='listitem'][data-has='label']",
+    "#bibliography .citations:has(.citation-content)",
     "section[data-title='References'] li[data-counter]",
     "section[data-title='References'] ol > li",
     "section[data-title='References and Notes'] ol > li",
@@ -171,7 +172,9 @@ def _reference_text(node: Any) -> str:
             for match in clone.select(selector):
                 match.decompose()
         active_node = clone
-    text = normalize_text(active_node.get_text(" ", strip=True))
+    from ..extraction.html.inline import render_html_inline_node
+
+    text = normalize_text(render_html_inline_node(active_node))
     return _clean_reference_text(text)
 
 

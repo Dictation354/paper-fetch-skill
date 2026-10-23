@@ -296,6 +296,26 @@
         "basis": "Recorded versioned arXiv URL and same-version captured abstract page; original record retained unchanged",
         "original_record_sha256": "0493bf01b69dd7ff770599ecf35c055c7f3c32a64d30f251f29c03f78cb0b06d"
       }
+    },
+    {
+      "doi": "10.48550/arxiv.0811.2625v2",
+      "provider": "arxiv",
+      "requested_url": "https://arxiv.org/html/0811.2625v2",
+      "final_url": "https://arxiv.org/html/0811.2625v2",
+      "status_code": 200,
+      "response_headers": {
+        "last-modified": "Mon, 24 Aug 2026 19:47:31 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "etag": "\"CIKDlI6EupYDEAE=\"",
+        "date": "Wed, 21 Oct 2026 06:00:06 GMT"
+      },
+      "capture_kind": "http_response_entity",
+      "captured_at_utc": "2026-10-21T06:00:06.950763+00:00",
+      "body_file": "acquisition/fulltext-baselines-2026-10-21/92175652ed.html",
+      "size": 1385094,
+      "sha256": "cbbd156b0780425b50fd949876fdc62c6363dcda7549585e24f291317b4d82ba",
+      "transport": "existing paper-fetch HttpTransport",
+      "access_conditions": "Existing lawful institution environment; no authentication or policy changes"
     }
   ],
   "scope": "Original response entity bytes after project HTTP decompression; no browser authentication or challenge bypass. Headers omit Set-Cookie only. Main golden extraction route unchanged.",

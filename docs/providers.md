@@ -428,9 +428,9 @@ resolve
   - DOI、URL、裸 ID 或已有 metadata 中能可靠推导 arXiv ID 时，会先构造最小 metadata：`doi`、`arxiv_id`、`landing_page_url`、`html_url`、`pdf_url`、`provider=arxiv`，随后执行 HTML -> PDF waterfall（`all` 且允许资产落盘时先核对摘要页并发现附件）；主链结束后默认通过内部 Atom API client 执行 arXiv API metadata enrichment，Atom API 从 `RouteExecutionPolicy` 取得 60 秒超时、2 次 transient retry 和 3 秒共享 pacing，最终失败或 429 只记录 warning/diagnostic，不会阻塞全文获取。
   - official HTML front matter 会补齐 `title`、`authors`、`abstract`、`published`、`primary_category`、canonical DOI、HTML/PDF URL；普通字段合并优先级是 arXiv API metadata > HTML front matter > derived arXiv URLs；作者保留完整有序列表：API 列表更长时使用 API，否则优先 HTML，不拼接不同姓名写法；显式或本次固定的 `vN` 标识和对应 URL 不被 enrichment 改为最新版，因此 API 不可用时也不应出现 `Untitled Article` 或 authorless arXiv fulltext。
   - official HTML 是主路径，直接请求 `https://arxiv.org/html/{id}`，抽取 Markdown、官方 bibliography references 和正文 figure 资产候选；可匹配到下载 URL 的正文 figure 会在原 caption 附近先以内联图片 Markdown 表达，下载后改写为 `body_assets/...` 本地链接；如果 official HTML 只有 `ltx_missing_image` 这类缺失图片占位符，会读取 `https://arxiv.org/e-print/{id}` source 包，按 LaTeX figure 顺序 / caption 匹配恢复图片或将 source PDF 图渲染为 PNG，再插回对应 figure caption 前；HTML 正文不足、非 HTML、不可访问或质量门控失败时直接继续 PDF fallback。
-  - official HTML 渲染前会做 arXiv/LaTeXML 专用语义块预处理：`figure.ltx_table` 和裸 `table.ltx_tabular` 复用共享 HTML table renderer 输出 Markdown 表格或 key-value 行，单个全宽 `colspan` 标题行会提升为表格前普通文本，`ltx_listing` / algorithm block 输出标题和 fenced pseudo-code，并用 placeholder 保持原文位置；无法插回的位置会追加到文末并记录 warning。
+  - official HTML 渲染前会做 arXiv/LaTeXML 专用语义块预处理：`figure.ltx_table` 和裸 `table.ltx_tabular` 复用共享 HTML table renderer 输出 Markdown 表格或 key-value 行，单个全宽 `colspan` 标题行会提升为表格前普通文本，`ltx_listing` / algorithm block 输出标题与保留数学的逐行内容，并用 placeholder 保持原文位置；无法插回的位置会追加到文末并记录 warning。
   - official HTML 的 section kind 由清洗后的 `article.ltx_document` DOM 结构 hint 驱动：`References` / `Bibliography` 与 Data / Code Availability 继续按共享语义分类，其它由正文渲染链路输出的 article 标题默认作为正文；页面外部 metrics / citation chrome 不进入 arXiv HTML 解析范围。
-  - official HTML 会清理仅表示未定义宏的 `.ltx_ERROR.undefined` 节点（例如 `\addsec`）、图片 `alt="Refer to caption"` 占位噪声和 TeX annotation 内部嵌套 `$...$` 定界符；普通段落、list item 和 caption 的源 HTML 硬换行会折叠为空格，但 display math、Markdown 表格、列表边界、代码块和独立图片块仍保留必要换行。正常 caption、图片 URL 和正文 figure 下载链路不受影响。语义块渲染失败会写入 `semantic_losses.table_semantic_loss_count` / `table_fallback_count`，便于质量诊断。
+  - official HTML 会清理仅表示未定义宏的 `.ltx_ERROR.undefined` 节点（例如 `\addsec`）、图片 `alt="Refer to caption"` 占位噪声；公式内部 TeX 与嵌套 `$...$` 按共享公式保真契约保留；普通段落、list item 和 caption 的源 HTML 硬换行会折叠为空格，但 display math、Markdown 表格、列表边界、代码块和独立图片块仍保留必要换行。正常 caption、图片 URL 和正文 figure 下载链路不受影响。语义块渲染失败会写入 `semantic_losses.table_semantic_loss_count` / `table_fallback_count`，便于质量诊断。
   - PDF fallback 的正文 Markdown 来自共享 PDF 转换；`body/all` 且允许 artifact 落盘时会保存 PDF 导出的正文图片。
   - 成功时公开 `source="arxiv_html"` 或 `source="arxiv_pdf"`；HTML route 使用项目自研 HTML Markdown 渲染链路和全文质量检测，不依赖本机转换器。
 - `copernicus`：完整路径、来源和资产行为见上文 [Copernicus](#copernicus)。
@@ -578,6 +578,7 @@ CLI、Python API、MCP 当前默认值如下：
 #### Wiley 正文资产
 
 - `wiley` HTML 正文图片使用 Camoufox 同会话串行导航：资产阶段只创建一个自有 context/page，初始化继承正文 cookies 与浏览器配置，后续保留浏览器更新后的 cookies。公式优先，各组保持正文顺序；每个逻辑资产最多 30 秒，导航、验证等待和候选回退共享预算，并受总请求期限、取消信号与共享资产预算约束。每候选只主动导航一次，不刷新或探测独立 figure 页面。导航前注册监听，按当前请求及重定向链归属捕获原始响应，同时确认对应 DOM 图片已加载；导航等待异常但图片证据有效时仍可接受。只保存原始字节，不追加 HTTP 下载、截图、转码或 canvas 重绘。普通单图失败继续复用会话；完成、取消或总预算终止时在所属线程解绑监听并释放响应缓存、自有页面和 context。`asset_profile=none` 不启动资产浏览器；补充文件与 PDF 路径不变。
+- HTTP 重定向后 Firefox 的 `currentSrc` 可能仍为初始地址；只接受已确认的初始/最终 URL，且页面地址须匹配最终响应。共享预算耗尽前尚未导航的候选记录 `candidate_not_navigated`，preview 回退保留原图失败和降级诊断。
 - Wiley 已发现的公式图片 URL 全部进入串行归档，包括正文已由 MathJax 排版的公式；正文仍优先输出 MathML/LaTeX。公式正文位置与位图归档分别验收，专项公式通过不能代替整篇资产完整度与统一 acceptance。
 - Wiley 图片失败响应保留 `response_diagnostic`：白名单响应头（含 `cf-mitigated`、`cf-ray`）、正文长度/SHA-256 及固定挑战特征；不保存 Cookie、原始正文或脚本。声明正文超过 64 KiB 时跳过读取，其余正文扫描至多 64 KiB，读取仍受共享资产预算约束。初始 `403 / cf-mitigated: challenge` 是中间证据，等待浏览器自然验证和重新请求；成功时通过 `recovery_attempts` 保存挑战到成功的时间线并清除候选终态失败。30 秒后仍是挑战则报告 `cloudflare_challenge` 并继续下一资产；不自动点击人工验证控件。单独 403 或 Cloudflare server/ray 标记不证明挑战。
 
@@ -640,6 +641,7 @@ CLI、Python API、MCP 当前默认值如下：
 - 公式图片资产不参与 figure asset 抽取、跨引用内联或 figure slot 消耗；同一图片 URL 同时命中 figure 和 formula 时保留 formula 语义。
 - 这可以避免正文图在尾部重复，或导出残留可本地化远端图。
 - HTML/XML 文章组装阶段也会用 `article.assets[*]` 把正文里的远程 figure / table / formula image 链接改写为已下载本地路径，再做 Markdown 图片块边界和短 alt 归一化。PDF 只改写实际导出资产路径，保留转换器 alt、顺序和正文格式。
+- XML figure/table/supplement 组装继承实际下载记录，再覆盖标题、caption 和链接等源语义；不得丢失 `asset_timing`、tier、fetcher、尺寸和字节数。未知 browser backend 保留空值，实际 fetcher 才使用 `selected_browser` 兜底，不能把 `None` 转成后端名称。并发资产的累计耗时与整篇墙钟时间分别解释。
 - 下载资产会保留 `download_tier`、`download_url`、`original_url`、`preview_url`、`full_size_url`、`content_type`、`downloaded_bytes`、`width`、`height`，以及可选的 `browser_backend`、`final_fetcher`、`recovery_attempts`、`asset_route` 与质量 provenance。成功与失败项还包含不带 URL 的 `asset_timing`：queue、candidate resolution、DNS policy validation、connect-to-headers/TTFB、body stream、browser recovery、retry wait、conversion、save、total 毫秒及终态。
 - 下载失败的资产会保留到 `article.quality.asset_failures` 与顶层 `quality.asset_failures`。
 - Elsevier XML 图、表及补充资产组装保留下载记录中的计时、尺寸、字节数和来源字段。共享 Camoufox 图片 fetcher 及其线程包装器显式报告 `camoufox`；未知后端保持空值，`final_fetcher` 使用 `selected_browser`，不将 Python `None` 转成字符串。
@@ -744,11 +746,11 @@ CLI 主输出、artifact 与命令组合的用户语义见 [`cli.md`](cli.md)；
 
 ### Markdown 与语义 normalize
 
-- 公式输出会在公共公式 normalize 层处理 publisher-specific LaTeX 宏。
-- `\updelta` 等 upright Greek 宏会改写成普通 KaTeX 可渲染宏；`\mspace{Nmu}` 会改写成 `\mkernNmu`，其它单位不改；MathJax `\unicode{...}` 码点会改写成 KaTeX 可解析符号，例如 `\unicode{x2A7D}` 输出为 `\leqslant`。
-- 外部 MathML 后端返回的常见伪影也会在同一层处理，例如 texmath / mathml-to-latex 产生的空 delimiter `\left(\right.` / `\left.\right)`、被拆成空格的下标标识符 `F_{c r i t}` 和 `S O S_{y 0}`。
-- HTML 中源站直接提供的 MathJax / `tex-math` 片段会复用同一套 LaTeX normalize，同时保留原始 `$...$` / `$$...$$` / `\(...\)` / `\[...\]` 包裹，避免 display 公式在清洗后退化成行内公式。
-- HTML 公式如果能从 MathML 转成 LaTeX，会按行内或 display 语境渲染；如果只有站点提供的公式图片 fallback，会保留为 `![Formula](...)` 并进入资产下载/改写流程。
+- HTML、XML、arXiv 和 Atypon 先用 MathJax 校验源 TeX，通过时原样保留；失败时仅从同节点唯一可配对的 MathML 副本转换，并再校验。所有转换失败时保留原 TeX 及错误；无源 TeX 时沿用图片、文字、缺失回退。arXiv 在替换原始 `<math>` 前完成选择，PDF 输出不进入此流程。
+- `normalize_latex()` 仅处理公式外侧空白和成对数学定界符；公式内部的命令、字符、空格、换行和环境原样保留，包括 `\updelta`、`\mspace{Nmu}`、`\unicode{...}` 和 `\mathop`。不删除零宽间距、不合并标识符空格、不修正源反斜杠或添加 `\limits`。
+- MathML 后端的空 delimiter、拆分标识符及标识符中转义的下划线等转换产物修正只在私有转换入口处理，源 TeX 不经过该入口。转换所需的分组、字面字符转义和控制词边界保留。
+- 公式通过原始 Markdown token 避开正文与最终文章组装的压缩；行内／display 定界符、列表缩进及表格容器编码按 Markdown 要求处理。图片 fallback 仍保留为 `![Formula](...)` 并进入资产下载／改写流程。
+- 公式工具和离线包固定携带 MathJax 4.1.3、既有扩展、`bbm`、`textcomp` 和本地 bbm 字形。worker 按文档维护并清理宏；`quality.semantic_losses.formula_diagnostics` 记录原 TeX、最终 LaTeX、错误、后端和样式降级，复用 fallback 计数与 warning。LitRoot 与独立检查器使用 paper-fetch 唯一引擎源码的同步副本，不通过命令替换或删除括号修复源 TeX。
 - HTML references 会去除 publisher 链接 chrome，如 `Google Scholar`、`Crossref`、`Green Version`、相关链接和隐藏文本，并优先保留用户可见 citation body。
 - 默认 reference 组装规则是：fulltext provider 已经从 HTML / XML / 出版社 REST 显式提供非空 references 时，最终 `ArticleModel.references` 和 Markdown references 以这些全文/出版社 references 为准；metadata / Crossref references 只在 provider references 为空、失败或不可用时兜底，不允许追加未匹配的 metadata-only 条目。
 - Elsevier XML references 优先从结构化 bibliography 构建，保留编号、作者、题名、来源、页码、年份和 DOI；缺字段时保留原始 citation text 或显式 `[Reference text unavailable]` 占位，Crossref references 只作为兜底。

@@ -13,6 +13,7 @@ import pytest
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.models.markdown import iter_markdown_images
 from paper_fetch.providers._arxiv_graphics import INLINE_SVG_PREFIX
+from tests.support.markdown_presentation import visible_markdown
 from tests.support.canonical_content import source_prose_blocks
 from tests.support.object_content import (
     assert_object_position,
@@ -172,10 +173,16 @@ def test_captured_ddpm_source_figures_13_14_are_legitimate_separate_occurrences(
     assert_image_occurrences(markdown, source_urls)
     for node_id in ("A4.F13", "A4.F14"):
         assert source.select(f'a[href="#{node_id}"]')
-    assert "Figure 11, 13, 16, 17, 18, and 19 show uncurated samples" in markdown
-    assert "(Figs. 14 and 10)" in markdown
-    assert "Unconditional CIFAR10 generated samples" in markdown
-    assert "Unconditional CIFAR10 progressive generation" in markdown
+    assert visible_markdown(
+        "Figure 11, 13, 16, 17, 18, and 19 show uncurated samples"
+    ) in visible_markdown(markdown)
+    assert visible_markdown("(Figs. 14 and 10)") in visible_markdown(markdown)
+    assert visible_markdown(
+        "Unconditional CIFAR10 generated samples"
+    ) in visible_markdown(markdown)
+    assert visible_markdown(
+        "Unconditional CIFAR10 progressive generation"
+    ) in visible_markdown(markdown)
     for suffix in (
         "cifar10_eps-fixedlarge-mse_20x20.png",
         "cifar10_eps-fixedlarge-mse_20_progressive.jpg",

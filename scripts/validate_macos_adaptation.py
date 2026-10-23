@@ -157,6 +157,16 @@ def validate_contract(
     if missing_safety:
         errors.append(f"safety is missing: {sorted(missing_safety)!r}")
 
+    codex = contract.get("skills", {}).get("codex", {})
+    for key, expected in {
+        "user_directory": "~/.agents/skills/paper-fetch-skill",
+        "project_directory": ".agents/skills/paper-fetch-skill",
+        "verify_before_legacy_cleanup": True,
+        "check_is_read_only": True,
+    }.items():
+        if codex.get(key) != expected:
+            errors.append(f"skills.codex.{key} must be {expected!r}")
+
     browser = contract.get("browser", {})
     for key in (
         "runtime_bundle_built_in",

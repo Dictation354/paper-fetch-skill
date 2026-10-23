@@ -424,6 +424,13 @@ def _normalize_frontiers_extracted_assets(
                 asset["archive_state"] = "downloadable"
             elif supplementary_anchor:
                 asset["link"] = supplementary_anchor
+                asset["original_url"] = supplementary_anchor
+                if (
+                    source_href
+                    and str(asset.get("heading") or "").casefold()
+                    == "supplementary material"
+                ):
+                    asset["heading"] = f"Supplementary material ({source_href})"
                 asset["archive_state"] = "not_archived"
                 asset["not_archived_reason"] = (
                     "Frontiers supplementary entry did not expose a downloadable URL."
@@ -1216,6 +1223,9 @@ class FrontiersClient(ProviderClient):
         )
         if asset_failures:
             article.quality.asset_failures = [dict(item) for item in asset_failures]
+        for asset in article.assets:
+            if asset.kind == "supplementary" and not asset.path:
+                asset.url = asset.original_url or asset.source_url
         return article
 
     def describe_artifacts(

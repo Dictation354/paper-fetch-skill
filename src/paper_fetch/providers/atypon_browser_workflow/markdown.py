@@ -7,6 +7,7 @@ from dataclasses import asdict
 import copy
 
 from ...models import SemanticLosses
+from ...formula.validation import formula_document, capture_formula_diagnostics
 from typing import Any
 
 from ...metadata.types import ProviderMetadata
@@ -47,8 +48,10 @@ from .profile import (
 )
 
 from bs4 import BeautifulSoup, Tag
+from .._html_section_markdown import render_html_fragment_markdown
 
 
+@formula_document(new_document=True)
 def extract_browser_workflow_markdown(
     html_text: str,
     source_url: str,
@@ -57,6 +60,9 @@ def extract_browser_workflow_markdown(
     metadata: ProviderMetadata | Mapping[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any]]:
     soup = BeautifulSoup(html_text, choose_parser())
+    from ...extraction.html.object_links import prepare_retained_object_links
+
+    prepare_retained_object_links(soup, source_url)
     title = extract_page_title(soup)
     title = _preferred_title_from_metadata(title, metadata)
     title = " ".join((title or "").split())
@@ -89,6 +95,11 @@ def extract_browser_workflow_markdown(
         _content_fragment_html(asset_container, publisher=publisher), source_url
     )
 
+    from urllib.parse import urljoin
+
+    for anchor in container.select("a[href]"):
+        if not str(anchor["href"]).startswith(("#", "javascript:")):
+            anchor["href"] = urljoin(source_url, str(anchor["href"]))
     losses = SemanticLosses()
     table_entries = _normalize_special_blocks(container, publisher, losses)
     abstract_sections = _abstract_section_payloads(container)
@@ -110,6 +121,7 @@ def extract_browser_workflow_markdown(
         trafilatura_backend=None,
         noise_profile=noise_profile,
         cleaned_html=True,
+        renderer=render_html_fragment_markdown,
     )
     if abstract_sections:
         markdown = _ensure_body_markdown_heading(markdown, title=title)
@@ -154,6 +166,7 @@ def extract_browser_workflow_markdown(
             diagnostics.reason, availability_failure_message(diagnostics)
         )
 
+    capture_formula_diagnostics(losses, count_fallbacks=True)
     extraction_payload = {
         "semantic_losses": asdict(losses),
         "title": title,

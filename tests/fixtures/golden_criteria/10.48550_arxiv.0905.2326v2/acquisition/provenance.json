@@ -133,6 +133,26 @@
       "former_archive_file": "acquisition/network-repair/source.tar.gz",
       "archive_sha256": "abcd288ac2d6a783d95ca10472c1d26dfdd056ef29c6e396a4b6dab6c2ad862b",
       "evidence": "Unmodified non-ancillary member retained before deleting the source archive containing supplementary files; not a separate HTTP response"
+    },
+    {
+      "doi": "10.48550/arxiv.0905.2326v2",
+      "provider": "arxiv",
+      "requested_url": "https://arxiv.org/html/0905.2326v2",
+      "final_url": "https://arxiv.org/html/0905.2326v2",
+      "status_code": 200,
+      "response_headers": {
+        "etag": "\"CJ78+MDzuZYDEAE=\"",
+        "last-modified": "Mon, 24 Aug 2026 18:33:15 GMT",
+        "content-type": "text/html; charset=utf-8",
+        "date": "Wed, 21 Oct 2026 06:00:06 GMT"
+      },
+      "capture_kind": "http_response_entity",
+      "captured_at_utc": "2026-10-21T06:00:06.303449+00:00",
+      "body_file": "acquisition/fulltext-baselines-2026-10-21/589a2bc152.html",
+      "size": 126258,
+      "sha256": "613957377230c067ff6e3b9304fdab4fe108c9c347ad426bde9d95ef904a0b51",
+      "transport": "existing paper-fetch HttpTransport",
+      "access_conditions": "Existing lawful institution environment; no authentication or policy changes"
     }
   ],
   "removed_records": [

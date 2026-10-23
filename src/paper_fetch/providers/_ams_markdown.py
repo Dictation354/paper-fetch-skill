@@ -176,6 +176,7 @@ def ams_classify_heading(heading: str, title: str | None) -> str | None:
         "body_heading"
         if normalized_heading
         in {"acknowledgment", "acknowledgments", "acknowledgement", "acknowledgements"}
+        or normalized_heading.startswith("appendix")
         else None
     )
 
@@ -248,6 +249,58 @@ def finalize_extraction(
     references = extract_references(html_text)
     if references:
         extraction["references"] = references
+    from bs4 import BeautifulSoup
+    from copy import deepcopy
+    from ._html_section_markdown import render_clean_text_from_html
+
+    original = BeautifulSoup(html_text, "lxml")
+    abstract = original.select_one("section.abstract:has(h3.abstractTitle)")
+    if abstract is not None and any(
+        h.get_text(strip=True).casefold() == "significance statement"
+        for h in abstract.select("h3.abstractTitle")
+    ):
+        main = deepcopy(abstract)
+        for section in main.select("div.section:has(h3.abstractTitle)"):
+            section.decompose()
+        for heading in main.select(".abstractTitle"):
+            heading.decompose()
+        blocks: list[dict[str, Any]] = [
+            {
+                "heading": "Abstract",
+                "text": render_clean_text_from_html(
+                    main, collapse_prose_line_breaks=True
+                ),
+                "kind": "abstract",
+                "order": 0,
+            }
+        ]
+        for section in abstract.find_all("div", class_="section", recursive=False):
+            heading = section.find("h3", class_="abstractTitle")
+            if heading is None:
+                continue
+            clone = deepcopy(section)
+            clone.find("h3", class_="abstractTitle").decompose()
+            text = render_clean_text_from_html(clone, collapse_prose_line_breaks=True)
+            blocks.append(
+                {
+                    "heading": heading.get_text(strip=True),
+                    "text": text,
+                    "kind": "abstract",
+                    "order": len(blocks),
+                }
+            )
+        if len(blocks) > 1:
+            extraction["abstract_sections"] = blocks
+            extraction["abstract_text"] = blocks[0]["text"]
+            prefix = "\n\n".join(
+                "## " + block["heading"] + "\n\n" + block["text"] for block in blocks
+            )
+            markdown_text = re.sub(
+                r"(?ms)^## Abstract\n.*?(?=^## (?!Significance Statement)|\Z)",
+                prefix + "\n\n",
+                markdown_text,
+                count=1,
+            )
     markdown_text = _normalize_ams_markdown_text(markdown_text)
     return markdown_text, extraction
 

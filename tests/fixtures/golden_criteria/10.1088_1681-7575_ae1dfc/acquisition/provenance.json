@@ -603,6 +603,43 @@
       },
       "official_cli_record": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
+    },
+    {
+      "doi": "10.1088/1681-7575/ae1dfc",
+      "provider": "iop",
+      "requested_url": "https://api.crossref.org/works/10.1088%2F1681-7575%2Fae1dfc",
+      "final_url": "https://api.crossref.org/works/10.1088%2F1681-7575%2Fae1dfc",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Wed, 21 Oct 2026 06:02:13 GMT",
+        "content-type": "application/json",
+        "content-length": "3762"
+      },
+      "captured_at_utc": "2026-10-21T06:02:12.168142+00:00",
+      "body_file": "acquisition/fulltext-baselines-2026-10-21/service-000-http_response_entity.bin",
+      "size": 15917,
+      "sha256": "d045ac10e3bf5ab66d9137fef1a4daff90d54a8f4242a9d0fcde2cf0ce251db5",
+      "capture_kind": "http_response_entity",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1088/1681-7575/ae1dfc",
+      "provider": "iop",
+      "requested_url": "https://iopscience.iop.org/article/10.1088/1681-7575/ae1dfc",
+      "final_url": "https://iopscience.iop.org/article/10.1088/1681-7575/ae1dfc",
+      "status_code": 200,
+      "response_headers": {
+        "content-type": "text/html;charset=UTF-8",
+        "date": "Wed, 21 Oct 2026 06:02:16 GMT"
+      },
+      "captured_at_utc": "2026-10-21T06:02:18.201294+00:00",
+      "body_file": "acquisition/fulltext-baselines-2026-10-21/service-001-browser_rendered_dom.html",
+      "size": 349981,
+      "sha256": "a6bd36d56eb8a47f8a220cef9729015de1ee5628d7bbf5daa0aeb3843910f922",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
     }
   ]
 }

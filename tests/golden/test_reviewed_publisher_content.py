@@ -7,6 +7,8 @@ numbers and their order are preserved. No expected text comes from the renderer.
 """
 
 from tests.support.reviewed_publisher_content import _words
+from tests.support.canonical_content import source_reference_text
+from types import SimpleNamespace
 import re
 from urllib.parse import urlsplit
 from bs4 import BeautifulSoup
@@ -49,7 +51,14 @@ def test_reviewed_visible_references_preserve_every_entry_in_order(reviewed_arti
         original = BeautifulSoup(str(original), "xml" if kind == "xml" else "lxml")
         for ui in original.select(".citation-links, label, .label"):
             ui.decompose()
-        expected = _words(original.get_text(" ", strip=True))
+        expected = _words(
+            source_reference_text(
+                SimpleNamespace(
+                    provider="frontiers" if kind == "xml" else "oxfordacademic"
+                ),
+                original,
+            )
+        )
         # Explicit numbering catches duplicates/reordering even for similar entries.
         assert reference.raw.startswith(f"{index}.")
         assert _words(re.sub(r"^\d+\.\s*", "", reference.raw)) == expected, (doi, index)
@@ -172,7 +181,7 @@ def test_real_aip_supplement_identity_and_scope():
 def test_real_jats_supplements_retain_source_identity_without_claiming_download():
     for doi, href, heading in [
         (CASES[1][0], "https://doi.org/10.5194/acp-24-1-2024-supplement", "pdf"),
-        (CASES[2][0], "Table_1.docx", "Supplementary material"),
+        (CASES[2][0], "Table_1.docx", "Supplementary material (Table_1.docx)"),
     ]:
         article = build_article_from_fixture(golden_corpus_fixture_for_doi(doi))
         supplements = [a for a in article.assets if a.kind == "supplementary"]
@@ -182,7 +191,11 @@ def test_real_jats_supplements_retain_source_identity_without_claiming_download(
         assert asset.heading == heading
         assert asset.section == "supplementary"
         assert asset.path is None and asset.downloaded_bytes is None
-        assert href in asset.original_url
+        if doi.startswith("10.3389/"):
+            assert asset.original_url.endswith("#supplementary-material")
+            assert "frontiersin.org" in asset.original_url
+        else:
+            assert href in asset.original_url
 
 
 def test_real_plos_supporting_files_preserve_all_18_identities():
@@ -193,8 +206,10 @@ def test_real_plos_supporting_files_preserve_all_18_identities():
     assets = [a for a in article.assets if a.kind == "supplementary"]
     assert len(originals) == len(assets) == 18
     for number, (node, asset) in enumerate(zip(originals, assets, strict=True), 1):
-        assert asset.original_url == f"info:doi/{doi}.s{number:03d}"
-        assert _words(node.get_text(" ", strip=True)) == _words(asset.heading)
+        assert asset.source_href == f"info:doi/{doi}.s{number:03d}"
+        assert asset.original_url == f"https://doi.org/{doi}.s{number:03d}"
+        assert _words(node.find("label").get_text()) == _words(asset.heading)
+        assert _words(node.get_text(" ", strip=True)) == _words(asset.caption)
         assert asset.section == "supplementary"
         assert asset.path is None
     assert (

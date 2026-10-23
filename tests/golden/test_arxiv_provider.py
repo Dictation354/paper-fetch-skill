@@ -1,5 +1,5 @@
 from __future__ import annotations
-from __future__ import annotations
+from tests.support.markdown_presentation import visible_markdown
 from tests.support._paper_fetch_support import (
     RecordingTransport,
     http_response,
@@ -382,7 +382,16 @@ class ArxivProviderTests(unittest.TestCase):
         for arxiv_id in PDF_FALLBACK_IDS:
             with self.subTest(arxiv_id=arxiv_id):
                 sample = golden_criteria_sample_for_doi(_doi(arxiv_id))
-                self.assertEqual(sample["route_kind"], "pdf_fallback")
+                # DDPM retains its captured PDF while its canonical replay
+                # now uses the complete official HTML capture.
+                self.assertEqual(
+                    sample["route_kind"],
+                    "html" if arxiv_id == "2006.11239v2" else "pdf_fallback",
+                )
+                if sample["route_kind"] == "html":
+                    self.assertTrue(
+                        golden_criteria_asset(_doi(arxiv_id), "original.html").is_file()
+                    )
                 assets = set(sample["assets"])
                 self.assertTrue({"api.json", "original.pdf"} <= assets)
                 # Exact contracts replay original HTML against expected.json.
@@ -766,7 +775,7 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertIn("## 1 Introduction", markdown)
         self.assertIn("## References", markdown)
         self.assertIn("$$", markdown)
-        self.assertIn("@@PF_CITE", markdown)
+        self.assertIn("](" + canonical_arxiv_html_url(arxiv_id) + "#bib.", markdown)
         self.assertGreaterEqual(len(article.sections), 5)
         self.assertGreater(len(article.references), 0)
         self.assertGreater(len(raw_payload.content.extracted_assets), 0)
@@ -842,7 +851,7 @@ class ArxivProviderTests(unittest.TestCase):
                     canonical_arxiv_html_url(arxiv_id),
                     metadata=_metadata(arxiv_id),
                 )
-                self.assertNotIn(r"\hspace{0pt}", extraction.markdown_text)
+                self.assertNotIn("[Formula unavailable]", extraction.markdown_text)
                 self.assertGreater(
                     extraction.diagnostics["extraction"]["math_nodes_normalized"], 0
                 )
@@ -912,7 +921,14 @@ class ArxivProviderTests(unittest.TestCase):
             markdown.index("**Figure 1.**"),
         )
         self.assertNotIn("\n## Figures\n", markdown)
-        self.assertNotIn("https://arxiv.org/html/", markdown)
+        from paper_fetch.models.markdown import iter_markdown_images
+
+        self.assertTrue(
+            all(
+                not image.url.startswith("https://arxiv.org/html/")
+                for image in iter_markdown_images(markdown)
+            )
+        )
         self.assertEqual(
             diagnostics["inline_figure_image_count"],
             len(raw_payload.content.extracted_assets),
@@ -940,7 +956,7 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertIn("![Figure 2.2](body_assets/gc0oo4.png)", markdown)
         self.assertLess(
             markdown.index("![Figure 2.2](body_assets/gc0oo4.png)"),
-            markdown.index("**Figure 2.** Phase portraits projected"),
+            markdown.index("Figure 2: Phase portraits projected"),
         )
         self.assertIn(
             "Figure 2.2",
@@ -1113,11 +1129,12 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertNotIn("Column 2", raw_payload.content.markdown_text)
         self.assertNotIn("<sup>1</sup><sup>1</sup>1", raw_payload.content.markdown_text)
         self.assertIn(
-            "<sup>1</sup> Appendix Table 6 reports", raw_payload.content.markdown_text
+            visible_markdown("<sup>1</sup> Appendix Table 6 reports"),
+            visible_markdown(raw_payload.content.markdown_text),
         )
         self.assertIn(
-            "Main scales (default 8E / top-1 MoE) |       |",
-            raw_payload.content.markdown_text,
+            visible_markdown("Main scales (default 8E / top-1 MoE) |       |"),
+            visible_markdown(raw_payload.content.markdown_text),
         )
         self.assertNotIn(
             "Main scales (default 8E / top-1 MoE) | Main scales",
@@ -1127,7 +1144,14 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertTrue(all("$" not in alt for alt in image_alts))
         self.assertTrue(all(alt != "Figure" for alt in image_alts))
         self.assertTrue(all(len(alt) <= 40 for alt in image_alts))
-        self.assertNotIn("https://arxiv.org/html/", markdown)
+        from paper_fetch.models.markdown import iter_markdown_images
+
+        self.assertTrue(
+            all(
+                not image.url.startswith("https://arxiv.org/html/")
+                for image in iter_markdown_images(markdown)
+            )
+        )
         self.assertNotIn("Refer to caption", markdown)
 
     def test_html_route_omits_bare_table_heading_for_unnumbered_tables(self) -> None:
@@ -1229,7 +1253,18 @@ class ArxivProviderTests(unittest.TestCase):
             "**Algorithm 1.** Monte Carlo estimation of NormRouter scale constant",
             markdown,
         )
-        self.assertIn("```text", markdown)
+        from bs4 import BeautifulSoup
+        from markdown_it import MarkdownIt
+
+        rendered = BeautifulSoup(
+            MarkdownIt("commonmark", {"html": True}).render(markdown), "lxml"
+        )
+        self.assertTrue(
+            any("return" in paragraph.get_text() for paragraph in rendered.select("p"))
+        )
+        self.assertFalse(
+            any("$" in code.get_text() for code in rendered.select("pre code"))
+        )
         self.assertIn("Input: Number of experts", markdown)
         self.assertIn("return", markdown)
         diagnostics = extraction.diagnostics["extraction"]
@@ -1259,7 +1294,7 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertTrue(all(hint["kind"] == "body" for hint in metrics_hints))
         self.assertIn("**Table 1.** Joint camera and character control.", markdown)
         self.assertIn("| Uni3C", markdown)
-        self.assertIn("| ActCam", markdown)
+        self.assertIn("| **ActCam (Ours)**", markdown)
 
     def test_arxiv_html_section_hints_are_limited_to_article_dom(self) -> None:
         repeated_body = " ".join(
@@ -2105,7 +2140,7 @@ class TestArxivAncillaryAssets(unittest.TestCase):
                 # The established body fixture has figures; this test isolates supplementary
                 # service assembly. Body image downloading has separate replay coverage.
                 soup = _arxiv_html.BeautifulSoup(_fixture_html(arxiv_id), "html.parser")
-                for node in soup.select("figure, img"):
+                for node in soup.select("figure, img, svg.ltx_picture"):
                     node.decompose()
                 transport.responses[("GET", canonical_arxiv_html_url(arxiv_id))][
                     "body"
@@ -2156,7 +2191,12 @@ class TestArxivAncillaryAssets(unittest.TestCase):
                     self.assertEqual(acceptance.overall.value, "degraded")
                     self.assertEqual(len(envelope.article.quality.asset_failures), 1)
                 else:
-                    self.assertEqual(acceptance.overall.value, "complete")
+                    self.assertEqual(
+                        acceptance.overall.value,
+                        "degraded"
+                        if envelope.article.quality.semantic_losses.formula_fallback_count
+                        else "complete",
+                    )
                     self.assertEqual(acceptance.asset.local, 1)
                     self.assertEqual(len(envelope.article.assets), 1)
                     self.assertEqual(

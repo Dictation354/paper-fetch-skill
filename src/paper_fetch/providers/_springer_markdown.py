@@ -54,6 +54,24 @@ def _inject_remote_figure_links(
     figure_assets = extract_figure_assets(cleaned_html, source_url)
     if not figure_assets:
         return markdown_text
+    # The DOM renderer already emits the owning figure; URL aliases replace
+    # only its rendition. Do not inject a second size for the same source ID.
+    from ..models.markdown import replace_markdown_images
+
+    aliases = {}
+    for asset in figure_assets:
+        preferred = asset.get("full_size_url") or asset.get("url")
+        if not preferred:
+            continue
+        for field in ("url", "preview_url", "original_url", "full_size_url"):
+            if asset.get(field):
+                aliases[asset[field]] = preferred
+    markdown_text = replace_markdown_images(
+        markdown_text,
+        lambda image: image.text.replace(
+            image.url, aliases.get(image.url, image.url), 1
+        ),
+    )
     return inject_inline_figure_links(
         markdown_text,
         figure_assets=figure_assets,

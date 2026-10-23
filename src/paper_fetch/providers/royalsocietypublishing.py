@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from dataclasses import asdict
 from collections.abc import Mapping
 from urllib.parse import quote, urlparse
 
@@ -187,6 +188,7 @@ class RoyalsocietypublishingClient(browser_workflow.BrowserWorkflowClient):
             "extracted_authors": royal_html.extract_authors(html_text),
             "references": references if isinstance(references, list) else [],
             "extracted_assets": extraction.extracted_assets,
+            "semantic_losses": asdict(extraction.semantic_losses),
         }
         return extraction.markdown_text, extraction_payload
 

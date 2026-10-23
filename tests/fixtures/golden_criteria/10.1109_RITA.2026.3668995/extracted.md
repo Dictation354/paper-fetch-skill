@@ -8,7 +8,7 @@ source: "ieee_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 7508
+token_estimate: 7498
 ---
 
 # Computational Thinking in Rural Education: Evidence of Gains in Problem-Solving Abilities
@@ -43,7 +43,7 @@ Despite this growing body of research, there is still a lack of empirical eviden
 
 Unlike exploratory or descriptive approaches, we adopted a cross-sectional quasi-experimental design, which allowed us to observe the effects of the intervention in real educational settings. Based on the theoretical review, previous work in the field, and the challenges observed at IEFPS, we formulated the following hypotheses (H):
 
-H1: There are significant differences in the levels of understanding of computational concepts, required tasks, and evaluative capacities, as measured by the pre- and post-tests.
+H1<strong>:</strong> There are significant differences in the levels of understanding of computational concepts, required tasks, and evaluative capacities, as measured by the pre- and post-tests.
 
 H0: There are no significant differences in these dimensions before and after the intervention.
 
@@ -81,9 +81,9 @@ To develop the required task dimension, students practiced sequencing and debugg
 
 Across all three assessed dimensions, students in the experimental group showed sustained improvement. Statistical analysis, based on a repeated-measures mixed model, revealed not only significant effects over time but also clear differences between students who participated in the strategy and those who did not. These gains were consistently strong and educationally meaningful, with partial eta-squared values exceeding.81 across all dimensions, indicating a robust impact of the intervention. As shown in Table I, the most pronounced improvements emerged in the computational concepts dimension.
 
-![Table](/tmp/tmpnti4w0fw/ieee-asset-1.gif)
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett.t1-3668995-large.gif)
 
-Table I- Pre/Post-Test Outcomes by Dimension and Group
+**TABLE I** Pre/Post-Test Outcomes by Dimension and Group
 
 The experimental group improved from a mean of 0.447 to 0.785, a difference of 0.338 ($\Delta =$.338, p <.001). In contrast, the control group declined from 0.475 to 0.413 ($\Delta =$–.062, p <.001). This positive shift in the intervention group was particularly evident in their understanding of basic structures such as sequences, loops, and conditionals. The interaction between time and group was statistically significant and substantial in magnitude (F(1, 42) = 282.96, $\eta ^{2} =$.871), confirming that the observed changes were attributable to the pedagogical experience rather than the mere passage of time.
 
@@ -91,7 +91,7 @@ In the required tasks dimension, which focused on the execution of logical instr
 
 Regarding the evaluative capacity dimension, which includes complex processes such as abstraction, decomposition, and algorithmic design, the experimental group improved from 0.442 to 0.766 ($\Delta =$.324, p <.001), while the control group’s performance dropped from 0.470 to 0.399 ($\Delta =$–.071, p <.001). The interaction between time and group (F(1, 42) = 186.40, p <.001, $\eta ^{2} =$.816), along with the high variance explained in the experimental group ($\eta ^{2} =$.856), points to a significant impact of the intervention beyond simple exposure to content or the passage of time.
 
-Finally, the study explored whether the observed improvements were influenced by sociodemographic or academic characteristics using Hayes’s PROCESS macro (models 1 and 4). The results were conclusive: no significant moderation or mediation effects were found. In every case, R<sup>2</sup>-change values were marginal (between 0.0000 and 0.0038), F values ranged from 0.0036 to 0.1592, and all p-values exceeded.69. Confidence intervals included zero across all comparisons (e.g., gender in computational concepts: 95% CI = [–.1140,.1210]; academic average: 95% CI = [–.0156,.0252]). These findings reinforce the robustness and equity of the strategy’s educational impact, showing no bias based on gender, family structure, or prior academic performance.
+Finally, the study explored whether the observed improvements were influenced by sociodemographic or academic characteristics using Hayes’s PROCESS macro (models 1 and 4). The results were conclusive: no significant moderation or mediation effects were found. In every case, R<sup>2</sup>-change values were marginal (between 0.0000 and 0.0038), F values ranged from 0.0036 to 0.1592, and all p-values exceeded.69. Confidence intervals included zero across all comparisons (e.g., gender in computational concepts: 95% CI = \[–.1140,.1210\]; academic average: 95% CI = \[–.0156,.0252\]). These findings reinforce the robustness and equity of the strategy’s educational impact, showing no bias based on gender, family structure, or prior academic performance.
 
 ## Discussion
 
@@ -131,35 +131,21 @@ Computational Thinking Assessment Instrument (Román-González, 2016)
 
 ### Original Spanish Version
 
-SECTION A.
-
 Test de Pensamiento Computacional (Versión 2.0) de Román-González (2016) aplicado como Prestes y Postest en la Institución Educativa Francisco de Paula Santander.
 
-![Figure](/tmp/tmpnti4w0fw/ieee-asset-2.gif)
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett1-3668995-large.gif)
 
--
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett2-3668995-large.gif)
 
-![Figure](/tmp/tmpnti4w0fw/ieee-asset-3.gif)
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett3-3668995-large.gif)
 
--
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett4-3668995-large.gif)
 
-![Figure](/tmp/tmpnti4w0fw/ieee-asset-4.gif)
-
--
-
-![Figure](/tmp/tmpnti4w0fw/ieee-asset-5.gif)
-
--
-
-![Figure](/tmp/tmpnti4w0fw/ieee-asset-6.gif)
-
--
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett5-3668995-large.gif)
 
 Instrucciones para los estudiantes: Este cuestionario no es un examen escolar y no afectará sus calificaciones. Su propósito es comprender cómo razonan al resolver problemas lógicos y de programación. Lean cada pregunta con atención y seleccionen la opción que mejor represente su razonamiento. Trabajen individualmente y no consulten a sus compa ñeros.”
 
 ### English Translated Version
-
-SECTION B.
 
 Computational Thinking Test (Version 2.0) by Román-González (2016), administered as a pretest and posttest at the Institución Educativa Francisco de Paula Santander.
 
@@ -167,22 +153,12 @@ Instructions for students:
 
 This questionnaire is not a school exam and will not affect your grades. Its purpose is to understand how you reason when solving logical and programming problems. Read each question carefully and select the option that best represents your reasoning. Work individually and do not consult your classmates
 
-![Figure](/tmp/tmpnti4w0fw/ieee-asset-7.gif)
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett6-3668995-large.gif)
 
--
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett7-3668995-large.gif)
 
-![Figure](/tmp/tmpnti4w0fw/ieee-asset-8.gif)
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett8-3668995-large.gif)
 
--
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett9-3668995-large.gif)
 
-![Figure](/tmp/tmpnti4w0fw/ieee-asset-9.gif)
-
--
-
-![Figure](/tmp/tmpnti4w0fw/ieee-asset-10.gif)
-
--
-
-![Figure](/tmp/tmpnti4w0fw/ieee-asset-11.gif)
-
--
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett10-3668995-large.gif)

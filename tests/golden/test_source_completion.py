@@ -96,6 +96,30 @@ def test_verified_original_has_same_identity_capture(row):
         identity = inspect_original(
             body, row["provider"], row["doi"], row["source_url"]
         )
+        if (
+            identity
+            and identity["format"] == "pdf"
+            and identity["identity"] == "insufficient"
+        ):
+            from paper_fetch.providers._pdf_common import _pdf_identity_evidence
+            from paper_fetch.publisher_identity import validate_extracted_identity
+            from tests.golden_criteria import golden_criteria_asset
+
+            landing = golden_criteria_asset(row["doi"], "landing.html")
+            captured = inspect_original(
+                landing.read_bytes(),
+                row["provider"],
+                row["doi"],
+                row["identity"].get("companion_url", row["source_url"]),
+            )
+            assert captured and captured["identity"] == "matched"
+            result = validate_extracted_identity(
+                {"doi": row["doi"], "title": captured["title"]},
+                {},
+                _pdf_identity_evidence(REPO_ROOT / row["source"]),
+            )
+            assert result.status == "match"
+            identity["identity"] = "matched"
         assert identity and identity["identity"] == "matched"
         if identity["format"] == "pdf":
             assert identity["all_pages_readable"] and identity["pages"] > 0

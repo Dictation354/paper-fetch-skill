@@ -26,6 +26,7 @@ rollout-*.jsonl
 *.local.md
 
 # Project-local agent installs
+/.agents/skills/paper-fetch-skill/
 .codex
 .codex/
 .claude/

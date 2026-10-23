@@ -16,7 +16,7 @@ _REFERENCE_SELECTORS = (
     "section#html-references_list li",
 )
 _REFERENCE_UI_BRACKET_TOKEN_RE = re.compile(
-    r"\[\s*(?:Google Scholar|CrossRef|PubMed|Green Version)\s*\]",
+    r"\\?\[\s*(?:Google Scholar|CrossRef|PubMed|Green Version)\s*\\?\]",
     flags=re.IGNORECASE,
 )
 
@@ -56,7 +56,9 @@ def extract_references(html_text: str) -> list[dict[str, str | None]]:
         for node in soup.select(selector):
             if not isinstance(node, Tag):
                 continue
-            text = _clean_reference_raw_text(node.get_text(" ", strip=True))
+            from ..extraction.html.inline import render_html_inline_node
+
+            text = _clean_reference_raw_text(render_html_inline_node(node))
             text = _prepend_reference_label(text, _reference_label_from_node(node))
             if not text or text in seen:
                 continue

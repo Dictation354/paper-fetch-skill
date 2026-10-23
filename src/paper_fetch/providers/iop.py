@@ -560,7 +560,6 @@ PROVIDER_BUNDLE = ProviderBundle(
         ),
         formula=ProviderFormulaRules(
             container_tokens=_iop_html.IOP_FORMULA_CONTAINER_TOKENS,
-            display_selectors=_iop_html.IOP_DISPLAY_FORMULA_SELECTORS,
         ),
         assets=ProviderAssetRules(
             supplementary_text_tokens=_iop_html.IOP_SUPPLEMENTARY_TEXT_TOKENS,
@@ -576,6 +575,8 @@ PROVIDER_BUNDLE = ProviderBundle(
             access_block_text_tokens=_iop_html.IOP_ACCESS_BLOCK_TEXT_TOKENS,
         ),
         dom_hooks=DomHooks(
+            before_block_normalization=_iop_html.iop_body_container,
+            before_inline_formula_normalization=_iop_html.iop_before_inline_formula_normalization,
             body_container=_iop_html.iop_body_container,
             asset_body_container=_iop_html.iop_asset_body_container,
             asset_figure_extraction=_iop_html.iop_asset_figure_extraction,

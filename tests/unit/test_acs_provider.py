@@ -189,7 +189,7 @@ def test_acs_provider_owned_cleanup_removes_copy_chrome_and_extracts_references(
     assert extraction["references"] == [
         {
             "label": "1.",
-            "raw": "Liu, L. Catalyst paper. Chem. Rev. 2018, DOI: 10.1021/example",
+            "raw": "Liu, L. Catalyst paper. *Chem. Rev.* 2018, DOI: 10.1021/example",
             "doi": "10.1021/example",
             "year": "2018",
         }
@@ -289,7 +289,7 @@ def test_acs_silverchair_references_extract_structured_citations() -> None:
             "label": "1.",
             "raw": (
                 "Example, A.; Author, B. A complete reference title. "
-                "Chem. Rev. 2024, 12, 10-20. DOI"
+                "*Chem. Rev.* 2024, 12, 10-20. DOI"
             ),
             "doi": "10.1021/example",
             "year": "2024",

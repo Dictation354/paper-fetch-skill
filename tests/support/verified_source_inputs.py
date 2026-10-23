@@ -245,12 +245,16 @@ def build_verified_source_article(row: dict):
     from tests.support.acquired_publisher_inputs import CapturedSourceFixture
 
     sample = golden_criteria_sample(row["sample_id"])
+    if sample.get("baseline_completion"):
+        from tests.golden_corpus import GoldenCorpusFixture
+
+        return build_article_from_fixture(GoldenCorpusFixture(row["sample_id"], sample))
     sample.update(
         captured_source_path=row["source"],
         source_url=row["source_url"],
         landing_url=row["source_url"],
         title=row["identity"].get("title") or sample.get("title") or row["doi"],
-        route_kind=row["format"],
+        route_kind="pdf_fallback" if row["format"] == "pdf" else row["format"],
         content_type="text/" + row["format"],
     )
     if row["provider"] != "ieee":

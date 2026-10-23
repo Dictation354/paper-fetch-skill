@@ -121,7 +121,7 @@ def test_jats_xml_formatting_newlines_are_spaces_but_explicit_break_is_preserved
     assert "Rate *r* = 1 and *T<sub>leaf</sub> < T<sub>air</sub>*." in (
         extraction.markdown_text
     )
-    assert "First\n— second." in extraction.markdown_text
+    assert "First<br>— second." in extraction.markdown_text
 
 
 def test_jats_embedded_blocks_do_not_leak_xml_tail_newlines() -> None:

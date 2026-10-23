@@ -61,6 +61,11 @@ def representative_html():
 
 @pytest.fixture
 def replay(monkeypatch):
+    from tests.support.formula_runtime import captured_formula_environment
+
+    for name, value in captured_formula_environment().items():
+        monkeypatch.setenv(name, value)
+
     class ReplayClient(TandfClient):
         html = representative_html()
 

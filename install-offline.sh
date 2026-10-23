@@ -768,7 +768,7 @@ antigravity_home() {
 install_skills() {
   [ -n "${HOME:-}" ] || die "HOME is required to install Codex, Claude, and Antigravity skills."
 
-  local codex_skill="$HOME/.codex/skills/$SKILL_NAME"
+  local codex_skill="$HOME/.agents/skills/$SKILL_NAME"
   local claude_skill="$HOME/.claude/skills/$SKILL_NAME"
   local antigravity_skill
   antigravity_skill="$(antigravity_home)/skills/$SKILL_NAME"
@@ -1076,12 +1076,13 @@ remove_user_config_blocks() {
 remove_installed_skills() {
   [ -n "${HOME:-}" ] || die "HOME is required for --uninstall."
 
-  local codex_skill="$HOME/.codex/skills/$SKILL_NAME"
+  local codex_skill="$HOME/.agents/skills/$SKILL_NAME"
   local claude_skill="$HOME/.claude/skills/$SKILL_NAME"
   local antigravity_skill
   antigravity_skill="$(antigravity_home)/skills/$SKILL_NAME"
 
   rm -rf "$codex_skill" "$claude_skill" "$antigravity_skill"
+  rm -rf "$HOME/.codex/skills/$SKILL_NAME"
   log "Removed Codex skill at $codex_skill"
   log "Removed Claude Code skill at $claude_skill"
   log "Removed Antigravity skill at $antigravity_skill"
@@ -1555,7 +1556,7 @@ main() {
   install_skills
   verify_skill_bundle_integrity \
     "$INSTALL_ROOT" \
-    "$HOME/.codex/skills/$SKILL_NAME" \
+    "$HOME/.agents/skills/$SKILL_NAME" \
     "Codex post-install"
   verify_skill_bundle_integrity \
     "$INSTALL_ROOT" \
@@ -1565,6 +1566,8 @@ main() {
     "$INSTALL_ROOT" \
     "$(antigravity_home)/skills/$SKILL_NAME" \
     "Antigravity post-install"
+  # Remove the previous Codex discovery entry only after all new bundles verify.
+  rm -rf "$HOME/.codex/skills/$SKILL_NAME"
   write_shell_startup_file
   register_codex_mcp
   register_claude_mcp

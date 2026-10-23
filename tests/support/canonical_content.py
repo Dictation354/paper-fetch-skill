@@ -42,6 +42,13 @@ REFERENCE_SELECTORS = {
 # These two compact author blocks include affiliation markers and institutions;
 # the names below were read from their original .ltx_personname blocks.
 COMPACT_AUTHORS = {
+    "10.48550/arxiv.0905.2326v2": [
+        "Z. Bern",
+        "J. J. Carrasco",
+        "L. J. Dixon",
+        "H. Johansson",
+        "R. Roiban",
+    ],
     "10.48550/arxiv.2605.06663v1": ["Ryan Wang", "Akshita Bhagia", "Sewon Min"],
     "10.48550/arxiv.2605.06665v1": [
         "Minbin Huang",
@@ -129,6 +136,13 @@ def source_authors(fixture, soup):
             elif (collab := n.find("collab")) is not None:
                 names.append(collab.get_text(" ", strip=True))
         return names, selector
+    if fixture.provider == "springer" and not soup.select(
+        'meta[name="citation_author"]'
+    ):
+        nodes = soup.select('.c-article-author-list [data-test="author-name"]')
+        return [
+            n.get_text(" ", strip=True) for n in nodes
+        ], '.c-article-author-list [data-test="author-name"]'
     selector = (
         'meta[name="dc.Creator"]'
         if fixture.provider == "tandf"
@@ -151,6 +165,8 @@ def source_references(fixture, soup):
             if n.get("content", "").strip()
         ]
     nodes = soup.select(REFERENCE_SELECTORS[fixture.provider])
+    if fixture.provider == "science" and not nodes:
+        nodes = soup.select("#bibliography .biblioentry")
     if fixture.provider == "tandf" and not nodes:
         nodes = soup.select(".summation-section > div[id^='FN']")
     return nodes
@@ -223,6 +239,18 @@ def source_reference_doi(fixture, node):
 
 def source_reference_text(fixture, node):
     original = deepcopy(node)
+    external_urls = list(
+        dict.fromkeys(
+            str(a["href"])
+            for a in original.select(
+                ".ltx_bib_external[href], .ltx_bib_external a[href]"
+            )
+            if str(a["href"]).startswith(("https://", "http://"))
+        )
+    )
+    for etal in original.select("etal"):
+        if not etal.get_text(strip=True):
+            etal.string = "et al."
     if fixture.provider == "wiley":
         for label in original.select(":scope > .bullet"):
             label.decompose()
@@ -257,6 +285,9 @@ def source_reference_text(fixture, node):
     text = original.get_text(" ", strip=True)
     if fixture.provider == "tandf" and str(original.get("id", "")).startswith("FN"):
         text = re.sub(r"^\d+\s+", "", text)
+    for url in external_urls:
+        if url not in text:
+            text += " " + url
     return text
 
 
@@ -264,6 +295,10 @@ def numeric_signature(value):
     """Bibliographic numeric values and signs, independently of word matching."""
     from tests.support.scientific_content import without_latex_spacing
 
+    tokens = _INLINE_MARKDOWN.parseInline(value)[0].children or []
+    value = "".join(
+        t.content for t in tokens if t.type in {"text", "code_inline", "html_inline"}
+    )
     value = without_latex_spacing(html.unescape(value))
     value = re.sub(
         r"</?(?:sub|sup|br|em|strong|i|b|span)(?:\s[^<>]*?)?\s*/?>", "", value
@@ -317,7 +352,8 @@ def source_prose_blocks(fixture, soup):
             ".contrib-group, .author-affiliations, .sectionInfo, .articleTools, .author-footnote, "
             ".article-title-and-authors, .off-screen, .table-wrap-foot, .html-table_footer, .html-table_foot, "
             ".dropDownMenu, .menuButton, .clearer, .hidden, .NLM_supplementary-material, "
-            ".NLM_disp-formula, .disp-formula, .inline-formula"
+            ".NLM_disp-formula, .disp-formula, .inline-formula, fn, .ltx_note"
+            ", .recommended"
         )
     ):
         if node.parent is not None:
@@ -335,6 +371,7 @@ def source_prose_blocks(fixture, soup):
         if section.name in {"ack", "acknowledgment"} or label in {
             "acknowledgments",
             "acknowledgements",
+            "acknowledgments and disclosure of funding",
             "author contributions",
             "funding",
             "competing interests",
@@ -453,12 +490,12 @@ def source_prose_blocks(fixture, soup):
             value = re.sub(r"\b[Rr]efs?\.\s*$", "", str(string)).strip()
             if is_heading:
                 value = re.sub(r"^\d+(?:\.\d+)*\.?\s+", "", value)
-                if (
-                    fixture.provider == "annualreviews"
-                    and value.isupper()
-                    and len(value) > 3
-                ):
-                    value = value.title()
+                if fixture.provider == "annualreviews":
+                    value = {
+                        "abstract": "Abstract",
+                        "summary points": "Summary Points",
+                        "future issues": "Future Issues",
+                    }.get(value.casefold(), value)
                 if value.casefold() == "online methods":
                     value = "Methods"
             if (
@@ -504,7 +541,21 @@ def source_tables(fixture, soup):
                     old.replace_with(original)
     tables = (soup if fixture.provider == "elsevier" else body).select("table")
     if fixture.provider == "arxiv":
-        tables = body.select("figure.ltx_table table.ltx_tabular")
+        expanded = getattr(fixture, "sample", {}).get("baseline_completion")
+        tables = [
+            table
+            for table in body.select("figure table.ltx_tabular")
+            if (figure := table.find_parent("figure")) is not None
+            and (
+                "ltx_table" in figure.get("class", [])
+                or (
+                    expanded
+                    and (caption := figure.find("figcaption", recursive=False))
+                    is not None
+                    and re.match(r"Table\s+\d", caption.get_text(" ", strip=True))
+                )
+            )
+        ]
     result = []
     seen = set()
     for table in tables:
@@ -589,14 +640,26 @@ def comparable_cell(value):
         without_latex_spacing,
     )
 
-    value = without_latex_spacing(script_markup(value))
+    value = without_latex_spacing(value).replace("<br>•", "–")
+    if re.search(r"\\[A-Za-z]+", value):
+        value = value.replace("~", " ")
     value = re.sub(
         r"\$([^$]+)\$",
         lambda m: "$" + re.sub(r"(?<!\\)([_^])([^{}\s\\])", r"\1{\2}", m[1]) + "$",
         value,
     )
-    value = value.replace("⋅", "·")
+    value = (
+        value.replace("⋅", "·")
+        .replace("°", "∘")
+        .replace("′", "'")
+        .replace("\u2060", "")
+    )
     value = html.unescape(value).replace("\\|", "|")
+    value = re.sub(
+        r"\\(?:text|mathrm|mathbf|boldsymbol|mathsf|mathit|textrm|operatorname|mathcal|textit|textbf|textsf|texttt)\s*\{([^{}]*)\}",
+        r"\1",
+        value,
+    )
     for command, accent in (("widetilde", "˜"), ("tilde", "˜"), ("breve", "⌣")):
         value = re.sub(
             r"\\" + command + r"\{([^{}]*)\}",
@@ -620,11 +683,13 @@ def comparable_cell(value):
         for token in tokens
         if token.type in {"text", "code_inline", "html_inline"}
     )
-    value = value.replace("SCRIPTSUBTOKEN", "_")
+    value = script_markup(value.replace("SCRIPTSUBTOKEN", "_"))
     for index, formula in enumerate(formulas):
         value = value.replace(f"PAPERFETCHFORMULA{index}END", formula)
     value = value.replace("*", "LITERALASTERISK")
     for command, symbol in {
+        "max": "max",
+        "min": "min",
         "mu": "μ",
         "alpha": "α",
         "beta": "β",
@@ -655,23 +720,39 @@ def comparable_cell(value):
         "ldots": "...",
         "phi": "φ",
         "chi": "χ",
+        "Lambda": "Λ",
+        "Theta": "Θ",
+        "Phi": "Φ",
+        "varphi": "ϕ",
+        "circ": "∘",
+        "cap": "∩",
+        "cup": "∪",
+        "langle": "〈",
+        "rangle": "〉",
+        "lbrack": "[",
+        "rbrack": "]",
         "ell": "l",
     }.items():
         value = re.sub(
             r"\\" + command + r"(?![A-Za-z])", lambda _, symbol=symbol: symbol, value
         )
     value = re.sub(
-        r"\\(?:text|mathrm|mathbf|mathit|textrm|operatorname|mathcal)\s*\{([^{}]*)\}",
+        r"\\(?:text|mathrm|mathbf|boldsymbol|mathsf|mathit|textrm|operatorname|mathcal|textit|textbf|textsf|texttt)\s*\{([^{}]*)\}",
         r"\1",
         value,
     )
     value = re.sub(r"\\overset\{([^{}]*)\}\{([^{}]*)\}", r"\2\1", value)
-    value = re.sub(r"\\(?:left|right|displaystyle|limits)(?![A-Za-z])", "", value)
+    value = re.sub(
+        r"\\(?:left|right|middle|displaystyle|limits)(?![A-Za-z])", "", value
+    )
     value = re.sub(r"\\(?:begin|end)\{[^{}]+\}", "", value)
     value = value.replace(r"\\", "").replace("&", "")
     value = re.sub(r"\\[,;! ]", "", value)
-    value = value.replace("\\%", "%").replace("\\_", "_")
-    return _table_cell(math_semantic_key(value))
+    value = re.sub(r"\\([%_+*$.\-])", r"\1", value)
+    value = re.sub(
+        r"(?<=[A-Za-z0-9}\]])('+)(?=[,;:.}\s]|$)", lambda m: "^{" + m[1] + "}", value
+    )
+    return _table_cell(math_semantic_key(value)).replace(r"\|", "|")
 
 
 def source_table_grid(table):
@@ -827,7 +908,7 @@ def source_formulas(fixture, soup):
     result = []
     seen = set()
     for node in body.select("math, tex-math"):
-        if node.find_parent(["math", "tex-math", "annotation-xml"]):
+        if node.find_parent(["math", "tex-math", "annotation-xml", "svg"]):
             continue
         if any(
             p.get("aria-hidden") == "true"
@@ -877,7 +958,14 @@ def formula_route(node):
 
 
 def tex_key(value):
-    value = html.unescape(value).replace(r"\|", "|")
+    value = html.unescape(value).replace(r"\\|", r"\|").replace(r"\|", "|")
+    value = value.replace("{,}", ",")
+    # Nested text-mode math fences are equivalent; dollar signs cannot be
+    # nested inside Markdown's outer dollar fences.
+    value = value.replace(r"\(", "").replace(r"\)", "")
+    # Outer equation environments and Markdown display delimiters express the
+    # same display boundary; the expression and any explicit tags still count.
+    value = re.sub(r"\\(?:begin|end)\{equation\*?\}", "", value)
     value = re.sub(
         r"\\(?:left|right|displaystyle|textstyle|limits)(?![A-Za-z])", "", value
     )
@@ -928,6 +1016,8 @@ def math_identifier_text(value):
         "iota": "ι",
         "kappa": "κ",
         "lambda": "λ",
+        "max": "max",
+        "min": "min",
         "mu": "μ",
         "nu": "ν",
         "xi": "ξ",
@@ -952,11 +1042,19 @@ def math_identifier_text(value):
         "Psi": "Ψ",
         "Omega": "Ω",
         "partial": "∂",
+        "hbar": "ℏ",
+        "hslash": "ℏ",
+        "ldots": "…",
+        "cdots": "…",
+        "dots": "…",
+        "emptyset": "∅",
+        "varnothing": "∅",
         "ell": "l",
         "infty": "∞",
         "pm": "±",
         "times": "×",
         "ast": "*",
+        "cdot": "·",
         "leq": "≤",
         "le": "≤",
         "geq": "≥",

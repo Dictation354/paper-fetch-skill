@@ -51,7 +51,11 @@ def prepare_arxiv_graphics(article: Tag, source_url: str) -> None:
         if node.find_parent(["figure", "section"]) is None:
             continue
         if node.name == "svg" and node.find_parent("figure") is None:
-            continue
+            if (
+                node.find_parent(class_="ltx_inline-block") is None
+                or node.find("foreignobject") is None
+            ):
+                continue
         if node.name == "object":
             if node.get("type") != "image/svg+xml" and not str(
                 node.get("data", "")

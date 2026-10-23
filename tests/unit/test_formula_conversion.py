@@ -66,89 +66,58 @@ class FormulaConversionTests(unittest.TestCase):
         self.assertEqual(result.status, "ok")
         self.assertEqual(captured_env, runtime_env)
 
-    def test_normalize_latex_repairs_identifier_escaped_underscores(self) -> None:
+    def test_normalize_latex_preserves_source_scenario_samples(self) -> None:
         samples = json.loads(
             golden_criteria_scenario_asset(
                 "formula_latex_normalization", "samples.json"
             ).read_text(encoding="utf-8")
         )
-        sample = next(
-            item for item in samples if item["name"] == "identifier_escaped_underscores"
-        )
-
-        normalized = formula_conversion.normalize_latex(sample["input"])
-
-        for token in sample["must_not_include"]:
-            self.assertNotIn(token, normalized)
-        for token in sample["must_include"]:
-            self.assertIn(token, normalized)
-
-    def test_normalize_latex_scenario_samples_are_katex_compatible(self) -> None:
-        samples = json.loads(
-            golden_criteria_scenario_asset(
-                "formula_latex_normalization", "samples.json"
-            ).read_text(encoding="utf-8")
-        )
-
         for sample in samples:
             with self.subTest(sample=sample["name"]):
-                normalized = formula_conversion.normalize_latex(sample["input"])
-                if "expected" in sample:
-                    self.assertEqual(normalized, sample["expected"])
-                for token in sample.get("must_not_include", []):
-                    self.assertNotIn(token, normalized)
-                for token in sample.get("must_include", []):
-                    self.assertIn(token, normalized)
+                self.assertEqual(
+                    formula_conversion.normalize_latex(sample["input"]), sample["input"]
+                )
 
-    def test_normalize_latex_does_not_globally_replace_textbackslash(self) -> None:
-        normalized = formula_conversion.normalize_latex(r"\text{\textbackslash\_NDVI}")
+    def test_normalize_latex_preserves_source_commands_and_spacing(self) -> None:
+        for source in (
+            r"\updelta Q + \upDelta P + \updeltaQ",
+            r"\mspace{6mu}x + \mspace{ -1.5 mu }y + \mspace{2pt}z",
+            "S\u200bO + " + r"a\hspace{0pt}b + c\hspace*{ 0.0 em }d",
+            r"F_{c r i t} = \sum_{t_{p}}^{S O S_{y 0}} R_{f} + \mathcal{ℴ}",
+            r"P(SPI \unicode{x2A7D} - 1.64) + \unicode{U+03B1}x",
+            r"\mathop\sum_{i=1}^n x + \mathop{custom}",
+            r"x\textbackslash\_NDVI + \text{\textbackslash\_NDVI}",
+            r"s \left(\right. s + 1 \left.\right)",
+        ):
+            with self.subTest(source=source):
+                self.assertEqual(formula_conversion.normalize_latex(source), source)
 
-        self.assertEqual(normalized, r"\text{\textbackslash\_NDVI}")
+    def test_normalize_latex_removes_only_outer_delimiters(self) -> None:
+        source = "\\begin{equation}\n x % comment\n + \\text{two  spaces} + \\hbox{$y$}\n\\end{equation}"
+        for opener, closer in (
+            ("$", "$"),
+            ("$$", "$$"),
+            (r"\(", r"\)"),
+            (r"\[", r"\]"),
+        ):
+            with self.subTest(opener=opener):
+                normalized = formula_conversion.normalize_latex(
+                    f" {opener}\n{source}\n{closer} "
+                )
+                self.assertEqual(normalized, source)
+                self.assertEqual(formula_conversion.normalize_latex(normalized), source)
+        self.assertEqual(formula_conversion.normalize_latex(None), "")
+        self.assertEqual(formula_conversion.normalize_latex("$$ $$"), "")
 
-    def test_normalize_latex_rewrites_upgreek_macros(self) -> None:
-        normalized = formula_conversion.normalize_latex(
-            r"\updelta Q + \upDelta P + \updeltaQ"
+    def test_mathml_conversion_repairs_stay_private(self) -> None:
+        source = (
+            r"F_{c r i t} + x\textbackslash\_NDVI + s \left(\right. s + 1 \left.\right)"
         )
-
-        self.assertEqual(normalized, r"\delta Q + \Delta P + \updeltaQ")
-
-    def test_normalize_latex_rewrites_mspace_for_katex(self) -> None:
-        normalized = formula_conversion.normalize_latex(
-            r"\mspace{6mu}x + \mspace{ -1.5 mu }y + \mspace{2pt}z"
-        )
-
-        self.assertEqual(normalized, r"\mkern6mu x + \mkern-1.5mu y + \mspace{2pt}z")
-
-    def test_normalize_latex_removes_only_zero_width_spacing(self) -> None:
-        normalized = formula_conversion.normalize_latex(
-            "S\u200bO + " + r"a\hspace{0pt}b + c\hspace*{ 0.0 em }d + e\hspace{1pt}f"
-        )
-
-        self.assertEqual(normalized, r"SO + ab + cd + e\hspace{1pt}f")
-
-    def test_normalize_latex_removes_texmath_empty_delimiter_artifacts(self) -> None:
-        normalized = formula_conversion.normalize_latex(
-            r"s \left(\right. s + 1 \left.\right) + \left(\right. D + 1 \left.\right)"
-        )
-
-        self.assertEqual(normalized, "s(s + 1) + (D + 1)")
-
-    def test_normalize_latex_compacts_split_math_identifiers(self) -> None:
-        normalized = formula_conversion.normalize_latex(
-            r"F_{c r i t} = \sum_{t_{p}}^{S O S_{y 0}} R_{f} + \mathcal{ℴ}"
-        )
-
+        self.assertEqual(formula_conversion.normalize_latex(source), source)
         self.assertEqual(
-            normalized, r"F_{crit} = \sum\limits_{t_{p}}^{SOS_{y0}} R_{f} + \mathcal{O}"
+            formula_conversion._normalize_mathml_latex(source),
+            r"F_{crit} + x\_NDVI + s(s + 1)",
         )
-
-    def test_normalize_latex_rewrites_unicode_commands_for_katex(self) -> None:
-        normalized = formula_conversion.normalize_latex(
-            r"P(SPI \unicode{x2A7D} - 1.64) + \unicode{U+03B1}x"
-        )
-
-        self.assertEqual(normalized, "P(SPI \\leqslant - 1.64) + \u03b1x")
-        self.assertNotIn(r"\unicode", normalized)
 
     def test_backend_registry_preserves_public_backend_groups(self) -> None:
         self.assertEqual(

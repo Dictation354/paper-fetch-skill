@@ -8,7 +8,7 @@ source: "ieee_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 9574
+token_estimate: 9666
 ---
 
 # Paediatric Prosthetic Knee Design: The Technical Requirements of a Swing Phase Control Mechanism Are Correlated With Parameters of Childhood Growth
@@ -41,13 +41,13 @@ The aim of this study is twofold. First to develop a novel inverse dynamics mode
 
 3D gait data of typically developing children was required to form the target gait pattern for the KD prosthetic model to emulate. Datasets of 31 children walking across level ground were sourced from two existing datasets. Datasets formed a range of ages and maturities to ensure hypothesis 2 regarding the impact of growth could be assessed. 10 were sourced from the University of Salford and ethical approval for secondary data access was granted by Imperial College London Ethics Committee. Data at Salford were collected using a 13 camera Qualisys Oqus motion capture system with 4 AMTI BP400600 force plates. 133 gait trials were transferred for analysis along with a static trial for each participant<sup>26</sup>. Post processing of marker data was conducted on Qualisys Track Manager using a fourth order Butterworth filter at 6 Hz<sup>27</sup>. 21 datasets were sourced from an opensource dataset from Lencioni et al.<sup>28</sup>. These were collected using a 9 camera SMART motion capture system and 2 Kistler force plates. Post processing in the original study used fifth order Butterworth filter at 6 Hz on the marker data. 276 gait trials were downloaded for data analysis along with a static trial for each participant. Marker locations for the lower limbs used in the two datasets are shown in Fig. 1. The demographics of the datasets are shown in Table I. Both datasets included a wide range of heights, body masses, and ages, where range is presented to show the spread across childhood maturity rather than the mean and standard deviation (SD).
 
-![Figure 1](/tmp/tmp96077k4j/ieee-asset-1.gif)
+![Figure 1](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar1-3434477-large.gif)
 
-**Figure 1.** - The lower limb retroreflective motion capture markers used in the two gait databases of typically developing children. Red markers show anatomical landmark markers, green markers show segment cluster markers. Skeleton figures edited from another source (https://pixabay.com/vectors/skeleton-human-skeletal-anatomy-41548/, https://pixabay.com/vectors/skeleton-human-skeletal-anatomy-41550/ (a) the marker set used in the Salford data collection. (b) The marker set used in the Lencioni data collection [27].
+**Figure 1.** The lower limb retroreflective motion capture markers used in the two gait databases of typically developing children. Red markers show anatomical landmark markers, green markers show segment cluster markers. Skeleton figures edited from another source ([https://pixabay.com/vectors/skeleton-human-skeletal-anatomy-41548/](https://pixabay.com/vectors/skeleton-human-skeletal-anatomy-41548/), [https://pixabay.com/vectors/skeleton-human-skeletal-anatomy-41550/](https://pixabay.com/vectors/skeleton-human-skeletal-anatomy-41550/) (a) the marker set used in the Salford data collection. (b) The marker set used in the Lencioni data collection<sup>27</sup>.
 
-![Table](/tmp/tmp96077k4j/ieee-asset-2.gif)
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar.t1-3434477-large.gif)
 
-Table I- Participant Demographics Showing Median Value and the Range for Both Paediatric Non-Disabled Gait Datasets
+**TABLE I** Participant Demographics Showing Median Value and the Range for Both Paediatric Non-Disabled Gait Datasets
 
 ### B. Model Creation and Prosthetic Joint Definition
 
@@ -57,9 +57,9 @@ The ‘Generic Juvenile Model’ was then linearly scaled using the static motio
 
 The non-disabled model for each participant was then altered to represent a unilateral right KD amputation with typical low-cost prosthetic componentry and a novel polycentric knee joint axis (Fig. 2). The physiological segments on the right side of the body below the femur were removed, namely the shank and foot<sup>32</sup>. The mass properties of the residual and intact limbs were unaltered from the non-disabled child, thus potential post-amputation muscular atrophy and hypertrophy was not accounted for. However, the choice of KD amputation level permitted reduced assumptions in the length of the femur used in the simulation as the full femur length is maintained with KD.
 
-![Figure 2](/tmp/tmp96077k4j/ieee-asset-3.gif)
+![Figure 2](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar2-3434477-large.gif)
 
-**Figure 2.** - The two types of models built on OpenSim and used in the inverse dynamics process to identify the difference in the kinetics required to emulate a target non-disabled movement. The non-disabled paediatric model (left) was scaled from Hainisch et al. ‘Generic Juvenile Lower Limb Model’ [33]. The equivalent knee-disarticulation prosthetic model (right) was created for this work using low-cost componentry including a polypropylene socket, SACH foot and a novel prosthetic knee. These two models were created for each of the 31 non-disabled paediatric gait datasets available resulting in a total of 62 models.
+**Figure 2.** The two types of models built on OpenSim and used in the inverse dynamics process to identify the difference in the kinetics required to emulate a target non-disabled movement. The non-disabled paediatric model (left) was scaled from Hainisch et al. ‘Generic Juvenile Lower Limb Model’<sup>33</sup>. The equivalent knee-disarticulation prosthetic model (right) was created for this work using low-cost componentry including a polypropylene socket, SACH foot and a novel prosthetic knee. These two models were created for each of the 31 non-disabled paediatric gait datasets available resulting in a total of 62 models.
 
 The distal segments were replaced with prosthetic bodies, namely a polycentric knee, typical shank pylon, prosthetic Solid Ankle Cushion Heel (SACH) foot and a polypropylene socket. All componentry was chosen to represent typical low-cost componentry available globally. It was important to be accurate in defining these bodies and therefore one set of componentry was chosen and maintained throughout simulations. The knee joint represented a novel polycentric mechanical knee design in which loading does not occur through the links during stance. The knee axis was defined using a spline function on OpenSim to allow for the typical vertical and horizontal translations present in a polycentric knee. The SACH ankle was locked to represent the lack of ankle joint motion in the typically available polypropylene technology<sup>3</sup>. A polypropylene socket was chosen to interface with the residual limb as is typically used in LREs. The interface was modelled as a rigidly fixed joint. The prosthetic model had 11 body segments compared to the non-disabled 12. The result was an non-disabled model and a KD model for each participant for which motion capture was available, producing 62 models.
 
@@ -69,13 +69,23 @@ Care was taken to reduce the number of assumptions in the KD model creation by f
 
 The BSIPs of the componentry were determined experimentally<sup>40</sup>. A reaction board technique was used to determine the COM of each separate component (Fig. 3).
 
-![Figure 3](/tmp/tmp96077k4j/ieee-asset-4.gif)
+![Figure 3](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar3-3434477-large.gif)
 
-**Figure 3.** - The reaction board methodology employed to determine the center of mass of the prosthetic componentry used in the Openism paediatric knee-disarticulation mode (reproduced with permission from Toderita, 2022 [41].
+**Figure 3.** The reaction board methodology employed to determine the center of mass of the prosthetic componentry used in the Openism paediatric knee-disarticulation mode (reproduced with permission from Toderita, 2022<sup>41</sup>.
 
-OpenSim requires the MOI about the COM for each body. To determine the MOI for atypical shapes, an oscillation technique can be employed. This was used for the prosthetic feet, where the MOI about the axis (I<sub>axis</sub>) is related to its period of oscillation (τ) about that axis (1), where mass of the total oscillating system (m) and the distance from the oscillation axis to the COM (d) are known. $$ \begin{equation*} {{I}_{axis}} = {{\left({\frac{\tau }{{2\pi }}} \right)}^2}\ mgd \tag{1} \end{equation*} $$
+OpenSim requires the MOI about the COM for each body. To determine the MOI for atypical shapes, an oscillation technique can be employed. This was used for the prosthetic feet, where the MOI about the axis (I<sub>axis</sub>) is related to its period of oscillation (τ) about that axis [(1)](https://ieeexplore.ieee.org/rest/document/10612240/?logAccess=true#deqn1), where mass of the total oscillating system (m) and the distance from the oscillation axis to the COM (d) are known.
+$$
+\begin{equation*}
+{{I}_{axis}} = {{\left( {\frac{\tau }{{2\pi }}} \right)}^2}\ mgd \tag{1}
+\end{equation*}
+$$
 
-A swing tester machine provided a minimal friction bearing about which the prosthetic componentry was oscillated. Each component's period was determined using a digital video camera (GoPro, 720p,120 FPS) to film the oscillation<sup>42</sup>. The software Kinovea (version 0.9.5, KiNOVEA) was used to analyze the film and determine the oscillation period. The parallel axis theorem determined the MOI about the COM (I<sub>COM</sub>) using the mass of the feet (m) (2). $$ \begin{equation*} {{I}_{axis}} = \ {{I}_{COM}} + m{{d}^2} \tag{2} \end{equation*} $$
+A swing tester machine provided a minimal friction bearing about which the prosthetic componentry was oscillated. Each component's period was determined using a digital video camera (GoPro, 720p,120 FPS) to film the oscillation<sup>42</sup>. The software Kinovea (version 0.9.5, KiNOVEA) was used to analyze the film and determine the oscillation period. The parallel axis theorem determined the MOI about the COM (I<sub>COM</sub>) using the mass of the feet (m) [(2)](https://ieeexplore.ieee.org/rest/document/10612240/?logAccess=true#deqn2).
+$$
+\begin{equation*}
+{{I}_{axis}} = \ {{I}_{COM}} + m{{d}^2} \tag{2}
+\end{equation*}
+$$
 
 ### D. Inverse Kinematics and Dynamics
 
@@ -83,7 +93,7 @@ Inverse kinematics (IK) followed by inverse dynamics (ID) was conducted for each
 
 ### E. Statistics
 
-To account for the confounding factor of differing walking speeds in the original motion capture collection, the kinetic results from both models were reported for 3 speeds. Each motion capture trial from each dataset was assigned to one of 3 walking speed categories: slow (<1.2 ms<sup>-1</sup>), free (1.2–1.5 ms<sup>-1</sup>), or fast (>1.5 ms<sup>-1</sup>). The categories were derived from work by Lythgo et al. who reported slow, self-selected, and fast walking speeds for age groups from 5.7 years to young adults<sup>25</sup>. An average torque was produced across the trials for each participant in each speed category where data was available.
+To account for the confounding factor of differing walking speeds in the original motion capture collection, the kinetic results from both models were reported for 3 speeds. Each motion capture trial from each dataset was assigned to one of 3 walking speed categories: slow (<1.2 ms<sup>-1</sup>), free (1.2–1.5 ms<sup>-1</sup>), or fast (&gt;1.5 ms<sup>-1</sup>). The categories were derived from work by Lythgo et al. who reported slow, self-selected, and fast walking speeds for age groups from 5.7 years to young adults<sup>25</sup>. An average torque was produced across the trials for each participant in each speed category where data was available.
 
 To show the effect of the modelling approach, including locking the ankle joint in the KD prosthetic model, the cross subject mean trajectories of the hip and knee kinematics during swing were determined for both the non-disabled and KD solutions. These were plotted together to identify similarities and differences. Statistical parametric mapping with a one-way analysis of variance (ANOVA) was used to determine if any significant differences between the solutions existed with the significance level set at α = 0.05<sup>44</sup>.
 
@@ -97,33 +107,33 @@ To test the second hypothesis that knee torque is correlated to parameters of gr
 
 The modelling approach of locking the ankle joint resulted in zero plantar or dorsiflexion in the KD right ankle as well as small but statistically significant changes in the knee joint and hip joint flexion angles throughout gait. The knee- disarticulation kinematics continued to emulate the non-disabled kinematics (Fig. 4).
 
-![Figure 4](/tmp/tmp96077k4j/ieee-asset-5.gif)
+![Figure 4](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar4-3434477-large.gif)
 
-**Figure 4.** - Comparison of the cross subject mean swing phase kinematic solutions between the non-disabled (black) and knee-disarticulation (blue) OpenSim models throughout the gait cycle. Bold lines show the mean with the SD shown as lighter shading. (a) The right hip swing phase kinematic solution for both models across subjects (b) The right knee swing phase kinematic solutions for both models across subjects.
+**Figure 4.** Comparison of the cross subject mean swing phase kinematic solutions between the non-disabled (black) and knee-disarticulation (blue) OpenSim models throughout the gait cycle. Bold lines show the mean with the SD shown as lighter shading. (a) The right hip swing phase kinematic solution for both models across subjects (b) The right knee swing phase kinematic solutions for both models across subjects.
 
 ### B. Hypothesis 1: Non-Disabled Solution vs. Knee-Disarticulation Solution Right Knee Torque
 
 The knee torque required by the SPCM for the KD model to emulate non-disabled gait was statistically significantly lower than the torque produced by the non-disabled participants for the swing phase (Fig. 5). This was true across free and fast walking speeds. For slow speed, only flexion torque was statistically significantly lower for KD. The maximum extension torque was reduced by 6.74% (± 18.9), 17.9% (± 10.2), 25.8% (± 9.15) at slow, free, and fast speeds, respectively. The maximum flexion torque was reduced by 69.4% (± 26.8), 66.3% (± 17.0), 61.8% (± 9.30) at slow, free, and fast speeds, respectively.
 
-![Figure 5](/tmp/tmp96077k4j/ieee-asset-6.gif)
+![Figure 5](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar5-3434477-large.gif)
 
-**Figure 5.** - (Left) Comparison of the cross subject mean right knee torque during swing phase from the non-disabled solution (black) and the knee-disarticulation (blue) prosthetic solution for the combined database. The solid line shows the cross subject mean and the shading shows the SD. (Right) the corresponding statistical parametric mapping during swing phase using a one-way ANOVA to determine where there is a significant difference between the solutions. Significance is set at a level of α = 0.05. Panels: (Top) slow speed; (middle) free speed; (bottom) fast speed.
+**Figure 5.** (Left) Comparison of the cross subject mean right knee torque during swing phase from the non-disabled solution (black) and the knee-disarticulation (blue) prosthetic solution for the combined database. The solid line shows the cross subject mean and the shading shows the SD. (Right) the corresponding statistical parametric mapping during swing phase using a one-way ANOVA to determine where there is a significant difference between the solutions. Significance is set at a level of α = 0.05. Panels: (Top) slow speed; (middle) free speed; (bottom) fast speed.
 
 ### C. Hypotheses 2: The Interplay of Growth and the Torque Specifications
 
 The torque required from the prosthetic knee joint differed across participants at different stages of physical growth. The linear regression models showed no outliers across the population. Maximum flexion and extension torque showed strong correlation with one or more parameters of growth at all speeds except maximum extension torque at slow speed. (Table II). The sign of correlation reflects the direction and not the magnitude. Scatter plots of the strongest correlation at free speed for maximum extension and flexion torques are shown in Fig. 6. with the linear regression line of best fit and the 95% confidence bounds. These plots show the range of torque required to cover an expected paediatric population. The equation of the line of best fit for each is shown in Table III along with the RMSE and the R<sup>2</sup> value of the fit.
 
-![Table](/tmp/tmp96077k4j/ieee-asset-7.gif)
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar.t2-3434477-large.gif)
 
-Table II- Spearman's Rank Correlation Analysis of the Maximum Torques Required From a Paediatric Knee-Disarticulation Prosthetic Knee Swing Phase Control Mechanism With Three Parameters of Growth (Age, Height, and Intact Body Mass). The Results Are Split by Walking Speed. The Strongest Correlations Are Shown in Bold
+**TABLE II** Spearman's Rank Correlation Analysis of the Maximum Torques Required From a Paediatric Knee-Disarticulation Prosthetic Knee Swing Phase Control Mechanism With Three Parameters of Growth (Age, Height, and Intact Body Mass). The Results Are Split by Walking Speed. The Strongest Correlations Are Shown in Bold
 
-![Figure 6](/tmp/tmp96077k4j/ieee-asset-8.gif)
+![Figure 6](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar6-3434477-large.gif)
 
-**Figure 6.** - Scatter plots showing the linear regression line of best fit for the strongest correlations between growth parameters and the maximum torque required from a paediatric knee disarticulation prosthetic knee joint. The results are shown for free speed. Both graphs show the data points (blue), line of best fit (bold red) and the 95% confidence bounds (dashed red) for each fit. (a) The strongest correlation for the maximum extension torque at free speed is with intact body mass. The linear regression fit is shown. (b) The strongest correlation for the maximum flexion torque at free speed is with intact height. The linear regression fit is shown.
+**Figure 6.** Scatter plots showing the linear regression line of best fit for the strongest correlations between growth parameters and the maximum torque required from a paediatric knee disarticulation prosthetic knee joint. The results are shown for free speed. Both graphs show the data points (blue), line of best fit (bold red) and the 95% confidence bounds (dashed red) for each fit. (a) The strongest correlation for the maximum extension torque at free speed is with intact body mass. The linear regression fit is shown. (b) The strongest correlation for the maximum flexion torque at free speed is with intact height. The linear regression fit is shown.
 
-![Table](/tmp/tmp96077k4j/ieee-asset-9.gif)
+![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar.t3-3434477-large.gif)
 
-Table III- The Equation of the Linear Line of Best Fit Is Given for Each Comparison Between the Three Growth Parameters (Age, Height, and Intact Body Mass) With Maximum Extension and Flexion Torque From a Paediatric Knee-Disarticulation Prosthetic Knee. The Results Are Split by Walking Speed. The RMSE for the Fit Is Provided Alongside the R2 Value. The Fits With the Smallest Errors Are Shown in Bold
+**TABLE III** The Equation of the Linear Line of Best Fit Is Given for Each Comparison Between the Three Growth Parameters (Age, Height, and Intact Body Mass) With Maximum Extension and Flexion Torque From a Paediatric Knee-Disarticulation Prosthetic Knee. The Results Are Split by Walking Speed. The RMSE for the Fit Is Provided Alongside the R2 Value. The Fits With the Smallest Errors Are Shown in Bold
 
 ## Discussion
 
@@ -159,58 +169,108 @@ This work utilized a novel model to produce for the first time a set of technica
 
 ## ACKNOWLEDGMENT
 
-The authors would like to acknowledge the benefit of opensource data and data sharing agreements without which this work would not have been possible. Secondary data used in this work was collected from two sources. Data from the University of Salford is lab specific normative data from the clinical gait laboratory service consented and held by the University of Salford. The second dataset is opensource and is available at: https://doi.org/10.6084/m9.figshare.c.4494755.v1.
+The authors would like to acknowledge the benefit of opensource data and data sharing agreements without which this work would not have been possible. Secondary data used in this work was collected from two sources. Data from the University of Salford is lab specific normative data from the clinical gait laboratory service consented and held by the University of Salford. The second dataset is opensource and is available at: [https://doi.org/10.6084/m9.figshare.c.4494755.v1](https://doi.org/10.6084/m9.figshare.c.4494755.v1).
 
 ## References (51 total, showing 51)
 
 1. ATscale, “Product narrative: Prostheses. A market landscape and strategic approach to increasing access to prosthetic devices and related services in low-and-middle-income countries. ATScale 2030 global partnership for assistive technology,” 2020. [Online]. Available: https://at2030.org/product-narrative-prostheses/
+
 2. M. D. Geil, “Walking kinematics in young children with limb loss using early versus traditional prosthetic knee prescription protocols,” PLoS One , vol. 15, no. 4, 2020, Art. no. e0231401.
+
 3. International Committee of the Red Cross (ICRC), “Manufacturing guidelines, trans-femoral prosthesis, physical rehabilitation programme,” 2006. [Online]. Available: icrc.org/en/doc/assets/files/other/eng-transfemoral.pdf
+
 4. S. R. Hamner, “Designing for scale: Development of the remotion knee for global emerging markets,” Ann. Biomed. Eng. , vol. 41, no. 9, pp. 1851–1859, 2013.
+
 5. A. Furse, “Development of a low-technology prosthetic swing-phase mechanism,” J. Med. Biol. Eng. , vol. 31, pp. 145–150, 2011.
+
 6. J. Andrysek and S. Redekop, “Role of internal friction in the attenuation of terminal impact noise in above-knee prostheses,” in Proc. CMBES , 2007, p. 30.
+
 7. M. Finco, “A review of musculoskeletal adaptations in individuals following major lower-limb amputation,” J. Musculoskelet. Neuronal Interact. , vol. 22, no. 2, pp. 269–283, 2022.
+
 8. C. A. Ford, “Effects of imbalanced muscle loading on hip joint development and maturation,” J. Orthopaedic Res. , vol. 35, no. 5, pp. 1128–1136, 2017.
+
 9. T. Kobayashi, “Effects of walking speed on magnitude and symmetry of ground reaction forces in individuals with transfemoral prosthesis,” J. Biomech. , vol. 130, Jan. 2021, Art. no. 110845.
+
 10. Y. S. Narang, V. N. M. Arelekatti, and A. G. Winter, “The effects of prosthesis inertial properties on prosthetic knee moment and hip energetics required to achieve non-disabled kinematics,” IEEE Trans. Neural Syst. Rehabil. Eng. , vol. 24, no. 7, pp. 754–763, Jul. 2016.
+
 11. R. E. Seroussi, “Mechanical work adaptations of above-knee amputee ambulation,” Arch. Phys. Med. Rehabil. , vol. 77, no. 11, pp. 1209–1214, 1996.
+
 12. M. A. Berringer, “Modular design of a passive, low-cost prosthetic knee mechanism to enable non-disabled kinematics for users with transfemoral amputation,” in Proc. Int. Des. Eng. Tech. Conf. Comput. Inf. Eng. , 2017.
+
 13. M. Schlafly and K. B. Reed, “Novel passive ankle-foot prosthesis mimics non-disabled ankle angles and ground reaction forces,” Clin. Biomech. , vol. 72, pp. 202–210, 2020.
+
 14. G. Stark, “Overview of knee disarticulation,” J. Prosthetics Orthotics , vol. 16, no. 4, pp. 130–137, 2004.
+
 15. P. R. Bryant and G. Pandian, “Acquired limb deficiencies. 1. Acquired limb deficiencies in children and young adults,” Arch. Phys. Med. Rehabil. , vol. 82, pp. S3–S8, 2001.
+
 16. E. E. Bilir, “Clinical properties and rehabilitation needs of earthquake survivors in a subacute rehabilitation setting,” Turkish J. Trauma Emerg. Surg. , vol. 30, no. 4, pp. 297–304, 2024.
+
 17. J. McQuerry, “Effect of amputation level of quality of life and subjective function in children,” J. Pediatr. Orthopaedics , vol. 39, no. 7, pp. 524–530, 2019.
+
 18. D. H. Sutherland, “The development of mature gait,” J. Bone Joint Surg. Amer. , vol. 62, no. 3, pp. 336–353, 1980.
+
 19. V. L. Chester, “A comparison of kinetic gait parameters for 3-13yr olds,” Clin. Biomech. , vol. 21, no. 7, pp. 726–732, 2006.
+
 20. T. Cupp, “Age-related kinetic changes in normal pediatrics,” J. Pediatr. Orthopaedics , vol. 19, no. 4, pp. 475–478, 1999.
+
 21. C. A. Ford, “Effects of imbalanced muscle loading on hip joint development and maturation,” J. Orthopaedic Res. , vol. 35, no. 5, pp. 1128–1136, 2017.
+
 22. E. P. Grabke and J. Andrysek, “Applications of musculoskeletal modelling and simulation for lower-limb prosthesis design optimization,” presented at Int. Des. Eng. Tech. Conf. and Comput. and Inf. in Eng. Conf., Quebec City, QC, Canada, Aug. 26–29, 2018, pp. 1–7.
+
 23. E. P. Grabke, “Lower limb assistive device design optimization using musculoskeletal modeling: A review,” J. Med. Devices , vol. 13, no. 4, 2019, Art. no. 040801.
+
 24. J. Hoogeveen and U. Pape, “Fragility and innovations in data collection,” in Data Collection in Fragile States: Innovations From Africa and Beyond . Washington, DC, USA : World Bank, 2020, pp. 1–12.
+
 25. N. Lythgo, “Basic gait and symmetry measures for primary school-aged children and young adults. II: Walking at slow, free and fast speed,” Gait Posture , vol. 33, no. 1, pp. 29–35, 2011.
+
 26. Qualisys, “Qualisys motion capture system,” 2022. [Online]. Available: https://www.qualisys.com/
+
 27. Qualisys, “Qualisys track manager,” 2022. [Online]. Available: https://www.qualisys.com/software/qualisys-track-manager/
+
 28. T. Lencioni, “Human kinematic, kinetic and EMG data during different walking and stair ascending and descending tasks,” Sci. Data , vol. 6, no. 1, 2019, Art. no. 309.
+
 29. S. L. Delp, “OpenSim: Open-source software to create and analyze dynamic simulations of movement,” IEEE Trans. Biomed. Eng. , vol. 54, no. 11, pp. 1940–1950, Nov. 2007.
+
 30. S. L. Delp, “An interactive graphics-based model of the lower extremity to study orthopaedic surgical procedures,” IEEE Trans. Biomed. Eng. , vol. 37, no. 8, pp. 757–767, Aug. 1990.
+
 31. A. Rajaopal, “Full-body musculoskeletal model for muscle-driven simulation of human gait,” IEEE Trans. Biomed. Eng. , vol. 63, no. 10, pp. 2068–2079, Oct. 2016.
+
 32. A. M. Wilson, “Full body musculoskeletal model for simulations of gait in persons with transtibial amputation,” Comput. Methods Biomech. Biomed. Eng. , vol. 26, no. 4, pp. 412–423, 2022.
+
 33. S. Schmid, “Musculoskeletal full-body models including a detailed thoracolumbar spine for children and adolescents aged 6–18 years,” J. Biomech. , vol. 102, 2020, Art. no. 109305.
+
 34. R. Hainisch, “A generic musculoskeletal model of the juvenile lower limb for biomechanical analyses of gait,” Comput. Methods Biomech. Biomed. Eng. , vol. 24, no. 4, pp. 349–357, 2021.
+
 35. K. J. Ganley and C. M. Powers, “Anthropometric parameters in children: A comparison of values obtained from dual energy X-ray absorptiometry and cadaver-based estimates,” Gait Posture , vol. 19, no. 2, pp. 133–140, 2004.
+
 36. Simtk-Confluence, “Getting started with scaling stanford,” 2022. [Online]. Available: https://simtk-confluence.stanford.edu:8443/display/OpenSim/Getting+Started+with+Scaling
+
 37. J. L. Hicks, “Is my model good enough? Best practices for verification and validation of musculoskeletal models and simulations of movement,” J. Biomech. Eng. , vol. 137, no. 2, 2015, Art. no. 020905.
+
 38. L. A. Miller and D. S. Childress, “Problems associated with the use of inverse dynamics in prosthetic applications: An example using a polycentric prosthetic knee,” Robotica , vol. 23, no. 3, pp. 329–335, 2005.
+
 39. B. M. Gaffney, “The effects of prosthesis inertial parameters on inverse dynamics: A probabilistic analysis,” J. Verification, Validation Uncertainty Quantification , vol. 2, no. 3, 2017, Art. no. 031003.
+
 40. J. D. Smith, “Oscillation and reaction board techniques for estimating inertial properties of a below-knee prosthesis,” J. Visualized Experiments , vol. 87, 2014, Art. no. e50977.
+
 41. D. Toderita, “The biomechanical effect of prosthetic design for transfemoral amputees: A combined experimental and computational study,” Ph.D. dissertation, Dept. Bioeng, Imperial College London, London, U.K., 2022.
+
 42. J. M. Jimenez-Olmedo, “Validity and reliability of smartphone high-speed camera and Kinovea for velocity-based training measurement,” J. Hum. Sport Exercise , vol. 164, no. 11, pp. 878–888, 2021.
+
 43. Simtk-Confluence, “Getting started with inverse kinematics,” 2022. [Online]. Available: https://simtk-confluence.stanford.edu:8443/display/OpenSim/Getting+Started+with+Inverse+Kinematics
+
 44. T. C. Pataky, “Vector field statistical analysis of kinematic and force trajectories,” J. Biomech. , vol. 46, no. 14, pp. 2394–2401, 2013.
+
 45. B. G. Tabachnick and L. S. Fidell, Using Multivariate Statistics , 6th ed., Pearson new international edition. Harlow, Essex, U.K.: Pearson, 2014.
+
 46. J. Pallant, SPSS Survival Manual . Maidenhead, U.K.: Open Univ. Press, 2016, pp. 1–137.
+
 47. R. Martorell, “The nature of child malnutrition and its long-term implications,” Food Nutr. Bull. , vol. 20, no. 3, pp. 288–292, 1999.
+
 48. A. Schmeling, “Effects of ethnicity on skeletal maturation: Consequences for forensic age estimations,” Int. J. Legal Med. , vol. 113, no. 5, pp. 253–258, 2000.
+
 49. C. Cunningham, Developmental Juvenile Osteology . New York, NY, USA : Academic, 2016.
+
 50. D. P. Henson, “Understanding lower limb muscle volume adaptations to amputation,” J. Biomech. , vol. 125, 2021, Art. no. 110599.
+
 51. C. Edgar, “Defining paediatric prosthetic knee technical specifications: An inverse dynamics approach using a novel OpenSim model of a child with limb-loss,” ISPO, Guadalajara, 2023.

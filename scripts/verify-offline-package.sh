@@ -550,7 +550,7 @@ if [ "$TARGET_PLATFORM" = "macos" ]; then
   fi
   [ ! -e "$INSTALL_ROOT" ] \
     || die "Quarantine rejection wrote the install directory."
-  [ ! -d "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] \
+  [ ! -d "$FAKE_HOME/.agents/skills/paper-fetch-skill" ] \
     || die "Quarantine rejection wrote a Codex skill."
   ! grep -F -q "# BEGIN paper-fetch offline managed" "$SHELL_STARTUP_EDIT_FILE" \
     || die "Quarantine rejection modified the Zsh startup target."
@@ -559,6 +559,8 @@ if [ "$TARGET_PLATFORM" = "macos" ]; then
   xattr -d com.apple.quarantine "$QUARANTINED_NATIVE"
 fi
 
+mkdir -p "$FAKE_HOME/.codex/skills/paper-fetch-skill"
+printf '%s\n' legacy > "$FAKE_HOME/.codex/skills/paper-fetch-skill/SKILL.md"
 log "Running initial installer with network/build command guard"
 PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive \
   --install-dir "$INSTALL_ROOT" \
@@ -566,6 +568,10 @@ PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive \
   --skip-smoke \
   "$INSTALL_USER_CONFIG_FLAG"
 
+[ ! -e "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Install left the legacy Codex skill."
+mkdir -p "$FAKE_HOME/.codex/skills/paper-fetch-skill"
+printf '%s\n' legacy > "$FAKE_HOME/.codex/skills/paper-fetch-skill/SKILL.md"
+printf '%s\n' stale > "$FAKE_HOME/.agents/skills/paper-fetch-skill/stale.md"
 log "Preparing an owned upgrade with stale runtime payload"
 "$RUNTIME_PYTHON" - "$INSTALL_ROOT/offline.env" "$ACTIVATE_SENTINEL" <<'PY'
 from pathlib import Path
@@ -587,6 +593,8 @@ PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive \
   --preset=headless \
   "$INSTALL_USER_CONFIG_FLAG"
 
+[ ! -e "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Upgrade left the legacy Codex skill."
+[ ! -e "$FAKE_HOME/.agents/skills/paper-fetch-skill/stale.md" ] || die "Upgrade left stale skill content."
 log "Verifying installed runtime package layout"
 "$RUNTIME_PYTHON" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --non-interactive
 [ -d "$INSTALL_ROOT/runtime/site-packages/paper_fetch" ] || die "Offline install is missing installed paper_fetch runtime."
@@ -619,7 +627,7 @@ grep -F -q "export PAPER_FETCH_BROWSER_HEADLESS=\"true\"" "$SHELL_STARTUP_FILE"
 grep -F -q "$INSTALL_ROOT/bin" "$SHELL_STARTUP_FILE"
 grep -F -q "$INSTALL_ROOT/formula-tools/bin" "$SHELL_STARTUP_FILE"
 grep -F -q "$INSTALL_ROOT/image-tools/bin" "$SHELL_STARTUP_FILE"
-[ -f "$FAKE_HOME/.codex/skills/paper-fetch-skill/SKILL.md" ] || die "Codex skill was not installed."
+[ -f "$FAKE_HOME/.agents/skills/paper-fetch-skill/SKILL.md" ] || die "Codex skill was not installed."
 [ -f "$FAKE_HOME/.claude/skills/paper-fetch-skill/SKILL.md" ] || die "Claude skill was not installed."
 [ -f "$FAKE_HOME/.gemini/antigravity-cli/skills/paper-fetch-skill/SKILL.md" ] || die "Antigravity skill was not installed."
 grep -F -q "codex mcp remove paper-fetch" "$FAKE_CLI_LOG"
@@ -722,7 +730,7 @@ assert "install_provenance" not in report, report
 PY
 for skill_dir in \
   "$INSTALL_ROOT/skills/paper-fetch-skill" \
-  "$FAKE_HOME/.codex/skills/paper-fetch-skill" \
+  "$FAKE_HOME/.agents/skills/paper-fetch-skill" \
   "$FAKE_HOME/.claude/skills/paper-fetch-skill" \
   "$FAKE_HOME/.gemini/antigravity-cli/skills/paper-fetch-skill"
 do
@@ -765,6 +773,8 @@ assert payload.get("doi") or payload.get("metadata", {}).get("doi"), payload.key
 PY
 fi
 
+mkdir -p "$FAKE_HOME/.codex/skills/paper-fetch-skill"
+printf '%s\n' legacy > "$FAKE_HOME/.codex/skills/paper-fetch-skill/SKILL.md"
 log "Verifying user-level uninstall"
 : > "$FAKE_CLI_LOG"
 PATH="$GUARD_DIR:$PATH" "$INSTALL_ROOT/install-offline.sh" --install-dir "$INSTALL_ROOT" --uninstall
@@ -781,7 +791,8 @@ if [ "$TARGET_PLATFORM" = "macos" ]; then
     die "Uninstall left the managed macOS user-config block behind."
   fi
 fi
-[ ! -d "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Codex skill was not removed."
+[ ! -d "$FAKE_HOME/.agents/skills/paper-fetch-skill" ] || die "Codex skill was not removed."
+[ ! -e "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Legacy Codex skill was not removed."
 [ ! -d "$FAKE_HOME/.claude/skills/paper-fetch-skill" ] || die "Claude skill was not removed."
 [ ! -d "$FAKE_HOME/.gemini/antigravity-cli/skills/paper-fetch-skill" ] || die "Antigravity skill was not removed."
 grep -F -q "codex mcp remove paper-fetch" "$FAKE_CLI_LOG"

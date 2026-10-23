@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.markdown_presentation import visible_markdown
 from paper_fetch.providers import springer as springer_provider
 from tests.block_fixtures import block_asset
 import re
@@ -422,7 +423,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
             article.to_ai_markdown(asset_profile="body", max_tokens="full_text"),
         )
         self.assertNotIn("## Online Methods", markdown_text)
-        figure_index = markdown_text.find("**Figure 1.**")
+        figure_index = markdown_text.find("![Figure 1](")
         methods_summary_index = markdown_text.find("## Methods Summary")
         self.assertGreaterEqual(figure_index, 0)
         self.assertGreater(methods_summary_index, figure_index)
@@ -716,7 +717,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
                 self.assertEqual(markdown.count(heading + "\n"), 1)
                 positions.append(markdown.index(heading + "\n"))
             self.assertEqual(positions, sorted(positions))
-            self.assertEqual(normalize_text(markdown).count(reporting_text), 1)
+            self.assertEqual(visible_markdown(markdown).count(reporting_text), 1)
             self.assertIn("https://figshare.com/s/56430026ba793775983f", markdown)
             self.assertIn("10.6084/m9.figshare.7054265", markdown)
 

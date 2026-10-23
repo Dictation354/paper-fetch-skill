@@ -56,26 +56,32 @@ def test_real_aip_energy_equations_and_lattice_parameter_table() -> None:
         include_refs="all", asset_profile="body", max_tokens="full_text"
     )
     # original.html jumplink-d1/d2: E=sum_i epsilon_i; epsilon_i=F(phi_i^(1),...,phi_i^(p)).
-    assert (
-        "**Equation 1.**\n\n$$\n"
-        + r"\begin{matrix} E = \sum\limits_{i}⁡\varepsilon_{i}, \end{matrix}"
-        + "\n$$"
-        in markdown
-    )
-    assert (
-        "**Equation 2.**\n\n$$\n"
-        + r"\begin{matrix} \varepsilon_{i} = F(\varphi_{i}^{(1)},…,\varphi_{i}^{(p)}), \end{matrix}"
-        + "\n$$"
-        in markdown
-    )
+    from tests.support.canonical_content import comparable_cell
+
+    for number, expected in [
+        (1, r"E = \sum\limits_{i}\varepsilon_{i},"),
+        (2, r"\varepsilon_{i} = F(\varphi_{i}^{(1)},…,\varphi_{i}^{(p)}),"),
+    ]:
+        equation = re.search(
+            r"\*\*Equation " + str(number) + r"\.\*\*\s*\$\$(.*?)\$\$", markdown, re.S
+        )
+        assert equation and comparable_cell(expected) == comparable_cell(equation[1])
     compact = re.sub(r"\s+", " ", markdown)
-    assert (
-        r"| Method | Lattice parameter / $a / b(\text{Å})$ | Lattice parameter / $c(\text{Å})$ | Lattice parameter / *γ* (deg) | Max relative error against Expt. (%) |"
-        in compact
-    )
+    header = next(line for line in markdown.splitlines() if line.startswith("| Method"))
+    assert comparable_cell(
+        r"| Method | Lattice parameter / $a / b(\text{Å})$ | Lattice parameter / $c(\text{Å})$ | Lattice parameter / <strong><em>γ</em></strong> (deg) | Max relative error against Expt. (%) |"
+    ) == comparable_cell(header)
+    assert "<strong><em>γ</em></strong>" in header
+
     assert "| ACE potential relaxation | 3.115 58 | 4.981 53 | 120 | 0.116 |" in compact
     assert "| DFT relaxation (PBEsol) | 3.112 88 | 4.982 47 | 120 | 0.032 |" in compact
-    assert "| Experiment<sup>64</sup> | 3.111 97 | 4.980 89 | 120 | 0 |" in compact
+    row = next(
+        line for line in markdown.splitlines() if line.startswith("| Experiment")
+    )
+    assert comparable_cell(
+        "| Experiment<sup>64</sup> | 3.111 97 | 4.980 89 | 120 | 0 |"
+    ) == comparable_cell(row)
+    assert "#c64" in row
 
 
 def test_original_aip_alt_and_modal_caption_variants_render_once():

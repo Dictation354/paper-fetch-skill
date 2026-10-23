@@ -34,16 +34,17 @@ def golden_criteria_dir_for_doi(doi: str) -> Path:
 
 
 def golden_criteria_asset(doi: str, filename: str) -> Path:
-    direct = golden_criteria_dir_for_doi(doi) / filename
-    if direct.exists():
-        return direct
-    # Logical names survive entity deduplication in the existing asset mapping.
+    # The manifest selects the canonical entity even when a historical file
+    # with the same logical name remains beside it.
     for sample in golden_criteria_manifest()["samples"].values():
-        if str(sample["doi"]).casefold() == doi.casefold():
+        if (
+            sample.get("fixture_family") == "golden"
+            and str(sample["doi"]).casefold() == doi.casefold()
+        ):
             target = sample["assets"].get(filename)
             if target:
                 return REPO_ROOT / target
-    return direct
+    return golden_criteria_dir_for_doi(doi) / filename
 
 
 def golden_criteria_scenario_dir(name: str) -> Path:

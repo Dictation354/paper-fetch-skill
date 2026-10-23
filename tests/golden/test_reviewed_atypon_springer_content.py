@@ -4,9 +4,11 @@ Image-only equations/tables prove source identity, never OCR transcription.
 Old Nature, modern Nature and Springer Classic are separate original templates.
 """
 
+from tests.support.canonical_content import comparable_cell
 import re
 import html
 from urllib.parse import urljoin
+from tests.support.markdown_presentation import visible_markdown
 from tests.support.test_evidence import evidence_cache as cache
 from bs4 import BeautifulSoup
 import pytest
@@ -292,7 +294,7 @@ def test_reviewed_first_middle_last_reference_identity(
 ):
     _, article, _ = _review(doi)
     ref = article.references[index]
-    assert author in ref.raw and title in ref.raw
+    assert author in visible_markdown(ref.raw) and title in visible_markdown(ref.raw)
     assert ref.doi == identifier
 
 
@@ -321,10 +323,8 @@ def test_science_entire_precipitation_variability_equation():
     formula = soup.select_one('math[display="block"]')
     assert formula.get_text(" ", strip=True) == "σ P ≈ σ − ω m q l g"
     expected = r"\sigma P \approx \sigma(- \frac{\omega_{\text{m}}q_{\text{l}}}{g})"
-    blocks = [
-        re.sub(r"\s+", "", v) for v in re.findall(r"\$\$(.*?)\$\$", markdown, re.S)
-    ]
-    assert re.sub(r"\s+", "", expected) in blocks
+    blocks = [comparable_cell(v) for v in re.findall(r"\$\$(.*?)\$\$", markdown, re.S)]
+    assert any(comparable_cell(expected) in block for block in blocks)
 
 
 def test_wiley_original_figure_and_image_only_formula_identity():

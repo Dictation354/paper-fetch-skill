@@ -13,7 +13,7 @@ from ..reason_codes import OFFICIAL_FULL_SIZE_NOT_EXPOSED
 from ..utils import normalize_text
 from ..xml_security import XmlParseFailure, parse_xml
 from ._article_markdown_common import child_text, iter_descendants
-from ._retained_object_links import resolve_retained_object_links
+from ..extraction.html.object_links import resolve_retained_object_links
 
 from ._article_markdown_jats import (
     JatsExtraction,
@@ -23,14 +23,63 @@ from ._article_markdown_jats import (
 CopernicusExtraction = JatsExtraction
 
 
+def _restore_embedded_inline_html(root: ET.Element) -> None:
+    """Copernicus encodes a second layer of inline HTML in XML character data."""
+    from bs4 import BeautifulSoup
+    from ._html_section_markdown import render_clean_text_from_html
+
+    def fragment(text: str | None) -> ET.Element | None:
+        if not text or not re.search(r"</?(?:sub|sup|i|b|em|strong|br)\b", text):
+            return None
+        raw = ET.Element("named-content", {"data-paper-fetch-markdown": "1"})
+        raw.text = render_clean_text_from_html(BeautifulSoup(text, "html.parser"))
+        return raw
+
+    for node in list(root.iter()):
+        if node.tag.rsplit("}", 1)[-1] in {
+            "tex-math",
+            "code",
+            "monospace",
+            "preformat",
+        }:
+            continue
+        children = list(node)
+        first = fragment(node.text)
+        if first is not None:
+            node.text = None
+            node.insert(0, first)
+        for child in children:
+            tail = fragment(child.tail)
+            if tail is not None:
+                child.tail = None
+                node.insert(list(node).index(child) + 1, tail)
+
+
 def _restore_empty_bibliography_xrefs(root: ET.Element, source_url: str) -> None:
     """Restore only empty citations from their explicitly identified bibliography."""
     references = {
         ref.get("id"): ref for ref in iter_descendants(root, "ref") if ref.get("id")
     }
     for node in iter_descendants(root, "xref"):
-        if node.get("ref-type") != "bibr" or normalize_text("".join(node.itertext())):
+        if node.get("ref-type") != "bibr":
             continue
+        prefix_nodes = [
+            child
+            for child in node
+            if child.tag.rsplit("}", 1)[-1] == "named-content"
+            and child.get("content-type") == "pre"
+        ]
+        if normalize_text("".join(node.itertext())) and not prefix_nodes:
+            continue
+        if normalize_text(node.text or "") or any(
+            normalize_text(child.tail or "")
+            or (child not in prefix_nodes and normalize_text("".join(child.itertext())))
+            for child in node
+        ):
+            continue
+        prefix = "".join("".join(child.itertext()) for child in prefix_nodes)
+        for child in prefix_nodes:
+            node.remove(child)
         citations = []
         for rid in (node.get("rid") or "").split():
             ref = references.get(rid)
@@ -44,12 +93,20 @@ def _restore_empty_bibliography_xrefs(root: ET.Element, source_url: str) -> None
             if short:
                 label = re.sub(r"\s*\(", " (", short[1], count=1)
             label = label or f"Reference {rid}"
+            if (node.get("id") or "").startswith("paren."):
+                label = re.sub(r"\s*\((\d{4}[a-z]?)\)", r", \1", label)
             citations.append(
                 resolve_retained_object_links(
                     f"[{label}](#{rid})", source_url, {rid: rid}
                 )
             )
-        node.text = "; ".join(citations) or "[Reference unavailable]"
+        node.set("data-paper-fetch-markdown", "1")
+        text = (prefix.rstrip() + " " if prefix else "") + (
+            "; ".join(citations) or "[Reference unavailable]"
+        )
+        node.text = (
+            "(" + text + ")" if (node.get("id") or "").startswith("paren.") else text
+        )
 
 
 def _copernicus_full_size_score(alternative: Mapping[str, Any]) -> tuple[int, int]:
@@ -71,14 +128,16 @@ def _restore_empty_object_xrefs(root: ET.Element) -> None:
     parents = {child: parent for parent in root.iter() for child in parent}
     targets = {
         node.get("id"): normalize_text(child_text(node, "label"))
-        for kind in ("fig", "table-wrap")
+        for kind in ("fig", "table-wrap", "disp-formula")
         for node in iter_descendants(root, kind)
         if node.get("id")
     }
     for node in iter_descendants(root, "xref"):
-        if node.get("ref-type") not in {"fig", "table"} or normalize_text(
-            "".join(node.itertext())
-        ):
+        if node.get("ref-type") not in {
+            "fig",
+            "table",
+            "disp-formula",
+        } or normalize_text("".join(node.itertext())):
             continue
         labels = [targets.get(rid, "") for rid in (node.get("rid") or "").split()]
         if labels and all(labels):
@@ -93,6 +152,40 @@ def _restore_empty_object_xrefs(root: ET.Element) -> None:
                     for label in labels
                 ]
             node.text = ", ".join(labels)
+
+
+def _separate_copernicus_footnotes(root: ET.Element) -> None:
+    body = next(iter(iter_descendants(root, "body")), None)
+    if body is None:
+        return
+    notes = ET.Element("sec")
+    ET.SubElement(notes, "title").text = "Notes"
+    parents = {child: parent for parent in body.iter() for child in parent}
+    for index, node in enumerate(iter_descendants(body, "fn"), 1):
+        parent = parents[node]
+        # Table footnotes retain their own table scope.
+        ancestor = parent
+        while ancestor in parents and ancestor.tag.rsplit("}", 1)[-1] not in {
+            "table-wrap",
+            "table",
+        }:
+            ancestor = parents[ancestor]
+        if ancestor.tag.rsplit("}", 1)[-1] in {"table-wrap", "table"}:
+            continue
+        marker = normalize_text(child_text(node, "label")) or str(index)
+        paragraph = ET.SubElement(notes, "p")
+        ET.SubElement(paragraph, "sup").text = marker
+        for child in node:
+            if child.tag.rsplit("}", 1)[-1] == "label":
+                continue
+            paragraph.append(deepcopy(child))
+        tail = node.tail
+        node.clear()
+        node.tag = "sup"
+        node.text = marker
+        node.tail = tail
+    if len(notes) > 1:
+        body.append(notes)
 
 
 def _promote_copernicus_official_graphics(
@@ -147,15 +240,23 @@ def parse_copernicus_xml(
     try:
         root = (
             deepcopy(xml_root)
-            if xml_root is not None
+            if xml_root is not None and b"<?xmltex" not in xml_body
             else parse_xml(
-                xml_body, source="Copernicus JATS XML", allow_external_doctype=True
+                re.sub(
+                    rb"<\?xmltex\s+[^?]*\\hack\{(?:\\hfill\\break|\\newline|\\\\)\}[^?]*\?>",
+                    b"<break/>",
+                    xml_body,
+                ),
+                source="Copernicus JATS XML",
+                allow_external_doctype=True,
             )
         )
     except XmlParseFailure:
         return None
+    _restore_embedded_inline_html(root)
     _restore_empty_bibliography_xrefs(root, source_url)
     _restore_empty_object_xrefs(root)
+    _separate_copernicus_footnotes(root)
     extraction = parse_jats_xml(
         xml_body,
         source_url=source_url,

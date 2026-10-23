@@ -10,6 +10,7 @@ import re
 import xml.etree.ElementTree as ET
 
 from ..models import Reference, SemanticLosses
+from ..formula.validation import formula_document, capture_formula_diagnostics
 from ..publisher_identity import extract_doi, normalize_doi
 from ..utils import _extract_year
 from ..xml_security import XmlParseFailure, parse_xml
@@ -311,6 +312,7 @@ def extract_elsevier_references(root: ET.Element) -> list[Reference]:
     return references
 
 
+@formula_document(new_document=True)
 def _build_elsevier_article_structure(
     *,
     metadata: Mapping[str, Any],
@@ -343,10 +345,19 @@ def _build_elsevier_article_structure(
     formula_image_lookup = elsevier_formula_asset_lookup(root, assets, markdown_path)
     abstract_lines: list[str] = []
     for abstract_node in _iter_elements_by_local_name(root, "abstract"):
+        if len(_iter_elements_by_local_name(root, "abstract")) > 1:
+            abstract_lines.extend(
+                [
+                    "### " + (child_text(abstract_node, "section-title") or "Abstract"),
+                    "",
+                ]
+            )
         abstract_lines.extend(
             render_elsevier_blocks(
                 abstract_node,
-                heading_level=3,
+                heading_level=4
+                if len(_iter_elements_by_local_name(root, "abstract")) > 1
+                else 3,
                 formula_image_lookup=formula_image_lookup,
                 formula_renders=formula_renders,
             )
@@ -437,6 +448,7 @@ def _build_elsevier_article_structure(
             if normalize_text(str(result.note or ""))
         ],
     )
+    capture_formula_diagnostics(semantic_losses)
     return ArticleStructure(
         title=title,
         doi=doi,

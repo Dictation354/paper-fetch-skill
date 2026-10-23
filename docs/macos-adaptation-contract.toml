@@ -15,8 +15,6 @@ runner = "macos-15"
 requires_admin = false
 
 [evidence.native]
-# 公式工具链升级后的原生 texmath、动态库收集与签名仍由原生 gate 验证；
-# Linux 编译及公式回归不能替代 macOS 打包/安装证据。版本由 workflow 和工具 owner 维护。
 runner = "macos-15"
 python_version = "3.14"
 release_matrix_workflow = ".github/workflows/offline.yml"
@@ -32,47 +30,19 @@ exact_payload_inventory = true
 reject_symlinks = true
 validated_purge_paths = true
 
+[skills.codex]
+user_directory = "~/.agents/skills/paper-fetch-skill"
+project_directory = ".agents/skills/paper-fetch-skill"
+verify_before_legacy_cleanup = true
+check_is_read_only = true
+
 [browser]
-# Science 单次正常 HTML attempt，引用与可见控件每轮合并读取；按候选列表中实际 ID
-# 的可抽取非空文本等待，最长 10 秒并受请求期限/取消约束。IEEE 原图索引仅在同一
-# 文档复用，主框架导航即失效；T&F 表格批量读取/注入保持原并发、预算及逐项失败。
-# 这些优化仍在所属线程使用既有浏览器执行面，Linux 回放不替代原生 macOS gate。
-# AIP governor 终态验证页仅在 URL 与 Validate User/不是机器人证据同时成立时结束正文等待；
-# headed/headless 规则相同，仍保存挑战诊断。IOP 仅并发 HTTP（最多 2），浏览器恢复与清理
-# 留在所属线程；恢复成功后同 host 待处理资产切换已有路线。Linux portable/浏览器证据
-# 不替代 macos-15 原生 gate，不新增浏览器执行面。
-# Playwright >=1.61 要求 Camoufox browser >=beta.30；版本兼容性由 Camoufox
-# Python 包判定，旧 pin 不能绕过检查。verify.yml 准备锁定包配对的 browser 和 fpgen 模型，
-# 默认配对以同一版本进行只读探测及准备；缺失时不回退到旧 active browser。
-# 用户显式渠道/pin 仍覆盖配对，模型下载写入上游 fpgen 包目录，离线前须准备。
-# Linux 的依赖/旧 runtime 拒绝测试不替代 macos-15 原生双 context gate。
-# 确认同篇正文付费墙后在现有 provider 结果边界停止；正文请求显式携带检查 provider，
-# 资产拒绝仍走资产结果；这些 Linux 回放证据不替代原生 macOS gate。
-# Provider 的响应选择、请求阻断及临时资产标签复用既有 Camoufox runtime；
-# 这些页面策略不改变下列 runtime 分发边界，也不提供原生 macOS 验证证据。
-# PNAS 与 Science 仅采用同篇同 URL、出版社主框架已完成导航的最终响应；
-# PNAS 每候选正文等待仍受总请求期限约束，不扩大 runtime 或访问权限边界。
-# PNAS 原图精确匹配与禁用 preview 只收敛 provider 候选；不新增浏览器执行面。
-# IEEE stamp 子 iframe 响应只在同篇官方路径内捕获，沿用 PDF 大小/身份验收；
-# stamp 失败后允许同篇文章页的可见 PDF 点击及 popup；Science 引用展开仅用页面可见控件。
-# IEEE direct PDF 的 HTTP 502 可进入上述既有浏览器回退，不改变 runtime 或身份验收边界。
-# Linux 浏览器回放验证响应契约，不代替 macos-15 原生 runtime gate。
-# Wiley 正文资产在同一自有 context/page 串行导航图片 URL；每逻辑资产共享 30 秒，
-# cookies 仅初始化注入，挑战可自然恢复；只捕获当前导航/重定向链的原始图片字节。
-# 页面与监听器在所属线程清理，不借用或关闭其它会话，不新增 runtime 执行面。
-# T&F 图片导航在 commit 后验收原始响应，避免图片文档 DOMContentLoaded 超时；
-# 沿用 Camoufox、同一资产预算和 MIME/字节验收，Linux 浏览器测试不替代原生 gate。
-# 12 个 provider 的浏览器补充文件仅点击页面已有控件，串行捕获本次请求及重定向链；
-# 目录 HTML / multimedia JSON 发现继续用 context request，HTTP-only 分支保持原策略。
-# 下载/响应/popup 监听提前注册，清理自有 popup 并恢复文章页；点击失败无直链回退。
-# 同一请求期限、取消、预算和原子验收适用，Linux 回放不能替代原生 macOS gate。
 runtime_bundle_built_in = false
 core_install_downloads_runtime = false
 optional_install_download_requires_consent = true
 optional_install_failure_preserves_core = true
 managed_runtime_preparation = true
 native_bundle_gate = true
-# CLI stdin cancellation leaves browser cleanup on the owning request worker.
 cooperative_cancel_owner_thread_cleanup = true
 
 [release]

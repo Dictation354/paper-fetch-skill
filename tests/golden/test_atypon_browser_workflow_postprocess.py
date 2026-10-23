@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.markdown_presentation import visible_markdown
 from paper_fetch.providers.atypon_browser_workflow import (
     extract_atypon_browser_workflow_markdown,
 )
@@ -39,15 +40,15 @@ class AtyponBrowserWorkflowPostprocessTests(unittest.TestCase):
     def _assert_pnas_table_inline_semantics(self, markdown: str) -> None:
         self.assertIn("TCID<sub>50</sub>", markdown)
         self.assertIn("log<sub>10</sub> copies/mL", markdown)
-        self.assertIn("delay of length *t*<sub>d</sub> days", markdown)
+        self.assertIn("delay of length *t<sub>d</sub>* days", markdown)
         self.assertIn("where *h*<sub>0</sub> is the baseline value", markdown)
-        self.assertIn("and *σ*<sub>h</sub> is the exponential decay rate", markdown)
+        self.assertIn("and *σ<sub>h</sub>* is the exponential decay rate", markdown)
         self.assertIn("*β*(mL/FFU/d)", markdown)
         self.assertIn("8.3 × 10<sup>–4</sup> (22.2)", markdown)
         self.assertIn("*ρ*<sub>0</sub>(/d)", markdown)
-        self.assertIn("*K*<sub>ρ</sub>(cells)", markdown)
+        self.assertIn("*K<sub>ρ</sub>*(cells)", markdown)
         self.assertIn("*h*<sub>0</sub>", markdown)
-        self.assertIn("*σ*<sub>h</sub>(/d)", markdown)
+        self.assertIn("*σ<sub>h</sub>*(/d)", markdown)
         self.assertNotIn("TCID50 of the virus", markdown)
         self.assertNotIn("3 log 10 copies/mL", markdown)
         self.assertNotIn("delay of length td days", markdown)
@@ -228,8 +229,10 @@ class AtyponBrowserWorkflowPostprocessTests(unittest.TestCase):
         self.assertRegex(markdown, r"\*\*Equation 1\.\*\*\n\n\$\$\n\\sigma P")
         self.assertRegex(markdown, r"\n\$\$\n\nwhere \*P\* is precipitation")
         self.assertIn(
-            "**Figure 2.** Regional change in daily precipitation variability from 1900 to 2020. Time series",
-            markdown,
+            visible_markdown(
+                "**Figure 2.** Regional change in daily precipitation variability from 1900 to 2020. Time series"
+            ),
+            visible_markdown(markdown),
         )
         self.assertNotIn("$$where *P* is precipitation", markdown)
         self.assertNotIn("2020.Time series", markdown)
@@ -286,19 +289,32 @@ class AtyponBrowserWorkflowPostprocessTests(unittest.TestCase):
         )
 
         self.assertIn(
-            "# The drivers and impacts of Amazon forest degradation", markdown
+            visible_markdown("# The drivers and impacts of Amazon forest degradation"),
+            visible_markdown(markdown),
         )
-        self.assertIn("## Losing the Amazon", markdown)
-        self.assertIn("## Structured Abstract", markdown)
-        self.assertIn("## Abstract", markdown)
-        self.assertIn("## Main Text", markdown)
-        self.assertIn("Policies to tackle degradation", markdown)
-        self.assertIn("log<sub>10</sub>", markdown)
-        self.assertIn("CO<sub>2</sub>", markdown)
-        self.assertIn("**Box 1.** Defining Amazonia’s degradation regime.", markdown)
         self.assertIn(
-            "**Co-occurrence:** The incidence of different forms of disturbance",
-            markdown,
+            visible_markdown("## Losing the Amazon"), visible_markdown(markdown)
+        )
+        self.assertIn(
+            visible_markdown("## Structured Abstract"), visible_markdown(markdown)
+        )
+        self.assertIn(visible_markdown("## Abstract"), visible_markdown(markdown))
+        self.assertIn(visible_markdown("## Main Text"), visible_markdown(markdown))
+        self.assertIn(
+            visible_markdown("Policies to tackle degradation"),
+            visible_markdown(markdown),
+        )
+        self.assertIn(visible_markdown("log<sub>10</sub>"), visible_markdown(markdown))
+        self.assertIn(visible_markdown("CO<sub>2</sub>"), visible_markdown(markdown))
+        self.assertIn(
+            visible_markdown("**Box 1.** Defining Amazonia’s degradation regime."),
+            visible_markdown(markdown),
+        )
+        self.assertIn(
+            visible_markdown(
+                "**Co-occurrence:** The incidence of different forms of disturbance"
+            ),
+            visible_markdown(markdown),
         )
         self.assertNotIn("**Figure 2.** Box 1.", markdown)
         self.assertEqual(markdown.count("![Figure 2]("), 1)

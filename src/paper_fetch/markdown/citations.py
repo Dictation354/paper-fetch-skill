@@ -8,6 +8,7 @@ from typing import Any
 
 from ..extraction.citation_anchors import looks_like_reference_href
 from ..utils import normalize_text
+from .math import DOLLAR_MATH_MARKDOWN_PATTERN
 from .inline_spacing import normalize_inline_sup_sub_tag_bodies
 
 NUMERIC_CITATION_SENTINEL_PREFIX = "@@PF_CITE:"
@@ -95,8 +96,9 @@ def _normalize_inline_token_lines(text: str) -> str:
                 body = line[:-1]
                 newline = "\n"
             if INLINE_TOKEN_MARKER_PATTERN.search(body):
-                body = render_inline_tokens(
-                    inline_markdown_tokens(body, parse_citations=True),
+                indent = body[: len(body) - len(body.lstrip(" \t"))]
+                body = indent + render_inline_tokens(
+                    inline_markdown_tokens(body[len(indent) :], parse_citations=True),
                     policy="body",
                     collapse_newlines=False,
                     break_render="<br>",
@@ -119,11 +121,47 @@ def _normalize_inline_token_lines(text: str) -> str:
     return "".join(normalized_parts)
 
 
+def _protect_markdown_content(text: str) -> tuple[str, dict[str, str]]:
+    protected: dict[str, str] = {}
+    pattern = re.compile(
+        r"(?P<fence>`{3,}|~{3,})[^\n]*\n.*?^(?P=fence)[ \t]*$"
+        r"|(?P<code>`+)(?:(?!(?P=code)).)*?(?P=code)"
+        r"|"
+        + DOLLAR_MATH_MARKDOWN_PATTERN
+        + r"|(?<!\\)!?\[(?:\\.|[^\[\]\\\n])*\]\((?:[^()\n]|\([^()\n]*\))*\)"
+        + r"|\\[\[\]][ \t]*",
+        re.M | re.S,
+    )
+
+    def replace(match: re.Match[str]) -> str:
+        marker = f"PAPERFETCHLITERAL{len(protected)}TOKEN"
+        while marker in text:
+            marker += "X"
+        original = match[0]
+        if original.startswith(("[", "![")):
+            label_end = original.rfind("](")
+            label = NUMERIC_CITATION_SENTINEL_PATTERN.sub(
+                lambda citation: f"<sup>{citation['payload']}</sup>",
+                original[:label_end],
+            )
+            original = label + original[label_end:]
+        protected[marker] = original
+        return marker
+
+    return pattern.sub(replace, text), protected
+
+
+def _restore_markdown_content(text: str, protected: dict[str, str]) -> str:
+    for marker, original in protected.items():
+        text = text.replace(marker, original)
+    return text
+
+
 def normalize_inline_citation_markdown(text: str) -> str:
     if not text:
         return ""
 
-    normalized = text
+    normalized, protected = _protect_markdown_content(text)
     normalized = REFERENCE_PREFIX_SENTINEL_PATTERN.sub(
         lambda match: match.group("sentinel"), normalized
     )
@@ -153,13 +191,15 @@ def normalize_inline_citation_markdown(text: str) -> str:
     normalized = _normalize_inline_token_lines(normalized)
     normalized = NUMERIC_CITATION_SENTINEL_PATTERN.sub(render_sentinel, normalized)
     normalized = normalize_inline_sup_sub_tag_bodies(normalized)
-    normalized = re.sub(r"(</(?:sub|sup)>)\s+([,.;:?]|!(?!\[))", r"\1\2", normalized)
-    normalized = re.sub(r"\s+([,.;:?]|!(?!\[))", r"\1", normalized)
+    normalized = re.sub(
+        r"(</(?:sub|sup)>)\s+([,;:?]|\.(?!\d)|!(?!\[))", r"\1\2", normalized
+    )
+    normalized = re.sub(r"\s+([,;:?]|\.(?!\d)|!(?!\[))", r"\1", normalized)
     normalized = re.sub(r"([(\[])\s+", r"\1", normalized)
     normalized = re.sub(r"\s+([)\]])", r"\1", normalized)
     normalized = re.sub(r"\n{3,}", "\n\n", normalized)
     normalized = re.sub(r"[ \t]+\n", "\n", normalized)
-    return normalized.strip()
+    return _restore_markdown_content(normalized.strip(), protected)
 
 
 def is_citation_text(text: str) -> bool:
@@ -276,9 +316,10 @@ def clean_citation_markers(
     if normalize_labels:
         for pattern in label_patterns or COMMON_LABEL_PATTERNS:
             cleaned = pattern.sub(_join_label_reference, cleaned)
-    cleaned = re.sub(r"\s+([,.;:!?])", r"\1", cleaned)
+    cleaned, protected = _protect_markdown_content(cleaned)
+    cleaned = re.sub(r"\s+([,;:?]|\.(?!\d)|!(?!\[))", r"\1", cleaned)
     cleaned = re.sub(r"([(\[])\s+", r"\1", cleaned)
     cleaned = re.sub(r"\s+([)\]])", r"\1", cleaned)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
     cleaned = re.sub(r"[ \t]+\n", "\n", cleaned)
-    return cleaned.strip()
+    return _restore_markdown_content(cleaned.strip(), protected)

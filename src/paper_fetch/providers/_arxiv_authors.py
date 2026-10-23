@@ -6,11 +6,11 @@ import copy
 from importlib import resources
 from typing import Any
 from collections.abc import Sequence
-import html as html_lib
 import json
 import re
 
 from ..extraction.html import assets as html_assets
+from ..extraction.markdown_render.formulas import render_inline_latex_markdown
 from ..formula.convert import normalize_latex
 from ..utils import dedupe_authors, normalize_text
 from ._arxiv_html import (
@@ -150,7 +150,7 @@ def _candidate_arxiv_author_text_from_person_node(node: Any) -> str:
     clone = copy.deepcopy(node)
     if not isinstance(clone, Tag):
         return ""
-    for selector in _arxiv_ar5iv_selectors("frontmatter_noise"):
+    for selector in (*_arxiv_ar5iv_selectors("frontmatter_noise"), "math", "tex-math"):
         for match in clone.select(selector):
             match.decompose()
 
@@ -283,6 +283,25 @@ def _extract_arxiv_person_authors(html_text: str) -> list[str]:
         return []
     authors = []
     for person_node in _arxiv_select(article, "author_person_names"):
+        # Older LaTeXML keeps several comma-separated authors in one person
+        # node, each followed by a superscript affiliation marker.
+        markers = person_node.find_all("sup", recursive=False)
+        if len(markers) > 1:
+            compact = copy.deepcopy(person_node)
+            for marker in compact.find_all("sup"):
+                marker.decompose()
+            names = [
+                normalize_text(name)
+                for name in re.split(
+                    r",\s*(?:and\s+)?|\s+and\s+", compact.get_text(" ", strip=True)
+                )
+                if normalize_text(name)
+            ]
+            if len(names) > 1 and all(
+                _looks_like_arxiv_author_name(name) for name in names
+            ):
+                authors.extend(names)
+                continue
         candidate_text = _candidate_arxiv_author_text_from_person_node(person_node)
         authors.extend(_split_arxiv_author_text(candidate_text))
     return dedupe_authors(authors)
@@ -295,7 +314,6 @@ _AUTHOR_PIPELINE = AuthorExtractionPipeline(
 
 
 _ARXIV_UNDEFINED_MACRO_PATTERN = re.compile(r"^\\[A-Za-z@]+\*?$")
-_ARXIV_UNESCAPED_DOLLAR_PATTERN = re.compile(r"(?<!\\)\$")
 
 
 def _clean_official_html_latexml_noise(article: Any) -> dict[str, int]:
@@ -308,6 +326,17 @@ def _clean_official_html_latexml_noise(article: Any) -> dict[str, int]:
         }
 
     removed_error_nodes = 0
+    # Extended-data figures can carry a caption as a text-only panel paragraph
+    # rather than figcaption. Retain that original caption, including its math.
+    for figure in article.select("figure.ltx_figure"):
+        if figure.find("figcaption") is not None:
+            continue
+        for panel in figure.select("p.ltx_figure_panel"):
+            if panel.find(["img", "object", "svg"]) is None and re.match(
+                r"(?:Extended Data Figure|Figure|Fig\.?)\s+\d",
+                normalize_text(panel.get_text(" ", strip=True)),
+            ):
+                panel.name = "figcaption"
     for node in list(_arxiv_select(article, "latexml_error_nodes")):
         if not isinstance(node, Tag):
             continue
@@ -359,57 +388,48 @@ def _arxiv_math_annotation_latex(node: Any) -> str:
         encoding = normalize_text(str(annotation.get("encoding") or "")).lower()
         if encoding == "application/x-tex":
             latex = annotation.get_text("", strip=False)
-            return _sanitize_arxiv_math_annotation_latex(html_lib.unescape(latex))
-    alttext = normalize_text(str(node.get("alttext") or ""))
-    return _sanitize_arxiv_math_annotation_latex(html_lib.unescape(alttext))
-
-
-def _latex_braces_are_balanced(text: str) -> bool:
-    depth = 0
-    index = 0
-    while index < len(text):
-        character = text[index]
-        if character == "\\":
-            index += 2
-            continue
-        if character == "{":
-            depth += 1
-        elif character == "}":
-            depth -= 1
-            if depth < 0:
-                return False
-        index += 1
-    return depth == 0
+            expression = _sanitize_arxiv_math_annotation_latex(latex)
+            if expression:
+                return expression
+    alttext = str(node.get("alttext") or "")
+    return _sanitize_arxiv_math_annotation_latex(alttext)
 
 
 def _sanitize_arxiv_math_annotation_latex(value: str) -> str:
-    latex = normalize_latex(value)
-    if not latex:
-        return ""
-    latex = _ARXIV_UNESCAPED_DOLLAR_PATTERN.sub("", latex)
-    latex = normalize_latex(latex)
-    if not latex or _ARXIV_UNESCAPED_DOLLAR_PATTERN.search(latex):
-        return ""
-    if re.search(r"(?<!\\)\\[\[\]]", latex):
-        return ""
-    if not _latex_braces_are_balanced(latex):
-        return ""
-    return latex
+    return normalize_latex(value)
 
 
 def _arxiv_math_is_display(node: Any) -> bool:
     if not isinstance(node, Tag):
         return False
-    return normalize_text(str(node.get("display") or "")).lower() == "block"
+    if normalize_text(str(node.get("display") or "")).lower() == "block":
+        return True
+    # LaTeXML also splits displayed equations into table cells whose math
+    # nodes individually carry display="inline". Their equation-cell role,
+    # rather than a guess based on TeX commands, establishes display context.
+    return any(
+        isinstance(parent, Tag) and "ltx_eqn_cell" in _arxiv_node_classes(parent)
+        for parent in node.parents
+    )
 
 
 def _arxiv_math_markdown(node: Any) -> str:
+    from ..formula.validation import select_formula_latex
+    from ..extraction.html.formula_rules import mathml_element_from_html_node
+
     latex = _arxiv_math_annotation_latex(node)
+    selected = select_formula_latex(
+        latex,
+        mathml_element_from_html_node(node),
+        display_mode=_arxiv_math_is_display(node),
+        node_id=str(node.get("id") or ""),
+    )
+    latex = selected.final_latex
     if not latex:
         return ""
     if _arxiv_math_is_display(node):
         return f"\n\n$$\n{latex}\n$$\n\n"
-    return f"${latex}$"
+    return render_inline_latex_markdown(latex)
 
 
 def _normalize_official_html_latexml_math_nodes(article: Any) -> int:
@@ -422,8 +442,58 @@ def _normalize_official_html_latexml_math_nodes(article: Any) -> int:
         replacement = _arxiv_math_markdown(node)
         if not replacement:
             continue
-        node.replace_with(replacement)
+        # Keep an opaque formula node until the shared HTML renderer handles
+        # it; ordinary text tokens collapse the display fence's line breaks.
+        formula = BeautifulSoup("", ARXIV_HTML_PARSER).new_tag("span")
+        formula["class"] = ["mathjax-tex"]
+        if _arxiv_math_is_display(node):
+            formula["class"].append("display-equation")
+        formula.string = replacement.strip()
+        node.replace_with(formula)
         normalized_count += 1
+    # Equation-table cells describe columns of a single aligned expression.
+    for table in list(article.select("table.ltx_eqn_table")):
+        if table.find_parent("table", class_="ltx_eqn_table") is not None:
+            continue
+        groups = table.find_all("tbody", recursive=False) or [table]
+        fragments = []
+        for group in groups:
+            rows = []
+            labels = []
+            for row in group.find_all("tr"):
+                if row.find_parent("table") is not table:
+                    continue
+                cells = []
+                for cell in row.find_all(["td", "th"], recursive=False):
+                    if "ltx_eqn_eqno" in cell.get("class", []):
+                        label = cell.get_text("", strip=True).strip("()")
+                        if label:
+                            labels.append(label)
+                        continue
+                    values = [
+                        normalize_latex(n.get_text("", strip=False))
+                        for n in cell.select("span.mathjax-tex")
+                    ]
+                    if values:
+                        cells.append(" ".join(values))
+                if cells:
+                    rows.append(" & ".join(cells))
+            if rows:
+                latex = (
+                    r"\begin{aligned}"
+                    + "\n"
+                    + (r" \\" + "\n").join(rows)
+                    + "\n"
+                    + r"\end{aligned}"
+                )
+                if labels:
+                    latex += r"\tag{" + ", ".join(labels) + "}"
+                fragments.append("$$\n" + latex + "\n$$")
+        if fragments:
+            block = BeautifulSoup("", ARXIV_HTML_PARSER).new_tag("div")
+            block["data-paper-fetch-markdown"] = "1"
+            block.string = "\n\n".join(fragments)
+            table.replace_with(block)
     return normalized_count
 
 
@@ -431,11 +501,20 @@ def _normalize_official_html_latexml_notes(article: Any) -> int:
     if not isinstance(article, Tag):
         return 0
     normalized_count = 0
+    factory = BeautifulSoup("", ARXIV_HTML_PARSER)
+    notes = factory.new_tag("section")
+    heading = factory.new_tag("h2")
+    heading.string = "Notes"
+    notes.append(heading)
     for note in list(_arxiv_select(article, "note_nodes")):
         if not isinstance(note, Tag):
             continue
         classes = _arxiv_node_classes(note)
-        if "ltx_role_footnote" not in classes and "ltx_role_endnote" not in classes:
+        if not classes & {
+            "ltx_role_footnote",
+            "ltx_role_endnote",
+            "ltx_role_footnotetext",
+        }:
             continue
         marker_node = _arxiv_select_one(note, "note_markers")
         marker = normalize_text(
@@ -452,20 +531,37 @@ def _normalize_official_html_latexml_notes(article: Any) -> int:
             continue
         for duplicate_marker in _arxiv_select(content, "note_markers"):
             duplicate_marker.decompose()
+        for duplicate_marker in content.select(".ltx_tag_note, .ltx_note_type"):
+            duplicate_marker.decompose()
         content_text = normalize_text(
             render_clean_text_from_html(content).replace("\n", " ")
         )
+        if "ltx_role_footnotetext" in classes:
+            paragraph = factory.new_tag("p", attrs={"data-paper-fetch-markdown": "1"})
+            paragraph.string = content_text
+            note.replace_with(paragraph)
+            normalized_count += 1
+            continue
         if not marker and not content_text:
             continue
 
         note.clear()
         if marker:
-            sup = BeautifulSoup("", ARXIV_HTML_PARSER).new_tag("sup")
+            sup = factory.new_tag("sup")
             sup.string = marker
             note.append(sup)
         if content_text:
-            if marker:
-                note.append(" ")
-            note.append(content_text)
+            paragraph = factory.new_tag("p")
+            paragraph["data-paper-fetch-markdown"] = "1"
+            paragraph.string = (
+                f"<sup>{marker}</sup> " if marker else ""
+            ) + content_text
+            notes.append(paragraph)
         normalized_count += 1
+    if normalized_count:
+        bibliography = article.select_one(".ltx_bibliography")
+        if bibliography is not None:
+            bibliography.insert_before(notes)
+        else:
+            article.append(notes)
     return normalized_count

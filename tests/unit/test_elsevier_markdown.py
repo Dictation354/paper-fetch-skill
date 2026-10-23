@@ -428,7 +428,7 @@ class ElsevierMarkdownTests(unittest.TestCase):
 
         expression = article_markdown_math.render_mathml_expression(math_node)
 
-        self.assertEqual(expression, "{NDVI_{d - w}}_{cli}")
+        self.assertEqual(expression, r"{\mathrm{NDVI}_{d - w}}_{\mathrm{cli}}")
 
     def _assert_real_elsevier_display_formula_renders_as_formula_block(self) -> None:
         markdown = _render_elsevier_golden_markdown("10.1016/j.agrformet.2024.109975")
@@ -452,7 +452,7 @@ class ElsevierMarkdownTests(unittest.TestCase):
             markdown,
         )
         self.assertIn("where $c_{1}$ is constant.", markdown)
-        self.assertRegex(markdown, r"\$\$\n\{?VPD\}? = T\n\$\$")
+        self.assertRegex(markdown, r"\$\$\n\\mathrm\{VPD\} = T\n\$\$")
         self.assertNotIn("$$\nT\n$$", markdown)
         self.assertNotIn("$$\nT_{d}\n$$", markdown)
         self.assertNotIn("$$\nc_{1}\n$$", markdown)
@@ -716,7 +716,7 @@ class ElsevierMarkdownTests(unittest.TestCase):
 
         text = render_inline_text(fragment)
 
-        self.assertIn("Fig. 2, Table 1) and *HD*<sub>1</sub> were normalized.", text)
+        self.assertIn("Fig. 2<br>, Table 1<br>) and *HD*<br>1 were normalized.", text)
         self.assertNotIn("Fig. 2\n,", text)
         self.assertNotIn("Table 1\n)", text)
 
@@ -735,7 +735,7 @@ class ElsevierMarkdownTests(unittest.TestCase):
 
         text = render_inline_text(fragment)
 
-        self.assertEqual(text, "*r* =1.00; *Tleaf < Tair*.")
+        self.assertEqual(text, "*r* =1.00; *T<sub>leaf <</sub> T<sub>air</sub>*.")
         self.assertNotIn("*r*\n=", text)
         self.assertNotIn("<\n", text)
 
@@ -788,7 +788,7 @@ class ElsevierMarkdownTests(unittest.TestCase):
             allow_more_cells=True,
         )
 
-    def test_split_inline_variable_subscripts_are_rejoined_in_paragraphs(self) -> None:
+    def test_unmarked_inline_variables_are_not_inferred_as_subscripts(self) -> None:
         xml_body = b"""<?xml version="1.0"?>
 <full-text-retrieval-response xmlns="http://www.elsevier.com/xml/svapi/article/dtd" xmlns:ce="http://www.elsevier.com/xml/common/dtd">
   <body>
@@ -811,10 +811,10 @@ refers to the tie.</ce:para>
         markdown = build_elsevier_markdown(xml_body)
 
         self.assertIn(
-            "where *x*<sub>i</sub> and *x*<sub>j</sub> represent the grid unit values",
+            "where <em>x</em> *i* and <em>x</em> *j* represent the grid unit values",
             markdown,
         )
-        self.assertIn("*t*<sub>m</sub> refers to the tie.", markdown)
+        self.assertIn("<em>t</em> *m* refers to the tie.", markdown)
         self.assertNotIn("where *x*\n*i*", markdown)
         self.assertNotIn("and *x*\n*j*", markdown)
 
@@ -1123,17 +1123,21 @@ refers to the tie.</ce:para>
         self.assertEqual(
             structure.abstract_lines,
             [
+                "### Abstract",
+                "",
                 "Introduccion breve.",
                 "",
-                "### Objetivo",
+                "#### Objetivo",
                 "",
                 "Evaluar *habilidades*.",
                 "",
-                "### Introduction",
+                "### Abstract",
+                "",
+                "#### Introduction",
                 "",
                 "Short introduction.",
                 "",
-                "### Objective",
+                "#### Objective",
                 "",
                 "Assess *skills*.",
                 "",

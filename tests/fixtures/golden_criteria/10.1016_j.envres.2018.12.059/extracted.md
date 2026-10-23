@@ -6,7 +6,7 @@ source: "elsevier_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 18328
+token_estimate: 18987
 ---
 
 # New approach to identifying proper thresholds for a heat warning system using health risk increments
@@ -57,7 +57,7 @@ Hourly meteorological data from 2000 to 2014 were obtained from the CWB, Taiwan.
 
 WBGT is a weighed combination of dry-bulb temperature, globe temperature and natural wet-bulb temperature (Bernard, 2012) (see Eq. (B) of Appendix A); it considers T, RH%, wind speed, and solar radiation. However, natural wet-bulb temperature and globe temperature were not provided by routine meteorological measurements. Nevertheless, equations for calculating WBGT according to fundamental principles of heat and mass transfer with standard meteorological data have been derived and validated (Liljegren et al., 2008). Thus, these equations with inputs of routine meteorological measurements of hourly temperature, RH%, wind speed, and solar radiation were used for calculating WBGT (see Eq. (C) and Eq. (D) of Appendix A). The daily maximum WBGTs of these stations were also averaged for analysis.
 
-In the heat-health model, confounders such as air pollutants (Ye et al., 2012) were adjusted using hourly measurements of air pollutant levels from 2000 to 2014. These measurements were obtained from the Environmental Protection Administration (EPA), Taiwan, which has 76 air-quality monitoring stations throughout Taiwan. PM2.5 was used as a confounder instead of other air pollutants because it is currently the most concerned pollutant in Taiwan and has high correlation with other pollutants. Measurements of PM2.5 from 55 ambient stations between 2000 and 2014 were used while data from other types of stations (such as industrial, traffic and background) were excluded.
+In the heat-health model, confounders such as air pollutants (Ye et al., 2012) were adjusted using hourly measurements of air pollutant levels from 2000 to 2014. These measurements were obtained from the Environmental Protection Administration (EPA), Taiwan, which has 76 air-quality monitoring stations throughout Taiwan. PM<sub>2.5</sub> was used as a confounder instead of other air pollutants because it is currently the most concerned pollutant in Taiwan and has high correlation with other pollutants. Measurements of PM<sub>2.5</sub> from 55 ambient stations between 2000 and 2014 were used while data from other types of stations (such as industrial, traffic and background) were excluded.
 
 ### Analysis
 
@@ -66,17 +66,17 @@ This study focused on health outcomes of heat-related illness; hence, only data 
 (1)
 
 $$
-{Log}\left\lbrack {E\left(Y_{t} \right)} \right\rbrack = {\alpha +}f(D_{t}{) +}g(t{) +}\sum\limits_{i = 1}^{m}{\lambda_{i}C_{\mathit{it}}}
+\mathrm{Log}\left\lbrack {E\left(Y_{t} \right)} \right\rbrack = {\mathrm{α} +}f(D_{t}{) +}g(t{) +}\sum\limits_{i = 1}^{m}{\lambda_{i}C_{\mathit{it}}}
 $$
 
-where α is a constant, $f(D_{t})$ is a thin plate spline function of the heat indicator with a number of knots over days in each warm season, and $g(t)$ is another thin plate spline function of time with some number of knots for examining daily change pattern during warm seasons. Potential covariates on day *t*, denoted by $C_{\mathit{it}}$, such as daily PM2.5 concentration, day of week, holiday and periods prevalent with the severe acute respiratory syndrome (SARS) are considered for adjustment. Model selection was conducted to obtain influential covariates and to choose the number of knots according to the Akaike information criterion (AIC). The model with a lower AIC value is a better-fitted model. By using the above evaluation, the number of knots $k = 3$ was adopted for fitting the thin plate spline function $f(D_{t})$. The AIC values for models with *k* ranging from 3 to 10 did not reduce significantly and the fitted patterns of the health outcomes showed almost the same linear relationship for heat indicators above 30. The fitted curve of $k = 10$ is presented in Fig. 1 of Appendix B for comparison. The spline function $g(t)$ models the same health outcome pattern during each warm season of 184 days; choices of *k* = 1, 2, 3 and 4 for a warm season were evaluated. According to the AIC values of the fitted models, *k* = 3 for a warm season is the best choice. Hence, $k = 45\ {and}\ 21$ were adopted for modeling $g(t)$ in health outcomes of heat-related hospital admissions and emergency visits (15 years) and all-cause mortality (7 years), respectively. After obtaining the best model, the estimated smooth function $\widehat{f}(D_{t})$ was plotted to examine the heat-health relationships. As shown in the Results section, the plots did reveal a linear heat-health relationship for heat indicator beyond certain cut-points, and that the model can be modified for determining proper thresholds. Specifically, the daily maximum heat indicator on day *t* in the model is replaced by $E_{t}$ which is defined as,
+where α is a constant, $f(D_{t})$ is a thin plate spline function of the heat indicator with a number of knots over days in each warm season, and $g(t)$ is another thin plate spline function of time with some number of knots for examining daily change pattern during warm seasons. Potential covariates on day *t*, denoted by $C_{\mathit{it}}$, such as daily PM<sub>2.5</sub> concentration, day of week, holiday and periods prevalent with the severe acute respiratory syndrome (SARS) are considered for adjustment. Model selection was conducted to obtain influential covariates and to choose the number of knots according to the Akaike information criterion (AIC). The model with a lower AIC value is a better-fitted model. By using the above evaluation, the number of knots $k = 3$ was adopted for fitting the thin plate spline function $f(D_{t})$. The AIC values for models with *k* ranging from 3 to 10 did not reduce significantly and the fitted patterns of the health outcomes showed almost the same linear relationship for heat indicators above 30. The fitted curve of $k = 10$ is presented in Fig. 1 of Appendix B for comparison. The spline function $g(t)$ models the same health outcome pattern during each warm season of 184 days; choices of *k* = 1, 2, 3 and 4 for a warm season were evaluated. According to the AIC values of the fitted models, *k* = 3 for a warm season is the best choice. Hence, $k = 45\hspace{0.25em}\mathrm{and}\hspace{0.25em}21$ were adopted for modeling $g(t)$ in health outcomes of heat-related hospital admissions and emergency visits (15 years) and all-cause mortality (7 years), respectively. After obtaining the best model, the estimated smooth function $\hat{f}(D_{t})$ was plotted to examine the heat-health relationships. As shown in the Results section, the plots did reveal a linear heat-health relationship for heat indicator beyond certain cut-points, and that the model can be modified for determining proper thresholds. Specifically, the daily maximum heat indicator on day *t* in the model is replaced by $E_{t}$ which is defined as,
 
 ![Figure 1](https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr1_lrg.jpg?httpAccept=%2A%2F%2A)
 
 Heat-health relationship of daily maximum WBGT, T and AT with all-cause mortality, heat-related hospital admissions and heat-related emergency visits obtained from smooth functions of heat indicator in GAMs after confounder adjustment.
 
 $$
-E_{t} = \left\{\begin{matrix} {D_{t} - \theta{,\quad\text{if}}D_{t} > \theta} \\ {0,{otherwise}} \end{matrix} \right.
+E_{t} = {\{\begin{matrix} {D_{t} - \theta{,\hspace{1em}\text{if}}D_{t} > \theta} \\ {0,\mathrm{otherwise}} \end{matrix}}
 $$
 
 where $\theta$ is a specified threshold candidate of the heat indicator. The model is then modified as
@@ -84,17 +84,17 @@ where $\theta$ is a specified threshold candidate of the heat indicator. The mod
 (2)
 
 $$
-{Log}\left\lbrack {E\left({Y_{t}|\theta} \right)} \right\rbrack = {\alpha +}\beta_{\theta}E_{t} + g(t{) +}\sum\limits_{i = 1}^{m}{\lambda_{i}C_{\mathit{it}}}
+\mathrm{Log}\left\lbrack {E\left({Y_{t}\mathrm{|}\theta} \right)} \right\rbrack = {\mathrm{α} +}\beta_{\theta}E_{t} + g(t{) +}\sum\limits_{i = 1}^{m}{\lambda_{i}C_{\mathit{it}}}
 $$
 
 where $\beta_{\theta}$ is a damage coefficient associated with an increased value of heat indicator from the chosen threshold $\theta$. For assessing changes in health risk in relation to a heat indicator threshold, this study evaluated the risk ratio (RR), $e^{\beta_{\theta}}$, which is the expected health outcome for 1 °C increment over the threshold candidate divided by the expected health outcome for that heat indicator below the threshold. With this damage coefficient $\beta_{\theta}$ in the modified model, different threshold candidates $\theta$ could be compared to shed light on the potential reduced health risks. The threshold candidates were assessed starting from 30 °C at 0.5 °C increments sequentially for the three heat indicators. Increments of 0.5 °C were used because a threshold defined by the authority is typically a round number or with 0.5 °C increments for easy communication with the general public. This work set 30 °C as the lowest threshold candidate of the three heat indicators because the median values of WBGT, T, and AT from 2000 to 2014 in Taiwan are 30.1 °C, 30.8 °C, and 33.6 °C, respectively. Previous studies also showed that Taiwan had higher mortality of various diseases at temperature above 30 °C (Pan et al., 1995). The models were repeatedly fitted with the threshold candidates till either the number of days above the threshold candidate or the number of cases was too small, a limitation of small sample size.
 
-Risk ratios of different threshold candidates were compared to determine the best threshold candidate with the maximum increments of risk ratio (RR) in comparison with a reference, which, in this work, is the chosen lowest threshold candidate denoted by $a = \quad$30 °C. The risk ratio increment (RRI) is calculated using
+Risk ratios of different threshold candidates were compared to determine the best threshold candidate with the maximum increments of risk ratio (RR) in comparison with a reference, which, in this work, is the chosen lowest threshold candidate denoted by $a = \hspace{1em}$30 °C. The risk ratio increment (RRI) is calculated using
 
 (3)
 
 $$
-{{RRI}(\%)} = \left\lbrack {e^{\beta_{\theta}} - e^{\beta_{a}}} \right\rbrack{\times 100\%}
+{\mathrm{RRI}\left(\% \right)} = \left\lbrack {e^{\beta_{\theta}} - e^{\beta_{a}}} \right\rbrack{\times 100\%}
 $$
 
 Such increment in association with a threshold candidate was adjusted by the RR of the reference level of a heat indicator; hence, the sensitivity of the threshold candidate to the RR could be examined and comparisons among different health outcomes associated with the heat indicator could be conducted. The patterns of RRI associated with different threshold candidates were graphically illustrated to determine the proper threshold value. The threshold candidate of the heat indicator with the maximum RRI, the largest increase in RR from the reference, was potentially the proper threshold value. Thresholds selected on the basis of different health outcomes for different purposes were evaluated for their consistency and differences. Finally, the numbers of days exceeding different threshold candidates in previous years were also assessed and provided as a complementary consideration for threshold selection.
@@ -102,6 +102,10 @@ Such increment in association with a threshold candidate was adjusted by the RR 
 Previous studies showed that heat-health thresholds determined by spline functions (the change point of the segmented regressions) were usually too low for a heat warning system as discussed in the Introduction. A spline function (*k* = 3) for $f(D_{t})$ was adopted to explore the patterns of health outcomes above certain cut-points in this work; rather than determining the thresholds. After confirming that the patterns of health outcome are linear above certain cut-points with Eq. (1), threshold candidates can be evaluated through comparing their associated RRI values with Eqs. (2) and (3). Moreover, thresholds determined according to the change point of the segmented regressions are typically shown in graphic presentations without quantification. Instead, the proposed approach presents quantitative RRI values to facilitate the authorities in their choice of thresholds. The quantitative graphical presentation is the major advantage of the proposed approach.
 
 Data processing and statistical analyses were carried out using SAS 9.3 (SAS Institute Inc., Cary, NC, USA) and R 3.3.3 with *mgcv* package (Wood, 2006). Regarding the lag effect, recent studies have found much smaller effect of heat waves in “extended periods” than the acute effects (Barnett et al., 2012; Gasparrini and Armstrong, 2011; Gosling et al., 2009), and the focus of an effective heat warning system should minimize health risks of the acute effects on the event days (WMO and WHO, 2015). For demonstration purpose, lagged effect was assessed for all-cause mortality and the results are shown in Table 1 of Appendix C. As can be seen, lagged effect was found to be relatively weak, and hence not evaluated further in this work.
+
+## Results
+
+Table 1 shows the summary of data in the warm season of 2000–2014 in Taiwan as used in the models. The daily maximum of all-cause mortality was 463 with more males than females; and the elderly had the highest counts among all age groups, as expected. Daily maximum of heat-related hospital admissions and emergency visits reached 1533 and 73, respectively. The mean heat-related emergency visit was almost 0.5% of the mean heat-related hospital admission. Among different age groups, people aged 15–64 years accounted for the majority of heat-related hospital admissions. In terms of gender, the number of females was higher than that of males. In contrast, females have fewer hospital emergency visits than males. The average daily maximum WBGT, T, and AT in the warm season of these 15 years were 29.5 °C, 30.4 °C, and 32.9 °C, respectively.
 
 Table 1
 
@@ -114,34 +118,29 @@ Summary of data used in GAM, May to October in years 2000–2014.
 | Male                                  | 1288 | 215  | 19   | 156  | 283  |
 | Age 0–14                              | 1288 | 3    | 2    | 0    | 9    |
 | Age 15–64                             | 1288 | 97   | 11   | 64   | 134  |
-| Age > 65                              | 1288 | 260  | 24   | 197  | 340  |
+| Age &gt; 65                           | 1288 | 260  | 24   | 197  | 340  |
 | Heat-related hospital admissions      | 2760 | 178  | 220  | 1    | 1533 |
 | Female                                | 2760 | 101  | 128  | 0    | 856  |
 | Male                                  | 2760 | 75   | 90   | 0    | 674  |
 | Age 0–14                              | 2760 | 8    | 8    | 0    | 63   |
 | Age 15–64                             | 2760 | 151  | 191  | 0    | 1351 |
-| Age > 65                              | 2760 | 18   | 22   | 0    | 147  |
+| Age &gt; 65                           | 2760 | 18   | 22   | 0    | 147  |
 | Heat-related emergency visits         | 2760 | 7    | 7    | 0    | 73   |
 | Female                                | 2760 | 2    | 2    | 0    | 26   |
 | Male                                  | 2760 | 5    | 6    | 0    | 45   |
 | Age 0–14                              | 2760 | 1    | 1    | 0    | 7    |
 | Age 15–64                             | 2760 | 5    | 6    | 0    | 51   |
-| Age > 65                              | 2760 | 1    | 2    | 0    | 19   |
+| Age &gt; 65                           | 2760 | 1    | 2    | 0    | 19   |
 | Heat indicator                        |      |      |      |      |      |
 | Daily max. WBGT (°C)                  | 2760 | 29.5 | 2.35 | 19.5 | 33.6 |
 | Daily max. T (°C)                     | 2760 | 30.4 | 2.18 | 20.9 | 34.5 |
 | Daily max. AT (°C)                    | 2760 | 32.9 | 2.82 | 20.8 | 38.0 |
 | Air pollutant                         |      |      |      |      |      |
-| PM2.5 (μg/m<sup>3</sup>)              | 2760 | 28.4 | 13.3 | 8.55 | 149  |
+| PM<sub>2.5</sub> (μg/m<sup>3</sup>)   | 2760 | 28.4 | 13.3 | 8.55 | 149  |
 
 a Dataset of daily all-cause mortality covers years 2008–2014.
 
-## Results
-
-Table 1 shows the summary of data in the warm season of 2000–2014 in Taiwan as used in the models. The daily maximum of all-cause mortality was 463 with more males than females; and the elderly had the highest counts among all age groups, as expected. Daily maximum of heat-related hospital admissions and emergency visits reached 1533 and 73, respectively. The mean heat-related emergency visit was almost 0.5% of the mean heat-related hospital admission. Among different age groups, people aged 15–64 years accounted for the majority of heat-related hospital admissions. In terms of gender, the number of females was higher than that of males. In contrast, females have fewer hospital emergency visits than males. The average daily maximum WBGT, T, and AT in the warm season of these 15 years were 29.5 °C, 30.4 °C, and 32.9 °C, respectively.
-
-The associations of WBGT, T, and AT with different health outcomes during warm season of the studied periods are shown in Fig. 2 of Appendix B. As can be seen, the health impacts increased linearly with the heat indicator after certain values in the right tails of these graphs.
-Fig. 1(a)-(i) displays the associations of WBGT, T, and AT with different health outcomes in GAMs after confounder adjustments. Similarly, the right tails seen in Fig. 1(a)-(i) also show linear exposure-response relationships of maximum WBGT, T, and AT with different health impacts above certain values. Such agreement in results obtained indicates the suitability of the GAMs for this analysis.
+The associations of WBGT, T, and AT with different health outcomes during warm season of the studied periods are shown in Fig. 2 of Appendix B. As can be seen, the health impacts increased linearly with the heat indicator after certain values in the right tails of these graphs. Fig. 1(a)-(i) displays the associations of WBGT, T, and AT with different health outcomes in GAMs after confounder adjustments. Similarly, the right tails seen in Fig. 1(a)-(i) also show linear exposure-response relationships of maximum WBGT, T, and AT with different health impacts above certain values. Such agreement in results obtained indicates the suitability of the GAMs for this analysis.
 
 ![Figure 2](https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-gr2_lrg.jpg?httpAccept=%2A%2F%2A)
 
@@ -155,84 +154,82 @@ Risk ratios at different threshold candidates of (a) WBGT, (b) T, and (c) AT.
 
 (a) WBGT
 
-| Threshold                        | RR               | > 30 °C / (95% CI)<sup>a</sup> | RR               | > 31.0 °C / (95% CI) | RR               | > 32.0 °C / (95% CI) | RR               | > 32.5 °C / (95% CI) | RR               | > 33.0 °C / (95% CI) |
-| -------------------------------- | ---------------- | ------------------------------ | ---------------- | -------------------- | ---------------- | -------------------- | ---------------- | -------------------- | ---------------- | -------------------- |
-| All-cause mortality              | 1.02<sup>*</sup> | (1.01, 1.02)                   | 1.03<sup>*</sup> | (1.02, 1.03)         | 1.05<sup>*</sup> | (1.03, 1.07)         | 1.06<sup>†</sup> | (1.01, 1.11)         | 1.10             | (0.96, 1.26)         |
-| Female                           | 1.01<sup>*</sup> | (1.00, 1.02)                   | 1.02<sup>*</sup> | (1.01, 1.03)         | 1.04<sup>†</sup> | (1.00, 1.07)         | 1.03             | (0.96, 1.11)         | 1.09             | (0.88, 1.34)         |
-| Male                             | 1.02<sup>*</sup> | (1.01, 1.03)                   | 1.03<sup>*</sup> | (1.02, 1.04)         | 1.05<sup>*</sup> | (1.03, 1.08)         | 1.08<sup>†</sup> | (1.01, 1.14)         | 1.10             | (0.93, 1.31)         |
-| Age 0–14                         | 1.02             | (0.97, 1.08)                   | 1.02             | (0.94, 1.12)         | 1.08             | (0.84, 1.37)         | 1.44             | (0.86, 2.42)         | 2.23             | (0.47, 10.53)        |
-| Age 15–64                        | 1.01<sup>*</sup> | (1.01, 1.02)                   | 1.02<sup>*</sup> | (1.01, 1.04)         | 1.03             | (0.99, 1.07)         | 1.04             | (0.96, 1.14)         | 1.15             | (0.88, 1.49)         |
-| Age > 65                         | 1.02<sup>*</sup> | (1.01, 1.02)                   | 1.03<sup>*</sup> | (1.02, 1.04)         | 1.05<sup>*</sup> | (1.03, 1.08)         | 1.06<sup>†</sup> | (1.01, 1.12)         | 1.07             | (0.92, 1.26)         |
-| Heat-related hospital admissions | 1.3<sup>*</sup>  | (1.30, 1.31)                   | 1.36<sup>*</sup> | (1.35, 1.37)         | 1.47<sup>*</sup> | (1.45, 1.49)         | 1.68<sup>*</sup> | (1.62, 1.73)         | 2.03<sup>*</sup> | (1.82, 2.28)         |
-| Female                           | 1.29<sup>*</sup> | (1.28, 1.29)                   | 1.33<sup>*</sup> | (1.32, 1.35)         | 1.43<sup>*</sup> | (1.40, 1.46)         | 1.61<sup>*</sup> | (1.54, 1.68)         | 1.83<sup>*</sup> | (1.57, 2.13)         |
-| Male                             | 1.33<sup>*</sup> | (1.32, 1.34)                   | 1.39<sup>*</sup> | (1.38, 1.41)         | 1.52<sup>*</sup> | (1.48, 1.55)         | 1.76<sup>*</sup> | (1.67, 1.85)         | 2.28<sup>*</sup> | (1.92, 2.71)         |
-| Age 0–14                         | 1.31<sup>*</sup> | (1.29, 1.34)                   | 1.40<sup>*</sup> | (1.35, 1.44)         | 1.54<sup>*</sup> | (1.42, 1.66)         | 1.72<sup>*</sup> | (1.45, 2.04)         | 2.61<sup>*</sup> | (1.49, 4.56)         |
-| Age 15–64                        | 1.31<sup>*</sup> | (1.31, 1.32)                   | 1.37<sup>*</sup> | (1.36, 1.38)         | 1.48<sup>*</sup> | (1.46, 1.51)         | 1.69<sup>*</sup> | (1.63, 1.75)         | 2.01<sup>*</sup> | (1.78, 2.28)         |
-| Age > 65                         | 1.24<sup>*</sup> | (1.23, 1.26)                   | 1.27<sup>*</sup> | (1.24, 1.29)         | 1.33<sup>*</sup> | (1.27, 1.39)         | 1.58<sup>*</sup> | (1.43, 1.76)         | 2.05<sup>*</sup> | (1.45, 2.91)         |
-| Heat-related emergency visits    | 1.77<sup>*</sup> | (1.73, 1.81)                   | 1.96<sup>*</sup> | (1.89, 2.02)         | 2.26<sup>*</sup> | (2.10, 2.42)         | 2.77<sup>*</sup> | (2.41, 3.17)         | 4.19<sup>*</sup> | (2.92, 6.03)         |
-| Female                           | 1.67<sup>*</sup> | (1.59, 1.75)                   | 1.87<sup>*</sup> | (1.75, 2.00)         | 2.31<sup>*</sup> | (2.01, 2.66)         | 3.29<sup>*</sup> | (2.55, 4.25)         | 3.81<sup>*</sup> | (1.92, 7.57)         |
-| Male                             | 1.80<sup>*</sup> | (1.75, 1.85)                   | 1.98<sup>*</sup> | (1.91, 2.06)         | 2.23<sup>*</sup> | (2.05, 2.42)         | 2.55<sup>*</sup> | (2.16, 3.01)         | 4.29<sup>*</sup> | (2.76, 6.65)         |
-| Age 0–14                         | 1.29<sup>*</sup> | (1.19, 1.40)                   | 1.52<sup>*</sup> | (1.33, 1.74)         | 2.38<sup>*</sup> | (1.76, 3.23)         | 3.45<sup>*</sup> | (1.90, 6.28)         | 6.86<sup>†</sup> | (1.49, 31.65)        |
-| Age 15–64                        | 1.82<sup>*</sup> | (1.77, 1.87)                   | 1.99<sup>*</sup> | (1.92, 2.07)         | 2.24<sup>*</sup> | (2.07, 2.43)         | 2.66<sup>*</sup> | (2.27, 3.11)         | 3.86<sup>*</sup> | (2.52, 5.91)         |
-| Age > 65                         | 1.84<sup>*</sup> | (1.73, 1.95)                   | 1.99<sup>*</sup> | (1.83, 2.16)         | 2.25<sup>*</sup> | (1.89, 2.66)         | 3.15<sup>*</sup> | (2.30, 4.31)         | 5.50<sup>*</sup> | (2.50, 12.13)        |
+| Threshold                        | RR                | &gt; 30 °C / (95% CI)<sup>a</sup> | RR                | &gt; 31.0 °C / (95% CI) | RR                | &gt; 32.0 °C / (95% CI) | RR                | &gt; 32.5 °C / (95% CI) | RR                | &gt; 33.0 °C / (95% CI) |
+| -------------------------------- | ----------------- | --------------------------------- | ----------------- | ----------------------- | ----------------- | ----------------------- | ----------------- | ----------------------- | ----------------- | ----------------------- |
+| All-cause mortality              | 1.02<sup>\*</sup> | (1.01, 1.02)                      | 1.03<sup>\*</sup> | (1.02, 1.03)            | 1.05<sup>\*</sup> | (1.03, 1.07)            | 1.06<sup>†</sup>  | (1.01, 1.11)            | 1.10              | (0.96, 1.26)            |
+| Female                           | 1.01<sup>\*</sup> | (1.00, 1.02)                      | 1.02<sup>\*</sup> | (1.01, 1.03)            | 1.04<sup>†</sup>  | (1.00, 1.07)            | 1.03              | (0.96, 1.11)            | 1.09              | (0.88, 1.34)            |
+| Male                             | 1.02<sup>\*</sup> | (1.01, 1.03)                      | 1.03<sup>\*</sup> | (1.02, 1.04)            | 1.05<sup>\*</sup> | (1.03, 1.08)            | 1.08<sup>†</sup>  | (1.01, 1.14)            | 1.10              | (0.93, 1.31)            |
+| Age 0–14                         | 1.02              | (0.97, 1.08)                      | 1.02              | (0.94, 1.12)            | 1.08              | (0.84, 1.37)            | 1.44              | (0.86, 2.42)            | 2.23              | (0.47, 10.53)           |
+| Age 15–64                        | 1.01<sup>\*</sup> | (1.01, 1.02)                      | 1.02<sup>\*</sup> | (1.01, 1.04)            | 1.03              | (0.99, 1.07)            | 1.04              | (0.96, 1.14)            | 1.15              | (0.88, 1.49)            |
+| Age &gt; 65                      | 1.02<sup>\*</sup> | (1.01, 1.02)                      | 1.03<sup>\*</sup> | (1.02, 1.04)            | 1.05<sup>\*</sup> | (1.03, 1.08)            | 1.06<sup>†</sup>  | (1.01, 1.12)            | 1.07              | (0.92, 1.26)            |
+| Heat-related hospital admissions | 1.3<sup>\*</sup>  | (1.30, 1.31)                      | 1.36<sup>\*</sup> | (1.35, 1.37)            | 1.47<sup>\*</sup> | (1.45, 1.49)            | 1.68<sup>\*</sup> | (1.62, 1.73)            | 2.03<sup>\*</sup> | (1.82, 2.28)            |
+| Female                           | 1.29<sup>\*</sup> | (1.28, 1.29)                      | 1.33<sup>\*</sup> | (1.32, 1.35)            | 1.43<sup>\*</sup> | (1.40, 1.46)            | 1.61<sup>\*</sup> | (1.54, 1.68)            | 1.83<sup>\*</sup> | (1.57, 2.13)            |
+| Male                             | 1.33<sup>\*</sup> | (1.32, 1.34)                      | 1.39<sup>\*</sup> | (1.38, 1.41)            | 1.52<sup>\*</sup> | (1.48, 1.55)            | 1.76<sup>\*</sup> | (1.67, 1.85)            | 2.28<sup>\*</sup> | (1.92, 2.71)            |
+| Age 0–14                         | 1.31<sup>\*</sup> | (1.29, 1.34)                      | 1.40<sup>\*</sup> | (1.35, 1.44)            | 1.54<sup>\*</sup> | (1.42, 1.66)            | 1.72<sup>\*</sup> | (1.45, 2.04)            | 2.61<sup>\*</sup> | (1.49, 4.56)            |
+| Age 15–64                        | 1.31<sup>\*</sup> | (1.31, 1.32)                      | 1.37<sup>\*</sup> | (1.36, 1.38)            | 1.48<sup>\*</sup> | (1.46, 1.51)            | 1.69<sup>\*</sup> | (1.63, 1.75)            | 2.01<sup>\*</sup> | (1.78, 2.28)            |
+| Age &gt; 65                      | 1.24<sup>\*</sup> | (1.23, 1.26)                      | 1.27<sup>\*</sup> | (1.24, 1.29)            | 1.33<sup>\*</sup> | (1.27, 1.39)            | 1.58<sup>\*</sup> | (1.43, 1.76)            | 2.05<sup>\*</sup> | (1.45, 2.91)            |
+| Heat-related emergency visits    | 1.77<sup>\*</sup> | (1.73, 1.81)                      | 1.96<sup>\*</sup> | (1.89, 2.02)            | 2.26<sup>\*</sup> | (2.10, 2.42)            | 2.77<sup>\*</sup> | (2.41, 3.17)            | 4.19<sup>\*</sup> | (2.92, 6.03)            |
+| Female                           | 1.67<sup>\*</sup> | (1.59, 1.75)                      | 1.87<sup>\*</sup> | (1.75, 2.00)            | 2.31<sup>\*</sup> | (2.01, 2.66)            | 3.29<sup>\*</sup> | (2.55, 4.25)            | 3.81<sup>\*</sup> | (1.92, 7.57)            |
+| Male                             | 1.80<sup>\*</sup> | (1.75, 1.85)                      | 1.98<sup>\*</sup> | (1.91, 2.06)            | 2.23<sup>\*</sup> | (2.05, 2.42)            | 2.55<sup>\*</sup> | (2.16, 3.01)            | 4.29<sup>\*</sup> | (2.76, 6.65)            |
+| Age 0–14                         | 1.29<sup>\*</sup> | (1.19, 1.40)                      | 1.52<sup>\*</sup> | (1.33, 1.74)            | 2.38<sup>\*</sup> | (1.76, 3.23)            | 3.45<sup>\*</sup> | (1.90, 6.28)            | 6.86<sup>†</sup>  | (1.49, 31.65)           |
+| Age 15–64                        | 1.82<sup>\*</sup> | (1.77, 1.87)                      | 1.99<sup>\*</sup> | (1.92, 2.07)            | 2.24<sup>\*</sup> | (2.07, 2.43)            | 2.66<sup>\*</sup> | (2.27, 3.11)            | 3.86<sup>\*</sup> | (2.52, 5.91)            |
+| Age &gt; 65                      | 1.84<sup>\*</sup> | (1.73, 1.95)                      | 1.99<sup>\*</sup> | (1.83, 2.16)            | 2.25<sup>\*</sup> | (1.89, 2.66)            | 3.15<sup>\*</sup> | (2.30, 4.31)            | 5.50<sup>\*</sup> | (2.50, 12.13)           |
 
 (b) T
 
-| Threshold                        | RR               | > 30 °C / (95% CI)<sup>a</sup> | RR               | > 31.0 °C / (95% CI) | RR               | > 32.0 °C / (95% CI) | RR               | > 33.0 °C / (95% CI) | RR               | > 33.5 °C / (95% CI) | RR               | > 34.0 °C / (95% CI) |
-| -------------------------------- | ---------------- | ------------------------------ | ---------------- | -------------------- | ---------------- | -------------------- | ---------------- | -------------------- | ---------------- | -------------------- | ---------------- | -------------------- |
-| All-cause mortality              | 1.01<sup>*</sup> | (1.01, 1.02)                   | 1.02<sup>*</sup> | (1.02, 1.03)         | 1.04<sup>*</sup> | (1.03, 1.05)         | 1.08<sup>*</sup> | (1.05, 1.11)         | 1.11<sup>*</sup> | (1.04–1.17)          | 1.16             | (0.97, 1.39)         |
-| Female                           | 1.01<sup>*</sup> | (1.01, 1.02)                   | 1.02<sup>*</sup> | (1.01, 1.03)         | 1.03<sup>*</sup> | (1.02, 1.05)         | 1.07<sup>*</sup> | (1.02, 1.12)         | 1.06             | (0.96–1.16)          | 1.11             | (0.83, 1.48)         |
-| Male                             | 1.02<sup>*</sup> | (1.01, 1.02)                   | 1.02<sup>*</sup> | (1.02, 1.03)         | 1.04<sup>*</sup> | (1.03, 1.05)         | 1.08<sup>*</sup> | (1.05, 1.12)         | 1.14<sup>*</sup> | (1.06–1.23)          | 1.20             | (0.94, 1.51)         |
-| Age 0–14                         | 1.01             | (0.97, 1.06)                   | 1.01             | (0.95, 1.07)         | 0.99             | (0.89, 1.10)         | 0.88             | (0.62, 1.26)         | 0.68             | (0.29–1.62)          | 0.37             | (0.02, 7.13)         |
-| Age 15–64                        | 1.01<sup>*</sup> | (1.00, 1.02)                   | 1.01<sup>*</sup> | (1.00, 1.03)         | 1.02<sup>†</sup> | (1.00, 1.04)         | 1.05             | (0.99, 1.11)         | 1.09             | (0.97–1.23)          | 1.22             | (0.86, 1.74)         |
-| Age > 65                         | 1.02<sup>*</sup> | (1.01, 1.02)                   | 1.02<sup>*</sup> | (1.02, 1.03)         | 1.04<sup>*</sup> | (1.03, 1.05)         | 1.09<sup>*</sup> | (1.06, 1.13)         | 1.11<sup>*</sup> | (1.04–1.20)          | 1.15             | (0.93, 1.42)         |
-| Heat-related hospital admissions | 1.31<sup>*</sup> | (1.30, 1.31)                   | 1.36<sup>*</sup> | (1.35, 1.36)         | 1.44<sup>*</sup> | (1.43, 1.45)         | 1.59<sup>*</sup> | (1.56, 1.62)         | 1.68<sup>*</sup> | (1.61–1.74)          | 1.69<sup>*</sup> | (1.50, 1.90)         |
-| Female                           | 1.30<sup>*</sup> | (1.29, 1.30)                   | 1.35<sup>*</sup> | (1.34, 1.35)         | 1.43<sup>*</sup> | (1.42, 1.44)         | 1.56<sup>*</sup> | (1.53, 1.60)         | 1.60<sup>*</sup> | (1.52–1.69)          | 1.56<sup>*</sup> | (1.33, 1.82)         |
-| Male                             | 1.32<sup>*</sup> | (1.32, 1.33)                   | 1.37<sup>*</sup> | (1.36, 1.38)         | 1.45<sup>*</sup> | (1.43, 1.46)         | 1.63<sup>*</sup> | (1.58, 1.67)         | 1.77<sup>*</sup> | (1.67–1.88)          | 1.84<sup>*</sup> | (1.54, 2.20)         |
-| Age 0–14                         | 1.31<sup>*</sup> | (1.29, 1.33)                   | 1.37<sup>*</sup> | (1.34, 1.40)         | 1.49<sup>*</sup> | (1.44, 1.54)         | 1.76<sup>*</sup> | (1.61, 1.93)         | 2.01<sup>*</sup> | (1.66–2.44)          | 2.20<sup>*</sup> | (1.21, 4.00)         |
-| Age 15–64                        | 1.31<sup>*</sup> | (1.31, 1.32)                   | 1.36<sup>*</sup> | (1.36, 1.37)         | 1.44<sup>*</sup> | (1.43, 1.45)         | 1.59<sup>*</sup> | (1.56, 1.62)         | 1.66<sup>*</sup> | (1.59–1.73)          | 1.66<sup>*</sup> | (1.47, 1.89)         |
-| Age > 65                         | 1.26<sup>*</sup> | (1.24, 1.27)                   | 1.30<sup>*</sup> | (1.28, 1.31)         | 1.36<sup>*</sup> | (1.33, 1.39)         | 1.53<sup>*</sup> | (1.44, 1.62)         | 1.72<sup>*</sup> | (1.52–1.94)          | 1.69<sup>*</sup> | (1.17, 2.45)         |
-| Heat-related emergency visits    | 1.65<sup>*</sup> | (1.62, 1.68)                   | 1.74<sup>*</sup> | (1.70, 1.78)         | 1.88<sup>*</sup> | (1.82, 1.95)         | 2.36<sup>*</sup> | (2.18, 2.57)         | 3.06<sup>*</sup> | (2.59–3.62)          | 4.13<sup>*</sup> | (2.40, 7.12)         |
-| Female                           | 1.61<sup>*</sup> | (1.55, 1.67)                   | 1.74<sup>*</sup> | (1.66, 1.82)         | 1.99<sup>*</sup> | (1.86, 2.13)         | 2.76<sup>*</sup> | (2.35, 3.24)         | 4.19<sup>*</sup> | (3.05–5.76)          | 7.45<sup>*</sup> | (2.65, 20.98)        |
-| Male                             | 1.66<sup>*</sup> | (1.62, 1.69)                   | 1.74<sup>*</sup> | (1.69, 1.79)         | 1.85<sup>*</sup> | (1.77, 1.92)         | 2.25<sup>*</sup> | (2.04, 2.48)         | 2.81<sup>*</sup> | (2.30–3.43)          | 3.58<sup>*</sup> | (1.88, 6.82)         |
-| Age 0–14                         | 1.24<sup>*</sup> | (1.17, 1.32)                   | 1.29<sup>*</sup> | (1.19, 1.40)         | 1.49<sup>*</sup> | (1.30, 1.70)         | 2.20<sup>*</sup> | (1.54, 3.13)         | 3.69<sup>*</sup> | (1.78–7.66)          | 2.17             | (0.11, 44.82)        |
-| Age 15–64                        | 1.68<sup>*</sup> | (1.65, 1.72)                   | 1.76<sup>*</sup> | (1.71, 1.80)         | 1.86<sup>*</sup> | (1.79, 1.94)         | 2.21<sup>*</sup> | (2.01, 2.43)         | 2.60<sup>*</sup> | (2.13–3.17)          | 4.05<sup>*</sup> | (2.19, 7.48)         |
-| Age > 65                         | 1.83<sup>*</sup> | (1.74, 1.92)                   | 1.96<sup>*</sup> | (1.85, 2.08)         | 2.16<sup>*</sup> | (1.99, 2.35)         | 3.13<sup>*</sup> | (2.60, 3.77)         | 5.29<sup>*</sup> | (3.73–7.51)          | 5.25<sup>†</sup> | (1.47, 18.73)        |
+| Threshold                        | RR                | &gt; 30 °C / (95% CI)<sup>a</sup> | RR                | &gt; 31.0 °C / (95% CI) | RR                | &gt; 32.0 °C / (95% CI) | RR                | &gt; 33.0 °C / (95% CI) | RR                | &gt; 33.5 °C / (95% CI) | RR                | &gt; 34.0 °C / (95% CI) |
+| -------------------------------- | ----------------- | --------------------------------- | ----------------- | ----------------------- | ----------------- | ----------------------- | ----------------- | ----------------------- | ----------------- | ----------------------- | ----------------- | ----------------------- |
+| All-cause mortality              | 1.01<sup>\*</sup> | (1.01, 1.02)                      | 1.02<sup>\*</sup> | (1.02, 1.03)            | 1.04<sup>\*</sup> | (1.03, 1.05)            | 1.08<sup>\*</sup> | (1.05, 1.11)            | 1.11<sup>\*</sup> | (1.04–1.17)             | 1.16              | (0.97, 1.39)            |
+| Female                           | 1.01<sup>\*</sup> | (1.01, 1.02)                      | 1.02<sup>\*</sup> | (1.01, 1.03)            | 1.03<sup>\*</sup> | (1.02, 1.05)            | 1.07<sup>\*</sup> | (1.02, 1.12)            | 1.06              | (0.96–1.16)             | 1.11              | (0.83, 1.48)            |
+| Male                             | 1.02<sup>\*</sup> | (1.01, 1.02)                      | 1.02<sup>\*</sup> | (1.02, 1.03)            | 1.04<sup>\*</sup> | (1.03, 1.05)            | 1.08<sup>\*</sup> | (1.05, 1.12)            | 1.14<sup>\*</sup> | (1.06–1.23)             | 1.20              | (0.94, 1.51)            |
+| Age 0–14                         | 1.01              | (0.97, 1.06)                      | 1.01              | (0.95, 1.07)            | 0.99              | (0.89, 1.10)            | 0.88              | (0.62, 1.26)            | 0.68              | (0.29–1.62)             | 0.37              | (0.02, 7.13)            |
+| Age 15–64                        | 1.01<sup>\*</sup> | (1.00, 1.02)                      | 1.01<sup>\*</sup> | (1.00, 1.03)            | 1.02<sup>†</sup>  | (1.00, 1.04)            | 1.05              | (0.99, 1.11)            | 1.09              | (0.97–1.23)             | 1.22              | (0.86, 1.74)            |
+| Age &gt; 65                      | 1.02<sup>\*</sup> | (1.01, 1.02)                      | 1.02<sup>\*</sup> | (1.02, 1.03)            | 1.04<sup>\*</sup> | (1.03, 1.05)            | 1.09<sup>\*</sup> | (1.06, 1.13)            | 1.11<sup>\*</sup> | (1.04–1.20)             | 1.15              | (0.93, 1.42)            |
+| Heat-related hospital admissions | 1.31<sup>\*</sup> | (1.30, 1.31)                      | 1.36<sup>\*</sup> | (1.35, 1.36)            | 1.44<sup>\*</sup> | (1.43, 1.45)            | 1.59<sup>\*</sup> | (1.56, 1.62)            | 1.68<sup>\*</sup> | (1.61–1.74)             | 1.69<sup>\*</sup> | (1.50, 1.90)            |
+| Female                           | 1.30<sup>\*</sup> | (1.29, 1.30)                      | 1.35<sup>\*</sup> | (1.34, 1.35)            | 1.43<sup>\*</sup> | (1.42, 1.44)            | 1.56<sup>\*</sup> | (1.53, 1.60)            | 1.60<sup>\*</sup> | (1.52–1.69)             | 1.56<sup>\*</sup> | (1.33, 1.82)            |
+| Male                             | 1.32<sup>\*</sup> | (1.32, 1.33)                      | 1.37<sup>\*</sup> | (1.36, 1.38)            | 1.45<sup>\*</sup> | (1.43, 1.46)            | 1.63<sup>\*</sup> | (1.58, 1.67)            | 1.77<sup>\*</sup> | (1.67–1.88)             | 1.84<sup>\*</sup> | (1.54, 2.20)            |
+| Age 0–14                         | 1.31<sup>\*</sup> | (1.29, 1.33)                      | 1.37<sup>\*</sup> | (1.34, 1.40)            | 1.49<sup>\*</sup> | (1.44, 1.54)            | 1.76<sup>\*</sup> | (1.61, 1.93)            | 2.01<sup>\*</sup> | (1.66–2.44)             | 2.20<sup>\*</sup> | (1.21, 4.00)            |
+| Age 15–64                        | 1.31<sup>\*</sup> | (1.31, 1.32)                      | 1.36<sup>\*</sup> | (1.36, 1.37)            | 1.44<sup>\*</sup> | (1.43, 1.45)            | 1.59<sup>\*</sup> | (1.56, 1.62)            | 1.66<sup>\*</sup> | (1.59–1.73)             | 1.66<sup>\*</sup> | (1.47, 1.89)            |
+| Age &gt; 65                      | 1.26<sup>\*</sup> | (1.24, 1.27)                      | 1.30<sup>\*</sup> | (1.28, 1.31)            | 1.36<sup>\*</sup> | (1.33, 1.39)            | 1.53<sup>\*</sup> | (1.44, 1.62)            | 1.72<sup>\*</sup> | (1.52–1.94)             | 1.69<sup>\*</sup> | (1.17, 2.45)            |
+| Heat-related emergency visits    | 1.65<sup>\*</sup> | (1.62, 1.68)                      | 1.74<sup>\*</sup> | (1.70, 1.78)            | 1.88<sup>\*</sup> | (1.82, 1.95)            | 2.36<sup>\*</sup> | (2.18, 2.57)            | 3.06<sup>\*</sup> | (2.59–3.62)             | 4.13<sup>\*</sup> | (2.40, 7.12)            |
+| Female                           | 1.61<sup>\*</sup> | (1.55, 1.67)                      | 1.74<sup>\*</sup> | (1.66, 1.82)            | 1.99<sup>\*</sup> | (1.86, 2.13)            | 2.76<sup>\*</sup> | (2.35, 3.24)            | 4.19<sup>\*</sup> | (3.05–5.76)             | 7.45<sup>\*</sup> | (2.65, 20.98)           |
+| Male                             | 1.66<sup>\*</sup> | (1.62, 1.69)                      | 1.74<sup>\*</sup> | (1.69, 1.79)            | 1.85<sup>\*</sup> | (1.77, 1.92)            | 2.25<sup>\*</sup> | (2.04, 2.48)            | 2.81<sup>\*</sup> | (2.30–3.43)             | 3.58<sup>\*</sup> | (1.88, 6.82)            |
+| Age 0–14                         | 1.24<sup>\*</sup> | (1.17, 1.32)                      | 1.29<sup>\*</sup> | (1.19, 1.40)            | 1.49<sup>\*</sup> | (1.30, 1.70)            | 2.20<sup>\*</sup> | (1.54, 3.13)            | 3.69<sup>\*</sup> | (1.78–7.66)             | 2.17              | (0.11, 44.82)           |
+| Age 15–64                        | 1.68<sup>\*</sup> | (1.65, 1.72)                      | 1.76<sup>\*</sup> | (1.71, 1.80)            | 1.86<sup>\*</sup> | (1.79, 1.94)            | 2.21<sup>\*</sup> | (2.01, 2.43)            | 2.60<sup>\*</sup> | (2.13–3.17)             | 4.05<sup>\*</sup> | (2.19, 7.48)            |
+| Age &gt; 65                      | 1.83<sup>\*</sup> | (1.74, 1.92)                      | 1.96<sup>\*</sup> | (1.85, 2.08)            | 2.16<sup>\*</sup> | (1.99, 2.35)            | 3.13<sup>\*</sup> | (2.60, 3.77)            | 5.29<sup>\*</sup> | (3.73–7.51)             | 5.25<sup>†</sup>  | (1.47, 18.73)           |
 
 (c) AT
 
-| Threshold                        | RR               | > 30 °C / (95% CI)<sup>a</sup> | RR               | > 32.0 °C / (95% CI) | RR               | > 34.0 °C / (95% CI) | RR               | > 36.0 °C / (95% CI) | RR               | > 37.0 °C / (95% CI) | RR               | > 37.5 °C / (95%CI) |
-| -------------------------------- | ---------------- | ------------------------------ | ---------------- | -------------------- | ---------------- | -------------------- | ---------------- | -------------------- | ---------------- | -------------------- | ---------------- | ------------------- |
-| All-cause mortality              | 1.01<sup>*</sup> | (1.00, 1.01)                   | 1.01<sup>*</sup> | (1.01, 1.01)         | 1.02<sup>*</sup> | (1.01, 1.02)         | 1.05<sup>*</sup> | (1.03, 1.07)         | 1.04             | (0.97–1.12)          | 1.11             | (0.93, 1.32)        |
-| Female                           | 1.00<sup>†</sup> | (1.00, 1.01)                   | 1.01<sup>*</sup> | (1.00, 1.01)         | 1.01<sup>*</sup> | (1.01, 1.02)         | 1.04<sup>*</sup> | (1.01, 1.08)         | 1.01             | (0.90–1.14)          | 1.02             | (0.77, 1.35)        |
-| Male                             | 1.01<sup>*</sup> | (1.00, 1.01)                   | 1.01<sup>*</sup> | (1.01, 1.02)         | 1.02<sup>*</sup> | (1.01, 1.03)         | 1.06<sup>*</sup> | (1.03, 1.09)         | 1.06             | (0.96–1.17)          | 1.17             | (0.93, 1.47)        |
-| Age 0–14                         | 0.99             | (0.97, 1.01)                   | 1.00             | (0.97, 1.03)         | 1.00             | (0.94, 1.05)         | 1.03             | (0.82, 1.31)         | 1.22             | (0.47–3.17)          | 0.99             | (0.09, 11.13)       |
-| Age 15–64                        | 1.01<sup>*</sup> | (1.00, 1.01)                   | 1.01<sup>*</sup> | (1.00, 1.01)         | 1.01<sup>*</sup> | (1.00, 1.02)         | 1.03             | (0.99, 1.07)         | 1.05             | (0.90–1.22)          | 1.28             | (0.92, 1.79)        |
-| Age > 65                         | 1.01<sup>*</sup> | (1.00, 1.01)                   | 1.01<sup>*</sup> | (1.01, 1.01)         | 1.02<sup>*</sup> | (1.01, 1.03)         | 1.06<sup>*</sup> | (1.04, 1.09)         | 1.04             | (0.95–1.14)          | 1.05             | (0.85, 1.29)        |
-| Heat-related hospital admissions | 1.21<sup>*</sup> | (1.21, 1.22)                   | 1.24<sup>*</sup> | (1.24, 1.25)         | 1.30<sup>*</sup> | (1.29, 1.30)         | 1.45<sup>*</sup> | (1.43, 1.47)         | 1.37<sup>*</sup> | (1.30–1.44)          | 1.52<sup>*</sup> | (1.35, 1.71)        |
-| Female                           | 1.21<sup>*</sup> | (1.20, 1.21)                   | 1.23<sup>*</sup> | (1.23, 1.24)         | 1.29<sup>*</sup> | (1.28, 1.29)         | 1.43<sup>*</sup> | (1.40, 1.46)         | 1.28<sup>*</sup> | (1.20–1.38)          | 1.38<sup>*</sup> | (1.18, 1.62)        |
-| Male                             | 1.23<sup>*</sup> | (1.22, 1.23)                   | 1.26<sup>*</sup> | (1.25, 1.26)         | 1.32<sup>*</sup> | (1.31, 1.32)         | 1.48<sup>*</sup> | (1.45, 1.51)         | 1.47<sup>*</sup> | (1.35–1.59)          | 1.68<sup>*</sup> | (1.40, 2.01)        |
-| Age 0–14                         | 1.19<sup>*</sup> | (1.18, 1.21)                   | 1.24<sup>*</sup> | (1.22, 1.25)         | 1.31<sup>*</sup> | (1.28, 1.33)         | 1.53<sup>*</sup> | (1.43, 1.64)         | 1.58<sup>*</sup> | (1.21–2.06)          | 1.97<sup>†</sup> | (1.07, 3.62)        |
-| Age 15–64                        | 1.22<sup>*</sup> | (1.22, 1.22)                   | 1.25<sup>*</sup> | (1.25, 1.25)         | 1.30<sup>*</sup> | (1.30, 1.31)         | 1.46<sup>*</sup> | (1.44, 1.48)         | 1.35<sup>*</sup> | (1.28–1.43)          | 1.50<sup>*</sup> | (1.32, 1.70)        |
-| Age > 65                         | 1.18<sup>*</sup> | (1.17, 1.19)                   | 1.21<sup>*</sup> | (1.19, 1.22)         | 1.24<sup>*</sup> | (1.23, 1.26)         | 1.36<sup>*</sup> | (1.30, 1.42)         | 1.45<sup>*</sup> | (1.23–1.70)          | 1.58<sup>†</sup> | (1.08, 2.29)        |
-| Heat-related emergency visits    | 1.42<sup>*</sup> | (1.40, 1.44)                   | 1.51<sup>*</sup> | (1.49, 1.54)         | 1.64<sup>*</sup> | (1.61, 1.68)         | 2.02<sup>*</sup> | (1.90, 2.14)         | 2.60<sup>*</sup> | (2.13–3.18)          | 4.67<sup>*</sup> | (2.82, 7.75)        |
-| Female                           | 1.38<sup>*</sup> | (1.34, 1.41)                   | 1.47<sup>*</sup> | (1.43, 1.52)         | 1.61<sup>*</sup> | (1.54, 1.68)         | 2.16<sup>*</sup> | (1.92, 2.44)         | 2.91<sup>*</sup> | (1.97–4.30)          | 6.08<sup>*</sup> | (2.22, 16.68)       |
-| Male                             | 1.44<sup>*</sup> | (1.42, 1.46)                   | 1.53<sup>*</sup> | (1.50, 1.55)         | 1.65<sup>*</sup> | (1.61, 1.69)         | 1.96<sup>*</sup> | (1.82, 2.10)         | 2.52<sup>*</sup> | (1.98–3.19)          | 4.38<sup>*</sup> | (2.41, 7.95)        |
-| Age 0–14                         | 1.14<sup>*</sup> | (1.10, 1.18)                   | 1.18<sup>*</sup> | (1.12, 1.23)         | 1.23<sup>*</sup> | (1.14, 1.33)         | 1.85<sup>*</sup> | (1.43, 2.39)         | 3.46<sup>*</sup> | (1.46–8.21)          | 5.93             | (0.52, 67.74)       |
-| Age 15–64                        | 1.46<sup>*</sup> | (1.44, 1.49)                   | 1.55<sup>*</sup> | (1.53, 1.58)         | 1.67<sup>*</sup> | (1.63, 1.71)         | 1.97<sup>*</sup> | (1.84, 2.11)         | 2.43<sup>*</sup> | (1.93–3.07)          | 4.59<sup>*</sup> | (2.59, 8.15)        |
-| Age > 65                         | 1.52<sup>*</sup> | (1.47, 1.58)                   | 1.63<sup>*</sup> | (1.56, 1.69)         | 1.77<sup>*</sup> | (1.67, 1.87)         | 2.29<sup>*</sup> | (1.98, 2.64)         | 3.30<sup>*</sup> | (2.11–5.15)          | 5.12<sup>*</sup> | (1.53, 17.10)       |
+| Threshold                        | RR                | &gt; 30 °C / (95% CI)<sup>a</sup> | RR                | &gt; 32.0 °C / (95% CI) | RR                | &gt; 34.0 °C / (95% CI) | RR                | &gt; 36.0 °C / (95% CI) | RR                | &gt; 37.0 °C / (95% CI) | RR                | &gt; 37.5 °C / (95%CI) |
+| -------------------------------- | ----------------- | --------------------------------- | ----------------- | ----------------------- | ----------------- | ----------------------- | ----------------- | ----------------------- | ----------------- | ----------------------- | ----------------- | ---------------------- |
+| All-cause mortality              | 1.01<sup>\*</sup> | (1.00, 1.01)                      | 1.01<sup>\*</sup> | (1.01, 1.01)            | 1.02<sup>\*</sup> | (1.01, 1.02)            | 1.05<sup>\*</sup> | (1.03, 1.07)            | 1.04              | (0.97–1.12)             | 1.11              | (0.93, 1.32)           |
+| Female                           | 1.00<sup>†</sup>  | (1.00, 1.01)                      | 1.01<sup>\*</sup> | (1.00, 1.01)            | 1.01<sup>\*</sup> | (1.01, 1.02)            | 1.04<sup>\*</sup> | (1.01, 1.08)            | 1.01              | (0.90–1.14)             | 1.02              | (0.77, 1.35)           |
+| Male                             | 1.01<sup>\*</sup> | (1.00, 1.01)                      | 1.01<sup>\*</sup> | (1.01, 1.02)            | 1.02<sup>\*</sup> | (1.01, 1.03)            | 1.06<sup>\*</sup> | (1.03, 1.09)            | 1.06              | (0.96–1.17)             | 1.17              | (0.93, 1.47)           |
+| Age 0–14                         | 0.99              | (0.97, 1.01)                      | 1.00              | (0.97, 1.03)            | 1.00              | (0.94, 1.05)            | 1.03              | (0.82, 1.31)            | 1.22              | (0.47–3.17)             | 0.99              | (0.09, 11.13)          |
+| Age 15–64                        | 1.01<sup>\*</sup> | (1.00, 1.01)                      | 1.01<sup>\*</sup> | (1.00, 1.01)            | 1.01<sup>\*</sup> | (1.00, 1.02)            | 1.03              | (0.99, 1.07)            | 1.05              | (0.90–1.22)             | 1.28              | (0.92, 1.79)           |
+| Age &gt; 65                      | 1.01<sup>\*</sup> | (1.00, 1.01)                      | 1.01<sup>\*</sup> | (1.01, 1.01)            | 1.02<sup>\*</sup> | (1.01, 1.03)            | 1.06<sup>\*</sup> | (1.04, 1.09)            | 1.04              | (0.95–1.14)             | 1.05              | (0.85, 1.29)           |
+| Heat-related hospital admissions | 1.21<sup>\*</sup> | (1.21, 1.22)                      | 1.24<sup>\*</sup> | (1.24, 1.25)            | 1.30<sup>\*</sup> | (1.29, 1.30)            | 1.45<sup>\*</sup> | (1.43, 1.47)            | 1.37<sup>\*</sup> | (1.30–1.44)             | 1.52<sup>\*</sup> | (1.35, 1.71)           |
+| Female                           | 1.21<sup>\*</sup> | (1.20, 1.21)                      | 1.23<sup>\*</sup> | (1.23, 1.24)            | 1.29<sup>\*</sup> | (1.28, 1.29)            | 1.43<sup>\*</sup> | (1.40, 1.46)            | 1.28<sup>\*</sup> | (1.20–1.38)             | 1.38<sup>\*</sup> | (1.18, 1.62)           |
+| Male                             | 1.23<sup>\*</sup> | (1.22, 1.23)                      | 1.26<sup>\*</sup> | (1.25, 1.26)            | 1.32<sup>\*</sup> | (1.31, 1.32)            | 1.48<sup>\*</sup> | (1.45, 1.51)            | 1.47<sup>\*</sup> | (1.35–1.59)             | 1.68<sup>\*</sup> | (1.40, 2.01)           |
+| Age 0–14                         | 1.19<sup>\*</sup> | (1.18, 1.21)                      | 1.24<sup>\*</sup> | (1.22, 1.25)            | 1.31<sup>\*</sup> | (1.28, 1.33)            | 1.53<sup>\*</sup> | (1.43, 1.64)            | 1.58<sup>\*</sup> | (1.21–2.06)             | 1.97<sup>†</sup>  | (1.07, 3.62)           |
+| Age 15–64                        | 1.22<sup>\*</sup> | (1.22, 1.22)                      | 1.25<sup>\*</sup> | (1.25, 1.25)            | 1.30<sup>\*</sup> | (1.30, 1.31)            | 1.46<sup>\*</sup> | (1.44, 1.48)            | 1.35<sup>\*</sup> | (1.28–1.43)             | 1.50<sup>\*</sup> | (1.32, 1.70)           |
+| Age &gt; 65                      | 1.18<sup>\*</sup> | (1.17, 1.19)                      | 1.21<sup>\*</sup> | (1.19, 1.22)            | 1.24<sup>\*</sup> | (1.23, 1.26)            | 1.36<sup>\*</sup> | (1.30, 1.42)            | 1.45<sup>\*</sup> | (1.23–1.70)             | 1.58<sup>†</sup>  | (1.08, 2.29)           |
+| Heat-related emergency visits    | 1.42<sup>\*</sup> | (1.40, 1.44)                      | 1.51<sup>\*</sup> | (1.49, 1.54)            | 1.64<sup>\*</sup> | (1.61, 1.68)            | 2.02<sup>\*</sup> | (1.90, 2.14)            | 2.60<sup>\*</sup> | (2.13–3.18)             | 4.67<sup>\*</sup> | (2.82, 7.75)           |
+| Female                           | 1.38<sup>\*</sup> | (1.34, 1.41)                      | 1.47<sup>\*</sup> | (1.43, 1.52)            | 1.61<sup>\*</sup> | (1.54, 1.68)            | 2.16<sup>\*</sup> | (1.92, 2.44)            | 2.91<sup>\*</sup> | (1.97–4.30)             | 6.08<sup>\*</sup> | (2.22, 16.68)          |
+| Male                             | 1.44<sup>\*</sup> | (1.42, 1.46)                      | 1.53<sup>\*</sup> | (1.50, 1.55)            | 1.65<sup>\*</sup> | (1.61, 1.69)            | 1.96<sup>\*</sup> | (1.82, 2.10)            | 2.52<sup>\*</sup> | (1.98–3.19)             | 4.38<sup>\*</sup> | (2.41, 7.95)           |
+| Age 0–14                         | 1.14<sup>\*</sup> | (1.10, 1.18)                      | 1.18<sup>\*</sup> | (1.12, 1.23)            | 1.23<sup>\*</sup> | (1.14, 1.33)            | 1.85<sup>\*</sup> | (1.43, 2.39)            | 3.46<sup>\*</sup> | (1.46–8.21)             | 5.93              | (0.52, 67.74)          |
+| Age 15–64                        | 1.46<sup>\*</sup> | (1.44, 1.49)                      | 1.55<sup>\*</sup> | (1.53, 1.58)            | 1.67<sup>\*</sup> | (1.63, 1.71)            | 1.97<sup>\*</sup> | (1.84, 2.11)            | 2.43<sup>\*</sup> | (1.93–3.07)             | 4.59<sup>\*</sup> | (2.59, 8.15)           |
+| Age &gt; 65                      | 1.52<sup>\*</sup> | (1.47, 1.58)                      | 1.63<sup>\*</sup> | (1.56, 1.69)            | 1.77<sup>\*</sup> | (1.67, 1.87)            | 2.29<sup>\*</sup> | (1.98, 2.64)            | 3.30<sup>\*</sup> | (2.11–5.15)             | 5.12<sup>\*</sup> | (1.53, 17.10)          |
 
-*
-*p* < 0.01.
+\* *p* < 0.01.
 
-†
-*p* < 0.05.
+† *p* < 0.05.
 
 a Risk Ratio (RR) and 95% confidence interval (95% CI) of each outcome with a 1 °C increase above the threshold.
 
 In general, males have higher RRs for these three health outcomes with all three heat indicators than females, with the few exceptions observed for emergency visits with the WBGT threshold set at 32.0 °C, T thresholds at 32.0, 33.0, and 34.0 °C, and AT thresholds at 36.0, 37.0, and 37.5 °C. The differences in RRs between males and females became greater with increasing threshold values. In heat-related emergency visits, the highest RR for males was 4.29 for WBGT with threshold of 33.0 °C, while that for females reached 7.45 for T with threshold of 34.0 °C and 6.08 for AT with threshold of 37.5 °C. The above estimates were all statistically significant.
 
-Differences in RR for health outcomes among the three age groups also widened with increasing threshold values of heat indicators. The following description focuses on results with statistical significance. For WBGT, the highest RR for all-cause mortality (1.06) occurred in the population aged above 65 years at threshold of 32.5 °C; while that for both heat-related hospital admissions (2.61) and heat-related emergency visits (6.86) occurred among the age group of 0–14 years at threshold of 33.0 °C and 33.0 °C, respectively. For T, the population aged above 65 years had the highest RR for all-cause mortality (1.11) and heat-related emergency visits (5.29) at threshold of 33.5 °C; while the age group of 0–14 had the highest RR for heat-related hospital admissions (2.20) at threshold of 34.0 °C. Similarly, for AT, the population aged above 65 years had the highest RR for all-cause mortality (1.06) and heat-related emergency visits (5.12) at threshold of 36.0 °C and 37.5 °C, respectively; while the age group of 0–14 had the highest RR for heat-related hospital admissions (1.97) at threshold of 37.5 °C. In short, the age group of either 0–14 or > 65 had the highest RRs for these three different heat indicators, with those for all-cause mortality consistently in the population aged above 65 and those for heat-related hospital admissions consistently in age group of 0–14. Moreover, for the age group of 0–14, the RRs for heat-related hospital admissions (1.97–2.61) and emergency visits (3.46–6.86) showed statistically significant increase with most of the threshold candidates for the different heat indicators; while those for all-cause mortality did not.
+Differences in RR for health outcomes among the three age groups also widened with increasing threshold values of heat indicators. The following description focuses on results with statistical significance. For WBGT, the highest RR for all-cause mortality (1.06) occurred in the population aged above 65 years at threshold of 32.5 °C; while that for both heat-related hospital admissions (2.61) and heat-related emergency visits (6.86) occurred among the age group of 0–14 years at threshold of 33.0 °C and 33.0 °C, respectively. For T, the population aged above 65 years had the highest RR for all-cause mortality (1.11) and heat-related emergency visits (5.29) at threshold of 33.5 °C; while the age group of 0–14 had the highest RR for heat-related hospital admissions (2.20) at threshold of 34.0 °C. Similarly, for AT, the population aged above 65 years had the highest RR for all-cause mortality (1.06) and heat-related emergency visits (5.12) at threshold of 36.0 °C and 37.5 °C, respectively; while the age group of 0–14 had the highest RR for heat-related hospital admissions (1.97) at threshold of 37.5 °C. In short, the age group of either 0–14 or &gt; 65 had the highest RRs for these three different heat indicators, with those for all-cause mortality consistently in the population aged above 65 and those for heat-related hospital admissions consistently in age group of 0–14. Moreover, for the age group of 0–14, the RRs for heat-related hospital admissions (1.97–2.61) and emergency visits (3.46–6.86) showed statistically significant increase with most of the threshold candidates for the different heat indicators; while those for all-cause mortality did not.
 
 The incremental changes in RRs of different threshold candidates compared with RRs of the reference, as shown in Fig. 2(a)-(c), show a rapid rising trend with increase in threshold values. For WBGT (Fig. 2(a)) with threshold of 33.0 °C, the RRI of heat-related hospital admissions (73%) and heat-related emergency visits (242%) are numerically much higher than that of all-cause mortality (9%). The same pattern is observed for T (Fig. 2(b)) with threshold of 34.0 °C and AT (Fig. 2(c)) with threshold of 37.5 °C. In addition, the rapid increase in RRIs for these three different health outcomes occurred between WBGT threshold at 32.0 °C and 33.0 °C. During the period of 2000–2014, WBGT of 32.0 °C and 33.0 °C correspond to 89.8 percentile and 99.6 percentile, respectively. For T, the rapid increase in RRIs occurred between thresholds of 33.0 °C and 34.0 °C for all-cause mortality and heat-related emergency visits only. Temperature of 33.0 °C and 34.0 °C correspond to 94.1 percentile and 99.8 percentile, respectively during 2000–2014. For AT, the rapid increase in RRIs occurred between thresholds of 36.0 °C and 37.5 °C for all-cause mortality and heat-related emergency visits only, which correspond to 90.6 percentile and 99.9 percentile, respectively for 2000–2014.
 
@@ -274,62 +271,134 @@ There are two limitations in this study. First, although Taiwan does not have an
 
 In response to the call from UN and ICSU for solution-oriented research, this study presents a new approach to identifying a proper health-based threshold for a heat warning system. The proposed approach examines heat-health relationships using a modified GAM, compares RRI, assesses occurrence frequency, and presents analysis results graphically. Results showed that RRI of three different health outcomes (all-cause mortality, heat-related hospital admissions, heat-related emergency visits) all consistently identified the same candidate as the appropriate threshold for a specified heat indicator. Heat-related emergency visits gave the most distinctive RRI among the three health records. The recommended thresholds for Taiwan are WBGT at 33.0 °C, T at 34.0 °C, and AT at 37.5 °C. Emergency response actions corresponding to these chosen thresholds could reduce both mortality and heat-related morbidity risks. Among these three heat indicators, WBGT gave more consistent results in RRIs of health outcomes and showed a more obvious rising trend. Although the proposed approach can be applied to any heat indicator, WBGT is recommended as the best for a heat warning system because it considers four essential meteorological parameters for heat stress, namely, T, RH%, wind speed, and solar radiation. Under the trend of climate change, the selection of a proper heat indicator with a proper threshold is crucial for an effective heat warning system to reduce health risks. This work presents a straightforward scientific tool for selecting a proper threshold as the basis of an effective warning system for better heat-stress adaptation of our society.
 
+## Acknowledgement
+
+We would like to acknowledge the in-house funding support from the Research Center for Environmental Changes of Academia Sinica in Taiwan and the Academia Sinica thematic project “Integrated Multi-source and High-resolution Heat Wave Vulnerability Assessment of Taiwan (AS-104-SS-A02)”. We also thank the Health and Welfare Data Science Center of the Ministry of Health and Welfare in Taiwan, Taiwan Environmental Protection Administration, and Taiwan Central Weather Bureau for providing data. The contents of this paper are solely the responsibility of the authors and do not represent the official views of the aforementioned institutes and funding agencies.
+
+### Declaration of competing financial interests
+
+The authors declare no competing financial interests on funding, employment, or personal financial interests. The funding agencies had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.
+
+### Funding
+
+This work was supported by the Research Center for Environmental Changes of Academia Sinica and the Academia Sinica thematic project “Integrated Multi-source and High-resolution Heat Wave Vulnerability Assessment of Taiwan (AS-104-SS-A02)”.
+
+## Supplementary material
+
+Supplementary data associated with this article can be found in the online version at doi:10.1016/j.envres.2018.12.059
+
 ## References (57 total, showing 57)
 
 1. D.O. Astrom, B. Forsberg, J. Rocklov. 2011. Heat wave impact on morbidity and mortality in the elderly population: a review of recent studies. Maturitas. 10.1016/j.maturitas.2011.03.008 [Astrom et al., 2011]
+
 2. Australian Government - Bureau of Meteorology, 2018. Homepage: Heatwave Service for Australia. Available: 〈http://www.bom.gov.au/australia/heatwave/index.shtml〉 (Accessed 11 May 2018).
+
 3. L. Bai, G. Ding, S. Gu, P. Bi, B. Su, D. Qin. 2014. The effects of summer temperature and heat waves on heat-related illness in a coastal city of China, 2011–2013. Environ. Res. 10.1016/j.envres.2014.04.002 [Bai et al., 2014]
+
 4. A.G. Barnett, S. Hajat, A. Gasparrini, J. Rocklov. 2012. Cold and heat waves in the United States. Environ. Res. 10.1016/j.envres.2011.12.010 [Barnett et al., 2012]
-5. T.E. Bernard. 2012. Thermal stress. Fundamentals of Industrial Hygene: 335-361 [Bernard, 2012]
+
+5. T.E. Bernard. 2012. Thermal stress. B.A. Plog, P. Quinlan (eds.), Fundamentals of Industrial Hygene, 6th edition, Ill. National Safety Council, Itasca: 335-361 [Bernard, 2012]
+
 6. K. Błażejczyk, J. Baranowski, A. Błażejczyk. 2014. Heat stress and occupational health and safety – spatial and temporal differentiation. Misc. Geogr. - Reg. Stud. Dev. 10.2478/mgrsd-2014-0011 [Błażejczyk et al., 2014]
+
 7. P. Brode, D. Fiala, B. Lemke, T. Kjellstrom. 2018. Estimated work ability in warm outdoor environments depends on the chosen heat stress assessment metric. Int. J. Biometeorol. 10.1007/s00484-017-1346-9 [Brode et al., 2018]
+
 8. S.A. Changnon, K.E. Kunkel, B.C. Reinke. 1996. Impacts and responses to the 1995 heat wave: a call to action. B Am. Meteorol. Soc., 77: 1497-1506 [Changnon et al., 1996]
+
 9. J.Y. Chung, Y. Honda, Y.C. Hong, X.C. Pan, Y.L. Guo, H. Kim. 2009. Ambient temperature and mortality: an international study in four capital cities of East Asia. Sci. Total Environ. 10.1016/j.scitotenv.2009.09.009 [Chung et al., 2009]
+
 10. Y. Chung, Y.H. Lim, Y. Honda, Y.L. Guo, M. Hashizume, M.L. Bell. 2015. Mortality related to extreme temperature for 15 cities in Northeast Asia. Epidemiology. 10.1097/ede.0000000000000229 [Chung et al., 2015]
+
 11. S. Coccolo, J. Kämpf, J.-L. Scartezzini, D. Pearlmutter. 2016. Outdoor human comfort and thermal stress: a comprehensive review on models and standards. Urban Clim. 10.1016/j.uclim.2016.08.004 [Coccolo et al., 2016]
+
 12. A. Gasparrini, B. Armstrong. 2011. The impact of heat waves on mortality. Epidemiology. 10.1097/ede.0b013e3181fdcd99 [Gasparrini and Armstrong, 2011]
+
 13. A. Gasparrini, Y. Guo, M. Hashizume, E. Lavigne, A. Zanobetti, J. Schwartz. 2015. Mortality risk attributable to high and low ambient temperature: a multicountry observational study. Lancet. 10.1016/s0140-6736(14)62114-0 [Gasparrini et al., 2015]
+
 14. U. Ghumman, J. Horney. 2016. Characterizing the impact of extreme heat on mortality, Karachi, Pakistan, June 2015. Prehosp. Disaster Med. 10.1017/s1049023x16000273 [Ghumman and Horney, 2016]
+
 15. S.N. Gosling, J.A. Lowe, G.R. McGregor, M. Pelling, B.D. Malamud. 2009. Associations between elevated atmospheric temperature and human mortality: a critical review of the literature. Clim. Change. 10.1007/s10584-008-9441-x [Gosling et al., 2009]
+
 16. Y. Guo, A. Gasparrini, B. Armstrong, S. Li, B. Tawatsupa, A. Tobias. 2014. Global variation in the effects of ambient temperature on mortality: a systematic evaluation. Epidemiology. 10.1097/ede.0000000000000165 [Guo et al., 2014]
+
 17. Y. Honda, M. Kabuto, M. Ono, I. Uchiyama. 2007. Determination of optimum daily maximum temperature using climate data. Environ. Health Prev. Med. 10.1265/ehpm.12.209 [Honda et al., 2007]
+
 18. Y. Honda, M. Kondo, G. McGregor, H. Kim, Y.L. Guo, Y. Hijioka. 2013. Heat-related mortality risk model for climate change impact projection. Environ. Health Prev. Med. 10.1007/s12199-013-0354-6 [Honda et al., 2013]
+
 19. O.M. Hyatt, B. Lemke, T. Kjellstrom. 2010. Regional maps of occupational heat exposure: past, present, and potential future. Glob. Health Action. 10.3402/gha.v3i0.5715 [Hyatt et al., 2010]
+
 20. ICSU (International Council for Science), 2014. Future earth 2025 vision. Available: 〈www.futureearth.org/〉 (Accessed 11 May 2018).
-21. IPCC (Intergovernmental Panel on Climate Change). 2014. Climate Change 2014: Impacts, Adaptation, and Vulnerability. Part A: Global and Aspects. Contribution of Working Group II to the Fifth Assessment Report of the Intergovernmental Panel on Climate Change.: 1132 [IPCC (Intergovernmental Panel on Climate Change), 2014]
+
+21. IPCC (Intergovernmental Panel on Climate Change). 2014. C.B. Field, V.R. Barros, D.J. Dokken, K.J. Mach, M.D. Mastrandrea, T.E. Bilir, M. Chatterjee, K.L. Ebi, Y.O. Estrada, R.C. Genova, B. Girma, E.S. Kissel, A.N. Levy, S. MacCracken, P.R. Mastrandrea, L.L. White (eds.), Climate Change 2014: Impacts, Adaptation, and Vulnerability. Part A: Global and Aspects. Contribution of Working Group II to the Fifth Assessment Report of the Intergovernmental Panel on Climate Change., Cambridge University Press, Cambridge, United Kingdom and New York, NY, USA: 1132 [IPCC (Intergovernmental Panel on Climate Change), 2014]
+
 22. ISO (International Standards Organization), 2017. Ergonomics of the thermal environment – assessment of heat stress using the WBGT (wet bulb globe temperature) index. Available: 〈https://www.iso.org/standard/67188.html〉 (Accessed 11 May 2018).
+
 23. Japanese Ministry of the Environment, 2018. Homepage: Heat illness prevention information. Available: 〈http://www.wbgt.env.go.jp/en/〉 (Accessed 11 May 2018).
+
 24. R. Kaiser, A. Le Tertre, J. Schwartz, C.A. Gotway, W.R. Daley, C.H. Rubin. 2007. The effect of the 1995 heat wave in Chicago on all-cause and cause-specific mortality. Am. J. Public Health 97, Suppl 1: S158-S162 [Kaiser et al., 2007]
+
 25. T. Kakamu, K. Wada, D.R. Smith, S. Endo, T. Fukushima. 2017. Preventing heat illness in the anticipated hot climate of the Tokyo 2020 summer Olympic Games. Environ. Health Prev. Med., 22: 68 [Kakamu et al., 2017]
+
 26. K. Knowlton, M. Rotkin-Ellman, G. King, H.G. Margolis, D. Smith, G. Solomon. 2009. The 2006 California heat wave: impacts on hospitalizations and emergency department visits. Environ. Health Perspect., 117: 61-67 [Knowlton et al., 2009]
+
 27. A. Le Tertre, A. Lefranc, D. Eilstein, C. Declercq, S. Medina, M. Blanchard. 2006. Impact of the 2003 heatwave on all-cause mortality in 9 French cities. Epidemiology. 10.1097/01.ede.0000187650.36636.1f [Le Tertre et al., 2006]
+
 28. K.L. Lee, Y.H. Chan, T.C. Lee, W.B. Goggins, E.Y. Chan. 2016. The development of the Hong Kong Heat Index for enhancing the heat stress information service of the Hong Kong Observatory. Int. J. Biometeorol., 60: 1029-1039 [Lee et al., 2016]
+
 29. M. Li, S. Gu, P. Bi, J. Yang, Q. Liu. 2015. Heat waves and morbidity: current knowledge and further direction - a comprehensive literature review. Int. J. Environ. Res. Public Health, 12: 5256-5283 [Li et al., 2015]
+
 30. J.C. Liljegren, R.A. Carhart, P. Lawday, S. Tschopp, R. Sharp. 2008. Modeling the wet bulb globe temperature using standard meteorological measurements. J. Occup. Environ. Hyg., 5: 645-655 [Liljegren et al., 2008]
+
 31. Y.K. Lin, T.J. Ho, Y.C. Wang. 2011. Mortality risk associated with temperature and prolonged temperature extremes in elderly populations in Taiwan. Environ. Res. 10.1016/j.envres.2011.06.008 [Lin et al., 2011]
+
 32. Y.K. Lin, C.K. Chang, M.H. Li, Y.C. Wu, Y.C. Wang. 2012. High-temperature indices associated with mortality and outpatient visits: characterizing the association with elevated temperature. Sci. Total Environ. 10.1016/j.scitotenv.2012.04.039 [Lin et al., 2012]
+
 33. G. Mastrangelo, U. Fedeli, C. Visentin, G. Milan, E. Fadda, P. Spolaore. 2007. Pattern and determinants of hospitalization during heat waves: an ecologic study. BMC Public Health. 10.1186/1471-2458-7-200 [Mastrangelo et al., 2007]
+
 34. P. Michelozzi, F.K. de' Donato, A.M. Bargagli, D. D'Ippoliti, M. De Sario, C. Marino. 2010. Surveillance of summer mortality and preparedness to reduce the health impact of heat waves in Italy. Int. J. Environ. Res. Public Health. 10.3390/ijerph7052256 [Michelozzi et al., 2010]
+
 35. W.-H. Pan, L.-A. Li, M.-J. Tsai. 1995. Temperature extremes and mortality from coronary heart disease and cerebral infarction in elderly Chinese. Lancet. 10.1016/s0140-6736(95)90341-0 [Pan et al., 1995]
+
 36. M. Pascal, K. Laaidi, M. Ledrans, E. Baffert, C. Caserio-Schonemann, A. Le Tertre. 2006. France's heat health watch warning system. Int. J. Biometeorol. 10.1007/s00484-005-0003-x [Pascal et al., 2006]
+
 37. D.B. Petitti, D.M. Hondula, S. Yang, S.L. Harlan, G. Chowell. 2016. Multiple trigger points for quantifying heat-health impacts: new evidence from a hot climate. Environ. Health Perspect. 10.1289/ehp.1409119 [Petitti et al., 2016]
+
 38. M.A. Sarath Chandran, A.V.M. Subba Rao, V.M. Sandeep, V.P. Pramod, P. Pani, V.U.M. Rao. 2017. Indian summer heat wave of 2015: a biometeorological analysis using half hourly automatic weather station data with special reference to Andhra Pradesh. Int. J. Biometeorol. 10.1007/s00484-016-1286-9 [Sarath Chandran et al., 2017]
+
 39. J.C. Semenza, C.H. Rubin, K.H. Falter, J.D. Selanikio, W.D. Flanders, H.L. Howe. 1996. Heat-related deaths during the July 1995 heat wave in Chicago. N. Engl. J. Med. 10.1056/nejm199607113350203 [Semenza et al., 1996]
+
 40. J.C. Semenza, J.E. McCullough, W.D. Flanders, M.A. McGeehin, J.R. Lumpkin. 1999. Excess hospital admissions during the July 1995 heat wave in Chicago. J. Prev. Med. 10.1016/s0749-3797(99)00025-2 [Semenza et al., 1999]
+
 41. S.C. Sheridan, S. Lin. 2014. Assessing variability in the impacts of heat on health outcomes in New York City over time, season, and heat-wave duration. Ecohealth. 10.1007/s10393-014-0970-7 [Sheridan and Lin, 2014]
-42. K.R. Smith, A. Woodward, D. Campbell-Lendrum, D.D. Chadee, Y. Honda, Q. Liu. 2014. Human health: impacts, adaptation, and co-benefits. Climate Change 2014: Impacts, Adaptation, and Vulnerability. Part A: Global and Sectoral Aspects. Contribution of Working Group II to the Fifth Assessment Report of the Intergovernmental Panel on Climate Change: 709-754 [Smith et al., 2014]
+
+42. K.R. Smith, A. Woodward, D. Campbell-Lendrum, D.D. Chadee, Y. Honda, Q. Liu. 2014. Human health: impacts, adaptation, and co-benefits. C.B. Field, V.R. Barros, D.J. Dokken, K.J. Mach, M.D. Mastrandrea, T.E. Bilir, M. Chatterjee, K.L. Ebi, Y.O. Estrada, R.C. Genova, B. Girma, E.S. Kissel, A.N. Levy, S. MacCracken, P.R. Mastrandrea, L.L. White (eds.), Climate Change 2014: Impacts, Adaptation, and Vulnerability. Part A: Global and Sectoral Aspects. Contribution of Working Group II to the Fifth Assessment Report of the Intergovernmental Panel on Climate Change, Cambridge University Press, Cambridge, United Kingdom and New York, NY, USA: 709-754 [Smith et al., 2014]
+
 43. J.T. Spector, P.E. Sheffield. 2014. Re-evaluating occupational heat stress in a changing climate. Ann. Occup. Hyg. 10.1093/annhyg/meu073 [Spector and Sheffield, 2014]
+
 44. R.G. Steadman. 1984. A universal scale of apparent temperature. J. Clim. Appl. Meteorol. 10.1175/1520-0450(1984)023<1674:ausoat>2.0.co;2 [Steadman, 1984]
+
 45. T.I. Sung, P.C. Wu, S.C. Lung, C.Y. Lin, M.J. Chen, H.J. Su. 2013. Relationship between heat index and mortality of 6 major cities in Taiwan. Sci. Total Environ. 10.1016/j.scitotenv.2012.09.068 [Sung et al., 2013]
+
 46. Taiwan National Development Council, 2018. Government website open information announcement. Available: 〈https://data.gov.tw/en〉 (Accessed 11 May 2018).
-47. S.L. Tong, X.Y. Wang, G. FitzGerald, D. McRae, G. Neville, V. Tippett. 2014. Development of health risk-based metrics for defining a heatwave: a time series study in Brisbane, Australia. BMC Public Health. 10.1186/1471-2458-14-435 [Tong et al., 2014]
+
+47. S.L. Tong, X.Y. Wang, G. FitzGerald, D. McRae, G. Neville, V. Tippett. 2014. Development of health risk-based metrics for defining a heatwave: a time series study in Brisbane, Australia. BMC Public Health. 10.1186/1471-2458-14-435. (Online May) [Tong et al., 2014]
+
 48. UN (United Nations), 2018. Sustainable Development Goals (SDGs). Available: 〈https://www.un.org/sustainabledevelopment/〉 (Accessed 11May 2018).
-49. WHO (World Health Organization). 2014. Quantitative risk assessment of the effects of climate change on selected causes of death. 2030s and 2050s [WHO (World Health Organization), 2014]
+
+49. WHO (World Health Organization). 2014. Quantitative risk assessment of the effects of climate change on selected causes of death. S. Hales, S. Kovats, S. Lloyd, D. Campbell-Lendrum (eds.), 2030s and 2050s, World Health Organization (WHO) [WHO (World Health Organization), 2014]
+
 50. S. Williams, M. Nitschke, T. Sullivan, G.R. Tucker, P. Weinstein, D.L. Pisaniello. 2012. Heat and health in Adelaide, South Australia: assessment of heat thresholds and temperature relationships. Sci. Total Environ. 10.1016/j.scitotenv.2011.11.038 [Williams et al., 2012]
-51. WMO and WHO (World Meteorological Organization and World Health Organization). 2015. Heatwaves and Health: Guidance on Warning-System Development [WMO and WHO (World Meteorological Organization and World Health Organization), 2015]
-52. S.N. Wood. 2006. Generalized Additive Models: An Introduction with R [Wood, 2006]
+
+51. WMO and WHO (World Meteorological Organization and World Health Organization). 2015. G.R. McGregor, P.E., K. Bessemoulin, B. Menne (eds.), Heatwaves and Health: Guidance on Warning-System Development, World Meteorological Organization(WMO) [WMO and WHO (World Meteorological Organization and World Health Organization), 2015]
+
+52. S.N. Wood. 2006. Generalized Additive Models: An Introduction with R. Chapman and Hall/CRC [Wood, 2006]
+
 53. Y. Xia, Y. Li, D. Guan, D.M. Tinoco, J. Xia, Z. Yan. 2018. Assessment of the economic impacts of heat waves: a case study of Nanjing, China. J. Clean. Prod. 10.1016/j.jclepro.2017.10.069 [Xia et al., 2018]
+
 54. Z. Xu, R.A. Etzel, H. Su, C. Huang, Y. Guo, S. Tong. 2012. Impact of ambient temperature on children's health: a systematic review. Environ. Res., 117: 120-131 [Xu et al., 2012]
+
 55. Yaglou C.P., Minard D., 1956. Prevention of heat casualties at marine corps training centers. Armed Services Technical Information Agency Document Service Center AD099920. [Yaglou and Minard, 1956]
+
 56. S. Yamamoto, M. Iwamoto, M. Inoue, N. Harada. 2007. Evaluation of the effect of heat exposure on the autonomic nervous system by heart rate variability and urinary catecholamines. J. Occup. Health. 10.1539/joh.49.199 [Yamamoto et al., 2007]
+
 57. X. Ye, R. Wolff, W. Yu, P. Vaneckova, X. Pan, S. Tong. 2012. Ambient temperature and morbidity: a review of epidemiological evidence. Environ. Health Perspect. 10.1289/ehp.1003198 [Ye et al., 2012]

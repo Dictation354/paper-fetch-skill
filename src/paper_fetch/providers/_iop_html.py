@@ -12,7 +12,14 @@ from bs4 import BeautifulSoup, Tag
 from ..extraction.html._metadata import parse_html_metadata, raw_html_meta_values
 from ..extraction.html.asset_fields import MARKDOWN_ASSET_REFERENCE_FIELDS
 from ..extraction.html.assets import extract_figure_assets
-from ..extraction.html.formula_rules import is_tex_formula_script_node
+from ..extraction.html.formula_rules import (
+    is_display_formula_node,
+    is_tex_formula_script_node,
+)
+from ..extraction.markdown_render.formulas import (
+    html_formula_latex_from_node,
+    render_inline_latex_markdown,
+)
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.provider_rules import COMMON_ACCESS_BLOCK_TOKENS
 from ..extraction.html.signals import HtmlExtractionFailure
@@ -102,9 +109,11 @@ IOP_EXTRACTION_CLEANUP_SELECTORS = (
     ".access-widget",
     ".iopscience-nav",
     ".js-article-toolbar",
+    ".fig-dwnld-std-img",
+    ".fig-dwnld-hi-img",
 )
-IOP_FORMULA_CONTAINER_TOKENS = ("display-eqn", "inline-eqn", "tex")
-IOP_DISPLAY_FORMULA_SELECTORS = (".display-eqn",)
+# inline-eqn / display-eqn and the display selector are shared defaults.
+IOP_FORMULA_CONTAINER_TOKENS = ("tex",)
 IOP_ACCEPTED_FIGURE_PREVIEW_URL_TOKENS = ("_online.",)
 IOP_HIGH_RESOLUTION_FIGURE_URL_PATTERN = re.compile(
     r"(?P<stem>.+)_(?:lr|online)(?P<suffix>\.(?:jpe?g|png|gif|webp))(?:[?#].*)?$",
@@ -386,6 +395,10 @@ def _parse_citation_reference_meta(value: Any) -> dict[str, str | None]:
     title = normalize_text((fields.get("citation_title") or [""])[0])
     journal = normalize_text((fields.get("citation_journal_title") or [""])[0])
     publisher = normalize_text((fields.get("citation_publisher") or [""])[0])
+    conference = normalize_text((fields.get("citation_conference_title") or [""])[0])
+    institution = normalize_text(
+        (fields.get("citation_dissertation_institution") or [""])[0]
+    )
     year = normalize_text((fields.get("citation_publication_date") or [""])[0])
     volume = normalize_text((fields.get("citation_volume") or [""])[0])
     first_page = normalize_text((fields.get("citation_firstpage") or [""])[0])
@@ -398,6 +411,8 @@ def _parse_citation_reference_meta(value: Any) -> dict[str, str | None]:
         title,
         journal,
         publisher,
+        conference,
+        institution,
         volume,
         pages,
         f"doi:{doi}" if doi else "",
@@ -411,6 +426,7 @@ def _parse_citation_reference_meta(value: Any) -> dict[str, str | None]:
 
 
 def _extract_figure_captions_from_soup(soup: BeautifulSoup) -> list[str]:
+    _remove_iop_figure_download_controls(soup)
     captions: list[str] = []
     for node in soup.select(
         "figure figcaption, .figure .caption, .article-figure .caption"
@@ -496,7 +512,16 @@ def _append_missing_figure_captions(
     missing = [
         caption
         for caption in captions
-        if caption and not _markdown_contains_caption(markdown_text, caption)
+        if caption
+        and not _markdown_contains_caption(markdown_text, caption)
+        and not (
+            (label := re.match(r"^(?:Figure|Fig\.?)\s+(\d+[a-z]?)", caption, re.I))
+            and re.search(
+                r"\*\*(?:Figure|Fig\.?)\s+" + re.escape(label[1]) + r"[.\s]",
+                markdown_text,
+                re.I,
+            )
+        )
     ]
     if not missing:
         return markdown_text
@@ -654,7 +679,10 @@ def _node_class_tokens(node: Any) -> set[str]:
 def _is_iop_latex_formula_container(node: Any) -> bool:
     if not isinstance(node, Tag):
         return False
-    if not (_node_class_tokens(node) & set(IOP_FORMULA_CONTAINER_TOKENS)):
+    if not (
+        _node_class_tokens(node)
+        & {"display-eqn", "inline-eqn", *IOP_FORMULA_CONTAINER_TOKENS}
+    ):
         return False
     return node.find(_is_iop_formula_script) is not None
 
@@ -995,9 +1023,25 @@ def refine_selected_container(node: Tag, **_kwargs: Any) -> Tag:
     return _complete_iop_article_container(body) or body
 
 
+def _remove_iop_figure_download_controls(container: Tag) -> None:
+    for caption in container.select(
+        "figure figcaption, .figure .caption, .article-figure .caption"
+    ):
+        for node in list(caption.select(".print-hide")):
+            if node.parent is None:
+                continue
+            if (
+                normalize_text(node.get_text(" ", strip=True)).casefold()
+                == "download figure:"
+                or node.select_one(".fig-dwnld-std-img, .fig-dwnld-hi-img") is not None
+            ):
+                node.decompose()
+
+
 def _remove_iop_article_chrome(container: Any) -> None:
     if not isinstance(container, Tag):
         return
+    _remove_iop_figure_download_controls(container)
     for selector in IOP_EXTRACTION_CLEANUP_SELECTORS:
         try:
             nodes = list(container.select(selector))
@@ -1012,6 +1056,30 @@ def _remove_iop_article_chrome(container: Any) -> None:
 
 def _is_iop_formula_script(node: Any) -> bool:
     return is_tex_formula_script_node(node)
+
+
+def iop_before_inline_formula_normalization(container: Tag) -> None:
+    from .atypon_browser_workflow.profile import _dedupe_top_level_nodes
+    from .atypon_browser_workflow.formulas import _raw_markdown_node
+
+    nodes = _dedupe_top_level_nodes(
+        [node for node in container.select(".inline-eqn") if isinstance(node, Tag)]
+    )
+    for node in nodes:
+        if not isinstance(node, Tag) or node.parent is None:
+            continue
+        if is_display_formula_node(node) or "display-eqn" in _node_class_tokens(node):
+            continue
+        latex = ""
+        for script in node.find_all("script"):
+            if not isinstance(script, Tag) or not is_tex_formula_script_node(script):
+                continue
+            latex = html_formula_latex_from_node(script)
+            if latex:
+                break
+        markdown = render_inline_latex_markdown(latex)
+        if markdown:
+            node.replace_with(_raw_markdown_node(node, markdown))
 
 
 def iop_body_container(container: Any) -> None:
@@ -1029,7 +1097,6 @@ def iop_asset_figure_extraction(container: Any) -> None:
 
 __all__ = [
     "IOP_ACCESS_BLOCK_TEXT_TOKENS",
-    "IOP_DISPLAY_FORMULA_SELECTORS",
     "IOP_EXTRACTION_CLEANUP_SELECTORS",
     "IOP_FORMULA_CONTAINER_TOKENS",
     "IOP_FRONT_MATTER_CONTAINS_TOKENS",

@@ -128,7 +128,7 @@ def extract_supplementary_assets(
 ) -> list[dict[str, str]]:
 
     soup = BeautifulSoup(html_text, choose_parser())
-    assets_by_key: dict[tuple[str, str, str], dict[str, str]] = {}
+    assets_by_key: dict[tuple[str, str], dict[str, str]] = {}
     for anchor in soup.find_all("a", href=True):
         asset = _supplementary_asset_from_anchor(
             anchor, source_url, noise_profile=noise_profile
@@ -139,7 +139,6 @@ def extract_supplementary_assets(
         key = (
             url or normalize_text(asset.get("heading") or ""),
             "supplementary",
-            normalize_text(asset.get("heading") or ""),
         )
         existing = assets_by_key.get(key)
         if existing is None:

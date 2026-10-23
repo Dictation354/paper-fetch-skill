@@ -2,7 +2,7 @@
 
 安装、配置、MCP 注册和升级见下文；7.0 行为变化见 [迁移说明](migration-v7.md)。
 provider 差异见 [providers.md](providers.md)，浏览器准备见 [browser-backends.md](browser-backends.md)，
-原生 macOS 证据边界见 [适配说明](macos-adaptation-audit.md)。已安装 skill 的独立说明位于
+原生 macOS 证据边界见 [适配说明](#macos-适配与证据边界)。已安装 skill 的独立说明位于
 [environment.md](../skills/paper-fetch-skill/references/environment.md) 和
 [cli-workflow.md](../skills/paper-fetch-skill/references/cli-workflow.md)。
 
@@ -211,7 +211,7 @@ source ~/.local/share/paper-fetch-skill/activate-offline.sh
 Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的清理复选框，静默卸载（包括升级先卸载）始终保留。清理仅接受 `optional-tools.json` 中本向导拥有的版本目录：Ghostscript 校对注册路径和官方卸载器摘要后调用对应可见卸载器；UAC 取消、路径不符或失败时保留并报告位置。libvips 仅删除清单内摘要未变的文件，新增/修改文件保留。清理报告保存为 `optional-cleanup-results.txt`。Linux/macOS 不卸载 APT/Homebrew 工具；任何平台均不清理共享 Camoufox 缓存。
 
 - Windows：在“设置 > 应用 > 已安装的应用”中卸载 `Paper Fetch Skill`，或运行 `%LOCALAPPDATA%\PaperFetchSkill\unins000.exe`。卸载器会删除其管理的 runtime、wrapper、bundled skill 和元数据，删除安装器复制的 Codex / Claude Code / Antigravity skill、用户 PATH 中的安装目录 `bin`，并移除安装器管理的 MCP 注册；`offline.env`、`downloads/` 内用户文件、其它安装根用户内容及用户手写的其它 Codex / Claude / Antigravity 配置会保留。
-- Linux：运行 `~/.local/share/paper-fetch-skill/install-offline.sh --uninstall`，自定义目录则运行该目录下的 `install-offline.sh --install-dir <path> --uninstall`。该路径不做 checksum、Python ABI 或 bundle asset 检查，只删除 `~/.codex/skills/paper-fetch-skill`、`~/.claude/skills/paper-fetch-skill`、`~/.gemini/antigravity-cli/skills/paper-fetch-skill`，清理 shell 启动文件、用户配置和 Codex fallback config 中的 installer managed block，并通过可用的 `codex` / `claude` CLI 和 Antigravity `mcp_config.json` 移除 MCP；不会删除固定安装目录、`bin/`、`runtime/`、`offline.env`、`downloads/`，也不会删除用户配置中的非 managed 内容。需要删除固定安装目录时显式运行 `install-offline.sh --purge`。
+- Linux：运行 `~/.local/share/paper-fetch-skill/install-offline.sh --uninstall`，自定义目录则运行该目录下的 `install-offline.sh --install-dir <path> --uninstall`。该路径不做 checksum、Python ABI 或 bundle asset 检查，只删除新旧 Codex skill（`~/.agents/skills/paper-fetch-skill` 和 `~/.codex/skills/paper-fetch-skill`）、`~/.claude/skills/paper-fetch-skill`、`~/.gemini/antigravity-cli/skills/paper-fetch-skill`，清理 shell 启动文件、用户配置和 Codex fallback config 中的 installer managed block，并通过可用的 `codex` / `claude` CLI 和 Antigravity `mcp_config.json` 移除 MCP；不会删除固定安装目录、`bin/`、`runtime/`、`offline.env`、`downloads/`，也不会删除用户配置中的非 managed 内容。需要删除固定安装目录时显式运行 `install-offline.sh --purge`。
 - macOS：卸载命令与 Linux 相同；如果使用自定义安装目录，运行该目录下的 `install-offline.sh --install-dir <path> --uninstall`。卸载只清理 `~/Library/Application Support/paper-fetch/.env` 的 managed block，保留用户自写内容。`--purge` 会在删除任何用户集成之前拒绝 `/`、HOME 及其祖先、尚未安装的当前 bundle root 等危险目标，并要求目标目录中的 schema 3 `offline-manifest.json` 证明 project / entrypoint 所有权且存在 `runtime/python-bin` 安装标记；校验失败时不会做部分卸载。
 
 离线安装约束：
@@ -224,7 +224,7 @@ Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的
 - Linux 构建阶段用临时 wheelhouse 把项目和依赖安装进 `runtime/site-packages`，然后只把安装后的 runtime、`bin/` 启动器、公式工具和 skill 放进自解压 `.sh` payload；目标机安装阶段不运行 pip，不包含源码树、`dist/` 或 `wheelhouse/`
 - Playwright 和 Camoufox Python 依赖随 Linux / macOS `runtime/site-packages` 和 Windows embedded runtime 分发；Camoufox 浏览器 binary 不随包分发，核心安装和静态诊断不下载，可选向导仅在用户明确选择时下载；fetch、auth 和 preflight 在实际启动浏览器前自动补全或更新 managed runtime。未固定版本时检查所选渠道最新兼容版本，固定时只补全对应版本；更新失败且本地版本有效时提示并继续使用，否则报告准备失败。显式 binary 由用户维护。进入受限网络或离线环境前应在联网阶段运行 `python -m camoufox fetch` 预置 binary，并运行 preflight 做启动/provider 验证。当前验证尚未覆盖预置后真正断网的 Camoufox launch，因此不能宣称完整离线浏览器支持
 - Linux `.sh` payload 不包含仓库源码快照和 `tests/` 目录；离线安装目标是运行已打包工具，不在目标机执行项目测试
-- Linux、macOS、Windows 离线包都携带原生 texmath 0.13.3，分别位于 `formula-tools/bin/texmath` 和 `formula-tools/bin/texmath.exe`，并将它作为首选公式后端；`mathml-to-latex>=1.8.0,<2.0.0` 和随 Playwright 分发的 Node 作为二级转换回退。项目不随包安装或调用 KaTeX renderer/validator；KaTeX 只描述 LaTeX 规范化的兼容目标。`src/paper_fetch/resources/formula` 是 Node manifest、lockfile 和转换脚本的唯一源码位置；checkout runtime 直接引用它，Python 安装器和离线构建将它暂存到 `formula-tools`。lockfile 当前解析为 `mathml-to-latex` 1.8.0 及其实际传递依赖，unit test 会拒绝声明或解析结果漂移。目标机不编译 texmath，也不运行 `npm install`。CI / release 公式构建固定使用 `haskell-actions/setup` v2.12.1 的完整 SHA、GHC 9.14.1 和 Cabal 3.18.1.0。macOS 构建会把非系统 Mach-O dylib 复制到 `formula-tools/lib`，用 `@rpath` / `@loader_path` 重写引用，并对 texmath 与随包 dylib 做 ad-hoc codesign
+- Linux、macOS、Windows 离线包都携带原生 texmath 0.13.3，分别位于 `formula-tools/bin/texmath` 和 `formula-tools/bin/texmath.exe`，并将它作为首选公式后端；`mathml-to-latex>=1.8.0,<2.0.0` 和随 Playwright 分发的 Node 作为二级转换回退。公式工具和离线包同时携带固定为 4.1.3 的 MathJax、TeX 字库、mhchem 与 bbm 字形扩展，预载 `bbm`、`textcomp` 及既有扩展，供源 TeX 与 MathML 转换结果的编译／排版校验使用。LitRoot 提交由 `scripts/sync_mathjax_engine.py /path/to/LitRoot` 生成的引擎副本；`--check`、副本摘要测试和独立检查器阻止内容漂移。`src/paper_fetch/resources/formula` 是 Node manifest、lockfile 和转换脚本的唯一源码位置；checkout runtime 直接引用它，Python 安装器和离线构建将它暂存到 `formula-tools`。lockfile 解析上述固定 MathJax 资源、`mathml-to-latex` 1.8.0 及其实际传递依赖，unit test 会拒绝声明或解析结果漂移。目标机不编译 texmath，也不运行 `npm install`。CI / release 公式构建固定使用 `haskell-actions/setup` v2.12.1 的完整 SHA、GHC 9.14.1 和 Cabal 3.18.1.0。macOS 构建会把非系统 Mach-O dylib 复制到 `formula-tools/lib`，用 `@rpath` / `@loader_path` 重写引用，并对 texmath 与随包 dylib 做 ad-hoc codesign
 - Linux / macOS 会配置安装目录内 `image-tools` 作为图片转换工具查找目录；离线构建不会把构建机 PATH 上的 Ghostscript/libvips 符号链接固化进包内。运行时找到 Ghostscript 时可转 EPS，找到 libvips 时可转 TIFF；缺少对应工具时只影响 AMS `Download Figure` 源图转换，网页 JPG/PNG 候选仍可回退
 - Linux / macOS 默认写固定安装目录内的 `offline.env`、生成可在 bash/zsh 中 `source` 的 `activate-offline.sh`、复制三份 host skill，并把离线 CLI PATH、工具路径、`PAPER_FETCH_ENV_FILE`、`PYTHONUTF8`、`PYTHONIOENCODING` 等写入当前 shell 启动文件；`offline.env` 的 managed block 写入 `PAPER_FETCH_BROWSER_HEADLESS=true`，不覆盖 Camoufox 生成的 Firefox UA/指纹。只有显式传 `--user-config` 才会把受标记管理的运行时块合并到用户配置；Linux 目标是 `~/.config/paper-fetch/.env`，macOS 目标是 `~/Library/Application Support/paper-fetch/.env`
 - Linux / macOS `--install-dir <path>` 只接受不存在、空目录，或同时带 schema 3 ownership manifest 与 `runtime/python-bin` marker 的既有安装目录；拒绝 HOME/祖先、非空未拥有目录及指向它的 symlink。合法升级会清理 `src/`、`tests/`、`wheelhouse/`、`dist/`、`.github/` 等残留，保留安装目录内 `offline.env`，并保留用户配置中非 managed 内容
@@ -352,7 +352,18 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 
 主抓取链路不依赖外部公式后端；只有当你希望公式转换效果更好时，才需要这一步。
 
-即使没有安装外部公式后端，运行时仍会对已经拿到的 LaTeX 做轻量 normalize，例如把 `\updelta` 这类 upright Greek 宏改成 KaTeX 常用宏、把 `\mspace{Nmu}` 改成 `\mkernNmu`、把 MathJax `\unicode{x2A7D}` 这类码点命令改成 KaTeX 可解析符号，并清理外部后端可能产生的空 delimiter / 拆分标识符伪影。外部后端只影响 MathML 到 LaTeX 的转换能力，不是这些 normalize 规则的开关。
+公式工具同时提供 MathJax 4.1.3 校验与本地字形。源 TeX 通过编译／排版校验时原样保留内部命令、字符、空格和换行；失败时只转换同一公式节点唯一可配对的 MathML 副本，再次校验后才输出。全部失败保留原 TeX 并记录诊断；工具不可用也保留原 TeX。源 TeX 不进入转换产物修正，不通过宏别名或括号删除修复。无源 TeX 沿用现有图片、文字与缺失回退。
+
+### 独立 Markdown 公式审阅
+
+公式审阅使用显式指定的 LitRoot checkout 及其已安装依赖，从 `src/shared/markdown-math.mjs` 加载与阅读器相同的同步 MathJax 4.1.3 引擎、本地 SVG 字形和扩展，不访问 CDN：
+
+```bash
+node scripts/review_markdown_math.mjs --modules-root /path/to/LitRoot --output report.json paper.md
+PAPER_FETCH_REVIEW_READER_ROOT=/path/to/LitRoot PYTHONPATH=src uv run python -m pytest tests/integration/test_markdown_math_review.py -q
+```
+
+可传多个 Markdown 文件；省略 `--output` 时向 stdout 输出 JSON。报告顶层 `mathjax` 是引擎版本，`extensions` 列出预载扩展；每篇文档独立维护宏和诊断，保留公式计数、位置、源表达式、相对资产和定界符候选。`warnings` 保留为空数组；解析、编译或排版失败时每条公式只记录一次错误，退出码为 1，无错误时为 0。阅读器只在失败公式处显示源 TeX 和错误提示，其余正文继续渲染。历史 KaTeX 报告保留原记录。
 
 ### 已安装环境
 
@@ -376,7 +387,7 @@ paper-fetch-install-formula-tools
 - `./install-formula-tools.sh` 会把工具装到当前仓库的 `./.formula-tools/`
 - 如果只想安装公式工具但跳过 Node fallback，可给仓库脚本加 `--no-node`
 - 运行时可用 `PAPER_FETCH_FORMULA_TOOLS_DIR` 覆盖公式工具查找目录；默认会考虑 repo-local `.formula-tools` 和用户数据目录下的 `formula-tools`
-- `src/paper_fetch/resources/formula/package.json` / `package-lock.json` 是公式 Node 依赖的唯一 manifest 与 lockfile；唯一直接依赖是 `mathml-to-latex`，unit contract 检查 lockfile 根依赖与 manifest 一致且该转换包有解析结果。
+- `src/paper_fetch/resources/formula/package.json` / `package-lock.json` 是公式 Node 依赖的唯一 manifest 与 lockfile；直接依赖包括 `mathml-to-latex` 和固定 4.1.3 的 MathJax／字体包，unit contract 检查 manifest、lockfile 与版本一致。已有 texmath 或旧 `mathml-to-latex` 安装不能跳过新增校验依赖；安装器检查完整 Node 依赖，离线构建执行转换及 bbm/textcomp 排版 smoke test。
 
 ### 可选图片转换后端
 
@@ -420,7 +431,9 @@ paper-fetch doctor --group browser --detail compact
 
 offline manifest schema 3 保留 `version`、`git_revision`、`built_at_utc`、`target.platform` / `arch` / `python_tag` 和 `entrypoint`，并包含 skill bundle schema 2：除 `SKILL.md`、全部 `references/`、canonical `agents/openai.yaml` 等完整 regular-file 列表和逐文件 SHA256 外，还记录路径排序、与 mtime/遍历顺序无关的 `content_sha256` / `content_version=sha256:<digest>`。macOS tarball 还写入 `target.minimum_os_version`。POSIX 与 Windows 安装器会在复制前校验 bundle，在复制后再次校验安装根目录及 Codex、Claude Code、Antigravity 三份 skill；缺文件、多文件、符号链接、special file 或 hash 不一致都会阻止完整性验收。
 
-源码安装或升级后可运行 `./scripts/install-codex-skill.sh --check` 检查 Codex user scope，或加 `--project --check` 检查仓库 `.codex/skills/paper-fetch-skill`。该模式严格只读，不安装包、不复制/建目录、不注册或注销 MCP、不写配置/日志；`0` 表示精确同步，`1` 表示缺失或漂移，`2` 表示参数用法冲突。离线安装器会在复制前后及三个宿主目标上 fail closed 验证 Skill，完成后重启 Codex、Claude Code 和 Antigravity 使宿主重新扫描已验证的 skill/MCP。
+Codex 用户级 skill 安装到 `~/.agents/skills/paper-fetch-skill`，项目级安装到项目 `.agents/skills/paper-fetch-skill`；Windows 用户级对应 `%USERPROFILE%\.agents\skills\paper-fetch-skill`。新目录遵循 [OpenAI skill 指导](https://learn.chatgpt.com/docs/build-skills)，不由 `CODEX_HOME` 决定；MCP 配置位置沿用现有契约。新副本复制并通过内容校验后才清理同 scope 的旧 `.codex/skills/paper-fetch-skill`；源码安装器还兼容清理原 `CODEX_HOME/skills/paper-fetch-skill`。`--uninstall` 同时处理新旧目录，user/project scope 不互相清理。离线安装器仅处理其既有用户 scope。
+
+源码安装或升级后可运行 `./scripts/install-codex-skill.sh --check` 检查 Codex user scope，或加 `--project --check` 检查仓库 `.agents/skills/paper-fetch-skill`。该模式严格只读，不安装包、不复制/建目录、不注册或注销 MCP、不写配置/日志；`0` 表示精确同步，`1` 表示缺失或漂移，`2` 表示参数用法冲突。离线安装器会在复制前后及三个宿主目标上 fail closed 验证 Skill，完成后重启 Codex、Claude Code 和 Antigravity 使宿主重新扫描已验证的 skill/MCP。
 
 部署排查顺序为：`doctor` / `provider_status` 静态检查 → 对 browser provider 运行 CLI 或 MCP `browser_preflight` 做真实页面预检 → 只有返回 challenge/auth required 或实际抓取明确需要时，才由用户运行 `paper-fetch auth <provider>`。live 步骤会访问网络，preflight 默认可能更新 provider storage-state；MCP 可显式设 `save_storage_state=false` 禁止本轮保存。两种 preflight 入口共用 HTML 核心，均在实际启动前自动准备 managed runtime，不运行 PDF fallback 或自动 auth。静态 `ready` 不代表网页当前健康或账号已有访问权，预置后真正断网的 Camoufox launch 仍是公开审计项。
 
@@ -493,7 +506,7 @@ provider 路由、付费墙终态、browser readiness、PDF 恢复与环境变�
 
 安装器和离线包不会内置 Camoufox 浏览器 binary；首次 browser launch 保留 managed
 runtime 自动准备机制。进入受限网络前需显式预置并验证。Ghostscript/libvips 的原生
-依赖和 macOS 验证范围见 [macOS 适配说明](macos-adaptation-audit.md)。
+依赖和 macOS 验证范围见 [macOS 适配说明](#macos-适配与证据边界)。
 
 ## 5. 部署到 Codex
 
@@ -662,3 +675,28 @@ PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_RUN_IEEE_BROWSER_LIVE=1 \
 - [`docs/README.md`](README.md)
 - [`providers.md`](providers.md)
 - [`architecture/overview.md`](architecture/overview.md)
+
+## macOS 适配与证据边界
+
+macOS 的机器合同见 [`macos-adaptation-contract.toml`](macos-adaptation-contract.toml)。它只记录长期支持矩阵、安全不变量和原生证据要求；全平台 release 事实继续由 workflow、installer manifest 与 release asset owner 维护。
+
+### 支持范围
+
+- 在线安装遵循 `pyproject.toml` 的 Python 版本范围。
+- 离线安装包只面向 Apple Silicon；具体 CPython 矩阵和 runner 由 `.github/workflows/offline.yml` 定义。
+- 安装包命名来自 `installer/manifest.json`，公开资产集合由 `scripts/prepare_release_assets.py` 定义。macOS 合同不复制全平台资产数量或依赖清单。
+- 稳定发布的源码、离线构建与依赖快照验证工具来自同一个已验证 commit SHA，不支持跨 revision tooling overlay。
+
+### 安全不变量
+
+构建与安装必须继续拒绝错误架构、非标准 CPython ABI、未归属 staging、符号链接 payload 和未验证的 purge 路径。正式产物使用原子发布；quarantine 与 payload inventory 校验 fail closed。Camoufox 浏览器不打入离线包，核心安装不下载浏览器；可选向导仅在用户明确选择后预置，失败不回滚核心安装。受管 runtime 在实际启动浏览器前自动补全或更新，尊重已有渠道和固定版本；更新失败时可复用校验有效的本地版本。离线使用前仍需在联网阶段预先准备，预置不等于已验证完全断网启动。
+
+### 证据等级
+
+- `scripts/validate_macos_adaptation.py` 从项目元数据、workflow、installer manifest 和 release asset owner 读取当前事实并校验合同。
+- Windows 与 Linux/WSL contract 入口只提供本地静态和纯 Python 预检查，不属于 CI 平台证据，也不证明 Mach-O、codesign、quarantine、文件模式、大小写或原生浏览器 bundle。
+- `.github/workflows/verify.yml` 的原生 macOS gate 提供 CPython 3.14 与浏览器 bundle 证据；`.github/workflows/offline.yml` 覆盖发布矩阵。
+
+本地修改涉及上述边界时，先运行 `python scripts/validate_macos_adaptation.py`，再在当前平台运行对应 contract 入口。原生发布证据只能由 macOS runner 提供。
+
+Codex skill 的 `.agents/skills` 迁移与校验后清理同样适用于 macOS；Linux portable 验证不替代原生 macOS 安装证据。

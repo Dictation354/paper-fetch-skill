@@ -13,7 +13,7 @@
 | 修改提取、组装、渲染 | [架构](architecture/overview.md) → [提取规则](extraction-rules.md) |
 | 新增 provider | [开发流程与契约](adding-a-provider.md) |
 | 检查探测与验收 | [probe 语义](architecture/probe-semantics.md) → [测试分层与证据](../tests/README.md) |
-| 修改 macOS/Unix 安装或浏览器边界 | [适配说明](macos-adaptation-audit.md) → [机器契约](macos-adaptation-contract.toml) |
+| 修改 macOS/Unix 安装或浏览器边界 | [适配说明](deployment.md#macos-适配与证据边界) → [机器契约](macos-adaptation-contract.toml) |
 
 ## 事实来源与维护
 
@@ -23,7 +23,8 @@
   回归入口由源码与 provider-local 测试管理。PDF 内容只允许现有转换器输出透传。
 - 当前可执行样本、来源选择、拒绝/撤回记录在
   [fixture manifest](../tests/fixtures/golden_criteria/manifest.json)，预期在各样本 expected，
-  采集事件在 acquisition/provenance。[测试说明](../tests/README.md) 定义证据审计。
+  采集事件在 acquisition/provenance；原文回归契约在
+  [review scenarios](../tests/fixtures/golden_criteria/_scenarios/review_contracts/README.md)。[测试说明](../tests/README.md) 定义证据审计。
 - 发布构建、安装验收与平台证据统一见 [发布前检查](deployment.md#release-checklist)。
   协作要求见 [AGENTS.md](../AGENTS.md)；早期大版本变更见 [6.0 迁移](migration-v6.md)。
 - [fixture 约定](../tests/fixtures/README.md) 只维护来源和资产证据规则；测试命令与
@@ -32,7 +33,7 @@
   `mcp/schemas.py`、tool adapter 和契约测试为准。文档解释行为，示例不替代完整 schema。
 - 安装后的 [skill bundle](../skills/paper-fetch-skill/SKILL.md) 必须自包含，因此其
   预设、环境与验收摘要保留必要重复；不能改成依赖未随包安装的 `docs/` 链接。
-- 更新日志、迁移说明和专项审计记录描述对应版本或一次运行；其中本机证据路径、
+- 更新日志和迁移说明描述对应版本或历史行为；其中本机证据路径、
   测试数量与性能数据不作为当前能力承诺。当前规范通过上面的主题入口维护。
 
 ## 术语表

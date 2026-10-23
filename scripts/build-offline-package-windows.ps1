@@ -335,6 +335,10 @@ stage_bundled_node_workspace(Path(sys.argv[1]))
     if ($LASTEXITCODE -ne 0 -or -not $nodeLatex.Contains("x")) {
         throw "Bundled mathml-to-latex fallback failed its smoke test."
     }
+    $validation = ('{"id":1,"session":"offline-smoke","expression":"\\mathbbm{1}+\\textdegree","displayMode":false}' | & $node (Join-Path $target "tex_validation_worker.mjs") | ConvertFrom-Json)
+    if ($LASTEXITCODE -ne 0 -or -not $validation.ok -or -not $validation.valid) {
+        throw "Bundled MathJax validation/font layout failed its smoke test."
+    }
 }
 
 function Add-ImageTools {

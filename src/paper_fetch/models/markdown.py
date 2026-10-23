@@ -9,6 +9,7 @@ import re
 import urllib.parse
 from typing import Any
 
+from ..markdown.math import protect_markdown_math, restore_markdown_math
 from ..common_patterns import EXTENDED_DATA_LABEL, INLINE_WHITESPACE_PATTERN
 from ..utils import normalize_text, safe_text, strip_html_tags
 
@@ -327,7 +328,11 @@ def markdown_image_fullmatch(markdown_text: str) -> MarkdownImageMatch | None:
 
 
 def normalize_markdown_text(value: str | None) -> str:
-    text = (value or "").replace("\r\n", "\n").replace("\r", "\n").replace("\xa0", " ")
+    text, protected = protect_markdown_math(value or "")
+    protected = {
+        key: _collapse_display_math_padding(math) for key, math in protected.items()
+    }
+    text = text.replace("\r\n", "\n").replace("\r", "\n").replace("\xa0", " ")
     normalized_lines: list[str] = []
     in_fence = False
     blank_run = 0
@@ -355,7 +360,8 @@ def normalize_markdown_text(value: str | None) -> str:
 
     normalized = "\n".join(normalized_lines).strip()
     normalized = _collapse_display_math_padding(normalized)
-    return _normalize_markdown_image_block_boundaries(normalized)
+    normalized = _normalize_markdown_image_block_boundaries(normalized)
+    return restore_markdown_math(normalized, protected)
 
 
 def _is_block_markdown_image_alt(alt_text: str) -> bool:
@@ -463,7 +469,7 @@ def _collapse_display_math_padding(text: str) -> str:
     in_display_math = False
 
     for raw_line in text.split("\n"):
-        line = raw_line.rstrip()
+        line = raw_line
         if MARKDOWN_FENCE_PATTERN.match(line):
             if in_display_math:
                 math_lines.append(line)
@@ -477,11 +483,11 @@ def _collapse_display_math_padding(text: str) -> str:
                 while math_lines and not math_lines[-1].strip():
                     math_lines.pop()
                 collapsed_lines.extend(math_lines)
-                collapsed_lines.append("$$")
+                collapsed_lines.append(line)
                 math_lines = []
                 in_display_math = False
             else:
-                collapsed_lines.append("$$")
+                collapsed_lines.append(line)
                 math_lines = []
                 in_display_math = True
             continue
@@ -497,7 +503,7 @@ def _collapse_display_math_padding(text: str) -> str:
     if in_display_math:
         collapsed_lines.extend(math_lines)
 
-    return "\n".join(collapsed_lines).strip()
+    return "\n".join(collapsed_lines).strip("\r\n")
 
 
 def should_preserve_markdown_line(line: str) -> bool:
@@ -572,7 +578,6 @@ def normalize_inline_html_text(value: Any) -> str:
     text = INLINE_HTML_CLOSE_SUBSUP_WHITESPACE_PATTERN.sub(r"</\1>", text)
     text = INLINE_HTML_BEFORE_SUBSUP_PATTERN.sub(r"\1", text)
     text = INLINE_HTML_AFTER_SUBSUP_NEWLINE_PATTERN.sub(r"\1 ", text)
-    text = INLINE_HTML_AFTER_SUBSUP_WORD_PATTERN.sub(r"\1 ", text)
     text = INLINE_HTML_AFTER_SUBSUP_PUNCT_PATTERN.sub(r"\1\2", text)
     return text.strip()
 

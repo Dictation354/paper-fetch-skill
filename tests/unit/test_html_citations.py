@@ -95,7 +95,10 @@ class HtmlCitationsTests(unittest.TestCase):
             _render_non_table_inline_node(soup.p)
         )
 
-        self.assertEqual(section, "Observed<sup>1–3</sup> in practice.")
+        self.assertEqual(
+            section,
+            "Observed *[1](#core-collateral-R1) – [3](#core-collateral-R3)* in practice.",
+        )
         self.assertEqual(atypon, section)
 
     def test_clean_citation_markers_preserves_year_ranges(self) -> None:

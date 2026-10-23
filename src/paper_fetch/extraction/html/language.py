@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from typing import Any
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 from ...utils import normalize_text
 from .semantics import ABSTRACT_ATTR_TOKENS, ABSTRACT_HEADINGS, node_source_selector
@@ -101,7 +101,9 @@ def html_node_language_hint(node: Any, *, allow_soft_hints: bool = False) -> str
     return None
 
 
-def collect_html_abstract_blocks(root: Any) -> list[dict[str, Any]]:
+def collect_html_abstract_blocks(
+    root: Any, *, text_renderer: Callable[[Any], str] | None = None
+) -> list[dict[str, Any]]:
     structural_nodes = _top_level_html_abstract_nodes(root, structural_only=True)
     candidate_nodes = (
         _expand_parallel_html_abstract_variants(structural_nodes)
@@ -117,7 +119,12 @@ def collect_html_abstract_blocks(root: Any) -> list[dict[str, Any]]:
             or normalize_text(_html_attribute_text(attrs.get("data-title")))
             or "Abstract"
         )
-        text = normalize_text("\n\n".join(_html_text_blocks(node)))
+        paragraphs = _html_text_blocks(node, text_renderer)
+        text = (
+            "\n\n".join(paragraphs)
+            if text_renderer is not None
+            else normalize_text("\n\n".join(paragraphs))
+        )
         if not text:
             continue
         key = (_normalize_semantic_text(heading), _normalize_semantic_text(text))
@@ -295,7 +302,9 @@ def _first_html_heading_text(node: Any) -> str:
     return normalize_text(text(" ", strip=True)) if callable(text) else ""
 
 
-def _html_text_blocks(node: Any) -> list[str]:
+def _html_text_blocks(
+    node: Any, text_renderer: Callable[[Any], str] | None = None
+) -> list[str]:
     texts: list[str] = []
     seen: set[str] = set()
     finder = getattr(node, "find_all", None)
@@ -309,7 +318,11 @@ def _html_text_blocks(node: Any) -> list[str]:
                 and normalize_text(candidate.get("role") or "").lower() != "paragraph"
             ):
                 continue
-            text = normalize_text(candidate.get_text(" ", strip=True))
+            text = normalize_text(
+                text_renderer(candidate)
+                if text_renderer is not None
+                else candidate.get_text(" ", strip=True)
+            )
             if not text:
                 continue
             canonical = _normalize_semantic_text(text)
@@ -320,7 +333,9 @@ def _html_text_blocks(node: Any) -> list[str]:
     if texts:
         return texts
     fallback_text = normalize_text(
-        getattr(node, "get_text", lambda *_args, **_kwargs: "")(" ", strip=True)
+        text_renderer(node)
+        if text_renderer is not None
+        else getattr(node, "get_text", lambda *_args, **_kwargs: "")(" ", strip=True)
     )
     heading_text = _first_html_heading_text(node)
     if heading_text and fallback_text:

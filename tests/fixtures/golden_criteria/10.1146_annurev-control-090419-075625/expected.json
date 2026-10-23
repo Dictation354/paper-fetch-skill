@@ -1,0 +1,267 @@
+{
+  "has": {
+    "title": true,
+    "authors": true,
+    "abstract": true,
+    "body": true,
+    "figures": true,
+    "references": true,
+    "data_availability": false,
+    "code_availability": false
+  },
+  "counts": {
+    "sections": 24,
+    "abstract_sections": 1,
+    "body_sections": 21,
+    "figures": 3,
+    "tables": 0,
+    "references": 138
+  },
+  "expected_content_kind": "fulltext",
+  "source_objects": [
+    {
+      "source": "tests/fixtures/golden_criteria/10.1146_annurev-control-090419-075625/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "sha256": "4762c65db10b07266cc6c8e749a2a7b15bb3510e4c4ecf5d6fe31dad04dc0da1",
+      "method": "Independent original DOM/XML nodes; source spans and scientific scripts frozen without reading provider output.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "3e9f54c2857d8347bf213768cbf2561624b926021ef3689f8b1dbd0350da3537",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2
+              ]
+            ],
+            [
+              1,
+              [
+                3,
+                4,
+                5
+              ]
+            ],
+            [
+              2,
+              [
+                6,
+                7,
+                8
+              ]
+            ],
+            [
+              3,
+              [
+                9,
+                10,
+                11
+              ]
+            ],
+            [
+              4,
+              [
+                12,
+                13,
+                14
+              ]
+            ],
+            [
+              5,
+              [
+                15,
+                16,
+                17
+              ]
+            ],
+            [
+              6,
+              [
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              7,
+              [
+                21,
+                22,
+                23
+              ]
+            ],
+            [
+              8,
+              [
+                24,
+                25,
+                26
+              ]
+            ],
+            [
+              9,
+              [
+                27,
+                28,
+                29
+              ]
+            ],
+            [
+              10,
+              [
+                30,
+                31,
+                32
+              ]
+            ],
+            [
+              11,
+              [
+                33,
+                34,
+                35
+              ]
+            ]
+          ],
+          "cells": [
+            "Section",
+            "Specific subtopic",
+            "References",
+            "Learning the System Dynamics",
+            "Robust models",
+            "37 – 41",
+            "",
+            "Parametric",
+            "44 – 61",
+            "",
+            "Nonparametric",
+            "64 – 70",
+            "",
+            "Stochastic models/robust in probability",
+            "71 – 73",
+            "",
+            "Parametric",
+            "77 – 84",
+            "",
+            "",
+            "",
+            "Learning the Controller Design",
+            "Performance-driven learning",
+            "—",
+            "",
+            "Bayesian optimization",
+            "102 – 108",
+            "",
+            "Terminal components",
+            "110 – 113",
+            "",
+            "",
+            "",
+            "Model Predictive Control for Safe Learning",
+            "—",
+            "72 , 73 , 127 – 138"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": "b1",
+          "node_sha256": "d56f2df84858807383912811c7018dd518e75c783b4036b14c61f9f0bf318bda",
+          "grid": [
+            [
+              0,
+              [
+                0
+              ]
+            ]
+          ],
+          "cells": [
+            "MODEL PREDICTIVE CONTROL WITH ACTIVE LEARNING AND DUAL CONTROL Dual control considers the challenge of simultaneous identification and control of dynamical systems ( 11 ) and was first studied by Feldbaum ( 26 , 27 ). In the optimal control setting, such as the problem in Equation 4 , the optimal policy needs to take the information gain over the horizon into account in order to address this trade-off. The problem can be studied using dynamic programming; however, the exact solution is computationally intractable for all but the smallest toy examples ( 18 ), which is why most learning-based MPC techniques use passive learning schemes. Mesbah ( 12 ) presented a recent survey of dual control in the context of MPC. Dual control methods are typically divided into two categories: explicit and implicit. In explicit dual control, the exploratory aspect of the controller (i.e., the dual effect) is explicitly inserted into the control scheme—e.g., through a form of exploration bonus in the cost function ( 28 , 29 ) or by ensuring persistent excitation ( 30 , 31 ) to enhance adaptation speed and ensure the quality of the parameter estimates. The resulting techniques typically do not significantly increase computational complexity, but the exploration–exploitation trade-off is addressed heuristically. In implicit dual control, the optimal stochastic control problem in Equation 4 , including the information gain with respect to the parameters along the control horizon, is directly approximated. This can be achieved, e.g., through the use of sampling ( 32 – 34 ) or a specific system structure ( 35 , 36 ). In contrast to explicit approaches, the exploration–exploitation trade-off is therefore naturally addressed, but the resulting methods tend to be limited to specific system classes or are computationally expensive."
+          ]
+        }
+      ],
+      "mathml": []
+    }
+  ],
+  "source_review": {
+    "sample_id": "10.1146_annurev-control-090419-075625",
+    "provider": "annualreviews",
+    "doi": "10.1146/annurev-control-090419-075625",
+    "original": "tests/fixtures/golden_criteria/10.1146_annurev-control-090419-075625/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+    "sha256": "4762c65db10b07266cc6c8e749a2a7b15bb3510e4c4ecf5d6fe31dad04dc0da1",
+    "format": "html",
+    "review_method": "2026-10-21: exact captured source, independent DOM/XML assertions and provider replay; PDF identity and converter passthrough",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 4,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 138,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 79,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 3,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 37,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 0,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 61,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "No structured formula in the selected original; bitmap/externally loaded formulas have only captured index/link evidence.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": "tests/fixtures/golden_criteria/10.1146_annurev-control-090419-075625/acquisition/provenance.json",
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 0,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  }
+}

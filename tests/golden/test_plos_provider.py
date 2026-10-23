@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.markdown_presentation import visible_markdown
 from dataclasses import replace
 from pathlib import Path
 import re
@@ -429,24 +430,19 @@ def test_real_plos_table_preserves_cipher_parameters() -> None:
     )
     # original.xml pone.0304873.t001. Read all nine columns together, so a
     # shifted register/table-size/access-count value cannot pass.
-    assert (
+    assert visible_markdown(
         "Implementation parameters based on lookup tables for linear matrices"
-        in markdown
-    )
+    ) in visible_markdown(markdown)
     compact = re.sub(r"\s+", " ", markdown)
-    assert (
+    assert visible_markdown(
         "| № | Cipher | Matrix size, Finite field | Register size (bits) | Lookup table size | Number of lookup tables | Number of memory accesses | Number of XORs | Size of the linear transform |"
-        in compact
-    )
-    assert (
+    ) in visible_markdown(compact)
+    assert visible_markdown(
         "| 1 | LED block cipher [25] | 4×4,<br>*GF*(2<sup>4</sup>) | 16 | 128 B | 4 | 4 | 4 | 16 bits |"
-        in compact
-    )
-    assert (
+    ) in visible_markdown(compact)
+    assert visible_markdown(
         "| 2 | AES block cipher [22, 23]) | 4×4,<br>*GF*(2<sup>8</sup>) | 32 | 4 KB | 4 | 4 | 4 | 32 bits |"
-        in compact
-    )
-    assert (
+    ) in visible_markdown(compact)
+    assert visible_markdown(
         "| 4 | Kuznyechik [24, 32] | 16×16,<br>*GF*(2<sup>8</sup>) | 64 | 64 KB | 32 | 32 | 32 | 128 bits |"
-        in compact
-    )
+    ) in visible_markdown(compact)

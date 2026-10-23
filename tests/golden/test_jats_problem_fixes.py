@@ -114,8 +114,19 @@ def test_copernicus_all_83_empty_xrefs_keep_their_101_bibliography_targets():
             assert ")" in label
             short = label.split(")", 1)[0] + ")"
             author, year = short.rsplit("(", 1)
-            links.append(f"[{author.rstrip()} ({year}]({source}#{rid})")
-        expected.append("; ".join(links))
+            label = author.rstrip() + (
+                ", " + year.removesuffix(")")
+                if node.get("id", "").startswith("paren.")
+                else " (" + year
+            )
+            links.append(f"[{label}]({source}#{rid})")
+        prefix = "".join(
+            n.get_text() for n in node.select('named-content[content-type="pre"]')
+        ).rstrip()
+        group = (prefix + " " if prefix else "") + "; ".join(links)
+        expected.append(
+            "(" + group + ")" if node.get("id", "").startswith("paren.") else group
+        )
     for mode in ("all", "partial", "none"):
         markdown = article.to_ai_markdown(include_refs=mode, asset_profile="all")
         cursor = 0
@@ -127,7 +138,11 @@ def test_copernicus_all_83_empty_xrefs_keep_their_101_bibliography_targets():
         for node in nodes:
             if node.get_text(strip=True):
                 assert " ".join(node.get_text().split()) in " ".join(markdown.split())
-        assert "using the method of [Hargreaves and Samani (1982)]" in markdown
+        from tests.support.markdown_presentation import visible_markdown
+
+        assert "using the method of (Hargreaves and Samani, 1982)" in visible_markdown(
+            markdown
+        )
         assert "[Reference unavailable" not in markdown
         # Every restored target remains linked to the official source even when refs are filtered.
         all_empty = [
@@ -139,8 +154,19 @@ def test_copernicus_all_83_empty_xrefs_keep_their_101_bibliography_targets():
         assert len(outside_body) == 1 and outside_body[0]["id"] == "paren.91"
         assert outside_body[0]["rid"] == "bib1.bibx76"
         assert "data compiled herein" in outside_body[0].parent.get_text()
-        targets = [rid for n in all_empty for rid in n["rid"].split()]
-        assert len(targets) == 102
+        assert sum(len(n["rid"].split()) for n in all_empty) == 102
+        restored = [
+            n
+            for n in soup.select('xref[ref-type="bibr"]')
+            if not n.get_text(strip=True)
+            or (
+                n.find("named-content", attrs={"content-type": "pre"}) is not None
+                and n.get_text(strip=True)
+                == n.find("named-content").get_text(strip=True)
+            )
+        ]
+        targets = [rid for n in restored for rid in n["rid"].split()]
+        assert len(targets) == 111
         assert (
             re.findall(re.escape(source) + r"#(bib1\.bibx\d+)\)", markdown) == targets
         )

@@ -1,5 +1,7 @@
 """P12 replacements: original response identity and current HTML/XML assembly."""
 
+from tests.support.markdown_presentation import visible_markdown
+
 import html
 import re
 from urllib.parse import unquote, urlsplit
@@ -123,12 +125,11 @@ def test_science_pnas_captured_full_article_preserves_bibliography(
 ):
     record, body = _record(doi, path)
     soup = BeautifulSoup(body, "lxml")
-    assert (
+    assert visible_markdown(
         soup.select_one('meta[name="citation_doi"], meta[name="publication_doi"]')[
             "content"
         ]
-        == doi
-    )
+    ) == visible_markdown(doi)
     assert soup.select_one("#bodymatter") is not None
     sample = golden_criteria_sample_for_doi(doi)
     sample.update(
@@ -151,7 +152,9 @@ def test_science_pnas_captured_full_article_preserves_bibliography(
     for node in empty:
         # The captured commentary's r22 contains no citation or DOI to recover.
         citations = node.select_one(".citations")
-        assert str(citations) == '<div class="citations" id="r22"></div>'
+        assert visible_markdown(str(citations)) == visible_markdown(
+            '<div class="citations" id="r22"></div>'
+        )
     if empty_labels:
         assert golden_criteria_asset(doi, "commentary.html").read_bytes() == body
     nonempty = [node for node in originals if node not in empty]
@@ -166,7 +169,9 @@ def test_science_pnas_captured_full_article_preserves_bibliography(
         # character, including punctuation and case, must survive in raw text.
         assert reference.raw.startswith(f"{label}. ")
         citation = reference.raw.removeprefix(f"{label}. ")
-        assert re.sub(r"\s+", "", citation) == re.sub(r"\s+", "", text), label
+        assert re.sub(r"\s+", "", visible_markdown(citation)) == re.sub(
+            r"\s+", "", text
+        ), label
         doi_links = [
             unquote(urlsplit(anchor["href"]).path.lstrip("/")).lower()
             for anchor in node.select("a[href]")

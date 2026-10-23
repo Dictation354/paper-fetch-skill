@@ -89,7 +89,7 @@ def _ensure_body_markdown_heading(
     markdown_text: str, *, title: str | None = None
 ) -> str:
     blocks = [
-        normalize_markdown_text(block)
+        block.strip("\r\n")
         for block in re.split(r"\n\s*\n", markdown_text)
         if normalize_text(block)
     ]
@@ -331,7 +331,7 @@ def _postprocess_browser_workflow_markdown(
         markdown_text, publisher=publisher
     )
     blocks = [
-        normalize_markdown_text(block)
+        block.strip("\r\n")
         for block in re.split(r"\n\s*\n", markdown_text)
         if normalize_text(block)
     ]
@@ -376,6 +376,10 @@ def _postprocess_browser_workflow_markdown(
             )
             if override_category is not None:
                 category = override_category
+            if category == "references_or_back_matter" and not re.match(
+                r"^(?:references|bibliography|literature cited)\b", heading_text, re.I
+            ):
+                category = "body_heading"
             if category == "front_matter":
                 state.transition(category, is_heading=True)
                 abstract_prose_blocks_seen = 0
@@ -476,25 +480,9 @@ def _postprocess_browser_workflow_markdown(
                 break
             continue
         if not started_content and is_auxiliary_block:
-            # Science perspectives can begin with a manuscript photograph,
-            # without an abstract or section heading. Its body asset survived
-            # the provider's teaser filter and must retain its caption.
-            from ...extraction.html.figure_links import (
-                canonical_figure_label_from_asset,
-            )
-
-            leading_figure = re.match(
-                r"^\*\*(Figure\s+\d+)\.\*\*", normalized_block, re.I
-            )
-            if not (
-                publisher == "science"
-                and leading_figure is not None
-                and any(
-                    canonical_figure_label_from_asset(asset)
-                    == leading_figure[1].lower()
-                    for asset in figure_assets or []
-                    if asset.get("section", "body") == "body"
-                )
+            keep_leading = markdown_hooks.keep_leading_auxiliary_block
+            if keep_leading is None or not keep_leading(
+                normalized_block, publisher=publisher, figure_assets=figure_assets
             ):
                 continue
         if not is_auxiliary_block and _looks_like_front_matter_paragraph(

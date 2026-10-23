@@ -235,6 +235,7 @@ def aip_normalize_markdown(markdown_text: str) -> str:
 
 def _strip_aip_title_badges(value: str) -> str:
     text = normalize_markdown_text(value)
+    text = re.sub(r"!\[[^\]]*\]\([^)]*/editorspick-icon\.svg\)", "", text)
     return normalize_text(AIP_TITLE_BADGE_RE.sub("", text))
 
 

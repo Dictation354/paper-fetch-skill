@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from copy import deepcopy
 import re
 import urllib.parse
 import xml.etree.ElementTree as ET
 
 from ..markdown.images import render_markdown_image
-from ..formula.convert import convert_mathml_element_to_latex, normalize_latex_macros
+from ..formula.convert import normalize_latex
+from ..formula.validation import select_formula_latex, same_node_mathml
 from ._article_markdown_xml import (
     child_text,
     first_descendant,
@@ -86,16 +88,23 @@ def _render_mathml_sequence(
 ) -> str:
     rendered: list[str] = []
     previous_name = ""
+    previous_value = ""
     for child in nodes:
         value = render_node(child)
         current_name = xml_local_name(child.tag) if isinstance(child.tag, str) else ""
         if value and rendered:
-            rendered.append(
-                _mathml_sequence_separator(previous_name, current_name, value)
-            )
+            separator = _mathml_sequence_separator(previous_name, current_name, value)
+            # A TeX control word consumes subsequent ASCII letters. Preserve
+            # the MathML node boundary before joining, including nested rows;
+            # never infer a command prefix from already joined source TeX.
+            if not separator and re.search(r"\\[A-Za-z]+$", previous_value):
+                if re.match(r"[A-Za-z]", value):
+                    separator = " "
+            rendered.append(separator)
         rendered.append(value)
         if value:
             previous_name = current_name
+            previous_value = value
     return "".join(rendered)
 
 
@@ -121,14 +130,62 @@ class FormulaRenderResult:
 
 
 def render_tex_math(element: ET.Element | None) -> str:
-    raw = normalize_compact_text(
-        "".join(element.itertext()) if element is not None else ""
-    )
-    if raw.startswith(r"\(") and raw.endswith(r"\)"):
-        return raw[2:-2].strip()
-    if raw.startswith(r"\[") and raw.endswith(r"\]"):
-        return raw[2:-2].strip()
-    return raw
+    return normalize_latex("".join(element.itertext()) if element is not None else "")
+
+
+def _source_tex_result(
+    element: ET.Element | None, *, display_mode: bool = False
+) -> FormulaRenderResult:
+    if element is not None:
+        # Explicit source nodes precede TeX annotations, then MathML conversion.
+        nodes = list(element.iter())
+        # MathML alttext is an accessibility description unless it exposes
+        # TeX syntax. Presentation MathML remains authoritative for plain text.
+        for node in nodes:
+            if isinstance(node.tag, str) and xml_local_name(node.tag) == "math":
+                alternative = node.get("alttext", "")
+                if re.search(r"\\[A-Za-z]+", alternative):
+                    annotation = ET.Element("alttext-tex")
+                    annotation.text = alternative
+                    nodes.append(annotation)
+        for name in ("tex-math", "annotation", "alttext-tex"):
+            for node in nodes:
+                if not isinstance(node.tag, str) or xml_local_name(node.tag) != name:
+                    continue
+                if name == "annotation" and (
+                    node.get("encoding") or ""
+                ).lower() not in {
+                    "application/x-tex",
+                    "application/x-latex",
+                    "text/tex",
+                    "text/x-tex",
+                }:
+                    continue
+                expression = render_tex_math(node)
+                if expression:
+                    selected = select_formula_latex(
+                        expression,
+                        same_node_mathml(element),
+                        display_mode=display_mode,
+                        node_id=element.get("id", ""),
+                    )
+                    fallback = bool(selected.backend) or not selected.valid
+                    return FormulaRenderResult(
+                        method=f"mathml:{selected.backend}"
+                        if selected.backend
+                        else name,
+                        status="fallback" if fallback else "ok",
+                        expression=selected.final_latex,
+                        fallback_kind="fallback" if fallback else None,
+                        note=(
+                            "Source TeX failed MathJax validation; used same-node MathML."
+                            if selected.valid
+                            else "Source TeX failed MathJax validation; original TeX retained."
+                        )
+                        if fallback
+                        else None,
+                    )
+    return FormulaRenderResult()
 
 
 def render_external_mathml_expression(
@@ -136,10 +193,10 @@ def render_external_mathml_expression(
 ) -> str:
     if element is None:
         return ""
-    result = convert_mathml_element_to_latex(element, display_mode=display_mode)
-    if result.status == "ok" and result.latex:
-        return result.latex
-    return render_mathml_expression(element)
+    source = _source_tex_result(element, display_mode=display_mode)
+    if source.expression:
+        return source.expression
+    return select_formula_latex("", element, display_mode=display_mode).final_latex
 
 
 def _mathml_formula_result(
@@ -149,27 +206,23 @@ def _mathml_formula_result(
 ) -> FormulaRenderResult:
     if element is None:
         return FormulaRenderResult()
-    conversion = convert_mathml_element_to_latex(
-        element,
-        display_mode=display_mode,
-    )
-    if conversion.status == "ok" and conversion.latex:
+    source = _source_tex_result(element, display_mode=display_mode)
+    if source.expression:
+        return source
+    selected = select_formula_latex("", element, display_mode=display_mode)
+    if selected.valid:
+        internal = selected.backend == "internal_mathml"
         return FormulaRenderResult(
-            method=f"mathml:{conversion.backend}",
-            status="ok",
-            expression=conversion.latex,
-        )
-    expression = render_mathml_expression(element)
-    if expression:
-        return FormulaRenderResult(
-            method="internal_mathml",
-            status="fallback",
-            fallback_kind="fallback",
-            note="Formula used the internal MathML fallback renderer.",
-            expression=expression,
+            method="internal_mathml" if internal else f"mathml:{selected.backend}",
+            status="fallback" if internal else "ok",
+            fallback_kind="fallback" if internal else None,
+            note="Formula used the internal MathML fallback renderer."
+            if internal
+            else None,
+            expression=selected.final_latex,
         )
     return FormulaRenderResult(
-        method=f"mathml:{conversion.backend}",
+        method="mathml:failed",
         status="missing",
         fallback_kind="missing",
         note="Formula MathML conversion failed and exposed no usable fallback.",
@@ -179,6 +232,22 @@ def _mathml_formula_result(
 def render_mathml_expression(element: ET.Element | None) -> str:
     if element is None:
         return ""
+    source = _source_tex_result(element)
+    if source.expression:
+        return source.expression
+
+    from ..formula.semantics import mathml_token_latex, _styled_mathml_text_latex
+
+    inherited_variants = {}
+
+    def variants(node, inherited=None):
+        inherited = node.get("mathvariant", inherited)
+        inherited_variants[id(node)] = inherited
+        for child in node:
+            if isinstance(child.tag, str):
+                variants(child, inherited)
+
+    variants(element)
 
     def render_node(node: ET.Element | None) -> str:
         if node is None or not isinstance(node.tag, str):
@@ -199,21 +268,43 @@ def render_mathml_expression(element: ET.Element | None) -> str:
             return ""
         if local_name in {"mi", "mn"}:
             text = normalize_compact_text("".join(node.itertext()))
-            if text in _MATHML_IDENTIFIER_LATEX:
-                return _MATHML_IDENTIFIER_LATEX[text]
-            return text
+            expression = _MATHML_IDENTIFIER_LATEX.get(
+                text, re.sub(r"(?<!\\)%", r"\\%", text)
+            )
+            return (
+                mathml_token_latex(text, expression, inherited_variants.get(id(node)))
+                if local_name == "mi"
+                or inherited_variants.get(id(node)) not in {None, "normal"}
+                else expression
+            )
         if local_name == "mtext":
             text = normalize_compact_text("".join(node.itertext())).rstrip("\\")
+            styled = _styled_mathml_text_latex(text, inherited_variants.get(id(node)))
+            if styled is not None:
+                return styled
+            text = re.sub(r"(?<!\\)%", r"\\%", text)
             return rf"\text{{{text}}}" if text else ""
         if local_name == "mo":
-            operator = normalize_compact_text("".join(node.itertext()))
+            raw_operator = "".join(node.itertext())
+            operator = normalize_compact_text(raw_operator)
+            if raw_operator and not operator:
+                return r"\ {}"
+            if operator == "~":
+                return r" \sim "
+            if operator == "\u2061":
+                return ""
+            styled = mathml_token_latex(
+                operator, operator, inherited_variants.get(id(node)), operator=True
+            )
+            if styled != operator:
+                return styled
             compact = {
                 "(": "(",
                 ")": ")",
                 "[": "[",
                 "]": "]",
-                "{": "{",
-                "}": "}",
+                "{": r"\{",
+                "}": r"\}",
                 ",": ",",
                 ":": ": ",
                 ";": "; ",
@@ -248,6 +339,8 @@ def render_mathml_expression(element: ET.Element | None) -> str:
             }
             if operator in compact:
                 return compact[operator]
+            if operator == "%":
+                return r"\%"
             return large_operators.get(operator, spaced.get(operator, operator))
         if local_name == "msub":
             if len(children) >= 2:
@@ -266,7 +359,7 @@ def render_mathml_expression(element: ET.Element | None) -> str:
             if len(children) >= 2:
                 return rf"\frac{{{render_node(children[0])}}}{{{render_node(children[1])}}}"
         if local_name == "msqrt":
-            return rf"\sqrt{{{''.join(render_node(child) for child in children)}}}"
+            return rf"\sqrt{{{_render_mathml_sequence(children, render_node)}}}"
         if local_name == "mroot":
             if len(children) >= 2:
                 return (
@@ -280,13 +373,22 @@ def render_mathml_expression(element: ET.Element | None) -> str:
         if local_name == "mfenced":
             open_char = node.get("open", "(")
             close_char = node.get("close", ")")
-            separators = list((node.get("separators") or ",").strip() or ",")
+            open_char = open_char.replace("{", r"\{").replace("}", r"\}")
+            close_char = close_char.replace("{", r"\{").replace("}", r"\}")
+            separators = list("".join(node.get("separators", ",").split()))
             rendered_children = [render_node(child) for child in children]
             joined = ""
             for index, child_text_value in enumerate(rendered_children):
-                if index:
+                if index and separators:
                     separator = separators[min(index - 1, len(separators) - 1)]
                     joined += f"{separator} "
+                if (
+                    index
+                    and not separators
+                    and re.search(r"\\[A-Za-z]+$", joined)
+                    and re.match(r"[A-Za-z]", child_text_value)
+                ):
+                    joined += " "
                 joined += child_text_value
             return f"{open_char}{joined}{close_char}"
         if local_name == "mover":
@@ -343,24 +445,17 @@ def render_mathml_expression(element: ET.Element | None) -> str:
 
     def render_script_base(node: ET.Element | None) -> str:
         expression = render_node(node)
-        if not expression or node is None or not isinstance(node.tag, str):
+        if not expression:
+            return "{}"
+        if node is None or not isinstance(node.tag, str):
             return expression
 
         if xml_local_name(node.tag) in {"mi", "mn", "mo", "mtext"}:
             return expression
         return f"{{{expression}}}"
 
-    expression = normalize_latex_macros(render_node(element))
+    expression = render_node(element)
 
-    def append_command_separator(match: re.Match[str]) -> str:
-        return match.group(0) + " "
-
-    for command in set(_MATHML_IDENTIFIER_LATEX.values()):
-        expression = re.sub(
-            re.escape(command) + r"(?=[A-Za-z])",
-            append_command_separator,
-            expression,
-        )
     expression = re.sub(r"\s+", " ", expression).strip()
     expression = re.sub(r"\(\s+", "(", expression)
     expression = re.sub(r"\s+\)", ")", expression)
@@ -395,24 +490,16 @@ def render_inline_formula_result(
     if element is None:
         return FormulaRenderResult()
     label = child_text(element, "label") or None
+    source = _source_tex_result(element)
+    if source.expression:
+        source.label = normalize_compact_text(label)
+        return source
     math_node = first_descendant(element, "math")
     if math_node is not None:
         result = _mathml_formula_result(math_node, display_mode=False)
         result.label = normalize_compact_text(label)
         if result.expression:
             return result
-    tex_node = first_descendant(element, "tex-math")
-    if tex_node is not None:
-        expression = render_tex_math(tex_node)
-        if expression:
-            return FormulaRenderResult(
-                method="tex-math",
-                status="fallback",
-                fallback_kind="fallback",
-                note="Formula used the publisher tex-math fallback.",
-                label=normalize_compact_text(label),
-                expression=expression,
-            )
     image_url = formula_graphic_url(element, source_url=source_url)
     if image_url:
         return FormulaRenderResult(
@@ -458,10 +545,16 @@ def formula_inline_markdown(result: FormulaRenderResult) -> str:
             result.label or "Formula",
             result.image_url,
         )
-    expression = normalize_compact_text(result.expression)
+    expression = (result.expression or "").strip()
     if not expression:
         return ""
-    return expression if result.status == "missing" else f"${expression}$"
+    from ..extraction.markdown_render.formulas import render_inline_latex_markdown
+
+    return (
+        expression
+        if result.status == "missing"
+        else render_inline_latex_markdown(expression)
+    )
 
 
 def render_inline_formula(element: ET.Element | None) -> str:
@@ -470,7 +563,7 @@ def render_inline_formula(element: ET.Element | None) -> str:
     result = render_inline_formula_result(element)
     if result.image_url:
         return formula_inline_markdown(result)
-    return normalize_compact_text(result.expression)
+    return (result.expression or "").strip()
 
 
 def formula_graphic_url(element: ET.Element | None, *, source_url: str = "") -> str:
@@ -496,31 +589,58 @@ def render_display_formula_result(
     if element is None:
         return FormulaRenderResult(lines=[])
 
+    source = _source_tex_result(element, display_mode=True)
+    math = first_descendant(element, "math")
+    table = first_descendant(math, "mtable")
+    if (
+        not source.expression
+        and table is not None
+        and list(table)
+        and all(xml_local_name(row.tag) == "mlabeledtr" for row in table)
+    ):
+        results = []
+        for row in table:
+            cells = list(row)
+            if len(cells) < 2:
+                continue
+            formula = ET.Element("disp-formula")
+            ET.SubElement(formula, "label").text = normalize_compact_text(
+                "".join(cells[0].itertext())
+            )
+            math_expression = ET.SubElement(formula, "math")
+            for cell in cells[1:]:
+                math_expression.extend(deepcopy(list(cell)))
+            results.append(
+                render_display_formula_result(formula, source_url=source_url)
+            )
+        if results:
+            return FormulaRenderResult(
+                lines=[line for result in results for line in result.lines],
+                expression=" ".join(result.expression or "" for result in results),
+                label=", ".join(result.label or "" for result in results),
+                method=results[0].method,
+                status=results[0].status,
+                fallback_kind=next(
+                    (r.fallback_kind for r in results if r.fallback_kind), None
+                ),
+                note="; ".join(r.note for r in results if r.note) or None,
+                assets=[asset for result in results for asset in result.assets],
+            )
+
     label = child_text(element, "label")
     if not label:
         label = render_literal_inline_text(first_descendant(element, "label"))
     math_node = first_descendant(element, "math")
-    tex_node = first_descendant(element, "tex-math")
-    fallback_kind: str | None = None
-    note: str | None = None
-    method = "unavailable"
-    status = "missing"
-    if math_node is not None:
-        math_result = _mathml_formula_result(math_node, display_mode=True)
-        expression = normalize_compact_text(math_result.expression)
-        method = math_result.method
-        status = math_result.status
-        fallback_kind = math_result.fallback_kind
-        note = math_result.note
-    else:
-        expression = ""
-    if not expression and tex_node is not None:
-        expression = render_tex_math(tex_node)
-        if expression:
-            fallback_kind = "fallback"
-            method = "tex-math"
-            status = "fallback"
-            note = "Formula used the publisher tex-math fallback."
+    result = (
+        source
+        if source.expression
+        else _mathml_formula_result(math_node, display_mode=True)
+    )
+    expression = result.expression or ""
+    method = result.method
+    status = result.status
+    fallback_kind = result.fallback_kind
+    note = result.note
     image_url = ""
     if not expression:
         image_url = formula_graphic_url(
@@ -590,13 +710,7 @@ def render_mathml_formula_result(
 def render_tex_formula_result(element: ET.Element | None) -> FormulaRenderResult:
     expression = render_tex_math(element)
     if expression:
-        return FormulaRenderResult(
-            method="tex-math",
-            status="fallback",
-            fallback_kind="fallback",
-            note="Formula used the publisher tex-math fallback.",
-            expression=expression,
-        )
+        return _source_tex_result(element)
     return FormulaRenderResult(
         method="unavailable",
         status="missing",

@@ -19,14 +19,14 @@ from tests.golden_criteria import golden_criteria_scenario_asset
             ("γ 1", "A N", "ϕ ON", "ϕ 2", "</sub>(blue)"),
             (
                 "*γ*<sub>1</sub>",
-                "*A*<sub>N</sub>",
-                "*ϕ*<sub>ON</sub>",
+                "*A<sub>N</sub>*",
+                "<strong><em>ϕ</em></strong><sub>ON</sub>",
                 (
                     "$\\overset{\\cdot}{q}(q, \\phi_{2})$ (blue)",
                     "$\\overset{\\cdot}{q}(q,\\phi_{2})$ (blue)",
                     "$\\overset{˙}{q}{({q,\\phi_{2}})}$ (blue)",
                 ),
-                "*ϕ*<sub>OFF</sub> (blue)",
+                "<strong><em>ϕ</em></strong><sub>OFF</sub> (blue)",
             ),
         ),
         (

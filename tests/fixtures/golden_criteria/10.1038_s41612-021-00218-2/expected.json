@@ -4,7 +4,7 @@
     "authors": true,
     "abstract": true,
     "body": true,
-    "figures": false,
+    "figures": true,
     "references": true,
     "data_availability": true,
     "code_availability": true
@@ -13,7 +13,7 @@
     "sections": 16,
     "abstract_sections": 1,
     "body_sections": 13,
-    "figures": 0,
+    "figures": 9,
     "tables": 0,
     "references": 69
   },
@@ -97,7 +97,8 @@
       "tex_checked": 0,
       "mathml_checked": 0,
       "empty_excluded": 0
-    }
+    },
+    "asset_replay": "Verified captured same-paper table pages now use the existing full Springer replay. Figure count is derived independently from original figure/figcaption nodes labeled Fig. N, excluding Table 1."
   },
   "source_objects": [
     {

@@ -6,7 +6,7 @@ source: "elsevier_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 12000
+token_estimate: 12367
 ---
 
 # Developing an applied extreme heat vulnerability index utilizing socioeconomic and environmental data
@@ -14,6 +14,10 @@ token_estimate: 12000
 ## Abstract
 
 Extreme heat is a leading cause of weather-related fatalities worldwide. Emphasis is currently being placed on the development of spatially specific vulnerability models, which are useful for decision support during extreme heat events (EHE). Research results concerning such spatially-explicit models lead efforts in preparation and mitigation of heat-related vulnerability and potential adaptation. The presented research analyzes the 1995 Chicago EHE in the context of a socio-environmental hazards approach, and fosters the development of an extreme heat vulnerability index (EHVI). The EHVI is a fused dataset consisting of census data and remotely sensed variables, which are examined in relation to geocoded mortality data. The presented analysis combines 25 well-known indicators of extreme heat-health risk into an applied index utilizing a principal components analysis. The developed EHVI presented a trend of higher rates of death in the highest risk zones to lower rates in lower zones of risk. The model explains nearly 80% of the total variance in the heat-health vulnerability variables utilized. This index could be utilized by city officials to assist in the mitigation of extreme heat events and is a further evolution of previously developed efforts. Our findings indicate extreme heat vulnerability models should likely be developed on a local level for a specific location, taking into account local variations in social and environmental vulnerability.
+
+### Highlights
+
+► We create a vulnerability index (EHVI) for extreme heat utilizing the Chicago, IL, USA 1995 heat wave analog. ► We compare the developed EHVI with a population density, environmental and socioeconomic model utilizing mortality data from the heat wave. ► We determine the EHVI outperforms the other models and follows the expected distribution of mortality. ► We outline further and future efforts in the development and fine tuning of the EHVI.
 
 ## Introduction
 
@@ -41,7 +45,7 @@ In order to develop and test the EHVI we selected a historic analog event, which
 
 Mortality data was collected from the Illinois State Vital Records Department in Springfield, Illinois. No electronic record of the specific location of death was available. Therefore, each death certificate was digitally scanned and the cause of death, age of decedent, and location of death was encoded into a database for analysis and geocoding procedures. Once residential heat deaths were determined (*n* = 586; all 720 deaths did not meet our criteria of a residential heat death) these decedent records were geocoded using the census street centerline file for Chicago from the 1990 census (98% = correctly geocoded). The death locations were primarily geocoded as a test dataset for the development and evaluation of the EHVI.
 
-Twenty-five census variables were selected at the census block group level from the 1990 decadal census that are widely considered to be indicative of vulnerability to extreme heat and were standardized by unit area (see Table 1). Previous research has demonstrated that the most prevalent indicators of vulnerability include: age, economic level, race, level of education, and social isolation (Dolney & Sheridan, 2006; Johnson & Wilson, 2009; Johnson et al., 2009; O’Neill, Zanobetti, & Schwartz, 2005). Cutter et al. (2003) identified that some of the previously mentioned variables which have the strongest associations with vulnerability, are the age of the population and an individual’s economic situation.
+Twenty-five census variables were selected at the census block group level from the 1990 decadal census that are widely considered to be indicative of vulnerability to extreme heat and were standardized by unit area (see Table 1 ). Previous research has demonstrated that the most prevalent indicators of vulnerability include: age, economic level, race, level of education, and social isolation (Dolney & Sheridan, 2006; Johnson & Wilson, 2009; Johnson et al., 2009; O’Neill, Zanobetti, & Schwartz, 2005). Cutter et al. (2003) identified that some of the previously mentioned variables which have the strongest associations with vulnerability, are the age of the population and an individual’s economic situation.
 
 Table 1
 
@@ -55,27 +59,27 @@ Eigenvalues, variance explained, and rotated component matrix for variables incl
 | 4         | 1.33       | 6.98                  |
 |           |            | *Cumulative = 79.41%* |
 
-|                                                              | Component / 1 | Component / 2 | Component / 3 | Component / 4 |
-| ------------------------------------------------------------ | ------------- | ------------- | ------------- | ------------- |
-| Females age 65 and up                                        | ***0.938***   | 0.087         | 0.213         | 0.176         |
-| Males age 65 and up                                          | ***0.931***   | 0.099         | 0.226         | 0.181         |
-| Females age 65 and up living alone                           | ***0.928***   | 0.107         | 0.148         | 0.108         |
-| White population                                             | ***0.9***     | 0.277         | 0.148         | −0.066        |
-| Females head of household                                    | ***0.876***   | 0.167         | 0.257         | 0.232         |
-| Males age 65 and up living alone                             | ***0.861***   | 0.19          | 0.121         | 0.136         |
-| Mean family income in 1989                                   | ***0.845***   | 0.272         | 0.236         | 0.226         |
-| Per capita income in 1989                                    | ***0.836***   | 0.291         | 0.202         | 0.183         |
-| Mean household income in 1989                                | ***0.832***   | 0.263         | 0.252         | 0.256         |
-| Population 25 and older with less than high school education | ***0.827***   | 0.3           | 0.273         | 0.236         |
-| Asian population                                             | ***0.637***   | 0.178         | −0.067        | −0.387        |
-| Population age 65 and older in group living                  | ***0.49***    | −0.006        | 0.098         | −0.321        |
-| Other race population                                        | 0.211         | ***0.931***   | 0.125         | −0.013        |
-| Hispanic population                                          | 0.308         | ***0.905***   | 0.145         | −0.017        |
-| Population 25 and older with a high school education         | 0.105         | ***0.614***   | 0.059         | 0.359         |
-| Normalized difference built-up index                         | 0.247         | 0.157         | ***0.903***   | −0.018        |
-| Normalized difference vegetation index                       | −0.361        | −0.151        | ***−0.892***  | 0.039         |
-| Black population                                             | 0.4           | 0.025         | 0.332         | ***0.674***   |
-| Land surface temperature                                     | 0.104         | 0.101         | −0.125        | ***0.936***   |
+|                                                              | Component / 1            | Component / 2            | Component / 3             | Component / 4            |
+| ------------------------------------------------------------ | ------------------------ | ------------------------ | ------------------------- | ------------------------ |
+| Females age 65 and up                                        | <strong>*0.938*</strong> | 0.087                    | 0.213                     | 0.176                    |
+| Males age 65 and up                                          | <strong>*0.931*</strong> | 0.099                    | 0.226                     | 0.181                    |
+| Females age 65 and up living alone                           | <strong>*0.928*</strong> | 0.107                    | 0.148                     | 0.108                    |
+| White population                                             | <strong>*0.9*</strong>   | 0.277                    | 0.148                     | −0.066                   |
+| Females head of household                                    | <strong>*0.876*</strong> | 0.167                    | 0.257                     | 0.232                    |
+| Males age 65 and up living alone                             | <strong>*0.861*</strong> | 0.19                     | 0.121                     | 0.136                    |
+| Mean family income in 1989                                   | <strong>*0.845*</strong> | 0.272                    | 0.236                     | 0.226                    |
+| Per capita income in 1989                                    | <strong>*0.836*</strong> | 0.291                    | 0.202                     | 0.183                    |
+| Mean household income in 1989                                | <strong>*0.832*</strong> | 0.263                    | 0.252                     | 0.256                    |
+| Population 25 and older with less than high school education | <strong>*0.827*</strong> | 0.3                      | 0.273                     | 0.236                    |
+| Asian population                                             | <strong>*0.637*</strong> | 0.178                    | −0.067                    | −0.387                   |
+| Population age 65 and older in group living                  | <strong>*0.49*</strong>  | −0.006                   | 0.098                     | −0.321                   |
+| Other race population                                        | 0.211                    | <strong>*0.931*</strong> | 0.125                     | −0.013                   |
+| Hispanic population                                          | 0.308                    | <strong>*0.905*</strong> | 0.145                     | −0.017                   |
+| Population 25 and older with a high school education         | 0.105                    | <strong>*0.614*</strong> | 0.059                     | 0.359                    |
+| Normalized difference built-up index                         | 0.247                    | 0.157                    | <strong>*0.903*</strong>  | −0.018                   |
+| Normalized difference vegetation index                       | −0.361                   | −0.151                   | <strong>*−0.892*</strong> | 0.039                    |
+| Black population                                             | 0.4                      | 0.025                    | 0.332                     | <strong>*0.674*</strong> |
+| Land surface temperature                                     | 0.104                    | 0.101                    | −0.125                    | <strong>*0.936*</strong> |
 
 Age can indicate how efficiently an individual’s body is able to adapt to inclement weather and maintain normal thermoregulatory processes. Age can also allude to the quantity of social interactions and pre-existing health conditions, both of which are documented as extremely important factors for surviving an EHE (Cutter et al., 2003; Johnson & Wilson, 2009; Naughton et al., 2002; Whitman et al., 1997). Whitman et al. (1997) estimated more than 70 percent of the heat-related deaths during the Chicago, IL 1995 heat wave occurred in the 65 years of age or older population, an observation supported by many other researchers (Changnon, Kunkel, & Reinke, 1996; Dolney & Sheridan, 2006; Ebi, Teisberg, Kalkstein, Robinson, & Weiher, 2003). This is because elderly individuals have some of the highest prevalence of chronic illness rates within a population (Robinson, 2001; Schwartz, 2005; Shen et al., 1998). Pre-existing conditions cause damage to important organs and increase the risk of heart attack or stroke during natural thermoregulation. In cases of decreased motor function due to illnesses, such as Parkinson’s Disease or underdeveloped mental functions, can make it difficult for individuals to accurately asses their risk, relocate to cooler environments, or acquire fluids (CDC, 2002, 2006). Semenza et al. (1996) documented an increased risk of 16 percent for patients who were confined to bed, and a mortality rate six times greater for those who required the services of an attendant during adverse weather conditions. These facts alone demonstrate why age is considered such a vulnerable variable. Age variables also suggest higher probability of social isolation and fixed finances.
 
@@ -87,21 +91,16 @@ The normalized difference built-up index (NDBI) was also calculated to measure t
 
 In order to determine measurements of our variables within the environment in which people live, we utilized the USGS National Land Cover Dataset (NLCD) map to extract land cover/land use patterns to identify areas representative of residential land use. The NLCD dataset was created in 1993. Using this delineation we calculated the average value of LST, NDVI, and NDBI within these zones for each block group as well as our denominator for areal standardization of the census block group level demographic variables. Therefore, all the census demographic variables are based on residential density. We view this as an important step because it generates statistics for the locations in which people reside and is not a simple standardization by the area of the arbitrary census block group boundary. For example, there could be a relatively large area within a census block group that contains an industrial site generating a large amount of heat waste and contains a significant portion of built environment, while no residence is on this site. By removing this potential confounding environmental relationship within the block group, it is thought to provide a better picture of the environment within residential areas. Moreover, there may be areas within a relatively large block group where people are very densely packed into residential zones. Standardizing our density measure by the area of the block group would construct an erroneous metric for how densely populated the residential zone is.
 
-Factor analysis using principal components was then performed on the twenty-eight variables (census and environmental combined) collected at the block group level; before conducting the PCA we normalized all the variables to *Z*-score values. We employed a varimax rotation, to assist with interpretability of the output, and calculated regression factor scores for each component. Factor scores that surpassed the Kaiser criteria (eigenvalues > 1) were retained to explain variance in the dataset. Variables found to exhibit complex structure were removed in order to further assist in the ability to attempt to label the individual components. All scores from the remaining 19 variables were then added together following procedures outlined by Cutter (for the SoVI) and Reid (for EVI) to generate the EHVI (Cutter et al., 2003, 2008, 2010; Reid et al., 2009).
+Factor analysis using principal components was then performed on the twenty-eight variables (census and environmental combined) collected at the block group level; before conducting the PCA we normalized all the variables to *Z*-score values. We employed a varimax rotation, to assist with interpretability of the output, and calculated regression factor scores for each component. Factor scores that surpassed the Kaiser criteria (eigenvalues &gt; 1) were retained to explain variance in the dataset. Variables found to exhibit complex structure were removed in order to further assist in the ability to attempt to label the individual components. All scores from the remaining 19 variables were then added together following procedures outlined by Cutter (for the SoVI) and Reid (for EVI) to generate the EHVI (Cutter et al., 2003, 2008, 2010; Reid et al., 2009).
 
 To test the effectiveness of the EHVI we calculated an expected mortality rate based on the total number of individuals living within a block group and the overall rate of death in Chicago during the EHE. We then compared the expected rate with a model of population density, socioeconomics, remotely sensed data, and the EHVI and tested for statistical significance. The models were then stratified by the standardized score from the summed PCA factors utilizing the following scheme:
-1.
-Greater than 2*Z*, High-High Risk (H-H)
-2.
-Less than 2*Z*, greater than 1*Z*, Low High Risk (L-H)
-3.
-Less than 1*Z*, greater than 0*Z*, High Moderate Risk (H-M)
-4.
-Less than 0*Z*, greater than −1*Z*, Low Moderate Risk (L-M)
-5.
-Less than −1*Z*, greater than −2*Z*, High Low Risk (H-L)
-6.
-Less than −2*Z*, Low Low Risk (L-L)
+
+1. Greater than 2<em>Z</em>, High-High Risk (H-H)
+2. Less than 2<em>Z</em>, greater than 1<em>Z</em>, Low High Risk (L-H)
+3. Less than 1<em>Z</em>, greater than 0<em>Z</em>, High Moderate Risk (H-M)
+4. Less than 0<em>Z</em>, greater than −1<em>Z</em>, Low Moderate Risk (L-M)
+5. Less than −1<em>Z</em>, greater than −2<em>Z</em>, High Low Risk (H-L)
+6. Less than −2<em>Z</em>, Low Low Risk (L-L)
 
 The population in each of the zones was calculated in order to determine the expected number of deaths. We then compared the expected number to the actual number of deaths occurring in each zone. If the EHVI is indeed effective one would expect there to be a higher rate of death in the H-H category with a general tapering of risk to the L-L zone. If the trend of mortality does not follow this pattern within the examination then we assume it to be invalid.
 
@@ -109,7 +108,7 @@ The population in each of the zones was calculated in order to determine the exp
 
 Table 1 presents the variables used in the study as well as the principal component structure of the EHVI. Component one loads heavily on 12 of the 19 variables used in the analysis and explains 46.71% of the variance. Component two loads heavily on 3 of the 19 variables and explains 13.90% of the variance. Component three explains 11.82% of the variance and loads heavily with 2 of the 19 variables. Similarly, accounting for 6.98% of the variance, component 4 contains 2 of the 19 variables. In this principal components solution: total population, males under 5, females under 5, males head of household, poverty under 5, poverty 65 and up, and below poverty level all exhibit complex structure in the PCA loadings matrix and were iteratively removed from the analysis until we found a matrix we believed to exhibit little to no complex structure.
 
-Three alternative models were tested against the proposed EHVI, consisting of socioeconomic or environmental variables (Table 2). The comparison between these models demonstrates some interesting results. Population density does not appear to be a strong indicator of heat-related death, where only two categories differed significantly from the expected. The same results occurred for the LST model. Socioeconomic factors alone followed the rate of expectation with the only difference being the H-L category. The EHVI follows the expected trend of significantly higher deaths in the zones of greatest risk. The only exception within the EHVI model is the L-M category, which one would expect as the line of risk crosses from higher to lower risk, although this does not appear to be the case with the other models.
+Three alternative models were tested against the proposed EHVI, consisting of socioeconomic or environmental variables (Table 2 ). The comparison between these models demonstrates some interesting results. Population density does not appear to be a strong indicator of heat-related death, where only two categories differed significantly from the expected. The same results occurred for the LST model. Socioeconomic factors alone followed the rate of expectation with the only difference being the H-L category. The EHVI follows the expected trend of significantly higher deaths in the zones of greatest risk. The only exception within the EHVI model is the L-M category, which one would expect as the line of risk crosses from higher to lower risk, although this does not appear to be the case with the other models.
 
 Table 2
 
@@ -137,7 +136,7 @@ Comparison of alternative models with the proposed EHVI. (Bold indicates highest
 
 ### Comparison between models
 
-Examining the model developed utilizing population density (all models are presented spatially in Fig. 1) we do not see a significant increase in death over expected in the areas of greater settlement density. Therefore, there is not an indication of more death occurring in higher density areas than in lower density locations. There is a higher than expected death rate in the H-M category and a lower than expected rate in the L-M class. The remaining categories do not significantly differ from the expectation. This would seem to indicate that total population density is not a statistically significant factor in heat-related death. This has further been corroborated in previous studies elucidating the Philadelphia 1998 event (Johnson et al., 2009).
+Examining the model developed utilizing population density (all models are presented spatially in Fig. 1 ) we do not see a significant increase in death over expected in the areas of greater settlement density. Therefore, there is not an indication of more death occurring in higher density areas than in lower density locations. There is a higher than expected death rate in the H-M category and a lower than expected rate in the L-M class. The remaining categories do not significantly differ from the expectation. This would seem to indicate that total population density is not a statistically significant factor in heat-related death. This has further been corroborated in previous studies elucidating the Philadelphia 1998 event (Johnson et al., 2009).
 
 ![Figure 1](https://api.elsevier.com/content/object/eid/1-s2.0-S014362281200032X-gr1.jpg?httpAccept=%2A%2F%2A)
 
@@ -180,81 +179,159 @@ Obviously, extreme heat is more than an academic concern to the public health an
 ## References (79 total, showing 79)
 
 1. M.K. Andrew, A.B. Mitnitski, K. Rockwood. 2008. Social vulnerability, frailty and mortality in elderly people. PLoS ONE, 3 [Andrew et al., 2008]
+
 2. M.K. Andrew, K. Rockwood. 2010. Social vulnerability predicts cognitive decline in a prospective cohort of older Canadians. Alzheimers & Dementia, 6: 319-325 [Andrew and Rockwood, 2010]
+
 3. C. Aniello, K. Morgan, A. Busbey, L. Newland. 1995. Mapping micro-urban heat islands using LANDSAT TM and a GIS. Computers & Geosciences, 21: 965-967 [Aniello et al., 1995]
+
 4. G. Bankoff. 2001. Rendering the world unsafe: ‘vulnerability’ as western discourse. Disasters, 25 [Bankoff, 2001]
+
 5. G. Bankoff. 2003. Constructing vulnerability: the historical, natural and social generation of flooding in metropolitan Manila. Disasters, 27: 15 [Bankoff, 2003]
+
 6. R. Basu. 2009. High ambient temperature and mortality: a review of epidemiologic studies from 2001 to 2008. Environmental Health, 8 [Basu, 2009]
-7. P. Blaikie, T. Cannon, I. Davis, B. Wisner. 1994. At risk: Natural hazards, people’s vulnerability and disasters [Blaikie et al., 1994]
+
+7. P. Blaikie, T. Cannon, I. Davis, B. Wisner. 1994. At risk: Natural hazards, people’s vulnerability and disasters. Routledge, London; New York [Blaikie et al., 1994]
+
 8. C.R. Browning, D. Wallace, S.L. Feinberg, K.A. Cagney. 2006. Neighborhood social processes, physical conditions, and disaster-related mortality: the case of the 1995 Chicago heat wave. American Sociological Review, 71: 661-678 [Browning et al., 2006]
+
 9. Centers for Disease Control and Prevention. 2002. Heat-related deaths—four states, July–August 2001, and United States, 1979–1999. Mortality and Morbidity Weekly Report, 51: 567-570 [Centers for Disease Control and Prevention, 2002]
+
 10. Centers for Disease Control and Prevention. 2006. Heat-related deaths – United States, 1999–2003. Morbidity and Mortality Weekly Report, 55: 796-798 [Centers for Disease Control and Prevention, 2006]
+
 11. G. Chander, B.L. Markham, D.L. Helder. 2009. Summary of current radiometric calibration coefficients for Landsat MSS, TM, ETM+, and EO-1 ALI sensors. Remote Sensing of Environment, 113: 893-903 [Chander et al., 2009]
+
 12. S.A. Changnon, K.E. Kunkel, B.C. Reinke. 1996. Impacts and responses to the 1995 heat wave: a call to action. Bulletin of the American Meteorological Society, 77: 1497-1506 [Changnon et al., 1996]
+
 13. X.L. Chen, H.M. Zhao, P.X. Li, Z.Y. Yin. 2006. Remote sensing image-based analysis of the relationship between urban heat island and land use/cover changes. Remote Sensing of Environment, 104: 133-146 [Chen et al., 2006]
+
 14. F.C. Curriero, K.S. Heiner, J.M. Samet, S.L. Zeger, L. Strug, J.A. Patz. 2002. Temperature and mortality in 11 cities of the eastern United States. American Journal of Epidemiology, 155: 80-87 [Curriero et al., 2002]
+
 15. S.L. Cutter, L. Barnes, M. Berry, C. Burton, E. Evans, E. Tate. 2008. A place-based model for understanding community resilience to natural disasters. Global Environmental Change-Human and Policy Dimensions, 18: 598-606 [Cutter et al., 2008]
+
 16. S.L. Cutter, B.J. Boruff, W. Shirley. 2003. Social vulnerability to environmental hazards. Social Science Quarterly (Blackwell Publishing Limited), 84: 242-261 [Cutter et al., 2003]
+
 17. S.L. Cutter, C.G. Burton, C.T. Emrich. 2010. Disaster resilience indicators for benchmarking baseline conditions. Journal of Homeland Security and Emergency Management, 7 [Cutter et al., 2010]
+
 18. S.L. Cutter, C. Finch. 2008. Temporal and spatial changes in social vulnerability to natural hazards. Proceedings of the National Academy of Sciences of the United States of America, 105: 2301-2306 [Cutter and Finch, 2008]
+
 19. M. Davis. 1997. The radical politics of shade. Capitalism, Nature, Socialism, 8: 35-39 [Davis, 1997]
+
 20. T.J. Dolney, S.C. Sheridan. 2006. The relationship between extreme heat and ambulance response calls for the city of Toronto, Ontario, Canada. Environmental Research, 101: 94-103 [Dolney and Sheridan, 2006]
+
 21. B. Dousset, F. Gourmelon. 2003. Satellite multi-sensor data analysis of urban surface temperatures and landcover. ISPRS Journal of Photogrammetry and Remote Sensing, 58: 43-54 [Dousset and Gourmelon, 2003]
+
 22. B. Dousset, F. Gourmelon, K. Laaidi, A. Zeghnoun, E. Giraudet, P. Bretin. 2011. Satellite monitoring of summer heat waves in the Paris metropolitan area. International Journal of Climatology, 31: 313-323 [Dousset et al., 2011]
+
 23. M. Duneier. 2006. Ethnography, the ecological fallacy, and the 1995 Chicago heat wave. American Sociological Review, 71: 679-688 [Duneier, 2006]
+
 24. K.L. Ebi, T.J. Teisberg, L.S. Kalkstein, L. Robinson, R.F. Weiher. 2003. Heat watch/warning systems save lives: estimated costs and benefits for Philadelphia 1995–98. Bulletin of the American Meteorological Society, 85: 1067-1073 [Ebi et al., 2003]
+
 25. K.P. Gallo, A.L. Mcnab, T.R. Karl, J.F. Brown, J.J. Hood, J.D. Tarpley. 1993. The use of a vegetation index for assessment of the urban heat-island effect. International Journal of Remote Sensing, 14: 2223-2230 [Gallo et al., 1993]
+
 26. S.L. Harlan, A.J. Brazel, L. Prashad, W.L. Stefanov, L. Larsen. 2006. Neighborhood microclimates and vulnerability to heat stress. Social Science & Medicine, 63: 2847-2863 [Harlan et al., 2006]
+
 27. D. Hattis, Y. Ogneva-Himmelberger, S. Ratick. 2012. The spatial variability of heat-related mortality in Massachusetts. Applied Geography, 33: 45-52 [Hattis et al., 2012]
+
 28. X.F. Hu, Q.H. Weng. 2009. Estimating impervious surfaces from medium spatial resolution imagery using the self-organizing map and multi-layer perceptron neural networks. Remote Sensing of Environment, 113: 2089-2102 [Hu and Weng, 2009]
+
 29. C.R. Huang, P. Vaneckova, X.M. Wang, G. FitzGerald, Y.M. Guo, S.L. Tong. 2011. Constraints and barriers to public health adaptation to climate change: a review of the literature. American Journal of Preventive Medicine, 40: 183-190 [Huang et al., 2011]
+
 30. A.R. Huete, G. Hua, J. Qi, A. Chehbouni, W.J.D. Vanleeuwen. 1992. Normalization of multidirectional red and NIR reflectances with the SAVI. Remote Sensing of Environment, 41: 143-154 [Huete et al., 1992]
+
 31. M.L. Imhoff, P. Zhang, R.E. Wolfe, L. Bounoua. 2010. Remote sensing of the urban heat island effect across biomes in the continental USA. Remote Sensing of Environment, 114: 504-513 [Imhoff et al., 2010]
+
 32. R. Jackson, K.N. Shields. 2008. Preparing the US health community for climate change. Annual Review of Public Health, 29: 57 [Jackson and Shields, 2008]
+
 33. D.P. Johnson, J.S. Wilson. 2009. The socio-spatial dynamics of extreme urban heat events: the case of heat-related deaths in Philadelphia. Applied Geography, 29: 419-434 [Johnson and Wilson, 2009]
+
 34. D. Johnson, J. Wilson, G. Luber. 2009. Socioeconomic indicators of heat-related health risk supplemented with remotely sensed data. International Journal of Health Geographics, 8: 57 [Johnson et al., 2009]
+
 35. L.S. Kalkstein. 1991. A new approach to evaluate the impact of climate on human mortality. Environmental Health Perspectives, 96: 145-150 [Kalkstein, 1991]
+
 36. L.S. Kalkstein, J.S. Greene. 1997. An evaluation of climate/mortality relationships in large U.S. cities and the possible impacts of a climate change. Environmental Health Perspectives, 105: 84-93 [Kalkstein and Greene, 1997]
+
 37. L.S. Kalkstein, S. Greene, D.M. Mills, J. Samenow. 2011. An evaluation of the progress in reducing heat-related human mortality in major U.S. cities. Natural Hazards, 56: 113-129 [Kalkstein et al., 2011]
+
 38. L.S. Kalkstein, P.F. Jamason, J.S. Greene, J. Libby, L. Robinson. 1996. The Philadelphia hot weather-health watch/warning system: development and application, summer 1995. Bulletin of the American Meteorological Society, 77: 1520-1528 [Kalkstein et al., 1996]
+
 39. K. Li, Z. Yu. 2008. Comparative and combinative study of urban heat island in Wuhan city with remote sensing and CFD simulation. Sensors, 8: 6692-6703 [Li and Yu, 2008]
+
 40. C.P. Lo, D.A. Quattrochi. 2003. Land-use and land-cover change, urban heat island phenomenon, and health implications: a remote sensing approach. Photogrammetric Engineering and Remote Sensing, 69: 1053-1063 [Lo and Quattrochi, 2003]
+
 41. G. Luber, M. McGeehin. 2008. Climate change and extreme heat events. American Journal of Preventive Medicine, 35: 429-435 [Luber and McGeehin, 2008]
+
 42. A.J. McMichael, P. Wilkinson, R.S. Kovats, S. Pattenden, S. Hajat, B. Armstrong. 2008. International study of temperature, heat and urban mortality: the ‘ISOTHURM’ project. International Journal of Epidemiology, 1 [McMichael et al., 2008]
+
 43. H. Merbitz, M. Buttstädt, S. Michael, W. Dott, C. Schneider. 2012. GIS-based identification of spatial variables enhancing heat and poor air quality in urban areas. Applied Geography, 33: 94-106 [Merbitz et al., 2012]
+
 44. S.B. Miles, S.E. Chang. 2011. ResilUS: a community based disaster resilience model. Cartography and Geographic Information Science, 38: 36-51 [Miles and Chang, 2011]
+
 45. I.J. Miron, J.C. Montero, J.J. Criado-Alvarez, J. Diaz, C. Linares. 2010. Effects of temperature extremes on daily mortality in Castile-La Mancha (Spain): trends from 1975 to 2003. Gaceta Sanitaria, 24: 117-122 [Miron et al., 2010]
+
 46. M.P. Naughton, A. Henderson, M.C. Mirabelli, R. Kaiser, J.L. Wilhelm, S.M. Kieszak. 2002. Heat-related mortality during a 1999 heat wave in Chicago. American Journal of Preventive Medicine, 22: 221-227 [Naughton et al., 2002]
+
 47. M.S. O’Neill, A. Zanobetti, J. Schwartz. 2005. Disparities by race in heat-related mortality in four US cities: the role of air conditioning prevalence. Journal of Urban Health, 82: 191-197 [O’Neill et al., 2005]
+
 48. K. Pantavou, G. Theoharatos, A. Mavrakis, M. Santamouris. 2011. Evaluating thermal comfort conditions and health responses during an extremely hot summer in Athens. Building and Environment, 46: 339-344 [Pantavou et al., 2011]
+
 49. D. Papanastasiou, D. Melas, T. Bartzanas, C. Kittas. 2010. Temperature, comfort and pollution levels during heat waves and the role of sea breeze. International Journal of Biometeorology, 54: 307-317 [Papanastasiou et al., 2010]
+
 50. J.A. Patz, M.A. McGeehin, S.M. Bernard, K.L. Ebi, P.R. Epstein, A. Grambsch. 2000. The potential health impacts of climate variability and change for the United States: executive summary of the report of the health sector of the US national assessment. Environmental Health Perspectives, 108: 367-376 [Patz et al., 2000]
+
 51. C.E. Reid, M.S. O’Neill, C.J. Gronlund, S.J. Brines, D.G. Brown, A.V. Diez-Roux. 2009. Mapping community determinants of heat vulnerability. Environmental Health Perspectives, 117: 1730-1736 [Reid et al., 2009]
+
 52. C. Rinner, D. Patychuk, K. Bassil, S. Nasr, S. Gower, M. Campbell. 2010. The role of maps in neighborhood-level heat vulnerability assessment for the city of Toronto. Cartography and Geographic Information Science, 37: 31-44 [Rinner et al., 2010]
+
 53. P.J. Robinson. 2001. On the definition of a heat wave. Journal of Applied Meteorology, 40: 762-775 [Robinson, 2001]
+
 54. M.C. Schmidtlein, R.C. Deutsch, W.W. Piegorsch, S.L. Cutter. 2008. A sensitivity analysis of the social vulnerability index. Risk Analysis, 28: 1099-1114 [Schmidtlein et al., 2008]
+
 55. J. Schwartz. 2005. Who is sensitive to extremes of temperature. Epidemiology, 16: 67-72 [Schwartz, 2005]
+
 56. J.C. Semenza, C.H. Rubin, K.H. Falter, J.D. Selanikio, W.D. Flanders, H.L. Howe. 1996. Heat-related deaths during the July 1995 heat wave in Chicago. The New England Journal of Medicine, 335: 84-90 [Semenza et al., 1996]
+
 57. T.F. Shen, H.L. Howe, C. Alo, R.L. Moolenaar. 1998. Toward a broader definition of heat-related death: comparison of mortality estimates from medical examiners’ classification with those from total death differentials during the July 1995 heat wave in Chicago, Illinois. American Journal of Forensic Medicine and Pathology, 19: 113-118 [Shen et al., 1998]
+
 58. A. Smargiassi, M. Fournier, C. Griot, Y. Baudouin, T. Kosatsky. 2008. Prediction of the indoor temperatures of an urban area with an in-time regression mapping approach. Journal of Exposure Science and Environmental Epidemiology, 18: 282-288 [Smargiassi et al., 2008]
+
 59. K.E. Smoyer. 1998. Putting risk in its place: methodological considerations for investigating extreme event health risk. Social Science & Medicine, 47: 1809-1824 [Smoyer, 1998]
+
 60. K.E. Smoyer-Tomic, R. Kuhn, A. Hudson. 2003. Heat wave hazards: an overview of heat wave impacts in Canada. Natural Hazards, 28: 463-485 [Smoyer-Tomic et al., 2003]
+
 61. B. Stone, J.J. Hess, H. Frumkin. 2010. Urban form and extreme heat events: are sprawling cities more vulnerable to climate change than compact cities?. Environmental Health Perspectives, 118: 1425-1428 [Stone et al., 2010]
+
 62. J.G. Tan, Y.F. Zheng, X. Tang, C.Y. Guo, L.P. Li, G.X. Song. 2010. The urban heat island and its impact on heat waves and human health in Shanghai. International Journal of Biometeorology, 54: 75-84 [Tan et al., 2010]
+
 63. E. Tate, S.L. Cutter, M. Berry. 2010. Integrated multihazard mapping. Environment and Planning B – Planning & Design, 37: 646-663 [Tate et al., 2010]
+
 64. S. Thorsson, F. Lindberg, J. Bjorklund, B. Holmer, D. Rayner. 2011. Potential changes in outdoor thermal comfort conditions in Gothenburg, Sweden due to climate change: the influence of urban geometry. International Journal of Climatology, 31: 324-335 [Thorsson et al., 2011]
+
 65. C.K. Uejio, O.V. Wilhelmi, J.S. Golden, D.M. Mills, S.P. Gulino, J.P. Samenow. 2011. Intra-urban societal vulnerability to extreme heat: the role of heat exposure and the built environment, socioeconomics, and neighborhood stability. Health & Place, 17: 498-507 [Uejio et al., 2011]
+
 66. J.A. Voogt, T.R. Oke. 2003. Thermal remote sensing of urban climates. Remote Sensing of Environment, 86: 370-384 [Voogt and Oke, 2003]
+
 67. W.W. Wang, L.Z. Zhu, R.C. Wang. 2004. An analysis on spatial variation of urban human thermal comfort in Hangzhou, China. Journal of Environmental Sciences-China, 16: 332-338 [Wang et al., 2004]
+
 68. Q. Weng, D. Lu. 2008. A sub-pixel analysis of urbanization effect on land surface temperature and its interplay with impervious surface and vegetation coverage in Indianapolis, United States. International Journal of Applied Earth Observation and Geoinformation, 10: 68-83 [Weng and Lu, 2008]
+
 69. Q.H. Weng, D.S. Lu, J. Schubring. 2004. Estimation of land surface temperature-vegetation abundance relationship for urban heat island studies. Remote Sensing of Environment, 89: 467-483 [Weng et al., 2004]
+
 70. Q.H. Weng, D.A. Quattrochi. 2006. Thermal remote sensing of urban areas: an introduction to the special issue. Remote Sensing of Environment, 104: 119-122 [Weng and Quattrochi, 2006]
+
 71. S. Whitman, G. Good, E.R. Donoghue, N. Benbow, W. Shou, S. Mou. 1997. Mortality in Chicago attributed to the July 1995 heat wave. American Journal of Public Health, 87: 1515-1518 [Whitman et al., 1997]
+
 72. O.V. Wilhelmi, M.H. Hayden. 2010. Connecting people and place: a new framework for reducing urban vulnerability to extreme heat. Environmental Research Letters, 5 [Wilhelmi and Hayden, 2010]
-73. B. Wisner. 2004. At risk: Natural hazards, people’s vulnerability, and disasters [Wisner, 2004]
+
+73. B. Wisner. 2004. At risk: Natural hazards, people’s vulnerability, and disasters. Routledge, London; New York [Wisner, 2004]
+
 74. N.J. Wood, C.G. Burton, S.L. Cutter. 2010. Community variations in social vulnerability to Cascadia-related tsunamis in the US Pacific Northwest. Natural Hazards, 52: 369-389 [Wood et al., 2010]
+
 75. R.B. Xiao, Z.Y. Ouyang, H. Zheng, W.F. Li, E.W. Schienke, X.K. Wang. 2007. Spatial pattern of impervious surfaces and their impacts on land surface temperature in Beijing, China. Journal of Environmental Sciences-China, 19: 250-256 [Xiao et al., 2007]
+
 76. F. Yuan, M.E. Bauer. 2007. Comparison of impervious surface area and normalized difference vegetation index as indicators of surface urban heat island effects in Landsat imagery. Remote Sensing of Environment, 106: 375-386 [Yuan and Bauer, 2007]
+
 77. X. Zhang, T. Zhong, K. Wang, Z. Cheng. 2009. Scaling of impervious surface area and vegetation as indicators to urban land surface temperature using satellite data. International Journal of Remote Sensing, 30: 841-859 [Zhang et al., 2009]
+
 78. Y.S. Zhang, I.O.A. Odeh, C.F. Han. 2009. Bi-temporal characterization of land surface temperature in relation to impervious surface area, NDVI and NDBI, using a sub-pixel image analysis. International Journal of Applied Earth Observation and Geoinformation, 11: 256-264 [Zhang et al., 2009]
+
 79. Y. Zhou, J.M. Shepherd. 2010. Atlanta’s urban heat island under extreme heat conditions and potential mitigation strategies. Natural Hazards, 52: 639-668 [Zhou and Shepherd, 2010]

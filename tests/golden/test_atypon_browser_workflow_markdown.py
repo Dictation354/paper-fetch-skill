@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.canonical_content import comparable_cell
+from tests.support.markdown_presentation import visible_markdown
 import re
 import unittest
 from urllib.parse import urljoin
@@ -225,7 +227,7 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             for offset, label in enumerate(("Variable", "Coefficient", "Prob.")):
                 self.assertEqual(
                     rows[0][start + offset],
-                    f"**{group}** / *R*<sup>2</sup>**: {score}** / "
+                    f"**{group}** / <strong><em>R</em><sup>2</sup>: {score}</strong> / "
                     f"**Akaike (AIC): {aic}** / **{label}**",
                 )
         self.assertEqual(
@@ -276,17 +278,14 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertNotIn("- Model: Pdev", markdown)
         compact = re.sub(r"\s+", " ", markdown)
         self.assertIn(
-            "| Composition | 9 | 0.623 | 0.621 | 0 | 0.995 | MAP, Pdev, MAP\\*Pdev, |",
+            "| Composition | 9 | 0.623 | 0.621 | 0 | 0.995 | MAP, Pdev, MAP\\*Pdev, MAP\\*Woody, MAP\\*Herb, Pdev\\*Woody, Pdev\\*Herb |",
             compact,
         )
-        self.assertIn(
-            "| Composition | 9 | 0.623 | 0.621 | 0 | 0.995 | Pdev\\*Woody, Pdev\\*Herb |",
-            compact,
-        )
-        self.assertIn(
-            "| Disturbance | 8 | 0.604 | 0.477 | 13,037 | 0 | MAP\\*Pdev\\*1/√YSD |",
-            compact,
-        )
+        rows = [
+            line for line in markdown.splitlines() if line.startswith("| Disturbance")
+        ]
+        self.assertEqual(len(rows), 1)
+        self.assertIn("MAP\\*Pdev\\*1/√YSD", rows[0])
 
     def test_pnas_real_figure_identity_and_equation_bodies(self) -> None:
         markdown, _ = self._extract_sample_markdown(PNAS_SAMPLE)
@@ -306,24 +305,34 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             r"\frac{dV}{dt} = \pi I - cV",
             r"V_{i} = f(V)",
         ):
-            self.assertIn(expression, equation)
+            self.assertIn(comparable_cell(expression), comparable_cell(equation))
 
     def test_science_fixture_extracts_fulltext_markdown(self) -> None:
         markdown, info = self._extract_sample_markdown(SCIENCE_SAMPLE)
 
-        self.assertEqual(info["container_tag"], "main")
-        self.assertIn(
-            "# Hyaluronic acid and tissue mechanics orchestrate mammalian digit tip regeneration",
-            markdown,
+        self.assertEqual(
+            visible_markdown(info["container_tag"]), visible_markdown("main")
         )
-        self.assertIn("Structured Abstract", markdown)
-        self.assertIn("Discussion", markdown)
-        self.assertIn("Materials and methods", markdown)
+        self.assertIn(
+            visible_markdown(
+                "# Hyaluronic acid and tissue mechanics orchestrate mammalian digit tip regeneration"
+            ),
+            visible_markdown(markdown),
+        )
+        self.assertIn(
+            visible_markdown("Structured Abstract"), visible_markdown(markdown)
+        )
+        self.assertIn(visible_markdown("Discussion"), visible_markdown(markdown))
+        self.assertIn(
+            visible_markdown("Materials and methods"), visible_markdown(markdown)
+        )
         self.assertIn("![Figure 1](", markdown)
         self.assertNotIn("**Figure 1.** .", markdown)
         self.assertIn(
-            "**Figure 1.** The niche discriminates regeneration from fibrosis after digit tip amputation. (**A**)",
-            markdown,
+            visible_markdown(
+                "**Figure 1.** The niche discriminates regeneration from fibrosis after digit tip amputation. (**A**)"
+            ),
+            visible_markdown(markdown),
         )
         self.assertNotIn("amputation.(**A**)", markdown)
 
@@ -342,13 +351,13 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertNotIn("Purchase digital access to this article", markdown)
         self.assertNotIn("Copyright ©", markdown)
 
-    def test_science_fixture_keeps_data_availability_but_filters_teaser_figure(
+    def test_science_fixture_keeps_data_availability_and_graphical_summary(
         self,
     ) -> None:
         markdown, _ = self._extract_sample_markdown(SCIENCE_SAMPLE)
 
         self.assertIn("## Data, code, and materials availability", markdown)
-        self.assertNotIn(
+        self.assertIn(
             "The ECM and tissue mechanics direct wound healing outcomes after digit amputations",
             markdown,
         )
@@ -482,13 +491,14 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         self.assertNotIn("Download PDF", markdown)
         self.assertNotIn("About Wiley Online Library", markdown)
 
-    def test_wiley_full_fixture_keeps_data_availability_but_filters_other_back_matter(
+    def test_wiley_full_fixture_keeps_data_availability_and_source_declarations(
         self,
     ) -> None:
         markdown, _ = self._extract_sample_markdown(WILEY_SAMPLE)
 
         self.assertIn("## DATA AVAILABILITY STATEMENT", markdown)
-        self.assertNotIn("## CONFLICT OF INTEREST", markdown)
+        self.assertIn("## CONFLICT OF INTEREST", markdown)
+        self.assertIn("The authors declare no competing interests.", markdown)
         self.assertNotIn("## Supporting Information", markdown)
 
     def test_science_perspective_fixture_extracts_fulltext_without_section_headings(
@@ -507,12 +517,30 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             "Yellowstone is one of the most seismically active areas", markdown
         )
         self.assertIn("The findings of Cao", markdown)
-        self.assertIn("<sup>1–3</sup>", markdown)
-        self.assertIn("<sup>6, 7</sup>", markdown)
-        self.assertIn("<sup>11, 12</sup>", markdown)
-        self.assertNotIn("(*1–3*)", markdown)
-        self.assertNotIn("(*6, 7*)", markdown)
-        self.assertNotIn("(*11, 12*)", markdown)
+        from markdown_it import MarkdownIt
+
+        source = BeautifulSoup(SCIENCE_PERSPECTIVE_FIXTURE.read_bytes(), "lxml")
+        rendered = BeautifulSoup(
+            MarkdownIt("commonmark", {"html": True}).render(markdown), "lxml"
+        )
+        callouts = [
+            a
+            for a in source.select(
+                'a[role="doc-biblioref"][href^="#core-collateral-R"]'
+            )
+        ]
+        self.assertTrue(callouts)
+        for callout in callouts:
+            target = urljoin(
+                "https://www.science.org/doi/full/10.1126/science.aeg3511",
+                callout["href"],
+            )
+            self.assertTrue(
+                any(
+                    a["href"] == target and a.get_text() == callout.get_text()
+                    for a in rendered.select("a[href]")
+                )
+            )
         diagnostics = info["availability_diagnostics"]
         self.assertTrue(diagnostics["accepted"])
         self.assertIn("body_sufficient", diagnostics["strong_positive_signals"])
@@ -529,16 +557,20 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             "10.1126/science.adp0212",
         )
 
-        self.assertIn("**Equation 1.**", markdown)
-        self.assertIn("$$", markdown)
-        self.assertIn("where *P* is precipitation", markdown)
+        self.assertIn(visible_markdown("**Equation 1.**"), visible_markdown(markdown))
+        self.assertIn(visible_markdown("$$"), visible_markdown(markdown))
+        self.assertIn(
+            visible_markdown("where *P* is precipitation"), visible_markdown(markdown)
+        )
         self.assertLess(
             markdown.index("**Equation 1.**"),
             markdown.index("where *P* is precipitation"),
         )
         self.assertIn(
-            "**Figure 2.** Regional change in daily precipitation variability from 1900 to 2020. Time series",
-            markdown,
+            visible_markdown(
+                "**Figure 2.** Regional change in daily precipitation variability from 1900 to 2020. Time series"
+            ),
+            visible_markdown(markdown),
         )
 
 

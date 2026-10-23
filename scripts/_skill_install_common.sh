@@ -30,7 +30,7 @@ pf_skill_abspath() {
 pf_skill_user_base() {
     case "$PF_HOST" in
         claude) printf '%s\n' "$HOME/.claude" ;;
-        codex) printf '%s\n' "${CODEX_HOME:-$HOME/.codex}" ;;
+        codex) printf '%s\n' "$HOME/.agents" ;;
         antigravity) printf '%s\n' "${ANTIGRAVITY_HOME:-$HOME/.gemini/antigravity-cli}" ;;
         *) pf_skill_die "Unsupported skill host: $PF_HOST" ;;
     esac
@@ -144,6 +144,24 @@ pf_skill_copy_static_skill() {
     cp -R "$PF_SOURCE_SKILL_DIR" "$PF_SKILL_DIR"
 }
 
+pf_skill_remove_legacy_copies() {
+    [ "$PF_HOST" = "codex" ] || return 0
+    if [ "$PF_SCOPE" = "project" ]; then
+        rm -rf "$PF_REPO_DIR/.codex/skills/$PF_SKILL_NAME"
+    else
+        local legacy_base legacy_dir
+        for legacy_base in "$HOME/.codex" "${CODEX_HOME:-$HOME/.codex}"; do
+            legacy_dir="$legacy_base/skills/$PF_SKILL_NAME"
+            # CODEX_HOME may itself point at the new discovery root.
+            [ "$legacy_dir" = "$PF_SKILL_DIR" ] && continue
+            if [ -e "$legacy_dir" ] && [ "$legacy_dir" -ef "$PF_SKILL_DIR" ]; then
+                continue
+            fi
+            rm -rf "$legacy_dir"
+        done
+    fi
+}
+
 pf_skill_compare_bundle() {
     command -v python3 >/dev/null 2>&1 || pf_skill_die "python3 not found on PATH"
     local verifier="$PF_REPO_DIR/scripts/skill_integrity.py"
@@ -162,6 +180,7 @@ pf_skill_verify_installed_bundle() {
 }
 
 pf_skill_unregister_if_requested() {
+    pf_skill_remove_legacy_copies
     rm -rf "$PF_SKILL_DIR"
     pf_skill_log "Removed $PF_SKILL_DIR"
     if [ "$PF_REGISTER_MCP" = "1" ]; then
@@ -204,6 +223,7 @@ pf_skill_main() {
     pf_skill_install_package
     pf_skill_copy_static_skill
     pf_skill_verify_installed_bundle
+    pf_skill_remove_legacy_copies
 
     if [ "$PF_REGISTER_MCP" = "1" ]; then
         pf_host_register_mcp

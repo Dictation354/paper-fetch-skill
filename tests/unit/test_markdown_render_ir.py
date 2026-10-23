@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import unittest
+import pytest
 
 from paper_fetch.extraction.markdown_render import (
     MarkdownCaption,
@@ -19,6 +20,31 @@ from paper_fetch.extraction.markdown_render import (
 from paper_fetch.extraction.markdown_render.table_format import (
     render_aligned_markdown_table,
 )
+from paper_fetch.extraction.markdown_render.formulas import (
+    render_inline_latex_markdown,
+)
+
+
+@pytest.mark.parametrize(
+    ("latex", "expected"),
+    [
+        ("x+1", "$x+1$"),
+        ("$x+1$", "$x+1$"),
+        (r"\$75", r"\$75"),
+        (r"\$", r"$$ \$ $$"),
+        (r"\text{for $x>1$}", r"$$\text{for $x>1$}$$"),
+        (r"\text{two $$ signs}", r"$$$\text{two $$ signs}$$$"),
+        (r"$$\text{for $x>1$}$$", r"$$\text{for $x>1$}$$"),
+    ],
+)
+def test_inline_formula_fences_preserve_internal_dollars(latex, expected):
+    assert render_inline_latex_markdown(latex) == expected
+
+
+def test_formula_ir_uses_shared_inline_dollar_fences():
+    assert render_formula(
+        MarkdownFormula(label="", latex=r"\$75", display_mode=False)
+    ) == [r"\$75", ""]
 
 
 class MarkdownRenderIrTests(unittest.TestCase):
@@ -226,14 +252,16 @@ class MarkdownRenderIrTests(unittest.TestCase):
         self.assertEqual(render_caption(caption), "**Figure 2.** A caption.")
         self.assertEqual(render_list(items), ["1. First", "2. Second", ""])
 
-    def test_formula_renderer_normalizes_latex(self) -> None:
+    def test_formula_renderer_preserves_source_latex(self) -> None:
         formula = MarkdownFormula(
             label="",
             latex=r"P(SPI \unicode{x2A7D} - 1.64)",
             display_mode=False,
         )
 
-        self.assertEqual(render_formula(formula), [r"$P(SPI \leqslant - 1.64)$", ""])
+        self.assertEqual(
+            render_formula(formula), [r"$P(SPI \unicode{x2A7D} - 1.64)$", ""]
+        )
 
 
 if __name__ == "__main__":

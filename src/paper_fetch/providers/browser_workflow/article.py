@@ -218,6 +218,18 @@ def browser_workflow_article_from_payload(
         )
 
     article_metadata = dict(metadata)
+    if route == PDF_FALLBACK and content is not None:
+        pdf_metadata = (content.diagnostics.get("pdf_fallback") or {}).get(
+            "metadata"
+        ) or {}
+        if (
+            not article_metadata.get("title")
+            or normalize_doi(str(article_metadata["title"])) == doi
+        ):
+            if pdf_metadata.get("title"):
+                article_metadata["title"] = pdf_metadata["title"]
+        if not article_metadata.get("authors") and pdf_metadata.get("authors"):
+            article_metadata["authors"] = pdf_metadata["authors"]
     extraction_payload = (
         content.diagnostics.get("extraction") if content is not None else None
     )

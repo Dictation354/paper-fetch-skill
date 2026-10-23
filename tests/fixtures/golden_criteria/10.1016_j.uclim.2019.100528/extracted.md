@@ -6,7 +6,7 @@ source: "elsevier_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 10010
+token_estimate: 10038
 ---
 
 # A methodological assessment of extreme heat mortality modeling and heat vulnerability mapping in Dallas, Texas
@@ -33,7 +33,7 @@ A population's vulnerability to environmental hazards can be characterized as a 
 
 ![Formula](https://api.elsevier.com/content/object/eid/1-s2.0-S2212095518300610-fx1_lrg.jpg?httpAccept=%2A%2F%2A)
 
-Equation 1: Components of heat vulnerability (Cutter et al., 2003; Cutter et al., 2008).
+- Equation 1: Components of heat vulnerability (Cutter et al., 2003; Cutter et al., 2008).
 
 Heat Vulnerability Indices (HVIs) are one method used to determine heat vulnerability, focusing on these three components of risk. HVIs can provide a more in-depth analysis of specific risk factors associated with heat, allowing urban planners to identify areas of higher relative heat vulnerability. This tool is generally accessible to the planning practitioner, often using familiar datasets and analysis techniques. Much of the data used in HVIs are publicly available, such as through the National Land Cover Database or in the US Census (Bao et al., 2015; Wolf et al., 2015). Analysis and mapping techniques can often be run in a geographic information system.
 
@@ -43,7 +43,7 @@ HVIs often combine these indicators using various statistical methods into a sin
 
 ### Exposure-response function models
 
-Researchers are increasingly using exposure-response functions to estimate the health impacts of environmental exposures than are difficult to directly measure (Bobb et al., 2014; Gasparrini et al. (2015); Kalkstein et al., 2011; Stone et al., 2014). For example, the number of deaths resulting from a heat wave is hard to determine directly, as the cause of death recorded on death certificates may be attributed to an underlying health condition exacerbated by extreme heat, such as a cardiovascular or respiratory illness (Harlan et al., 2013; USGCRP, 2016). As an alternative to such direct attribution approaches to quantifying heat-related mortality, health researchers are increasingly developing heat exposure-response functions, based on the established association between observed temperature and all-cause mortality over time (Bobb et al., 2014; Kalkstein et al., 2011). As illustrated in Fig. 1, all-cause mortality is often found to increase significantly during heat wave events, such as in Paris during the summer of 2003. Exposure-response functions for heat mortality are statistically derived from the association between temperature and total mortality over a fixed period of time.
+Researchers are increasingly using exposure-response functions to estimate the health impacts of environmental exposures than are difficult to directly measure (Bobb et al., 2014; Gasparrini et al. (2015); Kalkstein et al., 2011; Stone et al., 2014). For example, the number of deaths resulting from a heat wave is hard to determine directly, as the cause of death recorded on death certificates may be attributed to an underlying health condition exacerbated by extreme heat, such as a cardiovascular or respiratory illness (Harlan et al., 2013; USGCRP, 2016). As an alternative to such direct attribution approaches to quantifying heat-related mortality, health researchers are increasingly developing heat exposure-response functions, based on the established association between observed temperature and all-cause mortality over time (Bobb et al., 2014; Kalkstein et al., 2011). As illustrated in Fig. 1 , all-cause mortality is often found to increase significantly during heat wave events, such as in Paris during the summer of 2003. Exposure-response functions for heat mortality are statistically derived from the association between temperature and total mortality over a fixed period of time.
 
 ![Figure 1](https://api.elsevier.com/content/object/eid/1-s2.0-S2212095518300610-gr1_lrg.jpg?httpAccept=%2A%2F%2A)
 
@@ -55,7 +55,7 @@ Eq. (2) summarizes how a change in mortality for a population can be predicted b
 
 ![Formula](https://api.elsevier.com/content/object/eid/1-s2.0-S2212095518300610-fx2_lrg.jpg?httpAccept=%2A%2F%2A)
 
-Equation 2: Exposure-response function applied to heat-related mortality (USGCRP, 2016).
+- Equation 2: Exposure-response function applied to heat-related mortality (USGCRP, 2016).
 
 The recent development of global datasets on the association between temperature and mortality enables both historical and projected heat mortality to be estimated for many large cities around the world. For example, Gasparrini et al. (2015) analyzed daily death counts and temperatures from 384 locations over several years to determine the relationship between mortality and temperature. From these observations, the authors determined the excess mortality per degree temperature change across the range of temperatures experienced by the locality for which the response function is derived, the third component in Eq. (2). By determining a unique exposure-response function for each location, this procedure already takes into account any behavioral and physiological acclimatization to heat and cold in the local population. Such acclimatization characteristics are well established in the literature as critical components of a local population's sensitivity to extreme temperatures (Boeckmann and Rohn, 2014; Davis et al., 2003; Hondula et al., 2014; Kalkstein and Davis, 1989; Knowlton et al., 2007; Robinson, 2001; Toloo et al., 2013). Using location-specific mortality rates and response functions provides a complete picture of a population's sensitivity to extreme temperatures and their adaptive capacity to cope with them.
 
@@ -70,10 +70,9 @@ In combination with regional climate model output on heat exposure, a heat healt
 While HVIs can provide a low-cost approach to mapping heat vulnerability, they may not well represent actual heat risk. As a result, researchers in urban planning, public health, social vulnerability, and risk management are increasingly seeking to validate HVI methods using heat-related morbidity and mortality observations (Bao et al., 2015; Wolf et al., 2015). Exposure-response functions can provide high-resolution mortality estimates based on local observations to fill this model validation gap. However, these functions are generally less accessible to the planning practitioner because of technical demands and processing costs (Measham et al., 2011; Winkler et al., 2011). Alternatively, HVI construction is much less technically demanding and can provide useful insights into which areas have higher relative risk.
 
 In light of these observations, this paper seeks to answer the following questions:
-1.
-How effective are HVIs in identifying zones of high heat-related mortality as estimated by a health-response function? Can HVIs be employed as a reliable surrogate for statistical attribution approaches to estimating heat risk?
-2.
-Which components of HVIs are most useful for assessing heat risk?
+
+1. How effective are HVIs in identifying zones of high heat-related mortality as estimated by a health-response function? Can HVIs be employed as a reliable surrogate for statistical attribution approaches to estimating heat risk?
+2. Which components of HVIs are most useful for assessing heat risk?
 
 ## Methods
 
@@ -93,7 +92,7 @@ Mortality estimates were created using published Dallas-specific relative risk c
 
 ### Heat vulnerability index
 
-We reconstructed a heat vulnerability index using the Reid et al. (2009) PCA HVI procedure for Dallas. The vulnerability indicators are summarized in Table 1. Social vulnerability data were collected from the American Community Survey 5-year estimates (2011–2015) at the tract level from the Social Explorer website. These vulnerability indicators include population over age 65, living alone, over 65 and living alone, living below the poverty line, race other than white, and those with less than a high school education. Each variable was normalized by tract population to be used as a proportion of the tract population ranging from 0 to 1, with larger numbers implying higher vulnerability. All tracts with zero population were removed.
+We reconstructed a heat vulnerability index using the Reid et al. (2009) PCA HVI procedure for Dallas. The vulnerability indicators are summarized in Table 1 . Social vulnerability data were collected from the American Community Survey 5-year estimates (2011–2015) at the tract level from the Social Explorer website. These vulnerability indicators include population over age 65, living alone, over 65 and living alone, living below the poverty line, race other than white, and those with less than a high school education. Each variable was normalized by tract population to be used as a proportion of the tract population ranging from 0 to 1, with larger numbers implying higher vulnerability. All tracts with zero population were removed.
 
 Table 1
 
@@ -113,7 +112,7 @@ In following with the Reid et al. (2009) procedure, lack of green space was used
 
 Additionally, lack of access to air conditioning (AC) is an important exposure factor in this analysis. AC data was available at the parcel level from the Dallas Central Appraisal District for the year 2015. All parcels with “unassigned” AC classification were removed from the analysis (representing about 8% of all residential parcels). Any census tracts with less than a 33% complete record of residential parcel AC designation or with no residential parcels were removed from the analysis. We include two exposure indicators in our analysis: proportion of households with no AC access and proportion of households with no full AC access. Proportion of households with no AC access at all is defined as parcels within a tract with no AC divided by the total parcels for which we have data. Proportion of households with no full AC access is defined as parcels with window, wall, central, partial, or no AC divided by the total parcels for which data were available.
 
-Principal components analysis (PCA) was employed to reduce the total number of variables to three statistically independent components, following the Reid et al. (2009) procedure. The marginal explanatory power of each component dropped significantly after three components, so three were used for this analysis. These three components explain 71.3% of the variance in the model. The PCA uses a varimax rotation to ensure orthogonality between the components. This transformation ensures that the components are statistically independent of one another and maximizes the variance of the component loadings on each variable. This process makes it easier to identify each variable with a single component, thereby enhancing the ability to classify each component as a component of vulnerability (i.e. sensitivity, exposure, or adaptive capacity) using its associated variables. All PCA processing was conducted using IBM SPSS 22. Component scores were created for each tract and were converted to z-scores to indicate vulnerability relative to other tracts. Each tract was assigned an HVI score based on the z-score for each component according to the scheme in Table 2. Since an increase in each variable implies an increase in vulnerability, higher component scores also imply higher vulnerability. Therefore, a higher z-score means greater relative vulnerability relative to the Dallas average. The composite HVI score was then defined as the sum of the HVI scores for each component.
+Principal components analysis (PCA) was employed to reduce the total number of variables to three statistically independent components, following the Reid et al. (2009) procedure. The marginal explanatory power of each component dropped significantly after three components, so three were used for this analysis. These three components explain 71.3% of the variance in the model. The PCA uses a varimax rotation to ensure orthogonality between the components. This transformation ensures that the components are statistically independent of one another and maximizes the variance of the component loadings on each variable. This process makes it easier to identify each variable with a single component, thereby enhancing the ability to classify each component as a component of vulnerability (i.e. sensitivity, exposure, or adaptive capacity) using its associated variables. All PCA processing was conducted using IBM SPSS 22. Component scores were created for each tract and were converted to z-scores to indicate vulnerability relative to other tracts. Each tract was assigned an HVI score based on the z-score for each component according to the scheme in Table 2 . Since an increase in each variable implies an increase in vulnerability, higher component scores also imply higher vulnerability. Therefore, a higher z-score means greater relative vulnerability relative to the Dallas average. The composite HVI score was then defined as the sum of the HVI scores for each component.
 
 Table 2
 
@@ -150,7 +149,7 @@ Gridded heat-related mortality estimate results, reported as number of deaths pe
 
 ### Heat vulnerability index
 
-The PCA grouped the vulnerability indicators into three independent components, shown in Table 3. The components can be roughly characterized by the strength of their correlations with each indicator. We characterized the components by any variable that has a 0.6 or higher correlation coefficient with that component. Component 1 can be characterized by lack of AC access, diabetes, and living below the poverty line. Component 2 can be characterized by elderly populations, living alone, and having less than high school education. Component 3 can be characterized by nonwhite populations and lack of green space.
+The PCA grouped the vulnerability indicators into three independent components, shown in Table 3 . The components can be roughly characterized by the strength of their correlations with each indicator. We characterized the components by any variable that has a 0.6 or higher correlation coefficient with that component. Component 1 can be characterized by lack of AC access, diabetes, and living below the poverty line. Component 2 can be characterized by elderly populations, living alone, and having less than high school education. Component 3 can be characterized by nonwhite populations and lack of green space.
 
 Table 3
 
@@ -186,7 +185,7 @@ Resulting R<sup>2</sup> from bivariate and multivariate regressions.
 | Bivariate HVI | 0.03         |
 | Multivariate  | 0.4          |
 
-The multivariate regression identifies several significant predictors of total deaths, as shown in Table 5. Elderly population and less than high school education are highly significant, and no full AC and diabetes prevalence were are also significant. However, the sign of some coefficients were unexpected, including those of diabetes and no full AC. All indicators were expected to have a positive correlation with mortality estimates, but these two indicators showed a negative correlation. This could be an artifact of the aggregation of mortality estimates to the tract level. This may also be a factor not well captured by the mortality estimates, as they account for only age and sex, not pre-existing conditions that can occur at any age. Additionally, it could be that no full AC at home may not accurately predict true exposures, as residents are not always at home.
+The multivariate regression identifies several significant predictors of total deaths, as shown in Table 5 . Elderly population and less than high school education are highly significant, and no full AC and diabetes prevalence were are also significant. However, the sign of some coefficients were unexpected, including those of diabetes and no full AC. All indicators were expected to have a positive correlation with mortality estimates, but these two indicators showed a negative correlation. This could be an artifact of the aggregation of mortality estimates to the tract level. This may also be a factor not well captured by the mortality estimates, as they account for only age and sex, not pre-existing conditions that can occur at any age. Additionally, it could be that no full AC at home may not accurately predict true exposures, as residents are not always at home.
 
 Table 5
 
@@ -204,11 +203,9 @@ Multivariate spatial regression results using total deaths as dependent variable
 | Diabetes<sup>⁎</sup>                | −1.14       | 0.67       | −1.71       | 0.09        |
 | No Full AC<sup>⁎</sup>              | −0.12       | 0.07       | −1.77       | 0.08        |
 
-⁎⁎
-Significant at ⍺ =0.05.
+⁎⁎ Significant at ⍺ =0.05.
 
-⁎
-Significant at ⍺ =0.1.
+⁎ Significant at ⍺ =0.1.
 
 ## Discussion
 
@@ -232,6 +229,10 @@ This analysis showed that a PCA HVI approach had only moderate success in aligni
 
 Absent this, the multivariate approach was found in Dallas to be superior to the bivariate HVI score, but neither are adequate in predicting total heat-related mortality. To this end, planners should utilize these approaches in tandem, using the total mortality estimates to highlight where heat intervention is most strongly recommended, but at the same time running a multivariate model of vulnerability indicators to inform which strategies may be most appropriate. Additionally, mapping factors separately can retain more useful information than a full aggregate score when utilizing PCA HVI mapping techniques. As the factors are characterized by multiple vulnerability indicators, these can highlight multiple overlapping vulnerabilities within the city. It may be more appropriate to target strategies like tree planting in an area with overlapping vulnerabilities of elderly and no greenspace, as compared to areas with elderly populations living in poverty without access to AC that may best be best served by opening cooling centers. In this way, the city can devise strategies unique to their local distribution of vulnerabilities and where they overlap the most. Together, these models can help guide both short- and long-term planning decisions to enhance local resilience to heat waves and protect vulnerable urban populations.
 
+## Funding
+
+This work was supported in part by the Texas Trees Foundation, Dallas, TX, United States of America.
+
 ## Declarations of Competing Interest
 
 None.
@@ -239,38 +240,73 @@ None.
 ## References (36 total, showing 36)
 
 1. American Planning Association. 2011. Policy Guide on Climate Change [American Planning Association, 2011]
+
 2. J. Bao, X. Li, C. Yu. 2015. The Construction and Validation of the Heat Vulnerability Index, a Review. 7220-7234. 10.3390/ijerph120707220 [Bao et al., 2015]
-3. J. Berko, D. Ingram, S. Saha, J. Parker. 2014. Deaths Attributed to Heat, Cold, and Other Weather Events in the United States, 2006–2010. National Health Statistics Reports no. 76 [Berko et al., 2014]
+
+3. J. Berko, D. Ingram, S. Saha, J. Parker. 2014. Deaths Attributed to Heat, Cold, and Other Weather Events in the United States, 2006–2010. National Health Statistics Reports no. 76, National Center for Health Statistics, Hyattsville, MD. http://www.cdc.gov/nchs/data/nhsr/nhsr076.pdf [Berko et al., 2014]
+
 4. J. Bobb, R. Peng, M. Bell, F. Dominici. 2014. Heat-related mortality and adaptation to heat in the United States. Environ. Health Perspect., 122: 811-816. 10.1289/ehp.1307392 [Bobb et al., 2014]
+
 5. M. Boeckmann, I. Rohn. 2014. Is planned adaptation to heat reducing heat-related mortality and illness? A systematic review. BMC Public Health, 13(1112): 1-13 [Boeckmann and Rohn, 2014]
+
 6. A. Bouchama, J. Knochel. 2002. Heat stroke. N. Engl. J. Med., 346(25): 1978-1988 [Bouchama and Knochel, 2002]
+
 7. D.E. Bowler, L. Buyung-Ali, T.M. Knight, A.S. Pullin. 2010. Urban greening to cool towns and cities: a systematic review of the empirical evidence. Landsc. Urban Plan., 97(3): 147-155. 10.1016/j.landurbplan.2010.05.006 [Bowler et al., 2010]
+
 8. F.C. Curriero, K.S. Heiner, J.M. Samet, S.L. Zeger, L. Strug, J.A. Patz. 2002. Temperature and mortality in 11 cities of the Eastern United States. Am. J. Epidemiol., 155(1): 80-87 [Curriero et al., 2002]
+
 9. S. Cutter, B. Boruff, W. Shirley. 2003. Social Vulnerability to Environmental Hazards. Social Science Quarterly, 84(2): 242-261 [Cutter et al., 2003]
+
 10. S.L. Cutter, L. Barnes, M. Berry, C. Burton, E. Evans, E. Tate, J. Webb. 2008. A place-based model for understanding community resilience to natural disasters. Glob. Environ. Chang., 18(4): 598-606. 10.1016/j.gloenvcha.2008.07.013 [Cutter et al., 2008]
+
 11. R. Davis, P. Knappenberger, P. Michaels, W. Novicoff. 2003. Changing heat-related mortality in the United States. Environ. Health Perspect., 111(14): 1712-1718. 10.1289/ehp.6336 [Davis et al., 2003]
+
 12. N.S. Diffenbaugh, M. Scherer. 2011. Observational and model evidence of global emergence of permanent, unprecedented heat in the 20th and 21st centuries. Clim. Chang., 107(3): 615-624. 10.1007/s10584-011-0112-y [Diffenbaugh and Scherer, 2011]
+
 13. B. Dousset, F. Gourmelon, K. Laaidi, A. Zeghnoun, E. Giraudet, P. Bretin, E. Mauri, S. Vandentorren. 2010. Satellite monitoring of summer heat waves in the Paris metropolitan area. Int. J. Climatol., 31(2): 313-323. 10.1002/joc.2222 [Dousset et al., 2010]
+
 14. J. Gamble, M. Schmeltz, B. Hurley, J. Hseih, G. Jette, H. Wagner. 2018. Mapping the Vulnerability of Human Health to Extreme Heat in the US [Gamble et al., 2018]
+
 15. A. Gasparrini, Y. Guo, M. Hashizume, E. Lavigne, A. Zanobetti, J. Schwartz, B. Armstrong. 2015. Mortality risk attributable to high and low ambient temperature: a multicountry observational study. Lancet, 386(9991): 369-375. 10.1016/s0140-6736(14)62114- [Gasparrini et al., 2015]
+
 16. D. Habeeb, J. Vargo, B. Stone. 2015. Rising heat wave trends in large US cities. Nat. Hazards, 76(3): 1651-1665. 10.1007/s11069-014-1563-z [Habeeb et al., 2015]
+
 17. Sharon L. Harlan, Juan H. Declet-Barreto, William L. Stefanov, Sarah Santana, D. Petitti. 2013. Neighborhood effects on heat deaths: social and environmental determinants of vulnerable places. Environ. Health Perspect., 121(2): 197-204. 10.1289/ehp.1104625 [Harlan et al., 2013]
+
 18. H. Ho, A. Knudby, Y. Xu, M. Hodul, M. Aminipouri. 2016. A comparison of urban heat islands mapped using skin temperature, air temperature, and apparent temperature (Humidex), for the greater Vancouver area. Sci. Total Environ., 544: 929-938. 10.1016/j.scitotenv.2015.12.021 [Ho et al., 2016]
+
 19. D. Hondula, J. Vanos, S. Gosling. 2014. The SSC: a decade of climate–health research and future directions. Int. J. Biometeorol., 58: 109-120. 10.1007/s00484-012-0619-6 [Hondula et al., 2014]
+
 20. L. Kalkstein, R. Davis. 1989. Weather and human mortality: an evaluation of demographic and interregional responses in the United States. Ann. Assoc. Am. Geogr., 71(1): 44-64 [Kalkstein and Davis, 1989]
+
 21. L. Kalkstein, S. Greene, D. Mills, J. Samenow. 2011. An evaluation of the progress in reducing heat-related human mortality in major US cities. Nat. Hazards, 56: 113-129. 10.1007/s11069-010-9552-3 [Kalkstein et al., 2011]
+
 22. K. Knowlton, B. Lynn, R. Goldberg, C. Rosenzweig, C. Hogrefe, J. Rosenthal, P. Kinney. 2007. Projecting heat-related mortality impacts under a changing climate in the New York City region. Am. J. Public Health, 97(11): 2028-2034. 10.2105/ajph.2006.102947 [Knowlton et al., 2007]
+
 23. R. Kovats, S. Hajat. 2008. Heat stress and public health: a critical review. Annu. Rev. Public Health, 29: 41-55. 10.1146/annurev.publhealth.29.020907.090843 [Kovats and Hajat, 2008]
+
 24. G. Luber, M. McGeehin. 2008. Climate change and extreme heat events. Am. J. Prev. Med., 35(5): 429-435. 10.1016/j.amepre.2008.08.021 [Luber and McGeehin, 2008]
-25. A.P. Manangan, C.K. Uejio, S. Saha, P.J. Schramm, G.D. Marinucci, C.L. Brown, George Luber. 2015. Assessing Health Vulnerability to Climate Change: A Guide for Health Departments [Manangan et al., 2015]
+
+25. A.P. Manangan, C.K. Uejio, S. Saha, P.J. Schramm, G.D. Marinucci, C.L. Brown, George Luber. 2015. Assessing Health Vulnerability to Climate Change: A Guide for Health Departments. Center for Disease Control and Prevention. Retrieved from. http://www.cdc.gov/climateandhealth/pubs/AssessingHealthVulnerabilitytoClimateChange.pdf [Manangan et al., 2015]
+
 26. T.G. Measham, B.L. Preston, T.F. Smith, C. Brooke, R. Gorddard, G. Withycombe, C. Morrison. 2011. Adapting to climate change through local municipal planning: barriers and challenges. Mitig. Adapt. Strateg. Glob. Chang., 16(8): 889-909. 10.1007/s11027-011-9301-2 [Measham et al., 2011]
+
 27. C. Reid, M. O'Neill, C. Gronlund, S. Brines, D. Brown, A. Diez-Roux, J. Schwartz. 2009. Mapping community determinants of heat vulnerability. Environ. Health Perspect., 117(11): 1730-1736. 10.1289/ehp.0900683 [Reid et al., 2009]
+
 28. P. Robinson. 2001. On the definition of a heat wave. J. Appl. Meteorol., 40: 762-775 [Robinson, 2001]
+
 29. S.C. Sheridan. 2007. A survey of public perception and response to heat warnings across four North American cities: an evaluation of municipal effectiveness. Int. J. Biometeorol., 52: 3-15. 10.1007/s00484-006-0052-9 [Sheridan, 2007]
+
 30. B. Stone, J. Vargo, P. Liu, D. Habeeb, A. DeLucia, M. Trail, Y. Hu, A. Russell. 2014. Avoided heat-related mortality through climate adaptation strategies in three US cities. PLoS One, 9(6). 10.1371/journal.pone.0100852 [Stone et al., 2014]
+
 31. G. Toloo, G. Fitzgerald, P. Aitken, K. Verrall, S. Tong. 2013. Are heat warning systems effective?. Environ. Health(27): 12. 10.1186/1476-069x-12-27 [Toloo et al., 2013]
+
 32. US Global Change Research Program. 2016. The Impacts of Climate Change on Human Health in the United States: A Scientific Assessment. Washington DC [US Global Change Research Program, 2016]
-33. A. Voorhees, N. Fann, C. Fulcher, P. Dolwick, B. Hubbell, B. Bierwagen, P. Morefield. 2011. Climate change-related temperature impacts on warm season heat mortality: a proof-of-concept methodology using BenMAP. Environ. Sci. Technol., 45: 1450-1457. 10.1021/es102820y [Voorhees et al., 2011]
+
+33. A. Voorhees, N. Fann, C. Fulcher, P. Dolwick, B. Hubbell, B. Bierwagen, P. Morefield. 2011. Climate change-related temperature impacts on warm season heat mortality: a proof-of-concept methodology using BenMAP. Environ. Sci. Technol., 45: 1450-1457. 10.1021/es102820y. dx.doi.org/10.1021/es102820y [Voorhees et al., 2011]
+
 34. Q. Weng, U. Rajasekar, X. Hu. 2011. Modeling urban heat islands and their relationship with impervious surface and vegetation abundance by using ASTER images. IEEE Trans. Geosci. Remote Sens., 49(10): 4080-4089 [Weng et al., 2011]
+
 35. J.A. Winkler, G.S. Guentchev, M. Liszewska, Perdinan, P.-N. Tan. 2011. Climate scenario development and applications for local/regional climate change impact assessments: an overview for the non-climate scientist. Part II: considerations when using climate change scenarios. Geogr. Compass, 5(6): 301-328. 10.1111/j.1749-8198.2011.00426.x [Winkler et al., 2011]
+
 36. T. Wolf, W. Chuang, G. Mcgregor. 2015. On the science-policy bridge : do spatial heat vulnerability assessment studies influence policy?. Int. J. Environ. Res. Public Health, 12: 13321-13349. 10.3390/ijerph121013321 [Wolf et al., 2015]

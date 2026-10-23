@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.markdown_presentation import visible_markdown
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from tests.block_fixtures import block_asset
 from tests.support._atypon_browser_workflow_provider_support import (
@@ -108,16 +109,17 @@ def test_markdown_contract_structure_fixture() -> None:
 def test_markdown_contract_table_fixture() -> None:
     # markdown-review: purpose=table doi=10.1146/annurev-control-030123-013355
     markdown = _render_markdown_for_fixture(HTML_DOI)
-    assert "**Table 1**" in markdown
-    assert "**Table 2**" in markdown
+    assert visible_markdown("**Table 1**") in visible_markdown(markdown)
+    assert visible_markdown("**Table 2**") in visible_markdown(markdown)
     assert (
-        "| Reference | Soft, rigid, or hybrid?<sup>a</sup> | DOFs for SC<sup>b</sup> | "
-        "Open-loop control<sup>c</sup> | Closed-loop control<sup>d</sup> |"
-    ) in markdown
-    assert (
+        visible_markdown(
+            "| Reference | Soft, rigid, or hybrid?<sup>a</sup> | DOFs for SC<sup>b</sup> | "
+            "Open-loop control<sup>c</sup> | Closed-loop control<sup>d</sup> |"
+        )
+    ) in visible_markdown(markdown)
+    assert visible_markdown(
         "| Hwang et al. (31)<sup>e</sup> | Hybrid | 1 | Shape and gait<sup>f</sup> | NA |"
-        in markdown
-    )
+    ) in visible_markdown(markdown)
     assert "Reference\nSoft, rigid, or hybrid?" not in markdown
     assert "Download as PowerPoint" not in markdown
     assert "Article metrics loading..." not in markdown
@@ -130,7 +132,7 @@ def test_neuroscience_fixture_preserves_text_and_ion_formatting() -> None:
         "The NMDA spike as a hallmark of electrogenesis in thin dendrites." in markdown
     )
     assert "I-V curve" in markdown
-    assert "g max" in markdown
+    assert "g<sub>max</sub>" in markdown
     assert "Na<sup>+</sup>" in markdown
     assert "Download as PowerPoint" not in markdown
     assert "Article metrics loading..." not in markdown
@@ -460,8 +462,11 @@ def test_real_numbered_equation_images_preserve_identity_and_position() -> None:
 
     source = json.loads(golden_criteria_asset(doi, "source.json").read_text())
     for name, record in source["assets"].items():
+        # source.json describes the retained original capture, not the newer
+        # canonical full-page entity selected by the manifest.
+        role = "historical-original.html" if name == "original.html" else name
         assert (
-            hashlib.sha256(golden_criteria_asset(doi, name).read_bytes()).hexdigest()
+            hashlib.sha256(golden_criteria_asset(doi, role).read_bytes()).hexdigest()
             == record["sha256"]
         )
 

@@ -113,7 +113,7 @@ def test_original_old_nature_table_pages_recover_all_four_real_images(tmp_path):
     assert {a["url"] for a in tables} == set(originals)
     downloaded = download_captured_images(doi, tables, tmp_path)
     article = client.to_article_model(metadata, raw, downloaded_assets=downloaded)
-    rendered = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
+    rendered = article.to_ai_markdown(asset_profile="all", max_tokens="full_text")
     positions = []
     for number, asset in enumerate(downloaded, 1):
         assert Path(asset["path"]).read_bytes() == originals[asset["download_url"]]
@@ -122,6 +122,44 @@ def test_original_old_nature_table_pages_recover_all_four_real_images(tmp_path):
         positions.append(rendered.index(f"]({asset['path']})"))
     assert positions == sorted(positions)
     assert "Table body unavailable" not in rendered
+    assert "PAPER_FETCH_TABLE_PLACEHOLDER" not in rendered
+
+    # The canonical whole-article replay also consumes these verified captures.
+    from tests.golden_corpus import (
+        golden_corpus_fixture_for_doi,
+        build_article_from_fixture,
+    )
+
+    fixture = golden_corpus_fixture_for_doi(doi)
+    canonical = build_article_from_fixture(fixture)
+    full = canonical.to_ai_markdown(asset_profile="all", max_tokens="full_text")
+    assert "PAPER_FETCH_TABLE_PLACEHOLDER" not in full
+    assert "## Figures" not in full
+    assert full.count("## Extended Data") == 1
+    for number in range(1, 5):
+        assert full.count(f"table{number}-image-response.bin)") == 1
+        assert full.count(f"**Extended Data Table {number}.") == 1
+    source = BeautifulSoup(body, "lxml")
+    extended = [
+        a
+        for a in source.select(
+            ".c-article-supplementary__title a[data-supp-info-image]"
+        )
+        if a.get_text(strip=True).startswith("Extended Data Figure")
+    ]
+    assert len(extended) == 6
+    image_positions = []
+    for entry in extended:
+        from urllib.parse import urljoin
+
+        target = urljoin(url, entry["data-supp-info-image"])
+        assert full.count(f"]({target})") == 1
+        image_positions.append(full.index(f"]({target})"))
+    assert image_positions == sorted(image_positions)
+    hidden = canonical.to_ai_markdown(asset_profile="all", include_supplementary=False)
+    assert "## Extended Data" not in hidden
+    assert "table1-image-response.bin" not in hidden
+    assert "_Fig5_ESM.jpg" not in hidden
 
 
 def test_original_science_pure_code_statement_survives_acknowledgments():
@@ -181,7 +219,7 @@ def test_original_science_pure_code_statement_survives_acknowledgments():
         "[https://codeocean.com/capsule/0322198/tree/v1](https://codeocean.com/capsule/0322198/tree/v1)"
         in rendered
     )
-    assert "## Acknowledgments" not in rendered
+    assert "## Acknowledgments" in rendered
     assert not any(
         expected in _words(s.text) for s in article.sections if s.kind == "body"
     )

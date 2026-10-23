@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from copy import deepcopy
 from typing import Any
 from collections.abc import Callable, Mapping, Sequence
 
@@ -16,13 +15,14 @@ from ..table_grid import (
 from ..markdown_render import table_format as markdown_table_format
 from ...models import normalize_markdown_text
 from ...utils import normalize_text
+from ...markdown.images import render_markdown_image
 from .inline import (
     render_html_inline_node,
     wrap_html_inline_text_fragment,
 )
 from .shared import attr_text
 
-from bs4 import Tag, NavigableString
+from bs4 import Tag
 
 TABLE_PLACEHOLDER_PREFIX = "PAPER_FETCH_TABLE_PLACEHOLDER_"
 
@@ -35,18 +35,63 @@ def wrap_table_text_fragment(text: str, marker: str | None) -> str:
 
 
 def render_table_inline_node(node: Any, *, text_style: str | None = None) -> str:
-    if isinstance(node, Tag) and "*" in node.get_text():
-        node = deepcopy(node)
-        for text in list(node.find_all(string=True)):
-            if "*" not in text or text.find_parent("math") is not None:
-                continue
-            parts = re.split(r"(\$[^$]+\$)", str(text))
-            escaped = "".join(
-                part if part.startswith("$") else part.replace("*", r"\*")
-                for part in parts
+    def image_markdown(child: Any) -> str | None:
+        if isinstance(child, Tag) and child.name == "a" and child.get("href"):
+            from urllib.parse import quote
+
+            href = quote(str(child["href"]), safe="/:#?=&%+@;,~!$*'[]")
+            content = deepcopy(child)
+            content.name = "span"
+            label = render_html_inline_node(
+                content,
+                policy="table_cell",
+                text_style=text_style,
+                raw_markdown_from_node=image_markdown,
             )
-            text.replace_with(NavigableString(escaped))
-    return render_html_inline_node(node, policy="table_cell", text_style=text_style)
+            return label if href == "#" else f"[{label}]({href})"
+        from ..markdown_render.formulas import (
+            is_mathjax_tex_node,
+            is_html_formula_container,
+            render_html_formula_container,
+        )
+
+        if isinstance(child, Tag) and (
+            child.name == "math"
+            or is_mathjax_tex_node(child)
+            or is_html_formula_container(child)
+        ):
+            return render_html_formula_container(child) or None
+        if isinstance(child, Tag) and child.name == "img":
+            url = next(
+                (
+                    str(child[key])
+                    for key in ("src", "data-src", "data-lsrc")
+                    if child.get(key)
+                ),
+                "",
+            )
+            if url:
+                return render_markdown_image(
+                    "image", str(child.get("alt") or "Image"), url
+                )
+        return None
+
+    from copy import deepcopy
+
+    node = deepcopy(node)
+    if isinstance(node, Tag):
+        for block in node.find_all(["p", "div"]):
+            block.insert_before(
+                Tag(name="br")
+            ) if block.previous_sibling is not None else None
+        for bold in node.select(".ltx_font_bold"):
+            bold.name = "strong"
+    return render_html_inline_node(
+        node,
+        policy="table_cell",
+        text_style=text_style,
+        raw_markdown_from_node=image_markdown,
+    )
 
 
 def render_table_inline_text(node: Any) -> str:
@@ -343,7 +388,7 @@ def render_table_markdown(
         header_row = [header for header in headers]
         body_rows: list[list[str]] = []
         for row in data_rows:
-            cells = [normalize_text(str(cell.get("text") or "")) for cell in row]
+            cells = [str(cell.get("text") or "") for cell in row]
             body_rows.append(cells + [""] * max(0, len(header_row) - len(cells)))
         lines.extend(render_aligned_markdown_table([header_row, *body_rows]))
         return "\n".join(lines)
@@ -389,7 +434,7 @@ def inject_inline_table_blocks(
         return markdown_text
 
     blocks = [
-        normalize_markdown_text(block)
+        block.strip("\r\n")
         for block in re.split(r"\n\s*\n", markdown_text)
         if normalize_text(block)
     ]
@@ -403,7 +448,7 @@ def inject_inline_table_blocks(
             injected.append(block)
             continue
         injected.extend(
-            normalize_markdown_text(part)
+            part.strip("\r\n")
             for part in re.split(r"\n\s*\n", replacement)
             if normalize_text(part)
         )

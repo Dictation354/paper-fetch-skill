@@ -38,8 +38,8 @@ def test_placeholder_mathml_is_checked_in_every_captured_paper():
         assert assert_mathml_formulas(nodes, markdown) == len(nodes)
         counts[fixture.provider] += len(nodes)
         papers[fixture.provider] += 1
-    assert counts == {"pnas": 325, "science": 43}
-    assert papers == {"pnas": 7, "science": 5}
+    assert counts == {"pnas": 325, "science": 44}
+    assert papers == {"pnas": 7, "science": 6}
 
 
 @pytest.mark.parametrize("doi", ["10.1126/science.adp0212", "10.1073/pnas.2406303121"])

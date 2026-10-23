@@ -30,6 +30,7 @@ EXPLICIT_FORMULA_IMAGE_URL_PATTERN = re.compile(
     flags=re.IGNORECASE,
 )
 GENERIC_FORMULA_CONTAINER_TOKENS = (
+    "inline-formula",
     "inline-equation",
     "inline-eqn",
     "display-equation",
@@ -49,7 +50,7 @@ GENERIC_DISPLAY_FORMULA_SELECTORS = (
     *(
         f".{token}"
         for token in GENERIC_FORMULA_CONTAINER_TOKENS
-        if token not in {"inline-eqn", "inline-equation"}
+        if token not in {"inline-eqn", "inline-equation", "inline-formula"}
     ),
     "math[display='block']",
     "div[role='math']",
@@ -57,7 +58,7 @@ GENERIC_DISPLAY_FORMULA_SELECTORS = (
 GENERIC_DISPLAY_FORMULA_IDENTITY_TOKENS = tuple(
     token
     for token in GENERIC_FORMULA_CONTAINER_TOKENS
-    if token not in {"inline-eqn", "inline-equation"}
+    if token not in {"inline-eqn", "inline-equation", "inline-formula"}
 )
 MATHML_SCRIPT_TYPES = frozenset(
     {
@@ -381,9 +382,19 @@ def formula_heading_for_image(
 def mathml_element_from_html_node(node: Any) -> ET.Element | None:
     if not isinstance(node, Tag):
         return None
-    math_node = (
-        node if normalize_text(node.name or "").lower() == "math" else node.find("math")
+    math_nodes = (
+        [node]
+        if normalize_text(node.name or "").lower() == "math"
+        else node.find_all("math")
     )
+    scripts = [
+        script
+        for script in node.find_all("script")
+        if normalize_formula_script_type(script.get("type")) in MATHML_SCRIPT_TYPES
+    ]
+    if len(math_nodes) + len(scripts) != 1:
+        return None
+    math_node = math_nodes[0] if math_nodes else None
     if isinstance(math_node, Tag):
         parsed = _parse_mathml(str(math_node))
         if parsed is not None:

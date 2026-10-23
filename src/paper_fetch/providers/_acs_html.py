@@ -98,6 +98,14 @@ def acs_before_block_normalization(container: Any) -> None:
     )
 
     _decompose_matching(container, ACS_DOM_CHROME_SELECTORS)
+    for operator in container.find_all(lambda node: node.name in {"mo", "mml:mo"}):
+        if operator.get_text() == "\u2063" and operator.get("rspace"):
+            width = operator["rspace"]
+            operator.name = (
+                "mml:mspace" if operator.name.startswith("mml:") else "mspace"
+            )
+            operator.clear()
+            operator.attrs = {"width": width}
     _drop_promotional_blocks(container, promo_block_tokens=_promo_block_tokens("acs"))
     # Publisher source wrapping is whitespace inside a heading, not a Markdown
     # block boundary. Preserve inline tags while joining its source text lines.
@@ -114,7 +122,10 @@ def acs_before_block_normalization(container: Any) -> None:
         note_blocks = []
         for note in wrapper.select(".table-wrap-foot"):
             paragraph = BeautifulSoup("", choose_parser()).new_tag("p")
-            paragraph.string = render_retained_text_from_html(note)
+            paragraph.string = render_retained_text_from_html(
+                note, source_url="https://pubs.acs.org/"
+            )
+            paragraph["data-paper-fetch-markdown"] = "1"
             note_blocks.append(paragraph)
             note.decompose()
         tables = [
@@ -265,7 +276,9 @@ def _clean_reference_text(node: Tag) -> str:
     ):
         for match in list(clone.select(selector)):
             match.decompose()
-    text = normalize_text(clone.get_text(" ", strip=True))
+    from ..extraction.html.inline import render_html_inline_node
+
+    text = normalize_text(render_html_inline_node(clone))
     text = re.sub(r"\s+([,.;:])", r"\1", text)
     text = re.sub(r"DOI:\s+", "DOI: ", text, flags=re.IGNORECASE)
     return normalize_text(text)

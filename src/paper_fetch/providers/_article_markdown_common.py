@@ -27,6 +27,7 @@ from ..extraction.markdown_render.tables import (
     render_table_block,
 )
 from ..utils import format_paper_stem, normalize_text
+from ..markdown.math import protect_markdown_math, restore_markdown_math
 
 XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
 XLINK_TITLE = "{http://www.w3.org/1999/xlink}title"
@@ -66,22 +67,31 @@ __all__ = [
 
 def _normalize_xml_character_data(value: str | None) -> str:
     """Normalize XML text without letting literal stars become Markdown emphasis."""
-    return re.sub(r"[ \t\r\n]+", " ", value or "").replace("*", r"\*")
+    from ..extraction.html.inline import escape_markdown_text
+
+    return escape_markdown_text(re.sub(r"[ \t\r\n]+", " ", value or ""))
 
 
 def _render_xml_tail(child: ET.Element, next_child: ET.Element | None) -> str:
     tail = child.tail or ""
-    if (
-        ("\n" in tail or "\r" in tail)
-        and not tail.strip()
-        and isinstance(child.tag, str)
-        and xml_local_name(child.tag) == "italic"
-        and next_child is not None
-        and isinstance(next_child.tag, str)
-        and xml_local_name(next_child.tag) == "italic"
-    ):
-        return "\n"
-    return _normalize_xml_character_data(tail)
+    wrapped_url = _wrapped_xml_url(child)
+    if wrapped_url:
+        href, suffix = wrapped_url
+        tail = tail.lstrip()[len(suffix) :]
+    normalized = _normalize_xml_character_data(tail)
+    return normalized
+
+
+def _wrapped_xml_url(node: ET.Element) -> tuple[str, str] | None:
+    if not isinstance(node.tag, str) or xml_local_name(node.tag) != "ext-link":
+        return None
+    label = normalize_text("".join(node.itertext()))
+    href = node.get(XLINK_HREF) or node.get("href") or ""
+    if label.startswith(("https://", "http://")) and href.startswith(label):
+        suffix = href[len(label) :]
+        if suffix and (node.tail or "").lstrip().startswith(suffix):
+            return href, suffix
+    return None
 
 
 def iter_children(
@@ -108,28 +118,31 @@ def iter_descendants(element: ET.Element | None, local_name: str) -> list[ET.Ele
 
 
 def normalize_inline_markup_text(value: str | None) -> str:
-    text = normalize_text(value)
+    text, protected = protect_markdown_math(value or "")
+    text = normalize_text(text)
     if not text:
         return ""
 
-    text = INLINE_SPLIT_SUBSCRIPT_PATTERN.sub(
-        lambda match: (
-            f"*{match.group('base')}*<sub>{match.group('italic_sub') or match.group('plain_sub')}</sub>"
-        ),
-        text,
-    )
     text = re.sub(r"\s*(<(?:sub|sup)>)\s*", r"\1", text, flags=re.IGNORECASE)
     text = re.sub(r"\s+</(sub|sup)>", r"</\1>", text, flags=re.IGNORECASE)
     text = re.sub(r"\s+(<(?:sub|sup)>)", r"\1", text, flags=re.IGNORECASE)
     text = re.sub(r"(</(?:sub|sup)>)\s*\n\s*", r"\1 ", text, flags=re.IGNORECASE)
-    text = re.sub(r"(</(?:sub|sup)>)(?=[A-Za-z0-9])", r"\1 ", text, flags=re.IGNORECASE)
     text = re.sub(
         r"(</(?:sub|sup)>)\s+([,.;:%\]\}\+\)])", r"\1\2", text, flags=re.IGNORECASE
     )
     text = re.sub(r"\s*\n\s*([,.;:%\]\}\)])", r"\1", text)
     text = re.sub(r"([(\[{])\s*\n\s*", r"\1", text)
     text = re.sub(r"(?<=[A-Za-z0-9>])\s*\n\s*(?=[A-Za-z0-9*_<])", " ", text)
-    return text.strip()
+    return restore_markdown_math(text.strip(), protected)
+
+
+def join_xml_inline_parts(parts: list[str]) -> str:
+    text = ""
+    for part in parts:
+        if text.endswith("$") and part.startswith("$"):
+            text += " "
+        text += part
+    return text
 
 
 def render_inline_text(
@@ -165,6 +178,35 @@ def render_inline_text(
                 continue
 
             local_name = xml_local_name(child.tag)
+            if (
+                xml_local_name(node.tag) in {"name", "person-group", "element-citation"}
+                and local_name
+                in {
+                    "name",
+                    "surname",
+                    "given-names",
+                    "suffix",
+                    "etal",
+                    "article-title",
+                    "source",
+                    "year",
+                    "volume",
+                    "issue",
+                    "fpage",
+                    "lpage",
+                    "pub-id",
+                    "publisher-name",
+                    "publisher-loc",
+                }
+                and parts
+                and not parts[-1][-1:].isspace()
+            ):
+                parts.append(" ")
+            if child.get("data-paper-fetch-markdown") is not None:
+                parts.append(child.text or "")
+                if child.tail:
+                    parts.append(_render_xml_tail(child, next_child))
+                continue
             if local_name in skip_names:
                 if child.tail:
                     parts.append(_render_xml_tail(child, next_child))
@@ -202,26 +244,68 @@ def render_inline_text(
                     f"{render_inline_text(child, skip_local_names=skip_names, formula_renders=formula_renders, source_url=source_url)}"
                     "</sup>"
                 )
-            elif local_name == "sub":
+            elif local_name in {"sub", "inf"}:
                 parts.append(
                     "<sub>"
                     f"{render_inline_text(child, skip_local_names=skip_names, formula_renders=formula_renders, source_url=source_url)}"
                     "</sub>"
                 )
-            elif local_name in {"bold"}:
-                parts.append(
-                    "**"
-                    f"{render_inline_text(child, skip_local_names=skip_names, formula_renders=formula_renders, source_url=source_url)}"
-                    "**"
+            elif local_name in {"monospace", "code", "preformat"}:
+                from ..extraction.html.inline import code_span
+
+                parts.append(code_span("".join(child.itertext())))
+            elif local_name == "etal":
+                parts.append("et al.")
+            elif local_name in {"bold", "italic"}:
+                body = render_inline_text(
+                    child,
+                    skip_local_names=skip_names,
+                    formula_renders=formula_renders,
+                    source_url=source_url,
                 )
-            elif local_name in {"italic"}:
-                parts.append(
-                    "*"
-                    f"{render_inline_text(child, skip_local_names=skip_names, formula_renders=formula_renders, source_url=source_url)}"
-                    "*"
+                previous = node.text if index == 0 else children[index - 1].tail
+                adjacent = (
+                    next_child is not None
+                    and xml_local_name(next_child.tag) in {"italic", "bold"}
+                    and not (child.tail or "").strip()
                 )
+                nested = any(
+                    xml_local_name(n.tag) in {"bold", "italic"}
+                    for n in child.iter()
+                    if n is not child and isinstance(n.tag, str)
+                )
+                in_word = bool(previous and previous[-1:].isalnum()) or bool(
+                    child.tail and child.tail[:1].isalnum()
+                )
+                tag = "strong" if local_name == "bold" else "em"
+                marker = "**" if local_name == "bold" else "*"
+                parts.append(
+                    f"<{tag}>{body}</{tag}>"
+                    if adjacent or nested or in_word
+                    else f"{marker}{body}{marker}"
+                )
+                if "".join(child.itertext())[-1:].isspace():
+                    parts.append(" ")
             elif local_name in {"break", "br"}:
-                parts.append("\n")
+                parts.append("<br>")
+            elif local_name == "ext-link" and (wrapped_url := _wrapped_xml_url(child)):
+                parts.append(wrapped_url[0])
+            elif local_name == "ext-link" and (
+                child.get(XLINK_HREF) or child.get("href")
+            ):
+                href = child.get(XLINK_HREF) or child.get("href") or ""
+                href = (
+                    "https://doi.org/" + href.removeprefix("info:doi/")
+                    if href.startswith("info:doi/")
+                    else urllib.parse.urljoin(source_url, href)
+                )
+                label = render_inline_text(
+                    child,
+                    skip_local_names=skip_names,
+                    formula_renders=formula_renders,
+                    source_url=source_url,
+                )
+                parts.append(f"[{label}]({href})")
             elif local_name in {"math", "inline-formula", "tex-math"}:
                 pass
             else:
@@ -231,7 +315,7 @@ def render_inline_text(
                 parts.append(_render_xml_tail(child, next_child))
 
     visit(element)
-    return normalize_inline_markup_text("".join(parts))
+    return normalize_inline_markup_text(join_xml_inline_parts(parts))
 
 
 def path_relative_to(base_dir: Path, target_path: str | Path) -> str:

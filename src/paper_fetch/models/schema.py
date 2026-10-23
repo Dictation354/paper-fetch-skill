@@ -92,7 +92,7 @@ QualityConfidence = Literal["high", "medium", "low"]
 
 TRUNCATION_WARNING = "Output truncated to satisfy token budget."
 # 7.0 changes HTML/XML extraction and confirmed access-stop semantics across providers.
-EXTRACTION_REVISION = 6
+EXTRACTION_REVISION = 8
 
 
 @dataclass
@@ -273,6 +273,7 @@ class SemanticLosses:
     table_semantic_loss_count: int = 0
     formula_fallback_count: int = 0
     formula_missing_count: int = 0
+    formula_diagnostics: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -590,7 +591,9 @@ class ArticleModel:
             context=context,
             preserve_source_order=True,
         )
-        if render_plan.abstract_sections:
+        if preserve_pdf:
+            pass
+        elif render_plan.abstract_sections:
             _append_sections_with_budget(
                 lines,
                 sections=render_plan.abstract_sections,

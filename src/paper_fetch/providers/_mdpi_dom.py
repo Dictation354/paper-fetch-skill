@@ -21,12 +21,15 @@ from ..extraction.html.parsing import choose_parser
 from ..extraction.html.shared import append_text_block, short_text, soup_root
 from ..extraction.html.signals import HtmlExtractionFailure
 from ..extraction.html.tables import render_table_markdown
-from ..extraction.markdown_render.formulas import render_html_formula_container
+from ..extraction.markdown_render.formulas import (
+    render_html_formula_container,
+    html_formula_latex_from_node,
+)
+from ..markdown.math import protect_markdown_math, restore_markdown_math
 from ..markdown.images import render_markdown_image
 from ..utils import normalize_text
 from ._article_markdown_math import (
     render_external_mathml_expression,
-    render_mathml_expression,
 )
 
 
@@ -317,6 +320,12 @@ def _retained_mdpi_statement(node: Tag) -> bool:
         "code availability statement",
         "code availability",
         "abbreviations",
+        "author contributions",
+        "funding",
+        "acknowledgments",
+        "acknowledgements",
+        "conflicts of interest",
+        "supplementary materials",
     }
 
 
@@ -366,14 +375,23 @@ def _article_container_html(
     # html-back sections such as supplementary downloads or site declarations.
     old_style_appendices: list[Tag] = []
     for node in source_container.select(
-        "section[id^='app'], section.html-notes, section#html-glossary"
+        "section[id^='app'], section.html-notes, section.html-ack, section#html-glossary"
     ):
         heading = node.find(re.compile(r"^h[1-6]$"))
-        if _retained_mdpi_statement(node) or (
-            heading is not None
-            and normalize_text(heading.get_text(" ", strip=True))
-            .lower()
-            .startswith("appendix")
+        if (
+            _retained_mdpi_statement(node)
+            or (
+                heading is not None
+                and normalize_text(heading.get_text(" ", strip=True))
+                .lower()
+                .startswith("supplementary")
+            )
+            or (
+                heading is not None
+                and normalize_text(heading.get_text(" ", strip=True))
+                .lower()
+                .startswith("appendix")
+            )
         ):
             if not any(
                 parent is copied
@@ -423,6 +441,38 @@ def _extract_abstract_text(container: Tag) -> str | None:
 
 
 def _normalize_mdpi_dom(container: Tag) -> None:
+    for definition_list in list(
+        container.select("dl.html-simple, dl.html-bullet, dl.html-order")
+    ):
+        terms = definition_list.find_all("dt", recursive=False)
+        definitions = definition_list.find_all("dd", recursive=False)
+        labels = [short_text(term) for term in terms]
+        ordered = bool(labels) and all(
+            re.fullmatch(r"\(?\d+\)?[.)]?", label) for label in labels
+        )
+        bullets = bool(labels) and all(label in {"–", "-", "•"} for label in labels)
+        if len(terms) != len(definitions) or not (ordered or bullets):
+            continue
+        definition_list.name = "ol" if ordered else "ul"
+        for term, definition in zip(terms, definitions, strict=True):
+            if ordered:
+                match = re.search(r"\d+", short_text(term))
+                assert match is not None
+                definition["value"] = match[0]
+            term.decompose()
+            definition.name = "li"
+        if definition_list.find_parent(["td", "th"]) is not None:
+            for item in definitions:
+                item.insert_before(Tag(name="br"))
+                item.insert_before(NavigableString("• "))
+    for table in list(container.select("#html-glossary table")):
+        block = Tag(name="div", attrs={"data-paper-fetch-markdown": "1"})
+        block.string = render_table_markdown(table, label="", caption="")
+        table.replace_with(block)
+    for image in container.select("table img"):
+        url = _mdpi_image_url(image, "https://www.mdpi.com")
+        if url:
+            image["src"] = url
     _normalize_mdpi_mathjax_groups(container)
     # Scientific data/code statements share html-notes with author/ethics UI in
     # both captured MDPI templates. Preserve just the explicitly labelled notes.
@@ -437,6 +487,7 @@ def _normalize_mdpi_dom(container: Tag) -> None:
                 text = render_retained_text_from_html(paragraph)
                 paragraph.clear()
                 paragraph.append(text)
+                paragraph["data-paper-fetch-markdown"] = "1"
     for selector in MDPI_EXTRACTION_CLEANUP_SELECTORS:
         for node in list(container.select(selector)):
             node.decompose()
@@ -461,9 +512,6 @@ def _normalize_mdpi_dom(container: Tag) -> None:
         text = normalize_text(anchor.get_text(" ", strip=True)).lower()
         if classes & _NOISY_ANCHOR_CLASSES or "scholar.google." in href:
             anchor.decompose()
-            continue
-        if "html-disp-formula" in classes and text:
-            anchor.replace_with(NavigableString(text))
             continue
         if text in {"google scholar", "crossref", "pubmed"}:
             anchor.decompose()
@@ -568,7 +616,7 @@ def _normalize_mdpi_inline_block_wrappers(container: Tag) -> None:
 def _render_mdpi_inline_text(node: Tag | None) -> str:
     if node is None:
         return ""
-    return normalize_text(
+    protected, expressions = protect_markdown_math(
         render_html_inline_node(
             node,
             policy="body",
@@ -576,18 +624,17 @@ def _render_mdpi_inline_text(node: Tag | None) -> str:
             break_render=" ",
         )
     )
+    return restore_markdown_math(normalize_text(protected), expressions)
 
 
 def _render_mdpi_mathml_latex(node: Tag, *, display_mode: bool) -> str:
+    source = html_formula_latex_from_node(node)
+    if source:
+        return source
     element = mathml_element_from_html_node(node)
     if element is None:
         return ""
-    latex = normalize_text(
-        render_external_mathml_expression(element, display_mode=display_mode)
-    )
-    if latex:
-        return latex
-    return normalize_text(render_mathml_expression(element))
+    return render_external_mathml_expression(element, display_mode=display_mode)
 
 
 def _mdpi_formula_label(node: Tag) -> str:
@@ -610,13 +657,16 @@ def _mdpi_markdown_formula_replacement(
     if not latex:
         return None
     if not display_mode:
-        return NavigableString(f"${latex}$")
+        raw = Tag(name="span", attrs={"data-paper-fetch-markdown": "1"})
+        raw.string = f"${latex}$"
+        return raw
 
     soup = soup_root(node)
     if soup is None:
         return None
     replacement = soup.new_tag("div")
     replacement[_MDPI_FORMULA_BLOCK_ATTR] = "1"
+    replacement["data-paper-fetch-markdown"] = "1"
     for line in ("$$", latex, "$$"):
         append_text_block(replacement, line, soup=soup)
     normalized_label = normalize_text(label)
@@ -654,6 +704,7 @@ def _mdpi_formula_text_replacement(node: Tag, *, label: str = "") -> Tag | None:
         return None
     replacement = soup.new_tag("div")
     replacement[_MDPI_FORMULA_BLOCK_ATTR] = "1"
+    replacement["data-paper-fetch-markdown"] = "1"
     append_text_block(replacement, formula_text, soup=soup)
     normalized_label = normalize_text(label)
     if normalized_label:
@@ -705,11 +756,15 @@ def _normalize_mdpi_mathjax_groups(container: Tag) -> None:
             rendered = render_html_formula_container(replacement)
             if display:
                 replacement.clear()
-                replacement.attrs = {_MDPI_FORMULA_BLOCK_ATTR: "1"}
+                replacement.attrs = {
+                    _MDPI_FORMULA_BLOCK_ATTR: "1",
+                    "data-paper-fetch-markdown": "1",
+                }
                 for line in rendered.strip().splitlines():
                     append_text_block(replacement, line, soup=soup)
             else:
-                replacement = NavigableString(rendered)
+                replacement = Tag(name="span", attrs={"data-paper-fetch-markdown": "1"})
+                replacement.string = rendered
         frame.replace_with(replacement)
         if preview is not None:
             preview.decompose()
@@ -1011,6 +1066,7 @@ def _markdown_display_block(
     block = soup.new_tag("div")
     block[_MDPI_DISPLAY_BLOCK_ATTR] = kind
     block.append(NavigableString(markdown_text))
+    block["data-paper-fetch-markdown"] = "1"
     return block
 
 

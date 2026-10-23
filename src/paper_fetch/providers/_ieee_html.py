@@ -11,6 +11,7 @@ from ..extraction.html.assets import extract_scoped_html_assets
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.provider_rules import IEEE_EXTRACTION_CLEANUP_SELECTORS
 from ..extraction.html.renderer import clean_rendered_markdown
+from ..extraction.markdown_render.formulas import render_inline_latex_markdown
 from ..extraction.html.semantics import collect_html_section_hints
 from ..reason_codes import NO_RESULT
 from ..runtime import RuntimeContext
@@ -41,7 +42,7 @@ from .base import ProviderFailure
 from bs4 import BeautifulSoup, Tag
 
 IEEE_SECTION_MARKER_PATTERN = re.compile(
-    r"^SECTION\s+(?:[IVXLCDM]+|\d+)\s*[.:]?$", flags=re.IGNORECASE
+    r"^SECTION\s+(?:[A-Z]+|\d+)\s*[.:]?$", flags=re.IGNORECASE
 )
 
 
@@ -63,6 +64,13 @@ def _find_ieee_article(html_text: str) -> Tag | None:
 
 
 def _clean_ieee_article(article: Tag) -> None:
+    for item in article.select(".alg-item.label"):
+        item.name = "p"
+        for paragraph in list(item.find_all("p", recursive=False)):
+            paragraph.insert_before(" ")
+            paragraph.unwrap()
+    for code in article.find_all("monospace"):
+        code.name = "code"
     for selector in IEEE_EXTRACTION_CLEANUP_SELECTORS:
         try:
             for node in list(article.select(selector)):
@@ -89,6 +97,10 @@ def _clean_ieee_article(article: Tag) -> None:
         if "kicker" in classes and IEEE_SECTION_MARKER_PATTERN.fullmatch(text):
             node.decompose()
             continue
+        if "kicker" in classes and re.fullmatch(
+            r"SECTION\s+Algorithm\s+\d+", text, re.I
+        ):
+            node.string = re.sub(r"^SECTION\s+", "", text, flags=re.I)
         if (
             node.name in {"span", "div"}
             and IEEE_SECTION_MARKER_PATTERN.fullmatch(text)
@@ -134,7 +146,17 @@ def _annotate_ieee_inline_media_blocks(article: Tag, source_url: str) -> None:
         # shared figure renderer consumes semantic HTML figcaption nodes.
         # Normalize this provider DOM before removing the preview image.
         for caption in block.select("div.figcaption"):
+            _mark_ieee_caption_tex(caption)
             caption.name = "figcaption"
+            if asset.get("kind") == "table" or str(asset.get("heading", "")).startswith(
+                "Listing"
+            ):
+                title = caption.select_one(".title")
+                if title is not None:
+                    # The renderer uses this node as the label. Keep its
+                    # caption body separate so the same source label appears once.
+                    block.insert(0, title.extract())
+                    title["class"] = [*title.get("class", []), "fig-label"]
         inline_url = normalize_text(
             str(
                 asset.get("url")
@@ -154,6 +176,27 @@ def _annotate_ieee_inline_media_blocks(article: Tag, source_url: str) -> None:
             for preview in list(block.find_all("img")):
                 if isinstance(preview, Tag):
                     preview.decompose()
+
+
+def _mark_ieee_caption_tex(caption: Tag) -> None:
+    # Xplore table captions contain literal dollar-delimited TeX character
+    # data, unlike its body tex-math elements. Mark only these caption runs.
+    for text in list(caption.find_all(string=True)):
+        if text.find_parent(["math", "tex-math", "script"]) is not None:
+            continue
+        value = str(text)
+        matches = list(re.finditer(r"(?<![\\$])\$([^$\n]+)\$(?!\$)", value))
+        if not matches:
+            continue
+        cursor = 0
+        for match in matches:
+            text.insert_before(value[cursor : match.start()])
+            formula = Tag(name="span", attrs={"data-paper-fetch-markdown": "1"})
+            formula.string = render_inline_latex_markdown(match[1])
+            text.insert_before(formula)
+            cursor = match.end()
+        text.insert_before(value[cursor:])
+        text.extract()
 
 
 def _ieee_marker_counts(article: Tag) -> dict[str, int]:
@@ -370,6 +413,9 @@ def _extract_ieee_html(
         raise ProviderFailure(
             NO_RESULT, "IEEE dynamic HTML endpoint did not include #article."
         )
+    from ..extraction.html.object_links import prepare_retained_object_links
+
+    prepare_retained_object_links(article, source_url)
     asset_html = str(article)
     _clean_ieee_article(article)
     _annotate_ieee_inline_media_blocks(article, source_url)

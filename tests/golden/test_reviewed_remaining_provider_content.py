@@ -6,7 +6,10 @@ capture of multiple publisher pages. Ancillary fixtures are original excerpts.
 """
 
 from copy import deepcopy
+from tests.support.canonical_content import source_reference_text
+from types import SimpleNamespace
 from tests.support.test_evidence import evidence_cache as cache
+from tests.support.canonical_content import comparable_cell
 import hashlib
 import html
 import json
@@ -122,8 +125,12 @@ def test_all_original_reference_entries_and_rendered_order(doi, count):
                 for block in original.select(".ltx_bibblock"):
                     if block.get_text(strip=True).startswith("External Links:"):
                         block.decompose()
-                expected = _words(original.get_text(" ", strip=True))
-            raw_without_label = re.sub(r"^(?:\d+\.|\[\d+\])\s*", "", reference.raw)
+                expected = _words(
+                    source_reference_text(SimpleNamespace(provider="arxiv"), node)
+                )
+            raw_without_label = re.sub(
+                r"^(?:\d+\.|\\?\[\d+\\?\])\s*", "", reference.raw
+            )
             assert _words(raw_without_label) == expected, (doi, index)
         cursor = rendered.index(expected, cursor) + len(expected)
 
@@ -333,11 +340,9 @@ def test_arxiv_full_table_one_keeps_all_numeric_rows_and_columns():
 )
 def test_complete_reviewed_equations(doi, equations):
     _, _, markdown = _review(doi)
-    blocks = [
-        re.sub(r"\s+", "", b) for b in re.findall(r"\$\$(.*?)\$\$", markdown, re.S)
-    ]
+    blocks = [comparable_cell(b) for b in re.findall(r"\$\$(.*?)\$\$", markdown, re.S)]
     for equation in equations:
-        assert re.sub(r"\s+", "", equation) in blocks
+        assert any(comparable_cell(equation) in block for block in blocks)
 
 
 @pytest.mark.parametrize(
@@ -352,14 +357,17 @@ def test_archived_ancillary_excerpts_preserve_source_date_version_and_complete_l
         ("ancillary-excerpt.html", f"https://arxiv.org/src/{arxiv_id}/anc"),
     ]:
         path = golden_criteria_asset(f"10.48550/arxiv.{arxiv_id}", filename)
-        sample_id = f"10.48550_arxiv.{arxiv_id}_{filename.removesuffix('.html')}"
+        sample_id = f"10.48550_arxiv.{arxiv_id}"
         sample = golden_criteria_manifest()["samples"][sample_id]
         record = fixture_catalog()[sample["assets"][filename]]
         assert record.origin_kind == "real_excerpt"
-        assert record.source_url == url
-        assert sample["retrieved_at"] == "2026-09-08"
+        assert sample["auxiliary_source_urls"][filename] == url
+        assert sample["excerpt_retrieved_at"] == "2026-09-08"
         assert sample["arxiv_id"] == arxiv_id
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == sample["sha256"]
+        assert (
+            hashlib.sha256(path.read_bytes()).hexdigest()
+            == sample["excerpt_sha256"][filename]
+        )
         soup = BeautifulSoup(path.read_text(), "lxml")
         links = [n["href"] for n in soup.select("a.anc-file-name")]
         assert len(links) == len(set(links)) == count

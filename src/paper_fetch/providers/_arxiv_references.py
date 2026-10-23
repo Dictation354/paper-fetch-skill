@@ -107,7 +107,24 @@ def _arxiv_reference_text(node: Any) -> str:
     clone = _clean_arxiv_reference_node(node)
     if not isinstance(clone, Tag):
         return ""
-    return _normalize_reference_text(clone.get_text(" ", strip=True))
+    from ..markdown.citations import normalize_inline_citation_markdown
+
+    text = _normalize_reference_text(
+        normalize_inline_citation_markdown(render_clean_text_from_html(clone))
+    )
+    urls = list(
+        dict.fromkeys(
+            str(link["href"])
+            for link in node.select(
+                ".ltx_bib_external[href], .ltx_bib_external a[href]"
+            )
+            if str(link["href"]).startswith(("https://", "http://"))
+        )
+    )
+    for url in urls:
+        if url not in text:
+            text += f" [{url}]({url})"
+    return text
 
 
 def _candidate_arxiv_bibitems(root: Any) -> list[Any]:
@@ -143,8 +160,21 @@ def _is_arxiv_table_figure(node: Any) -> bool:
     return (
         isinstance(node, Tag)
         and node.name == "figure"
-        and _arxiv_node_has_class(node, "ltx_table")
         and node.find("table") is not None
+        and (
+            _arxiv_node_has_class(node, "ltx_table")
+            or (
+                node.find("figcaption", recursive=False) is not None
+                and bool(
+                    re.match(
+                        r"Table\s+\d",
+                        node.find("figcaption", recursive=False).get_text(
+                            " ", strip=True
+                        ),
+                    )
+                )
+            )
+        )
     )
 
 
@@ -210,12 +240,8 @@ def _replace_arxiv_semantic_node_with_placeholder(
 ) -> None:
     if not isinstance(node, Tag):
         return
-    placeholder_node = soup.new_string(f"\n\n{placeholder}\n\n")
-    figure_anchor = _arxiv_topmost_figure_ancestor(node, article)
-    if isinstance(figure_anchor, Tag):
-        figure_anchor.insert_before(placeholder_node)
-        node.decompose()
-        return
+    placeholder_node = soup.new_tag("p", attrs={"data-paper-fetch-markdown": "1"})
+    placeholder_node.string = placeholder
     node.replace_with(placeholder_node)
 
 
@@ -285,14 +311,16 @@ def _render_arxiv_table_cell(node: Any) -> str:
     from ..markdown.images import render_markdown_image
 
     cell = copy.deepcopy(node)
+    for bold in cell.select(".ltx_font_bold"):
+        bold.name = "strong"
     for image in cell.find_all("img"):
         url = str(image.get(INLINE_FIGURE_SRC_ATTR) or image.get("src") or "")
         if url:
-            image.replace_with(
-                render_markdown_image(
-                    "figure", image.get(INLINE_FIGURE_ALT_ATTR) or image.get("alt"), url
-                )
+            raw = Tag(name="span", attrs={"data-paper-fetch-markdown": "1"})
+            raw.string = render_markdown_image(
+                "figure", image.get(INLINE_FIGURE_ALT_ATTR) or image.get("alt"), url
             )
+            image.replace_with(raw)
     return render_clean_text_from_html(cell)
 
 
@@ -358,9 +386,7 @@ def _render_arxiv_listing_block(node: Any) -> tuple[str, bool]:
     if not code_lines:
         return normalize_markdown_text(heading_line), False
     escaped_lines = [line.replace("```", "'''") for line in code_lines]
-    return normalize_markdown_text(
-        "\n".join([heading_line, "", "```text", *escaped_lines, "```"])
-    ), True
+    return normalize_markdown_text("\n\n".join([heading_line, *escaped_lines])), True
 
 
 def _prepare_arxiv_semantic_blocks(article: Any, soup: Any) -> ArxivSemanticPreparation:

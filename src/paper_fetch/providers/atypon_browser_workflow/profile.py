@@ -25,7 +25,6 @@ from ...extraction.html.provider_rules import (
     front_matter_contains_tokens_for_profile,
     front_matter_exact_texts_for_profile,
     front_matter_publication_keywords_for_profile,
-    provider_html_rules,
 )
 from ...extraction.html._runtime import (
     FRONT_MATTER_PUBLICATION_KEYWORDS,
@@ -162,19 +161,12 @@ def _front_matter_publication_keywords(publisher: str | None) -> set[str]:
     }
 
 
-def _post_content_break_tokens(publisher: str | None) -> tuple[str, ...]:
-    return (
-        *POST_CONTENT_BREAK_TOKENS,
-        *provider_html_rules(publisher).cleanup.post_content_break_tokens,
-    )
-
-
 def _post_content_cleanup_policy(publisher: str | None):
     return extend_cleanup_policy(
         _cleanup_policy_for_publisher(publisher),
         post_content_exact_texts=tuple(POST_CONTENT_BREAK_TEXTS),
         post_content_prefixes=POST_CONTENT_BREAK_PREFIXES,
-        post_content_cutoff_tokens=_post_content_break_tokens(publisher),
+        post_content_cutoff_tokens=POST_CONTENT_BREAK_TOKENS,
     )
 
 

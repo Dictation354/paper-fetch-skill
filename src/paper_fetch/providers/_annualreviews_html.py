@@ -268,8 +268,6 @@ def _canonical_heading(text: str) -> str:
         return aliases[lowered]
     if lowered.startswith("literature cited"):
         return "References"
-    if heading.isupper() and len(heading) > 3:
-        return heading.title()
     return heading
 
 
@@ -314,7 +312,7 @@ def _normalize_section_headings(container: Tag) -> None:
         "#viewGlossaryPopup .modal-title, #viewFootnotePopup .modal-title"
     ):
         title = _canonical_heading(_node_text(heading))
-        if title in {"Terms And Definitions", "Footnotes"}:
+        if title.casefold() in {"terms and definitions", "footnotes"}:
             heading.replace_with(_new_tag_like(heading, "h2", title))
 
 
@@ -466,7 +464,9 @@ def _replace_with_markdown_table(table_container: Tag, table: Tag) -> None:
     markdown = _markdown_table_block(table, table_container)
     if not markdown:
         return
-    replacement = BeautifulSoup("", choose_parser()).new_tag("pre")
+    replacement = BeautifulSoup("", choose_parser()).new_tag(
+        "div", attrs={"data-paper-fetch-markdown": "1"}
+    )
     replacement["class"] = _TABLE_BLOCK_CLASS
     replacement.string = markdown
     table_container.replace_with(replacement)
@@ -483,7 +483,9 @@ def _normalize_tables(container: Tag) -> None:
         for label in list(caption.select(".table-label")):
             text = _node_text(label)
             if text:
-                label.replace_with(_new_tag_like(label, "p", f"**{text}**"))
+                replacement = _new_tag_like(label, "p", f"**{text}**")
+                replacement["data-paper-fetch-markdown"] = "1"
+                label.replace_with(replacement)
 
     for table_container in list(container.select(".table-container")):
         if not isinstance(table_container, Tag):
@@ -542,6 +544,9 @@ def _cleaned_article_html_from_soup(
     list[dict[str, Any]],
     HtmlContainerEvidence,
 ]:
+    from ..extraction.html.object_links import prepare_retained_object_links
+
+    prepare_retained_object_links(soup, source_url)
     selection = _select_article_container(soup)
     if selection is None:
         raise HtmlExtractionFailure(
@@ -549,8 +554,15 @@ def _cleaned_article_html_from_soup(
             "Could not identify the Annual Reviews full-text container.",
         )
     cleaned = copy.deepcopy(selection.node)
+    for node in cleaned.select("span.jp-sub, span.jp-sup"):
+        node.name = "sub" if "jp-sub" in node.get("class", []) else "sup"
     _remove_noise_nodes(cleaned)
     _normalize_section_headings(cleaned)
+    for formula in cleaned.select(".disp-formula"):
+        label = formula.find(class_="label", recursive=False)
+        if isinstance(label, Tag):
+            formula.insert_before(_new_tag_like(label, "p", _node_text(label)))
+            label.decompose()
     # Annual Reviews supplies body equations as root-relative GIFs. The
     # provider renderer emits these directly, so retain a usable source link
     # when the resulting Markdown is opened away from the publisher page.
@@ -560,6 +572,14 @@ def _cleaned_article_html_from_soup(
             # Normalize this publisher's legacy marker to the renderer's
             # existing inline-equation contract, including figure captions.
             image["class"] = [*image.get("class", []), "inline-equation"]
+    for styled in cleaned.select(".jp-italic, .jp-bold"):
+        styled.name = "em" if "jp-italic" in styled.get("class", []) else "strong"
+    for heading in cleaned.select(".tl-third-level-section"):
+        label = heading.find_previous_sibling(class_="label")
+        if label is not None:
+            heading.insert(0, label.get_text(strip=True) + " ")
+            label.decompose()
+        heading.name = "h4"
     _normalize_figures(cleaned, source_url)
     _normalize_tables(cleaned)
     _normalize_references(cleaned)
@@ -626,20 +646,28 @@ def _extract_page_title_from_soup(
 
 
 def _render_annualreviews_article_markdown(article_html: str, source_url: str) -> str:
-    del source_url
     soup = BeautifulSoup(article_html, choose_parser())
     article = soup.find("article")
     if not isinstance(article, Tag):
         return ""
+    for anchor in article.select("a[href]"):
+        if not str(anchor["href"]).startswith(("javascript:", "mailto:")):
+            anchor["href"] = urljoin(source_url, str(anchor["href"]))
     # A caption's equation images belong to its inline text, not to the
     # figure's image list. Work on this render copy so asset discovery still
     # sees the original caption subtree and its formula URLs.
     for figure in article.find_all("figure"):
         caption = figure.find("figcaption")
         if isinstance(caption, Tag) and caption.find("img") is not None:
+            for image in caption.find_all("img"):
+                if "inline-equation" in image.get(
+                    "class", []
+                ) or "inline-formula" in image.get("class", []):
+                    image["alt"] = "Formula"
             text = render_clean_text_from_html(caption)
             caption.clear()
             caption.append(text)
+            caption["data-paper-fetch-markdown"] = "1"
     lines: list[str] = []
     render_container_markdown(
         article,
@@ -706,6 +734,15 @@ def extract_references(html_text: str) -> list[dict[str, Any]]:
         for item in list(ref.select(".citation-label")):
             if isinstance(item, Tag):
                 item.decompose()
+        for script in ref.select("sub, sup, span.jp-sub, span.jp-sup"):
+            script.name = (
+                "sub"
+                if script.name == "sub" or "jp-sub" in script.get("class", [])
+                else "sup"
+            )
+            script.replace_with(
+                f"<{script.name}>{script.get_text(strip=True)}</{script.name}>"
+            )
         raw = normalize_text(ref.get_text(" ", strip=True))
         raw = _REFERENCE_LEADING_LABEL_RE.sub("", raw).strip()
         raw = _PUNCT_SPACE_RE.sub(r"\1", raw)

@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass
-from html import escape
+from dataclasses import dataclass, field as dataclass_field
 import re
 from typing import Any
 from collections.abc import Mapping
 from urllib.parse import quote, urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
+from ..formula.validation import formula_document, capture_formula_diagnostics
+from ..models import SemanticLosses
 
 from ..extraction.html._metadata import (
     merge_html_metadata,
@@ -31,7 +32,10 @@ from ..extraction.html.renderer import (
 from ..extraction.markdown_render.formulas import (
     normalize_tex_formula_text,
     render_html_mathml_node,
+    render_html_formula_container,
+    render_inline_latex_markdown,
 )
+from ..formula.convert import normalize_latex
 from ..models import AssetProfile
 from ..publisher_identity import extract_doi, normalize_doi
 from ..utils import normalize_text
@@ -121,7 +125,7 @@ _REFERENCE_TABLE_HEADER_RE = re.compile(
 )
 _BROKEN_REFERENCE_TABLE_ROW_RE = re.compile(r"^\|\s*\[\s*\|")
 _MARKDOWN_HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
-_INLINE_MATH_SPAN_RE = re.compile(r"\$[^$\n]+\$")
+_INLINE_MATH_SPAN_RE = re.compile(r"(?<!\\)\$[^$\n]+(?<!\\)\$")
 _DISPLAY_EQUATION_RE = re.compile(r"(Equation(?:\s+\d+(?:\.\d+)*)?:\s+\$[^$\n]+\$)")
 _ROYAL_FIGURE_BASENAME_RE = re.compile(
     r"^(?:m_)?([a-z0-9._-]+f\d+[a-z]?)(?:\.[a-z0-9]+)?$",
@@ -140,6 +144,7 @@ class RoyalSocietyHtmlExtraction:
     abstract_sections: list[dict[str, Any]]
     section_hints: list[dict[str, Any]]
     extracted_assets: list[dict[str, Any]]
+    semantic_losses: SemanticLosses = dataclass_field(default_factory=SemanticLosses)
 
 
 def direct_article_url(doi: str) -> str:
@@ -191,7 +196,10 @@ def _remove_noise_nodes(container: Tag) -> None:
 
 def _normalize_silverchair_dom(container: Tag) -> None:
     for paragraph in list(container.select("div.block-child-p")):
-        if isinstance(paragraph, Tag):
+        if (
+            isinstance(paragraph, Tag)
+            and paragraph.find(["ul", "ol", "div", "table"]) is None
+        ):
             paragraph.name = "p"
 
     _normalize_table_captions(container)
@@ -209,29 +217,28 @@ def _normalize_silverchair_dom(container: Tag) -> None:
     for formula in list(container.select(".inline-formula")):
         if not isinstance(formula, Tag):
             continue
-        math_node = formula.find("math")
-        rendered = (
-            normalize_text(render_html_mathml_node(math_node))
-            if isinstance(math_node, Tag)
-            else ""
-        )
+        rendered = render_html_formula_container(formula).strip()
         text = rendered or normalize_text(formula.get_text(" ", strip=True))
         if text:
-            formula.replace_with(text)
-
-    for inline in list(container.find_all(["em", "i", "strong", "b"])):
-        if isinstance(inline, Tag):
-            inline.replace_with(inline.get_text("", strip=False))
+            formula.name = "span"
+            formula.clear()
+            formula["data-paper-fetch-markdown"] = "1"
+            formula.string = text
 
     for math_node in list(container.find_all("math")):
         if not isinstance(math_node, Tag):
             continue
-        rendered = normalize_text(render_html_mathml_node(math_node))
+        rendered = render_html_mathml_node(math_node).strip()
         if rendered:
-            math_node.replace_with(rendered)
+            math_node.name = "span"
+            math_node.clear()
+            math_node["data-paper-fetch-markdown"] = "1"
+            math_node.string = rendered
 
 
 def _normalize_table_captions(container: Tag) -> None:
+    from ._html_section_markdown import render_clean_text_from_html
+
     for table_wrap in list(container.select(".table-wrap")):
         if not isinstance(table_wrap, Tag):
             continue
@@ -239,27 +246,30 @@ def _normalize_table_captions(container: Tag) -> None:
             continue
         title_node = table_wrap.select_one(".table-wrap-title")
         label = (
-            _node_text(title_node.select_one(".label"))
+            render_clean_text_from_html(title_node.select_one(".label"))
             if isinstance(title_node, Tag)
             else ""
         )
         caption = (
-            _node_text(title_node.select_one(".caption"))
+            render_clean_text_from_html(title_node.select_one(".caption"))
             if isinstance(title_node, Tag)
             else ""
         )
         text = normalize_text(": ".join(item for item in (label, caption) if item))
         if not text:
             continue
-        caption_soup = BeautifulSoup(
-            f'<p class="paper-fetch-table-title">{escape(text)}</p>',
-            choose_parser(),
+        caption_node = Tag(
+            name="p",
+            attrs={
+                "class": "paper-fetch-table-title",
+                "data-paper-fetch-markdown": "1",
+            },
         )
-        caption_node = caption_soup.select_one(".paper-fetch-table-title")
-        if not isinstance(caption_node, Tag):
-            continue
+        caption_node.string = text
         if isinstance(title_node, Tag):
-            title_node.insert_after(caption_node)
+            if title_node.get("id"):
+                caption_node["id"] = title_node["id"]
+            title_node.replace_with(caption_node)
         else:
             table_wrap.insert(0, caption_node)
 
@@ -267,7 +277,7 @@ def _normalize_table_captions(container: Tag) -> None:
 def _replace_display_formula(node: Tag, label_node: Tag | None) -> bool:
     formula_node = node.select_one(".disp-formula")
     formula = formula_node if isinstance(formula_node, Tag) else node
-    math_text = render_html_mathml_node(formula).strip()
+    math_text = render_html_formula_container(formula).strip()
     math_node = formula.select_one(".math")
     if not math_text and isinstance(math_node, Tag):
         math_text = normalize_tex_formula_text(math_node.get_text("", strip=False))
@@ -275,25 +285,15 @@ def _replace_display_formula(node: Tag, label_node: Tag | None) -> bool:
         return False
     label = _node_text(label_node)
     prefix = f"Equation {label}: " if label else "Equation: "
-    node.replace_with(f" {prefix}{_inline_formula_markdown(math_text)} ")
+    node.name = "p"
+    node.clear()
+    node["data-paper-fetch-markdown"] = "1"
+    node.string = f"{prefix}{_inline_formula_markdown(math_text)}"
     return True
 
 
 def _inline_formula_markdown(markdown_text: str) -> str:
-    lines = [
-        line.strip() for line in str(markdown_text or "").splitlines() if line.strip()
-    ]
-    if len(lines) >= 3 and lines[0] == "$$" and lines[-1] == "$$":
-        lines = lines[1:-1]
-    text = normalize_text(" ".join(lines))
-    text = text.replace(
-        r"{\overset{\sim}{X}}_{t - 1}e_{t}",
-        r"{\overset{\sim}{X}}_{t - 1}; e_{t}",
-    )
-    text = text.replace(r"\text{and\textbackslash~}", r"\text{and }")
-    if text.startswith("$") and text.endswith("$"):
-        return text
-    return f"${text}$" if text else ""
+    return render_inline_latex_markdown(normalize_latex(markdown_text))
 
 
 def _space_inline_math_spans(line: str) -> str:
@@ -334,16 +334,7 @@ def _split_display_equation_runs(line: str) -> list[str]:
 
 
 def _repair_royal_math_text(line: str) -> str:
-    line = line.replace(
-        r"where Atand $\mathcal{E}_{t}$",
-        r"where $A_t$ and $\mathcal{E}_{t}$",
-    )
-    line = re.sub(
-        r"where Atand (\$[^$\n]+\$)",
-        r"where $A_t$ and \1",
-        line,
-    )
-    return line.replace("εinot", "εi not")
+    return line
 
 
 def _clean_article_body_from_soup(soup: BeautifulSoup) -> tuple[str, int]:
@@ -457,7 +448,9 @@ def _parse_html_reference_node(node: Tag) -> dict[str, Any] | None:
     for selector in (".label", ".citation-links", ".ref-links", ".cit-extra"):
         for item in list(ref.select(selector)):
             item.decompose()
-    raw = normalize_text(ref.get_text(" ", strip=True))
+    from ..extraction.html.inline import render_html_inline_node
+
+    raw = normalize_text(render_html_inline_node(ref))
     raw = re.sub(r"^\d+\s+", "", raw).strip()
     if not raw:
         return None
@@ -465,7 +458,7 @@ def _parse_html_reference_node(node: Tag) -> dict[str, Any] | None:
     year_node = ref.select_one(".year")
     from ._html_references import _reference_doi
 
-    doi = extract_doi(raw) or _reference_doi(node)
+    doi = _reference_doi(node) or extract_doi(ref.get_text(" ", strip=True))
     return {
         "raw": raw,
         "title": _node_text(title_node) or None,
@@ -713,9 +706,7 @@ def _merge_asset(existing: dict[str, Any], incoming: Mapping[str, Any]) -> None:
         existing["heading"] = candidate_heading
     current_caption = normalize_text(str(existing.get("caption") or ""))
     candidate_caption = normalize_text(str(incoming.get("caption") or ""))
-    if candidate_caption and (
-        not current_caption or len(candidate_caption) > len(current_caption)
-    ):
+    if candidate_caption and not current_caption:
         existing["caption"] = candidate_caption
     for field in (
         "url",
@@ -783,6 +774,7 @@ def _normalize_extracted_assets(assets: list[dict[str, str]]) -> list[dict[str, 
     return normalized_assets
 
 
+@formula_document(new_document=True)
 def extract_markdown(
     html_text: str,
     source_url: str,
@@ -791,6 +783,9 @@ def extract_markdown(
     asset_profile: AssetProfile = "body",
 ) -> RoyalSocietyHtmlExtraction:
     soup = BeautifulSoup(html_text, choose_parser())
+    from ..extraction.html.object_links import prepare_retained_object_links
+
+    prepare_retained_object_links(soup, source_url)
     raw_article_body = _first_article_body(soup)
     raw_article_body_html = (
         str(raw_article_body) if isinstance(raw_article_body, Tag) else ""
@@ -813,12 +808,15 @@ def extract_markdown(
             extracted_assets=[],
         )
 
+    from ._html_section_markdown import render_html_fragment_markdown
+
     render_html = _markdown_render_html(cleaned_html, source_url)
     rendered = render_provider_html_fragment(
         render_html,
         source_url,
         title=str(merged_metadata.get("title") or ""),
         postprocessors=(royalsocietypublishing_normalize_markdown,),
+        renderer=render_html_fragment_markdown,
     )
     markdown_text = _restore_empty_back_matter_sections(
         rendered.markdown_text,
@@ -854,12 +852,20 @@ def extract_markdown(
     )
     if body_text_length and section_hints:
         section_hints[0].setdefault("container_text_length", body_text_length)
+    from ..extraction.html.language import collect_html_abstract_blocks
+    from ._html_section_markdown import render_clean_text_from_html
+
+    abstract_source = BeautifulSoup(cleaned_html, choose_parser())
     abstract_sections = [
         dict(item)
-        for item in rendered.abstract_sections
+        for item in collect_html_abstract_blocks(
+            abstract_source, text_renderer=render_clean_text_from_html
+        )
         if normalize_text(str(item.get("text") or "")).lower()
         != normalize_text(str(item.get("heading") or "")).lower()
     ]
+    losses = SemanticLosses()
+    capture_formula_diagnostics(losses, count_fallbacks=True)
     return RoyalSocietyHtmlExtraction(
         html_text=cleaned_html,
         markdown_text=markdown_text,
@@ -867,6 +873,7 @@ def extract_markdown(
         abstract_sections=abstract_sections,
         section_hints=section_hints,
         extracted_assets=[dict(item) for item in extracted_assets],
+        semantic_losses=losses,
     )
 
 

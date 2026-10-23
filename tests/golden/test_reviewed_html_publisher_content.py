@@ -6,6 +6,7 @@ citation_reference metadata evidence. Fixed equations/rows were transcribed from
 MathML, IOP's embedded TeX and the original HTML table cells.
 """
 
+from tests.support.canonical_content import comparable_cell
 from tests.support.reviewed_html_publisher_content import _table_cell
 import re
 from copy import deepcopy
@@ -148,7 +149,7 @@ def test_reviewed_html_body_runs_and_headings_preserve_order(reviewed_html):
         (
             "10.1021/acsomega.3c06992",
             [
-                r"ln(P_{(n)}) = a + b(n - 1) + cS_{CNE}",
+                r"\ln(P_{(n)}) = a + b(n - 1) + cS_{CNE}",
                 r"P_{LC(n)} = a + b(n - 1) + cS_{CNE}",
             ],
         ),
@@ -164,7 +165,7 @@ def test_reviewed_html_body_runs_and_headings_preserve_order(reviewed_html):
             "10.3390/math11030657",
             [
                 r"Y_{i} = f(xi,\beta)e^{vi - ui}(i = 1,2,…,N),",
-                r"lnY_{it} = \beta_{0} + \sum\beta_{j}lnx_{it} + v_{it} - u_{it}(i = 1,2,…,N; t = 1,2,…,T),",
+                r"\ln Y_{it} = \beta_{0} + \sum\beta_{j}lnx_{it} + v_{it} - u_{it}(i = 1,2,…,N; t = 1,2,…,T),",
             ],
         ),
     ],
@@ -172,11 +173,9 @@ def test_reviewed_html_body_runs_and_headings_preserve_order(reviewed_html):
 def test_reviewed_complete_html_equations(doi, equations):
     article = build_article_from_fixture(golden_corpus_fixture_for_doi(doi))
     markdown = article.to_ai_markdown(max_tokens="full_text")
-    blocks = [
-        re.sub(r"\s+", "", b) for b in re.findall(r"\$\$(.*?)\$\$", markdown, re.S)
-    ]
+    blocks = [comparable_cell(b) for b in re.findall(r"\$\$(.*?)\$\$", markdown, re.S)]
     for equation in equations:
-        assert re.sub(r"\s+", "", equation) in blocks
+        assert comparable_cell(equation) in blocks
 
 
 @pytest.mark.parametrize(

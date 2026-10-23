@@ -23,14 +23,24 @@ def _locked_package_version(path, package_name: str) -> str:
 
 def test_formula_node_package_lock_matches_manifest() -> None:
     formula_dependencies = _load_json(FORMULA_PACKAGE)["dependencies"]
-    assert set(formula_dependencies) == {"mathml-to-latex"}
+    assert set(formula_dependencies) == {
+        "mathml-to-latex",
+        "@mathjax/src",
+        "@mathjax/mathjax-tex-font",
+        "@mathjax/mathjax-mhchem-font-extension",
+        "@mathjax/mathjax-bbm-font-extension",
+    }
     assert _locked_dependencies(FORMULA_LOCK) == formula_dependencies
     assert all(
-        specifier.startswith(">=") and " <" in specifier
-        for specifier in formula_dependencies.values()
+        specifier == "4.1.3"
+        if name.startswith("@mathjax/")
+        else specifier.startswith(">=") and " <" in specifier
+        for name, specifier in formula_dependencies.items()
     )
 
 
 def test_formula_lock_resolves_each_direct_dependency() -> None:
     for package_name in _load_json(FORMULA_PACKAGE)["dependencies"]:
         assert _locked_package_version(FORMULA_LOCK, package_name)
+        if package_name.startswith("@mathjax/"):
+            assert _locked_package_version(FORMULA_LOCK, package_name) == "4.1.3"

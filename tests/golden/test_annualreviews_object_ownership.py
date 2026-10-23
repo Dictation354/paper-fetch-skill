@@ -30,12 +30,12 @@ CONTROL = "10.1146/annurev-control-090419-075625"
 CASES = {
     "10.1146/annurev-control-030123-013355": (
         ["t1", "t2", "t3"],
-        "Terms And Definitions",
+        "TERMS AND DEFINITIONS",
     ),
     CONTROL: (["t1"], None),
-    "10.1146/annurev-environ-102511-084654": ([], "Terms And Definitions"),
-    "10.1146/annurev-med-120811-171056": (["t1"], "Terms And Definitions"),
-    "10.1146/annurev-neuro-062111-150343": ([], "Footnotes"),
+    "10.1146/annurev-environ-102511-084654": ([], "TERMS AND DEFINITIONS"),
+    "10.1146/annurev-med-120811-171056": (["t1"], "TERMS AND DEFINITIONS"),
+    "10.1146/annurev-neuro-062111-150343": ([], "FOOTNOTES"),
 }
 
 
@@ -69,6 +69,12 @@ def _source(doi):
             tables, source_object_expectations(doi, REPO_ROOT / row["source"])["tables"]
         )
     markdown = article.to_ai_markdown(include_refs="all", asset_profile="all")
+    # Compare source occurrence identities after resolving persistent image
+    # paths through the article's recorded original URL.
+    for asset in article.assets:
+        origin = asset.download_url or asset.original_url
+        if asset.path and origin:
+            markdown = markdown.replace(f"]({asset.path})", f"]({origin})")
     fixture = SimpleNamespace(provider="annualreviews", doi=doi)
     runs = [run for _, group in source_prose_blocks(fixture, soup) for run in group]
     return soup, article, markdown, row["source_url"], runs
@@ -161,10 +167,10 @@ def test_nine_reviewed_table_and_backmatter_headings_keep_content_and_position(d
         label = original.select_one(".table-label").get_text(" ", strip=True)
         assert label == f"Table {table_id[1:]}"
         marker = f"**{label}**"
-        assert markdown.count(marker) == 1
+        assert len(re.findall(r"(?m)^" + re.escape(marker), markdown)) == 1
         assert not re.search(rf"(?m)^#+ {re.escape(label)}\s*$", markdown)
         assert not any(s.heading == label for s in article.sections)
-        start = markdown.index(marker)
+        start = re.search(r"(?m)^" + re.escape(marker), markdown).start()
         table = original.find_next("table")
         # Bound the table to its next retained prose, avoiding another table.
         end = markdown.find("\n\n", markdown.index("\n|", start))
@@ -176,15 +182,12 @@ def test_nine_reviewed_table_and_backmatter_headings_keep_content_and_position(d
         assert_object_position(original, markdown, start, end, runs)
     if back_heading:
         popup_id = (
-            "viewFootnotePopup" if back_heading == "Footnotes" else "viewGlossaryPopup"
+            "viewFootnotePopup" if back_heading == "FOOTNOTES" else "viewGlossaryPopup"
         )
         popup = soup.select_one(f"#itemFullTextId #{popup_id}")
-        assert (
-            popup.select_one(".modal-title").get_text(strip=True).title()
-            == back_heading
-        )
+        assert popup.select_one(".modal-title").get_text(strip=True) == back_heading
         marker = f"## {back_heading}\n"
-        assert markdown.count(marker) == 1
+        assert len(re.findall(r"(?m)^" + re.escape(marker), markdown)) == 1
         section = next(s for s in article.sections if s.heading == back_heading)
         assert section.level == 2
         start = markdown.index(marker)

@@ -233,6 +233,17 @@ def _append_candidate_node(
         candidates.append(node)
 
 
+def _is_source_fragment(href: str, source_url: str) -> bool:
+    target = urllib.parse.urlsplit(urllib.parse.urljoin(source_url, href))
+    source = urllib.parse.urlsplit(source_url)
+    return (target.scheme, target.netloc, target.path, target.query) == (
+        source.scheme,
+        source.netloc,
+        source.path,
+        source.query,
+    )
+
+
 def _figure_page_url_from_soup(node: Any, source_url: str) -> str:
     if not isinstance(node, Tag):
         return ""
@@ -255,7 +266,7 @@ def _figure_page_url_from_soup(node: Any, source_url: str) -> str:
             if (
                 any(token in hint_blob for token in FIGURE_PAGE_HINTS)
                 and href
-                and not href.startswith("#")
+                and not _is_source_fragment(href, source_url)
             ):
                 return urllib.parse.urljoin(source_url, href)
     return ""
@@ -280,7 +291,7 @@ def _figure_full_size_url_from_soup(node: Any, source_url: str) -> str:
     for context in contexts:
         for anchor in context.find_all("a", href=True):
             href = normalize_text(str(anchor.get("href") or ""))
-            if href.startswith("#"):
+            if _is_source_fragment(href, source_url):
                 continue
             absolute_href = urllib.parse.urljoin(source_url, href)
             hint_blob = " ".join(
@@ -318,7 +329,7 @@ def _image_anchor_url(image: Any, node: Any, source_url: str) -> str:
     while isinstance(current, Tag):
         if current is node:
             href = normalize_text(str(anchor.get("href") or ""))
-            if href and not href.startswith("#"):
+            if href and not _is_source_fragment(href, source_url):
                 return urllib.parse.urljoin(source_url, href)
             return ""
         current = getattr(current, "parent", None)

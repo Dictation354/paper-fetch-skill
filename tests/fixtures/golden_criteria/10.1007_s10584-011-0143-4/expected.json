@@ -2,7 +2,7 @@
   "counts": {
     "abstract_sections": 1,
     "body_sections": 9,
-    "figures": 0,
+    "figures": 10,
     "references": 39,
     "sections": 10,
     "tables": 0
@@ -14,7 +14,7 @@
     "body": true,
     "code_availability": false,
     "data_availability": false,
-    "figures": false,
+    "figures": true,
     "references": true,
     "title": true
   },

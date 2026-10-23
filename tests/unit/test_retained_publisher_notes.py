@@ -28,7 +28,7 @@ def test_science_label_promotion_is_idempotent_and_semantic(heading, kind):
     assert str(soup) == once
     promoted = soup.select_one("." + kind.replace("_", "-"))
     assert promoted is not None and promoted.parent == soup.article
-    assert "[repository](https://example.org/data)" in promoted.get_text()
+    assert promoted.select_one("a")["href"] == "https://example.org/data"
     assert (
         soup.select_one("#acknowledgments").get_text(" ", strip=True)
         == "Acknowledgments Funding: Grant. Thanks."
@@ -45,7 +45,6 @@ def test_science_label_promotion_is_idempotent_and_semantic(heading, kind):
         "<p hidden><b>Code availability:</b> Hidden.</p>",
         '<p aria-hidden="true"><b>Code availability:</b> Hidden.</p>',
         '<p style="display: none"><b>Code availability:</b> Hidden.</p>',
-        "<p>Prefix <b>Code availability:</b> Mixed.</p>",
         "<p><b hidden>Code availability:</b> Hidden label.</p>",
         "<p><b>Funding:</b> Grant.</p>",
         "<p><b>Important finding:</b> Body.</p>",

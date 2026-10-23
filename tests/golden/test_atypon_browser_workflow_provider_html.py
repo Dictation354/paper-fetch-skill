@@ -111,8 +111,14 @@ class AtyponBrowserWorkflowProviderHtmlTests(AtyponBrowserWorkflowProviderTestCa
             ["Abstract"],
         )
         self.assertEqual(
-            [section.heading for section in article.sections[:4]],
-            ["Abstract", "Losing the Amazon", "Structured Abstract", "Main Text"],
+            [section.heading for section in article.sections[:5]],
+            [
+                "Abstract",
+                "Losing the Amazon",
+                "Structured Abstract",
+                "Graphical summary",
+                "Main Text",
+            ],
         )
         self.assertEqual(article.sections[1].kind, "body")
         self.assertEqual(article.sections[2].kind, "body")

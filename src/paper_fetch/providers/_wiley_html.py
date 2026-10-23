@@ -429,11 +429,28 @@ def _drop_abstract_sections_from_body_container(container: Any) -> None:
 def wiley_before_block_normalization(container: Any) -> None:
     from ._html_section_markdown import render_heading_text_from_html
 
+    for paragraph in container.select("div.paragraph-element"):
+        paragraph["role"] = "paragraph"
     for heading in container.select("h2, h3, h4, h5, h6"):
         if heading.find(["sup", "sub"]) is not None:
             text = render_heading_text_from_html(heading)
             heading.clear()
             heading.append(text)
+            heading["data-paper-fetch-markdown"] = "1"
+    for footnotes in list(container.select(".article-section__table-footnotes")):
+        from ._html_section_markdown import render_retained_text_from_html
+
+        notes = []
+        for note in footnotes.select("li"):
+            paragraph = Tag(name="p", attrs={"data-paper-fetch-markdown": "1"})
+            paragraph.string = render_retained_text_from_html(note)
+            notes.append(paragraph)
+        wrapper = (
+            footnotes.find_parent(class_="article-table-content") or footnotes.parent
+        )
+        for note in reversed(notes):
+            wrapper.insert_after(note)
+        footnotes.decompose()
     # Wiley calls numbered display layouts "inline-equation". Map that
     # publisher convention before the shared nearest-container classifier.
     for node in container.select("div.inline-equation"):

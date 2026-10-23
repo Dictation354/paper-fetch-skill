@@ -20,7 +20,7 @@ class RenderedTable:
 
 def rendered_tables(markdown):
     result = []
-    for match in re.finditer(r"^\|[^\n]*(?:\n\|[^\n]*)*", markdown, re.M):
+    for match in re.finditer(r"^[ \t]*\|[^\n]*(?:\n[ \t]*\|[^\n]*)*", markdown, re.M):
         rows = [
             [
                 comparable_cell(c)
@@ -72,6 +72,41 @@ def assert_source_tables(
     checked = 0
     for table_index, table in enumerate(tables, 1):
         grid = source_table_grid(table)
+        if provider == "science":
+            # Source rowspans bind one model's statistics to wrapped covariates.
+            # Keep an independent logical-row expectation from those source cells.
+            from copy import deepcopy
+
+            logical = []
+            for row, cells in grid:
+                if (
+                    logical
+                    and cells[:-1]
+                    and all(
+                        left is right
+                        for left, right in zip(
+                            cells[:-1], logical[-1][1][:-1], strict=True
+                        )
+                    )
+                ):
+                    tail = logical[-1][1][-1]
+                    text = tail.__dict__["_source_text"]
+                    separator = (
+                        ""
+                        if text.rstrip().endswith(
+                            ("LITERALASTERISK", "/", "−", "-", "+")
+                        )
+                        else " "
+                    )
+                    tail.__dict__["_source_text"] = (
+                        text + separator + source_cell_text(cells[-1])
+                    )
+                else:
+                    copied = list(cells)
+                    copied[-1] = deepcopy(copied[-1])
+                    copied[-1].__dict__["_source_text"] = source_cell_text(cells[-1])
+                    logical.append((row, copied))
+            grid = logical
         is_list = (
             table.select_one(".list-td") is not None
             or table.find_parent(class_="list-paired") is not None
@@ -138,12 +173,15 @@ def assert_source_tables(
                     )
                     if callout is not None:
                         list_node = callout.find_parent("list")
-                        position_node = (
-                            list_node
-                            if list_node is not None
-                            else callout.find_parent("para")
-                        )
+                        position_node = callout.find_parent("para") or list_node
                         if position_node is not None:
+                            # A float anchor can precede a nested list within
+                            # this paragraph. Only prose before the anchor is
+                            # a preceding neighbor, not the later list items.
+                            if callout.name == "float-anchor" and position_node.find(
+                                "list"
+                            ):
+                                position_node = callout
                             assert_object_position(
                                 position_node,
                                 markdown,
@@ -226,6 +264,27 @@ def image_matches_source(url, asset, original, provider):
 
     scope = unquote(html.unescape(original)).lower()
     origins = [url]
+    if provider == "royalsocietypublishing":
+        from bs4 import BeautifulSoup
+
+        source_image = BeautifulSoup(original, "lxml").select_one("img.content-image")
+
+        def stem(value):
+            return (
+                re.sub(
+                    r"^(?:m_|f_)",
+                    "",
+                    urlsplit(str(value or "")).path.rsplit("/", 1)[-1],
+                )
+                .rsplit(".", 1)[0]
+                .lower()
+            )
+
+        if source_image is not None and asset is not None:
+            expected = stem(source_image.get("data-src") or source_image.get("src"))
+            actual = stem(asset.original_url or asset.download_url or url)
+            if expected and actual != expected:
+                return False
     if asset is not None:
         origins += [
             asset.original_url or "",
@@ -316,6 +375,8 @@ def assert_figure_bindings(fixture, soup, article, markdown):
                 (a for a in article.assets if str(a.path or a.url or "") == image[2]),
                 None,
             )
+            if asset is not None and asset.kind == "formula":
+                continue
             if image_matches_source(image[2], asset, original, fixture.provider):
                 owned.append(image_index)
         if owned:
@@ -416,6 +477,37 @@ def assert_figure_bindings(fixture, soup, article, markdown):
         ]
         if inline_assets and not figure.find_parent("floats"):
             position_node = parent if parent is not None else figure
+            if fixture.provider == "royalsocietypublishing":
+                # Royal's asset renderer inserts figures beside their first
+                # explicit reveal callout, rather than a trailing DOM gallery.
+                number = label[1] if label else ""
+                body = soup.select_one(".article-body")
+                mention = (
+                    next(
+                        (
+                            t
+                            for t in body.strings
+                            if number
+                            and re.search(
+                                r"\bfig(?:ure)?\.?\s*"
+                                + re.escape(number)
+                                + r"(?:[a-z]|\b)",
+                                str(t),
+                                re.I,
+                            )
+                            and not t.find_parent(class_="fig-section")
+                        ),
+                        None,
+                    )
+                    if body
+                    else None
+                )
+                if mention is not None:
+                    position_node = (
+                        mention.find_parent("p")
+                        or mention.find_parent(class_="block-child-p")
+                        or mention.parent
+                    )
             assert_object_position(
                 position_node,
                 markdown,

@@ -61,61 +61,6 @@ def _stop_mathml_workers() -> None:
 
 atexit.register(_stop_mathml_workers)
 
-UPGREEK_LATEX_ALIASES = {
-    "upalpha": "alpha",
-    "upbeta": "beta",
-    "upgamma": "gamma",
-    "updelta": "delta",
-    "upepsilon": "epsilon",
-    "upvarepsilon": "varepsilon",
-    "upzeta": "zeta",
-    "upeta": "eta",
-    "uptheta": "theta",
-    "upvartheta": "vartheta",
-    "upiota": "iota",
-    "upkappa": "kappa",
-    "uplambda": "lambda",
-    "upmu": "mu",
-    "upnu": "nu",
-    "upxi": "xi",
-    "uppi": "pi",
-    "upvarpi": "varpi",
-    "uprho": "rho",
-    "upvarrho": "varrho",
-    "upsigma": "sigma",
-    "upvarsigma": "varsigma",
-    "uptau": "tau",
-    "upupsilon": "upsilon",
-    "upphi": "phi",
-    "upvarphi": "varphi",
-    "upchi": "chi",
-    "uppsi": "psi",
-    "upomega": "omega",
-    "upGamma": "Gamma",
-    "upDelta": "Delta",
-    "upTheta": "Theta",
-    "upLambda": "Lambda",
-    "upXi": "Xi",
-    "upPi": "Pi",
-    "upSigma": "Sigma",
-    "upUpsilon": "Upsilon",
-    "upPhi": "Phi",
-    "upPsi": "Psi",
-    "upOmega": "Omega",
-}
-UPGREEK_LATEX_ALIAS_NAMES = "|".join(
-    re.escape(name) for name in sorted(UPGREEK_LATEX_ALIASES, key=len, reverse=True)
-)
-UPGREEK_LATEX_ALIAS_PATTERN = re.compile(
-    r"\\(" + UPGREEK_LATEX_ALIAS_NAMES + r")(?![A-Za-z])"
-)
-LATEX_MSPACE_MU_PATTERN = re.compile(
-    r"\\mspace\s*\{\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*mu\s*\}"
-)
-LATEX_ZERO_HSPACE_PATTERN = re.compile(
-    r"\\hspace\*?\s*\{\s*[+-]?(?:0+(?:\.0*)?|\.0+)\s*(?:pt|em|ex|mu|mm|cm|in|pc)?\s*\}"
-)
-ZERO_WIDTH_SPACE_PATTERN = re.compile(r"[\u200b\u200c\u200d\u2060\ufeff]")
 LATEX_SCRIPT_SPLIT_IDENTIFIER_PATTERN = re.compile(
     r"(?P<script>[_^])\{(?P<body>[A-Za-z0-9](?:\s+[A-Za-z0-9]){1,})\}"
 )
@@ -132,18 +77,6 @@ LATEX_EMPTY_DELIMITER_REPLACEMENTS = (
     (re.compile(r"\\left\s*\|\s*\\right\."), "|"),
     (re.compile(r"\\left\.\s*\\right\s*\|"), "|"),
 )
-LATEX_UNICODE_MATH_ALIASES = {
-    "ℴ": "O",
-}
-LATEX_UNICODE_COMMAND_PATTERN = re.compile(
-    r"\\unicode\s*\{\s*(?:0[xX]|[xX]|[uU]\+)?(?P<code>[0-9A-Fa-f]{1,6})\s*\}"
-)
-LATEX_UNICODE_COMMAND_ALIASES = {
-    "2264": r"\le",
-    "2265": r"\ge",
-    "2A7D": r"\leqslant",
-    "2A7E": r"\geqslant",
-}
 
 
 @dataclass(slots=True)
@@ -424,45 +357,6 @@ def stringify_mathml(element: ET.Element | str | None) -> str:
     return ET.tostring(element, encoding="unicode").strip()
 
 
-def normalize_latex_macros(value: str | None) -> str:
-    text = value or ""
-    if not text:
-        return ""
-
-    def replace_alias(match: re.Match[str]) -> str:
-        return "\\" + UPGREEK_LATEX_ALIASES[match.group(1)]
-
-    def replace_mspace(match: re.Match[str]) -> str:
-        following = match.string[match.end() : match.end() + 1]
-        suffix = " " if following and following.isalnum() else ""
-        return rf"\mkern{match.group(1)}mu{suffix}"
-
-    def replace_unicode_command(match: re.Match[str]) -> str:
-        codepoint = int(match.group("code"), 16)
-        codepoint_key = f"{codepoint:X}"
-        replacement = LATEX_UNICODE_COMMAND_ALIASES.get(codepoint_key)
-        if replacement is None:
-            try:
-                replacement = chr(codepoint)
-            except ValueError:
-                return ""
-        following = match.string[match.end() : match.end() + 1]
-        suffix = (
-            " "
-            if replacement.startswith("\\") and following and following.isalpha()
-            else ""
-        )
-        return replacement + suffix
-
-    text = ZERO_WIDTH_SPACE_PATTERN.sub("", text)
-    for source, replacement in LATEX_UNICODE_MATH_ALIASES.items():
-        text = text.replace(source, replacement)
-    text = LATEX_ZERO_HSPACE_PATTERN.sub("", text)
-    text = LATEX_UNICODE_COMMAND_PATTERN.sub(replace_unicode_command, text)
-    text = UPGREEK_LATEX_ALIAS_PATTERN.sub(replace_alias, text)
-    return LATEX_MSPACE_MU_PATTERN.sub(replace_mspace, text)
-
-
 def _normalize_texmath_empty_delimiters(value: str) -> str:
     text = value
     for pattern, replacement in LATEX_EMPTY_DELIMITER_REPLACEMENTS:
@@ -490,31 +384,35 @@ def _normalize_split_latex_identifiers(value: str) -> str:
     )
 
 
-def _normalize_latex_operator_spacing(value: str) -> str:
-    text = re.sub(r"\\sum(?!\\limits)(?=_)", r"\\sum\\limits", value)
-    return re.sub(
-        r"(\\sum\\limits_\{[^{}]+\}\^\{[^{}]+\})\s+(?=[A-Za-z\\])", r"\1", text
-    )
-
-
 def normalize_latex(value: str | None) -> str:
+    """Remove only whitespace and paired math delimiters outside source TeX."""
     text = (value or "").strip()
-    if not text:
-        return ""
-    text = text.replace("\r\n", "\n").replace("\r", "\n")
-    text = text.strip()
+    pairs = (("$$", "$$"), (r"\(", r"\)"), (r"\[", r"\]"), ("$", "$"))
+    while text:
+        for opener, closer in pairs:
+            if (
+                text.startswith(opener)
+                and text.endswith(closer)
+                and len(text) >= len(opener) + len(closer)
+            ):
+                text = text[len(opener) : -len(closer)].strip()
+                break
+        else:
+            break
+    return text
+
+
+def _normalize_mathml_latex(value: str | None) -> str:
+    """Repair conversion artifacts only; source TeX never enters this path."""
+    text = (value or "").strip()
     if text.startswith("<?mml2tex"):
         match = re.search(r"<\?mml2tex\s+(.*?)\?>", text, flags=re.S)
         text = match.group(1).strip() if match else text
-    text = text.replace("\n", " ")
     text = re.sub(r"\s+", " ", text)
     text = re.sub(r"(?<=[A-Za-z0-9])\\textbackslash\\_(?=[A-Za-z0-9])", r"\\_", text)
-    text = normalize_latex_macros(text)
     text = _normalize_texmath_empty_delimiters(text)
     text = _normalize_split_latex_identifiers(text)
-    text = _normalize_latex_operator_spacing(text)
-    text = re.sub(r"^\$(.+)\$$", r"\1", text)
-    return text.strip()
+    return normalize_latex(text)
 
 
 def resolve_backend(
@@ -689,6 +587,14 @@ class MathMLToLatexWorker:
                 process.kill()
 
     def convert(self, raw_mathml: str, *, timeout_seconds: float) -> str:
+        return str(
+            self.request({"mathml": raw_mathml}, timeout_seconds=timeout_seconds).get(
+                "latex"
+            )
+            or ""
+        )
+
+    def request(self, message: Mapping[str, object], *, timeout_seconds: float) -> dict:
         with self._lock:
             process = self._ensure_process()
             if process.stdin is None or process.stdout is None:
@@ -697,17 +603,35 @@ class MathMLToLatexWorker:
             self._next_id += 1
             request_id = self._next_id
             process.stdin.write(
-                json.dumps({"id": request_id, "mathml": raw_mathml}, ensure_ascii=False)
-                + "\n"
+                json.dumps({**message, "id": request_id}, ensure_ascii=False) + "\n"
             )
             process.stdin.flush()
-            ready, _, _ = select.select([process.stdout], [], [], timeout_seconds)
-            if not ready:
-                self.stop()
-                raise subprocess.TimeoutExpired(
-                    [self.node_bin, self.script_path], timeout_seconds
-                )
-            line = process.stdout.readline()
+            if os.name == "nt":
+                # Windows select() accepts sockets only. Retain the same persistent
+                # process and bound each pipe read with a daemon thread instead.
+                import queue
+
+                lines: queue.Queue[str] = queue.Queue()
+                output_pipe = process.stdout
+                assert output_pipe is not None
+                threading.Thread(
+                    target=lambda: lines.put(output_pipe.readline()), daemon=True
+                ).start()
+                try:
+                    line = lines.get(timeout=timeout_seconds)
+                except queue.Empty:
+                    self.stop()
+                    raise subprocess.TimeoutExpired(
+                        [self.node_bin, self.script_path], timeout_seconds
+                    ) from None
+            else:
+                ready, _, _ = select.select([process.stdout], [], [], timeout_seconds)
+                if not ready:
+                    self.stop()
+                    raise subprocess.TimeoutExpired(
+                        [self.node_bin, self.script_path], timeout_seconds
+                    )
+                line = process.stdout.readline()
             if not line:
                 stderr = process.stderr.read() if process.stderr is not None else ""
                 self.stop()
@@ -726,7 +650,7 @@ class MathMLToLatexWorker:
                     _compact_error_text(payload.get("error"))
                     or "mathml-to-latex worker conversion failed"
                 )
-            return str(payload.get("latex") or "")
+            return payload
 
 
 def _mathml_worker_for(
@@ -760,7 +684,7 @@ def _completed_result(
     return FormulaConversionResult(
         backend=backend,
         status=status,
-        latex=normalize_latex(latex),
+        latex=_normalize_mathml_latex(latex),
         raw_mathml=raw_mathml,
         error=error,
         duration_ms=max(0, round((time.monotonic() - started_at) * 1000)),
@@ -856,7 +780,7 @@ def convert_with_texmath(
             ).strip(),
         )
 
-    latex = normalize_latex(process.stdout)
+    latex = _normalize_mathml_latex(process.stdout)
     if latex.endswith("\\"):
         latex = latex[:-1].rstrip() + (r"\:" if "<mspace" in raw_mathml else "")
     if not latex:
@@ -912,7 +836,7 @@ def convert_with_mathml_to_latex(
                 env=runtime_env,
             )
             try:
-                latex = normalize_latex(
+                latex = _normalize_mathml_latex(
                     worker.convert(raw_mathml, timeout_seconds=DEFAULT_TIMEOUT_SECONDS)
                 )
                 if latex:
@@ -978,7 +902,7 @@ def convert_with_mathml_to_latex(
             error=error,
         )
 
-    latex = normalize_latex(process.stdout)
+    latex = _normalize_mathml_latex(process.stdout)
     if not latex:
         return _completed_result(
             backend=BACKEND_MATHML_TO_LATEX,
@@ -1127,7 +1051,7 @@ def convert_with_mml2tex(
         )
 
     match = re.search(r"<\?mml2tex\s+(.*?)\?>", process.stdout, flags=re.S)
-    latex = normalize_latex(match.group(1) if match else process.stdout)
+    latex = _normalize_mathml_latex(match.group(1) if match else process.stdout)
     if not latex:
         return _completed_result(
             backend=BACKEND_MML2TEX,
@@ -1157,7 +1081,7 @@ def convert_mathml_string(
     explicitly_selected = bool(
         (backend or runtime_env.get("MATHML_CONVERTER_BACKEND") or "").strip()
     )
-    selected_backend = resolve_backend(env=env, backend=backend)
+    selected_backend = resolve_backend(env=runtime_env, backend=backend)
     cache_key = _formula_cache_key(
         backend=selected_backend,
         raw_mathml=raw_mathml,

@@ -191,7 +191,7 @@ CLI 的 `--batch-results` 与 MCP 的 `batch_results` 都只写一次最终 JSON
 | `asset-discovery` | `paper_fetch.extraction.html.assets`、`providers._html_asset_engine`、`extraction.html.figure_links`、`provider_rules`、provider asset policies | figure、table、formula、supplementary 资产候选识别。 |
 | `asset-download` | `paper_fetch.extraction.html.assets.download` / `state` / `requester`、`providers.browser_workflow.fetchers`、provider asset clients | 资产候选下载、状态机、cookie-aware opener 和 provider-owned 下载链路。 |
 | `asset-validation` | `paper_fetch.extraction.image_payloads`、`extraction.html.assets`、`models.Quality` | 真实图片校验、尺寸阈值、preview acceptance 和失败诊断。 |
-| `asset-link-rewrite` | `paper_fetch.extraction.html.figure_links`、CLI / model asset link rewrite helpers | 远程 / 绝对资产链接改写为本地 Markdown 链接。 |
+| `asset-link-rewrite` | `paper_fetch.extraction.html.figure_links`、`extraction.html.object_links`、CLI / model asset link rewrite helpers | 远程 / 绝对资产链接改写为本地 Markdown 链接；按原 DOM 核验来源页对象链接。 |
 | `table-rendering` | `paper_fetch.extraction.table_grid`、`paper_fetch.extraction.xml_tables`、`paper_fetch.extraction.markdown_render.table_format`、HTML/provider adapters | provider-neutral cell/row IR、HTML/JATS/CALS 网格规范化、pipe-table/列表投影、降级和语义损失标记。 |
 | `formula-rendering` | `paper_fetch.extraction.markdown_render.formulas`、`paper_fetch.extraction.html.formula_rules`、`provider_rules`、`_article_markdown_math`、`paper_fetch.formula.convert` | MathML / LaTeX / 公式图片 fallback 渲染。 |
 | `markdown-normalization` | `paper_fetch.models.markdown`、provider postprocess、`extraction.html._runtime` / `renderer` | Markdown 块边界、空白、行内语义和去重。 |
@@ -206,7 +206,8 @@ CLI 的 `--batch-results` 与 MCP 的 `batch_results` 都只写一次最终 JSON
 - provider-neutral 的 access signals、section semantics、language filtering 固定在 `extraction.html.signals` / `semantics` / `language`；landing fetch helper 是 provider-neutral。
 - table 展开、formula 默认 token/selector、inline TeX 渲染、citation cleanup / numeric payload 等通用能力位于各自 canonical owner；publisher-specific class/selector/pattern 必须通过 `ProviderHtmlRules` 与调用方 `noise_profile` 注入，不进入通用默认规则。
 - availability verdict 位于 quality 层，reason code 的 canonical owner 是 `paper_fetch.reason_codes`；`paper_fetch.quality.reason_codes` 仅保留为公开兼容导入路径，生产代码统一依赖 canonical owner。`models.schema.ContentKind` 保持显式 Literal 作为 public wire contract。
-- provider-owned browser workflow 的 DOM / Markdown 后处理只能通过 `ProviderHtmlRules.dom_hooks` / `markdown_hooks` 的 typed callable 注册，不得恢复字符串 stage dispatch 或反射表。
+- provider-owned browser workflow 的 DOM / Markdown 后处理只能通过 `ProviderHtmlRules.dom_hooks` / `markdown_hooks` 的 typed callable 注册，不得恢复字符串 stage dispatch 或反射表。Atypon 编排在 display 公式处理后、共享 inline 处理前调用 `before_inline_formula_normalization`（IOP），在原表格阶段调用 `render_table`（Science；返回 `None` 时走共享渲染），在首个辅助块处调用 `keep_leading_auxiliary_block`（Science）。回调默认为 `None`，专用规则由对应 provider 持有。
+- Science / PNAS 的正文与补充材料范围拆分复用 `atypon_browser_workflow.asset_scopes.extract_body_and_supplementary_html`；清理 policy 先携带 provider 增量，Atypon 仅追加工作流公共截断词。正文清理、资产发现及 availability 清理保留各自作用域，跨阶段的清理、引用规范化和图表回填保留原调用位置；这些 HTML/XML 路径不处理 PDF 转换结果。
 
 ### 7. Provider 层
 

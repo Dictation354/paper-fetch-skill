@@ -6,8 +6,6 @@
 
 运行时配置优先级固定为：**进程环境 > 调用方显式 `env_file` > `PAPER_FETCH_ENV_FILE` 指向的文件 > platformdirs 用户配置 > 内置默认值**。CLI diagnostics 的显式层是 `paper-fetch doctor --env-file <path>`；显式参数和环境变量指向同一文件时只读取一次，并归因到显式层。仓库本地 `.env` 不会被隐式加载。
 
-兼容表述：process environment > an explicit `env_file` argument > the file named by `PAPER_FETCH_ENV_FILE` > the platformdirs user config file > built-in defaults。
-
 离线安装的 `paper-fetch` / `paper-fetch-mcp` wrapper 只在调用方尚未设置 `PAPER_FETCH_ENV_FILE` 时把它指向 `<install-root>/offline.env`。`activate-offline.sh` 默认安全解析同一文件；使用 installer 的 `--reuse-env-file <path>` 时改为指向该外部文件。dotenv 内容不作为 shell 执行，安装/激活后仍以最终进程环境为运行时最高优先级。不要在诊断输出、日志或报告中复制 secret 值。
 
 ## 基础配置与凭证名称
@@ -58,7 +56,7 @@
 - `MATHML_CONVERSION_CACHE_SIZE`：进程内 MathML 转换结果 cache 上限。
 - `MML2TEX_JAVA_BIN`、`MML2TEX_CLASSPATH`、`MML2TEX_SAXON_JAR`、`MML2TEX_XMLRESOLVER_JAR`、`MML2TEX_XMLRESOLVER_DATA_JAR`、`MML2TEX_STYLESHEET`、`MML2TEX_CATALOG`：仅在显式 `mml2tex` 高级后端时使用；默认 installer 不准备该 Java/XSLT 工具链。
 
-安装入口是 `paper-fetch-install-formula-tools`（已安装环境）或仓库脚本 `./install-formula-tools.sh`。公式工具缺失只影响相应转换/fallback，不改变 provider 身份；共享 LaTeX 宏规范化独立运行。
+安装入口是 `paper-fetch-install-formula-tools`（已安装环境）或仓库脚本 `./install-formula-tools.sh`。公式工具缺失只影响相应转换/fallback，不改变 provider 身份。HTML/XML 公式使用随公式工具提供的校验引擎选择源 TeX 或同节点 MathML；工具缺失或校验失败保留原表达和诊断，PDF 转换正文不进入该流程。
 
 ## 诊断顺序
 
@@ -71,4 +69,4 @@
 
 Linux/macOS 离线安装器及 Windows EXE 在核心 smoke 成功后提供可选向导，源码在线安装入口不变。凭据隐藏输入，留空保留旧值；下载/安装默认关闭。Unix `--non-interactive`、无终端及 Windows `/SILENT`、`/VERYSILENT` 全部跳过；`--reuse-env-file` 保持外部配置只读。Linux 仅为 Debian/Ubuntu 提供经确认的 APT 辅助安装，macOS 仅复用已有 Homebrew，Windows 使用摘要固定的官方 Ghostscript EXE（需要 UAC、系统注册表）和完整 libvips ZIP。图片工具通过实际 EPS/TIFF 转换后保存绝对路径，桌面 MCP 无需依赖 shell PATH。
 
-Camoufox 可选择准备并验证本地空白页，不访问 provider、不保存登录状态；下载、启动与站点访问状态分开报告。跳过本次安装不会关闭后续运行时自动准备。可选失败/取消不影响核心安装，升级保留凭据与可选工具；卸载默认保留可选工具和共享浏览器缓存。配置后重启已运行的宿主/MCP；完整说明见项目 `docs/deployment.md`。
+Camoufox 可选择准备并验证本地空白页，不访问 provider、不保存登录状态；下载、启动与站点访问状态分开报告。跳过本次安装不会关闭后续运行时自动准备。可选失败/取消不影响核心安装，升级保留凭据与可选工具；卸载默认保留可选工具和共享浏览器缓存。安装器负责升级和卸载；配置或升级后重启已运行的宿主/MCP。

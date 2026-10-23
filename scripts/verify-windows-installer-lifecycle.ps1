@@ -45,6 +45,16 @@ function Invoke-InstalledSmoke {
         }
     }
 
+    $codexSkill = Join-Path $env:USERPROFILE ".agents/skills/paper-fetch-skill"
+    Invoke-NativeChecked -FilePath $runtime -Arguments @(
+        "-X", "utf8", (Join-Path $InstallRoot "scripts/skill_integrity.py"),
+        "verify", "--manifest", (Join-Path $InstallRoot "offline-manifest.json"),
+        "--skill-dir", $codexSkill
+    )
+    if (Test-Path -LiteralPath (Join-Path $env:USERPROFILE ".codex/skills/paper-fetch-skill")) {
+        throw "Verified install left the legacy Codex skill discoverable."
+    }
+
     $versionOutput = (& $cli --version | Out-String).Trim()
     if ($LASTEXITCODE -ne 0 -or $versionOutput -notmatch [regex]::Escape($ExpectedVersion)) {
         throw "Installed CLI did not report expected version $ExpectedVersion`: $versionOutput"
@@ -185,6 +195,9 @@ try {
         "/SP-",
         "/DIR=$installRoot"
     )
+    $legacyCodexSkill = Join-Path $fakeProfile ".codex/skills/paper-fetch-skill"
+    New-Item -ItemType Directory -Force -Path $legacyCodexSkill | Out-Null
+    Set-Content -LiteralPath (Join-Path $legacyCodexSkill "SKILL.md") -Value "legacy"
     Write-Host "==> Silent install of final EXE"
     Invoke-NativeChecked -FilePath $SetupPath -Arguments $installArguments
     Invoke-InstalledSmoke -InstallRoot $installRoot
@@ -211,6 +224,9 @@ try {
         throw "Silent install must not run optional configuration."
     }
 
+    New-Item -ItemType Directory -Force -Path $legacyCodexSkill | Out-Null
+    Set-Content -LiteralPath (Join-Path $legacyCodexSkill "SKILL.md") -Value "legacy coexistence"
+    Set-Content -LiteralPath (Join-Path $fakeProfile ".agents/skills/paper-fetch-skill/stale.md") -Value "stale"
     Write-Host "==> In-place overwrite upgrade with the same verified EXE"
     Invoke-NativeChecked -FilePath $SetupPath -Arguments $installArguments
     Invoke-InstalledSmoke -InstallRoot $installRoot
@@ -239,6 +255,8 @@ try {
             "found [$($uninstallers.Name -join ', ')]."
         )
     }
+    New-Item -ItemType Directory -Force -Path $legacyCodexSkill | Out-Null
+    Set-Content -LiteralPath (Join-Path $legacyCodexSkill "SKILL.md") -Value "legacy coexistence"
     $uninstallLog = Join-Path $testRoot "final-uninstall.log"
     Write-Host "==> Silent uninstall of final EXE"
     Invoke-NativeChecked -FilePath $uninstallers[0].FullName -Arguments @(
@@ -254,7 +272,8 @@ try {
     Wait-ForUninstallCompletion -InstallRoot $installRoot -LogPath $uninstallLog
     Assert-ExactPreservedInstallTree -InstallRoot $installRoot
     foreach ($managedSkill in @(
-        (Join-Path $fakeProfile ".codex/skills/paper-fetch-skill"),
+        (Join-Path $fakeProfile ".agents/skills/paper-fetch-skill"),
+        $legacyCodexSkill,
         (Join-Path $fakeProfile ".claude/skills/paper-fetch-skill"),
         (Join-Path $fakeAntigravity "skills/paper-fetch-skill")
     )) {

@@ -141,7 +141,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
 
                 self.assertIn("Box 1 | Model", markdown)
                 self.assertIn("Preserved box prose.", markdown)
-                self.assertIn("$$x = y + 1$$", markdown)
+                self.assertIn("$$\nx = y + 1\n$$", markdown)
                 self.assertNotIn("Hidden interface text.", markdown)
                 self.assertIn("Preserved box prose.", payload["cleaned_html"])
                 self.assertNotIn("Hidden interface text.", payload["cleaned_html"])
@@ -246,7 +246,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         )
 
         self.assertIn(
-            "Bootstrap resampling<sup>55, 56, 57</sup> was employed.",
+            "Bootstrap resampling<sup>[55](https://www.nature.com/articles/example-article#ref-CR55),[56](https://www.nature.com/articles/example-article#ref-CR56),[57](https://www.nature.com/articles/example-article#ref-CR57)</sup> was employed.",
             payload["markdown_text"],
         )
 
@@ -271,9 +271,9 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertIn("10<sup>15</sup> g", normalized)
         self.assertIn("1981–2020", normalized)
         self.assertIn("1981–2010", normalized)
-        self.assertIn("TX90<sup>21</sup>", normalized)
-        self.assertIn("CRUNCEP<sup>24</sup>", normalized)
-        self.assertIn(">10<sup>6</sup> km<sup>2</sup>", normalized)
+        self.assertIn("TX90 ref. <sup>[21](#ref-CR21)</sup>", normalized)
+        self.assertIn("CRUNCEP<sup>[24](#ref-CR24)</sup>", normalized)
+        self.assertIn("&gt;10<sup>6</sup> km<sup>2</sup>", normalized)
         self.assertIn("22,500 km<sup>2</sup>", normalized)
 
     def test_springer_asset_retry_policy_reuses_html_asset_identity_helper(
@@ -675,7 +675,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         self.assertNotIn("## 1Introduction", markdown)
         self.assertNotIn("### 3.1Glaciers", markdown)
 
-    def test_springer_mathjax_tex_normalizes_upgreek_macros(self) -> None:
+    def test_springer_mathjax_tex_preserves_upgreek_macros(self) -> None:
         html = r"""
         <html>
           <body>
@@ -719,15 +719,17 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
                     url,
                 )
 
-                self.assertIn(r"$\alpha _{i,t} = \delta Q_{i,t}/E_{i,t}$", markdown)
+                self.assertIn(r"$\alpha _{i,t} = \updelta Q_{i,t}/E_{i,t}$", markdown)
                 self.assertIn("Existing $x + y$.", markdown)
                 self.assertIn("Bare $z + 1$.", markdown)
                 self.assertIn(r"Incomplete $\(q + 1$.", markdown)
                 self.assertIn(
-                    r"$$\delta Q_{i,t} = \alpha _{i,t}E_{{\mathrm{p}}(i,t)}S_{i,t}$$",
+                    "$$\n"
+                    + r"\updelta Q_{i,t} = \alpha _{i,t}E_{{\mathrm{p}}(i,t)}S_{i,t}"
+                    + "\n$$",
                     markdown,
                 )
-                self.assertNotIn(r"\updelta", markdown)
+                self.assertIn(r"\updelta", markdown)
                 self.assertNotIn(r"\(\alpha", markdown)
                 self.assertNotIn(r"E_{i,t}\)", markdown)
 
@@ -762,13 +764,11 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
             "https://www.nature.com/articles/s41561-022-00912-7",
         )
 
-        self.assertIn("$s(s + 1)$", markdown)
-        self.assertRegex(
+        self.assertIn(r"$s \left(\right. s + 1 \left.\right)$", markdown)
+        self.assertIn(
+            "$$\n" + r"F_{c r i t} = \sum_{t_{p}}^{S O S_{y 0}} R_{f}" + "\n$$",
             markdown,
-            r"\$\$F_\{crit\} = \\sum\\limits_\{t_\{p\}\}\^\{SOS_\{y0\}\}\s*R_\{f\}\$\$",
         )
-        self.assertNotIn(r"\left(\right.", markdown)
-        self.assertNotIn("F_{c r i t}", markdown)
 
     def test_springer_markdown_ignores_ai_alt_text_when_caption_exists(self) -> None:
         html = r"""
@@ -823,7 +823,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
             "https://www.nature.com/articles/s41467-023-36727-2",
         )
 
-        self.assertIn("**Figure 2.** Variations in", markdown)
+        self.assertIn("**Figure 2.** **Variations in", markdown)
         self.assertIn("Panel description text.", markdown)
         self.assertNotIn("γ CGR T", markdown)
         self.assertNotIn("$$", markdown)

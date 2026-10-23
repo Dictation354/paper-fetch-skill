@@ -48,7 +48,11 @@ def plain(text):
 
 def table_cell_plain(text):
     text = re.sub(r"<sup>([0-9, ]+)</sup>", r"(\1)", text)
-    return re.sub(r"\s*([(),])\s*", r"\1", plain(text))
+    from tests.support.markdown_presentation import visible_markdown
+
+    return re.sub(
+        r"\s*([(),])\s*", r"\1", plain(visible_markdown(text.replace("<br>", " ")))
+    )
 
 
 def test_science_table_three_keeps_every_source_field_and_missing_tail():

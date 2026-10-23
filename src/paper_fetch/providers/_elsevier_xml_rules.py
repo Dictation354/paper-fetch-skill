@@ -28,6 +28,9 @@ class ElsevierXmlRules:
 
 
 ELSEVIER_ELEMENT_RULES: dict[str, ElsevierElementRule] = {
+    "acknowledgment": ElsevierElementRule(
+        "structure", "section", "render acknowledgment heading and paragraphs"
+    ),
     "sections": ElsevierElementRule(
         category="structure",
         handler="container",
