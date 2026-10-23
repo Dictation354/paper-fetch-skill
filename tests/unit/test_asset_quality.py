@@ -603,7 +603,9 @@ def test_provider_preview_failure_policy_does_not_change_other_assets():
                     {"stage": "preview_fallback", "provider": provider}
                 ],
             }
-            expected = not (provider in {"wiley", "oxfordacademic"} and kind == "figure")
+            expected = not (
+                provider in {"wiley", "oxfordacademic"} and kind == "figure"
+            )
             assert preview_asset_is_accepted(entry) is expected
             asset = _asset_from_entry(entry, kind=kind, heading_fallback="Asset")
             assert asset.preview_accepted is expected

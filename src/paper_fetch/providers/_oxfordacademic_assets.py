@@ -57,15 +57,15 @@ def extract_inline_figures(body: Tag, source_url: str) -> list[dict[str, Any]]:
 
     figures = []
     for image in body.find_all("img"):
-        asset = by_image.get(id(image))
-        if asset is None:
+        figure = by_image.get(id(image))
+        if figure is None:
             continue
-        target = asset.get("full_size_url") or asset["url"]
+        target = figure.get("full_size_url") or figure["url"]
         if target:
-            asset["original_url"] = target
+            figure["original_url"] = target
             image["src"] = target
             for attr in PREVIEW_IMAGE_ATTRS:
                 if image.has_attr(attr):
                     image[attr] = target
-        figures.append(asset)
+        figures.append(figure)
     return [*figures, *caption_only]

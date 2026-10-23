@@ -194,7 +194,9 @@ def validate_contract(
     extras = project.get("project", {}).get("optional-dependencies", {})
     for extra in ("browser", "full"):
         if browser.get("python_package_spec") not in extras.get(extra, []):
-            errors.append(f"browser.python_package_spec must match project {extra} extra")
+            errors.append(
+                f"browser.python_package_spec must match project {extra} extra"
+            )
 
     release = contract.get("release", {})
     if release.get("installer_manifest") != "installer/manifest.json":

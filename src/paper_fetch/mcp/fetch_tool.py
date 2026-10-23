@@ -276,7 +276,11 @@ def _fetch_paper_envelope(
         final_scope = capability_scope_from_runtime_context(context)
         # Preserve the producer scope so Markdown registration cannot become public.
         mark_envelope_capability_scope(envelope, final_scope)
-        if not request.no_download and service_download_dir is not None and envelope.doi:
+        if (
+            not request.no_download
+            and service_download_dir is not None
+            and envelope.doi
+        ):
             deps.write_cached_fetch_envelope(
                 service_download_dir,
                 envelope,

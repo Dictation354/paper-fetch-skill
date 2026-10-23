@@ -1275,13 +1275,16 @@ def run_batch_fetch(
         artifact_mode=artifact_mode,
     )
     duplicates_by_owner: dict[int, tuple[CliBatchItem, ...]] = {}
-    with RuntimeContext(
-        env=runtime_env,
-        transport=shared_transport,
-        download_dir=output_dir,
-        artifact_mode=artifact_mode,
-        cancel_check=cancel_event.is_set,
-    ) as batch_context, batch_context.fetch_browser_preparation(prepare=False):
+    with (
+        RuntimeContext(
+            env=runtime_env,
+            transport=shared_transport,
+            download_dir=output_dir,
+            artifact_mode=artifact_mode,
+            cancel_check=cancel_event.is_set,
+        ) as batch_context,
+        batch_context.fetch_browser_preparation(prepare=False),
+    ):
         try:
             batch_context.prepare_fetch_browser()
         except RequestCancelledError:

@@ -652,12 +652,15 @@ async def _execute_batch_fetch(
     logical_terminal = 0
     run_result: BatchRunResult[BatchFetchItem, BatchFetchOutcome] | None = None
 
-    with RuntimeContext(
-        env=runtime_env,
-        download_dir=cache_dir,
-        artifact_mode=("none" if request.no_download else request.artifact_mode),
-        cancel_check=cancelled.is_set,
-    ) as runtime_context, runtime_context.fetch_browser_preparation(prepare=False):
+    with (
+        RuntimeContext(
+            env=runtime_env,
+            download_dir=cache_dir,
+            artifact_mode=("none" if request.no_download else request.artifact_mode),
+            cancel_check=cancelled.is_set,
+        ) as runtime_context,
+        runtime_context.fetch_browser_preparation(prepare=False),
+    ):
         await run_blocking_call(
             runtime_context.prepare_fetch_browser,
             cancel_event=cancelled,

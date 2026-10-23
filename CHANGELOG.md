@@ -6,6 +6,19 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.2.1 - 2026-10-23
+
+### Browser runtime updates
+
+- Pin browser/full extras to `camoufox==0.5.8` and default managed browsers to `official/prerelease`. Select the latest compatible build for the current platform through Camoufox's official discovery, without upgrading the Python package. Preserve explicit channels, version/SHA pins and custom executables; migrate old active-only configurations under the existing cache lock.
+- Check and prepare the browser at the start of every CLI, MCP and Python API fetch, including HTTP-only requests and cache hits. Prepare once before batch scheduling and reuse the result across children and browser launches; independent calls check again. Reuse a valid local browser when updates fail. Without a usable browser, retain the preparation error while allowing HTTP/cache work to continue, and report it if a browser is needed. Skip managed updates for core installs without browser dependencies and for custom executables; keep static diagnostics read-only and preserve cancellation and batch terminal records.
+- Update browser documentation, Skill guidance and the macOS contract. The native gate prepares a compatible prerelease and fingerprint model through the project preparer, then reuses that build for both context modes.
+
+### Oxford inline figures
+
+- Preserve Oxford figures at their source positions, including identifiers, captions and subpanels, without appending duplicate figure assets. Download each original image once, use available previews when original downloads fail, and retain explicit diagnostics and degraded acceptance for unavailable assets.
+- Add captured-source and original-image regression coverage for `10.1093/nsr/nwae442`, alongside minimal figure-ownership and signed-asset identity contracts.
+
 ## 7.2.0 - 2026-10-23
 
 ### Source fidelity and formula validation

@@ -191,7 +191,9 @@ def _mock_fetch_browser_preparation(request, monkeypatch):
     """
     if request.node.get_closest_marker("live"):
         return
-    from paper_fetch.providers.browser_runtime.preparation import FetchBrowserPreparation
+    from paper_fetch.providers.browser_runtime.preparation import (
+        FetchBrowserPreparation,
+    )
 
     def prepare(self, env, cancel_check):
         cancel_check()
