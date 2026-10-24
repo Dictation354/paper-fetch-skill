@@ -264,7 +264,8 @@ def _recent_update_check(path: Path, identity: Mapping[str, Any]) -> bool:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(payload, dict) or any(
-            key not in payload or payload[key] != value for key, value in identity.items()
+            key not in payload or payload[key] != value
+            for key, value in identity.items()
         ):
             return False
         checked_at = payload.get("checked_at")
@@ -318,7 +319,13 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
     lock_path = root / ".paper-fetch-prepare.lock"
     flag = Path(multiversion.COMPAT_FLAG)
     check_path = root / UPDATE_CHECK_FILENAME
-    for path in (config_path, lock_path, flag, check_path, Path(multiversion.BROWSERS_DIR)):
+    for path in (
+        config_path,
+        lock_path,
+        flag,
+        check_path,
+        Path(multiversion.BROWSERS_DIR),
+    ):
         if _path_chain_has_link(root, path):
             raise RuntimeError(
                 "Camoufox browser preparation failed: unsafe managed cache path."
@@ -435,7 +442,9 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                         file=sys.stderr,
                     )
                     return previous
-                raise RuntimeError(f"Camoufox browser preparation failed: {exc}") from exc
+                raise RuntimeError(
+                    f"Camoufox browser preparation failed: {exc}"
+                ) from exc
 
             folder = multiversion.version_folder_name(
                 fetcher.version, fetcher.build, selected.sha8
@@ -454,7 +463,9 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                 )
             probe = _probe_runtime(pkgman, target, spec, safe)
             if not probe.managed_path_safe:
-                raise RuntimeError(f"Camoufox browser preparation failed: {probe.message}")
+                raise RuntimeError(
+                    f"Camoufox browser preparation failed: {probe.message}"
+                )
             try:
                 if not probe.valid or probe.version != selected.version.full_string:
                     if previous.valid and target == previous.runtime_path:
@@ -472,7 +483,8 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                     probe = _probe_runtime(pkgman, target, spec, safe)
                     if not probe.valid or probe.version != selected.version.full_string:
                         raise RuntimeError(
-                            probe.message or "Installed Camoufox runtime failed validation."
+                            probe.message
+                            or "Installed Camoufox runtime failed validation."
                         )
                 if multiversion.load_config().get("active_version") != spec:
                     multiversion.set_active(spec)
@@ -492,7 +504,9 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                         file=sys.stderr,
                     )
                     return restored
-                raise RuntimeError(f"Camoufox browser preparation failed: {exc}") from exc
+                raise RuntimeError(
+                    f"Camoufox browser preparation failed: {exc}"
+                ) from exc
 
 
 __all__ = [

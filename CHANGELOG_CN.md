@@ -6,6 +6,23 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.2.2 - 2026-10-24
+
+### 浏览器更新间隔
+
+- Fetch、认证、preflight 和直接准备调用共享滚动 24 小时的托管 Camoufox 更新检查记录。间隔内复用有效本地浏览器；缺失、损坏或不兼容时立即准备。检查失败也计时，跳过不延长间隔，取消不记录为完成；渠道、版本/SHA pin 或 Camoufox Python 包变化后重新判断。
+- 在既有缓存锁内校验更新记录的路径归属和时间戳。记录缺失或无效时重新检查；写入记录失败保留准备结果，并向 stderr 报告诊断。同步浏览器文档、随包 Skill 指引及 macOS 契约。
+
+### PDF 依赖兼容性
+
+- PDF extras 升级至 PyMuPDF 2.x 和 PyMuPDF4LLM 2.x，PyMuPDF、PyMuPDF4LLM 及 pymupdf-layout 均锁定为 2.0。保留上游转换输出和既有资产路径处理，不增加项目层格式清洗或内容修复。
+- 刷新存档 PDF 基线与转换透传覆盖。真实 PDF 转换和进程契约归入 integration，整篇回放归入 golden，并阻止 unit 测试通过转换器别名调用真实转换。
+
+### 维护
+
+- 刷新 25 个兼容的锁定 Python 依赖，包括 cachetools 7.2.4、filelock 4.2.4、idutils 1.7.1、platformdirs 4.13.5、Pydantic 2.14.1 / pydantic-core 2.50.1、python-dateutil 3.0.0、httpx2 / httpcore2 2.16.0 和 Ruff 0.17.2。保留 trafilatura 2.2.0 与 Camoufox 兼容的 Playwright 1.62.0；Python 3.11.5 及以上解析 SoupSieve 3.0.4，较早的 Python 3.11 补丁版本使用 2.10。
+- 将固定的 GitHub Actions 更新至 setup-python 7.1.0 和 setup-uv 10.3.2。
+
 ## 7.2.1 - 2026-10-23
 
 ### 浏览器运行时更新

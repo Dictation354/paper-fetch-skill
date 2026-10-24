@@ -119,7 +119,10 @@ def test_managed_camoufox_process_lock_prevents_duplicate_install(
     import textwrap
 
     result = subprocess.run(
-        [sys.executable, "-c", textwrap.dedent('''
+        [
+            sys.executable,
+            "-c",
+            textwrap.dedent("""
             import sys
             from pathlib import Path
             from camoufox import pkgman, multiversion
@@ -137,8 +140,12 @@ def test_managed_camoufox_process_lock_prevents_duplicate_install(
 
             pkgman.list_available_versions = unexpected_query
             assert preparation.prepare_camoufox_managed_runtime().valid
-        '''), str(env.root)],
-        capture_output=True, text=True, timeout=15,
+        """),
+            str(env.root),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=15,
     )
     assert result.returncode == 0, result.stderr
     assert "Checking Camoufox" not in result.stderr
@@ -155,13 +162,21 @@ def test_automatic_preparation_entrypoints_share_update_interval(
     import playwright.sync_api as playwright_sync
     from paper_fetch import auth, browser_preflight
     from paper_fetch.providers.base import ProviderFailure
-    from paper_fetch.providers.browser_runtime.camoufox_manager import _launch_executable_path
+    from paper_fetch.providers.browser_runtime.camoufox_manager import (
+        _launch_executable_path,
+    )
 
     env = managed_camoufox
-    monkeypatch.setattr(preparation.FetchBrowserPreparation, "prepare", _PREPARE_FETCH_BROWSER)
+    monkeypatch.setattr(
+        preparation.FetchBrowserPreparation, "prepare", _PREPARE_FETCH_BROWSER
+    )
     monkeypatch.setattr(preparation, "find_spec", lambda _name: object())
     playwright = SimpleNamespace(stop=mock.Mock())
-    monkeypatch.setattr(playwright_sync, "sync_playwright", lambda: SimpleNamespace(start=lambda: playwright))
+    monkeypatch.setattr(
+        playwright_sync,
+        "sync_playwright",
+        lambda: SimpleNamespace(start=lambda: playwright),
+    )
     launch = mock.Mock(side_effect=RuntimeError("launch boundary reached"))
     monkeypatch.setattr(camoufox_sync, "NewBrowser", launch)
     runtime_env = {"XDG_DATA_HOME": str(tmp_path / "data")}
@@ -180,7 +195,9 @@ def test_automatic_preparation_entrypoints_share_update_interval(
                 preparation.fetch_browser_preparation.reset(token)
         elif route == "auth":
             with pytest.raises(ProviderFailure, match="launch boundary reached"):
-                auth.authenticate_provider_profile(provider="wiley", env=runtime_env, confirm=None)
+                auth.authenticate_provider_profile(
+                    provider="wiley", env=runtime_env, confirm=None
+                )
         else:
             result = browser_preflight.preflight_browser_provider(
                 "ieee", env=runtime_env, save_storage_state=False

@@ -6,6 +6,23 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.2.2 - 2026-10-24
+
+### Browser update interval
+
+- Share a rolling 24-hour managed Camoufox update-check record across fetch, authentication, preflight and direct preparation. Reuse a valid local browser within the interval; missing, damaged or incompatible runtimes are prepared immediately. Failed checks also count toward the interval, skipped checks do not extend it, and cancellation does not record completion. Recheck when the channel, version/SHA pin or Camoufox Python package changes.
+- Validate the update record under the existing cache lock, including path ownership and timestamps. Invalid or missing records trigger a fresh check; record-write failures retain the preparation result and report diagnostics to stderr. Update browser documentation, bundled Skill guidance and the macOS contract.
+
+### PDF dependency compatibility
+
+- Upgrade PDF extras to PyMuPDF 2.x and PyMuPDF4LLM 2.x, with PyMuPDF, PyMuPDF4LLM and pymupdf-layout locked to 2.0. Preserve upstream conversion output and existing asset-path handling without project-level formatting cleanup or content repair.
+- Refresh captured PDF baselines and conversion-passthrough coverage. Keep real PDF conversion and process contracts in integration, full-paper replays in golden, and guard converter aliases against real conversion in unit tests.
+
+### Maintenance
+
+- Refresh 25 compatible locked Python dependencies, including cachetools 7.2.4, filelock 4.2.4, idutils 1.7.1, platformdirs 4.13.5, Pydantic 2.14.1 / pydantic-core 2.50.1, python-dateutil 3.0.0, httpx2 / httpcore2 2.16.0 and Ruff 0.17.2. Retain trafilatura 2.2.0 and the Camoufox-compatible Playwright 1.62.0 lock. Resolve SoupSieve to 3.0.4 on Python 3.11.5+ and 2.10 on earlier Python 3.11 patch releases.
+- Update pinned GitHub Actions to setup-python 7.1.0 and setup-uv 10.3.2.
+
 ## 7.2.1 - 2026-10-23
 
 ### Browser runtime updates
