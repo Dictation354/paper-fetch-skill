@@ -8,7 +8,7 @@ source: "arxiv_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 7906
+token_estimate: 8314
 ---
 
 # Generative Adversarial Networks
@@ -59,6 +59,9 @@ In other words, _D_ and _G_ play the following two-player minimax game with valu
 
 
 
+<!-- Start of picture text -->
+min G max D V  ( D, G ) = E x ∼p data( x )[log  D ( x )] + E z ∼p z ( z )[log(1  − D ( G ( z )))] . (1)<br><!-- End of picture text -->
+
 In the next section, we present a theoretical analysis of adversarial nets, essentially showing that the training criterion allows one to recover the data generating distribution as _G_ and _D_ are given enough capacity, i.e., in the non-parametric limit. See Figure 1 for a less formal, more pedagogical explanation of the approach. In practice, we must implement the game using an iterative, numerical approach. Optimizing _D_ to completion in the inner loop of training is computationally prohibitive, and on finite datasets would result in overfitting. Instead, we alternate between _k_ steps of optimizing _D_ and one step of optimizing _G_ . This results in _D_ being maintained near its optimal solution, so long as _G_ changes slowly enough. This strategy is analogous to the way that SML/PCD [31, 29] training maintains samples from a Markov chain from one learning step to the next in order to avoid burning in a Markov chain as part of the inner loop of learning. The procedure is formally presented in Algorithm 1. 
 
 In practice, equation 1 may not provide sufficient gradient for _G_ to learn well. Early in learning, when _G_ is poor, _D_ can reject samples with high confidence because they are clearly different from the training data. In this case, log(1 _− D_ ( _G_ ( **_z_** ))) saturates. Rather than training _G_ to minimize log(1 _− D_ ( _G_ ( **_z_** ))) we can train _G_ to maximize log _D_ ( _G_ ( **_z_** )). This objective function results in the same fixed point of the dynamics of _G_ and _D_ but provides much stronger gradients early in learning. 
@@ -92,6 +95,9 @@ We will show in section 4.1 that this minimax game has a global optimum for _pg_
 
 
 
+<!-- Start of picture text -->
+1 m<br>∇θd m � �log  D � x ( i )� + log �1  − D � G � z ( i )���� .<br>i =1<br><!-- End of picture text -->
+
 ### **end for** 
 
 - Sample minibatch of _m_ noise samples _{_ **_z_**<sup>(1)</sup> _, . . . ,_ **_z_**<sup>(</sup><sup>_m_)</sup> _}_ from noise prior _pg_ ( **_z_** ). 
@@ -99,6 +105,9 @@ We will show in section 4.1 that this minimax game has a global optimum for _pg_
 - Update the generator by descending its stochastic gradient: 
 
 
+
+<!-- Start of picture text -->
+1 m<br>∇θg m � log �1  − D � G � z ( i )��� .<br>i =1<br><!-- End of picture text -->
 
 ### **end for** 
 
@@ -110,15 +119,24 @@ We first consider the optimal discriminator _D_ for any given generator _G_ . **
 
 
 
+<!-- Start of picture text -->
+pdata ( x )<br>DG ∗ ( x ) = (2)<br>pdata ( x ) +  pg ( x )<br><!-- End of picture text -->
+
 _Proof._ The training criterion for the discriminator D, given any generator _G_ , is to maximize the quantity _V_ ( _G, D_ ) 
 
 
+
+<!-- Start of picture text -->
+V  ( G, D ) = p data( x ) log( D ( x )) dx  + p z ( z ) log(1  − D ( g ( z ))) dz<br>� x � z<br>=<br>p data( x ) log( D ( x )) +  pg ( x ) log(1  − D ( x )) dx (3)<br>� x<br><!-- End of picture text -->
 
 For any ( _a, b_ ) _∈_ R<sup>2</sup> _\ {_ 0 _,_ 0 _}_ , the function _y → a_ log( _y_ ) + _b_ log(1 _− y_ ) achieves its maximum in [0 _,_ 1] at _a_ + _<u>a</u> b_<sup>.Thediscriminatordoesnotneedtobedefinedoutsideof</sup><sup>_Supp_(</sup><sup>_p_data)</sup><sup>_∪Supp_(</sup><sup>_pg_),</sup> concluding the proof. 
 
 Note that the training objective for _D_ can be interpreted as maximizing the log-likelihood for estimating the conditional probability _P_ ( _Y_ = _y|_ **_x_** ), where _Y_ indicates whether **_x_** comes from _p_ data (with _y_ = 1) or from _pg_ (with _y_ = 0). The minimax game in Eq. 1 can now be reformulated as: 
 
 
+
+<!-- Start of picture text -->
+C ( G ) = max D V  ( G, D )<br>=E x ∼p data[log  DG ∗ ( x )] + E z ∼p z [log(1  − D G ∗ ( G ( z )))] (4)<br>=E x ∼p data[log  DG ∗ ( x )] + E x ∼p g [log(1  − D G ∗ ( x ))]<br>p data( x ) pg ( x )<br>=E x ∼p data log + E x ∼pg log<br>� P data( x ) +  pg ( x ) � � p data( x ) +  pg ( x ) �<br><!-- End of picture text -->
 
 4 
 
@@ -128,13 +146,22 @@ _Proof._ For _pg_ = _p_ data, _DG_<sup>_∗_(</sup><sup>**_x_**) =</sup><sup><u>
 
 
 
+<!-- Start of picture text -->
+E x ∼p data [ − log 2] + E x ∼pg  [ − log 2] =  − log 4<br><!-- End of picture text -->
+
 and that by subtracting this expression from _C_ ( _G_ ) = _V_ ( _DG_<sup>_∗, G_), we obtain:</sup> 
 
 
 
+<!-- Start of picture text -->
+p data + pg p data + pg<br>C ( G ) =  − log(4) +  KL p data +  KL pg (5)<br>� ���� 2 � � ���� 2 �<br><!-- End of picture text -->
+
 where KL is the Kullback–Leibler divergence. We recognize in the previous expression the Jensen– Shannon divergence between the model’s distribution and the data generating process: 
 
 
+
+<!-- Start of picture text -->
+C ( G ) =  − log(4) + 2  · JSD  ( p data  ∥pg  ) (6)<br><!-- End of picture text -->
 
 Since the Jensen–Shannon divergence between two distributions is always non-negative and zero only when they are equal, we have shown that _C_<sup>_∗_</sup> = _−_ log(4) is the global minimum of _C_ ( _G_ ) and that the only solution is _pg_ = _p_ data, i.e., the generative model perfectly replicating the data generating process. 
 
@@ -143,6 +170,9 @@ Since the Jensen–Shannon divergence between two distributions is always non-ne
 **Proposition 2.** _If G and D have enough capacity, and at each step of Algorithm 1, the discriminator is allowed to reach its optimum given G, and pg is updated so as to improve the criterion_ 
 
 
+
+<!-- Start of picture text -->
+E x ∼pdata [log  DG ∗ ( x )] + E x ∼p g [log(1  − D G ∗ ( x ))]<br><!-- End of picture text -->
 
 _then pg converges to pdata_ 
 
@@ -214,9 +244,7 @@ The aforementioned advantages are primarily computational. Adversarial models ma
 
 This framework admits many straightforward extensions: 
 
-> 1. A _conditional generative_ model _p_ ( **_x_** _|_ **_c_** ) can be obtained by adding **_c_** as input to both _G_ and _D_ . 
-
-> 2. _Learned approximate inference_ can be performed by training an auxiliary network to predict **_z_** given **_x_** . This is similar to the inference net trained by the wake-sleep algorithm [15] but with the advantage that the inference net may be trained for a fixed generator net after the generator net has finished training. 
+> 1. A _conditional generative_ model _p_ ( **_x_** _|_ **_c_** ) can be obtained by adding **_c_** as input to both _G_ and _D_ . 2. _Learned approximate inference_ can be performed by training an auxiliary network to predict **_z_** given **_x_** . This is similar to the inference net trained by the wake-sleep algorithm [15] but with the advantage that the inference net may be trained for a fixed generator net after the generator net has finished training. 
 
 7 
 

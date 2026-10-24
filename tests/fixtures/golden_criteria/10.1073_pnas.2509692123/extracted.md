@@ -14,12 +14,12 @@ acquisition:
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 16480
+token_estimate: 16476
 ---
 
 # A discrete serotonergic circuit involved in the generation of tinnitus behavior
 
-**RESEARCH ARTICLE |** NEUROSCIENCE 
+**RESEARCH ARTICLE |** 
 
 
 
@@ -45,9 +45,7 @@ Multiple lines of evidence implicate the 5-HT system in tinnitus (17–19). In c
 
 Author affiliations:<sup>a</sup> School of Life Sciences and Medical Engineering, Anhui University, Hefei 230601, China; bKey Laboratory of Human Microenvironment and Precision Medicine of Anhui Higher Education Institutes, Anhui University, Hefei 230601, China;<sup>c</sup> Department of Otolaryngology Head and Neck Surgery, The First Affiliated Hospital of University of Science and Technology of China, Division of Life Sciences and Medicine, University of Science and Technology of China, Hefei, Anhui 230001, China;<sup>d</sup> Division of Life Sciences and Medicine, University of Science and Technology of China, Hefei 230027, China; and eOregon Hearing Research Center and Vollum Institute, Oregon Health and Science University, Portland, OR 97239 
 
-Author contributions: Q. - W.W., L.O.T., and Z. - Q.T. designed research; M. - T.Y., Z. - Y.D., S. - X.W., K. - J.W., C. - H.Q., Y. - M.Z., X. - T.G., and C. - C.P. performed research; J. - Q.S., J. - W.S., W. - H.C., and Y.J. contributed new reagents/analytic tools; M. - T.Y., Z. - Y.D., S. - X.W., K. - J.W., C. - H.Q., Y. - M.Z., X. - T.G., and C. - C.P. analyzed data; and M. - T.Y., Z. - Y.D., S. - X.W., Q. - W.W., L.O.T., and Z. - Q.T. wrote the paper. 
-
-The authors declare no competing interest. This article is a PNAS Direct Submission. 
+Author contributions: Q. - W.W., L.O.T., and Z. - Q.T. designed research; M. - T.Y., Z. - Y.D., S. - X.W., K. - J.W., C. - H.Q., Y. - M.Z., X. - T.G., and C. - C.P. performed research; J. - Q.S., J. - W.S., W. - H.C., and Y.J. contributed new reagents/analytic tools; M. - T.Y., Z. - Y.D., S. - X.W., K. - J.W., C. - H.Q., Y. - M.Z., X. - T.G., and C. - C.P. analyzed data; and M. - T.Y., Z. - Y.D., S. - X.W., Q. - W.W., L.O.T., and Z. - Q.T. wrote the paper. The authors declare no competing interest. This article is a PNAS Direct Submission. 
 
 Copyright © 2026 the Author(s). Published by PNAS. This article is distributed under Creative Commons Attribution - NonCommercial - NoDerivatives License 4.0 (CC BY - NC - ND). 1M. - T.Y., Z. - Y.D., and S. - X.W. contributed equally to this work. 
 

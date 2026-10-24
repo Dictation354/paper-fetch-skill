@@ -161,16 +161,22 @@ Camoufox 启动不接受固定 UA，以避免生成的 Firefox 指纹内部不�
 
 CLI、MCP 和 Python API 每次抓取请求开始时自动准备 managed runtime，包括
 纯 HTTP 和缓存命中；批量任务调度前统一准备一次，子任务及后续浏览器启动复用
-本次结果。不同调用重新检查，不设置更新间隔。`auth` 和 preflight 仍在启动前检查。
+本次结果。抓取、`auth`、preflight 和项目准备函数共享 cache 中的
+`.paper-fetch-update-check.json`：本地 runtime 有效且距上次实际检查结束不足
+86400 秒时直接复用，满 24 小时后的首次调用联网检查。失败也计时，跳过不刷新
+时间戳，取消不记为完成。浏览器缺失、损坏或不兼容时立即准备；渠道、pin/SHA
+或 Camoufox Python 包版本变化后重新判断准备需求。记录缺失、损坏或时间戳在
+未来时重新检查，记录写入失败只报告 stderr，不影响本次准备结果。
+`auth` 和 preflight 仍在启动前进入同一准备逻辑。
 默认渠道为 `official/prerelease`，通过 Camoufox 0.5.8 官方发现和兼容判断选择
 当前平台最新兼容 prerelease，不使用包配套浏览器隐式 pin，不自动升级 Python 包。
 已有显式渠道、版本 pin、SHA、自定义 executable 优先；本地有效 pin 不联网查询。
-共享 cache 的准备使用进程锁，并在锁内补写默认渠道，旧 active 配置自动迁移。
+共享 cache 的准备和检查记录读写使用同一进程锁，并在锁内补写默认渠道，旧 active 配置自动迁移。
 有效目标直接复用，损坏目标只修复经路径校验的版本目录，不清空整个 cache。
 更新失败时提示并恢复有效本地版本；没有可用版本时先记录失败，继续 HTTP／缓存
 流程，实际需要浏览器时报告失败，同次请求不重试准备。取消继续传播。
 配置损坏、路径越界或 symlink/reparse 路径会明确报错，不通过删除配置修复。
-下载进度和错误写 stderr；core 安装缺少 browser extra 或显式 executable 时
+仅实际联网时输出检查进度；下载进度和错误写 stderr。core 安装缺少 browser extra 或显式 executable 时
 跳过托管更新，不自动安装 Python 依赖。
 准备完成后由 Camoufox package 自行解析 active browser version。paper-fetch 不会把官方 macOS app 内的 `Contents/MacOS/camoufox` 再当成
 custom executable 传回去，因为 Camoufox 的 bundle metadata 位于

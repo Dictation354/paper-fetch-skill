@@ -22,7 +22,8 @@ python -m pip install "paper-fetch-skill[full]"
 准备 Camoufox runtime，包括相邻配置、addons、字体和 fpgen 指纹模型；只复制可执行文件
 不足以组成可用 runtime。CLI、MCP 和 Python API 在每次抓取请求开始时检查并
 准备 managed runtime，包括纯 HTTP 和缓存命中；批量任务在调度前统一检查一次，
-子任务和后续浏览器启动复用本次结果。`auth` 和 preflight 在启动浏览器前检查。
+子任务和后续浏览器启动复用本次结果。`auth` 和 preflight 在启动浏览器前准备，
+与抓取及项目准备函数共享滚动 24 小时（86400 秒）的更新检查记录。
 运行时不自动安装缺失的 Python 依赖；core 安装缺少 browser extra，或指定
 `PAPER_FETCH_BROWSER_BINARY_PATH` 时，跳过托管更新。
 核心安装不下载浏览器，可选安装向导仅在用户明确选择后预置并验证本地启动，
@@ -35,8 +36,13 @@ browser/full extras 固定 `camoufox==0.5.8`，不自动升级 Python 包。未�
 用户已有渠道、版本 pin、SHA 和自定义 executable 保持优先。可用
 `python -m camoufox set official/stable` 跟踪 stable，或用
 `python -m camoufox set official/prerelease/<version>` 固定版本。
-显式 pin 只准备对应版本，有效本地 pin 直接复用；未 pin 时每次抓取均查询，
-没有跨调用更新间隔。更新失败且本地版本校验有效时提示并继续使用；没有可用版本
+显式 pin 只准备对应版本，有效本地 pin 直接复用；未 pin 时，本地 runtime 有效且
+距上次实际检查结束不足 24 小时则直接复用，满 24 小时后的首次调用再次联网检查。
+检查或更新失败也计时；跳过检查不延长间隔，取消不记为完成。浏览器缺失、损坏
+或不兼容时立即准备。渠道、pin/SHA 或 Camoufox Python 包版本变化后重新判断
+准备需求。记录位于共享 cache 的 `.paper-fetch-update-check.json`，在同一进程锁内
+读取和原子写入；缺失、损坏或时间戳在未来时重新检查，写入失败只向 stderr 报告。
+更新失败且本地版本校验有效时提示并继续使用；没有可用版本
 则记录准备失败并继续 HTTP／缓存流程，实际需要浏览器时报告该失败，同次请求不
 重复更新。进度和错误写 stderr，取消继续传播。
 
@@ -84,8 +90,9 @@ runtime 明确实现 Camoufox 的 custom-path metadata 布局时才使用该覆�
 
 一个 `RuntimeContext` 在 owning thread 内复用一个 Camoufox process，每次操作
 创建独立 `BrowserContext`。HTML、PDF fallback 和资产下载共享相同 runtime
-配置及 provider storage-state，同一浏览器生命周期不重复检查更新；无需浏览器
-的抓取不检查更新。Playwright sync 对象不会跨线程共享。
+配置及 provider storage-state，同一浏览器生命周期复用准备结果；纯 HTTP 和缓存
+命中的抓取也在请求开始时进入准备逻辑，并共享上述 24 小时检查间隔。
+Playwright sync 对象不会跨线程共享。
 
 `doctor` 和 `provider_status` 只做静态依赖/配置检查，不启动浏览器、不下载
 runtime、不访问出版社页面。CLI 与 MCP `browser_preflight` 在实际启动前自动

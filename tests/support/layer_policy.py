@@ -2,11 +2,14 @@
 
 The audit hook catches Python/shell/fork launches without an executable allowlist.
 Canonical source reads are blocked regardless of which HTML/XML extractor is used.
-The import finder rejects the converter before loading its heavy dependencies.
+Installed PDF modules load before unit collection; conversion guards also cover
+function aliases captured during collection.
 """
 
 from __future__ import annotations
-import importlib.abc
+from functools import wraps
+import importlib
+import importlib.util
 import os
 from pathlib import Path
 import sys
@@ -63,13 +66,45 @@ def audit(event: str, args: tuple) -> None:
                 reject("canonical full-paper source read")
 
 
-class ConverterBoundary(importlib.abc.MetaPathFinder):
-    def find_spec(self, fullname, path=None, target=None):
-        if fullname == "pymupdf4llm" or fullname.startswith("pymupdf4llm."):
-            reject("real PDF conversion backend")
-        return None
+def _guard_converter(converter):
+    @wraps(converter)
+    def guarded(*args, **kwargs):
+        reject("real PDF conversion")
+        return converter(*args, **kwargs)
+
+    return guarded
+
+
+def _install_pdf_boundaries() -> None:
+    # PyMuPDF 2.x imports pymupdf4llm itself. Its initialization may probe
+    # Tesseract via a subprocess, so finish imports before enabling unit policy.
+    for name in ("pymupdf", "pymupdf4llm"):
+        if importlib.util.find_spec(name) is not None:
+            importlib.import_module(name)
+    owners = [
+        module
+        for name, module in tuple(sys.modules.items())
+        if name == "pymupdf" or name.startswith("pymupdf4llm")
+    ]
+    if "pymupdf" in sys.modules:
+        owners.append(sys.modules["pymupdf"].Document)
+    entrypoints = {
+        "to_markdown",
+        "to_json",
+        "to_text",
+        "to_chunks",
+        "convert_batch",
+        "_convert_batch",
+        "parse_document",
+    }
+    for owner in owners:
+        for name in vars(owner):
+            if name in entrypoints or name.startswith(("_layout_to_", "_to_")):
+                converter = getattr(owner, name)
+                if callable(converter):
+                    setattr(owner, name, _guard_converter(converter))
 
 
 def install() -> None:
+    _install_pdf_boundaries()
     sys.addaudithook(audit)
-    sys.meta_path.insert(0, ConverterBoundary())

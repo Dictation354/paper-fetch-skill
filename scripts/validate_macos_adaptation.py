@@ -188,6 +188,7 @@ def validate_contract(
     for key, expected in (
         ("default_channel", "official/prerelease"),
         ("python_package_spec", "camoufox==0.5.8"),
+        ("update_check_interval_seconds", 86400),
     ):
         if browser.get(key) != expected:
             errors.append(f"browser.{key} must be {expected}")

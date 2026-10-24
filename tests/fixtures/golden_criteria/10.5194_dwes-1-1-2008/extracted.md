@@ -8,7 +8,7 @@ source: "copernicus_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 7365
+token_estimate: 7403
 ---
 
 # Correlations between total cell concentration, total adenosine tri-phosphate concentration and heterotrophic plate counts during microbial monitoring of drinking water
@@ -73,6 +73,9 @@ To measure the total cell concentration (TCC), 900 µl of the water sample was s
 Total ATP concentration was determined as described in Berney et al. (2006) using the Promega Bac Titer-Glo™ Microbial Cell Viability Assay (Promega Corporation, Madison, WI, USA). All samples were measured in triplicate. A standard curve with dilutions of a known rATP standard (Promega Corporation) was completed before the experiments and the total ATP concentration was calculated based on the standard curve. Free ATP was measured in selected samples by filtering the samples through 0.1 µm sterile filters (Millipore, USA). ATP-per-cell was calculated from total ATP measurements and flow cytometry measurements as follows: 
 
 
+
+<!-- Start of picture text -->
+ATP-per-cell (g/cell) = total ATP concentration (g/L) (1)<br>cell concentration (cells/L)<br><!-- End of picture text -->
 
 Drink. Water Eng. Sci., 1, 1–6, 2008 
 

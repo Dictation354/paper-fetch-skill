@@ -8,7 +8,7 @@ source: "copernicus_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 8757
+token_estimate: 9237
 ---
 
 # 298 K rate coefficients for the reaction of OH with i-C3H7I, n-C3H7I and C3H8
@@ -54,9 +54,18 @@ OH with _n−_ C3H7I (1) and _i−_ C3H7I, (2) at room temperature. As a test of
 
 
 
+<!-- Start of picture text -->
+OH +  n− C3H7I  → products (1)<br><!-- End of picture text -->
 
 
 
+<!-- Start of picture text -->
+OH +  i− C3H7I  → products (2)<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+OH + C3H8 → products (3)<br><!-- End of picture text -->
 
 both the axis of propagation of the laser beam and the microwave lamp by a photomultiplier operating in photon counting mode which was screened by a 309 _±_ 5 nm interference filter. Between 1000 and 5000 decay profiles were averaged at 10 Hz to improve signal-to-noise ratios. 
 
@@ -70,7 +79,13 @@ OH generation is initiated by the photolysis of NO2 according to the following s
 
 
 
+<!-- Start of picture text -->
+NO2 +  hν (439 . 44 nm)  → NO2 ∗ (4)<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+NO2 ∗ +  hν (439 . 44 nm)  → NO 2 ∗∗ (5)<br><!-- End of picture text -->
 
 ## **2 Experimental** 
 
@@ -80,11 +95,23 @@ The laser photolysis / OH-resonance fluorescence experimental set-up has been de
 
 
 
+<!-- Start of picture text -->
+NO2 ∗∗ → NO + O( 1 D) (6a)<br><!-- End of picture text -->
 
 
 
+<!-- Start of picture text -->
+NO2 ∗∗ → NO + O( 3 P) (6b)<br><!-- End of picture text -->
 
 
+
+<!-- Start of picture text -->
+O( 1 D) + H2 → OH + H (7)<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+H + NO2 → OH + NO (8)<br><!-- End of picture text -->
 
 In all experiments the total pressure was 20 Torr (1 Torr = 1.333 hPa), the NO2 concentration was held constant at _≈_ 5 _×_ 10<sup>14</sup> cm<sup>_−_3</sup> (occasionally determined optically), with the H2 concentration at about 2 _×_ 10<sup>16</sup> cm<sup>_−_3</sup> . Under these conditions, the half lives for OH generation from reactions (7) and (8) are circa 1 and 8 _µ_ s, respectively. As we discuss in a previous publication (Carl and Crowley, 1998), OH is formed in vibrationally excited states in both reactions (7) and (8). The control experiments with C3H8 provide confirmation that either OH ( _v >_ 0) is rapidly quenched by 
 
@@ -102,6 +129,9 @@ Typically, laser fluences of _≈_ 20 _−_ 40 mJ cm<sup>_−_2</sup> were used 
 
 
 
+<!-- Start of picture text -->
+HNO3 +  hν (248 nm)  → OH + NO2 (9)<br><!-- End of picture text -->
+
 This source proved to be unsuitable for study of the reactions of OH with C3H7I due to the extensive dissociation of the iodides by the 248 nm laser light (see below), but was used for OH + C3H8. _n−_ C3H7I (Aldrich, 99%) and _i−_ C3H7I (Aldrich, 99%) were used after repeated degassing. The stated maximum 1% impurity in _n−_ C3H7I is thought to be _i−_ C3H7I, and vice-versa. C3H8 (Linde, 99.95%), Ar (Linde, 99.999%), H2 (Linde, 99.999%) and NO2 (purchased as N2O4, Merck, 99.5%) were used without further purification. 
 
 ## **3 Results and discussion** 
@@ -110,16 +140,22 @@ All experiments were carried out under pseudo first-order conditions, with the a
 
 
 
+<!-- Start of picture text -->
+[OH] t = [OH]0 exp  {− ( k bi[RI] +  k NO2[NO2] +  d ) t} (10)<br><!-- End of picture text -->
+
 where [OH] _t_ is the OH concentration at time = _t_ after the laser pulse, _k_ bi the bimolecular rate constant for the reaction with RI, _k_ NO2 the rate constant for reaction of OH with NO2 and _d_ the rate constant for diffusion out of the reaction zone. The first-order decay constant, _k_<sup>_′_</sup> was obtained by non-linear least-squares fitting of the OH decays and is related to the desired rate constant, _k_ bi as shown in equation (11). 
 
 
+
+<!-- Start of picture text -->
+k ′ =  k bi[RI] +  k NO2[NO2] +  d (11)<br><!-- End of picture text -->
 
 The loss of OH due to reaction with NO2 results in an intercept in the plot of _k_<sup>_′_</sup> versus [RI]. Efforts were therefore made to ensure that the concentration of NO2 (which was maintained by flow controller) remained constant during the course of experiments in which the decay of OH in various excess amounts of organic were measured. The spectral deconvolution procedure showed that [NO2] was stable to _≈_ 1% over such a measurement, which converts to a variation in the pseudo-first order decay constant of only _±_ 60 s<sup>_−_1</sup> in a total of between 800 and 5000 s<sup>_−_1</sup> , depending on the concentration (and identity) of the excess reactant. The observed small degree of scatter in the plots of _k_<sup>_′_</sup> versus [RI] confirm this. 
 
 
 
 <!-- Start of picture text -->
-6000<br>4000<br>2000<br>0<br>0 1 2 3 4 5<br>C3H8 [1015 cm-3]<br>-1k’ [s]<br><!-- End of picture text -->
+600 0<br>400 0<br>200 0<br>0<br>0 1 2 3 4 5<br>C3H8 [1015 cm-3]<br>-1k’ [s]<br><!-- End of picture text -->
 
 **Fig. 2.** Plot of pseudo-first order decay constant of OH versus [propane]. Circles represent data obtained using 248 nm photolysis of HNO3 as OH source, triangles are data points obtained using the two-photon (439.44 nm) dissociation of NO2 in the presence of H2 as OH source. The error bars are 2 _σ_ statistical errors on _k_<sup>_′_</sup> . The bimolecular rate constants obtained are (1.17 _±_ 0.01) _×_ 10<sup>_−_12</sup> and (1.15 _±_ 0.03) _×_ 10<sup>_−_12</sup> cm<sup>3</sup> s<sup>_−_1</sup> , respectively (2 _σ_ precision). 
 
@@ -158,19 +194,34 @@ The first-order decays of OH were similar in quality to those shown for C3H8 and
 
 
 
+<!-- Start of picture text -->
+i− C3H7I +  hν (248 nm)  → i− C3H7 + I (12)<br><!-- End of picture text -->
+
 and a rapid reaction (Tsang, 1988) of OH with the radical product: 
 
 
+
+<!-- Start of picture text -->
+C3H7 + OH  → products (13)<br><!-- End of picture text -->
 
 This problem was clearly not encountered when using 439.44 nm radiation to generate OH radicals as _i−_ C3H7I does not absorb at this wavelength, and highlights the advantages of using pulsed visible radiation instead of UV radiation, as only very few small molecules have absorption spectra that extend beyond 400 nm. The data obtained with HNO3 + 248 nm photolysis therefore only define an upper limit to the rate constant for OH + _i−_ C3H7I (see Table 1). Data obtained with NO2/H2 photolysis at 439.44 nm are summarised in Table 1, and the plot of _k_<sup>_′_</sup> versus concentration of iodopropane is displayed in Fig. 3. The rate constants obtained are (1.47 _±_ 0.08) _×_ 10<sup>_−_12</sup> cm<sup>3</sup> s<sup>_−_1</sup> and (1.22 _±_ 0.06) _×_ 10<sup>_−_12</sup> cm<sup>3</sup> s<sup>_−_1</sup> for OH with _n−_ C3H7I and _i−_ C3H7I, respectively (errors are 2 _σ_ precision plus 5% estimated systematic error in concentration measurement). As _i−_ C3H7I and (by analogy) _n−_ C3H7I react rapidly with O(<sup>3</sup> P) (Gilles et al., 1996), it is necessary to assess the potential impact of this on the reported rate constants. The products of the reaction of O(<sup>3</sup> P) with the iodo-propanes are IO, HOI, C3H6, and C3H7 (Klaasen et al., 1996). By analogy with the reaction of O(<sup>3</sup> _P_ + C2H5I (Monks et al., 1995) reaction (14a) is expected to dominate with a branching ratio close to 0.9. 
 
 
 
+<!-- Start of picture text -->
+O( 3 P) + C3H7I  → HOI + C3H6 (14a)<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+→ IO + C3H7 (14b)<br><!-- End of picture text -->
 
 OH is expected to react rapidly not only with propyl radicals (see above) but, by analogy with BrO and ClO, also with IO radicals (DeMore et al., 1997). The potential perturbation of the OH kinetics due to the formation of reactive products was investigated by varying the pulse energy at 439.44 nm and thus the initial OH and O(<sup>3</sup> P) concentrations by a factor of 10. This had no effect on the resulting pseudo-first order decays, ruling out a significant secondary loss of OH. The potential enhancement in measured rate constants for both _n−_ C3H7I and _i−_ C3H7I due to the presence of I2 impurity was also examined. The rate constant for reaction between OH and I2 (15) is at _≈_ 2 _×_ 10<sup>_−_10</sup> cm<sup>3</sup> s<sup>_−_1</sup> very large, and I2 impurity at the percent level would result in a factor of two overestimation of the true rate constant. 
 
 
+
+<!-- Start of picture text -->
+OH + I2 → HOI + I (15)<br><!-- End of picture text -->
 
 For this reason, the visible absorption by highly concentrated mixtures of the alkyl iodides in the region where I2 absorbs strongly was examined for traces of I2. None were found, and we were able to set an upper limit to the fractional concentration of I2 of 3 _×_ 10<sup>_−_4</sup> in _n−_ C3H7I and _i−_ C3H7I. This implies an upper limit to the contribution to the overall OH decay (and thus to _k_ 1 and _k_ 2) of just 3%. 
 
@@ -188,11 +239,20 @@ www.atmos-chem-phys.org/acp/1/1/
 
 
 
+<!-- Start of picture text -->
+OH + CF3I  → HOI + CF3 (16)<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+OH + C3H7I  → HOI + C3H7 (17a)<br><!-- End of picture text -->
 
 However, the latest estimates for the heat of formation of HOI (Berry et al., 1998) suggest that reaction (17a) is endothermic by _>_ 20 kJmol<sup>_−_1</sup> for both _n−_ C3H7I and _i−_ C3H7I and therefore unlikely to be significant in the present experiments at 298 K, or in the atmosphere. As the present study gives no indications to the contrary, we assume that the reaction proceeds via H-atom abstraction to give H2O and an iodine containing alkyl radical as products. 
 
 
+
+<!-- Start of picture text -->
+OH + C3H7I  → H2O + C3H6I (17b)<br><!-- End of picture text -->
 
 ## **4 Conclusions and atmospheric implications** 
 
@@ -201,7 +261,7 @@ The overall rate constant for the reaction of OH with propane was measured using
 
 
 <!-- Start of picture text -->
-5000<br>n - C3H7I<br>4000<br>3000<br>i - C3H7I<br>2000<br>1000<br>0<br>0 1 2 3<br>[RI] [1015 cm-3]<br>-1k’ [s]<br><!-- End of picture text -->
+500 0<br>n - C3H7I<br>400 0<br>300 0<br>i - C3H7I<br>200 0<br>100 0<br>0<br>0 1 2 3<br>[RI] [1015 cm-3]<br>-1k’ [s]<br><!-- End of picture text -->
 
 **Fig. 3.** Plot of pseudo-first order decay constant of OH versus [propyl-iodide]. Solid circles, _n−_ C3H7I ( _k_ 1 = 1.47 _±_ 0.02 _×_ 10<sup>_−_13</sup> cm<sup>3</sup> s<sup>_−_1</sup> ); open squares, _i−_ C3H7I ( _k_ 2 = 1.22 _±_ 0.01 _×_ 10<sup>_−_13</sup> cm<sup>3</sup> s<sup>_−_1</sup> ), 2 _σ_ precision. The error bars are 2 _σ_ statistical errors on _k_<sup>_′_</sup> , overall errors in the bimolecular rate constants are estimated as _≈_ 5%, related mainly to errors in the absorption cross sections of _n−_ C3H7I and _i−_ C3H7I. 
 

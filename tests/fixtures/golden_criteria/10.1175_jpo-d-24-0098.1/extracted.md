@@ -8,7 +8,7 @@ source: "ams_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 22227
+token_estimate: 22332
 ---
 
 # JPOD240098_proof.pdf
@@ -47,7 +47,7 @@ Publisher's Note: This article was revised on 13 June 2025 to include improved v
 
 DOI: 10.1175/JPO-D-24-0098.1 
 
-Ó 2025 American Meteorological Society. This published article is licensed under the terms of the default AMS reuse license. For information regarding reuse of this content and general copyright information, consult the AMS Copyright Policy (www.ametsoc.org/PUBSReuseLicenses). 
+> Ó 2025 American Meteorological Society. This published article is licensed under the terms of the default AMS reuse license. For information regarding reuse of this content and general copyright information, consult the AMS Copyright Policy (www.ametsoc.org/PUBSReuseLicenses). 
 
 Brought to you by Peking University | Unauthenticated | Downloaded 09/19/26 02:16 AM UTC 
 
@@ -139,6 +139,9 @@ The spectral slope is a fundamental parameter that characterizes the IW spectrum
 
 
 
+<!-- Start of picture text -->
+q<br>pG<br>��p k 2 z∗ 1<br>F(kz) 5 e0 G 1 G q 2 1 [1 1 (kz/kz∗) p ] q/p (1)<br>� p � � p �<br><!-- End of picture text -->
+
 to get the IW spectral parameters, following Polzin and Lvov (2011). The undetermined IW spectral parameters in Eq. (1) include e0 (energy-related coefficient), kz∗ (vertical wavenumber scale), p (low-wavenumber slope), and q (high-wavenumber slope), where the parameter q is of the most interest. Figure 2b indicates that the displacement spectral slope varies among segments in the SCS. In several studies, researchers used a more simplified GM formula (essentially assuming p 5 q) to fit the entire vertical wavenumber spectral slope without distinguishing between high- and low-wavenumber slopes. For instance, Pollmann (2020) employed this method to analyze the global variation of the entire vertical wavenumber spectral slope. 
 
 ## e. Cluster analysis of the IW spectra 
@@ -195,7 +198,7 @@ previous study indicated that Rv depends not only on N but also on f at the glob
 
 ## b. IW spectral shape 
 
-## 1) SPECTRAL SLOPE 
+1) SPECTRAL SLOPE 
 
 Let us focus on the high-wavenumber slope of the displacement spectrum qj obtained through the fitting method given in section 2d. A higher (lower) value of qj indicates a flatter 
 
@@ -322,6 +325,9 @@ In region C, hENIWi shows a significant positive correlation with hEsubi, while 
 This process can be qualitatively assessed via internal leewave energy flux: 
 
 
+
+<!-- Start of picture text -->
+(FrL)c2 r0<br>Fluxlee 5 min�1, FrL2 � 3 4p 2<br>(kh ? Usub) ��������������������������<br>3 �21‘‘ �21‘‘ P(kx, ky) |kh| �Nbot2 2 (kh ? Usub) 2<br>����������������������<br>3 �(kh ? Usub) 2 2 f 2 dkxdky (2)<br><!-- End of picture text -->
 
 where the steepness (or inverse Froude number), FrL 5 Nboth0/|Usub|, measures the nonlinearity of internal lee waves. Here, r0 is a reference density, kh 5 (kx, ky) is the horizontal 
 

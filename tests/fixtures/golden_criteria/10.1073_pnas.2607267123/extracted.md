@@ -39,7 +39,9 @@ Author contributions: Z.L. and S.W. wrote the paper.
 
 The authors declare no competing interest. 
 
-Copyright © 2026 the Author(s). Published by PNAS. This article is distributed under Creative Commons Attribution - NonCommercial - NoDerivatives License 4.0 (CC BY - NC - ND). See companion article, “A soft electrode array with reconfigurable hydrogel interfaces for high - fidelity neurophysiological monitoring during craniotomy,” 10.1073/pnas.2533145123. 1To whom correspondence may be addressed. Email: sihongwang@uchicago.edu. Published April 20, 2026. 
+Copyright © 2026 the Author(s). Published by PNAS. This article is distributed under Creative Commons Attribution - NonCommercial - NoDerivatives License 4.0 (CC BY - NC - ND). See companion article, “A soft electrode array with reconfigurable hydrogel interfaces for high - fidelity neurophysiological monitoring during craniotomy,” 10.1073/pnas.2533145123. 1To whom correspondence may be addressed. Email: sihongwang@uchicago.edu. 
+
+Published April 20, 2026. 
 
 
 

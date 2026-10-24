@@ -207,7 +207,9 @@ Preparation of this manuscript was supported by the grant “Time perspective an
 
 ### **Declarations** 
 
-**Consent for publication.** All participants provided informed consent for the publication of anonymized data and results derived from their participation. 
+**Consent for publication.** All participants provided informed consent for the publication of 
+
+anonymized data and results derived from their participation. 
 
 ### **Consent to Participate declaration** 
 

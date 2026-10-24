@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
-from contextlib import redirect_stdout
+from contextlib import contextmanager, redirect_stdout
 from contextvars import ContextVar
 from dataclasses import dataclass
 from importlib import import_module
+from importlib.metadata import version as distribution_version
 from importlib.util import find_spec
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
 import json
+import math
 import os
 from pathlib import Path
 import stat
 import shutil
 import sys
 import threading
+import time
 from typing import Any
 
 from filelock import FileLock
@@ -22,8 +25,11 @@ from filelock import FileLock
 from ...utils import normalize_text
 from ...config import BROWSER_BINARY_PATH_ENV_VAR, browser_env_value
 from ...http import RequestCancelledError
+from .paths import _atomic_write_json
 
 DEFAULT_CHANNEL = "official/prerelease"
+UPDATE_CHECK_INTERVAL_SECONDS = 86400
+UPDATE_CHECK_FILENAME = ".paper-fetch-update-check.json"
 
 
 class FetchBrowserPreparation:
@@ -254,6 +260,50 @@ def _probe_runtime(
     )
 
 
+def _recent_update_check(path: Path, identity: Mapping[str, Any]) -> bool:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict) or any(
+            key not in payload or payload[key] != value for key, value in identity.items()
+        ):
+            return False
+        checked_at = payload.get("checked_at")
+        if (
+            isinstance(checked_at, bool)
+            or not isinstance(checked_at, (int, float))
+            or not math.isfinite(checked_at)
+            or checked_at < 0
+        ):
+            return False
+        return 0 <= time.time() - checked_at < UPDATE_CHECK_INTERVAL_SECONDS
+    except (OSError, ValueError, OverflowError):
+        return False
+
+
+def _write_update_check(root: Path, path: Path, identity: Mapping[str, Any]) -> None:
+    try:
+        if _path_chain_has_link(root, path):
+            raise ValueError("Camoufox update-check record path is unsafe.")
+        _atomic_write_json(path, {**identity, "checked_at": time.time()})
+    except (OSError, ValueError) as exc:
+        print(f"Could not save Camoufox update check: {exc}", file=sys.stderr)
+
+
+@contextmanager
+def _record_update_check(
+    root: Path, path: Path, identity: Mapping[str, Any]
+) -> Iterator[None]:
+    try:
+        yield
+    except RequestCancelledError:
+        raise
+    except Exception:
+        _write_update_check(root, path, identity)
+        raise
+    else:
+        _write_update_check(root, path, identity)
+
+
 def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
     """Prepare only a validated version directory, preserving a usable active runtime.
 
@@ -267,13 +317,18 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
     config_path = Path(multiversion.CONFIG_FILE)
     lock_path = root / ".paper-fetch-prepare.lock"
     flag = Path(multiversion.COMPAT_FLAG)
-    for path in (config_path, lock_path, flag, Path(multiversion.BROWSERS_DIR)):
+    check_path = root / UPDATE_CHECK_FILENAME
+    for path in (config_path, lock_path, flag, check_path, Path(multiversion.BROWSERS_DIR)):
         if _path_chain_has_link(root, path):
             raise RuntimeError(
                 "Camoufox browser preparation failed: unsafe managed cache path."
             )
     root.mkdir(parents=True, exist_ok=True)
     with FileLock(lock_path), redirect_stdout(sys.stderr):
+        if _path_chain_has_link(root, check_path):
+            raise RuntimeError(
+                "Camoufox browser preparation failed: unsafe managed cache path."
+            )
         try:
             config = _read_config(root, config_path)
         except (OSError, ValueError) as exc:
@@ -332,101 +387,112 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                         flag.touch()
                         return probe
 
-        try:
-            print(
-                f"Checking Camoufox runtime: {channel}{'/' + pinned if pinned else ''}",
-                file=sys.stderr,
-            )
-            versions = pkgman.list_available_versions(
-                repo,
-                include_prerelease=channel_type == "prerelease",
-            )
-            selected = next(
-                (
-                    v
-                    for v in versions
-                    if v.is_prerelease == (channel_type == "prerelease")
-                    and v.version.is_supported()
-                    and (not pinned or v.version.full_string == pinned)
-                    and (not pinned_sha or v.sha256 == pinned_sha)
-                ),
-                None,
-            )
-            if selected is None:
-                raise RuntimeError(
-                    "No compatible Camoufox version is available for the configured channel/pin."
-                )
-            fetcher = pkgman.CamoufoxFetcher(
-                repo_config=repo, selected_version=selected
-            )
-        except RequestCancelledError:
-            raise
-        except Exception as exc:
-            if previous.valid and not pinned:
-                flag.touch()
-                print(
-                    f"Camoufox update failed; using local {previous.version}: {exc}",
-                    file=sys.stderr,
-                )
-                return previous
-            raise RuntimeError(f"Camoufox browser preparation failed: {exc}") from exc
-
-        folder = multiversion.version_folder_name(
-            fetcher.version, fetcher.build, selected.sha8
-        )
-        target_repo = multiversion.get_repo_name(fetcher.github_repo)
-        spec = f"browsers/{target_repo}/{folder}"
-        target, safe = _managed_candidate(root, spec)
-        if (
-            not safe
-            or len(Path(spec).parts) != 3
-            or target_repo != repo_name
-            or target != Path(multiversion.BROWSERS_DIR) / target_repo / folder
-        ):
-            raise RuntimeError(
-                "Camoufox browser preparation failed: unsafe target version path."
-            )
-        probe = _probe_runtime(pkgman, target, spec, safe)
-        if not probe.managed_path_safe:
-            raise RuntimeError(f"Camoufox browser preparation failed: {probe.message}")
-        try:
-            if not probe.valid or probe.version != selected.version.full_string:
-                if previous.valid and target == previous.runtime_path:
-                    raise RuntimeError(
-                        "Target metadata differs from the release; preserving the validated active runtime."
-                    )
-                # Only this validated target can be removed; never purge the cache.
-                if target.exists():
-                    shutil.rmtree(target)
-                print(
-                    f"Preparing Camoufox {selected.version.full_string}",
-                    file=sys.stderr,
-                )
-                multiversion.install_versioned(fetcher)
-                probe = _probe_runtime(pkgman, target, spec, safe)
-                if not probe.valid or probe.version != selected.version.full_string:
-                    raise RuntimeError(
-                        probe.message or "Installed Camoufox runtime failed validation."
-                    )
-            if multiversion.load_config().get("active_version") != spec:
-                multiversion.set_active(spec)
-            # Prevent upstream launch-time legacy cache cleanup, including on reuse.
+        identity = {
+            "channel": channel,
+            "pinned": pinned,
+            "pinned_sha": pinned_sha,
+            "python_package_version": distribution_version("camoufox"),
+        }
+        if not pinned and previous.valid and _recent_update_check(check_path, identity):
             flag.touch()
-            return probe
-        except RequestCancelledError:
-            multiversion.save_config(config)
-            raise
-        except Exception as exc:
-            multiversion.save_config(config)
-            restored = probe_camoufox_managed_runtime()
-            if restored.valid and not pinned:
-                flag.touch()
+            return previous
+
+        with _record_update_check(root, check_path, identity):
+            try:
                 print(
-                    f"Camoufox update failed; using local {restored.version}: {exc}",
+                    f"Checking Camoufox runtime: {channel}{'/' + pinned if pinned else ''}",
                     file=sys.stderr,
                 )
-                return restored
-            raise RuntimeError(f"Camoufox browser preparation failed: {exc}") from exc
+                versions = pkgman.list_available_versions(
+                    repo,
+                    include_prerelease=channel_type == "prerelease",
+                )
+                selected = next(
+                    (
+                        v
+                        for v in versions
+                        if v.is_prerelease == (channel_type == "prerelease")
+                        and v.version.is_supported()
+                        and (not pinned or v.version.full_string == pinned)
+                        and (not pinned_sha or v.sha256 == pinned_sha)
+                    ),
+                    None,
+                )
+                if selected is None:
+                    raise RuntimeError(
+                        "No compatible Camoufox version is available for the configured channel/pin."
+                    )
+                fetcher = pkgman.CamoufoxFetcher(
+                    repo_config=repo, selected_version=selected
+                )
+            except RequestCancelledError:
+                raise
+            except Exception as exc:
+                if previous.valid and not pinned:
+                    flag.touch()
+                    print(
+                        f"Camoufox update failed; using local {previous.version}: {exc}",
+                        file=sys.stderr,
+                    )
+                    return previous
+                raise RuntimeError(f"Camoufox browser preparation failed: {exc}") from exc
+
+            folder = multiversion.version_folder_name(
+                fetcher.version, fetcher.build, selected.sha8
+            )
+            target_repo = multiversion.get_repo_name(fetcher.github_repo)
+            spec = f"browsers/{target_repo}/{folder}"
+            target, safe = _managed_candidate(root, spec)
+            if (
+                not safe
+                or len(Path(spec).parts) != 3
+                or target_repo != repo_name
+                or target != Path(multiversion.BROWSERS_DIR) / target_repo / folder
+            ):
+                raise RuntimeError(
+                    "Camoufox browser preparation failed: unsafe target version path."
+                )
+            probe = _probe_runtime(pkgman, target, spec, safe)
+            if not probe.managed_path_safe:
+                raise RuntimeError(f"Camoufox browser preparation failed: {probe.message}")
+            try:
+                if not probe.valid or probe.version != selected.version.full_string:
+                    if previous.valid and target == previous.runtime_path:
+                        raise RuntimeError(
+                            "Target metadata differs from the release; preserving the validated active runtime."
+                        )
+                    # Only this validated target can be removed; never purge the cache.
+                    if target.exists():
+                        shutil.rmtree(target)
+                    print(
+                        f"Preparing Camoufox {selected.version.full_string}",
+                        file=sys.stderr,
+                    )
+                    multiversion.install_versioned(fetcher)
+                    probe = _probe_runtime(pkgman, target, spec, safe)
+                    if not probe.valid or probe.version != selected.version.full_string:
+                        raise RuntimeError(
+                            probe.message or "Installed Camoufox runtime failed validation."
+                        )
+                if multiversion.load_config().get("active_version") != spec:
+                    multiversion.set_active(spec)
+                # Prevent upstream launch-time legacy cache cleanup, including on reuse.
+                flag.touch()
+                return probe
+            except RequestCancelledError:
+                multiversion.save_config(config)
+                raise
+            except Exception as exc:
+                multiversion.save_config(config)
+                restored = probe_camoufox_managed_runtime()
+                if restored.valid and not pinned:
+                    flag.touch()
+                    print(
+                        f"Camoufox update failed; using local {restored.version}: {exc}",
+                        file=sys.stderr,
+                    )
+                    return restored
+                raise RuntimeError(f"Camoufox browser preparation failed: {exc}") from exc
 
 
 __all__ = [

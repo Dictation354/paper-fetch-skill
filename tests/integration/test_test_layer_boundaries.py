@@ -29,7 +29,7 @@ def _run_unit(tmp_path, source, *args):
         env=env,
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=180,
     )
 
 
@@ -43,8 +43,23 @@ import sys
 from tests.golden_corpus import build_article_from_fixture
 from tests.golden_criteria import golden_criteria_asset
 
-def test_backend_is_not_loaded():
-    assert "pymupdf4llm" not in sys.modules
+def test_pdf_imports_and_core_api():
+    import pymupdf
+    import pymupdf4llm
+    from pymupdf4llm.helpers import document_layout, pymupdf_rag
+    with pymupdf.open() as document:
+        page = document.new_page()
+        page.insert_text((72, 72), "Minimal snippet")
+        assert "Minimal snippet" in page.get_text()
+    assert callable(pymupdf4llm.to_markdown)
+    assert callable(document_layout.parse_document)
+    assert callable(pymupdf_rag.to_markdown)
+
+def test_mock_converter(monkeypatch):
+    import pymupdf4llm
+    from paper_fetch.providers._pdf_common import _render_default_pdf_markdown
+    monkeypatch.setattr(pymupdf4llm, "to_markdown", lambda *a, **kw: "mock output")
+    assert _render_default_pdf_markdown("unused.pdf") == "mock output"
 
 def test_process():
     subprocess.run([sys.executable, "-c", "raise SystemExit(99)"])
@@ -54,6 +69,7 @@ def test_shell():
 
 def test_conversion():
     import pymupdf4llm
+    pymupdf4llm.to_markdown("unused.pdf")
 
 def test_replay():
     build_article_from_fixture(None)
@@ -64,14 +80,59 @@ def test_html_source():
     )
     output = result.stdout + result.stderr
     assert result.returncode == 1, output
-    assert "5 failed, 1 passed" in output
+    assert "5 failed, 2 passed" in output
     for operation in (
         "external process",
-        "real PDF conversion backend",
+        "real PDF conversion",
         "full-paper replay builder",
         "canonical full-paper source read",
     ):
         assert operation in output
+
+
+def test_unit_converter_aliases_are_guarded_during_collection_and_execution(tmp_path):
+    source = """
+import pytest
+import pymupdf
+import pymupdf4llm
+from pymupdf4llm import batch_converter
+from pymupdf4llm.helpers import document_layout, pymupdf_rag
+
+# Capture aliases during collection, before any per-test fixture can patch them.
+converters = [
+    getattr(owner, name)
+    for owner in (pymupdf4llm, pymupdf_rag, pymupdf.Document)
+    for name in ("to_markdown", "to_json", "to_text", "to_chunks")
+] + [
+    pymupdf.convert_batch,
+    pymupdf4llm.convert_batch,
+    batch_converter.convert_batch,
+    document_layout.parse_document,
+    pymupdf4llm._layout_to_markdown,
+    pymupdf4llm._layout_to_json,
+    pymupdf4llm._layout_to_text,
+]
+
+@pytest.mark.parametrize("converter", converters)
+def test_alias(converter):
+    converter("unused.pdf")
+"""
+    result = _run_unit(tmp_path, source)
+    output = result.stdout + result.stderr
+    assert result.returncode == 1, output
+    assert "19 failed" in output
+    assert output.count("real PDF conversion;") == 19
+
+    collection = tmp_path / "collection"
+    collection.mkdir()
+    result = _run_unit(
+        collection,
+        "from pymupdf4llm.helpers.pymupdf_rag import to_markdown as convert\n"
+        'convert("unused.pdf")\n',
+        "--collect-only",
+    )
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "real PDF conversion" in result.stdout + result.stderr
 
 
 @pytest.mark.parametrize("marker", ["browser", "live", "allow_subprocess"])

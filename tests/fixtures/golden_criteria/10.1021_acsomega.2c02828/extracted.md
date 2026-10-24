@@ -11,7 +11,7 @@ acquisition:
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 11282
+token_estimate: 12398
 ---
 
 # manuscript 1..10
@@ -43,13 +43,7 @@ Chao-Tun Cao and Chenzhong Cao*
 <!-- Start of picture text -->
 Metrics & More Article Recommendations * sı Supporting Information<br><!-- End of picture text -->
 
-ABSTRACT: Changes in various physicochemical properties ( _P_ ( _n_ )) of organic compounds with the number of carbon atoms ( _n_ ) can be roughly divided into linear and nonlinear changes. To date, there has been no general equation to express nonlinear changes in the properties of organic homologues. This study proposes a general equation expressing nonlinear changes in the physicochemical properties of organic homologues, including boiling point, viscosity, ionization potential, and vapor pressure, named the “NPOH equation”, as 
-
-follows: _P_ (n) = _P_ (1) _α_<sup>_n_−</sup><sup>_1_</sup> _e_<sup>∑</sup> d<sup>ni=2</sup> ( _β_ /( _i_ − 1)) where _α_ and _β_ are adjustable parameters, and _P_ (1) represents the property of the starting compound (pseudo-value at _n_ = 1) of each homologue. The results show that various nonlinear changes in the properties of homologues can be expressed by the NPOH equation. Linear and nonlinear changes in the properties of homologues can all be correlated with _n_ and the “sum of carbon number effects”, ∑ni=2(1/i − 1). Using these two 
-
-
-
-parameters, a quantitative correlation equation can be established between any two properties of each homologue, providing convenient mutual estimation of the properties of a homologue series. The NPOH equation can also be used in property correlation for structures with functionality located elsewhere along a linear alkyl chain as well as for branched organic compounds. This work can provide new perspectives for studying quantitative structure−property relationships. 
+ABSTRACT: Changes in various physicochemical properties ( _P_ ( _n_ )) of organic compounds with the number of carbon atoms ( _n_ ) can be roughly divided into linear and nonlinear changes. To date, there has been no general equation to express nonlinear changes in the properties of organic homologues. This study proposes a general equation expressing nonlinear changes in the physicochemical properties of organic homologues, including boiling point, viscosity, ionization potential, and vapor pressure, named the “NPOH equation”, as follows: _P_ (n) = _P_ (1) _α_<sup>_n_−</sup><sup>_1_</sup> _e_<sup>∑</sup> d<sup>ni=2</sup> ( _β_ /( _i_ − 1)) where _α_ and _β_ are adjustable parameters, and _P_ (1) represents the property of the starting compound (pseudo-value at _n_ = 1) of each homologue. The results show that various nonlinear changes in the properties of homologues can be expressed by the NPOH equation. Linear and nonlinear changes in the properties of homologues can all be correlated with _n_ and the “sum of carbon number effects”, ∑ni=2(1/i − 1). Using these two parameters, a quantitative correlation equation can be established between any two properties of each homologue, providing convenient mutual estimation of the properties of a homologue series. The NPOH equation can also be used in property correlation for structures with functionality located elsewhere along a linear alkyl chain as well as for branched organic compounds. This work can provide new perspectives for studying quantitative structure−property relationships. 
 
 ##### **1. INTRODUCTION** 
 
@@ -61,9 +55,15 @@ proposed and molecular characteristic parameters are extracted for specific comp
 
 
 
+<!-- Start of picture text -->
+RT a ( T )<br>P =<br>V b V 2 + uVb + wb 2 (1)<br><!-- End of picture text -->
+
 where _u_ and _w_ are characteristics of the equation ( _u_ = 1 and _w_ = 0 or _u_ = 2 and _w_ = −1 for Redlich-Kwong<sup>10</sup> or Peng− Robinson (PR),<sup>11</sup> respectively), and _a_ and _b_ are parameters computed using critical pressure ( _P_ c) and temperature ( _T_ c), as shown in eqs 2 and 3 
 
 
+
+<!-- Start of picture text -->
+R 2 T c2<br>a = a P c ( T ) (2)<br>RT c<br>b = b<br>P c (3)<br><!-- End of picture text -->
 
 
 
@@ -97,11 +97,17 @@ Much research has focused on expressing the regularity of property changes in or
 
 
 
+<!-- Start of picture text -->
+Y = Y ( Y Y 0)exp( n 2/3) (4)<br><!-- End of picture text -->
+
 where _Y_ is the boiling point value at carbon number _n_ and _Y_ 0 is the boiling point pseudo-value at _n_ = 0, _Y_ ∞ = 1078, and _β_ = 4.999 × 10<sup>−3</sup> . 
 
 In 1985, Gasem and Robinson et al.<sup>13,14</sup> proposed eq 5 for evaluating the critical properties of _n_ -paraffins, known as the ABC equation 
 
 
+
+<!-- Start of picture text -->
+Y = Y ( Y Y 0 )exp( ( n 1)) (5)<br><!-- End of picture text -->
 
 where variables _Y_ , _Y_ ∞, and _Y_ 0 are property values at carbon number _n_ , the limiting property value as _n_ becomes very large, 
 
@@ -151,11 +157,17 @@ In 1997, Marano and Holder<sup>15</sup> proposed eq 6 to correlate the thermodyn
 
 
 
+<!-- Start of picture text -->
+Y = Y Y 0exp( ( n ± n 0)) (6)<br><!-- End of picture text -->
+
 where five adjustable parameters, _n_ 0, _Y_ 0, _Y_ ∞, _β_ , and _γ_ , are employed. 
 
 In 2009, Zenkevich<sup>16</sup> employed a recurrent function to correlate the properties of homologous series, as shown in eq 7 
 
 
+
+<!-- Start of picture text -->
+A ( n + 1) = aA ( n ) + b (7)<br><!-- End of picture text -->
 
 where _A_ ( _n_ + 1) is the physicochemical property value for homologues with ( _n_ + 1) carbon atoms, _A_ ( _n_ ) is the property value for homologues with _n_ carbon atoms, and coefficients _a_ and _b_ are calculated by the least squares method. Equation 7 is different from eqs 4−6 because the parameter _Y_ ∞ is not required. 
 
@@ -168,6 +180,9 @@ Notably, eq 4 was proposed more than 60 years ago, and the inherent change regul
 number _n_ can be roughly divided into linear and nonlinear changes. The linear change of a property is relatively simple and will not be discussed in detail here. This study focuses on the complex nonlinear change of a property. Using _n_ -paraffins (H−(CH2) _n_ −H) as an example, some _P_ values increase with an increasing _n_ value, while some _P_ values decrease with an increasing _n_ value, The _P_ changes show significant differences, as shown in Figure 1. We investigated how these different changes are dominantly affected by _n_ , and whether all of these changes follow a common rule, through theoretical analysis. Usually, organic homologues can be represented as X−(A) _n_ − Y, where A is a repeating structural unit, _n_ is the number of repeating structural units, and X and Y are end groups. For _n_ - paraffins, A is CH2, and both X and Y are H atoms, represented by H−(CH2) _n_ −H. In a series of organic homologues, the property of compound X−(A) _n_ −Y containing _n_ repeating structural units is represented by _P_ ( _n_ ), and the property of another compound containing _n_ − 1 repeating structural units X−(A) _n_ −1−Y is represented by _P_ ( _n_ −1). The molecular structure of X−(A) _n_ −Y is known to be formed by adding repeating structural unit A to molecule X−(A) _n_ −1−Y, namely, X− (A) _n_ −1−Y becomes X−(A) _n_ −1−A−Y. The addition of unit A causes a change of property _P_ ( _n_ −1) of X−(A) _n_ −1−Y to property _P_ ( _n_ ) of X−(A) _n_ −Y. Therefore, property _P_ ( _n_ ) of X−(A) _n_ −Y can be considered a perturbation based on property _P_ ( _n_ −1) of X− (A) _n_ −1−Y. This perturbation effect must be related to the original molecular chain length (A) _n_ −1. Assuming that the perturbation effect acts in the form of an exponential, exp( _β_ /( _n_ − 1)), then, the relationship between _P_ ( _n_ ) and _P_ ( _n_ −1) can be expressed by eq 8 
 
 
+
+<!-- Start of picture text -->
+P ( n ) = P ( n 1) exp( /( n 1)) (8)<br><!-- End of picture text -->
 
 where _α_ is the proportional coefficient of the property change and _β_ is an adjustable parameter of the perturbation effect. 
 
@@ -208,13 +223,22 @@ _P_ (2) = _P_ ( _n_ 1) exp( /(2 1)) (9)
 
 
 
+<!-- Start of picture text -->
+P (3) = P (2) exp( /(3 1)) = [ P (1) exp( /(2 1))]<br>2<br>exp( /(3 1)) = P (1) exp[( /(2 1)) + ( /(3 1))]<br>(10)<br>2<br>P (4) = P (3) exp( /(4 1)) = { P (1) exp[( /(2 1)) +<br>3<br>( /(3 1))]} exp( /(4 1)) = P (1) exp[( /(2 1)) +<br>( /(3 1)) + ( /(4 1))] (11)<br><!-- End of picture text -->
+
 From eqs 9−11, eq 8 can also be expressed as eq 12 _P_ ( _n_ ) = _P_ (1) _n_ 1 _e ni_ =2( /( _i_ 1)) 
 
 
 
+<!-- Start of picture text -->
+(12)<br><!-- End of picture text -->
+
 Equation 12 expresses the relationship between the property of organic homologues X−(A) _n_ −Y and the number of repeating structural units, _n_ . If the logarithm is taken, eq 12 can be expressed as eq 13 
 
 
+
+<!-- Start of picture text -->
+n<br>i 1 y<br>ln( P ( n )) = ln( P (1)) + ( n 1)ln( ) + jjj zzz<br>( i =2) k i 1 {<br>n<br>i 1 y<br>= a + b ( n 1) + c jjj zzz<br>i =2 k i 1 { (13)<br><!-- End of picture text -->
 
 where _a_ = ln( _P_ (1)), _b_ = ln( _α_ ), and _c_ = _β_ . These are characteristic coefficients related to the properties of each homologue and can be obtained by regression analysis. For convenience, term _in_ =2 ( _i_ 1 1) in eqs 12 and 13 is 
 
@@ -222,7 +246,13 @@ subsequently denoted as _S_ CNE (abbreviation of “sum of carbon number effects
 
 
 
+<!-- Start of picture text -->
+P ( n ) = P (1) n 1e S CNE (14)<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+ln( P ( n )) = a + b ( n 1) + cS CNE (15)<br><!-- End of picture text -->
 
 In contrast to eqs 4−7, eqs 12 and 14 show that property _P_ ( _n_ ) of homologue X−(A) _n_ −Y is related to the starting compound property _P_ (1) (property pseudo-value at _n_ = 1) of each homologue, as well as the number of repeating structural units, _n_ , and the cumulative perturbation effect, _S_ CNE, of repeating structural units. 
 
@@ -235,6 +265,9 @@ We noted that _a_ value of boiling point _T_ b equation in Table 2 (no. 1) is 4.
 Interestingly, for the linear change property, _P_ LC( _n_ ), of homologues, it was only necessary to directly replace term ln( _P_ ( _n_ )) in eq 15 with term _P_ LC( _n_ ), as shown in eq 16 
 
 
+
+<!-- Start of picture text -->
+P LC( n ) = a + b ( n 1) + cS CNE (16)<br><!-- End of picture text -->
 
 For example, for the critical volume<sup>21</sup> ( _V_ c) of _n_ -paraffins ( _n_ = 2−18), _n_ was used directly to perform regression against _V_ c, giving eq 17, while eq 16 was used as the model equation to perform regression against _V_ c to obtain eq 18. Equation 18 showed better correlation compared with eq 17, and the standard error ( _S_ ) was greatly reduced 
 
@@ -256,9 +289,15 @@ _a)P_ w, partition coefficient (regression in the form of log _P_ w); other symb
 
 
 
+<!-- Start of picture text -->
+V c = 14.011 + 66.100 n<br>R = 0.9989, S = 15.90, N = 17, F = 6838.68 (17)<br>V c = 146.95 + 73.8684( n 1) 66.1187 S CNE<br>R = 0.9999, S = 5.95, N = 17, F = 24449.43 (18)<br><!-- End of picture text -->
+
 As another example, the vaporization enthalpy<sup>21</sup> ( _H_ v) of _n_ - paraffins ( _n_ = 2−20) was regressed with the methods used in eqs 17 and 18, giving eqs 19 and 20. The correlation of eq 20 was better than that of eq 19, and the standard error ( _S_ ) of eq 20 was greatly reduced 
 
 
+
+<!-- Start of picture text -->
+H v = 0.4826 + 5.1475 n<br>R = 0.9989, S = 1.357, N = 18, F = 7229.01 (19)<br>H v = 2.7756 + 4.5303( n 1) + 4.9545 S CNE<br>R = 0.9997, S = 0.714, N = 18, F = 13086.83 (20)<br><!-- End of picture text -->
 
 The above regression analysis results show that eq 16 is more suitable for expressing the linear change properties of homologues compared with directly using _n_ . However, for some linear change properties of homologues, such as molar mass ( _M_ mol), coefficient _c_ in eq 16 was equal to zero, meaning that the term _S_ CNE did not need to be used in such cases. 
 
@@ -272,7 +311,13 @@ _2.2.3. Relationship between Nonlinear Properties of Homologues._ Equation 15 no
 
 
 
+<!-- Start of picture text -->
+[ln( P ( n )) ln( P ( n ))]<br>= [ln( P (1)) ln( P (1))] + ( n 1)[ln( ) ln( )] +<br>( ) S CNE<br>= a r + b r( n 1) + c S r CNE (21)<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+[ln( P ( n )) + ln( P ( n ))]<br>= [ln( P (1)) + ln( P (1))] + ( n 1)[ln( ) + ln( )]<br>+ ( + ) S CNE<br>= a s + b s( n 1) + c S s CNE (22)<br><!-- End of picture text -->
 
 **26674** 
 
@@ -335,6 +380,9 @@ When the logarithms of eqs 21 and 22 are removed, they return to eqs 23 and 24
 
 
 
+<!-- Start of picture text -->
+P ( n ) = P ( n )e a r( eb r)( n 1) ec S r CNE = P ( n ) kl ( n 1)e c S r CNE (23)<br>P ( n ) = [ P ( n )] 1e a s(e b s)( n 1)e c S s CNE = [ P ( n )] 1 mq ( n 1) ec S s CNE<br>(24)<br><!-- End of picture text -->
+
 Equations 23 and 24 express the relationship between two properties of a homologues series, where _k_ , _l_ , _c_ r, _m_ , _q_ , and _c_ s are all coefficients. Therefore, one property of homologues can be 
 
 **26675** 
@@ -365,6 +413,9 @@ _2.2.4. Relationship between Nonlinear and Linear Properties of Homologues._ Equ
 
 
 
+<!-- Start of picture text -->
+ln( P ( n )) P LC( n ) = a + b ( n 1) + c S CNE (26)<br><!-- End of picture text -->
+
 where, for the two specific physicochemical properties, _P_ ( _n_ ) and _P_ LC( _n_ ), of the same series of homologues, parameters _a_ ′, _b_ ′, and _c_ ′ can be obtained by the regression method 
 
 Using the boiling point ( _T_ b) and critical volume ( _V_ c) of _n_ - paraffins as an example 
@@ -377,17 +428,29 @@ Equation 29 can be rewritten as eq 30
 
 
 
+<!-- Start of picture text -->
+T b = 124.67 × (0.999207) V c × (1.057748)( n 1)<br>× (1.562792) S CNE (30)<br><!-- End of picture text -->
+
 Using eq 30 and employing parameters _V_ c, ( _n_ − 1), and _S_ CNE of _n_ -paraffins, the _T_ b values of _n_ -paraffins can be calculated. The average absolute error between the experimental and calculated _T_ b values was 0.94 K for the 17 _n_ -paraffins with _n_ = 2−18. 
 
 _2.2.5. Simplification of Equation._ Equations 12 and 13 contain the term _in_ =2 ( _i_ 1 1)<sup>,whichisinconvenienttouse.</sup> This section discusses the simplification of this term. According to mathematical principles, for the infinite series _SS_ {1, 1/2, 1/3, ..., 1/ _n_ }, the sum of the first _n_ terms is shown in eq 31 
 
 
 
+<!-- Start of picture text -->
+SSn = 1 + 1/2 + 1/3 + ··· + 1/ n (31)<br><!-- End of picture text -->
+
 Equation 31 can also be approximately expressed as eq 32 
 
 
 
+<!-- Start of picture text -->
+n<br>SSn 1 d = ln( n )<br>1 X x (32)<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+Therefore, the term in =2 ( i 1 1) can be expressed as follows<br>n i 1 y n 1<br>jjj zzz = 1 d = ln( n 1)<br>i =2 k i 1 { 1 X x (33)<br><!-- End of picture text -->
 
 Therefore, eqs 12 and 13 can be simplified to eqs 34 and 35 _P_ ( _n_ ) = _P_ (1) _n_ 1e ln( _n_ 1) (34) https://doi.org/10.1021/acsomega.2c02828 _ACS Omega_ 2022, 7, 26670−26679 
 
@@ -411,9 +474,15 @@ For the boiling point ( _T_ b)
 
 
 
+<!-- Start of picture text -->
+ln( T b( n )) = 5.149022 0.00321026( n 1)<br>+ 0.451589ln( n 1)<br>R = 0.9990, S = 0.0175, N = 34, F = 7869.27 (36)<br><!-- End of picture text -->
+
 For the critical temperature ( _T_ c) 
 
 
+
+<!-- Start of picture text -->
+ln( T c( n )) = 5.70368 0.00197920( n 1)<br>+ 0.334542ln( n 1)<br>R = 0.9994, S = 0.0092, N = 19, F = 7102.50 (37)<br><!-- End of picture text -->
 
 Equations 36 and 37 still show good correlation, which is only slightly worse than that of the corresponding equations (nos. 1 and 2 of Table 2). However, eqs 36 and 37 are more convenient to use than eqs 12 and 13. 
 
@@ -426,6 +495,9 @@ skeleton to the NPOH equation. We take the boiling points of alkanes and alcohol
 _2.2.7.1. Example 1, Boiling Point of Alkanes._ Alkane molecules are almost nonpolar, and their boiling points are affected by both the number of carbon atoms and the molecular carbon atomic skeleton in the molecule. The effect of the number of carbon atoms on the boiling point can be expressed with the parameters ( _n_ − 1) and _S_ CNE, while that of the molecular carbon atomic skeleton can be expressed using the Odd−Even Index (OEI) difference, ΔOEI.<sup>21</sup> That is, for the alkane molecule with _n_ carbon atoms, ΔOEI = OEI (branched alkane) − OEI (normal alkane). Based on Yuan’s method,<sup>21</sup> the OEI values of 2-methylpropane and butane are 4.5000 and 5.2222, respectively. Thus, ΔOEI(2-methylpropane) = 4.5000 − 5.2222 = −0.7222; ΔOEI (butane) = 4.5000 − 4.5000 = 0. It means that ΔOEI = 0 for any normal alkane. Then, we employed ( _n_ − 1), _S_ CNE, and (ΔOEI/ _n_ ) as variables to perform the regression analysis of boiling points, _T_ b( _n_ ), of alkanes and obtained eq 38 in which the boiling points for all alkanes were taken from a listing by Cao et al.<sup>28</sup> These data are listed in the Supporting Information 
 
 
+
+<!-- Start of picture text -->
+ln( T b( n )) = 4.6730 0.004633( n 1) + 0.516835 S CNE<br>+ 0.196248( OEI/ n )<br>R = 0.9990, S = 0.0096, N = 210, F = 35459.68<br>(38)<br><!-- End of picture text -->
 
 In eq 38, the 210 alkanes involve all isomers of C2−C10, and the carbon atoms are in the range of C1−C100. The average absolute error between the experimental value ( _T_ b,exp.) and the calculated value ( _T_ b,cal.) was 3.07 K, and the average percentage error was 0.69%. 
 
@@ -445,13 +517,22 @@ CH3CH2CH2OH (PrOH), for example, the PEIOH values of _i_ - Pr and Pr are 1.2811 
 
 
 
+<!-- Start of picture text -->
+ln( T b( n )) = 5.7785 + 0.031339( n 1) + 0.051561 S CNE<br>1.74757 ( PEIOH/ n )<br>R = 0.9864, S = 0.0124, N = 105, F = 1212.06<br>(39)<br><!-- End of picture text -->
+
 In eq 39, the 105 alcohols involving the carbon atoms are in the range of C2−C11. The average absolute error between the experimental value ( _T_ b,exp.) and the calculated value ( _T_ b,cal.) was 4.40 K, and the average percentage error was 1.01%. 
 
 The results indicate that eqs 38 and 39 provide very satisfactory results. We noted that it is difficult to compare the results of this work with those of other works because different data sets and different number of variables were employed in various works. In particular, many of the other works only include alkanes with below 11 carbon atoms. Nevertheless, it is instructive that Allison et al.,<sup>29</sup> in 2022, used a graph convolutional neural network to predict the normal boiling point and obtained an average absolute error of 6 K (corresponding to an average percentage error of 1.32%). Cordes and Rarey<sup>30</sup> compared some group contribution methods for predicting the boiling points of acyclic alkanes and found that these methods produced average absolute errors ranging from 6.5 to 26.7 K. Palatinus et al.<sup>31</sup> proposed eq 40 to calculate the _Y_ R parameter and then used the calculated _Y_ R values and eq 41 to predict the boiling point for linear and branched alkanes in which the average absolute deviation between experimental and predicted boiling points was 1.45 K, and the average percentage error was 0.32%. Liu et al.<sup>32</sup> used the QSPR method to predict the boiling points of alcohols and obtained the standard error of 5.69 K 
 
 
 
+<!-- Start of picture text -->
+Y R = 1.726 + 2.779 C + 1.716 M 3 + 1.564 M + 4.204 E 3<br>+ 3.905 E + 5.007 P 0.329 D + 0.241 G + 0.479 V<br>+ 0.967 T + 0.574 S (40)<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+BP( K ) = aY BP2/3 + bY BP1/3 + c (41)<br><!-- End of picture text -->
 
 The above two examples show that the NPOH equation can also be used in property correlation for structures with functionality located elsewhere along a linear alkyl chain as well as for branched organic compounds. 
 

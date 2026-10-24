@@ -8,7 +8,7 @@ source: "copernicus_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 11036
+token_estimate: 11086
 ---
 
 # A field-based method for simultaneous measurements of the d18O and d13C of soil CO2 efflux
@@ -55,6 +55,9 @@ B. Mortazavi et al.: _δ_<sup>18</sup> O and _δ_<sup>13</sup> C of soil CO2 eff
 
 
 
+<!-- Start of picture text -->
+CO2 ( aq ) +H2O↔H2CO3 ( aq ). (1)<br><!-- End of picture text -->
+
 In this hydration reaction and subsequent dissociation, each CO2 molecule exchanges one oxygen atom with liquid water, and in this process the oxygen isotope ratio of CO2 approaches that of soil water (Mills and Urey, 1940). The isotope exchange reaction is described by the following reaction: 
 
 The correct estimate of the<sup>18</sup> O of soil CO2 efflux, however, will depend on (i) the extent to which CO2 diffusing out of a particular layer reaches equilibrium or will be in disequilibrium with water in that layer (Tans, 1998), and (ii) the magnitude of the<sup>18</sup> O fractionation factor. It is not clear if the 8.8‰ molecular diffusion fractionation factor is always fully expressed as CO2 diffuses from the soil to the atmosphere (Miller et al., 1999). Laboratory investigations (Miller et al., 1999) and modeling efforts (Stern et al., 2001) suggest that the effective diffusional fractionation factor will vary depending on the environmental conditions. Error in the estimation of the oxygen isotopic ratio of soil respired CO2 will impact the results of studies that use the stable isotopes of CO2 to partition ecosystem gas exchange into its components (Yakir and Wang, 1996; Bowling et al., 2003b). 
@@ -64,6 +67,9 @@ The<sup>13</sup> C of soil respired CO2 has also been estimated from soil CO2 co
 Our objectives were to use an alternative method to static chambers and soil CO2 to simultaneously determine the<sup>18</sup> O and<sup>13</sup> C of soil respired CO2 in the field. We used open-top piping (mini-towers) placed on the soil surface and collected gas samples along the height of the mini-tower as CO2 diffused from the soil. A Keeling plot of the CO2 concentrations and isotopic ratios of samples collected from multiple heights was used to estimate the isotopic composition of soil respired CO2. Results indicate that the mini-tower approach can be used successfully to simultaneously determine the<sup>18</sup> O and<sup>13</sup> C of soil CO2 efflux. 
 
 
+
+<!-- Start of picture text -->
+C 16 O2+H 18 2 O↔C18O16O+H16 2 O . (2)<br><!-- End of picture text -->
 
 ## **2 Methods** 
 

@@ -26,9 +26,10 @@ PYTHONPATH=src uv run python -m pytest tests/golden -q
 调用原构建器，保持独立运行。
 
 全层保留默认网络和用户目录隔离。unit 收集及执行禁止真实进程（包含 Python、
-shell、fork）、真实 PDF 转换后端、整篇构建器及 canonical 全文输入读取；
+shell、fork）、真实 PDF 转换、整篇构建器及 canonical 全文输入读取；
 `browser`、`live`、`allow_subprocess` 标记不能绕过。已有 `_scenarios` 的最小片段
-可供 unit 读取。安全检查不导入 PDF 转换后端；转换单测可注入 fake module。
+可供 unit 读取。已安装 PDF 模块在 unit 边界启用前完成导入；核心 PDF API、转换 mock 和 fake module
+可用，转换入口及其别名（含 helpers、`Document.to_*` 和批量转换）在调用时拦截。
 这些失败路径由 integration 中的子 pytest 验证。
 
 `test-evidence.json` 是内部 v2 台账：每个模块声明默认分类，仅不同契约的测试

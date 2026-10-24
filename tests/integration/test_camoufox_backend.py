@@ -76,7 +76,15 @@ def test_managed_camoufox_process_lock_prevents_duplicate_install(
     context = multiprocessing.get_context("fork")
     barrier = context.Barrier(2)
     downloads = tmp_path / "downloads"
+    queries = tmp_path / "queries"
     original_download = env.download.side_effect
+
+    def query(*_args, **_kwargs):
+        with queries.open("a") as output:
+            output.write("query\n")
+        return [env.latest, env.old]
+
+    env.query.side_effect = query
 
     def download(file, url):
         with downloads.open("a") as output:
@@ -102,7 +110,91 @@ def test_managed_camoufox_process_lock_prevents_duplicate_install(
                 process.terminate()
                 process.join(timeout=5)
     assert downloads.read_text() == "download\n"
+    assert queries.read_text() == "query\n"
     assert preparation.probe_camoufox_managed_runtime().valid
+
+    # A fresh interpreter has no inherited mocks or request-level preparation.
+    import subprocess
+    import sys
+    import textwrap
+
+    result = subprocess.run(
+        [sys.executable, "-c", textwrap.dedent('''
+            import sys
+            from pathlib import Path
+            from camoufox import pkgman, multiversion
+            from paper_fetch.providers.browser_runtime import preparation
+
+            root = Path(sys.argv[1])
+            pkgman.INSTALL_DIR = multiversion.INSTALL_DIR = root
+            multiversion.CONFIG_FILE = root / "config.json"
+            multiversion.BROWSERS_DIR = root / "browsers"
+            multiversion.COMPAT_FLAG = root / ".0.5_FLAG"
+            pkgman.OS_NAME = multiversion.OS_NAME = "lin"
+
+            def unexpected_query(*args, **kwargs):
+                raise SystemExit("fresh process queried before 24 hours")
+
+            pkgman.list_available_versions = unexpected_query
+            assert preparation.prepare_camoufox_managed_runtime().valid
+        '''), str(env.root)],
+        capture_output=True, text=True, timeout=15,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "Checking Camoufox" not in result.stderr
+
+
+_PREPARE_FETCH_BROWSER = preparation.FetchBrowserPreparation.prepare
+
+
+@pytest.mark.parametrize("first", ["fetch", "auth", "preflight", "project"])
+def test_automatic_preparation_entrypoints_share_update_interval(
+    managed_camoufox, monkeypatch, tmp_path, first
+):
+    import camoufox.sync_api as camoufox_sync
+    import playwright.sync_api as playwright_sync
+    from paper_fetch import auth, browser_preflight
+    from paper_fetch.providers.base import ProviderFailure
+    from paper_fetch.providers.browser_runtime.camoufox_manager import _launch_executable_path
+
+    env = managed_camoufox
+    monkeypatch.setattr(preparation.FetchBrowserPreparation, "prepare", _PREPARE_FETCH_BROWSER)
+    monkeypatch.setattr(preparation, "find_spec", lambda _name: object())
+    playwright = SimpleNamespace(stop=mock.Mock())
+    monkeypatch.setattr(playwright_sync, "sync_playwright", lambda: SimpleNamespace(start=lambda: playwright))
+    launch = mock.Mock(side_effect=RuntimeError("launch boundary reached"))
+    monkeypatch.setattr(camoufox_sync, "NewBrowser", launch)
+    runtime_env = {"XDG_DATA_HOME": str(tmp_path / "data")}
+
+    def prepare(route):
+        if route == "project":
+            assert preparation.prepare_camoufox_managed_runtime().valid
+        elif route == "fetch":
+            request = preparation.FetchBrowserPreparation()
+            token = preparation.fetch_browser_preparation.set(request)
+            try:
+                request.prepare(runtime_env, lambda: None)
+                request.require()
+                assert _launch_executable_path(None) is None
+            finally:
+                preparation.fetch_browser_preparation.reset(token)
+        elif route == "auth":
+            with pytest.raises(ProviderFailure, match="launch boundary reached"):
+                auth.authenticate_provider_profile(provider="wiley", env=runtime_env, confirm=None)
+        else:
+            result = browser_preflight.preflight_browser_provider(
+                "ieee", env=runtime_env, save_storage_state=False
+            )
+            assert result.status == "runtime_error"
+            assert "launch boundary reached" in result.message
+
+    prepare(first)
+    record = (env.root / preparation.UPDATE_CHECK_FILENAME).read_bytes()
+    for route in ("fetch", "auth", "preflight", "project"):
+        prepare(route)
+        assert (env.root / preparation.UPDATE_CHECK_FILENAME).read_bytes() == record
+    env.query.assert_called_once()
+    env.download.assert_called_once()
 
 
 @pytest.mark.parametrize("pinned", [False, True])

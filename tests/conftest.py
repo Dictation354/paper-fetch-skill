@@ -10,7 +10,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import shutil
-import sys
 import tempfile
 from typing import Any
 
@@ -226,13 +225,6 @@ def _paper_fetch_test_safety(request, monkeypatch):
     monkeypatch.setattr(
         _pdf_common, "_call_pdf_renderer_with_tessdata_retry", guarded_renderer
     )
-    for name, module in tuple(sys.modules.items()):
-        if name.startswith("pymupdf4llm") and hasattr(module, "to_markdown"):
-
-            def blocked_converter(*args, **kwargs):
-                layer_policy.reject("real PDF conversion")
-
-            monkeypatch.setattr(module, "to_markdown", blocked_converter)
     try:
         yield
     finally:

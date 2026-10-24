@@ -8,7 +8,7 @@ source: "aip_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 17547
+token_estimate: 21039
 ---
 
 # A basis-free phase space electronic Hamiltonian that recovers beyond Born–Oppenheimer electronic momentum and current density
@@ -107,9 +107,15 @@ Let us now be more precise. To begin our analysis, suppose that one treats the n
 
 
 
+<!-- Start of picture text -->
+(1)<br>( ∂ ∂ x + ∂ ∂ X )Φ( x ;  X ) = 0,<br><!-- End of picture text -->
+
 then the matrix elements of the total momentum operator for the total wavefunction Φ( **_x_** ; **_X_** ) _χ_ ( **_X_** , _t_ ) are trivial, 
 
 
+
+<!-- Start of picture text -->
+⟨Φ χ ∣( p ˆ + P ˆ )∣Φ χ ⟩= ⟨ χ ∣ P ˆ ∣ χ ⟩≡ P . (2)<br><!-- End of picture text -->
 
 Equation (2)<sup>13</sup> follows from the definitions of the electronic and nuclear momentum operators, **_p_** ˆ = − _i_ ̵ _h ∂_<sup>_<u>∂</u>_</sup> **_x_**<sup>and</sup><sup>**_P_**ˆ = −</sup><sup>_i_̵</sup><sup>_h_</sup> _∂_<sup>_<u>∂</u>_</sup> **_X_**<sup>. The total</sup> angular momentum can be represented in a similar fashion. Moreover, because the BO potential energy surface is translationally and rotationally invariant to the position of the nuclei, it follows that the quantum mechanical nuclear momentum is conserved. In this vein, one can argue that, according to the mapping above, BO dynamics conserve the total momentum. 
 
@@ -117,11 +123,20 @@ At this point, there are two important nuances that must be mentioned. First, in
 
 
 
+<!-- Start of picture text -->
+i ̵ h ∂χ ( X ,  t ) P ˆ (3)<br>∂t = ( 2 M +  Vel ( X )) χ ( X ,  t ),<br><!-- End of picture text -->
+
 or (ii) one can include the gauge potential (i.e., the derivative coupling), 
 
 
 
+<!-- Start of picture text -->
+ih ̵ ∂χ ( X ,  t ) (4)<br>∂t = ( ( P ˆ − 2 M i ̵ h d )2 +  Vel ( X )) χ ( X ,  t ),<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+d  ≡⟨Φ( X )∣ ∂ (5)<br>∂ X ∣Φ( X )⟩.<br><!-- End of picture text -->
 
 Here, _V el_ ( **_X_** ) is the electronic energy. Both Eqs. (3) and (4) conserve the total nuclear momentum, but only with Eq. (4)—where the gauge potential represents the momentum of the electrons—can one interpret the conservation of the nuclear momentum to really represent the conservation of the total momentum. 
 
@@ -133,9 +148,15 @@ Consider next the case where the nuclei are treated classically. For classical B
 
 
 
+<!-- Start of picture text -->
+M X ¨  = − ∂Vel (6)<br>∂ X .<br><!-- End of picture text -->
+
 As a result, just as for quantum dynamics, such BO simulations conserve the nuclear momentum rather than the total nuclear plus electronic momentum.<sup>8</sup> Moreover, just as for quantum dynamics, one can partially rectify this lack of total momentum conservation by including the effect of the gauge potential. Within semiclassical theory, the relevant term that must be included<sup>14</sup> is the Berry pseudomagnetic force,<sup>8</sup> which depends on both nuclear velocity and Berry curvature (curl of the derivative coupling), 
 
 
+
+<!-- Start of picture text -->
+M X ¨  = − ∂ ∂ V X el +  i ̵ h (∇ X  ×  d ) X ˙. (7)<br><!-- End of picture text -->
 
 Indeed, over the past several years, several research groups in the chemical<sup>15,16</sup> and physical communities<sup>17</sup> have explored _ab initio_ BO dynamics that include Berry forces, in or out of magnetic fields, both in gas and solid phases. Unfortunately, however, running such _ab initio_ dynamics has several limitations. ( _i_ ) First, in agreement with the quantum case, the Berry force is always exactly zero for a (nondegenerate) system with an even number of electrons; for a nonzero Berry force, one requires either the presence of an external magnetic field or a system with an odd number of electrons and spin–orbit coupling—although in the latter case, because of Kramers degeneracy, fixing an adiabatic state to walk along is difficult and not quite well-defined.<sup>7</sup> ( _ii_ ) Second, the cost of evaluating a Berry force can be quite large. ( _iii_ ) Third, there is no feedback from the nuclear dynamics on the single-state electronic dynamics, so that all electronic observables remain uncorrected. ( _iv_ ) Fourth, there is no way to apply a Berry force in a nonadiabatic context,<sup>18</sup> and thus, these simulations cannot be used to study momentum transfer during passage through curve crossings (which would represent a meaningful extension of Landau–Zener theory<sup>19</sup> ). 
 
@@ -163,6 +184,9 @@ In this vein, a very enticing alternative, inexpensive strategy to BO theory, is
 
 
 
+<!-- Start of picture text -->
+1<br>H ˆ Shenvi( X ,  P ) = ∑ ( P AδIJ  − i ̵ h d A IJ ) ⋅( P A δ JK − i ̵ h d A JK )∣Φ I ⟩⟨Φ K ∣<br>IJK , A 2 MA<br>+ ∑ EKK ( X )∣Φ K ⟩⟨Φ K ∣. (8)<br>K<br><!-- End of picture text -->
+
 A brief interlude about the notations is given as follows: Here, _A_ , _B_ , _. . ._ denote the index of atoms, **_P_** _A_ denotes the nuclear momentum of atom _A_ , and, more generally, all quantities that are **bold** represent vectors (or matrix when stated explicitly) in R<sup>3</sup> Euclidean space. **_X_** is shorthand for { **_X_** } = ( **_X_** _A_ , **_X_** _B_ , _. . ._ ), representing the collection of all nuclear positions, and **_P_** is shorthand for { **_P_** } = ( **_P_** _A_ , **_P_** _B_ , _. . ._ ), representing the collection of all nuclear momenta. _I_ , _J_ , _K_ index electronic states. **_d_**<sup>_A_</sup> _JK_<sup>= ⟨Φ</sup><sup>_J_∣</sup> _∂∂_ **_X_** _A_<sup>∣Φ</sup><sup>_K_⟩isthe</sup> derivative coupling vector between the eigenstates ∣Φ _J_ ⟩ and ∣Φ _K_ ⟩ of the conventional electronic Hamiltonian, where _H_<sup>ˆ</sup> _el_ ∣Φ _K_ ⟩= _EK_ ∣Φ _K_ ⟩. Although they do not appear in Eq. (8), **_x_** ˆ, **_p_** ˆ,<sup>ˆ</sup> **_l_** , and ˆ **_s_** will denote the electronic position, linear momentum, orbital angular momentum, and spin operators, respectively. All quantities with a hat are electronic operators. 
 
 Trajectories propagated along the eigensurfaces from diagonalizing the Shenvi Hamiltonian in Eq. (8) do conserve total momentum.<sup>37</sup> Unfortunately, however, these dynamics also suffer from several problems. First, the derivative coupling vector is known to diverge near avoided crossings, leading to numerical instability during dynamics using the phase-space Hamiltonian in Eq. (8). Second, such derivative couplings are not even well-defined in the case of degenerate states. Third, building the phase-space Hamiltonian in Eq. (8) involves computing _N_ ( _N_ + 1)/2 derivative coupling vectors, 
@@ -173,23 +197,44 @@ If _H_<sup>ˆ</sup> _el_ is the usual electronic Hamiltonian, consider a phasesp
 
 
 
+<!-- Start of picture text -->
+1<br>H ˆ PS( X ,  P ) = ∑ ( P A  − i ̵ h Γ ˆ A ( X )) ⋅( P A  − i ̵ h Γ ˆ A ( X )) + H ˆ el ( X ),<br>A 2 MA<br>(9)<br><!-- End of picture text -->
+
 with eigenvalues and eigenvectors 
 
 
+
+<!-- Start of picture text -->
+H ˆ PS( X ,  P )∣ΨPS( X ,  P )⟩=  E PS( X ,  P )∣ΨPS( X ,  P )⟩. (10)<br><!-- End of picture text -->
 
 To simplify our notation, we drop the dependence of the phase space wavefunction on nuclear position and momentum from now on. The equations of motion for the corresponding Hamiltonian mechanics are 
 
 
 
+<!-- Start of picture text -->
+X ˙ = ∂E PS P ˙ = − ∂E PS (11)<br>∂ P , ∂ X .<br><!-- End of picture text -->
+
 Obviously, such Hamilton’s equations conserve energy. In what follows, we will prove that the dynamics in Eq. (11) conserve linear and angular momentum, provided that the **Γ**<sup>ˆ</sup> _A_ operator satisfies four constraints, 
 
 
 
+<!-- Start of picture text -->
+− i ̵ h ∑ Γ ˆ A  + ˆ p  = 0, (12)<br>A<br><!-- End of picture text -->
 
 
 
+<!-- Start of picture text -->
+∂<br>(13)<br>[− i ̵ h ∑ B ∂ X B + ˆ p ,  Γ ˆ A ] = 0,<br><!-- End of picture text -->
 
 
+
+<!-- Start of picture text -->
+− i ̵ h ∑ X A  × Γ ˆ A  + ˆ l  + ˆ s  = 0, (14)<br>A<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+∂<br>ϵαγδ Γ ˆ Aα , (15)<br>[− i ̵ h ∑ B ( X B  × ∂ X B ) γ + l ˆ  γ  + ˆ sγ , Γ ˆ Aδ ] =  i ̵ h ∑ α<br><!-- End of picture text -->
 
 where “×” represents the cross product between two vectors in R<sup>3</sup> . Note that Eqs. (12)–(15) are satisfied exactly by the derivative couplings [if we substitute **_d_** for **Γ** as in Eq. (8)].<sup>13</sup> In other words, here, we are approximating the derivative couplings by a **Γ**<sup>ˆ</sup> operator (which is to be determined). Intuitively, Eqs. (12) and (14) insist that the electronic eigenfunctions of _H_<sup>ˆ</sup> PS will be expressed in coordinates relative to the nuclei: when the nuclei translate, the electrons gain momentum [Eq. (12)]; when the nuclei rotate, the electrons gain angular momentum [Eq. (14)]. Equations (13) and (15) dictate that the form of the **Γ**<sup>ˆ</sup> _A_ operators is unchanged if we displace or reorient the molecule. 
 
@@ -215,21 +260,39 @@ show
 
 
 
+<!-- Start of picture text -->
+∂EPS<br>∑ = 0, (16)<br>A ∂ X A<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+∑ X A  × ∂EPS = 0. (17)<br>A ∂ X A<br><!-- End of picture text -->
 
 By the Hellmann–Feynman theorem, 
 
 
 
+<!-- Start of picture text -->
+∂EPS<br>∑ = ∑ ⟨ΨPS∣ ∂H ˆ PS ∣ΨPS⟩, (18)<br>A ∂ X A A ∂ X A<br>∑ X A  × ∂EPS = ∑ X A  × ⟨ΨPS∣ ∂H ˆ PS ∣ΨPS⟩. (19)<br>A ∂ X A A ∂ X A<br><!-- End of picture text -->
+
 Using Eqs. (13) and (15), we have the commutation relations 
 
 
+
+<!-- Start of picture text -->
+∂<br>(20)<br>[− i ̵ h ∑ B ∂ X B + ˆ p , H ˆ PS ] = 0,<br>∂<br>(21)<br>[− ih ̵ ∑ B ( X B  × ∂ X B ) + ˆ l  + ˆ s , H ˆ PS ] = 0.<br><!-- End of picture text -->
 
 Equations (18) and (19) then become 
 
 
 
+<!-- Start of picture text -->
+∂EPS<br>∑ = −⟨ΨPS∣[ p ˆ, H ˆ PS ]∣ΨPS⟩<br>A ∂ X A<br>=  EPS (⟨ΨPS∣ p ˆΨPS⟩−⟨ p ˆΨPS∣ΨPS⟩) = 0, (22)<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+∑ X A  × ∂EPS<br>A ∂ X A<br>= −⟨ΨPS∣[ ˆ l  + ˆ s , H ˆ PS ]∣ΨPS⟩<br>=  EPS (⟨ΨPS∣( ˆ l  + ˆ s )ΨPS⟩−⟨( ˆ l  + ˆ s )ΨPS∣ΨPS⟩)<br>= 0. (23)<br><!-- End of picture text -->
 
 ##### B. Momentum conservation 
 
@@ -237,11 +300,20 @@ To prove momentum conservation, we evaluate the total linear and angular momentu
 
 
 
+<!-- Start of picture text -->
+P tot = ∑ MA X ˙ A  + ⟨ΨPS∣ p ˆ∣ΨPS⟩, (24)<br>A<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+L tot = ∑ MA X A  × X ˙ A  + ⟨ΨPS∣ ˆ l  + ˆ s ∣ΨPS⟩. (25)<br>A<br><!-- End of picture text -->
 
 Now, using Eqs. (9) and (11), it follows that the nuclear kinetic momentum is 
 
 
+
+<!-- Start of picture text -->
+MA X ˙ A =  P A  − i ̵ h ⟨ΨPS∣ Γ ˆ A ∣ΨPS⟩. (26)<br><!-- End of picture text -->
 
 ##### III. FORM OF **Γ** IN EQ. (9) 
 
@@ -252,6 +324,9 @@ The simplest physical model for the **Γ** -couplings in Eq. (9) arises from the
 Thus, a natural choice for the **Γ** -couplings is to set 
 
 
+
+<!-- Start of picture text -->
+Γ ˆ A = ∑ Γ ′ A ( ˆ x i , ˆ p i ) +  ∑ Γ ′′ A ( ˆ x i , ˆ p i ), (27)<br>i i<br><!-- End of picture text -->
 
 where the sum over _i_ represents a sum over electrons, **Γ**<sup>ˆ</sup> _A_<sup>′isan</sup> ETF operator, and **Γ**<sup>ˆ′′</sup> _A_<sup>is an ERF operator. Encouragingly, within the</sup> context of quantum chemistry calculations in an AO basis (where explicit forms for ETFs and ERFs are known), we have recently demonstrated that phase-space dynamics using Eq. (27) recovers the correct electronic momentum<sup>38</sup> as well as quite accurate VCD signals for three small chiral molecules.<sup>42</sup> Unfortunately, however, all previous phase-space calculations relied on an AO basis (in order 
 
@@ -281,9 +356,15 @@ One example of this kind is to define Θ _A_ ( ˆ **_x_** ) as
 
 
 
+<!-- Start of picture text -->
+QAe −∣ x ˆ− X A ∣2/ σ 2<br>Θ A ( ˆ x ) = (28)<br>∑ B QBe −∣ x ˆ− X B ∣2/ σ 2 ,<br><!-- End of picture text -->
+
 where _QA_ is the bare nuclear charge of atom _A_ and _σ_ is a parameter that determines the length scale over which we partition unity (and can be determined empirically). Alternatively, one can also imagine using the nuclear mass _MA_ as a prefactor, 
 
 
+
+<!-- Start of picture text -->
+MAe −∣ x ˆ− X A ∣2/ σ 2<br>Θ A ( ˆ x ) = (29)<br>∑ B MBe −∣ x ˆ− X B ∣2/ σ 2 .<br><!-- End of picture text -->
 
 Note that for most systems, the nuclear mass _MA_ is usually proportional to the nuclear charge _QA_ , so that the differences between Eqs. (28) and (29) need not be enormous. Note also that any positive prefactor will preserve conditions 1–3 above, so one can also employ combinations of mass and charge, etc., in the choice of Θ _A_ ( ˆ **_x_** ). 
 
@@ -291,13 +372,27 @@ For linear momentum conservation, one must satisfy Eq. (12). We distribute this 
 
 
 
+<!-- Start of picture text -->
+∑ A Γ ˆ ′ A = i 1 ̵ h p ˆ, (30)<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+∑ Γ ˆ ′′ A = 0. (31)<br>A<br><!-- End of picture text -->
+
 Let us multiply the R.H.S. of Eq. (30) on the left (and then on the right) by ∑ _A_ Θ<sup>ˆ</sup> _A_ and then take the average. The result is 
 
 
 
+<!-- Start of picture text -->
+∑ A Γ ˆ ′ A = 2 1 i ̵ h ∑ A (Θ ˆ A p ˆ + ˆ p Θ ˆ A ), (32)<br><!-- End of picture text -->
+
 which suggests the following expression for **Γ**<sup>ˆ</sup> _A_<sup>′:</sup> 
 
 
+
+<!-- Start of picture text -->
+Γ ˆ ′ A = 1 (33)<br>2 i ̵ h (Θ ˆ A p ˆ + ˆ p  ˆΘ A ).<br><!-- End of picture text -->
 
 It can be shown easily that **Γ**<sup>ˆ</sup> _A_<sup>′defined by Eq. (33) is anti-Hermitian</sup> (note that both Θ<sup>ˆ</sup> _A_ and **_p_** ˆ are Hermitian), which is crucial for constructing a phase-space electronic Hamiltonian. 
 
@@ -307,19 +402,34 @@ Given the definition of **Γ**<sup>ˆ</sup> _A_<sup>′in Eq. (33), Eq. (14) bec
 
 
 
+<!-- Start of picture text -->
+∑ A X A  × Γ ˆ ′′ A = i 1 ̵ h ( ˆ x  × ˆ p  + ˆ s ) −∑ A X A  × Γ ˆ ′ A<br>= 1<br>2 i ̵ h ∑ A (( ˆ x  − X A ) × (Θ ˆ A p ˆ)<br>+ ( ˆ x  − X A ) × ( p ˆΘ ˆ A ) + 2ˆ s Θ ˆ A ), (34)<br><!-- End of picture text -->
+
 If one defines 
 
 
+
+<!-- Start of picture text -->
+J ˆ A = 1<br>2 i ̵ h (( ˆ x  − X A ) × (Θ ˆ A p ˆ)<br>+ ( ˆ x  − X A ) × ( p ˆΘ ˆ A ) + 2ˆ s Θ ˆ A ), (35)<br><!-- End of picture text -->
 
 Equation (34) can be written succinctly as 
 
 
 
+<!-- Start of picture text -->
+∑ X A  × Γ ˆ ′′ A =  ∑ J ˆ A . (36)<br>A A<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+Let us now show that if one defines  Γ ˆ A ′′ as<br>Γ ˆ ′′ A = − ∑ ζAB ( X A  − X 0 B ) × ( K − B 1 J ˆ B ), (37)<br>B<br><!-- End of picture text -->
 
 both Eqs. (31) and (36) can be satisfied, given a proper choice of the unknown vector **_X_**<sup>0</sup> _B_<sup>and a to-be-determined 3 × 3 matrix</sup><sup>**_K_**</sup><sup>_B_. In</sup> Eq. (37), in order to ensure that **Γ**<sup>′′</sup> _A_ is localized around atom _A_ , we introduce a weighting factor _ζAB_ . Here, the function _ζAB_ = _ζ_ ( **_X_** _A_ , **_X_** _B_ ) is a function of ∣ **_X_** _A_ − **_X_** _B_ ∣ (although not necessarily a symmetric function of _A_ and _B_ ), and **_X_**<sup>0</sup> _B_<sup>isintuitivelyalocalcenterofmass</sup> around atom _B_ . In practice, for **Γ**<sup>ˆ′′</sup> _A_<sup>tooperatelocallyonelectrons</sup> near atom _A_ , we require _ζAB_ to vanish for large separations of **_X_** _A_ and **_X_** _B_ , and we set 
 
 
+
+<!-- Start of picture text -->
+ζAB =  MAe −∣ X A − X B ∣2/ β AB 2 . (38)<br><!-- End of picture text -->
 
 Equation (38) enforces locality through a parameter _βAB_ . The importance of the mass prefactor _MA_ can be understood as follows: if we ignore the exponential in Eq. (38) and set _ζAB_ = _MA_ , then **_X_** _B_<sup>0</sup> becomes the nuclear center of mass, and **_K_** _B_ is the total nuclear moment of inertia matrix relative to the center of mass; see the discussion below. 
 
@@ -327,13 +437,22 @@ Inserting Eq. (37) into Eq. (31), one can rewrite the necessary constraint as
 
 
 
+<!-- Start of picture text -->
+∑ ζAB ( X A  − X 0 B ) × ( K − B 1 J ˆ B ) = 0. (39)<br>AB<br><!-- End of picture text -->
+
 The simplest way to satisfy Eq. (39) [and therefore Eq. (31)] is to set 
 
 
 
+<!-- Start of picture text -->
+∑ ζAB ( X A  − X 0 B ) = 0, (40)<br>A<br><!-- End of picture text -->
+
 which suggests that we define a local average position, 
 
 
+
+<!-- Start of picture text -->
+X 0 B = ∑ A ζAB X A . (41)<br>∑ A ζAB<br><!-- End of picture text -->
 
 J. Chem. Phys. **162** , 144111 (2025); doi: 10.1063/5.0260731 Published under an exclusive license by AIP Publishing 
 
@@ -349,13 +468,22 @@ Next, inserting Eq. (37) into Eq. (36), one finds that the constraint has the fo
 
 
 
+<!-- Start of picture text -->
+−∑ ζAB ( X A  − X B 0 ) × ( K −1 J ˆ B . (42)<br>A X A  × (∑ B B J ˆ B )) =  ∑ B<br><!-- End of picture text -->
+
 The most natural way to satisfy the above equation is to set 
 
 
 
+<!-- Start of picture text -->
+−∑ X A  × ( ζAB ( X A  − X B 0 ) × ( K B −1 J ˆ B )) = J ˆ B . (43)<br>A<br><!-- End of picture text -->
+
 This ansatz suggests that we define the matrix **_K_** _B_ such that for any arbitrary vector **_v_** and in particular, **_v_** ≡ **_K_** _B_<sup>−1</sup><sup>**_J_**ˆ</sup><sup>_B_, one has</sup> 
 
 
+
+<!-- Start of picture text -->
+K B v  = −∑ X A  × ( ζAB ( X A  − X B 0 ) ×  v ) (44)<br>A<br>⇒ K B = −∑ ζAB (( X A  − X B 0 ) X A ⊺ − X ⊺ A ( X A − X 0 B ) I 3 ) (45)<br>A<br>= ∑ ζAB (( X A ⊺ X A − X 0 B ⊺ X 0 B ) I 3 −( X A X A ⊺ − X B 0 X 0 B ⊺)), (46)<br>A<br><!-- End of picture text -->
 
 where _I_ 3 is a 3 by 3 identity matrix. Note that we have invoked Eq. (40) in deriving Eq. (46). 
 
@@ -369,9 +497,23 @@ Equation (13) can be proven in many ways. For purposes below, the most natural a
 
 
 
+<!-- Start of picture text -->
+LHS  = ⟨Φ I ( X )∣∑ B ( d s  ⋅∇ XB Γ ˆ A ( X ))∣Φ J ( X )⟩<br>+ ⟨∑ B d s  ⋅∇ XB Φ I ( X )∣ Γ ˆ A ( X )∣Φ J ( X )⟩<br>(50)<br>+ ⟨Φ I ( X )∣ Γ ˆ A ( X )∣∑ B d s  ⋅∇ XB Φ J ( X )⟩<br><!-- End of picture text -->
 
 
 
+<!-- Start of picture text -->
+= ⟨Φ I ( X )∣[∑ B d s  ⋅∇ XB ,  Γ ˆ A ( X )]∣Φ J ( X )⟩<br>+ i<br>h ̵ (⟨ d s  ⋅ p ˆΦ I ( X )∣ Γ ˆ A ( X )∣Φ J ( X )⟩<br>−⟨Φ I ( X )∣ Γ ˆ A ( X )∣ d s  ⋅ p ˆΦ J ( X )⟩) (51)<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+= i (52)<br>h ̵ ⟨Φ I ( X )∣[ d s  ⋅(− i ̵ h ∑ B ∇ XB + ˆ p ),  Γ ˆ A ( X )]∣Φ J ( X )⟩<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+= 0. (53)<br><!-- End of picture text -->
 
 Given that _d_ **_s_** is arbitrary, this final equality implies Eq. (13). 
 
@@ -381,19 +523,34 @@ Equation (15) can be proved in an analogous fashion. Let _R_ ( _d_ **_θ_** ) be
 
 
 
+<!-- Start of picture text -->
+Γ A ( R  ˆ x ,  R p ˆ,  R ˆ s ,  R X ) = R Γ A ( ˆ x , ˆ p ,ˆ s ,  X ). (54)<br><!-- End of picture text -->
+
 To prove Eq. (54), the first two things to note are that the dot product between two vectors is invariant under _R_ and that the cross product between two vectors rotates with the vectors, i.e., 
 
 
 
+<!-- Start of picture text -->
+R v i  ⋅ R v j =  v i  ⋅ v j , (55)<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+Γ ˆ( x  +  d s ,  X  +  d s ) = Γ ˆ( x ,  X ), (47)<br><!-- End of picture text -->
 
 it follows that the matrix representing **Γ** must be the same in any electronic basis of states that moves with the nuclear coordinates (e.g., the adiabatic basis<sup>13,54</sup> ). Thus, if _d_ **_s_** denotes an infinitesimal translation of all atoms, the following identity holds 
 
 
 
+<!-- Start of picture text -->
+⟨Φ I ( X  +  d s )∣ Γ ˆ A ( X  +  d s )∣Φ J ( X  +  d s )⟩<br>= ⟨Φ I ( X )∣ Γ ˆ A ( X )∣Φ J ( X )⟩ (48)<br><!-- End of picture text -->
+
 in any basis that satisfies 
 
 
+
+<!-- Start of picture text -->
+(− i ̵ h ∑ B ∇ XB + ˆ p )∣Φ I ( X )⟩<br>∇ XB + ∂ (49)<br>= − i ̵ h (∑ B ∂ x )∣Φ I ( X )⟩= 0.<br><!-- End of picture text -->
 
 Equation (49) is the standard phase relationship chosen for adiabats in Born–Oppenheimer theory.<sup>13,54</sup> 
 
@@ -401,19 +558,39 @@ Now, Eq. (48) is trivial to zeroth order in _d_ **_s_** , so let us evaluate the
 
 
 
+<!-- Start of picture text -->
+R v i  × R v j = R ( v i  ×  v j ), (56)<br><!-- End of picture text -->
+
 where **_v_** _i_ , **_v_** _j_ are any vectors. It follows that 
 
 
 
+<!-- Start of picture text -->
+Γ ′ A ( R  ˆ x ,  R p ˆ,  R X ) = R Γ ′ A ( ˆ x , ˆ p ,  X ), (57)<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+J B ( R  ˆ x ,  R p ˆ,  R ˆ s ,  R X ) = R J B ( ˆ x , ˆ p ,ˆ s ,  X ). (58)<br><!-- End of picture text -->
 
 Next, let **_V_** ˆ _B_ = **_K_**<sup>−</sup> _B_<sup>1(</sup><sup>**_X_**)</sup><sup>**_J_**ˆ</sup><sup>_B_.Asimplederivationshowsthat[or</sup> alternatively see Eq. (43)] 
 
 
 
+<!-- Start of picture text -->
+J ˆ B =  K B ( X ) V  ˆ B = ∑ X A  × ( ζAB ( X A  − X 0 B ) × V ˆ B ), (59)<br>A<br>X A  × ( ζAB ( X A  − X 0 (60)<br>⇒ R J ˆ B = R (∑ A B ) × V ˆ B ))<br><!-- End of picture text -->
 
 
 
+<!-- Start of picture text -->
+= ∑ R X A  × ( ζAB ( R X A  − R X 0 B ) × R V  ˆ B ) (61)<br>A<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+=  K B ( R X ) R V ˆ B (62)<br><!-- End of picture text -->
+
+⇒ _R_ **_V_**<sup>ˆ</sup> _B_ = **_K_**<sup>−</sup> _B_<sup>1(</sup><sup>_R_</sup><sup>**_X_**)</sup><sup>_R_</sup><sup>**_J_**ˆ</sup> _B_<sup>,</sup> (63) 
 
 J. Chem. Phys. **162** , 144111 (2025); doi: 10.1063/5.0260731 Published under an exclusive license by AIP Publishing 
 
@@ -429,17 +606,29 @@ from which one finds
 
 
 
+<!-- Start of picture text -->
+Γ ′′ A ( R  ˆ x ,  R p ˆ,  R ˆ s ,  R X ) = R Γ A ′′( ˆ x , ˆ p ,ˆ s ,  X ). (64)<br><!-- End of picture text -->
+
 Clearly, Eqs. (57) and (64) imply (54). 
 
 Equation (54) dictates that the matrix elements of the **Γ**<sup>ˆ</sup> operators in Eqs. (33) and (37) are invariant to rotations in a basis that rotates with the system. Mathematically, Eq. (54) implies that 
 
 
 
+<!-- Start of picture text -->
+⟨Φ I ( R ( d θ ) X )∣ Γ ˆ A ( R ( d θ ) X )∣Φ J ( R ( d θ ) X )⟩<br>= ⟨Φ I ( X )∣ R ( d θ ) Γ ˆ A ( X )∣Φ J ( X )⟩ (65)<br><!-- End of picture text -->
+
 in a basis that rotates with the molecule and has the standard phase convention, 
 
 
 
+<!-- Start of picture text -->
+(− ih ̵ ∑ B X B  × ∇ XB + ˆ l  + ˆ s )∣Φ I ( X )⟩= 0.<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+(66)<br><!-- End of picture text -->
 
 Again, this phase convention is the standard choice of phase for the adiabatic states within the Born–Oppenheimer approximation.<sup>13,54</sup> 
 
@@ -447,13 +636,22 @@ At this point, let us expand Eq. (65) in powers of _θ_ . Note that
 
 
 
+<!-- Start of picture text -->
+Rαβ ( d θ ) =  δαβ  + ∑ ϵαβγdθγ  + O ( d θ 2 ), (67)<br>γ<br><!-- End of picture text -->
+
 so that the Taylor series of the ket is 
 
 
 
+<!-- Start of picture text -->
+∣Φ J ( R ( d θ ) X )⟩−∣Φ J ( X )⟩<br>(68)<br>= −(∑ B X B  × ∇ XB ) ⋅ d θ ∣Φ J ( X )⟩+ O ( d θ 2 )<br><!-- End of picture text -->
+
 Therefore, Eq. (65) is equivalent to 
 
 
+
+<!-- Start of picture text -->
+∑ dθγ , Γ ˆ Aδ ( X ) =  i ̵ h ∑ ϵδαγ Γ ˆ Aα ( X ) dθγ ,<br>⎡⎢⎢⎢⎢⎣ γ (− i ̵ h ∑ B X B  × ∇ XB + ˆ l  + ˆ s ) γ ⎤⎥⎥⎥⎥⎦ αγ<br>(75)<br>⇒ , Γ ˆ Aδ ( X ) =  i ̵ h ∑ ϵαγδ Γ ˆ Aα ( X ).<br>⎡⎢⎢⎢⎢⎣(− i ̵ h ∑ B X B  × ∇ XB + ˆ l  + ˆ s ) γ ⎤⎥⎥⎥⎥⎦ α<br>(76)<br><!-- End of picture text -->
 
 Thus, Eqs. (33) and (37) satisfy Eq. (15). 
 
@@ -465,17 +663,37 @@ At this point, working with the ansatz in Eqs. (28), (29), and (38), there are o
 
 
 
+<!-- Start of picture text -->
+= − i 1 h ̵ ((ˆ l  + ˆ s ) ⋅ d θ ∣Φ I ( X )⟩) + O ( d θ 2). (69)<br><!-- End of picture text -->
+
 Subtracting ⟨Φ _I_ ( **_X_** )∣ **Γ**<sup>ˆ</sup> _A_ ( **_X_** )∣Φ _J_ ( **_X_** )⟩ from both sides of Eq. (65), the L.H.S. gives (to the first order in _d_ **_θ_** ) ⟨Φ _I_ ( _R_ ( _d_ **_θ_** ) **_X_** )∣ **Γ**<sup>ˆ</sup> _A_ ( _R_ ( _d_ **_θ_** ) **_X_** )∣Φ _J_ ( _R_ ( _d_ **_θ_** ) **_X_** )⟩−⟨Φ _I_ ( **_X_** )∣ **Γ**<sup>ˆ</sup> _A_ ( **_X_** )∣Φ _J_ ( **_X_** )⟩ 
 
 
 
+<!-- Start of picture text -->
+(70)<br><!-- End of picture text -->
 
 
 
+<!-- Start of picture text -->
+= −⟨Φ I ( X )∣[(∑ B X B  × ∇ XB ) ⋅ d θ ,  Γ ˆ A ( X )]∣Φ J ( X )⟩<br>− i<br>h ̵ (⟨(ˆ l  + ˆ s ) ⋅ d θ Φ I ( X )∣ Γ ˆ A ( X )∣Φ J ( X )⟩<br>−⟨Φ I ( X )∣ Γ ˆ A ( X )∣( ˆ l  + ˆ s ) ⋅ d θ Φ J ( X )⟩) (71)<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+= − i<br>h ̵ ⟨Φ I ( X )∣[(− i ̵ h ∑ B X B  × ∇ XB + ˆ l  + ˆ s ) ⋅ d θ ,  Γ ˆ A ( X )]∣Φ J ( X )⟩.<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+(72)<br><!-- End of picture text -->
 
 Rearranging the R.H.S of Eq. (65), one can express the result in explicit Cartesian indices, 
 
 
+
+<!-- Start of picture text -->
+(⟨Φ I ( X )∣ R ( d θ ) Γ ˆ A ( X )∣Φ J ( X )⟩−⟨Φ I ( X )∣ Γ ˆ A ( X )∣Φ J ( X )⟩) δ (73)<br>= ⟨Φ I ( X )∣∑ ϵδβγdθγ Γ Aβ ( X )∣Φ J ( X )⟩. (74)<br>βγ<br><!-- End of picture text -->
 
 ##### A. Electronic momentum 
 
@@ -505,6 +723,9 @@ In Figs. 1(a) and 1(b), we show results using the nuclear charges [Eq. (28)] and
 
 
 
+<!-- Start of picture text -->
+i ̵ h Γ ˆ A = MA p ˆ − MA ( X A  − X NCM) × ( I − NCM 1 (ˆ l NCM + ˆ s )). (77)<br>M tot<br><!-- End of picture text -->
+
 It then follows that (with **Γ**<sup>ˆ</sup> _A_ and **Γ**<sup>ˆ2</sup> _A_<sup>as second quantized operators)</sup> 
 
 J. Chem. Phys. **162** , 144111 (2025); doi: 10.1063/5.0260731 Published under an exclusive license by AIP Publishing 
@@ -519,19 +740,8 @@ J. Chem. Phys. **162** , 144111 (2025); doi: 10.1063/5.0260731 Published under a
 
 
 
-
-
-Here, **_X_** NCM is the nuclear center of mass, **_I_** NCM is the total nuclear moment of inertia matrix relative to the nuclear center of mass, and<sup>ˆ</sup> **_l_** NCM is the electronic angular momentum relative to the nuclear center of mass. Thus, in this limit, four terms appear: (i) the kinetic energy of the atoms relative to the center of nuclear mass, (ii) the total kinetic energy of the nuclear center of mass (recognizing that ∑ _A_ **_P_** _A_ now represents the total nuclear plus electronic momentum, from which one must subtract the electronic momentum),<sup>13</sup> (iii) a Coriolis potential from aligning the electronic frame of the electrons to the nuclei,<sup>56</sup> and (iv) a centrifugal potential that captures the inertia of electrons in a rotating frame.<sup>57</sup> 
-
-Next, let us address the electronic momentum of normal modes in this same limit. Let ∣ΨPS( **_X_** , **_P_** )⟩ be the electronic wavefunction associated with an internal normal mode, such that ∑ _A_ **_P_** _A_ = ∑ _A_ **_X_** _A_ × **_P_** _A_ = 0. In this limit, the Hamiltonian becomes 
-
-
-
-Note that, as an electronic operator, _H_<sup>ˆ</sup> _PS_ commutes with the timereversal operator. Therefore, provided that the ground state is electronically nondegenerate, it follows that 
-
-
-
-Note that despite the physical appeal of Eq. (79), the vanishing of the electronic momentum in this limit _σ_ , _βAB_ →∞ makes clear that this limit is unphysical. As the simplest problematic example, consider the vibration of a hydrogen–deuterium molecule. If the center of mass is unchanged, then because of the mass difference between hydrogen and deuterium, each atom must move at a different speed. That being said, each atom has the same charge and is equally attracted to electrons, which means one electron must be moving faster than the other electron, and there must be a total nonzero electron momentum that can be captured only by viewing the internal motion of the system from each atom’s individual 
+<!-- Start of picture text -->
+( P A  − ih ̵ Γ ˆ  A )2<br>∑<br>A 2 MA<br>P 2 A − ∑ A P A p ˆ 2<br>= ∑ ⋅ p ˆ +<br>A 2 MA M tot 2 M tot<br>NCM ⋅(ˆ l NCM + ˆ s )<br>−(∑ A ( X A  − X NCM) ×  P A ) ⋅ I −1<br>+ 2 1 (ˆ l NCM + ˆ s ) ⋅ I NCM −1 ⋅(ˆ l NCM + ˆ s ) (78)<br><!-- End of picture text -->
 
 body frame; in other words, _σ_ must be finite. Note also that if we use charge instead of mass as a weight [Eq. (28) instead of Eq. (29)], we do recover a non-zero electronic momentum even at the limit of _σ_ →∞, as shown in Fig. 1(a); that being said, the robust and correct solution for large simulations is to set _σ_ to be finite. 
 
@@ -539,21 +749,51 @@ Before concluding, let us write down the form of the phase space electronic Hami
 
 
 
+<!-- Start of picture text -->
+( P A  − i ̵ h Γ ˆ  A )2<br>∑<br>= ∑ ( P A  − M M tot A (∑ B  P B )) 2 + (∑ A P A  − p ˆ )2 A 2 MA P 2 A − ∑ A P A p ˆ 2 j<br>A 2 MA 2 M tot = ∑ A 2 MA M tot ⋅∑ j p ˆ j  + ∑ j 2 M tot<br>NCM ⋅(ˆ l NCM + ˆ s )<br>−(∑ A ( X A  − X NCM) ×  P A ) ⋅ I −1 −∑ NCM ⋅(ˆ l NCM ( x j ) + ˆ s j )<br>j (∑ A ( X A  − X NCM) ×  P A ) ⋅ I −1<br>+ 2 1 (ˆ l NCM + ˆ s ) ⋅ I NCM −1 ⋅(ˆ l NCM + ˆ s ). (79) + ∑ 12 (ˆ l NCM( x j ) + ˆ s j ) ⋅ I NCM −1 ⋅(ˆ l NCM ( x j ) + ˆ s j ). (82)<br>j<br><!-- End of picture text -->
+
 This form makes clear that the product **Γ**<sup>ˆ2</sup> _A_<sup>operators in Eq. (9) are</sup> indeed one-electron operators (just like **Γ**<sup>ˆ</sup> _A_ ). 
+
+Here, **_X_** NCM is the nuclear center of mass, **_I_** NCM is the total nuclear moment of inertia matrix relative to the nuclear center of mass, and<sup>ˆ</sup> **_l_** NCM is the electronic angular momentum relative to the nuclear center of mass. Thus, in this limit, four terms appear: (i) the kinetic energy of the atoms relative to the center of nuclear mass, (ii) the total kinetic energy of the nuclear center of mass (recognizing that ∑ _A_ **_P_** _A_ now represents the total nuclear plus electronic momentum, from which one must subtract the electronic momentum),<sup>13</sup> (iii) a Coriolis potential from aligning the electronic frame of the electrons to the nuclei,<sup>56</sup> and (iv) a centrifugal potential that captures the inertia of electrons in a rotating frame.<sup>57</sup> 
 
 ##### _2. Limit_ **_σ_ → 0** 
 
 Second, in the opposite limit (small _σ_ ), the values of the electronic momentum become relatively constant (and always have the correct sign), which is extremely encouraging. Note that if _σ_ gets too small, numerical convergence can become difficult unless one uses a tight grid. At present, we evaluate Θ on a Lebedev grid designed to sample density near that atomic nucleus for density functional theory (DFT) calculations, but there is no reason we could not build a new grid to best sample Θ _A_ . Thus, as long as the partitioning is not too flat and provided we have enough grid points to model the switching region, there is a large range of parameters whereby the electronic momentum is robust. 
 
+Next, let us address the electronic momentum of normal modes in this same limit. Let ∣ΨPS( **_X_** , **_P_** )⟩ be the electronic wavefunction associated with an internal normal mode, such that ∑ _A_ **_P_** _A_ = ∑ _A_ **_X_** _A_ × **_P_** _A_ = 0. In this limit, the Hamiltonian becomes 
+
 Importantly, one should not be very disheartened insofar as the fact that we do not recover exactly ⟨ **_p_** ˆ⟩= _md_ / _dt_ ⟨Φ∣ **_x_** ˆ∣Φ⟩ in Fig. 1 because, as shown in Ref. 38, this result follows exactly (analytically) if we set **Γ** = **_d_** and sum over all excited states. Our goal in this article is to generate **Γ** by approximating the derivative coupling, which, by construction, will violate the above condition. In particular, one can divide the electronic momentum into two contributions, 
 
 
 
+<!-- Start of picture text -->
+P 2 A p ˆ 2<br>+ + 1<br>H ˆ PS = ∑ A 2 MA 2 Mtot 2 (ˆ l NCM + ˆ s ) ⋅ I NCM −1 ⋅(ˆ l NCM + ˆ s ) + H ˆ el .<br>(80)<br><!-- End of picture text -->
 
+Note that, as an electronic operator, _H_<sup>ˆ</sup> _PS_ commutes with the timereversal operator. Therefore, provided that the ground state is electronically nondegenerate, it follows that 
+
+
+
+<!-- Start of picture text -->
+⟨ p ˆ⟩=  m d (83)<br>dt ⟨ x ˆ⟩<br>=  m dt d ∑ Dμν x νμ (84)<br>μν<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+⟨ΨPS∣ p ˆ∣ΨPS⟩= ⟨ΨPS∣ ˆ l ∣ΨPS⟩= 0. (81)<br><!-- End of picture text -->
+
+Note that despite the physical appeal of Eq. (79), the vanishing of the electronic momentum in this limit _σ_ , _βAB_ →∞ makes clear that this limit is unphysical. As the simplest problematic example, consider the vibration of a hydrogen–deuterium molecule. If the center of mass is unchanged, then because of the mass difference between hydrogen and deuterium, each atom must move at a different speed. That being said, each atom has the same charge and is equally attracted to electrons, which means one electron must be moving faster than the other electron, and there must be a total nonzero electron momentum that can be captured only by viewing the internal motion of the system from each atom’s individual 
+
+
+
+<!-- Start of picture text -->
+=  m ∑ (85)<br>μν ( Dμν  ⋅ dt d x νμ  + dt d Dμν  ⋅ x νμ ).<br><!-- End of picture text -->
 
 Here, _Dμν_ is the electronic density matrix elements in atomic orbital basis indexed by _μ_ , _ν_ , 
 
 
+
+<!-- Start of picture text -->
+Dμν = ∑ CμiCν ∗ i , (86)<br>i<br><!-- End of picture text -->
 
 where _Cμi_ is the matrix of molecular orbital coefficients, and we sum over all occupied orbitals _i_ in Eq. (86). 
 
@@ -581,7 +821,13 @@ For a system of electrons and nuclei, let us begin by defining the electronic ch
 
 
 
+<!-- Start of picture text -->
+ρ ˆ e ( r ) = ψ ˆ † ( r ) ψ ˆ ( r ), (87)<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+j ˆ e ( r ) = − 2 i m h ̵ [ ψ ˆ  †( r )∇ r  ˆ ψ ( r ) −(∇ r  ˆ ψ  †( r )) ψ ˆ ( r )], (88)<br><!-- End of picture text -->
 
 where _ψ_ ˆ<sup>†</sup> ( **_r_** )/ _ψ_ ˆ ( **_r_** ) is the creation and annihilation operator for an electron at position **_r_** . As is well known, there is a 
 
@@ -589,29 +835,57 @@ continuity equation for the electron based on the electronic Schrodinger’s equ
 
 
 
+<!-- Start of picture text -->
+d<br>(89)<br>dt ρ ˆ e ( r ) = h ̵ i [ H  ˆ el , ˆ ρ e ( r )] = −∇⋅ j ˆ e ( r ).<br>Here, we have written the electronic Hamiltonian operator in terms<br>of the creation and annihilation operators,<br>H ˆ el = ∫ d 3 r ψ ˆ † ( r )[−̵ 2 h m 2 ∇2 r +  V ( r )] ψ ˆ ( r )<br>+ 1 qe 2 (90)<br>2 ∫ d 3 r  ∫ d 3 r ′ ˆ ψ  †( r ) ψ ˆ  †( r ′) ∣ r  − r ′ ∣ ψ ˆ ( r ′) ψ ˆ ( r ).<br><!-- End of picture text -->
+
 Here, we have written the electronic Hamiltonian operator in terms of the creation and annihilation operators, 
-
-
 
 Equation (89) is an operator equation that holds for exact quantum dynamics. One means of checking the accuracy of approximate dynamics, (e.g., for a trajectory moving along the eigensurface of a phase space electronic Hamiltonian) is to test whether or not this continuity equation still holds during such approximate dynamics. Equation (89) clearly does not hold for BO motion because, in such a case, the electronic current operator will always have an expectation value of zero. 
 
+To that end, let Φ be a BO eigenstate. Treating the first-order non-BO operator as a perturbation and assuming non-degenerate states, one can construct a wavefunction corrected to the first order, 
 
+
+
+<!-- Start of picture text -->
+P ∂ X ∣Φ I ⟩<br>∣Ψ ˜ I ⟩= ∣Φ I ⟩− i ̵ h ∑ ∣Φ J ⟩. (91)<br>J ≠ I M ⋅ ⟨Φ E J ∣ I  − ∂ EJ<br><!-- End of picture text -->
 
 Next, we can evaluate the electronic current density missing in the BO approximation, 
 
 
 
+<!-- Start of picture text -->
+P ∂ X ∣Φ I ⟩<br>⟨Ψ ˜ I ∣ j ˆ e ( r )∣Ψ ˜ I ⟩= 2̵ h  Im∑ ⟨Φ I ∣ j ˆ e ( r )∣Φ J ⟩. (92)<br>J ≠ I M ⋅ ⟨Φ E J ∣ I  − ∂ EJ<br><!-- End of picture text -->
+
 One notices immediately that if we include the first-order non-BO correction, a non-zero current density arises. 
 
-The next step is to evaluate the electronic flux for this current density. From the commutation relationship in Eq. (89), it follows that ( _EI_ − _EJ_ )⟨Φ _I_ ∣ **_ρ_** ˆ _e_ ( **_r_** )∣Φ _J_ ⟩= _i_ ̵ _h_ ⟨Φ _I_ ∣∇⋅ **_j_**<sup>ˆ</sup> _e_ ( **_r_** )∣Φ _J_ ⟩. (93) 
+The next step is to evaluate the electronic flux for this current density. From the commutation relationship in Eq. (89), it follows that 
+
+
+
+<!-- Start of picture text -->
+( EI  − EJ )⟨Φ I ∣ ρ ˆ e ( r )∣Φ J ⟩=  i ̵ h ⟨Φ I ∣∇⋅ j ˆ e ( r )∣Φ J ⟩. (93)<br><!-- End of picture text -->
 
 Using Eq. (93), we now evaluate 
 
 
 
+<!-- Start of picture text -->
+⟨Ψ ˜ I ∣∇⋅ j ˆ e ( r )∣Ψ ˜ I ⟩<br>P ∂ X ∣Φ I ⟩<br>= 2̵ h  Im∑ ⟨Φ I ∣∇⋅ j ˆ e ∣Φ J ⟩ (94)<br>J ≠ I M ⋅ ⟨Φ E J ∣ I  − ∂ EJ<br><!-- End of picture text -->
 
 
 
+<!-- Start of picture text -->
+P<br>= −2 Re∑ (95)<br>J M ⋅⟨Φ J ∣ ∂ ∂ X ∣Φ I ⟩⟨Φ I ∣ ρ ˆ e ( r )∣Φ J ⟩<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+(96)<br>= −2 Re⟨Φ I ∣ ρ ˆ e ( r ) M P ⋅ ∂ ∂ X ∣Φ I ⟩,<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+⟨Ψ ˜ I ∣∇⋅ j ˆ e ( r )∣Ψ ˜ I ⟩= − d (97)<br>dt ⟨Φ I ∣ ρ ˆ e ( r )∣Φ I ⟩.<br><!-- End of picture text -->
 
 J. Chem. Phys. **162** , 144111 (2025); doi: 10.1063/5.0260731 Published under an exclusive license by AIP Publishing 
 
@@ -633,11 +907,25 @@ As a side note, we mention that, from Eq. (97), one can derive the standard, bey
 
 
 
+<!-- Start of picture text -->
+(98)<br>m  ∫ r ∇⋅⟨Ψ ˜ I ∣ j ˆ e ( r )∣Ψ ˜ I ⟩ d r  = − m  ∫⟨Ψ ˜ I ∣ j ˆ e ( r )∣Ψ ˜ I ⟩ d r<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+= −⟨Ψ ˜ I ∣ p ˆ∣Ψ ˜ I ⟩. (99)<br><!-- End of picture text -->
+
 Here, in Eq. (98), we used integration by parts. The RHS of Eq. (97) becomes 
 
 
 
+<!-- Start of picture text -->
+− m  ∫ r dt d ⟨Φ I ∣ ρ ˆ e ( r )∣Φ I ⟩ d r<br>= − m d (100)<br>dt ⟨Φ I ∣∫ r ψ ˆ  †( r ) ψ ˆ ( r ) d r ∣Φ I ⟩<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+= − m dt d ⟨Φ I ∣ r ˆ∣Φ I ⟩. (101)<br><!-- End of picture text -->
 
 Combining Eqs. (99) and (101), we recover the expression for the electronic momentum. In Fig. 1, we benchmarked our phase space results against the result above [Eq. (101)] for electronic momentum. In Figs. 2 and 3, an even more strenuous test is used to benchmark against the current density. 
 
@@ -727,21 +1015,11 @@ The data that support the findings of this study are available within the articl
 
 ##### REFERENCES 
 
-1R. Naaman and D. H. Waldeck, “Chiral-induced spin selectivity effect,” J. Phys. Chem. Lett. **3** , 2178 (2012). 
+1R. Naaman and D. H. Waldeck, “Chiral-induced spin selectivity effect,” J. Phys. Chem. Lett. **3** , 2178 (2012). 2J. Fransson, “Vibrational origin of exchange splitting and chiral-induced spin selectivity,” Phys. Rev. B **102** , 235416 (2020). 3J. Gersten, K. Kaasbjerg, and A. Nitzan, “Induced spin filtering in electron transmission through chiral molecular layers adsorbed on metals with strong spin–orbit coupling,” J. Chem. Phys. **139** , 114111 (2013). 4H. J. Eckvahl, N. A. Tcyrulnikov, A. Chiesa, J. M. Bradley, R. M. Young, S. Carretta, M. D. Krzyaniak, and M. R. Wasielewski, “Direct observation of chirality-induced spin selectivity in electron donor–acceptor molecules,” Science **382** , 197 (2023). 5C. Li, R. Requist, and E. K. U. Gross, “Energy, momentum, and angular momentum transfer between electrons and nuclei,” Phys. Rev. Lett. **128** , 113001 (2022). 
 
-> 2J. Fransson, “Vibrational origin of exchange splitting and chiral-induced spin selectivity,” Phys. Rev. B **102** , 235416 (2020). 
+> 6Y. Shu, L. Zhang, Z. Varga, K. A. Parker, S. Kanchanakungwankul, S. Sun, and D. G. Truhlar, “Conservation of angular momentum in direct nonadiabatic dynamics,” J. Phys. Chem. Lett. **11** , 1135 (2020). 7Z. Tao, X. Bian, Y. Wu, J. Rawlinson, R. G. Littlejohn, and J. E. Subotnik, “Total angular momentum conservation in Ehrenfest dynamics with a truncated basis of adiabatic states,” J. Chem. Phys. **160** , 054104 (2024). 8X. Bian, Z. Tao, Y. Wu, J. Rawlinson, R. G. Littlejohn, and J. E. Subotnik, “Total angular momentum conservation in _ab initio_ Born–Oppenheimer molecular dynamics,” Phys. Rev. B **108** , L220304 (2023). 
 
-> 3J. Gersten, K. Kaasbjerg, and A. Nitzan, “Induced spin filtering in electron transmission through chiral molecular layers adsorbed on metals with strong spin–orbit coupling,” J. Chem. Phys. **139** , 114111 (2013). 
-
-> 4H. J. Eckvahl, N. A. Tcyrulnikov, A. Chiesa, J. M. Bradley, R. M. Young, S. Carretta, M. D. Krzyaniak, and M. R. Wasielewski, “Direct observation of chirality-induced spin selectivity in electron donor–acceptor molecules,” Science **382** , 197 (2023). 
-
-> 5C. Li, R. Requist, and E. K. U. Gross, “Energy, momentum, and angular momentum transfer between electrons and nuclei,” Phys. Rev. Lett. **128** , 113001 (2022). 
-
-> 6Y. Shu, L. Zhang, Z. Varga, K. A. Parker, S. Kanchanakungwankul, S. Sun, and D. G. Truhlar, “Conservation of angular momentum in direct nonadiabatic dynamics,” J. Phys. Chem. Lett. **11** , 1135 (2020). 
-
-7Z. Tao, X. Bian, Y. Wu, J. Rawlinson, R. G. Littlejohn, and J. E. Subotnik, “Total angular momentum conservation in Ehrenfest dynamics with a truncated basis of adiabatic states,” J. Chem. Phys. **160** , 054104 (2024). 
-
-8X. Bian, Z. Tao, Y. Wu, J. Rawlinson, R. G. Littlejohn, and J. E. Subotnik, “Total angular momentum conservation in _ab initio_ Born–Oppenheimer molecular dynamics,” Phys. Rev. B **108** , L220304 (2023). 9N. V. Cohan and H. F. Hameka, “Isotope effects in optical rotation,” J. Am. Chem. Soc. **88** , 2136 (1966). 
+> 9N. V. Cohan and H. F. Hameka, “Isotope effects in optical rotation,” J. Am. Chem. Soc. **88** , 2136 (1966). 
 
 J. Chem. Phys. **162** , 144111 (2025); doi: 10.1063/5.0260731 Published under an exclusive license by AIP Publishing 
 
@@ -827,13 +1105,15 @@ J. Chem. Phys. **162** , 144111 (2025); doi: 10.1063/5.0260731 Published under a
 
 **pubs.aip.org/aip/jcp** 
 
-56R. G. Littlejohn and W. G. Flynn, “Geometric phases in the asymptotic theory of coupled wave equations,” Phys. Rev. A **44** , 5239 (1991). 
+- 56R. G. Littlejohn and W. G. Flynn, “Geometric phases in the asymptotic theory of coupled wave equations,” Phys. Rev. A **44** , 5239 (1991). 
 
 57I. A. Aucar, S. S. Gómez, M. C. R. de Azúa, and C. G. Giribet, “Theoretical study of the nuclear spin-molecular rotation coupling for relativistic electrons and nonrelativistic nuclei,” J. Chem. Phys. **136** , 204119 (2012). 
 
 > 58A. Nitzan, _Chemical Dynamics in Condensed Phases_ (Oxford University Press, 2006). 
 
-> 59X. Bian, Y. Wu, T. Qiu, Z. Tao, and J. E. Subotnik, “A semiclassical nonadiabatic phase-space approach to molecular translations and rotations: Surface hopping with electronic inertial effects,” J. Chem. Phys. **161** , 234114 (2024). 
+> 59X. Bian, Y. Wu, T. Qiu, Z. Tao, and J. E. Subotnik, “A semiclassical nonadiabatic phase-space approach to molecular translations and rotations: Surface hopping with electronic inertial effects,” J. Chem. Phys. **161** , 234114 
+
+(2024). 
 
 > 60F. Jensen, _Introduction to Computational Chemistry_ (Wiley, 1999). 
 

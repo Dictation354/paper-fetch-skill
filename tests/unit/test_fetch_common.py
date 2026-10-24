@@ -145,7 +145,7 @@ class FetchCommonTests(unittest.TestCase):
                 "==0.5.8",
             )
 
-    def test_pdf_extras_require_current_pymupdf4llm_compatibility_line(self) -> None:
+    def test_pdf_extras_require_coordinated_pymupdf_2_line(self) -> None:
         with (REPO_ROOT / "pyproject.toml").open("rb") as handle:
             pyproject = tomllib.load(handle)
         with (REPO_ROOT / "uv.lock").open("rb") as handle:
@@ -153,23 +153,22 @@ class FetchCommonTests(unittest.TestCase):
 
         optional_dependencies = pyproject["project"]["optional-dependencies"]
         for extra_name in ("pdf", "full"):
-            requirements = [
-                dependency
+            requirements = {
+                Requirement(dependency).name.casefold(): Requirement(dependency)
                 for dependency in optional_dependencies[extra_name]
-                if Requirement(dependency).name.casefold() == "pymupdf4llm"
-            ]
-            self.assertEqual(requirements, ["pymupdf4llm>=1.28.2,<2"])
+                if Requirement(dependency).name.casefold() in {"pymupdf", "pymupdf4llm"}
+            }
+            self.assertEqual(set(requirements), {"pymupdf", "pymupdf4llm"})
+            for requirement in requirements.values():
+                self.assertEqual(str(requirement.specifier), "<3,>=2")
 
-        locked = [
-            package
-            for package in uv_lock["package"]
-            if package["name"].casefold() == "pymupdf4llm"
-        ]
-        self.assertEqual(len(locked), 1)
-        self.assertIn(
-            Version(locked[0]["version"]),
-            Requirement("pymupdf4llm>=1.28.2,<2").specifier,
-        )
+        for name in ("pymupdf", "pymupdf4llm", "pymupdf-layout"):
+            locked = [
+                package["version"]
+                for package in uv_lock["package"]
+                if package["name"].casefold() == name
+            ]
+            self.assertEqual(locked, ["2.0"])
 
     def test_only_camoufox_uses_an_exact_dependency_constraint(self) -> None:
         with (REPO_ROOT / "pyproject.toml").open("rb") as handle:

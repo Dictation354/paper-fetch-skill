@@ -8,7 +8,7 @@ source: "springer_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 32733
+token_estimate: 33110
 ---
 
 # Encoded and non-genetic protein variants expand human functional proteome
@@ -158,9 +158,9 @@ We compared our pipeline with the previous method based on MaxQuant dependent pe
 
 
 <!-- Start of picture text -->
-405  proteasome inhibitor MG132 57  . If alternative proteins were as stable as their reference forms,<br>406  their relative abundance would be largely unchanged upon proteasome inhibition. Instead, we<br><!-- End of picture text -->
+392  Figure 5. Functional characteristics of amino acid substitutions.  (a) AlphaMissense<br>393  pathogenicity scores plotted against substitution abundances of genetic (left) and non-genetic<br>394  (right) variants.  (b) Distributions of alternative variant substitution abundances in proteasome-<br>395  inhibited (left) and non-inhibited conditions (right). (c) Venn diagram of hemoglobin<br>396  substitutions identified in three datasets. Red – substitutions found in healthy tissue dataset, – substitutions found in healthy tissue dataset,  substitutions found in healthy tissue dataset,<br>397  orange  – in purified hemoglobin isolate, blue  in purified hemoglobin isolate, blue  – in in vitro differentiated hematopoietic  in in vitro differentiated hematopoietic<br>398  precursor cell culture. (d) Positions with identified substitutions in human hemoglobin in<br>399  healthy tissues dataset. Spheres indicate C   position of the substituted residues. Color scheme<br>400  corresponds to recurrence of a substitutions in each site among the tissues. Sites with associated<br>401  changes in O2 affinity highlighted 2 affinity highlighted  affinity highlighted<br>402<br>403  To examine whether alternative variants are subject to selective degradation, we leveraged a<br>404  data in which osteosarcoma-derived cells were cultured in the presence or absence of the<br>405  proteasome inhibitor MG132 57  . If alternative proteins were as stable as their reference forms,<br>406  their relative abundance would be largely unchanged upon proteasome inhibition. Instead, we<br><!-- End of picture text -->
 
-374 pathogenicity scores as a potential modulation of the main protein function, implemented by 375 the reference proteoform. The higher pathogenicity score serves as a proxy for a potential 376 “disruptiveness” of a given substitution. We performed a separate functional analysis on non377 genetic and genetic substitutions in our dataset. To classify non-genetic substitution, we 378 specified a minimum RNA sequencing coverage threshold as 10 reads per reference and 0 reads 379 per substituted position. We observed a negative correlation between predicted pathogenicity 380 and the substitution abundance ratio in both genetic and non-genetic variant groups, indicating 381 that more disruptive substitutions tend to be present at lower levels in the proteome (Fig. 5a). 382 For genetic variants, this relationship likely reflects the greater disruptive potential of low383 abundance somatic substitutions relative to germline variants. The analogous trend among non384 genetic variants is consistent with either (i) preferential synthesis of non-pathogenic variants 385 or, more plausibly, (ii) enhanced degradation of more deleterious protein variants. Notably, 386 correlation with predicted pathogenicity is weak and cannot fully explain observed abundance 387 ratios. Moreover, non-genetic substitutions classified as pathogenic cannot impose a 388 comparable fitness burden, as they are incorporated into a fraction of a protein’s molecules 389 rather than uniformly affecting all copies, as implicitly assumed by AlphaMissense. Such 390 partial incorporation could expand functional diversity while avoiding the full fitness cost of a 391 fixed genetic mutation. 392 **Figure 5. Functional characteristics of amino acid substitutions.** (a) AlphaMissense 393 pathogenicity scores plotted against substitution abundances of genetic (left) and non-genetic 394 (right) variants.  (b) Distributions of alternative variant substitution abundances in proteasome395 inhibited (left) and non-inhibited conditions (right). (c) Venn diagram of hemoglobin 396 substitutions identified in three datasets. Red – substitutions found in healthy tissue dataset, 397 orange – in purified hemoglobin isolate, blue – in in vitro differentiated hematopoietic 398 precursor cell culture. (d) Positions with identified substitutions in human hemoglobin in 399 healthy tissues dataset. Spheres indicate C  position of the substituted residues. Color scheme 400 corresponds to recurrence of a substitutions in each site among the tissues. Sites with associated 401 changes in O2 affinity highlighted 402 403 To examine whether alternative variants are subject to selective degradation, we leveraged a 404 data in which osteosarcoma-derived cells were cultured in the presence or absence of the 
+374 pathogenicity scores as a potential modulation of the main protein function, implemented by 375 the reference proteoform. The higher pathogenicity score serves as a proxy for a potential 376 “disruptiveness” of a given substitution. We performed a separate functional analysis on non377 genetic and genetic substitutions in our dataset. To classify non-genetic substitution, we 378 specified a minimum RNA sequencing coverage threshold as 10 reads per reference and 0 reads 379 per substituted position. We observed a negative correlation between predicted pathogenicity 380 and the substitution abundance ratio in both genetic and non-genetic variant groups, indicating 381 that more disruptive substitutions tend to be present at lower levels in the proteome (Fig. 5a). 382 For genetic variants, this relationship likely reflects the greater disruptive potential of low383 abundance somatic substitutions relative to germline variants. The analogous trend among non384 genetic variants is consistent with either (i) preferential synthesis of non-pathogenic variants 385 or, more plausibly, (ii) enhanced degradation of more deleterious protein variants. Notably, 386 correlation with predicted pathogenicity is weak and cannot fully explain observed abundance 387 ratios. Moreover, non-genetic substitutions classified as pathogenic cannot impose a 388 comparable fitness burden, as they are incorporated into a fraction of a protein’s molecules 389 rather than uniformly affecting all copies, as implicitly assumed by AlphaMissense. Such 390 partial incorporation could expand functional diversity while avoiding the full fitness cost of a 391 fixed genetic mutation. 392 **Figure 5. Functional characteristics of amino acid substitutions.** (a) AlphaMissense 393 pathogenicity scores plotted against substitution abundances of genetic (left) and non-genetic 394 (right) variants.  (b) Distributions of alternative variant substitution abundances in proteasome395 inhibited (left) and non-inhibited conditions (right). (c) Venn diagram of hemoglobin 396 substitutions identified in three datasets. Red – substitutions found in healthy tissue dataset, – substitutions found in healthy tissue dataset,  substitutions found in healthy tissue dataset, 397 orange – in purified hemoglobin isolate, blue  in purified hemoglobin isolate, blue – in in vitro differentiated hematopoietic  in in vitro differentiated hematopoietic 398 precursor cell culture. (d) Positions with identified substitutions in human hemoglobin in 399 healthy tissues dataset. Spheres indicate C  position of the substituted residues. Color scheme 400 corresponds to recurrence of a substitutions in each site among the tissues. Sites with associated 401 changes in O2 affinity highlighted 2 affinity highlighted  affinity highlighted 402 403 To examine whether alternative variants are subject to selective degradation, we leveraged a 404 data in which osteosarcoma-derived cells were cultured in the presence or absence of the 
 
 12 
 
@@ -213,6 +213,9 @@ We compared our pipeline with the previous method based on MaxQuant dependent pe
 505 hemoglobin exhibits extensive substitution diversity _in vivo_ , although the underlying 506 mechanisms driving this diversification remain unclear. 507 In all these analyses we used the MS-supported substitutions lacking RNA-seq support as 508 hypothesized mistranslations. We are aware that due to the RNA-seq coverage limitations we 509 cannot completely exclude the cases of somatic mutations within the tissue samples. However, 510 we assume that the averaged trends over different amino acid substitution patterns, their 511 pathogenicity and allele frequencies would largely reflect the tendencies of protein 512 mistranslation as it represents a major source of protein heterogeneity in cells<sup>9,34</sup> . Additionally, 513 the existence of recurring substitutions in samples from non-related individuals allowed us to 514 rationalize on distinct roles of non-genetic substitutions in human. 515 **Methods** 516 **RNA-seq analysis** 517 Raw RNA sequencing reads in fastq format were downloaded from Array Express 518 (http://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-2836/) and their correspondence 519 with the MS data was verified through Table EV1, tab “Sample Information” in Wang et _al_ . 520 publication<sup>1</sup> .  Fastq files were aligned against ensembl CDS reference sequences (r112, 521 <u>https://ftp.ensembl.org/pub/release-112/fasta/homo_sapiens/cds/) using BWA</u><sup>61</sup> . Resulting 522 files were converted, sorted and indexed using SAMtools<sup>62</sup> . Unmapped reads as well as 523 supplementary, secondary and duplicated alignments were discarded. Observed codons at the 524 genomic locations of each amino acid substitution were counted for each sample separately, 525 and counts were summed per tissue. Alignments that contained N at the substitution position 526 or an indel prior to it were removed. 527 We considered a substitution confirmed on a genetic level if observed number of reads with 528 mutation could not arise from the DNA polymerase used in the sequencing library preparation. 529 Specifically, we compute a one-sided binomial tail probability: 𝑛 530 𝑃(𝑋≥𝑘|𝑛, 𝑝) = ∑(<sup>𝑛</sup> 𝑖<sup>) 𝑝𝑖(1 −𝑝)𝑛−𝑖</sup> 𝑖=𝑘 531 k = number of reads reporting the specific non-reference base that would produce the amino- 
 
 
+
+<!-- Start of picture text -->
+530<br>531<br>532<br><!-- End of picture text -->
 
 - 532 acid substitution, 
 
@@ -401,9 +404,7 @@ We compared our pipeline with the previous method based on MaxQuant dependent pe
 
 27 
 
-- 900 
-
-20. Lai-Cheong, J. E., McGrath, J. A. & Uitto, J. Revertant mosaicism in skin: natural gene 
+- 900 20. Lai-Cheong, J. E., McGrath, J. A. & Uitto, J. Revertant mosaicism in skin: natural gene 
 
 
 
@@ -421,9 +422,12 @@ We compared our pipeline with the previous method based on MaxQuant dependent pe
 
 - 932 Dominant Constraint on Coding-Sequence Evolution. _Cell_ **134** , 341–352 (2008). 
 
-903 coli is largely determined by tRNA competition. _RNA_ **13** , 87–96 (2007). 904 22. Landerer, C., Poehls, J. & Toth-Petroczy, A. Fitness Effects of Phenotypic Mutations at 905 Proteome-Scale Reveal Optimality of Translation Machinery. _Mol. Biol. Evol._ **41** , msae048 906 (2024). 907 23. Wu, X., Xu, M., Yang, J.-R. & Lu, J. Genome-wide impact of codon usage bias on 908 translation optimization in Drosophila melanogaster. _Nat. Commun._ **15** , 8329 (2024). 909 24. Willensdorfer, M., Bürger, R. & Nowak, M. A. Phenotypic Mutation Rates and the 910 Abundance of Abnormal Proteins in Yeast. _PLoS Comput. Biol._ **3** , e203 (2007). 911 25. Reynolds, N. M., Lazazzera, B. A. & Ibba, M. Cellular mechanisms that control 912 mistranslation. _Nat. Rev. Microbiol._ **8** , 849–856 (2010). 913 26. Kapur, M. & Ackerman, S. L. mRNA Translation Gone Awry: Translation Fidelity and 914 Neurological Disease. _Trends Genet._ **34** , 218–231 (2018). 915 27. Lee, J. W. _et al._ Editing-defective tRNA synthetase causes protein misfolding and 916 neurodegeneration. _Nature_ **443** , 50–55 (2006). 917 28. Miranda, I. _et al._ Candida albicans CUG Mistranslation Is a Mechanism To Create Cell 918 Surface Variation. _mBio_ **4** , 10.1128/mbio.00285-13 (2013). 919 29. Netzer, N. _et al._ Innate immune and chemically triggered oxidative stress modifies 920 translational fidelity. _Nature_ **462** , 522–526 (2009). 921 30. Santos, M., Fidalgo, A., Varanda, A. S., Oliveira, C. & Santos, M. A. S. tRNA 922 Deregulation and Its Consequences in Cancer. _Trends Mol. Med._ **25** , 853–865 (2019). 923 31. Whitehead, D. J., Wilke, C. O., Vernazobres, D. & Bornberg-Bauer, E. The look-ahead 924 effect of phenotypic mutations. _Biol. Direct_ **3** , 18 (2008). 925 32. Bratulic, S., Toll-Riera, M. & Wagner, A. Mistranslation can enhance fitness through 926 purging of deleterious mutations. _Nat. Commun._ **8** , 15410 (2017). 927 33. Yanagida, H. _et al._ The Evolutionary Potential of Phenotypic Mutations. _PLoS Genet._ **11** , 928 e1005445 (2015). 929 34. Pouplana, L. R. de, Santos, M. A. S., Zhu, J.-H., Farabaugh, P. J. & Javid, B. Protein 930 mistranslation: friend or foe? _Trends Biochem. Sci._ **39** , 355–362 (2014). 931 
 
-28 
+
+<!-- Start of picture text -->
+28<br><!-- End of picture text -->
+
+903 coli is largely determined by tRNA competition. _RNA_ **13** , 87–96 (2007). 904 22. Landerer, C., Poehls, J. & Toth-Petroczy, A. Fitness Effects of Phenotypic Mutations at 905 Proteome-Scale Reveal Optimality of Translation Machinery. _Mol. Biol. Evol._ **41** , msae048 906 (2024). 907 23. Wu, X., Xu, M., Yang, J.-R. & Lu, J. Genome-wide impact of codon usage bias on 908 translation optimization in Drosophila melanogaster. _Nat. Commun._ **15** , 8329 (2024). 909 24. Willensdorfer, M., Bürger, R. & Nowak, M. A. Phenotypic Mutation Rates and the 910 Abundance of Abnormal Proteins in Yeast. _PLoS Comput. Biol._ **3** , e203 (2007). 911 25. Reynolds, N. M., Lazazzera, B. A. & Ibba, M. Cellular mechanisms that control 912 mistranslation. _Nat. Rev. Microbiol._ **8** , 849–856 (2010). 913 26. Kapur, M. & Ackerman, S. L. mRNA Translation Gone Awry: Translation Fidelity and 914 Neurological Disease. _Trends Genet._ **34** , 218–231 (2018). 915 27. Lee, J. W. _et al._ Editing-defective tRNA synthetase causes protein misfolding and 916 neurodegeneration. _Nature_ **443** , 50–55 (2006). 917 28. Miranda, I. _et al._ Candida albicans CUG Mistranslation Is a Mechanism To Create Cell 918 Surface Variation. _mBio_ **4** , 10.1128/mbio.00285-13 (2013). 919 29. Netzer, N. _et al._ Innate immune and chemically triggered oxidative stress modifies 920 translational fidelity. _Nature_ **462** , 522–526 (2009). 921 30. Santos, M., Fidalgo, A., Varanda, A. S., Oliveira, C. & Santos, M. A. S. tRNA 922 Deregulation and Its Consequences in Cancer. _Trends Mol. Med._ **25** , 853–865 (2019). 923 31. Whitehead, D. J., Wilke, C. O., Vernazobres, D. & Bornberg-Bauer, E. The look-ahead 924 effect of phenotypic mutations. _Biol. Direct_ **3** , 18 (2008). 925 32. Bratulic, S., Toll-Riera, M. & Wagner, A. Mistranslation can enhance fitness through 926 purging of deleterious mutations. _Nat. Commun._ **8** , 15410 (2017). 927 33. Yanagida, H. _et al._ The Evolutionary Potential of Phenotypic Mutations. _PLoS Genet._ **11** , 928 e1005445 (2015). 929 34. Pouplana, L. R. de, Santos, M. A. S., Zhu, J.-H., Farabaugh, P. J. & Javid, B. Protein 930 mistranslation: friend or foe? _Trends Biochem. Sci._ **39** , 355–362 (2014). 931 
 
 - 933 
 
@@ -452,10 +456,7 @@ We compared our pipeline with the previous method based on MaxQuant dependent pe
 
 - 968 51. Rozik, P. _et al._ Mistranslation from an endogenous tRNA variant in human pan-genome 969 cell lines. _Nucleic Acids Res._ **54** , gkag224 (2026). 
 
-
-
-<!-- Start of picture text -->
-970  52. Pataskar, A.  et al.  Tryptophan depletion results in tryptophan-to-phenylalanine<br><!-- End of picture text -->
+- 970 52. Pataskar, A. _et al._ Tryptophan depletion results in tryptophan-to-phenylalanine 
 
 - 971 substitutants. _Nature_ **603** , 721–727 (2022). –727 (2022). 727 (2022). 
 
@@ -557,15 +558,9 @@ substitutants. _Nature_ **603** , 721–727 (2022). –727 (2022). 727 (2022). 5
 
 1079 count in the MS data. 1080 **Extended Data Fig. 6: Analysis of leucine starvation dataset.** Amino acid substitution 1081 matrices with counts (numbers in cells) and substitution fraction (color) of the specific 1082 substitutions in control (a,b) and leucine depleted (c,d) breast cancer MB-231cells. Substitution 1083 fraction is defined as ratio of substituted origin amino acids to its total observed count in the 1084 MS data. 1085 **Extended Data Fig. 7: Analysis of tryptophan/tyrosine starvation dataset.** Amino acid 1086 substitution matrices with counts (numbers in cells) and substitution fraction (color) of the 1087 specific substitutions in control (a,b), tryptophan depleted (c,d) and tyrosine depleted (e,f) 1088 melanoma MD55A3 cells. Substitution fraction is defined as ratio of substituted origin amino 1089 acids to its total observed count in the MS data. 1090 **Extended Data Fig. 8** : **Analysis of W>D substitution-bearing peptides in three** 1091 **independent proteomic datasets.** (a) Venn diagram showing the number of W>D 1092 identifications in each dataset, with overlaps indicating peptides detected in common. (b–f) 1093 Annotated MS/MS spectra of the five W>D peptides identified across all three datasets (¹⁸O1094 labeled HeLa cells, healthy tissues, and W/Y-starved human cell lines). Some W>D peptides 1095 were detected in multiple healthy tissues and starvation conditions (top left corner of each 1096 spectrum). Similarity of the experimental and predicted spectra in the top right corner of each 1097 spectrum. Fragments supporting the substitution are highlighted in red, the site-determining 1098 fragment is marked with a black star, and +2 Da / +4 Da suffixes on y-ion labels indicate the 1099 presence of one or two ¹⁸O atoms at the precursor C-terminus. 1100 **Extended Data Fig. 9: Analysis of proteasome inhibition dataset.** (Left) Violin plots 1101 showing the distributions of substitution abundances in untreated U2OS cells (blue) and 1102 MG‑132–treated U2OS cells (red), shown separately for each biological replicate. The 1103 middle line within the violin shows the median. Number of observations in each replicate are 1104 indicated as N above each respective violin. 1105 **Extended Data Fig. 10** : **Substitutions detected in recombinant antibody** . Substitutions 1106 detected in heavy (top) and light (bottom) chains of affinity purified human recombinant 1107 immunoglobulin protein R1. Amino acid positions covered by MS highlighted by the green 1108 panel above the x-axis. Each bar represents the count of different substitutions detected in 1109 respective positions of the protein. CDR areas highlighted in orange, framework regions in 1110 purple/green. Inset – proportions of the mutational distances among detected substitutions of – proportions of the mutational distances among detected substitutions of  proportions of the mutational distances among detected substitutions of 1111 each chain. 1112 1113 
 
+1116 1117 
 
-
-<!-- Start of picture text -->
-1116<br>1117<br><!-- End of picture text -->
-
-
-
-<!-- Start of picture text -->
-1118<br>1119<br>1120<br>1121<br>ACCELERATED ARTICLE PREVIEW<br><!-- End of picture text -->
+1118 1119 1120 1121 
 
 34 
 
@@ -617,7 +612,7 @@ Last updated by author(s): Vyacheslav Tretyachenko, 26.08.2026
 
 #### <u>Reporting Summary</u> 
 
-Nature Portfolio wishes to improve the reproducibility of the work that we publish. This form provides structure for consistency and transparency in reporting. For further information on Nature Portfolio policies, see our <u>Editorial Policies</u> and the <u>Editorial Policy Checklist.</u> 
+Nature Portfolio wishes to improve the reproducibility of the work that we publish. This form provides structure for consistency and transparency in reporting. For further information on Nature Portfolio policies, see our <u>Editorial Policies</u> and the Editorial Policy Checklist. 
 
 ###### <u>Statistics</u> 
 
@@ -635,7 +630,7 @@ _Only common tests should be described solely by name; describe more complex tec
 
 - A description of all covariates tested 
 
-A description of any assumptions or corrections, such as tests of normality and adjustment for multiple comparisons 
+- A description of any assumptions or corrections, such as tests of normality and adjustment for multiple comparisons 
 
 A full description of the statistical parameters including central tendency (e.g. means) or other basic estimates (e.g. regression coefficient) AND variation (e.g. standard deviation) or associated estimates of uncertainty (e.g. confidence intervals) 
 
@@ -647,7 +642,7 @@ For hierarchical and complex designs, identification of the appropriate level fo
 
 Estimates of effect sizes (e.g. Cohen's _d_ , Pearson's _r_ ), indicating how they were calculated 
 
-_Our web collection on_ _<u>statistics for biologists contains articles on many of the points above.</u>_ 
+_Our web collection on_ _<u>statistics for biologists</u> contains articles on many of the points above._ 
 
 ###### <u>Software and code</u> 
 
@@ -673,7 +668,7 @@ For manuscripts utilizing custom algorithms or software that are central to the 
 
 Policy information about <u>availability of data</u> 
 
-All manuscripts must include a <u>data availability statement. This statement should provide the following information, where applicable:</u> 
+All manuscripts must include a data availability statement. This statement should provide the following information, where applicable: 
 
 - Accession codes, unique identifiers, or web links for publicly available datasets 
 
@@ -713,7 +708,12 @@ Data exclusions PXD010154 healthy tissue data - 27/29 tissues were analyzed; kid
 
 2 
 
-Replication All experiments were performed in one replicate as the purpose of the analysis was to demonstrate the existence of substituted species and eventually to validate specific substitution types also identified in public data. No quantitative claims were raised. Confirmation of specific substitutions was performed using combination of our experimental datasets and publicly available data Randomization We did not perform randomization in our experiments as our purified protein samples had no comparison groups. Blinding We did not perform blinding as we focused on aggregated analysis of substitutions in humans without discrimination into groups 
+|Replication|All experiments were performed in one replicate as the purpose of the analysis was to demonstrate the existence of substituted species and<br>eventually to validate specific substitution types also identified in public data. No quantitative claims were raised. Confirmation of specific<br>substitutions was performed using combination of our experimental datasets and publicly available data|
+|---|---|
+|Randomization|We did not perform randomization in our experiments as our purified protein samples had no comparison groups.|
+|Blinding|We did not perform blinding as we focused on aggregated analysis of substitutions in humans without discrimination into groups|
+
+
 
 ##### <u>Reporting for specific materials, systems and methods</u> 
 

@@ -8,7 +8,7 @@ source: "iop_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 74597
+token_estimate: 74771
 ---
 
 # The structure of micelles and microemulsions
@@ -341,6 +341,9 @@ The structure factor _S(_ **_q )_** is defined by
 
 
 
+<!-- Start of picture text -->
+S(q)  = 1 +-  ( g ( r )  - 1)  eiqr dr<br>L i:<br><!-- End of picture text -->
+
 where **_g ( r )_** is the correlation function between particles. _S(q)_ is the interparticle interference scattering and is related to the interactions. In favourable cases, the structure factor can be calculated analytically-for hard-sphere interaction (Percus and Yevick 1958) and for hard spheres and a screened electrostatic potential (Hayter and Penfold 1981). **In** more general cases, the HNC integral equation is needed to determine _S(q)_ (Hansen and McDonald 1976). 
 
 For the case of monodisperse spheres, a self-consistent fitting procedure can be used to elucidate micellar structure: an estimate of aggregation number, hydration and 
@@ -401,6 +404,9 @@ Motions in heterogeneous media can be separated into two parts: slow motions of 
 For a fast internal axially anisotropic motion coupled to a slow overall isotropic one, the spectral density is 
 
 
+
+<!-- Start of picture text -->
+J ( w ,  s,  Tcs  3  7cr)  =  S2J(0, Tcs)  +  (1  -  W ( w ,  r c d<br><!-- End of picture text -->
 
 where _rCf_ and _T~~_ are the correlation times for the fast and slow motions, and S is an order parameter defined as the time average due to fast motions 
 
@@ -650,6 +656,9 @@ The electrical potential of the aggregate, although screened by counter-ion ‘c
 
 
 
+<!-- Start of picture text -->
+Zie2  exp[  -K  ( r  -  uo)]<br>u ( r )  =<br>E  (1  +  K a 0 / 2 ) ~  r<br><!-- End of picture text -->
+
 This electric potential applies for two rigid spheres of charge _Zo_ and diameter _a._ separated by a continuous medium where counter-ions are considered as point-like and the ionic strength fixes the inverse Debye length **_K._** As a rule of thumb, the inverse Debye length (in angstroms) in pure water at 25 _“C_ is given by **_K_** = 0.33&, c being the ionic strength expressed in moles per litre. 
 
 This potential applies only outside of the hard sphere ‘core’, which includes the ‘bound’ counter-ions and the hydration water. It can be shown that this one-component macrofluid ( OCM) approach is formally equivalent to the more rigorous calculation of pair distribution functions between micelles using HNC (the hypernetted chain, see below) to solve the ‘primitive model’ where no ‘bound’ counter-ions exist since all counter-ions are taken into account with their own diameter in this two-component model (Belloni 1986a). 
@@ -685,13 +694,22 @@ Ninham 1981, Evans and Ninham 1983). In fact **gsurface** is a balance between e
 
 
 
+<!-- Start of picture text -->
+gsurface  =  Y ~ 0 - t -  1:  4; d a<br><!-- End of picture text -->
+
 where is the electric potential at the surface when the surface charge per area is _a._ Then, the geometry of the aggregate imposes a relation between the surface potential and charge: in the case of a spherical micelle, one obtains a quantitative prediction of the surface charge by the so-called ‘dressed micelle’ model (Evans _er a1_ 1984). The optimal micelle has aggregation number and charge such that surface free energy is minimum 
 
 
 
+<!-- Start of picture text -->
+-- agsurface  -0<br>dA<br><!-- End of picture text -->
+
 and thus one obtains a constraint for the electrostatic free energy 
 
 
+
+<!-- Start of picture text -->
+age1<br>y=-.<br>aA<br><!-- End of picture text -->
 
 This theory, known as the ‘dressed micelle’ model, allows reasonable prediction of surface charge when the aggregation number and interfacial tension are known. 
 
@@ -837,6 +855,9 @@ If the microstructure is locally cylindrical, only one _R,_ radius of cylinders 
 If the structure is locally lamellar, only one thickness _T_ of the bilayer satisfies packing constraints 
 
 
+
+<!-- Start of picture text -->
+2v<br>T=-.  2<br><!-- End of picture text -->
 
 In case of asphericity, the Talmon and Prager (1978) model or the cubic random cell model (see 06.2) (De Gennes and Taupin 1982) could be used. These models have been designed to describe Winsor **I11** microemulsions with equal amounts of water and oil and vanishing surfactant concentration. It is therefore not surprising that these models do not compare to the scattering of ternary systems: Talmon-Prager cannot account for any peak in the scattering and the predicted position of the scattering 
 

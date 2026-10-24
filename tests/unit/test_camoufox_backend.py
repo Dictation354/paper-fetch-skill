@@ -2695,7 +2695,11 @@ def managed_camoufox(monkeypatch, tmp_path):
             multiversion.set_active(path.relative_to(root).as_posix())
         return path
 
+    clock = [1_000_000.0]
+    monkeypatch.setattr(preparation, "time", SimpleNamespace(time=lambda: clock[0]))
     return SimpleNamespace(
+        clock=clock,
+        check_path=root / preparation.UPDATE_CHECK_FILENAME,
         root=root,
         pkgman=pkgman,
         multi=multiversion,
@@ -2712,7 +2716,7 @@ def test_managed_camoufox_missing_installs_and_latest_reuses(managed_camoufox, c
     first = preparation.prepare_camoufox_managed_runtime()
     assert first.valid and first.version == env.latest.version.full_string
     assert preparation.prepare_camoufox_managed_runtime() == first
-    assert env.query.call_count == 2
+    assert env.query.call_count == 1
     env.download.assert_called_once()
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -2745,23 +2749,181 @@ def test_managed_camoufox_defaults_to_prerelease_and_migrates_active(
     assert env.query.call_args.kwargs == {"include_prerelease": True}
     assert env.pkgman.camoufox_path(download_if_missing=False) == result.runtime_path
     assert preparation.prepare_camoufox_managed_runtime() == result
-    assert env.query.call_count == 2
+    assert env.query.call_count == 1
     env.download.assert_called_once()
 
 
-def test_managed_camoufox_new_prerelease_updates_next_call(managed_camoufox):
+def test_managed_camoufox_new_prerelease_updates_after_interval(managed_camoufox):
     env = managed_camoufox
     env.multi.CONFIG_FILE.unlink()
     env.old.is_prerelease = env.latest.is_prerelease = True
     env.query.return_value = [env.old]
     first = preparation.prepare_camoufox_managed_runtime()
     env.query.return_value = [env.latest, env.old]
+    assert preparation.prepare_camoufox_managed_runtime() == first
+    env.clock[0] += 86400
     second = preparation.prepare_camoufox_managed_runtime()
     assert first.version == env.old.version.full_string
     assert second.version == env.latest.version.full_string
     assert first.runtime_path.is_dir()
     assert env.multi.load_config()["active_version"] == second.active_spec
     assert env.download.call_count == 2
+
+
+def test_managed_camoufox_interval_runs_from_completion_without_sliding(
+    managed_camoufox, capsys
+):
+    env = managed_camoufox
+
+    def query(*_args, **_kwargs):
+        env.clock[0] += 90
+        return [env.latest]
+
+    env.query.side_effect = query
+    first = preparation.prepare_camoufox_managed_runtime()
+    record = env.check_path.read_bytes()
+    assert json.loads(record)["checked_at"] == env.clock[0]
+    assert json.loads(record)["python_package_version"] == preparation.distribution_version("camoufox")
+    capsys.readouterr()
+    env.multi.COMPAT_FLAG.unlink()
+    for elapsed in (1, 43200, 86399):
+        env.clock[0] = json.loads(record)["checked_at"] + elapsed
+        assert preparation.prepare_camoufox_managed_runtime() == first
+        assert env.check_path.read_bytes() == record
+    assert capsys.readouterr().err == ""
+    assert env.multi.COMPAT_FLAG.exists()
+    env.query.assert_called_once()
+    env.clock[0] += 1
+    assert preparation.prepare_camoufox_managed_runtime() == first
+    assert env.query.call_count == 2
+    assert json.loads(env.check_path.read_text())["checked_at"] == env.clock[0]
+
+
+@pytest.mark.parametrize("failure", ["query", "download"])
+def test_managed_camoufox_failed_update_observes_interval(managed_camoufox, failure):
+    env = managed_camoufox
+    env.install_local()
+    failed = env.query if failure == "query" else env.download
+
+    def fail(*_args, **_kwargs):
+        env.clock[0] += 60
+        raise OSError("offline")
+
+    failed.side_effect = fail
+    result = preparation.prepare_camoufox_managed_runtime()
+    completed = env.clock[0]
+    assert json.loads(env.check_path.read_text())["checked_at"] == completed
+    env.clock[0] += 86399
+    assert preparation.prepare_camoufox_managed_runtime() == result
+    failed.assert_called_once()
+    env.clock[0] = completed + 86400
+    assert preparation.prepare_camoufox_managed_runtime() == result
+    assert failed.call_count == 2
+
+
+@pytest.mark.parametrize("broken", ["missing", "executable", "metadata", "incompatible"])
+def test_managed_camoufox_invalid_runtime_bypasses_interval(managed_camoufox, broken):
+    env = managed_camoufox
+    first = preparation.prepare_camoufox_managed_runtime()
+    if broken == "missing":
+        import shutil
+
+        shutil.rmtree(first.runtime_path)
+    elif broken == "executable":
+        first.executable_path.unlink()
+    elif broken == "metadata":
+        (first.runtime_path / "version.json").write_text("{")
+    else:
+        (first.runtime_path / "version.json").write_text(json.dumps(
+            env.pkgman.AvailableVersion(
+                env.pkgman.Version("beta.29", "152.0.4"), "https://example.test/old.zip", False
+            ).to_metadata()
+        ))
+    assert preparation.prepare_camoufox_managed_runtime().valid
+    assert env.query.call_count == 2
+    assert env.download.call_count == 2
+
+
+@pytest.mark.parametrize("changed", ["channel", "pinned", "pinned_sha", "package"])
+def test_managed_camoufox_configuration_change_bypasses_interval(
+    managed_camoufox, monkeypatch, changed
+):
+    env = managed_camoufox
+    env.query.return_value = [env.old]
+    preparation.prepare_camoufox_managed_runtime()
+    config = env.multi.load_config()
+    if changed == "package":
+        monkeypatch.setattr(preparation, "distribution_version", lambda _name: "new-package")
+    else:
+        config[changed] = {
+            "channel": "official/prerelease",
+            "pinned": env.latest.version.full_string,
+            "pinned_sha": "new-sha",
+        }[changed]
+        env.multi.save_config(config)
+    env.query.return_value = [env.latest]
+    env.latest.is_prerelease = changed == "channel"
+    assert preparation.prepare_camoufox_managed_runtime().valid
+    assert env.query.call_count == 2
+    record = json.loads(env.check_path.read_text())
+    if changed == "package":
+        assert record["python_package_version"] == "new-package"
+    else:
+        assert record[changed] == config[changed]
+
+
+def test_managed_camoufox_changed_pin_reuses_local_without_refreshing_record(
+    managed_camoufox, monkeypatch
+):
+    env = managed_camoufox
+    env.install_local()
+    preparation.prepare_camoufox_managed_runtime()
+    record = env.check_path.read_bytes()
+    config = env.multi.load_config()
+    config["pinned"] = env.old.version.full_string
+    env.multi.save_config(config)
+    monkeypatch.setattr(preparation, "distribution_version", lambda _name: "new-package")
+    env.clock[0] += 86400
+    assert preparation.prepare_camoufox_managed_runtime().version == env.old.version.full_string
+    assert env.check_path.read_bytes() == record
+    env.query.assert_called_once()
+
+
+@pytest.mark.parametrize("payload", [
+    None, "{", "[]", "{}", '{"checked_at": 1}',
+    "future", "string", "null", "bool", "nan", "infinity", "negative", "huge", "missing-key",
+])
+def test_managed_camoufox_invalid_check_record_triggers_query(managed_camoufox, payload):
+    env = managed_camoufox
+    preparation.prepare_camoufox_managed_runtime()
+    record = json.loads(env.check_path.read_text())
+    timestamps = {
+        "future": env.clock[0] + 1, "string": str(env.clock[0]), "null": None,
+        "bool": True, "nan": float("nan"), "infinity": float("inf"),
+        "negative": -1, "huge": 10**400,
+    }
+    if payload is None:
+        env.check_path.unlink()
+    elif payload in timestamps:
+        record["checked_at"] = timestamps[payload]
+        env.check_path.write_text(json.dumps(record))
+    elif payload == "missing-key":
+        record.pop("pinned")
+        env.check_path.write_text(json.dumps(record))
+    else:
+        env.check_path.write_text(payload)
+    assert preparation.prepare_camoufox_managed_runtime().valid
+    assert env.query.call_count == 2
+
+
+def test_managed_camoufox_check_record_write_failure_preserves_result(
+    managed_camoufox, monkeypatch, capsys
+):
+    env = managed_camoufox
+    monkeypatch.setattr(preparation, "_atomic_write_json", mock.Mock(side_effect=OSError("read-only")))
+    assert preparation.prepare_camoufox_managed_runtime().valid
+    assert "Could not save Camoufox update check: read-only" in capsys.readouterr().err
+    assert not env.check_path.exists()
 
 
 def test_managed_camoufox_prerelease_filters_incompatible(managed_camoufox):
@@ -2866,6 +3028,11 @@ def test_managed_camoufox_failure_uses_only_valid_local_runtime(
         with pytest.raises(RuntimeError, match="Camoufox browser preparation failed"):
             preparation.prepare_camoufox_managed_runtime()
         assert not preparation.probe_camoufox_managed_runtime().valid
+        assert json.loads(env.check_path.read_text())["checked_at"] == env.clock[0]
+        # An unsuccessful check cannot delay preparation without a valid browser.
+        with pytest.raises(RuntimeError, match="Camoufox browser preparation failed"):
+            preparation.prepare_camoufox_managed_runtime()
+        assert env.query.call_count == 2
 
 
 def test_managed_camoufox_repairs_only_broken_target(managed_camoufox):
@@ -2896,7 +3063,7 @@ def test_managed_camoufox_rejects_config_without_reset(managed_camoufox, payload
 
 
 @pytest.mark.parametrize(
-    "unsafe", ["active", "target", "config", "lock", "flag", "metadata", "executable"]
+    "unsafe", ["active", "target", "config", "lock", "flag", "check", "metadata", "executable"]
 )
 def test_managed_camoufox_rejects_unsafe_paths(managed_camoufox, tmp_path, unsafe):
     env = managed_camoufox
@@ -2914,6 +3081,7 @@ def test_managed_camoufox_rejects_unsafe_paths(managed_camoufox, tmp_path, unsaf
             "config": env.multi.CONFIG_FILE,
             "lock": env.root / ".paper-fetch-prepare.lock",
             "flag": env.multi.COMPAT_FLAG,
+            "check": env.check_path,
             "metadata": target / "version.json",
             "executable": target / "camoufox-bin",
         }
@@ -2952,6 +3120,7 @@ def test_managed_camoufox_concurrent_preparation_installs_once(managed_camoufox)
     assert results[0] == results[1]
     assert all(result.valid for result in results)
     env.download.assert_called_once()
+    env.query.assert_called_once()
 
 
 def test_managed_camoufox_static_status_never_prepares(managed_camoufox):
@@ -3059,6 +3228,9 @@ def test_managed_camoufox_pin_sha_does_not_reuse_different_asset(managed_camoufo
 
     env = managed_camoufox
     old_path = env.install_local()
+    env.query.return_value = [env.old]
+    preparation.prepare_camoufox_managed_runtime()
+    env.query.reset_mock()
     archive = env.download.side_effect(io.BytesIO(), "https://example.test/old.zip")
     env.old.sha256 = hashlib.sha256(archive.getvalue()).hexdigest()
     env.multi.save_config(
@@ -3073,6 +3245,7 @@ def test_managed_camoufox_pin_sha_does_not_reuse_different_asset(managed_camoufo
     assert result.valid and result.runtime_path.name.endswith(f"-{env.old.sha256[:8]}")
     assert env.multi.load_config()["pinned_sha"] == env.old.sha256
     env.download.assert_called_once()
+    env.query.assert_called_once()
     assert old_path.is_dir()
 
 
@@ -3187,3 +3360,22 @@ def test_managed_camoufox_cancellation_does_not_fall_back(managed_camoufox, stag
     with pytest.raises(RequestCancelledError):
         preparation.prepare_camoufox_managed_runtime()
     assert preparation.probe_camoufox_managed_runtime().runtime_path == path
+    assert not env.check_path.exists()
+
+
+@pytest.mark.parametrize("stage", ["query", "download"])
+def test_managed_camoufox_cancelled_update_keeps_previous_check_record(
+    managed_camoufox, stage
+):
+    from paper_fetch.http import RequestCancelledError
+
+    env = managed_camoufox
+    env.query.return_value = [env.old]
+    preparation.prepare_camoufox_managed_runtime()
+    record = env.check_path.read_bytes()
+    env.clock[0] += 86400
+    env.query.return_value = [env.latest]
+    (env.query if stage == "query" else env.download).side_effect = RequestCancelledError("cancelled")
+    with pytest.raises(RequestCancelledError):
+        preparation.prepare_camoufox_managed_runtime()
+    assert env.check_path.read_bytes() == record

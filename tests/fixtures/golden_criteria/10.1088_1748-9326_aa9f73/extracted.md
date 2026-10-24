@@ -29,9 +29,7 @@ View the <u>article online</u> for updates and enhancements.
 
 - <u>Urban climate effects on extreme temperatures in Madison, Wisconsin, USA</u> Jason Schatz and Christopher J Kucharik 
 
-- <u>Reduced Urban Heat Island intensity</u> 
-
-- <u>under warmer conditions</u> 
+- <u>Reduced Urban Heat Island intensity under warmer conditions</u> 
 
 - Anna A Scott, Darryn W Waugh and Ben F Zaitchik 
 
@@ -339,7 +337,7 @@ Lei Zhao https://orcid.org/0000-0002-6481-3786 Kristie L Ebi https://orcid.org/0
 
 - Anderson G B and Bell M L 2011 Heat waves in the United States: mortality risk during heat waves and effect modification by heat wave characteristics in 43 US communities _Environ. Health Persp._ **119** 210 
 
-Arnfield A J 2003 Two decades of urban climate research: a review of turbulence, exchanges of energy and water, and the urban heat Island _Int. J. Climatol._ **23** 1–26 
+- Arnfield A J 2003 Two decades of urban climate research: a review of turbulence, exchanges of energy and water, and the urban heat Island _Int. J. Climatol._ **23** 1–26 
 
 - Barriopedro D, Fischer E M, Luterbacher J, Trigo R M and 
 
@@ -371,7 +369,7 @@ extremes in the United States _Geophys. Res. Lett._ **37** L15701
 
 - Fuquay J W 1981 Heat-stress as it affects animal production _J. Anim. Sci._ **52** 164–74 
 
-Gao Y, Fu J S, Drake J B, Liu Y and Lamarque J F 2012 Projected changes of extreme weather events in the eastern United States based on a high resolution climate modeling system _Environ. Res. Lett._ **7** 044025 
+- Gao Y, Fu J S, Drake J B, Liu Y and Lamarque J F 2012 Projected changes of extreme weather events in the eastern United States based on a high resolution climate modeling system _Environ. Res. Lett._ **7** 044025 
 
 Georgescu M, Morefield P E, Bierwagen B G and Weaver C P 2014 Urban adaptation can roll back warming of emerging megapolitan regions _Proc. Natl Acad. Sci. USA_ **111** 2909–14 
 
@@ -381,19 +379,23 @@ Heilig G K 2012 _World Urbanization Prospects: The 2011 Revision_ (New York: Uni
 
 Horton D E, Johnson N C, Singh D, Swain D L, Rajaratnam B and Diffenbaugh N S 2015 Contribution of changes in atmospheric circulation patterns to extreme temperature trends _Nature_ **522** 465 
 
-- Horton R M, Mankin J S, Lesk C, Coffel E and Raymond C 2016 A review of recent advances in research on extreme heat events _Curr. Clim. Change Rep._ **2** 242–59 
+Horton R M, Mankin J S, Lesk C, Coffel E and Raymond C 2016 A review of recent advances in research on extreme heat events _Curr. Clim. Change Rep._ **2** 242–59 
 
 Houser T, Hsiang S, Kopp R and Larsen K 2015 _Economic Risks of Climate Change: An American Prospectus_ (New York: Columbia University Press) 
 
-Hsiang S M, Meng K C and Cane M A 2011 Civil conflicts are associated with the global climate _Nature_ **476** 438–41 
+Hsiang S M, Meng K C and Cane M A 2011 Civil conflicts are 
 
-Huang C R, Barnett A G, Wang X M, Vaneckova P, FitzGerald G and Tong S L 2011 Projecting future heat-related mortality under climate change scenarios: a systematic review _Environ. Health Persp._ **119** 1681–90 
+associated with the global climate _Nature_ **476** 438–41 
+
+- Huang C R, Barnett A G, Wang X M, Vaneckova P, FitzGerald G and Tong S L 2011 Projecting future heat-related mortality under climate change scenarios: a systematic review _Environ. Health Persp._ **119** 1681–90 
 
 Hurrell J W _et al_ 2013 The community earth system model a framework for collaborative research _Bull. Am. Meteorol. Soc._ **94** 1339–60 
 
 Isaac M and van Vuuren D P 2009 Modeling global residential sector energy demand for heating and air conditioning in the context of climate change _Energ. Policy_ **37** 507–21 
 
-- Klinenberg E 2015 _Heat Wave: A Social Autopsy of Disaster in Chicago_ (Chicago, IL: University of Chicago Press) 
+- Klinenberg E 2015 _Heat Wave: A Social Autopsy of Disaster in_ 
+
+_Chicago_ (Chicago, IL: University of Chicago Press) 
 
 - Kovats R S and Ebi K L 2006 Heatwaves and public health in Europe _Eur. J. Public Health_ **16** 592–9 
 

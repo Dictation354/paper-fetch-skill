@@ -6,7 +6,7 @@ source: "royalsocietypublishing_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 7574
+token_estimate: 8752
 ---
 
 # Quantal phase factors accompanying adiabatic changes
@@ -49,9 +49,15 @@ The state _\ ft(t))_ of the system evolves according to Schrodinger’s equation
 
 
 
+<!-- Start of picture text -->
+dw ) \ w» = i*|f<o>-  (!)<br><!-- End of picture text -->
+
 At any instant, the natural basis consists of the eigenstates |w(f?)) (assumed discrete) of _H(R)_ for _R_ = _R{t),_ that satisfy 
 
 
+
+<!-- Start of picture text -->
+J?(«) |»(«)> = Bn(*) |»(*)>,  (2)<br><!-- End of picture text -->
 
 with energies _En(R)._ This eigenvalue equation implies no relation between the phases of the eigenstates |w(JR)) at different _R._ For present purposes any (differen­ tiable) choice of phases can be made, provided |w(.R)} is single-valued in a parameter domain that includes the circuit C. 
 
@@ -61,11 +67,17 @@ Thus can be written as
 
 
 
+<!-- Start of picture text -->
+|^(0> = exp { ^ J od^ ( « ( n ) ) exp(iyn(0)|n(^W ».  (3)<br><!-- End of picture text -->
+
 The first exponential is the familiar dynamical phase factor. In this paper the object of attention is the second exponential. The crucial point will be that its phase _y n(t)_ is _non-integrable; yn_ cannot be written as a function of _R_ and in particular is not single-valued under continuation around a circuit, i.e. _yn( T_ # yn(0). 
 
 The function _yn(t)_ is determined by the requirement that satisfy Schro­ dinger’s equation, and direct substitution of (3) into (1) leads to 
 
 
+
+<!-- Start of picture text -->
+y n(t) = i(n(R(t))\ VRv(R(t)))'R(t). (4)<br><!-- End of picture text -->
 
 Downloaded from royalsocietypublishing.​org/​rspa/​article-pdf/​392/​1802/​45/​65511/​rspa.​1984.​0023.​pdf by Peking University user on 19 September 2026 
 
@@ -75,9 +87,15 @@ Downloaded from royalsocietypublishing.​org/​rspa/​article-pdf/​392/​1
 
 
 
+<!-- Start of picture text -->
+\f(T)}  = exp(ir „(C))exp{-=±  P d f  £„(«(())} |f(0)>,  (5)<br><!-- End of picture text -->
+
 where the _geometrical phase change_ is 
 
 
+
+<!-- Start of picture text -->
+y„(C) = i | <»(R)|  Vs n(R))-dR. (6)<br><!-- End of picture text -->
 
 Thus _yn(_ C) is given by a circuit integral in parameter space and is independent of how the circuit is traversed (provided of course that this is slow enough for the adiabatic approximation to hold). The normalization of | implies that _(n\WRn)_ is imaginary, which guarantees that _yn_ is real. 
 
@@ -85,19 +103,37 @@ Direct evaluation of jV^w) requires a locally single-valued basis for | and can 
 
 
 
+<!-- Start of picture text -->
+7JC)  = - I m J J  dS- Vx( n\Vn ), (la)<br><!-- End of picture text -->
 
 
 
+<!-- Start of picture text -->
+=— ImJ*J d5 -(Vn| x |Vn), (76)<br><!-- End of picture text -->
+
+
+
+<!-- Start of picture text -->
+=  — Im  IT  d  S  -2 (Vn|  (7c)x  |Vn>,<br>JjC  m^n<br>R  space and the exclusion in the summation is<br> being imaginary. The off-diagonal elements are obtained from<br>(m\Vn) = (m\VH \n)/(En- E m), m ^ n . (8)<br><!-- End of picture text -->
 
 where diS" denotes area element in _R_ space and the exclusion in the summation is justified by _(ji\ Vn)_ being imaginary. The off-diagonal elements are obtained from (2) as 
 
 
 
+<!-- Start of picture text -->
+(m\Vn) = (m\VH \n)/(En- E m), m ^ n .<br>Thus  yn  can be expressed as<br>/»  f*<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+r«(C)  = -  d (9)<br>J J  c<br><!-- End of picture text -->
 
 where 
 
 
+
+<!-- Start of picture text -->
+,/  t d \  _T™ V  (n(R)\Vs 6 (R)\m(R))x(m(R)\VRH(R)\n(R))<br>(10)<br>^ }  rkn  (Em( R ) - E n(R)f<br><!-- End of picture text -->
 
 Obviously _yn(_ C) is zero for a circuit which retraces itself and so encloses no area. 
 
@@ -123,6 +159,9 @@ The energy denominators in (10) show that if the circuit C lies close to a point
 
 
 
+<!-- Start of picture text -->
+V  IP)  <  + (R)\Va(R*)\- (R) )x(-(R)\Vf i(R*<br>v+{ K ) - i m  {E+{R)-E_(R))* •  (  j<br><!-- End of picture text -->
+
 Obviously _V_(R) = - V+(R),_ so that y_(C) = — y+(C). 
 
 Downloaded from royalsocietypublishing.​org/​rspa/​article-pdf/​392/​1802/​45/​65511/​rspa.​1984.​0023.​pdf by Peking University user on 19 September 2026 
@@ -133,9 +172,15 @@ Without essential loss of generality we can take _=_ 0 and _R* =_ 0. _H(R)_ can 
 
 
 
+<!-- Start of picture text -->
+Z X - i Y<br>(  12 )<br>£ ( * > = 4 X + iY - Z<br><!-- End of picture text -->
+
 The eigenvalues are 
 
 
+
+<!-- Start of picture text -->
+E+(R) = -E_(R)  = ±(X2 +  Y2 + Z2)t = (13)<br><!-- End of picture text -->
 
 Thus the degeneracy is an isolated point at which all three parameters vanish. This illustrates an old result of Von Neumann & Wigner (1929): for generic Hamiltonians (Hermitian matrices), it is necessary to vary three parameters in order to make a degeneracy occur accidentally, that is, not on account of symmetry. Alternatively stated, degeneracies have co-dimension three. 
 
@@ -143,21 +188,36 @@ The form (12) was chosen to exploit the fact that
 
 
 
+<!-- Start of picture text -->
+VH =  iff,  (14)<br><!-- End of picture text -->
+
 where the components _ax , a Y, az_ of the vector operator _a_ are the Pauli spin matrices. When evaluating the matrix elements in (11) it greatly simplifies the calculations to take advantage of the isotropy of spin and temporarily rotate axes so that the _Z-_ axis points along _R,_ and to employ the following relations, which come from the commutation laws between the components of : 
 
 
+
+<!-- Start of picture text -->
+ax  | ± ) — | + )>  | ± ) — ± i | + X  az \±y — ± \ ±y. (15)<br><!-- End of picture text -->
 
 With these rotated axes, (11) gives 
 
 
 
+<!-- Start of picture text -->
+Vx+  = (Im<+ I  fir  I -><- I  fiz  I + »/2 & =  0,'j<br>Fr+ = (Im< + |a z |- > < - |S x l + » / 2^ = 0,  ()C)<br>Fz+ = Im< + |$ x | —> (—|S F |+ > =  1/ 2RK  j<br><!-- End of picture text -->
+
 Reverting to unrotated axes, we obtain 
 
 
 
+<!-- Start of picture text -->
+V+(R) = R / 2R3. (17)<br><!-- End of picture text -->
+
 Now use of (9) shows that the phase change y+(C) is the flux through C of the magnetic field of a monopole with strength — | located at the degeneracy. Thus we obtain the pleasant result, valid for the natural choice (12) of standard form for _H,_ that the geometrical phase factor associated with C is 
 
 
+
+<!-- Start of picture text -->
+exp (iy±(C)} = exp { + £i£?(C)},  (18)<br><!-- End of picture text -->
 
 where i2(C) is the _solid angle_ that C subtends at the degeneracy; _Q_ is, in a sense, a measure of the _view_ of the circuit as seen from the degeneracy. The phase factor is 
 
@@ -203,17 +263,29 @@ To evaluate the matrix elements we again temporarily rotate axes so that the Z-a
 
 
 
+<!-- Start of picture text -->
+(s^ + iSy) |w,s> = [s(s+  l ) - n  1)]1 |n+l,«>,'<br>(sx - i s Y)  |w,,s> = [>(s+  l ) - n  1)]1  l,s>, (23)<br>sz  |w,<s) =  n  |w,s>.<br><!-- End of picture text -->
+
 It is clear that only states with _m — n_ ± 1 are coupled with and _Vv_ are zero because they involve off-diagonal elements of To find , we make use of (23) to obtain 
 
 
+
+<!-- Start of picture text -->
+(n± l,s |s x |w,s> = |[s(s+ l)-w (w ± l)]i,  |<br>(n± 1,s|  sY |w,«)  = +  £i[s(s-f-  1)]*J<br><!-- End of picture text -->
 
 then (22) gives 
 
 
 
+<!-- Start of picture text -->
+Im<br>VZn  = ^2 KWI 5A'  \n +  1>  (n  + 1 |«F  \n) ~ (n \ SY \n  + 1) 11  ><br>+ (w|  sx  \n—  l)(w — 1|  sY \n) — (n\ 1 |){w— 1|  sx  |w>}<br>n<br>=  (25)<br><!-- End of picture text -->
+
 Reverting to unrotated axes, we obtain 
 
 
+
+<!-- Start of picture text -->
+Vn{B) = n B /B \ (26)<br><!-- End of picture text -->
 
 _yn{_ C) is the flux through C of the ‘ magnetic field ’ of a 
 
@@ -222,6 +294,9 @@ Now, use of (9) shows that monopole — _n_ phase factor is
 _n_ located at the origin of magnetic field space. Thus the geometrical 
 
 
+
+<!-- Start of picture text -->
+exP{i7n(c )} = exp { — mf2(C)},  (27)<br><!-- End of picture text -->
 
 where _Q{_ C) is the solid angle that C subtends at 0. Note that _yn_ depends only on the eigenvalue _n_ of the spin component along _B_ and not on the spin _s_ of the particle, so that _y n_ is insensitive to the strength + 1 of the degeneracy at _=_ 0. It follows from (27) that any phase change can be produced by varying _B_ round a suitable circuit. For fermions (half-integer a whole turn of _B_ (rotation through _2 k_ in a plane, giving _Q = 2 k )_ produces a phase factor — 1. In the special case _n_ this shows that the sign change of spinors on rotation and the sign change of wavefunctions round a degeneracy have the same mathematical origin. For bosons (integer _n),_ a whole turn of _B_ produces a phase factor + 1. To produce a sign change, 
 
@@ -237,15 +312,27 @@ The following experiment could be carried out to test the predictions embodied i
 
 
 
+<!-- Start of picture text -->
+1(6) =  cos2  (nn  1 — cos  6)). (28)<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+I wish to emphasize that this proposed experiment is different from those carried<br>out by Rauch  et  al.  (1975, 1978) and Werner  (1975) (see Silverman 1980) with<br>unpolarized  neutrons in a  constant  magnetic field. Those neutrons were not in an<br>eigenstate, and their phase changed dynamically, rather than geometrically, under<br>the Hamiltonian (20) (with  B  along  Z  and  a  replacing  s)  according to the evolution<br>operator<br>01  1  0<br>exp (— i  Ht/h)  =  exp ( — cos  \KBt 1  (29)<br>0  1 4- i sin 0  - 1<br><!-- End of picture text -->
 
 The sign changed whenever _\i<Bt_ was an odd multiple of _n,_ and this was interpreted on the basis of precession theory as corresponding to odd numbers of complete rotations about _B._ 
 
 
 
+<!-- Start of picture text -->
+5.  A h a r o n o v - B ohm e f f e c t<br><!-- End of picture text -->
+
 Consider a magnetic field consisting of a single line with flux For positions _R_ not on the flux line, the field is zero but there must be a vector potential _A(R)_ satisfying 
 
 
+
+<!-- Start of picture text -->
+A(R) dR = 0 , (30)<br><!-- End of picture text -->
 
 for circuits C threaded by the flux line. Aharonov & Bohm (1959) showed that in quantum mechanics such vector potentials have physical significance even though they correspond to zero field. I shall now show how their effect can be interpreted as a geometrical phase change of the type described in §2. 
 
@@ -263,19 +350,31 @@ Downloaded from royalsocietypublishing.​org/​rspa/​article-pdf/​392/​1
 
 
 
+<!-- Start of picture text -->
+H = H ( p , f - R ) , (31)<br><!-- End of picture text -->
+
 and the wavefunctions have the form _\Jrn{r — R)_ with energies independent of _R._ With non-zero flux, the states |w(i?)) satisfy 
 
 
 
+<!-- Start of picture text -->
+H(p-qA(r),  f-R)  |  n(R)) = En )>,  (32)<br><!-- End of picture text -->
+
 an equation whose exact solutions are obtained by multiplying _\Jrn_ by an appropriate Dirac phase factor, giving 
 
 
+
+<!-- Start of picture text -->
+<r|»(R)> = e x p { |P d r'-A (r')js M r —R).  (33)<br><!-- End of picture text -->
 
 These solutions are single-valued in r and (locally) in _R._ The energies are unaffected the vector potential. 
 
 Now let the box be transported round a circuit C threaded by the flux line; in this particular case it is not necessary that the transport be adiabatic. After com­ pletion of the circuit there will be a geometrical phase change that can be calculated from (6) and (33) by using 
 
 
+
+<!-- Start of picture text -->
+<«(R)|VS«(R)>=. f f f d 3r « ( r - R ) { ^ ^ ( R ) f „ ( r —R) + Vs ^„(r-R )}<br>= - i  qA(R)/h. (34)<br><!-- End of picture text -->
 
 Downloaded from royalsocietypublishing.​org/​rspa/​article-pdf/​392/​1802/​45/​65511/​rspa.​1984.​0023.​pdf by Peking University user on 19 September 2026 
 
@@ -286,6 +385,9 @@ M. V. Berry
 (The vanishing of the second term in braces follows from the normalization of _\Jrn.)_ Evidently in this example the analogy between Im<w|Vw) and a magnetic vector potential becomes a reality. Thus 
 
 
+
+<!-- Start of picture text -->
+r.(C) = |£ / i ( H ) - d  (35)<br><!-- End of picture text -->
 
 which shows that the phase factor is independent of _n,_ and also of C if this winds once round the flux line. The phase factor could be observed by interference between the particles in the transported box and those in a box which was not transported round the circuit. 
 
@@ -336,6 +438,9 @@ Wu, T. T. & Yang, C. N. 1975 _Phys. Rev._ D 12, 3845-3857.
 To show that y(C) is independent of the surface spanning C, it is necessary to prove that _V(R)_ (equation (10)) has zero divergence. This can be accomplished by expressing _V_ in terms of the vector Hermitian operator _B_ defined by 
 
 
+
+<!-- Start of picture text -->
+B = - i Z \ V n ) ( n \ . (Al)<br>n<br><!-- End of picture text -->
 
 From (8), the off-diagonal elements of _B_ are 
 

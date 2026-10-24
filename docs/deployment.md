@@ -67,6 +67,10 @@ paper-fetch-skill-windows-x86_64-setup.exe
 
 `pyproject.toml` 的大多数依赖保留兼容范围；browser/full extra 使用 `camoufox==0.5.8`，浏览器默认独立跟踪最新兼容 prerelease，Python 包不自动升级。`uv.lock` 固定普通开发和 CI 实际使用的版本；POSIX 离线构建不再对 Camoufox 增加单独的 lockfile 精确约束，而是读取依赖 wheelhouse 中唯一 Camoufox wheel 的 METADATA，验证安装后的 distribution 与该版本一致，并在 `offline-manifest.json` 的 `components.camoufox.python_package_version` 记录实际值。quality job 在其它静态门禁之前通过独立的 `Check lockfile freshness` 步骤执行 `uv lock --check`，项目版本、依赖声明或 lock metadata 的陈旧状态会直接令 CI 失败；后续 `uv sync --frozen` 只消费已验证的锁文件，不会在常规运行中重新选择版本。Dependabot 每周为 pip、npm 和 GitHub Actions 更新创建可跟进的 PR；普通 PR 继续由 `verify.yml` 对锁定依赖执行全 extras 漏洞审计。离线 wheelhouse/hash manifest 继续负责跨平台离线资产，不替代开发锁文件。
 
+PDF 的 `pdf/full` extras 协调使用 `PyMuPDF>=2,<3` 与 `pymupdf4llm>=2,<3`，
+开发锁定这两个包及其传递依赖 `pymupdf-layout` 均为 2.0；仅维护 2.x。
+转换调用、上游输出透传及资产落盘语义保持不变。
+
 HTML 提取依赖 trafilatura 暂限 `>=2.0,<2.3`，开发锁定 2.2.0。
 2.3.0 和 2.3.1 的 Markdown 转义会改写既有 `$...$` 公式中的下划线及表格引用；
 在线安装与离线构建沿用这一兼容上限，保留现有公式和表格输出契约。
@@ -90,7 +94,7 @@ core 缺少 browser extra 或指定 custom executable 时跳过托管更新。
 `camoufox fetch` 或首次生成指纹会按上游校验下载并写入 fpgen 包目录。
 进入完全离线环境前需以该目录可写的普通用户完成准备，再验证实际浏览器启动。
 
-CI 的 setup-uv 固定为 10.3.0 的完整 SHA。缓存使用该版本的 `auto` 事件策略，
+CI 的 setup-uv 固定为 10.3.2 的完整 SHA。缓存使用该版本的 `auto` 事件策略，
 并显式保留 `prune-cache: true`，避免跨主版本升级改变缓存清理行为。
 
 主包版本号同步清单：
@@ -147,7 +151,12 @@ xattr -dr com.apple.quarantine \
 Mach-O 结构，不等同于 Developer ID 签名或 Apple notarization。
 
 如果要在之后进入受限网络或离线环境，请在仍联网时预置并验证浏览器。普通运行时
-会在每次抓取请求开始时检查并准备 binary，也可以提前显式预置：
+会在每次抓取请求开始时进入 binary 准备逻辑；与 auth、preflight 和项目准备函数
+共享滚动 24 小时（86400 秒）检查记录，本地有效且未满间隔时直接复用。检查或
+更新失败也计时，跳过不延长间隔，取消不记为完成；缺失、损坏或不兼容时立即
+准备。渠道、pin/SHA 或 Camoufox Python 包版本变化后重新判断，有效本地 pin
+仍直接复用。记录缺失、损坏或时间戳在未来时重新检查，写入失败只报告 stderr。
+也可以提前显式预置：
 
 ```bash
 source ~/.local/share/paper-fetch-skill/activate-offline.sh
@@ -227,7 +236,7 @@ Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的
 - Linux / macOS 安装时会把通过 `PAPER_FETCH_OFFLINE_PYTHON_BIN` / `python3` 选中的解释器路径写入 `runtime/python-bin`，后续 `runtime/paper-fetch-python` 私有 launcher、CLI wrapper 和 MCP 都复用该解释器；`bin/` 不暴露通用 `python` wrapper，避免全局 PATH 前置后遮蔽用户自己的 Python
 - Windows 安装器固定使用包内 CPython 3.13.15 x64 embeddable runtime；版本、python.org URL 与官方 SHA-256 `d1f04d990aee1253d8569e8e5104e30fa9f5fa830899f14843448872d936a2cf` 均来自 `installer/manifest.json`，构建器在解压前校验，目标机不需要预装 Python
 - Linux 构建阶段用临时 wheelhouse 把项目和依赖安装进 `runtime/site-packages`，然后只把安装后的 runtime、`bin/` 启动器、公式工具和 skill 放进自解压 `.sh` payload；目标机安装阶段不运行 pip，不包含源码树、`dist/` 或 `wheelhouse/`
-- Playwright 和 Camoufox Python 依赖随 Linux / macOS `runtime/site-packages` 和 Windows embedded runtime 分发；Camoufox 浏览器 binary 不随包分发，核心安装和静态诊断不下载，可选向导仅在用户明确选择时下载；fetch 在每次请求开始时自动补全或更新 managed runtime，auth 和 preflight 在启动前准备。未固定版本时检查所选渠道最新兼容版本，固定时只补全对应版本；更新失败且本地版本有效时提示并继续使用，否则报告准备失败。显式 binary 由用户维护。进入受限网络或离线环境前应在联网阶段按 [浏览器预置说明](browser-backends.md#安装) 准备 prerelease 和 fpgen，并运行 preflight 做启动/provider 验证。当前验证尚未覆盖预置后真正断网的 Camoufox launch，因此不能宣称完整离线浏览器支持
+- Playwright 和 Camoufox Python 依赖随 Linux / macOS `runtime/site-packages` 和 Windows embedded runtime 分发；Camoufox 浏览器 binary 不随包分发，核心安装和静态诊断不下载，可选向导仅在用户明确选择时下载；fetch 在每次请求开始时自动补全或更新 managed runtime，auth 和 preflight 在启动前准备；这些入口与项目准备函数共享滚动 24 小时检查间隔（失败也计时，跳过不刷新，取消不计时），本地无效时立即准备。未固定版本且满间隔时检查所选渠道最新兼容版本，固定时只补全对应版本；更新失败且本地版本有效时提示并继续使用，否则报告准备失败。显式 binary 由用户维护。进入受限网络或离线环境前应在联网阶段按 [浏览器预置说明](browser-backends.md#安装) 准备 prerelease 和 fpgen，并运行 preflight 做启动/provider 验证。当前验证尚未覆盖预置后真正断网的 Camoufox launch，因此不能宣称完整离线浏览器支持
 - Linux `.sh` payload 不包含仓库源码快照和 `tests/` 目录；离线安装目标是运行已打包工具，不在目标机执行项目测试
 - Linux、macOS、Windows 离线包都携带原生 texmath 0.13.3，分别位于 `formula-tools/bin/texmath` 和 `formula-tools/bin/texmath.exe`，并将它作为首选公式后端；`mathml-to-latex>=1.8.0,<2.0.0` 和随 Playwright 分发的 Node 作为二级转换回退。公式工具和离线包同时携带固定为 4.1.3 的 MathJax、TeX 字库、mhchem 与 bbm 字形扩展，预载 `bbm`、`textcomp` 及既有扩展，供源 TeX 与 MathML 转换结果的编译／排版校验使用。LitRoot 提交由 `scripts/sync_mathjax_engine.py /path/to/LitRoot` 生成的引擎副本；`--check`、副本摘要测试和独立检查器阻止内容漂移。`src/paper_fetch/resources/formula` 是 Node manifest、lockfile 和转换脚本的唯一源码位置；checkout runtime 直接引用它，Python 安装器和离线构建将它暂存到 `formula-tools`。lockfile 解析上述固定 MathJax 资源、`mathml-to-latex` 1.8.0 及其实际传递依赖，unit test 会拒绝声明或解析结果漂移。目标机不编译 texmath，也不运行 `npm install`。CI / release 公式构建固定使用 `haskell-actions/setup` v2.12.1 的完整 SHA、GHC 9.14.1 和 Cabal 3.18.1.0。macOS 构建会把非系统 Mach-O dylib 复制到 `formula-tools/lib`，用 `@rpath` / `@loader_path` 重写引用，并对 texmath 与随包 dylib 做 ad-hoc codesign
 - Linux / macOS 会配置安装目录内 `image-tools` 作为图片转换工具查找目录；离线构建不会把构建机 PATH 上的 Ghostscript/libvips 符号链接固化进包内。运行时找到 Ghostscript 时可转 EPS，找到 libvips 时可转 TIFF；缺少对应工具时只影响 AMS `Download Figure` 源图转换，网页 JPG/PNG 候选仍可回退

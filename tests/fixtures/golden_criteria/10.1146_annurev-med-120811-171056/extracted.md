@@ -5,16 +5,14 @@ source: "annualreviews_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 14192
+token_estimate: 14190
 ---
 
 # Downloaded from www.annualreviews.org. Peking University (ar-387953) IP: 162.105.199.211 On: Sat, 23 May 2026 13:40:41
 
 # **Further** 
 
-###### ANNUAL 
-
-REVIEWS 
+###### ANNUAL REVIEWS 
 
 Click here for quick links to Annual Reviews content online, including: 
 
@@ -34,9 +32,13 @@ Human Genome Sequencing Center, Baylor College of Medicine, Houston, Texas 77030
 
 Annu. Rev. Med. 2014. 65:33–48 
 
-First published online as a Review in Advance on November 21, 2013 The _Annual Review of Medicine_ is online at med.annualreviews.org 
+First published online as a Review in Advance on November 21, 2013 
 
-This article’s doi: 10.1146/annurev-med-120811-171056 Copyright _⃝_ c 2014 by Annual Reviews. All rights reserved 
+The _Annual Review of Medicine_ is online at med.annualreviews.org 
+
+This article’s doi: 10.1146/annurev-med-120811-171056 
+
+Copyright _⃝_ c 2014 by Annual Reviews. All rights reserved 
 
 ### **Keywords** 
 
@@ -44,7 +46,7 @@ next-generation sequencing, molecular markers, somatic mutation, targeted therap
 
 ### **Abstract** 
 
-For a decade, the technologies behind DNA sequencing have improved rapidly in cost reduction and speed. Sequencing in large populations of cancer patients is leading to dramatic advances in our understanding of the cancer genome. The wide variety of cancer types sequenced and analyzed using these technologies has revealed many novel fundamental <u>genetic mechanisms driving cancer initiation, progression, and mainte-</u> nance. We have deepened our understanding of the signaling pathways, demonstrating disruption in epigenetic regulation and destabilization of the splicing machinery. The molecular mechanisms of resistance to targeted therapies are being elucidated for the first time. The translation of genome-scale variation into clinically actionable information is still in its infancy; nevertheless, insights from sequencing studies have led to the discovery of a variety of novel diagnostic biomarkers and therapeutic targets. Here, we review recent advances in cancer genomics and discuss what the new findings have taught us about cancer biology and, more importantly, how these new findings guide more effective diagnostic and treatment strategies. 
+For a decade, the technologies behind DNA sequencing have improved rapidly in cost reduction and speed. Sequencing in large populations of cancer patients is leading to dramatic advances in our understanding of the cancer genome. The wide variety of cancer types sequenced and analyzed using these technologies has revealed many novel fundamental genetic mechanisms driving cancer initiation, progression, and maintenance. We have deepened our understanding of the signaling pathways, demonstrating disruption in epigenetic regulation and destabilization of the splicing machinery. The molecular mechanisms of resistance to targeted therapies are being elucidated for the first time. The translation of genome-scale variation into clinically actionable information is still in its infancy; nevertheless, insights from sequencing studies have led to the discovery of a variety of novel diagnostic biomarkers and therapeutic targets. Here, we review recent advances in cancer genomics and discuss what the new findings have taught us about cancer biology and, more importantly, how these new findings guide more effective diagnostic and treatment strategies. 
 
 _33_ 
 
@@ -54,11 +56,13 @@ In 2008, 7.6 million people died of cancer— 13% of all deaths worldwide. The n
 
 **Somatic mutations:** mutations that occur in the tumor cell but not in the germ cell of the body 
 
-Today cancer is recognized as a disease of the genome; however, recognition of that fact was slow in coming. In spite of the publication of the central dogma of molecular biology, which elucidated the flow of biological information from DNA to RNA to protein, in 1958 (1), not until 1973 did the first concrete hints at the genetic underpinnings of cancer appear. In that year, Dr. Janet Rowley, studying chronic myeloid leukemia, proposed a link between a specific chromosomal translocation, the Philadelphia chromosome, and a particular cancer type (2). Almost 10 years later in 1982, Reddy and colleagues found a single point Supplemental Material mutation changing guanosine to thymidine 
+Today cancer is recognized as a disease of the genome; however, recognition of that fact was slow in coming. In spite of the publication of the central dogma of molecular biology, which elucidated the flow of biological information from DNA to RNA to protein, in 1958 (1), not until 1973 did the first concrete hints at the genetic underpinnings of cancer appear. In that year, Dr. Janet Rowley, studying chronic myeloid leukemia, proposed a link between a specific chromosomal translocation, the Philadelphia chromosome, and a particular cancer type (2). Almost 10 years later in 1982, Reddy and colleagues found a single point mutation changing guanosine to thymidine 
+
+Supplemental Material 
 
 ### **SEQUENCING** 
 
-Whole-exome sequencing: Genomic DNA is enriched using oligonucleotide probes complementary to portions of the genome encoding proteins. Sequencing only the coding portion of the <u>genome</u> focuses the effort to 1–2% of the <u>genome</u> and is more cost-effective, requiring the generation of only 6–9 billion bases of sequence. 
+Whole-exome sequencing: Genomic DNA is enriched using oligonucleotide probes complementary to portions of the genome encoding proteins. Sequencing only the coding portion of the genome focuses the effort to 1–2% of the genome and is more cost-effective, requiring the generation of only 6–9 billion bases of sequence. 
 
 Whole-genome sequencing: Unbiased sequencing of the whole genome. In the context of cancer genome sequencing, this requires the generation of 90–180 billion bases from the tumor and 90 billion bases from the patient’s normal DNA. 
 
@@ -108,11 +112,7 @@ _www.annualreviews.org • Genomic Sequencing for Cancer 35_
 
 
 <!-- Start of picture text -->
-1,000<br>100<br>10<br>1<br>0.1<br>0.01<br>Pediatric cancers Adult cancers<br>AML ALL AML Throid Cy CRC MSS Cervical C Melanoma CRC MSI<br>Number of somatic mutations per MB (Log) atoblastomaHep endEpmomay harCranioiomapngy Intracranial GCT Wilm’s tumor Chromohobe renal cell Cp Breast invasive C rade liomaLow-g Prostate adeno C Glioblastoma multiforme Endometrial MSS stadeno COvarian serous cy Renal papillar cell Cy Renal clear cell C Hepatocellular C Pancreatic adeno C H&N squamous cell C Stomach adeno C Bladder urothelial C Lung adeno C Lung  squamous cell C Endometrial MSI CRC MSS POLE Endometrial MSS POLE<br><!-- End of picture text -->
-
-##### **Figure 2** 
-
-Frequencies of point mutations in different cancers. Each black dot represents a single patient’s tumor mutation frequency as determined through whole-exome sequencing. The pediatric cancers are shaded in light blue and adult cancers are shaded in dark blue. All data are from primary tumors prior to the initiation of therapy. Only non-silent mutations (missense, nonsense, frameshift, and splice site) are tallied. Cancers are arranged left to right in order of increasing median mutation frequency. Red horizontal lines within each cluster of points indicate median value of the mutation frequency of each tumor type. Abbreviations: ALL, acute lymphoblastic leukemia; AML, acute myeloid leukemia; C, carcinoma; GCT, germ cell tumor; CRC, colorectal carcinoma; MSI, microsatellite instability; H&N, head and neck; MSS, microsatellite stable; POLE, patients with somatic mutation in the nuclease (proofreading) domain of the _POLE_ gene. The outlier in the low-grade glioma patient with _>_ 100 mutations per Mb is also _POLE_ mutated. The sequencing data for all the pediatric tumors, CRC, and hepatocellular carcinoma were generated at the Human Genome Sequencing Center at Baylor College of Medicine. The sequencing data for all other adult tumors were from the TCGA Genome Data Analysis Center ( **https://confluence.broadinstitute.org/display/GDAC/Home** ). Pediatric AML, ALL, and Wilm’s tumor data were obtained from the TARGET project ( **http://www.targetproject.net/** ). Reproduced from Reference 65 with permission. 
+1,000<br>100<br>10<br>1<br>0.1<br>0.01<br>Pediatric cancers Adult cancers<br>Figure 2<br>Frequencies of point mutations in different cancers. Each black dot represents a single patient’s tumor mutation frequency as<br>determined through whole-exome sequencing. The pediatric cancers are shaded in light blue and adult cancers are shaded in dark blue.<br>All data are from primary tumors prior to the initiation of therapy. Only non-silent mutations (missense, nonsense, frameshift, and<br>splice site) are tallied. Cancers are arranged left to right in order of increasing median mutation frequency. Red horizontal lines within<br>each cluster of points indicate median value of the mutation frequency of each tumor type. Abbreviations: ALL, acute lymphoblastic<br>leukemia; AML, acute myeloid leukemia; C, carcinoma; GCT, germ cell tumor; CRC, colorectal carcinoma; MSI, microsatellite<br>instability; H&N, head and neck; MSS, microsatellite stable; POLE, patients with somatic mutation in the nuclease (proofreading)<br>domain of the  POLE  gene. The outlier in the low-grade glioma patient with  > 100 mutations per Mb is also  POLE  mutated. The<br>sequencing data for all the pediatric tumors, CRC, and hepatocellular carcinoma were generated at the Human Genome Sequencing<br>Center at Baylor College of Medicine. The sequencing data for all other adult tumors were from the TCGA Genome Data Analysis<br>Center ( https://confluence.broadinstitute.org/display/GDAC/Home ). Pediatric AML, ALL, and Wilm’s tumor data were obtained<br>from the TARGET project ( http://www.targetproject.net/ ). Reproduced from Reference 65 with permission.<br>AML ALL AML Throid Cy CRC MSS Cervical C Melanoma CRC MSI<br>Number of somatic mutations per MB (Log) atoblastomaHep endEpmomay harCranioiomapngy Intracranial GCT Wilm’s tumor Chromohobe renal cell Cp Breast invasive C rade liomaLow-g Prostate adeno C Glioblastoma multiforme Endometrial MSS stadeno COvarian serous cy Renal papillar cell Cy Renal clear cell C Hepatocellular C Pancreatic adeno C H&N squamous cell C Stomach adeno C Bladder urothelial C Lung adeno C Lung  squamous cell C Endometrial MSI CRC MSS POLE Endometrial MSS POLE<br><!-- End of picture text -->
 
 tumor DNA replication system. The variation in nucleotide substitution frequency among patients with the same type of tumor is approximately one order of magnitude, whereas it is more than three orders of magnitude across different human tumors (see **Figure 2** ). At the low end of the range are pediatric cancers, followed by adult chromophobe renal cell carcinoma, adult leukemia and other adult solid tumors. Most pediatric tumors have approximately 0.1 to 0.2 mutations per megabase pairs (Mb) of DNA sequence. Some individuals 
 

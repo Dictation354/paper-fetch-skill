@@ -8,7 +8,7 @@ source: "ams_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 2286
+token_estimate: 2285
 ---
 
 # Corrigendum
@@ -45,9 +45,7 @@ Corresponding author: Kristian Strommen, kristian.strommen@physics.ox.ac.uk
 
 
 
-DOI: 10.1175/JCLI-D-25-0547.1 
-
-Ó 2026 Author(s). This published article is licensed under the terms of a Creative Commons Attribution 4.0 International (CC BY 4.0) License 
+DOI: 10.1175/JCLI-D-25-0547.1 Ó 2026 Author(s). This published article is licensed under the terms of a Creative Commons Attribution 4.0 International (CC BY 4.0) License 
 
 Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:23 AM UTC 
 

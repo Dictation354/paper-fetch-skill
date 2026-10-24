@@ -8,7 +8,7 @@ source: "ams_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 7529
+token_estimate: 7523
 ---
 
 # Integrating High-Resolution Modeling with Diverse Field Campaign Observations through an Open Science Summer School
@@ -208,11 +208,11 @@ Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:2
 
 # 3) HYPOTHESES 
 
-- The scale of large-scale forcing that will yield results closest to observations depends on the date—there is no “one-size-fits-all” scale size. 
+   - The scale of large-scale forcing that will yield results closest to observations depends on the date—there is no “one-size-fits-all” scale size. 
 
-- Increased surface moisture will cause earlier timing of shallow cumulus creation and deeper clouds (looking at observations on LASSO case dates). 
+   - Increased surface moisture will cause earlier timing of shallow cumulus creation and deeper clouds (looking at observations on LASSO case dates). 
 
-# 4) OUTCOMES 
+- 4) OUTCOMES 
 
 Varying large-scale forcing scenarios, indicated by Sim 6-8 in Figure 3a, impact cloud core fraction due to differences in turbulent kinetic energy. The model should carefully choose the large-forcing length scale to represent the environment appropriately on a given day. 
 
@@ -306,27 +306,27 @@ Brought to you by Peking University | Unauthenticated | Downloaded 05/12/26 10:2
 
 # 1) TEAM MEMBERS 
 
-   - Adrian Cortes Santos, University of Puerto Rico 
+- Adrian Cortes Santos, University of Puerto Rico 
 
-   - Jessica Gasparik, Brookhaven National Laboratory 
+- Jessica Gasparik, Brookhaven National Laboratory 
 
-   - Joy Lai, Pacific Northwest National Laboratory 
+- Joy Lai, Pacific Northwest National Laboratory 
 
-   - Ryan Poland, University of Georgia 
+- Ryan Poland, University of Georgia 
 
-   - Hayden Webb, University of Oklahoma 
+- Hayden Webb, University of Oklahoma 
 
-   - Yan Xie, University of Michigan 
+- Yan Xie, University of Michigan 
 
-   - Maggie Zhang, Washington University in St. Louis 
+- Maggie Zhang, Washington University in St. Louis 
 
-- 2) SCIENCE QUESTIONS 
+# 2) SCIENCE QUESTIONS 
 
-   - Where do peak dust and black carbon events occur? 
+- Where do peak dust and black carbon events occur? 
 
-   - How do these peaks correlate with changes in surface albedo/surface shortwave radiation? 
+- How do these peaks correlate with changes in surface albedo/surface shortwave radiation? 
 
-   - How does snowpack change around these events? 
+- How does snowpack change around these events? 
 
 # 3) HYPOTHESES 
 

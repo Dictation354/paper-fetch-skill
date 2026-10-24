@@ -5,7 +5,7 @@ source: "plos_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 13225
+token_estimate: 13342
 ---
 
 # 10.1371/journal.pbio.0040298
@@ -172,15 +172,24 @@ Figure 5. FimH–1M Bond Lifetimes in a Flow Chamber The binding of 1M beads to 
 
 
 
+<!-- Start of picture text -->
+�DUU þ f DxU f DxU<br>kUðf Þ ¼ Aexp ¼ k 0 U exp ð1Þ<br>� kbT � � kbT �<br><!-- End of picture text -->
+
 Here, A is the Arhenius frequency factor, kbT is the thermal energy, and k<sup>0</sup> U<sup>istheuncoilingrateintheabsenceofforce.</sup> There will be an analogous rate equation for kC( f) for coiling depending on the energy DUC and distance DxC differences between the uncoiled and transition states. From the single transition state assumption, we get that DxC ¼ DxU � DL and DUC ¼ DUU � DU, where DU is the energy cost to uncoil a monomer and DL is the extension due to one subunit uncoiling. 
 
 With this model, we can relate the average extension velocity V to the applied force 
 
 
 
+<!-- Start of picture text -->
+Vðf Þ ¼ DL k½ Uð f Þ � kCð f Þ�<br>f DxU f DxC<br>¼ DL k 0 U exp � k 0 C exp ð2Þ<br>� � kbT � � kbT ��<br><!-- End of picture text -->
+
 This equation should hold whether the AFM tip pulls the fimbrial tip at a constant velocity while recording the force (Figures 1, 2, and 4A), or the tip maintains a constant force while the position is recorded (Figures 3B and S1). A consequence of Equation 2 is that there is a force, fbal, at which the average velocity is zero and the uncoiling and coiling rates balance each other [kbal ¼ kU( fbal) ¼ kC( fbal)]. We can then rewrite Equation 2 as 
 
 
+
+<!-- Start of picture text -->
+ð f � fbalÞDxU<br>Vð f Þ ¼ DL kbal exp<br>� � kbT �<br>ð f � fbalÞðDxU � DLÞ<br>�exp ð3Þ<br>� kbT ��<br><!-- End of picture text -->
 
 We fit this model to the data in Figure 4A using DL ¼ 5.0 nm and kbal ¼ 2.2 s<sup>�1</sup> as calculated from data in Figure 3B. The least-squares fit (Figure 4A, solid line) estimated fbal ¼ 20 6 2 pN and DxU ¼ 0.26 6 0.01 nm. This corresponds to an uncoiling energy barrier of 29kbT and a coiling barrier close to 4kbT. The model also predicts a range of forces (25 to 60 pN) for which uncoiling is slow, consistent with the force range at which slow uncoiling was observed in Figure 4A. Thus, the pattern of coiling, stable plateau, and uncoiling shown in Figure 4A is predicted by a biophysical model of quaternary uncoiling. 
 

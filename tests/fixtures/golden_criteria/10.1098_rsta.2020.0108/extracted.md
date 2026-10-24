@@ -5,7 +5,7 @@ source: "royalsocietypublishing_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 19309
+token_estimate: 19288
 ---
 
 # royalsocietypublishing.org/journal/rsta
@@ -44,19 +44,17 @@ Xian Chen<sup>1</sup> , Irene Fonseca<sup>2</sup> , Miha Ravnik<sup>3,4</sup> ,V
 
 5 48009 Bilbao, Bizkaia, Spain 
 
-9‘Simion Stoilow’ Institute of the Romanian Academy, 
-
-21 Calea Grivitei, 010702 Bucharest, Romania 
+9‘Simion Stoilow’ Institute of the Romanian Academy, 21 Calea Grivitei, 010702 Bucharest, Romania 
 
 
 
 XC, 0000-0002-0114-4642; MR, 0000-0001-8883-9318; CZ, 0000-0002-7977-1005; ADZ, 0000-0002-3620-6196 
 
-We present a perspective on several current research directions relevant to the mathematical design of new materials. We discuss: (i) design problems for phase-transforming and shape-morphing materials, (ii) epitaxy as an approach of central importance in the design of advanced semiconductor materials, (iii) selected design problems in soft matter, (iv) mathematical <u>problems</u> in magnetic materials, <u>(v)</u> some open problems in liquid crystals and soft materials and (vi) mathematical problems on liquid crystal colloids. The presentation combines topics from soft and hard condensed matter, with specific focus on those design themes where mathematical approaches could possibly lead to exciting progress. 
+We present a perspective on several current research directions relevant to the mathematical design of new materials. We discuss: (i) design problems for phase-transforming and shape-morphing materials, (ii) epitaxy as an approach of central importance in the design of advanced semiconductor materials, (iii) selected design problems in soft matter, (iv) mathematical problems in magnetic materials, (v) some open problems in liquid crystals and soft materials and (vi) mathematical problems on liquid crystal colloids. The presentation combines topics from soft and hard condensed matter, with specific focus on those design themes where mathematical approaches could possibly lead to exciting progress. 
 
 This article is part of the theme issue ‘Topics in mathematical design of complex materials’. 
 
-~~2021 The Author(s) Published by the Royal Society. All rights reserved.~~ 
+2021 The Author(s) Published by the Royal Society. All rights reserved. 
 
 ```
 Downloaded from http://royalsocietypublishing.org/rsta/article-pdf/doi/10.1098/rsta.2020.0108/373338/rsta.2020.0108.pdf
@@ -64,7 +62,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~2~~** 
+**2** 
 
 ### 1. Introduction 
 
@@ -84,7 +82,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~3~~** 
+**3** 
 
 These material development procedures can be rationalized under mathematical guidance. Recent advances in developing the low-hysteresis and/or high-resilience shape memory alloys are successful material design cases [17–20] based on the geometric nonlinear theory and crystallographic compatibility conditions. It is theorized that the satisfaction of the cofactor conditions [18] allows for spectacular new microstructures and results in a dramatic enhancement of the functionalities in phase-transforming metals [17–19] and ceramics [20]. As a mathematical foundation, the cofactor conditions underlie a tuning direction of lattice parameters and symmetries of phase transforming materials for achieving lower thermal hysteresis and higher phase reversibility. The martensitic material can be theorized by a transformation stretch tensor, which determines the interface morphology and represents the microstructure related properties. When this tensor satisfies the mechanics criteria, the material will show tremendous enhancement in functionalities. Conceptually, it enlightens a design strategy for new shape memory alloys. 
 
@@ -108,7 +106,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~4~~** 
+**4** 
 
 are formed, the resulting configuration has greater energy than that exhibiting the nucleation of dislocations. Furthermore, once dislocations are formed they migrate to the film/substrate interface, and the film surface relaxes towards a planar-like morphology (e.g. [33,57–60]). In [52], this was demonstrated for two-dimensional configurations corresponding to three-dimensional morphologies with planar symmetry. The next task is now to extend this analysis to fully three-dimensional configurations. 
 
@@ -136,7 +134,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~5~~** 
+**5** 
 
 field(s). Therefore, it is an underlying question how to guide the system to form a general, i.e. designed-topological state, notably subjected to different equilibrium (free) energy or dynamic conditions and constraints. 
 
@@ -162,7 +160,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~6~~** 
+**6** 
 
 #### (b) Magnetoelasticity 
 
@@ -186,7 +184,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~7~~** 
+**7** 
 
 demanding in terms of resources, it provides a test bench for microscopic and phenomenological theories of liquid crystals (like mean field and density functional theories) and in particular for the validity of assumptions like molecular uniaxiality and rigidity [145] . More importantly, atomistic simulations open exciting and to some extent unforeseen possibilities for the practical molecular design of novel mesogens with the prediction of their properties, also in advance of their chemical synthesis. 
 
@@ -210,7 +208,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~8~~** 
+**8** 
 
 #### (d) Simulating mixtures 
 
@@ -242,7 +240,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~9~~** 
+**9** 
 
 - (ii) Considertopologically constrainedboundary conditions(ontheboundary ofthenematicsampleonly, not on the colloids) 
 
@@ -270,7 +268,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~10~~** 
+**10** 
 
 boundary conditions). Understanding and quantifying these in a mathematically rigorous fashion should be within reach of current variational techniques. 
 
@@ -294,7 +292,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~11~~** 
+**11** 
 
 Leverhulme grant no. RPG-2018-438. The work of A.Z. is supported by the Basque Government through the BERC 2018-2021 program, by Spanish Ministry of Economy and Competitiveness MINECO through BCAM Severo Ochoa excellence accreditation SEV-2017-0718 and through project MTM2017-82184-R funded by (AEI/FEDER, UE) and acronym ‘DESFLU’. 
 
@@ -342,7 +340,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~12~~** 
+**12** 
 
 18. Chen X, Srivastava V, Dabade V, James RD. 2013 Study of the cofactor conditions: conditions of supercompatibility between phases. _J. Mech. Phys. Solids_ **61** , 2566–2587. (doi:10.1016/j.jmps.2013.08.004) 
 
@@ -398,7 +396,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~13~~** 
+**13** 
 
 42. Bella P, Goldman M, Zwicknagl B. 2015 Study of island formation in epitaxially strained films on unbounded domains. _Arch. Ration. Mech. Anal._ **218** , 163–217. (doi:10.1007/ s00205-015-0858-x) 
 
@@ -456,7 +454,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~14~~** 
+**14** 
 
 67. Marchetti MC, Joanny JF, Ramaswamy S, Liverpool TB, Prost J, Rao M, Simha RA. 2013 Hydrodynamics of soft active matter. _Rev. Mod. Phys._ **85** , 1143. (doi:10.1103/ RevModPhys.85.1143) 
 
@@ -516,7 +514,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~15~~** 
+**15** 
 
 93. Truby RL, Lewis JA. 2016 Printing soft matter in three dimensions. _Nature_ **540** , 371–378. (doi:10.1038/nature21003) 
 
@@ -572,7 +570,7 @@ on 22 May 2026
 
 119. Lum GZ, Ye Z, Dong X, Marvi H, Erin O, Hu W, Sitti M. 2016 Shape-programmable magnetic `Downloaded from http://royalsocietypublishing.org/rsta/article-pdf/doi/10.1098/rsta.2020.0108/373338/rsta.2020.0108.pdf` soft matter. _Proc. Natl Acad. Sci. USA_ **113** , E6007. (doi:10.1073/pnas.1608193113) `by Peking University Library user on 22 May 2026` 
 
-**~~16~~** 
+**16** 
 
 120. Makarov D, Melzer M, Karnaushenko D, Schmidt OG. 2016 Shapeable magnetoelectronics. _Appl. Phys. Rev._ **3** , 011101. (doi:10.1063/1.4938497) 
 
@@ -624,7 +622,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~17~~** 
+**17** 
 
 142. Roscioni OM, Muccioli L, Della Valle RG, Pizzirusso A, Ricci M, Zannoni C. 2013 Predicting the anchoring of liquid crystals at a solid surface: 5-cyanobiphenyl on cristobalite and glassy silica surfaces of increasing roughness. _Langmuir_ **29** , 8950–8958. (doi:10.1021/la400857s) 
 
@@ -672,7 +670,7 @@ by Peking University Library user
 on 22 May 2026
 ```
 
-**~~18~~** 
+**18** 
 
 162. Bedolla E, Padierna LC, Castaneda-Priego R. 2021 Machine learning for condensed matter physics. _J. Phys. Cond. Matter_ **33** , 053001. (doi:10.1088/1361-648X/abb895) 
 

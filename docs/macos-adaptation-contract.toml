@@ -44,6 +44,7 @@ optional_install_failure_preserves_core = true
 managed_runtime_preparation = true
 fetch_start_preparation = true
 batch_prepares_once = true
+update_check_interval_seconds = 86400
 default_channel = "official/prerelease"
 python_package_spec = "camoufox==0.5.8"
 native_bundle_gate = true

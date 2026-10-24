@@ -6,7 +6,7 @@ source: "mdpi_pdf"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 22547
+token_estimate: 22918
 ---
 
 # LESS Spark Ignition Engine: An Innovative Alternative to the Crankshaft Mechanism
@@ -351,6 +351,9 @@ In order to simulate engine combustion, the CFM-1D model distinguishes two zones
 
 
 
+<!-- Start of picture text -->
+dmhdt =  V d dt p + dQ dt comb − dQ dt wall + ∑ hj dmdt j (1)<br>in , out<br><!-- End of picture text -->
+
 where _V_ is the cylinder volume, _h_ is the mass enthalpy, _m_ is the enclosed mass and _p_ is the pressure which is linked to the mean temperature _T_ via the perfect gas law. The last term of Equation (1) refers to enthalpy exchanges at the inlets and outlets (valves, the injector). _Qwall_ corresponds to heat losses at the walls, which are described with the Woschni model or another similar heat-loss model. _Qcomb_ is the heat released through combustion processes. 
 
 The above assumptions allow us to determine the heat release resulting from the computations of a mean flame surface, and flame front wrinkling induced by turbulence. 
@@ -365,6 +368,9 @@ The fuel consumption rate throughout the flame front mainly depends on the fresh
 
 
 
+<!-- Start of picture text -->
+Γ C<br>Ki = Ki , equg � rbg � = 1 + 2 U u′ l � Sc g ( rbg ) (2)<br>� �<br><!-- End of picture text -->
+
 where _u_<sup>_′_</sup> is the instantaneous velocity fluctuation, Γ is the efficiency function of the turbulent flow on the flame strain, _C_ is a modelling constant, _Sc_ is the Schmidt number, _rbg_ is 
 
 14 of 36 
@@ -374,6 +380,9 @@ _Energies_ **2023** , _16_ , 6655
 the current mean flame radius and _g_ is a function accounting for the laminar-turbulent transition of the flame front. 
 
 
+
+<!-- Start of picture text -->
+The turbulence was computed via a simple phenomenological model approach during<br>the closed valve part of the engine cycle; this approach requires a reduced CPU time, and<br>allowed for a better calibration of the combustion heat release. The evolution of the kinetic<br>energy is obtained through assuming a linear decrease in the tumble motion from the intake<br>valve closure (IVC) to the top dead center, using the following expression:<br>dEdtkin = 8 1 mω eng 2 � L 2 dNtumble dt + 2 Ntumble L dL dt � (3)<br><!-- End of picture text -->
 
 where _L_ is the distance between the piston and the cylinder head, and _ωeng_ is the engine speed in rad.s<sup>_−_1</sup> . _Ntumble_ is the tumble number at IVC, which corresponds to an initial condition for the compression stroke. 
 
@@ -444,15 +453,27 @@ In order to obtain an accurate model of the lubrication phenomena of the novel L
 
 
 
+<!-- Start of picture text -->
+∂P<br>in the r — dimension (4)<br>∂r = µ∂ ∂ 2 z u 2 r ,<br><!-- End of picture text -->
 
+
+
+<!-- Start of picture text -->
+1 ∂P<br>in the θ — dimension (5)<br>r ∂θ = µ∂ ∂ 2 z u 2 θ ,<br><!-- End of picture text -->
 
 The developed model was generalized for any given topology of the two surfaces as a function _g_ ( _θ_ ) and _f_ ( _θ_ ) for the fixed and moving part of the LESS, respectively. For the calculation of the required film thickness at each contact point, a convergence process was applied. After the calculation of the radial and tangential velocity, and the integration of the continuity equation, a modified Reynolds equation can be derived: 
 
 
 
+<!-- Start of picture text -->
+∂ rH ( θ ) ∂P + 1 ∂ H ( θ ) ∂P =  − 2 µrh .  − ω ∂ (6)<br>∂r � ∂r � r ∂θ � ∂θ � 2 ∂θ [  f  ( θ )  − g ( θ )]<br><!-- End of picture text -->
+
 where _h_ . is the squeeze velocity of the film thickness at each contact point, and 
 
 
+
+<!-- Start of picture text -->
+H ( θ ) = [ h 0+ f ( θ )] 3 3 −g 3( θ ) − [ h 0+ f ( θ )+ g ( θ )][( 2 h 0+ f ( θ ))2 −g 2( θ )] (7)<br>+[ h 0 + f  ( θ )][ h 0 + f  ( θ )  − g ( θ )] g ( θ )<br><!-- End of picture text -->
 
 Equation (7) is a partial differential equation that can be solved with the implementation of the finite element method. Further details of the developed model and its results will be presented in a separate publication by the LESS development project team. 
 

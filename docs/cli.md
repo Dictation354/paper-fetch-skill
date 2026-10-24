@@ -458,7 +458,12 @@ CLI 会在开始抓取前创建最终输出目录，包括显式 `--output-dir` 
 | `4` | 被限速 |
 
 CLI 抓取在每次请求开始时检查 managed Camoufox，包括 HTTP 抓取和缓存命中；
-批量任务在调度前统一检查一次，子任务和浏览器启动复用该结果。browser/full
+批量任务在调度前统一检查一次，子任务和浏览器启动复用该结果。抓取、`auth`、
+`browser-preflight` 和项目准备函数共享滚动 24 小时（86400 秒）检查记录：
+本地 runtime 有效且未满间隔时直接复用，满间隔后首次调用联网检查。失败也
+计时，跳过不刷新时间戳，取消不记为完成；缺失、损坏或不兼容时立即准备。
+渠道、pin/SHA 或 Camoufox Python 包版本变化后重新判断，有效本地 pin 仍直接
+复用。记录异常时重新检查，写入失败只报告 stderr。browser/full
 固定 `camoufox==0.5.8`，默认渠道 `official/prerelease`，跟踪当前平台最新兼容
 浏览器，不自动升级 Python 包。显式渠道、pin、SHA 和自定义 executable 优先；
 core 缺少 browser extra 或显式 executable 时跳过托管更新。更新失败可复用有效
