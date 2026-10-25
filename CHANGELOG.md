@@ -6,6 +6,19 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.2.3 - 2026-10-25
+
+### HTML capture and selection performance
+
+- Capture ready PNAS, Science and Wiley HTML, title and URL together in the browser's main context on its owning thread. Recapture after provider page preparation, fall back to native capture on navigation races, and preserve cancellation and access-boundary handling.
+- Reuse container scores and ancestor selections within one read-only DOM selection phase. Preserve stable ties and invalidate scores around refiners that can mutate the document.
+- Set independent arXiv Atom metadata and source-asset request intervals to one second while retaining shared-worker pacing and Retry-After handling.
+
+### Maintenance
+
+- Streamline the bundled Skill and focused references with section-level guidance for presets, tool contracts and acceptance.
+- Separate live browser preflight timing from fetch timing, preserve isolated MCP environments, and recognize explicit Elsevier access restrictions in the legacy-DOI live check. Add offline snapshot and scoring-reuse coverage and synchronize the macOS adaptation contract.
+
 ## 7.2.2 - 2026-10-24
 
 ### Browser update interval
