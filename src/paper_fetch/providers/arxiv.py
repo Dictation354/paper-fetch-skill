@@ -814,7 +814,7 @@ PROVIDER_BUNDLE = ProviderBundle(
                 kind="metadata",
                 transport="api",
                 timeout_seconds=60,
-                qps=1 / 3,
+                qps=1,
             ),
             ProviderRouteSpec(name="official_html", kind="html"),
             ProviderRouteSpec(
@@ -826,7 +826,7 @@ PROVIDER_BUNDLE = ProviderBundle(
                 name="source_assets",
                 kind="assets",
                 hosts=("arxiv.org",),
-                qps=1 / 3,
+                qps=1,
                 asset_scope="all",
             ),
         ),

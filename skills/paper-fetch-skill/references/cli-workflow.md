@@ -17,36 +17,11 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421" \
   --max-tokens full_text
 ```
 
-文本归档显式选择主输出、artifact 和资产范围；只有需要单篇可审计记录时再加 `--manifest`：
-
-```bash
-paper-fetch fetch --query "10.1186/1471-2105-11-421" \
-  --format markdown \
-  --output ./papers/example.md \
-  --output-dir ./papers \
-  --artifact-mode none \
-  --asset-profile none \
-  --include-refs all \
-  --max-tokens full_text
-```
-
-需要单篇可审计记录时加 `--manifest ./papers/example.manifest.json`。正文图改为 `--artifact-mode markdown-assets --asset-profile body`；补充材料改为 `--artifact-mode markdown-assets --asset-profile all`。用户还要求全部正文资产本地化时加 `--require-local-body-assets`，要求全部为 full-size 时加 `--require-full-size-body-assets`（自动隐含 local）。两项默认关闭且不适用于 `asset-profile=none`。`--artifact-mode all` 只在用户还要求原始 provider/cache/debug payload 时使用。
+归档命令与正文图/补充材料/严格资产参数只按[单篇本地归档](presets.md#3-单篇本地归档)及[共同规则](presets.md#共同规则)选择。需要单篇可审计记录时加 `--manifest ./papers/example.manifest.json`。
 
 ## 批量归档
 
-UTF-8 query file 每行一个 DOI、URL 或标题；空行和 `#` 开头行忽略。正常批量主路径是：
-
-```bash
-paper-fetch fetch --query-file ./queries.txt \
-  --format markdown \
-  --output-dir ./papers \
-  --batch-concurrency 4 \
-  --batch-results ./papers/batch-results.jsonl \
-  --artifact-mode none \
-  --asset-profile none \
-  --include-refs all \
-  --max-tokens full_text
-```
+按[批量本地归档预设](presets.md#5-批量本地归档)运行命令。UTF-8 query file 每行一个规范目标；空行和 `#` 开头行忽略。先按[分块规则](presets.md#批量分块与证据等级)完成身份解析与去重，再生成 query file。
 
 每篇主输出写入 `--output-dir`；batch JSONL 在整批结束时原子写入，每个输入恰好一个 schema-v2 terminal record，并按稳定 `index` 排列。可用 Python 标准库检查记录：
 
@@ -67,12 +42,10 @@ PY
 
 ## 输出和错误边界
 
-- `--format markdown|json|both` 控制 stdout、显式 `--output` 或默认主输出格式；`--save-markdown` 是额外 Markdown 副本，不是主输出开关。
-- `--artifact-mode none` 不禁止显式主输出、`--output-dir` 默认主输出或 `--save-markdown`。
+- 自定义 `--format`、主输出、额外 Markdown 或 artifact 组合时，查 [CLI 输出/落盘矩阵](presets.md#cli-输出落盘矩阵)。
 - Runtime fetch failure 的结构化 JSON 写 stderr；argparse 参数错误仍使用标准 stderr/exit 2。歧义、访问、限流、网络和取消的重试只遵循 [`failure-handling.md`](failure-handling.md)。
-- CLI fetch 每次请求开始时自动准备 managed Camoufox，包括 HTTP 和缓存命中，批量只检查一次，各入口共享滚动 24 小时更新检查间隔，本地 runtime 有效且未满间隔时直接复用，无效时立即准备；失败时按 [`environment.md`](environment.md#运行时准备与授权) 处理。该边界不影响静态 doctor，也不改变论文产物的 artifact mode。
+- 抓取自动准备 managed runtime；异常时读[环境参考](environment.md#运行时准备与授权)，无需单独更新检查。
 - 使用 `paper-fetch --help` 和 `paper-fetch fetch|doctor|browser-preflight --help` 读取当前安装的有效枚举和默认值，不从旧安装或外部仓库文档猜测。
-- 安装/升级完整性由安装器在复制前后及三个宿主目标上直接调用独立 verifier；源码 installer 可用 `./scripts/install-codex-skill.sh [--project] --check` 做严格只读同步检查。普通 `doctor` 只报告业务 runtime/provider readiness。
 
 ## 窄 fallback
 

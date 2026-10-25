@@ -4,6 +4,12 @@
 `paper_fetch.providers.browser_runtime` facade 获取 Firefox/Juggler context；
 provider 不得直接创建 Playwright 或 Camoufox 生命周期。
 
+PNAS、Science、Wiley HTML 在正文连续两次指纹一致（观察间隔 750ms）后，
+通过浏览器 owner 线程内的一次同步 `page.evaluate` 捕获含 doctype 的完整 HTML、
+标题和最终 URL。权限检查使用 provider preparation 前的快照，preparation 后重新
+捕获以保留展开的引用。捕获异常、导航切换或结果无效时沿用原生捕获路径；
+请求 deadline 与协作取消检查保持生效，取消直接传播。
+
 ## 安装
 
 默认 core 安装不包含浏览器依赖：

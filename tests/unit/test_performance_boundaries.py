@@ -15,6 +15,35 @@ from paper_fetch.runtime import RuntimeContext
 from tests.support._paper_fetch_support import RecordingTransport, http_response
 
 
+@pytest.mark.parametrize(
+    "payload",
+    [
+        None,
+        {},
+        {"html": "", "title": "", "url": "https://example.test"},
+        {"html": "<html></html>", "title": 1, "url": "https://example.test"},
+        {"html": "<html></html>", "title": "", "url": "https://other.test"},
+    ],
+)
+def test_main_context_snapshot_invalid_result_uses_native_fallback(payload):
+    page = mock.Mock(url="https://example.test")
+    page.evaluate.return_value = payload
+    assert _playwright_browser._main_context_html_snapshot(page) is None
+
+
+@pytest.mark.parametrize(
+    "error", [RuntimeError("navigation"), RequestCancelledError("cancelled")]
+)
+def test_main_context_snapshot_capture_error_preserves_cancellation(error):
+    page = mock.Mock(url="https://example.test")
+    page.evaluate.side_effect = error
+    if isinstance(error, RequestCancelledError):
+        with pytest.raises(RequestCancelledError):
+            _playwright_browser._main_context_html_snapshot(page)
+    else:
+        assert _playwright_browser._main_context_html_snapshot(page) is None
+
+
 def test_aip_terminal_readiness_records_block_instead_of_timeout():
     page = mock.Mock()
     page.evaluate.return_value = {
@@ -81,7 +110,7 @@ def test_optional_atom_has_one_short_attempt_and_falls_back(failure):
     assert call["timeout"] == 10
     assert call["retry_on_transient"] is call["retry_on_rate_limit"] is False
     assert call["transient_retries"] == call["rate_limit_retries"] == 0
-    assert call["request_policy"].minimum_interval_seconds == 3
+    assert call["request_policy"].minimum_interval_seconds == 1
 
 
 @pytest.mark.parametrize(

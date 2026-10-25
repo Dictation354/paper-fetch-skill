@@ -27,76 +27,64 @@
 
 ### 1. 输入规范化
 
-- 接收 DOI、URL、arXiv ID、书目、标题候选以及搜索工具发现的候选，保留原始顺序、原始条目和来源。
-- 为每条输入固定原始 1-based `index`。`batch_resolve`、`batch_check`、`batch_fetch` 每次均最多 50 条；超过 50 条时，在首次批量解析前按 [`presets.md`](presets.md#批量分块与证据等级) 的现有规则分块。
-- 规范化空白、标识表示和结构化书目信息，不在此阶段抓取全文或选择执行后端。
-- web search 只发现候选；后续阅读、总结、比较、翻译、批判或全文核验必须进入本状态机。
-- 不得用去重前的原始条目数决定 CLI 或 MCP。
+- 接收 DOI、URL、arXiv ID、书目、标题和搜索发现的候选，保留原始条目、来源及顺序；为每条输入固定原始 1-based `index`。
+- 超过 50 条时，在首次批量解析前按[分块规则](presets.md#批量分块与证据等级)处理；后续块内结果映射回原 index。
+- 此阶段只规范输入，不抓全文或选后端。搜索用于发现候选，后续全文任务仍进入本状态机。
 
 ### 2. resolve/batch_resolve
 
-- 单篇调用 `resolve_paper(...)`，成批候选按每块最多 50 条调用 `batch_resolve(...)` 并显式选择并发数（例如 `concurrency=4`），记录每个输入对应的解析状态、规范身份和候选，并把块内 index 映射回原始 index。
-- 标题候选严格遵循 [`tool-contract.md`](tool-contract.md) 中唯一的标题解析规则，不在其它文档重新定义该规则。
-- 先完成本阶段再抓取，不把搜索结果页面或未经解析的书目当成全文身份。
+- 单篇调用 `resolve_paper`；成批调用 `batch_resolve` 并显式选择并发数，记录规范身份、候选和原始输入映射。
+- 标题输入遵循[标题解析契约](tool-contract.md#标题解析)。完成解析后再抓取。
 
 ### 3. DOI 去重
 
-- 汇总所有解析块后，以规范化 DOI 跨块合并同一论文的重复输入，保留原始条目到规范目标的映射；没有 DOI 但身份唯一时保留可追溯的规范落地页身份。
-- 后续规模、缓存、意图和后端判断只针对去重后的规范目标，不丢失用户输入的别名和顺序。
+- 汇总解析块后按规范 DOI 跨块合并重复输入；无 DOI 但身份唯一时保留规范落地页身份。
+- 保留所有原始别名和顺序；后续规模、意图和后端判断只针对规范目标。
 
 ### 4. 仅歧义项阻塞
 
-- 只暂停 `multiple_candidates` 或 `insufficient_identity` 的目标，展示候选或缺失身份字段并请求最小必要信息。
-- 继续推进其它身份唯一的目标；用户要求整批原子完成时，才等待所有身份项就绪。
-- 用户消歧后从规范身份恢复状态项，并保留原始条目映射。
+- 仅对身份不唯一的目标按 BLOCKING 白名单请求最小必要信息，继续其余目标。
+- 用户消歧后从规范身份恢复，保留原始条目映射；只有用户要求整批原子完成时才等待全部身份就绪。
 
 ### 5. 意图
 
-- 从用户目标确定本次是临时阅读、可缓存阅读、单篇本地归档、批量可读性分诊或批量本地归档，读取 [`presets.md`](presets.md) 的共同规则和当前预设，确定正文、引用、cache、artifact、资产及最终文件参数。预设只补全未指定项，用户明确的路径、资产范围和执行面直接沿用。
-- 普通阅读、总结、比较、翻译、批判或信息提取默认不要求先讨论保存；用户已明确产物目标时直接沿用。
-- 多篇比较沿用临时阅读或用户已允许的可缓存阅读预设；单篇或批量仅探测可用性都使用批量可读性分诊预设。
-- 需要本地归档时，按以下优先级推断保存目录：用户显式路径 → 项目配置或唯一已有约定 → 唯一合理的 `papers/` → 仍无法唯一确定时请求选择。
-- 使用实际目录和文件判断已有成果。继续会覆盖可用成果且尚未获得该覆盖授权时以 `overwrite_existing` 暂停；已有授权直接沿用。目录选择会实质改变产物且无法唯一推断时以 `material_output_choice` 暂停。
+- 从用户目标选择[共同规则](presets.md#共同规则)和当前预设：[临时阅读](presets.md#1-临时阅读)、[可缓存阅读](presets.md#2-可缓存阅读)、[单篇归档](presets.md#3-单篇本地归档)、[仅探测](presets.md#4-批量可读性分诊)或[批量归档](presets.md#5-批量本地归档)。只读所选章节，确定请求参数；多篇比较沿用阅读预设。
+- 普通阅读不要求讨论保存。归档目录按用户显式路径 → 项目配置或唯一已有约定 → 唯一合理的 `papers/` 推断；仍不唯一且实质影响产物时才归入 `material_output_choice`。
+- 检查实际已有文件；未获授权而将覆盖可用成果时归入 `overwrite_existing`，已有覆盖授权直接沿用。
 
 ### 6. 本地/cache
 
-- 按 [`presets.md`](presets.md#本地优先决策树) 先检查合格本地全文，再执行当前预设适用的 cache 分支。临时阅读不要求选择 cache scope；没有指定 scope 或用户禁止使用缓存时跳过缓存查询，保持完全不落盘预设。
-- 先检查用户已提供且身份可证明的全文文件。需要缓存复用且已知 DOI/scope 时调用 `get_cached(doi, download_dir=<scope>, detail="compact", preferred_only=true, modes=..., strategy=..., include_refs=..., max_tokens=...)`，不要全量调用 `list_cached()`；参数使用上一步确定的值，与后续 prefer-cache fetch 保持一致。
-- 只有文件身份、内容级别和当前任务意图相符时才复用。`get_cached` 不联网；顶层 `status=hit` 只证明存在条目，FetchEnvelope 只有在 `request_satisfied=true` 时才满足本次请求。不匹配时正常进入 fetch，不放宽严格请求匹配。
-- 缓存命中不是自动验收通过，metadata-only 也不是全文。合格本地全文直接读取；只有匹配的 sidecar 时按本地优先决策树取得正文响应。复用可跳过联网抓取，但仍必须进入 acceptance 和 report。仅探测且无可复用证据时继续 `batch_check`，不为查询缓存要求新增 scope 或获取正文。
+- 先检查用户提供或已有的合格全文；需要 cache 且当前预设允许、已有 scope 时，再读[本地优先决策树](presets.md#本地优先决策树)。临时阅读不为查缓存而新增 scope。
+- cache 复用直接消费 `request_satisfied`；不手工重算内部匹配。未满足则继续 fetch。合格本地正文直接读取，复用后仍进入 acceptance/report。
+- 仅探测且没有合格本地证据时继续 `batch_check`，不为查询缓存获取正文。
 
 ### 7. 后端
 
-- 根据去重后的规范目标、任务意图、产物形式和当前可用能力自主选择执行面。去重后的数量可以辅助并发规划，但不得成为单独的硬阈值。
-- 批量本地归档默认使用 CLI；需要 MCP 宿主内 progress/cancel、结构化 acceptance 或不便解析 CLI stdout 时使用 `batch_fetch`。少量阅读或结构化抽取默认使用 MCP。用户明确禁止某个执行面时切换到可用的另一个执行面。
-- 不因选择 CLI 或 MCP 请求额外确认。按选定执行面的预设矩阵核对落盘语义；使用 CLI 时再读 [`cli-workflow.md`](cli-workflow.md) 的单篇或批量章节，入口不可用时再读窄 fallback。
+- 按规范目标、意图、产物形式和可用能力自主选择，数量只辅助并发规划，不是单独的硬阈值，也不额外请求确认。
+- 阅读和结构化抽取默认 MCP；批量归档默认 CLI。需要宿主 progress/cancel、结构化批量结果或不便解析 stdout 时用 `batch_fetch`；沿用用户对执行面的限制。
+- 使用 CLI 时读 [CLI 工作流](cli-workflow.md#单篇)或[批量章节](cli-workflow.md#批量归档)。只有自定义输出组合时才查[CLI](presets.md#cli-输出落盘矩阵)/[MCP](presets.md#mcp-输出落盘矩阵)落盘矩阵。
 
 ### 8. 必要状态检查
 
-- 仅当 provider 凭证、浏览器运行时、人工登录或合法访问上下文可能影响目标时调用 `provider_status()`，并按 [`environment.md`](environment.md) 处理。
-- 对 runtime `capabilities.browser_available=true`（由 provider routes 派生） 的 provider，在首次联网抓取前先用 `provider_status(provider=...)` 确认静态 runtime；缺失时按 [`environment.md`](environment.md#运行时准备与授权) 处理。只有需要真实链路证明时才运行 MCP `browser_preflight(provider=...)` 或 CLI `paper-fetch browser-preflight --provider ...`；它可能联网并写 storage-state，不能当作只读检查。
-- 实际 fetch 或按需预检的 `challenge` / `auth_required` 才转入显式人工 `auth`；`runtime_error` 按运行时准备与授权规则处理。已执行 live 预检时，以 `ready` 作为该预检允许继续 fetch 的结论，不额外要求每次抓取都做 live 预检。预检不执行 PDF fallback 或自动 auth，也不得尝试绕过 challenge。
-- 需要人工登录/授权时使用 `manual_auth` 暂停；遇到付费、许可或合法访问边界时使用 `lawful_access_boundary` 暂停。不得绕过登录、验证码、付费墙或访问控制。
+- provider 凭证、browser runtime 或访问上下文可能影响目标时，用筛选后的 `provider_status(provider=...)` 确认静态状态；provider/capability 以 [catalog](tool-contract.md#static-provider-catalog) 为准。
+- browser provider 首次联网抓取前确认静态 runtime；静态 binary 缺失不阻止工具自动准备。缺失或异常时读[运行时准备与授权](environment.md#运行时准备与授权)。
+- 只有需要真实链路证明时才做 [browser preflight](tool-contract.md#browser-preflight-contract)；它会联网且可能写 storage-state。已返回 `ready` 则继续 fetch，不要求每次预检。
+- 实际 fetch 或按需预检返回 `challenge` / `auth_required` 时按 `manual_auth` 处理；付费、许可等访问边界按 `lawful_access_boundary` 处理，不绕过访问控制。
 
 ### 9. fetch
 
-- 对尚未由合格本地/cache 满足的目标执行抓取或分诊；按意图使用 `batch_check(queries=[query])`（单篇探测）或 `batch_check(...)`（批量探测）、`fetch_paper(...)` 或 `batch_fetch(...)`，CLI 只接收规范目标并按选定的批量归档参数运行。普通 fetch 每次请求开始时自动准备 managed runtime，包括 HTTP 和缓存命中，批量只检查一次，各入口共享滚动 24 小时更新检查间隔，本地 runtime 有效且未满间隔时直接复用，无效时立即准备；静态状态显示 binary 缺失不阻止该路径。准备失败时报告具体诊断。
-- `batch_check(mode="metadata")` 只给出 `likely_yes` / `unknown` 的低成本探测；按逐项证据完成探测任务，不自动再抓全文。去重后的目标仍按每次最多 50 条调用，并映射回原始输入顺序。
-- 多篇任务需要完整阅读且没有合格本地正文时，直接对各规范目标调用单篇临时阅读预设的 `fetch_paper`；用户已允许可缓存阅读时沿用对应预设。不先调用 `batch_fetch` 再重复获取正文，也不向单篇接口传批量专用参数。
-- `batch_fetch` 是 MCP 的真实批量全文入口；单块最多 50 条，默认只返回 input-ordered compact record/acceptance，实际完成顺序另列。compact 无正文；bounded 可能截断，检查逐项 `content_truncated` 和返回字符数，不能凭片段宣称已读全文。已归档正文直接读取文件。可选 `batch_results` 只写最终 input-ordered JSONL，不提供恢复。
-- 同一阶段内允许在 runtime 限制和 provider 速率约束下受控并发；不要求所有论文严格逐篇串行，浏览器资产下载仍服从 runtime 自身的串行约束。
-- 对浏览器链路失败按 [`failure-handling.md`](failure-handling.md) 与环境策略处理，限制重试并保留诊断。抓取失败或降级仍进入 acceptance。
+- 对未被本地/cache 满足的目标按当前预设调用工具；普通抓取自动准备 managed runtime，无需 agent 另做更新检查。准备失败时按[环境参考](environment.md#运行时准备与授权)读取具体诊断。
+- 仅探测用 `batch_check`（单篇传一个 query），不升级为抓取；多篇完整阅读对各规范目标直接使用单篇阅读预设，已取得正文不重复抓取。
+- 需要结构化批量抓取时用 `batch_fetch`，详细返回见 [Batch Fetch Contract](tool-contract.md#batch-fetch-contract)；compact 无正文，bounded 可能截断，归档正文直接读文件。
+- 同阶段独立目标可在 provider 速率和 runtime 限制内受控并发；批量分块沿用第 1 阶段规则。失败、限流或准备重试时读[失败处理](failure-handling.md)；失败或降级仍进入 acceptance。
 
 ### 10. acceptance
 
-- 仅探测时按 [`acceptance.md`](acceptance.md#探测核对与报告) 核对逐项 `probe_state`、证据、错误和未调度状态，再进入 report；探测响应没有全文 acceptance，不套用以下全文验收要求。
-- 对真实抓取和本地/cache 复用目标按 [`acceptance.md`](acceptance.md) 读取统一 acceptance 结果，检查 overall、identity、fetch、content、asset、output 和 provenance；不得另造一套成功标准。
-- 任务要求写盘时，检查返回的实际路径存在且为预期文件；确认文件非空、可读、身份对应规范目标，且内容级别和资产满足意图。任务不要求写盘时，检查实际响应载荷及其验收结果。
-- 对本地/cache 复用执行同样的身份、内容和输出验收。目录被 gitignore 或 `git status` 没有变化既不表示失败，也不表示成功。
-- 将 abstract-only、metadata-only、缺失资产和质量降级保留为对应验收结论，不升级成全文完成。
+- 仅探测直接按[探测核对与报告](acceptance.md#探测核对与报告)核对证据和调度状态，再进入 report。
+- 抓取或复用按[七个分面](acceptance.md#七个分面)及[响应验收](acceptance.md#响应验收)消费统一结果，核对身份、内容范围和实际正文，不另造成功标准。
+- 请求资产时读[资产验收](acceptance.md#资产验收)；归档或复用文件时读[文件、路径与 hash 验收](acceptance.md#文件路径与-hash-验收)；真实批量抓取再读[批量验收](acceptance.md#批量验收)。
 
 ### 11. report
 
-- 按 [`acceptance.md`](acceptance.md#最终报告) 区分普通阅读、归档、探测和失败报告；保留身份、来源、适用的 acceptance 结论或探测证据及影响任务的降级，技术细节按需展示。
-- 批量结果保留原始条目映射、去重结果及逐项状态；真实抓取汇总 complete、degraded、limited、failed、action_required、取消与未调度项，仅探测按 probe_state、错误和调度状态汇总。不得把 fetch 完成当作最终成功。
-- 获取和验收完成后，宿主用已核验的文本继续用户要求的总结、比较、翻译或提取；若材料不足，说明具体限制并完成证据支持的部分。paper-fetch 的职责仍限于身份解析、获取、验收和报告。
+- 按[最终报告](acceptance.md#最终报告)交付任务结论、来源及影响任务的降级；批量保留原始映射与逐项状态。
+- 获取验收后，宿主用已核验文本继续用户要求的总结、比较、翻译或提取；材料不足则说明具体限制并完成有依据的部分。paper-fetch 仍只负责身份解析、获取、验收和报告。

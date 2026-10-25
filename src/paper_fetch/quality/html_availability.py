@@ -445,28 +445,30 @@ def prefer_complete_ancestor(
     abstract_node_finder: Callable[[Tag], list[Tag]] | None = None,
     body_selectors: tuple[str, ...] = HTML_CONTAINER_BODY_SELECTORS,
 ) -> Tag:
-    best = node
-    best_key = (
-        container_completeness_score(
-            node,
-            abstract_node_finder=abstract_node_finder,
-            body_selectors=body_selectors,
+    return _prefer_complete_ancestor(
+        node,
+        lambda candidate: (
+            container_completeness_score(
+                candidate,
+                abstract_node_finder=abstract_node_finder,
+                body_selectors=body_selectors,
+            ),
+            score_container(candidate, score_profile=score_profile),
         ),
-        score_container(node, score_profile=score_profile),
     )
+
+
+def _prefer_complete_ancestor(
+    node: Tag, score_key: Callable[[Tag], tuple[int, float]]
+) -> Tag:
+    best = node
+    best_key = score_key(node)
     current = node.parent if isinstance(node.parent, Tag) else None
     depth = 0
     while isinstance(current, Tag) and depth < 8:
         if normalize_text(current.name or "").lower() == "html":
             break
-        current_key = (
-            container_completeness_score(
-                current,
-                abstract_node_finder=abstract_node_finder,
-                body_selectors=body_selectors,
-            ),
-            score_container(current, score_profile=score_profile),
-        )
+        current_key = score_key(current)
         if current_key > best_key:
             best = current
             best_key = current_key
@@ -475,38 +477,75 @@ def prefer_complete_ancestor(
     return best
 
 
+class _ContainerSelectionScores:
+    """Identity-based scores for one selection's current read-only DOM phase."""
+
+    def __init__(self, policy: HtmlContainerSelectionPolicy) -> None:
+        self.policy = policy
+        self.scores: dict[int, float] = {}
+        self.completeness: dict[int, int] = {}
+        self.ancestors: dict[int, Tag] = {}
+
+    def clear(self) -> None:
+        self.scores.clear()
+        self.completeness.clear()
+        self.ancestors.clear()
+
+    def score(self, node: Tag) -> float:
+        identity = id(node)
+        if identity not in self.scores:
+            self.scores[identity] = score_container(
+                node, score_profile=self.policy.score_profile
+            )
+        return self.scores[identity]
+
+    def key(self, node: Tag) -> tuple[int, float]:
+        identity = id(node)
+        if identity not in self.completeness:
+            self.completeness[identity] = container_completeness_score(
+                node,
+                abstract_node_finder=self.policy.abstract_node_finder,
+                body_selectors=self.policy.body_selectors,
+            )
+        return self.completeness[identity], self.score(node)
+
+    def ancestor(self, node: Tag) -> Tag:
+        identity = id(node)
+        if identity not in self.ancestors:
+            self.ancestors[identity] = _prefer_complete_ancestor(node, self.key)
+        return self.ancestors[identity]
+
+
 def _is_page_level_container(node: Tag | None) -> bool:
     if not isinstance(node, Tag):
         return False
     return normalize_text(node.name or "").lower() in {"html", "body"}
 
 
-def _refine_selected_container(node: Tag, policy: HtmlContainerSelectionPolicy) -> Tag:
-    refined_node = (
-        prefer_complete_ancestor(
-            node,
-            score_profile=policy.score_profile,
-            abstract_node_finder=policy.abstract_node_finder,
-            body_selectors=policy.body_selectors,
-        )
-        if policy.prefer_complete_ancestor
-        else node
-    )
+def _refine_selected_container(
+    node: Tag, policy: HtmlContainerSelectionPolicy, scores: _ContainerSelectionScores
+) -> Tag:
+    refined_node = scores.ancestor(node) if policy.prefer_complete_ancestor else node
     if policy.refine_selected_container is None:
         return refined_node
-    refined = policy.refine_selected_container(
-        refined_node,
-        direct_child_tags=_direct_child_tags,
-        class_tokens=_class_tokens,
-        container_completeness_score=lambda candidate: container_completeness_score(
-            candidate,
-            abstract_node_finder=policy.abstract_node_finder,
-            body_selectors=policy.body_selectors,
-        ),
-        score_container=lambda candidate: score_container(
-            candidate, score_profile=policy.score_profile
-        ),
-    )
+    # Refiners (notably T&F) may mutate the DOM between scoring callbacks.
+    scores.clear()
+    try:
+        refined = policy.refine_selected_container(
+            refined_node,
+            direct_child_tags=_direct_child_tags,
+            class_tokens=_class_tokens,
+            container_completeness_score=lambda candidate: container_completeness_score(
+                candidate,
+                abstract_node_finder=policy.abstract_node_finder,
+                body_selectors=policy.body_selectors,
+            ),
+            score_container=lambda candidate: score_container(
+                candidate, score_profile=policy.score_profile
+            ),
+        )
+    finally:
+        scores.clear()
     if isinstance(refined, Tag):
         return refined
     return refined_node
@@ -542,13 +581,9 @@ def select_best_container(
         body = soup.body
         return body if isinstance(body, Tag) else None
 
-    candidates.sort(
-        key=lambda node: score_container(
-            node, score_profile=active_policy.score_profile
-        ),
-        reverse=True,
-    )
-    preferred = _refine_selected_container(candidates[0], active_policy)
+    scores = _ContainerSelectionScores(active_policy)
+    candidates.sort(key=scores.score, reverse=True)
+    preferred = _refine_selected_container(candidates[0], active_policy, scores)
     if not active_policy.avoid_page_level_container or not _is_page_level_container(
         preferred
     ):
@@ -556,7 +591,7 @@ def select_best_container(
 
     alternative_nodes: list[Tag] = []
     for node in candidates:
-        alternative = _refine_selected_container(node, active_policy)
+        alternative = _refine_selected_container(node, active_policy, scores)
         if _is_page_level_container(alternative):
             continue
         alternative_nodes.append(alternative)
@@ -564,14 +599,7 @@ def select_best_container(
         return preferred
     return max(
         alternative_nodes,
-        key=lambda node: (
-            container_completeness_score(
-                node,
-                abstract_node_finder=active_policy.abstract_node_finder,
-                body_selectors=active_policy.body_selectors,
-            ),
-            score_container(node, score_profile=active_policy.score_profile),
-        ),
+        key=scores.key,
     )
 
 

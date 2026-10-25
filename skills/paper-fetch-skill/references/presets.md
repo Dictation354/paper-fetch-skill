@@ -1,11 +1,15 @@
 # 任务预设与落盘矩阵
 
-输入超过 50 条时，在批量解析前先读[分块规则](#批量分块与证据等级)。按 [`workflow.md`](workflow.md) 完成身份解析后，读取共同规则和当前任务对应的预设，先确定请求参数及必要的 scope，再检查本地/cache。预设只补全用户未指定项；执行面确定后核对对应落盘矩阵。不要用预设跳过当前任务适用的验收或探测核对与报告。
+输入超过 50 条时，在批量解析前先读[分块规则](#批量分块与证据等级)。按 [`workflow.md`](workflow.md) 完成身份解析后，读取共同规则和当前任务对应的预设，先确定请求参数及必要的 scope，再检查本地/cache。预设只补全用户未指定项；按预设执行不必另读落盘矩阵，自定义输出组合时才查对应矩阵。不要用预设跳过当前任务适用的验收或探测核对与报告。
 
 ## 目录
 
 - [共同规则](#共同规则)
-- [五个预设](#五个预设)
+- [临时阅读](#1-临时阅读)
+- [可缓存阅读](#2-可缓存阅读)
+- [单篇本地归档](#3-单篇本地归档)
+- [仅探测](#4-批量可读性分诊)
+- [批量本地归档](#5-批量本地归档)
 - [CLI 输出/落盘矩阵](#cli-输出落盘矩阵)
 - [MCP 输出/落盘矩阵](#mcp-输出落盘矩阵)
 - [本地优先决策树](#本地优先决策树)
@@ -17,7 +21,7 @@
 - 每条 CLI fetch 命令都显式传 `--artifact-mode` 和 `--asset-profile`。`--output` / `--output-dir` 是主输出；`--save-markdown` 只是额外 Markdown 副本。
 - 文本归档使用 `artifact_mode=none`、`asset_profile=none`。用户明确要求正文图时使用 `artifact_mode=markdown-assets`、`asset_profile=body`；明确要求补充材料时使用 `artifact_mode=markdown-assets`、`asset_profile=all`。
 - 只在用户还要求原始 provider 载荷或调试 sidecar 时使用 `artifact_mode=all`。补充材料范围由 `asset_profile=all` 决定，不由 `artifact_mode=all` 决定。
-- `asset_profile=body|all` 始终受每篇共享预算约束（普通 provider 默认不限制文件数，仍限制 32 MiB/文件、256 MiB 累计、64 MP、最多 4 个资产 worker 并受 route cap 限制；arXiv source archive 独立限制 128 个 regular member）；不要通过把正文图和 supplementary 拆成两次调用来规避。超限时以 `asset_failures[*].reason` 的稳定 `asset_*` code 向用户说明每个未归档项。
+- `body|all` 资产共用每篇运行时预算，不拆调用规避；超限按结构化原因说明未归档项。具体预算仅在需要时查[资产参数](tool-contract.md#fetch-notes)。
 - 默认使用兼容的 provider-policy 资产验收。用户明确要求离线完整正文资产时，CLI 加 `--require-local-body-assets`、MCP strategy 加 `require_local_body_assets=true`；明确要求原尺寸时改用 `--require-full-size-body-assets` / `require_full_size_body_assets=true`，它会自动隐含 local。两项只适用于 `body|all`，不应加到纯文本预设。
 - MCP 的 `no_download` 控制 provider 载荷、资产和 fetch-envelope sidecar；CLI 使用 `--artifact-mode none`。`save_markdown=true` 仍会写用户要求的 Markdown；PF-005 的 DOI 证明索引也会随显式保存更新。
 - “不保存最终 Markdown”“不建立用户归档”“不写 provider artifact”“允许 cache”和“完全不落盘”是五个独立判断，不要互换。
@@ -50,24 +54,11 @@
 }
 ```
 
-这个组合把正文放在 MCP 响应中，不写最终 Markdown、provider artifact、资产、fetch-envelope sidecar 或 cache index。保持 `prefer_cache=false`，否则读取 cache 就需要一个 `download_dir` scope。
+这个组合把正文放在 MCP 响应中，不写论文产物或 cache。保持 `prefer_cache=false`，不为临时阅读要求 scope；managed runtime 的自动准备独立于论文落盘参数。
 
 多篇完整阅读先复用并读取合格本地正文；其余每个规范目标直接调用上述单篇预设，在 provider 速率和 runtime 限制内受控并发。不要先批量抓取再重复获取；单篇 `fetch_paper` 不接受 `concurrency`、`detail` 或 `content_max_chars`。核对实际收到的正文与截断提示后继续用户的阅读任务。
 
-CLI 没有同等的硬零写盘保证；它在 fetch 前会准备工作目录。只需要 stdout 且接受创建一个空工作目录时使用：
-
-```bash
-paper-fetch fetch --query "10.1186/1471-2105-11-421" \
-  --format markdown \
-  --output - \
-  --output-dir ./.paper-fetch-tmp \
-  --artifact-mode none \
-  --asset-profile none \
-  --include-refs all \
-  --max-tokens full_text
-```
-
-此 CLI 组合不写论文文件，但会创建或检查 `./.paper-fetch-tmp`。要求完全不落盘时改用上面的 MCP 预设。
+CLI 会准备工作目录；若接受此行为且只需 stdout，见 [CLI 单篇用法](cli-workflow.md#单篇)。要求完全不写论文产物或 cache 时使用上面的 MCP 组合。
 
 ### 2. 可缓存阅读
 
@@ -95,7 +86,7 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421" \
 }
 ```
 
-先按本地优先决策树调用同 scope 的 `get_cached(detail="compact", preferred_only=true)`，并传与上述 fetch 完全相同的 `modes`、`strategy`、`include_refs` 和 `max_tokens`。`status=hit` 只表示存在已证明条目；只有 `request_satisfied=true` 才表示严格匹配的 sidecar 可短路联网。没有 sidecar 或请求不匹配时正常抓取，并为后续相同请求写 cache。CLI 没有等价的 cache-only / prefer-cache 预设；不要把 `--artifact-mode all` 冒充成可缓存阅读。
+按[本地优先决策树](#本地优先决策树)查询同 scope；直接消费 `request_satisfied`，未满足则正常抓取并写 cache。CLI 没有等价的 cache-only / prefer-cache 预设。
 
 ### 3. 单篇本地归档
 
@@ -155,9 +146,7 @@ MCP 文本归档显式把主 Markdown 与 cache scope 放在同一目录：
 }
 ```
 
-`batch_check(mode="metadata")` 固定不写下载目录，结果只有 `likely_yes` 或 `unknown` 的探测证据。结果数组与输入等长、原顺序，每项保留 1-based `index/query/status/error/provider_lane`；`not_scheduled` 不是完成，顶层 progress 会单列。Title 会先在 item-local context 解析 provider lane，已知 DOI 只做本地 canonical 规范化；一个 provider 的 cooldown 不会扩大到其它 lane。它没有抓取全文，不能报告成“已归档”“已验证全文”或“metadata-only 全文”。需要真实正文结论时，对选中的规范 DOI 再进入本地优先决策树并调用 `fetch_paper`。
-
-逐项核对 `probe_state`、`evidence`、`warnings`、`error` 及取消/未调度状态，按[探测核对与报告](acceptance.md#探测核对与报告)完成任务，不要求全文 acceptance，也不自动升级为全文抓取。只有用户要求真实正文结论时才进入 fetch。
+`batch_check(mode="metadata")` 不写下载目录，只返回可用性证据。调用后直接按[探测核对与报告](acceptance.md#探测核对与报告)完成任务，不要求全文 acceptance，不自动升级为抓取。只有需要解释返回字段时才查 [Batch Probe Contract](tool-contract.md#batch-probe-contract)。
 
 超过 50 条时从解析阶段起按[批量分块与证据等级](#批量分块与证据等级)处理。CLI 当前没有等价的 metadata probe 预设。
 
@@ -201,7 +190,7 @@ paper-fetch fetch --query-file ./queries.txt \
 }
 ```
 
-这个 MCP 组合为每篇返回 input-ordered compact record、实际完成序号、acceptance、输出 SHA-256 和 Markdown path，并在整批结束时按输入顺序原子写一次 `batch_results`。同批规范 DOI 重复项只抓取 representative 一次，再 fan-out 到原 index；不同请求之间不共享执行。已有不同内容路径默认拒绝覆盖；`batch_results` 不是 journal，也不提供恢复语义。正文图和补充材料仍按上文分别改成 `no_download=false`、`artifact_mode="markdown-assets"`、`asset_profile="body|all"`。`batch_check` 仍不是归档工具，不能用 probe 结果替代 `batch_fetch`/CLI 的真实 fetch 和 acceptance。
+这个 MCP 组合写每篇 Markdown 和最终 input-ordered JSONL，返回 compact acceptance 与文件快照；JSONL 不提供恢复语义。正文图或补充材料按[单篇归档](#3-单篇本地归档)调整。返回字段需要查阅时见 [Batch Fetch Contract](tool-contract.md#batch-fetch-contract)，实际文件按[文件验收](acceptance.md#文件路径与-hash-验收)核对。
 
 ## CLI 输出/落盘矩阵
 
@@ -245,7 +234,7 @@ CLI 不提供 cache-only `prefer_cache`。`--artifact-mode none` 不会禁止显
 
 1. **已核验本地 fulltext**：先检查用户提供或工作区已有的文件。只复用身份可证明、`has_fulltext=true` / `content_kind=fulltext`、内容和当前资产意图相符的文件；命中后不调用网络工具，直接进入 acceptance。
 2. **同 scope 精确 DOI cache**：已知 DOI 时调用 `get_cached(doi=<normalized-doi>, download_dir=<scope>)`，实际常规参数补全为 `detail="compact", preferred_only=true, modes=..., strategy=..., include_refs=..., max_tokens=...`；不要为已知 DOI 全量调用 `list_cached()`。`get_cached` 只扫描该 scope，不联网。若 `preferred.markdown` 是已证明的合格 fulltext，读取它并进入 acceptance；不能仅凭顶层 `status=hit` 宣称请求匹配。
-3. **严格请求匹配的 prefer-cache**：仍需结构化响应或只有 fetch-envelope 时，先要求 compact cache 结果的 `request_satisfied=true`，再用同一个 `download_dir` 调用 `fetch_paper(..., prefer_cache=true)`，并显式传与当前意图相同的 `modes`、`strategy`、`include_refs` 和 `max_tokens`。该布尔值直接复用 `cached_request_matches()` 严格匹配并检查 payload modes；不匹配不得复用。
+3. **严格请求匹配的 prefer-cache**：仍需结构化响应或只有 fetch-envelope 时，先要求 compact cache 结果的 `request_satisfied=true`，再用同一个 `download_dir` 调用 `fetch_paper(..., prefer_cache=true)`，并显式传与当前意图相同的 `modes`、`strategy`、`include_refs` 和 `max_tokens`。直接消费该布尔值，不手工重算 fingerprint、sidecar 版本或 payload modes 匹配；未满足时进入正常 fetch。
 4. **正常 fetch**：本地/cache 未满足任务时，按选定预设调用 `fetch_paper`；可缓存请求保持 `prefer_cache=true`，工具在 cache miss 时进入正常抓取。不要因 cache miss 停止，也不要放宽请求匹配。
 
 使用第 3 步的 prefer-cache 复用时，从 `get_cached` 到 `fetch_paper` 始终传相同的 `download_dir` 和请求参数。只有 DOI 未知且任务确实需要浏览 scope 时才使用 `list_cached()`；它不能替代身份解析。

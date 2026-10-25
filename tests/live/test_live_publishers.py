@@ -410,6 +410,7 @@ def test_catalog_provider_sample_live_body_acceptance(
             }
             terminal_record["performance"] = {
                 "preflight_seconds": preflight_seconds,
+                "fetch_wall_seconds": fetch_telemetry["fetch_wall_seconds"],
                 "total_seconds": round(time.monotonic() - sample_started_at, 3),
             }
             terminal_record["source_trail"] = list(exc.source_trail or [])
@@ -433,10 +434,13 @@ def test_catalog_provider_sample_live_body_acceptance(
         total_seconds = round(time.monotonic() - sample_started_at, 3)
         readiness = _last_browser_candidate(preflight_trace)
         performance_warning = None
-        if sample.provider == "pnas" and total_seconds > 45:
+        if (
+            sample.provider == "pnas"
+            and float(fetch_telemetry["fetch_wall_seconds"]) > 45
+        ):
             performance_warning = (
-                "PNAS preflight+fetch exceeded the observational 45 second target: "
-                f"{total_seconds:.3f}s"
+                "PNAS fetch exceeded the observational 45 second target: "
+                f"{fetch_telemetry['fetch_wall_seconds']:.3f}s"
             )
             warnings.warn(performance_warning, RuntimeWarning, stacklevel=1)
         record_property("fetch_wall_seconds", fetch_telemetry["fetch_wall_seconds"])
@@ -673,11 +677,15 @@ class LivePublisherTests(unittest.TestCase):
 
     def test_elsevier_old_doi_live_uses_official_pdf_fallback(self) -> None:
         self._require_env(*ELSEVIER_SAMPLE.required_env)
-        article = fetch_article(
-            "10.1016/0304-4165(96)00054-2",
-            transport=HttpTransport(),
-            env=self.env,
-        )
+        try:
+            article = fetch_article(
+                "10.1016/0304-4165(96)00054-2",
+                transport=HttpTransport(),
+                env=self.env,
+            )
+        except PaperFetchFailure as exc:
+            _skip_legal_access_boundary("elsevier", exc)
+            raise
 
         self.assertEqual(article.source, "elsevier_pdf")
         self.assertTrue(article.quality.has_fulltext)

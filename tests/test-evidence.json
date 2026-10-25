@@ -4542,6 +4542,20 @@
         "scope": "Oxford DOM image ownership, original/preview download order, subpanels and degraded acceptance",
         "reason": "Minimal HTML fragments and mocked binary responses; full original images replay in golden."
       }
+    },
+    "tests/unit/test_container_scoring_reuse.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Single-selection identity scoring reuse, stable ties and mutating refiner invalidation",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/integration/test_main_context_html_snapshot.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "PNAS/Science/Wiley owner-thread snapshots, delayed DOM, preparation recapture, navigation and cancellation in offline Camoufox",
+        "reason": "真实浏览器验证最小分页/懒加载与缺失报告契约，不声明线上可用性。"
+      }
     }
   }
 }

@@ -108,6 +108,15 @@ _WILEY_REVIEWABLE_HTTP_STATUSES = frozenset({401, 403})
 _WILEY_DOI_META_NAMES = frozenset(
     {"citation_doi", "dc.identifier", "dc.identifier.doi", "prism.doi"}
 )
+_MAIN_CONTEXT_SNAPSHOT_PROVIDERS = frozenset({"pnas", "science", "wiley"})
+_MAIN_CONTEXT_HTML_SNAPSHOT_SCRIPT = """
+() => ({
+  html: (document.doctype ? new XMLSerializer().serializeToString(document.doctype) + '\\n' : '')
+    + document.documentElement.outerHTML,
+  title: document.title,
+  url: location.href,
+})
+"""
 _MAIN_DOCUMENT_NAVIGATION_DIAGNOSTIC_SCRIPT = """
 () => {
   const entry = performance.getEntriesByType('navigation')[0] || null;
@@ -1079,6 +1088,37 @@ def _wait_for_browser_html_readiness(
     return body_readiness
 
 
+def _main_context_html_snapshot(
+    page: Any, *, runtime_context: RuntimeContext | None = None
+) -> tuple[str, str, str] | None:
+    """Capture one document synchronously, falling back on a navigation race."""
+    if runtime_context is not None:
+        runtime_context.raise_if_cancelled()
+    try:
+        before_url = str(page.url or "")
+        raw = page.evaluate(_MAIN_CONTEXT_HTML_SNAPSHOT_SCRIPT)
+        if runtime_context is not None:
+            runtime_context.raise_if_cancelled()
+        if not isinstance(raw, Mapping):
+            return None
+        html, title, url = (raw.get(key) for key in ("html", "title", "url"))
+        if (
+            not isinstance(html, str)
+            or not html.strip()
+            or not isinstance(title, str)
+            or not isinstance(url, str)
+            or not url.strip()
+            or url != before_url
+            or url != str(page.url or "")
+        ):
+            return None
+        return html, normalize_text(title), url
+    except RequestCancelledError:
+        raise
+    except Exception:
+        return None
+
+
 def _prepare_provider_browser_page(
     page: Any,
     *,
@@ -2020,7 +2060,7 @@ def fetch_html_with_playwright(
                     readiness_deadline = time.monotonic() + max(
                         0.0, float(readiness_budget_seconds)
                     )
-                _wait_for_browser_html_readiness(
+                body_readiness = _wait_for_browser_html_readiness(
                     page,
                     publisher=publisher,
                     readiness=readiness,
@@ -2036,11 +2076,31 @@ def fetch_html_with_playwright(
                         else None
                     ),
                 )
+                use_main_context_snapshot = bool(
+                    not return_image_payload
+                    and normalize_text(publisher).lower()
+                    in _MAIN_CONTEXT_SNAPSHOT_PROVIDERS
+                    and body_readiness is not None
+                    and body_readiness.ready
+                )
                 if not return_image_payload:
+                    snapshot = (
+                        _main_context_html_snapshot(
+                            page, runtime_context=runtime_context
+                        )
+                        if use_main_context_snapshot
+                        else None
+                    )
                     raise_for_paywall(
-                        str(page.content() or ""),
+                        snapshot[0]
+                        if snapshot is not None
+                        else str(page.content() or ""),
                         metadata={"doi": config.doi},
-                        source_url=str(getattr(page, "url", "") or normalized_url),
+                        source_url=(
+                            snapshot[2]
+                            if snapshot is not None
+                            else str(getattr(page, "url", "") or normalized_url)
+                        ),
                         provider=publisher,
                         context=runtime_context,
                     )
@@ -2051,12 +2111,20 @@ def fetch_html_with_playwright(
                     candidate_trace=candidate_trace,
                     runtime_context=runtime_context,
                 )
-                final_url = (
-                    normalize_text(str(getattr(page, "url", "") or ""))
-                    or normalized_url
+                snapshot = (
+                    _main_context_html_snapshot(page, runtime_context=runtime_context)
+                    if use_main_context_snapshot
+                    else None
                 )
-                html = str(page.content() or "")
-                title = normalize_text(str(page.title() or ""))
+                if snapshot is not None:
+                    html, title, final_url = snapshot
+                else:
+                    final_url = (
+                        normalize_text(str(getattr(page, "url", "") or ""))
+                        or normalized_url
+                    )
+                    html = str(page.content() or "")
+                    title = normalize_text(str(page.title() or ""))
                 if not title and normalize_text(publisher).lower() != "ieee":
                     title = (
                         extract_page_title(BeautifulSoup(html, choose_parser())) or ""

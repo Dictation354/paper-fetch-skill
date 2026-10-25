@@ -49,6 +49,7 @@ default_channel = "official/prerelease"
 python_package_spec = "camoufox==0.5.8"
 native_bundle_gate = true
 cooperative_cancel_owner_thread_cleanup = true
+html_snapshot_owner_thread = true
 
 [release]
 installer_manifest = "installer/manifest.json"

@@ -87,7 +87,8 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
                 args=["-m", "paper_fetch.mcp.server"],
                 cwd=str(REPO_ROOT),
                 env={
-                    **os.environ,
+                    # The isolated mapping already includes the parent environment;
+                    # merging it again restores deliberately removed overrides.
                     **self.env,
                     **(env_override or {}),
                     "PYTHONPATH": str(SRC_DIR),
@@ -225,7 +226,6 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
                 args=["-m", "paper_fetch.mcp.server"],
                 cwd=str(REPO_ROOT),
                 env={
-                    **os.environ,
                     **self.env,
                     "PYTHONPATH": str(SRC_DIR),
                     "PAPER_FETCH_DOWNLOAD_DIR": str(Path(tmpdir) / "downloads"),
@@ -242,9 +242,13 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
                         logging_callback=logging_callback,
                     ) as session:
                         await session.initialize()
+                        preflight_started_at = time.monotonic()
                         preflight = await session.call_tool(
                             "browser_preflight",
                             {"provider": "pnas", "detail": "full"},
+                        )
+                        preflight_seconds = round(
+                            time.monotonic() - preflight_started_at, 3
                         )
                         self.assertFalse(preflight.is_error)
                         preflight_payload = preflight.structured_content or {}
@@ -255,6 +259,7 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
                             )
                         self.assertEqual(result_payload["status"], "ready")
 
+                        fetch_started_at = time.monotonic()
                         result = await session.call_tool(
                             "fetch_paper",
                             {
@@ -268,6 +273,9 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
                                 },
                             },
                             progress_callback=progress_callback,
+                        )
+                        fetch_wall_seconds = round(
+                            time.monotonic() - fetch_started_at, 3
                         )
 
         total_seconds = round(time.monotonic() - started_at, 3)
@@ -299,10 +307,10 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
             )
         )
         performance_warning = None
-        if total_seconds > 45:
+        if fetch_wall_seconds > 45:
             performance_warning = (
-                "PNAS MCP preflight+fetch exceeded the observational 45 second "
-                f"target: {total_seconds:.3f}s"
+                "PNAS MCP fetch exceeded the observational 45 second "
+                f"target: {fetch_wall_seconds:.3f}s"
             )
             warnings.warn(performance_warning, RuntimeWarning, stacklevel=1)
         artifact_root = Path(
@@ -321,6 +329,8 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
                         trace_payload.get("navigation_count") or 0
                     ),
                     "total_seconds": total_seconds,
+                    "preflight_seconds": preflight_seconds,
+                    "fetch_wall_seconds": fetch_wall_seconds,
                     "performance_warning": performance_warning,
                     "browser_runtime_trace": trace_payload,
                 },

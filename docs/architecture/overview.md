@@ -255,7 +255,7 @@ provider 身份与能力配置统一来自 provider entry module 导出的 `PROV
 
 `HttpTransport` 保持 public request options、structured logs、cancel checks、`Retry-After` 最大等待和 `RequestFailure` 形状；瞬时错误与 429 retry policy 由 `urllib3.util.Retry` 表达，连接池由 `PoolManager(num_pools, maxsize, block=True)` 配置并按 hostname 复用。`SafeRemoteUrlPolicy` 在每个 redirect hop 检查 HTTP(S)、标准端口、无 userinfo、无 HTTPS 降级以及全部 DNS 答案均为公网地址，然后由共享 pool 按原 hostname 连接。跨 origin redirect 始终剥离 Authorization/Cookie/Proxy-Authorization/Referer；额外敏感 header 和 host allowlist 只有调用方显式放入 request policy 时才生效。HTTP cache 仅在当前进程内按请求 key、TTL、条数和总字节上限复用，不写磁盘、不做 conditional 304、reconcile 或 prune。内部子模块：`transport.py`（request loop / pool / semaphore / log）、`url_policy.py`（direct URL、DNS/IP 与 redirect 安全）、`provider_policy.py`、`cache.py`（memory cache key / bounds / stats）、`retry.py`、`body.py`、`errors.py`。
 
-Route QPS 使用同一个 transport cooldown lock 与 scope 做跨 worker 原子时隙预留；服务端 `Retry-After` 与既有 minimum interval 总是取更晚 deadline。arXiv Atom route 因而在同一共享 transport 上至少间隔三秒，batch child context 共享该 transport 但不共享可变请求状态。测试使用 fake clock/barrier，不依赖真实等待。
+Route QPS 使用同一个 transport cooldown lock 与 scope 做跨 worker 原子时隙预留；服务端 `Retry-After` 与既有 minimum interval 总是取更晚 deadline。arXiv atom_metadata 与 source_assets route 分别使用独立 scope，在同一共享 transport 上各自至少间隔一秒，资产并发上限保持为 2，batch child context 共享该 transport 但不共享可变请求状态。测试使用 fake clock/barrier，不依赖真实等待。
 
 Fulltext provider identity evidence 保留 domain、publisher、DOI 的一致与冲突事实。DOI prefix 或两个独立信号一致才属于 strong；只有 strong provider 的 `NO_ACCESS` 能终止 provider waterfall，weak access boundary 会保留 diagnostics 后继续严格 identity-checked candidate。Acceptance 不再用 title 证明 DOI-less identity；只有 DOI，或同时声明 URL、verified、unique 的 canonical landing fact，才会得到 `identity=resolved`。
 

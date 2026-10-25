@@ -37,6 +37,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["browser"]["update_check_interval_seconds"] = 0
         contract["browser"]["python_package_spec"] = "camoufox>=0.5.8"
         contract["browser"]["cooperative_cancel_owner_thread_cleanup"] = False
+        contract["browser"]["html_snapshot_owner_thread"] = False
 
         diagnostic = "\n".join(validator.validate_contract(contract))
 
@@ -51,6 +52,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertIn(
             "cooperative_cancel_owner_thread_cleanup must be true", diagnostic
         )
+        self.assertIn("html_snapshot_owner_thread must be true", diagnostic)
 
     def test_codex_discovery_and_migration_contract_drift_is_rejected(self) -> None:
         contract = validator.load_contract()

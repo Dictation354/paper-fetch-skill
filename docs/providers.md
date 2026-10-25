@@ -309,7 +309,7 @@ resolve
 ### 2. metadata 与路由
 
 - 系统会先尽可能拿到 Crossref metadata。
-- `elsevier` 和 `arxiv` 会参加 provider metadata probe；`arxiv` 通过项目内部 Atom API client 调用官方 arXiv API，使用 catalog 编译出的 60 秒超时、2 次 transient retry 与跨 worker/同 scope 至少 3 秒 pacing。每个 scope 使用串行 start gate；迟到的 `Retry-After` 移动队首后，后续 waiter 仍按实际起点间隔三秒，而不是在 cooldown deadline 一起放行。该调用获取 title、authors、abstract、published、categories、arXiv DOI、abs URL 和 PDF URL。
+- `elsevier` 和 `arxiv` 会参加 provider metadata probe；`arxiv` 通过项目内部 Atom API client 调用官方 arXiv API，使用 catalog 编译出的 60 秒超时、2 次 transient retry 与跨 worker/同 scope 至少 1 秒 pacing。每个 scope 使用串行 start gate；迟到的 `Retry-After` 移动队首后，后续 waiter 仍按实际起点间隔一秒，而不是在 cooldown deadline 一起放行。该调用获取 title、authors、abstract、published、categories、arXiv DOI、abs URL 和 PDF URL。
 - `springer`、`wiley`、`science`、`pnas`、`ieee`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`plos`、`frontiers`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf` 在 `probe_official_provider()` 和 `probe_has_fulltext()` 中都只依赖 Crossref / landing-page / DOI 信号，不调用 publisher metadata API。
 - 最终会合并 primary / secondary metadata，统一生成正文抓取需要的元数据。
 
@@ -425,7 +425,7 @@ resolve
   - HTML 标题、摘要和参考文献采用已验证的 LaTeXML `ltx_*` 结构；删除无真实样本支撑的通用 `h1`、Abstract/References 标题及任意 `li` 猜测分支。ID/API metadata 补全继续保留。
   - 固定顺序是 `arXiv ID 解析 -> arXiv official HTML -> direct HTTP PDF fallback -> metadata-only`。
   - resolve 支持 `https://arxiv.org/abs/{id}`、`/html/{id}`、`/pdf/{id}`、`arXiv:{id}`、裸 `{id}` / `{id}vN`，以及 `10.48550/arXiv.{id}`。
-  - DOI、URL、裸 ID 或已有 metadata 中能可靠推导 arXiv ID 时，会先构造最小 metadata：`doi`、`arxiv_id`、`landing_page_url`、`html_url`、`pdf_url`、`provider=arxiv`，随后执行 HTML -> PDF waterfall（`all` 且允许资产落盘时先核对摘要页并发现附件）；主链结束后默认通过内部 Atom API client 执行 arXiv API metadata enrichment，Atom API 从 `RouteExecutionPolicy` 取得 60 秒超时、2 次 transient retry 和 3 秒共享 pacing，最终失败或 429 只记录 warning/diagnostic，不会阻塞全文获取。
+  - DOI、URL、裸 ID 或已有 metadata 中能可靠推导 arXiv ID 时，会先构造最小 metadata：`doi`、`arxiv_id`、`landing_page_url`、`html_url`、`pdf_url`、`provider=arxiv`，随后执行 HTML -> PDF waterfall（`all` 且允许资产落盘时先核对摘要页并发现附件）；主链结束后默认通过内部 Atom API client 执行 arXiv API metadata enrichment，Atom API 从 `RouteExecutionPolicy` 取得 60 秒超时、2 次 transient retry 和 1 秒共享 pacing，最终失败或 429 只记录 warning/diagnostic，不会阻塞全文获取。
   - official HTML front matter 会补齐 `title`、`authors`、`abstract`、`published`、`primary_category`、canonical DOI、HTML/PDF URL；普通字段合并优先级是 arXiv API metadata > HTML front matter > derived arXiv URLs；作者保留完整有序列表：API 列表更长时使用 API，否则优先 HTML，不拼接不同姓名写法；显式或本次固定的 `vN` 标识和对应 URL 不被 enrichment 改为最新版，因此 API 不可用时也不应出现 `Untitled Article` 或 authorless arXiv fulltext。
   - official HTML 是主路径，直接请求 `https://arxiv.org/html/{id}`，抽取 Markdown、官方 bibliography references 和正文 figure 资产候选；可匹配到下载 URL 的正文 figure 会在原 caption 附近先以内联图片 Markdown 表达，下载后改写为 `body_assets/...` 本地链接；如果 official HTML 只有 `ltx_missing_image` 这类缺失图片占位符，会读取 `https://arxiv.org/e-print/{id}` source 包，按 LaTeX figure 顺序 / caption 匹配恢复图片或将 source PDF 图渲染为 PNG，再插回对应 figure caption 前；HTML 正文不足、非 HTML、不可访问或质量门控失败时直接继续 PDF fallback。
   - official HTML 渲染前会做 arXiv/LaTeXML 专用语义块预处理：`figure.ltx_table` 和裸 `table.ltx_tabular` 复用共享 HTML table renderer 输出 Markdown 表格或 key-value 行，单个全宽 `colspan` 标题行会提升为表格前普通文本，`ltx_listing` / algorithm block 输出标题与保留数学的逐行内容，并用 placeholder 保持原文位置；无法插回的位置会追加到文末并记录 warning。
@@ -943,7 +943,7 @@ arXiv 路线当前不需要 publisher 凭证；official HTML 主路径不依赖�
 - 资产默认仍为 `body`。`asset_profile=all` 且允许资产落盘时，先读取官方 `/abs/{id}` 核对身份；无版本输入使用页面明确的本版本链接固定本次正文及附件版本，显式 `vN` 严格保留，后续 API enrichment 不改写版本。`none/body` 或禁止资产落盘不增加附件发现请求。
 - 从摘要页 Ancillary files 区域进入 `/src/{版本化ID}/anc`，按详情页完整列表下载同论文、同版本的官方 `a.anc-file-name` 链接；支持 `.nb`、`.m`、PDF 和嵌套路径，按规范化 URL 去重并保留来源路径。本地文件沿用安全文件名与重名处理，不按远端目录建树。
 - HTML 和 PDF fallback 都会将独立附件各登记一次并展示在 `Supplementary Materials`；PDF 正文图继续保留，只有附件的结果也不再标为 text-only。附件齐全不改变 PDF fallback 的降级与 trace。
-- 正常摘要页无附件区域时返回空集合；发现请求、身份或详情完整性校验失败记录 `arxiv_ancillary_discovery_failed`，下载失败沿用现有资产原因，均保留成功正文。附件复用现有下载器、共享资产预算、限速与最多 2 个 worker；不使用浏览器、源码包附件 fallback、外部数据仓库，也不归档源码包中的普通文件。
+- 正常摘要页无附件区域时返回空集合；发现请求、身份或详情完整性校验失败记录 `arxiv_ancillary_discovery_failed`，下载失败沿用现有资产原因，均保留成功正文。附件复用现有下载器、共享资产预算、source_assets scope 每秒一次请求的限速与最多 2 个 worker；不使用浏览器、源码包附件 fallback、外部数据仓库，也不归档源码包中的普通文件。
 - arXiv 全文路线消费 official HTML；source 包用于 HTML 路线的正文 figure 源图优先获取及缺失图恢复，不用于重建全文。若 official HTML 缺失或质量不过关，会直接进入 PDF fallback。
 - arXiv official HTML 使用已验证的 LaTeXML `ltx_*` 标题、摘要和 bibliography 结构，不为无标记的通用 `h1`、摘要/参考文献容器或任意列表项猜测 fallback；官方 ID/API metadata 补全保持。
 - arXiv HTML 系列解析器集中由 `paper_fetch.providers._arxiv_parsing.ARXIV_HTML_PARSER` 指定；正常安装使用 `choose_parser()` 选择可用解析器，arXiv fixture 单测覆盖该路径。
@@ -952,7 +952,7 @@ arXiv 路线当前不需要 publisher 凭证；official HTML 主路径不依赖�
 - 带 `SITE_UI_COPY_REGRESSION_MARKER` 的 fatal/error 或 publisher UI copy 常量表示站点改版敏感文案，调整时需要回归 extraction rules 单测。
 - HTML 资产下载失败会优先读取 transport 层 `RequestErrorCategory` 判定是否可重试；诊断 payload 的 substring fallback 只用于缺少结构化分类的失败记录。
 
-- 全文成功后的可选 Atom 元数据补充使用 10 秒单次 I/O 超时和一次请求尝试，关闭该调用的瞬时错误与限流重试，保留 3 秒节流。超时或普通网络失败保留 HTML 元数据、正文及已有 warning，诊断记录补充耗时和回退原因；取消与访问限制继续传播。独立 metadata 查询维持 60 秒及原重试策略，成功补充维持原合并顺序和版本身份检查。10 秒不是严格墙钟上限。HTTP 结构化 `http_request_start` 日志另记 `rate_limit_wait_ms`，用于区分节流等待与网络时间；不改变 3 秒节流、并发上限或请求次数。
+- 全文成功后的可选 Atom 元数据补充使用 10 秒单次 I/O 超时和一次请求尝试，关闭该调用的瞬时错误与限流重试，保留 1 秒节流。超时或普通网络失败保留 HTML 元数据、正文及已有 warning，诊断记录补充耗时和回退原因；取消与访问限制继续传播。独立 metadata 查询维持 60 秒及原重试策略，成功补充维持原合并顺序和版本身份检查。10 秒不是严格墙钟上限。HTTP 结构化 `http_request_start` 日志另记 `rate_limit_wait_ms`，用于区分节流等待与网络时间；两条路由各自按每秒一次请求调度，资产并发上限仍为 2，请求次数不变。
 
 ### IEEE
 

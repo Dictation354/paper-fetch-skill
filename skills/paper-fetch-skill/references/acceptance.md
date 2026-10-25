@@ -1,8 +1,8 @@
 # 统一验收与报告
 
-抓取、cache 命中或本地文件复用都不是最终成功。这些目标必须读取工具、manifest 或 cache 返回的统一 acceptance，复核实际响应/文件，再进入 report；不要按 warning 文案另造成功标准。仅探测任务使用下方探测核对与报告，不要求探测响应中不存在的全文 acceptance。
+仅探测直接读[探测核对与报告](#探测核对与报告)，不加载全文验收章节。抓取或本地/cache 复用读取[七个分面](#七个分面)、[响应验收](#响应验收)和[最终报告](#最终报告)；请求资产、文件或真实批量结果时，再读对应章节。
 
-共用章节是七个分面、响应验收和最终报告。请求资产时读资产验收；复用本地文件或归档时读文件、路径与 hash 验收；批量任务再读批量验收。检查所需证据与向用户展示多少技术细节是两件事。
+直接消费工具、manifest 或 cache 的统一 acceptance，核对当前任务所需的实际响应和文件，不从 warning 文案另造成功标准。内部一致性由工具负责；只有结果异常或用户要求诊断时，才查[内部一致性诊断](tool-contract.md#内部一致性诊断)。
 
 ## 探测核对与报告
 
@@ -13,7 +13,7 @@
 
 ## 七个分面
 
-| 分面 | 必查事实 |
+| 分面 | 任务相关事实 |
 | --- | --- |
 | `overall` | 任务级结论：`complete`、`degraded`、`limited`、`failed` 或 `action_required`。 |
 | `identity` | 规范 DOI/落地页、期望 DOI、标题，以及 `resolved/ambiguous/mismatch/unavailable`。 |
@@ -25,27 +25,23 @@
 
 顶层兼容 `status=ok` 只表示调用没有抛出运行时失败；`has_fulltext` 是内容事实；`overall` 才是任务验收结论。三者不能互换。摘要或 metadata 可以是成功返回，但最多是 `limited`，不能报告成全文完成。
 
-MCP 单篇 `fetch_paper` 成功响应直接返回紧凑 `acceptance`；`batch_fetch` 在每个 result 中返回同形摘要。两者的七分面状态必须由同一个统一验收报告投影，不能从 warning 文本或 `has_fulltext` 另行推断。
-
-当前 acceptance wire schema 是 v2（`schema_version=2`、`minimum_reader_schema_version=2`）。provenance 包含可空的 `acquisition={provider,route,representation,transport,fallback_used}`；它须与 catalog route、source owner 和 trace fallback 事实一致，缺失时保留 partial，不能从兼容 `source` 猜测。
+单篇响应和批量逐项结果都提供统一 acceptance 摘要；直接读取各分面结论。保留返回的 `source`、`acquisition` 和 provenance 降级，不从 provider 名或 URL 补全缺失来源。
 
 ## 资产验收
 
-asset 分面分别记录 `accepted_preview`、`fallback_preview` 与有序去重 `issue_codes`；`preview` 等于前两者之和。只有 accepted preview 且无其它 issue 时可以 complete；publisher 明确接受的规范公式位图即使尺寸小或内容重复，也按结构化 `preview_accepted` 事实验收，不据此另造 placeholder issue。fallback preview 是 `asset_fidelity_degraded`，不等同于 `asset_download_failure`。
-
-正文资产严格验收是 v2 的兼容增量：`require_local_body_assets` 和 `require_full_size_body_assets` 默认都为 `false`，后者自动隐含前者，且只在 `asset_profile=body|all` 时适用。报告同时给出 `has_local_body_assets`、`all_body_assets_local`、`all_body_assets_full_size`、两项 `*_satisfied`，以及 body discovered/attempted/local/full-size/preview/failed/not-archived/remote-only 计数。严格分母只包含需要独立 binary 文件的正文逻辑资产；没有 remote/failure 且已以内联语义完成的 table/formula/figure 不算缺少文件。严格 local 要求其余全部已发现正文逻辑资产落盘且没有 failure、not-archived 或 remote-only；严格 full-size 还要求没有 accepted/fallback preview。未满足时 `asset`/`overall` 为 `degraded`，已经取得的全文仍保持 `fetch=ok`。
-
-资产验收统计 provider 合并后的逻辑资产，而不是同一远端对象的每个尺寸 URL。Springer/Nature 的 `media.springernature.com/lwNN/...` 预览别名与对应 `/full/...` 下载记录必须先按既有 full-size promotion 规则合并；全尺寸记录已有本地路径时，预览别名不能再作为第二个 `missing_path` / remote-only 资产进入 Manifest。没有对应本地记录的真实远端资产仍按原规则验收失败。
+- 按请求的 `asset_profile` 核对 asset 分面和实际资产；未请求的资产不算缺失。
+- 默认 provider-policy 下，被接受的 preview、允许保留的远程链接可以合格；读取工具给出的 `issue_codes`、failure 和 placeholder，保留影响任务的降级，不按尺寸或重复内容另造问题。
+- 请求严格 local/full-size 时，直接检查 `local_body_assets_satisfied` / `full_size_body_assets_satisfied` 及对应 requirement；不要从计数重算。未满足只降低 asset/overall，已取得全文仍可为 `fetch=ok`。
+- 要求本地资产时核对实际文件，沿用[文件、路径与 hash 验收](#文件路径与-hash-验收)。字段含义或结果异常时查[资产参数](tool-contract.md#fetch-notes)及[内部一致性诊断](tool-contract.md#内部一致性诊断)。
 
 ## 响应验收
 
 - 核对响应的规范 identity 与原始输入映射；歧义、DOI mismatch 或身份不足按 [`workflow.md`](workflow.md) 的 BLOCKING 白名单处理。
 - 核对 `content` 是否满足当前 [`presets.md`](presets.md) 的文本意图；任务只需摘要时可接受 limited，用户明确需要全文时不能升级结论。
 - 阅读任务还要取得并读取实际正文：compact 只含验收摘要，不能充当阅读材料；bounded 检查逐项 `content_truncated`、`content_available_chars` 和 `content_returned_chars`，并保留正文自身或宿主的截断提示。即使 acceptance 表明抓取到全文，也不能据截断响应宣称已读全文；完整阅读的获取路径见[临时阅读预设](presets.md#1-临时阅读)。
-- 只有请求了资产才检查 asset 完整度。默认 provider-policy 下，允许保留的远程链接、被接受的 preview 和 `asset_profile=none` 不是自动失败；请求严格 local/full-size 时必须按上述结构化 satisfaction 字段验收，不能只看 top-level `overall`。结构化 asset failure 和 placeholder 始终需报告。
+- 请求资产时按[资产验收](#资产验收)核对；结构化 asset failure 和 placeholder 保留为对应降级。
 - 核对请求输出集合，保留 table/formula/asset 降级、fallback code 和 source trail。普通 warning 不按字符串猜测类别。
-- 核对兼容 `source` 与结构化 `acquisition`；若 acquisition 为 `null` 或与 catalog/trace 不一致，明确保留 provenance partial/degraded，不以 provider 名或 URL 补全。向用户展示字段的范围按最终报告处理。
-- envelope、acceptance 和 manifest 的完整 trace event count 必须一致；两个 retry 的同 code 是两条事实，不能按 marker 去重。`quality` 中的 source trail 只是摘要，不得回拼成第二份 trace。
+- 保留工具给出的来源及 provenance partial/degraded；遇到缺失或矛盾的结果才查[内部一致性诊断](tool-contract.md#内部一致性诊断)，普通验收不逐项比对 catalog/trace。
 
 ## 文件、路径与 hash 验收
 

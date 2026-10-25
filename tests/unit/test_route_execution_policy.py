@@ -97,8 +97,8 @@ def test_compiler_unifies_hosts_and_runtime_route_fields() -> None:
     assert "dns_error" in copernicus.transient_retry_categories
     assert "temporary_dns" not in copernicus.transient_retry_categories
     assert arxiv.timeout_seconds == 60
-    assert arxiv.qps == 1 / 3
-    assert arxiv.minimum_interval_seconds == 3.0
+    assert arxiv.qps == 1
+    assert arxiv.minimum_interval_seconds == 1.0
     assert arxiv.retry_on_transient is True
 
 
@@ -113,11 +113,34 @@ def test_provider_request_policy_projects_http_execution_fields() -> None:
     assert policy.timeout_seconds == 60
     assert policy.retry_on_transient is True
     assert policy.transient_retries == 2
-    assert policy.minimum_interval_seconds == 3.0
+    assert policy.minimum_interval_seconds == 1.0
     assert policy.cooldown_scope == "provider:arxiv:atom_metadata"
 
 
-def test_shared_rate_slots_space_concurrent_workers_without_real_sleep() -> None:
+def test_arxiv_route_scopes_keep_independent_one_second_schedules() -> None:
+    transport = HttpTransport(cache_ttl=0, cache_capacity=0)
+    clock = _FakeClock()
+    policies = [
+        provider_request_policy("arxiv", route)
+        for route in ("atom_metadata", "source_assets")
+    ]
+    assert len({policy.cooldown_scope for policy in policies}) == 2
+    with (
+        mock.patch("paper_fetch.http.transport.time.monotonic", clock.monotonic),
+        mock.patch.object(transport, "_cancellable_sleep", clock.sleep),
+    ):
+        for expected in (0.0, 1.0):
+            for policy in policies:
+                assert policy.minimum_interval_seconds == 1
+                transport._wait_for_rate_slot(
+                    policy.cooldown_scope, policy.minimum_interval_seconds, None
+                )
+                assert clock.monotonic() == expected
+
+
+@pytest.mark.parametrize("route", ["atom_metadata", "source_assets"])
+def test_shared_rate_slots_space_concurrent_workers_without_real_sleep(route) -> None:
+    policy = provider_request_policy("arxiv", route)
     transport = HttpTransport(cache_ttl=0, cache_capacity=0)
     clock = _FakeClock()
     barrier = threading.Barrier(3)
@@ -126,7 +149,9 @@ def test_shared_rate_slots_space_concurrent_workers_without_real_sleep() -> None
 
     def worker() -> None:
         barrier.wait()
-        transport._wait_for_rate_slot("arxiv", 3.0, None)
+        transport._wait_for_rate_slot(
+            policy.cooldown_scope, policy.minimum_interval_seconds, None
+        )
         with starts_lock:
             starts.append(clock.monotonic())
 
@@ -139,11 +164,13 @@ def test_shared_rate_slots_space_concurrent_workers_without_real_sleep() -> None
         for future in futures:
             future.result()
 
-    assert sorted(starts) == [0.0, 3.0, 6.0]
-    assert all(delay <= 3.0 for delay in clock.sleeps)
+    assert sorted(starts) == [0.0, 1.0, 2.0]
+    assert all(delay <= 1.0 for delay in clock.sleeps)
 
 
-def test_retry_after_extends_existing_pacing_deadline() -> None:
+@pytest.mark.parametrize("route", ["atom_metadata", "source_assets"])
+def test_retry_after_extends_existing_pacing_deadline(route) -> None:
+    policy = provider_request_policy("arxiv", route)
     transport = HttpTransport(cache_ttl=0, cache_capacity=0)
     clock = _FakeClock()
 
@@ -151,15 +178,21 @@ def test_retry_after_extends_existing_pacing_deadline() -> None:
         mock.patch("paper_fetch.http.transport.time.monotonic", clock.monotonic),
         mock.patch.object(transport, "_cancellable_sleep", clock.sleep),
     ):
-        transport._wait_for_rate_slot("arxiv", 3.0, None)
-        transport._set_cooldown("arxiv", 10.0)
-        transport._wait_for_rate_slot("arxiv", 3.0, None)
+        transport._wait_for_rate_slot(
+            policy.cooldown_scope, policy.minimum_interval_seconds, None
+        )
+        transport._set_cooldown(policy.cooldown_scope, 10.0)
+        transport._wait_for_rate_slot(
+            policy.cooldown_scope, policy.minimum_interval_seconds, None
+        )
 
     assert clock.monotonic() == 10.0
     assert clock.sleeps == [10.0]
 
 
-def test_late_retry_after_keeps_queued_starts_serialized() -> None:
+@pytest.mark.parametrize("route", ["atom_metadata", "source_assets"])
+def test_late_retry_after_keeps_queued_starts_serialized(route) -> None:
+    policy = provider_request_policy("arxiv", route)
     transport = HttpTransport(cache_ttl=0, cache_capacity=0)
     clock = _ControlledClock()
     semaphore = threading.BoundedSemaphore(1)
@@ -170,19 +203,23 @@ def test_late_retry_after_keeps_queued_starts_serialized() -> None:
         mock.patch("paper_fetch.http.transport.time.monotonic", clock.monotonic),
         mock.patch.object(transport, "_cancellable_sleep", clock.sleep),
     ):
-        transport._wait_for_rate_slot("arxiv", 3.0, None)
+        transport._wait_for_rate_slot(
+            policy.cooldown_scope, policy.minimum_interval_seconds, None
+        )
 
         def worker() -> None:
             entered.wait()
             with semaphore:
-                transport._wait_for_rate_slot("arxiv", 3.0, semaphore)
+                transport._wait_for_rate_slot(
+                    policy.cooldown_scope, policy.minimum_interval_seconds, semaphore
+                )
                 starts.append(clock.monotonic())
 
         with ThreadPoolExecutor(max_workers=2) as executor:
             futures = [executor.submit(worker) for _ in range(2)]
             entered.wait()
-            clock.wait_until_sleeping_for(3.0)
-            transport._set_cooldown("arxiv", 10.0)
+            clock.wait_until_sleeping_for(1.0)
+            transport._set_cooldown(policy.cooldown_scope, 10.0)
 
             # Both the paced sleeper and the waiter behind its start gate have
             # released their host slots.  A response on this host can therefore
@@ -190,15 +227,15 @@ def test_late_retry_after_keeps_queued_starts_serialized() -> None:
             assert semaphore.acquire(blocking=False)
             semaphore.release()
 
-            clock.advance_to(3.0)
+            clock.advance_to(1.0)
             clock.wait_until_sleeping_for(10.0)
             clock.advance_to(10.0)
-            clock.wait_until_sleeping_for(13.0)
-            clock.advance_to(13.0)
+            clock.wait_until_sleeping_for(11.0)
+            clock.advance_to(11.0)
             for future in futures:
                 future.result()
 
-    assert sorted(starts) == [10.0, 13.0]
+    assert sorted(starts) == [10.0, 11.0]
 
 
 def test_rate_start_gate_propagates_cancellation_and_restores_host_slot() -> None:
@@ -476,7 +513,7 @@ def test_arxiv_source_stream_consumes_compiled_route_policy(tmp_path) -> None:
     options = kwargs["options"]
     assert isinstance(options, HttpStreamOptions)
     assert options.request_policy is not None
-    assert options.request_policy.minimum_interval_seconds == 3.0
+    assert options.request_policy.minimum_interval_seconds == 1.0
     assert options.request_policy.allowed_hosts is None
     reservation.rollback()
 

@@ -182,6 +182,7 @@ def validate_contract(
         "batch_prepares_once",
         "native_bundle_gate",
         "cooperative_cancel_owner_thread_cleanup",
+        "html_snapshot_owner_thread",
     ):
         if browser.get(key) is not True:
             errors.append(f"browser.{key} must be true")

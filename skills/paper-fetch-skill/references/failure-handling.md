@@ -20,25 +20,16 @@
 
 ## 批量分诊和并发
 
-- `batch_check(mode="metadata")` 是较低成本的 likely probe，只产生 `probe_state=likely_yes|unknown` 的证据。`likely_yes` 表示存在可读信号，不能报告成已经抓取正文、已经验收全文或已验证 `has_fulltext=true`。
-- 独立 `has_fulltext` 和 `batch_check(mode="article")` 已移除。单篇探测调用 `batch_check(queries=[query])`，读取 `results[0].error`（歧义候选也在其中）；仅探测按[探测核对与报告](acceptance.md#探测核对与报告)结束，不自动抓全文。用户要求真实正文检查时使用 `batch_fetch` 并读取 acceptance，无落盘参数及完整阅读路径见 [Batch Probe Contract](tool-contract.md#batch-probe-contract)。
-- 三个批量工具每次最多 50 条；从输入规范化起按[批量分块与证据等级](presets.md#批量分块与证据等级)保留原始 index、切块、汇总解析并跨块 DOI 去重，再继续 probe/fetch。不得按完成顺序或块内序号重新编号。
-- `batch_fetch` 同样每次最多 50 条，并直接返回 input-ordered terminal records 与独立 `completion_order`；不要按完成顺序重排。单项普通失败默认继续，其结构化 acceptance/error 进入最终报告；显式 `continue_on_error=false` 才停止全批后续新提交。
-- 阶段之间保持依赖有序：先 resolve/去重，再 probe 或 fetch，最后 acceptance/report。同一阶段内身份独立的条目可使用显式 `concurrency=1..8` 受控并发；根据 provider、宿主容量和任务规模选择，不假定默认并发为 3。
-- 收到 `rate_limited` 后立即停止向相同 provider lane 提交新项，保留尚未调度项和 `retry_after_seconds`/cooldown；不相关 provider lane 可以继续。等待期满后若仍需重试，也受单项最多 3 次代理尝试约束。
+- 保留[分块规则](presets.md#批量分块与证据等级)中的原始 index 与逐项终态，普通单项失败继续其它目标。`batch_fetch` 的停止调度选项见 [Batch Fetch Contract](tool-contract.md#batch-fetch-contract)。仅探测按[探测核对](acceptance.md#探测核对与报告)结束。
+- 收到 `rate_limited` 后立即停止向相同 provider lane 提交新项，保留未调度项和 `retry_after_seconds`/cooldown；不相关 lane 继续。冷却后重试仍受上述单项最多 3 次约束。
 
 ## Error Contract
 
-兼容的短状态摘要如下；具体动作和上限始终以下表为准：
-
-- `ambiguous`: Contains `candidates`; prompt the user to choose and retry.
-- `no_access`: Credentials or entitlements are missing; retry only after auth or entitlement state changes.
-- `rate_limited`: Back off and retry later.
-- `error`: Any other failure; inspect `reason`.
+状态与退出码字段见[工具错误契约](tool-contract.md#error-contract)；本文件只定义失败后的动作、重试条件与上限。需要用户决定时，统一按[BLOCKING 白名单](workflow.md#blocking-白名单)处理。
 
 ### 失败决策表
 
-优先读取结构化 `status`、`code`、`error_category`、`http_status` 和 `retry_after_seconds`，再用 `reason`、`source_trail` 与 `warnings` 补充判断；字段存在时不得另写字符串分类器。CLI runtime fetch 的 `ambiguous=2`、`no_access=3`、`rate_limited=4` 保持不变；argparse/参数校验也可能 exit 2，但必须按参数错误而不是歧义处理。
+优先读取结构化 `status`、`code`、`error_category`、`http_status` 和 `retry_after_seconds`，再用 `reason`、`source_trail` 与 `warnings` 补充判断；字段存在时不得另写字符串分类器。
 
 | 类别与触发条件 | 重试前必须发生的参数/状态变化 | 终止条件 | 用户报告字段 |
 |---|---|---|---|
@@ -59,9 +50,7 @@
 - `abstract_only` / `metadata_only` 是降级成功，不是已验证全文。告诉用户证据边界；若摘要或元数据足以完成意图则停止，只有用户确需全文且能改变 provider/访问/策略时才按上表计入重试。
 - Browser HTML 失败后 PDF/ePDF fallback 成功仍是降级成功：顶层可为 `status=ok`，但必须保留 HTML failure trace/code，且 `acceptance.overall=degraded`；不得只报告 PDF 成功或把 browser 原因抹掉。
 - `artifact_mode=all` 且 HTML 页面已到达但 extraction/availability 失败时，优先读取返回的 `diagnostic_path` 和 manifest 中 `kind=diagnostic` 的 `diagnostic.json` / `page-sanitized.html`。自动诊断是脱敏页面结构，不含原始失败 HTML、截图、Cookie/Authorization 或 URL query token。
-- `asset_profile=body|all` 返回资源但图片似乎缺失时，先检查 `article.assets[*].render_state`、`download_tier`、`width`、`height`、`content_type`、`downloaded_bytes`、`asset_timing` 和 `source_trail`。默认 provider-policy 下 `download_tier=preview` 在尺寸达标且 source trail 记录接受时可以合格；严格 local/full-size 请求则读取 acceptance 的 requirement/satisfaction 和 body 计数。严格约束未满足只降级 asset/overall，不自动重抓全文。
-- Browser/runtime 能力和 provider/source 归属只从 `resource://paper-fetch/provider-catalog` 读取，不在本文件维护静态 provider 列表。Browser HTML 资产通常只报告 `full_size` 或 `preview`；challenge recovery 失败时检查 `quality.asset_failures[*].reason` 与 `recovery_attempts`，direct HTTP 转换可能报告 `source_converted`。
-- `table_layout_degraded_count` 是源 span/列定义异常导致布局无法可靠验证的警告；合法合并单元格成功展开不计为降级。`table_semantic_loss_count` 才是内容可能不完整的更强信号；真实降级都应进入 acceptance，而不是无条件重抓全文。
+- 资产或 table/formula 降级直接消费[资产验收](acceptance.md#资产验收)及结构化 acceptance，不自动重抓全文。需要定位具体资产字段、恢复记录或 semantic loss 时才读[工具参数与字段](tool-contract.md#fetch-notes)，计数矛盾才读[内部一致性诊断](tool-contract.md#内部一致性诊断)。
 - 本地没有 PDF/Markdown 只表示 cache/local miss，不证明论文不可读；按工作流继续 probe/fetch，不得仅据此报告 `unreadable`，也不得把未请求资产报告成下载失败。
 
 ## 最终报告

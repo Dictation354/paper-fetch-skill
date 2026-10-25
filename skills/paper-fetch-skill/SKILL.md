@@ -9,20 +9,20 @@ description: "获取、下载或核验指定论文全文，或探测全文可用
 
 ## 关键约束
 
-- 沿用用户明确的路径、资产范围、执行面和覆盖授权；预设只补全未指定项。遵循状态机，仅 BLOCKING 白名单中的情形暂停。
-- 按当前预设复用合格本地全文或同 scope 精确缓存；临时阅读不为查询缓存而要求目录。保留身份、合法访问、来源追踪和统一验收边界。
-- 批量工具每次最多 50 条，输入时分块并保留原始 index，解析后跨块去重；阶段依赖有序，同阶段独立论文可受控并发。
-- 多篇完整阅读沿用单篇阅读预设取得每篇正文；compact 无正文，bounded 可能截断。不要重复抓取已取得的正文。
-- provider、凭证或浏览器影响结果时才检查状态。每次抓取开始时自动准备 managed runtime，批量只检查一次，各入口共享滚动 24 小时更新检查间隔，本地 runtime 有效且未满间隔时直接复用，无效时立即准备；仅明确返回 challenge/auth_required 时进入人工认证，不绕过访问控制。
-- 抓取或文件复用核验实际响应和文件及统一 acceptance；仅探测核对逐项证据和调度状态，不自动升级为抓取。abstract-only、metadata-only 或缺失资产不得报告成全文成功。
-- HTML 失败但 PDF/ePDF 成功仍保留 browser failure provenance 和 degraded 验收。PDF 正文以现有转换器输出为边界，不清洗或修复内容。
+- 沿用用户明确的路径、资产范围、执行面和覆盖授权；预设只补全未指定项。状态与暂停条件统一见工作流。
+- 优先复用身份可证明且满足当前意图的本地全文或同 scope 缓存；临时阅读不为查询缓存而要求目录。
+- 阅读必须取得并读取实际正文，区分全文、摘要、元数据与截断片段；仅探测不自动升级为抓取。
+- 工具自动准备 managed runtime。仅实际返回 `challenge` / `auth_required` 时进入人工认证，不绕过登录、验证码、付费墙或访问控制。
+- 消费统一 acceptance，并核对任务要求的响应、资产和实际文件。保留来源及影响任务的降级；HTML 失败后 PDF/ePDF 成功仍保留 browser failure provenance。
+- PDF 正文以现有转换器输出为边界，不清洗或修复内容。
 
 ## 按需参考
 
-- 开始任务读唯一状态机及 BLOCKING 白名单：[`references/workflow.md`](references/workflow.md)。
-- 选择五个预设、处理本地/cache、批量分块和落盘矩阵：[`references/presets.md`](references/presets.md)。
-- 验收正文或资产、复用文件、核对探测结果及报告：[`references/acceptance.md`](references/acceptance.md)。
-- 核对 MCP 参数、返回值、cache 和 provider catalog：[`references/tool-contract.md`](references/tool-contract.md)。
-- 配置凭证、准备浏览器或公式工具、解释运行环境诊断：[`references/environment.md`](references/environment.md)。
-- 使用 CLI 单篇或批量流程及入口不可用时的窄 fallback：[`references/cli-workflow.md`](references/cli-workflow.md)。
-- 处理失败、限流、降级和重试：[`references/failure-handling.md`](references/failure-handling.md)。
+先读[工作流](references/workflow.md)，再按任务读取章节，不默认加载整份 reference：
+
+- 选择参数：读[共同规则](references/presets.md#共同规则)和当前预设：[临时阅读](references/presets.md#1-临时阅读)、[可缓存阅读](references/presets.md#2-可缓存阅读)、[单篇归档](references/presets.md#3-单篇本地归档)、[仅探测](references/presets.md#4-批量可读性分诊)或[批量归档](references/presets.md#5-批量本地归档)。自定义输出组合时再查该文件的 CLI/MCP 落盘矩阵。
+- 验收：仅探测直接读[探测核对与报告](references/acceptance.md#探测核对与报告)；抓取或复用读[七个分面](references/acceptance.md#七个分面)、[响应验收](references/acceptance.md#响应验收)及[最终报告](references/acceptance.md#最终报告)。资产、文件、批量章节只在适用时读。
+- 精确参数或返回字段：按需查[工具契约](references/tool-contract.md)的对应章节；内部一致性诊断仅在异常或用户要求时读。
+- 凭证、runtime 或工具链实际影响任务时，读[环境参考](references/environment.md)的对应章节；普通抓取无需预读更新机制。
+- 选用 CLI 时，读 [CLI 工作流](references/cli-workflow.md)的单篇或批量章节；入口不可用时再读窄 fallback。
+- 失败、限流、需解释的降级或准备重试时，读[失败处理](references/failure-handling.md)的对应章节。
