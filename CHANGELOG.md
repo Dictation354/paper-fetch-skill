@@ -6,6 +6,19 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.2.4 - 2026-10-27
+
+### Independent supplementary acquisition
+
+- Add `target="supplementary"` to the Python API and MCP single/batch fetch, and `--target supplementary` to the CLI. Verify paper identity and discover and download publisher-defined supplementary files, Source Data, Extended Data and multimedia without requiring article text or fetching the article PDF.
+- Return structured material lists, per-file failures, discovery completeness and source provenance, with a separate Markdown index. Distinguish complete empty discovery from discovery failures and preserve unarchived lists when downloads are disabled. Isolate paper and supplementary cache requests and verify required local files before cache reuse.
+- Allow supplementary browser indexes on abstract and paywalled article pages while preserving attachment access restrictions and the existing browser click-download path. Update acceptance, manifest schemas, bundled Skill guidance and regression coverage.
+
+### Official installation updates
+
+- Add `paper-fetch update` for official installations. Select the latest stable GitHub Release installer for the current platform and CPython ABI and verify its SHA256 before execution; current or newer installations skip the download.
+- Upgrade Linux/macOS installations in place through the existing installer, reusing the current Python and configuration. Preflight macOS archives before extraction. On Windows, launch the verified graphical installer with the current installation directory preselected. Source and pip environments receive their existing update commands.
+
 ## 7.2.3 - 2026-10-25
 
 ### HTML capture and selection performance

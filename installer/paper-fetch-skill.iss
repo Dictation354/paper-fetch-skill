@@ -7,7 +7,7 @@
 #endif
 
 #ifndef AppVersion
-#define AppVersion "7.2.3"
+#define AppVersion "7.2.4"
 #endif
 
 #ifndef OutputDir

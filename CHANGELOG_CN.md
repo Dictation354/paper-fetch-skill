@@ -6,6 +6,19 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.2.4 - 2026-10-27
+
+### 独立获取补充材料
+
+- Python API、MCP 单篇与批量抓取新增 `target="supplementary"`，CLI 新增 `--target supplementary`。独立核对论文身份，发现并下载出版社定义的补充附件、Source Data、Extended Data 和多媒体，不要求正文成功，也不获取正文 PDF。
+- 返回结构化材料清单、逐项失败、发现完整性和来源记录，另存独立 Markdown 索引。区分完整发现后的空结果与发现失败；禁止下载时保留未归档清单。隔离正文与补充材料缓存请求，复用缓存前核验所需本地文件。
+- 浏览器补充索引允许摘要页和正文付费页，保留附件访问限制与既有浏览器点击下载路径。同步验收、manifest schema、随包 Skill 指引及回归覆盖。
+
+### 官方安装包更新
+
+- 为官方安装环境新增 `paper-fetch update`。从 GitHub 最新正式 Release 中选择匹配当前平台和 CPython ABI 的安装包，校验 SHA256 后执行；当前版本相同或更新时跳过下载。
+- Linux/macOS 复用当前 Python 和配置，通过既有安装器原地升级；macOS 解包前预检归档。Windows 启动已校验的图形安装向导，预选当前安装目录。源码和 pip 环境提示原有更新命令。
+
 ## 7.2.3 - 2026-10-25
 
 ### HTML 抓取与容器选择性能
