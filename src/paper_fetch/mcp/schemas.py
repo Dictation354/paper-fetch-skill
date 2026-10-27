@@ -554,6 +554,7 @@ class _RenderOptionsRequest(BaseModel):
 class _FetchOptionsRequest(_RenderOptionsRequest):
     """Shared single- and batch-fetch fields and validation."""
 
+    target: Literal["paper", "supplementary"] = "paper"
     prefer_cache: bool = False
     no_download: bool = False
     artifact_mode: ArtifactModeInput = DEFAULT_MCP_ARTIFACT_MODE
@@ -582,8 +583,14 @@ class _FetchOptionsRequest(_RenderOptionsRequest):
 
     def requested_modes(self) -> set[str]:
         requested: set[str] = set(self.modes)
+        if self.target == "supplementary":
+            requested.discard("article")
         if self.save_markdown:
-            requested.update({"article", "markdown"})
+            requested.update(
+                {"markdown"}
+                if self.target == "supplementary"
+                else {"article", "markdown"}
+            )
         return requested
 
 

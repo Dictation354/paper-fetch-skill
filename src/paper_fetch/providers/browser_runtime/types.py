@@ -47,6 +47,7 @@ class BrowserHtmlReadiness:
 class BrowserHtmlFetchOptions:
     """Select specialized HTML-fetch result modes without widening the facade."""
 
+    supplementary_index: bool = False
     return_image_payload: bool = False
     return_screenshot: bool = False
     lightweight_seed_only: bool = False

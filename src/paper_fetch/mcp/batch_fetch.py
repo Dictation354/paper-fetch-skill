@@ -202,6 +202,7 @@ def _request_parameters(
     markdown_dir: Path | None,
 ) -> dict[str, Any]:
     return {
+        **({"target": request.target} if request.target != "paper" else {}),
         "modes": sorted(str(mode) for mode in request.modes),
         "strategy": request.strategy.cache_request_payload(),
         "render": {
@@ -370,6 +371,14 @@ def _classify_outcome(outcome: BatchFetchOutcome) -> BatchFailure | None:
     envelope = outcome.envelope
     if envelope is None:
         return None
+    if envelope.target == "supplementary" and envelope.supplementary is not None:
+        status = envelope.supplementary.status
+        if status not in {"complete", "degraded"}:
+            return BatchFailure(
+                reason_code=status,
+                message="Supplementary acquisition returned " + status,
+                rate_limited=status == RATE_LIMITED,
+            )
     rate_limit_events = [
         event
         for event in envelope.trace
@@ -501,6 +510,14 @@ def _compact_run_payload(
             "error": error_payload,
             "output_artifacts": _artifact_payloads(record),
         }
+        envelope = state.envelopes.get(key)
+        if (
+            envelope is not None
+            and envelope.target == "supplementary"
+            and envelope.supplementary is not None
+        ):
+            item["target"] = envelope.target
+            item["supplementary"] = asdict(envelope.supplementary)
         if request.detail == "bounded":
             item.update(
                 content_payloads.get(
@@ -887,6 +904,7 @@ async def _execute_batch_fetch(
 async def batch_fetch_tool_async(
     *,
     queries: list[str],
+    target: str = "paper",
     concurrency: int = 1,
     modes: list[str] | None = None,
     strategy: FetchStrategyInput | Mapping[str, Any] | None = None,

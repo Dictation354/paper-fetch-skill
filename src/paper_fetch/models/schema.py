@@ -393,11 +393,46 @@ _FETCH_ENVELOPE_QUALITY_FIELDS = frozenset(
 )
 
 
+@dataclass
+class SupplementaryResult:
+    assets: list[dict[str, Any]] = field(default_factory=list)
+    asset_failures: list[dict[str, Any]] = field(default_factory=list)
+    discovery_complete: bool = False
+    identity_verified: bool = False
+    source_urls: list[str] = field(default_factory=list)
+
+    @property
+    def status(self) -> str:
+        if self.discovery_complete and not self.assets and not self.asset_failures:
+            return "no_result"
+        local = sum(bool(asset.get("path")) for asset in self.assets)
+        if (
+            self.discovery_complete
+            and local == len(self.assets)
+            and not self.asset_failures
+        ):
+            return "complete"
+        if local or (self.assets and not self.asset_failures):
+            return "degraded"
+        return str(
+            next(
+                (
+                    item.get("reason")
+                    for item in self.asset_failures
+                    if item.get("reason")
+                ),
+                "error",
+            )
+        )
+
+
 @dataclass(kw_only=True)
 class FetchEnvelope:
     doi: str | None
     source: str
     has_fulltext: bool
+    target: Literal["paper", "supplementary"] = "paper"
+    supplementary: SupplementaryResult | None = None
     content_kind: ContentKind = "metadata_only"
     has_abstract: bool = False
     warnings: list[str] = field(default_factory=list)
@@ -684,6 +719,7 @@ __all__ = [
     "SectionHint",
     "SemanticLosses",
     "SourceKind",
+    "SupplementaryResult",
     "TokenEstimateBreakdown",
     "coerce_acquisition_provenance",
 ]

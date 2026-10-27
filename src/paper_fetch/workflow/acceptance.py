@@ -152,6 +152,7 @@ class FormulaAcceptanceFacet(_AcceptanceModel):
 
 
 class ContentAcceptanceFacet(_AcceptanceModel):
+    requested: bool = True
     status: ContentAcceptanceStatus
     has_fulltext: bool
     has_abstract: bool
@@ -267,6 +268,7 @@ class FetchAcceptanceReport(_AcceptanceModel):
     schema_version: Literal[2]
     minimum_reader_schema_version: Literal[2]
     overall: OverallAcceptanceStatus
+    target: Literal["paper", "supplementary"] = "paper"
     identity: IdentityAcceptanceFacet
     fetch: FetchAcceptanceFacet
     content: ContentAcceptanceFacet
@@ -1163,6 +1165,7 @@ def evaluate_fetch_acceptance(
     envelope: FetchEnvelope | None,
     *,
     asset_profile: AssetProfile,
+    target: Literal["paper", "supplementary"] = "paper",
     requested_outputs: Collection[AcceptanceOutputKind | str] | None = None,
     asset_summary: AssetAcceptanceSummary | None = None,
     failure_code: str | None = None,
@@ -1186,6 +1189,18 @@ def evaluate_fetch_acceptance(
     if envelope is not None and normalized_failure is not None:
         raise ValueError("failure_code cannot be combined with a completed envelope")
     effective_failure = normalized_failure or (ERROR if envelope is None else None)
+    target = envelope.target if envelope is not None else target
+    if target == "supplementary":
+        if envelope is not None:
+            return _evaluate_supplementary_acceptance(
+                envelope, expected_doi=expected_doi, requested_outputs=requested_outputs
+            )
+        asset_profile = "all"
+        require_local_body_assets = require_full_size_body_assets = False
+        if requested_outputs is not None:
+            requested_outputs = [
+                item for item in requested_outputs if item != "article"
+            ]
     quality = _quality_for(envelope)
     trace = _trace_for(envelope, quality)
     resolved_source = (
@@ -1240,7 +1255,16 @@ def evaluate_fetch_acceptance(
         canonical_landing_unique=canonical_landing_unique,
     )
     fetch = _fetch_facet(envelope, effective_failure)
-    content = _content_facet(envelope, quality)
+    content = (
+        ContentAcceptanceFacet(
+            status=ContentAcceptanceStatus.UNAVAILABLE,
+            requested=False,
+            has_fulltext=False,
+            has_abstract=False,
+        )
+        if target == "supplementary"
+        else _content_facet(envelope, quality)
+    )
     asset = _asset_facet(summary, fetch_completed=fetch.completed)
     output = _output_facet(envelope, requested_outputs)
     provenance = _provenance_facet(
@@ -1265,12 +1289,138 @@ def evaluate_fetch_acceptance(
         schema_version=FETCH_ACCEPTANCE_SCHEMA_VERSION,
         minimum_reader_schema_version=FETCH_ACCEPTANCE_MIN_READER_VERSION,
         overall=overall,
+        target=target,
         identity=identity,
         fetch=fetch,
         content=content,
         asset=asset,
         output=output,
         provenance=provenance,
+    )
+
+
+def _evaluate_supplementary_acceptance(envelope, *, expected_doi, requested_outputs):
+    result = envelope.supplementary
+    assert result is not None
+    local = sum(bool(asset.get("path")) for asset in result.assets)
+    failed = len(result.asset_failures)
+    unarchived = sum(not asset.get("path") for asset in result.assets)
+    codes = tuple(
+        dict.fromkeys(
+            str(item.get("reason") or "asset_download_failure")
+            for item in result.asset_failures
+        )
+    )
+    identity = _identity_facet(
+        envelope,
+        identity_status=None
+        if result.identity_verified
+        else IdentityAcceptanceStatus.UNAVAILABLE,
+        failure_code=None,
+        candidate_count=0,
+        doi=envelope.doi,
+        expected_doi=expected_doi,
+        title=None,
+        canonical_landing_url=result.source_urls[0] if result.source_urls else None,
+        canonical_landing_verified=result.identity_verified,
+        canonical_landing_unique=True,
+    )
+    status = result.status
+    completed = status in {"complete", "degraded"}
+    asset_status = (
+        AssetAcceptanceStatus.NOT_APPLICABLE
+        if status == "no_result"
+        else AssetAcceptanceStatus.COMPLETE
+        if status == "complete"
+        else AssetAcceptanceStatus.DEGRADED
+        if completed
+        else AssetAcceptanceStatus.FAILED
+    )
+    assets = AssetAcceptanceFacet(
+        requested=True,
+        profile="all",
+        audited=result.discovery_complete,
+        expected=len(result.assets) if result.discovery_complete else None,
+        discovered=len(result.assets),
+        total=len(result.assets),
+        attempted=min(len(result.assets), local + failed),
+        local=local,
+        failed=failed,
+        not_archived=unarchived,
+        remote_only_count=unarchived,
+        remote_links_preserved=bool(unarchived),
+        failure_codes=codes,
+        issue_codes=codes or (("asset_not_archived",) if unarchived else ()),
+        status=asset_status,
+    )
+    requested = tuple(
+        AcceptanceOutputKind(item)
+        for item in sorted(set(requested_outputs or ()))
+        if item != "article"
+    )
+    available = tuple(
+        item
+        for item in requested
+        if (item == AcceptanceOutputKind.MARKDOWN and envelope.markdown is not None)
+        or (item == AcceptanceOutputKind.METADATA and envelope.metadata is not None)
+    )
+    missing = tuple(item for item in requested if item not in available)
+    provenance_complete = bool(
+        result.source_urls
+        and envelope.acquisition
+        and envelope.trace
+        and envelope.acquisition.provider == envelope.source
+        and envelope.acquisition.route in {"supplementary", "source_assets"}
+        and envelope.acquisition.representation in {"html", "xml"}
+    )
+    overall = (
+        OverallAcceptanceStatus.ACTION_REQUIRED
+        if identity.status != IdentityAcceptanceStatus.RESOLVED
+        else OverallAcceptanceStatus.FAILED
+        if not completed or missing
+        else OverallAcceptanceStatus.COMPLETE
+        if status == "complete" and provenance_complete
+        else OverallAcceptanceStatus.DEGRADED
+    )
+    return FetchAcceptanceReport(
+        schema_version=2,
+        minimum_reader_schema_version=2,
+        target="supplementary",
+        overall=overall,
+        identity=identity,
+        fetch=FetchAcceptanceFacet(
+            status=FetchAcceptanceStatus.OK
+            if completed
+            else FetchAcceptanceStatus.FAILED,
+            completed=completed,
+            code=None if completed else status,
+        ),
+        content=ContentAcceptanceFacet(
+            status=ContentAcceptanceStatus.UNAVAILABLE,
+            requested=False,
+            has_fulltext=False,
+            has_abstract=False,
+        ),
+        asset=assets,
+        output=OutputAcceptanceFacet(
+            status=OutputAcceptanceStatus.COMPLETE
+            if not missing
+            else OutputAcceptanceStatus.MISSING,
+            requested=requested,
+            available=available,
+            missing=missing,
+        ),
+        provenance=ProvenanceAcceptanceFacet(
+            status=ProvenanceAcceptanceStatus.COMPLETE
+            if provenance_complete
+            else ProvenanceAcceptanceStatus.PARTIAL,
+            source=envelope.source,
+            acquisition=envelope.acquisition,
+            trace_event_count=len(envelope.trace),
+            failure_codes=codes,
+            acceptance_policy="validated_asset",
+            acceptance_policy_satisfied=status == "complete",
+        ),
     )
 
 

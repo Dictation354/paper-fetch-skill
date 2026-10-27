@@ -346,6 +346,8 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         self.assertEqual(
             set(envelope.to_dict().keys()),
             {
+                "target",
+                "supplementary",
                 "doi",
                 "source",
                 "acquisition",

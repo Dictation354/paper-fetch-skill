@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Literal, Any
 
 from mcp import types as mcp_types
 from mcp.server.lowlevel.server import NotificationOptions
@@ -198,6 +198,7 @@ def build_server() -> PaperFetchMCPServer:
     )
     async def fetch_paper(
         query: str,
+        target: Literal["paper", "supplementary"] = "paper",
         modes: OutputModesInput | None = None,
         strategy: FetchStrategyToolInput | None = None,
         include_refs: IncludeRefsInput | None = None,
@@ -218,6 +219,7 @@ def build_server() -> PaperFetchMCPServer:
             tool_kwargs["download_dir"] = parsed_download_dir
         return await fetch_paper_tool_async(
             query=query,
+            target=target,
             modes=[str(mode) for mode in modes] if modes is not None else None,
             strategy=strategy,
             include_refs=include_refs,
@@ -324,6 +326,7 @@ def build_server() -> PaperFetchMCPServer:
     )
     async def batch_fetch(
         queries: BatchQueriesInput,
+        target: Literal["paper", "supplementary"] = "paper",
         concurrency: ConcurrencyInput = 1,
         modes: OutputModesInput | None = None,
         strategy: FetchStrategyToolInput | None = None,
@@ -350,6 +353,7 @@ def build_server() -> PaperFetchMCPServer:
             tool_kwargs["download_dir"] = parsed_download_dir
         return await batch_fetch_tool_async(
             queries=queries,
+            target=target,
             concurrency=concurrency,
             modes=[str(mode) for mode in modes] if modes is not None else None,
             strategy=strategy,

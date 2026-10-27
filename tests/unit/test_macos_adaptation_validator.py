@@ -7,6 +7,14 @@ from scripts import validate_macos_adaptation as validator
 
 
 class MacosAdaptationValidatorTests(unittest.TestCase):
+    def test_update_entry_preserves_installer_boundaries(self) -> None:
+        contract = validator.load_contract()
+        for key, value in contract["update"].items():
+            contract["update"][key] = False if value is True else "other"
+        diagnostics = "\n".join(validator.validate_contract(contract))
+        for key in contract["update"]:
+            self.assertIn(f"update.{key} must be", diagnostics)
+
     def test_support_matrix_drift_is_rejected(self) -> None:
         contract = validator.load_contract()
         contract["support"]["offline"]["python_versions"] = ["3.14"]
@@ -38,6 +46,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["browser"]["python_package_spec"] = "camoufox>=0.5.8"
         contract["browser"]["cooperative_cancel_owner_thread_cleanup"] = False
         contract["browser"]["html_snapshot_owner_thread"] = False
+        contract["browser"]["supplementary_index_without_body"] = False
 
         diagnostic = "\n".join(validator.validate_contract(contract))
 
@@ -53,6 +62,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             "cooperative_cancel_owner_thread_cleanup must be true", diagnostic
         )
         self.assertIn("html_snapshot_owner_thread must be true", diagnostic)
+        self.assertIn("supplementary_index_without_body must be true", diagnostic)
 
     def test_codex_discovery_and_migration_contract_drift_is_rejected(self) -> None:
         contract = validator.load_contract()

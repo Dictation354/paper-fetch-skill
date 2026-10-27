@@ -1670,6 +1670,7 @@ def fetch_html_with_playwright(
     browser_context_seed: Mapping[str, Any] | None = None,
     options: BrowserHtmlFetchOptions = DEFAULT_BROWSER_HTML_FETCH_OPTIONS,
 ) -> BrowserFetchedHtml:
+    supplementary_index = options.supplementary_index
     return_image_payload = options.return_image_payload
     return_screenshot = options.return_screenshot
     lightweight_seed_only = options.lightweight_seed_only
@@ -2083,7 +2084,7 @@ def fetch_html_with_playwright(
                     and body_readiness is not None
                     and body_readiness.ready
                 )
-                if not return_image_payload:
+                if not return_image_payload and not supplementary_index:
                     snapshot = (
                         _main_context_html_snapshot(
                             page, runtime_context=runtime_context
@@ -2235,7 +2236,9 @@ def fetch_html_with_playwright(
                 )
                 continue
 
-            if looks_like_abstract_redirect(normalized_url, final_url):
+            if not supplementary_index and looks_like_abstract_redirect(
+                normalized_url, final_url
+            ):
                 candidate_trace["duration_seconds"] = round(
                     time.monotonic() - candidate_started, 3
                 )
@@ -2252,7 +2255,7 @@ def fetch_html_with_playwright(
                 )
                 continue
 
-            if not return_image_payload:
+            if not return_image_payload and not supplementary_index:
                 raise_for_paywall(
                     html,
                     metadata={"doi": config.doi},
@@ -2297,6 +2300,7 @@ def fetch_html_with_playwright(
                 summary,
                 status_for_block_detection,
                 substantive_body_ready=substantive_body_ready,
+                include_paywall_text=not supplementary_index,
                 html_text="" if required_selector_ready else html,
                 response_headers={} if required_selector_ready else headers,
             )
@@ -2428,7 +2432,11 @@ def fetch_html_with_playwright(
             )
             candidate_trace["result"] = "success"
             staged_storage_state = None
-            if config.persist_storage_state and not return_image_payload:
+            if (
+                config.persist_storage_state
+                and not return_image_payload
+                and not supplementary_index
+            ):
                 staged_storage_state, storage_state_result = _stage_storage_state(
                     browser_context,
                     config,

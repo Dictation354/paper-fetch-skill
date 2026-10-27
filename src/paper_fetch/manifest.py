@@ -514,6 +514,9 @@ def build_manifest_record(
     acceptance = evaluate_fetch_acceptance(
         envelope,
         asset_profile=asset_profile,
+        target="supplementary"
+        if request.parameters.get("target") == "supplementary"
+        else "paper",
         requested_outputs=requested_outputs,
         asset_summary=asset_summary,
         require_local_body_assets=effective_require_local,
@@ -534,7 +537,21 @@ def build_manifest_record(
         )
         for spec in output_artifacts
     )
-    if envelope is not None:
+    if (
+        envelope is not None
+        and envelope.target == "supplementary"
+        and not acceptance.fetch.completed
+    ):
+        record_status = ManifestRecordStatus.FAILED
+        manifest_error = ManifestError(
+            status=acceptance.fetch.code or "error",
+            reason=(
+                "No supplementary materials were found after complete discovery."
+                if acceptance.fetch.code == "no_result"
+                else "Supplementary acquisition failed; see individual material failures."
+            ),
+        )
+    elif envelope is not None:
         record_status = ManifestRecordStatus.COMPLETED
     elif aborted:
         record_status = ManifestRecordStatus.ABORTED

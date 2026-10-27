@@ -111,6 +111,8 @@ agent 安装 skill 后，可以识别 Paper Fetch 的适用边界，按用户意
 - Linux：与本机 CPython ABI 匹配的 `paper-fetch-skill-offline-linux-x86_64-cp*.sh`
 - macOS 15+ Apple Silicon：与本机 CPython ABI 匹配的 `paper-fetch-skill-offline-macos-arm64-cp*.tar.gz`
 
+官方安装包安装后，运行 `paper-fetch update` 即可更新到最新正式 Release：Linux/macOS 自动升级，Windows 下载校验后打开安装向导，并预选当前安装目录。同版或当前版本更新时直接退出。
+
 源码安装按能力分层：
 
 ```bash
@@ -196,3 +198,13 @@ paper-fetch auth wiley
 ## 社区
 
 <https://linux.do/>
+
+## 独立获取补充材料
+
+```bash
+paper-fetch fetch --target supplementary --query "10.1038/s41561-022-00912-7" --output-dir ./papers
+```
+
+`--target paper|supplementary` 默认 `paper`。`supplementary` 独立核对身份、发现并下载出版社定义的补充附件、Source Data、Extended Data 和多媒体，不要求正文成功，也不获取正文 PDF。普通数据仓库链接不自动纳入。索引命名为 `<paper-stem>_supplementary`，Markdown 只列材料名称、来源链接和本地路径，JSON 另含逐项失败及发现完整性。
+
+Python `fetch_paper(..., target="supplementary")`、MCP `fetch_paper` / `batch_fetch` 使用相同目标；CLI 批量仍用 `--query-file`。`asset_profile` 和正文渲染选项只控制 `paper`；`paper` 配合 `asset_profile=all` 仍表示随正文获取补充材料。完整发现且没有材料时返回空清单和 `no_result`，CLI 非零退出；禁止下载时返回标记为未归档的发现清单。

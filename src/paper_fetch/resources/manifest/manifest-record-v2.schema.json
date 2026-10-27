@@ -307,6 +307,11 @@
     },
     "ContentAcceptanceFacet": {
       "properties": {
+        "requested": {
+          "default": true,
+          "title": "Requested",
+          "type": "boolean"
+        },
         "status": {
           "$ref": "#/$defs/ContentAcceptanceStatus"
         },
@@ -413,6 +418,15 @@
         },
         "overall": {
           "$ref": "#/$defs/OverallAcceptanceStatus"
+        },
+        "target": {
+          "default": "paper",
+          "enum": [
+            "paper",
+            "supplementary"
+          ],
+          "title": "Target",
+          "type": "string"
         },
         "identity": {
           "$ref": "#/$defs/IdentityAcceptanceFacet"

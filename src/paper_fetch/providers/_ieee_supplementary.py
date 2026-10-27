@@ -198,6 +198,7 @@ def fetch_ieee_multimedia_assets(
     headers: Mapping[str, str],
     timeout: float = DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     runtime_context: RuntimeContext | None = None,
+    strict: bool = False,
 ) -> list[dict[str, str]]:
     if not landing_attempt.article_number or not _landing_metadata_has_multimedia_scope(
         landing_attempt.landing_metadata
@@ -208,7 +209,7 @@ def fetch_ieee_multimedia_assets(
         article_number=landing_attempt.article_number,
         multimedia_url=multimedia_url,
     )
-    if cached is not None:
+    if cached is not None and (cached or not strict):
         return cached
     try:
         response = transport.request(
@@ -218,6 +219,11 @@ def fetch_ieee_multimedia_assets(
             timeout=timeout,
             retry_on_transient=True,
         )
+        if (
+            strict
+            and int(response.get("status_code") or response.get("status") or 200) >= 400
+        ):
+            raise ValueError("IEEE multimedia index request failed.")
         payload = json.loads(
             decode_html(
                 bytes(response.get("body") or b""),
@@ -225,8 +231,14 @@ def fetch_ieee_multimedia_assets(
             )
         )
     except (RequestFailure, TypeError, ValueError):
+        if strict:
+            raise
         return []
-    if not isinstance(payload, Mapping):
+    if not isinstance(payload, Mapping) or (
+        strict and not isinstance(payload.get("multimedia"), list)
+    ):
+        if strict:
+            raise ValueError("IEEE multimedia index is incomplete.")
         return []
     response_url = _absolute_ieee_url(
         str(response.get("url") or multimedia_url), multimedia_url

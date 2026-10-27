@@ -6,6 +6,7 @@ from ..reason_codes import ERROR, NO_ACCESS, RATE_LIMITED
 from .provider_catalog import PROVIDER_CATALOG_RESOURCE_URI
 
 DEFAULT_FETCH_VALUES: tuple[tuple[str, str], ...] = (
+    ("target", '"paper"'),
     ("modes", '["article", "markdown"]'),
     ("strategy.asset_profile", "null (provider default)"),
     ("strategy.allow_metadata_only_fallback", "true"),
@@ -89,6 +90,8 @@ def server_instructions() -> str:
         "modes=[article], detail=compact, save_markdown=false, no_download=true, "
         "prefer_cache=false, artifact_mode=none, strategy.asset_profile=none, and no "
         "batch_results; judge each result by acceptance. "
+        "fetch_paper and batch_fetch accept target=paper|supplementary (default paper). "
+        "Supplementary tasks discover materials without a body, preserve per-item failures, and use content_requested=false acceptance. "
         "fetch_paper defaults to article+markdown, provider-default assets, metadata-only "
         "fallback enabled, full text, cache preference off, downloads on, and "
         "artifact_mode=markdown-assets. Fetch and batch calls may access remote services; "
@@ -107,6 +110,9 @@ def server_instructions() -> str:
 def fetch_tool_description() -> str:
     return (
         "Fetch one paper as structured article, Markdown, and/or metadata with provenance, "
+        "or use target=supplementary for independent material discovery/download without a body or body PDF. "
+        "target defaults to paper; supplementary ignores body asset/render options, returns a structured supplementary list "
+        "and a material-only Markdown index. Empty complete discovery returns no_result; no_download returns unarchived links. "
         "quality, trace, and token estimates. Defaults are modes=article+markdown, "
         "provider-default assets, metadata-only fallback enabled, include_refs=null, "
         "max_tokens=full_text, prefer_cache=false, no_download=false, "

@@ -66,7 +66,11 @@ def _service_modes_for_fetch_request(
     include_article_for_assets: bool,
 ) -> set[str]:
     requested_modes = request.requested_modes()
-    if include_article_for_assets and request.strategy.asset_profile != "none":
+    if (
+        request.target == "paper"
+        and include_article_for_assets
+        and request.strategy.asset_profile != "none"
+    ):
         requested_modes = set(requested_modes)
         requested_modes.add("article")
     return requested_modes
@@ -261,17 +265,28 @@ def _fetch_paper_envelope(
         if cached_envelope is not None:
             return cached_envelope
 
-        envelope = FetchPipeline(deps.service_fetch_paper).run(
-            FetchPipelineRequest(
-                query=request.query,
-                modes=_service_modes_for_fetch_request(
-                    request, include_article_for_assets=include_article_for_assets
-                ),  # type: ignore[arg-type]
-                strategy=request.strategy.to_service_strategy(),
-                render=request.to_render_options(),
-            ),
-            context=context,
-        )
+        previous_store = context.artifact_store
+        if request.target == "supplementary" and request.no_download:
+            from ..artifacts import ArtifactStore
+
+            context.artifact_store = ArtifactStore.from_download_dir(
+                None, artifact_mode="none"
+            )
+        try:
+            envelope = FetchPipeline(deps.service_fetch_paper).run(
+                FetchPipelineRequest(
+                    query=request.query,
+                    target=request.target,
+                    modes=_service_modes_for_fetch_request(
+                        request, include_article_for_assets=include_article_for_assets
+                    ),  # type: ignore[arg-type]
+                    strategy=request.strategy.to_service_strategy(),
+                    render=request.to_render_options(),
+                ),
+                context=context,
+            )
+        finally:
+            context.artifact_store = previous_store
         context.raise_if_cancelled()
         final_scope = capability_scope_from_runtime_context(context)
         # Preserve the producer scope so Markdown registration cannot become public.
@@ -312,6 +327,7 @@ def _resolve_request_from_inputs(
 def _fetch_request_from_inputs(
     *,
     query: str,
+    target: str = "paper",
     modes: list[str] | None,
     strategy: FetchStrategyInput | Mapping[str, Any] | None,
     include_refs: str | None,
@@ -343,7 +359,13 @@ def _response_payload_from_envelope(
         requested_outputs=request.requested_modes(),
         expected_doi=expected_doi_from_query(request.query),
     )
-    payload["status"] = "ok"
+    payload["status"] = (
+        envelope.supplementary.status
+        if envelope.target == "supplementary"
+        and envelope.supplementary is not None
+        and envelope.supplementary.status not in {"complete", "degraded"}
+        else "ok"
+    )
     payload["acceptance"] = compact_acceptance_payload(acceptance)
     if not request.save_markdown:
         return payload
@@ -391,6 +413,7 @@ def resolve_paper_payload(
 def fetch_paper_payload(
     *,
     query: str,
+    target: str = "paper",
     modes: list[str] | None = None,
     strategy: FetchStrategyInput | Mapping[str, Any] | None = None,
     include_refs: str | None = None,
@@ -409,6 +432,7 @@ def fetch_paper_payload(
 ) -> dict[str, Any]:
     request = _fetch_request_from_inputs(
         query=query,
+        target=target,
         modes=modes,
         strategy=strategy,
         include_refs=include_refs,
@@ -652,9 +676,28 @@ def provider_status_tool(
         return _tool_result(error_payload_from_exception(error), is_error=True)
 
 
+def _fetch_error_payload(
+    error: Exception, *, target: str, query: str
+) -> dict[str, Any]:
+    payload = error_payload_from_exception(error)
+    if target == "supplementary":
+        payload["target"] = target
+        payload["acceptance"] = compact_acceptance_payload(
+            evaluate_fetch_acceptance(
+                None,
+                target="supplementary",
+                asset_profile="all",
+                failure_code=payload.get("status", "error"),
+                expected_doi=expected_doi_from_query(query),
+            )
+        )
+    return payload
+
+
 async def fetch_paper_tool_async(
     *,
     query: str,
+    target: str = "paper",
     modes: list[str] | None = None,
     strategy: FetchStrategyInput | Mapping[str, Any] | None = None,
     include_refs: str | None = None,
@@ -676,6 +719,7 @@ async def fetch_paper_tool_async(
     try:
         request = _fetch_request_from_inputs(
             query=query,
+            target=target,
             modes=modes,
             strategy=strategy,
             include_refs=include_refs,
@@ -691,7 +735,9 @@ async def fetch_paper_tool_async(
         await report_progress(
             ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper failed"
         )
-        return _tool_result(error_payload_from_exception(error), is_error=True)
+        return _tool_result(
+            _fetch_error_payload(error, target=target, query=query), is_error=True
+        )
 
     await report_progress(ctx, 1, _FETCH_PROGRESS_TOTAL, "Fetching paper content")
     cancelled = threading.Event()
@@ -776,7 +822,9 @@ async def fetch_paper_tool_async(
         await report_progress(
             ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper failed"
         )
-        return _tool_result(error_payload_from_exception(error), is_error=True)
+        return _tool_result(
+            _fetch_error_payload(error, target=target, query=query), is_error=True
+        )
     finally:
         if runtime_context is not None:
             runtime_context.close()

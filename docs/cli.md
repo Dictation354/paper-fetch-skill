@@ -4,7 +4,7 @@
 
 ## 命令面
 
-`paper-fetch --help` 会直接列出当前可用的 `fetch`、`auth`、`browser-preflight` 和 `doctor` 子命令；每个子命令都可以用 `--help` 查看有效默认值、枚举和落盘影响：
+`paper-fetch --help` 会直接列出当前可用的 `fetch`、`auth`、`browser-preflight`、`doctor` 和 `update` 子命令；每个子命令都可以用 `--help` 查看有效默认值、枚举和落盘影响：
 
 ```bash
 paper-fetch --help
@@ -12,9 +12,24 @@ paper-fetch fetch --help
 paper-fetch auth --help
 paper-fetch browser-preflight --help
 paper-fetch doctor --help
+paper-fetch update --help
 ```
 
 抓取必须使用 `paper-fetch fetch ...`。单篇抓取的 `--manifest <path>` 是一次性结果文件选项，不是独立子命令。`doctor` 是内置的只读、无网络静态诊断命令。
+
+## 更新官方安装包
+
+```bash
+paper-fetch update
+```
+
+固定从 `Dictation354/paper-fetch-skill` 查询最新正式 Release，按当前平台、架构和 CPython ABI 下载官方安装包及同一 Release 的 `SHA256SUMS`，摘要匹配后才执行。当前版本相同或更新时直接提示并退出；源码和 pip 环境会提示各自的更新命令。
+
+Linux/macOS 在当前安装目录自动升级，复用当前 Python、配置解析得到的 headless/headful 设置及外部 env 路径，并以 `--non-interactive` 跳过可选配置。macOS 先预检 tarball 的路径、链接及特殊文件，再解包执行原安装器，继续执行其 ABI、payload 和 quarantine 检查。用户配置、论文文件、认证状态和宿主集成沿用安装器的保留语义。
+
+Windows 下载校验后打开图形安装向导，以 `/DIR` 预选当前安装目录；CLI 随后退出释放 runtime，输出“已启动安装向导”和保留的安装包位置，升级结果由向导报告。
+
+更新完成、无需更新或成功交接向导返回 `0`；不支持的安装方式，以及查询、下载、校验或安装失败返回 `1`，错误写入 stderr。部署细节见 [部署文档](deployment.md#8-更新方式)。
 
 ## 基本用法
 
@@ -32,6 +47,21 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421" \
 `--query` 可以是 DOI、论文 landing URL 或标题查询。CLI 默认会优先尝试全文；如果全文不可用，可能返回摘要或 metadata-only 结果。MDPI 的经典数字 URL（例如 `https://www.mdpi.com/2072-4292/18/10/1673`）会先按已知 ISSN 到 journal code 映射推导 DOI；MDPI DOI / DOI URL 也会在 provider 阶段反推对应的数字 article URL，再进入 MDPI selected-browser provider，避免解析阶段被 MDPI direct HTTP/CDN 403 阻断；未知 ISSN 仍按通用 landing URL 解析。URL 中嵌入 DOI 时，resolver 会复用 provider path templates 清理已知 route 后缀，例如 Frontiers 的 `/full` / `/pdf` / `/xml`、IOP 的 `/pdf`、Wiley 的 `/fullpdf` 和 Springer PDF URL 的 `.pdf`，PLOS 这类 `id={doi}` query parameter 也会直接提取 DOI；未知 provider 的 DOI 后缀不会被猜测性剥离。旧式 SICI DOI（例如 `10.1175/1520-0469(1967)024<0241:TEOTAW>2.0.CO;2` 或 Wiley/Blackwell 的 `10.1002/(SICI)...<...>...`）会保留完整 `<...>` / `;` 后缀；对应的 AMS `view/...xml` 或 `downloadpdf/...pdf` URL 可作为 query。官方 PDF fallback 已经下载到真实 PDF 但无法转换成 Markdown 时，会保留已下载的 PDF artifact 并在 warning 中说明 PDF-only 状态，而不是降级成 Crossref metadata-only source。
 
 上面的命令是临时阅读：正文写 stdout，不归档论文文件。CLI 仍会准备显式的 `./.paper-fetch-tmp` 工作目录，因此不能承诺硬零写盘；完全不落盘请使用 MCP 的临时阅读预设。CLI 没有 cache-only / `prefer_cache` 预设，也没有与 `batch_check(mode="metadata")` 等价的低成本批量 probe。
+
+## 独立补充材料任务
+
+```bash
+paper-fetch fetch --target supplementary --query "论文 DOI 或 URL" --output-dir ./papers
+paper-fetch fetch --target supplementary --query-file queries.txt --output-dir ./papers --format json
+```
+
+`--target` 接受 `paper|supplementary`，默认 `paper`。独立补充任务不检查正文充分性，不组装或输出正文，不下载正文 PDF；正文付费不妨碍获取公开附件，附件自身的访问限制仍逐项报告。来源未实现此能力时返回 `not_supported`。
+
+材料范围沿用 provider 的明确补充区、Source Data、Extended Data 和多媒体定义，普通数据仓库链接不自动纳入。`--asset-profile` 的三个值不变，补充任务固定获取材料范围；`--include-refs`、`--max-tokens` 和正文资产要求仅用于 `paper`。
+
+主 JSON/Markdown 及另存 Markdown 索引使用 `<paper-stem>_supplementary`，附件沿用原资产目录规则。JSON 的 `target="supplementary"`、`has_fulltext=false`、`article=null`；`supplementary` 包含 `assets`、`asset_failures`、`discovery_complete`、`identity_verified` 和 `source_urls`。Markdown 只列材料名称、来源链接及已下载文件路径。`--artifact-mode none` 返回未归档清单，显式的主输出或索引保存仍遵循原 CLI 语义。
+
+全部文件成功时 acceptance 为 `complete`，部分成功或仅发现未归档时为 `degraded`；全部下载失败保留具体原因。只有完整检查且没有材料时返回 `no_result` 和空清单，并使用非零退出码，批量 JSONL 的 acceptance 保留该结果。随正文下载补充材料继续用 `--target paper --asset-profile all`。
 
 ## 任务预设
 
@@ -66,7 +96,7 @@ CLI 适合单篇或批量本地归档；需要 MCP 宿主内 progress/cancel、�
 | `terminal` | `record` 为既有 manifest v2 record，产物写入和工作线程清理完成后发送 |
 | `cancel_response` | `status: cancelling / already_finished / invalid_command / stale_run` |
 
-单篇 `index` 为 1，批量即使乱序完成也保留原始序号。`completed` 为已处理资产（包括失败），候选地址尝试及重试不重复累加。同一次发现/下载范围内按资产身份计数，切换来源或重试轮次时 `scope` 改变，消费者替换当前计数。`total: null` 表示未知；不推算百分比。补充材料仅在请求 `asset_profile=all` 时处理。
+单篇 `index` 为 1，批量即使乱序完成也保留原始序号。`completed` 为已处理资产（包括失败），候选地址尝试及重试不重复累加。同一次发现/下载范围内按资产身份计数，切换来源或重试轮次时 `scope` 改变，消费者替换当前计数。`total: null` 表示未知；不推算百分比。正文任务的补充材料仅在请求 `asset_profile=all` 时处理；独立 `target=supplementary` 固定处理补充材料。
 
 `--control-stdin` 仅与 `--progress jsonl` 配合使用。等待 `run_started` 后向 stdin 写入以下 JSONL（每行最多 16,384 字符）：
 

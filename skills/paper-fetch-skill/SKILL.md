@@ -1,6 +1,6 @@
 ---
 name: paper-fetch-skill
-description: "获取、下载或核验指定论文全文，或探测全文可用性。支持 DOI、URL、arXiv ID、标题和引用条目；阅读、总结、比较或翻译已知论文而需要全文时使用。不用于尚无明确候选的开放式领域检索。"
+description: "获取、下载或核验指定论文全文或补充材料，或探测全文可用性。支持 DOI、URL、arXiv ID、标题和引用条目；阅读、总结、比较或翻译已知论文而需要全文时使用。不用于尚无明确候选的开放式领域检索。"
 ---
 
 # 论文抓取
@@ -15,6 +15,10 @@ description: "获取、下载或核验指定论文全文，或探测全文可用
 - 工具自动准备 managed runtime。仅实际返回 `challenge` / `auth_required` 时进入人工认证，不绕过登录、验证码、付费墙或访问控制。
 - 消费统一 acceptance，并核对任务要求的响应、资产和实际文件。保留来源及影响任务的降级；HTML 失败后 PDF/ePDF 成功仍保留 browser failure provenance。
 - PDF 正文以现有转换器输出为边界，不清洗或修复内容。
+
+## 独立补充材料
+
+用户只要补充材料时，使用 CLI `fetch --target supplementary` 或 MCP `fetch_paper` / `batch_fetch` 的 `target="supplementary"`，沿用已有路径和批量设置。此任务不要求正文、不获取正文 PDF；材料范围固定，不用 `asset_profile` 改变范围。读取返回的 `supplementary.assets`、逐项失败及发现完整性，按材料验收报告；`has_fulltext=false` 和正文未请求不是失败。随正文归档补充材料仍使用 `target="paper", asset_profile="all"`。精确返回与落盘语义见[工具契约](references/tool-contract.md#独立补充材料任务)。
 
 ## 按需参考
 

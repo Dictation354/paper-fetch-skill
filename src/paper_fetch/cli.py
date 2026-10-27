@@ -348,6 +348,13 @@ def serialize_envelope(
             if markdown_override is not None
             else envelope.markdown or ""
         )
+    if envelope.target == "supplementary":
+        assert envelope.supplementary is not None
+        payload = envelope.to_dict()
+        payload["status"] = envelope.supplementary.status
+        if output_format == "both" and markdown_override is not None:
+            payload["markdown"] = markdown_override
+        return json.dumps(payload, ensure_ascii=False, indent=2)
     if output_format == "json":
         if envelope.article is None:
             raise ValueError("CLI json output requires the article payload.")
@@ -476,6 +483,8 @@ def _formatted_output_filename(
         query_digest = sha256(normalized_query.encode("utf-8")).hexdigest()[:16]
         title = f"article_{query_digest}"
     stem = format_paper_stem(authors, year, title, doi=doi)
+    if envelope.target == "supplementary":
+        stem += "_supplementary"
     suffix = {
         "markdown": ".md",
         "json": ".json",
@@ -735,6 +744,7 @@ def _run_single_fetch_with_context(
         envelope = FetchPipeline(fetch_paper).run(
             FetchPipelineRequest(
                 query=query,
+                target=getattr(args, "target", "paper"),
                 modes=modes,
                 strategy=FetchStrategy(
                     allow_metadata_only_fallback=True,
@@ -869,6 +879,11 @@ def _manifest_request_parameters(
     """Return the CLI request semantics covered by the shared fingerprint."""
 
     return {
+        **(
+            {"target": args.target}
+            if getattr(args, "target", "paper") != "paper"
+            else {}
+        ),
         "modes": sorted(_compute_modes(args)),
         "format": args.format,
         "strategy": {
@@ -1110,6 +1125,19 @@ def _run_batch_item(
 def _classify_batch_outcome(outcome: CliFetchOutcome) -> BatchFailure | None:
     error = outcome.error
     if error is None:
+        envelope = outcome.result.envelope if outcome.result is not None else None
+        if (
+            envelope is not None
+            and envelope.target == "supplementary"
+            and envelope.supplementary is not None
+        ):
+            status = envelope.supplementary.status
+            if status not in {"complete", "degraded"}:
+                return BatchFailure(
+                    reason_code=status,
+                    message="Supplementary acquisition returned " + status,
+                    rate_limited=status == RATE_LIMITED,
+                )
         return None
     payload = _error_payload(error)
     status = str(payload.get("status") or ERROR)
@@ -1205,7 +1233,11 @@ def exit_code_for_batch_results(
 ) -> int:
     statuses = [
         (
-            ("ok" if item.error is None else item.error.status)
+            (
+                item.acceptance.fetch.code or "ok"
+                if item.acceptance.target == "supplementary"
+                else ("ok" if item.error is None else item.error.status)
+            )
             if isinstance(item, ManifestRecord)
             else str(item.get("status"))
         )
@@ -1592,6 +1624,12 @@ def _add_fetch_arguments(
         ),
     )
     parser.add_argument(
+        "--target",
+        choices=("paper", "supplementary"),
+        default=_default("paper", suppress_defaults=suppress_defaults),
+        help="Fetch the paper (default) or independently retrieve supplementary materials.",
+    )
+    parser.add_argument(
         "--asset-profile",
         choices=("none", "body", "all"),
         default=_default("body", suppress_defaults=suppress_defaults),
@@ -1877,7 +1915,25 @@ def build_parser(
         _register_doctor_subcommand(subparsers)
     else:
         doctor_registrar(subparsers)
+
+    update_parser = subparsers.add_parser(
+        "update",
+        help="Update an official installation to the latest stable GitHub Release.",
+        description=(
+            "Download and verify the latest stable Release from "
+            "Dictation354/paper-fetch-skill. Linux/macOS upgrade automatically; "
+            "Windows opens the setup wizard at the current installation directory. "
+            "Source and pip installations receive their existing update commands."
+        ),
+    )
+    update_parser.set_defaults(_command_handler=_run_update_namespace)
     return parser
+
+
+def _run_update_namespace(_args: argparse.Namespace) -> int:
+    from .update import run_update
+
+    return run_update()
 
 
 def _write_auth_result(provider_key: str, provider_label: str, result) -> None:
@@ -2196,6 +2252,17 @@ def _run_fetch_namespace(args: argparse.Namespace) -> int:
                     overwrite=bool(getattr(args, "overwrite", False)),
                 )
             progress.complete(1, lambda _cancelled: record)
+        if (
+            result.envelope.target == "supplementary"
+            and result.envelope.supplementary is not None
+            and result.envelope.supplementary.status not in {"complete", "degraded"}
+        ):
+            return exit_code_for_error(
+                PaperFetchFailure(
+                    result.envelope.supplementary.status,
+                    "Supplementary acquisition did not complete.",
+                )
+            )
         return 0
     except OutputDirectoryError as exc:
         if not batch_mode and output_dir is not None:

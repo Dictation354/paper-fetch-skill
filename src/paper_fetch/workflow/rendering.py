@@ -365,7 +365,8 @@ def _markdown_filename(
     authors = list(meta.authors) if meta and meta.authors else None
     year = _extract_year(meta.published if meta else None)
     title = meta.title if meta else None
-    return f"{format_paper_stem(authors, year, title, doi=envelope.doi)}.md"
+    suffix = "_supplementary" if envelope.target == "supplementary" else ""
+    return f"{format_paper_stem(authors, year, title, doi=envelope.doi)}{suffix}.md"
 
 
 def _extend_envelope_status(
@@ -389,7 +390,14 @@ def save_markdown_to_disk(
     commit_guard: Callable[[], None] | None = None,
 ) -> Path | None:
     has_usable_fulltext = bool(
-        envelope.content_kind == FULLTEXT and envelope.markdown and envelope.article
+        (
+            envelope.target == "supplementary"
+            and envelope.supplementary is not None
+            and envelope.markdown is not None
+        )
+        or (
+            envelope.content_kind == FULLTEXT and envelope.markdown and envelope.article
+        )
     )
     if not has_usable_fulltext:
         _extend_envelope_status(
@@ -413,7 +421,8 @@ def save_markdown_to_disk(
         overwrite=overwrite,
         commit_guard=commit_guard,
     )
-    message = f"Markdown full text was saved to {target}."
+    label = "supplementary index" if envelope.target == "supplementary" else "full text"
+    message = f"Markdown {label} was saved to {target}."
     _extend_envelope_status(
         envelope,
         warnings=[message],

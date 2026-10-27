@@ -17,6 +17,11 @@ def compact_acceptance_payload(
     """Project the canonical report into the bounded MCP acceptance contract."""
 
     return {
+        **(
+            {"target": report.target, "content_requested": report.content.requested}
+            if report.target != "paper"
+            else {}
+        ),
         "overall": report.overall.value,
         "identity": report.identity.status.value,
         "fetch": report.fetch.status.value,

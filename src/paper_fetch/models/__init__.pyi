@@ -61,3 +61,5 @@ from .tokens import (
 )
 
 __all__: list[str]
+
+from .schema import SupplementaryResult as SupplementaryResult

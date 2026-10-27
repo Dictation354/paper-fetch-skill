@@ -86,3 +86,5 @@ PY
 展示精简不改变工具、manifest 或 cache 的完整结果，也不省略必要的身份、文件和降级验收。需重试时只按 [`failure-handling.md`](failure-handling.md) 的上限和状态变化条件执行。
 
 获取验收后，宿主继续完成用户原本要求的总结、比较、翻译或提取；不要以获取报告结束阅读任务。证据不足时说明限制并完成有依据的部分，不把摘要或片段冒充全文。paper-fetch 本身仍只负责身份解析、全文获取、验收与报告。
+
+独立 `target=supplementary` 任务只验收材料：正文 `content.requested=false` 和 `has_fulltext=false` 符合请求。核对 `supplementary.discovery_complete`、逐项 `asset_failures`、来源记录及用户要求归档的实际文件；完整空发现为 `no_result`，未归档清单不能报告为下载完成。

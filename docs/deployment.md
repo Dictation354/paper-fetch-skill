@@ -206,7 +206,13 @@ Windows 安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管
 
 Windows 耗时步骤有进度窗口和控制台结果，可用 Ctrl+C 取消当前可选步骤；官方 Ghostscript 向导及 UAC 可直接取消。完成后显示汇总，并写入不含凭据的 `optional-setup-results.txt`。Unix 汇总输出到终端。重启已运行的宿主/MCP 后配置生效。需要重试时可使用安装目录绝对运行时执行 `-m paper_fetch.offline_setup --install-root <install-dir>`（Unix）；Windows 重新运行 EXE 向导。
 
-离线更新：
+离线更新：已安装官方包且命令支持 `update` 时，运行 `paper-fetch update`。命令通过 [GitHub latest release API](https://docs.github.com/en/rest/releases/releases#get-the-latest-release) 查询固定仓库 `Dictation354/paper-fetch-skill` 的最新正式 Release，仅升级到更高版本。按当前平台、架构和标准 CPython ABI 选择安装包，安装包与 `SHA256SUMS` 均取自本次 Release；流式下载至临时目录并核验 SHA256 后才执行。
+
+Linux/macOS 自动把当前安装目录、当前 Python、现有配置解析得到的 headless/headful 和外部 env 路径传给安装器，以 `--non-interactive` 跳过可选配置。macOS 在解包前拒绝越界路径、符号/硬链接、特殊文件及路径冲突，随后执行包内 `install-offline.sh`，保留原 ABI、payload inventory 和 quarantine 检查。Unix 下载临时文件在命令结束后清理。
+
+Windows 下载校验后以 `/DIR=<当前安装目录>` 启动图形安装向导，CLI 随即返回 `0` 释放 runtime，并输出“已启动安装向导”和保留的安装包路径；升级结果由向导报告。Linux/macOS 完成升级或当前版本相同/更新时返回 `0`；不支持的安装方式或查询、下载、校验、安装失败返回 `1`，错误写 stderr。升级的配置、论文、认证状态和宿主集成保留行为仍由原安装器负责。
+
+需要手动下载，或旧版尚无 `update` 命令时：
 
 - Windows：下载新版 `paper-fetch-skill-windows-x86_64-setup.exe` 并直接运行。安装路径和 `AppId` 固定；安装器先备份 `offline.env`，再通过固定版本与摘要的 UninsIS 1.7.0 静默运行同 `AppId` 的既有卸载器，并等待 Inno 的 TEMP 第二阶段删除原卸载器 EXE 后才覆盖新版 runtime-only payload。旧卸载器只移除自身管理的文件，不递归清空目录，因此 `offline.env`、`downloads/` 和其它用户自建文件会保留；UninsIS 的 LGPL 与 provenance notice 随安装器分发，新版 helper 只替换 managed runtime block，并重新写入 PATH、skill 和 MCP 注册。
 - Linux：下载与目标机 CPython ABI 匹配的新 `.sh` 后直接运行。默认安装目录固定为 `~/.local/share/paper-fetch-skill`，升级时会备份安装目录内的 `offline.env`，清理既有 runtime payload 和源码/构建残留，把新版 runtime-only payload 复制进去，再写回 `offline.env` 并刷新 shell / skill / MCP managed block。若希望更新时不改动外部 `offline.env`，用 `--reuse-env-file` 指向现有文件；安装脚本不会写入该文件，只会把 shell 启动文件和 Codex fallback config 中的 managed block 替换为新安装目录的 PATH / MCP runtime 路径。
@@ -593,7 +599,7 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 
 ## 8. 更新方式
 
-离线 release 包的更新方式见“离线包”小节。本节只针对源码或在线安装环境。
+官方 release 包运行 `paper-fetch update`，具体行为见“离线包”小节。源码或 pip 安装环境运行该命令时只提示原有更新命令，返回 `1`。源码或在线安装的更新方式如下。
 
 更新当前仓库版本时，进入原来的 Python 环境后重新安装即可：
 
@@ -714,3 +720,5 @@ macOS 的机器合同见 [`macos-adaptation-contract.toml`](macos-adaptation-con
 本地修改涉及上述边界时，先运行 `python scripts/validate_macos_adaptation.py`，再在当前平台运行对应 contract 入口。原生发布证据只能由 macOS runner 提供。
 
 Codex skill 的 `.agents/skills` 迁移与校验后清理同样适用于 macOS；Linux portable 验证不替代原生 macOS 安装证据。
+
+独立补充任务的浏览器索引模式复用同一 Camoufox runtime 和页面附件点击下载，不要求正文就绪，允许摘要页及正文付费页上的公开材料索引；附件自身仍遵守访问限制。此项跨平台契约见 `browser.supplementary_index_without_body`。

@@ -1,6 +1,18 @@
 {
   "version": 2,
   "modules": {
+    "tests/unit/test_update.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "Official updater CLI, version comparison, target selection and download/checksum boundary mocks."
+      }
+    },
+    "tests/integration/test_update.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "Local release HTTP downloads, Unix installer subprocess arguments, macOS archive preflight and Windows wizard boundary mock."
+      }
+    },
     "tests/unit/test_acceptance_adapter_contract.py": {
       "default": {
         "kind": "mechanism",
@@ -4555,6 +4567,19 @@
         "kind": "mechanism",
         "scope": "PNAS/Science/Wiley owner-thread snapshots, delayed DOM, preparation recapture, navigation and cancellation in offline Camoufox",
         "reason": "真实浏览器验证最小分页/懒加载与缺失报告契约，不声明线上可用性。"
+      }
+    },
+    "tests/unit/test_supplementary.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Supplementary task parameters, abstract/paywall index, scoped assets, identity, acceptance and cache boundary mocks.",
+        "reason": "Small provider snippets and boundary mocks; no claim about publisher full-text completeness."
+      }
+    },
+    "tests/integration/test_supplementary.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "Real local HTTP requests and attachment downloads through CLI/MCP single and batch outputs."
       }
     }
   }

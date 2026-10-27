@@ -183,6 +183,7 @@ def validate_contract(
         "native_bundle_gate",
         "cooperative_cancel_owner_thread_cleanup",
         "html_snapshot_owner_thread",
+        "supplementary_index_without_body",
     ):
         if browser.get(key) is not True:
             errors.append(f"browser.{key} must be true")
@@ -211,6 +212,18 @@ def validate_contract(
         errors.append("release.public_assets_are_installers_only must be true")
     if release.get("build_evidence_is_not_public") is not True:
         errors.append("release.build_evidence_is_not_public must be true")
+    update = contract.get("update", {})
+    for key, expected in {
+        "command": "paper-fetch update",
+        "repository": "Dictation354/paper-fetch-skill",
+        "official_installation_only": True,
+        "stable_release_only": True,
+        "sha256_before_execute": True,
+        "archive_preflight": True,
+        "reuse_offline_installer_checks": True,
+    }.items():
+        if update.get(key) != expected:
+            errors.append(f"update.{key} must be {expected!r}")
     return errors
 
 

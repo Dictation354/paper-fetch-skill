@@ -78,15 +78,28 @@ def probe_has_fulltext(
 def fetch_paper(
     query: str,
     *,
+    target: str = "paper",
     modes: set[OutputMode] | None = None,
     strategy: FetchStrategy | None = None,
     render: RenderOptions | None = None,
     context: RuntimeContext | None = None,
 ) -> FetchEnvelope:
+    if target not in {"paper", "supplementary"}:
+        raise ValueError("target must be paper or supplementary")
     owns_runtime = context is None
     runtime = context or RuntimeContext()
     try:
         with runtime.fetch_browser_preparation():
+            if target == "supplementary":
+                from .workflow.supplementary import fetch_supplementary
+
+                return fetch_supplementary(
+                    query,
+                    strategy=strategy or FetchStrategy(),
+                    context=runtime,
+                    modes=set(modes or DEFAULT_OUTPUT_MODES),
+                    resolve_paper_fn=resolve_paper,
+                )
             requested_modes = set(modes or DEFAULT_OUTPUT_MODES)
             active_strategy = strategy or FetchStrategy()
             active_render = render or RenderOptions()

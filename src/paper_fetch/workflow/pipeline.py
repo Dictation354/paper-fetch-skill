@@ -19,6 +19,7 @@ class FetchPipelineRequest:
     modes: set[OutputMode]
     strategy: FetchStrategy
     render: RenderOptions
+    target: str = "paper"
 
 
 @dataclass(frozen=True)
@@ -31,12 +32,14 @@ class FetchPipeline:
         *,
         context: RuntimeContext,
     ) -> FetchEnvelope:
+        target_kwargs = {"target": request.target} if request.target != "paper" else {}
         return self.fetch_paper_fn(
             request.query,
             modes=request.modes,
             strategy=request.strategy,
             render=request.render,
             context=context,
+            **target_kwargs,
         )
 
 

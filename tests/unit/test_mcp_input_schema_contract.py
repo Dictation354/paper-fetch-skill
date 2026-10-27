@@ -65,6 +65,7 @@ def test_batch_check_schema_accepts_only_metadata(native: bool) -> None:
             FetchPaperToolRequest,
             [
                 "query",
+                "target",
                 "modes",
                 "strategy",
                 "include_refs",
@@ -78,6 +79,7 @@ def test_batch_check_schema_accepts_only_metadata(native: bool) -> None:
                 "download_dir",
             ],
             {
+                "target": "paper",
                 "modes": None,
                 "strategy": None,
                 "include_refs": None,
@@ -119,6 +121,7 @@ def test_batch_check_schema_accepts_only_metadata(native: bool) -> None:
             BatchFetchRequest,
             [
                 "queries",
+                "target",
                 "concurrency",
                 "modes",
                 "strategy",
@@ -138,6 +141,7 @@ def test_batch_check_schema_accepts_only_metadata(native: bool) -> None:
                 "overwrite",
             ],
             {
+                "target": "paper",
                 "concurrency": 1,
                 "modes": None,
                 "strategy": None,

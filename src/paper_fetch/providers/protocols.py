@@ -24,6 +24,18 @@ class MetadataProvider(Protocol):
 
 
 @runtime_checkable
+class SupplementaryProvider(Protocol):
+    def fetch_supplementary(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        output_dir: Path | None,
+        *,
+        context: RuntimeContext,
+    ): ...
+
+
+@runtime_checkable
 class AssetProvider(Protocol):
     def download_related_assets(
         self,

@@ -280,6 +280,7 @@ def detect_html_block(
     response_status: int | None,
     *,
     substantive_body_ready: bool = False,
+    include_paywall_text: bool = True,
     html_text: str = "",
     response_headers: Mapping[str, Any] | None = None,
 ) -> HtmlExtractionFailure | None:
@@ -288,6 +289,7 @@ def detect_html_block(
         text,
         response_status,
         substantive_body_ready=substantive_body_ready,
+        include_paywall_text=include_paywall_text,
         html_text=html_text,
         response_headers=response_headers,
     )

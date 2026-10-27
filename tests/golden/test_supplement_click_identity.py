@@ -123,3 +123,70 @@ def test_real_iop_directory_retains_attachment_id_and_original_link():
         assert anchor is not None
         assert anchor.get("href") == asset["source_href"]
         assert asset["source_page_url"] == source
+
+
+@pytest.mark.parametrize(
+    "provider", ["science", "wiley", "mdpi", "annualreviews", "acs", "iop"]
+)
+def test_independent_supplementary_scope_replays_publisher_material_links(provider):
+    from paper_fetch.providers.supplementary import _html_assets
+    from paper_fetch.extraction.html._metadata import parse_html_metadata
+    from paper_fetch.providers import annualreviews, mdpi
+
+    sample = provider_benchmark_sample(provider)
+    doi, url = sample.doi, sample.landing_url
+    if provider == "science":
+        doi, url = (
+            "10.1126/sciadv.adl6155",
+            "https://www.science.org/doi/full/10.1126/sciadv.adl6155",
+        )
+    elif provider == "mdpi":
+        doi, url = "10.3390/s23010001", "https://www.mdpi.com/1424-8220/23/1/1"
+    elif provider == "annualreviews":
+        doi = "10.1146/annurev-neuro-062111-150343"
+        url = "https://www.annualreviews.org/content/journals/" + doi
+    html = golden_criteria_asset(doi, "original.html").read_text()
+    client_class = {
+        "mdpi": mdpi.MdpiClient,
+        "annualreviews": annualreviews.AnnualreviewsClient,
+    }.get(provider, CLIENTS.get(provider))
+    client = client_class(None, {})
+    with RuntimeContext(env={}) as context:
+        assets = _html_assets(client, html, url, context)
+    assert assets
+    assert all(
+        asset.get("kind") == "supplementary" or asset.get("section") == "supplementary"
+        for asset in assets
+    )
+    pdf_url = parse_html_metadata(html, url).get("citation_pdf_url")
+    assert not pdf_url or all(asset.get("url") != pdf_url for asset in assets)
+    source_links = {
+        urljoin(url, str(a.get("href")))
+        for a in BeautifulSoup(html, "lxml").select("a[href]")
+    }
+    for asset in assets:
+        assert any(
+            asset.get(field) in source_links
+            for field in ("url", "download_url", "original_url")
+        )
+
+
+def test_independent_springer_scope_keeps_extended_and_source_data():
+    from paper_fetch.providers.supplementary import _html_assets
+    from paper_fetch.providers.springer import SpringerClient
+
+    doi = "10.1038/s41561-022-00912-7"
+    html = golden_criteria_asset(doi, "original.html").read_text()
+    with RuntimeContext(env={}) as context:
+        assets = _html_assets(
+            SpringerClient(None, {}),
+            html,
+            "https://www.nature.com/articles/s41561-022-00912-7",
+            context,
+        )
+    assert any(asset.get("asset_kind") == "source_data" for asset in assets)
+    assert any("Extended Data" in asset.get("heading", "") for asset in assets)
+    assert all(
+        asset.get("kind") == "supplementary" or asset.get("section") == "supplementary"
+        for asset in assets
+    )

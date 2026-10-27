@@ -632,6 +632,20 @@ class ProviderClient:
             NOT_SUPPORTED, f"{self.name} metadata retrieval is not available."
         )
 
+    def fetch_supplementary(
+        self,
+        doi: str,
+        metadata: Mapping[str, Any],
+        output_dir: Path | None,
+        *,
+        context: RuntimeContext,
+    ):
+        from .supplementary import fetch_provider_supplementary
+
+        return fetch_provider_supplementary(
+            self, doi, metadata, output_dir, context=context
+        )
+
     def fetch_result(
         self,
         doi: str,

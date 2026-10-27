@@ -16,6 +16,14 @@
 
 抓取自动准备 managed runtime；机制与异常处理只查[环境参考](environment.md#运行时准备与授权)。
 
+### 独立补充材料任务
+
+`fetch_paper(query=..., target="supplementary")` 和 `batch_fetch(queries=[...], target="supplementary")` 使用独立材料任务。`target` 默认 `paper`；`supplementary` 不调用正文充分性检查、正文组装或正文 PDF fallback，正文付费不影响公开材料发现。材料范围由现有 provider 定义，包含明确补充区、Source Data、Extended Data 和多媒体，普通数据仓库链接不自动纳入；不支持的来源返回 `not_supported`。正文的 `asset_profile`、引用和 token 渲染选项不影响此范围。
+
+返回 `target="supplementary"`、`has_fulltext=false`、`article=null`，以及 `supplementary={assets,asset_failures,discovery_complete,identity_verified,source_urls}`。Markdown 只含材料名称、来源链接和本地路径；`save_markdown=true` 只保存 `<paper-stem>_supplementary.md` 材料索引。`no_download=true` 或 artifact 禁止资产落盘时，保留发现清单，标记 `archive_state="not_archived"`，不声称下载完成。
+
+acceptance v2 增量字段 `target="supplementary"`、`content_requested=false`，`content="unavailable"`（正文未请求）；按身份、发现、文件和来源验收。全部材料下载成功为 `complete`，部分成功或发现但未归档为 `degraded`，全部下载失败保留具体原因。只有完整检查且未发现材料时，返回 `status="no_result"`、空清单和来源记录。正文与补充请求指纹隔离；`prefer_cache=true` 的补充命中要求发现完整、身份匹配且所需文件仍存在。随正文获取材料用 `target="paper", strategy={"asset_profile":"all"}`。
+
 ### 其它工具入口
 
 - `list_cached(download_dir=...)` / `get_cached(doi, download_dir=..., detail="full|compact", preferred_only=false, modes=..., strategy=..., include_refs=..., max_tokens=...)`: 多轮会话重新抓取前，在同一个显式 cache scope 内读取当前索引；已知 DOI 优先使用请求敏感的 `get_cached` compact 结果。
@@ -96,7 +104,7 @@ batch_fetch(
 ## Batch Fetch Contract
 
 - `batch_fetch` 是结构化 MCP 全文批量入口；`batch_resolve` 只解析身份，`batch_check(mode="metadata")` 只做低成本 probe。需要 shell 原生批量文件、既有 CLI 自动命名或人工直接检查 JSONL 时仍优先 CLI；需要宿主 progress/cancel、结构化结果或无需解析 CLI stdout 时使用 `batch_fetch`。CLI 批量能力没有被移除。
-- 输入沿用 `fetch_paper` 的 `modes`、`strategy`、`include_refs`、`max_tokens`、`prefer_cache`、`no_download`、`artifact_mode`、`save_markdown`、`markdown_output_dir`、`markdown_filename` 和 `download_dir` 语义；`queries` 限 `1..50`，`concurrency` 限 `1..8`。多条输入不能共用一个 `markdown_filename`。
+- 输入沿用 `fetch_paper` 的 `target`、`modes`、`strategy`、`include_refs`、`max_tokens`、`prefer_cache`、`no_download`、`artifact_mode`、`save_markdown`、`markdown_output_dir`、`markdown_filename` 和 `download_dir` 语义；`queries` 限 `1..50`，`concurrency` 限 `1..8`。多条输入不能共用一个 `markdown_filename`。
 - 默认 `detail="compact"`，每项只返回稳定 1-based `index`、attempt/完成序号、run/record ID、request fingerprint、DOI/source、统一 acceptance 摘要、结构化 error、warning/code 摘要和带 size/SHA-256 的输出文件快照；结果数组始终按输入 index 排列，`completion_order` 单独保留实际完成顺序。
 - `get_cached.asset_summary` 使用完整 v2 asset facet，含 audited/expected/discovered/attempted、accepted/fallback preview、failure/issue codes 与 remote-link facts；`batch_fetch.output_artifacts[]` 除 path/kind/hash 外还稳定声明 `route` 和 `failure_code`（不可用时为 `null`）。
 - 只需少量正文片段时使用 `detail="bounded", content_max_chars=N`；`N` 是整批共享的 `1..100000` 字符上限，不是每篇上限。compact 不含 `article` 或 `markdown`，bounded 也只含受总上限约束的 Markdown 片段；核对逐项 `content_truncated`、`content_available_chars`、`content_returned_chars`，不能据截断片段宣称已读全文。多篇完整阅读直接逐篇使用阅读预设，已归档正文则读文件，不先批量抓取再重复获取。
@@ -107,6 +115,8 @@ batch_fetch(
 - 批量归档成功项通过 `output_artifacts` 返回路径和输出 hash；需要查询 cache 时使用相同 scope 的 `get_cached` 或 `list_cached`。`save_markdown`/`no_download`/`prefer_cache`/artifact/asset 的实际写盘组合与下方 Fetch Notes及 [`presets.md`](presets.md) 的 MCP 矩阵相同；显式 `batch_results` 是额外预期写盘产物。
 
 ## 运行时默认值（不是任务预设）
+
+- `target="paper"`
 
 - `modes=["article", "markdown"]`
 - `strategy.asset_profile=null (provider default)`

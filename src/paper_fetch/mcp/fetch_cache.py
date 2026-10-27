@@ -103,6 +103,12 @@ def _envelope_proven_artifact_paths(envelope: FetchEnvelope) -> tuple[str, ...]:
             for asset in envelope.article.assets
             if (path := normalize_text(asset.path))
         )
+    if envelope.supplementary is not None:
+        paths.extend(
+            str(asset["path"])
+            for asset in envelope.supplementary.assets
+            if asset.get("path")
+        )
     for diagnostic in envelope.diagnostic_artifacts:
         if not isinstance(diagnostic, Mapping):
             continue
@@ -116,6 +122,7 @@ def _envelope_proven_artifact_paths(envelope: FetchEnvelope) -> tuple[str, ...]:
 class _CacheRequestSchema(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
+    target: Literal["paper", "supplementary"] = "paper"
     modes: list[str]
     strategy: dict[str, Any]
     include_refs: str | None
@@ -227,6 +234,7 @@ def credential_scope_from_env(env: Mapping[str, str] | None) -> str:
 
 def request_cache_payload(request: FetchPaperRequest) -> dict[str, Any]:
     return {
+        **({"target": request.target} if request.target != "paper" else {}),
         "modes": sorted(request.requested_modes()),
         "strategy": request.strategy.cache_request_payload(),
         "include_refs": request.include_refs,
@@ -332,7 +340,8 @@ def _request_needs_article_for_inline_assets(
     source_name: str | None,
 ) -> bool:
     return (
-        not request.save_markdown
+        request.target == "paper"
+        and not request.save_markdown
         and not request.strategy.resolved_inline_image_budget().disabled
         and effective_asset_profile(
             request.strategy.asset_profile,
@@ -346,6 +355,8 @@ def cached_request_matches(
     cached_request: Mapping[str, Any],
     request: FetchPaperRequest,
 ) -> bool:
+    if cached_request.get("target", "paper") != request.target:
+        return False
     cached_modes = {str(item) for item in cached_request.get("modes") or []}
     if not request.requested_modes().issubset(cached_modes):
         return False
@@ -359,6 +370,24 @@ def cached_request_matches(
 def cached_payload_satisfies_request(
     payload: Mapping[str, Any], request: FetchPaperRequest
 ) -> bool:
+    if payload.get("target", "paper") != request.target:
+        return False
+    if request.target == "supplementary":
+        materials = payload.get("supplementary")
+        return bool(
+            isinstance(materials, Mapping)
+            and materials.get("discovery_complete")
+            and materials.get("identity_verified")
+            and not materials.get("asset_failures")
+            and (
+                "markdown" not in request.requested_modes()
+                or payload.get("markdown") is not None
+            )
+            and (
+                "metadata" not in request.requested_modes()
+                or payload.get("metadata") is not None
+            )
+        )
     requested_modes = request.requested_modes()
     if "article" in requested_modes and payload.get("article") is None:
         return False
@@ -420,6 +449,26 @@ def cached_envelope_satisfies_request(
     if envelope.has_fulltext != (envelope.content_kind == "fulltext"):
         return False
 
+    if request.target == "supplementary":
+        result = envelope.supplementary
+        try:
+            acceptance = evaluate_fetch_acceptance(
+                envelope,
+                asset_profile="all",
+                requested_outputs=request.requested_modes(),
+                expected_doi=normalized_expected_doi,
+            )
+        except (ValueError, AssertionError):
+            return False
+        return bool(
+            acceptance.provenance.status == ProvenanceAcceptanceStatus.COMPLETE
+            and acceptance.output.status == OutputAcceptanceStatus.COMPLETE
+            and result
+            and result.discovery_complete
+            and result.identity_verified
+            and not result.asset_failures
+            and all(asset.get("path") for asset in result.assets)
+        )
     requested_modes = request.requested_modes()
     if "markdown" in requested_modes and not normalize_text(envelope.markdown):
         return False
@@ -746,7 +795,14 @@ def envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
         quality.token_estimate = int(payload.get("token_estimate") or 0)
     from ..models.schema import ContentKind, SourceKind
 
+    from ..models.schema import SupplementaryResult
+
+    supplementary = payload.get("supplementary")
     return FetchEnvelope(
+        target=payload.get("target", "paper"),
+        supplementary=SupplementaryResult(**supplementary)
+        if isinstance(supplementary, Mapping)
+        else None,
         doi=normalize_text(payload.get("doi")) or None,
         source=cast(SourceKind, normalize_text(payload.get("source")) or METADATA_ONLY),
         has_fulltext=bool(payload.get("has_fulltext")),
@@ -799,6 +855,22 @@ def _asset_integrity(
 def cached_envelope_assets_are_scoped(
     envelope: FetchEnvelope, download_dir: Path
 ) -> bool:
+    if envelope.target == "supplementary":
+        if envelope.supplementary is None:
+            return False
+        for material in envelope.supplementary.assets:
+            if not material.get("path"):
+                continue
+            opened = read_scoped_file(
+                download_dir,
+                material["path"],
+                expected_size=material.get("downloaded_bytes"),
+                expected_sha256=material.get("sha256"),
+            )
+            if opened is None:
+                return False
+            material["path"] = str(opened[0])
+        return True
     article = envelope.article
     if article is None:
         return True
