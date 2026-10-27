@@ -67,6 +67,10 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
   route/profile/storage/page SHA 立即停止，只有候选 URL、profile 或 storage-state
   确实变化时才允许一次重试。
 
+### 补充材料索引
+
+独立 `target=supplementary` 任务的浏览器索引模式复用同一 Camoufox runtime 和页面附件点击下载，不要求正文就绪，允许摘要页及正文付费页上的公开材料索引；附件自身仍遵守访问限制。材料范围与逐项诊断见 [CLI 说明](cli.md#独立补充材料任务)。macOS 合同中的 `browser.supplementary_index_without_body` 同步记录此边界。
+
 ### PNAS 获取边界
 
 PNAS 正文使用浏览器 DOM；侧栏统计请求拦截不构成性能保证。项目尚未接入 PMC

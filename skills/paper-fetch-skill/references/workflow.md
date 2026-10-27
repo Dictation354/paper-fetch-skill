@@ -48,13 +48,15 @@
 
 ### 5. 意图
 
-- 从用户目标选择[共同规则](presets.md#共同规则)和当前预设：[临时阅读](presets.md#1-临时阅读)、[可缓存阅读](presets.md#2-可缓存阅读)、[单篇归档](presets.md#3-单篇本地归档)、[仅探测](presets.md#4-批量可读性分诊)或[批量归档](presets.md#5-批量本地归档)。只读所选章节，确定请求参数；多篇比较沿用阅读预设。
+- 先按[任务目标](presets.md#任务目标)区分正文与独立补充材料；只要材料时确定 `target=supplementary`，沿用路径和批量设置，不套用全文阅读或可用性探测。
+- 正文或仅探测任务从用户目标选择[共同规则](presets.md#共同规则)和当前预设：[临时阅读](presets.md#1-临时阅读)、[可缓存阅读](presets.md#2-可缓存阅读)、[单篇归档](presets.md#3-单篇本地归档)、[仅探测](presets.md#4-批量可读性分诊)或[批量归档](presets.md#5-批量本地归档)。只读所选章节，确定请求参数；多篇比较沿用阅读预设。
 - 普通阅读不要求讨论保存。归档目录按用户显式路径 → 项目配置或唯一已有约定 → 唯一合理的 `papers/` 推断；仍不唯一且实质影响产物时才归入 `material_output_choice`。
 - 检查实际已有文件；未获授权而将覆盖可用成果时归入 `overwrite_existing`，已有覆盖授权直接沿用。
 
 ### 6. 本地/cache
 
-- 先检查用户提供或已有的合格全文；需要 cache 且当前预设允许、已有 scope 时，再读[本地优先决策树](presets.md#本地优先决策树)。临时阅读不为查缓存而新增 scope。
+- 独立材料任务先按[任务目标](presets.md#任务目标)检查材料清单和文件，未满足则继续材料请求；正文或正文缓存命中不能替代材料。MCP 的材料缓存复用由 `target=supplementary, prefer_cache=true` 请求处理。
+- 正文任务先检查用户提供或已有的合格全文；需要 cache 且当前预设允许、已有 scope 时，再读[本地优先决策树](presets.md#本地优先决策树)。临时阅读不为查缓存而新增 scope。
 - cache 复用直接消费 `request_satisfied`；不手工重算内部匹配。未满足则继续 fetch。合格本地正文直接读取，复用后仍进入 acceptance/report。
 - 仅探测且没有合格本地证据时继续 `batch_check`，不为查询缓存获取正文。
 
@@ -74,6 +76,7 @@
 ### 9. fetch
 
 - 对未被本地/cache 满足的目标按当前预设调用工具；普通抓取自动准备 managed runtime，无需 agent 另做更新检查。准备失败时按[环境参考](environment.md#运行时准备与授权)读取具体诊断。
+- 独立材料任务使用 CLI `fetch --target supplementary` 或 MCP `fetch_paper` / `batch_fetch(target="supplementary")`；不要求正文成功，不追加正文 PDF fallback。
 - 仅探测用 `batch_check`（单篇传一个 query），不升级为抓取；多篇完整阅读对各规范目标直接使用单篇阅读预设，已取得正文不重复抓取。
 - 需要结构化批量抓取时用 `batch_fetch`，详细返回见 [Batch Fetch Contract](tool-contract.md#batch-fetch-contract)；compact 无正文，bounded 可能截断，归档正文直接读文件。
 - 同阶段独立目标可在 provider 速率和 runtime 限制内受控并发；批量分块沿用第 1 阶段规则。失败、限流或准备重试时读[失败处理](failure-handling.md)；失败或降级仍进入 acceptance。
@@ -81,8 +84,9 @@
 ### 10. acceptance
 
 - 仅探测直接按[探测核对与报告](acceptance.md#探测核对与报告)核对证据和调度状态，再进入 report。
-- 抓取或复用按[七个分面](acceptance.md#七个分面)及[响应验收](acceptance.md#响应验收)消费统一结果，核对身份、内容范围和实际正文，不另造成功标准。
-- 请求资产时读[资产验收](acceptance.md#资产验收)；归档或复用文件时读[文件、路径与 hash 验收](acceptance.md#文件路径与-hash-验收)；真实批量抓取再读[批量验收](acceptance.md#批量验收)。
+- 独立材料任务按[补充材料验收](acceptance.md#补充材料验收)核对身份、发现完整性、逐项失败及所需文件，不要求实际正文。
+- 正文抓取或复用按[七个分面](acceptance.md#七个分面)及[响应验收](acceptance.md#响应验收)消费统一结果，核对身份、内容范围和实际正文，不另造成功标准。
+- 正文任务请求资产时读[资产验收](acceptance.md#资产验收)；各任务归档或复用文件时读[文件、路径与 hash 验收](acceptance.md#文件路径与-hash-验收)；真实批量抓取再读[批量验收](acceptance.md#批量验收)。
 
 ### 11. report
 

@@ -2,6 +2,8 @@
 
 CLI 是单篇/批量本地归档、shell 自动化和人工检查 manifest/JSONL 的正常执行面。先按 [`workflow.md`](workflow.md) 解析身份、去重、选择 [`presets.md`](presets.md) 并检查适用的本地/cache，再运行当前单篇或批量章节的命令；入口不可用时再读窄 fallback。MCP 宿主内 progress/cancel 或结构化批量结果则优先使用 `batch_fetch`。
 
+以下单篇和批量示例默认获取正文；独立材料任务先按[任务目标](presets.md#任务目标)添加 `--target supplementary` 并选择材料落盘参数，沿用相同的输出目录、query file 和批量汇总设置，按[补充材料验收](acceptance.md#补充材料验收)核对结果。
+
 ## 单篇
 
 临时 stdout 阅读仍会准备工作目录；要求完全不落盘时改用 MCP 临时阅读预设：

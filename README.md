@@ -60,6 +60,14 @@ CLI 默认在终端 stderr 显示逐篇阶段和资产进度；`--progress text|
 
 CLI 仍会准备显式工作目录；需要真正无落盘的临时读取时，使用 MCP 临时阅读预设。完整输出和落盘矩阵见 [`docs/cli.md`](docs/cli.md) 与 [`presets.md`](skills/paper-fetch-skill/references/presets.md)。
 
+### 独立获取补充材料
+
+```bash
+paper-fetch fetch --target supplementary --query "10.1038/s41561-022-00912-7" --output-dir ./papers
+```
+
+只需要补充附件、Source Data、Extended Data 或多媒体时，使用 `--target supplementary`，无需先取得正文，也不下载正文 PDF。随正文获取补充材料则使用默认的 `--target paper` 和 `--asset-profile all`。Python API 与 MCP 单篇、批量入口也支持 `target="supplementary"`；材料范围、输出及失败语义见 [CLI 说明](docs/cli.md#独立补充材料任务)。
+
 ## 你会得到什么
 
 - 带 YAML front matter 的论文 Markdown，包含题名、作者、期刊、DOI、来源和正文状态。
@@ -140,7 +148,7 @@ paper-fetch fetch \
   --batch-concurrency 4
 ```
 
-批量结果会按输入顺序原子写入 `batch-results.jsonl`；单篇失败会被记录，不会阻止其它条目继续。需要正文图时使用 `--artifact-mode markdown-assets --asset-profile body`，需要补充材料时将 asset profile 改为 `all`。
+批量结果会按输入顺序原子写入 `batch-results.jsonl`；单篇失败会被记录，不会阻止其它条目继续。需要正文图时使用 `--artifact-mode markdown-assets --asset-profile body`，随正文获取补充材料时将 asset profile 改为 `all`；只获取补充材料时加 `--target supplementary`。
 
 将本仓库接入 Agent：
 
@@ -198,13 +206,3 @@ paper-fetch auth wiley
 ## 社区
 
 <https://linux.do/>
-
-## 独立获取补充材料
-
-```bash
-paper-fetch fetch --target supplementary --query "10.1038/s41561-022-00912-7" --output-dir ./papers
-```
-
-`--target paper|supplementary` 默认 `paper`。`supplementary` 独立核对身份、发现并下载出版社定义的补充附件、Source Data、Extended Data 和多媒体，不要求正文成功，也不获取正文 PDF。普通数据仓库链接不自动纳入。索引命名为 `<paper-stem>_supplementary`，Markdown 只列材料名称、来源链接和本地路径，JSON 另含逐项失败及发现完整性。
-
-Python `fetch_paper(..., target="supplementary")`、MCP `fetch_paper` / `batch_fetch` 使用相同目标；CLI 批量仍用 `--query-file`。`asset_profile` 和正文渲染选项只控制 `paper`；`paper` 配合 `asset_profile=all` 仍表示随正文获取补充材料。完整发现且没有材料时返回空清单和 `no_result`，CLI 非零退出；禁止下载时返回标记为未归档的发现清单。

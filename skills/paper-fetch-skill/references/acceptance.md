@@ -1,6 +1,6 @@
 # 统一验收与报告
 
-仅探测直接读[探测核对与报告](#探测核对与报告)，不加载全文验收章节。抓取或本地/cache 复用读取[七个分面](#七个分面)、[响应验收](#响应验收)和[最终报告](#最终报告)；请求资产、文件或真实批量结果时，再读对应章节。
+仅探测直接读[探测核对与报告](#探测核对与报告)；独立 `target=supplementary` 任务直接读[补充材料验收](#补充材料验收)，不加载全文验收章节。正文抓取或本地/cache 复用读取[七个分面](#七个分面)和[响应验收](#响应验收)。均按[最终报告](#最终报告)交付；请求资产、文件或真实批量结果时，再读对应章节。
 
 直接消费工具、manifest 或 cache 的统一 acceptance，核对当前任务所需的实际响应和文件，不从 warning 文案另造成功标准。内部一致性由工具负责；只有结果异常或用户要求诊断时，才查[内部一致性诊断](tool-contract.md#内部一致性诊断)。
 
@@ -10,6 +10,14 @@
 - 检查每项 `index/query/status`、顶层 `aborted/abort_reason/progress` 及原始输入映射。歧义候选从逐项 `error` 读取；错误、取消、限流和 `not_scheduled` 分别保留，不把未完成项计作成功探测或推断成不可读。
 - 报告规范身份、逐项探测结论及支持证据、错误和必要动作；批量按 probe_state 和调度/错误状态汇总。明确材料只经过可用性探测，没有全文 acceptance，也不宣称已归档或已验证全文。
 - 完成仅探测任务后停止，不自动升级为全文抓取。若复用的是已取得的合格本地全文，仍按本文件的文件与内容验收，并标明本地证据来源，不伪造 `probe_state` 或远端当前可用性。
+
+## 补充材料验收
+
+- 独立 `target=supplementary` 任务只验收材料。正文 `content.requested=false`（紧凑摘要为 `content_requested=false`）和 `has_fulltext=false` 符合请求，不据此判为全文缺失或触发正文重抓。
+- 核对规范身份、`supplementary.identity_verified`、`source_urls` 和来源记录；核对 `assets`、逐项 `asset_failures` 及 `discovery_complete`。只有完整发现且没有材料时才报告 `no_result`；发现未完成或失败不能报告为没有补充材料。
+- 需要归档时核对用户要求的实际附件和材料索引，文件检查见[文件、路径与 hash 验收](#文件路径与-hash-验收)。材料 Markdown 只有名称、来源链接和本地路径，不要求包含论文正文或 front matter。
+- 直接消费统一 acceptance：全部材料下载成功为 `complete`，部分成功或发现但未归档为 `degraded`，全部下载失败保留具体原因。`archive_state="not_archived"` 的发现清单不能报告为下载完成。
+- 真实批量任务再按[批量验收](#批量验收)核对原始映射和逐项状态；按[最终报告](#最终报告)交付材料发现、归档结论及影响任务的失败。
 
 ## 七个分面
 
@@ -47,11 +55,11 @@
 
 任务要求写盘或复用本地文件时，对 CLI `output_path`、批量 `output_artifacts[*].path`、单篇 MCP 请求参数确定的 Markdown 目标或待复用文件执行以下检查：
 
-1. 路径位于用户选择/推断的目标目录，文件存在、可读且非空。
-2. Markdown front matter 或 manifest identity 与规范目标一致；文件名和正文里偶然出现的 DOI 不能证明归属。
-3. 内容级别满足意图；`abstract_only` / `metadata_only` 文件仍不能当作 fulltext archive。
+1. 路径位于用户选择/推断的目标目录，文件存在、可读且非空；独立材料任务完整空发现的索引允许为空，以结构化 `no_result` 和发现完整性为准。
+2. 正文 Markdown front matter 或 manifest identity 与规范目标一致；材料索引及附件通过结构化响应或 manifest 的身份、来源和资产路径关联核对。文件名和正文里偶然出现的 DOI 不能证明归属。
+3. 内容满足当前任务意图；正文任务的 `abstract_only` / `metadata_only` 文件仍不能当作 fulltext archive，独立材料任务按[补充材料验收](#补充材料验收)核对。
 4. 当前文件 size/SHA-256 与返回的输出快照一致；没有输出快照时直接计算实际值供验收，按最终报告的场景决定是否展示。
-5. 资产 profile 与实际本地文件、MIME/尺寸/hash、remote-only 或 missing 事实一致。
+5. 正文任务按资产 profile、独立材料任务按返回的材料集合，核对实际本地文件、MIME/尺寸/hash、remote-only 或 missing 事实。
 
 文件被 `.gitignore` 忽略、`git status` 没有变化或位于仓库外，都不影响上述验收。需要独立复核单个产物时可用标准库计算实际 size/hash，不依赖 `jq`：
 
@@ -78,6 +86,7 @@ PY
 ## 最终报告
 
 - 仅探测：按[探测核对与报告](#探测核对与报告)展示可用性证据、错误和调度状态，不套用全文 acceptance 汇总。
+- 独立材料任务：按[补充材料验收](#补充材料验收)报告身份、来源、发现完整性、材料清单及归档路径，保留逐项失败，区分完整空发现和未归档清单。
 - 普通阅读：保留论文身份、可追溯来源、实际取得的内容范围及影响任务的降级。全文、摘要和元数据必须区分；browser HTML 失败后 PDF 成功仍需保留精确 failure code 和 degraded 结论。
 - 归档：补充实际产物路径、验收结论和缺失资产；只展示本次请求的产物，不把未请求项列为失败。
 - 失败或需用户动作：说明具体原因、受影响目标及必要动作；按需展开结构化 code、执行面、attempt、acquisition、hash 或诊断路径。用户要求审计时提供完整技术证据。
@@ -86,5 +95,3 @@ PY
 展示精简不改变工具、manifest 或 cache 的完整结果，也不省略必要的身份、文件和降级验收。需重试时只按 [`failure-handling.md`](failure-handling.md) 的上限和状态变化条件执行。
 
 获取验收后，宿主继续完成用户原本要求的总结、比较、翻译或提取；不要以获取报告结束阅读任务。证据不足时说明限制并完成有依据的部分，不把摘要或片段冒充全文。paper-fetch 本身仍只负责身份解析、全文获取、验收与报告。
-
-独立 `target=supplementary` 任务只验收材料：正文 `content.requested=false` 和 `has_fulltext=false` 符合请求。核对 `supplementary.discovery_complete`、逐项 `asset_failures`、来源记录及用户要求归档的实际文件；完整空发现为 `no_result`，未归档清单不能报告为下载完成。

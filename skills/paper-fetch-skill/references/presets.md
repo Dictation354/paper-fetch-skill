@@ -5,6 +5,7 @@
 ## 目录
 
 - [共同规则](#共同规则)
+- [任务目标](#任务目标)
 - [临时阅读](#1-临时阅读)
 - [可缓存阅读](#2-可缓存阅读)
 - [单篇本地归档](#3-单篇本地归档)
@@ -19,12 +20,23 @@
 
 - 支持 `include_refs` 的 fetch/cache 调用（`fetch_paper`、`batch_fetch`、`get_cached` 及 CLI fetch）都显式选择引用范围：`none`、`top10` 或 `all`。以下完整阅读示例选择 `all`；任务不需要参考文献时改为 `none`。解析、探测、`list_cached` 等不支持该参数的接口不传此字段。
 - 每条 CLI fetch 命令都显式传 `--artifact-mode` 和 `--asset-profile`。`--output` / `--output-dir` 是主输出；`--save-markdown` 只是额外 Markdown 副本。
-- 文本归档使用 `artifact_mode=none`、`asset_profile=none`。用户明确要求正文图时使用 `artifact_mode=markdown-assets`、`asset_profile=body`；明确要求补充材料时使用 `artifact_mode=markdown-assets`、`asset_profile=all`。
-- 只在用户还要求原始 provider 载荷或调试 sidecar 时使用 `artifact_mode=all`。补充材料范围由 `asset_profile=all` 决定，不由 `artifact_mode=all` 决定。
+- 正文任务的文本归档使用 `artifact_mode=none`、`asset_profile=none`。用户明确要求正文图时使用 `artifact_mode=markdown-assets`、`asset_profile=body`；随正文获取补充材料时使用 `artifact_mode=markdown-assets`、`asset_profile=all`。只要补充材料时按[任务目标](#任务目标)使用独立材料请求。
+- 只在用户还要求原始 provider 载荷或调试 sidecar 时使用 `artifact_mode=all`。正文任务随附的补充材料范围由 `asset_profile=all` 决定；独立材料任务的范围固定，二者均不由 `artifact_mode=all` 决定。
 - `body|all` 资产共用每篇运行时预算，不拆调用规避；超限按结构化原因说明未归档项。具体预算仅在需要时查[资产参数](tool-contract.md#fetch-notes)。
 - 默认使用兼容的 provider-policy 资产验收。用户明确要求离线完整正文资产时，CLI 加 `--require-local-body-assets`、MCP strategy 加 `require_local_body_assets=true`；明确要求原尺寸时改用 `--require-full-size-body-assets` / `require_full_size_body_assets=true`，它会自动隐含 local。两项只适用于 `body|all`，不应加到纯文本预设。
 - MCP 的 `no_download` 控制 provider 载荷、资产和 fetch-envelope sidecar；CLI 使用 `--artifact-mode none`。`save_markdown=true` 仍会写用户要求的 Markdown；PF-005 的 DOI 证明索引也会随显式保存更新。
 - “不保存最终 Markdown”“不建立用户归档”“不写 provider artifact”“允许 cache”和“完全不落盘”是五个独立判断，不要互换。
+
+## 任务目标
+
+`target` 与下列五个预设的路径、批量和落盘选择分开处理；默认 `paper`。正文阅读、归档和仅探测沿用原预设。用户只要补充附件、Source Data、Extended Data 或多媒体时，CLI 加 `--target supplementary`，MCP `fetch_paper` / `batch_fetch` 传 `target="supplementary"`，不先抓正文或探测全文可用性。
+
+- 材料范围由 provider 定义，`asset_profile`、引用、token 及严格正文资产参数不影响范围。CLI 可显式传 `--asset-profile none`，仍按独立材料范围处理。
+- 下载材料时沿用已有归档路径和批量设置，使用 `artifact_mode=markdown-assets`；MCP 同时设 `no_download=false`。需要保存 Markdown 材料索引时沿用 `save_markdown` 和输出路径设置，不照搬文本归档的禁止下载参数。
+- 只需发现清单时，MCP 用 `no_download=true`，CLI 用 `--artifact-mode none`；显式保存索引仍按原落盘语义处理，清单不等于材料已下载。
+- 本地复用检查同一论文的材料清单和所需文件；已有全文不能替代材料请求。已有 cache scope 且允许复用时，MCP 材料请求可用 `prefer_cache=true`，由工具检查独立请求匹配及文件状态。
+
+返回字段见[独立补充材料任务](tool-contract.md#独立补充材料任务)，结果按[补充材料验收](acceptance.md#补充材料验收)处理。
 
 ## 五个预设
 
@@ -129,7 +141,7 @@ MCP 文本归档显式把主 Markdown 与 cache scope 放在同一目录：
 
 这个 MCP 组合写 `./papers/example.md` 和证明其 DOI 归属所需的 cache index，不写 fetch-envelope sidecar、provider artifact 或资产。响应会把 `article`、`markdown` 设为 `null`，保留诊断字段；文件位置由请求中的输出目录/文件名确定，并通过返回路径或批量 `output_artifacts` 验收。
 
-用户要求正文图时，把 CLI 改为 `--artifact-mode markdown-assets --asset-profile body`；把 MCP 改为 `no_download=false`、`artifact_mode="markdown-assets"`、`strategy.asset_profile="body"`。用户要求补充材料时把两个执行面的 asset profile 改为 `all`。不要同时保留 `no_download=true`，否则资产不会落盘。
+用户要求正文图时，把 CLI 改为 `--artifact-mode markdown-assets --asset-profile body`；把 MCP 改为 `no_download=false`、`artifact_mode="markdown-assets"`、`strategy.asset_profile="body"`。随正文获取补充材料时把两个执行面的 asset profile 改为 `all`；只要补充材料时按[任务目标](#任务目标)改用独立请求。不要同时保留 `no_download=true`，否则资产不会落盘。
 
 ### 4. 批量可读性分诊
 
@@ -166,7 +178,7 @@ paper-fetch fetch --query-file ./queries.txt \
   --max-tokens full_text
 ```
 
-每篇主 Markdown 和 `batch-results.jsonl` 都是用户归档。需要正文图时显式改为 `--artifact-mode markdown-assets --asset-profile body`；需要补充材料时显式改为 `--artifact-mode markdown-assets --asset-profile all`。
+每篇主 Markdown 和 `batch-results.jsonl` 都是用户归档。需要正文图时显式改为 `--artifact-mode markdown-assets --asset-profile body`；随正文获取补充材料时显式改为 `--artifact-mode markdown-assets --asset-profile all`；只要补充材料时按[任务目标](#任务目标)改用独立请求。
 
 需要 MCP 宿主内 progress/cancel、结构化 acceptance 或不便解析 CLI stdout 时，使用 `batch_fetch`；其归档预设显式保留同一文本意图和持久化路径：
 

@@ -721,4 +721,4 @@ macOS 的机器合同见 [`macos-adaptation-contract.toml`](macos-adaptation-con
 
 Codex skill 的 `.agents/skills` 迁移与校验后清理同样适用于 macOS；Linux portable 验证不替代原生 macOS 安装证据。
 
-独立补充任务的浏览器索引模式复用同一 Camoufox runtime 和页面附件点击下载，不要求正文就绪，允许摘要页及正文付费页上的公开材料索引；附件自身仍遵守访问限制。此项跨平台契约见 `browser.supplementary_index_without_body`。
+`browser.supplementary_index_without_body` 对应的跨平台行为见[补充材料索引](browser-runtime.md#补充材料索引)。

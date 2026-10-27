@@ -18,6 +18,8 @@
 
 ### 独立补充材料任务
 
+参数组合见[任务目标](presets.md#任务目标)，结果核对见[补充材料验收](acceptance.md#补充材料验收)。
+
 `fetch_paper(query=..., target="supplementary")` 和 `batch_fetch(queries=[...], target="supplementary")` 使用独立材料任务。`target` 默认 `paper`；`supplementary` 不调用正文充分性检查、正文组装或正文 PDF fallback，正文付费不影响公开材料发现。材料范围由现有 provider 定义，包含明确补充区、Source Data、Extended Data 和多媒体，普通数据仓库链接不自动纳入；不支持的来源返回 `not_supported`。正文的 `asset_profile`、引用和 token 渲染选项不影响此范围。
 
 返回 `target="supplementary"`、`has_fulltext=false`、`article=null`，以及 `supplementary={assets,asset_failures,discovery_complete,identity_verified,source_urls}`。Markdown 只含材料名称、来源链接和本地路径；`save_markdown=true` 只保存 `<paper-stem>_supplementary.md` 材料索引。`no_download=true` 或 artifact 禁止资产落盘时，保留发现清单，标记 `archive_state="not_archived"`，不声称下载完成。
