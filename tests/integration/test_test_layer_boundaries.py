@@ -3,6 +3,7 @@
 import os
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 import pytest
 from tests.paths import REPO_ROOT
 
@@ -117,11 +118,16 @@ converters = [
 def test_alias(converter):
     converter("unused.pdf")
 """
-    result = _run_unit(tmp_path, source)
+    report_path = tmp_path / "converter-aliases.xml"
+    result = _run_unit(tmp_path, source, "--junitxml", str(report_path))
     output = result.stdout + result.stderr
     assert result.returncode == 1, output
-    assert "19 failed" in output
-    assert output.count("real PDF conversion;") == 19
+    cases = ET.parse(report_path).findall(".//testcase")
+    assert len(cases) == 19, output
+    for case in cases:
+        failure = case.find("failure")
+        assert failure is not None, ET.tostring(case, encoding="unicode")
+        assert "real PDF conversion;" in failure.get("message", "")
 
     collection = tmp_path / "collection"
     collection.mkdir()
