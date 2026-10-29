@@ -1458,53 +1458,87 @@ same_directory() {
   [ "$(cd "$left" && pwd -P)" = "$(cd "$right" && pwd -P)" ]
 }
 
-clean_install_root_payload() {
-  mkdir -p "$INSTALL_ROOT"
-  rm -rf \
-    "$INSTALL_ROOT/bin" \
-    "$INSTALL_ROOT/runtime" \
-    "$INSTALL_ROOT/formula-tools" \
-    "$INSTALL_ROOT/image-tools" \
-    "$INSTALL_ROOT/skills" \
-    "$INSTALL_ROOT/installer" \
-    "$INSTALL_ROOT/install-offline.sh" \
-    "$INSTALL_ROOT/activate-offline.sh" \
-    "$INSTALL_ROOT/README.offline.md" \
-    "$INSTALL_ROOT/offline-manifest.json" \
-    "$INSTALL_ROOT/sha256sums.txt" \
-    "$INSTALL_ROOT/LICENSE" \
-    "$INSTALL_ROOT/.env.example" \
-    "$INSTALL_ROOT/src" \
-    "$INSTALL_ROOT/tests" \
-    "$INSTALL_ROOT/.github" \
-    "$INSTALL_ROOT/wheelhouse" \
-    "$INSTALL_ROOT/dist" \
-    "$INSTALL_ROOT/pyproject.toml"
-}
+# Only installer-owned payload components participate in replacement. User data,
+# offline.env and unrelated top-level files remain in place throughout.
+install_runtime_payload() (
+  local transaction_root="" component status rollback_failed=0
+  local backed_up=() installed=()
+  local managed_components=(
+    bin runtime formula-tools image-tools skills installer scripts
+    install-offline.sh activate-offline.sh README.offline.md
+    offline-manifest.json sha256sums.txt LICENSE .env.example
+  )
 
-install_runtime_payload() {
-  local env_backup=""
+  finish_runtime_transaction() {
+    status=$?
+    trap - EXIT HUP INT TERM
+    if [ "$status" -ne 0 ] && [ -n "$transaction_root" ]; then
+      warn "Runtime installation failed (exit $status); restoring previous payload."
+      for component in ${installed[@]+"${installed[@]}"}; do
+        rm -rf "$INSTALL_ROOT/$component" || rollback_failed=1
+      done
+      for component in ${backed_up[@]+"${backed_up[@]}"}; do
+        if [ -e "$INSTALL_ROOT/$component" ] || [ -L "$INSTALL_ROOT/$component" ]; then
+          rollback_failed=1
+        else
+          mv "$transaction_root/backup/$component" "$INSTALL_ROOT/$component" \
+            || rollback_failed=1
+        fi
+      done
+    fi
+    if [ "$rollback_failed" = "1" ]; then
+      warn "Runtime rollback failed; backup retained at $transaction_root/backup"
+    elif [ -n "$transaction_root" ]; then
+      rm -rf "$transaction_root"
+    fi
+    exit "$status"
+  }
+  trap finish_runtime_transaction EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
 
   mkdir -p "$INSTALL_ROOT"
   if same_directory "$BUNDLE_ROOT" "$INSTALL_ROOT"; then
     log "Using existing offline runtime directory: $INSTALL_ROOT"
-    return 0
+  else
+    transaction_root="$(mktemp -d "$INSTALL_ROOT/.paper-fetch-update.XXXXXX")"
+    mkdir -p "$transaction_root/staged" "$transaction_root/backup"
+    log "Staging runtime payload for $INSTALL_ROOT"
+    cp -a "$BUNDLE_ROOT/." "$transaction_root/staged/"
+    (
+      BUNDLE_ROOT="$transaction_root/staged"
+      verify_checksums
+      check_bundle_assets
+      verify_skill_bundle_integrity \
+        "$BUNDLE_ROOT" "$BUNDLE_ROOT/skills/$SKILL_NAME" "staged runtime"
+    )
+
+    log "Replacing runtime payload in $INSTALL_ROOT"
+    for component in "${managed_components[@]}"; do
+      if [ -e "$INSTALL_ROOT/$component" ] || [ -L "$INSTALL_ROOT/$component" ]; then
+        mv "$INSTALL_ROOT/$component" "$transaction_root/backup/$component"
+        backed_up+=("$component")
+      fi
+      if [ -e "$transaction_root/staged/$component" ]; then
+        mv "$transaction_root/staged/$component" "$INSTALL_ROOT/$component"
+        installed+=("$component")
+      fi
+    done
   fi
 
-  if [ "$REUSE_ENV_FILE" != "1" ] && [ -f "$INSTALL_ROOT/offline.env" ]; then
-    env_backup="$(mktemp)"
-    cp "$INSTALL_ROOT/offline.env" "$env_backup"
-  fi
+  write_runtime_python_file
+  verify_skill_bundle_integrity \
+    "$INSTALL_ROOT" "$INSTALL_ROOT/skills/$SKILL_NAME" "installed runtime"
+  run_smoke_checks
 
-  log "Installing runtime payload to $INSTALL_ROOT"
-  clean_install_root_payload
-  cp -a "$BUNDLE_ROOT/." "$INSTALL_ROOT/"
-
-  if [ -n "$env_backup" ]; then
-    cp "$env_backup" "$INSTALL_ROOT/offline.env"
-    rm -f "$env_backup"
+  # Commit only after required validation and enabled smoke checks succeed.
+  # Source/build leftovers are removed only on a successful replacement.
+  if [ -n "$transaction_root" ]; then
+    rm -rf "$INSTALL_ROOT/src" "$INSTALL_ROOT/tests" "$INSTALL_ROOT/.github" \
+      "$INSTALL_ROOT/wheelhouse" "$INSTALL_ROOT/dist" "$INSTALL_ROOT/pyproject.toml"
   fi
-}
+)
 
 main() {
   local config_env_file
@@ -1533,11 +1567,6 @@ main() {
   check_preset_requirements
   check_bundle_assets
   install_runtime_payload
-  write_runtime_python_file
-  verify_skill_bundle_integrity \
-    "$INSTALL_ROOT" \
-    "$INSTALL_ROOT/skills/$SKILL_NAME" \
-    "installed runtime"
 
   if [ "$REUSE_ENV_FILE" = "1" ]; then
     log "Reusing offline.env without modifying it: $OFFLINE_ENV_FILE"
@@ -1573,7 +1602,6 @@ main() {
   register_claude_mcp
   register_antigravity_mcp
 
-  run_smoke_checks
   run_optional_configuration
 
   echo

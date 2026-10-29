@@ -67,3 +67,6 @@ stable_release_only = true
 sha256_before_execute = true
 archive_preflight = true
 reuse_offline_installer_checks = true
+staged_payload_validation = true
+runtime_failure_rollback = true
+validation_before_runtime_commit = true

@@ -94,6 +94,7 @@ def _html_assets(client, html_text, source_url, context):
     from .browser_workflow.client import BrowserWorkflowClient
     from ._springer_assets import extract_html_assets as springer_assets
 
+    discovery_failures = []
     if client.name == "springer":
         assets = springer_assets(html_text, source_url, asset_profile="all")
         if not assets:
@@ -120,8 +121,18 @@ def _html_assets(client, html_text, source_url, context):
                 asset_profile="all",
                 context=context,
             )
-        except HtmlExtractionFailure:
+        except HtmlExtractionFailure as exc:
             assets = []
+            if exc.reason != "article_container_not_found":
+                discovery_failures.append(
+                    {
+                        "kind": "supplementary",
+                        "source_url": source_url,
+                        "reason": exc.reason,
+                        "message": exc.message,
+                        "details": dict(exc.details or {}),
+                    }
+                )
         # Some provider scopes require a body container. Explicit attachment sections
         # on abstract pages remain discoverable without accepting a body.
         assets.extend(
@@ -140,7 +151,10 @@ def _html_assets(client, html_text, source_url, context):
             _semantic_scope(html_text), source_url, noise_profile=client.name
         )
     _, supplements = split_body_and_supplementary_assets(assets)
-    return merge_assets_by_identity([dict(asset) for asset in supplements])
+    return (
+        merge_assets_by_identity([dict(asset) for asset in supplements]),
+        discovery_failures,
+    )
 
 
 def _fetch_browser_index(client, doi, metadata, context, candidates=None):
@@ -201,6 +215,9 @@ def _browser_index(client, doi, metadata, context):
     result = _fetch_browser_index(client, doi, metadata, context)
     observed = parse_html_metadata(result.html, result.final_url)
     _verify_identity(metadata, observed)
+    assets, discovery_failures = _html_assets(
+        client, result.html, result.final_url, context
+    )
     return RawFulltextPayload(
         provider=client.name,
         content=ProviderContent(
@@ -210,9 +227,8 @@ def _browser_index(client, doi, metadata, context):
             body=result.html.encode(),
             merged_metadata=metadata,
             browser_context_seed=dict(result.browser_context_seed or {}),
-            extracted_assets=_html_assets(
-                client, result.html, result.final_url, context
-            ),
+            extracted_assets=assets,
+            diagnostics={"supplementary_discovery_failures": discovery_failures},
         ),
     )
 
@@ -398,8 +414,9 @@ def _http_index(client, doi, metadata, context):
         )
     if client.name != "ieee":
         _verify_identity(metadata, result.metadata)
-    assets = _html_assets(client, result.html_text, result.final_url, context)
-    discovery_failures = []
+    assets, discovery_failures = _html_assets(
+        client, result.html_text, result.final_url, context
+    )
     index_urls = []
     if client.name == "ieee":
         from . import _ieee_metadata as ieee_metadata
@@ -623,6 +640,15 @@ def fetch_provider_supplementary(
             doi, metadata, raw, output_dir, asset_profile="all", context=context
         )
     else:
+        download_headers = None
+        candidate_headers_filter = None
+        sensitive_headers = ()
+        if client.name == "elsevier":
+            from .elsevier import _object_request_headers
+
+            download_headers = client._base_headers("*/*")
+            candidate_headers_filter = _object_request_headers
+            sensitive_headers = ("x-els-apikey",)
         downloaded = download_assets(
             SUPPLEMENTARY_KIND,
             client.transport,
@@ -632,6 +658,9 @@ def fetch_provider_supplementary(
             user_agent=client.user_agent,
             asset_profile="all",
             options=AssetDownloadOptions(
+                headers=download_headers,
+                candidate_headers_filter=candidate_headers_filter,
+                sensitive_headers=sensitive_headers,
                 runtime_context=context,
                 artifact_store=context.artifact_store,
                 asset_budget=context.asset_budget,

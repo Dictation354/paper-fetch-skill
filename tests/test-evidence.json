@@ -4581,6 +4581,13 @@
         "kind": "infrastructure",
         "scope": "Real local HTTP requests and attachment downloads through CLI/MCP single and batch outputs."
       }
+    },
+    "tests/unit/test_supplementary_elsevier_auth.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "独立 Elsevier 补充材料路由的认证头候选过滤、普通/流式请求、跨源重定向及逐项失败；使用最小 XML 与 transport 边界 mock。",
+        "reason": "只验证认证传递与结果完整性，不证明真实出版社授权或内容可用性。"
+      }
     }
   }
 }

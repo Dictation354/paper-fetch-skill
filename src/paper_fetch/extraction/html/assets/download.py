@@ -114,6 +114,10 @@ class _AssetRequestContext:
     asset_budget: AssetBudget
     staging_dir: Path
     allowed_hosts: tuple[str, ...] | None = None
+    candidate_headers_filter: (
+        Callable[[str, Mapping[str, str]], Mapping[str, str]] | None
+    ) = None
+    sensitive_headers: tuple[str, ...] = ()
     provider_name: str | None = None
     route_name: str | None = None
 
@@ -133,6 +137,10 @@ class AssetResolutionOptions:
     asset_budget: AssetBudget | None = None
     staging_dir: Path | None = None
     allowed_hosts: tuple[str, ...] | None = None
+    candidate_headers_filter: (
+        Callable[[str, Mapping[str, str]], Mapping[str, str]] | None
+    ) = None
+    sensitive_headers: tuple[str, ...] = ()
     provider_name: str | None = None
     route_name: str | None = None
     host_recovery_circuit: AssetHostRecoveryCircuit | None = None
@@ -146,6 +154,10 @@ class AssetDownloadOptions:
     """Optional fetch, safety, and execution controls for ``download_assets``."""
 
     headers: Mapping[str, str] | None = None
+    candidate_headers_filter: (
+        Callable[[str, Mapping[str, str]], Mapping[str, str]] | None
+    ) = None
+    sensitive_headers: tuple[str, ...] = ()
     browser_context_seed: Mapping[str, Any] | None = None
     figure_page_fetcher: FigurePageFetcher | None = None
     candidate_builder: Callable[..., list[str]] | None = None
@@ -671,6 +683,7 @@ def _stream_asset_candidate(
     retry_wait_seconds = 0.0
     request_policy = HttpRequestPolicy(
         allowed_hosts=request_context.allowed_hosts,
+        sensitive_headers=request_context.sensitive_headers,
         max_response_bytes=request_context.asset_budget.max_bytes_per_asset,
         max_compressed_response_bytes=request_context.asset_budget.max_bytes_per_asset,
         timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
@@ -797,6 +810,10 @@ def _request_asset_candidate(
     )
     if cookie_header:
         request_headers["Cookie"] = cookie_header
+    if request_context.candidate_headers_filter is not None:
+        request_headers = dict(
+            request_context.candidate_headers_filter(candidate_url, request_headers)
+        )
     if _transport_supports_streaming(transport):
         return _stream_asset_candidate(
             kind,
@@ -808,6 +825,7 @@ def _request_asset_candidate(
 
     request_policy = HttpRequestPolicy(
         allowed_hosts=request_context.allowed_hosts,
+        sensitive_headers=request_context.sensitive_headers,
         max_response_bytes=request_context.asset_budget.max_bytes_per_asset,
         max_compressed_response_bytes=request_context.asset_budget.max_bytes_per_asset,
         timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
@@ -916,6 +934,8 @@ def _asset_request_context(
     )
     return _AssetRequestContext(
         headers=options.headers,
+        candidate_headers_filter=options.candidate_headers_filter,
+        sensitive_headers=options.sensitive_headers,
         user_agent=options.user_agent,
         browser_context_seed=options.browser_context_seed,
         browser_cookies=options.browser_cookies,
@@ -2307,6 +2327,8 @@ def download_assets(
             options=AssetResolutionOptions(
                 transport=transport,
                 headers=headers,
+                candidate_headers_filter=active_options.candidate_headers_filter,
+                sensitive_headers=active_options.sensitive_headers,
                 user_agent=user_agent,
                 browser_context_seed=browser_context_seed,
                 browser_cookies=browser_cookies,

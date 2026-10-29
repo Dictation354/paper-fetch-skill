@@ -319,3 +319,82 @@ def test_unverified_index_is_not_reported_as_complete_empty_discovery():
         with pytest.raises(ProviderFailure) as caught:
             client.fetch_supplementary(DOI, META, None, context=context)
     assert caught.value.code == "error"
+
+
+@pytest.mark.parametrize(
+    "reason,has_attachment",
+    [
+        (None, False),
+        ("parser_failed", False),
+        ("parser_failed", True),
+        ("insufficient_body", True),
+        ("article_container_not_found", False),
+        ("article_container_not_found", True),
+    ],
+)
+@pytest.mark.parametrize("archive", [False, True])
+def test_browser_discovery_preserves_failures_and_recovered_assets(
+    monkeypatch, tmp_path, reason, has_attachment, archive
+):
+    from paper_fetch.extraction.html.signals import HtmlExtractionFailure
+    from paper_fetch.providers.browser_workflow import assets as browser_assets
+
+    failure = HtmlExtractionFailure(reason, "Original parser diagnostic")
+    failure.details = {"selector": ".article-body", "phase": "scope"}
+    scanner = mock.Mock(side_effect=failure) if reason else mock.Mock(return_value=[])
+    monkeypatch.setattr(browser_assets, "_cached_browser_workflow_assets", scanner)
+    page = html_page() if has_attachment else html_page(links="")
+    fetched = BrowserFetchedHtml(
+        source_url=URL,
+        final_url=URL,
+        html=page,
+        response_status=200,
+        response_headers={},
+        title="Attachment contract",
+        summary="",
+        browser_context_seed={},
+    )
+    deps = replace(
+        default_browser_workflow_deps(),
+        load_runtime_config=mock.Mock(return_value=SimpleNamespace()),
+        ensure_runtime_ready=mock.Mock(),
+        fetch_html_with_browser=mock.Mock(return_value=fetched),
+    )
+    transport = RecordingTransport({})
+    client = ScienceClient(transport, {}, deps=deps)
+    downloader = mock.Mock(
+        side_effect=lambda *a, **k: {
+            "assets": [{**asset, "path": "support.csv"} for asset in k["assets"]],
+            "asset_failures": [],
+        }
+    )
+    monkeypatch.setattr(client, "_download_browser_backed_related_assets", downloader)
+    monkeypatch.setattr(
+        client,
+        "fetch_raw_fulltext",
+        mock.Mock(side_effect=AssertionError("body request")),
+    )
+    with RuntimeContext(env={}, transport=transport) as context:
+        result, _ = client.fetch_supplementary(
+            DOI, META, tmp_path if archive else None, context=context
+        )
+    failed = reason not in {None, "article_container_not_found"}
+    assert result.discovery_complete is not failed
+    assert len(result.assets) == int(has_attachment)
+    assert result.asset_failures == (
+        [
+            {
+                "kind": "supplementary",
+                "source_url": URL,
+                "reason": reason,
+                "message": failure.message,
+                "details": failure.details,
+            }
+        ]
+        if failed
+        else []
+    )
+    assert downloader.call_count == int(archive and has_attachment)
+    if archive and has_attachment:
+        assert result.assets[0]["path"] == "support.csv"
+    assert transport.calls == []

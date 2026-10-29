@@ -221,6 +221,9 @@ def validate_contract(
         "sha256_before_execute": True,
         "archive_preflight": True,
         "reuse_offline_installer_checks": True,
+        "staged_payload_validation": True,
+        "runtime_failure_rollback": True,
+        "validation_before_runtime_commit": True,
     }.items():
         if update.get(key) != expected:
             errors.append(f"update.{key} must be {expected!r}")

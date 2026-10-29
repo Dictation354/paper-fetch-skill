@@ -680,6 +680,27 @@ def download_elsevier_related_assets(
     }
 
 
+def _object_request_headers(url: str, headers: Mapping[str, str]) -> dict[str, str]:
+    """Scope Object Retrieval credentials to the official HTTPS endpoint."""
+    try:
+        parsed = urllib.parse.urlsplit(url)
+        official = (
+            parsed.scheme == "https"
+            and parsed.hostname == "api.elsevier.com"
+            and parsed.port in {None, 443}
+            and parsed.username is None
+            and parsed.password is None
+            and parsed.path.startswith("/content/object/")
+        )
+    except ValueError:
+        official = False
+    return {
+        key: value
+        for key, value in headers.items()
+        if official or key.lower() != "x-els-apikey"
+    }
+
+
 class ElsevierClient(ProviderClient):
     name = "elsevier"
 

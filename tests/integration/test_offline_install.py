@@ -379,6 +379,7 @@ class OfflineInstallTests(unittest.TestCase):
         extra_env: dict[str, str] | None = None,
         install_dir: Path | str | None = None,
         use_default_install_dir: bool = False,
+        skip_smoke: bool = True,
     ) -> subprocess.CompletedProcess[str]:
         env = os.environ.copy()
         env["HOME"] = str(home)
@@ -390,7 +391,9 @@ class OfflineInstallTests(unittest.TestCase):
             env["SHELL"] = shell
         if extra_env:
             env.update(extra_env)
-        command = [str(bundle / "install-offline.sh"), "--skip-smoke"]
+        command = [str(bundle / "install-offline.sh")]
+        if skip_smoke:
+            command.append("--skip-smoke")
         if not use_default_install_dir:
             command.extend(["--install-dir", str(install_dir or bundle)])
         command.extend(args)
@@ -585,11 +588,32 @@ class OfflineInstallTests(unittest.TestCase):
                 ).lstrip(),
             )
 
+            _write_file(install_root / "scripts" / "obsolete.py", "old")
+            _write_file(install_root / "downloads" / "paper.md", "keep paper")
+            _write_file(install_root / "user-file.txt", "keep user file")
+            _write_executable(
+                bundle / "bin" / "paper-fetch", "#!/usr/bin/env bash\necho upgraded\n"
+            )
+            _write_checksums(bundle)
             result = self._run_installer(
                 bundle, fake_bin, home, install_dir=install_root
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                subprocess.check_output(
+                    [str(install_root / "bin" / "paper-fetch"), "--help"], text=True
+                ).strip(),
+                "upgraded",
+            )
+            self.assertFalse((install_root / "scripts" / "obsolete.py").exists())
+            self.assertEqual(
+                (install_root / "downloads" / "paper.md").read_text(), "keep paper"
+            )
+            self.assertEqual(
+                (install_root / "user-file.txt").read_text(), "keep user file"
+            )
+            self.assertEqual(list(install_root.glob(".paper-fetch-update.*")), [])
             for stale in (
                 "src",
                 "tests",
@@ -619,6 +643,148 @@ class OfflineInstallTests(unittest.TestCase):
                 f'PAPER_FETCH_IMAGE_TOOLS_DIR="{install_root / "image-tools"}"',
                 offline_env,
             )
+
+    def test_runtime_upgrade_rolls_back_before_config_changes(self) -> None:
+        cases = (
+            "copy_start",
+            "copy_partial",
+            "staged_checksum",
+            "staged_entry",
+            "replace",
+            "rollback_restore",
+            "installed_skill",
+            "marker",
+            "smoke",
+        )
+        for fault in cases:
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as tmpdir:
+                root = Path(tmpdir)
+                bundle, fake_bin, home = self._create_bundle(root)
+                install_root = root / "installed"
+                initial = self._run_installer(
+                    bundle, fake_bin, home, install_dir=install_root
+                )
+                self.assertEqual(initial.returncode, 0, initial.stderr)
+                _write_file(install_root / "downloads" / "paper.md", "keep paper")
+                _write_file(install_root / "user-file.txt", "keep user file")
+                _write_file(install_root / "src" / "old.txt", "old source")
+                _write_file(install_root / "scripts" / "old-managed.py", "old script")
+                _write_file(install_root / "offline.env", 'ELSEVIER_API_KEY="keep"\n')
+                preserved = {
+                    path: path.read_bytes()
+                    for directory in (install_root, home)
+                    for path in directory.rglob("*")
+                    if path.is_file()
+                }
+                # A new launcher makes a partially applied update observable.
+                _write_executable(
+                    bundle / "bin" / "paper-fetch",
+                    "#!/usr/bin/env bash\necho new-launcher\n",
+                )
+                if fault == "smoke":
+                    _write_executable(
+                        bundle / "bin" / "paper-fetch",
+                        "#!/usr/bin/env bash\necho injected-smoke >&2\nexit 76\n",
+                    )
+                _write_checksums(bundle)
+                expected_code = 1
+                if fault.startswith(("copy", "staged")):
+                    expected_code = (
+                        71
+                        if fault == "copy_start"
+                        else 72
+                        if fault == "copy_partial"
+                        else 1
+                    )
+                    action = {
+                        "copy_start": 'echo "injected copy start" >&2; exit 71',
+                        "copy_partial": '/bin/cp -a "$2/runtime" "$3/runtime"; echo "injected partial copy" >&2; exit 72',
+                        "staged_checksum": '/bin/cp "$@"; echo corrupt >> "$3/runtime/site-packages/paper_fetch/__init__.py"; exit 0',
+                        "staged_entry": '/bin/cp "$@"; chmod -x "$3/bin/paper-fetch"; exit 0',
+                    }[fault]
+                    _write_executable(
+                        fake_bin / "cp",
+                        f"""#!/usr/bin/env bash
+if [[ "$1" == "-a" && "$3" == *"/.paper-fetch-update."*/staged/ ]]; then
+  {action}
+fi
+exec /bin/cp "$@"
+""",
+                    )
+                elif fault in {"replace", "installed_skill", "rollback_restore"}:
+                    expected_code = 2 if fault == "installed_skill" else 73
+                    action = (
+                        'echo "injected replace" >&2; exit 73'
+                        if fault != "installed_skill"
+                        else '/bin/mv "$@"; echo corrupt >> "$2/paper-fetch-skill/references/tool-contract.md"; exit 0'
+                    )
+                    component = "skills" if fault == "installed_skill" else "runtime"
+                    restore_fault = (
+                        'if [[ "$1" == *"/.paper-fetch-update."*/backup/bin ]]; then exit 74; fi'
+                        if fault == "rollback_restore"
+                        else ""
+                    )
+                    _write_executable(
+                        fake_bin / "mv",
+                        f"""#!/usr/bin/env bash
+{restore_fault}
+if [[ "$1" == *"/.paper-fetch-update."*/staged/{component} ]]; then
+  {action}
+fi
+exec /bin/mv "$@"
+""",
+                    )
+                elif fault == "marker":
+                    expected_code = 1
+                    _write_executable(
+                        fake_bin / "mv",
+                        """#!/usr/bin/env bash
+if [[ "$1" == *"/.paper-fetch-update."*/staged/runtime ]]; then
+  /bin/mv "$@"
+  mkdir "$2/python-bin"
+  exit 0
+fi
+exec /bin/mv "$@"
+""",
+                    )
+                else:
+                    expected_code = 76
+                result = self._run_installer(
+                    bundle,
+                    fake_bin,
+                    home,
+                    install_dir=install_root,
+                    skip_smoke=fault != "smoke",
+                )
+                self.assertEqual(
+                    result.returncode, expected_code, result.stdout + result.stderr
+                )
+                self.assertIn("restoring previous payload", result.stderr)
+                transactions = list(install_root.glob(".paper-fetch-update.*"))
+                if fault == "rollback_restore":
+                    self.assertEqual(len(transactions), 1)
+                    backup = transactions[0] / "backup"
+                    self.assertIn(str(backup), result.stderr)
+                    self.assertIn("Runtime rollback failed", result.stderr)
+                else:
+                    self.assertEqual(transactions, [])
+                for path, content in preserved.items():
+                    actual_path = path
+                    if fault == "rollback_restore" and path.is_relative_to(
+                        install_root / "bin"
+                    ):
+                        actual_path = backup / path.relative_to(install_root)
+                    self.assertEqual(actual_path.read_bytes(), content, str(path))
+                for launcher in (
+                    install_root / "bin" / "paper-fetch",
+                    install_root / "runtime" / "paper-fetch-python",
+                ):
+                    if fault == "rollback_restore" and launcher.parent.name == "bin":
+                        launcher = backup / launcher.relative_to(install_root)
+                    probe = subprocess.run(
+                        [str(launcher), "--help"], capture_output=True
+                    )
+                    self.assertEqual(probe.returncode, 0)
 
     def test_install_rejects_home_before_removing_existing_content(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
