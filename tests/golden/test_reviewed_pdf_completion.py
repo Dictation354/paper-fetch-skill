@@ -1,6 +1,6 @@
 """Remaining original PDFs through current provider/service assembly.
 
-Only retrieval of the captured PDF and metadata is injected. The PDF parser,
+Captured PDF/metadata and browser preparation are boundary mocks. The PDF parser,
 route-aware provider assembly and service rendering are the current code.
 """
 
@@ -49,7 +49,13 @@ def completed_pdf(request):
         ),
     )
     client = provider_bundle(provider).client_factory(HttpTransport(), {})
-    with mock.patch.object(client, "fetch_raw_fulltext", return_value=payload):
+    # Module fixtures run before the function-scoped offline preparation mock.
+    with (
+        mock.patch.object(client, "fetch_raw_fulltext", return_value=payload),
+        mock.patch(
+            "paper_fetch.providers.browser_runtime.preparation.prepare_camoufox_managed_runtime"
+        ),
+    ):
         envelope = _fetch_through_service(client, fixture, metadata)
     assert envelope.article is not None
     return fixture, envelope.article, client, payload

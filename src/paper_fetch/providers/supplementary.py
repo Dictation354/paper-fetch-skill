@@ -642,7 +642,7 @@ def fetch_provider_supplementary(
     else:
         download_headers = None
         candidate_headers_filter = None
-        sensitive_headers = ()
+        sensitive_headers: tuple[str, ...] = ()
         if client.name == "elsevier":
             from .elsevier import _object_request_headers
 

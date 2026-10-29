@@ -152,7 +152,7 @@ def test_independent_supplementary_scope_replays_publisher_material_links(provid
     }.get(provider, CLIENTS.get(provider))
     client = client_class(None, {})
     with RuntimeContext(env={}) as context:
-        assets = _html_assets(client, html, url, context)
+        assets, _ = _html_assets(client, html, url, context)
     assert assets
     assert all(
         asset.get("kind") == "supplementary" or asset.get("section") == "supplementary"
@@ -178,7 +178,7 @@ def test_independent_springer_scope_keeps_extended_and_source_data():
     doi = "10.1038/s41561-022-00912-7"
     html = golden_criteria_asset(doi, "original.html").read_text()
     with RuntimeContext(env={}) as context:
-        assets = _html_assets(
+        assets, _ = _html_assets(
             SpringerClient(None, {}),
             html,
             "https://www.nature.com/articles/s41561-022-00912-7",

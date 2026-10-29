@@ -6,6 +6,18 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.2.5 - 2026-10-29
+
+### Supplementary discovery and authentication fixes
+
+- Preserve browser supplementary discovery failures with their original reason, message, details and source page. Continue the explicit-attachment fallback and download recovered files while keeping discovery incomplete; a missing article container remains compatible with attachment discovery on abstract and paywalled pages.
+- Send the configured Elsevier API key for independent supplementary downloads only to the official HTTPS Object Retrieval endpoint. Filter candidate headers and remove sensitive credentials on cross-origin redirects in both ordinary and streaming downloads; retain per-file failures and discovery-only behavior.
+
+### Reliable Linux and macOS updates
+
+- Stage and validate the complete new runtime on the target filesystem before replacing managed components. Include the runtime marker, required installed-skill validation and enabled smoke checks before commit; restore the previous payload and original exit code on failure, and retain the backup location if rollback fails.
+- Preserve papers, user files and environment files during runtime replacement. Clean backups and source/build leftovers after success, then update configuration and host integrations. Synchronize the macOS adaptation contract and deployment instructions.
+
 ## 7.2.4 - 2026-10-27
 
 ### Independent supplementary acquisition
