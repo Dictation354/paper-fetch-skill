@@ -51,7 +51,6 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
     if platform.system() != "Darwin" or platform.machine() != "arm64":
         pytest.skip("native Camoufox bundle evidence requires Darwin arm64")
 
-    import camoufox.addons as camoufox_addons
     import camoufox.fpgen_model as camoufox_fpgen_model
     import camoufox.sync_api as camoufox_sync_api
     from camoufox import DefaultAddons, multiversion, pkgman
@@ -73,7 +72,6 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
     # This gate proves the explicitly staged bundle, independent of new releases.
     # Launch-time preparation still runs, with discovery limited to this asset.
     version_data = json.loads((expected_runtime_path / "version.json").read_text())
-    assert version_data.get("prerelease") is True
     assert pkgman.Version.from_path(expected_runtime_path).is_supported()
     staged_version = pkgman.AvailableVersion(
         version=pkgman.Version.from_path(expected_runtime_path),
@@ -102,18 +100,10 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
             **kwargs,
         )
 
-    def reject_addon_download(*_args, **_kwargs) -> None:
-        pytest.fail("native bundle test must not download Camoufox default addons")
-
     monkeypatch.setattr(
         camoufox_sync_api,
         "launch_options",
         offline_launch_options,
-    )
-    monkeypatch.setattr(
-        camoufox_addons,
-        "download_and_extract",
-        reject_addon_download,
     )
     monkeypatch.setattr(
         camoufox_fpgen_model,

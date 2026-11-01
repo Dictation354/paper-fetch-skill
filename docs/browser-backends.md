@@ -35,9 +35,10 @@ python -m pip install "paper-fetch-skill[full]"
 核心安装不下载浏览器，可选安装向导仅在用户明确选择后预置并验证本地启动，
 详见 [离线包](deployment.md#离线包)。
 
-browser/full extras 固定 `camoufox==0.5.8`，不自动升级 Python 包。未显式指定
+browser/full extras 固定 `camoufox==0.5.9`，不自动升级 Python 包。未显式指定
 渠道或 browser pin 时，默认跟踪 `official/prerelease`，由 Camoufox 官方版本
-发现和兼容判断选择当前平台最新兼容 prerelease，不再使用 Python 包的隐式配对。
+发现的排序和兼容判断，从正式版和预发布版中选择当前平台最新兼容浏览器，不再使用 Python 包的隐式配对。
+`prerelease` 表示允许预发布，也接受正式版；`stable` 仅接受正式版。
 准备时在缓存锁内补写默认渠道，旧 active 配置自动迁移；静态探测不写配置。
 用户已有渠道、版本 pin、SHA 和自定义 executable 保持优先。可用
 `python -m camoufox set official/stable` 跟踪 stable，或用
@@ -52,7 +53,7 @@ browser/full extras 固定 `camoufox==0.5.8`，不自动升级 Python 包。未�
 则记录准备失败并继续 HTTP／缓存流程，实际需要浏览器时报告该失败，同次请求不
 重复更新。进度和错误写 stderr，取消继续传播。
 
-联网阶段可先用项目准备逻辑预置 prerelease 和 fpgen 模型：
+联网阶段可先用项目准备逻辑预置最新兼容浏览器和 fpgen 模型：
 
 ```bash
 python - <<'PYCODE'

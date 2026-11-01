@@ -2965,18 +2965,20 @@ def test_managed_camoufox_check_record_write_failure_preserves_result(
     assert not env.check_path.exists()
 
 
-def test_managed_camoufox_prerelease_filters_incompatible(managed_camoufox):
+@pytest.mark.parametrize("prerelease", [False, True])
+def test_managed_camoufox_prerelease_filters_incompatible(managed_camoufox, prerelease):
     env = managed_camoufox
     env.multi.CONFIG_FILE.unlink()
     env.old.is_prerelease = True
     unsupported = env.pkgman.AvailableVersion(
-        env.pkgman.Version("beta.29", "152.0.4"),
+        env.pkgman.Version("2.0.0", "152.0.4"),
         "https://example.test/unsupported.zip",
-        True,
+        prerelease,
     )
-    env.query.return_value = [env.latest, unsupported, env.old]
+    env.query.return_value = [unsupported, env.old]
     result = preparation.prepare_camoufox_managed_runtime()
     assert result.version == env.old.version.full_string
+    assert env.query.call_args.kwargs == {"include_prerelease": True}
 
 
 @pytest.mark.parametrize("failure", ["query", "download"])
@@ -3006,13 +3008,16 @@ def test_managed_camoufox_updates_without_removing_old(managed_camoufox):
 
 
 @pytest.mark.parametrize("local", [True, False])
-def test_managed_camoufox_pin_only_prepares_requested_version(managed_camoufox, local):
+@pytest.mark.parametrize("channel", ["stable", "prerelease"])
+def test_managed_camoufox_pin_only_prepares_requested_version(
+    managed_camoufox, local, channel
+):
     env = managed_camoufox
     if local:
         env.install_local()
     env.multi.save_config(
         {
-            "channel": "official/stable",
+            "channel": f"official/{channel}",
             "pinned": env.old.version.full_string,
             "unrelated": "preserve",
         }
@@ -3025,15 +3030,27 @@ def test_managed_camoufox_pin_only_prepares_requested_version(managed_camoufox, 
     assert env.download.call_count == (0 if local else 1)
 
 
-def test_managed_camoufox_respects_prerelease_channel(managed_camoufox):
+@pytest.mark.parametrize("latest_prerelease", [False, True])
+def test_managed_camoufox_prerelease_selects_latest_compatible(
+    managed_camoufox, latest_prerelease
+):
     env = managed_camoufox
-    env.old.is_prerelease = True
+    env.latest.is_prerelease = latest_prerelease
+    env.old.is_prerelease = not latest_prerelease
     env.multi.save_config({"channel": "official/prerelease"})
     result = preparation.prepare_camoufox_managed_runtime()
-    assert result.version == env.old.version.full_string
+    assert result.version == env.latest.version.full_string
     assert env.query.call_args.kwargs == {"include_prerelease": True}
     assert env.query.call_args.args[0].name == "Official"
     assert env.multi.load_config()["channel"] == "official/prerelease"
+
+
+def test_managed_camoufox_stable_excludes_prerelease(managed_camoufox):
+    env = managed_camoufox
+    env.latest.is_prerelease = True
+    result = preparation.prepare_camoufox_managed_runtime()
+    assert result.version == env.old.version.full_string
+    assert env.query.call_args.kwargs == {"include_prerelease": False}
 
 
 @pytest.mark.parametrize("failure", ["query", "download", "validation"])

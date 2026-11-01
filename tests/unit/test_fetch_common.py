@@ -111,7 +111,7 @@ class FetchCommonTests(unittest.TestCase):
                 for dependency in optional_dependencies[extra_name]
                 if Requirement(dependency).name.casefold() == "camoufox"
             ]
-            self.assertEqual(camoufox_requirements, ["camoufox==0.5.8"])
+            self.assertEqual(camoufox_requirements, ["camoufox==0.5.9"])
 
         camoufox_packages = [
             package
@@ -122,7 +122,7 @@ class FetchCommonTests(unittest.TestCase):
         locked_version = Version(camoufox_packages[0]["version"])
         self.assertIn(
             locked_version,
-            Requirement("camoufox==0.5.8").specifier,
+            Requirement("camoufox==0.5.9").specifier,
         )
 
         project_package = next(
@@ -142,7 +142,7 @@ class FetchCommonTests(unittest.TestCase):
             self.assertEqual(len(camoufox_edges), 1)
             self.assertEqual(
                 camoufox_edges[0].get("specifier"),
-                "==0.5.8",
+                "==0.5.9",
             )
 
     def test_pdf_extras_require_coordinated_pymupdf_2_line(self) -> None:
@@ -187,7 +187,7 @@ class FetchCommonTests(unittest.TestCase):
             operators = {specifier.operator for specifier in requirement.specifier}
             self.assertTrue(requirement.specifier, dependency)
             if requirement.name.casefold() == "camoufox":
-                self.assertEqual(str(requirement.specifier), "==0.5.8")
+                self.assertEqual(str(requirement.specifier), "==0.5.9")
             else:
                 self.assertTrue(operators.isdisjoint({"==", "==="}), dependency)
 

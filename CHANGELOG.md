@@ -6,6 +6,17 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.2.6 - 2026-11-01
+
+### Browser runtime selection
+
+- Upgrade browser/full extras to `camoufox==0.5.9`. Let `official/prerelease` select the latest compatible stable or prerelease browser in upstream order; keep `official/stable` restricted to stable releases. Apply the same channel rule to local pinned builds while preserving version/SHA pins, custom executables, update intervals, locking and failure fallback.
+- Update browser documentation, CLI/MCP and Skill guidance, and the macOS adaptation contract. Allow the native dual-context gate to reuse either release type and remove the obsolete addon-download hook while retaining staged-runtime and fingerprint-model reuse.
+
+### Dependency updates
+
+- Refresh 23 compatible locked Python dependencies, including Pydantic 2.14.2, python-dateutil 4.0.0, PyObjC 13.0, pytest 9.2.0, mypy 2.4.1 and Ruff 0.17.3. Retain Playwright 1.62.0 and trafilatura 2.2.0 with their existing compatibility constraints.
+
 ## 7.2.5 - 2026-10-29
 
 ### Supplementary discovery and authentication fixes

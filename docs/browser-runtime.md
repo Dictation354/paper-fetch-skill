@@ -1,7 +1,7 @@
 # Browser runtime ownership
 
 生产 browser runtime 只有 Camoufox；browser/full extra 固定
-`camoufox==0.5.8`。开发和常规 CI 使用 `uv.lock` 中的具体版本，离线构建使用
+`camoufox==0.5.9`。开发和常规 CI 使用 `uv.lock` 中的具体版本，离线构建使用
 依赖 wheelhouse 中的同一固定版本，并由 `paper_fetch.providers.browser_runtime`
 统一管理。
 
@@ -172,8 +172,10 @@ CLI、MCP 和 Python API 每次抓取请求开始时自动准备 managed runtime
 或 Camoufox Python 包版本变化后重新判断准备需求。记录缺失、损坏或时间戳在
 未来时重新检查，记录写入失败只报告 stderr，不影响本次准备结果。
 `auth` 和 preflight 仍在启动前进入同一准备逻辑。
-默认渠道为 `official/prerelease`，通过 Camoufox 0.5.8 官方发现和兼容判断选择
-当前平台最新兼容 prerelease，不使用包配套浏览器隐式 pin，不自动升级 Python 包。
+默认渠道为 `official/prerelease`，通过 Camoufox 0.5.9 官方发现和兼容判断选择
+当前平台正式版和预发布版中的最新兼容浏览器，沿用上游排序，不按发布时间另行排序。
+`prerelease` 表示允许预发布，也接受正式版；`stable` 仅接受正式版。
+不使用包配套浏览器隐式 pin，不自动升级 Python 包。
 已有显式渠道、版本 pin、SHA、自定义 executable 优先；本地有效 pin 不联网查询。
 共享 cache 的准备和检查记录读写使用同一进程锁，并在锁内补写默认渠道，旧 active 配置自动迁移。
 有效目标直接复用，损坏目标只修复经路径校验的版本目录，不清空整个 cache。
@@ -188,7 +190,7 @@ custom executable 传回去，因为 Camoufox 的 bundle metadata 位于
 `executable_path` 透传；在 macOS 上优先使用 managed runtime，除非 custom bundle
 明确支持 Camoufox 的 executable-path metadata 语义。
 
-按 [浏览器预置说明](browser-backends.md#安装) 准备官方 prerelease 和 fpgen 模型后，可执行不访问远端 publisher 的原生双 context
+按 [浏览器预置说明](browser-backends.md#安装) 准备官方最新兼容浏览器和 fpgen 模型后，可执行不访问远端 publisher 的原生双 context
 回归：
 
 ```bash
@@ -199,10 +201,10 @@ PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST=1 \
 
 该 test 串行运行是因为临时 context 与持久 context 共用同一个本地 browser
 runtime；Windows / WSL 只运行对应的 pure-mock unit tests。原生 test 通过
-Camoufox 公开的 `exclude_addons` 参数排除默认扩展，并对实际扩展下载设置失败
-tripwire，并将版本查询限定为已预置的版本、禁止重新安装，因此只验证
+Camoufox 公开的 `exclude_addons` 参数排除默认扩展，并将版本查询限定为已预置的
+正式版或预发布版、禁止重新安装，同时要求复用已预置的 fpgen 模型，因此只验证
 已预置 managed app bundle 和两类 context 的本地启动，
-不依赖已有扩展缓存，也不验证 Camoufox 默认扩展行为。它还通过 BrowserForge
+不依赖已有扩展缓存，也不验证 Camoufox 默认扩展行为。它还通过 Camoufox
 公开的 screen constraint 使用固定 synthetic screen，避免原生 CI 依赖已登录的
 WindowServer 或物理显示器。
 

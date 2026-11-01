@@ -6,6 +6,17 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.2.6 - 2026-11-01
+
+### 浏览器版本选择
+
+- browser/full extras 升级至 `camoufox==0.5.9`。`official/prerelease` 沿用上游排序，从正式版和预发布版中选择最新兼容浏览器；`official/stable` 仍仅接受正式版。本地 pin 复用采用相同渠道规则，保留版本/SHA pin、自定义 executable、更新间隔、进程锁与失败回退。
+- 同步浏览器文档、CLI/MCP、Skill 指引和 macOS 适配契约。原生双 context gate 允许复用预置正式版或预发布版，移除已删除的扩展下载函数钩子，继续要求复用预置 runtime 与 fpgen 模型。
+
+### 依赖更新
+
+- 刷新 23 个兼容的锁定 Python 依赖，包括 Pydantic 2.14.2、python-dateutil 4.0.0、PyObjC 13.0、pytest 9.2.0、mypy 2.4.1 和 Ruff 0.17.3。保留 Playwright 1.62.0、trafilatura 2.2.0 及现有兼容约束。
+
 ## 7.2.5 - 2026-10-29
 
 ### 补充材料发现与认证修复

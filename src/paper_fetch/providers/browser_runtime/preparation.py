@@ -363,6 +363,7 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
             )
         pinned = config.get("pinned")
         pinned_sha = config.get("pinned_sha")
+        include_prerelease = channel_type == "prerelease"
         if not config.get("channel") and not pinned:
             # Disable upstream's implicit package pairing before any later launch.
             config["channel"] = channel
@@ -379,7 +380,7 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                 if (
                     item.repo_name == repo_name
                     and item.version.full_string == pinned
-                    and item.is_prerelease == (channel_type == "prerelease")
+                    and (include_prerelease or not item.is_prerelease)
                     and (not pinned_sha or item.sha256 == pinned_sha)
                 ):
                     path, safe = _managed_candidate(root, item.relative_path)
@@ -412,13 +413,13 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                 )
                 versions = pkgman.list_available_versions(
                     repo,
-                    include_prerelease=channel_type == "prerelease",
+                    include_prerelease=include_prerelease,
                 )
                 selected = next(
                     (
                         v
                         for v in versions
-                        if v.is_prerelease == (channel_type == "prerelease")
+                        if (include_prerelease or not v.is_prerelease)
                         and v.version.is_supported()
                         and (not pinned or v.version.full_string == pinned)
                         and (not pinned_sha or v.sha256 == pinned_sha)

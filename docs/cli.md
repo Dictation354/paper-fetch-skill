@@ -494,8 +494,9 @@ CLI 抓取在每次请求开始时检查 managed Camoufox，包括 HTTP 抓取�
 计时，跳过不刷新时间戳，取消不记为完成；缺失、损坏或不兼容时立即准备。
 渠道、pin/SHA 或 Camoufox Python 包版本变化后重新判断，有效本地 pin 仍直接
 复用。记录异常时重新检查，写入失败只报告 stderr。browser/full
-固定 `camoufox==0.5.8`，默认渠道 `official/prerelease`，跟踪当前平台最新兼容
-浏览器，不自动升级 Python 包。显式渠道、pin、SHA 和自定义 executable 优先；
+固定 `camoufox==0.5.9`，默认渠道 `official/prerelease`，沿用上游排序，从正式版
+和预发布版中选择当前平台最新兼容浏览器。`prerelease` 表示允许预发布；
+显式 `official/stable` 仅接受正式版。不自动升级 Python 包。显式渠道、pin、SHA 和自定义 executable 优先；
 core 缺少 browser extra 或显式 executable 时跳过托管更新。更新失败可复用有效
 本地版本；无可用浏览器则记录失败并继续 HTTP／缓存流程，实际需要浏览器时报告
 失败，本次不重复准备。进度和错误写 stderr。`auth` 和 `browser-preflight` 在

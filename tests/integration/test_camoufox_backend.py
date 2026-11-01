@@ -246,15 +246,15 @@ def test_managed_camoufox_rejects_runtime_below_playwright_floor(
 
 
 @pytest.mark.parametrize("local", [False, True])
+@pytest.mark.parametrize("prerelease", [False, True])
 def test_managed_camoufox_default_agrees_with_upstream_path_resolution(
-    managed_camoufox, local
+    managed_camoufox, local, prerelease
 ):
     env = managed_camoufox
     env.install_local()
+    env.latest.is_prerelease = prerelease
     if local:
-        env.latest.is_prerelease = True
         env.install_local(env.latest, active=False)
-    env.latest.is_prerelease = True
     config = env.multi.load_config()
     config.pop("channel")
     env.multi.save_config(config)

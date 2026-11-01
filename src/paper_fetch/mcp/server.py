@@ -319,7 +319,7 @@ def build_server() -> PaperFetchMCPServer:
             "only a batch-wide bounded text sample. batch_results atomically writes "
             "the final input-ordered JSONL result; overwrite defaults false. "
             "Each batch checks managed Camoufox once at start, including HTTP/cache "
-            "hits (default official/prerelease; explicit channel/pins take priority)."
+            "hits (default official/prerelease allows stable and prerelease builds; official/stable excludes prereleases; explicit channel/pins take priority)."
         ),
         annotations=_fetch_annotations(),
         structured_output=False,

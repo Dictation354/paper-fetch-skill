@@ -180,6 +180,7 @@ def validate_contract(
         "managed_runtime_preparation",
         "fetch_start_preparation",
         "batch_prepares_once",
+        "prerelease_includes_stable",
         "native_bundle_gate",
         "cooperative_cancel_owner_thread_cleanup",
         "html_snapshot_owner_thread",
@@ -189,7 +190,7 @@ def validate_contract(
             errors.append(f"browser.{key} must be true")
     for key, expected in (
         ("default_channel", "official/prerelease"),
-        ("python_package_spec", "camoufox==0.5.8"),
+        ("python_package_spec", "camoufox==0.5.9"),
         ("update_check_interval_seconds", 86400),
     ):
         if browser.get(key) != expected:
