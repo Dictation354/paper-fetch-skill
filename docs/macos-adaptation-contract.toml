@@ -37,6 +37,11 @@ verify_before_legacy_cleanup = true
 check_is_read_only = true
 
 [browser]
+default_backend = "camoufox"
+pnas_backend = "camoufox"
+elsevier_browser_routes = "unsupported"
+system_chrome_required = false
+installer_prepares_flaresolverr = false
 runtime_bundle_built_in = false
 core_install_downloads_runtime = false
 optional_install_download_requires_consent = true
@@ -52,6 +57,10 @@ native_bundle_gate = true
 cooperative_cancel_owner_thread_cleanup = true
 html_snapshot_owner_thread = true
 supplementary_index_without_body = true
+publisher_native_persistent_profiles = true
+profile_exclusive_lock_owner_thread = true
+auth_native_profile_replay = true
+json_export_optional = true
 
 [release]
 installer_manifest = "installer/manifest.json"

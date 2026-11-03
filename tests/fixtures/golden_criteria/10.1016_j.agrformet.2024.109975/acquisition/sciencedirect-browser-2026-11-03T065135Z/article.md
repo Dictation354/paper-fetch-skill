@@ -1,0 +1,345 @@
+---
+title: "Optimal representation of spring phenology on photosynthetic productivity across the northern hemisphere forests"
+authors: "Jing Fang, Herman H. Shugart, Leibin Wang, James A. Lutz, Xiaodong Yan, Feng Liu"
+source: "elsevier_html"
+acquisition:
+  provider: "elsevier"
+  route: "browser_html"
+  representation: "html"
+  transport: "browser"
+  fallback_used: false
+has_fulltext: true
+content_kind: "fulltext"
+has_abstract: true
+token_estimate: 12673
+---
+
+# Optimal representation of spring phenology on photosynthetic productivity across the northern hemisphere forests
+
+## Abstract
+
+<a id="elsevier-abs0002"></a>
+
+Accurate simulation of the onset of spring is crucial for predicting the photosynthetic productivity of forest ecosystems. Nonetheless, the potential of phenology simulations on predictions of forest gross primary productivity (GPP) remains poorly understood, with previous studies generally focused on predicting phenology dates themselves or on limited scales. Here, we constructed a framework through the critical process of leaf growth to couple a terrestrial biosphere model—FORCCHN2 with five widely used phenology models, including one-phase (involving heat forcing), two-phase (considering chilling demand), and multi-phase models (integrating photoperiod effects) through the critical process of leaf growth. We evaluated the GPP performance from the multiple forest biomes in 74 eddy covariance (EC) sites and compared the total trends to satellite observations across the northern hemisphere forests. The predictions of the five models could reproduce 62.41–67.24 % variations of the GPP observations in all EC sites. In the deciduous broadleaf forest sites, we found the two-phase and multi-phase coupled models performed better than the one-phase coupled model. Chilling may play an essential role in controlling photosynthetic activity in deciduous broadleaf forests. Moreover, the multi-phase coupled model integrated photoperiod effects performed best at capturing GPP changes of the whole northern hemisphere forests. The predictions also showed the GPP in the northern hemisphere ranged from 21.68 to 26.06 Pg C year<sup>−1</sup>, and the total GPP showed an increasing trend. This study provides local and regional available evidence for the impact of phenology on photosynthesis with climate warming. The results highlight the necessity for enhancing understanding of the phenology factors on GPP and integrating the appropriate phenology representation to improve predictions of photosynthetic productivity for forests, especially in prediction to large scales and long-term trends.
+
+## 1. Introduction
+
+<a id="elsevier-cesectitle0005"></a><a id="elsevier-sec0001"></a>
+
+Forest trees fix CO<sub>2</sub> as organics through photosynthesis, and this carbon flux is also known as the gross primary productivity (GPP) at the ecosystem level ([Beer et al., 2010](#elsevier-sbref0003); [Anav et al., 2015](#elsevier-sbref0001)). Climate warming induced changes in spring phenology are considered to be a primary reason for the increase in terrestrial vegetation GPP ([Piao et al., 2017](#elsevier-sbref0031)). Previous studies have developed multiple spring phenology models, mainly focusing on the simulation of phenology dates, to express the response and feedback of vegetation to climate change ([Cannell and Smith, 1983](#elsevier-sbref0005); [Chuine, 2000](#elsevier-sbref0006); [Caffarra et al., 2011](#elsevier-sbref0004)). These models are used to investigate plant phenology responses to future climate change and integrate with terrestrial biosphere models (TBMs) to explore carbon dynamics from individual to global scales. However, some vegetation phenology models are considered to be overly simplistic and produce considerable uncertainties when coupled with TBMs, leading to large biases in estimating GPP ([Ryu et al., 2008](#elsevier-sbref0037); [Randerson et al., 2009](#elsevier-sbref0033); [Richardson et al., 2012](#elsevier-sbref0035)). Clearly, to promote large-scale GPP modeling by terrestrial biosphere models and to increase our understanding of the global carbon cycle in the context of climate change, an investigation of the potential of spring phenology models on GPP predictions is needed.
+
+Current studies considered heat forcing as the main driver of spring onset, whereas chilling demand and photoperiod effect codetermine the start dates of spring growth (SOS) for some specific vegetations or areas ([Zohner et al., 2016](#elsevier-sbref0045); [Liu et al., 2018](#elsevier-sbref0023); [Piao et al., 2019](#elsevier-sbref0030); [Huang et al., 2020](#elsevier-sbref0016)). Using these factors, scientists developed empirical models and process-based phenology models for the SOS simulations ([Landsberg, 1974](#elsevier-sbref0020); [Hänninen, 1990](#elsevier-sbref0015); [Kramer, 1994](#elsevier-sbref0018); [Chuine, 2000](#elsevier-sbref0006); [Caffarra et al., 2011](#elsevier-sbref0004)). These models can be roughly divided into one-phase, two-phase, and multi-phase models according to the developmental stages. One-phase models only have ecodormancy stage and rely on heat forcing—the leaf begins to grow when the accumulated heat reaches a required threshold ([Cannell and Smith, 1983](#elsevier-sbref0005)). Two-phase models need to break the endodormancy after reaching the chilling demand, and then break the ecodormancy (i.e., second stage) to induce leaf growth ([Hänninen, 1990](#elsevier-sbref0015)). Multi-phase models add a dormancy induction phase to the two-phase models, and they integrate the photoperiod effect to simulate the SOS ([Caffarra et al., 2011](#elsevier-sbref0004)). Overall, the models differ in their factors and complexity that control spring phenology processes, and consequently, the phenology predictions using these models under future climate change may vary widely. [Liu et al. (2018)](#elsevier-sbref0023) investigated climate drivers and mechanisms of spring phenology using these models in the northern hemisphere, while the influence of phenology predictions on GPP remains ambiguous.
+
+Phenology models are used as sub-modules in TBMs or ecological models, some studies have evaluated them and concluded that these sub-modules can lead to biased GPP predictions ([Kucharik et al., 2006](#elsevier-sbref0019); [Richardson et al., 2012](#elsevier-sbref0035); [Park and Jeong, 2021](#elsevier-sbref0028)). [Richardson et al. (2012)](#elsevier-sbref0035) ran 14 TBMs at 10 forest sites in North America using uniform conditions. They found that the errors of phenology modeling in deciduous forests often propagate additional errors in GPP seasonal predictions. Due to a misrepresentation of spring GPP seasonality, the accumulated bias in the GPP of the deciduous forest was about 13 % of the total annual GPP. [Migliavacca et al. (2012)](#elsevier-sbref0026) drove the same terrestrial biosphere model (i.e., BEPS model) by using the phenology results from different phenology models in Harvard Forest (Massachusetts, USA). They reported that the structure of phenology models led to discrepancies in forest seasonality descriptions. These discrepancies contributed to an accumulated uncertainty in the total annual GPP of 9.6 %. Obviously, improving the simulation of phenology in TBMs is essential to understanding and predicting photosynthetic productivity. However, there is still a lack of direct evidence for the effects of these phenology models or mechanisms on the carbon cycle in more or larger regions.
+
+A TBM, FORCCHN2 model, couples short- and long-term (i.e., daily and yearly) phenological influences with photosynthesis through the leaf growth process ([Fang et al., 2022b](#elsevier-sbref0013)). In this study, we constructed a framework for coupling five widely used spring phenology models with the FORCCHN2 model through the leaf growth process to predict forest GPP across the northern hemisphere (latitude&gt;30° N). The five coupled phenology models included one-phase model (Thermal Time), three two-phase models (Sequential, Parallel, and Unichill model), and one multi-phase model (DORMPHOT model). Our analysis utilized GPP observations over the past decades to evaluate and compare GPP predictions outputted from each coupled model. The observations included the GPP measured from eddy covariance (EC) sites and the Global Land Surface Satellite (GLASS) GPP product derived from the Advanced Very-High-Resolution Radiometer (AVHRR) in the northern hemisphere. The primary objectives of this study were: (1) to couple the different phenology models with an existing TBM by leaf growth processes; (2) to evaluate the accuracy of the different coupled models and identify the optimal model in predicting GPP across the northern hemisphere forests; (3) to explore the effects of phenology representation, including phenology phases and factors (i.e., heat forcing, chilling demand, and photoperiod), on the spatiotemporal GPP patterns.
+
+## 2. Materials and methods
+
+<a id="elsevier-cesectitle0006"></a><a id="elsevier-sec0002"></a>
+
+### 2.1. Vegetation, phenology, and climate data
+
+<a id="elsevier-cesectitle0007"></a><a id="elsevier-sec0003"></a>
+
+We considered natural forest ecosystems across the northern temperate zone (latitudes exceeding 30° N, these regions had obvious changes in phenology). Leaf area index (LAI) from the GLASS (available at [http://www.glass.umd.edu/Download.html](http://www.glass.umd.edu/Download.html)) was used to initialize the vegetation information in the FORCCHN2 model and to extract the phenology dates for the first year. For initialization, we used the LAI data from 1982 with a spatial resolution of 0.5° and a time resolution of 8-days. We extracted the start date of the growing season (SOS) in 1982 and used these dates to calculate the phenological parameter (i.e., the threshold of heat accumulation, see [Section 2.3](#elsevier-sec0005)). Following previous studies, our extraction of SOS was based on a 10 % LAI threshold and the Pruned Exact Linear Time (PELT) method with a penalty factor (equal to 0.5) and a minimum segment length of 14 days ([Richardson et al., 2018](#elsevier-sbref0036); [Fang et al., 2022a](#elsevier-sbref0010)). The penalty factor was used to control the quantity of identified significant changes by applying the additional penalty on each potential changepoint. Meanwhile, the minimum segment length regulated the minimum number of days allowed between these identified changepoints. We could find the changepoints in the time series in detail and did not need to preset the number of changepoints by using the PELT method.
+
+Our definition of forest cover used the types and fractional coverage of forests at 0.5° resolution from the dataset of [Pugh et al. (2019)](#elsevier-sbref0032) ([Fig. 1](#elsevier-fig0001)). This dataset in turn was defined based on the European Space Agency Climate Change Initiative (ESA CCI) land cover. Forest was considered to be land with at least 15 % canopy cover ([Pugh et al., 2019](#elsevier-sbref0032)). Forests were divided into five types: evergreen broadleaf forest (EBF), deciduous broadleaf forest (DBF), evergreen needleleaf forest (ENF), deciduous needleleaf forest (DNF), and mixed forest (MF). The distribution of forest types and fractional coverage were shown in [Fig 1](#elsevier-fig0001).
+
+![Figure 1](https://ars.els-cdn.com/content/image/1-s2.0-S016819232400090X-gr1_lrg.jpg)
+
+<a id="elsevier-fig0001"></a>Fig. 1. Spatial distribution of flux sites, forest types, and coverage of northern hemisphere forests (latitudes&gt;30°N) at 0.5° resolution based on the European space agency climate change initiative land cover dataset. EBF: evergreen broadleaf forest; DBF: deciduous broadleaf forest; ENF: evergreen needleleaf forest; DNF: deciduous needleleaf forest; MF, mixed forest.
+
+The FORCCHN2 model is driven by daily climate and CO<sub>2</sub> data. In this case, we used the daily climate data (spatial resolution of 0.5°) from the ERA5-Land dataset (available at [https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land](https://cds.climate.copernicus.eu/cdsapp#!/dataset/reanalysis-era5-land)). The climate variables included the maximum and minimum air temperature (°C), precipitation (mm), relative humidity (%), wind speed (m s<sup>−1</sup>), atmospheric pressure (hPa), and shortwave radiation (W m<sup>−2</sup>). This dataset was generated by replaying the land component of the ECMWF ERA5 climate reanalysis. CO<sub>2</sub> concentration (ppm) was derived from Mauna Loa Observatory records (available at [https://gml.noaa.gov/ccgg/trends/data.html](https://gml.noaa.gov/ccgg/trends/data.html)). The used period was consistent with the GLASS-GPP, from 1982 to 2018. In addition, the climate data for driving the FORCCHN2 model at each flux site was observed by the eddy covariance (EC) towers.
+
+### 2.2. GPP data
+
+<a id="elsevier-cesectitle0008"></a><a id="elsevier-sec0004"></a>
+
+We compared the predicted results from FORCCHN2 with GPP observations at the flux tower sites. The EC tower-based GPP data were obtained and processed from the FLUXNET2015 dataset (available at [https://fluxnet.org/](https://fluxnet.org/)). We extracted the GPP data according to the Variable Ustar Threshold Mean (VUT\_MEAN) values of FLUXNET2015 daily version ([Pastorello et al., 2020](#elsevier-sbref0029)). The FLUXNET2015 dataset provided GPP estimates based on both nighttime (GPP\_NT\_VUT\_MEAN) and daytime (GPP\_DT\_VUT\_MEAN) methods (see [Reichstein et al. (2005)](#elsevier-sbref0034) for details on the implementation of these methods). We used the average of the two estimates to evaluate our predictions. For all EC sites, we chose the 74 active forest sites with continuous daily GPP observations in the northern hemisphere (i.e., a total of 226,818 daily observations; [Fig. 1a](#elsevier-fig0001)). These sites covered four major forest types: EBF, DBF, ENF, and MF. The type of DNF was lacking in the chosen data. On the regional scale, we also used the GLASS-GPP AVHRR dataset ([http://www.glass.umd.edu/GPP/AVHRR/](http://www.glass.umd.edu/GPP/AVHRR/)) with a spatial resolution of 0.5° from 1982 to 2018 to test the predicted GPP results across northern temperate zone forests. The GLASS-GPP algorithm originates from the latest version of the Eddy Covariance-Light Use Efficiency (EC-LUE) model, integrating the impacts of several environmental variables ([Liang et al., 2021](#elsevier-sbref0021)).
+
+### 2.3. Multiple spring phenology models
+
+<a id="elsevier-cesectitle0009"></a><a id="elsevier-sec0005"></a>
+
+Multiple phenology models have been widely used in predictions and evaluations of spring phenology. In this study, we employed five representative spring phenology models. According to the number of preceding development phases, these models can be classified into one-phase, two-phase, and multi-phase models ([Piao et al., 2019](#elsevier-sbref0030)). The models included:
+
+- (1) **Thermal Time model with one-phase**, with leaf growth initiated when the accumulated heat exceeds a critical threshold (calculated by Eqs. (1)–(3) in [Table 1](#elsevier-tbl0001)) ([Cannell and Smith, 1983](#elsevier-sbref0005));
+
+  <a id="elsevier-tbl0001"></a>
+
+  Table 1. The calculation processes of the spring phenology models. *T*: daily temperature; *DL*: daily photoperiod; *R<sub>f</sub>*: the daily rate of heat accumulation; *S<sub>f</sub>*: the accumulated heat; *t*: date; *t<sub>0</sub>*: January 1 of the given year; *t<sub>1</sub>*: September 1 of the previous year; *R<sub>c</sub>*: the daily rate of chilling accumulation; *S<sub>c</sub>*: the accumulated chilling; *K*: competence function; *S<sub>D</sub>*: the accumulation for endodormancy induction, triggered by temperature (*R<sub>T</sub>*) and photoperiod (*R<sub>P</sub>*). Others are the parameters in the phenology models. The start date of spring growth (*SOS*) is defined as the date when *S<sub>f</sub>* exceeds the critical threshold (*F<sub>crit</sub>*).
+
+  | Models             | Functions                                                                                                                                                                                                                                                        | Functions | Description                                                                                                                                                          | Refs.                                                                         |
+  | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+  | Thermal Time model | $R_{f}{= \{}\begin{matrix} {0,\hspace{0.33em}T \leq T_{d}} \\ {\frac{A_{f}}{1 + e^{\alpha({T + \beta})}},\hspace{0.33em}T > T_{d}} \end{matrix}$                                                                                                                 | Eq. (1)   | One-phase                                                                                                                                                            | [Cannell and Smith (1983)](#elsevier-sbref0005)                               |
+  | Thermal Time model | $S_{f} = \sum\limits_{t_{0}}^{t}R_{f}$                                                                                                                                                                                                                           | Eq. (2)   | One-phase                                                                                                                                                            | [Cannell and Smith (1983)](#elsevier-sbref0005)                               |
+  | Thermal Time model | $SOS = t,\hspace{0.33em}when\hspace{0.33em}S_{f} > F_{crit}$                                                                                                                                                                                                     | Eq. (3)   | One-phase                                                                                                                                                            | [Cannell and Smith (1983)](#elsevier-sbref0005)                               |
+  | Sequential model | $R_{c}{= \{}\begin{matrix} {0,\hspace{0.33em}T \leq T_{a}\hspace{0.33em}or\hspace{0.33em}T \geq T_{c}} \\ {\frac{T - T_{a}}{T_{b} - T_{a}},\hspace{0.33em}T_{a} < T < T_{b}} \\ {\frac{T - T_{c}}{T_{b} - T_{c}},\hspace{0.33em}T_{b} < T < T_{c}} \end{matrix}$ | Eq. (4) | Two-phase<br>First phase: Eqs. (4), (5).<br>Second phase: Eqs. (6)–(9). | [Hänninen (1990)](#elsevier-sbref0015) |
+  | Sequential model | $S_{c} = \sum\limits_{t_{1}}^{t}R_{c}$ | Eq. (5) | Two-phase<br>First phase: Eqs. (4), (5).<br>Second phase: Eqs. (6)–(9). | [Hänninen (1990)](#elsevier-sbref0015) |
+  | Sequential model | $K = \{\begin{matrix} {0,\hspace{0.33em}S_{c} < C_{crit}} \\ {1,\hspace{0.33em}S_{c} \geq C_{crit}} \end{matrix}$ | Eq. (6) | Two-phase<br>First phase: Eqs. (4), (5).<br>Second phase: Eqs. (6)–(9). | [Hänninen (1990)](#elsevier-sbref0015) |
+  | Sequential model | $R_{f}{= \{}\begin{matrix} {0,\hspace{0.33em}T \leq T_{d}} \\ {K \cdot \frac{A_{f}}{1 + e^{\alpha({T + \beta})}},\hspace{0.33em}T > T_{d}} \end{matrix}$ | Eq. (7) | Two-phase<br>First phase: Eqs. (4), (5).<br>Second phase: Eqs. (6)–(9). | [Hänninen (1990)](#elsevier-sbref0015) |
+  | Sequential model | $S_{f} = \sum\limits_{t_{1}}^{t}R_{f}$ | Eq. (8) | Two-phase<br>First phase: Eqs. (4), (5).<br>Second phase: Eqs. (6)–(9). | [Hänninen (1990)](#elsevier-sbref0015) |
+  | Sequential model | $SOS = t,\hspace{0.33em}when\hspace{0.33em}S_{f} > F_{crit}$ | Eq. (9) | Two-phase<br>First phase: Eqs. (4), (5).<br>Second phase: Eqs. (6)–(9). | [Hänninen (1990)](#elsevier-sbref0015) |
+  | Parallel model | $K = \{\begin{matrix} {K_{min} + \frac{1 - K_{min}}{C_{crit}} \cdot S_{c},\hspace{0.33em}S_{c} < C_{crit}} \\ {1,\hspace{0.33em}S_{c} \geq C_{crit}} \end{matrix}$ | Eq. (10) | Two-phase<br>First phase is the same as the Sequential model.<br>Second phase: Eq. (10)–(13). | [Landsberg (1974)](#elsevier-sbref0020), [Kramer (1994)](#elsevier-sbref0018) |
+  | Parallel model | $S_{f} = \sum\limits_{t_{1}}^{t}R_{f}$ | Eq. (11) | Two-phase<br>First phase is the same as the Sequential model.<br>Second phase: Eq. (10)–(13). | [Landsberg (1974)](#elsevier-sbref0020), [Kramer (1994)](#elsevier-sbref0018) |
+  | Parallel model | $SOS = t,\hspace{0.33em}when\hspace{0.33em}S_{f} > F_{crit}$ | Eq. (12) | Two-phase<br>First phase is the same as the Sequential model.<br>Second phase: Eq. (10)–(13). | [Landsberg (1974)](#elsevier-sbref0020), [Kramer (1994)](#elsevier-sbref0018) |
+  | Parallel model | $S_{c} = \sum\limits_{t_{1}}^{t}R_{c} = \sum\limits_{t_{1}}^{t}\frac{1}{1 + e^{T_{a}{({T - T_{c}})}^{2} + T_{b(}T - T_{c})}}$ | Eq. (13) | Two-phase<br>First phase is the same as the Sequential model.<br>Second phase: Eq. (10)–(13). | [Landsberg (1974)](#elsevier-sbref0020), [Kramer (1994)](#elsevier-sbref0018) |
+  | Unichill model | $R_{f}{= \{}\begin{matrix} {0,\hspace{0.33em}\hspace{0.33em}S_{c} < C_{crit}} \\ {\frac{A_{f}}{1 + e^{\alpha({T + \beta})}},\hspace{0.33em}S_{c} \geq C_{crit}} \end{matrix}$ | Eq. (14) | Two-phase<br>First phase: Eq. (14).<br>Second phase: Eq. (15)–(17). | [Chuine (2000)](#elsevier-sbref0006) |
+  | Unichill model | $S_{f} = \sum\limits_{t_{1}}^{t}R_{f}$ | Eq. (15) | Two-phase<br>First phase: Eq. (14).<br>Second phase: Eq. (15)–(17). | [Chuine (2000)](#elsevier-sbref0006) |
+  | Unichill model | $SOS = t,\hspace{0.33em}when\hspace{0.33em}S_{f} > F_{crit}$ | Eq. (16) | Two-phase<br>First phase: Eq. (14).<br>Second phase: Eq. (15)–(17). | [Chuine (2000)](#elsevier-sbref0006) |
+  | Unichill model | $S_{D} = \sum\limits_{t_{1}}^{t}R_{T} \cdot R_{P} = \sum\limits_{t_{1}}^{t}\frac{1}{1 + e^{T_{f}{({T - T_{g}})}}} \cdot \frac{1}{1 + e^{10 \cdot_{(}DL - DL_{a})}}$ | Eq. (17) | Two-phase<br>First phase: Eq. (14).<br>Second phase: Eq. (15)–(17). | [Chuine (2000)](#elsevier-sbref0006) |
+  | DORMPHOT model | $R_{c}{= \{}\begin{matrix} {0,\hspace{0.33em}\hspace{0.33em}S_{D} < D_{crit}} \\ {\frac{1}{1 + e^{T_{a}{({T - T_{b}})}^{2} + {({T - T_{b}})}}},\hspace{0.33em}S_{D} \geq D_{crit}} \end{matrix}$ | Eq. (18) | Multi-phase<br>First phase: Eq. (18).<br>Second phase: Eq. (19), (20).<br>Third phase: Eq. (21)–(25). | [Caffarra et al. (2011)](#elsevier-sbref0004) |
+  | DORMPHOT model | $S_{c} = \sum\limits_{t_{1}}^{t}R_{c}$ | Eq. (19) | Multi-phase<br>First phase: Eq. (18).<br>Second phase: Eq. (19), (20).<br>Third phase: Eq. (21)–(25). | [Caffarra et al. (2011)](#elsevier-sbref0004) |
+  | DORMPHOT model | $R_{f}{= \{}\begin{matrix} {0,\hspace{0.33em}S_{D} < D_{crit}} \\ {\frac{A_{f}}{1 + e^{h \cdot_{(}T - T_{50})}},\hspace{0.33em}S_{D} \geq D_{crit}} \end{matrix}$ | Eq. (20) | Multi-phase<br>First phase: Eq. (18).<br>Second phase: Eq. (19), (20).<br>Third phase: Eq. (21)–(25). | [Caffarra et al. (2011)](#elsevier-sbref0004) |
+  | DORMPHOT model | $T_{50} = \frac{60}{1 + e^{g \cdot_{(}DL - DL_{50})}}$ | Eq. (21) | Multi-phase<br>First phase: Eq. (18).<br>Second phase: Eq. (19), (20).<br>Third phase: Eq. (21)–(25). | [Caffarra et al. (2011)](#elsevier-sbref0004) |
+  | DORMPHOT model | $DL_{50} = \frac{24}{1 + e^{k \cdot_{(}S_{c} - C_{crit})}}$ | Eq. (22) | Multi-phase<br>First phase: Eq. (18).<br>Second phase: Eq. (19), (20).<br>Third phase: Eq. (21)–(25). | [Caffarra et al. (2011)](#elsevier-sbref0004) |
+  | DORMPHOT model | $S_{f} = \sum\limits_{t_{1}}^{t}R_{f}$ | Eq. (23) | Multi-phase<br>First phase: Eq. (18).<br>Second phase: Eq. (19), (20).<br>Third phase: Eq. (21)–(25). | [Caffarra et al. (2011)](#elsevier-sbref0004) |
+  | DORMPHOT model | $S_{f} = \sum\limits_{t_{1}}^{t}R_{f}$ | Eq. (24) | Multi-phase<br>First phase: Eq. (18).<br>Second phase: Eq. (19), (20).<br>Third phase: Eq. (21)–(25). | [Caffarra et al. (2011)](#elsevier-sbref0004) |
+  | DORMPHOT model | $SOS = t,\hspace{0.33em}when\hspace{0.33em}S_{f} > F_{crit}$ | Eq. (25) | Multi-phase<br>First phase: Eq. (18).<br>Second phase: Eq. (19), (20).<br>Third phase: Eq. (21)–(25). | [Caffarra et al. (2011)](#elsevier-sbref0004) |
+- (2) **Sequential model with two-phase**, with explicit consideration of the developmental phases preceding leaf unfolding (calculated by Eqs. (4)–(9) in [Table 1](#elsevier-tbl0001)) ([Hänninen, 1990](#elsevier-sbref0015)). In the first stage, the vegetation needed to accumulate a certain amount of chilling to “wake up” from endodormancy. The second stage was similar to the Thermal Time model—the leaf began growth when the critical heat index was met;
+- (3) **Parallel model with two-phase**, which resembled the Sequential model (calculated by Eqs. (10)–(13) in [Table 1](#elsevier-tbl0001)) ([Landsberg, 1974](#elsevier-sbref0020); [Kramer, 1994](#elsevier-sbref0018)), but the Parallel model accumulated chilling- and heat-indices simultaneously. The accumulated rate of heat was controlled by the accumulated rate of chilling;
+- (4) **Unichill model with two-phase**, which had the same processes as the Sequential model, but this model had a new method for calculating the accumulated rate of chilling (calculated by Eqs. (14)–(17) in [Table 1](#elsevier-tbl0001)) ([Chuine, 2000](#elsevier-sbref0006));
+- (5) **DORMPHOT model with multi-phase**, which integrated the effect of photoperiod (calculated by Eqs. (18)–(25) in [Table 1](#elsevier-tbl0001)) ([Caffarra et al., 2011](#elsevier-sbref0004)). The first stage was triggered by both photoperiod and temperature, and the vegetation was induced to enter the state of endodormancy when the critical threshold was reached. The second stage was the accumulation of chilling and then awakened the vegetation from the endodormancy. The third stage was also to accumulate a certain amount of heat and the accumulated rate was determined by both the photoperiod and the accumulated chilling.
+
+The calculation processes of all models were shown in [Table 1](#elsevier-tbl0001) (see Eqs. (1)–(25)). Additionally, to calculate the response of growth to the leaf development stage (see *F* in Eq. (27)–(29)), the model needed to know the autumn phenology date (i.e., the end date of the growing season, EOS). We used the Cold Degree Days (CDD) model from N. [Delpierre et al. (2009)](#elsevier-sbref0007) to predict the EOS and acquired the phenology dates of a full growing season. The CDD model was calculated by Eqs. (S1), (S2) in **Appendix S1**. For the parameters of the five spring phenology models, [Liu et al. (2018)](#elsevier-sbref0023) applied Bayesian optimization techniques and satellite data to determine the corresponding parameter set for each forest type (these calibrated parameters were given in **Table S1)**. The SOS dates in each model were defined as the date when the accumulated heat exceeded the critical threshold (*F<sub>crit</sub>*). We followed the method of [Fang et al. (2022a)](#elsevier-sbref0010) to set the parameter *F<sub>crit</sub>* in each model. *F<sub>crit</sub>* was calculated from each phenology model and the observed SOS date of the first year:
+
+<a id="elsevier-eqn0001"></a>
+
+**(26)**
+
+$$
+F_{crit} = \sum\limits_{t_{p}}^{SOS_{y0}}R_{f}
+$$
+
+where *y<sub>0</sub>* represented the first year; SOS<sub>y0</sub> represented the observed SOS date in the first year; *t<sub>p</sub>* was the date that began to accumulate heat; *R<sub>f</sub>* was the daily rate of heat accumulation, and the calculation of *R<sub>f</sub>* was shown in [Table 1](#elsevier-tbl0001). The SOS results predicted by each model were shown in **Fig. S1**.
+
+### 2.4. FORCCHN2 model
+
+<a id="elsevier-cesectitle0010"></a><a id="elsevier-sec0006"></a>
+
+The original FORCCHN is a forest carbon dynamic model, which has been applied to explore the daily carbon cycle of the forest at plot and global scale ([Ma et al., 2017](#elsevier-sbref0024)). The daily climate data drives this model and the LAI initializes the vegetation information on a fixed forest area. At the daily step, the principal processes are photosynthesis, maintenance respiration, photosynthate allocation, as well as soil organic matter (SOM) decomposition. At the yearly step, the rest of the photosynthate is stored in a so-called ‘buffer carbon pool’ at the end of the year. This pool is mainly used to support the growth of tree organs such as leaf and wood. In the FORCCHN model, phenology prediction relies on the accumulation of daily mean temperatures above a threshold value. The leaf began growth when temperature was greater than 5 °C for 10 consecutive days, while the leaf ceased growth when temperature was less than 5 °C for 10 consecutive days.
+
+To enhance the predicted performance of GPP for forest ecosystems, the second version of FORCCHN (FORCCHN2) is developed ([Fang et al., 2021](#elsevier-sbref0011); [2022b](#elsevier-sbref0013)). This model demonstrates improved performance in predicting forest carbon sinks compared to other models in North American forests ([Fang et al., 2020](#elsevier-sbref0012)), and subsequently, its application and validation have been extended to the entire northern hemisphere ([Fang et al., 2022b](#elsevier-sbref0013)). FORCCHN2 uses the non-structural carbohydrate (NSC) pool to replace the ‘buffer carbon’ pool. The NSC produced by photosynthesis serves as the basic substance for tree vital activities, including photosynthesis (i.e., NSC production), vegetation autotrophic respiration (i.e., NSC consumption), tree growth, and carbon storage (i.e., NSC allocation). The model divides the NSC pool into an active NSC pool and a slow NSC pool: the active NSC pool provides the essential NSC consumption for daily vital activities; the slow NSC pool serves as an NSC storage, ensuring adequate supply for requirements when the current active NSC pool is insufficient, e.g., maintaining vegetation respiration during the non-growing and early growing seasons. Moreover, this model couples the Thermal Time model for predicting spring phenology and the Cold Degree Days model for predicting autumn phenology. In the model, the daily carbon uptake of photosynthesis (i.e., GPP) is determined by the leaf biomass and external climate conditions. The GPP calculation in FORCCHN2 is shown in **Appendix S2**. The model integrates photosynthesis and phenology through the leaf growth process. Specifically, the phenology controls the start and end time of the leaf growing season. Meanwhile, FORCCHN2 uses the daily rate of heat accumulation (*R<sub>f</sub>*) and the accumulated heat (*S<sub>f</sub>*) in the phenology processes to calculate the growth rate of leaf biomass (*G<sub>P</sub>*):
+
+<a id="elsevier-eqn0002"></a>
+
+**(27)**
+
+$$
+\frac{dG_{P}}{dt} = k_{N}(t) \times \frac{R_{f}(t)}{A_{f}} \times F(t) \times MG
+$$
+
+where *k<sub>N</sub>* is the impact of the NSC storage pool on growth; *A<sub>f</sub>* is the phenology parameter (see **Table S1**); *F* is the response of growth to the leaf development stage, determined by *S<sub>f</sub>; MG* is the maximum daily growth rate.
+
+The value for *F* is based on the assumption that the leaf development is the highest in the middle of the growth period and equally low in the early and late seasons ([Schiestl-Aalto et al., 2015](#elsevier-sbref0038)). The process is written as:
+
+<a id="elsevier-eqn0003"></a>
+
+**(28)**
+
+$$
+F(t) = {\{\begin{matrix} {0,\hspace{0.33em}S_{f}(t)\left\langle {F_{crit}\hspace{0.33em}or\hspace{0.33em}S_{f}(t)} \right\rangle E_{crit}} \\ {\frac{1}{2}\left({\sin \left({\frac{2\pi}{E_{crit}} \times \left({S_{f}(t) - \frac{E_{crit}}{4}} \right)} \right) + 1} \right),\hspace{0.33em}F_{crit} \leq S_{f}(t) \leq E_{crit}} \end{matrix}}
+$$
+
+<a id="elsevier-eqn0004"></a>
+
+**(29)**
+
+$$
+E_{crit} = \sum\limits_{t_{p}}^{EOS}R_{f}
+$$
+
+where *E<sub>crit</sub>* is the accumulated heat when growth ceased; *EOS* is the end date of the growing season. The *S<sub>f</sub>* and *R<sub>f</sub>* are calculated in [Table 1](#elsevier-tbl0001). All model codes, processes, and parameters can be found in [Fang et al. (2022b)](#elsevier-sbref0013).
+
+Using the different *S<sub>f</sub>* and *R<sub>f</sub>*, we coupled the spring phenology models with FORCCHN2, resulting in five models: Thermal-FORCCHN2, Sequential-FORCCHN2, Parallel-FORCCHN2, Unichill-FORCCHN2, and DORMPHOT-FORCCHN2. The graphical representation of the whole framework can be seen in Fig. S2.
+
+### 2.5. Model validation and comparison
+
+<a id="elsevier-cesectitle0011"></a><a id="elsevier-sec0007"></a>
+
+To test the predicted GPP performance of these models, we used the GPP from the EC towers against the GPP predictions from each of the five models. Two statistical metrics were introduced to assess the model performance: correlation coefficient (*R*) and root mean square error (*RMSE*). All statistical results were based on the predicted GPP against the EC tower-based GPP at the daily time step. The calculation of *RMSE* was available in Appendix S3.
+
+## 3. Results
+
+<a id="elsevier-cesectitle0012"></a><a id="elsevier-sec0008"></a>
+
+### 3.1. The optimal model for each type at the EC sites
+
+<a id="elsevier-cesectitle0013"></a><a id="elsevier-sec0009"></a>
+
+[Fig. 2](#elsevier-fig0002) showed the comparison between each of the five models and 226,818 daily observations for each forest type. Overall, these models had different performances in capturing GPP dynamics, the correlation (i.e., R) between the predicted results and the observations ranged from 0.79 to 0.83, and the RMSE ranged from 2.48 to 2.71 g C m<sup>−2</sup> day<sup>−1</sup> ([Fig. 2](#elsevier-fig0002): **All forests**). For the different forest types, the ability of all models to reproduce GPP in EBF was worse than in the other forest types. In the DBF sites with distinct seasonal dynamics of leaf phenology, the ability of the one-phase Thermal-FORCCHN2 model to capture GPP dynamics was worse than other models. The one-phase model performed slightly better than other models in the evergreen needleleaf forests (RMSE=2.15 g C *m*<sup>−2</sup> day<sup>−1</sup>), but the two-phase models (Sequential-FORCCHN2, Parallel-FORCCHN2, and Unichill-FORCCHN2) and the multi-phase model (DORMPHOT-FORCCHN2) outperformed the one-phase model in the other types. Among these models, the Parallel-FORCCHN2 model and the DORMPHOT-FORCCHN2 model generally performed best, especially in evergreen broadleaf forests and mixed forests (i.e., the low RMSE).
+
+![Figure 2](https://ars.els-cdn.com/content/image/1-s2.0-S016819232400090X-gr2_lrg.jpg)
+
+<a id="elsevier-fig0002"></a>Fig. 2. Heat plots represent the relationship between observations and predictions of daily gross primary productivity (GPP) from the studied eddy covariance (EC) sites. FOR2 means the FORCHHN2 model. N represents the number of the daily observations. Diagonal lines are 1:1 line, indicating perfect agreement between predictions and observations. Black lines represent linear regression. Colors indicate the percentage of pixels in each given area (red is the densest). R is the correlation coefficient and RMSE is the root-mean-square error. Red values mean the lowest values. Box plots represent the distribution of the observed (Obs) and predicted (Pre) values.
+
+### 3.2. Evaluation of five models across the northern hemisphere
+
+<a id="elsevier-cesectitle0014"></a><a id="elsevier-sec0010"></a>
+
+In the forests across the northern hemisphere (&gt;30° N), the spatial patterns of GPP predicted by five models were broadly similar to the satellite-derived GPP (i.e., GLASS-GPP) ([Fig. 3](#elsevier-fig0003)). From 1982 to 2018, the total value of mean annual GPP inferred from the satellite data was 22.72 Pg C, and the GPP predictions of the models ranged from 21.68 (predicted by the one-phase model, Thermal-FORCCHN2) to 26.06 Pg C (predicted by the two-phase model, Unichill-FORCCHN2) ([Fig. 3](#elsevier-fig0003)). The total GPP predicted by multi-phase model DORMPHOT-FORCCHN2 (i.e., 22.98 Pg C) was closest to the value of GLASS-GPP. Both observed and predicted GPP distributions showed the largest GPP occurring in the humid subtropical and temperate regions of eastern and western Northern America, followed by the humid temperate regions in western Europe. The regions with the lowest GPP were mainly in the high latitudes with low temperatures as well as in central Northern America with the arid climate. Nonetheless, model predictions underestimated the GPP in high latitudes of Asia. The Unichill-FORCCHN2 model overestimated GPP fluxes in central Asia, while the remaining four models underestimated some regions of central and western Europe.
+
+![Figure 3](https://ars.els-cdn.com/content/image/1-s2.0-S016819232400090X-gr3_lrg.jpg)
+
+<a id="elsevier-fig0003"></a>Fig. 3. The spatial distribution of mean GPP observed by satellite (GLASS-GPP) and predicted by each coupled model for forest ecosystems of the Northern Hemisphere during 1982–2018. The spatial resolution is 0.5°. (g) is the corresponding latitudinal pattern of each result. 1 Pg C = 10<sup>15</sup> g carbon. The scatter plots are the comparison between GLASS-GPP and model predictions, the dotted line represents 1:1 line. R: correlation coefficient; k: slope.
+
+In terms of latitudinal distribution, we found that the five models can accurately capture the latitude gradients of GLASS-GPP, except that the Thermal-FORCCHN2 generally underestimated the GPP and the Unichill-FORCCHN2 generally overestimated the GPP ([Fig. 3g](#elsevier-fig0003)). Specifically, the Thermal-FORCCHN2 model overestimated the GPP in the regions between 60° to 66° N, and it underestimated the GPP below 60° N; the Unichill-FORCCHN2 model overestimated the GPP in 45°−66° N, and it had the similar gradients below 45° N; the other two- and multi-phase models could capture the gradients in 45°−60° N, and they overestimated the GPP in 45°−60° N and had an underestimation below 45° N.
+
+### 3.3. GPP trends predicted by the different models in the past decades
+
+<a id="elsevier-cesectitle0015"></a><a id="elsevier-sec0011"></a>
+
+Linear regression analysis was used to calculate GPP trends over 1982–2018 in each 0.5° grid of the northern hemisphere ([Fig. 4](#elsevier-fig0004)). In this period, the five models captured the increasing trends of GPP across 99.41 % (Parallel-FORCCHN2) to 99.69 % (Thermal-FORCCHN2) of the study area, which was in good agreement with the satellite observations (GLASS-GPP was 95.87 %). The magnitudes of all predictions were stronger than the observed trends, particularly in the regions of DBF ([Figs. 1a](#elsevier-fig0001) and [4](#elsevier-fig0004)). The difference in trends between satellite-derived GPP trends and model predictions was mainly distributed in western Northern America, southern Europe, and Mongolia, where forest cover was close to zero ([Figs. 1b](#elsevier-fig0001) and [4](#elsevier-fig0004)).
+
+![Figure 4](https://ars.els-cdn.com/content/image/1-s2.0-S016819232400090X-gr4_lrg.jpg)
+
+<a id="elsevier-fig0004"></a>Fig. 4. Changes in satellite-derived and model-predicted GPP during the period from 1982 to 2018. (a) is the satellite-derived GPP, and others are the model-predicted GPP.
+
+[Fig. 5](#elsevier-fig0001) showed the mean annual SOS and GPP changes of the whole study area from 1982 to 2018. Both observed and predicted GPP had significant increasing trends and the SOS had significant decreasing trends (significance *p* < 0.05, [Fig. 5](#elsevier-fig0005)b), although predicted trends were larger than the observations (trends of the GLASS-GPP and GLASS SOS were less than 0.1 Pg C year<sup>−1</sup> and 0.1 days year<sup>−1</sup>, respectively). The one-phase model Thermal-FORCCHN2 generally underestimated the annual GPP (*R* = 0.86 and RMSE=1.29 Pg C year<sup>−1</sup>), whereas the two-phase model Unichill-FORCCHN2 generally overestimated the annual GPP (*R* = 0.85 and RMSE=3.44 Pg C year<sup>−1</sup>) ([Fig. 5](#elsevier-fig0005)d). Overall, the multi-phase model DORMPHOT-FORCCHN2 which additionally considered photoperiods provided the best performance in the inter-annual predictions of forest GPP (*R* = 0.86 and RMSE=0.80 Pg C year<sup>−1</sup>).
+
+![Figure 5](https://ars.els-cdn.com/content/image/1-s2.0-S016819232400090X-gr5_lrg.jpg)
+
+<a id="elsevier-fig0005"></a>Fig. 5. (a) is the annual SOS derived by satellite (i.e., GLASS-LAI) and predicted by phenology models for forests in the whole of the Northern Hemisphere during 1982–2018; (b) is the annual GPP derived by satellite (i.e., GLASS-GPP) and predicted by coupled models; (c) is the corresponding scatter plot of satellite observations and model predictions in the studied area, the dotted line represents 1:1 line; (d) is the linear trends of satellite-derived and model-predicted SOS and GPP, and \* indicates that the trends are significant at *p* < 0.05.
+
+## 4. Discussion
+
+<a id="elsevier-cesectitle0016"></a><a id="elsevier-sec0012"></a>
+
+The impacts of spring phenology on vegetation photosynthesis and carbon dynamics remain elusive and differ between regions and species. Our study, coupling five different phenology models with a TBM, constructed a unified framework to evaluate the potential of phenology prediction on forest carbon cycles. Compared to the GPP observations from the EC sites, the RMSE and R of the predicted results were 2.48–2.71 g C m<sup>−2</sup> day<sup>−1</sup> and 0.79–0.82, respectively. These results were consistent with previous efforts of the spring phenology, [Liu et al. (2018)](#elsevier-sbref0023) using the same five phenology models to predict the SOS and the corresponding difference of RMSE and R was less than 3 days and 0.03, respectively. Meanwhile, the overall accuracy of the GPP predictions was comparable with previous studies. For example, [Balzarolo et al. (2014)](#elsevier-sbref0002) used the EC flux data in European forests to evaluate the GPP predicted by three land surface models (i.e., ISBA-A-gs, CTESSEL, and ORCHIDEE) with the RMSE ranging from 1.87 to 3.23 g C m<sup>−2</sup> day<sup>−1</sup> and the R ranging from 0.37 to 0.74. Across the northern hemisphere forests, the five models predicted a difference of 4.38 Pg C year<sup>−1</sup> (ranging from 21.68 to 26.06 Pg C year<sup>−1</sup>) in average annual GPP. The RMSE of GPP trends in the whole study area between the model predictions and satellite-derived GPP was 0.80–3.34Pg C year<sup>−1</sup>.
+
+In terms of the predicted GPP trends in the northern hemisphere during 1982–2018, the models could capture the increased GPP trends well in most regions ([Fig. 5](#elsevier-fig0005)). With continued climate warming, the advanced SOS and the increased length of growing season promoted the photosynthesis of forest vegetation ([Anav et al., 2015](#elsevier-sbref0001)). A few regions showed negative trends in GPP likely due to climate extremes, such as reduced precipitation or increased drought or disturbances (fires and insect outbreaks) which could have caused widespread tree mortality events that would reduce GPP for many years ([Zscheischler et al., 2014](#elsevier-sbref0046)). However, we found that the five models captured the opposite GPP trend with satellite observations in areas of low forest coverage ([Figs. 1b](#elsevier-fig0001) and [4](#elsevier-fig0004)). The FORCCHN2 model focused on the dynamics of forests rather than other land cover classifications ([Fang et al., 2022b](#elsevier-sbref0013)), which may lead to biases in estimating GPP trends for the areas of low- or non-forest areas (i.e., low-forest areas refer to regions with forest coverage below 20 %, and non-forest areas correspond to the null values shown in [Fig. 1b](#elsevier-fig0001)). Moreover, the coupled models overestimated the total trends of GPP resulting from the overestimation of the SOS decreasing trend by the phenology models themselves ([Fig. 5](#elsevier-fig0005)b).
+
+Previous studies of spring phenology modeling focused on the phenology dates to understand the mechanisms underlying the leaf growth process and to predict future phenology changes ([Linkosalo et al., 2008](#elsevier-sbref0022); [Caffarra et al., 2011](#elsevier-sbref0004); [Liu et al., 2018](#elsevier-sbref0023)). However, how phenology influenced the carbon cycle of forest ecosystems still needed to be further explored. In this study, we found that the two- or multi-phase model that included the chilling stage performed better in reproducing the GPP of DBF than the one-phase model, which only included the thermal forcing stage. Most DBFs in the northern hemisphere were distributed in the temperate region ([Fig. 1a](#elsevier-fig0001)), indicating that these forests required sufficient chilling before the growing season. Thus, chilling was one of the important factors in predicting the GPP of temperate forests ([Jeong et al., 2012](#elsevier-sbref0017); Nicolas [Delpierre et al., 2016](#elsevier-sbref0008)). In other forest types, the five models performed closely. ENF and MF were mainly distributed in the mid-high latitudes of northern regions ([Fig. 1b](#elsevier-fig0001), the forest coverage was close to 100 %), which had cold winters and early springs. The chilling requirements of these forests could be satisfied in the period before leaf growth ([Xu and Chen, 2013](#elsevier-sbref0042)). EBF was distributed in subtropics, experiencing short winters, and may need a few requirements for chilling ([Song et al., 2020](#elsevier-sbref0040)). This led to similar model performance in EBF between the one-phase model and other models. Meanwhile, the predictions of all coupled models in EBF performed poorer than other types. This was consistent with the previous carbon modeling studies, the EBF revealed subtle changes in phenology ([Yuan et al., 2014](#elsevier-sbref0044)), and the modeling of EBF phenology needed to incorporate more factors or mechanisms through more manipulative experiments. Across the whole of northern hemisphere forests, we found that the multi-phase model DORMPHOT-FORCCHN2 including photoperiods performed better than other models in capturing inter-annual trends [(Fig. 5)](#elsevier-fig0005). [Way and Montgomery (2015)](#elsevier-sbref0041) reported that temperature was not the only cue used by trees to determine seasonality, and changes in photoperiod provided a more reliable signal of annual seasonality than temperature. Therefore, considering the effects of photoperiod on forest phenology and photosynthetic activity in the northern hemisphere forests was necessary for improving model predictions of carbon dynamics ([Migliavacca et al., 2012](#elsevier-sbref0026); [Melaas et al., 2013](#elsevier-sbref0025); [Flynn and Wolkovich, 2018](#elsevier-sbref0014)).
+
+Predictions of GPP and its variation under the background of climate change by each coupled model depended largely on own performance of the FORCCHN2 model. This model has been applied at multiple scales ([Fang et al., 2022b](#elsevier-sbref0013)), and the uncertainty of GPP predictions in this study may stem from several sources. At the plot scale, the discrepancies between predictions and EC tower-based GPP could potentially arise from the fact that the EC GPP was derived based on observations (i.e., using the VUT method) rather than being directly observed. At regional scale, forest disturbances (e.g. fires, insect outbreaks, storms, pollution, and human management) were well captured by satellite retrievals ([Anav et al., 2015](#elsevier-sbref0001); [Shao et al., 2016](#elsevier-sbref0039)), but they were difficult to simulate by the FORCCHN2 model. Another potential source of uncertainty between satellite-derived GPP and model predictions may stem from the coarse spatial resolution of the satellite observations (i.e., 0.5° resolution). For example, the GPP of a given pixel may be derived from multiple vegetation types rather than a single forest type ([Yan et al., 2019](#elsevier-sbref0043)). Satellite-derived data itself also includes considerable uncertainties, and it may be better to consider the shared uncertainties between satellite observations and model predictions. In addition, the parameterization of the phenology model was a possible source of uncertainty in simulating GPP. We used the fixed phenology parameters from the previous study ([Liu et al., 2018](#elsevier-sbref0023)), but these parameters may vary in space. Using the Markov Chain Monte Carlo approach or local climatic conditions may be a good parameterization method for future works ([Jeong et al., 2012](#elsevier-sbref0017); [Fang et al., 2022a](#elsevier-sbref0010)).
+
+In conclusion, we coupled five frequently applied spring phenology models with FORCCHN2 by using the response of leaf growth to phenology and compared their GPP predictions in the northern hemisphere forests during the period 1982–2018. Obviously, the model performance for GPP relied on the different phenology factors and processes. For the temperate DBFs, chilling probably plays a more essential role in predicting GPP, with two- or multi-phase models showing higher accuracy than the one-phase model. Across the northern hemisphere forests, the multi-phase model DORMPHOT-FORCCHN2, including the photoperiod effect for phenology, best captured the changes of the satellite-derived GPP. These results suggested that chilling and photoperiod effects should be considered in large-scale predictions of forest photosynthetic productivity. Some forests may not fully meet the chilling requirements if the climate continues to warm in the future, so accurate phenology mechanisms may become more critical in these forests. We hope that these results could help the terrestrial biosphere or dynamic global vegetation models to choose the optimal phenology expression, aiming to reduce uncertainty in the process of carbon cycle predictions.
+
+## Data Accessibility Statement
+
+<a id="elsevier-cesectitle0008a"></a><a id="elsevier-sec0004a"></a>
+
+The datasets predicted by the five coupled models include the 37-year (1982–2018) GPP for northern hemisphere forests (&gt;30°N, 0.5°×0.5°) are publicly available via [10.6084/m9.figshare.21599292.v1](http://10.6084/m9.figshare.21599292.v1) ([Fang, 2022](#elsevier-sbref0009)). We also provided the source code of the FORCCHN2 model in the zenodo database ([https://zenodo.org/records/7078461](https://zenodo.org/records/7078461)).
+
+## CRediT authorship contribution statement
+
+<a id="elsevier-cesectitle0008aa"></a><a id="elsevier-sec0004aa"></a>
+
+**Jing Fang:** Writing – review & editing, Writing – original draft, Validation, Software, Resources, Methodology, Funding acquisition, Formal analysis, Data curation, Conceptualization. **Herman H. Shugart:** Writing – review & editing, Writing – original draft, Methodology. **Leibin Wang:** Data curation. **James A. Lutz:** Writing – review & editing, Writing – original draft. **Xiaodong Yan:** Supervision, Methodology. **Feng Liu:** Writing – review & editing, Writing – original draft, Supervision, Methodology, Funding acquisition.
+
+## Declaration of competing interest
+
+<a id="elsevier-cesectitle0018"></a><a id="elsevier-coi0001"></a>
+
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+## Acknowledgments
+
+<a id="elsevier-cesectitle0019"></a><a id="elsevier-ack0001"></a>
+
+This study was supported by the <a id="elsevier-gs0001"></a>National Natural Science Foundation of China ([32101349](#elsevier-gs0001), [32171599](#elsevier-gs0001)). This study also was supported by the Key Program of the National Natural Science Foundation of China (32130069).
+
+## Appendix. Supplementary materials
+
+<a id="elsevier-cesectitle9002"></a><a id="elsevier-sec0015"></a>
+
+[Word document (8MB)](https://ars.els-cdn.com/content/image/1-s2.0-S016819232400090X-mmc1.docx)
+
+## Data availability
+
+<a id="elsevier-cesectitle0004"></a><a id="elsevier-refdata001"></a>
+
+- Data will be made available on request.
+
+## References (45 total, showing 45)
+
+1. <a id="elsevier-sbref0001"></a>A. Anav, P. Friedlingstein, C. Beer, P. Ciais, A. Harper, C. Jones, M. Zhao Spatiotemporal patterns of terrestrial gross primary production: a review Reviews of Geophysics, 53 (3) (2015), pp. 785-818, 10.1002/2015RG000483 [Anav et al., 2015]
+
+2. <a id="elsevier-sbref0002"></a>M. Balzarolo, S. Boussetta, G. Balsamo, A. Beljaars, F. Maignan, J.C. Calvet, D. Papale Evaluating the potential of large-scale simulations to predict carbon fluxes of terrestrial ecosystems over a European Eddy Covariance network Biogeosciences, 11 (10) (2014), pp. 2661-2678, 10.5194/bg-11-2661-2014 [Balzarolo et al., 2014]
+
+3. <a id="elsevier-sbref0003"></a>C. Beer, M. Reichstein, E. Tomelleri, P. Ciais, M. Jung, N. Carvalhais, D. Papale Terrestrial Gross Carbon Dioxide Uptake: global Distribution and Covariation with Climate Science, 329 (5993) (2010), pp. 834-838, 10.1126/science.1184984 [Beer et al., 2010]
+
+4. <a id="elsevier-sbref0004"></a>A. Caffarra, A. Donnelly, I. Chuine Modelling the timing of Betula pubescens budburst. II. Integrating complex effects of photoperiod into process-based models Clim. Res., 46 (2) (2011), pp. 159-170. 10.3354/cr00983 [Caffarra et al., 2011]
+
+5. <a id="elsevier-sbref0005"></a>M.G.R. Cannell, R.I. Smith Thermal Time, Chill Days and Prediction of Budburst in Picea sitchensis J. Appl. Ecol., 20 (3) (1983), pp. 951-963, 10.2307/2403139 [Cannell and Smith, 1983]
+
+6. <a id="elsevier-sbref0006"></a>I. Chuine A Unified Model for Budburst of Trees J. Theor. Biol., 207 (3) (2000), pp. 337-347, 10.1006/jtbi.2000.2178 [Chuine, 2000]
+
+7. <a id="elsevier-sbref0009"></a>J. Fang The GPP of northern hemisphere forests predicted by the FORCCHN2 model coupled with five phenology models. figshare, v1 https://doi.org/10.6084/m9.figshare.21599292.v1 [Fang, 2022]
+
+8. <a id="elsevier-sbref0007"></a>N. Delpierre, E. Dufrêne, K. Soudani, E. Ulrich, S. Cecchini, J. Boé, C. François Modelling interannual and spatial variability of leaf senescence for three deciduous tree species in France Agric. For. Meteorol., 149 (6) (2009), pp. 938-948, 10.1016/j.agrformet.2008.11.014 [Delpierre et al., 2009]
+
+9. <a id="elsevier-sbref0008"></a>N. Delpierre, Y. Vitasse, I. Chuine, J. Guillemot, S. Bazot, T. Rutishauser, C.B.K. Rathgeber Temperate and boreal forest tree phenology: from organ-scale processes to terrestrial ecosystem models Ann. For. Sci., 73 (1) (2016), pp. 5-25, 10.1007/s13595-015-0477-6 [Delpierre et al., 2016]
+
+10. <a id="elsevier-sbref0010"></a>J. Fang, J.A. Lutz, H.H. Shugart, L. Wang, F. Liu, X. Yan Continental-scale parameterization and prediction of leaf phenology for the North American forests Glob. Ecol. Biogeogr., 31 (8) (2022), pp. 1603-1615, 10.1111/geb.13533 [Fang et al., 2022a]
+
+11. <a id="elsevier-sbref0011"></a>J. Fang, J.A. Lutz, H.H. Shugart, X. Yan, W. Xie, F. Liu Improving intra- and inter-annual GPP predictions by using individual tree inventories and leaf growth dynamics J. Appl. Ecol., 58 (10) (2021), pp. 2315-2328, 10.1111/1365-2664.13960 [Fang et al., 2021]
+
+12. <a id="elsevier-sbref0012"></a>J. Fang, J.A. Lutz, L. Wang, H.H. Shugart, X Yan Using climate-driven leaf phenology and growth to improve predictions of gross primary productivity in North American forests Glob. Change Biol., 26 (2020), pp. 6974-6988, 10.1111/gcb.15349 [Fang et al., 2020]
+
+13. <a id="elsevier-sbref0013"></a>J. Fang, H.H. Shugart, F. Liu, X. Yan, Y. Song, F. Lv FORCCHN V2.0: an individual-based model for predicting multiscale forest carbon dynamics Geosci. Model Dev., 15 (17) (2022), pp. 6863-6872, 10.5194/gmd-15-6863-2022 [Fang et al., 2022b]
+
+14. <a id="elsevier-sbref0014"></a>D.F.B. Flynn, E.M. Wolkovich Temperature and photoperiod drive spring phenology across all species in a temperate forest community New Phytol., 219 (4) (2018), pp. 1353-1362, 10.1111/nph.15232 [Flynn and Wolkovich, 2018]
+
+15. <a id="elsevier-sbref0015"></a>H. Hänninen Modelling bud dormancy release in trees from cool and temperate regions Acta For. Fenn., 213 (1990), pp. 1-47 [Hänninen, 1990]
+
+16. <a id="elsevier-sbref0016"></a>J.G. Huang, Q. Ma, S. Rossi, F. Biondi, A. Deslauriers, P. Fonti, E. Ziaco Photoperiod and temperature as dominant environmental drivers triggering secondary growth resumption in northern hemisphere conifers Proc. Natl. Acad. Sci., 117 (34) (2020), pp. 20645-20652, 10.1073/pnas.2007058117 [Huang et al., 2020]
+
+17. <a id="elsevier-sbref0017"></a>S.J. Jeong, D. Medvigy, E. Shevliakova, S. Malyshev Uncertainties in terrestrial carbon budgets related to spring phenology J. Geophys. Res. Biogeosciences, 117 (G1) (2012), 10.1029/2011JG001868 [Jeong et al., 2012]
+
+18. <a id="elsevier-sbref0018"></a>K. Kramer Selecting a model to predict the onset of growth of fagus sylvatica J. Appl. Ecol., 31 (1) (1994), pp. 172-181, 10.2307/2404609 [Kramer, 1994]
+
+19. <a id="elsevier-sbref0019"></a>C.J. Kucharik, C.C. Barford, M.E. Maayar, S.C. Wofsy, R.K. Monson, D.D. Baldocchi A multiyear evaluation of a dynamic global vegetation model at three ameriflux forest sites: vegetation structure, phenology, soil temperature, and CO2 and H2O vapor exchange Ecol. Modell., 196 (1) (2006), pp. 1-31, 10.1016/j.ecolmodel.2005.11.031 [Kucharik et al., 2006]
+
+20. <a id="elsevier-sbref0020"></a>J.J. Landsberg Apple fruit bud development and growth; analysis and an empirical model Ann. Bot., 38 (5) (1974), pp. 1013-1023, 10.1093/oxfordjournals.aob.a084891 [Landsberg, 1974]
+
+21. <a id="elsevier-sbref0021"></a>S. Liang, J. Cheng, K. Jia, B. Jiang, Q. Liu, Z. Xiao, J. Zhou The global land surface satellite (GLASS) product suite Bull. Am. Meteorol. Soc., 102 (2) (2021), pp. E323-E337. 10.1175/bams-d-18-0341.1 [Liang et al., 2021]
+
+22. <a id="elsevier-sbref0022"></a>T. Linkosalo, H.K. Lappalainen, P. Hari A comparison of phenological models of leaf bud burst and flowering of boreal trees using independent observations Tree Physiol., 28 (12) (2008), pp. 1873-1882, 10.1093/treephys/28.12.1873 [Linkosalo et al., 2008]
+
+23. <a id="elsevier-sbref0023"></a>Q. Liu, Y.H. Fu, Y. Liu, I.A. Janssens, S. Piao Simulating the onset of spring vegetation growth across the northern hemisphere Glob. Change Biol., 24 (3) (2018), pp. 1342-1356. 10.1111/gcb.13954 [Liu et al., 2018]
+
+24. <a id="elsevier-sbref0024"></a>J. Ma, H.H. Shugart, X. Yan, C. Cao, S. Wu Evaluating carbon fluxes of global forest ecosystems by using an individual tree-based model FORCCHN Sci. Total Environ., 586 (2017), pp. 939-951 [Ma et al., 2017]
+
+25. <a id="elsevier-sbref0025"></a>E.K. Melaas, A.D. Richardson, M.A. Friedl, D. Dragoni, C.M. Gough, M. Herbst, E. Moors Using FLUXNET data to improve models of springtime vegetation activity onset in forest ecosystems Agric. For. Meteorol., 171-172 (2013), pp. 46-56, 10.1016/j.agrformet.2012.11.018 [Melaas et al., 2013]
+
+26. <a id="elsevier-sbref0026"></a>M. Migliavacca, O. Sonnentag, T.F. Keenan, A. Cescatti, J. O'Keefe, A.D. Richardson On the uncertainty of phenological responses to climate change, and implications for a terrestrial biosphere model Biogeosciences, 9 (6) (2012), pp. 2063-2083, 10.5194/bg-9-2063-2012 [Migliavacca et al., 2012]
+
+27. <a id="elsevier-sbref0028"></a>H. Park, S. Jeong Leaf area index in earth system models: how the key variable of vegetation seasonality works in climate projections Environ. Res. Lett., 16 (3) (2021), Article 034027, 10.1088/1748-9326/abe2cf [Park and Jeong, 2021]
+
+28. <a id="elsevier-sbref0029"></a>G. Pastorello, C. Trotta, E. Canfora, H. Chu, D. Christianson, Y.W. Cheah, D. Papale The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data Sci. Data, 7 (1) (2020), p. 225, 10.1038/s41597-020-0534-3 [Pastorello et al., 2020]
+
+29. <a id="elsevier-sbref0030"></a>S. Piao, Q. Liu, A. Chen, I.A. Janssens, Y. Fu, J. Dai, X. Zhu Plant phenology and global climate change: current progresses and challenges Glob. Change Biol., 25 (6) (2019), pp. 1922-1940, 10.1111/gcb.14619 [Piao et al., 2019]
+
+30. <a id="elsevier-sbref0031"></a>S. Piao, Z. Liu, T. Wang, S. Peng, P. Ciais, M. Huang, P.P. Tans Weakening temperature control on the interannual variations of spring carbon uptake across northern lands Nat. Clim. Change, 7 (5) (2017), pp. 359-363, 10.1038/nclimate3277 [Piao et al., 2017]
+
+31. <a id="elsevier-sbref0032"></a>T.A. Pugh, M. Lindeskog, B. Smith, B. Poulter, A. Arneth, V. Haverd, L. Calle Role of forest regrowth in global carbon sink dynamics Proc. Natl. Acad. Sci., 116 (10) (2019), pp. 4382-4387. 10.1073/pnas.1810512116 [Pugh et al., 2019]
+
+32. <a id="elsevier-sbref0033"></a>J.T. Randerson, F.M. Hoffman, P.E. Thornton, N.M. Mahowald, K. Lindsay, Y.H. Lee, I.Y. Fung Systematic assessment of terrestrial biogeochemistry in coupled climate–carbon models Glob. Change Biol., 15 (10) (2009), pp. 2462-2484, 10.1111/j.1365-2486.2009.01912.x [Randerson et al., 2009]
+
+33. <a id="elsevier-sbref0034"></a>M. Reichstein, E. Falge, D. Baldocchi, D. Papale, M. Aubinet, P. Berbigier, R. Valentini On the separation of net ecosystem exchange into assimilation and ecosystem respiration: review and improved algorithm Glob. Change Biol., 11 (9) (2005), pp. 1424-1439. 10.1111/j.1365-2486.2005.001002.x [Reichstein et al., 2005]
+
+34. <a id="elsevier-sbref0035"></a>A.D. Richardson, R.S. Anderson, M.A. Arain, A.G. Barr, G. Bohrer, G. Chen, Y. Xue Terrestrial biosphere models need better representation of vegetation phenology: results from the North American carbon program site synthesis Glob. Change Biol., 18 (2) (2012), pp. 566-584, 10.1111/j.1365-2486.2011.02562.x [Richardson et al., 2012]
+
+35. <a id="elsevier-sbref0036"></a>A.D. Richardson, K. Hufkens, T. Milliman, D.M. Aubrecht, M. Chen, J.M. Gray, M. Kosmala Tracking vegetation phenology across diverse North American biomes using PhenoCam imagery Sci. Data, 5 (1) (2018), pp. 1-24 [Richardson et al., 2018]
+
+36. <a id="elsevier-sbref0037"></a>S.R. Ryu, J. Chen, A. Noormets, M.K. Bresee, S.V. Ollinger Comparisons between PnET-day and eddy covariance based gross ecosystem production in two northern wisconsin forests Agric. For. Meteorol., 148 (2) (2008), pp. 247-256, 10.1016/j.agrformet.2007.08.005 [Ryu et al., 2008]
+
+37. <a id="elsevier-sbref0038"></a>P. Schiestl-Aalto, L. Kulmala, H. Mäkinen, E. Nikinmaa, A. Mäkelä CASSIA – a dynamic model for predicting intra-annual sink demand and interannual growth variation in Scots pine New Phytol., 206 (2) (2015), pp. 647-659, 10.1111/nph.13275 [Schiestl-Aalto et al., 2015]
+
+38. <a id="elsevier-sbref0039"></a>J. Shao, X. Zhou, Y. Luo, G. Zhang, W. Yan, J. Li, W. Zhu Uncertainty analysis of terrestrial net primary productivity and net biome productivity in China during 1901–2005 Journal of Geophysical Research: Biogeosciences, 121 (5) (2016), pp. 1372-1393, 10.1002/2015JG003062 [Shao et al., 2016]
+
+39. <a id="elsevier-sbref0040"></a>Z. Song, X. Song, Y. Pan, K. Dai, J. Shou, Q. Chen, Y. Du Effects of winter chilling and photoperiod on leaf-out and flowering in a subtropical evergreen broadleaved forest in China For. Ecol. Manag., 458 (2020), Article 117766, 10.1016/j.foreco.2019.117766 [Song et al., 2020]
+
+40. <a id="elsevier-sbref0041"></a>D.A. Way, R.A. Montgomery Photoperiod constraints on tree phenology, performance and migration in a warming world Plant Cell Environ., 38 (9) (2015), pp. 1725-1736, 10.1111/pce.12431 [Way and Montgomery, 2015]
+
+41. <a id="elsevier-sbref0042"></a>L. Xu, X. Chen Regional unified model-based leaf unfolding prediction from 1960 to 2009 across northern China Glob. Change Biol., 19 (4) (2013), pp. 1275-1284, 10.1111/gcb.12095 [Xu and Chen, 2013]
+
+42. <a id="elsevier-sbref0043"></a>D. Yan, R.L. Scott, D.J.P. Moore, J.A. Biederman, W.K. Smith Understanding the relationship between vegetation greenness and productivity across dryland ecosystems through the integration of PhenoCam, satellite, and eddy covariance data Remote Sens. Environ., 223 (2019), pp. 50-62, 10.1016/j.rse.2018.12.029 [Yan et al., 2019]
+
+43. <a id="elsevier-sbref0044"></a>W. Yuan, W. Cai, J. Xia, J. Chen, S. Liu, W. Dong, G. Wohlfahrt Global comparison of light use efficiency models for simulating terrestrial vegetation gross primary production based on the LaThuile database Agric. For. Meteorol., 192-193 (2014), pp. 108-120, 10.1016/j.agrformet.2014.03.007 [Yuan et al., 2014]
+
+44. <a id="elsevier-sbref0045"></a>C.M. Zohner, B.M. Benito, J.C. Svenning, S.S. Renner Day length unlikely to constrain climate-driven shifts in leaf-out times of northern woody plants Nat. Clim. Change, 6 (12) (2016), pp. 1120-1123, 10.1038/nclimate3138 [Zohner et al., 2016]
+
+45. <a id="elsevier-sbref0046"></a>J. Zscheischler, A.M. Michalak, C. Schwalm, M.D. Mahecha, D.N. Huntzinger, M. Reichstein, N. Zeng Impact of large-scale climate extremes on biospheric carbon fluxes: an intercomparison based on MsTMIP data Glob. Biogeochem. Cycles, 28 (6) (2014), pp. 585-600, 10.1002/2014GB004826 [Zscheischler et al., 2014]

@@ -45,7 +45,7 @@ def test_camoufox_context_failure_closes_at_backend_boundary(
         "camoufox failed"
     )
     monkeypatch.setattr(
-        browser_runtime_context, "CamoufoxBrowserManager", camoufox_manager
+        browser_runtime_context, "PublisherProfileManager", camoufox_manager
     )
     config = BrowserRuntimeConfig(
         provider="ieee",
@@ -124,7 +124,7 @@ def test_camoufox_context_options_do_not_override_fingerprint(tmp_path) -> None:
     assert "locale" not in options
 
 
-def test_open_context_records_successful_storage_state_injection(tmp_path) -> None:
+def test_open_context_delegates_native_profile_without_injecting_json(tmp_path) -> None:
     state = tmp_path / "storage-state.json"
     state.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
     config = BrowserRuntimeConfig(
@@ -149,14 +149,8 @@ def test_open_context_records_successful_storage_state_injection(tmp_path) -> No
     assert opened is browser_context
     runtime.new_browser_context_for_runtime_config.assert_called_once_with(
         config,
-        accept_downloads=True,
-        storage_state=str(state),
     )
-    runtime.record_browser_state_capability_use.assert_called_once_with(
-        provider="wiley",
-        backend="camoufox",
-        storage_state_path=state,
-    )
+    runtime.record_browser_state_capability_use.assert_not_called()
 
 
 def test_open_context_failure_does_not_record_storage_state_use(tmp_path) -> None:
@@ -211,7 +205,6 @@ def test_open_wiley_context_without_storage_state_has_no_state_capability_use(
     assert opened is browser_context
     runtime.new_browser_context_for_runtime_config.assert_called_once_with(
         config,
-        accept_downloads=True,
     )
     runtime.record_browser_state_capability_use.assert_not_called()
     assert not list(tmp_path.rglob("storage-state.json"))
@@ -1190,7 +1183,9 @@ def test_main_document_diagnostics_distinguish_finished_response_from_loading_sh
     assert "private-value" not in str(loading_trace)
 
 
-def test_camoufox_trace_reports_storage_state_was_loaded(monkeypatch, tmp_path) -> None:
+def test_camoufox_trace_does_not_report_unimported_json_as_used(
+    monkeypatch, tmp_path
+) -> None:
     context = _Context()
     state = tmp_path / "storage-state.json"
     state.write_text('{"cookies":[],"origins":[]}', encoding="utf-8")
@@ -1224,7 +1219,7 @@ def test_camoufox_trace_reports_storage_state_was_loaded(monkeypatch, tmp_path) 
     assert result.diagnostics["browser_runtime_trace"]["storage_state_load"] == {
         "path": str(state),
         "exists": True,
-        "used": True,
+        "used": False,
     }
 
 

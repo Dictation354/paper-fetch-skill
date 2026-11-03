@@ -253,31 +253,36 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
                         self.assertFalse(preflight.is_error)
                         preflight_payload = preflight.structured_content or {}
                         result_payload = preflight_payload["results"][0]
-                        if result_payload["status"] in {"challenge", "auth_required"}:
-                            self.skipTest(
-                                "PNAS live MCP preflight reached a legal access boundary."
-                            )
-                        self.assertEqual(result_payload["status"], "ready")
+                        access_boundary = result_payload["status"] in {
+                            "challenge",
+                            "auth_required",
+                        }
+                        if not access_boundary:
+                            self.assertEqual(result_payload["status"], "ready")
 
-                        fetch_started_at = time.monotonic()
-                        result = await session.call_tool(
-                            "fetch_paper",
-                            {
-                                "query": PNAS_SAMPLE.doi,
-                                "modes": ["article"],
-                                "artifact_mode": "all",
-                                "strategy": {
-                                    "allow_metadata_only_fallback": False,
-                                    "preferred_providers": ["pnas"],
-                                    "asset_profile": "body",
+                            fetch_started_at = time.monotonic()
+                            result = await session.call_tool(
+                                "fetch_paper",
+                                {
+                                    "query": PNAS_SAMPLE.doi,
+                                    "modes": ["article"],
+                                    "artifact_mode": "all",
+                                    "strategy": {
+                                        "allow_metadata_only_fallback": False,
+                                        "preferred_providers": ["pnas"],
+                                        "asset_profile": "body",
+                                    },
                                 },
-                            },
-                            progress_callback=progress_callback,
-                        )
-                        fetch_wall_seconds = round(
-                            time.monotonic() - fetch_started_at, 3
-                        )
+                                progress_callback=progress_callback,
+                            )
+                            fetch_wall_seconds = round(
+                                time.monotonic() - fetch_started_at, 3
+                            )
 
+        # Raise SkipTest after the MCP task groups close so AnyIO cannot wrap it
+        # in an ExceptionGroup and turn a legal access boundary into a failure.
+        if access_boundary:
+            self.skipTest("PNAS live MCP preflight reached a legal access boundary.")
         total_seconds = round(time.monotonic() - started_at, 3)
         structured_content = result.structured_content or {}
         if is_machine_readable_no_access(structured_content):

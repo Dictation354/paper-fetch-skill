@@ -752,7 +752,10 @@ class BrowserPreflightRequest(BaseModel):
     timeout_ms: BrowserPreflightTimeoutInput | None = None
     browser_user_agent: str | None = None
     storage_state_path: str | None = None
-    save_storage_state: bool = True
+    save_storage_state: bool = Field(
+        default=True,
+        description="Export a compatibility JSON snapshot; native persistent profiles are updated even when false.",
+    )
     detail: BrowserPreflightDetailInput = "full"
 
     @field_validator("test_url", "browser_user_agent", mode="before")

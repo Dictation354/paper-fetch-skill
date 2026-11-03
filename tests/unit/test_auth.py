@@ -121,7 +121,9 @@ def _install_fake_browser_manager(monkeypatch) -> type[_FakeAuthBrowserManager]:
             self.user_data_dir = user_data_dir
             self.headless = headless
 
-    monkeypatch.setattr(auth, "CamoufoxPersistentContextManager", FakeManager)
+    from paper_fetch.providers.browser_runtime import profile
+
+    monkeypatch.setattr(profile, "CamoufoxPersistentContextManager", FakeManager)
     return FakeManager
 
 
@@ -133,14 +135,6 @@ def _patch_auth_runtime(
         runtime_env.update(env)
     monkeypatch.setattr(auth, "build_runtime_env", lambda: dict(runtime_env))
     monkeypatch.setattr(auth, "ensure_runtime_ready", lambda _runtime: None)
-    monkeypatch.setattr(
-        auth,
-        "_verify_staged_auth_state",
-        lambda _runtime, _stage, *, target_url, provider_label, **_kwargs: (
-            target_url,
-            f"{provider_label} Article",
-        ),
-    )
 
 
 def test_authenticate_provider_profile_ams_saves_filtered_browser_state(
@@ -309,7 +303,7 @@ def test_authenticate_provider_profile_rejects_non_browser_provider() -> None:
         raise AssertionError("expected non-browser provider auth to fail")
 
 
-def test_auth_save_failure_does_not_verify_or_overwrite_stale_state(
+def test_auth_json_save_failure_preserves_native_verification_and_old_snapshot(
     monkeypatch, tmp_path
 ) -> None:
     _install_fake_browser_manager(monkeypatch)
@@ -335,13 +329,12 @@ def test_auth_save_failure_does_not_verify_or_overwrite_stale_state(
         },
     )
 
-    with pytest.raises(ProviderFailure) as raised:
-        auth.authenticate_provider_profile(
-            provider="wiley",
-            confirm=lambda _prompt: None,
-        )
-
-    assert raised.value.code == "auth_state_save_failed"
+    result = auth.authenticate_provider_profile(
+        provider="wiley", confirm=lambda _prompt: None
+    )
+    assert result.verified
+    assert result.json_export["saved"] is False
+    assert result.json_export["reason"] == "save_failed"
     assert state_path.read_bytes() == old_bytes
 
 
@@ -407,3 +400,62 @@ def test_auth_context_does_not_install_context_wide_network_route(
 
     context = fake_manager.instances[0].context
     assert context.route_handler is None
+
+
+def test_auth_json_export_exception_does_not_invalidate_native_replay(
+    monkeypatch, tmp_path
+):
+    fake = _install_fake_browser_manager(monkeypatch)
+    _patch_auth_runtime(monkeypatch, tmp_path)
+
+    def export_failure(*args, **kwargs):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(auth, "commit_staged_storage_state", export_failure)
+    result = auth.authenticate_provider_profile(
+        provider="wiley", confirm=lambda prompt: None
+    )
+    assert result.verified
+    assert result.json_export["reason"] == "export_failed"
+    assert [manager.headless for manager in fake.instances] == [False, True]
+    assert fake.instances[0].user_data_dir == fake.instances[1].user_data_dir
+    assert all(manager.closed for manager in fake.instances)
+
+
+@pytest.mark.parametrize("value", ["0", " false "])
+def test_auth_replay_uses_configured_fetch_window_mode(monkeypatch, tmp_path, value):
+    from paper_fetch.config import BROWSER_HEADLESS_ENV_VAR
+
+    fake = _install_fake_browser_manager(monkeypatch)
+    _patch_auth_runtime(monkeypatch, tmp_path, {BROWSER_HEADLESS_ENV_VAR: value})
+    result = auth.authenticate_provider_profile(
+        provider="wiley", confirm=lambda prompt: None
+    )
+    assert result.verified
+    assert [manager.headless for manager in fake.instances] == [False, False]
+
+
+def test_auth_explicit_json_path_is_refreshed_without_reimporting_stale_state(
+    monkeypatch, tmp_path
+):
+    import hashlib
+    from paper_fetch.config import WILEY_STORAGE_STATE_JSON_ENV_VAR
+    from paper_fetch.providers.browser_runtime.profile import METADATA_FILENAME
+
+    _install_fake_browser_manager(monkeypatch)
+    snapshot = tmp_path / "explicit.json"
+    snapshot.write_text('{"cookies": [], "origins": []}')
+    _patch_auth_runtime(
+        monkeypatch, tmp_path, {WILEY_STORAGE_STATE_JSON_ENV_VAR: str(snapshot)}
+    )
+    result = auth.authenticate_provider_profile(
+        provider="wiley", confirm=lambda prompt: None
+    )
+    assert result.verified
+    assert result.storage_state_path == snapshot
+    metadata = json.loads((result.profile_dir / METADATA_FILENAME).read_text())
+    assert (
+        metadata["migrations"][str(snapshot.resolve())]
+        == hashlib.sha256(snapshot.read_bytes()).hexdigest()
+    )
+    assert result.json_export["saved"]

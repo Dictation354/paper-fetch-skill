@@ -114,6 +114,17 @@ if [ "$COPY_ENV_FILE" = "1" ] && [ -n "$DEFAULT_ENV_FILE" ] && [ -f "$REPO_DIR/.
 fi
 
 if [ "$INSTALL_HEAVY" = "1" ]; then
+    if [ "$(uname -s)" = "Linux" ] && [ "$(uname -m)" = "x86_64" ]; then
+        log "Core installation complete; preparing FlareSolverr"
+        FLARESOLVERR_ARGS=(--install-root "$REPO_DIR" --prepare-flaresolverr)
+        if [ -n "${PAPER_FETCH_ENV_FILE:-$DEFAULT_ENV_FILE}" ]; then
+            FLARESOLVERR_ARGS+=(--env-file "${PAPER_FETCH_ENV_FILE:-$DEFAULT_ENV_FILE}")
+        fi
+        trap ':' INT
+        "$PYTHON_BIN" -m paper_fetch.offline_setup "${FLARESOLVERR_ARGS[@]}" \
+            || warn "FlareSolverr is not ready; core installation is preserved. Rerun this installer to retry."
+        trap - INT
+    fi
     log "Installing formula conversion backends"
     PAPER_FETCH_INSTALL_PYTHON_BIN="$PYTHON_BIN" \
     PYTHON_BIN="$PYTHON_BIN" \
@@ -123,7 +134,7 @@ if [ "$INSTALL_HEAVY" = "1" ]; then
     PYTHON_BIN="$PYTHON_BIN" \
         bash "$REPO_DIR/install-image-tools.sh"
 else
-    warn "Skipped external formula and image backends because --lite was set."
+    warn "Skipped FlareSolverr preparation and external formula and image backends because --lite was set."
 fi
 
 echo

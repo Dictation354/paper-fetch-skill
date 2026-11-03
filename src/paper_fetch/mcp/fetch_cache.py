@@ -16,6 +16,7 @@ from ..artifacts import ArtifactStore
 from ..capability_scope import (
     CapabilityScopeBuilder,
     PUBLIC_CAPABILITY_SCOPE,
+    UNCACHEABLE_CAPABILITY_SCOPE,
 )
 from ..manifest import build_manifest_request_fingerprint
 from ..models import (
@@ -926,7 +927,10 @@ class FetchCache:
             normalize_text(credential_scope) or PUBLIC_CREDENTIAL_SCOPE
         )
         self.read_credential_scopes: tuple[str, ...]
-        if self.credential_scope == PUBLIC_CREDENTIAL_SCOPE:
+        if self.credential_scope in {
+            PUBLIC_CREDENTIAL_SCOPE,
+            UNCACHEABLE_CAPABILITY_SCOPE,
+        }:
             self.read_credential_scopes = (PUBLIC_CREDENTIAL_SCOPE,)
         else:
             requested_scopes = read_credential_scopes or (self.credential_scope,)
@@ -948,7 +952,10 @@ class FetchCache:
         doi: str,
         request: FetchPaperRequest,
     ) -> list[Path]:
-        if self.download_dir is None:
+        if (
+            self.download_dir is None
+            or self.credential_scope == UNCACHEABLE_CAPABILITY_SCOPE
+        ):
             return []
         exact_paths = [
             fetch_envelope_variant_path(
@@ -1012,7 +1019,10 @@ class FetchCache:
         *,
         commit_guard: Callable[[], None] | None = None,
     ) -> None:
-        if self.download_dir is None:
+        if (
+            self.download_dir is None
+            or self.credential_scope == UNCACHEABLE_CAPABILITY_SCOPE
+        ):
             return
         doi = normalize_doi(normalize_text(envelope.doi))
         if not doi:
@@ -1082,7 +1092,10 @@ class FetchCache:
     ) -> dict[str, Any] | None:
         """Register a saved Markdown file with identity known from its envelope."""
 
-        if self.download_dir is None:
+        if (
+            self.download_dir is None
+            or self.credential_scope == UNCACHEABLE_CAPABILITY_SCOPE
+        ):
             return None
         doi = normalize_doi(normalize_text(envelope.doi))
         if not doi:
@@ -1104,7 +1117,10 @@ class FetchCache:
         *,
         _filter_entries: bool = True,
     ) -> dict[str, Any]:
-        if self.download_dir is None:
+        if (
+            self.download_dir is None
+            or self.credential_scope == UNCACHEABLE_CAPABILITY_SCOPE
+        ):
             return {
                 "download_dir": None,
                 "entries": [],
@@ -1180,7 +1196,10 @@ class FetchCache:
                 credential_scope=candidate_scope,
             )
 
-        if self.download_dir is None:
+        if (
+            self.download_dir is None
+            or self.credential_scope == UNCACHEABLE_CAPABILITY_SCOPE
+        ):
             return finish(
                 "disabled",
                 "cache_scope_disabled",

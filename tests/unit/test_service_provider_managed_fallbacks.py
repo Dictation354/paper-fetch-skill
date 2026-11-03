@@ -234,7 +234,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         self.assertIn("fulltext:elsevier_pdf_api_ok", article.quality.source_trail)
         self.assertIn("fulltext:elsevier_pdf_fallback_ok", article.quality.source_trail)
         self.assertNotIn("fallback:html_ok", article.quality.source_trail)
-        self.assertNotIn("fulltext:elsevier_html_fail", article.quality.source_trail)
+        self.assertIn("fulltext:elsevier_html_fail", article.quality.source_trail)
 
     def test_elsevier_xml_and_pdf_failures_return_metadata_only_without_generic_html_fallback(
         self,
@@ -327,7 +327,7 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         )
         self.assertIn("fallback:metadata_only", article.quality.source_trail)
         self.assertNotIn("fallback:html_ok", article.quality.source_trail)
-        self.assertNotIn("fulltext:elsevier_html_fail", article.quality.source_trail)
+        self.assertIn("fulltext:elsevier_html_fail", article.quality.source_trail)
 
     def test_springer_provider_failure_skips_generic_html_fallback(self) -> None:
         resolved = paper_fetch.ResolvedQuery(

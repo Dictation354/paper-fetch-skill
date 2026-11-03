@@ -32,8 +32,13 @@ class ProviderClientFactory(Protocol):
 class ProviderRenderPolicy:
     mark_inline_assets: Callable[[str, list[Any], str], None] | None = None
     rewrite_asset_links: Callable[[str, list[Any], str | None], str] | None = None
+    finalize_markdown: Callable[[str], str] | None = None
 
     def __post_init__(self) -> None:
+        if self.finalize_markdown is not None and not callable(self.finalize_markdown):
+            raise TypeError(
+                "Provider render policy finalize_markdown must be callable."
+            )
         if self.rewrite_asset_links is not None and not callable(
             self.rewrite_asset_links
         ):

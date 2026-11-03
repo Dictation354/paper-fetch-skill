@@ -10,9 +10,9 @@
     "code_availability": false
   },
   "counts": {
-    "sections": 18,
-    "abstract_sections": 8,
-    "body_sections": 10,
+    "sections": 13,
+    "abstract_sections": 2,
+    "body_sections": 11,
     "figures": 3,
     "tables": 1,
     "references": 23
@@ -110,7 +110,7 @@
     "dimensions": {
       "authors": {
         "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
-        "source_count": 4,
+        "source_count": 3,
         "scope": "complete captured author list and order"
       },
       "references": {

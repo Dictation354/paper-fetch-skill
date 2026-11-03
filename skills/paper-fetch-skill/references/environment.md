@@ -14,7 +14,7 @@
 - `PAPER_FETCH_DOWNLOAD_DIR`：CLI/MCP 默认下载和 cache scope；未设置时使用 platformdirs 用户数据目录。
 - `PAPER_FETCH_SKILL_USER_AGENT`：非 browser metadata/API 请求的可选 User-Agent；未设置时使用 `paper_fetch.config.DEFAULT_USER_AGENT`。
 - `CROSSREF_MAILTO`：Crossref polite pool 联系邮箱。
-- `ELSEVIER_API_KEY`：Elsevier 官方全文路线所需的 key 名称。
+- `ELSEVIER_API_KEY`：Elsevier 官方 API 路线所需的 key；ScienceDirect 浏览器路线不要求该 key。
 - `WILEY_TDM_CLIENT_TOKEN`：Wiley 官方 TDM PDF lane 的可选 token 名称；本地 browser 路线是否可用仍由 runtime catalog 与诊断决定。
 - `XDG_DATA_HOME`：改变 platformdirs 用户数据基目录，因而影响默认下载和本地工具目录。
 - `PAPER_FETCH_RUN_LIVE`：仅用于显式 opt-in 的 live publisher 测试；正常诊断和单元测试不得设置它。
@@ -25,9 +25,9 @@
 - `PAPER_FETCH_BROWSER_BINARY_PATH`：已准备好的 Camoufox runtime executable 覆盖项。
 - `PAPER_FETCH_BROWSER_PROFILE_DIR`、`PAPER_FETCH_BROWSER_USER_DATA_DIR`：provider-scoped profile/storage-state 目录覆盖项。默认使用 `publisher-browser-profiles/<provider>-camoufox/`。
 - `PAPER_FETCH_BROWSER_USER_AGENT`：publisher direct 路线的可选浏览器 UA；它与 `PAPER_FETCH_SKILL_USER_AGENT` 分离。Camoufox 忽略该值，以保持生成的 Firefox 指纹一致。
-- `PAPER_FETCH_WILEY_STORAGE_STATE_JSON`、`PAPER_FETCH_WILEY_PROFILE_DIR`：Wiley 的兼容 storage/profile 覆盖。常规流程优先使用 provider-scoped storage-state；人工验证只在 preflight/fetch 明确要求时运行 `paper-fetch auth <provider>`。
+- `PAPER_FETCH_WILEY_STORAGE_STATE_JSON`、`PAPER_FETCH_WILEY_PROFILE_DIR`：Wiley 的兼容 storage/profile 覆盖。常规流程优先使用出版社原生持久目录；人工验证只在 preflight/fetch 明确要求时运行 `paper-fetch auth <provider>`。
 
-静态 `paper-fetch doctor --provider <name> --detail full --json` / MCP `provider_status` 不启动 Camoufox，也不访问出版社页面。需要 live 证明时再运行 CLI `paper-fetch browser-preflight --provider <name>` 或 MCP `browser_preflight(provider=...)`；两者在实际启动浏览器前自动准备 managed runtime。它们可能更新过滤后的 storage-state，但不会运行 PDF fallback 或自动认证。MCP preflight is open-world：它会访问远端页面、非只读且可能写 storage-state。
+静态 `paper-fetch doctor --provider <name> --detail full --json` / MCP `provider_status` 不启动 Camoufox，也不访问出版社页面。需要 live 证明时再运行 CLI `paper-fetch browser-preflight --provider <name>` 或 MCP `browser_preflight(provider=...)`；两者在实际启动浏览器前自动准备 managed runtime。它们始终可更新原生目录，默认另导出过滤后的 JSON 快照，但不会运行 PDF fallback 或自动认证。MCP preflight is open-world：它会访问远端页面、非只读且可能写 storage-state。
 
 ## 运行时准备与授权
 
@@ -78,3 +78,12 @@ browser/full 固定 `camoufox==0.5.9`，默认以 `official/prerelease` 沿用�
 Linux/macOS 离线安装器及 Windows EXE 在核心 smoke 成功后提供可选向导，源码在线安装入口不变。凭据隐藏输入，留空保留旧值；下载/安装默认关闭。Unix `--non-interactive`、无终端及 Windows `/SILENT`、`/VERYSILENT` 全部跳过；`--reuse-env-file` 保持外部配置只读。Linux 仅为 Debian/Ubuntu 提供经确认的 APT 辅助安装，macOS 仅复用已有 Homebrew，Windows 使用摘要固定的官方 Ghostscript EXE（需要 UAC、系统注册表）和完整 libvips ZIP。图片工具通过实际 EPS/TIFF 转换后保存绝对路径，桌面 MCP 无需依赖 shell PATH。
 
 Camoufox 可选择准备并验证本地空白页，不访问 provider、不保存登录状态；下载、启动与站点访问状态分开报告。跳过本次安装不会关闭后续运行时自动准备。可选失败/取消不影响核心安装，升级保留凭据与可选工具；卸载默认保留可选工具和共享浏览器缓存。安装器负责升级和卸载；配置或升级后重启已运行的宿主/MCP。
+
+所有出版社含 AIP、IEEE 的浏览器阶段在一次抓取内借用同一持久 context，HTTP 仍可并行。
+原生目录是认证状态来源，JSON 仅兼容快照；默认旧 JSON 不覆盖已有原生状态，显式 JSON
+内容变化按摘要导入一次。`auth` 人工验证后按正式抓取窗口配置重开同一目录验证，
+JSON 导出失败单独报告。`save_storage_state=false` 仅禁止导出 JSON，不禁止更新原生目录。
+同目录进程间排队遵守取消和请求期限；目录归属冲突、外部占用和超时必须如实报告，
+不删除 Firefox 原生锁或静默回退临时会话。
+
+PNAS 在 Windows/Linux x64 默认使用系统 Google Chrome＋按需 FlareSolverr；Elsevier 浏览器阶段固定使用该后端，不支持的平台跳过；macOS、其他架构的 PNAS 和其余出版社继续使用 Camoufox。`PAPER_FETCH_PNAS_BROWSER_BACKEND=auto|flaresolverr|camoufox` 只选择 PNAS 后端，`PAPER_FETCH_CHROME_BINARY_PATH` 指定 Chrome。Windows/Linux x64 安装器在核心安装后自动准备共享 `flaresolverr/` 源码、私有依赖和匹配驱动，在线 `--lite` 和 macOS 跳过；离线安装器此阶段可能联网。非交互／静默模式允许源码和驱动下载，缺系统依赖时只提供安装指引；Debian/Ubuntu 可经确认通过 APT 安装依赖及 Chrome（无源候选时下载 Google 官方 deb），Windows 缺 Chrome 只指向 https://www.google.com/chrome/ 。失败、拒绝或取消保留核心安装；可重跑安装器或用安装环境 Python 执行 `-m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-flaresolverr`。下载和空白页启动检查分别限 10 分钟、2 分钟；检查使用临时状态，不读取出版社登录态。运行时继续修复缓存缺失、损坏和 Chrome 更新后的驱动；静态诊断与缓存复用不触发下载。抓取和 preflight 默认 headless，失败不弹窗；显式 auth 保持 headed。FlareSolverr 的验证提示不能替代 DOI、正文和资产验收。

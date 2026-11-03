@@ -1,0 +1,57 @@
+{
+  "doi": "10.1016/j.scitotenv.2022.158109",
+  "requested_url": "https://www.sciencedirect.com/science/article/pii/S0048969722052081",
+  "final_url": "https://www.sciencedirect.com/science/article/pii/S0048969722052081",
+  "title": "Land-atmosphere coupling speeds up flash drought onset - ScienceDirect",
+  "response_status": 200,
+  "captured_at": "2026-11-03T07:07:17.174662+00:00",
+  "backend": "flaresolverr",
+  "headless": false,
+  "route": "browser_html",
+  "sha256": "fdaabb26038583b2ae0b057d54304d571e8b67f39efce8d9871b4d2d86989fbd",
+  "diagnostics": {
+    "persistent_profile": {
+      "provider": "elsevier",
+      "backend": "flaresolverr",
+      "context_reused": false,
+      "chrome_path": "/usr/bin/google-chrome",
+      "chrome_version": "156.0.8078.79",
+      "chromedriver_version": "156.0.8078.80",
+      "flaresolverr_version": "3.5.2",
+      "state_restored": true,
+      "state_sha256": "bd0ee0a35bc276454ae7fa915c737a7312c27977c567abbcaa5844cfcd392761",
+      "homepage_visited": true,
+      "navigation_count": 1
+    },
+    "responses": [
+      {
+        "url": "https://www.sciencedirect.com/",
+        "status": 200
+      },
+      {
+        "url": "https://www.sciencedirect.com/science/article/pii/S0048969722052081",
+        "status": 200
+      }
+    ],
+    "preparation": {
+      "mathjax_original_mathml": 5
+    }
+  },
+  "outputs": [
+    {
+      "path": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/sciencedirect-browser-2026-11-03T070708Z/original.html",
+      "size": 952612,
+      "sha256": "fdaabb26038583b2ae0b057d54304d571e8b67f39efce8d9871b4d2d86989fbd"
+    },
+    {
+      "path": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/sciencedirect-browser-2026-11-03T070708Z/extracted.md",
+      "size": 57013,
+      "sha256": "ac67e00d296146c67d20a5579224c4cb490e762fd29e0155393f641e010d440f"
+    },
+    {
+      "path": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/sciencedirect-browser-2026-11-03T070708Z/article.md",
+      "size": 57363,
+      "sha256": "04f3679801e03abdee0ef0620fd7e0d1e63d844f2ef24ed0ea42d88a4fd46cd6"
+    }
+  ]
+}

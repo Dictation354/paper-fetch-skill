@@ -1,22 +1,22 @@
 {
   "counts": {
+    "sections": 20,
     "abstract_sections": 1,
-    "body_sections": 16,
+    "body_sections": 18,
     "figures": 5,
-    "references": 36,
-    "sections": 19,
-    "tables": 5
+    "tables": 5,
+    "references": 36
   },
   "expected_content_kind": "fulltext",
   "has": {
-    "abstract": true,
+    "title": true,
     "authors": true,
+    "abstract": true,
     "body": true,
-    "code_availability": false,
-    "data_availability": false,
     "figures": true,
     "references": true,
-    "title": true
+    "data_availability": false,
+    "code_availability": false
   },
   "source_review": {
     "sample_id": "10.1016_j.uclim.2019.100528",

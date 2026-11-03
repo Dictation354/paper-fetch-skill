@@ -1,22 +1,22 @@
 {
   "counts": {
+    "sections": 23,
     "abstract_sections": 1,
-    "body_sections": 18,
+    "body_sections": 20,
     "figures": 18,
-    "references": 79,
-    "sections": 22,
-    "tables": 0
+    "tables": 0,
+    "references": 79
   },
   "expected_content_kind": "fulltext",
   "has": {
-    "abstract": true,
+    "title": true,
     "authors": true,
+    "abstract": true,
     "body": true,
-    "code_availability": true,
-    "data_availability": true,
     "figures": true,
     "references": true,
-    "title": true
+    "data_availability": true,
+    "code_availability": true
   },
   "source_review": {
     "sample_id": "10.1016_j.rse.2025.114648",

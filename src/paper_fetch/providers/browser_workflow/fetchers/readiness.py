@@ -13,6 +13,7 @@ from ....utils import normalize_text
 import contextlib
 
 ATYPON_BODY_READY_SELECTORS: Mapping[str, tuple[str, ...]] = {
+    "elsevier": ("#body",),
     "annualreviews": (
         "#itemFullTextId",
         "#html_fulltext",

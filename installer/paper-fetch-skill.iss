@@ -7,7 +7,7 @@
 #endif
 
 #ifndef AppVersion
-#define AppVersion "7.2.6"
+#define AppVersion "7.3.0"
 #endif
 
 #ifndef OutputDir
@@ -50,6 +50,7 @@ Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Fil
 
 [UninstallDelete]
 Type: files; Name: "{app}\install-helper.log"
+Type: files; Name: "{app}\flaresolverr-setup-results.txt"
 
 [Code]
 var
@@ -67,6 +68,7 @@ var
   OptionalRequestDir: String;
   OptionalResult: String;
   OptionalDone: Boolean;
+  FlareSolverrResult: String;
   CleanupSelected: Boolean;
 
 procedure AddOptionDetails(Page: TWizardPage; Top: Integer; Caption: String);
@@ -388,6 +390,39 @@ begin
   UpgradePrepared := True;
 end;
 
+procedure PrepareFlareSolverr;
+var
+  Params, ResultPath: String;
+  Output: AnsiString;
+  ResultCode, WindowMode: Integer;
+begin
+  if not OptionalCoreReady then exit;
+  ResultPath := ExpandConstant('{app}\flaresolverr-setup-results.txt');
+  DeleteFile(ResultPath);
+  Params := '-X utf8 -m paper_fetch.offline_setup --install-root "' + ExpandConstant('{app}') +
+    '" --prepare-flaresolverr --non-interactive --result "' + ResultPath + '"';
+  WindowMode := SW_SHOW;
+  if WizardSilent then WindowMode := SW_HIDE;
+  if not WizardSilent then OptionalProgress.Show;
+  try
+    if not WizardSilent then
+    begin
+      OptionalProgress.SetText('Preparing FlareSolverr and matching ChromeDriver...',
+        'May download. Core installation is complete. Ctrl+C in the console cancels preparation.');
+      OptionalProgress.Animate;
+    end;
+    FlareSolverrResult := 'FlareSolverr is not ready. Core installation is preserved.';
+    if Exec(ExpandConstant('{app}\runtime\python.exe'), Params,
+      '', WindowMode, ewWaitUntilTerminated, ResultCode) then
+      if LoadStringFromFile(ResultPath, Output) then
+        FlareSolverrResult := UTF8Decode(Output);
+    SaveStringToFile(ResultPath, UTF8Encode(FlareSolverrResult), False);
+    Log(FlareSolverrResult);
+  finally
+    if not WizardSilent then OptionalProgress.Hide;
+  end;
+end;
+
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   Result := PrepareUpgradeInstall;
@@ -399,6 +434,7 @@ begin
   begin
     RestoreOfflineEnv;
     RunPostInstallHelper;
+    PrepareFlareSolverr;
   end;
 end;
 
@@ -409,6 +445,17 @@ begin
   if CurPageID = wpFinished then
   begin
     OfflineEnvPath := ExpandConstant('{app}\offline.env');
+    if FlareSolverrResult <> '' then
+    begin
+      if Pos('FlareSolverr: ready', FlareSolverrResult) > 0 then
+        FlareSolverrResult := 'FlareSolverr: ready.'
+      else
+        FlareSolverrResult := 'FlareSolverr: not ready. Core installation is preserved.';
+      WizardForm.FinishedLabel.Caption := WizardForm.FinishedLabel.Caption + #13#10#13#10 +
+        FlareSolverrResult + #13#10 +
+        'Results and retry command: ' + ExpandConstant('{app}\flaresolverr-setup-results.txt') + #13#10 +
+        'Rerun this installer to retry. Missing Chrome: https://www.google.com/chrome/';
+    end;
     WizardForm.FinishedLabel.Caption :=
       WizardForm.FinishedLabel.Caption + #13#10#13#10 +
       'Elsevier setup: request an API key at https://dev.elsevier.com/ before fetching Elsevier full text.' + #13#10 +

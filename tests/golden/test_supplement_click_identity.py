@@ -8,6 +8,7 @@ import pytest
 
 from paper_fetch.providers import (
     _annualreviews_html,
+    _elsevier_html,
     _iop_html,
     _mdpi_assets,
     royalsocietypublishing,
@@ -37,12 +38,24 @@ def test_real_article_supplement_href_and_body_scope(provider, tmp_path):
     elif provider == "mdpi":
         doi = "10.3390/s23010001"
         source_url = "https://www.mdpi.com/1424-8220/23/1/1"
+    elif provider == "elsevier":
+        doi = "10.1016/j.ecolind.2024.112140"
+        source_url = (
+            "https://www.sciencedirect.com/science/article/pii/S1470160X24005971"
+        )
     elif provider == "annualreviews":
         doi = "10.1146/annurev-neuro-062111-150343"
         source_url = "https://www.annualreviews.org/content/journals/" + doi
-    raw = golden_criteria_asset(doi, "original.html").read_text()
+    raw = golden_criteria_asset(
+        doi, "sciencedirect.html" if provider == "elsevier" else "original.html"
+    ).read_text()
     owner = {"mdpi": _mdpi_assets, "annualreviews": _annualreviews_html}.get(provider)
-    if owner is not None:
+    if provider == "elsevier":
+        all_assets = _elsevier_html.extract_assets(raw, source_url, asset_profile="all")
+        body_assets = _elsevier_html.extract_assets(
+            raw, source_url, asset_profile="body"
+        )
+    elif owner is not None:
         all_assets = owner.extract_scoped_html_assets(
             raw, source_url, asset_profile="all"
         )
@@ -90,7 +103,7 @@ def test_real_article_supplement_href_and_body_scope(provider, tmp_path):
             )
         else:
             assert urljoin(source_url, asset["source_href"]) == asset["url"]
-    if provider in {"mdpi", "annualreviews", "science", "wiley"}:
+    if provider in {"mdpi", "annualreviews", "science", "wiley", "elsevier"}:
         assert supplements, "Known captured article must retain its attachments"
 
 

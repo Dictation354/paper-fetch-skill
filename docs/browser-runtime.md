@@ -1,6 +1,6 @@
 # Browser runtime ownership
 
-生产 browser runtime 只有 Camoufox；browser/full extra 固定
+PNAS 在 Windows/Linux x64 默认使用 FlareSolverr＋系统 Google Chrome，macOS 和其他架构继续使用 Camoufox；Elsevier 浏览器阶段固定使用 FlareSolverr，不支持的平台跳过；其余出版社保持 Camoufox。browser/full extra 固定
 `camoufox==0.5.9`。开发和常规 CI 使用 `uv.lock` 中的具体版本，离线构建使用
 依赖 wheelhouse 中的同一固定版本，并由 `paper_fetch.providers.browser_runtime`
 统一管理。
@@ -14,7 +14,7 @@ browser_runtime facade + BrowserRuntimeConfig
         ↓
 RuntimeContext.new_browser_context_for_runtime_config
         ↓
-CamoufoxBrowserManager
+PublisherProfileManager / FlareSolverrManager
 ```
 
 provider 只读取显式 `BrowserRuntimeConfig`，不探测 backend、不持有全局 browser，
@@ -43,7 +43,9 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
   检查在同步浏览器调用返回后执行，不能打断正在等待的 `evaluate`，因此实际耗时
   可能超过预算。预算耗尽后仍对最后一份 HTML 做 block detection 与正文抽取。
 - AIP 直接使用正常 HTML attempt，不启用媒体阻断或空脚本替换，因此正常加载期间
-  不注册请求拦截；继续使用非持久会话及现有正文 readiness。
+  不注册请求拦截；使用出版社独立的原生持久会话及现有正文 readiness。
+- Elsevier 正文导航不拦截图片、字体或媒体，沿用浏览器正常资源加载；headed 与
+  headless 使用同一策略。
 - Science 直接使用正常 HTML attempt；正文稳定后，在整体期限内最多用 10 秒等待
   bibliography 中实际目标 ID 对应的可抽取引用文本。每轮一次读取引用与可见展开控件，
   按页面控件点击；空引用、ID 先到或仅链接工具不算完成。预算耗尽如实保留缺项和
@@ -107,12 +109,13 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
   `allowed_hosts` / 额外敏感 header 仍逐跳生效。
 - Browser cookie 转 direct opener 时使用标准 `CookieJar`，保留 host-only/domain、
   RFC path boundary、secure 与 expiry，避免把 publisher cookie 扩到子域或相邻路径。
-- Browser context diagnostics 用 `storage_state_load={path,exists,used}` 明确区分“已配置”
-  与“实际注入”。只有 context 创建成功且 `storage_state` option 真正传入时，
-  `RuntimeContext` 才记录 capability use；MCP fetch 完成后以 provider、backend、最终
-  canonical path 和最终文件 SHA-256 重新构建 sidecar scope。默认 provider 目录、
-  `PAPER_FETCH_BROWSER_PROFILE_DIR`、`PAPER_FETCH_BROWSER_USER_DATA_DIR` 与 provider
-  显式 storage-state 都遵循同一规则。
+- `persistent_profile` diagnostics 区分原生目录加载、同 context 复用和 JSON 迁移；
+  `storage_state_load.used` 只在本次实际导入 JSON 时为 true，不把存在的快照标为已注入。
+  JSON 导出独立记录于 `storage_state_save`。Camoufox 出版社使用原生持久目录；PNAS / Elsevier FlareSolverr 使用按 provider 隔离的验收后 JSON 状态目录。Camoufox 覆盖
+  含 AIP、IEEE、PDF 浏览器回退与资产恢复；目录锁、迁移和 auth 回放见
+  [浏览器生命周期](browser-backends.md#生命周期)。
+- MCP 私有缓存使用实际目录与从打开的 context 获取的最新摘要；无法取得可信摘要时
+  禁用私有缓存读写。元数据只保存摘要，不保存 Cookie 或 localStorage 明文。
 
 ## 二进制资产与资源预算
 
@@ -152,7 +155,10 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
 
 ## 配置
 
-browser runtime 固定为 Camoufox。可使用：
+后端选择、系统依赖与按需源码准备见 [浏览器后端](browser-backends.md#pnas-系统-chrome-与按需-flaresolverr)。可使用：
+
+- `PAPER_FETCH_PNAS_BROWSER_BACKEND`（`auto|flaresolverr|camoufox`）
+- `PAPER_FETCH_CHROME_BINARY_PATH`
 
 - `PAPER_FETCH_BROWSER_HEADLESS`
 - `PAPER_FETCH_BROWSER_BINARY_PATH`
@@ -200,10 +206,10 @@ PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST=1 \
 ```
 
 该 test 串行运行是因为临时 context 与持久 context 共用同一个本地 browser
-runtime；Windows / WSL 只运行对应的 pure-mock unit tests。原生 test 通过
+runtime；Windows / WSL 的可移植契约和本地浏览器验证不能替代原生 macOS 证据。原生 test 通过
 Camoufox 公开的 `exclude_addons` 参数排除默认扩展，并将版本查询限定为已预置的
 正式版或预发布版、禁止重新安装，同时要求复用已预置的 fpgen 模型，因此只验证
-已预置 managed app bundle 和两类 context 的本地启动，
+已预置 managed app bundle、两类 context 的本地启动，以及出版社原生持久目录的跨重启 Cookie/localStorage 保留（不使用 JSON 回放），
 不依赖已有扩展缓存，也不验证 Camoufox 默认扩展行为。它还通过 Camoufox
 公开的 screen constraint 使用固定 synthetic screen，避免原生 CI 依赖已登录的
 WindowServer 或物理显示器。
@@ -219,3 +225,7 @@ IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：
 15 秒，直到 `#article` 包含目标文章号。持续的 AWS WAF 页使用
 `reason_code=aws_waf_challenge`、`status=challenge`，并在 diagnostics 中保留
 `challenge_provider=aws_waf` 与旧消费者可用的 `legacy_reason_code`。
+
+Elsevier 复用 browser workflow 的期限、取消、上下文和资源释放机制，自行执行 API XML → FlareSolverr HTML → API PDF → FlareSolverr PDF。ScienceDirect 页面准备钩子采集 MathJax 保存的原始 MathML；HTML、图片、补充文件和浏览器 PDF 共用本次上下文。macOS 的 Elsevier 仅执行 API 阶段。
+
+Windows/Linux x64 安装器在核心安装完成后自动准备 FlareSolverr（在线 `--lite` 跳过），macOS 跳过。准备复用 `flaresolverr/` 的源码、私有依赖和匹配驱动；离线安装器此阶段也可能联网。下载预算 10 分钟，本地启动检查预算 2 分钟，只使用临时状态、CDP 和空白页脚本；失败或取消保留核心安装，运行时按需修复继续生效。系统依赖确认与独立重试命令见 [部署说明](deployment.md)。

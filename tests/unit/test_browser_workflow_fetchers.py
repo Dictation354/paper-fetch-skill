@@ -358,7 +358,7 @@ def test_serial_image_and_file_fetchers_share_ready_article_page_until_owner_clo
     shared_session.close()
     runtime_context.close()
     assert context.page.close_calls == 1
-    assert context.close_calls == 1
+    assert context.close_calls == 0
     manager.close.assert_called_once()
 
 
@@ -429,7 +429,7 @@ def test_shared_page_session_closes_partial_context_when_page_creation_fails() -
         result = fetcher(image_url, {"kind": "figure"})
 
     assert result is None
-    context.close.assert_called_once()
+    context.close.assert_not_called()
     manager.close.assert_called_once()
     fetcher_context._restore_runtime_shared_page_session(
         runtime_context,

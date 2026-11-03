@@ -325,6 +325,7 @@ class InstallerSmokeTests(unittest.TestCase):
             "Elsevier setup: request a key at https://dev.elsevier.com/", result.stdout
         )
         self.assertIn('ELSEVIER_API_KEY="..."', result.stdout)
+        self.assertNotIn("--prepare-flaresolverr", log_path.read_text())
 
     def test_skill_installers_prompt_for_elsevier_api_key(self) -> None:
         for script_name in ("install-claude-skill.sh", "install-codex-skill.sh"):

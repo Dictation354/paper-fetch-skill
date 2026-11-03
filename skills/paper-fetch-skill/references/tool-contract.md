@@ -30,7 +30,7 @@ acceptance v2 增量字段 `target="supplementary"`、`content_requested=false`�
 
 - `list_cached(download_dir=...)` / `get_cached(doi, download_dir=..., detail="full|compact", preferred_only=false, modes=..., strategy=..., include_refs=..., max_tokens=...)`: 多轮会话重新抓取前，在同一个显式 cache scope 内读取当前索引；已知 DOI 优先使用请求敏感的 `get_cached` compact 结果。
 - `provider_status(provider=None, group=None, detail="full|compact")`: 返回 catalog-backed 本地静态诊断，不调用远程出版商 API；已知 provider 时应筛选，避免把全 catalog checks 放入上下文。
-- `browser_preflight(provider=None, test_url=None, timeout_ms=None, browser_user_agent=None, storage_state_path=None, save_storage_state=true, detail="full|compact")`: 对一个或全部 browser provider 运行 live HTML 预检；会访问出版社页面，默认可能更新过滤后的 storage-state，但不运行 PDF fallback、自动认证或 runtime 安装。
+- `browser_preflight(provider=None, test_url=None, timeout_ms=None, browser_user_agent=None, storage_state_path=None, save_storage_state=true, detail="full|compact")`: 对一个或全部 browser provider 运行 live HTML 预检；会访问出版社页面，始终可更新原生持久目录，默认另导出过滤后的 JSON 快照，但不运行 PDF fallback 或自动认证。
 - `batch_resolve(queries, concurrency)` / `batch_check(queries, mode, concurrency)`: 默认 `concurrency=1`，允许范围 `1..8`，每次最多 `50` 个查询；`batch_check` 的 `mode` 默认且仅允许 `"metadata"`，单篇也使用此入口。
 - `batch_fetch(queries, concurrency, ...)`: 对 `1..50` 篇执行真实全文抓取，复用 `fetch_paper` 的 modes/strategy/cache/artifact/Markdown 参数；默认只返回按输入 index 排列的紧凑 manifest/acceptance 记录，不返回多篇完整正文。
 
@@ -38,7 +38,7 @@ acceptance v2 增量字段 `target="supplementary"`、`content_requested=false`�
 
 - 先做 `provider_status` / CLI `doctor` 静态检查；只有需要真实链路证明时再运行 MCP `browser_preflight` / CLI `paper-fetch browser-preflight`。静态 `ready` 不是远端页面健康或访问授权证明。仅在实际 fetch 或按需预检明确要求时，由用户执行 `paper-fetch auth <provider>`。
 - 未传 `provider` 时，MCP 与 CLI 都检查 runtime catalog 中全部 browser provider 的内置样例。诊断已知目标时显式限定 provider；不默认执行 live 工具。
-- `test_url` 和 `storage_state_path` 只允许与一个显式 `provider` 一起使用。`test_url` 必须是无内嵌凭据的 HTTP(S) URL；`timeout_ms` 范围为 `1..600000`。`save_storage_state=false` 只关闭本轮保存，仍可读取已有 storage-state；默认 `true` 可能创建或原子更新 provider storage-state 文件。
+- `test_url` 和 `storage_state_path` 只允许与一个显式 `provider` 一起使用。`test_url` 必须是无内嵌凭据的 HTTP(S) URL；`timeout_ms` 范围为 `1..600000`。`save_storage_state=false` 仅关闭 JSON 导出，仍正常更新原生持久目录；默认 `true` 另可创建或原子更新兼容 JSON 快照。
 - 工具 annotations 为 open-world、非只读、非 destructive、非 idempotent：它会使用 Camoufox runtime 打开出版社页面，也可能写 storage-state。它不调用 PDF fallback，且 `auth_attempted=false`；challenge、验证码、付费或登录边界不会被自动绕过。
 - preflight 启动前自动准备 managed runtime；静态诊断仍只读，缺少 Python 依赖返回 `not_configured`。具体机制归[环境参考](environment.md#运行时准备与授权)。
 - 每个 provider 独立返回 `ready`、`challenge`、`auth_required`、`network_timeout`、`extraction_error`、`runtime_error` 或 `cancelled`，并给出唯一 `status/reason_code/stage/message/next_action` 契约。前一个 provider 的 challenge/runtime failure 不会删除其它已完成结果；取消会保留取消前的结果，并停止调度后续 provider。
@@ -52,7 +52,7 @@ acceptance v2 增量字段 `target="supplementary"`、`content_requested=false`�
 - 缓存查询使用 `detail="compact"`；需要后续 prefer-cache fetch 复用时，显式传相同的 `modes`、`strategy`、`include_refs`、`max_tokens` 和 `download_dir`。临时阅读适用范围按 [`presets.md`](presets.md#本地优先决策树) 处理。compact 不返回 `entries`、完整正文、sidecar payload 或资产数组，只返回优选 Markdown/primary entry、内容/置信度、acceptance/asset/warning 摘要、sidecar/request 状态与稳定 SHA-256 fingerprint。
 - 顶层 `status="hit"` 只表示该 DOI 在当前 scope 有身份可证明的 entry。fetch-envelope 是否满足请求直接读取 `request_satisfied`；工具已检查 sidecar、身份、scope 和请求匹配，agent 不手工重算。需要解释 mismatch 时再读[内部一致性诊断](#内部一致性诊断)。
 - `cached_request` / `cached_request_fingerprint` 描述被选中的 sidecar；`requested_request` / `requested_request_fingerprint` 描述本次查询。FetchEnvelope cache 以 DOI + request fingerprint 保存多版本 sidecar，同一 DOI 的 modes、strategy、`include_refs`、`max_tokens` 变体可以并存，不再由最后一次窄请求覆盖富请求。读取优先精确 fingerprint，再按质量/时间检查兼容候选；不兼容 entry 仍只能得到 `request_status="mismatch"`。
-- fingerprint 包含摘要化 `credential_scope`，不保存秘密或本地 state 内容。Browser scope 绑定实际 provider/backend、解析路径和内容摘要，只有成功注入的 state 才算使用。带 API token/storage-state capability 的调用在精确 sidecar 缺失或不满足请求时可单向复用 public sidecar；public 调用不能读取 private sidecar，不同 private scope 之间也不能复用。cache index、`list_cached`、`get_cached` 与 fetch 共用该可见性边界；非 sidecar artifact 保留自身可信 scope，legacy/多 scope 歧义 entry 不可见。
+- fingerprint 包含摘要化 `credential_scope`，不保存秘密或本地 state 内容。Browser scope 绑定实际 provider/backend、原生持久目录和打开 context 的最新可信状态摘要；无法取得可信摘要时禁用私有缓存读写。带 API token/storage-state capability 的调用在精确 sidecar 缺失或不满足请求时可单向复用 public sidecar；public 调用不能读取 private sidecar，不同 private scope 之间也不能复用。cache index、`list_cached`、`get_cached` 与 fetch 共用该可见性边界；非 sidecar artifact 保留自身可信 scope，legacy/多 scope 歧义 entry 不可见。
 - `sidecar.status` 明确区分 `ready`、`missing`、`corrupt`、`unreadable`、`version_mismatch`、`extraction_revision_mismatch`、`doi_mismatch`、`invalid_scope` 等状态。损坏/旧版/错误 DOI sidecar 以及 `identity_status="no_proven_entries"` 都令 `request_satisfied=false`，但 cache miss 仍是正常路由结果，不是工具失败。
 - 查询始终限制在显式 `download_dir`，不跨 scope 搜索、不联网。compact acceptance 是当前索引/sidecar 快照的摘要；它不承诺满足未传入的未来请求，命中后仍进入统一 acceptance/report。
 

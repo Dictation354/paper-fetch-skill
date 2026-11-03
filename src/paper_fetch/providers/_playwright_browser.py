@@ -108,7 +108,7 @@ _WILEY_REVIEWABLE_HTTP_STATUSES = frozenset({401, 403})
 _WILEY_DOI_META_NAMES = frozenset(
     {"citation_doi", "dc.identifier", "dc.identifier.doi", "prism.doi"}
 )
-_MAIN_CONTEXT_SNAPSHOT_PROVIDERS = frozenset({"pnas", "science", "wiley"})
+_MAIN_CONTEXT_SNAPSHOT_PROVIDERS = frozenset({"pnas", "science", "wiley", "elsevier"})
 _MAIN_CONTEXT_HTML_SNAPSHOT_SCRIPT = """
 () => ({
   html: (document.doctype ? new XMLSerializer().serializeToString(document.doctype) + '\\n' : '')
@@ -401,6 +401,12 @@ def _remove_page_diagnostic_listeners(
     for event, callback in listeners:
         with contextlib.suppress(Exception):
             remove(event, callback)
+
+
+def _elsevier_main_document_matches(response_url, final_url, html, doi):
+    from ._elsevier_html import main_document_matches
+
+    return main_document_matches(response_url, final_url, html, doi)
 
 
 def _main_document_response_diagnostic(
@@ -1213,6 +1219,9 @@ def _candidate_deadline_failure(
     *,
     trace: Mapping[str, Any],
 ) -> PlaywrightBrowserFailure:
+    if trace.get("backend") == "flaresolverr" and last_failure is not None:
+        last_failure.details.setdefault("browser_runtime_trace", dict(trace))
+        return last_failure
     timeout_failure = PlaywrightBrowserFailure(
         "browser_connect_timeout",
         "Browser HTML request deadline was exhausted before another candidate.",
@@ -1385,14 +1394,12 @@ def _open_browser_html_context(
         return manager, browser_context, page
     except PlaywrightBrowserFailure:
         if not reused:
-            _safe_close(browser_context)
             _safe_close(manager)
         raise
     except Exception as exc:
         trace["browser_connect_seconds"] = round(time.monotonic() - connect_started, 3)
         message = normalize_text(str(exc)) or "Browser context creation failed."
         if not reused:
-            _safe_close(browser_context)
             _safe_close(manager)
         raise PlaywrightBrowserFailure(
             BROWSER_CONTEXT_CREATE_FAILED,
@@ -1678,7 +1685,7 @@ def fetch_html_with_playwright(
         raise PlaywrightBrowserFailure(
             "empty_html_attempts", "No publisher HTML candidates were attempted."
         )
-    backend_name = "camoufox"
+    backend_name = config.backend
     active_blocked_resource_types = _active_browser_resource_types(
         backend_name=backend_name,
         disable_media=disable_media,
@@ -1736,6 +1743,8 @@ def fetch_html_with_playwright(
             "used": False,
         },
         "storage_state_write_enabled": config.persist_storage_state,
+        "json_export_enabled": config.persist_storage_state,
+        "native_profile_write_enabled": config.backend == "camoufox",
         "readiness_budget_seconds": readiness_budget_seconds,
         "runtime_page_reuse_enabled": bool(reuse_runtime_page),
     }
@@ -1768,17 +1777,36 @@ def fetch_html_with_playwright(
     try:
         if runtime_context is not None:
             runtime_context.raise_if_cancelled()
+        launch_config = config
+        if config.backend == "flaresolverr":
+            from dataclasses import replace
+
+            launch_config = replace(config, timeout_ms=max(1, remaining_timeout_ms()))
         manager, browser_context, page = _open_browser_html_context(
-            config,
+            launch_config,
             runtime_context=runtime_context,
             shared_page_session=shared_page_session,
             trace=trace,
         )
         storage_state_load = trace.get("storage_state_load")
         if isinstance(storage_state_load, dict):
-            # Reused pages belong to a context opened with the same runtime config;
-            # either way, reaching this point means the configured state was loaded.
-            storage_state_load["used"] = bool(storage_state_load.get("exists"))
+            profile_trace = (
+                runtime_context.browser_profile_diagnostics(browser_context)
+                if runtime_context is not None
+                and hasattr(runtime_context, "browser_profile_diagnostics")
+                else dict(getattr(manager, "diagnostics", {}))
+            )
+            if trace.get("runtime_page_reused"):
+                profile_trace.update(
+                    context_reused=True,
+                    native_profile_loaded=False,
+                    json_imported=False,
+                )
+            trace["persistent_profile"] = profile_trace
+            storage_state_load["used"] = bool(
+                profile_trace.get("json_imported")
+                or profile_trace.get("state_restored")
+            )
         if trace.get("runtime_page_reused"):
             trace["browser_context_seed"] = {
                 "provided": browser_context_seed is not None,
@@ -1813,6 +1841,7 @@ def fetch_html_with_playwright(
         response_hosts = {
             "science": {"science.org", "www.science.org"},
             "pnas": {"pnas.org", "www.pnas.org"},
+            "elsevier": {"sciencedirect.com", "www.sciencedirect.com"},
         }.get(normalize_text(publisher).lower(), set())
         if response_hosts:
 
@@ -1940,12 +1969,19 @@ def fetch_html_with_playwright(
                     trace["runtime_page_navigation_count"] = (
                         shared_page_session.mark_navigation()
                     )
-                response = _navigate_browser_page(
-                    page,
-                    url=normalized_url,
-                    timeout_ms=candidate_timeout_ms,
-                    return_image_payload=return_image_payload,
-                )
+                if config.backend == "flaresolverr" and not return_image_payload:
+                    from .browser_runtime.flaresolverr_manager import navigate_page
+
+                    response = navigate_page(
+                        page, normalized_url, timeout_ms=candidate_timeout_ms
+                    )
+                else:
+                    response = _navigate_browser_page(
+                        page,
+                        url=normalized_url,
+                        timeout_ms=candidate_timeout_ms,
+                        return_image_payload=return_image_payload,
+                    )
                 candidate_trace["navigation_seconds"] = round(
                     time.monotonic() - request_started, 3
                 )
@@ -2146,8 +2182,14 @@ def fetch_html_with_playwright(
                         and urllib.parse.urlsplit(current_url).hostname
                         in response_hosts
                         and target_doi
-                        and normalize_doi(extract_doi_from_url(current_url))
-                        == target_doi
+                        and (
+                            _elsevier_main_document_matches(
+                                current_url, final_url, html, target_doi
+                            )
+                            if normalize_text(publisher).lower() == "elsevier"
+                            else normalize_doi(extract_doi_from_url(current_url))
+                            == target_doi
+                        )
                     ):
                         response = current_response
                 status = _browser_response_status(response, zero_as_none=False)
@@ -2222,6 +2264,13 @@ def fetch_html_with_playwright(
                 )
                 if isinstance(exc, PlaywrightBrowserFailure):
                     candidate_failure = exc
+                    if backend_name == "flaresolverr":
+                        candidate_failure.details.setdefault(
+                            "browser_runtime_trace", trace
+                        )
+                        candidate_failure.details.setdefault(
+                            "stage", "flaresolverr_navigation"
+                        )
                 else:
                     candidate_failure = PlaywrightBrowserFailure(
                         f"{backend_name}_request_failed",
@@ -2343,7 +2392,7 @@ def fetch_html_with_playwright(
                                 doi=config.doi,
                                 target_url=normalized_url,
                                 final_url=final_url,
-                                backend="camoufox",
+                                backend=config.backend,
                                 response_status=status,
                                 title=title or "",
                                 summary=summary,
@@ -2394,7 +2443,7 @@ def fetch_html_with_playwright(
                                 doi=config.doi,
                                 target_url=normalized_url,
                                 final_url=final_url,
-                                backend="camoufox",
+                                backend=config.backend,
                                 response_status=status,
                                 title=title or "",
                                 summary=summary,
@@ -2490,7 +2539,6 @@ def fetch_html_with_playwright(
             or shared_page_session.context is not browser_context
         ):
             _safe_close(page)
-            _safe_close(browser_context)
             _safe_close(manager)
 
     if last_failure is None and latest_browser_context_seed is not None:

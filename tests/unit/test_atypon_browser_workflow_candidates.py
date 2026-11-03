@@ -73,7 +73,17 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
     def test_atypon_profile_scope_is_catalog_aligned(self) -> None:
         self.assertEqual(
             ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES,
-            ("science", "pnas", "wiley", "ams", "acs", "iop", "aip", "tandf"),
+            (
+                "science",
+                "pnas",
+                "elsevier",
+                "wiley",
+                "ams",
+                "acs",
+                "iop",
+                "aip",
+                "tandf",
+            ),
         )
         self.assertTrue(
             set(ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES) <= set(PROVIDER_CATALOG)
@@ -104,6 +114,14 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
         for name in ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES:
             with self.subTest(provider=name):
                 profile = publisher_profile(name)
+                if name == "elsevier":
+                    from paper_fetch.providers import _elsevier_html
+
+                    self.assertIs(
+                        profile.prepare_browser_page,
+                        _elsevier_html.prepare_browser_page,
+                    )
+                    continue
                 self.assertTrue(
                     any(
                         getattr(profile.dom_hooks, field.name) is not None

@@ -8,6 +8,11 @@ provider 差异见 [providers.md](providers.md)，浏览器准备见 [browser-ba
 
 ## 1. 安装 Python 包
 
+Windows 安装器及 Linux x64 在线／离线安装器在核心安装完成后自动准备 FlareSolverr，首次安装、升级和同版本重装均会检查并复用有效缓存。在线 `--lite` 跳过此阶段；macOS 和其他架构跳过。缺少系统 Chrome（115+）、依赖安装被拒绝、取消或准备失败只报告 FlareSolverr 未就绪，保留成功的核心安装。
+
+FlareSolverr v3.5.2 源码、私有依赖与匹配的 ChromeDriver 准备到用户数据目录 `flaresolverr/`，安装资产不包含这些下载。**离线安装器的安装后准备阶段也可能联网**；非交互／静默安装可自动下载源码和驱动，但缺系统依赖时只报告缺项和安装指引，不等待输入或提权。运行时保留缓存缺失、损坏和 Chrome 更新后的按需修复。Linux headless 需 Xvfb 与 Chrome 的启动依赖，WSL 只读 X11 socket 挂载还需可用的 rootless bubblewrap namespaces。默认抓取／preflight 保持 headless，显式 auth 使用 headed。配置和运行时边界见 [浏览器后端](browser-backends.md#pnas--elsevier-系统-chrome-与按需-flaresolverr)。
+
+
 默认 `pip install .` 只安装轻量 core。按需要选择 `.[browser]`（Camoufox/HTML）、
 `.[pdf]`（PDF 转换）或 `.[full]`（两者）。开发与普通 CI 使用已提交的锁文件：
 
@@ -456,7 +461,7 @@ Codex 用户级 skill 安装到 `~/.agents/skills/paper-fetch-skill`，项目级
 
 源码安装或升级后可运行 `./scripts/install-codex-skill.sh --check` 检查 Codex user scope，或加 `--project --check` 检查仓库 `.agents/skills/paper-fetch-skill`。该模式严格只读，不安装包、不复制/建目录、不注册或注销 MCP、不写配置/日志；`0` 表示精确同步，`1` 表示缺失或漂移，`2` 表示参数用法冲突。离线安装器会在复制前后及三个宿主目标上 fail closed 验证 Skill，完成后重启 Codex、Claude Code 和 Antigravity 使宿主重新扫描已验证的 skill/MCP。
 
-部署排查顺序为：`doctor` / `provider_status` 静态检查 → 对 browser provider 运行 CLI 或 MCP `browser_preflight` 做真实页面预检 → 只有返回 challenge/auth required 或实际抓取明确需要时，才由用户运行 `paper-fetch auth <provider>`。live 步骤会访问网络，preflight 默认可能更新 provider storage-state；MCP 可显式设 `save_storage_state=false` 禁止本轮保存。两种 preflight 入口共用 HTML 核心，均在实际启动前自动准备 managed runtime，不运行 PDF fallback 或自动 auth。静态 `ready` 不代表网页当前健康或账号已有访问权，预置后真正断网的 Camoufox launch 仍是公开审计项。
+部署排查顺序为：`doctor` / `provider_status` 静态检查 → 对 browser provider 运行 CLI 或 MCP `browser_preflight` 做真实页面预检 → 只有返回 challenge/auth required 或实际抓取明确需要时，才由用户运行 `paper-fetch auth <provider>`。live 步骤会访问网络，preflight 始终可更新出版社原生持久目录；MCP 的 `save_storage_state=false` 仅禁止导出 JSON 快照。两种 preflight 入口共用 HTML 核心，均在实际启动前自动准备 managed runtime，不运行 PDF fallback 或自动 auth。静态 `ready` 不代表网页当前健康或账号已有访问权，预置后真正断网的 Camoufox launch 仍是公开审计项。
 
 ### CI / GitHub Actions
 
@@ -518,6 +523,16 @@ scripts/clean-local-artifacts.sh --days 7
 ```
 
 该脚本只删除 `git check-ignore` 确认为 ignored 的目标；未被 `.gitignore` 覆盖的路径会跳过。
+
+FlareSolverr 的独立重试入口（使用安装环境的 Python）：
+
+```bash
+python -m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-flaresolverr
+```
+
+加 `--non-interactive` 只允许源码／驱动下载，不安装系统软件。Debian/Ubuntu 显示共享库、Xvfb、只读 X11 socket 所需 bubblewrap 的缺项和 APT 命令，默认不安装；用户同意后由 sudo 接收密码，APT 完成后重新检测。Chrome 优先采用已有源中的 `google-chrome-stable`，无候选时经确认下载 [Google 官方 x86-64 deb](https://support.google.com/chrome/answer/95346)，再交给 APT 解析依赖。显式 Chrome 路径无效时需修正 `PAPER_FETCH_CHROME_BINARY_PATH`；Windows 只提供官网安装指引，其他 Linux 发行版提供手动安装指引。namespace 能力以实际探测为准。
+
+下载准备预算 10 分钟，本地启动检查另有 2 分钟预算，可用 Ctrl+C 取消。检查沿用配置中的 headless/headful，只连接所属 Chrome 的 CDP 并运行 `about:blank` 脚本，使用临时状态目录，不读取出版社登录态或导航出版社主页，结束后清理所属进程。Unix 输出汇总，离线安装保存 `flaresolverr-setup-results.txt`；Windows 显示进度和完成状态并保存同名结果文件及重试命令。重新运行安装器同样可重试。Camoufox、公式和图片工具仍沿用各自原有的可选安装范围。
 
 ## 4. Provider 接入入口与本地运行时
 
@@ -648,7 +663,7 @@ integration，`--skip-typecheck` 跳过 mypy。发布前使用 `--with-golden`�
 CI 平台门禁见 [CI / GitHub Actions](#ci--github-actions)，发布终验见
 [发布前检查](#release-checklist)。下面的 live 命令只在本地显式执行，不能替代离线回归。
 
-未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live 时，`arxiv` 不需要 browser runtime；包括 `ams` 在内的 browser-backed provider 先按静态报告中的 `browser_runtime.available` 检查本地能力，再启动 Camoufox 做真实页面预检。pytest 隔离 XDG data/runtime、通用 profile 和所有 provider storage-state；Camoufox 的 browser bundle、版本元数据、字体和默认 addon 则复用隔离前由官方包管理器确认的 dependency cache，避免 live/MCP 子进程重复下载 runtime。每家 provider 的状态仍写入临时 `<provider>-camoufox/storage-state.json`，不会进入该共享 dependency cache。
+未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live 时，`arxiv` 不需要 browser runtime；包括 `ams` 在内的 browser-backed provider 先按静态报告中的 `browser_runtime.available` 检查本地能力，再启动 Camoufox 做真实页面预检。pytest 隔离 XDG data/runtime、通用 profile 和所有 provider storage-state；Camoufox 的 browser bundle、版本元数据、字体和默认 addon 则复用隔离前由官方包管理器确认的 dependency cache，避免 live/MCP 子进程重复下载 runtime。每家 provider 的原生状态写入隔离的 `<provider>-camoufox/` 持久目录，JSON 仅作为兼容快照，不会进入该共享 dependency cache。
 
 publisher catalog 不是宽松的全文 smoke：每个已执行样本都请求 `asset_profile=body` 并按默认 provider policy 要求 `acceptance.overall=complete`，同时写出 `live-acceptance.json`。无论 preflight/fetch 成功或失败，每个 provider 都先追加 terminal record；JSON 从 runtime catalog 计算总数、已记录/未记录 provider、已记录结果是否全 complete，以及全 catalog 是否全部执行并 complete。每个 provider 还记录外层 wall time、browser readiness、导航数和逐资产 timing。需要离线或 full-size 验收时，另以公开的两个严格布尔约束运行并读取同一 v2 acceptance。challenge/no-access skip 不会被伪装为全量完成；只有机器可读的 preflight `challenge` / `auth_required`、fetch/MCP `status=no_access`，或成功 metadata fallback 中仅由 `ProviderFailure(NO_ACCESS)` 产生的精确 access-boundary marker，才按合法访问边界 skip。解析失败、空壳、正文不足和其它未知错误仍是 hard failure。非 challenge/auth/cancelled 的 preflight 失败必须保留可读取的隐私安全诊断 artifact。Live fixture 的环境 mapping repr 不显示值；JUnit、acceptance、diagnostics 和待上传目录必须先通过 sentinel 扫描。live 测试依赖共享外部状态和 Camoufox 线程边界，必须串行运行；JUnit 使用与 `record_property` 兼容的 legacy family：
 
@@ -723,3 +738,10 @@ macOS 的机器合同见 [`macos-adaptation-contract.toml`](macos-adaptation-con
 Codex skill 的 `.agents/skills` 迁移与校验后清理同样适用于 macOS；Linux portable 验证不替代原生 macOS 安装证据。
 
 `browser.supplementary_index_without_body` 对应的跨平台行为见[补充材料索引](browser-runtime.md#补充材料索引)。
+
+出版社浏览器状态使用 `publisher-browser-profiles/<provider>-camoufox/` 原生持久目录，
+首次未认证访问也会创建。升级保留目录和现有路径覆盖配置；默认旧 JSON 仅初始化尚无
+原生 profile 的目录，显式 JSON 内容变化按摘要导入一次。备份应在浏览器关闭后执行。
+同目录跨进程排他使用，外部 Firefox 占用时先正常关闭外部会话；不删除原生锁。
+认证通过重开同一目录验证，JSON 导出失败独立报告。macOS 持久会话、锁和回放契约
+见 `macos-adaptation-contract.toml`；Linux/WSL 验证不能替代原生 macos-15 gate。

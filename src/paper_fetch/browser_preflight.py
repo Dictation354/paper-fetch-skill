@@ -216,8 +216,6 @@ def _runtime_with_preflight_storage(
         runtime = replace(
             runtime,
             storage_state_path=storage_state_path.expanduser(),
-            profile_dir=None,
-            user_data_dir=None,
         )
     else:
         runtime = runtime_with_default_storage_profile(
@@ -295,7 +293,9 @@ def static_browser_capabilities(
     )
     packages = dependency_details.get("packages")
     package_states = packages if isinstance(packages, Mapping) else {}
-    selected_backend = "camoufox"
+    from .providers.browser_runtime.selection import selected_backend as choose_backend
+
+    selected_backend = choose_backend(env, provider=provider_key)
 
     def package_capability(package: str) -> dict[str, object]:
         available = bool(
@@ -342,6 +342,9 @@ def static_browser_capabilities(
             "download_required",
             "runtime_state",
             "runtime_version",
+            "chrome_path",
+            "chrome_version",
+            "runtime_installed",
         }
     }
     runtime_status = (
@@ -417,7 +420,11 @@ def _failure_result(
                 doi=extract_doi(target_url or "") or None,
                 target_url=target_url,
                 final_url=final_url,
-                backend="camoufox",
+                backend=(
+                    diagnostic_payload.get("browser_runtime_trace")
+                    or diagnostic_payload.get("trace")
+                    or {}
+                ).get("backend", "camoufox"),
                 details=diagnostic_payload,
             ),
         )
@@ -774,10 +781,8 @@ def preflight_browser_provider(
             ),
         )
 
-    # AIP's Camoufox cookies are bound to the generated runtime fingerprint.
-    # A distinct preflight RuntimeContext must not publish those cookies for a
-    # later context to consume.
-    effective_save_storage_state = bool(save_storage_state and provider_key != "aip")
+    # Native profiles always persist; this flag controls JSON export only.
+    effective_save_storage_state = bool(save_storage_state)
 
     storage_path: dict[str, Path | None] = {"value": None}
     context: RuntimeContext | None = None

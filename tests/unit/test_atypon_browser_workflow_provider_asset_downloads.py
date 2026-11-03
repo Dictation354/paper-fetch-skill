@@ -434,9 +434,10 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         private_contexts: list[_ProviderFakeBrowserContext] = []
 
         def new_private_context(_manager, **_kwargs):
-            private_context = _ProviderFakeBrowserContext()
-            private_contexts.append(private_context)
-            return private_context
+            if _manager.context is None:
+                _manager.context = _ProviderFakeBrowserContext()
+                private_contexts.append(_manager.context)
+            return _manager.context
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "science", SCIENCE_SAMPLE.doi)
@@ -467,7 +468,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
             )
             with (
                 mock.patch(
-                    "paper_fetch.providers.browser_runtime.camoufox_manager.CamoufoxBrowserManager.new_context",
+                    "paper_fetch.providers.browser_runtime.profile.PublisherProfileManager.new_context",
                     new=new_private_context,
                 ),
                 mock.patch.object(
@@ -511,9 +512,11 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
             ["figure", "supplementary"],
         )
         self.assertEqual(result["asset_failures"], [])
-        self.assertEqual(len(private_contexts), 2)
+        self.assertEqual(len(private_contexts), 1)
         self.assertTrue(all(context.route_calls == [] for context in private_contexts))
-        self.assertTrue(all(context.closed for context in private_contexts))
+        self.assertFalse(any(context.closed for context in private_contexts))
+        for context in private_contexts:
+            context.close()
 
     def test_pnas_provider_download_related_assets_recovers_original_through_shared_browser(
         self,
@@ -532,7 +535,9 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
 </article>
 """
         transport = AssetTransport({})
-        client = pnas_provider.PnasClient(transport=transport, env={})
+        client = pnas_provider.PnasClient(
+            transport=transport, env={"PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox"}
+        )
         initial_seed = {
             "browser_cookies": [
                 {
@@ -631,7 +636,9 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
 </article>
 """
         transport = AssetTransport({})
-        client = pnas_provider.PnasClient(transport=transport, env={})
+        client = pnas_provider.PnasClient(
+            transport=transport, env={"PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox"}
+        )
         seed = {
             "browser_cookies": [
                 {

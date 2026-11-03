@@ -67,6 +67,7 @@ class PublisherProfile:
 ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES = (
     "science",
     "pnas",
+    "elsevier",
     "wiley",
     "ams",
     "acs",

@@ -52,14 +52,19 @@ def fetch_seeded_browser_pdf_payload(
 
         if deps.warm_browser_context is default_warm_browser_context:
             context_warmer = deps.pdf_browser_context_seed
-    pdf_context_seed = context_warmer(
-        pdf_candidates,
-        publisher=provider,
-        config=runtime,
-        browser_context_seed=browser_context_seed,
-        runtime_context=context,
-        lightweight=True,
-    )
+    if provider == "elsevier":
+        # HTML already owns this Chrome session. Navigating a PDF merely to warm
+        # it can start a download before the PDF fetcher installs its listener.
+        pdf_context_seed = dict(browser_context_seed or {})
+    else:
+        pdf_context_seed = context_warmer(
+            pdf_candidates,
+            publisher=provider,
+            config=runtime,
+            browser_context_seed=browser_context_seed,
+            runtime_context=context,
+            lightweight=True,
+        )
     if context is not None:
         context.raise_if_cancelled()
     seed_url = _choose_browser_seed_url(

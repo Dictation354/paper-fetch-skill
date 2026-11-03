@@ -209,7 +209,7 @@ class PublisherWaterfallTests(unittest.TestCase):
             )
         )
         self.assertIn(
-            "Full text was extracted from the Elsevier API PDF fallback after the XML route was not usable.",
+            "Full text was extracted from the Elsevier API PDF fallback.",
             raw_payload.warnings,
         )
 
@@ -309,7 +309,7 @@ class PublisherWaterfallTests(unittest.TestCase):
             ["S0034425723001712"],
         )
 
-    def test_elsevier_xml_and_pdf_failures_are_combined_without_html_markers(
+    def test_elsevier_xml_html_and_pdf_failures_are_combined(
         self,
     ) -> None:
         doi = "10.1016/test-no-fulltext"
@@ -347,7 +347,7 @@ class PublisherWaterfallTests(unittest.TestCase):
         self.assertEqual(ctx.exception.code, "no_result")
         self.assertIn("fulltext:elsevier_xml_fail", ctx.exception.source_trail)
         self.assertIn("fulltext:elsevier_pdf_api_fail", ctx.exception.source_trail)
-        self.assertNotIn("fulltext:elsevier_html_fail", ctx.exception.source_trail)
+        self.assertIn("fulltext:elsevier_html_fail", ctx.exception.source_trail)
         self.assertIn(
             "Elsevier official XML representation is not available.",
             ctx.exception.message,

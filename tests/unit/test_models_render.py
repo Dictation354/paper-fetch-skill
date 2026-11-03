@@ -733,6 +733,35 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertIn("$$\n\n![Figure 3](figure-3.png)", normalized)
         self.assertNotIn("Development![Figure", normalized)
 
+    def test_image_boundaries_preserve_list_continuation_indentation(self) -> None:
+        from tests.support.markdown_lists import ancestor, inline_text, markdown_tree
+
+        for marker in ("-", "12."):
+            indent = " " * (len(marker) + 1)
+            for body in (
+                f"{marker} First step.![Figure 1](figure.png)Original caption.",
+                f"{marker} First step.\n\n{indent}![Figure 1](figure.png)\n\n{indent}Original caption.",
+            ):
+                normalized = normalize_markdown_text(body + f"\n\n{marker} Next step.")
+                tree = markdown_tree(normalized)
+                items = tree.children[0].children
+                self.assertEqual(len(items), 2)
+                images = [n for n in tree.walk() if n.type == "image"]
+                self.assertEqual(len(images), 1)
+                self.assertIs(ancestor(images[0], "list_item"), items[0])
+                self.assertIn("Original caption.", inline_text(items[0]))
+                self.assertIn("Next step.", inline_text(items[1]))
+
+        normalized = normalize_markdown_text(
+            "- Outer step.\n\n  - Middle step.\n\n    - Inner step.![Figure 1](nested.png)Nested caption.\n\n    - Following inner step."
+        )
+        tree = markdown_tree(normalized)
+        image = next(n for n in tree.walk() if n.type == "image")
+        item = ancestor(image, "list_item")
+        self.assertIn("Inner step.", inline_text(item))
+        self.assertIn("Nested caption.", inline_text(item))
+        self.assertIn("Following inner step.", inline_text(item.next_sibling))
+
     def test_to_ai_markdown_separates_adjacent_section_images_after_asset_rewrites(
         self,
     ) -> None:

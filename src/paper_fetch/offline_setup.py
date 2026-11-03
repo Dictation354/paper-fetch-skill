@@ -1,4 +1,4 @@
-"""Opt-in post-install configuration for offline packages (never a fetch hook)."""
+"""Post-install browser preparation and opt-in configuration (never a fetch hook)."""
 
 from __future__ import annotations
 
@@ -626,6 +626,11 @@ def main(argv=None) -> int:
     parser.add_argument("--env-file", type=Path)
     parser.add_argument("--reuse-env-file", action="store_true")
     parser.add_argument("--non-interactive", action="store_true")
+    parser.add_argument(
+        "--prepare-flaresolverr",
+        action="store_true",
+        help="Prepare FlareSolverr automatically; system packages still require consent",
+    )
     parser.add_argument("--initialize-request", type=Path)
     parser.add_argument("--request", type=Path)
     parser.add_argument("--result", type=Path)
@@ -635,10 +640,13 @@ def main(argv=None) -> int:
         args.initialize_request.mkdir(exist_ok=False)
         protect(args.initialize_request)
         return 0
-    if args.non_interactive or (
-        not args.request
-        and not args.cleanup_tools
-        and not (sys.stdin.isatty() and sys.stdout.isatty())
+    if not args.prepare_flaresolverr and (
+        args.non_interactive
+        or (
+            not args.request
+            and not args.cleanup_tools
+            and not (sys.stdin.isatty() and sys.stdout.isatty())
+        )
     ):
         print(
             "Optional configuration skipped (non-interactive). No downloads or elevation. Runtime automatic browser preparation remains enabled."
@@ -659,7 +667,19 @@ def main(argv=None) -> int:
             atomic_write(args.result, message)
         return 0
     try:
-        if args.cleanup_tools:
+        if args.prepare_flaresolverr:
+            from .config import resolve_runtime_env
+            from .offline_flaresolverr import prepare
+
+            setup.env = resolve_runtime_env(env_file=setup.env_file).values
+            interactive = (
+                not args.non_interactive and sys.stdin.isatty() and sys.stdout.isatty()
+            )
+            with tool_environment(setup.env):
+                setup.step(
+                    "FlareSolverr", lambda: prepare(setup, interactive=interactive)
+                )
+        elif args.cleanup_tools:
             from .offline_windows_tools import cleanup_tools
 
             setup.step("Optional tools cleanup", lambda: cleanup_tools(setup))
@@ -696,7 +716,32 @@ def main(argv=None) -> int:
     finally:
         if args.request:
             args.request.unlink(missing_ok=True)
-    summary = setup.summary()
+    if args.prepare_flaresolverr:
+        installed_python = setup.root / (
+            "runtime/python.exe" if os.name == "nt" else "runtime/paper-fetch-python"
+        )
+        command = [
+            str(installed_python) if installed_python.is_file() else sys.executable,
+            "-m",
+            "paper_fetch.offline_setup",
+            "--install-root",
+            str(setup.root),
+            "--env-file",
+            str(setup.env_file),
+            "--prepare-flaresolverr",
+        ]
+        retry = (
+            subprocess.list2cmdline(command) if os.name == "nt" else shlex.join(command)
+        )
+        summary = (
+            "Core installation preserved. FlareSolverr preparation results:\n"
+            + "\n".join(setup.results)
+            + "\nRetry: "
+            + retry
+            + "\nOr rerun the installer. Runtime on-demand repair remains enabled.\n"
+        )
+    else:
+        summary = setup.summary()
     print(summary)
     if args.result:
         atomic_write(args.result, summary)

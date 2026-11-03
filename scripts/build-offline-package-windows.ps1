@@ -442,13 +442,14 @@ function Write-OfflineReadme {
 
 This installer includes the embedded Python runtime, installed Python packages, formula tools, and image-tools configuration for optional conversion tools.
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
-It does not redistribute a browser binary. After successful core smoke checks, optional configuration offers hidden Elsevier/Wiley credentials and unchecked Camoufox, Ghostscript and libvips downloads. `/SILENT` and `/VERYSILENT` skip the wizard without downloads or elevation. Skipping Camoufox keeps runtime automatic preparation enabled.
+It does not redistribute a browser binary. After successful core smoke checks, optional configuration offers hidden Elsevier/Wiley credentials and unchecked Camoufox, Ghostscript and libvips downloads. `/SILENT` and `/VERYSILENT` skip this optional wizard; the separate automatic FlareSolverr preparation still runs without elevation. Skipping Camoufox keeps runtime automatic preparation enabled.
 Ghostscript uses the official visible x64 installer (UAC/admin and system registry); libvips keeps the complete official x64 ZIP with DLLs/resources. Tools go under versioned `image-tools` directories; existing valid tools are reused and real EPS/TIFF conversion is checked before saving paths. Optional failures preserve the core installation. See `optional-setup-results.txt` after using the wizard.
 Upgrades preserve credentials and optional tools. Uninstall keeps optional tools by default; interactive cleanup removes only recorded owned tools via the official Ghostscript uninstaller or individually recorded libvips files, preserving user additions. Shared Camoufox caches remain.
 Before moving fully offline, prepare Camoufox with the wizard or `<install-dir>\runtime\python.exe -m camoufox fetch` while online. Restart running hosts/MCP after configuration.
 Formula conversion uses the bundled Playwright driver Node via `MATHML_TO_LATEX_NODE_BIN`; do not rely on a bare `node` from PATH in Codex Desktop sessions.
 
-Browser-backed providers use native Camoufox.
+PNAS and Elsevier browser routes use system Chrome and FlareSolverr; other browser routes use Camoufox.
+After core installation, FlareSolverr source/private dependencies and a matching ChromeDriver are prepared automatically, including silent installs. This phase may use the network. Missing Chrome only produces official installation guidance; preparation failures or cancellation preserve core installation. Results and the retry command are written to `flaresolverr-setup-results.txt`. Rerun the installer to retry.
 Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
 '@
     [System.IO.File]::WriteAllText((Join-Path $Staging "README.offline.md"), $content, [System.Text.UTF8Encoding]::new($false))

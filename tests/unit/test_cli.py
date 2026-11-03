@@ -201,7 +201,7 @@ class CliTests(unittest.TestCase):
             ),
             ("browser-preflight",): (
                 "usage: paper-fetch browser-preflight",
-                "--provider {wiley,science,pnas,ieee,ams,mdpi",
+                "--provider {elsevier,wiley,science,pnas,ieee,ams,mdpi",
                 "default: all browser-backed providers",
                 "save provider storage-state JSON on success",
             ),
@@ -485,7 +485,7 @@ class CliTests(unittest.TestCase):
             self.assertIn("Wiley storage state:", rendered)
             self.assertIn("Wiley profile dir:", rendered)
             self.assertIn(
-                "Persistent browser state is optional; fetches still run without it.",
+                "Wiley native profile verified: True",
                 rendered,
             )
             authenticate.assert_called_once()

@@ -22,11 +22,13 @@ class BrowserRuntimeConfig:
     storage_state_path: Path | None = None
     persist_storage_state: bool = True
     capability_storage_state_path: Path | None = None
+    backend: str = "camoufox"
+    chrome_binary_path: str | None = None
 
 
 @dataclass(frozen=True)
 class BrowserRuntimeSession:
-    """A fresh selected-backend browser context and its owning manager, if any."""
+    """A persistent browser context and its local owner, or None when borrowed."""
 
     backend: str
     context: Any

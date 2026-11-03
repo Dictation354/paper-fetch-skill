@@ -38,7 +38,6 @@ from .schema import (
 from .sections import (
     BODY_SECTION_EXCLUDED_KINDS,
     RETAINED_NON_BODY_SECTION_KINDS,
-    abstract_sections,
     first_abstract_text,
     renderable_body_sections,
     section_priority,
@@ -217,7 +216,13 @@ def _build_markdown_render_plan(
         asset_profile=asset_profile,
     )
     body_sections = tuple(renderable_body_sections(article.sections))
-    rendered_abstract_sections = tuple(abstract_sections(article.sections))
+    # Explicit abstract sections can consist entirely of a graphical abstract.
+    # Text-only filtering belongs to metadata/metrics, not document rendering.
+    rendered_abstract_sections = tuple(
+        section
+        for section in article.sections
+        if normalize_text(section.kind).lower() == "abstract" and section.text.strip()
+    )
     lead_sections, remaining_body_sections = split_leading_abstract_context_sections(
         body_sections
     )

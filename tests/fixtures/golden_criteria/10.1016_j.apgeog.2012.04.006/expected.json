@@ -1,22 +1,22 @@
 {
   "counts": {
+    "sections": 10,
     "abstract_sections": 2,
     "body_sections": 8,
     "figures": 1,
-    "references": 79,
-    "sections": 10,
-    "tables": 2
+    "tables": 2,
+    "references": 79
   },
   "expected_content_kind": "fulltext",
   "has": {
-    "abstract": true,
+    "title": true,
     "authors": true,
+    "abstract": true,
     "body": true,
-    "code_availability": false,
-    "data_availability": false,
     "figures": true,
     "references": true,
-    "title": true
+    "data_availability": false,
+    "code_availability": false
   },
   "source_review": {
     "sample_id": "10.1016_j.apgeog.2012.04.006",

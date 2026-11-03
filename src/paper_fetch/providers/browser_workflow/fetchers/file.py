@@ -160,9 +160,7 @@ class _ThreadLocalSharedBrowserFileDocumentFetcher(_ThreadLocalSharedDocumentFet
         use_runtime_shared_browser: bool = True,
         browser_options: BrowserDocumentFetcherOptions | None = None,
     ) -> None:
-        requires_caller_thread = (
-            runtime_context is not None and use_runtime_shared_browser
-        )
+        requires_caller_thread = True
         super().__init__(
             log_event="browser_workflow_file_fetcher_thread_created",
             requires_caller_thread=requires_caller_thread,

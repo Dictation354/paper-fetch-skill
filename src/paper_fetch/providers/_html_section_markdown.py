@@ -10,6 +10,7 @@ import re
 from copy import deepcopy
 from urllib.parse import urljoin
 from typing import Any
+from collections.abc import Callable
 
 from ..common_patterns import HEADING_TAG_PATTERN, INLINE_WHITESPACE_PATTERN
 from ..extraction.html.inline import (
@@ -143,6 +144,7 @@ def render_section_markdown(
     force_heading: str | None = None,
     section_content_selectors: tuple[str, ...] = ("div.c-article-section__content",),
     preserve_heading_levels: bool = False,
+    render_table_cell: Callable[[Any], str] | None = None,
 ) -> None:
     heading = force_heading or extract_section_title(section)
     content_root = _select_first(section, section_content_selectors) or section
@@ -154,6 +156,7 @@ def render_section_markdown(
         skip_first_heading=heading or None,
         section_content_selectors=section_content_selectors,
         preserve_heading_levels=preserve_heading_levels,
+        render_table_cell=render_table_cell,
     )
     if not rendered_content:
         return
@@ -177,6 +180,7 @@ def render_container_markdown(
     skip_first_heading: str | None = None,
     section_content_selectors: tuple[str, ...] = ("div.c-article-section__content",),
     preserve_heading_levels: bool = False,
+    render_table_cell: Callable[[Any], str] | None = None,
 ) -> None:
     if node is None:
         return
@@ -261,6 +265,7 @@ def render_container_markdown(
                 level=level,
                 section_content_selectors=section_content_selectors,
                 preserve_heading_levels=preserve_heading_levels,
+                render_table_cell=render_table_cell,
             )
             continue
         if _is_div_section_container(child):
@@ -270,6 +275,7 @@ def render_container_markdown(
                 level=level,
                 section_content_selectors=section_content_selectors,
                 preserve_heading_levels=preserve_heading_levels,
+                render_table_cell=render_table_cell,
             )
             continue
         if child.name and HEADING_TAG_PATTERN.match(child.name):
@@ -289,7 +295,13 @@ def render_container_markdown(
             and child.find(["ul", "ol", "table", "div", "p", "figure", "section"])
             is not None
         ):
-            render_container_markdown(child, lines, level=level)
+            render_container_markdown(
+                child,
+                lines,
+                level=level,
+                preserve_heading_levels=preserve_heading_levels,
+                render_table_cell=render_table_cell,
+            )
             continue
         if child.name in {"p", "blockquote"}:
             text = render_clean_text_from_html(child, collapse_prose_line_breaks=True)
@@ -305,7 +317,14 @@ def render_container_markdown(
                 lines.extend([fence, text, fence, ""])
             continue
         if child.name in {"ul", "ol"} or child.get("role") == "list":
-            lines.extend(_render_html_list(child, level=level))
+            lines.extend(
+                _render_html_list(
+                    child,
+                    level=level,
+                    render_table_cell=render_table_cell,
+                    preserve_heading_levels=preserve_heading_levels,
+                )
+            )
             continue
         if _is_figure_container(child):
             render_figure_markdown(child, lines)
@@ -315,12 +334,36 @@ def render_container_markdown(
         if child.name == "table":
             from ..extraction.html.tables import render_table_markdown
 
+            preserved_breaks: dict[str, str] = {}
+            cell_renderer = render_table_cell or render_clean_text_from_html
+
+            def cell_text(
+                cell,
+                preserved_breaks=preserved_breaks,
+                table_node=child,
+                cell_renderer=cell_renderer,
+            ):
+                value = cell_renderer(cell)
+
+                def preserve(match):
+                    token = f"PAPERFETCHCELLBREAK{len(preserved_breaks)}TOKEN"
+                    while token in table_node.get_text():
+                        token += "X"
+                    preserved_breaks[token] = match[0]
+                    return token
+
+                return re.sub(r"<br\s*/?>", preserve, value, flags=re.I)
+
             text = render_table_markdown(
                 child,
                 label="",
                 caption="",
-                render_inline_text=render_clean_text_from_html,
+                render_inline_text=cell_text
+                if render_table_cell
+                else render_clean_text_from_html,
             )
+            for token, value in preserved_breaks.items():
+                text = text.replace(token, value)
             if text:
                 lines.extend([text, ""])
             continue
@@ -332,6 +375,7 @@ def render_container_markdown(
                 skip_first_heading=skip_first_heading,
                 section_content_selectors=section_content_selectors,
                 preserve_heading_levels=preserve_heading_levels,
+                render_table_cell=render_table_cell,
             )
             continue
         if (
@@ -343,6 +387,7 @@ def render_container_markdown(
                 lines,
                 level=level,
                 preserve_heading_levels=preserve_heading_levels,
+                render_table_cell=render_table_cell,
             )
             continue
         text = render_clean_text_from_html(child)
@@ -351,7 +396,13 @@ def render_container_markdown(
     flush_inline()
 
 
-def _render_html_list(node: Tag, *, level: int) -> list[str]:
+def _render_html_list(
+    node: Tag,
+    *,
+    level: int,
+    render_table_cell: Callable[[Any], str] | None = None,
+    preserve_heading_levels: bool = False,
+) -> list[str]:
     lines = []
     try:
         number = int(node.get("start", "1"))
@@ -369,7 +420,18 @@ def _render_html_list(node: Tag, *, level: int) -> list[str]:
         except ValueError:
             number = 1
         item = deepcopy(item)
-        if "label-provided" in node.get("class", []):
+        list_label = item.select_one(":scope > .list-label")
+        explicit_source_label = list_label is not None
+        if list_label is not None:
+            label = list_label.get_text("", strip=True)
+            item["data-list-item-label"] = (
+                "" if re.fullmatch(r"[•◦▪▫‣⁃∙●○◾◽◼□■–—-]", label) else label
+            )
+            list_label.decompose()
+            content = item.select_one(":scope > .list-content")
+            if content is not None:
+                content.unwrap()
+        if not explicit_source_label and "label-provided" in node.get("class", []):
             supplied = item.find("span", recursive=False)
             if supplied is not None:
                 item["data-list-item-label"] = supplied.get_text(strip=True)
@@ -398,9 +460,17 @@ def _render_html_list(node: Tag, *, level: int) -> list[str]:
         if item.get("data-paper-fetch-markdown") is not None:
             blocks.append(item.get_text("\n\n", strip=False))
         else:
-            render_container_markdown(item, blocks, level=level)
+            render_container_markdown(
+                item,
+                blocks,
+                level=level,
+                render_table_cell=render_table_cell,
+                preserve_heading_levels=preserve_heading_levels,
+            )
         while blocks and not blocks[-1]:
             blocks.pop()
+        while blocks and not blocks[0].strip():
+            blocks.pop(0)
         if not blocks:
             continue
         explicit = str(item.get("data-list-item-label") or "")
@@ -414,13 +484,19 @@ def _render_html_list(node: Tag, *, level: int) -> list[str]:
         blocks = [
             line for block in blocks for line in (block.splitlines() if block else [""])
         ]
+        while blocks and not blocks[0].strip():
+            blocks.pop(0)
+        if not blocks:
+            continue
         first, *rest = blocks
         first = (
             ORDERED_LIST_PREFIX_PATTERN.sub("", first)
-            if ordered
+            if ordered and not explicit
             else UNORDERED_LIST_PREFIX_PATTERN.sub("", first)
         )
-        if explicit and not re.fullmatch(r"\d+[.)]?", explicit):
+        if explicit and (
+            explicit_source_label or not re.fullmatch(r"\d+[.)]?", explicit)
+        ):
             first = explicit + " " + first
         lines.append(f"{marker} {first}")
         indent = " " * (len(marker) + 1)

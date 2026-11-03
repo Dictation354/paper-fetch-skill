@@ -145,8 +145,13 @@ def _copy_image_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
 
 
 class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
-    # _new_browser_context opens the existing Camoufox runtime exclusively.
-    browser_backend = "camoufox"
+    @property
+    def browser_backend(self):
+        return (
+            self._browser_config.backend
+            if self._browser_config is not None
+            else "camoufox"
+        )
 
     def __init__(
         self,
@@ -210,7 +215,7 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
                     require_target_match=bool(
                         self._browser_config is not None
                         and (
-                            self._browser_config.provider == "pnas"
+                            self._browser_config.provider in {"pnas", "elsevier"}
                             or (
                                 self._browser_config.provider == "wiley"
                                 and _asset.get("kind") == "figure"
@@ -887,9 +892,10 @@ class _ThreadLocalSharedBrowserImageDocumentFetcher(_ThreadLocalSharedDocumentFe
         use_runtime_shared_browser: bool = True,
         browser_options: BrowserDocumentFetcherOptions | None = None,
     ) -> None:
-        requires_caller_thread = (
-            runtime_context is not None and use_runtime_shared_browser
+        self._browser_config = (
+            browser_options.runtime_config if browser_options is not None else None
         )
+        requires_caller_thread = True
         super().__init__(
             log_event="browser_workflow_image_fetcher_thread_created",
             requires_caller_thread=requires_caller_thread,

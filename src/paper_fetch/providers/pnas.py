@@ -105,6 +105,56 @@ class PnasClient(browser_workflow.BrowserWorkflowClient):
     name = PNAS_BROWSER_PROFILE.name
     profile = PNAS_BROWSER_PROFILE
 
+    def download_related_assets(
+        self,
+        doi,
+        metadata,
+        raw_payload,
+        output_dir,
+        *,
+        asset_profile="all",
+        context=None,
+    ):
+        from .browser_runtime.selection import selected_backend
+
+        policy = (
+            "browser_first"
+            if selected_backend(self.env, provider=self.name) == "flaresolverr"
+            else None
+        )
+        return self._download_browser_backed_related_assets(
+            doi,
+            metadata,
+            raw_payload,
+            output_dir,
+            asset_profile=asset_profile,
+            context=context,
+            body_fetch_policy=policy,
+        )
+
+    def _browser_asset_file_fetcher(self, context, **request):
+        config = request.get("browser_config")
+        if config is None or config.backend != "flaresolverr":
+            return super()._browser_asset_file_fetcher(context, **request)
+        if not request["attempt_supplementary_assets"]:
+            return None
+        from .browser_workflow.fetchers.context import BrowserDocumentFetcherOptions
+
+        # Chrome's PNAS download control does not reliably emit a download event
+        # over CDP. Fetch the already discovered file in the same cookie context.
+        return self.deps._build_shared_browser_file_fetcher(
+            browser_context_seed_getter=request["browser_context_seed_getter"],
+            seed_urls_getter=request["seed_urls_getter"],
+            browser_user_agent=request["browser_user_agent"],
+            headless=request["headless"],
+            runtime_context=context,
+            use_runtime_shared_browser=True,
+            thread_local=True,
+            browser_options=BrowserDocumentFetcherOptions(
+                runtime_config=config, file_fetch_mode="context_request"
+            ),
+        )
+
     def html_candidates(self, doi: str, metadata) -> list[str]:
         del metadata
         normalized_doi = normalize_doi(doi)

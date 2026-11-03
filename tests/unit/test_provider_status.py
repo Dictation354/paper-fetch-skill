@@ -41,6 +41,7 @@ class DummyTransport:
 
 class ProviderStatusTests(unittest.TestCase):
     def _browser_client(self, provider: str, env: dict[str, str]):
+        env = {**env, "PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox"}
         if provider == "acs":
             return AcsClient(DummyTransport(), env)
         if provider == "aip":
@@ -69,21 +70,20 @@ class ProviderStatusTests(unittest.TestCase):
         self.assertEqual(result.status, "not_configured")
         self.assertFalse(result.available)
         self.assertEqual(result.missing_env, ["ELSEVIER_API_KEY"])
-        self.assertEqual(len(result.checks), 1)
-        self.assertEqual(result.checks[0].name, "fulltext_api")
-        self.assertEqual(result.checks[0].status, "not_configured")
+        checks = {check.name: check for check in result.checks}
+        self.assertEqual(checks["fulltext_api"].status, "not_configured")
+        self.assertEqual(checks["runtime_env"].status, "not_configured")
 
-    def test_elsevier_status_is_ready_when_api_is_configured(self) -> None:
+    def test_elsevier_api_is_available_when_browser_is_not_configured(self) -> None:
         result = ElsevierClient(
             DummyTransport(), {"ELSEVIER_API_KEY": "secret"}
         ).probe_status()
-        self.assertEqual(result.status, "ready")
+        self.assertEqual(result.status, "partial")
         self.assertTrue(result.available)
         self.assertEqual(result.missing_env, [])
-        self.assertEqual(len(result.checks), 1)
-        self.assertEqual(result.checks[0].name, "fulltext_api")
-        self.assertEqual(result.checks[0].status, "ok")
-        self.assertEqual(result.checks[0].details, {})
+        checks = {check.name: check for check in result.checks}
+        self.assertEqual(checks["fulltext_api"].status, "ok")
+        self.assertEqual(checks["runtime_env"].status, "not_configured")
 
     def test_springer_direct_html_route_is_ready_without_env(self) -> None:
         result = SpringerClient(DummyTransport(), {}).probe_status()

@@ -8,11 +8,21 @@ from collections.abc import Mapping
 from .. import _playwright_browser
 from ..base import ProviderStatusResult
 from .backends.camoufox import DEFAULT_CAMOUFOX_BACKEND
+from .selection import selected_backend
 from .types import (
     BrowserFetchedHtml,
     BrowserRuntimeConfig,
     BrowserWarmResult,
 )
+
+
+def _backend(name: str):
+    if name == "flaresolverr":
+        from .backends.flaresolverr import DEFAULT_FLARESOLVERR_BACKEND
+
+        return DEFAULT_FLARESOLVERR_BACKEND
+    return DEFAULT_CAMOUFOX_BACKEND
+
 
 DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS = (
     _playwright_browser.DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS
@@ -32,7 +42,7 @@ def load_runtime_config(
     doi: str,
     require_storage_state: bool = False,
 ) -> BrowserRuntimeConfig:
-    return DEFAULT_CAMOUFOX_BACKEND.load_runtime_config(
+    return _backend(selected_backend(env, provider=provider)).load_runtime_config(
         env,
         provider=provider,
         doi=doi,
@@ -41,7 +51,7 @@ def load_runtime_config(
 
 
 def ensure_runtime_ready(config: BrowserRuntimeConfig) -> None:
-    DEFAULT_CAMOUFOX_BACKEND.ensure_runtime_ready(config)
+    _backend(config.backend).ensure_runtime_ready(config)
 
 
 def probe_runtime_status(
@@ -51,7 +61,7 @@ def probe_runtime_status(
     doi: str = "probe://browser/status",
     deep: bool = False,
 ) -> ProviderStatusResult:
-    return DEFAULT_CAMOUFOX_BACKEND.probe_runtime_status(
+    return _backend(selected_backend(env, provider=provider)).probe_runtime_status(
         env,
         provider=provider,
         doi=doi,
@@ -66,7 +76,7 @@ def fetch_html_with_browser(
     config: BrowserRuntimeConfig,
     **kwargs: Any,
 ) -> BrowserFetchedHtml:
-    return DEFAULT_CAMOUFOX_BACKEND.fetch_html(
+    return _backend(config.backend).fetch_html(
         candidate_urls,
         publisher=publisher,
         config=config,
@@ -86,7 +96,7 @@ def warm_browser_context(
     runtime_context: Any | None = None,
     lightweight: bool = False,
 ) -> BrowserWarmResult:
-    return DEFAULT_CAMOUFOX_BACKEND.warm_context(
+    return _backend(config.backend).warm_context(
         candidate_urls,
         publisher=publisher,
         config=config,
@@ -97,4 +107,4 @@ def warm_browser_context(
 
 
 def storage_state_path(config: BrowserRuntimeConfig):
-    return DEFAULT_CAMOUFOX_BACKEND.storage_state_path(config)
+    return _backend(config.backend).storage_state_path(config)

@@ -192,6 +192,15 @@ def browser_workflow_article_from_payload(
                     )
                     content = raw_payload.content
 
+    # Elsevier supplies abstracts separately from the same structured extraction.
+    # Keep their nested headings inside abstract sections, outside body parsing.
+    if client.name == "elsevier" and content is not None and "html" in content_type:
+        structured_extraction = content.diagnostics.get("extraction")
+        if isinstance(structured_extraction, Mapping) and structured_extraction.get(
+            "body_markdown"
+        ):
+            markdown_text = str(structured_extraction["body_markdown"])
+
     if not markdown_text:
         warnings.append(f"{client.name} retrieval did not produce usable markdown.")
         return metadata_only_article(

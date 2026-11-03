@@ -109,7 +109,7 @@ def _html_assets(client, html_text, source_url, context):
                 )
                 if not _springer_asset_is_peer_review(asset.get("heading", ""))
             ]
-    elif isinstance(client, BrowserWorkflowClient):
+    elif isinstance(client, BrowserWorkflowClient) and client.name != "elsevier":
         from .browser_workflow.assets import _cached_browser_workflow_assets
         from ..extraction.html.signals import HtmlExtractionFailure
 
@@ -166,14 +166,6 @@ def _fetch_browser_index(client, doi, metadata, context, candidates=None):
         deps: Any = client.deps
         profile = client.require_profile()
         runtime = deps.load_runtime_config(client.env, provider=client.name, doi=doi)
-        if not profile.persistent_storage_state:
-            runtime = replace(
-                runtime,
-                profile_dir=None,
-                user_data_dir=None,
-                storage_state_path=None,
-                persist_storage_state=False,
-            )
         candidates = client.html_candidates(doi, metadata)
         options = BrowserHtmlFetchOptions(
             supplementary_index=True,
@@ -497,6 +489,10 @@ def fetch_provider_supplementary(
     """Return materials and index provenance; never construct an ArticleModel."""
     from .browser_workflow.client import BrowserWorkflowClient
 
+    # Elsevier's independent material index keeps its API/XML contract.
+    browser_index_client = (
+        isinstance(client, BrowserWorkflowClient) and client.name != "elsevier"
+    )
     supported = {
         "arxiv",
         "springer",
@@ -506,7 +502,7 @@ def fetch_provider_supplementary(
         "copernicus",
         "elsevier",
     }
-    if not isinstance(client, BrowserWorkflowClient) and client.name not in supported:
+    if not browser_index_client and client.name not in supported:
         raise ProviderFailure(
             NOT_SUPPORTED, f"{client.name} does not support supplementary retrieval."
         )
@@ -544,7 +540,7 @@ def fetch_provider_supplementary(
         try:
             raw = (
                 _browser_index(client, doi, metadata, context)
-                if isinstance(client, BrowserWorkflowClient)
+                if browser_index_client
                 else None
             )
             if raw is None and client.name in {"plos", "frontiers", "elsevier"}:
@@ -593,8 +589,7 @@ def fetch_provider_supplementary(
             route="supplementary",
             representation=raw.content.route_kind,
             transport="browser"
-            if isinstance(client, BrowserWorkflowClient)
-            or raw.content.browser_context_seed
+            if browser_index_client or raw.content.browser_context_seed
             else "http",
         )
     if output_dir is None:
@@ -610,7 +605,7 @@ def fetch_provider_supplementary(
     if not assets:
         return result, acquisition
     context.raise_if_cancelled()
-    if isinstance(client, BrowserWorkflowClient):
+    if browser_index_client:
         assert raw is not None
         browser_assets: list[Mapping[str, Any]] = list(assets)
         downloaded = client._download_browser_backed_related_assets(

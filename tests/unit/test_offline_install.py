@@ -126,9 +126,16 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("install-helper.log", script)
         self.assertIn("[UninstallDelete]", script)
         self.assertIn('Type: files; Name: "{app}\\install-helper.log"', script)
+        self.assertIn(
+            'Type: files; Name: "{app}\\flaresolverr-setup-results.txt"', script
+        )
         self.assertIn('-LogPath "', script)
         self.assertIn('" -Action Install', script)
         self.assertIn("RestoreOfflineEnv;\n    RunPostInstallHelper;", script)
+        self.assertIn("RunPostInstallHelper;\n    PrepareFlareSolverr;", script)
+        self.assertIn("--prepare-flaresolverr --non-interactive --result", script)
+        self.assertIn("flaresolverr-setup-results.txt", script)
+        self.assertNotIn("CheckSystemChrome", script)
         self.assertNotIn(
             "Paper Fetch Skill post-install helper failed with exit code", script
         )

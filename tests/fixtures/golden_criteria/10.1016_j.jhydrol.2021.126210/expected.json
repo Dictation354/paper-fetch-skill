@@ -1,22 +1,22 @@
 {
   "counts": {
+    "sections": 20,
     "abstract_sections": 1,
-    "body_sections": 17,
+    "body_sections": 19,
     "figures": 7,
-    "references": 59,
-    "sections": 19,
-    "tables": 1
+    "tables": 1,
+    "references": 59
   },
   "expected_content_kind": "fulltext",
   "has": {
-    "abstract": true,
+    "title": true,
     "authors": true,
+    "abstract": true,
     "body": true,
-    "code_availability": false,
-    "data_availability": false,
     "figures": true,
     "references": true,
-    "title": true
+    "data_availability": false,
+    "code_availability": false
   },
   "source_review": {
     "sample_id": "10.1016_j.jhydrol.2021.126210",

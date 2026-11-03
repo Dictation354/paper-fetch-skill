@@ -1,0 +1,32 @@
+{
+  "requested_url": "https://www.sciencedirect.com/science/article/pii/S1575181318302614",
+  "final_url": "https://www.sciencedirect.com/science/article/pii/S1575181318302614",
+  "title": "Simulación de la cesárea perimortem, más allá del «saber qué» - ScienceDirect",
+  "responses": [
+    {
+      "url": "https://www.sciencedirect.com/",
+      "status": 200
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S1575181318302614",
+      "status": 307
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S1575181318302614",
+      "status": 403
+    },
+    {
+      "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/92wyg/0x4AAAAAAAAjq6WYeRDKmebM/light/fbE/new/normal?lang=auto",
+      "status": 200
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S1575181318302614",
+      "status": 200
+    }
+  ],
+  "sha256": "d90192821feec49fa10d767b475f32781eaae353e9350f566c8f6d07ac1c862f",
+  "captured_at": "2026-11-03T02:45:44.056014+00:00",
+  "preparation": {
+    "mathjax_original_mathml": 0
+  }
+}

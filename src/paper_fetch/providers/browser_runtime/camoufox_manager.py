@@ -130,7 +130,7 @@ class CamoufoxBrowserManager:
 
 
 class CamoufoxPersistentContextManager:
-    """Own one headed persistent Camoufox context for interactive auth."""
+    """Own one thread-affine native persistent Camoufox context."""
 
     def __init__(
         self,

@@ -1,6 +1,8 @@
-"""Article entitlement stops requests, with local degradation and evidence."""
+"""Captured article gates and route-scoped API entitlement with local fallback."""
 
 import pytest
+from dataclasses import replace
+from types import SimpleNamespace
 from paper_fetch.providers.base import (
     ProviderFailure,
 )
@@ -47,9 +49,10 @@ def test_real_subscription_pages_confirm_same_article_and_preserve_abstract(doi)
     assert diagnostics["received_metadata"]["abstract"]
 
 
-def test_real_official_api_entitlement_stops_xml_pdf_pii_and_abstract_requests():
+def test_real_official_api_entitlement_is_route_scoped_and_preserves_abstract():
     from paper_fetch.providers.elsevier import ElsevierClient
     from tests.golden_criteria import golden_criteria_asset
+    from tests.support.reviewed_block_provider_paths import _fetch_through_service
 
     doi = "10.1016/0034-4257(94)90046-9"
     body = golden_criteria_asset(
@@ -57,17 +60,30 @@ def test_real_official_api_entitlement_stops_xml_pdf_pii_and_abstract_requests()
     ).read_bytes()
     transport = RecordingTransport({})
     client = ElsevierClient(transport, {"ELSEVIER_API_KEY": "test"})
+    client.deps = replace(
+        client.deps,
+        bootstrap_browser_workflow=lambda *args, **kwargs: SimpleNamespace(
+            html_payload=None,
+            runtime=None,
+            runtime_failure=ProviderFailure("not_supported", "API-only source replay"),
+        ),
+    )
     url = client._official_article_url(doi)
     transport.responses[("GET", url)] = http_response(url, body, "text/xml")
-    result = client.fetch_result(
-        doi,
+    result = _fetch_through_service(
+        client,
+        SimpleNamespace(doi=doi, provider="elsevier", source_url=url),
         {"doi": doi, "pii": "S0034425794000469", "abstract": ABSTRACT},
-        None,
         asset_profile="all",
     )
-    assert [call["url"] for call in transport.calls] == [url]
+    assert [call["url"] for call in transport.calls] == [url, url]
+    assert [call["headers"]["Accept"] for call in transport.calls] == [
+        "text/xml",
+        "application/pdf",
+    ]
     assert result.article.metadata.abstract == ABSTRACT
     assert result.article.quality.content_kind == "abstract_only"
+    assert any("not entitled" in warning for warning in result.article.quality.warnings)
 
 
 @pytest.mark.parametrize("provider", ["springer", "oxfordacademic", "ieee"])

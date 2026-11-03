@@ -1,0 +1,24 @@
+{
+  "requested_url": "https://www.sciencedirect.com/science/article/pii/S016819232400090X",
+  "final_url": "https://www.sciencedirect.com/science/article/pii/S016819232400090X",
+  "title": "Optimal representation of spring phenology on photosynthetic productivity across the northern hemisphere forests - ScienceDirect",
+  "responses": [
+    {
+      "url": "https://www.sciencedirect.com/",
+      "status": 200
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S016819232400090X",
+      "status": 307
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S016819232400090X",
+      "status": 200
+    }
+  ],
+  "sha256": "47dac907fe2ffe395691995edda842a4b94adca7858ea88d104c2148f5d0f17f",
+  "captured_at": "2026-11-03T02:44:21.083245+00:00",
+  "preparation": {
+    "mathjax_original_mathml": 29
+  }
+}

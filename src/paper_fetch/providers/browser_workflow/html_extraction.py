@@ -726,7 +726,7 @@ def _fetch_browser_html_payload(
                 doi=normalize_text(str(metadata.get("doi") or "")) or None,
                 target_url=html_candidates[0] if html_candidates else None,
                 final_url=html_result.final_url,
-                backend="camoufox",
+                backend=runtime.backend,
                 response_status=html_result.response_status,
                 title=html_result.title,
                 summary=summarize_html(html_result.html),
@@ -784,9 +784,9 @@ def _fetch_browser_html_payload(
         context=context,
     )
     fetcher_attr = getattr(html_fetcher, "paper_fetch_html_fetcher_name", None)
-    fetcher_name = "camoufox"
+    fetcher_name = runtime.backend
     if isinstance(fetcher_attr, str) and normalize_text(fetcher_attr).endswith("_fast"):
-        fetcher_name = "camoufox_fast"
+        fetcher_name = f"{runtime.backend}_fast"
     payload = _browser_workflow_html_payload(
         client,
         html_result,

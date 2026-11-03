@@ -119,7 +119,7 @@ def source_authors(fixture, soup):
         return list(dict.fromkeys(names)), '.contributors [property="author"]'
     if fixture.raw_path.suffix == ".xml":
         selector = (
-            "author-group author"
+            "article > head > author-group author"
             if fixture.provider == "elsevier"
             else 'article-meta contrib-group contrib[contrib-type="author"]'
         )
@@ -295,6 +295,7 @@ def numeric_signature(value):
     """Bibliographic numeric values and signs, independently of word matching."""
     from tests.support.scientific_content import without_latex_spacing
 
+    value = re.sub(r'<a id="elsevier-[^"]+"></a>', "", value)
     tokens = _INLINE_MARKDOWN.parseInline(value)[0].children or []
     value = "".join(
         t.content for t in tokens if t.type in {"text", "code_inline", "html_inline"}
@@ -677,6 +678,7 @@ def comparable_cell(value):
 
     value = re.sub(r"\$([^$]+)\$", protect_math, value)
     value = value.replace("_", "SCRIPTSUBTOKEN")
+    value = re.sub(r'<a id="elsevier-[^"]+"></a>', "", value)
     tokens = _INLINE_MARKDOWN.parseInline(value)[0].children or []
     value = "".join(
         token.content

@@ -136,7 +136,7 @@ Options:
   --no-user-config        Do not touch the platform user config. This is the default.
   --reuse-env-file <path> Use an existing offline.env without modifying it.
   --skip-smoke            Skip local command smoke checks after installation.
-  --non-interactive       Skip optional configuration; never download or elevate.
+  --non-interactive       Skip optional configuration; prepare FlareSolverr without system installs or elevation.
   --uninstall             Remove user-level shell, skill, and MCP integration without deleting the install directory.
   --purge                 Remove user-level integration and delete the install directory.
   -h, --help              Show this help.
@@ -1430,6 +1430,19 @@ run_smoke_checks() {
   env "${env_args[@]}" "$(mcp_python_bin)" -c 'from paper_fetch.mcp.fetch_tool import provider_status_payload; payload = provider_status_payload(); assert "providers" in payload'
 }
 
+prepare_flaresolverr() {
+  [ "$HOST_PLATFORM" = "linux" ] && [ "$(uname -m)" = "x86_64" ] || return 0
+  local args=(--install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-flaresolverr
+    --result "$INSTALL_ROOT/flaresolverr-setup-results.txt")
+  if [ "$NON_INTERACTIVE" = "1" ]; then args+=(--non-interactive); fi
+  if [ "$REUSE_ENV_FILE" = "1" ]; then args+=(--reuse-env-file); fi
+  log "Core installation complete; preparing FlareSolverr (may use the network)"
+  trap ':' INT
+  "$(mcp_python_bin)" -m paper_fetch.offline_setup "${args[@]}" \
+    || warn "FlareSolverr is not ready; core installation is preserved. Rerun this installer to retry."
+  trap - INT
+}
+
 run_optional_configuration() {
   if [ "$NON_INTERACTIVE" = "1" ] || [ ! -t 0 ] || [ ! -t 1 ]; then
     log "Optional configuration skipped (non-interactive); no downloads or elevation."
@@ -1602,6 +1615,7 @@ main() {
   register_claude_mcp
   register_antigravity_mcp
 
+  prepare_flaresolverr
   run_optional_configuration
 
   echo
@@ -1609,11 +1623,18 @@ main() {
   echo "Shell startup file updated: $SHELL_STARTUP_TARGET"
   echo "Install directory: $INSTALL_ROOT"
   echo "Open a new shell, or activate the current one with: source $INSTALL_ROOT/activate-offline.sh"
-  echo "Default browser backend: Camoufox (headless: $(browser_headless_value))"
+  if [ "$HOST_PLATFORM" = "linux" ]; then
+    echo "Default browser backend: PNAS FlareSolverr + system Chrome; other publishers Camoufox (headless: $(browser_headless_value))"
+  else
+    echo "Default browser backend: Camoufox (headless: $(browser_headless_value))"
+  fi
   echo "The Camoufox browser binary is not bundled. Optional setup downloads it only with your consent."
   echo "Skipping optional setup does not disable runtime automatic Camoufox preparation."
   echo "Before moving fully offline, run '$INSTALL_ROOT/runtime/paper-fetch-python -m camoufox fetch', then 'paper-fetch browser-preflight'."
-  echo "Browser backend: Camoufox."
+  if [ "$HOST_PLATFORM" = "linux" ] && [ "$(uname -m)" = "x86_64" ]; then
+    echo "FlareSolverr preparation results: $INSTALL_ROOT/flaresolverr-setup-results.txt"
+    echo "Retry: \"$(mcp_python_bin)\" -m paper_fetch.offline_setup --install-root \"$INSTALL_ROOT\" --env-file \"$OFFLINE_ENV_FILE\" --prepare-flaresolverr"
+  fi
   echo "Restart Codex, Claude Code, and the Antigravity CLI so they rescan skills and MCP registration."
   echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to $OFFLINE_ENV_FILE before fetching Elsevier papers."
 }

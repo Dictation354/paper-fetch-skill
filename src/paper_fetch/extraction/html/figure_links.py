@@ -352,6 +352,7 @@ def inject_inline_figure_links(
 
     for block in blocks:
         normalized_block = normalize_text(block)
+        indent = block[: len(block) - len(block.lstrip(" \t"))]
         current_heading_key = _heading_key(block)
         if current_heading_key is not None:
             active_heading_key = current_heading_key
@@ -375,7 +376,8 @@ def inject_inline_figure_links(
                     or "Figure"
                 )
                 injected.append(
-                    render_markdown_image("figure", heading, image_entry["url"])
+                    indent
+                    + render_markdown_image("figure", heading, image_entry["url"])
                 )
             else:
                 injected.append(block)
@@ -385,7 +387,7 @@ def inject_inline_figure_links(
             label = match.group(1).rstrip(".")
             caption_entry = take_entry_for_label(canonical_figure_label(label))
             if caption_entry is not None:
-                image_block = render_markdown_image(
+                image_block = indent + render_markdown_image(
                     "figure", label, caption_entry["url"]
                 )
                 if not injected or normalize_text(injected[-1]) != image_block:

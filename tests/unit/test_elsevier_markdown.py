@@ -267,11 +267,19 @@ class ElsevierMarkdownTests(unittest.TestCase):
         references = elsevier_document.extract_elsevier_references(root)
 
         self.assertEqual(len(references), 3)
-        self.assertTrue(references[0].raw.startswith("1. 2024. Structured title"))
-        self.assertEqual(
-            references[1].raw, "2. Raw fallback reference text for the second citation."
+        self.assertTrue(
+            references[0].raw.startswith(
+                '1. <a id="elsevier-bib1"></a>2024. Structured title'
+            )
         )
-        self.assertEqual(references[2].raw, "3. [Reference text unavailable]")
+        self.assertEqual(
+            references[1].raw,
+            '2. <a id="elsevier-bib2"></a>Raw fallback reference text for the second citation.',
+        )
+        self.assertEqual(
+            references[2].raw,
+            '3. <a id="elsevier-bib3"></a>[Reference text unavailable]',
+        )
 
     def test_article_from_structure_preserves_inline_elsevier_figures(self) -> None:
         xml_body = b"""<?xml version="1.0"?>

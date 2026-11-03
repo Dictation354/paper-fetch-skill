@@ -3,13 +3,13 @@ from __future__ import annotations
 import json
 import os
 import platform
+import time
 from pathlib import Path
 
 import pytest
 
 from paper_fetch.providers.browser_runtime.camoufox_manager import (
     CamoufoxBrowserManager,
-    CamoufoxPersistentContextManager,
 )
 
 
@@ -133,16 +133,58 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
         browser_context.close()
         browser_manager.close()
 
-    persistent_manager = CamoufoxPersistentContextManager(
-        user_data_dir=str(tmp_path / "camoufox-profile"),
+    # The existing native bundle gate also proves the publisher profile owner,
+    # native OS-lock handling and cross-restart state, without JSON replay.
+    from paper_fetch.providers.browser_runtime.profile import PublisherProfileManager
+    from paper_fetch.providers.browser_runtime.types import BrowserRuntimeConfig
+
+    config = BrowserRuntimeConfig(
+        provider="pnas",
+        doi="offline-profile",
+        artifact_dir=tmp_path,
+        user_data_dir=tmp_path / "camoufox-profile",
         headless=True,
+        user_agent=None,
+        persist_storage_state=False,
     )
-    persistent_context = persistent_manager.new_context()
-    try:
-        page = persistent_context.new_page()
-        assert page.url == "about:blank"
-    finally:
-        persistent_manager.close()
+    for attempt in range(2):
+        persistent_manager = PublisherProfileManager(config)
+        persistent_context = persistent_manager.new_context()
+        try:
+            persistent_context.route(
+                "https://www.pnas.org/**",
+                lambda route: route.fulfill(
+                    body="<title>Offline native profile</title>"
+                ),
+            )
+            page = persistent_context.new_page()
+            page.goto("https://www.pnas.org/offline-profile")
+            if attempt == 0:
+                page.evaluate("localStorage.setItem('native-profile', 'persisted')")
+                persistent_context.add_cookies(
+                    [
+                        {
+                            "name": "native-profile",
+                            "value": "persisted",
+                            "domain": "www.pnas.org",
+                            "path": "/",
+                            "expires": time.time() + 3600,
+                        }
+                    ]
+                )
+            else:
+                assert (
+                    page.evaluate("localStorage.getItem('native-profile')")
+                    == "persisted"
+                )
+                assert any(
+                    cookie["name"] == "native-profile"
+                    for cookie in persistent_context.cookies()
+                )
+            page.close()
+        finally:
+            persistent_manager.close()
+    assert not (config.user_data_dir / "storage-state.json").exists()
 
     # The offline wizard reuses this cache and verifies only about:blank, with
     # no launch-time update, addon/fingerprint download or provider state.

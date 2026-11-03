@@ -1075,7 +1075,13 @@
         "acquisition/assets-2026-09-15/b367644c442f922f-http-1.bin": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/assets-2026-09-15/b367644c442f922f-http-1.bin",
         "acquisition/assets-2026-09-15/collection.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/assets-2026-09-15/collection.json",
         "acquisition/assets-2026-09-15/f8036c1f08c82f0c-http-1.bin": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/assets-2026-09-15/f8036c1f08c82f0c-http-1.bin",
-        "acquisition/assets-2026-09-15/replay-receipt.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/assets-2026-09-15/replay-receipt.json"
+        "acquisition/assets-2026-09-15/replay-receipt.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/assets-2026-09-15/replay-receipt.json",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/sciencedirect-browser-2026-11-03T065135Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/sciencedirect-browser-2026-11-03T065135Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/sciencedirect-browser-2026-11-03T065135Z/acceptance.json"
       },
       "fixture_family": "golden",
       "title": "Optimal representation of spring phenology on photosynthetic productivity across the northern hemisphere forests",
@@ -1369,6 +1375,14 @@
           "complete_received_files": 7
         },
         "historical_outcome_before_supplementary_removal": "complete"
+      },
+      "asset_origins": {
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       }
     },
     "10.1016_j.jhydrol.2021.126210": {
@@ -1384,7 +1398,13 @@
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/original.xml",
-        "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/acquisition/provenance.json"
+        "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/acquisition/provenance.json",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/acquisition/sciencedirect-browser-2026-11-03T065135Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/acquisition/sciencedirect-browser-2026-11-03T065135Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2021.126210/acquisition/sciencedirect-browser-2026-11-03T065135Z/acceptance.json"
       },
       "fixture_family": "golden",
       "title": "The interactions between hydrological drought evolution and precipitation-streamflow relationship",
@@ -1396,7 +1416,13 @@
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "real_replay",
-        "acquisition/provenance.json": "real_replay"
+        "acquisition/provenance.json": "real_replay",
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       },
       "source_selection": {
         "sample_id": "10.1016_j.jhydrol.2021.126210",
@@ -1442,7 +1468,10 @@
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/source-completion-2026-09-18/002-http_response_entity.xml",
-        "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/provenance.json"
+        "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/provenance.json",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/sciencedirect-2026-11-03/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/sciencedirect-2026-11-03/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/sciencedirect-2026-11-03/extracted.md"
       },
       "fixture_family": "golden",
       "expected_outcome": "fulltext",
@@ -1452,7 +1481,10 @@
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "real_replay",
-        "acquisition/provenance.json": "real_replay"
+        "acquisition/provenance.json": "real_replay",
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified"
       },
       "source_selection": {
         "sample_id": "10.1016_j.rse.2026.115369",
@@ -6562,14 +6594,26 @@
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/original.xml",
         "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/acquisition/provenance.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/extracted.md",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/acquisition/sciencedirect-browser-2026-11-03T065135Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/acquisition/sciencedirect-browser-2026-11-03T065135Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.110321/acquisition/sciencedirect-browser-2026-11-03T065135Z/acceptance.json"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "real_replay",
         "acquisition/provenance.json": "real_replay",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       },
       "source_selection": {
         "sample_id": "10.1016_j.agrformet.2024.110321",
@@ -6620,14 +6664,26 @@
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/original.xml",
         "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/acquisition/provenance.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/extracted.md",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/acquisition/sciencedirect-browser-2026-11-03T065135Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/acquisition/sciencedirect-browser-2026-11-03T065135Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2023.110326/acquisition/sciencedirect-browser-2026-11-03T065135Z/acceptance.json"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "real_replay",
         "acquisition/provenance.json": "real_replay",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       },
       "source_selection": {
         "sample_id": "10.1016_j.ecolind.2023.110326",
@@ -6686,7 +6742,13 @@
         "acquisition/assets-2026-09-15/5ec4d0d13dc7b0b8-http-1.bin": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/5ec4d0d13dc7b0b8-http-1.bin",
         "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/provenance.json",
         "acquisition/assets-2026-09-15/collection.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/collection.json",
-        "acquisition/assets-2026-09-15/replay-receipt.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/replay-receipt.json"
+        "acquisition/assets-2026-09-15/replay-receipt.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/assets-2026-09-15/replay-receipt.json",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/acceptance.json"
       },
       "expected_outcome": "fulltext",
       "asset_collection": {
@@ -7074,6 +7136,14 @@
           "complete_received_files": 10
         },
         "historical_outcome_before_supplementary_removal": "complete"
+      },
+      "asset_origins": {
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       }
     },
     "10.1016_j.jhydrol.2023.130125": {
@@ -7094,14 +7164,26 @@
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/original.xml",
         "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/acquisition/provenance.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/extracted.md",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/acquisition/sciencedirect-browser-2026-11-03T065135Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/acquisition/sciencedirect-browser-2026-11-03T065135Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/acquisition/sciencedirect-browser-2026-11-03T065135Z/acceptance.json"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "real_replay",
         "acquisition/provenance.json": "real_replay",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       },
       "source_selection": {
         "sample_id": "10.1016_j.jhydrol.2023.130125",
@@ -7152,14 +7234,26 @@
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/acquisition/source-completion-2026-09-18/002-http_response_entity.xml",
         "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/acquisition/provenance.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/extracted.md",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/acquisition/sciencedirect-browser-2026-11-03T065135Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/acquisition/sciencedirect-browser-2026-11-03T065135Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2024.114346/acquisition/sciencedirect-browser-2026-11-03T065135Z/acceptance.json"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "real_replay",
         "acquisition/provenance.json": "real_replay",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       },
       "source_selection": {
         "sample_id": "10.1016_j.rse.2024.114346",
@@ -7210,14 +7304,26 @@
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/original.xml",
-        "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/acquisition/provenance.json"
+        "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/acquisition/provenance.json",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/acquisition/sciencedirect-browser-2026-11-03T065135Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/acquisition/sciencedirect-browser-2026-11-03T065135Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/acquisition/sciencedirect-browser-2026-11-03T065135Z/acceptance.json"
       },
       "expected_outcome": "fulltext",
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "real_replay",
-        "acquisition/provenance.json": "real_replay"
+        "acquisition/provenance.json": "real_replay",
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       },
       "source_selection": {
         "sample_id": "10.1016_j.rse.2025.114648",
@@ -7268,14 +7374,26 @@
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/original.xml",
         "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/provenance.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/extracted.md",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/sciencedirect-browser-2026-11-03T070708Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/sciencedirect-browser-2026-11-03T070708Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/sciencedirect-browser-2026-11-03T070708Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/sciencedirect-browser-2026-11-03T070708Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/sciencedirect-browser-2026-11-03T070708Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/sciencedirect-browser-2026-11-03T070708Z/acceptance.json"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "real_replay",
         "acquisition/provenance.json": "real_replay",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       },
       "source_selection": {
         "sample_id": "10.1016_j.scitotenv.2022.158109",
@@ -7326,14 +7444,20 @@
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/original.xml",
         "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/acquisition/provenance.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/extracted.md",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/acquisition/sciencedirect-2026-11-03/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/acquisition/sciencedirect-2026-11-03/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158499/acquisition/sciencedirect-2026-11-03/extracted.md"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "real_replay",
         "acquisition/provenance.json": "real_replay",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified"
       },
       "source_selection": {
         "sample_id": "10.1016_j.scitotenv.2022.158499",
@@ -18584,13 +18708,25 @@
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/source-completion-2026-09-18/002-http_response_entity.xml",
-        "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/provenance.json"
+        "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/provenance.json",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/sciencedirect-browser-2026-11-03T065135Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/sciencedirect-browser-2026-11-03T065135Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/sciencedirect-browser-2026-11-03T065135Z/acceptance.json"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "real_replay",
-        "acquisition/provenance.json": "real_replay"
+        "acquisition/provenance.json": "real_replay",
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       },
       "source_selection": {
         "sample_id": "10.1016_j.apgeog.2012.04.006",
@@ -18644,13 +18780,25 @@
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/acquisition/source-completion-2026-09-18/001-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/acquisition/source-completion-2026-09-18/002-http_response_entity.xml",
-        "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/acquisition/provenance.json"
+        "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/acquisition/provenance.json",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/acquisition/sciencedirect-browser-2026-11-03T070304Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/acquisition/sciencedirect-browser-2026-11-03T070304Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/acquisition/sciencedirect-browser-2026-11-03T070304Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/acquisition/sciencedirect-browser-2026-11-03T070304Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/acquisition/sciencedirect-browser-2026-11-03T070304Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/acquisition/sciencedirect-browser-2026-11-03T070304Z/acceptance.json"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/002-http_response_entity.xml": "real_replay",
-        "acquisition/provenance.json": "real_replay"
+        "acquisition/provenance.json": "real_replay",
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       },
       "source_selection": {
         "sample_id": "10.1016_j.uclim.2019.100528",
@@ -18711,7 +18859,13 @@
         "acquisition/assets-2026-09-15/78232313ec8e2847-http-1.bin": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/assets-2026-09-15/78232313ec8e2847-http-1.bin",
         "acquisition/assets-2026-09-15/collection.json": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/assets-2026-09-15/collection.json",
         "acquisition/assets-2026-09-15/878a9873a0df2818-http-1.bin": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/assets-2026-09-15/878a9873a0df2818-http-1.bin",
-        "acquisition/assets-2026-09-15/replay-receipt.json": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/assets-2026-09-15/replay-receipt.json"
+        "acquisition/assets-2026-09-15/replay-receipt.json": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/assets-2026-09-15/replay-receipt.json",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/sciencedirect-browser-2026-11-03T065135Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/sciencedirect-browser-2026-11-03T065135Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.envres.2018.12.059/acquisition/sciencedirect-browser-2026-11-03T065135Z/acceptance.json"
       },
       "asset_collection": {
         "provider": "elsevier",
@@ -18932,6 +19086,14 @@
           "complete_received_files": 5
         },
         "historical_outcome_before_supplementary_removal": "complete"
+      },
+      "asset_origins": {
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       }
     },
     "10.1080_15481603.2026.2667034": {
@@ -27343,14 +27505,26 @@
         "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/acquisition/provenance.json",
         "acquisition/provenance-extra-2026-09-17/000-original.xml": "tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/original.xml",
         "expected.json": "tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/extracted.md",
+        "sciencedirect.html": "tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/acquisition/sciencedirect-browser-2026-11-03T065135Z/original.html",
+        "sciencedirect.provenance.json": "tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/acquisition/sciencedirect-browser-2026-11-03T065135Z/provenance.json",
+        "sciencedirect.extracted.md": "tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+        "sciencedirect.article.md": "tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+        "sciencedirect.article.json": "tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.json",
+        "sciencedirect.acceptance.json": "tests/fixtures/golden_criteria/10.1016_j.edumed.2018.09.002/acquisition/sciencedirect-browser-2026-11-03T065135Z/acceptance.json"
       },
       "asset_origins": {
         "acquisition/provenance-extra-2026-09-17/000-original.xml": "real_replay",
         "acquisition/provenance.json": "real_replay",
         "original.xml": "real_replay",
         "expected.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "sciencedirect.html": "real_replay",
+        "sciencedirect.provenance.json": "real_replay",
+        "sciencedirect.extracted.md": "unverified",
+        "sciencedirect.article.md": "unverified",
+        "sciencedirect.article.json": "unverified",
+        "sciencedirect.acceptance.json": "unverified"
       },
       "title": "Simulación de la cesárea perimortem, más allá del «saber qué»",
       "source_selection": {

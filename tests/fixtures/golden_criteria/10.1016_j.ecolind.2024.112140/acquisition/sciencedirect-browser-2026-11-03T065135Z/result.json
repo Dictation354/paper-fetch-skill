@@ -1,0 +1,142 @@
+{
+  "index": 5,
+  "doi": "10.1016/j.ecolind.2024.112140",
+  "title": "The variability in sensitivity of vegetation greenness to climate change across Eurasia",
+  "pii": "S1470160X24005971",
+  "landing_page_url": "https://www.sciencedirect.com/science/article/pii/S1470160X24005971",
+  "sample_id": "10.1016_j.ecolind.2024.112140",
+  "attempt": 1,
+  "route": "browser_html",
+  "directory": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z",
+  "status": "degraded",
+  "has_fulltext": true,
+  "source": "elsevier_html",
+  "markdown_path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+  "extracted_path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+  "outputs": [
+    {
+      "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/original.html",
+      "size": 863970,
+      "sha256": "dc80e6c2696eff13359626a6894107e50dbc02e4fa49cad571491492a48628d9"
+    },
+    {
+      "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
+      "size": 71224,
+      "sha256": "2d532d208e24659517cdb8dfd291693fcde7128a0490d6236abe0a8103000a03"
+    },
+    {
+      "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
+      "size": 71809,
+      "sha256": "9ac92cb65c5f0f4edcaf5e17d3f3d724a52d43e403fe51fa8cb40636c3c1b10c"
+    }
+  ],
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "degraded",
+    "target": "paper",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1016/j.ecolind.2024.112140",
+      "expected_doi": "10.1016/j.ecolind.2024.112140",
+      "title": "The variability in sensitivity of vegetation greenness to climate change across Eurasia",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "requested": true,
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 13181,
+      "confidence": "high",
+      "flags": [],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 0,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": false,
+      "profile": "none",
+      "audited": false,
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "body_discovered": 0,
+      "body_attempted": 0,
+      "body_local": 0,
+      "body_full_size": 0,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": false,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": false,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "not_requested",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "partial",
+      "source": "elsevier_html",
+      "acquisition": {
+        "provider": "elsevier",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "trace_event_count": 0,
+      "fallback_codes": [],
+      "warning_codes": [],
+      "failure_codes": [],
+      "unstructured_warning_count": 0,
+      "acceptance_policy": "provider_html_body",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "elapsed_seconds": 7.29
+}

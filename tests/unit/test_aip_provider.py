@@ -32,7 +32,7 @@ AIP_TABLE_FORMULA_DOI = "10.1063/5.0188905"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_aip_normal_html_load_keeps_transient_seed_without_persisting_state(
+def test_aip_normal_html_load_retains_seed_and_exports_compatible_state(
     tmp_path,
 ) -> None:
     client = AipClient(transport=None, env={})
@@ -116,7 +116,7 @@ def test_aip_normal_html_load_keeps_transient_seed_without_persisting_state(
         assert not browser_call.kwargs.get("disable_media", False)
     assert "browser_context_seed" not in mocked_browser.call_args_list[0].kwargs
     assert mocked_browser.call_args_list[0].args[0][0] == AIP_STRUCTURE_LANDING
-    commit_state.assert_not_called()
+    commit_state.assert_called_once()
     assert not state_path.exists()
     assert raw_payload.content is not None
     assert raw_payload.content.route_kind == "html"
@@ -126,15 +126,12 @@ def test_aip_normal_html_load_keeps_transient_seed_without_persisting_state(
         raw_payload.content.browser_context_seed["browser_cookies"]
         == seed["browser_cookies"]
     )
-    assert raw_payload.content.diagnostics["browser_runtime_trace"][
-        "storage_state_save"
-    ] == {
-        "attempted": False,
-        "staged": False,
-        "saved": False,
-        "path": None,
-        "reason": "provider_runtime_fingerprint_boundary",
-    }
+    assert (
+        raw_payload.content.diagnostics["browser_runtime_trace"]["storage_state_save"][
+            "saved"
+        ]
+        is True
+    )
 
 
 def test_aip_provider_bundle_declares_routing_sources_and_browser_runtime() -> None:
@@ -209,7 +206,7 @@ def test_aip_browser_client_profile_and_author_fallback() -> None:
     assert not client.profile.blocked_resource_types
     assert not client.profile.fast_html_attempt
     assert client.profile.html_readiness_budget_seconds == 90.0
-    assert not client.profile.persistent_storage_state
+    assert client.profile.persistent_storage_state
 
 
 def test_aip_asset_extraction_prefers_largest_official_srcset_rendition() -> None:

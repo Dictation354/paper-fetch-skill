@@ -147,6 +147,31 @@ class AtyponBrowserWorkflowPostprocessTests(unittest.TestCase):
             "![Figure 1](https://www.science.org/images/figure-1.jpg)", rewritten
         )
 
+    def test_figure_url_replacement_keeps_list_image_and_caption_ownership(self):
+        from tests.support.markdown_lists import ancestor, inline_text, markdown_tree
+
+        markdown = "- First step.\n\n  ![Figure 6](remote.png)\n\n  **Figure 6.** Original caption.\n\n- Following step."
+        rewritten = rewrite_inline_figure_links(
+            markdown,
+            figure_assets=[
+                {
+                    "kind": "figure",
+                    "heading": "Figure 6",
+                    "source_url": "remote.png",
+                    "path": "local.png",
+                }
+            ],
+            publisher="elsevier",
+        )
+        tree = markdown_tree(rewritten)
+        items = tree.children[0].children
+        self.assertEqual(len(items), 2)
+        images = [n for n in tree.walk() if n.type == "image"]
+        self.assertEqual(len(images), 1)
+        self.assertEqual(images[0].attrGet("src"), "local.png")
+        self.assertIs(ancestor(images[0], "list_item"), items[0])
+        self.assertIn("Original caption.", inline_text(items[0]))
+
     def test_rewrite_inline_figure_links_treats_fig_caption_as_existing_caption(
         self,
     ) -> None:

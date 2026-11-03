@@ -5,14 +5,20 @@ from __future__ import annotations
 from ._ir import MarkdownList
 
 
-def render_list(lst: MarkdownList) -> list[str]:
+def render_list(lst: MarkdownList, *, markers: list[str] | None = None) -> list[str]:
     lines: list[str] = []
     index = 1
-    for item in lst.items:
+    for item_index, item in enumerate(lst.items):
         text = item.strip()
         if not text:
             continue
-        marker = f"{index}." if lst.ordered else "-"
+        marker = (
+            markers[item_index]
+            if markers is not None
+            else f"{index}."
+            if lst.ordered
+            else "-"
+        )
         first, *continuation = text.splitlines()
         lines.append(f"{marker} {first}")
         indent = " " * (len(marker) + 1)

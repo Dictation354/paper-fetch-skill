@@ -713,6 +713,10 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
 
 ## Elsevier
 
+- HTML 正文外声明根据当前文章容器与 `#body` 的祖先、兄弟关系收集，保留页面顺序，父子节点只选取一次，并排除导航、推荐与阅读助手。双语摘要按外层摘要容器生成 `heading/text/language/order`，子标题保留在对应摘要文本中；最终文章仅组装一次，摘要段落不计为正文。参考文献 DOI 优先来自条目内 DOI 链接，文本回退使用去除工具链接且保留块边界的节点；表格仅按 DOM 类去除辅助提示，保留真实单元格文字。
+- XML 的 `data-availability`、`conflict-of-interest`、`acknowledgment` 从文章 head/body/tail 按来源顺序统一渲染，已遍历子树不重复输出。文章关键词组合并入 metadata；图资产注册表先于摘要渲染建立，图文摘要保持 `section=abstract` 并在摘要内消费，不进入正文图附录或正文图计数。
+- XML 缺失参考文献 DOI 的网络补全只能在全文和身份验收后执行，模型转换保持无网络副作用。优先复用父论文 Crossref 记录，再查询充分书目的条目，最后用现有 Elsevier FlareSolverr 上下文读取同篇网页参考文献；按可靠 reference key 且无书目冲突，或规范化完整题名、首作者、年份与可用卷页一致的唯一匹配填空。原 XML 条目数量、编号、顺序及已有 DOI 不变，补全来源与依据进入 diagnostics/trace。失败或平台不支持保留 XML，使用请求剩余期限，显式取消照常传播。所有结构规则不以具体 DOI、题名、段落或固定节点编号为条件。
+
 - 官方 PDF 的 HTTP 200 不能覆盖授权限制：响应头 `x-els-status` 明确声明 `limited to first page` 时，PDF route 返回 `no_access`，不把同篇首页预览报告为全文；其它 WARNING 或没有该声明的正常 PDF 仍走原有验收。真实输入与回放见 `tests/golden/test_acquired_publisher_inputs.py`。
 
 - Elsevier XML 元素级映射总表另见 [`../references/elsevier_markdown_mapping.md`](../references/elsevier_markdown_mapping.md)；下面只保留当前主干必须维持的用户可见 Markdown 行为约束。
@@ -1302,3 +1306,25 @@ Taylor & Francis 的相邻 `.NLM_disp-formula-image`／`.NLM_disp-formula` 属�
 - 图、表、图注按源对象归属；同一对象的尺寸副本不重复发出，图注内公式不提升为正文插图；不同源对象可合法复用相同 URL。补充入口按解析后的目标去重，下载成功使用持久相对路径，否则保留有效来源链接（包括 JATS `info:doi/` 的 HTTPS DOI 地址）。不把补充 PDF 转换成正文。
 - 同类 availability 最终合为一个对应章节，保留不同原文内容；不以语义相近为由删改作者陈述。补充入口及已呈现资产按结构和资产身份去重，不按作者措辞去重。
 - 上述规则仅适用于 HTML/XML；PDF 仍严格遵守 [PDF 转换边界](#rule-pdf-conversion-boundary)。原文的错误、矛盾、重复措辞和异常数学表达式保留原样。
+
+
+### ScienceDirect HTML 专用解析
+
+XML 作者组排除期刊 `<editors>` / `<title-editors-group>` 下的客座编辑；`edumed.2018.09.002` 的原 XML 与页面作者列表提供对应依据。
+
+Elsevier HTML 由 `_elsevier_html.py` 经 `extract_markdown` 接入；只选正文 `#body`、明确的摘要/关键词与文章 back matter，排除导航、阅读助手和推荐区。文章前置区域的 `.author-highlights`、`.Highlights`、`.highlights` 容器按结构移除；正文同名内容、双语摘要和图文摘要保留，XML 既有文本 Highlights 保留。
+
+提取修订号 `11`：HTML 保留源标题编号与层级，独立编号标签合并时不重复；XML 组合章节直属 `<ce:label>` 与 `<ce:section-title>`，没有源编号时不按位置推算。两路参考文献均按提取顺序展示为 `1.` 至 `N.`，作者年份型源标签作为条目末尾注记；内容、DOI、匹配 key 和原始顺序保留。HTML 提取 Markdown 与 ArticleModel 共用已经编号的 raw citation，年份不充当编号，不重复添加 label。
+
+Elsevier 列表直属 `.list-label` 与 `.list-content` 共同构成列表项首块，显式序号保持原样并与首段同一行，装饰圆点及首部空块不单独输出。多段正文、公式、图与图注、嵌套列表按实际父子关系保留在原列表项内；图片分块和边界规范化保留续块缩进，缩进宽度依实际 Markdown 标记计算，不通过全文空行替换修复。PDF 转换路径不参与这些调整。
+
+MathJax 页面准备读取保存的原始 MathML，将其绑定到对应渲染节点；直接 MathML/TeX 沿用共享路径，不从可见字形猜测公式。无法转换时沿用共享降级记录。图像优先使用页面明确给出的高分辨率链接，图文摘要、正文图和附录图分别记录 scope；补充材料仅从明确 `.e-component` 等附件容器发现，保持 `none/body/all` 语义。API key 不发往 ScienceDirect 或 CDN。PDF 验收和转换边界不变。
+
+配对原文覆盖 manifest 中全部 15 篇 Elsevier golden 样本；原始 DOM 的 SHA-256、响应状态、来源与 MathJax 采集计数见各 `sciencedirect.provenance.json` 映射。使用 `PYTHONPATH=src:. uv run python scripts/refresh_elsevier_baselines.py` 定向重建 15 份 XML 派生 Markdown、17 份 HTML 提取 Markdown 和既有 13 组最终文章/验收输出；保留源文件、资产、采集事实、失败记录和历史 `api-fetch.md`。
+
+
+Elsevier HTML 的 `.display` 按图、表、附件、公式顺序分派，图注内 MathML 不改变图容器的身份。公式只使用源标签；缺少标签时显式设置 `data-no-equation-label`，不从 `eq0010` 等 ID 推导编号。公式图片保持 fallback 及语义损失计数。Elsevier 启用共享章节遍历的可选表格单元格渲染器，正文、章节、列表和嵌套容器中的表格保留 `<br>`（含表头）、上下标、链接及数学；其他 provider 的默认渲染不变。
+
+主标题按 `h1 .title-text`、`h1.title-text`、`h1` 顺序选择，不输出独立英文译题。真实 `div#p数字` 按段落处理，`<u>` 保留同句内容，图注内段落/来源块保持边界。Topics 链接保留原文字；确切的 `Unlabelled Image` 占位说明省略，图片保留。附件保留源文件类型、大小及地址，不重复下载指令。
+
+保留内容使用 `elsevier-` 前缀和源 ID 生成 HTML 锚；章节锚位于标题后的内容中，图表及公式锚随对象保留列表归属。书目导航只复用实际书目 key 与 `ref-id-` 别名，不能按文献位置猜配。内部可选 `ProviderRenderPolicy.finalize_markdown` 仅对 Elsevier 非 PDF 输出启用：最终组装和预算裁剪之后保留有唯一目标的链接，缺失目标退为原文字，清理重复/不完整的生成锚；代码、数学与外部链接不参与处理。两路引用与已有 DOI 补全共用格式函数，已知 DOI 缺少时仅补一次，作者年份注记仍在末尾；纯 XML 转换不增加网络访问。文章级 `footnote` / `article-footnote` 与 HTML 文章脚注在 References 前以 `Article notes` 输出源标签和完整内容；表注留在原表附近。

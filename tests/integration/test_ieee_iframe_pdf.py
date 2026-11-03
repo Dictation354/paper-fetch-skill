@@ -110,6 +110,7 @@ def test_ieee_stamp_captures_subframe_response_without_download(
     ) as browser:
         context = browser.new_context()
         context.route("**/*", route_response)
+        borrowed_page = context.new_page()
         page = context.new_page()
         page.on("download", lambda download: downloads.append(download))
         page.on(
@@ -186,6 +187,7 @@ def test_ieee_stamp_captures_subframe_response_without_download(
                 else "pdf_download_not_triggered"
             )
             assert not list(tmp_path.glob("*.pdf"))
+        assert context.pages == [borrowed_page]
     assert bool(downloads) is (case == "download")
     assert requests[0][0] == landing
     headers = next(headers for url, headers in requests if url == stamp)

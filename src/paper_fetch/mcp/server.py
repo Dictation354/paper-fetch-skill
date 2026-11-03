@@ -411,7 +411,8 @@ def build_server() -> PaperFetchMCPServer:
         description=(
             "Live-check the shared browser HTML path for one provider or all browser "
             "providers. This prepares managed Camoufox before launch, opens publisher "
-            "pages, and may update filtered storage-state; it never runs PDF fallback "
+            "pages, and updates native publisher profiles. save_storage_state controls only "
+            "JSON snapshot export; it never runs PDF fallback "
             "or automatic authentication."
         ),
         annotations=_browser_preflight_annotations(),

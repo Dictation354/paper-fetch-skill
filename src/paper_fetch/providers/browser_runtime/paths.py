@@ -47,8 +47,8 @@ def default_provider_user_data_dir(
     env: Mapping[str, str], *, provider: str, backend: str
 ) -> Path:
     provider_key = sanitize_filename(normalize_text(provider).lower() or "browser")
-    if normalize_text(backend).lower() == "camoufox":
-        provider_key = f"{provider_key}-camoufox"
+    if normalize_text(backend).lower() in {"camoufox", "flaresolverr"}:
+        provider_key = f"{provider_key}-{backend.lower()}"
     return resolve_user_data_dir(env) / "publisher-browser-profiles" / provider_key
 
 
@@ -97,8 +97,6 @@ def runtime_with_default_storage_profile(
     env: Mapping[str, str],
     provider: str,
 ) -> BrowserRuntimeConfig:
-    if runtime.storage_state_path is not None:
-        return runtime
     if runtime.profile_dir is not None or runtime.user_data_dir is not None:
         return runtime
     from dataclasses import replace
@@ -106,7 +104,7 @@ def runtime_with_default_storage_profile(
     return replace(
         runtime,
         user_data_dir=default_provider_user_data_dir(
-            env, provider=provider, backend="camoufox"
+            env, provider=provider, backend=runtime.backend
         ),
     )
 
@@ -468,6 +466,9 @@ def commit_staged_storage_state(
         "path": str(expected_path) if expected_path is not None else None,
         "filtered": stage is not None,
     }
+    if not config.persist_storage_state:
+        result.update(attempted=False, reason="storage_state_write_disabled")
+        return result
     if stage is None or expected_path is None:
         result["reason"] = "no_staged_state"
         return result
@@ -506,6 +507,12 @@ def commit_staged_storage_state(
                 filter_url=stage.filter_url,
             )
             _atomic_write_json(expected_path, merged)
+        recorder = getattr(runtime_context, "note_browser_json_export", None)
+        if callable(recorder):
+            try:
+                recorder(expected_path)
+            except Exception as exc:
+                result["profile_metadata_update_error"] = normalize_text(str(exc))
         result.update(
             {
                 "saved": True,

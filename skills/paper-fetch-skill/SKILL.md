@@ -10,9 +10,10 @@ description: "获取、下载或核验指定论文全文或补充材料，或探
 ## 关键约束
 
 - 沿用用户明确的路径、资产范围、执行面和覆盖授权；预设只补全未指定项。状态与暂停条件统一见工作流。
+- 浏览器统一使用出版社原生持久目录；认证、迁移、排队和 JSON 兼容语义见[环境说明](references/environment.md#browser-backend-与-storage-state)。
 - 优先复用身份可证明且满足当前意图的本地文件或同 scope 缓存；临时阅读不为查询缓存而要求目录。
 - 阅读必须取得并读取实际正文，区分全文、摘要、元数据与截断片段；仅探测不自动升级为抓取。
-- 工具自动准备 managed runtime。仅实际返回 `challenge` / `auth_required` 时进入人工认证，不绕过登录、验证码、付费墙或访问控制。
+- Windows/Linux x64 安装器会在核心安装后准备 FlareSolverr（在线 `--lite` 跳过，macOS 跳过）；失败保留核心安装，重试入口见[环境说明](references/environment.md#browser-backend-与-storage-state)。工具继续按需准备和修复 managed runtime。仅实际返回 `challenge` / `auth_required` 时进入人工认证，不绕过登录、验证码、付费墙或访问控制。
 - 消费统一 acceptance，并核对任务要求的响应、资产和实际文件。保留来源及影响任务的降级；HTML 失败后 PDF/ePDF 成功仍保留 browser failure provenance。
 - PDF 正文以现有转换器输出为边界，不清洗或修复内容。
 

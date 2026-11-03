@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .provider_catalog import browser_preflight_provider_names
+from .provider_catalog import ordered_provider_specs, provider_has_browser_route
 from .providers.browser_runtime import paths as browser_paths
 from .publisher_identity import (
     extract_doi,
@@ -19,6 +19,7 @@ from .publisher_identity import (
 from .utils import normalize_text
 
 PUBLIC_CAPABILITY_SCOPE = "public"
+UNCACHEABLE_CAPABILITY_SCOPE = "browser-state-unavailable"
 _CREDENTIAL_ENV_TOKENS = ("API_KEY", "APIKEY", "TOKEN", "ACCESS_KEY", "SECRET")
 
 
@@ -33,13 +34,19 @@ def _file_sha256(path: Path) -> str | None:
     return digest.hexdigest()
 
 
+def browser_profile_digest(path: Path, provider: str) -> str | None:
+    from .providers.browser_runtime.profile import trusted_profile_digest
+
+    return trusted_profile_digest(path, provider)
+
+
 def _resolved_path(path: Path | str) -> Path:
     return Path(path).expanduser().resolve(strict=False)
 
 
 @dataclass(frozen=True, slots=True)
 class BrowserStateCapabilityUse:
-    """A provider browser state that was successfully injected into a context."""
+    """A provider profile that was actually opened, with its observed state digest."""
 
     provider: str
     backend: str
@@ -61,7 +68,11 @@ class BrowserStateCapabilityUse:
             provider=normalize_text(provider).lower(),
             backend=normalize_text(backend).lower(),
             storage_state_path=str(path),
-            content_sha256=_file_sha256(path),
+            content_sha256=(
+                browser_profile_digest(path, provider)
+                if path.is_dir()
+                else _file_sha256(path)
+            ),
             used=bool(used),
         )
 
@@ -69,9 +80,9 @@ class BrowserStateCapabilityUse:
 class CapabilityScopeBuilder:
     """Build stable opaque scopes for API and browser-backed capabilities.
 
-    Browser state is included only when the caller records that it was injected.
-    The digest is refreshed from the final path at build time so state committed by
-    an accepted browser route and the immediately following cache reader agree.
+    Browser state is included after the native context has actually opened.
+    Runtime callers refresh the context summary before building a scope; idle
+    readers validate the on-disk summary against native state changes.
     """
 
     def __init__(self, env: Mapping[str, str] | None = None) -> None:
@@ -120,25 +131,17 @@ class CapabilityScopeBuilder:
             if any(token in name for token in _CREDENTIAL_ENV_TOKENS):
                 values.append((name, value))
                 continue
-            # Runtime-aware callers add the resolved provider path below.
-            if "STORAGE_STATE" not in name:
-                continue
-            path = Path(value).expanduser()
-            try:
-                if path.is_file():
-                    values.append((name, hashlib.sha256(path.read_bytes()).hexdigest()))
-            except OSError:
-                continue
         return values
 
     def facts(self) -> dict[str, Any]:
         browser_states: list[dict[str, Any]] = []
         seen: set[tuple[str, str, str]] = set()
-        for use in self._browser_uses:
+        for use in reversed(self._browser_uses):
             if not use.used:
                 continue
             path = _resolved_path(use.storage_state_path)
-            digest = _file_sha256(path) or use.content_sha256 or "unavailable"
+            digest = use.content_sha256 if path.is_dir() else _file_sha256(path)
+            digest = digest or "unavailable"
             key = (use.provider, use.backend, str(path))
             if key in seen:
                 continue
@@ -167,6 +170,10 @@ class CapabilityScopeBuilder:
 
     def build(self) -> str:
         facts = self.facts()
+        if any(
+            item["content_sha256"] == "unavailable" for item in facts["browser_states"]
+        ):
+            return UNCACHEABLE_CAPABILITY_SCOPE
         if not facts["credentials"] and not facts["browser_states"]:
             return PUBLIC_CAPABILITY_SCOPE
         digest = hashlib.sha256(
@@ -183,27 +190,45 @@ class CapabilityScopeBuilder:
 def _provider_storage_state_use(
     env: Mapping[str, str], *, provider: str, backend: str
 ) -> BrowserStateCapabilityUse | None:
-    explicit_state = browser_paths.configured_storage_state_path(env, provider=provider)
-    profile_dir = browser_paths.configured_profile_dir(
-        env, provider=provider, backend=backend
-    )
-    user_data_dir = browser_paths.configured_user_data_dir(env, backend=backend)
-    if explicit_state is not None:
-        path = explicit_state
-    else:
-        profile = profile_dir or user_data_dir
-        if profile is None:
-            profile = browser_paths.default_provider_user_data_dir(
+    if backend == "flaresolverr":
+        state = (
+            browser_paths.default_provider_user_data_dir(
                 env, provider=provider, backend=backend
             )
-        path = Path(profile) / browser_paths.STORAGE_STATE_FILENAME
-    resolved = _resolved_path(path)
-    if not resolved.is_file():
+            / "storage-state.json"
+        )
+        if not state.is_file():
+            return None
+        return BrowserStateCapabilityUse(
+            provider=provider,
+            backend=backend,
+            storage_state_path=str(state),
+            content_sha256=_file_sha256(state),
+        )
+    from .providers.browser_runtime.profile import trusted_profile_digest
+
+    profile = browser_paths.configured_profile_dir(
+        env, provider=provider, backend=backend
+    ) or browser_paths.configured_user_data_dir(env, backend=backend)
+    if profile is None:
+        profile = browser_paths.default_provider_user_data_dir(
+            env, provider=provider, backend=backend
+        )
+    resolved = _resolved_path(profile)
+    digest = trusted_profile_digest(
+        resolved,
+        provider,
+        explicit_state_path=browser_paths.configured_storage_state_path(
+            env, provider=provider
+        ),
+    )
+    if digest is None:
         return None
-    return BrowserStateCapabilityUse.from_path(
+    return BrowserStateCapabilityUse(
         provider=provider,
         backend=backend,
-        storage_state_path=resolved,
+        storage_state_path=str(resolved),
+        content_sha256=digest,
     )
 
 
@@ -218,9 +243,17 @@ def capability_scopes_for_query(
     scopes: list[str] = []
     doi = extract_doi(query)
     inferred_provider = infer_provider_from_doi(doi) or infer_provider_from_url(query)
-    browser_providers = frozenset(browser_preflight_provider_names())
-    backend = "camoufox"
-    if inferred_provider in browser_providers:
+    browser_providers = frozenset(
+        spec.name
+        for spec in ordered_provider_specs()
+        if provider_has_browser_route(spec.name)
+    )
+    from .providers.browser_runtime.selection import selected_backend
+    from .providers.browser_runtime.chrome import supported_platform
+
+    browser_supported = inferred_provider != "elsevier" or supported_platform()
+    if inferred_provider in browser_providers and browser_supported:
+        backend = selected_backend(runtime_env, provider=inferred_provider)
         use = _provider_storage_state_use(
             runtime_env,
             provider=inferred_provider,
@@ -253,6 +286,7 @@ def capability_scope_from_runtime_context(context: Any) -> str:
 
 __all__ = [
     "PUBLIC_CAPABILITY_SCOPE",
+    "UNCACHEABLE_CAPABILITY_SCOPE",
     "BrowserStateCapabilityUse",
     "CapabilityScopeBuilder",
     "capability_scope_from_runtime_context",

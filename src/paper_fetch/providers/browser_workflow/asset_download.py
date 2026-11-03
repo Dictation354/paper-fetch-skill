@@ -48,6 +48,7 @@ _CLICK_SUPPLEMENT_PROVIDERS = frozenset(
         "science",
         "wiley",
         "pnas",
+        "elsevier",
         "ieee",
         "ams",
         "mdpi",

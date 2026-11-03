@@ -37,6 +37,11 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
     def test_browser_boundary_drift_is_rejected(self) -> None:
         contract = validator.load_contract()
         contract["browser"]["runtime_bundle_built_in"] = True
+        contract["browser"]["default_backend"] = "flaresolverr"
+        contract["browser"]["pnas_backend"] = "flaresolverr"
+        contract["browser"]["elsevier_browser_routes"] = "camoufox"
+        contract["browser"]["system_chrome_required"] = True
+        contract["browser"]["installer_prepares_flaresolverr"] = True
         contract["browser"]["native_bundle_gate"] = False
         contract["browser"]["managed_runtime_preparation"] = False
         contract["browser"]["fetch_start_preparation"] = False
@@ -48,10 +53,22 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["browser"]["cooperative_cancel_owner_thread_cleanup"] = False
         contract["browser"]["html_snapshot_owner_thread"] = False
         contract["browser"]["supplementary_index_without_body"] = False
+        for key in (
+            "publisher_native_persistent_profiles",
+            "profile_exclusive_lock_owner_thread",
+            "auth_native_profile_replay",
+            "json_export_optional",
+        ):
+            contract["browser"][key] = False
 
         diagnostic = "\n".join(validator.validate_contract(contract))
 
         self.assertIn("runtime_bundle_built_in must be false", diagnostic)
+        self.assertIn("default_backend must be camoufox", diagnostic)
+        self.assertIn("pnas_backend must be camoufox", diagnostic)
+        self.assertIn("elsevier_browser_routes must be unsupported", diagnostic)
+        self.assertIn("system_chrome_required must be false", diagnostic)
+        self.assertIn("installer_prepares_flaresolverr must be false", diagnostic)
         self.assertIn("native_bundle_gate must be true", diagnostic)
         self.assertIn("managed_runtime_preparation must be true", diagnostic)
         self.assertIn("fetch_start_preparation must be true", diagnostic)
@@ -65,6 +82,13 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         )
         self.assertIn("html_snapshot_owner_thread must be true", diagnostic)
         self.assertIn("supplementary_index_without_body must be true", diagnostic)
+        for key in (
+            "publisher_native_persistent_profiles",
+            "profile_exclusive_lock_owner_thread",
+            "auth_native_profile_replay",
+            "json_export_optional",
+        ):
+            self.assertIn(f"{key} must be true", diagnostic)
 
     def test_codex_discovery_and_migration_contract_drift_is_rejected(self) -> None:
         contract = validator.load_contract()

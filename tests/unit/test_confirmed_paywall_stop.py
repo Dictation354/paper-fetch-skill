@@ -411,7 +411,7 @@ def test_browser_candidate_loop_closes_page_before_preparation_or_next_url(tmp_p
     assert page.goto.call_count == 1
     prepare.assert_not_called()
     page.close.assert_called_once()
-    context.close.assert_called_once()
+    context.close.assert_not_called()
 
 
 def test_independent_asset_access_failure_keeps_readable_body(tmp_path):

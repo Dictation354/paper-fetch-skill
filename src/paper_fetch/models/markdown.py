@@ -415,16 +415,29 @@ def _split_markdown_image_adjacency_line(line: str) -> list[str]:
         return [line]
 
     pieces: list[str] = []
+    list_match = re.match(r"^([ \t]*(?:[-*+]|\d+[.)])[ \t]+)", line)
+    if list_match:
+        indent = " " * len(list_match[1])
+    else:
+        indent = line[: len(line) - len(line.lstrip())]
     cursor = 0
     for match in matches:
         prefix = line[cursor : match.start]
         if normalize_text(prefix):
-            pieces.append(prefix.rstrip())
-        pieces.append(match.text)
+            pieces.append(prefix.rstrip() if cursor == 0 else indent + prefix.strip())
+        if (
+            list_match
+            and cursor == 0
+            and not line[len(list_match[1]) : match.start].strip()
+        ):
+            # An image can itself be the first block of a list item.
+            pieces[-1] = list_match[1] + match.text
+        else:
+            pieces.append(indent + match.text)
         cursor = match.end
     suffix = line[cursor:]
     if normalize_text(suffix):
-        pieces.append(suffix.strip())
+        pieces.append(indent + suffix.strip())
     return pieces or [line]
 
 
@@ -449,7 +462,7 @@ def _normalize_markdown_image_block_boundaries(text: str) -> str:
         if _is_standalone_markdown_image_line(line):
             if bounded_lines and bounded_lines[-1].strip():
                 bounded_lines.append("")
-            bounded_lines.append(line.strip())
+            bounded_lines.append(line.rstrip())
             next_line = split_lines[index + 1] if index + 1 < len(split_lines) else ""
             if normalize_text(next_line):
                 bounded_lines.append("")

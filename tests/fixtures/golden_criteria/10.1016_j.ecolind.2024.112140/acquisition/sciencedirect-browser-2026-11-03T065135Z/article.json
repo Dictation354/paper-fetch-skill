@@ -1,0 +1,656 @@
+{
+  "doi": null,
+  "source": "elsevier_html",
+  "metadata": {
+    "title": "The variability in sensitivity of vegetation greenness to climate change across Eurasia",
+    "authors": [
+      "Zhipeng Wang",
+      "Jianshuang Wu",
+      "Meng Li",
+      "Yanan Cao",
+      "Minyahel Tilahun",
+      "Ben Chen"
+    ],
+    "abstract": "<a id=\"elsevier-ab010\"></a>\n\nClimate change is one of dominators driving the greening of vegetation worldwide, which is expected to enhance land carbon sink and mitigate global warming. The sensitivity of vegetation greenness to climate change is fluctuant and regulated by other environmental factors. However, the drivers and mechanisms behind remain unclear so far. Here, we hired long-term satellite-based vegetation index (NDVI), climatic variables, nitrogen deposition<sub>,</sub> and atmospheric CO<sub>2</sub> records to investigate variations of greenness climatic sensitivity and its drivers across Eurasia. To obtain the timeseries of temperature (γNDVI<sup>TEM</sup>) and precipitation sensitivity (γNDVI<sup>PRE</sup>), we applied multi-regression models and regressed temperature and precipitation on NDVI in each 9-year moving windows. The results showed that the area of vegetation greenness limited by low temperatures substantially shrunk, while the area of vegetation greenness limited by precipitation deficit increased during 1982–2015. Specifically, significantly decreasing γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> accounted for 29.8% and 20.1%, respectively, while remarkably increasing γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> accounted for about 18.2% and 24.5%, respectively, of the vegetated lands across Eurasia. Declining γNDVI<sup>TEM</sup> was widely observed in most biomes, including tropical and subtropical moist broadleaf forests, temperate broadleaf and mixed forests, temperate coniferous forests, croplands, and deserts and xeric shrublands. Substantially increasing γNDVI<sup>PRE</sup> was merely found in montane grasslands and shrublands, and tropical and subtropical dry broadleaf forests, while decreasing γNDVI<sup>PRE</sup> and nonlinear regimes was widely proved in other biome types. Spatially, rather than elevated CO<sub>2</sub> and nitrogen deposition, climate factors (temperature, precipitation, and radiation) jointly dominated γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> variations across nearly 45% and 48% of Eurasia respectively. Our results uncovered the apparent pattern of greenness climate sensitivity changes across Eurasia and highlighted the necessity to unfold the underlying mechanisms based on plant physiology and traits.",
+    "journal": null,
+    "article_type": null,
+    "published": null,
+    "keywords": [
+      "Terrestrial greening",
+      "Vegetation sensitivity",
+      "Biomes",
+      "Elevated CO 2",
+      "Nitrogen deposition",
+      "Eurasia",
+      "Elevated CO2"
+    ],
+    "license_urls": [],
+    "landing_page_url": "https://www.sciencedirect.com/science/article/pii/S1470160X24005971"
+  },
+  "sections": [
+    {
+      "heading": "Abstract",
+      "level": 2,
+      "kind": "abstract",
+      "text": "<a id=\"elsevier-ab010\"></a>\n\nClimate change is one of dominators driving the greening of vegetation worldwide, which is expected to enhance land carbon sink and mitigate global warming. The sensitivity of vegetation greenness to climate change is fluctuant and regulated by other environmental factors. However, the drivers and mechanisms behind remain unclear so far. Here, we hired long-term satellite-based vegetation index (NDVI), climatic variables, nitrogen deposition<sub>,</sub> and atmospheric CO<sub>2</sub> records to investigate variations of greenness climatic sensitivity and its drivers across Eurasia. To obtain the timeseries of temperature (γNDVI<sup>TEM</sup>) and precipitation sensitivity (γNDVI<sup>PRE</sup>), we applied multi-regression models and regressed temperature and precipitation on NDVI in each 9-year moving windows. The results showed that the area of vegetation greenness limited by low temperatures substantially shrunk, while the area of vegetation greenness limited by precipitation deficit increased during 1982–2015. Specifically, significantly decreasing γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> accounted for 29.8% and 20.1%, respectively, while remarkably increasing γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> accounted for about 18.2% and 24.5%, respectively, of the vegetated lands across Eurasia. Declining γNDVI<sup>TEM</sup> was widely observed in most biomes, including tropical and subtropical moist broadleaf forests, temperate broadleaf and mixed forests, temperate coniferous forests, croplands, and deserts and xeric shrublands. Substantially increasing γNDVI<sup>PRE</sup> was merely found in montane grasslands and shrublands, and tropical and subtropical dry broadleaf forests, while decreasing γNDVI<sup>PRE</sup> and nonlinear regimes was widely proved in other biome types. Spatially, rather than elevated CO<sub>2</sub> and nitrogen deposition, climate factors (temperature, precipitation, and radiation) jointly dominated γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> variations across nearly 45% and 48% of Eurasia respectively. Our results uncovered the apparent pattern of greenness climate sensitivity changes across Eurasia and highlighted the necessity to unfold the underlying mechanisms based on plant physiology and traits."
+    },
+    {
+      "heading": "1. Introduction",
+      "level": 2,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st025\"></a><a id=\"elsevier-s0005\"></a>\n\nTerrestrial greening, as indicated by increased vegetation indices, has been widely observed since at least the 1980s and is expected to persist in the future ([Chen et al., 2019](#elsevier-h0015), [Myers-Smith et al., 2020](#elsevier-h0185), [Piao et al., 2020](#elsevier-h0210), [Zhu et al., 2016](#elsevier-h0300)). It is predicted to enhance vegetation photosynthesis, increase terrestrial carbon sink, and play feedback to climate change ([Forzieri et al., 2017](#elsevier-h0065), [Sitch et al., 2015](#elsevier-h0240), [Yu et al., 2021](#elsevier-h0270), [Zeng et al., 2018](#elsevier-h0285), [Zeng et al., 2017](#elsevier-h0280)). At the global scale, terrestrial greening has caused a 0.09 ± 0.02 ℃ of decrease in land surface air temperature and a 12.1 ± 2.7 mm yr<sup>−1</sup> of increase in precipitation during the period 1982–2011 ([Zeng et al., 2018](#elsevier-h0285), [Zeng et al., 2017](#elsevier-h0280)). Although the apparent greening is the response of vegetation to environmental change, the greening magnitude is heterogeneous across space and time ([Ren et al., 2023](#elsevier-h0220)). In addition to the amplitude of environmental variations, the intrinsic adaptability of plants, also termed sensitivity to environmental change, is also a key factor affecting the direction and magnitude of vegetation greening, which is essential but has not been fully evaluated so far.\n\nClimate change, increasing atmospheric CO<sub>2</sub>, nitrogen deposition and land-use change are thought the four main processes triggering land surface greenness change and concerns are provided widely to quantify the relative contributions of these drivers on terrestrial greening ([Chen et al., 2019](#elsevier-h0015), [Piao et al., 2015](#elsevier-h0205), [Schimel et al., 2015](#elsevier-h0225), [Wang et al., 2020](#elsevier-h0250), [Zhu et al., 2016](#elsevier-h0300)). For example, [Zhu et al. (2016)](#elsevier-h0300) used ten global ecosystem models to quantify the contribution of these drivers on land greening, and they suggested that the CO<sub>2</sub> fertilization effect primarily regulates vegetation greening globally since the 1980s. While contributions from other drivers are notable on regional scale and has increased remarkably in recent decades. For instance, climate change dominated greening of the mid-to-high latitudes across Eurasia and the Tibetan Plateau ([Jiao et al., 2021](#elsevier-h0095), [Zhu et al., 2016](#elsevier-h0300)). Meanwhile, since the 2000s, land-use management has contributed largely to global greening, especially the forest and cropland coverage increase in China and India, respectively ([Chen et al., 2019](#elsevier-h0015)). These evaluations have delivered insightful understandings in terrestrial greening and its drivers, as well as the complexity.\n\nHowever, strong interactions make it difficult to completely disentangle the relative contribution of each greenness-driving factor. For example, increasing atmospheric CO<sub>2</sub> concentrations directly accelerate photosynthesis, greenness, and vegetation productivity ([Schimel et al., 2015](#elsevier-h0225), [Wang et al., 2020](#elsevier-h0250), [Zhu et al., 2016](#elsevier-h0300)). On the other hand, elevated CO<sub>2</sub> also reduces the stomatal conductance, and relieves water stress meanwhile the water losses from soil, these processes jointly increase water-use efficiency and may alter the climatic sensitivity of vegetation growth and carbon uptake ([Keenan et al., 2013](#elsevier-h0110), [Lian et al., 2021](#elsevier-h0150)). Recently, it is suggested that the CO<sub>2</sub> fertilization effect on vegetation photosynthesis has declined across most terrestrial ecosystems since the 1980s, likely due to changes in nutrient concentration and water availability ([Wang et al., 2020](#elsevier-h0250)). Novelty, studies subsequently found water constraints on vegetation growth significantly increased across the extratropical Northern Hemisphere and globe in the same period ([Denissen et al., 2022](#elsevier-h0040), [Feng et al., 2021](#elsevier-h0060), [Jiao et al., 2021](#elsevier-h0095)). Whereas, in a recent evaluation, evidences conversely suggest that precipitation sensitivity of vegetation productivity has generally declined globally over the past two decades ([Zeng et al., 2022](#elsevier-h0275)). Comprehensions on interactions between environmental factors in regulating vegetation growth is relatively insufficient so far, though it is vital for modeling and predicting vegetation change in the future.\n\nClimate change is the dominant factor that stimulate vegetation greening across most parts of the globe ([Piao et al., 2014](#elsevier-h0200), [Zeng et al., 2022](#elsevier-h0275), [Zhu et al., 2016](#elsevier-h0300)). While the climatic sensitivity of vegetation growth may change due to biotic and abiotic factors. For example, it is reported that the temperature sensitivity of the northern vegetation growth, especially in temperate and arctic ecosystems, has declined substantially since the 1980s ([Piao et al., 2014](#elsevier-h0200)). And drought-induced water deficit is proved to be the key constraint for vegetation greening and productivity at continental or global scales ([Feng et al., 2021](#elsevier-h0060), [Jiao et al., 2021](#elsevier-h0095)), which may manifest an enhancement in the sensitivity of vegetation activities to water availability. Other factors, such as community alteration, CO<sub>2</sub> increase, and nitrogen deposition, also affect the climatic sensitivity of vegetation growth, but there may be heterogeneity in space or between biomes ([Jiao et al., 2021](#elsevier-h0095), [Liu et al., 2022](#elsevier-h0165), [Piao et al., 2014](#elsevier-h0200), [Wang et al., 2020](#elsevier-h0250)). In recent years, it has been highlighted that the vegetation sensitivity to environmental factors is changing, which may amplify or mitigate the threat of climate change to human through land–atmosphere feedback ([Cong et al., 2017](#elsevier-h0025), [Jiao et al., 2021](#elsevier-h0095), [Zeng et al., 2022](#elsevier-h0275)). However, among different regions and biomes, understandings in vegetation climatic sensitivity change and its complexity drivers remains insufficient.\n\nEurasia, with a total area of more than 50 million km<sup>2</sup>, is the largest continent in this world. With complex topography, it has a wide range of climate gradients and covers almost all vegetation types. According to the results from global evaluations, in the past three decades, climate change dominates vegetation greening across most of Eurasia rather than other factors such as the CO<sub>2</sub> fertilization effect and nitrogen deposition ([Piao et al., 2020](#elsevier-h0210), [Zhu et al., 2016](#elsevier-h0300)). However, changes in climatic sensitivity of vegetation greenness and its drivers in different regions remain unclear across Eurasia. Therefore, in this study, we intend to enclose the vegetation greenness change patterns, secondly analyze the variations of vegetation climatic sensitivity, and lastly identify its drivers across Eurasia in the past three decades."
+    },
+    {
+      "heading": "2. Materials and methods",
+      "level": 2,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st030\"></a><a id=\"elsevier-s0010\"></a>"
+    },
+    {
+      "heading": "2.1. Study area",
+      "level": 3,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st035\"></a><a id=\"elsevier-s0015\"></a>\n\nWith Eurasia as the target region, we used the Terrestrial Ecoregions of the World (TEOW) to distinguish different biomes across Eurasia. It provides 14 different biome classifications, including Tropical and Subtropical Moist Broadleaf Forests (TSMBF), Tropical and Subtropical Dry Broadleaf Forests (TSDBF), Tropical and Subtropical Coniferous Forests (TSCF), Temperate Broadleaf and Mixed Forests (TBMF), Temperate Coniferous Forests (TCF), Boreal Forests/Taiga (BF), Tropical and Subtropical Grasslands, Savannas and Shrublands (TSGSS), Temperate Grasslands, Savannas and Shrublands (TGSS), Flooded Grasslands and Savannas (FGS), Montane Grasslands and Shrublands (MGS), Tundra, Mediterranean Forests, Woodlands and Scrub (MFWS), Deserts and Xeric Shrublands (DXS), and Mangroves (Ma) ([Olson et al., 2001](#elsevier-h0190)). In addition, we also collected the satellite-based land cover classification product (MCD12C1) from the National Aeronautics and Space Administration (NASA, [https://search.earthdata.nasa.gov/](https://search.earthdata.nasa.gov/)). The MCD12C1 product is derived from the Moderate Resolution Imaging Spectroradiometer (MODIS) boarded on Terra and Aqua, and supplies yearly global land classifications at 0.05°×0.05° spatial resolution.\n\nIn this study, we excluded biome types with a small proportion of area and retained 10 types in Eurasia from the TEOW ([Fig. 1](#elsevier-f0005)). The sensitivity of crops to climate change is strongly influenced by human activities, which can be different from natural vegetation. The TEOW classification does not have a clear division in croplands, which may affect our cognition. Therefore, we superimposed layers of TEOW and satellite-based landcover classification (MCD12C1) in 2001 to isolate the distribution of farmland in Eurasia. The croplands layer under the International Geosphere-Biosphere Program (IGBP) classification scheme within the MCD12C1 were selected to overlay the TEOW-biomes classification. Finally, the repainted biome domains at 0.05°×0.05° spatial resolution were aggregated to 0.5°×0.5° with majority filter (modal) method, and the procedure was achieved through ‘aggregate’ function in ‘raster’ package in R4.2.2 software.\n\n![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr1_lrg.jpg)\n\n<a id=\"elsevier-f0005\"></a>Fig. 1. Spatial distribution of different biomes across Eurasia."
+    },
+    {
+      "heading": "2.2. Data sources",
+      "level": 3,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st040\"></a><a id=\"elsevier-s0020\"></a>\n\nThe third-generation bi-weekly Normalized Difference Vegetation Index (NDVI), widely used as a proxy for vegetation growth, was derived from the Advanced Very High-Resolution Radiometer (AVHRR) and produced with the Global Inventory Monitoring and Modeling System (GIMMS) ([https://ecocast.arc.nasa.gov/](https://ecocast.arc.nasa.gov/)). The GIMMS NDVI3g covers the period 1982–2015 and is at 1/12 × 1/12 degree spatial resolution. We acquired the monthly air temperature and total precipitation datasets, with a spatial resolution of 0.5°×0.5°, from the Climate Research Unit (CRU) at the University of East Anglia (CRU TS v4.06) ([https://crudata.uea.ac.uk/cru/data/](https://crudata.uea.ac.uk/cru/data/)). The monthly mean surface shortwave radiation data, with 0.25°×0.25° spatial resolution, was retrieved from the fifth-generation ECMWF (European Centre for Medium-Range Weather Forecasts) reanalysis assimilation product (ERA5) ([Hersbach et al., 2019](#elsevier-h0085)) ([https://www.ecmwf.int](https://www.ecmwf.int)).\n\nIn this study, we averaged the bi-weekly NDVI of the growing season (April–October) (hereafter NDVI) to indicate annual vegetation activity while partly avoiding the confounding effects from soil background. Based on the monthly climate data, we calculated the mean growing season air temperature (TEM), total precipitation (PRE), and mean surface shortwave radiation (RAD). To match the spatial resolution of these climate data, all NDVI and radiation grid layers across Eurasia were aggregated to 0.5°×0.5° spatial resolution through ‘mean’ method embedded in ‘aggregate’ function in ‘raster’ package in R4.2.2 software. The in-situ atmospheric CO<sub>2</sub> concentration records from the Mauna Loa Observatory were obtained from the Scripps Institution of Oceanography (the Scripps CO<sub>2</sub> program) ([https://scrippsco2.ucsd.edu/](https://scrippsco2.ucsd.edu/)). The historical atmospheric nitrogen decomposition dataset was retrieved from the Inter-Sectoral Impact Model Intercomparison Project (ISIMIP) and the simulation round ISIMIP2a was selected in this study ([https://data.isimip.org/](https://data.isimip.org/)). The data, including reduced nitrogen and oxidized nitrogen depositions, is in 0.5°×0.5° spatial resolution and covers the period 1860–2016. And we simply summed the two parts as the totally atmospheric nitrogen deposition."
+    },
+    {
+      "heading": "2.3. Trend and sensitivity analysis",
+      "level": 3,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st045\"></a><a id=\"elsevier-s0025\"></a>\n\nWe hired Sen’s slope estimator ([Sen, 1968](#elsevier-h0230)) to obtain the change trend of variables and applied the nonparametric Mann-Kendall test ([Kendall, 1975](#elsevier-h0115), [Mann, 1945](#elsevier-h0180)) to examine the significance of the trend. These approaches were implemented with the ‘trend’ package in R software. Multiple linear regression analysis was used to quantify the effect of different independent variables on dependent variables, and the standard regression coefficients were defined as the sensitivity of dependent variables to independent variables, respectively. For example, when we use interannual variations of TEM and PRE regress NDVI variations during 1982–2015, the standardized regression coefficients of TEM (NDVI<sup>TEM</sup>) and PRE (NDVI<sup>PRE</sup>) were chosen to indicate the sensitivity of NDVI to TEM and PRE, respectively. This flexible and interpretable method is widely used in the relevant studies ([Jiao et al., 2021](#elsevier-h0095), [Li et al., 2024](#elsevier-h0130), [Zeng et al., 2022](#elsevier-h0275)).\n\nTo examine the change in NDVI sensitivity to TEM and PRE over the past three decades, starting in 1982, we used TEM and PRE regress NDVI under each 9-year moving window, and two time series (centered to 1986–2011) of NDVI sensitivity to TEM (γNDVI<sup>TEM</sup>) and PRE (γNDVI<sup>PRE</sup>) can be obtained. Based on the time series, we can statistically analyze its changes and triggers. The reason for setting a moving window of 9 years, rather than shorter period (e.g., 5 years) or a longer one (e.g., 15 years), is twofold. On one hand, a shorter window may result in an unstable regression relationship. On the other hand, a window longer than 10 years may retain the decadal signal in the time series, even when a detrending method is applied. In atmospheric and meteorological studies, a 9-year moving window is commonly employed to separate the components of interdecadal and interannual variations ([Lu et al., 2020](#elsevier-h0170)).\n\nTo verify the dominant factor regulating γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> temporal variability grid by grid, we used the Lindeman, Merenda and Gold (lmg) method ([Groemping, 2006](#elsevier-h0070)) to evaluate the relative importance of the climatic factors, and atmospheric CO<sub>2</sub> concentration and nitrogen deposition in explaining the variances of the γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup>. The method was based on variance decomposition for multiple linear regression models, and the relative importance of each factor can be quantified with a percentage. The sum of the relative weights of all independent variables is 100 %, and the factor with the highest relative importance value is defined as the dominant driver. These procedures were performed with the “relaimpo” package in R4.2.2 ([Groemping, 2006](#elsevier-h0070)).\n\nAt biome scale, we hired multiple regression model and regressed γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> with climate (including TEM, PRE, and RAD), atmospheric nitrogen deposition (ND), and atmospheric CO<sub>2</sub> concentration (CO<sub>2</sub>) records filtered by 9-year running mean. And the corresponding standardized regression coefficients were retrieved to indicate the sensitivity of γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> to each environmental factor."
+    },
+    {
+      "heading": "3. Results",
+      "level": 2,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st050\"></a><a id=\"elsevier-s0030\"></a>"
+    },
+    {
+      "heading": "3.1. Greenness change pattern across Eurasia",
+      "level": 3,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st055\"></a><a id=\"elsevier-s0035\"></a>\n\nFor the period 1982–2015, over half (51.80 %) of Eurasia became greening and less than 5 % of NDVI browning significantly (Mann-Kendall test, *p* < 0.05). Spatially, there are several clusters with high NDVI increase rates, including China, India, Europe, and the Siberian Plateau ([Fig. 2](#elsevier-f0010)). The NDVI overall Eurasia increased noticeably at a linear rate of 2 % per decade.\n\n![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr2_lrg.jpg)\n\n<a id=\"elsevier-f0010\"></a>Fig. 2. Spatial pattern of NDVI trend (Sen’s slope, ×10<sup>−1</sup>/decade) across Eurasia during 1982–2015. The inset panel shows the frequency distribution of NDVI trends, and regions labelled with black dots indicate the NDVI trend is statistically significant (Mann-Kendall test; *p* < 0.05)."
+    },
+    {
+      "heading": "3.2. Spatial patterns of greenness climatic sensitivity and its changes",
+      "level": 3,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st060\"></a><a id=\"elsevier-s0040\"></a>\n\nGenerally, the variation in vegetation greenness was positively and significantly (*p* < 0.05) correlated with growing season temperature in the northern lands (&gt;50°N) ([Fig. 3](#elsevier-f0015)a), accounting for 29.9 % of Eurasia. The relationship between NDVI and growing season precipitation was not significant statistically (*p* &gt; 0.05) for most lands. However, in the middle latitudes, which account for nearly 21.8 % of Eurasia, NDVI variations are remarkably constrained by precipitation ([Fig. 3](#elsevier-f0015)c).\n\n![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr3_lrg.jpg)\n\n<a id=\"elsevier-f0015\"></a>Fig. 3. Vegetation greenness climatic sensitivity and its change trend in the past three decades. The NDVI<sup>TEM</sup> and NDVI<sup>PRE</sup> refer to the NDVI temperature and precipitation sensitivity detected by multiple regression models applied in 1982–2015, respectively. γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> represent NDVI temperature and precipitation sensitivity detected in each 9-year moving window from 1982 to 2015. Lands labelled with black dots indicate the relationship is statistically significant (*p* < 0.05).\n\nIn the sub-period of 1982–2015, we found that both γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> changed notably and heterogeneously across space ([Fig. 3](#elsevier-f0015)b and d). Specifically, γNDVI<sup>TEM</sup> across the East Siberian Mountains, Central Europe, and the Pamir Plateau in central Asia significantly declined, which accounts for 29.8 % of the vegetated lands on Eurasia. While γNDVI<sup>TEM</sup> across the Central Siberian Plateau, Northwest China, and Indian Peninsula, counting 18.2 % of Eurasia, showed a remarkably increasing trend ([Fig. 3](#elsevier-f0015)b). In nearly one-quarter (24.5 %) of Eurasia, γNDVI<sup>PRE</sup> increased significantly, mainly in the Eastern European Plain and the West Siberian Plain ([Fig. 3](#elsevier-f0015)d). Notably decreasing γNDVI<sup>PRE</sup> in the past three decades was mostly found within Asia, accounting for nearly one-fifth (20.9 %) of Eurasia ([Fig. 3](#elsevier-f0015)d).\n\nIn the past three decades, positive γNDVI<sup>TEM</sup> showed a remarkable decrease in percentage areas in Eurasia, while the areas of negative γNDVI<sup>TEM</sup> increase significantly ([Fig. 4](#elsevier-f0020)a–b). It was novelty that vegetation greenness constrained by low temperature had decreased with a relatively highe rate (−4.3 %/decade) ([Fig. 4](#elsevier-f0020)b). Areas with positive and significantly positive (*p* < 0.05) γNDVI<sup>PRE</sup> had increased notably, while lands with negative and significantly negative (*p* < 0.05) γNDVI<sup>PRE</sup> declined significantly ([Fig. 4](#elsevier-f0020)c–d).\n\n![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr4_lrg.jpg)\n\n<a id=\"elsevier-f0020\"></a>Fig. 4. Temporal change of positive and negative γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> in percentage areas. γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> in labels represent NDVI temperature and precipitation sensitivity detected in each 9-year moving window since 1982. Red (blue) hollow and solid symbols in a–b (c–d) represent the proportion of positive γNDVI<sup>TEM</sup> (γNDVI<sup>PRE</sup>) and significantly positive γNDVI<sup>TEM</sup> (γNDVI<sup>PRE</sup>), respectively."
+    },
+    {
+      "heading": "3.3. Variations of greenness climatic sensitivity at biomes scale",
+      "level": 3,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st065\"></a><a id=\"elsevier-s0045\"></a>\n\nOverall Eurasia, γNDVI<sup>TEM</sup> showed stronger stability than γNDVI<sup>PRE</sup>, which firstly decreased, even fell below 0 in 1990–2005, and then recovered during the whole period ([Fig. 5](#elsevier-f0025)a). At biome scale, variations of γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> exhibited a variety of regimes. Sustained significant reductions in γNDVI<sup>TEM</sup> were observed in TSMBF, TBMF, TCF, Crop, Tundra and DXS. Specifically, γNDVI<sup>TEM</sup> had approached from positive to zero ([Fig. 5](#elsevier-f0025)d,e,k), while it had shifted from positive to negative for TSMBF, Crop and DXS ([Fig. 5](#elsevier-f0025)b,g,l). The γNDVI<sup>TEM</sup> of MFWS, TGSS, and MGS decreased slightly throughout the period, but no statistical significance was found ([Fig. 5](#elsevier-f0025)h, i, j). The γNDVI<sup>TEM</sup> of both TSDBF and BF showed a nonlinear regime, which increased first and then decreased ([Fig. 5](#elsevier-f0025)c,f).\n\n![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr5_lrg.jpg)\n\n<a id=\"elsevier-f0025\"></a>Fig. 5. Temporal variations of climatic sensitivity of NDVI (γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> in blue line) across biomes in Eurasia. Panels labelled with a–l indicate γNDVI<sup>TEM</sup> (red dotted line) and γNDVI<sup>PRE</sup> (blue dotted line) variations for Eurasia, TSMBF, TSDBF, TBMF, TCF, BF, Crop, MFWS, TGSS, MGS, Tundra, and DXS, respectively. And the corresponding *R<sup>2</sup>* and *p* values in red and blue colour within each panel show the coefficient of determination and statistical significance level of linear or polynomial fitting (coloured dotted lines), respectively.\n\nThe γNDVI<sup>PRE</sup> decreased significantly over TSMBF, TBMF, TCF and DXS. Specifically, for both TSMBF and TBMF vegetation, γNDVI<sup>PRE</sup> had shifted from positive to negative values before 2000 ([Fig. 5](#elsevier-f0025)b,d). While the negative γNDVI<sup>PRE</sup> over TCF had enhanced ([Fig. 5](#elsevier-f0025)e), which was contrary to the release for DXS ([Fig. 5](#elsevier-f0025)l). γNDVI<sup>PRE</sup> over TSDBF and MGS showed a remarkably continuous increasing trend, which had reversed from negative values to positive values in the past three decades ([Fig. 5](#elsevier-f0025)c,j). Regimes of γNDVI<sup>PRE</sup> over Crop, MFWS and Tundra exhibited a “first enlarged and then decreased” pattern ([Fig. 5](#elsevier-f0025)g,h,k), which was inversed to the pattern of γNDVI<sup>PRE</sup> for BF and TGSS ([Fig. 5](#elsevier-f0025)f,i)."
+    },
+    {
+      "heading": "3.4. Environmental drivers regulating greenness climatic sensitivity",
+      "level": 3,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st070\"></a><a id=\"elsevier-s0050\"></a>\n\nConsidering changes in climate, carbon dioxide concentration (CO<sub>2</sub>), and nitrogen deposition (ND), we evaluated the dominant driver regulating γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> variations at the local (grid cell) scale across Eurasia. Spatially, we found γNDVI<sup>TEM</sup> variations driven by temperature account for 16.2 % of Eurasia, most of which were in north of the Central Siberian Plateau and the Eastern Siberian Mountains ([Fig. 6](#elsevier-f0030)a). The area, where γNDVI<sup>TEM</sup> variability was dominated by precipitation, account for merely 12.9 % in the percentage of vegetated lands in Eurasia ([Fig. 6](#elsevier-f0030)a). Lands exhibited radiation-driven in γNDVI<sup>TEM</sup> were maintained in southern China and the Central Siberian Plateau, accounting for 15.7 % of lands in Eurasia ([Fig. 6](#elsevier-f0030)a). Nitrogen deposition-dominated γNDVI<sup>TEM</sup> variations accounted for 24.2 % of the total area of Eurasia, mainly distributed in the Eastern European Plain, the northern part of the Western Siberian Plain and the Turan Plain (Southwest Kazakhstan, northwest of Uzbekistan and Turkmenistan) in Central Asia ([Fig. 6](#elsevier-f0030)a). The CO<sub>2</sub>-driven γNDVI<sup>TEM</sup> variations appeared in 30.9 % of Eurasia and most of the lands spread in Asia ([Fig. 6](#elsevier-f0030)a). The relative importance of different variables in regulating γNDVI<sup>TEM</sup> can be obtained in [Fig. S1](#elsevier-s0090)a–e.\n\n![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr6_lrg.jpg)\n\n<a id=\"elsevier-f0030\"></a>Fig. 6. Spatial patterns of dominant factor regulating γNDVI<sup>TEM</sup> (a) and γNDVI<sup>PRE</sup> (b) variations during the past three decades. TEM: mean growing season temperature, PRE: growing season accumulate precipitation, RAD: mean growing season surface shortwave radiation, ND: nitrogen decomposition, and CO<sub>2</sub>: atmospheric CO<sub>2</sub>. Bar charts indicate the frequency distribution of each factor in percentage.\n\nThe γNDVI<sup>PRE</sup> variations dominated by temperature and precipitation merely account for 15.3 and 15.7 % of Eurasia, respectively ([Fig. 6](#elsevier-f0030)b). The lands, where γNDVI<sup>PRE</sup> variations were regulated by radiation, account for 17.0 % of lands in Eurasia and most distribute in Siberia ([Fig. 6](#elsevier-f0030)b). Nitrogen deposition-dominated γNDVI<sup>PRE</sup> variations accounted for 22.4 % of Eurasia, mainly distributed in east of the Eastern European Plain, the Eastern Siberian mountains, and the central Turan Plain ([Fig. 6](#elsevier-f0030)b). The CO<sub>2</sub>-driven γNDVI<sup>PRE</sup> variations was in 29.6 % of Eurasia and widely spread in Eurasia ([Fig. 6](#elsevier-f0030)a). The relative importance of different variables in regulating γNDVI<sup>TEM</sup> can be obtained in [Fig. S1](#elsevier-s0090)f–j.\n\nAt Eurasia and biome scale, temperature played a positively significant (*p* < 0.1) role in explaining γNDVI<sup>TEM</sup> variations for TSMBF, TSDBF and DXS, while it was negatively and statistically significant (*p* < 0.1) overall Eurasia, TGSS and MGS ([Fig. 7](#elsevier-f0035)). Precipitation was expected to notably (*p* < 0.1) increase γNDVI<sup>TEM</sup> for TCF and MFWS but remarkably (*p* < 0.05) decrease γNDVI<sup>TEM</sup> for BF ([Fig. 7](#elsevier-f0035)). The correlation was negatively significant between radiation and γNDVI<sup>TEM</sup> for TSMBF, TBMF, BF and Tundra. While it was contrary for TCF and TGSS, where the relationship was significantly negative ([Fig. 7](#elsevier-f0035)). The increase in nitrogen decomposition may considerably reduce γNDVI<sup>TEM</sup> in both TSDBF and MGS but substantially trigger the increase of γNDVI<sup>TEM</sup> for MFWS ([Fig. 7](#elsevier-f0035)). For Eurasia, TSMBF, TSDBF and BF, CO<sub>2</sub> anomalies acted as the dominate driver regulating γNDVI<sup>TEM</sup> variations rather than other factors, and the relationship was negatively significant ([Fig. 7](#elsevier-f0035)). While for MFWS, MGS and Tundra, increasing CO<sub>2</sub> was intend to enhance γNDVI<sup>TEM</sup> ([Fig. 7](#elsevier-f0035)).\n\n![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr7_lrg.jpg)\n\n<a id=\"elsevier-f0035\"></a>Fig. 7. Drivers regulating NDVI temperature sensitivity (γNDVI<sup>TEM</sup>) variations across different biomes in Eurasia. Bars coloured in red, light blue, orange, green, and pink, represent the sensitivity of the γNDVI<sup>TEM</sup> variations to mean temperature (TEM), total precipitation (PRE), mean radiation (RAD), nitrogen deposition (ND), and atmosphere carbon dioxide (CO<sub>2</sub>). *R*<sup>2</sup> in each panel refers to the coefficient of determination of the multilinear regression model and the column bar is labelled with <sup>+</sup> and \\* denoting the significance at the levels of 0.1 and 0.05, respectively.\n\nTemperature was significantly positively (*p* < 0.1) correlated with γNDVI<sup>PRE</sup> for TBMF, Crop, and DXS, providing evidence that higher temperatures lead to higher precipitation demand ([Fig. 8](#elsevier-f0040)d,g,l). More precipitation was expected to notably (*p* < 0.05) increase γNDVI<sup>PRE</sup> for BF and MFWS, but remarkably (*p* < 0.1) decrease γNDVI<sup>PRE</sup> for TSMBF, Crop and TGSS ([Fig. 8](#elsevier-f0040)b,g, i). The relationship was significantly positive between radiation and γNDVI<sup>PRE</sup> for Eurasia, TCF and Tundra ([Fig. 8](#elsevier-f0040)a,e,k), which was contrary to the relationship found in TSMBF and Crop ([Fig. 8](#elsevier-f0040)b,g). It was widely observed that the increase in nitrogen decomposition was intended to increase γNDVI<sup>PRE</sup> for TMBF, TCF, Crop, TGSS and DXS ([Fig. 8](#elsevier-f0040)d,e,g, i,l). No significant relationship between CO<sub>2</sub> and γNDVI<sup>PRE</sup> was found for most biomes except for Crop and Eurasia, where the relationship was positively and negatively significant, respectively ([Fig. 8](#elsevier-f0040)a,g).\n\n![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr8_lrg.jpg)\n\n<a id=\"elsevier-f0040\"></a>Fig. 8. Drivers regulating NDVI precipitation sensitivity (γNDVI<sup>PRE</sup>) variations across different biomes in Eurasia."
+    },
+    {
+      "heading": "4. Discussion",
+      "level": 2,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st075\"></a><a id=\"elsevier-s0055\"></a>"
+    },
+    {
+      "heading": "4.1. Declined temperature limitation but enhanced water constraints for vegetation growth",
+      "level": 3,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st080\"></a><a id=\"elsevier-s0060\"></a>\n\nIn recent years, a few studies have suggested that temperature limitation on vegetation greenness is declining but constraints from water availability are enhancing, albeit the targets and methods are different. For example, for the temperate and arctic ecosystems in the northern hemisphere, it is suggested that the greenness (NDVI) temperature has substantially declined since the 1980s ([Piao et al., 2014](#elsevier-h0200)). Hiring the SPEI (Standardized Precipitation Evapotranspiration Index) and scPDSI (self-calibrating Palmer drought severity index), [Jiao et al. (2021)](#elsevier-h0095) have documented that the area where vegetation growth is restricted by water deficit increased significantly across the extratropical Northern Hemisphere. Globally, [Liu et al. (2019)](#elsevier-h0155) has employed eddy covariance records from 188 flux towers and reported that the positive effect of temperature on GPP has declined but the positive effects of precipitation and CO<sub>2</sub> became stronger during 2000–2014. [Feng et al. (2021)](#elsevier-h0060) has attributed the levelling of global gross primary production (GPP) and vegetation greenness since 2010 to the spatial expansion of drought-induced soil water limitations. [Denissen et al. (2022)](#elsevier-h0040) has novelty employed the ecosystem limitation index, an index defined to distinguish water and heat limitation for ecosystem function (ET, evapotranspiration) ([Denissen et al., 2020](#elsevier-h0035)), and they have found the widespread regime shift from energy to water limitation between 1980 and 2100. In this study, we also suggest that the temperature sensitivity of vegetation greenness has been declining widely across Eurasia. Meanwhile, the constraints from precipitation-related water supply have strengthened based on the local analysis results ([Fig. 3](#elsevier-f0015) and [Fig. 4](#elsevier-f0020)).\n\nAt the biome scale, the declining of temperature limitation for vegetation greening can also be found in most biomes in Eurasia ([Fig. 5](#elsevier-f0025)). Whereas, for the TSDBF, BF and TGSS vegetation, γNDVI<sup>TEM</sup> does not simply decrease but changed nonlinearly ([Fig. 5](#elsevier-f0025)c,f, i). For MGS vegetation, γNDVI<sup>TEM</sup> does not show a significant (*p* &gt; 0.05) trend and low temperature remains a key limitation for vegetation growth ([Fig. 5](#elsevier-f0025)j). It should be noted that MGS vegetation mainly distributed in the Tibetan Plateau ([Fig. 1](#elsevier-f0005)), where the mean annual air temperature is usually below 0℃ ([You et al., 2013](#elsevier-h0265)). Though MGS air temperature has increased significantly in recent decades, it has not met the optimal temperature for vegetation growth ([Huang et al., 2019](#elsevier-h0090)), and that should be responsible for the relatively stable positive role of temperature for MGS vegetation greening. On the other hand, the intra-annual variations in MGS vegetation sensitivity to temperature may also contributed to the relativity flat γNDVI<sup>TEM</sup>. Formerly, [Cong et al. (2017)](#elsevier-h0025) analyzed changes in sensitivity of vegetation to climate at intra-annually monthly and seasonally scale in the Tibetan Plateau. They suggested that alpine grass exhibited minimal change in temperature sensitivity, likely attributed to increasing temperature sensitivity in spring and autumn but decreasing sensitivity in summer.\n\nA significantly increasing trend in γNDVI<sup>PRE</sup> can be only obviously found in the TSDBF and MGS, where γNDVI<sup>PRE</sup> has shifted from a negative phase to a positive phase ([Fig. 5](#elsevier-f0025)c,g). Conversely, for the TSMBF, TBMF, TCF and DXS, γNDVI<sup>PRE</sup> show a substantially decrease trend ([Fig. 5](#elsevier-f0025)b,d,e,l). Meanwhile, the nonlinear regimes of γNDVI<sup>PRE</sup> is conspicuously depicted in the BF, Crop, MFWS, TGSS and Tundra, and the changing trend seems reverse around 2000 ([Fig. 5](#elsevier-f0025)f,g,h, i,k). Recently, a study has also provided shreds of evidence that vegetation productivity sensitivity to precipitation has declined for most ecosystem types across the globe since 2001 ([Zeng et al., 2022](#elsevier-h0275)). They also suggest that the precipitation sensitivity of grasslands has slightly increased in the past two decades, which is consistent with the results we found at the biome scale ([Fig. 5](#elsevier-f0025)). For most biomes, the precipitation sensitivity of vegetation greenness has declined, especially since 2000 ([Fig. 5](#elsevier-f0025)) ([Zeng et al., 2022](#elsevier-h0275)). It seems to contradict the results depicted in the 3.2 section and previous studies that vegetation sensitivity to water availability has enhanced widely across the globe ([Denissen et al., 2022](#elsevier-h0040), [Jiao et al., 2021](#elsevier-h0095), [Li et al., 2022](#elsevier-h0140), [Wei et al., 2023](#elsevier-h0260)). We think the paradox may be explained by compensating effect of water both temporal and spatial. In a previous study, [Jung et al. (2017)](#elsevier-h0105) found that with an expansion of the spatial scale, the dominant factor driving interannual variation of vegetation productivity shift from water availability to air temperature, resulting in contradictory results at the local scale and at the hemispheric or global scale."
+    },
+    {
+      "heading": "4.2. Drivers and underlying mechanisms regulating variations of greenness climatic sensitivity",
+      "level": 3,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st085\"></a><a id=\"elsevier-s0065\"></a>\n\nSome kinds of drivers can regulate the climatic sensitivity of vegetation greenness to climate variations. Firstly, alterations of climate regimes, such as extreme droughts and heat waves, are expected to temporally change vegetation climatic sensitivity by altering moisture or heat availability. For example, studies have reported that release in moisture stress, especially for water-limited lands, may reduce the coupling between water and vegetation growth, and vice versa ([Denissen et al., 2022](#elsevier-h0040), [He et al., 2018](#elsevier-h0080), [Piao et al., 2014](#elsevier-h0200), [Zeng et al., 2022](#elsevier-h0275), [Zhao et al., 2023](#elsevier-h0295)). Pieces of evidence also proved that more heat supply, such as frequent droughts and extremely hot days, which is always associated with higher atmospheric water demand and even soil drier, may contribute to the decline in correlation between vegetation growth and temperature but enhance the thirst for water ([Denissen et al., 2022](#elsevier-h0040), [Jiao et al., 2021](#elsevier-h0095), [Piao et al., 2014](#elsevier-h0200)). Secondly, the acclimation of vegetation, such as plant physiological traits changes, biomass allocation and community composition alterations, is an important biotic factor that may change the climatic sensitivity of vegetation activities ([Batllori et al., 2020](#elsevier-h0005), [Li et al., 2020](#elsevier-h0135), [Liu et al., 2018](#elsevier-h0160), [Ma et al., 2017](#elsevier-h0175), [Poorter et al., 2012](#elsevier-h0215)). For example, drought is expected to shift community species composition to xeric species, which have deeper root systems to obtain more water to mitigate the negative impacts on productivity ([Batllori et al., 2020](#elsevier-h0005), [Liu et al., 2018](#elsevier-h0160), [Poorter et al., 2012](#elsevier-h0215), [Wang et al., 2022](#elsevier-h0255)). Shrub expansion over grass-dominated tundra is considered to contribute to the declining temperature sensitivity across the northern vegetation ([Piao et al., 2014](#elsevier-h0200)). Thirdly, atmospheric factors (e.g., CO<sub>2</sub> and Nitrogen deposition) also play important roles in regulating vegetation dynamics and climatic sensitivity. For instance, a higher CO<sub>2</sub> would reduce the stomatal conductance and lower water losses from the soil, which may increase water-use efficiency and decrease the moisture sensitivity of vegetation growth ([Keenan et al., 2013](#elsevier-h0110), [Lian et al., 2021](#elsevier-h0150), [Zhang et al., 2022](#elsevier-h0290)). The availability of soil nutrients may also directly affect the synthesis of chlorophyll and indirectly change the greenness sensitive to water or heat for vegetation growth ([Poorter et al., 2012](#elsevier-h0215)). Fourthly, other factors, such as soil texture, afforestation, and land use change, may also indirectly alter the climatic sensitivity of vegetation ([Gupta et al., 2022](#elsevier-h0075), [Jin et al., 2023](#elsevier-h0100)).\n\nIn this study, we statistically evaluated dominant environmental drivers regulating γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> variations across Eurasia at local/pixel and biome scales ([Fig. 6](#elsevier-f0030), [Fig. 7](#elsevier-f0035), [Fig. 8](#elsevier-f0040)). Spatially, climatic factors, including temperature, precipitation, and radiation variations, jointly regulate γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> variations over nearly 45 % and 48 % of Eurasia, respectively ([Fig. 6](#elsevier-f0030)). Similar to our spatial results, [Denissen et al. (2022)](#elsevier-h0040) attribute the declining of energy limitation for an ecosystem to increase in solar radiation and decrease of water availability. [Jiao et al. (2021)](#elsevier-h0095) and [Zeng et al. (2022)](#elsevier-h0275) also evaluate factors dominating greenness water sensitivity change and have found that climate variations primarily regulated the greenness SPEI and precipitation sensitivity over more lands across the extratropical Northern Hemisphere and globe, respectively. At Eurasia and biome scale, we also found the notably (*p* < 0.1) negative effects of temperature or radiation on γNDVI<sup>TEM</sup> among Eurasia, TSMBF, TBMF, BF, TGSS, MGS and Turdra ([Fig. 7](#elsevier-f0035)). And the expected positive effects of precipitation on γNDVI<sup>TEM</sup> can be found in most biomes, albeit remarkable relationship is merely observed in TCF and MFWS ([Fig. 7](#elsevier-f0035)). The possible reason is that higher temperature or more radiation-induced higher atmospheric water demand even soil drier may decrease heat demand but enhance thirst of plant growth for water, thus γNDVI<sup>TEM</sup> decreases and γNDVI<sup>PRE</sup> increases. While more water supply may alleviate the water demand (reducing γNDVI<sup>PRE</sup>) and increase heat requirement (increasing γNDVI<sup>TEM</sup>) ([Jiao et al., 2021](#elsevier-h0095), [Zeng et al., 2022](#elsevier-h0275)). Besides, the unexpected significantly negative relationship (*p* < 0.05) between precipitation and γNDVI<sup>TEM</sup> found in BF may be caused by the indirect effects of precipitation on vegetation. We found annual precipitation and temperature over BF are positively correlated (not shown), which may be the result of warming and greening-induced water cycle enhancing then precipitation increased ([Piao et al., 2020](#elsevier-h0210)).\n\nIt is widely confirmed that the CO<sub>2</sub> fertilization effect contributes greatly to the greening of the Earth, especially for tropical or subtropical forests ([Piao et al., 2020](#elsevier-h0210), [Song et al., 2022](#elsevier-h0245), [Zhu et al., 2016](#elsevier-h0300)). While the effects of atmospheric CO<sub>2</sub> change on greenness climatic sensitivity may be complex. On the one hand, the CO<sub>2</sub> fertilization effect directly benefits photosynthesis ([Chen et al., 2022](#elsevier-h0010)), which may compensate for the negative effects of heat or moisture inadequacy ([Lian et al., 2021](#elsevier-h0150), [Liu et al., 2019](#elsevier-h0155), [Song et al., 2022](#elsevier-h0245)). On the other hand, enriched CO<sub>2</sub> may alter vegetation traits, such as leaf area or stomatal conductance, which is closely related to the response of vegetation to climate ([Keenan et al., 2013](#elsevier-h0110), [Zhang et al., 2022](#elsevier-h0290)). In addition, the CO<sub>2</sub> fertilization effect-induced greening is expected to enhance evapotranspiration and cooling regional even global climate ([Li et al., 2018](#elsevier-h0145), [Shen et al., 2015](#elsevier-h0235), [Zeng et al., 2018](#elsevier-h0285), [Zeng et al., 2017](#elsevier-h0280)). That may indirectly alter greenness climatic sensitivity. Therefore, the statistical influence of atmospheric CO<sub>2</sub> anomalies on greenness climatic sensitivity depends on the net effect of the superposition of multiple processes. In this study, we found CO<sub>2</sub>-driven γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> spatially dominated 30.9 and 29.6 % of vegetated lands across Eurasia, respectively ([Fig. 6](#elsevier-f0030)). We also replaced the atmospheric CO<sub>2</sub> with gridded CO<sub>2</sub> dataset, which is based on the historical monthly and latitudinally resolved CO<sub>2</sub> concentrations accounting longitudinal features retrieved from fossil-fuel CO2 emissions from Carbon Dioxide Information analysis Center ([Cheng et al., 2022](#elsevier-h0020)). And we found that there is no significant difference between site-based CO<sub>2</sub> records and gridded CO<sub>2</sub> with spatial variability ([Fig. S2](#elsevier-s0090)). Atmospheric CO<sub>2</sub> behaved negative relationship with γNDVI<sup>TEM</sup> overall Eurasia and in all forest biomes, among which enriched CO<sub>2</sub> would reduce γNDVI<sup>TEM</sup> and it is statistically significant (*p* < 0.1) for Eurasia, TSMBF, TSDBF and BF ([Fig. 7](#elsevier-f0035)). For those biomes, CO<sub>2</sub> fertilization effect may trigger vegetation growth and reduce the dependence of vegetation growth on temperature. While for other biomes, especially for MFWS, MGS and Tundra, temperature is a positively vital role and CO<sub>2</sub> fertilization-induced greening may enhance the role of temperature due to enhanced evaporative cooling effect. For variations of γNDVI<sup>PRE</sup>, the role of atmospheric CO<sub>2</sub> seems indistinct for most biomes. A significant relationship is found overall between Eurasia (positive) and Crop (negative) ([Fig. 8](#elsevier-f0040)). Previously, studies have reported that the effects of elevated atmospheric CO<sub>2</sub> on precipitation sensitivity vary across regions. Generally, elevated atmospheric CO<sub>2</sub>, reducing leaf-level transpiration, decreases precipitation sensitivity in moist regions. However, in drylands, the leaf level reduction will be overridden when leaf area largely increases, which enhances the requirement for water ([Zhang et al., 2022](#elsevier-h0290)). The divergent effect of elevated atmospheric CO<sub>2</sub> on γNDVI<sup>PRE</sup> can also be found in our results. For example, the negative effects of elevated atmospheric CO<sub>2</sub> can be found in moist TSMBF, TBMF and Tundra, meanwhile, the positive effects can be found in arid TSDBF, TGSS, and DXS ([Fig. 8](#elsevier-f0040)).\n\nNitrogen availability is widely recognized as a limitation for plant productivity, especially for high latitudes ([Kicklighter et al., 2019](#elsevier-h0120), [LeBauer and Treseder, 2008](#elsevier-h0125)). As an external nitrogen input for terrestrial ecosystems, atmospheric nitrogen deposition may directly increase nitrogen availability, which may affect the structure and function of ecosystems and subsequently change their climatic sensitivity ([Du and de Vries, 2018](#elsevier-h0050), [Perring et al., 2018](#elsevier-h0195)). Whereas, studies have shown that the effects are context-dependent across types and spatial scales. For example, for N-limited biomes, additional nitrogen input is likely to stimulate carbon sequestration and productivity ([de Vries et al., 2014](#elsevier-h0030), [Du and de Vries, 2018](#elsevier-h0050)). But for nitrogen saturate conditions (extreme cases), it may play a deleterious role, such as soil acidification and nutrient imbalances ([Du et al., 2019](#elsevier-h0055), [Du et al., 2016](#elsevier-h0045)). Other factors like landscape, soil, and historical and current disturbance/management may also affect the effects of nitrogen deposition on ecosystems ([Perring et al., 2018](#elsevier-h0195)). In this study, we found nitrogen deposition has no significant influence on either γNDVI<sup>TEM</sup> or γNDVI<sup>PRE</sup> overall Eurasia and for most of the biomes ([Fig. 7](#elsevier-f0035) and [Fig. 8](#elsevier-f0040)). The possible reason may be that the contribution of nitrogen deposition on vegetation productivity is minor, compared to the contributions of biological N fixation (BNF)-induced productivity change ([Du and de Vries, 2018](#elsevier-h0050)). Whereas, for some specific biomes, nitrogen deposition has remarkable effects on γNDVI<sup>TEM</sup> or γNDVI<sup>PRE</sup>. For example, nitrogen deposition notably and negatively (*p* < 0.05) correlated with γNDVI<sup>TEM</sup> for the MGS. Both low temperature and nitrogen limit vegetation growth for mountainous grass and shrub ([Wang et al., 2022](#elsevier-h0255)). So, high nitrogen deposition may compensate for temperature effects on vegetation greenness for the MGS. The positive relationship between nitrogen deposition and γNDVI<sup>PRE</sup> enhancement can be found in almost all biomes across Eurasia, meanwhile, the relationship is statistically significant (*p* < 0.05) for TBMF, TCF, Crop, TGSS and DXS ([Fig. 8](#elsevier-f0040)). The underlying mechanism may be external nitrogen input-induced greening enhance water requirements."
+    },
+    {
+      "heading": "5. Conclusion",
+      "level": 2,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st090\"></a><a id=\"elsevier-s0070\"></a>\n\nIn this study, we found that the regimes of greenness climatic sensitivity (γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup>) vary spatially and temporally across Eurasia. Spatially, the area of greenness constrained by low temperature has declined and the proportion limited by insufficient precipitation has increased. At the biome scale, subsequently declined γNDVI<sup>TEM</sup> was confirmed for most biomes, while decreasing γNDVI<sup>PRE</sup> is observed more widely, especially in forest types, rather than increasing γNDVI<sup>PRE</sup> trend, which is merely proved in specific dry biomes. In most of Eurasia, climate change remains the dominator regulating γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> variations instead of elevated CO<sub>2</sub> and nitrogen deposition. However, the uncertainties and mechanisms, underlying greenness climatic sensitivity alterations, remain to be fully evaluated based on plant physiology and trait monitoring. Our results confirmed the complexity of changes in vegetation growth, which requires further in situ assessments in future."
+    },
+    {
+      "heading": "Author contributions",
+      "level": 2,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st095\"></a><a id=\"elsevier-s0075\"></a>\n\nJW conceptualized this study. ZW collected and analyzed the data and wrote the manuscript. ML, YC, MT and BC interpreted the results and proofread the manuscript. All authors contributed to this work and approved the final manuscript before submission."
+    },
+    {
+      "heading": "CRediT authorship contribution statement",
+      "level": 2,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st100\"></a><a id=\"elsevier-s0080\"></a>\n\n**Zhipeng Wang:** Writing – review & editing, Writing – original draft, Methodology, Formal analysis, Data curation, Conceptualization. **Jianshuang Wu:** Writing – review & editing, Funding acquisition, Conceptualization. **Meng Li:** Writing – review & editing, Methodology. **Yanan Cao:** Writing – review & editing, Formal analysis. **Minyahel Tilahun:** Writing – review & editing. **Ben Chen:** Writing – review & editing, Methodology."
+    },
+    {
+      "heading": "Declaration of competing interest",
+      "level": 2,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st105\"></a><a id=\"elsevier-coi005\"></a>\n\nThe authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper."
+    },
+    {
+      "heading": "Acknowledgements",
+      "level": 2,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st110\"></a><a id=\"elsevier-ak005\"></a>\n\nThis research was jointly funded by the Second Tibetan Plateau Scientific Expedition and Research Program (STEP) (2019QZKK1002), the Strategic Pilot Science and Technology Project of the <a id=\"elsevier-gp005\"></a>Chinese Academy of Sciences ([XDA26050501](#elsevier-gp005)), and the Innovation Talent Exchange of Foreign Expert Program under the Belt and Road Initiative ([DL2021056001L](#elsevier-gp005))."
+    },
+    {
+      "heading": "Appendix A. Supplementary data",
+      "level": 2,
+      "kind": "body",
+      "text": "<a id=\"elsevier-st120\"></a><a id=\"elsevier-s0090\"></a>\n\nThe following are the Supplementary data to this article:\n\n[Word document (3MB)](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-mmc1.docx)\n\nSupplementary Data 1."
+    },
+    {
+      "heading": "Data availability",
+      "level": 2,
+      "kind": "data_availability",
+      "text": "<a id=\"elsevier-st020\"></a><a id=\"elsevier-da005\"></a>\n\nData will be made available on request."
+    },
+    {
+      "heading": "References",
+      "level": 2,
+      "kind": "references",
+      "text": "1. <a id=\"elsevier-h0005\"></a>E. Batllori, F. Lloret, T. Aakala, W.R.L. Anderegg, E. Aynekulu, D.P. Bendixsen, A. Bentouati, C. Bigler, C.J. Burk, J.J. Camarero, M. Colangelo, J.D. Coop, R. Fensham, M.L. Floyd, L. Galiano, J.L. Ganey, P. Gonzalez, A.L. Jacobsen, J.M. Kane, T. Kitzberger, J.C. Linares, S.B. Marchetti, G. Matusick, M. Michaelian, R.M. Navarro-Cerrillo, R.B. Pratt, M.D. Redmond, A. Rigling, F. Ripullone, G. Sanguesa-Barreda, Y. Sasal, S. Saura-Mas, M.L. Suarez, T.T. Veblen, A. Vila-Cabrera, C. Vincke, B. Zeeman Forest and woodland replacement patterns following drought-related mortality Proc. Natl. Acad. Sci. U. S. A., 117 (2020), pp. 29720-29729. 10.1073/pnas.2002314117 [Batllori et al., 2020]\n\n2. <a id=\"elsevier-h0015\"></a>C. Chen, T. Park, X. Wang, S. Piao, B. Xu, R.K. Chaturvedi, R. Fuchs, V. Brovkin, P. Ciais, R. Fensholt, H. Tommervik, G. Bala, Z. Zhu, R.R. Nemani, R.B. Myneni China and India lead in greening of the world through land-use management Nat. Sustainability, 2 (2019), pp. 122-129. 10.1038/s41893-019-0220-7 [Chen et al., 2019]\n\n3. <a id=\"elsevier-h0020\"></a>W. Cheng, L. Dan, X. Deng, J. Feng, Y. Wang, J. Peng, J. Tian, W. Qi, Z. Liu, X. Zheng, D. Zhou, S. Jiang, H. Zhao, X. Wang Global monthly gridded atmospheric carbon dioxide concentrations under the historical and future scenarios Sci. Data, 9 (2022), p. 83 [Cheng et al., 2022]\n\n4. <a id=\"elsevier-h0025\"></a>N. Cong, M. Shen, W. Yang, Z. Yang, G. Zhang, S. Piao Varying responses of vegetation activity to climate changes on the Tibetan Plateau grassland Int J Biometeorol, 61 (2017), pp. 1433-1444. 10.1007/s00484-017-1321-5 [Cong et al., 2017]\n\n5. <a id=\"elsevier-h0030\"></a>W. de Vries, E.Z. Du, K. Butterbach-Bahl Short and long-term impacts of nitrogen deposition on carbon sequestration by forest ecosystems Curr. Opin. Environ. Sustain., 9–10 (2014), pp. 90-104 [de Vries et al., 2014]\n\n6. <a id=\"elsevier-h0035\"></a>J.M.C. Denissen, A.J. Teuling, M. Reichstein, R. Orth Critical Soil Moisture Derived From Satellite Observations Over Europe J. Geophys. Res. Atmos., 125, e2019JD031672. (2020) [Denissen et al., 2020]\n\n7. <a id=\"elsevier-h0040\"></a>J.M.C. Denissen, A.J. Teuling, A.J. Pitman, S. Koirala, M. Migliavacca, W. Li, M. Reichstein, A.J. Winkler, C. Zhan, R. Orth Widespread shift from ecosystem energy to water limitation with climate change Nat. Clim. Chang., 12 (2022), pp. 677-684. 10.1038/s41558-022-01403-8 [Denissen et al., 2022]\n\n8. <a id=\"elsevier-h0045\"></a>E.Z. Du, W. de Vries, W.X. Han, X.J. Liu, Z.B. Yan, Y. Jiang Imbalanced phosphorus and nitrogen deposition in China's forests Atmos. Chem. Phys., 16 (2016), pp. 8571-8579. 10.5194/acp-16-8571-2016 [Du et al., 2016]\n\n9. <a id=\"elsevier-h0050\"></a>E. Du, W. de Vries Nitrogen-induced new net primary production and carbon sequestration in global forests Environ. Pollut., 242 (2018), pp. 1476-1487 [Du and de Vries, 2018]\n\n10. <a id=\"elsevier-h0055\"></a>E. Du, M.E. Fenn, W. De Vries, Y.S. Ok Atmospheric nitrogen deposition to global forests: Status, impacts and management options Environ. Pollut., 250 (2019), pp. 1044-1048 [Du et al., 2019]\n\n11. <a id=\"elsevier-h0060\"></a>X. Feng, B. Fu, Y. Zhang, N. Pan, Z. Zeng, H. Tian, Y. Lyu, Y. Chen, P. Ciais, Y. Wang, L. Zhang, L. Cheng, F.T. Maestre, M. Fernandez-Martinez, J. Sardans, J. Penuelas Recent leveling off of vegetation greenness and primary production reveals the increasing soil water limitations on the greening Earth Science Bulletin, 66 (2021), pp. 1462-1471 [Feng et al., 2021]\n\n12. <a id=\"elsevier-h0065\"></a>G. Forzieri, R. Alkama, D.G. Miralles, A. Cescatti Satellites reveal contrasting responses of regional climate to the widespread greening of Earth Science, 356 (2017), pp. 1140-1144 [Forzieri et al., 2017]\n\n13. <a id=\"elsevier-h0070\"></a>U. Groemping Relative importance for linear regression in R: The package relaimpo J. Stat. Softw., 17 (2006) [Groemping, 2006]\n\n14. <a id=\"elsevier-h0075\"></a>S. Gupta, S. Bonetti, P. Lehmann, D. Or Limited role of soil texture in mediating natural vegetation response to rainfall anomalies Environ. Res. Lett., 17 (2022), Article 034012. 10.1088/1748-9326/ac5206 [Gupta et al., 2022]\n\n15. <a id=\"elsevier-h0080\"></a>B. He, L. Huang, Z. Chen, H. Wang Weakening sensitivity of global vegetation to long-term droughts Science China-Earth Sciences, 61 (2018), pp. 60-70. 10.1007/s11430-016-9119-8 [He et al., 2018]\n\n16. <a id=\"elsevier-h0010\"></a>Chen, C., Riley, W.J., Prentice, I.C., Keenan, T.F., 2022. CO2 fertilization of terrestrial photosynthesis inferred from site to global scales. Proc. Natl. Acad. Sci. U. S. A. 119. [Chen et al., 2022]\n\n17. <a id=\"elsevier-h0085\"></a>Hersbach, H., Bell, B., Berrisford, P., Biavati, G., Horányi, A., Muñoz Sabater, J., Nicolas, J., Peubey, C., Radu, R., Rozum, I., Schepers, D., Simmons, A., Soci, C., Dee, D., Thépaut, J.-N., 2019. ERA5 monthly averaged data on single levels from 1979 to present. Copernicus Climate Change Service (C3S) Climate Data Store (CDS). (Accessed on < 02-06-2020 >). [Hersbach et al., 2019]\n\n18. <a id=\"elsevier-h0090\"></a>M. Huang, S. Piao, P. Ciais, J. Penuelas, X. Wang, T.F. Keenan, S. Peng, J.A. Berry, K. Wang, J. Mao, R. Alkama, A. Cescatti, M. Cuntz, H. De Deurwaerder, M. Gao, Y. He, Y. Liu, Y. Luo, R.B. Myneni, S. Niu, X. Shi, W. Yuan, H. Verbeeck, T. Wang, J. Wu, I.A. Janssens Air temperature optima of vegetation productivity across global biomes Nat. Ecol. Evol., 3 (2019), pp. 772-779. 10.1038/s41559-019-0838-x [Huang et al., 2019]\n\n19. <a id=\"elsevier-h0095\"></a>W. Jiao, L. Wang, W.K. Smith, Q. Chang, H. Wang, P. D’Odorico Observed increasing water constraint on vegetation growth over the last three decades Nat. Commun., 12 (2021), p. 3777 [Jiao et al., 2021]\n\n20. <a id=\"elsevier-h0100\"></a>Z. Jin, Q. You, Z. Zuo, M. Li, G. Sun, N. Pepin, L. Wang Increased sensitivity of greening to afforestation in China over the recent 20 years Agric. For. Meteorol., 339 (2023), p. 109561 [Jin et al., 2023]\n\n21. <a id=\"elsevier-h0105\"></a>M. Jung, M. Reichstein, C.R. Schwalm, C. Huntingford, S. Sitch, A. Ahlstrom, A. Arneth, G. Camps-Valls, P. Ciais, P. Friedlingstein, F. Gans, K. Ichii, A.K. Jain, E. Kato, D. Papale, B. Poulter, B. Raduly, C. Rodenbeck, G. Tramontana, N. Viovy, Y.P. Wang, U. Weber, S. Zaehle, N. Zeng Compensatory water effects link yearly global land CO2 sink changes to temperature Nature, 541 (2017), pp. 516-520. 10.1038/nature20780 [Jung et al., 2017]\n\n22. <a id=\"elsevier-h0110\"></a>T.F. Keenan, D.Y. Hollinger, G. Bohrer, D. Dragoni, J.W. Munger, H.P. Schmid, A.D. Richardson Increase in forest water-use efficiency as atmospheric carbon dioxide concentrations rise Nature, 499 (2013), p. 324. 10.1038/nature12291 [Keenan et al., 2013]\n\n23. <a id=\"elsevier-h0115\"></a>M.G. Kendall Rank Correlation Methods Griffin, London, UK (1975) [Kendall, 1975]\n\n24. <a id=\"elsevier-h0120\"></a>D.W. Kicklighter, J.M. Melillo, E. Monier, A.P. Sokolov, Q.L. Zhuang Future nitrogen availability and its effect on carbon sequestration in Northern Eurasia Nat. Commun., 10 (2019), p. 3024 [Kicklighter et al., 2019]\n\n25. <a id=\"elsevier-h0125\"></a>D.S. LeBauer, K.K. Treseder Nitrogen limitation of net primary productivity in terrestrial ecosystems is globally distributed Ecology, 89 (2008), pp. 371-379. 10.1890/06-2057.1 [LeBauer and Treseder, 2008]\n\n26. <a id=\"elsevier-h0130\"></a>D. Li, L. An, S. Zhong, L. Shen, S. Wu Declining coupling between vegetation and drought over the past three decades Glob, Change Biol., 30 (2024), Article e17141 [Li et al., 2024]\n\n27. <a id=\"elsevier-h0135\"></a>M. Li, X. Zhang, B. Niu, Y. He, X. Wang, J. Wu Changes in plant species richness distribution in Tibetan alpine grasslands under different precipitation scenarios Glob. Ecol. Conserv., 21 (2020), Article e00848 [Li et al., 2020]\n\n28. <a id=\"elsevier-h0140\"></a>W. Li, M. Migliavacca, M. Forkel, J.M.C. Denissen, M. Reichstein, H. Yang, G. Duveiller, U. Weber, R. Orth Widespread increasing vegetation sensitivity to soil moisture Nat. Commun., 13 (2022), p. 3959 [Li et al., 2022]\n\n29. <a id=\"elsevier-h0145\"></a>Y. Li, Z. Zeng, L. Huang, X. Lian, S. Piao Comment on “Satellites reveal contrasting responses of regional climate to the widespread greening of Earth” Science, 360, eaap7950. (2018) [Li et al., 2018]\n\n30. <a id=\"elsevier-h0150\"></a>X. Lian, S. Piao, A. Chen, C. Huntingford, B. Fu, L.Z.X. Li, J. Huang, J. Sheffield, A.M. Berg, T.F. Keenan, T.R. McVicar, Y. Wada, X. Wang, T. Wang, Y. Yang, M.L. Roderick Multifaceted characteristics of dryland aridity changes in a warming world Nature Reviews Earth & Environment, 2 (2021), pp. 232-250. 10.1038/s43017-021-00144-0 [Lian et al., 2021]\n\n31. <a id=\"elsevier-h0155\"></a>Z. Liu, L. Chen, N.G. Smith, W. Yuan, X. Chen, G. Zhou, S.A. Alam, K. Lin, T. Zhao, P. Zhou, C. Chu, H. Ma, J. Liu Global divergent responses of primary productivity to water, energy, and CO2 Environ. Res. Lett., 14 (2019), p. 124044. 10.1088/1748-9326/ab57c5 [Liu et al., 2019]\n\n32. <a id=\"elsevier-h0160\"></a>H. Liu, Z. Mi, L. Lin, Y. Wang, Z. Zhang, F. Zhang, H. Wang, L. Liu, B. Zhu, G. Cao, X. Zhao, N.J. Sanders, A.T. Classen, P.B. Reich, J.-S. He Shifting plant species composition in response to climate change stabilizes grassland primary production Proc. Natl. Acad. Sci. u. s. a., 115 (2018), pp. 4051-4056. 10.1073/pnas.1700299114 [Liu et al., 2018]\n\n33. <a id=\"elsevier-h0165\"></a>D. Liu, T. Wang, J. Penuelas, S. Piao Drought resistance enhanced by tree species diversity in global forests Nat. Geosci., 15 (2022), pp. 800-804. 10.1038/s41561-022-01026-w [Liu et al., 2022]\n\n34. <a id=\"elsevier-h0170\"></a>R. Lu, Z. Zhu, T. Li, H. Zhang Interannual and Interdecadal Variabilities of Spring Rainfall over Northeast China and Their Associated Sea Surface Temperature Anomaly Forcings J. Clim., 33 (2020), pp. 1423-1435. 10.1175/jcli-d-19-0302.1 [Lu et al., 2020]\n\n35. <a id=\"elsevier-h0175\"></a>Z. Ma, H. Liu, Z. Mi, Z. Zhang, Y. Wang, W. Xu, L. Jiang, J.S. He Climate warming reduces the temporal stability of plant community biomass production Nat. Commun., 8 (2017), p. 15378 [Ma et al., 2017]\n\n36. <a id=\"elsevier-h0180\"></a>H.B. Mann Nonparametric tests against trend Econometrica, 13 (1945), pp. 245-259. 10.2307/1907187 [Mann, 1945]\n\n37. <a id=\"elsevier-h0185\"></a>I.H. Myers-Smith, J.T. Kerby, G.K. Phoenix, J.W. Bjerke, H.E. Epstein, J.J. Assmann, C. John, L. Andreu-Hayles, S. Angers-Blondin, P.S.A. Beck, L.T. Berner, U.S. Bhatt, A.D. Bjorkman, D. Blok, A. Bryn, C.T. Christiansen, J.H.C. Cornelissen, A.M. Cunliffe, S.C. Elmendorf, B.C. Forbes, S.J. Goetz, R.D. Hollister, R. de Jong, M.M. Loranty, M. Macias-Fauria, K. Maseyk, S. Normand, J. Olofsson, T.C. Parker, F.-J.-W. Parmentier, E. Post, G. Schaepman-Strub, F. Stordal, P.F. Sullivan, H.J.D. Thomas, H. Tommervik, R. Treharne, C.E. Tweedie, D.A. Walker, M. Wilmking, S. Wipf Complexity revealed in the greening of the Arctic Nat. Clim. Chang., 10 (2020), pp. 106-117. 10.1038/s41558-019-0688-1 [Myers-Smith et al., 2020]\n\n38. <a id=\"elsevier-h0190\"></a>D.M. Olson, E. Dinerstein, E.D. Wikramanayake, N.D. Burgess, G.V.N. Powell, E.C. Underwood, J.A. D'Amico, I. Itoua, H.E. Strand, J.C. Morrison, C.J. Loucks, T.F. Allnutt, T.H. Ricketts, Y. Kura, J.F. Lamoreux, W.W. Wettengel, P. Hedao, K.R. Kassem Terrestrial ecoregions of the worlds: A new map of life on Earth Bioscience, 51 (2001), pp. 933-938 [Olson et al., 2001]\n\n39. <a id=\"elsevier-h0195\"></a>M.P. Perring, M. Diekmann, G. Midolo, D.S. Costa, M. Bernhardt-Römermann, J.C.J. Otto, F.S. Gilliam, P.O. Hedwall, A. Nordin, T. Dirnböck, S.M. Simkin, F. Malis, H. Blondeel, J. Brunet, M. Chudomelová, T. Durak, P. De Frenne, R. Hédl, M. Kopecky, D. Landuyt, D.J. Li, P. Manning, P. Petrík, K. Reczynska, W. Schmidt, T. Standovár, K. Swierkosz, O. Vild, D.M. Waller, K. Verheyen Understanding context dependency in the response of forest understorey plant communities to nitrogen deposition Environ. Pollut., 242 (2018), pp. 1787-1799 [Perring et al., 2018]\n\n40. <a id=\"elsevier-h0200\"></a>S. Piao, H. Nan, C. Huntingford, P. Ciais, P. Friedlingstein, S. Sitch, S. Peng, A. Ahlstrom, J.G. Canadell, N. Cong, S. Levis, P.E. Levy, L. Liu, M.R. Lomas, J. Mao, R.B. Myneni, P. Peylin, B. Poulter, X. Shi, G. Yin, N. Viovy, T. Wang, X. Wang, S. Zaehle, N. Zeng, Z. Zeng, A. Chen Evidence for a weakening relationship between interannual temperature variability and northern vegetation activity Nat. Commun., 5, 5018. (2014) [Piao et al., 2014]\n\n41. <a id=\"elsevier-h0205\"></a>S. Piao, G. Yin, J. Tan, L. Cheng, M. Huang, Y. Li, R. Liu, J. Mao, R.B. Myneni, S. Peng, B. Poulter, X. Shi, Z. Xiao, N. Zeng, Z. Zeng, Y. Wang Detection and attribution of vegetation greening trend in China over the last 30 years Glob. Change Biol., 21 (2015), pp. 1601-1609. 10.1111/gcb.12795 [Piao et al., 2015]\n\n42. <a id=\"elsevier-h0210\"></a>S. Piao, X. Wang, T. Park, C. Chen, X. Lian, Y. He, J.W. Bjerke, A. Chen, P. Ciais, H. Tommervik, R.R. Nemani, R.B. Myneni Characteristics, drivers and feedbacks of global greening Nature Reviews Earth & Environment, 1 (2020), pp. 14-27 [Piao et al., 2020]\n\n43. <a id=\"elsevier-h0215\"></a>H. Poorter, K.J. Niklas, P.B. Reich, J. Oleksyn, P. Poot, L. Mommer Biomass allocation to leaves, stems and roots: meta-analyses of interspecific variation and environmental control New Phytol., 193 (2012), pp. 30-50. 10.1111/j.1469-8137.2011.03952.x [Poorter et al., 2012]\n\n44. <a id=\"elsevier-h0220\"></a>H. Ren, Z. Wen, Y. Liu, Z. Lin, P. Han, H. Shi, Z. Wang, T. Su Vegetation response to changes in climate across different climate zones in China Ecol. Ind., 155 (2023), Article 110932 [Ren et al., 2023]\n\n45. <a id=\"elsevier-h0225\"></a>D. Schimel, B.B. Stephens, J.B. Fisher Effect of increasing CO2 on the terrestrial carbon cycle Proc. Natl. Acad. Sci. U. S. A., 112 (2015), pp. 436-441. 10.1073/pnas.1407302112 [Schimel et al., 2015]\n\n46. <a id=\"elsevier-h0230\"></a>P.K. Sen Estimates of the regression coefficient based on Kendall's tau J. Am. Stat. Assoc., 63 (1968), pp. 1379-1389 [Sen, 1968]\n\n47. <a id=\"elsevier-h0235\"></a>M. Shen, S. Piao, S.J. Jeong, L. Zhou, Z. Zeng, P. Ciais, D. Chen, M. Huang, C.S. Jin, L.Z. Li, Y. Li, R.B. Myneni, K. Yang, G. Zhang, Y. Zhang, T. Yao Evaporative cooling over the Tibetan Plateau induced by vegetation growth Proc. Natl. Acad. Sci. U. S. A., 112 (2015), pp. 9299-9304. 10.1073/pnas.1504418112 [Shen et al., 2015]\n\n48. <a id=\"elsevier-h0240\"></a>S. Sitch, P. Friedlingstein, N. Gruber, S.D. Jones, G. Murray-Tortarolo, A. Ahlstrom, S.C. Doney, H. Graven, C. Heinze, C. Huntingford, S. Levis, P.E. Levy, M. Lomas, B. Poulter, N. Viovy, S. Zaehle, N. Zeng, A. Arneth, G. Bonan, L. Bopp, J.G. Canadell, F. Chevallier, P. Ciais, R. Ellis, M. Gloor, P. Peylin, S.L. Piao, C. Le Quere, B. Smith, Z. Zhu, R. Myneni Recent trends and drivers of regional sources and sinks of carbon dioxide Biogeosciences, 12 (2015), pp. 653-679. 10.5194/bg-12-653-2015 [Sitch et al., 2015]\n\n49. <a id=\"elsevier-h0245\"></a>Y. Song, W. Jiao, J. Wang, L. Wang Increased Global Vegetation Productivity Despite Rising Atmospheric Dryness Over the Last Two Decades Earths Future, 10 (2022), Article e2021EF002634 [Song et al., 2022]\n\n50. <a id=\"elsevier-h0250\"></a>S. Wang, Y. Zhang, W. Ju, J.M. Chen, P. Ciais, A. Cescatti, J. Sardans, I.A. Janssens, M. Wu, J.A. Berry, E. Campbell, M. Fernandez-Martinez, R. Alkama, S. Sftch, P. Friedlingstein, W.K. Smith, W. Yuan, W. He, D. Lombardozzi, M. Kautz, D. Zhu, S. Lienert, E. Kato, B. Poulter, T.G.M. Sanders, I. Kruger, R. Wang, N. Zeng, H. Tian, N. Vuichard, A.K. Jain, A. Wiltshire, V. Haverd, D.S. Goll, J. Penuelas Recent global decline of CO2 fertilization effects on vegetation photosynthesis Science, 370 (2020), pp. 1295-1330 [Wang et al., 2020]\n\n51. <a id=\"elsevier-h0255\"></a>Z. Wang, X. Zhang, B. Niu, Y. Zheng, Y. He, Y. Cao, Y. Feng, J. Wu Divergent Climate Sensitivities of the Alpine Grasslands to Early Growing Season Precipitation on the Tibetan Plateau Remote Sens., 14 (2022) [Wang et al., 2022]\n\n52. <a id=\"elsevier-h0260\"></a>X. Wei, W. He, Y. Zhou, N. Cheng, J. Xiao, W. Bi, Y. Liu, S. Sun, W. Ju Increased Sensitivity of Global Vegetation Productivity to Drought Over the Recent Three Decades Journal of Geophysical Research: Atmospheres 128, e2022JD037504. (2023) [Wei et al., 2023]\n\n53. <a id=\"elsevier-h0265\"></a>Q.L. You, K. Fraedrich, G.Y. Ren, N. Pepin, S.C. Kang Variability of temperature in the Tibetan Plateau based on homogenized surface stations and reanalysis data Int. J. Climatol., 33 (2013), pp. 1337-1347. 10.1002/joc.3512 [You et al., 2013]\n\n54. <a id=\"elsevier-h0270\"></a>L. Yu, Y. Xue, I. Diallo Vegetation greening in China and its effect on summer regional climate Science Bulletin, 66 (2021), pp. 13-17 [Yu et al., 2021]\n\n55. <a id=\"elsevier-h0275\"></a>X. Zeng, Z. Hu, A. Chen, W. Yuan, G. Hou, D. Han, M. Liang, K. Di, R. Cao, D. Luo The global decline in the sensitivity of vegetation productivity to precipitation from 2001 to 2018 Glob. Change Biol., 28 (2022), pp. 6823-6833. 10.1111/gcb.16403 [Zeng et al., 2022]\n\n56. <a id=\"elsevier-h0280\"></a>Z. Zeng, S. Piao, L.Z.X. Li, L. Zhou, P. Ciais, T. Wang, Y. Li, X. Lian, E.F. Wood, P. Friedlingstein, J. Mao, L.D. Estes, R.B. Myneni, S. Peng, X. Shi, S.I. Seneviratne, Y. Wang Climate mitigation from vegetation biophysical feedbacks during the past three decades Nat. Clim. Chang., 7 (2017), pp. 432-436. 10.1038/nclimate3299 [Zeng et al., 2017]\n\n57. <a id=\"elsevier-h0285\"></a>Z. Zeng, S. Piao, L.Z.X. Li, T. Wang, P. Ciais, X. Lian, Y. Yang, J. Mao, X. Shi, R.B. Myneni Impact of Earth Greening on the Terrestrial Water Cycle J. Clim., 31 (2018), pp. 2633-2650. 10.1175/jcli-d-17-0236.1 [Zeng et al., 2018]\n\n58. <a id=\"elsevier-h0290\"></a>Y. Zhang, P. Gentine, X. Luo, X. Lian, Y. Liu, S. Zhou, A.M. Michalak, W. Sun, J.B. Fisher, S. Piao, T.F. Keenan Increasing sensitivity of dryland vegetation greenness to precipitation due to rising atmospheric CO2 Nat. Commun., 13 (2022), p. 4875 [Zhang et al., 2022]\n\n59. <a id=\"elsevier-h0295\"></a>F. Zhao, X. Wang, Y. Wu, B. Sivakumar, S. Liu Enhanced Dependence of China’s Vegetation Activity on Soil Moisture Under Drier Climate Conditions Journal of Geophysical Research: Biogeosciences, 128, e2022JG007300. (2023) [Zhao et al., 2023]\n\n60. <a id=\"elsevier-h0300\"></a>Z. Zhu, S. Piao, R.B. Myneni, M. Huang, Z. Zeng, J.G. Canadell, P. Ciais, S. Sitch, P. Friedlingstein, A. Arneth, C. Cao, L. Cheng, E. Kato, C. Koven, Y. Li, X. Lian, Y. Liu, R. Liu, J. Mao, Y. Pan, S. Peng, J. Peñuelas, B. Poulter, T.A.M. Pugh, B.D. Stocker, N. Viovy, X. Wang, Y. Wang, Z. Xiao, H. Yang, S. Zaehle, N. Zeng Greening of the Earth and its drivers Nat. Clim. Chang., 6 (2016), pp. 791-795. 10.1038/nclimate3004 [Zhu et al., 2016]"
+    }
+  ],
+  "references": [
+    {
+      "raw": "1. <a id=\"elsevier-h0005\"></a>E. Batllori, F. Lloret, T. Aakala, W.R.L. Anderegg, E. Aynekulu, D.P. Bendixsen, A. Bentouati, C. Bigler, C.J. Burk, J.J. Camarero, M. Colangelo, J.D. Coop, R. Fensham, M.L. Floyd, L. Galiano, J.L. Ganey, P. Gonzalez, A.L. Jacobsen, J.M. Kane, T. Kitzberger, J.C. Linares, S.B. Marchetti, G. Matusick, M. Michaelian, R.M. Navarro-Cerrillo, R.B. Pratt, M.D. Redmond, A. Rigling, F. Ripullone, G. Sanguesa-Barreda, Y. Sasal, S. Saura-Mas, M.L. Suarez, T.T. Veblen, A. Vila-Cabrera, C. Vincke, B. Zeeman Forest and woodland replacement patterns following drought-related mortality Proc. Natl. Acad. Sci. U. S. A., 117 (2020), pp. 29720-29729. 10.1073/pnas.2002314117 [Batllori et al., 2020]",
+      "doi": "10.1073/pnas.2002314117",
+      "title": "Forest and woodland replacement patterns following drought-related mortality",
+      "year": "2020"
+    },
+    {
+      "raw": "2. <a id=\"elsevier-h0015\"></a>C. Chen, T. Park, X. Wang, S. Piao, B. Xu, R.K. Chaturvedi, R. Fuchs, V. Brovkin, P. Ciais, R. Fensholt, H. Tommervik, G. Bala, Z. Zhu, R.R. Nemani, R.B. Myneni China and India lead in greening of the world through land-use management Nat. Sustainability, 2 (2019), pp. 122-129. 10.1038/s41893-019-0220-7 [Chen et al., 2019]",
+      "doi": "10.1038/s41893-019-0220-7",
+      "title": "China and India lead in greening of the world through land-use management",
+      "year": "2019"
+    },
+    {
+      "raw": "3. <a id=\"elsevier-h0020\"></a>W. Cheng, L. Dan, X. Deng, J. Feng, Y. Wang, J. Peng, J. Tian, W. Qi, Z. Liu, X. Zheng, D. Zhou, S. Jiang, H. Zhao, X. Wang Global monthly gridded atmospheric carbon dioxide concentrations under the historical and future scenarios Sci. Data, 9 (2022), p. 83 [Cheng et al., 2022]",
+      "doi": null,
+      "title": "Global monthly gridded atmospheric carbon dioxide concentrations under the historical and future scenarios",
+      "year": "2022"
+    },
+    {
+      "raw": "4. <a id=\"elsevier-h0025\"></a>N. Cong, M. Shen, W. Yang, Z. Yang, G. Zhang, S. Piao Varying responses of vegetation activity to climate changes on the Tibetan Plateau grassland Int J Biometeorol, 61 (2017), pp. 1433-1444. 10.1007/s00484-017-1321-5 [Cong et al., 2017]",
+      "doi": "10.1007/s00484-017-1321-5",
+      "title": "Varying responses of vegetation activity to climate changes on the Tibetan Plateau grassland",
+      "year": "2017"
+    },
+    {
+      "raw": "5. <a id=\"elsevier-h0030\"></a>W. de Vries, E.Z. Du, K. Butterbach-Bahl Short and long-term impacts of nitrogen deposition on carbon sequestration by forest ecosystems Curr. Opin. Environ. Sustain., 9–10 (2014), pp. 90-104 [de Vries et al., 2014]",
+      "doi": null,
+      "title": "Short and long-term impacts of nitrogen deposition on carbon sequestration by forest ecosystems",
+      "year": "2014"
+    },
+    {
+      "raw": "6. <a id=\"elsevier-h0035\"></a>J.M.C. Denissen, A.J. Teuling, M. Reichstein, R. Orth Critical Soil Moisture Derived From Satellite Observations Over Europe J. Geophys. Res. Atmos., 125, e2019JD031672. (2020) [Denissen et al., 2020]",
+      "doi": null,
+      "title": "Critical Soil Moisture Derived From Satellite Observations Over Europe",
+      "year": "2020"
+    },
+    {
+      "raw": "7. <a id=\"elsevier-h0040\"></a>J.M.C. Denissen, A.J. Teuling, A.J. Pitman, S. Koirala, M. Migliavacca, W. Li, M. Reichstein, A.J. Winkler, C. Zhan, R. Orth Widespread shift from ecosystem energy to water limitation with climate change Nat. Clim. Chang., 12 (2022), pp. 677-684. 10.1038/s41558-022-01403-8 [Denissen et al., 2022]",
+      "doi": "10.1038/s41558-022-01403-8",
+      "title": "Widespread shift from ecosystem energy to water limitation with climate change",
+      "year": "2022"
+    },
+    {
+      "raw": "8. <a id=\"elsevier-h0045\"></a>E.Z. Du, W. de Vries, W.X. Han, X.J. Liu, Z.B. Yan, Y. Jiang Imbalanced phosphorus and nitrogen deposition in China's forests Atmos. Chem. Phys., 16 (2016), pp. 8571-8579. 10.5194/acp-16-8571-2016 [Du et al., 2016]",
+      "doi": "10.5194/acp-16-8571-2016",
+      "title": "Imbalanced phosphorus and nitrogen deposition in China's forests",
+      "year": "2016"
+    },
+    {
+      "raw": "9. <a id=\"elsevier-h0050\"></a>E. Du, W. de Vries Nitrogen-induced new net primary production and carbon sequestration in global forests Environ. Pollut., 242 (2018), pp. 1476-1487 [Du and de Vries, 2018]",
+      "doi": null,
+      "title": "Nitrogen-induced new net primary production and carbon sequestration in global forests",
+      "year": "2018"
+    },
+    {
+      "raw": "10. <a id=\"elsevier-h0055\"></a>E. Du, M.E. Fenn, W. De Vries, Y.S. Ok Atmospheric nitrogen deposition to global forests: Status, impacts and management options Environ. Pollut., 250 (2019), pp. 1044-1048 [Du et al., 2019]",
+      "doi": null,
+      "title": "Atmospheric nitrogen deposition to global forests: Status, impacts and management options",
+      "year": "2019"
+    },
+    {
+      "raw": "11. <a id=\"elsevier-h0060\"></a>X. Feng, B. Fu, Y. Zhang, N. Pan, Z. Zeng, H. Tian, Y. Lyu, Y. Chen, P. Ciais, Y. Wang, L. Zhang, L. Cheng, F.T. Maestre, M. Fernandez-Martinez, J. Sardans, J. Penuelas Recent leveling off of vegetation greenness and primary production reveals the increasing soil water limitations on the greening Earth Science Bulletin, 66 (2021), pp. 1462-1471 [Feng et al., 2021]",
+      "doi": null,
+      "title": "Recent leveling off of vegetation greenness and primary production reveals the increasing soil water limitations on the greening Earth",
+      "year": "2021"
+    },
+    {
+      "raw": "12. <a id=\"elsevier-h0065\"></a>G. Forzieri, R. Alkama, D.G. Miralles, A. Cescatti Satellites reveal contrasting responses of regional climate to the widespread greening of Earth Science, 356 (2017), pp. 1140-1144 [Forzieri et al., 2017]",
+      "doi": null,
+      "title": "Satellites reveal contrasting responses of regional climate to the widespread greening of Earth",
+      "year": "2017"
+    },
+    {
+      "raw": "13. <a id=\"elsevier-h0070\"></a>U. Groemping Relative importance for linear regression in R: The package relaimpo J. Stat. Softw., 17 (2006) [Groemping, 2006]",
+      "doi": null,
+      "title": "Relative importance for linear regression in R: The package relaimpo",
+      "year": "2006"
+    },
+    {
+      "raw": "14. <a id=\"elsevier-h0075\"></a>S. Gupta, S. Bonetti, P. Lehmann, D. Or Limited role of soil texture in mediating natural vegetation response to rainfall anomalies Environ. Res. Lett., 17 (2022), Article 034012. 10.1088/1748-9326/ac5206 [Gupta et al., 2022]",
+      "doi": "10.1088/1748-9326/ac5206",
+      "title": "Limited role of soil texture in mediating natural vegetation response to rainfall anomalies",
+      "year": "2022"
+    },
+    {
+      "raw": "15. <a id=\"elsevier-h0080\"></a>B. He, L. Huang, Z. Chen, H. Wang Weakening sensitivity of global vegetation to long-term droughts Science China-Earth Sciences, 61 (2018), pp. 60-70. 10.1007/s11430-016-9119-8 [He et al., 2018]",
+      "doi": "10.1007/s11430-016-9119-8",
+      "title": "Weakening sensitivity of global vegetation to long-term droughts",
+      "year": "2018"
+    },
+    {
+      "raw": "16. <a id=\"elsevier-h0010\"></a>Chen, C., Riley, W.J., Prentice, I.C., Keenan, T.F., 2022. CO2 fertilization of terrestrial photosynthesis inferred from site to global scales. Proc. Natl. Acad. Sci. U. S. A. 119. [Chen et al., 2022]",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "17. <a id=\"elsevier-h0085\"></a>Hersbach, H., Bell, B., Berrisford, P., Biavati, G., Horányi, A., Muñoz Sabater, J., Nicolas, J., Peubey, C., Radu, R., Rozum, I., Schepers, D., Simmons, A., Soci, C., Dee, D., Thépaut, J.-N., 2019. ERA5 monthly averaged data on single levels from 1979 to present. Copernicus Climate Change Service (C3S) Climate Data Store (CDS). (Accessed on < 02-06-2020 >). [Hersbach et al., 2019]",
+      "doi": null,
+      "title": null,
+      "year": null
+    },
+    {
+      "raw": "18. <a id=\"elsevier-h0090\"></a>M. Huang, S. Piao, P. Ciais, J. Penuelas, X. Wang, T.F. Keenan, S. Peng, J.A. Berry, K. Wang, J. Mao, R. Alkama, A. Cescatti, M. Cuntz, H. De Deurwaerder, M. Gao, Y. He, Y. Liu, Y. Luo, R.B. Myneni, S. Niu, X. Shi, W. Yuan, H. Verbeeck, T. Wang, J. Wu, I.A. Janssens Air temperature optima of vegetation productivity across global biomes Nat. Ecol. Evol., 3 (2019), pp. 772-779. 10.1038/s41559-019-0838-x [Huang et al., 2019]",
+      "doi": "10.1038/s41559-019-0838-x",
+      "title": "Air temperature optima of vegetation productivity across global biomes",
+      "year": "2019"
+    },
+    {
+      "raw": "19. <a id=\"elsevier-h0095\"></a>W. Jiao, L. Wang, W.K. Smith, Q. Chang, H. Wang, P. D’Odorico Observed increasing water constraint on vegetation growth over the last three decades Nat. Commun., 12 (2021), p. 3777 [Jiao et al., 2021]",
+      "doi": null,
+      "title": "Observed increasing water constraint on vegetation growth over the last three decades",
+      "year": "2021"
+    },
+    {
+      "raw": "20. <a id=\"elsevier-h0100\"></a>Z. Jin, Q. You, Z. Zuo, M. Li, G. Sun, N. Pepin, L. Wang Increased sensitivity of greening to afforestation in China over the recent 20 years Agric. For. Meteorol., 339 (2023), p. 109561 [Jin et al., 2023]",
+      "doi": null,
+      "title": "Increased sensitivity of greening to afforestation in China over the recent 20 years",
+      "year": "2023"
+    },
+    {
+      "raw": "21. <a id=\"elsevier-h0105\"></a>M. Jung, M. Reichstein, C.R. Schwalm, C. Huntingford, S. Sitch, A. Ahlstrom, A. Arneth, G. Camps-Valls, P. Ciais, P. Friedlingstein, F. Gans, K. Ichii, A.K. Jain, E. Kato, D. Papale, B. Poulter, B. Raduly, C. Rodenbeck, G. Tramontana, N. Viovy, Y.P. Wang, U. Weber, S. Zaehle, N. Zeng Compensatory water effects link yearly global land CO2 sink changes to temperature Nature, 541 (2017), pp. 516-520. 10.1038/nature20780 [Jung et al., 2017]",
+      "doi": "10.1038/nature20780",
+      "title": "Compensatory water effects link yearly global land CO2 sink changes to temperature",
+      "year": "2017"
+    },
+    {
+      "raw": "22. <a id=\"elsevier-h0110\"></a>T.F. Keenan, D.Y. Hollinger, G. Bohrer, D. Dragoni, J.W. Munger, H.P. Schmid, A.D. Richardson Increase in forest water-use efficiency as atmospheric carbon dioxide concentrations rise Nature, 499 (2013), p. 324. 10.1038/nature12291 [Keenan et al., 2013]",
+      "doi": "10.1038/nature12291",
+      "title": "Increase in forest water-use efficiency as atmospheric carbon dioxide concentrations rise",
+      "year": "2013"
+    },
+    {
+      "raw": "23. <a id=\"elsevier-h0115\"></a>M.G. Kendall Rank Correlation Methods Griffin, London, UK (1975) [Kendall, 1975]",
+      "doi": null,
+      "title": "Rank Correlation Methods",
+      "year": "1975"
+    },
+    {
+      "raw": "24. <a id=\"elsevier-h0120\"></a>D.W. Kicklighter, J.M. Melillo, E. Monier, A.P. Sokolov, Q.L. Zhuang Future nitrogen availability and its effect on carbon sequestration in Northern Eurasia Nat. Commun., 10 (2019), p. 3024 [Kicklighter et al., 2019]",
+      "doi": null,
+      "title": "Future nitrogen availability and its effect on carbon sequestration in Northern Eurasia",
+      "year": "2019"
+    },
+    {
+      "raw": "25. <a id=\"elsevier-h0125\"></a>D.S. LeBauer, K.K. Treseder Nitrogen limitation of net primary productivity in terrestrial ecosystems is globally distributed Ecology, 89 (2008), pp. 371-379. 10.1890/06-2057.1 [LeBauer and Treseder, 2008]",
+      "doi": "10.1890/06-2057.1",
+      "title": "Nitrogen limitation of net primary productivity in terrestrial ecosystems is globally distributed",
+      "year": "2008"
+    },
+    {
+      "raw": "26. <a id=\"elsevier-h0130\"></a>D. Li, L. An, S. Zhong, L. Shen, S. Wu Declining coupling between vegetation and drought over the past three decades Glob, Change Biol., 30 (2024), Article e17141 [Li et al., 2024]",
+      "doi": null,
+      "title": "Declining coupling between vegetation and drought over the past three decades",
+      "year": "2024"
+    },
+    {
+      "raw": "27. <a id=\"elsevier-h0135\"></a>M. Li, X. Zhang, B. Niu, Y. He, X. Wang, J. Wu Changes in plant species richness distribution in Tibetan alpine grasslands under different precipitation scenarios Glob. Ecol. Conserv., 21 (2020), Article e00848 [Li et al., 2020]",
+      "doi": null,
+      "title": "Changes in plant species richness distribution in Tibetan alpine grasslands under different precipitation scenarios",
+      "year": "2020"
+    },
+    {
+      "raw": "28. <a id=\"elsevier-h0140\"></a>W. Li, M. Migliavacca, M. Forkel, J.M.C. Denissen, M. Reichstein, H. Yang, G. Duveiller, U. Weber, R. Orth Widespread increasing vegetation sensitivity to soil moisture Nat. Commun., 13 (2022), p. 3959 [Li et al., 2022]",
+      "doi": null,
+      "title": "Widespread increasing vegetation sensitivity to soil moisture",
+      "year": "2022"
+    },
+    {
+      "raw": "29. <a id=\"elsevier-h0145\"></a>Y. Li, Z. Zeng, L. Huang, X. Lian, S. Piao Comment on “Satellites reveal contrasting responses of regional climate to the widespread greening of Earth” Science, 360, eaap7950. (2018) [Li et al., 2018]",
+      "doi": null,
+      "title": "Comment on “Satellites reveal contrasting responses of regional climate to the widespread greening of Earth”",
+      "year": "2018"
+    },
+    {
+      "raw": "30. <a id=\"elsevier-h0150\"></a>X. Lian, S. Piao, A. Chen, C. Huntingford, B. Fu, L.Z.X. Li, J. Huang, J. Sheffield, A.M. Berg, T.F. Keenan, T.R. McVicar, Y. Wada, X. Wang, T. Wang, Y. Yang, M.L. Roderick Multifaceted characteristics of dryland aridity changes in a warming world Nature Reviews Earth & Environment, 2 (2021), pp. 232-250. 10.1038/s43017-021-00144-0 [Lian et al., 2021]",
+      "doi": "10.1038/s43017-021-00144-0",
+      "title": "Multifaceted characteristics of dryland aridity changes in a warming world",
+      "year": "2021"
+    },
+    {
+      "raw": "31. <a id=\"elsevier-h0155\"></a>Z. Liu, L. Chen, N.G. Smith, W. Yuan, X. Chen, G. Zhou, S.A. Alam, K. Lin, T. Zhao, P. Zhou, C. Chu, H. Ma, J. Liu Global divergent responses of primary productivity to water, energy, and CO2 Environ. Res. Lett., 14 (2019), p. 124044. 10.1088/1748-9326/ab57c5 [Liu et al., 2019]",
+      "doi": "10.1088/1748-9326/ab57c5",
+      "title": "Global divergent responses of primary productivity to water, energy, and CO2",
+      "year": "2019"
+    },
+    {
+      "raw": "32. <a id=\"elsevier-h0160\"></a>H. Liu, Z. Mi, L. Lin, Y. Wang, Z. Zhang, F. Zhang, H. Wang, L. Liu, B. Zhu, G. Cao, X. Zhao, N.J. Sanders, A.T. Classen, P.B. Reich, J.-S. He Shifting plant species composition in response to climate change stabilizes grassland primary production Proc. Natl. Acad. Sci. u. s. a., 115 (2018), pp. 4051-4056. 10.1073/pnas.1700299114 [Liu et al., 2018]",
+      "doi": "10.1073/pnas.1700299114",
+      "title": "Shifting plant species composition in response to climate change stabilizes grassland primary production",
+      "year": "2018"
+    },
+    {
+      "raw": "33. <a id=\"elsevier-h0165\"></a>D. Liu, T. Wang, J. Penuelas, S. Piao Drought resistance enhanced by tree species diversity in global forests Nat. Geosci., 15 (2022), pp. 800-804. 10.1038/s41561-022-01026-w [Liu et al., 2022]",
+      "doi": "10.1038/s41561-022-01026-w",
+      "title": "Drought resistance enhanced by tree species diversity in global forests",
+      "year": "2022"
+    },
+    {
+      "raw": "34. <a id=\"elsevier-h0170\"></a>R. Lu, Z. Zhu, T. Li, H. Zhang Interannual and Interdecadal Variabilities of Spring Rainfall over Northeast China and Their Associated Sea Surface Temperature Anomaly Forcings J. Clim., 33 (2020), pp. 1423-1435. 10.1175/jcli-d-19-0302.1 [Lu et al., 2020]",
+      "doi": "10.1175/jcli-d-19-0302.1",
+      "title": "Interannual and Interdecadal Variabilities of Spring Rainfall over Northeast China and Their Associated Sea Surface Temperature Anomaly Forcings",
+      "year": "2020"
+    },
+    {
+      "raw": "35. <a id=\"elsevier-h0175\"></a>Z. Ma, H. Liu, Z. Mi, Z. Zhang, Y. Wang, W. Xu, L. Jiang, J.S. He Climate warming reduces the temporal stability of plant community biomass production Nat. Commun., 8 (2017), p. 15378 [Ma et al., 2017]",
+      "doi": null,
+      "title": "Climate warming reduces the temporal stability of plant community biomass production",
+      "year": "2017"
+    },
+    {
+      "raw": "36. <a id=\"elsevier-h0180\"></a>H.B. Mann Nonparametric tests against trend Econometrica, 13 (1945), pp. 245-259. 10.2307/1907187 [Mann, 1945]",
+      "doi": "10.2307/1907187",
+      "title": "Nonparametric tests against trend",
+      "year": "1945"
+    },
+    {
+      "raw": "37. <a id=\"elsevier-h0185\"></a>I.H. Myers-Smith, J.T. Kerby, G.K. Phoenix, J.W. Bjerke, H.E. Epstein, J.J. Assmann, C. John, L. Andreu-Hayles, S. Angers-Blondin, P.S.A. Beck, L.T. Berner, U.S. Bhatt, A.D. Bjorkman, D. Blok, A. Bryn, C.T. Christiansen, J.H.C. Cornelissen, A.M. Cunliffe, S.C. Elmendorf, B.C. Forbes, S.J. Goetz, R.D. Hollister, R. de Jong, M.M. Loranty, M. Macias-Fauria, K. Maseyk, S. Normand, J. Olofsson, T.C. Parker, F.-J.-W. Parmentier, E. Post, G. Schaepman-Strub, F. Stordal, P.F. Sullivan, H.J.D. Thomas, H. Tommervik, R. Treharne, C.E. Tweedie, D.A. Walker, M. Wilmking, S. Wipf Complexity revealed in the greening of the Arctic Nat. Clim. Chang., 10 (2020), pp. 106-117. 10.1038/s41558-019-0688-1 [Myers-Smith et al., 2020]",
+      "doi": "10.1038/s41558-019-0688-1",
+      "title": "Complexity revealed in the greening of the Arctic",
+      "year": "2020"
+    },
+    {
+      "raw": "38. <a id=\"elsevier-h0190\"></a>D.M. Olson, E. Dinerstein, E.D. Wikramanayake, N.D. Burgess, G.V.N. Powell, E.C. Underwood, J.A. D'Amico, I. Itoua, H.E. Strand, J.C. Morrison, C.J. Loucks, T.F. Allnutt, T.H. Ricketts, Y. Kura, J.F. Lamoreux, W.W. Wettengel, P. Hedao, K.R. Kassem Terrestrial ecoregions of the worlds: A new map of life on Earth Bioscience, 51 (2001), pp. 933-938 [Olson et al., 2001]",
+      "doi": null,
+      "title": "Terrestrial ecoregions of the worlds: A new map of life on Earth",
+      "year": "2001"
+    },
+    {
+      "raw": "39. <a id=\"elsevier-h0195\"></a>M.P. Perring, M. Diekmann, G. Midolo, D.S. Costa, M. Bernhardt-Römermann, J.C.J. Otto, F.S. Gilliam, P.O. Hedwall, A. Nordin, T. Dirnböck, S.M. Simkin, F. Malis, H. Blondeel, J. Brunet, M. Chudomelová, T. Durak, P. De Frenne, R. Hédl, M. Kopecky, D. Landuyt, D.J. Li, P. Manning, P. Petrík, K. Reczynska, W. Schmidt, T. Standovár, K. Swierkosz, O. Vild, D.M. Waller, K. Verheyen Understanding context dependency in the response of forest understorey plant communities to nitrogen deposition Environ. Pollut., 242 (2018), pp. 1787-1799 [Perring et al., 2018]",
+      "doi": null,
+      "title": "Understanding context dependency in the response of forest understorey plant communities to nitrogen deposition",
+      "year": "2018"
+    },
+    {
+      "raw": "40. <a id=\"elsevier-h0200\"></a>S. Piao, H. Nan, C. Huntingford, P. Ciais, P. Friedlingstein, S. Sitch, S. Peng, A. Ahlstrom, J.G. Canadell, N. Cong, S. Levis, P.E. Levy, L. Liu, M.R. Lomas, J. Mao, R.B. Myneni, P. Peylin, B. Poulter, X. Shi, G. Yin, N. Viovy, T. Wang, X. Wang, S. Zaehle, N. Zeng, Z. Zeng, A. Chen Evidence for a weakening relationship between interannual temperature variability and northern vegetation activity Nat. Commun., 5, 5018. (2014) [Piao et al., 2014]",
+      "doi": null,
+      "title": "Evidence for a weakening relationship between interannual temperature variability and northern vegetation activity",
+      "year": "2014"
+    },
+    {
+      "raw": "41. <a id=\"elsevier-h0205\"></a>S. Piao, G. Yin, J. Tan, L. Cheng, M. Huang, Y. Li, R. Liu, J. Mao, R.B. Myneni, S. Peng, B. Poulter, X. Shi, Z. Xiao, N. Zeng, Z. Zeng, Y. Wang Detection and attribution of vegetation greening trend in China over the last 30 years Glob. Change Biol., 21 (2015), pp. 1601-1609. 10.1111/gcb.12795 [Piao et al., 2015]",
+      "doi": "10.1111/gcb.12795",
+      "title": "Detection and attribution of vegetation greening trend in China over the last 30 years",
+      "year": "2015"
+    },
+    {
+      "raw": "42. <a id=\"elsevier-h0210\"></a>S. Piao, X. Wang, T. Park, C. Chen, X. Lian, Y. He, J.W. Bjerke, A. Chen, P. Ciais, H. Tommervik, R.R. Nemani, R.B. Myneni Characteristics, drivers and feedbacks of global greening Nature Reviews Earth & Environment, 1 (2020), pp. 14-27 [Piao et al., 2020]",
+      "doi": null,
+      "title": "Characteristics, drivers and feedbacks of global greening",
+      "year": "2020"
+    },
+    {
+      "raw": "43. <a id=\"elsevier-h0215\"></a>H. Poorter, K.J. Niklas, P.B. Reich, J. Oleksyn, P. Poot, L. Mommer Biomass allocation to leaves, stems and roots: meta-analyses of interspecific variation and environmental control New Phytol., 193 (2012), pp. 30-50. 10.1111/j.1469-8137.2011.03952.x [Poorter et al., 2012]",
+      "doi": "10.1111/j.1469-8137.2011.03952.x",
+      "title": "Biomass allocation to leaves, stems and roots: meta-analyses of interspecific variation and environmental control",
+      "year": "2012"
+    },
+    {
+      "raw": "44. <a id=\"elsevier-h0220\"></a>H. Ren, Z. Wen, Y. Liu, Z. Lin, P. Han, H. Shi, Z. Wang, T. Su Vegetation response to changes in climate across different climate zones in China Ecol. Ind., 155 (2023), Article 110932 [Ren et al., 2023]",
+      "doi": null,
+      "title": "Vegetation response to changes in climate across different climate zones in China",
+      "year": "2023"
+    },
+    {
+      "raw": "45. <a id=\"elsevier-h0225\"></a>D. Schimel, B.B. Stephens, J.B. Fisher Effect of increasing CO2 on the terrestrial carbon cycle Proc. Natl. Acad. Sci. U. S. A., 112 (2015), pp. 436-441. 10.1073/pnas.1407302112 [Schimel et al., 2015]",
+      "doi": "10.1073/pnas.1407302112",
+      "title": "Effect of increasing CO2 on the terrestrial carbon cycle",
+      "year": "2015"
+    },
+    {
+      "raw": "46. <a id=\"elsevier-h0230\"></a>P.K. Sen Estimates of the regression coefficient based on Kendall's tau J. Am. Stat. Assoc., 63 (1968), pp. 1379-1389 [Sen, 1968]",
+      "doi": null,
+      "title": "Estimates of the regression coefficient based on Kendall's tau",
+      "year": "1968"
+    },
+    {
+      "raw": "47. <a id=\"elsevier-h0235\"></a>M. Shen, S. Piao, S.J. Jeong, L. Zhou, Z. Zeng, P. Ciais, D. Chen, M. Huang, C.S. Jin, L.Z. Li, Y. Li, R.B. Myneni, K. Yang, G. Zhang, Y. Zhang, T. Yao Evaporative cooling over the Tibetan Plateau induced by vegetation growth Proc. Natl. Acad. Sci. U. S. A., 112 (2015), pp. 9299-9304. 10.1073/pnas.1504418112 [Shen et al., 2015]",
+      "doi": "10.1073/pnas.1504418112",
+      "title": "Evaporative cooling over the Tibetan Plateau induced by vegetation growth",
+      "year": "2015"
+    },
+    {
+      "raw": "48. <a id=\"elsevier-h0240\"></a>S. Sitch, P. Friedlingstein, N. Gruber, S.D. Jones, G. Murray-Tortarolo, A. Ahlstrom, S.C. Doney, H. Graven, C. Heinze, C. Huntingford, S. Levis, P.E. Levy, M. Lomas, B. Poulter, N. Viovy, S. Zaehle, N. Zeng, A. Arneth, G. Bonan, L. Bopp, J.G. Canadell, F. Chevallier, P. Ciais, R. Ellis, M. Gloor, P. Peylin, S.L. Piao, C. Le Quere, B. Smith, Z. Zhu, R. Myneni Recent trends and drivers of regional sources and sinks of carbon dioxide Biogeosciences, 12 (2015), pp. 653-679. 10.5194/bg-12-653-2015 [Sitch et al., 2015]",
+      "doi": "10.5194/bg-12-653-2015",
+      "title": "Recent trends and drivers of regional sources and sinks of carbon dioxide",
+      "year": "2015"
+    },
+    {
+      "raw": "49. <a id=\"elsevier-h0245\"></a>Y. Song, W. Jiao, J. Wang, L. Wang Increased Global Vegetation Productivity Despite Rising Atmospheric Dryness Over the Last Two Decades Earths Future, 10 (2022), Article e2021EF002634 [Song et al., 2022]",
+      "doi": null,
+      "title": "Increased Global Vegetation Productivity Despite Rising Atmospheric Dryness Over the Last Two Decades",
+      "year": "2022"
+    },
+    {
+      "raw": "50. <a id=\"elsevier-h0250\"></a>S. Wang, Y. Zhang, W. Ju, J.M. Chen, P. Ciais, A. Cescatti, J. Sardans, I.A. Janssens, M. Wu, J.A. Berry, E. Campbell, M. Fernandez-Martinez, R. Alkama, S. Sftch, P. Friedlingstein, W.K. Smith, W. Yuan, W. He, D. Lombardozzi, M. Kautz, D. Zhu, S. Lienert, E. Kato, B. Poulter, T.G.M. Sanders, I. Kruger, R. Wang, N. Zeng, H. Tian, N. Vuichard, A.K. Jain, A. Wiltshire, V. Haverd, D.S. Goll, J. Penuelas Recent global decline of CO2 fertilization effects on vegetation photosynthesis Science, 370 (2020), pp. 1295-1330 [Wang et al., 2020]",
+      "doi": null,
+      "title": "Recent global decline of CO2 fertilization effects on vegetation photosynthesis",
+      "year": "2020"
+    },
+    {
+      "raw": "51. <a id=\"elsevier-h0255\"></a>Z. Wang, X. Zhang, B. Niu, Y. Zheng, Y. He, Y. Cao, Y. Feng, J. Wu Divergent Climate Sensitivities of the Alpine Grasslands to Early Growing Season Precipitation on the Tibetan Plateau Remote Sens., 14 (2022) [Wang et al., 2022]",
+      "doi": null,
+      "title": "Divergent Climate Sensitivities of the Alpine Grasslands to Early Growing Season Precipitation on the Tibetan Plateau",
+      "year": "2022"
+    },
+    {
+      "raw": "52. <a id=\"elsevier-h0260\"></a>X. Wei, W. He, Y. Zhou, N. Cheng, J. Xiao, W. Bi, Y. Liu, S. Sun, W. Ju Increased Sensitivity of Global Vegetation Productivity to Drought Over the Recent Three Decades Journal of Geophysical Research: Atmospheres 128, e2022JD037504. (2023) [Wei et al., 2023]",
+      "doi": null,
+      "title": "Increased Sensitivity of Global Vegetation Productivity to Drought Over the Recent Three Decades",
+      "year": "2023"
+    },
+    {
+      "raw": "53. <a id=\"elsevier-h0265\"></a>Q.L. You, K. Fraedrich, G.Y. Ren, N. Pepin, S.C. Kang Variability of temperature in the Tibetan Plateau based on homogenized surface stations and reanalysis data Int. J. Climatol., 33 (2013), pp. 1337-1347. 10.1002/joc.3512 [You et al., 2013]",
+      "doi": "10.1002/joc.3512",
+      "title": "Variability of temperature in the Tibetan Plateau based on homogenized surface stations and reanalysis data",
+      "year": "2013"
+    },
+    {
+      "raw": "54. <a id=\"elsevier-h0270\"></a>L. Yu, Y. Xue, I. Diallo Vegetation greening in China and its effect on summer regional climate Science Bulletin, 66 (2021), pp. 13-17 [Yu et al., 2021]",
+      "doi": null,
+      "title": "Vegetation greening in China and its effect on summer regional climate",
+      "year": "2021"
+    },
+    {
+      "raw": "55. <a id=\"elsevier-h0275\"></a>X. Zeng, Z. Hu, A. Chen, W. Yuan, G. Hou, D. Han, M. Liang, K. Di, R. Cao, D. Luo The global decline in the sensitivity of vegetation productivity to precipitation from 2001 to 2018 Glob. Change Biol., 28 (2022), pp. 6823-6833. 10.1111/gcb.16403 [Zeng et al., 2022]",
+      "doi": "10.1111/gcb.16403",
+      "title": "The global decline in the sensitivity of vegetation productivity to precipitation from 2001 to 2018",
+      "year": "2022"
+    },
+    {
+      "raw": "56. <a id=\"elsevier-h0280\"></a>Z. Zeng, S. Piao, L.Z.X. Li, L. Zhou, P. Ciais, T. Wang, Y. Li, X. Lian, E.F. Wood, P. Friedlingstein, J. Mao, L.D. Estes, R.B. Myneni, S. Peng, X. Shi, S.I. Seneviratne, Y. Wang Climate mitigation from vegetation biophysical feedbacks during the past three decades Nat. Clim. Chang., 7 (2017), pp. 432-436. 10.1038/nclimate3299 [Zeng et al., 2017]",
+      "doi": "10.1038/nclimate3299",
+      "title": "Climate mitigation from vegetation biophysical feedbacks during the past three decades",
+      "year": "2017"
+    },
+    {
+      "raw": "57. <a id=\"elsevier-h0285\"></a>Z. Zeng, S. Piao, L.Z.X. Li, T. Wang, P. Ciais, X. Lian, Y. Yang, J. Mao, X. Shi, R.B. Myneni Impact of Earth Greening on the Terrestrial Water Cycle J. Clim., 31 (2018), pp. 2633-2650. 10.1175/jcli-d-17-0236.1 [Zeng et al., 2018]",
+      "doi": "10.1175/jcli-d-17-0236.1",
+      "title": "Impact of Earth Greening on the Terrestrial Water Cycle",
+      "year": "2018"
+    },
+    {
+      "raw": "58. <a id=\"elsevier-h0290\"></a>Y. Zhang, P. Gentine, X. Luo, X. Lian, Y. Liu, S. Zhou, A.M. Michalak, W. Sun, J.B. Fisher, S. Piao, T.F. Keenan Increasing sensitivity of dryland vegetation greenness to precipitation due to rising atmospheric CO2 Nat. Commun., 13 (2022), p. 4875 [Zhang et al., 2022]",
+      "doi": null,
+      "title": "Increasing sensitivity of dryland vegetation greenness to precipitation due to rising atmospheric CO2",
+      "year": "2022"
+    },
+    {
+      "raw": "59. <a id=\"elsevier-h0295\"></a>F. Zhao, X. Wang, Y. Wu, B. Sivakumar, S. Liu Enhanced Dependence of China’s Vegetation Activity on Soil Moisture Under Drier Climate Conditions Journal of Geophysical Research: Biogeosciences, 128, e2022JG007300. (2023) [Zhao et al., 2023]",
+      "doi": null,
+      "title": "Enhanced Dependence of China’s Vegetation Activity on Soil Moisture Under Drier Climate Conditions",
+      "year": "2023"
+    },
+    {
+      "raw": "60. <a id=\"elsevier-h0300\"></a>Z. Zhu, S. Piao, R.B. Myneni, M. Huang, Z. Zeng, J.G. Canadell, P. Ciais, S. Sitch, P. Friedlingstein, A. Arneth, C. Cao, L. Cheng, E. Kato, C. Koven, Y. Li, X. Lian, Y. Liu, R. Liu, J. Mao, Y. Pan, S. Peng, J. Peñuelas, B. Poulter, T.A.M. Pugh, B.D. Stocker, N. Viovy, X. Wang, Y. Wang, Z. Xiao, H. Yang, S. Zaehle, N. Zeng Greening of the Earth and its drivers Nat. Clim. Chang., 6 (2016), pp. 791-795. 10.1038/nclimate3004 [Zhu et al., 2016]",
+      "doi": "10.1038/nclimate3004",
+      "title": "Greening of the Earth and its drivers",
+      "year": "2016"
+    }
+  ],
+  "assets": [],
+  "quality": {
+    "has_fulltext": true,
+    "token_estimate": 12698,
+    "content_kind": "fulltext",
+    "has_abstract": true,
+    "warnings": [],
+    "source_trail": [
+      "fulltext:elsevier_html_ok"
+    ],
+    "token_estimate_breakdown": {
+      "abstract": 574,
+      "body": 12124,
+      "refs": 4687
+    },
+    "confidence": "high",
+    "flags": [],
+    "body_metrics": {
+      "char_count": 48424,
+      "word_count": 7475,
+      "body_block_count": 19,
+      "body_heading_count": 19,
+      "body_to_abstract_ratio": 22.313432835820894,
+      "explicit_body_container": false,
+      "post_abstract_body_run": false,
+      "figure_count": 0
+    },
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0,
+      "formula_diagnostics": []
+    },
+    "asset_failures": [],
+    "asset_summary": {
+      "audited": false,
+      "requested": false,
+      "profile": "none",
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_requested": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "failure_codes": [],
+      "issue_codes": [],
+      "by_kind": {
+        "figure": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "formula": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "table": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "supplement": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        },
+        "decoration": {
+          "total": 0,
+          "requested": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_requested": 0,
+          "not_archived": 0
+        }
+      },
+      "diagnostics": []
+    },
+    "extraction_revision": 11
+  },
+  "acquisition": {
+    "provider": "elsevier",
+    "route": "browser_html",
+    "representation": "html",
+    "transport": "browser",
+    "fallback_used": false
+  }
+}

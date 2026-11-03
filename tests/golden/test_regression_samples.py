@@ -467,20 +467,31 @@ class RegressionSampleTests(unittest.TestCase):
         # abstract. A synthetic fixture previously hid this omission.
         expected = []
         for abstract in abstracts:
-            for subsection in abstract.find_all("abstract-sec"):
-                heading = subsection.find("section-title")
-                expected.append(
-                    (
-                        heading.get_text(" ", strip=True) if heading else "Abstract",
-                        _words(
-                            subsection.find("simple-para").get_text(" ", strip=True)
-                        ),
-                    )
+            # Each source language is one abstract block. Subsection headings
+            # and all four original paragraphs remain inside that block.
+            heading = abstract.find("section-title", recursive=False)
+            clone = BeautifulSoup(str(abstract), "xml").find("abstract")
+            direct_heading = clone.find("section-title", recursive=False)
+            if direct_heading is not None:
+                direct_heading.decompose()
+            expected.append(
+                (
+                    heading.get_text(" ", strip=True) if heading else "Abstract",
+                    _words(clone.get_text("", strip=False)),
                 )
+            )
         self.assertEqual(
             [(section.heading, _words(section.text)) for section in rendered], expected
         )
-        self.assertEqual(article.metadata.abstract, rendered[0].text)
+        for abstract, section in zip(abstracts, rendered, strict=True):
+            for paragraph in abstract.find_all("simple-para"):
+                self.assertEqual(
+                    _words(section.text).count(
+                        _words(paragraph.get_text("", strip=False))
+                    ),
+                    1,
+                )
+        self.assertEqual(_words(article.metadata.abstract), _words(rendered[0].text))
 
     def test_tandf_bilingual_fixture_preserves_parallel_abstract_sections(self) -> None:
         self._assert_bilingual_fixture_case("tandf")
@@ -648,9 +659,14 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertTrue(article.quality.has_fulltext)
         self.assertTrue(len(article.sections) >= 4)
         headings = [section.heading for section in article.sections]
-        self.assertIn("Introduction", headings)
-        self.assertIn("Discussion", headings)
-        self.assertIn("Conclusions", headings)
+        import re
+
+        unnumbered = [
+            re.sub(r"^\d+(?:\.\d+)*\.?\s+", "", heading) for heading in headings
+        ]
+        self.assertIn("Introduction", unnumbered)
+        self.assertIn("Discussion", unnumbered)
+        self.assertIn("Conclusions", unnumbered)
         self.assertTrue(any("data" in heading.lower() for heading in headings))
         self.assertTrue(
             any(

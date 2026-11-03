@@ -85,7 +85,7 @@ class _SharedBrowserPageSession:
         if self._closed:
             return
         self._closed = True
-        for value in (self.page, self.context, self.manager):
+        for value in (self.page, self.manager):
             if value is not None:
                 with contextlib.suppress(Exception):
                     value.close()
@@ -271,9 +271,7 @@ class _BaseBrowserDocumentFetcher:
         self._headless = headless
         self._runtime_context = runtime_context
         self._use_runtime_shared_browser = use_runtime_shared_browser
-        self.requires_caller_thread = (
-            runtime_context is not None and use_runtime_shared_browser
-        )
+        self.requires_caller_thread = True
         self._browser_config = options.runtime_config
         self._shared_page_session = _runtime_shared_page_session(runtime_context)
         self._browser_manager = None
@@ -302,10 +300,7 @@ class _BaseBrowserDocumentFetcher:
             with contextlib.suppress(Exception):
                 self._page.close()
             self._page = None
-        if self._context is not None:
-            with contextlib.suppress(Exception):
-                self._context.close()
-            self._context = None
+        self._context = None
         if self._browser_manager is not None:
             with contextlib.suppress(Exception):
                 self._browser_manager.close()
@@ -365,7 +360,6 @@ class _BaseBrowserDocumentFetcher:
                 else:
                     for value in (
                         self._page,
-                        self._context,
                         self._browser_manager,
                     ):
                         if value is not None:
@@ -426,7 +420,11 @@ class _BaseBrowserDocumentFetcher:
             if max_urls is not None and warmed_count >= max_urls:
                 break
             try:
-                page.goto(seed_url, wait_until="domcontentloaded", timeout=timeout_ms)
+                from ...browser_runtime.flaresolverr_manager import navigate_page
+
+                navigate_page(
+                    page, seed_url, wait_until="domcontentloaded", timeout_ms=timeout_ms
+                )
                 if (
                     shared_session is not None
                     and shared_session.seed_page_ready_waiter is not None

@@ -699,7 +699,13 @@ EOF
   printf '\n%s\n\n' "$install_line" >> "$staging/README.offline.md"
 
   cat >> "$staging/README.offline.md" <<'EOF'
-Browser-backed providers use native Camoufox.
+On Linux x64, PNAS and Elsevier browser routes use system Chrome and FlareSolverr;
+other browser routes use Camoufox. macOS uses Camoufox and skips Elsevier browser routes.
+After core installation, Linux x64 automatically prepares FlareSolverr source/private
+dependencies and a matching ChromeDriver. This phase may use the network even with
+`--non-interactive`; system packages still require explicit interactive consent.
+Failures or cancellation preserve core installation. See `flaresolverr-setup-results.txt`
+or rerun `./runtime/paper-fetch-python -m paper_fetch.offline_setup --install-root . --prepare-flaresolverr`.
 Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
 
 The installer writes `PAPER_FETCH_BROWSER_HEADLESS=true` into `offline.env`. It does not override Camoufox's generated Firefox user agent or fingerprint settings.

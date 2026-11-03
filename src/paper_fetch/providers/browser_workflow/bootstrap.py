@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from ...quality.access_boundary import propagate_paywall
 
-from dataclasses import replace
 import logging
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
@@ -127,14 +126,6 @@ def bootstrap_browser_workflow(
                 provider=client.name,
                 doi=normalized_doi,
             )
-            if not profile.persistent_storage_state:
-                result.runtime = replace(
-                    result.runtime,
-                    profile_dir=None,
-                    user_data_dir=None,
-                    storage_state_path=None,
-                    persist_storage_state=False,
-                )
             deps.ensure_runtime_ready(result.runtime)
     except ProviderFailure as exc:
         if not allow_runtime_failure:
@@ -173,8 +164,18 @@ def bootstrap_browser_workflow(
                 getattr(extraction_html_result, "browser_context_seed", None)
                 or result.browser_context_seed
             )
+            pdf_extractor = extract_pdf_candidate_urls_from_html
+            if client.name == "elsevier":
+                from functools import partial
+                from .._elsevier_html import (
+                    browser_pdf_candidates as elsevier_pdf_extractor,
+                )
+
+                pdf_extractor = partial(
+                    elsevier_pdf_extractor, expected_doi=normalized_doi
+                )
             for pdf_candidate in reversed(
-                extract_pdf_candidate_urls_from_html(
+                pdf_extractor(
                     getattr(extraction_html_result, "html", "") or "",
                     getattr(extraction_html_result, "final_url", "") or "",
                 )

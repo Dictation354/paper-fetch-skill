@@ -1,0 +1,549 @@
+{
+  "code": "cloudflare_challenge",
+  "message": "Encountered a challenge or CAPTCHA page while loading publisher HTML.",
+  "details": {
+    "trace": {
+      "backend": "flaresolverr",
+      "candidate_count": 1,
+      "candidates": [
+        {
+          "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+          "host": "www.sciencedirect.com",
+          "path": "/science/article/pii/S0034425726001392",
+          "url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d",
+          "started_at": 1793688788.404,
+          "remaining_before_ms": 118917,
+          "navigation_seconds": 2.745,
+          "dom_readiness_seconds": 8.003,
+          "dom_readiness_attempted": true,
+          "dom_readiness_ready": false,
+          "dom_readiness_selector": null,
+          "dom_readiness_text_length": 0,
+          "dom_readiness_paragraph_count": 0,
+          "dom_readiness_heading_count": 0,
+          "dom_readiness_fingerprint_present": false,
+          "dom_readiness_result": "timeout",
+          "provider_page_preparation": {
+            "mathjax_original_mathml": 0
+          },
+          "provider_page_preparation_seconds": 0.003,
+          "status": null,
+          "main_document_response": {
+            "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+            "host": "www.sciencedirect.com",
+            "path": "/science/article/pii/S0034425726001392",
+            "url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d",
+            "status": null,
+            "content_type": null,
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "captured_html_bytes": 832056,
+            "navigation_timing": {
+              "available": true,
+              "document_ready_state": "complete",
+              "navigation_entry_present": true,
+              "response_start_ms": 249.4,
+              "response_end_ms": 854.1,
+              "dom_interactive_ms": 857.2,
+              "dom_content_loaded_event_end_ms": 857.2,
+              "load_event_end_ms": 865.2,
+              "duration_ms": 865.2,
+              "transfer_size_bytes": 832208,
+              "encoded_body_size_bytes": 831908,
+              "decoded_body_size_bytes": 831908,
+              "navigation_type": "navigate",
+              "next_hop_protocol": "h2",
+              "response_completed": true,
+              "dom_content_loaded_completed": true,
+              "load_event_completed": true
+            }
+          },
+          "final_url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+          "final_url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d",
+          "duration_seconds": 10.924,
+          "block_reason": "cloudflare_challenge"
+        }
+      ],
+      "navigation_count": 1,
+      "media_blocking": true,
+      "blocked_resource_types": [
+        "font",
+        "image",
+        "media"
+      ],
+      "blocked_request_count": 10,
+      "blocked_request_types": [
+        "font",
+        "image"
+      ],
+      "empty_script_response_count": 0,
+      "return_image_payload": false,
+      "return_screenshot": false,
+      "lightweight_seed_only": false,
+      "article_body_wait_enabled": true,
+      "selector_wait_enabled": false,
+      "wait_for_selector": null,
+      "storage_state_path": "/home/dictation/.local/share/paper-fetch/publisher-browser-profiles/elsevier-flaresolverr/storage-state.json",
+      "storage_state_load": {
+        "path": "/home/dictation/.local/share/paper-fetch/publisher-browser-profiles/elsevier-flaresolverr/storage-state.json",
+        "exists": true,
+        "used": true
+      },
+      "storage_state_write_enabled": true,
+      "json_export_enabled": true,
+      "native_profile_write_enabled": false,
+      "readiness_budget_seconds": 8.0,
+      "runtime_page_reuse_enabled": false,
+      "timeout_budget_ms": 119975,
+      "runtime_page_reused": false,
+      "browser_connect_seconds": 1.035,
+      "persistent_profile": {
+        "provider": "elsevier",
+        "backend": "flaresolverr",
+        "context_reused": false,
+        "chrome_path": "/usr/bin/google-chrome",
+        "chrome_version": "156.0.8078.79",
+        "chromedriver_version": "156.0.8078.80",
+        "flaresolverr_version": "3.5.2",
+        "state_restored": true,
+        "state_sha256": "4216a4197b25716c203cd8b257a4912bd74780465b7f8acdc732e5c031979f2e"
+      },
+      "browser_context_seed": {
+        "provided": false,
+        "cookie_count": 0,
+        "applied": false,
+        "user_agent_reused": false,
+        "reason": "no_compatible_cookies"
+      },
+      "page_events": {
+        "document_requests": [
+          {
+            "url": "https://www.sciencedirect.com/",
+            "host": "www.sciencedirect.com",
+            "path": "/",
+            "url_sha256": "42785766fd11dc29039fe2bd02120849049085f9118ed4aa234a125fde6bf9ff",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 871.391,
+            "status": 200,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 1121.081
+          },
+          {
+            "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+            "host": "www.sciencedirect.com",
+            "path": "/science/article/pii/S0034425726001392",
+            "url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d",
+            "resource_type": "document",
+            "response_received_observed": true,
+            "request_finished_observed": true,
+            "request_failed_observed": false,
+            "response_received_ms": 270.971,
+            "status": 429,
+            "content_type": "text/html",
+            "content_length_bytes": null,
+            "transfer_encoding_present": false,
+            "chunked_transfer_declared": false,
+            "request_finished_ms": 855.008
+          }
+        ],
+        "failed_requests": [
+          {
+            "url": "https://sciencedirect.elseviercdn.cn/shared-assets/89/fonts/elsevier-sans/1.0/sans/ElsevierSansWeb-Regular.woff2",
+            "host": "sciencedirect.elseviercdn.cn",
+            "path": "/shared-assets/89/fonts/elsevier-sans/1.0/sans/ElsevierSansWeb-Regular.woff2",
+            "url_sha256": "ef89d7af5a5da0f353d793629d4d2e748904141a2b9ef4ea144510eebbca9625",
+            "resource_type": "font",
+            "error": "net::ERR_FAILED"
+          },
+          {
+            "url": "https://www.sciencedirect.com/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/leapSpace_desktop_banner.jpg",
+            "host": "www.sciencedirect.com",
+            "path": "/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/leapSpace_desktop_banner.jpg",
+            "url_sha256": "c3eb6e5f23f4ff335d394735f4312fbc206ffd00f5f64915f8d67c1bceb39dba",
+            "resource_type": "image",
+            "error": "net::ERR_FAILED"
+          },
+          {
+            "url": "https://www.sciencedirect.com/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/leapSpace_tablet_mobile_banner.jpg",
+            "host": "www.sciencedirect.com",
+            "path": "/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/leapSpace_tablet_mobile_banner.jpg",
+            "url_sha256": "a801c2db7843c34cb0592ab2e3d0dfda8b814dd3c5a86ac93de858d4e6fdd820",
+            "resource_type": "image",
+            "error": "net::ERR_FAILED"
+          },
+          {
+            "url": "https://www.sciencedirect.com/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/confidence_in_research_banner.jpg",
+            "host": "www.sciencedirect.com",
+            "path": "/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/confidence_in_research_banner.jpg",
+            "url_sha256": "b0ceef20024a2b0549b208187d9f0465bd2a1922cc58dfd6ad9a9c774f9cc5e0",
+            "resource_type": "image",
+            "error": "net::ERR_FAILED"
+          },
+          {
+            "url": "https://sciencedirect.elseviercdn.cn/shared-assets/24/images/elsevier-non-solus-new-grey.svg",
+            "host": "sciencedirect.elseviercdn.cn",
+            "path": "/shared-assets/24/images/elsevier-non-solus-new-grey.svg",
+            "url_sha256": "5dbd7c0a0341f5e131e30ac8f8916fc5004bf852b08077d54d21132258562d36",
+            "resource_type": "image",
+            "error": "net::ERR_FAILED"
+          },
+          {
+            "url": "https://www.sciencedirect.com/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/confidence_in_research_logo.png",
+            "host": "www.sciencedirect.com",
+            "path": "/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/confidence_in_research_logo.png",
+            "url_sha256": "e8fefc97811eae5d3fe5b4616e3bc3e5365181755ee2006b5a41e2c733b7a77f",
+            "resource_type": "image",
+            "error": "net::ERR_FAILED"
+          },
+          {
+            "url": "https://www.sciencedirect.com/shared-assets/89/fonts/elsevier-sans/1.0/sans/ElsevierSansWeb-Regular.woff2",
+            "host": "www.sciencedirect.com",
+            "path": "/shared-assets/89/fonts/elsevier-sans/1.0/sans/ElsevierSansWeb-Regular.woff2",
+            "url_sha256": "f5d0cfa681e41ddc46fc0a679b02cf37ce7521e80835febfa93a2d5d2e524275",
+            "resource_type": "font",
+            "error": "net::ERR_FAILED"
+          },
+          {
+            "url": "https://www.sciencedirect.com/shared-assets/89/fonts/elsevier-sans/1.0/sans/ElsevierSansWeb-RegularItalic.woff2",
+            "host": "www.sciencedirect.com",
+            "path": "/shared-assets/89/fonts/elsevier-sans/1.0/sans/ElsevierSansWeb-RegularItalic.woff2",
+            "url_sha256": "c0a53c07d8d92058dc81644d8e296025cb3f5948928b19c6a368d48c0c1e8723",
+            "resource_type": "font",
+            "error": "net::ERR_FAILED"
+          }
+        ],
+        "failed_scripts": [],
+        "console_errors": [
+          {
+            "type": "error",
+            "message": "Failed to load resource: net::ERR_FAILED"
+          },
+          {
+            "type": "error",
+            "message": "Failed to load resource: net::ERR_FAILED"
+          },
+          {
+            "type": "error",
+            "message": "Failed to load resource: net::ERR_FAILED"
+          },
+          {
+            "type": "error",
+            "message": "Failed to load resource: net::ERR_FAILED"
+          },
+          {
+            "type": "error",
+            "message": "Failed to load resource: net::ERR_FAILED"
+          },
+          {
+            "type": "error",
+            "message": "Failed to load resource: net::ERR_FAILED"
+          },
+          {
+            "type": "error",
+            "message": "Failed to load resource: net::ERR_FAILED"
+          },
+          {
+            "type": "error",
+            "message": "Failed to load resource: net::ERR_FAILED"
+          }
+        ],
+        "page_errors": []
+      },
+      "challenge_signals": [
+        {
+          "reason": "cloudflare_challenge",
+          "status": null,
+          "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+          "host": "www.sciencedirect.com",
+          "path": "/science/article/pii/S0034425726001392",
+          "url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d"
+        }
+      ]
+    },
+    "stage": "block_detection",
+    "final_url": {
+      "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+      "host": "www.sciencedirect.com",
+      "path": "/science/article/pii/S0034425726001392",
+      "url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d"
+    },
+    "response_status": null,
+    "title_summary": "ScienceDirect",
+    "page_summary": "ScienceDirect ScienceDirect Help There was a problem providing the content you requested Please contact our support team for more information and provide the details below. Reference number: a54975d979eef8dc IP Address: 162.105.199.139 User Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36 Timestamp: 2026-11-03 06:53:10 UTC CPE00002 ::CLOUDFLARE_ERROR_1000S_BOX:: About ScienceDirect Remote access Contact and support Terms and conditions Privacy policy Cookie settings All content on this site: Copyright © 2026 Elsevier B.V., its licensors, and contributors. All rights are reserved, including those for text and data mining, AI training, and similar technologies. For all open access content, the relevant licensing terms apply.",
+    "failure_diagnostic": {
+      "schema_version": 2,
+      "provider": "elsevier",
+      "route": "browser_html",
+      "failure_code": "cloudflare_challenge",
+      "stage": "block_detection",
+      "backend": "flaresolverr",
+      "attempt": 1,
+      "target": {
+        "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+        "host": "www.sciencedirect.com",
+        "path": "/science/article/pii/S0034425726001392",
+        "url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d"
+      },
+      "final": {
+        "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+        "host": "www.sciencedirect.com",
+        "path": "/science/article/pii/S0034425726001392",
+        "url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d"
+      },
+      "response_status": null,
+      "title_summary": "ScienceDirect",
+      "page_summary": "ScienceDirect ScienceDirect Help There was a problem providing the content you requested Please contact our support team for more information and provide the details below. Reference number: a54975d979eef8dc IP Address: 162.105.199.139 User Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36 Timestamp: 2026-11-03 06:53:10 UTC CPE00002 ::CLOUDFLARE_ERROR_1000S_BOX:: About ScienceDirect Remote access Contact and support Terms and conditions Privacy policy Cookie settings All content on this site: Copyright © 2026 Elsevier B.V., its licensors, and contributors. All rights are reserved, including those for text and data mining, AI training, and similar technologies. For all open access content, the relevant licensing terms apply.",
+      "page": {
+        "browser_runtime": {
+          "backend": "flaresolverr",
+          "media_blocking": true,
+          "timeout_budget_ms": 119975,
+          "browser_connect_seconds": 1.035,
+          "browser_context_seed": {
+            "provided": false,
+            "cookie_count": 0,
+            "applied": false,
+            "user_agent_reused": false,
+            "reason": "no_compatible_cookies"
+          },
+          "page_events": {
+            "document_requests": [
+              {
+                "url": "https://www.sciencedirect.com/",
+                "host": "www.sciencedirect.com",
+                "path": "/",
+                "url_sha256": "42785766fd11dc29039fe2bd02120849049085f9118ed4aa234a125fde6bf9ff",
+                "resource_type": "document",
+                "response_received_observed": true,
+                "request_finished_observed": true,
+                "request_failed_observed": false,
+                "response_received_ms": 871.391,
+                "status": 200,
+                "content_type": "text/html",
+                "content_length_bytes": null,
+                "transfer_encoding_present": false,
+                "chunked_transfer_declared": false,
+                "request_finished_ms": 1121.081
+              },
+              {
+                "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+                "host": "www.sciencedirect.com",
+                "path": "/science/article/pii/S0034425726001392",
+                "url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d",
+                "resource_type": "document",
+                "response_received_observed": true,
+                "request_finished_observed": true,
+                "request_failed_observed": false,
+                "response_received_ms": 270.971,
+                "status": 429,
+                "content_type": "text/html",
+                "content_length_bytes": null,
+                "transfer_encoding_present": false,
+                "chunked_transfer_declared": false,
+                "request_finished_ms": 855.008
+              }
+            ],
+            "failed_requests": [
+              {
+                "url": "https://sciencedirect.elseviercdn.cn/shared-assets/89/fonts/elsevier-sans/1.0/sans/ElsevierSansWeb-Regular.woff2",
+                "host": "sciencedirect.elseviercdn.cn",
+                "path": "/shared-assets/89/fonts/elsevier-sans/1.0/sans/ElsevierSansWeb-Regular.woff2",
+                "url_sha256": "ef89d7af5a5da0f353d793629d4d2e748904141a2b9ef4ea144510eebbca9625",
+                "resource_type": "font",
+                "error": "net::ERR_FAILED"
+              },
+              {
+                "url": "https://www.sciencedirect.com/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/leapSpace_desktop_banner.jpg",
+                "host": "www.sciencedirect.com",
+                "path": "/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/leapSpace_desktop_banner.jpg",
+                "url_sha256": "c3eb6e5f23f4ff335d394735f4312fbc206ffd00f5f64915f8d67c1bceb39dba",
+                "resource_type": "image",
+                "error": "net::ERR_FAILED"
+              },
+              {
+                "url": "https://www.sciencedirect.com/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/leapSpace_tablet_mobile_banner.jpg",
+                "host": "www.sciencedirect.com",
+                "path": "/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/leapSpace_tablet_mobile_banner.jpg",
+                "url_sha256": "a801c2db7843c34cb0592ab2e3d0dfda8b814dd3c5a86ac93de858d4e6fdd820",
+                "resource_type": "image",
+                "error": "net::ERR_FAILED"
+              },
+              {
+                "url": "https://www.sciencedirect.com/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/confidence_in_research_banner.jpg",
+                "host": "www.sciencedirect.com",
+                "path": "/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/confidence_in_research_banner.jpg",
+                "url_sha256": "b0ceef20024a2b0549b208187d9f0465bd2a1922cc58dfd6ad9a9c774f9cc5e0",
+                "resource_type": "image",
+                "error": "net::ERR_FAILED"
+              },
+              {
+                "url": "https://sciencedirect.elseviercdn.cn/shared-assets/24/images/elsevier-non-solus-new-grey.svg",
+                "host": "sciencedirect.elseviercdn.cn",
+                "path": "/shared-assets/24/images/elsevier-non-solus-new-grey.svg",
+                "url_sha256": "5dbd7c0a0341f5e131e30ac8f8916fc5004bf852b08077d54d21132258562d36",
+                "resource_type": "image",
+                "error": "net::ERR_FAILED"
+              },
+              {
+                "url": "https://www.sciencedirect.com/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/confidence_in_research_logo.png",
+                "host": "www.sciencedirect.com",
+                "path": "/prod/9a3861aff51c751d6d00ed76bc8484d42b972dbd/images/confidence_in_research_logo.png",
+                "url_sha256": "e8fefc97811eae5d3fe5b4616e3bc3e5365181755ee2006b5a41e2c733b7a77f",
+                "resource_type": "image",
+                "error": "net::ERR_FAILED"
+              },
+              {
+                "url": "https://www.sciencedirect.com/shared-assets/89/fonts/elsevier-sans/1.0/sans/ElsevierSansWeb-Regular.woff2",
+                "host": "www.sciencedirect.com",
+                "path": "/shared-assets/89/fonts/elsevier-sans/1.0/sans/ElsevierSansWeb-Regular.woff2",
+                "url_sha256": "f5d0cfa681e41ddc46fc0a679b02cf37ce7521e80835febfa93a2d5d2e524275",
+                "resource_type": "font",
+                "error": "net::ERR_FAILED"
+              },
+              {
+                "url": "https://www.sciencedirect.com/shared-assets/89/fonts/elsevier-sans/1.0/sans/ElsevierSansWeb-RegularItalic.woff2",
+                "host": "www.sciencedirect.com",
+                "path": "/shared-assets/89/fonts/elsevier-sans/1.0/sans/ElsevierSansWeb-RegularItalic.woff2",
+                "url_sha256": "c0a53c07d8d92058dc81644d8e296025cb3f5948928b19c6a368d48c0c1e8723",
+                "resource_type": "font",
+                "error": "net::ERR_FAILED"
+              }
+            ],
+            "failed_scripts": [],
+            "console_errors": [
+              {
+                "type": "error",
+                "message": "Failed to load resource: net::ERR_FAILED"
+              },
+              {
+                "type": "error",
+                "message": "Failed to load resource: net::ERR_FAILED"
+              },
+              {
+                "type": "error",
+                "message": "Failed to load resource: net::ERR_FAILED"
+              },
+              {
+                "type": "error",
+                "message": "Failed to load resource: net::ERR_FAILED"
+              },
+              {
+                "type": "error",
+                "message": "Failed to load resource: net::ERR_FAILED"
+              },
+              {
+                "type": "error",
+                "message": "Failed to load resource: net::ERR_FAILED"
+              },
+              {
+                "type": "error",
+                "message": "Failed to load resource: net::ERR_FAILED"
+              },
+              {
+                "type": "error",
+                "message": "Failed to load resource: net::ERR_FAILED"
+              }
+            ],
+            "page_errors": []
+          },
+          "challenge_signals": [
+            {
+              "reason": "cloudflare_challenge",
+              "status": null,
+              "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+              "host": "www.sciencedirect.com",
+              "path": "/science/article/pii/S0034425726001392",
+              "url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d"
+            }
+          ],
+          "candidates": [
+            {
+              "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+              "url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d",
+              "final_url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+              "final_url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d",
+              "status": null,
+              "main_document_response": {
+                "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+                "host": "www.sciencedirect.com",
+                "path": "/science/article/pii/S0034425726001392",
+                "url_sha256": "9ab671bf44d850ee9f16a0eccae4d18d06755cf074f0cb0e67b4b7f683e6654d",
+                "status": null,
+                "content_type": null,
+                "content_length_bytes": null,
+                "transfer_encoding_present": false,
+                "chunked_transfer_declared": false,
+                "captured_html_bytes": 832056,
+                "navigation_timing": {
+                  "available": true,
+                  "document_ready_state": "complete",
+                  "navigation_entry_present": true,
+                  "response_start_ms": 249.4,
+                  "response_end_ms": 854.1,
+                  "dom_interactive_ms": 857.2,
+                  "dom_content_loaded_event_end_ms": 857.2,
+                  "load_event_end_ms": 865.2,
+                  "duration_ms": 865.2,
+                  "transfer_size_bytes": 832208,
+                  "encoded_body_size_bytes": 831908,
+                  "decoded_body_size_bytes": 831908,
+                  "navigation_type": "navigate",
+                  "next_hop_protocol": "h2",
+                  "response_completed": true,
+                  "dom_content_loaded_completed": true,
+                  "load_event_completed": true
+                }
+              },
+              "navigation_seconds": 2.745,
+              "dom_readiness_seconds": 8.003,
+              "dom_readiness_attempted": true,
+              "dom_readiness_ready": false,
+              "dom_readiness_selector": null,
+              "dom_readiness_text_length": 0,
+              "dom_readiness_paragraph_count": 0,
+              "dom_readiness_heading_count": 0,
+              "dom_readiness_fingerprint_present": false,
+              "duration_seconds": 10.924,
+              "block_reason": "cloudflare_challenge"
+            }
+          ]
+        },
+        "html_shape": {
+          "byte_count": 832056,
+          "has_html": true,
+          "has_head": true,
+          "has_body": true,
+          "body_text_length": 778,
+          "body_element_count": 139,
+          "article_container_count": 1
+        }
+      },
+      "raw_html": {
+        "byte_count": 832056,
+        "sha256": "cdcfa3cbdaf51f1a93fed232af099e4b6d02ee5d89adfbeed08f9e5963ff9dc0"
+      },
+      "sanitized_html": {
+        "path": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/sciencedirect-browser-2026-11-03T065135Z/diagnostics/elsevier/10.1016_j.rse.2026.115369/browser_html-1/page-sanitized.html",
+        "byte_count": 107292,
+        "sha256": "893e16cdfdce17bd91d0c369cb7cbe815f2883caeceb829c4e1f905fd93424d4",
+        "truncated": false
+      },
+      "diagnostic_path": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/sciencedirect-browser-2026-11-03T065135Z/diagnostics/elsevier/10.1016_j.rse.2026.115369/browser_html-1/diagnostic.json"
+    },
+    "diagnostic_path": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1016_j.rse.2026.115369/acquisition/sciencedirect-browser-2026-11-03T065135Z/diagnostics/elsevier/10.1016_j.rse.2026.115369/browser_html-1/diagnostic.json",
+    "html_attempts": [
+      {
+        "attempt": 1,
+        "result": "browser_failure",
+        "failure_code": "cloudflare_challenge"
+      }
+    ]
+  }
+}

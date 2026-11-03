@@ -197,7 +197,7 @@
     "tests/unit/test_atypon_browser_workflow_postprocess.py": {
       "default": {
         "kind": "mechanism",
-        "scope": "atypon browser workflow postprocess",
+        "scope": "atypon browser workflow postprocess; existing list images retain indentation, caption ownership and adjacent item grouping during URL replacement.",
         "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
       }
     },
@@ -942,7 +942,7 @@
     "tests/unit/test_models_render.py": {
       "default": {
         "kind": "mechanism",
-        "scope": "models render",
+        "scope": "models render; CommonMark image splitting/boundaries retain list item and caption ownership for bullet and multi-digit ordered markers.",
         "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
         "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
         "template_review": {
@@ -2604,7 +2604,7 @@
     "tests/golden/test_confirmed_paywall_stop.py": {
       "default": {
         "kind": "content",
-        "scope": "Article entitlement stops requests, with local degradation and evidence.",
+        "scope": "真实文章访问限制与摘要保留；Elsevier API entitlement 仅约束 API 路线，隔离浏览器边界并验证本地摘要降级。",
         "primary": [
           "source"
         ],
@@ -4587,6 +4587,100 @@
         "kind": "mechanism",
         "scope": "独立 Elsevier 补充材料路由的认证头候选过滤、普通/流式请求、跨源重定向及逐项失败；使用最小 XML 与 transport 边界 mock。",
         "reason": "只验证认证传递与结果完整性，不证明真实出版社授权或内容可用性。"
+      }
+    },
+    "tests/unit/test_publisher_profiles.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "出版社原生持久目录、迁移、归属、借用生命周期与摘要缓存的边界 mock。",
+        "reason": "验证本地浏览器与目录锁机制，不证明远端出版社全文可用性。"
+      }
+    },
+    "tests/integration/test_publisher_profiles.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "真实离线 Camoufox 跨重启状态、会话借用和真实线程/进程目录锁。",
+        "reason": "验证本地浏览器与目录锁机制，不证明远端出版社全文可用性。"
+      }
+    },
+    "tests/unit/test_pnas_flaresolverr.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "PNAS platform/backend policy, isolated source and driver cache preparation, Chrome discovery and read-only diagnostics boundary mocks.",
+        "reason": "最小片段及边界 mock；不代表 PNAS 实站验收。"
+      }
+    },
+    "tests/integration/test_pnas_flaresolverr.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Real Chrome/FlareSolverr/CDP lifecycle, serialized local navigation, original local asset bytes, accepted state replay and cancellation.",
+        "reason": "真实浏览器与本地服务合约；不代表 PNAS 实站全文验收。"
+      }
+    },
+    "tests/unit/test_elsevier_browser_waterfall.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Elsevier four-stage routing and minimal ScienceDirect DOM contracts",
+        "reason": "Minimal contract scenario and boundary mocks; no publisher source replay."
+      }
+    },
+    "tests/unit/test_elsevier_html.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Elsevier four-stage routing and minimal ScienceDirect DOM contracts; section label merging, structural front Highlights removal, shared sequential reference display and list first/continuation block ownership.",
+        "reason": "Minimal contract scenario and boundary mocks; no publisher source replay."
+      }
+    },
+    "tests/golden/test_elsevier_html.py": {
+      "default": {
+        "kind": "content",
+        "scope": "All 15 paired ScienceDirect HTML/XML captures: source authors, heading/paragraph order, references, figure captions, table cells, original MathML structures, supplementary and bilingual abstract scopes. Both final routes also check source section numbering, sequential reference display, structural Highlights removal and CommonMark list/image/caption/sibling ownership.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_elsevier_structure.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Elsevier XML 声明来源顺序、关键词合并和图文摘要的最小结构契约。 章节直属编号、不推算或重复编号、列表多段正文/公式/图注/嵌套项与真实标记宽度缩进。",
+        "reason": "最小结构片段和网络边界 mock；不证明真实出版社文章内容。"
+      }
+    },
+    "tests/unit/test_elsevier_reference_completion.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Elsevier XML DOI 补全的书目唯一匹配、来源优先、失败、取消、期限与平台边界 mock。",
+        "reason": "最小结构片段和网络边界 mock；不证明真实出版社文章内容。"
+      }
+    },
+    "tests/integration/test_elsevier_reference_deadline.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "真实本地 HTTP 请求验证 Elsevier DOI 补全复用 transport，重试等待受取消与当前剩余期限约束。",
+        "reason": "本地 HTTP 进程契约，不证明外部 Crossref 或出版社内容。"
+      }
+    },
+    "tests/unit/test_elsevier_render_fixes.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Minimal Elsevier HTML/XML rendering fragments: source labels, caption blocks, optional table callbacks, DOI deduplication and retained navigation.",
+        "reason": "Minimal fragments and boundary mocks; publisher completeness is covered by golden source replays."
+      }
+    },
+    "tests/unit/test_offline_flaresolverr.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "安装后 FlareSolverr 依赖检测、确认／非交互安装、独立准备与空白页检查边界 mock。"
+      }
+    },
+    "tests/integration/test_flaresolverr_setup.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "安装后独立准备模式的真实 Python CLI、配置加载、非交互输出与核心文件保留。"
       }
     }
   }

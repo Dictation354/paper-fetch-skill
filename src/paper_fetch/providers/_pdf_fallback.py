@@ -52,7 +52,6 @@ from ._pdf_common import (
     looks_like_pdf_payload,
     pdf_fetch_result_from_bytes,
     pdf_max_bytes,
-    sanitize_storage_state,
 )
 from .browser_runtime.seed import filter_browser_cookies_for_url
 from .browser_runtime.context import open_browser_context
@@ -281,7 +280,6 @@ def _open_pdf_browser_context(
 ) -> tuple[Any | None, Any]:
     active_config = replace(
         launch.browser_config,
-        storage_state_path=sanitized_storage_state_path,
         persist_storage_state=False,
         capability_storage_state_path=(
             capability_storage_state_path
@@ -303,9 +301,16 @@ def _seed_pdf_browser_page(
     deadline = request.deadline_monotonic
     if deadline is None:
         return None
-    for seed_url in [
-        normalize_text(url) for url in seed_urls or [] if normalize_text(url)
-    ]:
+    from .browser_runtime.flaresolverr_manager import FlareSolverrManager, navigate_page
+    from .browser_runtime.types import BrowserRuntimeFailure
+
+    solver = getattr(getattr(page, "context", None), "_paper_fetch_solver", None)
+    seeds = list(seed_urls or [])
+    if isinstance(solver, FlareSolverrManager) and not solver.diagnostics.get(
+        "homepage_visited"
+    ):
+        seeds.insert(0, solver.home_url)
+    for seed_url in [normalize_text(url) for url in seeds if normalize_text(url)]:
         if request.runtime is not None:
             request.runtime.raise_if_cancelled()
         try:
@@ -317,11 +322,15 @@ def _seed_pdf_browser_page(
                 )
                 * 1000
             )
-            page.goto(
-                seed_url,
-                wait_until="domcontentloaded",
-                timeout=timeout_ms,
+            navigate_page(
+                page, seed_url, wait_until="domcontentloaded", timeout_ms=timeout_ms
             )
+        except RequestCancelledError:
+            raise
+        except BrowserRuntimeFailure as exc:
+            if isinstance(solver, FlareSolverrManager):
+                return PdfFallbackFailure(exc.kind, exc.message, details=exc.details)
+            raise
         except PdfFallbackFailure as exc:
             return exc
         except Exception:
@@ -844,7 +853,12 @@ def _initialize_pdf_browser_page(
             ) from exc
 
     page = browser_context.new_page()
-    return page, _seed_pdf_browser_page(page, seed_urls, request)
+    try:
+        return page, _seed_pdf_browser_page(page, seed_urls, request)
+    except BaseException:
+        with contextlib.suppress(Exception):
+            page.close()
+        raise
 
 
 def fetch_pdf_with_browser(
@@ -883,7 +897,6 @@ def fetch_pdf_with_browser(
     )
     artifact_dir.mkdir(parents=True, exist_ok=True)
     last_failure: PdfFallbackFailure | None = None
-    sanitized_storage_state_path: Path | None = None
     active_user_agent = normalize_text(browser_user_agent)
     normalized_seed_urls = [
         normalize_text(url) for url in seed_urls or [] if normalize_text(url)
@@ -892,7 +905,9 @@ def fetch_pdf_with_browser(
         normalized_seed_urls[0] if normalized_seed_urls else ""
     )
 
-    if browser_cookies or normalized_seed_urls:
+    if (
+        browser_cookies or normalized_seed_urls
+    ) and browser_config.provider != "elsevier":
         http_headers = _browser_navigation_pdf_headers(
             user_agent=active_user_agent,
             referer=seeded_referer,
@@ -922,22 +937,36 @@ def fetch_pdf_with_browser(
 
     PlaywrightError, PlaywrightTimeoutError = _playwright_pdf_error_types()
 
-    if browser_config.storage_state_path is not None:
-        sanitized_storage_state_path = sanitize_storage_state(
-            browser_config.storage_state_path
-        )
-
     manager = None
     browser_context = None
+    page = None
+    initial_pages: list[Any] = []
     try:
+        launch_config = browser_config
+        if browser_config.backend == "flaresolverr":
+            launch_config = replace(
+                browser_config,
+                timeout_ms=max(
+                    1,
+                    int(
+                        _remaining_pdf_timeout_seconds(
+                            context, request_deadline, maximum=browser_budget_seconds
+                        )
+                        * 1000
+                    ),
+                ),
+            )
         manager, browser_context = _open_pdf_browser_context(
             _PdfBrowserLaunch(
                 runtime=context,
-                browser_config=browser_config,
+                browser_config=launch_config,
             ),
-            sanitized_storage_state_path=sanitized_storage_state_path,
+            sanitized_storage_state_path=None,
             capability_storage_state_path=browser_config.storage_state_path,
         )
+        existing_pages = getattr(browser_context, "pages", None)
+        if isinstance(existing_pages, list):
+            initial_pages = list(existing_pages)
 
         page, seed_failure = _initialize_pdf_browser_page(
             browser_context,
@@ -945,6 +974,8 @@ def fetch_pdf_with_browser(
             seed_urls=normalized_seed_urls,
             request=active_request,
         )
+        if browser_config.backend == "flaresolverr" and seed_failure is not None:
+            raise seed_failure
         last_failure = seed_failure or last_failure
         for attempt_index, url in enumerate(candidate_urls):
             if context is not None:
@@ -1103,7 +1134,7 @@ def fetch_pdf_with_browser(
                         and normalized_candidate not in http_retry_candidates
                     ):
                         http_retry_candidates.append(normalized_candidate)
-                if http_retry_candidates:
+                if http_retry_candidates and browser_config.provider != "elsevier":
                     try:
                         context_cookies = browser_context.cookies([html_base_url])
                     except TypeError:
@@ -1244,14 +1275,24 @@ def fetch_pdf_with_browser(
                     break
                 continue
     finally:
-        if browser_context is not None:
+        # Browser work is serialized on the owning thread: new popup pages also
+        # belong to this phase. Keep pages borrowed from earlier phases alive.
+        owned_pages = [page] if page is not None else []
+        with contextlib.suppress(Exception):
+            active_pages = getattr(browser_context, "pages", None)
+            if isinstance(active_pages, list):
+                owned_pages.extend(
+                    candidate
+                    for candidate in active_pages
+                    if candidate is not page
+                    and all(candidate is not previous for previous in initial_pages)
+                )
+        for owned_page in owned_pages:
             with contextlib.suppress(Exception):
-                browser_context.close()
+                owned_page.close()
         if manager is not None:
             with contextlib.suppress(Exception):
                 manager.close()
-        if sanitized_storage_state_path is not None:
-            sanitized_storage_state_path.unlink(missing_ok=True)
 
     if last_failure is None:
         last_failure = PdfFallbackFailure(

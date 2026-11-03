@@ -1877,7 +1877,7 @@ def build_parser(
         help="Fetch one paper or a query-file batch.",
         description=(
             "Fetch AI-friendly full text for a paper by DOI, URL, or title. "
-            "Browser-backed providers use Camoufox when the browser extra is installed."
+            "Browser-backed providers use the managed browser runtime; PNAS uses system Chrome on Windows/Linux x64."
         ),
         parents=[_build_fetch_parent_parser(suppress_defaults=False)],
     )
@@ -1937,7 +1937,6 @@ def _run_update_namespace(_args: argparse.Namespace) -> int:
 
 
 def _write_auth_result(provider_key: str, provider_label: str, result) -> None:
-    sys.stdout.write(f"{provider_label} storage state: {result.storage_state_path}\n")
     profile_dir = getattr(result, "profile_dir", None)
     if profile_dir is not None:
         sys.stdout.write(f"{provider_label} profile dir: {profile_dir}\n")
@@ -1951,7 +1950,12 @@ def _write_auth_result(provider_key: str, provider_label: str, result) -> None:
     if result.final_url:
         sys.stdout.write(f"Final URL: {result.final_url}\n")
     sys.stdout.write(
-        "Persistent browser state is optional; fetches still run without it.\n"
+        f"{provider_label} native profile verified: {bool(result.verified)}\n"
+    )
+    export = getattr(result, "json_export", None) or {}
+    sys.stdout.write(f"{provider_label} storage state: {result.storage_state_path}\n")
+    sys.stdout.write(
+        f"JSON snapshot export: {'saved' if export.get('saved') else export.get('reason', 'unavailable')}\n"
     )
 
 

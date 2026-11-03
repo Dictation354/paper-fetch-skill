@@ -1,22 +1,22 @@
 {
   "counts": {
-    "abstract_sections": 5,
-    "body_sections": 8,
+    "sections": 13,
+    "abstract_sections": 1,
+    "body_sections": 12,
     "figures": 3,
-    "references": 57,
-    "sections": 15,
-    "tables": 2
+    "tables": 2,
+    "references": 57
   },
   "expected_content_kind": "fulltext",
   "has": {
-    "abstract": true,
+    "title": true,
     "authors": true,
+    "abstract": true,
     "body": true,
-    "code_availability": false,
-    "data_availability": false,
     "figures": true,
     "references": true,
-    "title": true
+    "data_availability": false,
+    "code_availability": false
   },
   "source_review": {
     "sample_id": "10.1016_j.envres.2018.12.059",

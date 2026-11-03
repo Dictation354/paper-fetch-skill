@@ -136,6 +136,8 @@ def _response_payload(
                 else "not_started"
             ),
             "storage_state_write_enabled": request.save_storage_state,
+            "json_export_enabled": request.save_storage_state,
+            "native_profile_write_enabled": True,
             "pdf_fallback_attempted": False,
             "auth_attempted": False,
             "results": result_payloads,

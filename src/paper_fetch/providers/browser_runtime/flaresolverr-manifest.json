@@ -1,0 +1,432 @@
+{
+  "version": "3.5.2",
+  "commit": "93125d6ea6956906c8dfa29e169b2dc67d993dc3",
+  "source": {
+    "url": "https://codeload.github.com/FlareSolverr/FlareSolverr/zip/93125d6ea6956906c8dfa29e169b2dc67d993dc3",
+    "sha256": "cfd9797fa59f43bba74820d0215945fa233fdd5c07377b66f4390b89c93167f1",
+    "root": "FlareSolverr-93125d6ea6956906c8dfa29e169b2dc67d993dc3"
+  },
+  "packages": [
+    {
+      "name": "attrs",
+      "version": "26.1.0",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "attrs-26.1.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/64/b4/17d4b0b2a2dc85a6df63d1157e028ed19f90d4cd97c36717afef2bc2f395/attrs-26.1.0-py3-none-any.whl",
+          "sha256": "c647aa4a12dfbad9333ca4e71fe62ddc36f4e63b2d260a37a8b83d2f043ac309"
+        }
+      ]
+    },
+    {
+      "name": "bottle",
+      "version": "0.13.4",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "bottle-0.13.4-py2.py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/83/f6/b55ec74cfe68c6584163faa311503c20b0da4c09883a41e8e00d6726c954/bottle-0.13.4-py2.py3-none-any.whl",
+          "sha256": "045684fbd2764eac9cdeb824861d1551d113e8b683d8d26e296898d3dd99a12e"
+        }
+      ]
+    },
+    {
+      "name": "certifi",
+      "version": "2026.7.22",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "certifi-2026.7.22-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl",
+          "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775"
+        }
+      ]
+    },
+    {
+      "name": "cffi",
+      "version": "2.1.1",
+      "platforms": [
+        "win32"
+      ],
+      "artifacts": [
+        {
+          "filename": "cffi-2.1.1-cp311-cp311-win_amd64.whl",
+          "url": "https://files.pythonhosted.org/packages/73/c0/77ba02423c2f7d7091143c45cd49e0e6575c4c1967394bb542bd923a9b74/cffi-2.1.1-cp311-cp311-win_amd64.whl",
+          "sha256": "42f6930c31dc7f50732c9ae793c2786c7b6b044195967bbdde40bb9be81c4cc0",
+          "python": "311"
+        },
+        {
+          "filename": "cffi-2.1.1-cp312-cp312-win_amd64.whl",
+          "url": "https://files.pythonhosted.org/packages/d9/79/615cc094e2fb508cade7de88d3b4f6c4ec2bab695c97bce9153dc65aadf5/cffi-2.1.1-cp312-cp312-win_amd64.whl",
+          "sha256": "f53e442b08449d42821fa4a4fba000095af9f62742a500f978a9f557ec44339a",
+          "python": "312"
+        },
+        {
+          "filename": "cffi-2.1.1-cp313-cp313-win_amd64.whl",
+          "url": "https://files.pythonhosted.org/packages/60/a6/8b149b2c3f2e11aaa1618ef64500b45f50f22c57a977a4dff1aff1f91042/cffi-2.1.1-cp313-cp313-win_amd64.whl",
+          "sha256": "1aa5645c30469b09530c4ebca77ebf8f17618293c58f8549cb1a543a50236e7d",
+          "python": "313"
+        },
+        {
+          "filename": "cffi-2.1.1-cp314-cp314-win_amd64.whl",
+          "url": "https://files.pythonhosted.org/packages/a7/06/1c3e01e3ba14c39f6d10bfbac52753b7e22259e38088e5cfe1d704918690/cffi-2.1.1-cp314-cp314-win_amd64.whl",
+          "sha256": "3222ba5d678f80a030e6afbcc33dc1ae5cb45facabb61cee2c7016b8432fde48",
+          "python": "314"
+        }
+      ]
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.5.2",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "charset_normalizer-3.5.2-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/fc/ad/d07d7862a62ffa6d79d68074d14823243dd235a77c45262acbf6adeb28bf/charset_normalizer-3.5.2-py3-none-any.whl",
+          "sha256": "b6b751274acb69d77b3323d6b7dbaa3c7fdfc1eb829b7eb61d262f32e1af9685"
+        }
+      ]
+    },
+    {
+      "name": "func-timeout",
+      "version": "4.3.5",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "func_timeout-4.3.5.tar.gz",
+          "url": "https://files.pythonhosted.org/packages/b3/0d/bf0567477f7281d9a3926c582bfef21bff7498fc0ffd3e9de21811896a0b/func_timeout-4.3.5.tar.gz",
+          "sha256": "74cd3c428ec94f4edfba81f9b2f14904846d5ffccc27c92433b8b5939b5575dd"
+        }
+      ],
+      "source_root": "func_timeout-4.3.5/func_timeout"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "h11-0.16.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+          "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
+        }
+      ]
+    },
+    {
+      "name": "idna",
+      "version": "3.20",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "idna-3.20-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl",
+          "sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c"
+        }
+      ]
+    },
+    {
+      "name": "outcome",
+      "version": "1.3.0.post0",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "outcome-1.3.0.post0-py2.py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/55/8b/5ab7257531a5d830fc8000c476e63c935488d74609b50f9384a643ec0a62/outcome-1.3.0.post0-py2.py3-none-any.whl",
+          "sha256": "e771c5ce06d1415e356078d3bdd68523f284b4ce5419828922b6871e65eda82b"
+        }
+      ]
+    },
+    {
+      "name": "packaging",
+      "version": "26.3",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "packaging-26.3-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+          "sha256": "d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c"
+        }
+      ]
+    },
+    {
+      "name": "pefile",
+      "version": "2024.8.26",
+      "platforms": [
+        "win32"
+      ],
+      "artifacts": [
+        {
+          "filename": "pefile-2024.8.26-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/54/16/12b82f791c7f50ddec566873d5bdd245baa1491bac11d15ffb98aecc8f8b/pefile-2024.8.26-py3-none-any.whl",
+          "sha256": "76f8b485dcd3b1bb8166f1128d395fa3d87af26360c2358fb75b80019b957c6f"
+        }
+      ]
+    },
+    {
+      "name": "prometheus-client",
+      "version": "0.26.0",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "prometheus_client-0.26.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/eb/a3/b69efbf4143b5b9859b977770bbbabcc2796b702fa69dc40271e45cd5a56/prometheus_client-0.26.0-py3-none-any.whl",
+          "sha256": "fa93d06737aa02bacd05794768508bb97d2fbee28cb3bca04eaae92f0ca953d6"
+        }
+      ]
+    },
+    {
+      "name": "pycparser",
+      "version": "3.12",
+      "platforms": [
+        "win32"
+      ],
+      "artifacts": [
+        {
+          "filename": "pycparser-3.12-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/b6/ae/315bbeee126a769cbde43cf4908acb4b40408d8bf8bbf334dd7368d8dadf/pycparser-3.12-py3-none-any.whl",
+          "sha256": "a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e"
+        }
+      ]
+    },
+    {
+      "name": "pysocks",
+      "version": "1.7.1",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "PySocks-1.7.1-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/8d/59/b4572118e098ac8e46e399a1dd0f2d85403ce8bbaad9ec79373ed6badaf9/PySocks-1.7.1-py3-none-any.whl",
+          "sha256": "2725bd0a9925919b9b51739eea5f9e2bae91e83288108a9ad338b2e3a4435ee5"
+        }
+      ]
+    },
+    {
+      "name": "requests",
+      "version": "2.34.2",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "requests-2.34.2-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl",
+          "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0"
+        }
+      ]
+    },
+    {
+      "name": "selenium",
+      "version": "4.47.0",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "selenium-4.47.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/e4/0b/652575986d2ed03d29103d8574580a03aefe50d243d225b441e2375bd0f6/selenium-4.47.0-py3-none-any.whl",
+          "sha256": "2eac6b8e7c017f57ecc40820383da8881a6fd7a90ea555c1b0af322f2344b347"
+        }
+      ]
+    },
+    {
+      "name": "sniffio",
+      "version": "1.3.1",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "sniffio-1.3.1-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl",
+          "sha256": "2f6da418d1f1e0fddd844478f41680e794e6051915791a034ff65e5f100525a2"
+        }
+      ]
+    },
+    {
+      "name": "sortedcontainers",
+      "version": "2.4.0",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "sortedcontainers-2.4.0-py2.py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/32/46/9cb0e58b2deb7f82b84065f37f3bffeb12413f947f9388e4cac22c4621ce/sortedcontainers-2.4.0-py2.py3-none-any.whl",
+          "sha256": "a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"
+        }
+      ]
+    },
+    {
+      "name": "trio",
+      "version": "0.35.0",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "trio-0.35.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/0a/c6/77f116686de6b1bb4159ef70d476ef75576ad7819d4eeb783f6efb40f380/trio-0.35.0-py3-none-any.whl",
+          "sha256": "9a062a029487c1bdbcc1b2543b729a0bde857ce478b1512c84f391f628e0c5c9"
+        }
+      ]
+    },
+    {
+      "name": "trio-websocket",
+      "version": "0.12.2",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "trio_websocket-0.12.2-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/c7/19/eb640a397bba49ba49ef9dbe2e7e5c04202ba045b6ce2ec36e9cadc51e04/trio_websocket-0.12.2-py3-none-any.whl",
+          "sha256": "df605665f1db533f4a386c94525870851096a223adcb97f72a07e8b4beba45b6"
+        }
+      ]
+    },
+    {
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "typing_extensions-4.16.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+          "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+        }
+      ]
+    },
+    {
+      "name": "urllib3",
+      "version": "2.8.0",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "urllib3-2.8.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/92/9d/c4e665119135114480843e7ab388fa94d8480650450e6f8e26b70d323a4c/urllib3-2.8.0-py3-none-any.whl",
+          "sha256": "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3"
+        }
+      ]
+    },
+    {
+      "name": "waitress",
+      "version": "3.0.2",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "waitress-3.0.2-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/8d/57/a27182528c90ef38d82b636a11f606b0cbb0e17588ed205435f8affe3368/waitress-3.0.2-py3-none-any.whl",
+          "sha256": "c56d67fd6e87c2ee598b76abdd4e96cfad1f24cacdea5078d382b1f9d7b5ed2e"
+        }
+      ]
+    },
+    {
+      "name": "websocket-client",
+      "version": "1.9.2",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "websocket_client-1.9.2-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/d5/d2/cc4dc1271e464942db7ee278baae2daa99ee77cb2af744025c04da585a3e/websocket_client-1.9.2-py3-none-any.whl",
+          "sha256": "e1a673830a9c7bfa47b1cd3d5e4178f4c9651d80a4eab02c9c23a1c3ec6250ce"
+        }
+      ]
+    },
+    {
+      "name": "websockets",
+      "version": "17.0.1",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "websockets-17.0.1-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/09/ce/3929538b2b9918f5eee623fbf3346893973191f6df93f19bbda097bd7bb7/websockets-17.0.1-py3-none-any.whl",
+          "sha256": "c6be9cba65c65cc76dfa3d4619e359ff02a4476c74e179b215236c11a0b32345"
+        }
+      ]
+    },
+    {
+      "name": "wsproto",
+      "version": "1.3.2",
+      "platforms": [
+        "win32",
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "wsproto-1.3.2-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/a4/f5/10b68b7b1544245097b2a1b8238f66f2fc6dcaeb24ba5d917f52bd2eed4f/wsproto-1.3.2-py3-none-any.whl",
+          "sha256": "61eea322cdf56e8cc904bd3ad7573359a242ba65688716b0710a5eb12beab584"
+        }
+      ]
+    },
+    {
+      "name": "xvfbwrapper",
+      "version": "0.2.29",
+      "platforms": [
+        "linux"
+      ],
+      "artifacts": [
+        {
+          "filename": "xvfbwrapper-0.2.29-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/3f/b1/fce88472306a62a35655c2bc64f22921313022e8b4f8534c2b61ff135a43/xvfbwrapper-0.2.29-py3-none-any.whl",
+          "sha256": "6c4f411fdb10ee6e1ec7a5c69b67bc8d9720cfb294de0ffa45721bc8ba1cdd6b"
+        }
+      ]
+    }
+  ]
+}

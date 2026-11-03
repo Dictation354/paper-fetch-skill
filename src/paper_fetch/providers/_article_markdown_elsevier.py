@@ -33,6 +33,7 @@ from ._article_markdown_math import FormulaRenderResult, render_display_formula_
 from ..extraction.markdown_render import MarkdownList, render_list
 from ._elsevier_xml_rules import (
     ELSEVIER_IMAGE_ASSET_TYPES,
+    combine_elsevier_section_title,
     get_elsevier_element_rule,
     infer_elsevier_asset_group_key,
     should_ignore_elsevier_section_title,
@@ -245,10 +246,14 @@ def _render_elsevier_formula_result(
 ) -> FormulaRenderResult:
     locator = resolve_elsevier_formula_locator(element)
     image_url = (formula_image_lookup or {}).get(locator, "") if locator else ""
-    return render_display_formula_result(
-        element,
-        fallback_image_url=image_url,
-    )
+    result = render_display_formula_result(element, fallback_image_url=image_url)
+    if result.lines:
+        anchors = "".join(
+            node.get("data-elsevier-anchor", "") for node in element.iter()
+        )
+        if anchors:
+            result.lines = [anchors, "", *result.lines]
+    return result
 
 
 def render_elsevier_display_block(
@@ -291,7 +296,8 @@ def render_elsevier_display_block(
         result = _render_elsevier_formula_result(element, formula_image_lookup)
         if formula_renders is not None and result.lines:
             formula_renders.append(result)
-        return result.lines
+        lines = list(result.lines)
+        return lines
     return []
 
 
@@ -348,18 +354,12 @@ def render_elsevier_blocks(
                 )
                 + content
             )
-        output = render_list(MarkdownList(items=rendered, ordered=ordered))
-        if ordered:
-            item_index = 0
-            for index, line in enumerate(output):
-                if re.match(r"^\d+\. ", line):
-                    output[index] = re.sub(
-                        r"^\d+\.",
-                        child_text(items[item_index], "label").rstrip(").") + ".",
-                        line,
-                    )
-                    item_index += 1
-        return output
+        return render_list(
+            MarkdownList(items=rendered, ordered=ordered),
+            markers=[child_text(item, "label").rstrip(").") + "." for item in items]
+            if ordered
+            else None,
+        )
 
     for child in list(parent):
         if not isinstance(child.tag, str):
@@ -378,6 +378,7 @@ def render_elsevier_blocks(
             title = render_inline_text(title_node)
             if should_ignore_elsevier_section_title(title):
                 continue
+            title = combine_elsevier_section_title(child_text(child, "label"), title)
             child_lines = render_elsevier_blocks(
                 child,
                 heading_level=heading_level + 1,
@@ -397,6 +398,8 @@ def render_elsevier_blocks(
                 and child_lines
             ):
                 lines.extend([f"{'#' * heading_level} {normalized_title}", ""])
+            if child_lines and child.get("data-elsevier-anchor"):
+                child_lines = [child.get("data-elsevier-anchor", ""), "", *child_lines]
             lines.extend(child_lines)
             continue
 
@@ -550,7 +553,8 @@ def render_elsevier_blocks(
             result = _render_elsevier_formula_result(child, formula_image_lookup)
             if formula_renders is not None and result.lines:
                 formula_renders.append(result)
-            lines.extend(result.lines)
+            result_lines = list(result.lines)
+            lines.extend(result_lines)
     return lines
 
 
@@ -750,7 +754,7 @@ def elsevier_figure_registry(
 ) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
     image_assets = build_elsevier_asset_lookup(
         assets,
-        asset_types=set(ELSEVIER_IMAGE_ASSET_TYPES) - {"graphical_abstract"},
+        asset_types=set(ELSEVIER_IMAGE_ASSET_TYPES),
     )
     formula_locator_keys = elsevier_formula_locators(root)
 
@@ -759,6 +763,13 @@ def elsevier_figure_registry(
     used_asset_links: set[str] = set()
     appendix_figure_ids: set[str] = set()
     appendix_figure_locators: set[str] = set()
+    abstract_figures = {
+        id(figure)
+        for abstract in root.iter()
+        if xml_local_name(abstract.tag) == "abstract"
+        for figure in abstract.iter()
+        if xml_local_name(figure.tag) == "figure"
+    }
     for container in root.iter():
         if not isinstance(container.tag, str) or xml_local_name(container.tag) not in {
             "appendices",
@@ -813,7 +824,9 @@ def elsevier_figure_registry(
             "caption": caption,
             "link": link,
             "section": (
-                "appendix"
+                "abstract"
+                if id(figure) in abstract_figures or asset_type == "graphical_abstract"
+                else "appendix"
                 if asset_type == "appendix_image"
                 or figure_id in appendix_figure_ids
                 or normalize_text(locator) in appendix_figure_locators

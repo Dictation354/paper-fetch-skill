@@ -235,6 +235,7 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             env = {
                 config.XDG_DATA_HOME_ENV_VAR: tmpdir,
+                "PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox",
             }
             expected = Path(tmpdir) / "paper-fetch" / "downloads"
 
@@ -319,6 +320,7 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             env = {
                 config.XDG_DATA_HOME_ENV_VAR: tmpdir,
+                "PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox",
             }
             science_runtime = browser_runtime.load_runtime_config(
                 env,

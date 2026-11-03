@@ -259,4 +259,23 @@ class CrossrefLookupClient:
             "license_urls": licenses,
             "fulltext_links": links,
             "references": references,
+            "_reference_records": [
+                dict(item)
+                for item in message.get("reference", []) or []
+                if isinstance(item, dict)
+            ],
+            "_bibliography": {
+                "first_author": next(
+                    (
+                        str(author.get("family") or author.get("name") or "")
+                        for author in message.get("author", []) or []
+                        if isinstance(author, dict)
+                    ),
+                    "",
+                ),
+                "volume": str(message.get("volume") or ""),
+                "first_page": str(
+                    message.get("page") or message.get("article-number") or ""
+                ).split("-", 1)[0],
+            },
         }

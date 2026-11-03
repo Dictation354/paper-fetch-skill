@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 from collections.abc import Mapping
@@ -23,6 +24,7 @@ from ._article_markdown_common import (
     normalize_lines,
     normalize_text,
     path_relative_to,
+    render_inline_text,
     render_figure_block,
     render_table_block,
     table_entry_semantic_count,
@@ -37,6 +39,10 @@ from ._article_markdown_elsevier import (
 )
 from ._article_markdown_math import FormulaRenderResult
 from ..utils import dedupe_authors
+from ._elsevier_xml_rules import (
+    ELSEVIER_DECLARATION_ELEMENTS,
+    format_elsevier_reference,
+)
 
 
 @dataclass
@@ -58,6 +64,8 @@ class ArticleStructure:
     semantic_losses: SemanticLosses
     used_figure_keys: set[str]
     used_table_keys: set[str]
+    keywords: list[str]
+    abstract_sections: list[dict[str, Any]]
 
 
 def _iter_elements_by_local_name(root: ET.Element, local_name: str) -> list[ET.Element]:
@@ -88,7 +96,21 @@ def _extract_author_name(author_node: ET.Element) -> str:
 
 def extract_article_authors(root: ET.Element) -> list[str]:
     authors: list[str] = []
+    parents = {child: parent for parent in root.iter() for child in parent}
     for author_group in _iter_elements_by_local_name(root, "author-group"):
+        ancestor = parents.get(author_group)
+        editorial_group = False
+        while ancestor is not None:
+            if xml_local_name(ancestor.tag) in {
+                "editors",
+                "title-editors-group",
+                "title-editors-groups",
+            }:
+                editorial_group = True
+                break
+            ancestor = parents.get(ancestor)
+        if editorial_group:
+            continue
         for child in list(author_group):
             if not isinstance(child.tag, str):
                 continue
@@ -240,13 +262,6 @@ def _reference_body_is_doi_only(body: str, doi: str) -> bool:
     }
 
 
-def _reference_label_is_numeric_counter(label: str, index: int) -> bool:
-    normalized = normalize_text(label).strip("[](). ")
-    if not normalized:
-        return False
-    return normalized == str(index) or bool(re.fullmatch(r"\d+[A-Za-z]?", normalized))
-
-
 def extract_elsevier_references(root: ET.Element) -> list[Reference]:
     references: list[Reference] = []
     for index, bib_reference in enumerate(
@@ -294,13 +309,8 @@ def extract_elsevier_references(root: ET.Element) -> list[Reference]:
                 body = f"{body.rstrip('.')}. {note}"
         if not body:
             body = "[Reference text unavailable]"
-        raw = f"{index}. {body}"
-        if (
-            label
-            and not _reference_label_is_numeric_counter(label, index)
-            and not body.startswith(label)
-        ):
-            raw = f"{raw} [{label}]"
+        keys = [bib_reference.get("id")]
+        raw = format_elsevier_reference(index, body, label, doi=doi, keys=keys)
         references.append(
             Reference(
                 raw=raw,
@@ -328,6 +338,10 @@ def _build_elsevier_article_structure(
             return None
     else:
         root = xml_root
+    root = deepcopy(root)
+    from ._elsevier_navigation import prepare_xml_navigation
+
+    prepare_xml_navigation(root)
 
     title = normalize_text(str(metadata.get("title") or "")) or "Untitled Article"
     doi = normalize_text(str(metadata.get("doi") or ""))
@@ -343,25 +357,51 @@ def _build_elsevier_article_structure(
     body_node = first_descendant(root, "body")
     markdown_path = xml_path.with_suffix(".md")
     formula_image_lookup = elsevier_formula_asset_lookup(root, assets, markdown_path)
+    table_lookup, table_entries = elsevier_table_registry(root, assets, markdown_path)
+    figure_lookup, figure_entries = elsevier_figure_registry(
+        root, assets, markdown_path
+    )
     abstract_lines: list[str] = []
-    for abstract_node in _iter_elements_by_local_name(root, "abstract"):
-        if len(_iter_elements_by_local_name(root, "abstract")) > 1:
+    abstract_sections: list[dict[str, Any]] = []
+    abstracts = _iter_elements_by_local_name(root, "abstract")
+    for abstract_node in abstracts:
+        abstract_title = child_text(abstract_node, "section-title")
+        render_node = abstract_node
+        if not abstract_title and abstract_node.get("class") == "graphical":
+            subsection = first_child(abstract_node, "abstract-sec")
+            if subsection is not None and child_text(subsection, "section-title"):
+                abstract_title = child_text(subsection, "section-title")
+                render_node = subsection
+        if len(abstracts) > 1:
             abstract_lines.extend(
                 [
-                    "### " + (child_text(abstract_node, "section-title") or "Abstract"),
+                    "### " + (abstract_title or "Abstract"),
                     "",
                 ]
             )
-        abstract_lines.extend(
-            render_elsevier_blocks(
-                abstract_node,
-                heading_level=4
-                if len(_iter_elements_by_local_name(root, "abstract")) > 1
-                else 3,
-                formula_image_lookup=formula_image_lookup,
-                formula_renders=formula_renders,
-            )
+        rendered_abstract = render_elsevier_blocks(
+            render_node,
+            heading_level=4 if len(abstracts) > 1 else 3,
+            formula_image_lookup=formula_image_lookup,
+            formula_renders=formula_renders,
+            figure_lookup=figure_lookup,
+            figure_entries=figure_entries,
+            used_figure_keys=used_figure_keys,
+            table_lookup=table_lookup,
+            used_table_keys=used_table_keys,
         )
+        abstract_lines.extend(rendered_abstract)
+        if any(line.strip() for line in rendered_abstract):
+            abstract_sections.append(
+                {
+                    "heading": abstract_title or "Abstract",
+                    "text": "\n".join(rendered_abstract).strip(),
+                    "language": abstract_node.get(
+                        "{http://www.w3.org/XML/1998/namespace}lang"
+                    ),
+                    "order": len(abstract_sections),
+                }
+            )
     if not abstract_lines:
         fallback_abstract = normalize_text(
             str(
@@ -371,12 +411,28 @@ def _build_elsevier_article_structure(
         )
         if fallback_abstract:
             abstract_lines = [fallback_abstract, ""]
-    table_lookup, table_entries = elsevier_table_registry(root, assets, markdown_path)
-    figure_lookup, figure_entries = elsevier_figure_registry(
-        root, assets, markdown_path
-    )
+    # Render the body and declarations in source order. Each selected subtree
+    # is traversed once, including declarations nested inside the body.
+    parents = {child: parent for parent in root.iter() for child in parent}
+    selected = ET.Element("sections")
+    for node in root.iter():
+        if node is body_node:
+            selected.extend(list(node))
+        elif xml_local_name(node.tag) in ELSEVIER_DECLARATION_ELEMENTS:
+            ancestor = parents.get(node)
+            covered = False
+            while ancestor is not None:
+                if (
+                    ancestor is body_node
+                    or xml_local_name(ancestor.tag) in ELSEVIER_DECLARATION_ELEMENTS
+                ):
+                    covered = True
+                    break
+                ancestor = parents.get(ancestor)
+            if not covered:
+                selected.append(node)
     body_lines = render_elsevier_blocks(
-        body_node,
+        selected,
         heading_level=3,
         figure_lookup=figure_lookup,
         figure_entries=figure_entries,
@@ -386,29 +442,29 @@ def _build_elsevier_article_structure(
         formula_image_lookup=formula_image_lookup,
         formula_renders=formula_renders,
     )
-    head_availability_lines: list[str] = []
-    for availability_node in _iter_elements_by_local_name(root, "data-availability"):
-        if _contains_element(body_node, availability_node):
+    note_lines = []
+    for note in root.iter():
+        if xml_local_name(note.tag) not in {"footnote", "article-footnote"}:
             continue
-        availability_title = child_text(
-            availability_node, "section-title"
-        ) or child_text(availability_node, "title")
-        availability_body_lines = render_elsevier_blocks(
-            availability_node,
-            heading_level=4,
-            figure_lookup=figure_lookup,
-            figure_entries=figure_entries,
-            used_figure_keys=used_figure_keys,
-            table_lookup=table_lookup,
-            used_table_keys=used_table_keys,
-            formula_image_lookup=formula_image_lookup,
-            formula_renders=formula_renders,
+        ancestor = parents.get(note)
+        while ancestor is not None and xml_local_name(ancestor.tag) != "table":
+            ancestor = parents.get(ancestor)
+        if ancestor is not None:
+            continue
+        label = child_text(note, "label")
+        text = render_inline_text(note, skip_local_names={"label"})
+        if text:
+            note_lines.extend([(label + " " if label else "") + text, ""])
+    if note_lines:
+        body_lines.extend(["### Article notes", "", *note_lines])
+    keywords = list(
+        dict.fromkeys(
+            normalize_text("".join(keyword.itertext()))
+            for group in _iter_elements_by_local_name(root, "keywords")
+            for keyword in _iter_elements_by_local_name(group, "keyword")
+            if normalize_text("".join(keyword.itertext()))
         )
-        normalized_availability_title = normalize_text(availability_title)
-        if normalized_availability_title and availability_body_lines:
-            head_availability_lines.extend([f"### {normalized_availability_title}", ""])
-        head_availability_lines.extend(availability_body_lines)
-    body_lines.extend(head_availability_lines)
+    )
     supplement_entries = elsevier_supplement_entries(
         root, assets, xml_path.with_suffix(".md")
     )
@@ -467,6 +523,8 @@ def _build_elsevier_article_structure(
         semantic_losses=semantic_losses,
         used_figure_keys=used_figure_keys,
         used_table_keys=used_table_keys,
+        keywords=keywords,
+        abstract_sections=abstract_sections,
     )
 
 
@@ -577,7 +635,9 @@ def build_markdown_document(
         lines.extend(structure.conversion_notes)
         lines.append("")
 
-    return normalize_lines(lines)
+    from ._elsevier_navigation import finalize_markdown
+
+    return finalize_markdown(normalize_lines(lines))
 
 
 def write_article_markdown(

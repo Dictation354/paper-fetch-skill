@@ -159,7 +159,6 @@ AIP_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     policy=browser_workflow.BrowserWorkflowPolicy(
         fast_html_attempt=False,
         html_readiness_budget_seconds=90.0,
-        persistent_storage_state=False,
     ),
 )
 

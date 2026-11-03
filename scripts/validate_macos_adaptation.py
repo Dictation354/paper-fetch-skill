@@ -169,6 +169,8 @@ def validate_contract(
 
     browser = contract.get("browser", {})
     for key in (
+        "system_chrome_required",
+        "installer_prepares_flaresolverr",
         "runtime_bundle_built_in",
         "core_install_downloads_runtime",
     ):
@@ -185,10 +187,17 @@ def validate_contract(
         "cooperative_cancel_owner_thread_cleanup",
         "html_snapshot_owner_thread",
         "supplementary_index_without_body",
+        "publisher_native_persistent_profiles",
+        "profile_exclusive_lock_owner_thread",
+        "auth_native_profile_replay",
+        "json_export_optional",
     ):
         if browser.get(key) is not True:
             errors.append(f"browser.{key} must be true")
     for key, expected in (
+        ("default_backend", "camoufox"),
+        ("pnas_backend", "camoufox"),
+        ("elsevier_browser_routes", "unsupported"),
         ("default_channel", "official/prerelease"),
         ("python_package_spec", "camoufox==0.5.9"),
         ("update_check_interval_seconds", 86400),

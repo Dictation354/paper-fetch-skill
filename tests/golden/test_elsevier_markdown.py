@@ -162,7 +162,11 @@ class ElsevierMarkdownTests(unittest.TestCase):
         assert structure is not None
         self.assertGreater(len(structure.references), 20)
         first_reference = structure.references[0]
-        self.assertTrue(first_reference.raw.startswith("1. A. Anav, P. Friedlingstein"))
+        self.assertTrue(
+            re.sub(r'<a id="elsevier-[^"]+"></a>', "", first_reference.raw).startswith(
+                "1. A. Anav, P. Friedlingstein"
+            )
+        )
         self.assertIn(
             "Spatiotemporal patterns of terrestrial gross primary production: a review",
             first_reference.raw,
@@ -185,7 +189,10 @@ class ElsevierMarkdownTests(unittest.TestCase):
         )
         rendered = article.to_ai_markdown(max_tokens="full_text")
 
-        self.assertIn("1. A. Anav, P. Friedlingstein", rendered)
+        self.assertIn(
+            "1. A. Anav, P. Friedlingstein",
+            re.sub(r'<a id="elsevier-[^"]+"></a>', "", rendered),
+        )
         self.assertNotIn(
             "- Spatiotemporal patterns of terrestrial gross primary production: a review",
             rendered,
@@ -463,7 +470,7 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self,
     ) -> None:
         markdown = self._render_real_elsevier_appendix_markdown()
-        body_reference_idx = markdown.index("Fig. A.1 indicates locations.")
+        body_reference_idx = markdown.index("indicates locations.")
         appendix_idx = markdown.index("### Appendix")
         figure_idx = markdown.index("![Figure A.1](figure-a1.jpg)")
 
@@ -568,7 +575,7 @@ class ElsevierMarkdownTests(unittest.TestCase):
             markdown.count(f"[Supplementary Data 1]({assets[0]['path']})"), 1
         )
 
-    def test_real_graphical_abstract_from_golden_xml_is_excluded_from_figures(
+    def test_real_graphical_abstract_stays_inside_abstract_region(
         self,
     ) -> None:
         doi = "10.1016/j.scitotenv.2022.158499"
@@ -595,17 +602,28 @@ class ElsevierMarkdownTests(unittest.TestCase):
         self.assertTrue(
             any(entry["path"] == "gr1.jpg" for entry in structure.figure_entries)
         )
-        self.assertFalse(
-            any(entry["path"] == "ga1.jpg" for entry in structure.figure_entries)
+        graphical = next(
+            entry
+            for entry in structure.figure_entries
+            if entry.get("path") == "ga1.jpg"
         )
+        self.assertEqual(graphical["section"], "abstract")
+        self.assertIn(graphical["key"], structure.used_figure_keys)
+        self.assertIn("ga1.jpg", "\n".join(structure.abstract_lines))
+        self.assertNotIn("ga1.jpg", "\n".join(structure.body_lines))
 
     def _render_real_elsevier_body_table_markdown(self) -> str:
         return _render_elsevier_golden_markdown("10.1016/j.jhydrol.2021.126210")
 
     def _assert_real_elsevier_body_table_is_inserted_near_reference(self) -> None:
         markdown = self._render_real_elsevier_body_table_markdown()
+        visible_markdown = re.sub(r"\[([^\]]+)\]\(#elsevier-[^)]+\)", r"\1", markdown)
         reference_idx = markdown.index(
-            "The detailed information on the hydro-meteorological data is given in Table 1"
+            visible_markdown[
+                visible_markdown.index(
+                    "The detailed information on the hydro-meteorological data"
+                ) :
+            ].split("Table 1", 1)[0]
         )
         caption_idx = markdown.index("Study area and data used in this study.")
         header_match = re.search(

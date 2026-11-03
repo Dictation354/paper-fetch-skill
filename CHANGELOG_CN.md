@@ -6,6 +6,20 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.3.0 - 2026-11-03
+
+### 出版社浏览器目录与 FlareSolverr
+
+- 认证、preflight 和抓取统一复用按出版社隔离的 Camoufox 原生持久目录，保留独占锁、旧 JSON 初始化及独立的可选 JSON 导出。认证完成后重开同一目录验证；能力缓存绑定实际使用的浏览器状态，无法取得有效摘要时不复用缓存。
+- 为 Windows/Linux x64 的 PNAS 及 Elsevier 浏览器路线增加系统 Chrome 与固定版本 FlareSolverr 后端。源码、私有依赖和版本匹配的 ChromeDriver 共用 `flaresolverr/` 缓存，沿用摘要校验、文件锁和原子准备，结束后清理请求所属浏览器进程。macOS 和其他架构的 PNAS 继续使用 Camoufox，Elsevier 跳过浏览器路线。
+- Windows/Linux x64 在核心安装后自动准备 FlareSolverr，覆盖升级和同版本重装。新增经确认的 Debian/Ubuntu 系统依赖与 Chrome 安装、非交互下载准备、有界的临时状态 CDP／空白页启动检查、结果汇总和独立重试入口。失败或取消保留核心安装；在线 `--lite` 与 macOS 跳过，运行时继续按需修复。离线安装器的该准备阶段可能联网。
+
+### Elsevier 获取与来源保真
+
+- 沿用 API XML → FlareSolverr HTML → API PDF → FlareSolverr PDF 顺序，保留实际响应状态、DOI/PII 身份核对及同 context 正文资产。补充 ScienceDirect 正文、MathJax 原始 MathML、原图和补充材料抽取，并以采集原文回放覆盖。
+- Elsevier HTML/XML 输出保留来源章节编号、段落与列表归属、图注、双语摘要、书目顺序和结构化图文摘要。全文验收后仅通过有界、唯一匹配的 Crossref 查询补全空缺参考文献 DOI，保留来源引用及取消／期限语义。
+- extraction revision 从 8 升至 11，使旧抽取缓存重新处理。PDF 输出继续遵守既有转换器边界，同步浏览器诊断、CLI/MCP 契约、随包 Skill 指引和 macOS 适配契约。
+
 ## 7.2.6 - 2026-11-01
 
 ### 浏览器版本选择

@@ -57,7 +57,9 @@ class ProviderMetadata(TypedDict, total=False):
 
 
 class CrossrefMetadata(ProviderMetadata, total=False):
-    pass
+    # Internal evidence for provider citation matching; never Reference fields.
+    _reference_records: list[dict[str, Any]]
+    _bibliography: dict[str, Any]
 
 
 class HtmlLookupHints(TypedDict, total=False):

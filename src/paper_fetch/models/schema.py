@@ -17,6 +17,7 @@ from ..utils import normalize_text
 
 SourceKind = Literal[
     "elsevier_xml",
+    "elsevier_html",
     "elsevier_pdf",
     "springer_html",
     "springer_pdf",
@@ -92,7 +93,7 @@ QualityConfidence = Literal["high", "medium", "low"]
 
 TRUNCATION_WARNING = "Output truncated to satisfy token budget."
 # 7.0 changes HTML/XML extraction and confirmed access-stop semantics across providers.
-EXTRACTION_REVISION = 8
+EXTRACTION_REVISION = 11
 
 
 @dataclass
@@ -685,7 +686,13 @@ class ArticleModel:
         context.finalize_warnings()
         if preserve_pdf:
             return "\n".join(lines) + "\n"
-        return "\n".join(lines).strip() + "\n"
+        markdown = "\n".join(lines).strip() + "\n"
+        from ..provider_catalog import provider_render_policy_for_source
+
+        policy = provider_render_policy_for_source(self.source)
+        if policy is not None and policy.finalize_markdown is not None:
+            markdown = policy.finalize_markdown(markdown)
+        return markdown
 
 
 __all__ = [

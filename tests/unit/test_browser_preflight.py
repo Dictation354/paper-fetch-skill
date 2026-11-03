@@ -536,7 +536,7 @@ def test_browser_preflight_uses_provider_html_candidates_for_aip(
 
     assert result.ready is True
     assert result.provider == "aip"
-    assert result.storage_state_path is None
+    assert result.storage_state_path.name == "storage-state.json"
     assert captured["candidate_urls"] == [
         (
             "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/"
@@ -545,7 +545,7 @@ def test_browser_preflight_uses_provider_html_candidates_for_aip(
         "https://pubs.aip.org/doi/full/10.1063/5.0129134",
         "https://pubs.aip.org/doi/10.1063/5.0129134",
     ]
-    assert captured["persist_storage_state"] is False
+    assert captured["persist_storage_state"] is True
 
 
 def test_browser_preflight_uses_provider_html_candidates_for_royal_society(

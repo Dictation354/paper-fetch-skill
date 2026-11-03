@@ -8,6 +8,7 @@ def _words(text):
     """Coarse text locator only; scientific fidelity needs independent checks."""
     from tests.support.scientific_content import without_latex_spacing
 
+    text = re.sub(r'<a id="elsevier-[^"]+"></a>', "", text)
     text = without_latex_spacing(text)
     text = re.sub(
         r"\\(?:mathrm|mathit|mathbf|mathsf|mathcal|operatorname|text|textit|textbf|textsf|texttt)\{([^{}]*)\}",

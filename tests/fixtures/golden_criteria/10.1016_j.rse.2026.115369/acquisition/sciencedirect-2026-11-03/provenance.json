@@ -1,0 +1,32 @@
+{
+  "requested_url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+  "final_url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+  "title": "Sentinel-1 for offshore wind energy application - ScienceDirect",
+  "responses": [
+    {
+      "url": "https://www.sciencedirect.com/",
+      "status": 200
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+      "status": 307
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+      "status": 403
+    },
+    {
+      "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/n1az0/0x4AAAAAAAAjq6WYeRDKmebM/light/fbE/new/normal?lang=auto",
+      "status": 200
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S0034425726001392",
+      "status": 200
+    }
+  ],
+  "sha256": "e180f649993e0cff95b78ff488c5d18689d03af97b7ec41648e273d6a9e7866e",
+  "captured_at": "2026-11-03T02:44:48.988164+00:00",
+  "preparation": {
+    "mathjax_original_mathml": 5
+  }
+}

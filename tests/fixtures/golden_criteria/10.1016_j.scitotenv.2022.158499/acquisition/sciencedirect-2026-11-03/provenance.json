@@ -1,0 +1,32 @@
+{
+  "requested_url": "https://www.sciencedirect.com/science/article/pii/S004896972205598X",
+  "final_url": "https://www.sciencedirect.com/science/article/pii/S004896972205598X",
+  "title": "Assessing the impact of drought-land cover change on global vegetation greenness and productivity - ScienceDirect",
+  "responses": [
+    {
+      "url": "https://www.sciencedirect.com/",
+      "status": 200
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S004896972205598X",
+      "status": 307
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S004896972205598X",
+      "status": 403
+    },
+    {
+      "url": "https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/g/turnstile/f/av0/rch/9d6za/0x4AAAAAAAAjq6WYeRDKmebM/light/fbE/new/normal?lang=auto",
+      "status": 200
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S004896972205598X",
+      "status": 200
+    }
+  ],
+  "sha256": "ce28c9e2e0f2972a569101d6038fa0ea5dda8647638942426dd7f870fc91db30",
+  "captured_at": "2026-11-03T02:45:16.669567+00:00",
+  "preparation": {
+    "mathjax_original_mathml": 17
+  }
+}

@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from paper_fetch.capability_scope import (
     BrowserStateCapabilityUse,
+    UNCACHEABLE_CAPABILITY_SCOPE,
     CapabilityScopeBuilder,
     capability_scope_from_runtime_context,
     capability_scopes_for_query,
@@ -82,28 +83,41 @@ def test_capability_scope_binds_final_browser_state_path_and_digest(
     state_argument = tmp_path / "explicit.json"
     env = env_factory(tmp_path / "runtime", state_argument)
     expected_path = expected_path_factory(tmp_path / "runtime", state_argument)
-    _write_state(expected_path)
+    from paper_fetch.providers.browser_runtime import load_runtime_config
+    from paper_fetch.providers.browser_runtime.profile import (
+        profile_path,
+        _native_stamp,
+        METADATA_FILENAME,
+    )
 
+    _write_state(expected_path)
+    native = profile_path(load_runtime_config(env, provider="wiley", doi="test"))
+    native.mkdir(parents=True, exist_ok=True)
+    digest = "a" * 64
+    (native / METADATA_FILENAME).write_text(
+        json.dumps(
+            {
+                "provider": "wiley",
+                "state_sha256": digest,
+                "native_stamp": _native_stamp(native),
+                "migrations": {
+                    str(expected_path.resolve()): hashlib.sha256(
+                        expected_path.read_bytes()
+                    ).hexdigest()
+                },
+            }
+        )
+    )
     scopes = capability_scopes_for_query(env, "10.1002/unit-test")
     use = BrowserStateCapabilityUse.from_path(
-        provider="wiley",
-        backend="camoufox",
-        storage_state_path=expected_path,
+        provider="wiley", backend="camoufox", storage_state_path=native
     )
     builder = CapabilityScopeBuilder(env).add_browser_state_use(use)
-
     assert scopes[0] == builder.build()
     assert scopes[-1] == PUBLIC_CREDENTIAL_SCOPE
     facts = builder.facts()["browser_states"]
-    assert facts == [
-        {
-            "provider": "wiley",
-            "backend": "camoufox",
-            "storage_state_path": str(expected_path.resolve()),
-            "content_sha256": hashlib.sha256(expected_path.read_bytes()).hexdigest(),
-            "used": True,
-        }
-    ]
+    assert facts[0]["storage_state_path"] == str(native.resolve())
+    assert facts[0]["content_sha256"] == digest
 
 
 def test_env_only_scope_uses_current_capability_facts() -> None:
@@ -152,7 +166,7 @@ def test_actually_used_state_never_degrades_to_public_if_file_disappears(
         state.unlink()
         scope = capability_scope_from_runtime_context(context)
 
-    assert scope.startswith("credential:")
+    assert scope == UNCACHEABLE_CAPABILITY_SCOPE
     assert scope != PUBLIC_CREDENTIAL_SCOPE
 
 
@@ -209,20 +223,25 @@ def test_query_scope_does_not_fall_back_to_another_provider_private_state(
     tmp_path: Path,
 ) -> None:
     root = tmp_path / "runtime"
-    _write_state(
-        root
-        / "paper-fetch"
-        / "publisher-browser-profiles"
-        / "wiley-camoufox"
-        / "storage-state.json"
+    from paper_fetch.providers.browser_runtime.profile import (
+        _native_stamp,
+        METADATA_FILENAME,
     )
-    _write_state(
-        root
-        / "paper-fetch"
-        / "publisher-browser-profiles"
-        / "science-camoufox"
-        / "storage-state.json"
-    )
+
+    for provider in ("wiley", "science"):
+        native = (
+            root / "paper-fetch" / "publisher-browser-profiles" / f"{provider}-camoufox"
+        )
+        native.mkdir(parents=True)
+        (native / METADATA_FILENAME).write_text(
+            json.dumps(
+                {
+                    "provider": provider,
+                    "state_sha256": provider * 8,
+                    "native_stamp": _native_stamp(native),
+                }
+            )
+        )
     env = {"XDG_DATA_HOME": str(root)}
 
     wiley_scopes = capability_scopes_for_query(env, "10.1002/unit-test")
@@ -240,7 +259,6 @@ def test_query_scope_does_not_fall_back_to_another_provider_private_state(
                     / "paper-fetch"
                     / "publisher-browser-profiles"
                     / "science-camoufox"
-                    / "storage-state.json"
                 ),
             )
         )
@@ -387,3 +405,28 @@ def test_no_download_markdown_inherits_actual_browser_state_scope(
     entries = list_cache_entries(markdown_dir)
     saved_entry = next(entry for entry in entries if entry["path"] == str(saved.path))
     assert saved_entry["credential_scope"] == expected_scope
+
+
+def test_unavailable_native_summary_never_writes_a_private_or_public_sidecar(tmp_path):
+    doi = "10.1002/unavailable-native-summary"
+    native = tmp_path / "profile"
+    native.mkdir()
+
+    def fake_fetch(query, *, modes, strategy, render, context):
+        context.record_browser_state_capability_use(
+            provider="wiley", backend="camoufox", storage_state_path=native
+        )
+        return sample_envelope(modes=set(modes), doi=query)
+
+    request = FetchPaperRequest(query=doi, modes=["markdown"])
+    with RuntimeContext(env={}, download_dir=tmp_path) as context:
+        envelope = _fetch_paper_envelope(
+            request,
+            download_dir=tmp_path,
+            include_article_for_assets=False,
+            context=context,
+            deps=mcp_test_deps(service_fetch_paper=fake_fetch),
+        )
+    assert envelope_capability_scope(envelope) == UNCACHEABLE_CAPABILITY_SCOPE
+    assert not fetch_envelope_cache_path(tmp_path, doi).exists()
+    assert not list_cache_entries(tmp_path)

@@ -290,14 +290,15 @@ class RuntimeContext:
         storage_state_path: Path | str,
         content_sha256: str | None = None,
     ) -> None:
-        """Record state only after it was successfully injected into a context."""
+        """Record the actual native profile and its current context summary."""
 
         from .capability_scope import BrowserStateCapabilityUse
 
-        use = BrowserStateCapabilityUse.from_path(
+        use = BrowserStateCapabilityUse(
             provider=provider,
             backend=backend,
-            storage_state_path=storage_state_path,
+            storage_state_path=str(Path(storage_state_path).expanduser().resolve()),
+            content_sha256=content_sha256,
         )
         record = {
             "provider": use.provider,
@@ -307,10 +308,16 @@ class RuntimeContext:
             "used": True,
         }
         with self._capability_uses_lock:
-            if record not in self.capability_uses:
-                self.capability_uses.append(record)
+            self.capability_uses[:] = [
+                item
+                for item in self.capability_uses
+                if (item.get("provider"), item.get("storage_state_path"))
+                != (record["provider"], record["storage_state_path"])
+            ]
+            self.capability_uses.append(record)
 
     def browser_state_capability_uses(self) -> tuple[dict[str, Any], ...]:
+        self.refresh_browser_profiles()
         with self._capability_uses_lock:
             return tuple(copy.deepcopy(self.capability_uses))
 
@@ -363,26 +370,67 @@ class RuntimeContext:
         config: Any,
         **context_kwargs: Any,
     ) -> Any:
-        """Create a fresh context using the backend carried by runtime config."""
+        """Borrow the publisher's thread-affine persistent context."""
 
-        key = (
-            threading.get_ident(),
-            bool(config.headless),
-            str(config.binary_path or "").strip(),
+        from .providers.browser_runtime.profile import (
+            PublisherProfileManager,
+            profile_path,
         )
+
+        path = profile_path(config)
+        key = (threading.get_ident(), bool(config.headless), str(path))
         with self._browser_context_manager_lock:
             manager = self._camoufox_browser_managers.get(key)
-            if manager is None:
-                from .providers.browser_runtime.camoufox_manager import (
-                    CamoufoxBrowserManager,
-                )
+            if manager is not None and manager.config.provider != config.provider:
+                from .providers.browser_runtime.types import BrowserRuntimeFailure
 
-                manager = CamoufoxBrowserManager(
-                    binary_path=config.binary_path,
-                    headless=config.headless,
+                raise BrowserRuntimeFailure(
+                    "browser_profile_provider_conflict",
+                    f"Publisher profile {path} belongs to {manager.config.provider}; cannot use it for {config.provider}.",
                 )
+            if manager is not None and (
+                manager.config.backend != config.backend
+                or manager.config.binary_path != config.binary_path
+                or manager.config.chrome_binary_path != config.chrome_binary_path
+            ):
+                raise RuntimeError(
+                    f"Conflicting browser executable for native profile: {path}"
+                )
+            if manager is None:
+                # Release the prior publisher before waiting for another directory.
+                # This prevents two requests from holding opposite profile leases.
+                self.close_camoufox_for_current_thread()
+                if config.backend == "flaresolverr":
+                    from .providers.browser_runtime.flaresolverr_manager import (
+                        FlareSolverrManager,
+                    )
+
+                    manager = FlareSolverrManager(config, runtime_context=self)
+                else:
+                    manager = PublisherProfileManager(config, runtime_context=self)
                 self._camoufox_browser_managers[key] = manager
-        return manager.new_context(**context_kwargs)
+        try:
+            return manager.new_context()
+        except BaseException:
+            with self._browser_context_manager_lock:
+                self._camoufox_browser_managers.pop(key, None)
+            raise
+
+    def note_browser_json_export(self, path: Path) -> None:
+        for key, manager in list(self._camoufox_browser_managers.items()):
+            if key[0] == threading.get_ident():
+                manager.note_json_export(path)
+
+    def refresh_browser_profiles(self) -> None:
+        for key, manager in list(self._camoufox_browser_managers.items()):
+            if key[0] == threading.get_ident():
+                manager.refresh()
+
+    def browser_profile_diagnostics(self, context: Any) -> dict[str, Any]:
+        for manager in self._camoufox_browser_managers.values():
+            if manager.context is context:
+                return dict(manager.diagnostics)
+        return {}
 
     def close_browser(self) -> None:
         """Close Camoufox managers owned by this runtime context."""
@@ -414,6 +462,17 @@ class RuntimeContext:
             if id(manager) in seen:
                 continue
             seen.add(id(manager))
+            # Cached figure/seed pages must not survive a publisher switch.
+            for cache_key, value in list(self.session_cache.items()):
+                if (
+                    manager.context is not None
+                    and getattr(value, "context", None) is manager.context
+                ):
+                    close = getattr(value, "close", None)
+                    if callable(close):
+                        with contextlib.suppress(Exception):
+                            close()
+                    self.session_cache.pop(cache_key, None)
             manager.close()
 
     def close(self) -> None:

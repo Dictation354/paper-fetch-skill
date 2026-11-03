@@ -887,7 +887,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
         )
         self.assertEqual(fake_browser_context.route_pattern, "")
         self.assertEqual(fake_browser_context.page.route_pattern, "**/*")
-        self.assertTrue(fake_browser_context.closed)
+        self.assertFalse(fake_browser_context.closed)
         self.assertTrue(fake_browser_context.page.closed)
 
     def test_browser_rest_selection_keeps_metadata_without_reading_body(self) -> None:
@@ -1030,7 +1030,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
         self.assertEqual(browser_diagnostics["payload_source"], "dom_article")
         self.assertEqual(browser_diagnostics["rest_response_count"], 2)
         self.assertEqual(browser_diagnostics["invalid_rest_response_count"], 2)
-        self.assertTrue(fake_browser_context.closed)
+        self.assertFalse(fake_browser_context.closed)
         self.assertTrue(page.closed)
 
     def test_browser_html_uses_ready_dom_after_invalid_rest_response(self) -> None:

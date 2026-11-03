@@ -138,11 +138,17 @@ class CamoufoxBackend:
             env, provider=provider
         )
         storage_state_env_var = runtime_paths.provider_storage_state_env_var(provider)
+        native_dir = profile_dir or user_data_dir
+        native_profile_present = native_dir is not None and any(
+            (native_dir / name).is_file()
+            for name in ("prefs.js", "cookies.sqlite", "compatibility.ini")
+        )
         runtime_paths.validate_storage_state_path(
             storage_state_path,
             provider=provider,
-            require_storage_state=require_storage_state,
-            explicit_path=bool(
+            require_storage_state=require_storage_state and not native_profile_present,
+            explicit_path=not native_profile_present
+            and bool(
                 (
                     env.get(storage_state_env_var, "") if storage_state_env_var else ""
                 ).strip()

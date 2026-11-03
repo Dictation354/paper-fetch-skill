@@ -6,6 +6,20 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.3.0 - 2026-11-03
+
+### Publisher browser profiles and FlareSolverr
+
+- Reuse publisher-scoped native Camoufox profiles across authentication, preflight and fetching, with exclusive profile locks, legacy JSON initialization and separate optional JSON exports. Reopen the same profile to verify authentication; bind capability caches to the browser state actually used and avoid reuse when its digest is unavailable.
+- Add the system Chrome and pinned FlareSolverr backend for PNAS on Windows/Linux x64 and for Elsevier browser routes. Isolate source, private dependencies and version-matched ChromeDriver in the shared `flaresolverr/` cache, retain checksum/lock/atomic preparation, and clean up request-owned browser processes. macOS and other architectures retain Camoufox for PNAS and skip Elsevier browser routes.
+- Prepare FlareSolverr after core installation on Windows/Linux x64, including upgrades and reinstalls. Add consent-based Debian/Ubuntu dependency and Chrome installation, noninteractive download preparation, a bounded temporary-state CDP/blank-page check, result summaries and an independent retry command. Failures or cancellation preserve core installation; online `--lite` and macOS skip this phase, while runtime repair remains available. Offline installers may use the network during this preparation phase.
+
+### Elsevier acquisition and source fidelity
+
+- Use API XML → FlareSolverr HTML → API PDF → FlareSolverr PDF acquisition while retaining actual response statuses, DOI/PII identity checks and shared-context article assets. Add ScienceDirect body, MathJax MathML, original-image and supplementary extraction with captured-source regression coverage.
+- Preserve source section numbering, paragraph/list ownership, figure captions, bilingual abstracts, bibliography order and structural graphical abstracts across Elsevier HTML/XML output. Complete only missing reference DOIs after full-text acceptance through bounded, uniquely matched Crossref lookups; retain source citations and cancellation/deadline behavior.
+- Advance extraction revision from 8 to 11 so prior extraction caches are reprocessed. Keep PDF output within the existing converter boundary and synchronize browser diagnostics, CLI/MCP contracts, bundled Skill guidance and the macOS adaptation contract.
+
 ## 7.2.6 - 2026-11-01
 
 ### Browser runtime selection

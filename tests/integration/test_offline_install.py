@@ -87,6 +87,14 @@ def _fake_python_script(
       shift 2
     done
 
+    if [[ "${{1:-}}" == "-m" && "${{2:-}}" == "paper_fetch.offline_setup" ]]; then
+      printf 'POST_INSTALL_SETUP %s\\n' "$*"
+      if [[ "$*" == *'--prepare-flaresolverr'* ]]; then
+        exit "${{PAPER_FETCH_TEST_PREPARATION_EXIT:-0}}"
+      fi
+      exit 0
+    fi
+
     if [[ "${{1:-}}" == */scripts/skill_integrity.py ]]; then
       export PYTHONDONTWRITEBYTECODE=1
       exec "$REAL_PYTHON" "$@"
@@ -256,6 +264,15 @@ class OfflineInstallTests(unittest.TestCase):
         bundle.mkdir()
         shutil.copy2(REPO_ROOT / "install-offline.sh", bundle / "install-offline.sh")
         (bundle / "install-offline.sh").chmod(0o755)
+        chrome_checker = (
+            bundle
+            / "runtime/site-packages/paper_fetch/providers/browser_runtime/chrome.py"
+        )
+        chrome_checker.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(
+            REPO_ROOT / "src/paper_fetch/providers/browser_runtime/chrome.py",
+            chrome_checker,
+        )
         shutil.copytree(REPO_ROOT / "installer", bundle / "installer")
 
         manifest_python_tag = manifest_python_tag or _python_tag(python_version)
@@ -364,6 +381,10 @@ class OfflineInstallTests(unittest.TestCase):
             )
             _write_executable(fake_bin / "xattr", _fake_xattr_script())
 
+        _write_executable(
+            fake_bin / "google-chrome",
+            "#!/usr/bin/env bash\nprintf 'Google Chrome 156.0.8078.79\\n'\n",
+        )
         _write_checksums(bundle)
         home = root / "home"
         home.mkdir()
@@ -406,6 +427,51 @@ class OfflineInstallTests(unittest.TestCase):
             check=False,
         )
 
+    def test_missing_chrome_does_not_stop_upgrade(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
+            install_root = Path(tmpdir) / "existing"
+            initial = self._run_installer(
+                bundle, fake_bin, home, "--non-interactive", install_dir=install_root
+            )
+            self.assertEqual(initial.returncode, 0, initial.stderr)
+            marker = install_root / "old-runtime"
+            marker.write_text("keep")
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--non-interactive",
+                install_dir=install_root,
+                extra_env={
+                    "PAPER_FETCH_CHROME_BINARY_PATH": str(
+                        Path(tmpdir) / "missing-chrome"
+                    )
+                },
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("--prepare-flaresolverr", result.stdout)
+            self.assertIn("--non-interactive", result.stdout)
+            self.assertEqual(marker.read_text(), "keep")
+            self.assertTrue((install_root / "offline.env").exists())
+            self.assertTrue((home / ".agents").exists())
+
+    def test_preparation_cancellation_preserves_complete_core_install(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
+            result = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--non-interactive",
+                extra_env={"PAPER_FETCH_TEST_PREPARATION_EXIT": "130"},
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("FlareSolverr is not ready", result.stderr)
+            self.assertIn("Offline installation complete", result.stdout)
+            self.assertTrue((bundle / "offline.env").exists())
+            self.assertTrue((home / ".agents/skills/paper-fetch-skill").is_dir())
+
     def test_default_install_writes_browser_runtime_env_hint(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
@@ -437,7 +503,8 @@ class OfflineInstallTests(unittest.TestCase):
                 f"{fake_bin / 'python3'}\n",
             )
             self.assertIn(
-                "Default browser backend: Camoufox (headless: true)", result.stdout
+                "Default browser backend: PNAS FlareSolverr + system Chrome; other publishers Camoufox (headless: true)",
+                result.stdout,
             )
 
     def test_schema_v1_legacy_env_sets_do_not_override_canonical_mcp_keys(
@@ -983,6 +1050,7 @@ exec /bin/mv "$@"
             self.assertIn(
                 "Default browser backend: Camoufox (headless: false)", result.stdout
             )
+            self.assertNotIn("--prepare-flaresolverr", result.stdout)
 
     def test_macos_host_below_manifest_minimum_is_rejected_before_writes(
         self,

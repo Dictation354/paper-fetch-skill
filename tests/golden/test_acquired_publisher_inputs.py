@@ -129,10 +129,12 @@ def test_elsevier_actual_first_page_entitlement_response_is_rejected(header_case
     client = elsevier.ElsevierClient(
         transport, {"ELSEVIER_API_KEY": "injected-test-key"}
     )
-    with pytest.raises(ProviderFailure, match="further retrieval stopped") as failure:
+    with pytest.raises(ProviderFailure, match="API route is not entitled") as failure:
         client._fetch_official_pdf_payload(doi)
     assert failure.value.code == "no_access"
-    assert failure.value.details["confirmed_article_paywall"]["confirmed"]
+    assert failure.value.details["api_entitlement"]["confirmed_article_paywall"][
+        "confirmed"
+    ]
 
 
 @pytest.mark.parametrize(
