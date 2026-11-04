@@ -6,7 +6,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
-## 7.3.2 - 2026-11-04
+## 7.3.3 - 2026-11-04
 
 ### Browser preparation and offline components
 
@@ -15,6 +15,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 - Prepare all supported browser backends after installation, using shared dependency handling and the real backend for temporary blank-page checks. Add provider-declared backend selection and reuse common Playwright page operations across Camoufox and FlareSolverr.
 
 - Build frozen browser components in a child process so Windows releases loaded native dependency files before temporary-directory cleanup.
+
+- Preserve hidden upstream files when transferring frozen browser snapshots. Remove runtime-generated fingerprint model files and empty runtime directories during Windows uninstall while preserving user data and shared browser caches.
 
 ### Runtime and batch resource ownership
 
