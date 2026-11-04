@@ -179,3 +179,15 @@ def test_python_boundaries_build_once_then_smoke_core_and_full() -> None:
     smoke = next(command for command in commands if "wheel[full]" in command)
     assert "for install_kind in core full" in smoke
     assert "python -m venv" in smoke
+
+
+def test_dependency_snapshot_upload_preserves_hidden_component_files() -> None:
+    job = _workflow("release.yml")["jobs"]["resolve-dependencies"]
+    upload = next(
+        step
+        for step in _steps(job)
+        if str((step.get("with") or {}).get("name") or "").startswith(
+            "dependency-snapshot-"
+        )
+    )
+    assert upload["with"]["include-hidden-files"] is True
