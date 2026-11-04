@@ -186,8 +186,8 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
             persistent_manager.close()
     assert not (config.user_data_dir / "storage-state.json").exists()
 
-    # The offline wizard reuses this cache and verifies only about:blank, with
-    # no launch-time update, addon/fingerprint download or provider state.
+    # The offline wizard reuses the prepared runtime and fingerprint model,
+    # then verifies only about:blank without downloads or provider state.
     from paper_fetch.offline_setup import Setup
     from paper_fetch.providers.browser_runtime import preparation
 
@@ -198,5 +198,7 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
     )
     setup = Setup(tmp_path, tmp_path / "offline.env")
     setup.browser(selected=True)
-    assert "Camoufox local launch: ready" in setup.summary()
-    assert "Publisher access: not tested" in setup.summary()
+    assert "Camoufox: ready" in setup.summary()
+    assert (
+        "Fingerprint model and real backend; local script verified" in setup.summary()
+    )
