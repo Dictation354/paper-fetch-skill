@@ -52,7 +52,7 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
   degraded 验收，取消继续传播。在自动主框架导航后，使用当前候选中已完成、URL 与当前页面一致且 DOI
   匹配的最新主文档响应采集状态和响应头。初始拒绝响应仍保留在 trace 中；iframe、
   未完成响应和其他论文的响应不能替代文章状态，访问与正文检查继续执行。
-- Wiley 主文档返回 401/403 时不再在 `commit` 后立即结束候选，而是在既有 route
+- Wiley 主文档返回 401/403 时在 route
   deadline/readiness 预算内继续检查正文。只有正文 selector 达到阈值并连续两次保持
   同一指纹、citation meta/canonical/`.epub-doi` 中的 DOI 与请求精确匹配，且现有
   challenge、验证码、显式 no-access 和 Wiley datalayer 检测均无阻断时，block
@@ -105,14 +105,14 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
 - Direct HTTP/API、二进制流式下载与 cookie-seeded direct fallback 继续使用
   `SafeRemoteUrlPolicy`：每个 redirect hop 重新验证 HTTP(S)、公网 DNS、标准端口、
   userinfo 与 HTTPS downgrade，并在跨 origin 时剥离标准敏感 header。Catalog host 与
-  sensitive-header 数据不再自动成为授权 allowlist；调用方显式给出的
+  sensitive-header 数据不作为授权 allowlist；调用方显式给出的
   `allowed_hosts` / 额外敏感 header 仍逐跳生效。
 - Browser cookie 转 direct opener 时使用标准 `CookieJar`，保留 host-only/domain、
   RFC path boundary、secure 与 expiry，避免把 publisher cookie 扩到子域或相邻路径。
-- `persistent_profile` diagnostics 区分原生目录加载、同 context 复用和 JSON 迁移；
+- `persistent_profile` diagnostics 区分原生目录加载、同 context 复用和 JSON 导入；
   `storage_state_load.used` 只在本次实际导入 JSON 时为 true，不把存在的快照标为已注入。
   JSON 导出独立记录于 `storage_state_save`。Camoufox 出版社使用原生持久目录；PNAS / Elsevier FlareSolverr 使用按 provider 隔离的验收后 JSON 状态目录。Camoufox 覆盖
-  含 AIP、IEEE、PDF 浏览器回退与资产恢复；目录锁、迁移和 auth 回放见
+  含 AIP、IEEE、PDF 浏览器回退与资产恢复；目录锁、JSON 导入和 auth 回放见
   [浏览器生命周期](browser-backends.md#生命周期)。
 - MCP 私有缓存使用实际目录与从打开的 context 获取的最新摘要；无法取得可信摘要时
   禁用私有缓存读写。元数据只保存摘要，不保存 Cookie 或 localStorage 明文。
@@ -126,8 +126,7 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
   关闭临时标签。逐资产串行操作，保留文章页和原有预览降级、失败报告及质量验收。
 - 共享图片、附件和 PDF 下载默认先按 URL 走 hostname pool 的 direct stream；Wiley 正文资产
   使用 provider 专用的同会话串行导航，详见 [provider 说明](providers.md#wiley-正文资产)。direct
-  401/403 最多进入一次真正的 browser-byte recovery；同一 URL/同一会话状态不再先经
-  cookie opener 再重复 direct。恢复可使用 browser `response.body()`、page-context
+  401/403 最多进入一次真正的 browser-byte recovery；同一 URL/同一会话状态只执行一次 direct 尝试。恢复可使用 browser `response.body()`、page-context
   `arrayBuffer()`、已加载图像 canvas、`bodyB64`、download/file bytes 或 PDF viewer
   response body。
 - 同一论文的正文图和 supplementary 共用 `RuntimeContext` 的一个 `AssetBudget`：普通
@@ -155,7 +154,7 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
 
 ## 配置
 
-后端选择、系统依赖与按需源码准备见 [浏览器后端](browser-backends.md#pnas-系统-chrome-与按需-flaresolverr)。可使用：
+后端选择、系统依赖与按需源码准备见 [浏览器后端](browser-backends.md#pnas--elsevier-系统-chrome-与按需-flaresolverr)。可使用：
 
 - `PAPER_FETCH_PNAS_BROWSER_BACKEND`（`auto|flaresolverr|camoufox`）
 - `PAPER_FETCH_CHROME_BINARY_PATH`
@@ -171,24 +170,11 @@ Camoufox 启动不接受固定 UA，以避免生成的 Firefox 指纹内部不�
 
 CLI、MCP 和 Python API 入口只建立准备作用域，首次使用后端才准备；纯 HTTP、缓存命中与静态诊断不会触发准备。批次共享组件准备结果，浏览器会话、clients 和认证状态仍按请求隔离。抓取、`auth`、preflight 和安装器共用持久记录及文件锁。
 
-最近一次检查成功且组件本地有效时，86400 秒内不查询远端；失败或取消会记录最近结果，不建立或延长窗口，也不会被更早的成功时间阻止重试。旧 Camoufox 时间记录不作为成功凭据。缺失、损坏、不兼容仍可立即准备。更新失败可以复用兼容本地组件；同一在途操作由并发调用共享，失败结果不永久缓存。
-
-默认渠道为 `official/prerelease`，通过 Camoufox 0.5.9 官方发现和兼容判断选择
-当前平台正式版和预发布版中的最新兼容浏览器，沿用上游排序，不按发布时间另行排序。
-`prerelease` 表示允许预发布，也接受正式版；`stable` 仅接受正式版。
-不使用包配套浏览器隐式 pin，不自动升级 Python 包。
-已有显式渠道、版本 pin、SHA、自定义 executable 优先；本地有效 pin 不联网查询。
-共享 cache 的准备和检查记录读写使用同一进程锁，并在锁内补写默认渠道，旧 active 配置自动迁移。
-有效目标直接复用，损坏目标只修复经路径校验的版本目录，不清空整个 cache。
-更新失败时提示并恢复有效本地版本；没有可用版本时向实际使用浏览器的调用报告失败，后续调用允许重试。取消继续传播。
-配置损坏、路径越界或 symlink/reparse 路径会明确报错，不通过删除配置修复。
-仅实际联网时输出检查进度；下载进度和错误写 stderr。core 安装缺少 browser extra 或显式 executable 时
-跳过托管更新，不自动安装 Python 依赖。
-准备完成后由 Camoufox package 自行解析 active browser version。paper-fetch 不会把官方 macOS app 内的 `Contents/MacOS/camoufox` 再当成
-custom executable 传回去，因为 Camoufox 的 bundle metadata 位于
-`Contents/Resources`。只有显式 `PAPER_FETCH_BROWSER_BINARY_PATH` 才作为 custom
-`executable_path` 透传；在 macOS 上优先使用 managed runtime，除非 custom bundle
-明确支持 Camoufox 的 executable-path metadata 语义。
+Camoufox 的渠道、pin、检查间隔、失败重试和自定义 executable 行为统一见
+[浏览器安装与准备](browser-backends.md#安装)与[选择配置](browser-backends.md#选择与配置)。
+准备记录和 active 配置在同一缓存锁内更新；损坏目标只修复已校验的版本目录。
+配置损坏、路径越界或 symlink/reparse 路径会报错，不通过删除配置修复。
+进度和错误写 stderr，取消继续传播。
 
 按 [浏览器预置说明](browser-backends.md#安装) 准备官方最新兼容浏览器和 fpgen 模型后，可执行不访问远端 publisher 的原生双 context
 回归：
@@ -211,14 +197,14 @@ WindowServer 或物理显示器。
 ## 诊断边界
 
 `doctor`/`provider_status`、解析和帮助命令保持只读，不联网查询或准备 runtime。
-`fetch` 在请求开始时准备；`auth` 和 `browser-preflight` 在实际启动前准备；显式 executable 不参与
+`fetch` 在首次实际使用后端时准备；`auth` 和 `browser-preflight` 在实际启动前准备；显式 executable 不参与
 自动管理。预检随后执行 live 页面访问和可选 storage-state 保存。challenge、登录、验证码、付费和 entitlement
 边界始终需要合法用户操作，工具不会自动绕过。
 
 IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：它最多等待
 15 秒，直到 `#article` 包含目标文章号。持续的 AWS WAF 页使用
 `reason_code=aws_waf_challenge`、`status=challenge`，并在 diagnostics 中保留
-`challenge_provider=aws_waf` 与旧消费者可用的 `legacy_reason_code`。
+`challenge_provider=aws_waf` 与兼容字段 `legacy_reason_code`。
 
 Elsevier 复用 browser workflow 的期限、取消、上下文和资源释放机制，自行执行 API XML → FlareSolverr HTML → API PDF → FlareSolverr PDF。ScienceDirect 页面准备钩子采集 MathJax 保存的原始 MathML；HTML、图片、补充文件和浏览器 PDF 共用本次上下文。macOS 的 Elsevier 仅执行 API 阶段。
 

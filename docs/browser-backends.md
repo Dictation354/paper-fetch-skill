@@ -33,13 +33,13 @@ python -m pip install "paper-fetch-skill[full]"
 
 browser/full extras 固定 `camoufox==0.5.9`，不自动升级 Python 包。未显式指定
 渠道或 browser pin 时，默认跟踪 `official/prerelease`，由 Camoufox 官方版本
-发现的排序和兼容判断，从正式版和预发布版中选择当前平台最新兼容浏览器，不再使用 Python 包的隐式配对。
+发现的排序和兼容判断，从正式版和预发布版中选择当前平台最新兼容浏览器。
 `prerelease` 表示允许预发布，也接受正式版；`stable` 仅接受正式版。
-准备时在缓存锁内补写默认渠道，旧 active 配置自动迁移；静态探测不写配置。
+准备时在缓存锁内补写默认渠道，active 配置缺少渠道时自动补齐；静态探测不写配置。
 用户已有渠道、版本 pin、SHA 和自定义 executable 保持优先。可用
 `python -m camoufox set official/stable` 跟踪 stable，或用
 `python -m camoufox set official/prerelease/<version>` 固定版本。
-显式 pin 只准备对应版本，有效本地 pin 直接复用。最近一次检查成功且本地组件有效时，24 小时内不查询远端；“无需更新”也算成功。失败或取消只记录最近结果，不延长成功窗口，也不使用更早的成功时间阻止重试。记录在文件锁内复核并原子写入；旧版时间记录首次使用时重新确认。缺失、损坏或不兼容允许立即准备，更新失败时可复用兼容本地组件。安装器、CLI、MCP、API、auth 和 preflight 共用记录。
+显式 pin 只准备对应版本，有效本地 pin 直接复用。最近一次检查成功且本地组件有效时，24 小时内不查询远端；“无需更新”也算成功。失败或取消只记录最近结果，不延长成功窗口，也不使用更早的成功时间阻止重试。记录在文件锁内复核并原子写入；不包含成功状态的时间记录会重新确认。缺失、损坏或不兼容允许立即准备，更新失败时可复用兼容本地组件。安装器、CLI、MCP、API、auth 和 preflight 共用记录。
 
 联网阶段可先用项目准备逻辑预置最新兼容浏览器和 fpgen 模型：
 
@@ -72,10 +72,10 @@ fpgen 模型不包含在 Python wheel 中；首次生成指纹也可能下载模
 | `PAPER_FETCH_BROWSER_TIMEOUT_MS` | browser navigation timeout |
 | `PAPER_FETCH_BROWSER_USER_AGENT` | publisher direct HTTP 的可选 UA；Camoufox 本身忽略它以保持生成指纹一致 |
 
-原生持久目录位于 platformdirs 用户数据目录下的
+Camoufox 原生持久目录位于 platformdirs 用户数据目录下的
 `publisher-browser-profiles/<provider>-camoufox/`，首次未认证访问也会创建。
 覆盖优先级保持为通用 profile、provider 专用 profile、通用 user-data、默认目录；
-显式目录记录所属出版社，不同出版社不能共用。`storage-state.json` 仅为兼容快照。
+显式目录记录所属出版社，不同出版社不能共用。`storage-state.json` 仅为兼容快照。FlareSolverr 使用 provider 隔离的 JSON 状态目录，见下文。
 
 macOS 官方 managed app bundle 把 executable 放在 `Contents/MacOS`，把运行属性表
 放在 `Contents/Resources`。不要把官方 cache 内的
@@ -86,7 +86,7 @@ runtime 明确实现 Camoufox 的 custom-path metadata 布局时才使用该覆�
 
 ## 生命周期
 
-所有出版社（含 AIP、IEEE）的 auth、预检、HTML、PDF 浏览器回退、图页、图片恢复
+Camoufox 出版社（含 AIP、IEEE）的 auth、预检、HTML、PDF 浏览器回退、图页、图片恢复
 和补充材料统一以 `persistent_context=True` 打开原生持久目录。同一次抓取内借用同一
 出版社 context，各阶段只关闭自己创建的页面，所属 `RuntimeContext` 最终关闭会话。
 浏览器工作在所属线程执行，资产调度复用 caller-thread 机制，HTTP 仍可并行。
@@ -97,10 +97,10 @@ runtime 明确实现 Camoufox 的 custom-path metadata 布局时才使用该覆�
 
 `auth` 使用有窗口模式；人工验证后关闭并重开同一目录，按正式抓取的窗口配置
 （默认无窗口）验证。原生目录是认证状态的主要来源；JSON 导出失败单独报告，不使
-已验证目录变为认证失败。默认旧 JSON 仅初始化尚无原生 profile 的目录；显式 JSON
-内容变化按摘要导入一次，默认旧快照不覆盖已有原生状态。auth 保留显式 JSON 路径并更新其迁移摘要；已有原生 profile 时，缺少可选 JSON 不阻止使用原生状态。PDF 不用清理后的 JSON
+已验证目录变为认证失败。默认 JSON 快照 仅初始化尚无原生 profile 的目录；显式 JSON
+内容变化按摘要导入一次，默认快照不覆盖已有原生状态。auth 保留显式 JSON 路径并更新其导入摘要；已有原生 profile 时，缺少可选 JSON 不阻止使用原生状态。PDF 不用清理后的 JSON
 替换原生状态。`save_storage_state=false` 仅禁止 JSON 导出，浏览器仍更新原生目录。
-目录元数据 `paper-fetch-profile.json` 原子记录出版社、迁移摘要和实际 context 的
+目录元数据 `paper-fetch-profile.json` 原子记录出版社、导入摘要和实际 context 的
 状态摘要，不保存明文凭证。私有缓存绑定真实目录和最新可信摘要；缺少可信摘要时
 禁止该私有缓存复用与写入。
 
@@ -113,17 +113,6 @@ Preflight 只报告本次 live 检查；正式 fetch 独立导航并重新执行
 共享 direct-first 路径中，图片、附件或 PDF 的 direct 401/403 只允许一次 browser-byte 恢复；
 `response.body()`、page `arrayBuffer()`、canvas 或 download/file bytes 都会先进入统一
 MIME、大小、像素、预算、staging 与原子发布检查。
-
-## 4.0 迁移
-
-4.0 已删除 CloakBrowser 包、backend、环境变量、离线构建要求与自动迁移路径。
-升级前使用旧 backend 的部署应：
-
-1. 安装 `paper-fetch-skill[browser]` 或 `[full]`。
-2. 删除旧 backend 选择与旧前缀环境变量。
-3. 按 provider 重新执行 headed `paper-fetch auth <provider>`。
-4. 用 `paper-fetch doctor` 和显式 `browser-preflight` 分别验证静态配置与 live
-   页面能力。
 
 ## PNAS / Elsevier 系统 Chrome 与按需 FlareSolverr
 
@@ -144,3 +133,6 @@ Windows 安装器和 Linux x64 在线／离线安装器在核心安装后自动�
 Elsevier 复用 `flaresolverr/` 中已校验的程序和驱动缓存。ScienceDirect 主文档响应结合最终 URL、PII 与页面 DOI 关联；保留实际 `403 → 200` 响应轨迹，不采用 solver 填充的状态。四阶段顺序及公开 source 见 [provider 说明](providers.md#3-provider-全文主路径)。
 
 安装后准备复用上述校验与缓存锁，下载预算 10 分钟；单独的 2 分钟本地启动检查按配置的 headless/headful 创建临时状态目录，验证 CDP 和 `about:blank` 脚本，不读取出版社登录态、不调用主页导航，完成或取消后关闭所属进程。重试：安装环境 Python 执行 `-m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all`，也可重跑安装器。运行时继续修复缓存缺失、损坏及 Chrome 更新后的驱动匹配。
+
+`--prepare-browsers` 可选 `all`、`camoufox` 或 `flaresolverr`；兼容选项 `--prepare-flaresolverr`
+等价于单独准备 FlareSolverr。离线安装将汇总保存到 `browser-setup-results.txt`。

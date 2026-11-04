@@ -13,8 +13,7 @@
 | `fetch_paper` / `batch_fetch` | 完整 provider 抓取和统一验收 | 最终 `has_fulltext` 与 acceptance |
 
 有 license、全文链接或 `citation_pdf_url` 不证明当前可成功获取；probe 没有正信号时，
-后续 provider HTML/PDF 路径仍可能成功。两者不要求逐案一致。独立 `has_fulltext`
-MCP 工具和 `batch_check(mode="article")` 已移除，Python probe 服务保留。
+后续 provider HTML/PDF 路径仍可能成功。两者不要求逐案一致。Python 调用使用 `probe_has_fulltext()`。
 
 ## 证据与状态
 

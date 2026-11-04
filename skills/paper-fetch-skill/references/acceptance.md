@@ -31,7 +31,7 @@
 | `output` | 只检查本次明确请求的 article/Markdown/metadata 或文件；未请求不算缺失。 |
 | `provenance` | 结构化 fallback/warning/failure code、trace、semantic loss 和 asset failure。 |
 
-顶层兼容 `status=ok` 只表示调用没有抛出运行时失败；`has_fulltext` 是内容事实；`overall` 才是任务验收结论。三者不能互换。摘要或 metadata 可以是成功返回，但最多是 `limited`，不能报告成全文完成。
+顶层 `status=ok` 只表示调用没有抛出运行时失败；`has_fulltext` 是内容事实；`overall` 才是任务验收结论。三者不能互换。摘要或 metadata 可以是成功返回，但最多是 `limited`，不能报告成全文完成。
 
 单篇响应和批量逐项结果都提供统一 acceptance 摘要；直接读取各分面结论。保留返回的 `source`、`acquisition` 和 provenance 降级，不从 provider 名或 URL 补全缺失来源。
 
@@ -58,8 +58,8 @@
 1. 路径位于用户选择/推断的目标目录，文件存在、可读且非空；独立材料任务完整空发现的索引允许为空，以结构化 `no_result` 和发现完整性为准。
 2. 正文 Markdown front matter 或 manifest identity 与规范目标一致；材料索引及附件通过结构化响应或 manifest 的身份、来源和资产路径关联核对。文件名和正文里偶然出现的 DOI 不能证明归属。
 3. 内容满足当前任务意图；正文任务的 `abstract_only` / `metadata_only` 文件仍不能当作 fulltext archive，独立材料任务按[补充材料验收](#补充材料验收)核对。
-4. 当前文件 size/SHA-256 与返回的输出快照一致；没有输出快照时直接计算实际值供验收，按最终报告的场景决定是否展示。
-5. 正文任务按资产 profile、独立材料任务按返回的材料集合，核对实际本地文件、MIME/尺寸/hash、remote-only 或 missing 事实。
+4. 返回输出快照时，核对当前文件 size/SHA-256；没有快照时按前述身份、内容和路径核对，用户要求 hash 时再计算。
+5. 请求本地资产时核对所需文件及返回的资产快照；MIME、尺寸或 hash 的额外检查用于具体缺失、损坏问题或用户指定的验收要求。
 
 文件被 `.gitignore` 忽略、`git status` 没有变化或位于仓库外，都不影响上述验收。需要独立复核单个产物时可用标准库计算实际 size/hash，不依赖 `jq`：
 
@@ -87,7 +87,7 @@ PY
 
 - 仅探测：按[探测核对与报告](#探测核对与报告)展示可用性证据、错误和调度状态，不套用全文 acceptance 汇总。
 - 独立材料任务：按[补充材料验收](#补充材料验收)报告身份、来源、发现完整性、材料清单及归档路径，保留逐项失败，区分完整空发现和未归档清单。
-- 普通阅读：保留论文身份、可追溯来源、实际取得的内容范围及影响任务的降级。全文、摘要和元数据必须区分；browser HTML 失败后 PDF 成功仍需保留精确 failure code 和 degraded 结论。
+- 普通阅读：保留论文身份、可追溯来源、实际取得的内容范围及影响任务的降级。区分全文、摘要和元数据；fallback 的降级原因按工具结论说明，技术 code 按诊断需要展开。
 - 归档：补充实际产物路径、验收结论和缺失资产；只展示本次请求的产物，不把未请求项列为失败。
 - 失败或需用户动作：说明具体原因、受影响目标及必要动作；按需展开结构化 code、执行面、attempt、acquisition、hash 或诊断路径。用户要求审计时提供完整技术证据。
 - 批量抓取：保留原始 index/query 到规范身份的映射及逐项状态，汇总 complete/degraded/limited/failed/action-required、限流、取消和未调度项；其余技术字段保留在已有机器结果中，按核对或诊断需要展示。

@@ -4,7 +4,7 @@
 
 ## 1. 确认访问与路由
 
-先确认目标属于已知论文获取，再确认 DOI/域名身份、合法的全文入口和需要的 fallback；不得把猜测的私有接口作为 route。只使用公开或当前用户已有权限的访问方式；不要自动登录、解 CAPTCHA、绕过 paywall/challenge，也不要从搜索候选或人工审批 YAML 生成运行时 route。
+确认 DOI/域名身份、公开或当前用户有权限的全文入口，以及需要的 fallback。登录和 CAPTCHA 由用户在认证入口处理；route 使用已核实的入口。
 
 ## 2. 实现 provider owner
 
@@ -48,6 +48,6 @@ PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_bundle_registrat
 PYTHONPATH=src uv run python -m pytest tests/golden -q
 ```
 
-只有能力、配置或限制发生用户可见变化时才更新 [`providers.md`](providers.md)。不需要 scaffold、capture 状态机、provider manifest、review/signoff、sync-back、drift report 或 fixture 反向索引。
+能力、配置或限制发生用户可见变化时更新 [`providers.md`](providers.md)。
 
 真实 publisher live smoke 只在具备合法访问条件时显式运行，不能替代 committed fixture regression。完成条件是 runtime bundle、provider-local 行为、代表性 golden replay 和必要用户文档一致。

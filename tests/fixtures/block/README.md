@@ -3,15 +3,15 @@
 This directory contains canonical real article responses or captured browser DOMs
 rejected as full text, including subscription previews, abstract-only pages,
 challenges, access denials, empty shells, and empty-body XML.
-Current cases and remaining work are listed in the
-[real-case inventory](../../../docs/fixture-content-coverage.md).
+Current cases are registered in the
+[fixture manifest](../golden_criteria/manifest.json) with `fixture_family: "block"`.
 
 Conventions:
 
 - DOI-backed samples live under `tests/fixtures/block/<doi_slug>/`.
 - The DOI slug uses `/` replaced with `_`.
-- Block fixtures declare exactly one canonical `raw.html` or `raw.xml`. Historical
-  `extracted.md` files may remain for human review, but no test or governance claim
+- Block fixtures declare exactly one canonical `raw.html` or `raw.xml`.
+  `extracted.md` files are retained for human review, but no test or governance claim
   may use them as executable evidence.
 - Sample ownership and provenance metadata are registered in
   `tests/fixtures/golden_criteria/manifest.json` with

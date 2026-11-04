@@ -6,6 +6,14 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.3.4 - 2026-11-04
+
+### Documentation and skill guidance
+
+- Align CLI, MCP, browser backend and offline installation documentation with the implementation, correcting lazy browser preparation, successful-check reuse, bundled FlareSolverr components and state storage, Markdown save paths and cache persistence semantics.
+- Simplify fixed preflight sequences, repeated confirmations and extra acceptance steps in the skill; consolidate duplicate rules while preserving the five presets, unified acceptance, provenance and lawful-access constraints.
+- Remove version migration guides and historical closure records, describe current behavior throughout maintained documentation, and repair navigation and references while retaining the complete bilingual changelogs and regression evidence.
+
 ## 7.3.3 - 2026-11-04
 
 ### Browser preparation and offline components

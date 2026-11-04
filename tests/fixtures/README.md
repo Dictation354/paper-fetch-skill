@@ -3,7 +3,7 @@
 当前样本、来源选择、资产与预期由 [manifest](golden_criteria/manifest.json) 和对应
 DOI 目录管理；[fixture catalog](../fixture_catalog.py) 提供测试读取入口。
 测试命令、分层和台账维护统一见 [测试说明](../README.md)。本文只定义来源证据约束，
-不维护第二份覆盖清单、逐函数分类表或历史审计文件索引。
+不维护第二份覆盖清单、逐函数分类表。
 
 ## 目录与来源
 
@@ -23,7 +23,7 @@ DOI 目录管理；[fixture catalog](../fixture_catalog.py) 提供测试读取�
 | `real_excerpt` | 从真实来源直接裁取、可追溯的片段；改写文字和生成 Markdown 不属于原文 |
 | `contract_scenario` | 已登记的最小机制契约，不证明整篇文章的真实性 |
 | `synthetic` | transport/cache/config/service/MCP 等基础设施或局部机制 |
-| `unverified` | 尚未核验的历史来源，不能计入真实内容覆盖 |
+| `unverified` | 尚未核验的来源，不能计入真实内容覆盖 |
 
 来源标签是声明，不是联网获取证明。当前拒绝与撤回事实位于 manifest 的
 `rejected_sources` / `withdrawn_assets`；不能通过改名或修改标签把已拒绝字节提升为真实原文。
@@ -47,11 +47,16 @@ fallback 仅用于展示，不能进入可信 metadata；缺失题名可由既�
 保持缺失。源 DOI 与目标冲突时须在转换前拒绝。对应回归见
 [来源标题测试](../golden/test_replay_source_titles.py)，PDF metadata 沿用原契约。
 
+复杂表格的固定行列映射、单元格和 MathML 事实存于 expected 的 `source_objects`，
+绑定源文件 SHA-256、源节点哈希及对象索引。更新预期必须核对原始 HTML/XML，
+不能从生产输出生成；
+简单节点选择和对象位置检查直接读取原文，输出比较保留数值和上下标边界。
+
 ## 采集与逐资产证据
 
 - 原始 HTML/XML 和 acquisition 文件保留上游字节及空白；Git attributes 禁止对这些
   带 hash 输入执行 checkout 换行转换。来源 URL、时间、状态/MIME、SHA-256 与实际
-  响应分开记录；新增采集不改写旧失败响应或 synthetic 来源。
+  响应分开记录；新增采集不改写已有响应或 synthetic 来源。
 - Browser DOM、HTTP entity 和 canvas export 使用不同 capture kind。canvas 导出
   不捏造 HTTP 状态；direct 图片成功也不能证明 challenged-HTTP 的 browser recovery。
 - 捕获 HTML 不会自动认证图片字节。资产断言必须声明 `asset` primary role 并实际读取
@@ -71,7 +76,7 @@ fallback 仅用于展示，不能进入可信 metadata；缺失题名可由既�
 `test_evidence_ledger_integrity` 检查。声明中的 `scope` 和 primary roles 描述断言范围，
 不能靠改标签绕过证据要求。
 
-历史 `template_gap` 仍需 `template_review={status,scope,evidence_tests,remaining}`：
+`template_gap` 声明需要 `template_review={status,scope,evidence_tests,remaining}`：
 `mechanism` 仅证明局部机制，`covered` 关联该范围的离线内容测试，`partial` 列出具体缺口。
 只有 `partial` 可有非空 `remaining`；引用须指向已登记的内容测试，不能用机制或 live
 测试代替。review 不改变测试 kind 或资产来源。

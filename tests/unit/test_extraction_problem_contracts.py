@@ -1,4 +1,4 @@
-"""Minimal contracts for the extraction defects listed in problems.md."""
+"""Minimal contracts for extraction behavior."""
 
 from xml.etree import ElementTree as ET
 

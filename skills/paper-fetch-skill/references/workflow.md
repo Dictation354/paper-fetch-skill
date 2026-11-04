@@ -1,6 +1,6 @@
 # 身份优先工作流
 
-把每个目标作为独立状态项推进，整批任务共享意图、输出和并发策略。唯一阶段顺序如下，不得插入后端确认或保存确认作为额外阶段：
+把每个目标作为独立状态项推进，整批任务共享意图、输出和并发策略。阶段顺序如下；已有明确身份或合格本地全文时复用相应结果：
 
 > 输入规范化 → resolve/batch_resolve → DOI 去重 → 仅歧义项阻塞 → 意图 → 本地/cache → 后端 → 必要状态检查 → fetch → acceptance → report
 
@@ -69,7 +69,7 @@
 ### 8. 必要状态检查
 
 - provider 凭证、browser runtime 或访问上下文可能影响目标时，用筛选后的 `provider_status(provider=...)` 确认静态状态；provider/capability 以 [catalog](tool-contract.md#static-provider-catalog) 为准。
-- browser provider 首次联网抓取前确认静态 runtime；静态 binary 缺失不阻止工具自动准备。缺失或异常时读[运行时准备与授权](environment.md#运行时准备与授权)。
+- 普通 fetch 自动准备 runtime；遇到配置缺失或 runtime 异常时再检查静态状态，处理方式见[运行时准备与授权](environment.md#运行时准备与授权)。
 - 只有需要真实链路证明时才做 [browser preflight](tool-contract.md#browser-preflight-contract)；它会联网且可能写 storage-state。已返回 `ready` 则继续 fetch，不要求每次预检。
 - 实际 fetch 或按需预检返回 `challenge` / `auth_required` 时按 `manual_auth` 处理；付费、许可等访问边界按 `lawful_access_boundary` 处理，不绕过访问控制。
 

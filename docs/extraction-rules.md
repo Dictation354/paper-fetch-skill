@@ -3,11 +3,11 @@
 本文维护 HTML/XML 提取、组装和渲染的用户可见约束，DOI 仅作来源证据，不能成为
 特判规则。路由、运行时及资产获取见 [providers.md](providers.md)，阶段与代码 owner
 见 [架构映射](architecture/overview.md#extraction-stage-module-map)。测试分层、固定来源
-预期及当前样本选择见 [tests/README.md](../tests/README.md)；历史事故记录另行归档。
+预期及当前样本选择见 [tests/README.md](../tests/README.md)。
 
 ### 维护边界
 
-规则只描述用户可见的提取与渲染语义。实现 owner 由代码和 provider-local 测试负责，fixture 身份与预期由 `tests/fixtures/golden_criteria/manifest.json` 负责。已发布的显式 HTML anchor ID 继续保留；旧 ID 直接落到对应规范章节，不再显示重复标题。
+规则只描述用户可见的提取与渲染语义。实现 owner 由代码和 provider-local 测试负责，fixture 身份与预期由 `tests/fixtures/golden_criteria/manifest.json` 负责。显式 HTML anchor ID 保持稳定。
 
 <a id="rule-pdf-conversion-boundary"></a>
 ### PDF 转换边界：禁止格式清洗与质量修复
@@ -17,7 +17,6 @@
 - 禁令覆盖 shared 转换包装、provider、文章组装、最终渲染及其他后处理层；不得以通用规则、单篇 DOI 特判、已有实现或测试要求为例外。本文 HTML／XML 清洗规则不得套用于 PDF 输出。
 - PDF 元数据的缺失题名和作者可由文件 Info 经现有元数据链路补入；网页摘要去除 HTML 标记，不在已有 PDF 正文之前重复渲染。PDF 获取、合法访问、真实文件及完整论文身份校验、统一 acceptance、候选回退／降级、原始文件与转换器导出资产落盘、必要的本地资产路径改写和来源记录仍按既有契约执行；这些操作不得借机改写 PDF 转换内容，也不得新增 PDF 排版或解析保真验收要求。
 - 正文 PDF 候选排除参考文献、站点页脚中的 PDF 链接，以及明确的预览／补充材料链接。下载后仍检查原始及最终 URL、文件开头的补充材料标记和论文身份；DOI 不足以确认身份时，传入的目标标题必须得到文件内标题或开头文本支持。未核实文件不得因 `allow_pdf_only`、有效 PDF 文件头或可转换为 Markdown 而被接受为正文；失败后继续既有候选回退，最终按现有流程降级。此检查不改写转换内容，也不按 PDF 页数短就认定为预览。
-- 旧版标题修复、共享 PDF 引用分离及 AIP 上标编号归一化规则自本修订起撤销。历史代码、样本和质量断言仅说明已有实现，不构成有效规则或继续维护清洗的依据。相关清洗实现及其质量断言已移除，当前测试验证转换器输出原样通过组装和渲染。
 
 ## Generic
 
@@ -55,9 +54,7 @@
   - [`../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html`](../tests/fixtures/golden_criteria/10.1126_sciadv.adl6155/original.html)
   - 这个样本能证明 `MATERIALS AND METHODS` 是语义父节，而 `Experimental design` 是其子节内容。
 - 边界说明：
-  - 这条规则不是要求所有论文都必须出现 `MATERIALS AND METHODS` 这个固定字面值。
-  - 它约束的是“父节语义不能在组装或渲染阶段丢失”，不是要求不同 publisher 的标题体系完全一致。
-  - 当前直接 DOI 证据样本来自 Science；Wiley 与 models 测试证明同一父节保留行为不是 Science-specific 规则，后续不为凑数强行新增 fixture。
+  - 按各出版社原有标题体系保留父节语义；Science 原文及 Wiley、models 测试覆盖这一共享行为。
 
 <a id="rule-no-trailing-figures-appendix"></a>
 ### 正文已内联 figure 时避免重复追加尾部 Figures 附录
@@ -73,7 +70,6 @@
   - 这些样本分别覆盖 Wiley root-cause 回放、早期 Nature HTML、新 Nature HTML、Science 回归中“正文已有相对本地图片链接但资产模型里仍是绝对路径”的场景，以及 arXiv official HTML 中正文 figure 图片应原位内联、尾部 `Figures` 只作为未消费图片 fallback 的场景。
 - 边界说明：
   - 这条规则只约束 `asset_profile='body'` / `asset_profile='all'` 的正文图渲染结果。
-  - 它不是说系统永远不能输出 figure 附录，而是说正文 figure 已经内联时，不能再重复追加一个用户可见的尾部 Figures 块。
   - 如果正文里还有未锚定的 body figure，或者资产本来就不属于正文，这些内容仍然可以留在兜底附录里。
   - 去重扫描必须覆盖最终会渲染的 lead、abstract、body 和 retained section；不能只看普通 body section，否则摘要/Significance 中已经内联的本地图仍会在尾部重复追加。
   - 去重比较必须能识别远程 URL、绝对路径、相对 `body_assets/...` 路径和 basename 后缀的等价关系；不能只做字符串全等比较。
@@ -552,7 +548,7 @@ arXiv 旧版单个 `ltx_personname` 内可以包含多个逗号分隔姓名及�
 - 边界说明：
   - 这条规则不保证公式语义一定完全正确。
   - 它约束的是“公式块和图注句子的可读边界不能坏掉”，不是对编号体系或数学求值做承诺。
-  - 当前直接 DOI 证据样本来自 Science；PNAS 后处理测试覆盖同一共享 spacing policy，后续不为凑数强行新增 fixture。
+  - 当前直接 DOI 证据样本来自 Science；PNAS 后处理测试覆盖同一共享 spacing policy。
 
 <a id="rule-preserve-formula-image-fallbacks"></a>
 ### HTML 公式图片 fallback 必须保留并进入资产链路
@@ -840,10 +836,6 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
 - 边界说明：
   - 这条规则不禁止 metadata-only 结果用 bullet 形式渲染 references；它只禁止在全文 references 非空时把 metadata/Crossref fallback 作为额外条目追加。
 
-### PDF 引用与科学后置内容的分离
-
-此旧规则已撤销，统一遵守 [PDF 转换边界](#rule-pdf-conversion-boundary)。不再要求从 PDF 转换文本恢复引用分条、拼接续行、清理页脚、调整编号或重建后置内容。已有 metadata／官方结构化引用按既有来源契约使用，不据此清洗 PDF 文本。
-
 <a id="rule-elsevier-xml-references"></a>
 ### Elsevier XML 参考文献必须优先使用结构化 bibliography，保持编号和作者信息
 
@@ -1081,7 +1073,7 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
   - [`../tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/original.html`](../tests/fixtures/golden_criteria/10.1021_acsomega.3c06992/original.html)：当前 Silverchair formula 页面，21 个 display formulas、2 个 tables、8 个 figures、20 条 references。
   - [`../tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/original.pdf`](../tests/fixtures/golden_criteria/10.1021_acsomega.2c02828/original.pdf)：由 selected Camoufox runtime 捕获的当前 `article-pdf` fallback。
 - 边界说明：
-  - figure normalization 把一个 `.fig.fig-section` 折叠成一条带 label/caption 的正文图，不输出 `Open figure viewer`、`View Large`、`Close modal` 或重复 modal 文本；`/view-large/figure/` 仅保留为来源关联，不再触发额外查看器请求；正文真实 `DownloadImage.aspx` 包装必须继续解析为签名原图，CDN `m_*.png` 按 preview 质量规则处理。
+  - figure normalization 把一个 `.fig.fig-section` 折叠成一条带 label/caption 的正文图，不输出 `Open figure viewer`、`View Large`、`Close modal` 或重复 modal 文本；`/view-large/figure/` 仅保留为来源关联，不触发额外查看器请求；正文真实 `DownloadImage.aspx` 包装必须继续解析为签名原图，CDN `m_*.png` 按 preview 质量规则处理。
   - references 必须从清洗前的 `.ref-list .ref` 提取可见 citation；优先读取 `.year`，并移除 Crossref/ADS/OpenURL 操作 chrome，再由 provider 渲染一份编号 references。
   - supplementary 只从清洗前的 `.widget-ArticleDataSupplements` 建立独立 scope，并只接受稳定 `/article-supplement/` publisher 链接；嵌入 Figshare downloader 不作为 canonical 附件。
   - PDF fallback Markdown 仍由共享转换器负责；页面 footer 和双栏 references 顺序是 PDF 布局限制，不应反向写成 ACS DOI 特例。
@@ -1219,25 +1211,18 @@ PNAS 的 supplementary 资产范围见 [Supplementary discovery 必须来自明�
 - 图资产按同一 DOM 图片关联 `figure`、外层 `.fig-section` 和嵌套 `.graphic-wrap` 的发现结果，在下载前合并为一条逻辑资产；不同子图分别保留。原图候选只来自页面显式属性／链接（含 Silverchair 下载控件），沿用原签名，不通过去掉文件名 `m_` 猜测地址，也不改变不同尺寸 URL 的请求身份。
 - 正文原位使用显式原图 URL；下载成功后替换为本地原图，未下载时保留远程原图，不追加重复 Figures。只有原图缺失或获取失败才尝试预览；预览成功仍原位内联，记录 `download_tier=preview`、Oxford `preview_fallback` 和 `preview_accepted=false`。即使尺寸达标也保留 `asset_fidelity_degraded`，资产与整体验收为 degraded，全文获取保持成功；降级只进入报告／诊断，正文不增加提示。两种图片都失败时沿用资产失败报告。
 - 渲染列表前删除 `#Toolbar`、工具栏包装及引用／分享弹窗，并显式使用 Oxford noise profile；正文中的 `PDF`、`Share` 等操作词不作为全局删词规则。共享容器、普通节点和行内渲染均忽略 HTML `Comment`。
-- 附件区保留可点击链接，以文章 URL 解析相对地址；附件去重、资产范围与下载语义沿用现有契约。结构化摘要复用行内渲染保留上下标和公式，并保留段落、语言、顺序和来源信息，组装时不再用纯文本摘要覆盖。
+- 附件区保留可点击链接，以文章 URL 解析相对地址；附件去重、资产范围与下载语义沿用现有契约。结构化摘要复用行内渲染保留上下标和公式，并保留段落、语言、顺序和来源信息，组装时不用纯文本摘要覆盖。
 - 清理作者信息卡前按显式脚注目标 ID 采集作者关联，输出姓名与注释；没有关联信息时保留原注释，不根据作者顺序推断。`nwae442` 原网页没有共同贡献脚注的作者关联。
 - 参考文献仅依据明确 DOI 超链接修复同一 DOI 的断裂空格并合并重复表示；保留编号、条目顺序、书目信息及不同 DOI。共享图注渲染仅在同一逻辑图内合并相同规范图注的有号／无号候选，优先保留明确图号；不同图号、不同图注与子图说明继续保留。
 - 原始 HTML 与身份／来源记录见 [`nwae442`](../tests/fixtures/golden_criteria/_scenarios/oxford_nwae442/source.json)；[`Oxford HTML 回放`](../tests/golden/test_oxford_html_quality.py) 覆盖该篇及现有五篇样本。该篇六幅图各保留一份图注，50 条引用顺序不变，第 21 条 DOI 合并为一个正确表示。上述行为仅适用于 HTML，不处理 PDF 转换输出。
 - Silverchair 原文的同级 DOM `h2` / `h3` / `h4` 必须按各自层级渲染，防止组装时丢弃没有直属段落的父章节；同名标题按原文出现顺序处理。
 - 引用 Crossref 控件中的期刊 `(ISSN)` DOI 不能作为被引论文 DOI；保留原文可见作者、题名和出版信息。
 - Oxford Academic 的 Acknowledgements / Funding，以及 Frontiers XML 的 Author contributions / Acknowledgments 必须保留在 References 前。沿用现有 provider 的 `body` hint 作为保留渲染类别，不表示这些后置内容是科学正文；它们不得混入参考文献列表。
-- 对应阶段：`provider-html-or-xml-extraction`、`section-classification`、`article-assembly`、`references-rendering`。Owner：`_oxfordacademic_html` 与 `frontiers`。原文证据为 `10.1093/bioinformatics/btaa161` 和 `10.3389/fmars.2023.1101972`；回归见 [`test_reviewed_publisher_content.py`](../tests/golden/test_reviewed_publisher_content.py)，逐项比较原文标题、正文文本片段和全部可见引用，不读取历史 Markdown。
+- 对应阶段：`provider-html-or-xml-extraction`、`section-classification`、`article-assembly`、`references-rendering`。Owner：`_oxfordacademic_html` 与 `frontiers`。原文证据为 `10.1093/bioinformatics/btaa161` 和 `10.3389/fmars.2023.1101972`；回归见 [`test_reviewed_publisher_content.py`](../tests/golden/test_reviewed_publisher_content.py)，逐项比较原文标题、正文文本片段和全部可见引用。
 
-### AIP PDF 上标引用编号
+## 跨来源的内容保留与验收
 
-此旧规则已撤销。AIP 与其他 provider 一样遵守 [PDF 转换边界](#rule-pdf-conversion-boundary)，禁止对 PDF 输出做上标编号归一化、断行合并或引用分条；已有实现与 31 条引用的历史断言不构成例外。
-
-## 使用建议
-
-- 新增回归测试时，优先把规则写成行为约束，再用 DOI 级样本去证明它。
-- 做 root-cause 排障时，先判断问题是在 HTML 提取、文章组装、资产清洗，还是最终渲染阶段，再决定该把证据补到哪条规则下。
-- 共享 heading、inline whitespace、citation sentinel、DOI 与 formula 识别常量应复用代码中的单一来源；provider 只保留真正改变语义的覆盖规则，避免测试路径和运行时 drift。
-- 后续如果要补“既有规则”，继续沿用同一模板，不要把 incident 记录直接搬进这里。
+共享 heading、inline whitespace、citation sentinel、DOI 与 formula 识别复用现有代码 owner；provider 只覆盖自身不同的语义。
 
 Springer Classic 的非编号 author–year 文献列表按原顺序保留，不添加正文并不存在的编号；Springer 参考文献链接中的 `%2F` 在该 provider 内解码后识别 DOI。AMS 优先从可见 author–year 条目及其 DOI 链接提取引用，保留旧式含角括号的 DOI。图片形式的 Wiley 公式和 AMS 表格只保留资产身份，不声称 OCR 或结构化单元格还原。 Wiley 公式的 `/cms/asset/` 与 AMS 表格的 `/view/` 图片地址在 provider DOM 阶段按同篇 `source_url` 解析，再形成 Markdown fallback；preview/full 候选分别保留，远程 URL 不代表已下载，本地资产路径不参与解析。
 
@@ -1263,9 +1248,9 @@ Taylor & Francis 的相邻 `.NLM_disp-formula-image`／`.NLM_disp-formula` 属�
 
 ### 按证据保留出版社图片候选与 arXiv 结构
 
-- ACS／Royal 的原始文章可能只有缩略图、查看器和 `DownloadImage.aspx` 包装；独立查看器中存在直链不能证明文章也有普通直链。保留同图、同 CDN 的解包装检查；ACS 删除缺少原图时另访问查看器的回退，Royal 因真实分组 figure 反例保留该路径。原文回归见 `tests/golden/test_requested_template_evidence.py`。
-- PNAS 删除原图失败后的 preview 下载，以及没有原图时的 preview 下载；仍可从已有 figure-page 入口识别原图，并保留原图的浏览器恢复；浏览器 canvas/已加载图片须精确匹配目标 URL，不能以页面上的 preview 替代原图。原图失败按现有失败／远程资产验收报告，不以缩略图冲销。`tests/unit/test_provider_asset_candidate_boundaries.py` 覆盖串行浏览器和普通执行路径。其它 provider 的 preview 契约不变。
-- arXiv HTML frontmatter 和 bibliography 只使用已验证的 LaTeXML 选择器；删除无 ltx 标记时猜测通用 h1、Abstract/References 容器和任意列表项的分支。官方 ID/API metadata 与已有 HTML/PDF 路线不变。
+- ACS／Royal 的原始文章可能只有缩略图、查看器和 `DownloadImage.aspx` 包装；独立查看器中存在直链不能证明文章也有普通直链。保留同图、同 CDN 的解包装检查；ACS 仅使用正文提供的图片候选，Royal 因真实分组 figure 反例保留该路径。原文回归见 `tests/golden/test_requested_template_evidence.py`。
+- PNAS 仅下载原图，不下载 preview；仍可从已有 figure-page 入口识别原图，并保留原图的浏览器恢复；浏览器 canvas/已加载图片须精确匹配目标 URL，不能以页面上的 preview 替代原图。原图失败按现有失败／远程资产验收报告，不以缩略图冲销。`tests/unit/test_provider_asset_candidate_boundaries.py` 覆盖串行浏览器和普通执行路径。其它 provider 的 preview 契约不变。
+- arXiv HTML frontmatter 和 bibliography 只使用已验证的 LaTeXML 选择器，并通过官方 ID/API 补齐 metadata。
 - Science 原生 canvas 导出字节单独记录 `capture_kind=browser_canvas_export`，HTTP 状态为未知。导出 helper 自带的 status 不能当成真实 HTTP 状态；文章导航 challenge 也不能替代图片请求 challenge。
 
 ### Elsevier 主文表格的文字回退必须区分附录引用
@@ -1285,7 +1270,7 @@ Taylor & Francis 的相邻 `.NLM_disp-formula-image`／`.NLM_disp-formula` 属�
 ### 来源对象与访问边界回归约束
 
 - HTML 表格中的相同值仍属于各自单元格，不能按文本去重或移到首列；表格内图片不拆为独立 Markdown 段落。
-- Springer 的 Reporting summary 保留在正文原位置，不作为摘要前置；只有官方入口的 Extended Data Table 保留题注和表页链接，不据此声称取得表格内容。Extended Data 统一属于现有 `supplementary` 语义，完整输出按原编号及内部顺序保留图、表、说明与入口，包括主文容器外的节点；受 `include_supplementary`、`asset_profile` 和既有预算控制，不增加正文充分性。关闭补充内容也排除所属图表资产；已在该章节呈现的同一资产不再追加图注。已取得同篇官方表页及真实表图时，沿用既有资产链路保留图片和来源，不将图片内容转写为表格。只有入口时不据此声称取得表格内容。
+- Springer 的 Reporting summary 保留在正文原位置，不作为摘要前置；只有官方入口的 Extended Data Table 保留题注和表页链接，不据此声称取得表格内容。Extended Data 统一属于现有 `supplementary` 语义，完整输出按原编号及内部顺序保留图、表、说明与入口，包括主文容器外的节点；受 `include_supplementary`、`asset_profile` 和既有预算控制，不增加正文充分性。关闭补充内容也排除所属图表资产；已在该章节呈现的同一资产不追加图注。已取得同篇官方表页及真实表图时，沿用既有资产链路保留图片和来源，不将图片内容转写为表格。只有入口时不据此声称取得表格内容。
 - Wiley 参考文献的显示编号不进入引用正文；Royal Society 优先使用 HTML 完整书目；PLOS XML 作者姓名与相邻作者之间保留边界。
 - Copernicus 的空图表 xref 按明确 rid 对应的 label 恢复文字，保留已有文字；章节标题经现有公式渲染器保留 MathML。PDF 身份比较仅去除该 provider 元数据题名中的 HTML 标记，不改变 PDF 转换结果或降低身份阈值。
 - Oxford Academic 的 Abstract 标题和下载幻灯片控件不构成摘要内容；ACS 图像式表格计入正文资产发现和严格本地验收。ACS 表图使用所属表格标签区分身份；同为通用 `Graphic` alt 的不同表图不能在下载结果合并时互相覆盖。
@@ -1314,13 +1299,13 @@ XML 作者组排除期刊 `<editors>` / `<title-editors-group>` 下的客座编�
 
 Elsevier HTML 由 `_elsevier_html.py` 经 `extract_markdown` 接入；只选正文 `#body`、明确的摘要/关键词与文章 back matter，排除导航、阅读助手和推荐区。文章前置区域的 `.author-highlights`、`.Highlights`、`.highlights` 容器按结构移除；正文同名内容、双语摘要和图文摘要保留，XML 既有文本 Highlights 保留。
 
-提取修订号 `11`：HTML 保留源标题编号与层级，独立编号标签合并时不重复；XML 组合章节直属 `<ce:label>` 与 `<ce:section-title>`，没有源编号时不按位置推算。两路参考文献均按提取顺序展示为 `1.` 至 `N.`，作者年份型源标签作为条目末尾注记；内容、DOI、匹配 key 和原始顺序保留。HTML 提取 Markdown 与 ArticleModel 共用已经编号的 raw citation，年份不充当编号，不重复添加 label。
+HTML 保留源标题编号与层级，独立编号标签合并时不重复；XML 组合章节直属 `<ce:label>` 与 `<ce:section-title>`，没有源编号时不按位置推算。两路参考文献均按提取顺序展示为 `1.` 至 `N.`，作者年份型源标签作为条目末尾注记；内容、DOI、匹配 key 和原始顺序保留。HTML 提取 Markdown 与 ArticleModel 共用已经编号的 raw citation，年份不充当编号，不重复添加 label。
 
 Elsevier 列表直属 `.list-label` 与 `.list-content` 共同构成列表项首块，显式序号保持原样并与首段同一行，装饰圆点及首部空块不单独输出。多段正文、公式、图与图注、嵌套列表按实际父子关系保留在原列表项内；图片分块和边界规范化保留续块缩进，缩进宽度依实际 Markdown 标记计算，不通过全文空行替换修复。PDF 转换路径不参与这些调整。
 
 MathJax 页面准备读取保存的原始 MathML，将其绑定到对应渲染节点；直接 MathML/TeX 沿用共享路径，不从可见字形猜测公式。无法转换时沿用共享降级记录。图像优先使用页面明确给出的高分辨率链接，图文摘要、正文图和附录图分别记录 scope；补充材料仅从明确 `.e-component` 等附件容器发现，保持 `none/body/all` 语义。API key 不发往 ScienceDirect 或 CDN。PDF 验收和转换边界不变。
 
-配对原文覆盖 manifest 中全部 15 篇 Elsevier golden 样本；原始 DOM 的 SHA-256、响应状态、来源与 MathJax 采集计数见各 `sciencedirect.provenance.json` 映射。使用 `PYTHONPATH=src:. uv run python scripts/refresh_elsevier_baselines.py` 定向重建 15 份 XML 派生 Markdown、17 份 HTML 提取 Markdown 和既有 13 组最终文章/验收输出；保留源文件、资产、采集事实、失败记录和历史 `api-fetch.md`。
+配对原文覆盖 manifest 中全部 15 篇 Elsevier golden 样本；原始 DOM 的 SHA-256、响应状态、来源与 MathJax 采集计数见各 `sciencedirect.provenance.json` 映射。使用 `PYTHONPATH=src:. uv run python scripts/refresh_elsevier_baselines.py` 定向重建 15 份 XML 派生 Markdown、17 份 HTML 提取 Markdown 和既有 13 组最终文章/验收输出；保留源文件、资产、采集事实、失败记录和 `api-fetch.md` 采集证据。
 
 
 Elsevier HTML 的 `.display` 按图、表、附件、公式顺序分派，图注内 MathML 不改变图容器的身份。公式只使用源标签；缺少标签时显式设置 `data-no-equation-label`，不从 `eq0010` 等 ID 推导编号。公式图片保持 fallback 及语义损失计数。Elsevier 启用共享章节遍历的可选表格单元格渲染器，正文、章节、列表和嵌套容器中的表格保留 `<br>`（含表头）、上下标、链接及数学；其他 provider 的默认渲染不变。

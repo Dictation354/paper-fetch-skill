@@ -6,7 +6,7 @@ CLI 是单篇/批量本地归档、shell 自动化和人工检查 manifest/JSONL
 
 ## 单篇
 
-临时 stdout 阅读仍会准备工作目录；要求完全不落盘时改用 MCP 临时阅读预设：
+临时 stdout 阅读仍会准备工作目录；只需避免论文产物和论文 cache 写盘时可用 MCP 临时阅读预设；两者的 runtime 准备仍可能写盘：
 
 ```bash
 paper-fetch fetch --query "10.1186/1471-2105-11-421" \
@@ -47,7 +47,7 @@ PY
 - 自定义 `--format`、主输出、额外 Markdown 或 artifact 组合时，查 [CLI 输出/落盘矩阵](presets.md#cli-输出落盘矩阵)。
 - Runtime fetch failure 的结构化 JSON 写 stderr；argparse 参数错误仍使用标准 stderr/exit 2。歧义、访问、限流、网络和取消的重试只遵循 [`failure-handling.md`](failure-handling.md)。
 - 抓取自动准备 managed runtime；异常时读[环境参考](environment.md#运行时准备与授权)，无需单独更新检查。
-- 使用 `paper-fetch --help` 和 `paper-fetch fetch|doctor|browser-preflight --help` 读取当前安装的有效枚举和默认值，不从旧安装或外部仓库文档猜测。
+- 使用 `paper-fetch --help` 和 `paper-fetch fetch|doctor|browser-preflight --help` 读取已安装版本的有效枚举和默认值。
 
 ## 窄 fallback
 

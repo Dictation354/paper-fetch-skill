@@ -1,6 +1,6 @@
 # Failure Handling
 
-出现失败、限流、需解释的降级或准备重试时，读取总尝试次数及对应决策表行；批量任务再读分诊和并发。本文件是代理级重试、限流和失败报告的唯一长规则事实源。`SKILL.md` 与其它 reference 只保留链接、运行时事实或简短护栏，不另建重试规则。
+出现失败、限流、需解释的降级或准备重试时，读取总尝试次数及对应决策表行；批量任务再读分诊和并发。本文件集中定义代理级重试与限流规则。
 
 ## 目录
 
@@ -15,7 +15,7 @@
 - 对同一规范目标和同一任务意图，代理层最多执行 **初次尝试 + 2 次有意义的重试**，即最多 3 次工具调用尝试。消歧、修正参数或改变认证/运行时状态后的再次调用都计入该上限。
 - `paper-fetch` 的底层 HTTP transport 会独立处理允许的 Retry-After、5xx 和网络瞬态重试。一次工具调用内部发生的 transport retry 不增加代理层 `attempt`；工具返回失败后，代理也不得把底层已经耗尽的重试当成理由额外突破 3 次上限。
 - “有意义”要求在下一次调用前记录可观察变化：规范 query、工具参数、认证/授权、provider/browser 状态、网络状态或 Retry-After/cooldown 至少一项发生变化。只改措辞、立即原样重跑或重复相同失败路线不算。
-- `prefer_cache=false` 本来就是 `fetch_paper` 的兼容默认值。初次调用已经是 `false` 时，再传相同值不是“绕过缓存”；只有从实际使用的 `prefer_cache=true` 改为 `false`，且 trace/cache 证据表明缓存结果与当前请求不符时，才能准确报告为改变缓存策略。
+- `fetch_paper` 默认 `prefer_cache=false`。初次调用已经是 `false` 时，再传相同值不是“绕过缓存”；只有从实际使用的 `prefer_cache=true` 改为 `false`，且 trace/cache 证据表明缓存结果与当前请求不符时，才能准确报告为改变缓存策略。
 - 每次尝试保留 `attempt=1..3`、触发失败、调用参数、相对上次的变化、结果和终止/继续决定。不要修改底层 HTTP retry 算法，也不要自动执行认证。
 
 ## 批量分诊和并发
@@ -40,7 +40,7 @@
 | `rate_limited` / HTTP 429 / 出现 `retry_after_seconds`：provider 或资源 lane 限流 | 停止同 provider 新提交并尊重 Retry-After；无该字段时使用工具记录的 cooldown/policy，明确报告服务端未给时长 | 冷却尚未结束、任务不适合等待、冷却后仍限流，或达到 attempt 3 | provider/lane、`http_status`、`retry_after_seconds` 或 cooldown、未调度 index、attempt |
 | `network_error` / `timeout` / `tls_error` / `dns_error` / `connection_reset` / `connection_closed`，或已返回的 HTTP 5xx | 确认底层 transport 已结束；等待/backoff 后观察网络状态变化，或在契约允许时改变 provider route/环境；不得立即原样重跑 | 网络/路由状态无变化、相同瞬态重复，或达到 attempt 3 | `error_category`、`http_status`、provider/route、等待或环境变化、attempt |
 | browser transient：trace/preflight 出现 `browser_context_create_failed`、`browser_page_create_failed` 或 `camoufox_request_failed`，且不含确定性 challenge/auth 证据 | 先读取 `backend/code/stage/runtime_state/version/diagnostic_path` 并检查静态配置；`provider_status()` 不是 live 健康证明。runtime 缺失或异常时按 [`environment.md`](environment.md#运行时准备与授权) 的已有授权规则处理。只有 browser profile、认证状态、运行时健康、请求参数或环境发生变化才重试 | 无状态变化、preflight 为 challenge/auth_required/runtime_error 且未解决、相同失败重复，或达到 attempt 3 | provider、backend、精确 browser code/stage、runtime 状态/版本、diagnostic artifact、preflight/trace、变化项、`source_trail`、attempt |
-| `cancelled` / `request_cancelled`：用户、宿主或 cooperative cancellation 终止 | 只有用户明确恢复任务并重新确认仍需执行时才开始新的尝试；批量先保留 cancelled/not-scheduled index | 未恢复、任务已过期，或达到 attempt 3 | 已完成/取消/未调度 index、产物、恢复条件、attempt |
+| `cancelled` / `request_cancelled`：用户、宿主或 cooperative cancellation 终止 | 用户明确恢复任务后再开始新的尝试；批量先保留 cancelled/not-scheduled index | 未恢复、任务已过期，或达到 attempt 3 | 已完成/取消/未调度 index、产物、恢复条件、attempt |
 | 未分类 `error`：结构化字段不足，且不匹配上述类别 | 先收集 `reason`、trace、provider status 与实际产物；只有诊断导出具体参数/状态变化时重试 | 无可执行变化、同错重复，或达到 attempt 3 | `status/code/error_category`、`reason`、provider、trace/产物、诊断和 attempt |
 
 `aws_waf_challenge` / `cloudflare_challenge` 是等待 provider readiness 后仍存在的确定性验证页。只有合法 browser profile/storage state、网络授权或人工验证状态发生变化时才可重试；不得把初始 HTTP 202、隐藏 `noscript` 文案或单独 REST 请求当成最终结论，也不得自动绕过 challenge。报告应保留 `status=challenge`、精确 reason code、`challenge_provider`、`legacy_reason_code`、HTTP 状态、readiness trace、页面关闭前采集的脱敏诊断和 attempt。

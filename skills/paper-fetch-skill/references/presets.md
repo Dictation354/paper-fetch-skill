@@ -23,7 +23,7 @@
 - 正文任务的文本归档使用 `artifact_mode=none`、`asset_profile=none`。用户明确要求正文图时使用 `artifact_mode=markdown-assets`、`asset_profile=body`；随正文获取补充材料时使用 `artifact_mode=markdown-assets`、`asset_profile=all`。只要补充材料时按[任务目标](#任务目标)使用独立材料请求。
 - 只在用户还要求原始 provider 载荷或调试 sidecar 时使用 `artifact_mode=all`。正文任务随附的补充材料范围由 `asset_profile=all` 决定；独立材料任务的范围固定，二者均不由 `artifact_mode=all` 决定。
 - `body|all` 资产共用每篇运行时预算，不拆调用规避；超限按结构化原因说明未归档项。具体预算仅在需要时查[资产参数](tool-contract.md#fetch-notes)。
-- 默认使用兼容的 provider-policy 资产验收。用户明确要求离线完整正文资产时，CLI 加 `--require-local-body-assets`、MCP strategy 加 `require_local_body_assets=true`；明确要求原尺寸时改用 `--require-full-size-body-assets` / `require_full_size_body_assets=true`，它会自动隐含 local。两项只适用于 `body|all`，不应加到纯文本预设。
+- 默认使用 provider-policy 资产验收。用户明确要求离线完整正文资产时，CLI 加 `--require-local-body-assets`、MCP strategy 加 `require_local_body_assets=true`；明确要求原尺寸时改用 `--require-full-size-body-assets` / `require_full_size_body_assets=true`，它会自动隐含 local。两项只适用于 `body|all`，不应加到纯文本预设。
 - MCP 的 `no_download` 控制 provider 载荷、资产和 fetch-envelope sidecar；CLI 使用 `--artifact-mode none`。`save_markdown=true` 仍会写用户要求的 Markdown；PF-005 的 DOI 证明索引也会随显式保存更新。
 - “不保存最终 Markdown”“不建立用户归档”“不写 provider artifact”“允许 cache”和“完全不落盘”是五个独立判断，不要互换。
 
@@ -42,7 +42,7 @@
 
 ### 1. 临时阅读
 
-适用：取得阅读、总结、比较或翻译所需正文，且不要求归档或缓存。多篇比较也沿用此预设。优先使用 MCP `fetch_paper`，并完整显式传参：
+适用：取得阅读、总结、比较或翻译所需正文，且不要求归档或缓存。多篇比较也沿用此预设。优先使用 MCP `fetch_paper`，并显式传入影响正文和落盘的参数：
 
 ```json
 {
@@ -50,9 +50,7 @@
   "modes": ["article", "markdown"],
   "strategy": {
     "allow_metadata_only_fallback": true,
-    "preferred_providers": null,
-    "asset_profile": "none",
-    "inline_image_budget": null
+    "asset_profile": "none"
   },
   "include_refs": "all",
   "max_tokens": "full_text",
@@ -60,8 +58,6 @@
   "no_download": true,
   "artifact_mode": "none",
   "save_markdown": false,
-  "markdown_output_dir": null,
-  "markdown_filename": null,
   "download_dir": null
 }
 ```
@@ -82,9 +78,7 @@ CLI 会准备工作目录；若接受此行为且只需 stdout，见 [CLI 单篇
   "modes": ["article", "markdown"],
   "strategy": {
     "allow_metadata_only_fallback": true,
-    "preferred_providers": null,
-    "asset_profile": "none",
-    "inline_image_budget": null
+    "asset_profile": "none"
   },
   "include_refs": "all",
   "max_tokens": "full_text",
@@ -92,8 +86,6 @@ CLI 会准备工作目录；若接受此行为且只需 stdout，见 [CLI 单篇
   "no_download": false,
   "artifact_mode": "none",
   "save_markdown": false,
-  "markdown_output_dir": null,
-  "markdown_filename": null,
   "download_dir": "./.paper-fetch-cache"
 }
 ```
@@ -123,9 +115,7 @@ MCP 文本归档显式把主 Markdown 与 cache scope 放在同一目录：
   "modes": ["article", "markdown"],
   "strategy": {
     "allow_metadata_only_fallback": true,
-    "preferred_providers": null,
-    "asset_profile": "none",
-    "inline_image_budget": null
+    "asset_profile": "none"
   },
   "include_refs": "all",
   "max_tokens": "full_text",
@@ -139,7 +129,7 @@ MCP 文本归档显式把主 Markdown 与 cache scope 放在同一目录：
 }
 ```
 
-这个 MCP 组合写 `./papers/example.md` 和证明其 DOI 归属所需的 cache index，不写 fetch-envelope sidecar、provider artifact 或资产。响应会把 `article`、`markdown` 设为 `null`，保留诊断字段；文件位置由请求中的输出目录/文件名确定，并通过返回路径或批量 `output_artifacts` 验收。
+这个 MCP 组合写 `./papers/example.md` 和证明其 DOI 归属所需的 cache index，不写 fetch-envelope sidecar、provider artifact 或资产。响应会把 `article`、`markdown` 设为 `null`，保留诊断字段；单篇响应不包含保存路径，按显式指定的目录/文件名检查文件；批量响应另有 `output_artifacts` 文件快照。
 
 用户要求正文图时，把 CLI 改为 `--artifact-mode markdown-assets --asset-profile body`；把 MCP 改为 `no_download=false`、`artifact_mode="markdown-assets"`、`strategy.asset_profile="body"`。随正文获取补充材料时把两个执行面的 asset profile 改为 `all`；只要补充材料时按[任务目标](#任务目标)改用独立请求。不要同时保留 `no_download=true`，否则资产不会落盘。
 
@@ -224,7 +214,7 @@ CLI 不提供 cache-only `prefer_cache`。`--artifact-mode none` 不会禁止显
 
 | 显式组合 | MCP 正文响应 | 用户 Markdown | fetch-envelope/cache index | provider artifact | 本地资产 | 实际落盘结论 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `save_markdown=false, no_download=true, prefer_cache=false, artifact_mode=none, asset_profile=none, download_dir=null` | 有 | 无 | 无 | 无 | 无 | 完全不落盘 |
+| `save_markdown=false, no_download=true, prefer_cache=false, artifact_mode=none, asset_profile=none, download_dir=null` | 有 | 无 | 无 | 无 | 无 | 不写论文产物或论文 cache |
 | `save_markdown=false, no_download=false, prefer_cache=true, artifact_mode=none, asset_profile=none, download_dir=<scope>` | 有 | 无 | sidecar + index + 锁元数据 | 无 | 无 | 只写可复用 cache |
 | `save_markdown=true, no_download=true, prefer_cache=true, artifact_mode=none, asset_profile=none, markdown_output_dir=<dir>, download_dir=<dir>` | 紧凑响应，无正文 | 有 | 仅保存注册所需 index 与锁元数据；无 sidecar | 无 | 无 | 文本归档 |
 | `save_markdown=true, no_download=false, prefer_cache=true, artifact_mode=markdown-assets, asset_profile=body, markdown_output_dir=<dir>, download_dir=<dir>` | 紧凑响应，无正文 | 有 | sidecar + index + 锁元数据 | PDF fallback 等保留型 artifact | 正文资产 | 正文图归档 |
@@ -232,20 +222,22 @@ CLI 不提供 cache-only `prefer_cache`。`--artifact-mode none` 不会禁止显
 | `save_markdown=true, no_download=false, prefer_cache=true, artifact_mode=all, asset_profile=body|all, markdown_output_dir=<dir>, download_dir=<dir>` | 紧凑响应，无正文 | 有 | sidecar + index + 锁元数据 | 再加原始 provider 载荷、调试 sidecar | 显式 profile 对应资产 | 调试/原始材料归档 |
 | `batch_fetch(..., batch_results=<path>)` | input-ordered compact；可选全批受限片段 | 由同一 `save_markdown` 参数决定 | 由同一 `no_download/prefer_cache` 参数决定 | 由同一 artifact mode 决定 | 由同一 asset profile 决定 | 原子写最终 input-ordered JSONL，不可恢复 |
 
-`artifact_mode=none` 不等于 MCP 完全不落盘：只要 `no_download=false`，成功 fetch 仍会写 fetch-envelope sidecar 和 cache index。`no_download=true` 也不覆盖 `save_markdown=true` 的显式用户输出。
+此表只描述论文产物与论文 cache；浏览器 runtime 准备和持久状态可另行写盘。
 
-`batch_fetch` 不传 `batch_results` 时不写批量结果文件；无需落盘的批量正文验收可沿用第一行完全不落盘组合。默认 `detail="compact"` 不返回正文；只需片段时显式用 `detail="bounded", content_max_chars=<全批上限>`，并检查逐项 `content_truncated`、`content_available_chars` 和 `content_returned_chars`。需要完整阅读时直接使用单篇阅读预设或读取合格文件，不能用 compact 验收摘要或 bounded 截断片段宣称已读全文。显式传入 `batch_results` 时，即使论文下载参数本身不落盘，最终 JSONL 仍是预期写盘产物。
+`artifact_mode=none` 不等于 MCP 不写论文文件：只要 `no_download=false`，成功 fetch 仍会写 fetch-envelope sidecar 和 cache index。`no_download=true` 也不覆盖 `save_markdown=true` 的显式用户输出。
+
+`batch_fetch` 不传 `batch_results` 时不写批量结果文件；无需落盘的批量正文验收可沿用第一行不写论文产物或论文 cache 的组合。默认 `detail="compact"` 不返回正文；只需片段时显式用 `detail="bounded", content_max_chars=<全批上限>`，并检查逐项 `content_truncated`、`content_available_chars` 和 `content_returned_chars`。需要完整阅读时直接使用单篇阅读预设或读取合格文件，不能用 compact 验收摘要或 bounded 截断片段宣称已读全文。显式传入 `batch_results` 时，即使论文下载参数本身不落盘，最终 JSONL 仍是预期写盘产物。
 
 ## 本地优先决策树
 
 先按任务意图确定参数，再按适用分支执行：已核验本地 fulltext → 同 scope 精确 DOI cache → 严格请求匹配的 prefer-cache → 正常 fetch。
 
-临时阅读未指定 cache scope 或用户禁止使用缓存时，跳过第 2、3 步，不为查缓存而要求目录；若本地全文未满足任务，直接使用临时阅读预设。临时阅读已指定 scope 且允许读取缓存时，可只读检查并复用合格本地 Markdown；需要由 `fetch_paper` 返回结构化正文时仍保持 `prefer_cache=false, download_dir=null`，不把缓存查询 scope 带入完全不落盘请求。可缓存阅读和归档则使用各自预设的 scope 与缓存参数。
+临时阅读未指定 cache scope 或用户禁止使用缓存时，跳过第 2、3 步，不为查缓存而要求目录；若本地全文未满足任务，直接使用临时阅读预设。临时阅读已指定 scope 且允许读取缓存时，可只读检查并复用合格本地 Markdown；需要由 `fetch_paper` 返回结构化正文时仍保持 `prefer_cache=false, download_dir=null`，不把缓存查询 scope 带入不写论文产物或论文 cache 的请求。可缓存阅读和归档则使用各自预设的 scope 与缓存参数。
 
 对每个已经规范化的目标按以下顺序执行适用步骤：
 
 1. **已核验本地 fulltext**：先检查用户提供或工作区已有的文件。只复用身份可证明、`has_fulltext=true` / `content_kind=fulltext`、内容和当前资产意图相符的文件；命中后不调用网络工具，直接进入 acceptance。
-2. **同 scope 精确 DOI cache**：已知 DOI 时调用 `get_cached(doi=<normalized-doi>, download_dir=<scope>)`，实际常规参数补全为 `detail="compact", preferred_only=true, modes=..., strategy=..., include_refs=..., max_tokens=...`；不要为已知 DOI 全量调用 `list_cached()`。`get_cached` 只扫描该 scope，不联网。若 `preferred.markdown` 是已证明的合格 fulltext，读取它并进入 acceptance；不能仅凭顶层 `status=hit` 宣称请求匹配。
+2. **同 scope 精确 DOI cache**：已知 DOI 时调用 `get_cached(doi=<normalized-doi>, download_dir=<scope>)`，实际常规参数补全为 `detail="compact", preferred_only=true, modes=..., strategy=..., include_refs=..., max_tokens=...`；不要为已知 DOI 全量调用 `list_cached()`。`get_cached` 只读该 scope 的注册索引，不扫描散落文件或联网。若 `preferred.markdown` 是已证明的合格 fulltext，读取它并进入 acceptance；不能仅凭顶层 `status=hit` 宣称请求匹配。
 3. **严格请求匹配的 prefer-cache**：仍需结构化响应或只有 fetch-envelope 时，先要求 compact cache 结果的 `request_satisfied=true`，再用同一个 `download_dir` 调用 `fetch_paper(..., prefer_cache=true)`，并显式传与当前意图相同的 `modes`、`strategy`、`include_refs` 和 `max_tokens`。直接消费该布尔值，不手工重算 fingerprint、sidecar 版本或 payload modes 匹配；未满足时进入正常 fetch。
 4. **正常 fetch**：本地/cache 未满足任务时，按选定预设调用 `fetch_paper`；可缓存请求保持 `prefer_cache=true`，工具在 cache miss 时进入正常抓取。不要因 cache miss 停止，也不要放宽请求匹配。
 
@@ -256,4 +248,4 @@ CLI 不提供 cache-only `prefer_cache`。`--artifact-mode none` 不会禁止显
 - 在输入规范化时为每条原始输入固定 1-based `index`，去重和分块后仍保留原 index 到规范目标的映射。
 - `batch_resolve`、`batch_check`、`batch_fetch` 每次均最多 50 条。首次批量解析前按原顺序切块；例如 113 条先拆成 `[1..50]`、`[51..100]`、`[101..113]`。每块显式传 `concurrency`。汇总解析结果后跨块 DOI 去重，再把需 probe/fetch 的规范目标按每块最多 50 条提交。原始 index 是宿主保留的映射，不作为工具额外参数；将各阶段块内结果映射到全部原始别名，最终按原 index 排序，不按完成顺序或块内 `1..N` 重新编号。
 - `batch_check(mode="metadata")` 是 likely probe：`likely_yes` 表示有可读信号，`unknown` 表示证据不足。二者都不是已抓取全文。
-- 真实抓取使用 `batch_fetch` 或 `fetch_paper`，并通过 acceptance 才能报告全文完成；已移除 article check。无需落盘的正文检查参数见 [Batch Probe Contract](tool-contract.md#batch-probe-contract)。
+- 真实抓取使用 `batch_fetch` 或 `fetch_paper`，并通过 acceptance 才能报告全文完成。无需落盘的正文检查参数见 [Batch Probe Contract](tool-contract.md#batch-probe-contract)。

@@ -3,8 +3,7 @@
 ## Supported versions
 
 Security fixes are provided for the latest stable release of
-`paper-fetch-skill`. Users should upgrade before reporting a problem that is
-already fixed in the current release.
+`paper-fetch-skill`.
 
 ## Reporting a vulnerability
 
@@ -25,8 +24,8 @@ again; standard sensitive headers are stripped on cross-origin redirects. After
 validation, requests use the shared hostname connection pool. Provider catalog
 domains and sensitive-header declarations describe routing and execution policy,
 but are not an implicit network authorization allowlist. A caller-supplied
-`SafeRemoteUrlPolicy.allowed_hosts` remains fail-closed and is enforced on every
-hop.
+`allowed_hosts` argument to `SafeRemoteUrlPolicy.validate()` remains fail-closed
+and is enforced on every hop.
 
 Browser navigation, redirects, and subresources follow the selected browser
 runtime's native networking behavior. Browser-owned image, file, and PDF bytes

@@ -16,7 +16,7 @@ Markdown · structured article · quality diagnostics
 
 ## 为什么不只是 PDF → Markdown
 
-Paper Fetch 不替代通用 PDF 转换器，而是在它们之外增加论文身份解析、provider 路由、官方结构化全文和统一质量诊断。具体 PDF 工具的能力各不相同；下表比较的是两种设计重点，而不是对所有 PDF 转换器作统一评价。
+Paper Fetch 将论文身份解析、provider 路由、官方结构化全文与 PDF fallback 连接起来，并统一报告获取和内容质量。
 
 | 维度 | Paper Fetch | 单一 PDF → Markdown 路径 |
 | --- | --- | --- |
@@ -40,7 +40,7 @@ paper-fetch fetch \
   --output-dir ./papers
 ```
 
-`--query` 可以是 DOI、论文 landing URL 或标题。未显式传 `--output` 且指定 `--output-dir` 时，CLI 会在目录中生成安全命名的主输出；默认 Markdown 模式会保留全文 references，并按 `body` 资产范围尝试归档正文图表资源。全文不可用时，结果会明确降级为仅摘要、仅元数据或可诊断的失败，而不是伪装成完整正文。
+`--query` 可以是 DOI、论文 landing URL 或标题。未显式传 `--output` 且指定 `--output-dir` 时，CLI 会在目录中生成安全命名的主输出；默认 Markdown 模式会保留全文 references，并按 `body` 资产范围尝试归档正文图表资源。全文不可用时，结果会标明仅摘要、仅元数据或具体失败原因。
 
 只需要临时把 Markdown 输出到终端、不归档论文资产时：
 
@@ -58,7 +58,7 @@ paper-fetch fetch \
 
 CLI 默认在终端 stderr 显示逐篇阶段和资产进度；`--progress text|jsonl|none` 可显式选择输出，`--progress jsonl --control-stdin` 提供机器单篇/整批取消接口，见 [`docs/cli.md`](docs/cli.md#实时进度与机器取消)。
 
-CLI 仍会准备显式工作目录；需要真正无落盘的临时读取时，使用 MCP 临时阅读预设。完整输出和落盘矩阵见 [`docs/cli.md`](docs/cli.md) 与 [`presets.md`](skills/paper-fetch-skill/references/presets.md)。
+CLI 会准备工作目录；MCP 临时阅读预设不保存独立 Markdown 或下载论文资产，但运行时仍可能写入缓存和浏览器状态。完整输出和落盘矩阵见 [`docs/cli.md`](docs/cli.md) 与 [`presets.md`](skills/paper-fetch-skill/references/presets.md)。
 
 ### 独立获取补充材料
 
@@ -167,7 +167,7 @@ Paper Fetch 不绕过付费墙或访问授权。可用性取决于 provider、�
 - Elsevier 官方 XML/API 和部分 PDF fallback 需要从 <https://dev.elsevier.com/> 申请 `ELSEVIER_API_KEY`。
 - 部分 provider 需要 Camoufox browser runtime 或用户已有的合法登录状态。
 - 安装器默认准备平台支持的浏览器，提供 `--skip-browser-prepare` / `/SKIPBROWSERPREPARE`。运行时首次使用后端才准备，HTTP 和缓存命中不准备；成功检查后 24 小时内复用，失败或取消允许下次重试。配置与离线交付见 [浏览器安装](docs/browser-backends.md#安装)。
-- `paper-fetch doctor` 只做本地静态诊断；`paper-fetch browser-preflight` 才会启动浏览器并访问 provider 页面；只有结果明确要求认证时才运行 `paper-fetch auth <provider>`。
+- `paper-fetch doctor` 只做本地静态诊断；`paper-fetch browser-preflight` 才会启动浏览器并访问 provider 页面；需要建立或更新登录状态时运行 `paper-fetch auth <provider>`。
 
 ```bash
 paper-fetch doctor
@@ -180,8 +180,6 @@ paper-fetch auth wiley
 ## 项目边界
 
 - 只负责已知论文的身份解析、全文获取、验收和报告，不替代开放式主题检索、文献推荐或综述生成。
-- 只访问用户本来就有权访问的内容，不绕过 challenge、付费墙或机构权限。
-- 官方 HTML/XML、浏览器路径和 PDF fallback 都受 provider、凭据和运行环境限制；“已找到论文”不等于“一定能取得完整全文”。
 - 结构化公式转换依赖源站提供 MathML/TeX；只有图片或 PDF 排版信息时，不承诺恢复可靠 LaTeX。
 - 新 provider 以 runtime bundle、provider-local 测试和代表性 golden replay 验证获取契约及 HTML/XML 内容；PDF 转换输出保持原样，质量不属于项目修复或验收目标。见 [`docs/adding-a-provider.md`](docs/adding-a-provider.md) 和 [PDF 转换边界](docs/extraction-rules.md#rule-pdf-conversion-boundary)。
 
@@ -199,7 +197,7 @@ paper-fetch auth wiley
 
 - 获取的文献仅供个人学术研究和学习使用，不得用于商业用途。
 - 请遵守所在国家/地区著作权法律法规及所在机构的知识产权政策。
-- 本项目不存储、分发或传播任何文献内容，仅协助用户定位、抓取或转换用户有权访问的论文内容。
+- 抓取结果、资产和缓存按所选参数保存在本地；仓库中的示例与测试样本用于展示和回归验证。
 - fixture 中的文献样本仅作为测试使用，严禁对 fixture 进行任何形式的二次分发。
 - 使用者应对自身的文献获取和使用行为承担全部责任。
 
