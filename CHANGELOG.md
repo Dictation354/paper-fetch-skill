@@ -6,13 +6,15 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
-## 7.3.1 - 2026-11-04
+## 7.3.2 - 2026-11-04
 
 ### Browser preparation and offline components
 
 - Prepare browser backends lazily when a provider actually needs them. Reuse successful online preparation checks for 24 hours while allowing failed or cancelled attempts to retry; prepare the Camoufox fingerprint model through the same managed path.
 - Bundle pinned FlareSolverr source, private dependencies, licenses and component metadata in Windows/Linux x64 offline packages and frozen dependency snapshots. Validate bundled components locally instead of downloading replacement source at runtime; continue preparing browsers and matching ChromeDriver separately.
 - Prepare all supported browser backends after installation, using shared dependency handling and the real backend for temporary blank-page checks. Add provider-declared backend selection and reuse common Playwright page operations across Camoufox and FlareSolverr.
+
+- Build frozen browser components in a child process so Windows releases loaded native dependency files before temporary-directory cleanup.
 
 ### Runtime and batch resource ownership
 

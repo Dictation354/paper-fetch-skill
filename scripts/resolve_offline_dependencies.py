@@ -290,7 +290,7 @@ def resolve_snapshot(args: argparse.Namespace) -> int:
 
     browser_components = {}
     if actual_platform in {"linux", "windows"} and actual_arch == "x86_64":
-        from scripts.build_browser_components import build, inventory
+        from scripts.build_browser_components import inventory
 
         component = output_dir / "browser-components" / "flaresolverr"
         with tempfile.TemporaryDirectory(
@@ -309,11 +309,21 @@ def resolve_snapshot(args: argparse.Namespace) -> int:
                     *map(str, sorted(runtime_wheels.glob("*.whl"))),
                 ]
             )
-            sys.path.insert(0, dependency_dir)
-            try:
-                build(component)
-            finally:
-                sys.path.remove(dependency_dir)
+            # Native extension modules stay loaded until process exit on Windows.
+            # Finish the builder process before deleting its dependency directory.
+            _run(
+                [
+                    sys.executable,
+                    "-c",
+                    "from pathlib import Path; import sys; "
+                    "sys.path.insert(0, sys.argv[1]); "
+                    "from scripts.build_browser_components import build; "
+                    "build(Path(sys.argv[2]))",
+                    dependency_dir,
+                    str(component),
+                ],
+                cwd=project_root,
+            )
         browser_components = inventory(component)
 
     fragment = {
