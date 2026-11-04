@@ -44,7 +44,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["browser"]["installer_prepares_flaresolverr"] = True
         contract["browser"]["native_bundle_gate"] = False
         contract["browser"]["managed_runtime_preparation"] = False
-        contract["browser"]["fetch_start_preparation"] = False
+        contract["browser"]["fetch_start_preparation"] = True
         contract["browser"]["batch_prepares_once"] = False
         contract["browser"]["default_channel"] = "official/stable"
         contract["browser"]["prerelease_includes_stable"] = False
@@ -71,7 +71,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertIn("installer_prepares_flaresolverr must be false", diagnostic)
         self.assertIn("native_bundle_gate must be true", diagnostic)
         self.assertIn("managed_runtime_preparation must be true", diagnostic)
-        self.assertIn("fetch_start_preparation must be true", diagnostic)
+        self.assertIn("fetch_start_preparation must be false", diagnostic)
         self.assertIn("batch_prepares_once must be true", diagnostic)
         self.assertIn("default_channel must be official/prerelease", diagnostic)
         self.assertIn("prerelease_includes_stable must be true", diagnostic)
@@ -115,13 +115,13 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
 
     def test_optional_download_cannot_change_core_offline_boundary(self) -> None:
         contract = validator.load_contract()
-        contract["browser"]["core_install_downloads_runtime"] = True
-        contract["browser"]["optional_install_download_requires_consent"] = False
+        contract["browser"]["core_install_downloads_runtime"] = False
+        contract["browser"]["optional_install_download_requires_consent"] = True
         contract["browser"]["optional_install_failure_preserves_core"] = False
         diagnostic = "\n".join(validator.validate_contract(contract))
-        self.assertIn("core_install_downloads_runtime must be false", diagnostic)
+        self.assertIn("core_install_downloads_runtime must be true", diagnostic)
         self.assertIn(
-            "optional_install_download_requires_consent must be true", diagnostic
+            "optional_install_download_requires_consent must be false", diagnostic
         )
         self.assertIn(
             "optional_install_failure_preserves_core must be true", diagnostic

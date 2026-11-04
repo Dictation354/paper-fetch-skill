@@ -37,7 +37,7 @@ from ..models import (
     article_from_structure,
     metadata_only_article,
 )
-from ..provider_catalog import ProviderRouteSpec, ProviderSpec
+from ..provider_contracts import ProviderRouteSpec, ProviderSpec
 from ..pdf_limits import pdf_max_bytes
 from ..publisher_identity import extract_doi, normalize_doi
 from ..runtime import RuntimeContext
@@ -78,7 +78,7 @@ from ._pdf_common import (
 )
 from ._payloads import build_provider_payload
 from ._elsevier_navigation import finalize_markdown as _finalize_elsevier_markdown
-from ._registry import ProviderBundle, ProviderRenderPolicy
+from ._registry import BrowserPagePolicy, ProviderBundle, ProviderRenderPolicy
 from . import browser_workflow, _elsevier_html
 from .browser_runtime import BrowserHtmlReadiness, BrowserRuntimeFailure
 from ._pdf_fallback import PdfFallbackFailure
@@ -726,6 +726,9 @@ def _object_request_headers(url: str, headers: Mapping[str, str]) -> dict[str, s
 
 _PROVIDER_SPEC = ProviderSpec(
     name="elsevier",
+    browser_backends=("flaresolverr",),
+    browser_default="flaresolverr",
+    browser_home_url="https://www.sciencedirect.com/",
     display_name="Elsevier",
     official=True,
     domains=("sciencedirect.com", "elsevier.com"),
@@ -1743,6 +1746,10 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_page_policy=BrowserPagePolicy(
+        document_hosts=("sciencedirect.com", "www.sciencedirect.com"),
+        document_matches=_elsevier_html.main_document_matches,
+    ),
     render_policy=ProviderRenderPolicy(finalize_markdown=_finalize_elsevier_markdown),
     client_factory=ElsevierClient,
     catalog=_PROVIDER_SPEC,

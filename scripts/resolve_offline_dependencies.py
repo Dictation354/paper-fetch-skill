@@ -15,6 +15,8 @@ import tempfile
 import tomllib
 from typing import Any
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 SCHEMA_VERSION = 1
 SUPPORT_REQUIREMENTS = ("pip", "setuptools", "wheel")
 
@@ -53,6 +55,11 @@ def _dependency_digest(payload: dict[str, Any]) -> str:
                 "arch": target["arch"],
                 "python_tag": target["python_tag"],
                 "dependencies": target["dependencies"],
+                **(
+                    {"browser_components": target["browser_components"]}
+                    if target.get("browser_components")
+                    else {}
+                ),
             }
             for key, target in sorted(payload["targets"].items())
         },
@@ -281,6 +288,34 @@ def resolve_snapshot(args: argparse.Namespace) -> int:
                 f"with runtime dependency {runtime_version}"
             )
 
+    browser_components = {}
+    if actual_platform in {"linux", "windows"} and actual_arch == "x86_64":
+        from scripts.build_browser_components import build, inventory
+
+        component = output_dir / "browser-components" / "flaresolverr"
+        with tempfile.TemporaryDirectory(
+            prefix="paper-fetch-component-deps-"
+        ) as dependency_dir:
+            _run(
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "install",
+                    "--no-index",
+                    "--no-deps",
+                    "--target",
+                    dependency_dir,
+                    *map(str, sorted(runtime_wheels.glob("*.whl"))),
+                ]
+            )
+            sys.path.insert(0, dependency_dir)
+            try:
+                build(component)
+            finally:
+                sys.path.remove(dependency_dir)
+        browser_components = inventory(component)
+
     fragment = {
         "schema_version": SCHEMA_VERSION,
         "generated_at_utc": _utc_now(),
@@ -298,6 +333,7 @@ def resolve_snapshot(args: argparse.Namespace) -> int:
         },
         "dependencies": dependency_records,
         "support_wheels": support_records,
+        "browser_components": browser_components,
     }
     _write_json(output_dir / "fragment.json", fragment)
     return 0
@@ -328,6 +364,7 @@ def merge_snapshots(args: argparse.Namespace) -> int:
             "python_tag": target["python_tag"],
             "dependencies": fragment["dependencies"],
             "support_wheels": fragment["support_wheels"],
+            "browser_components": fragment.get("browser_components", {}),
         }
 
     expected = set(args.expected_target)
@@ -466,6 +503,11 @@ def verify_snapshot(args: argparse.Namespace) -> int:
         target.get("support_wheels"),
         label="support",
     )
+    from scripts.build_browser_components import inventory
+
+    actual_components = inventory(snapshot_root / "browser-components" / "flaresolverr")
+    if actual_components != target.get("browser_components", {}):
+        raise SnapshotError("Frozen browser component inventory differs")
     return 0
 
 

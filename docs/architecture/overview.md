@@ -400,3 +400,12 @@ fallback 开关。`preferred_providers` 控制允许进入的全文 provider，�
 - [`../providers.md`](../providers.md)
 - [`../deployment.md`](../deployment.md)
 - [`probe-semantics.md`](probe-semantics.md)
+
+
+### 浏览器及请求资源边界
+
+`provider_contracts` 定义不可变类型，`providers._registry` 定义 Bundle 与冲突验证，`provider_catalog` 只负责固定装配和查询。provider 声明支持的后端、平台默认值、启动首页以及页面回调；Camoufox 与 FlareSolverr 通过中立接口复用 Playwright 页面流程。
+
+根 `RuntimeContext` 拥有并关闭 transport，child 借用 transport，独立持有预算、trace、缓存、提交屏障和惰性 clients。同名 client 并发只构造一次，工厂失败仍由占位 client 隔离。`BatchExecutionSession` 集中处理 child 所有权、DOI 分组、结果复制和取消屏障，CLI/MCP 保留各自输出投影及 runner 约定。浏览器在所属 worker 的终态清理中关闭。
+
+`models.codec` 负责模型的结构编码与解码，保留 wire shape、资产字段及 envelope/article 的共享 Quality；MCP 缓存继续拥有请求匹配、scope、sidecar 兼容与完整性检查。codec 不依赖 MCP 请求类型，不进行正文或 PDF 修复。

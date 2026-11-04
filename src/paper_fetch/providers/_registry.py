@@ -8,7 +8,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Protocol
 
 from ..normalize_journal_name import normalize_journal_name
-from ..provider_catalog import (
+from ..provider_contracts import (
     MetadataProbeShortCircuit,
     ProviderRouteSpec,
     ProviderSpec,
@@ -54,13 +54,23 @@ class ProviderRenderPolicy:
 
 
 @dataclass(frozen=True)
+class BrowserPagePolicy:
+    empty_request: Callable[[str], bool] | None = None
+    readiness_per_candidate: bool = False
+    document_hosts: tuple[str, ...] = ()
+    document_matches: Callable[[str, str, str, str], bool] | None = None
+
+
+@dataclass(frozen=True)
 class ProviderBundle:
     catalog: ProviderSpec
+    # Browser page behavior stays with the declaring provider.
     client_factory: ProviderClientFactory
     metadata_probe_short_circuit: MetadataProbeShortCircuit | None = None
     html_rules: ProviderHtmlRules | None = None
     sources: tuple[str, ...] = ()
     render_policy: ProviderRenderPolicy | None = None
+    browser_page_policy: BrowserPagePolicy = BrowserPagePolicy()
 
     def __post_init__(self) -> None:
         if not self.catalog.name:

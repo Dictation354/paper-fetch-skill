@@ -47,9 +47,9 @@ def prepared(monkeypatch):
     driver = cache / "drivers" / os.sys.platform / chrome.version
     if not prep.valid_cache(driver, chrome.version):
         pytest.skip("matching ChromeDriver cache is unavailable")
-    monkeypatch.setattr(managed, "prepare_source", lambda cache, budget: root)
+    monkeypatch.setattr(prep, "prepare_source", lambda cache, budget: root)
     monkeypatch.setattr(
-        managed,
+        prep,
         "prepare_driver",
         lambda cache, version, budget: (
             driver / ("chromedriver.exe" if os.name == "nt" else "chromedriver"),
@@ -98,8 +98,8 @@ def test_installer_local_check_never_restores_or_navigates_and_cleans_processes(
 
     monkeypatch.setattr(offline_flaresolverr, "FlareSolverrManager", Owner)
     chrome = discover_chrome()
-    runtime = managed.prepare_source(tmp_path, prep.PreparationBudget(10))
-    driver, version = managed.prepare_driver(
+    runtime = prep.prepare_source(tmp_path, prep.PreparationBudget(10))
+    driver, version = prep.prepare_driver(
         tmp_path, chrome.version, prep.PreparationBudget(10)
     )
     if cancel:
@@ -183,8 +183,8 @@ def test_owned_cdp_session_collects_original_asset_bytes_and_cleans_processes(
     prepared, site, monkeypatch, tmp_path, provider
 ):
     base, assets, calls = site
-    monkeypatch.setattr(managed, "PNAS_HOME_URL", base + "/")
-    monkeypatch.setitem(managed.PROVIDER_HOME_URLS, "elsevier", base + "/")
+    _set_home(monkeypatch, "pnas", base + "/")
+    _set_home(monkeypatch, "elsevier", base + "/")
     config = _config(tmp_path, provider)
     with RuntimeContext(env={}) as runtime:
         result = fetch_html_with_browser(
@@ -235,7 +235,7 @@ def test_api_ok_does_not_accept_verification_page(
     prepared, site, monkeypatch, tmp_path
 ):
     base, _, _ = site
-    monkeypatch.setattr(managed, "PNAS_HOME_URL", base + "/")
+    _set_home(monkeypatch, "pnas", base + "/")
     with RuntimeContext(env={}) as runtime:
         with pytest.raises(BrowserRuntimeFailure):
             fetch_html_with_browser(
@@ -256,7 +256,7 @@ def test_accepted_json_state_restores_in_fresh_owned_chrome(
 ):
     base, _, _ = site
     config = replace(_config(tmp_path), persist_storage_state=True)
-    monkeypatch.setattr(managed, "PNAS_HOME_URL", "https://www.pnas.org/")
+    _set_home(monkeypatch, "pnas", "https://www.pnas.org/")
 
     def attach(context):
         page = context.new_page()
@@ -306,7 +306,7 @@ def test_cancellation_stops_owned_browser_tree(prepared, site, monkeypatch, tmp_
     from paper_fetch.http import RequestCancelledError
 
     base, _, _ = site
-    monkeypatch.setattr(managed, "PNAS_HOME_URL", base + "/")
+    _set_home(monkeypatch, "pnas", base + "/")
     runtime = RuntimeContext(env={})
     config = _config(tmp_path)
     context = runtime.new_browser_context_for_runtime_config(config)
@@ -367,7 +367,7 @@ def test_native_pdf_click_uses_download_bytes_in_same_chrome(
     )
 
     base, assets, _ = site
-    monkeypatch.setattr(managed, "PNAS_HOME_URL", base + "/")
+    _set_home(monkeypatch, "pnas", base + "/")
     config = _config(tmp_path)
     with RuntimeContext(env={}) as runtime:
         context = runtime.new_browser_context_for_runtime_config(config)
@@ -570,3 +570,12 @@ def test_elsevier_pdf_route_downloads_in_owned_context_without_http_lane(
         assert result.body == original
         assert runtime.new_browser_context_for_runtime_config(config) is context
         assert context._paper_fetch_solver.home_url == home
+
+
+def _set_home(monkeypatch, provider, url):
+    from dataclasses import replace
+    from paper_fetch import provider_catalog
+
+    catalog = dict(provider_catalog.PROVIDER_CATALOG)
+    catalog[provider] = replace(catalog[provider], browser_home_url=url)
+    monkeypatch.setattr(provider_catalog, "PROVIDER_CATALOG", catalog)

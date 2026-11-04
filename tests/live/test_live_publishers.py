@@ -241,23 +241,49 @@ def catalog_live_report(catalog_live_artifact_root: Path):
 
 
 @pytest.mark.parametrize(
-    "sample",
-    iter_provider_benchmark_samples(),
-    ids=lambda sample: sample.provider,
+    "sample,backend",
+    [
+        (sample, backend)
+        for sample in iter_provider_benchmark_samples()
+        for backend in (
+            ("camoufox", "flaresolverr") if sample.provider == "pnas" else ("auto",)
+        )
+    ],
+    ids=[
+        f"{sample.provider}-{backend}"
+        for sample in iter_provider_benchmark_samples()
+        for backend in (
+            ("camoufox", "flaresolverr") if sample.provider == "pnas" else ("auto",)
+        )
+    ],
 )
 def test_catalog_provider_sample_live_body_acceptance(
     sample,
+    backend,
     catalog_live_env,
     catalog_live_preflight_cache,
     catalog_live_artifact_root,
     catalog_live_report,
     record_property,
 ) -> None:
+    from paper_fetch.providers.browser_runtime.selection import selected_backend
+
+    catalog_live_env = type(catalog_live_env)(catalog_live_env)
+    catalog_live_env[f"PAPER_FETCH_{sample.provider.upper()}_BROWSER_BACKEND"] = backend
+    active_backend = (
+        selected_backend(catalog_live_env, provider=sample.provider)
+        if provider_has_browser_route(sample.provider)
+        else "http"
+    )
+    catalog_live_artifact_root = catalog_live_artifact_root / active_backend
+    catalog_live_artifact_root.mkdir(parents=True, exist_ok=True)
+    record_property("browser_backend", active_backend)
     sample_started_at = time.monotonic()
     preflight_seconds = 0.0
     preflight_trace: dict[str, object] = {}
     terminal_record: dict[str, object] = {
         "provider": sample.provider,
+        "backend": active_backend,
         "doi": normalize_doi(sample.doi),
         "terminal": {
             "status": "failed",
@@ -458,6 +484,7 @@ def test_catalog_provider_sample_live_body_acceptance(
         record_property("performance_warning", performance_warning or "")
         success_record = {
             "provider": sample.provider,
+            "backend": active_backend,
             "doi": normalize_doi(sample.doi),
             "terminal": {"status": "failed", "reason_code": "validation_pending"},
             "preflight": preflight_payload,
@@ -687,13 +714,27 @@ class LivePublisherTests(unittest.TestCase):
             _skip_legal_access_boundary("elsevier", exc)
             raise
 
+        self.assertEqual(article.doi, "10.1016/0304-4165(96)00054-2")
         self.assertEqual(article.source, "elsevier_pdf")
         self.assertTrue(article.quality.has_fulltext)
         self.assertIn("fulltext:elsevier_xml_fail", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_pdf_api_ok", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_pdf_fallback_ok", article.quality.source_trail)
+        acquisition = article.acquisition
+        self.assertIsNotNone(acquisition)
+        self.assertEqual(acquisition.provider, "elsevier")
+        self.assertEqual(acquisition.representation, "pdf")
+        self.assertIn(acquisition.route, {"pdf_api", "browser_pdf"})
+        if acquisition.route == "pdf_api":
+            self.assertEqual(acquisition.transport, "api")
+            self.assertIn("fulltext:elsevier_pdf_api_ok", article.quality.source_trail)
+            self.assertIn(
+                "fulltext:elsevier_pdf_fallback_ok", article.quality.source_trail
+            )
+        else:
+            self.assertEqual(acquisition.transport, "browser")
+            self.assertIn(
+                "fulltext:elsevier_browser_pdf_ok", article.quality.source_trail
+            )
         self.assertNotIn("fulltext:elsevier_html_ok", article.quality.source_trail)
-        self.assertNotIn("fulltext:elsevier_html_fail", article.quality.source_trail)
 
 
 if __name__ == "__main__":

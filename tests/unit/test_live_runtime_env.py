@@ -210,7 +210,7 @@ def test_live_preflight_uses_nested_browser_runtime_availability() -> None:
         )
 
     assert actual is result
-    assert cache == {"wiley": result}
+    assert cache == {("wiley", "camoufox"): result}
     preflight.assert_called_once_with(
         "wiley",
         env={},

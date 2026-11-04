@@ -8,7 +8,7 @@ provider 差异见 [providers.md](providers.md)，浏览器准备见 [browser-ba
 
 ## 1. 安装 Python 包
 
-Windows 安装器及 Linux x64 在线／离线安装器在核心安装完成后自动准备 FlareSolverr，首次安装、升级和同版本重装均会检查并复用有效缓存。在线 `--lite` 跳过此阶段；macOS 和其他架构跳过。缺少系统 Chrome（115+）、依赖安装被拒绝、取消或准备失败只报告 FlareSolverr 未就绪，保留成功的核心安装。
+安装器在核心安装完成后默认准备当前平台支持的后端：Linux/Windows x64 依次准备 Camoufox、FlareSolverr，macOS 只准备 Camoufox。首次安装、升级和同版本重装复用有效缓存及成功检查记录；在线 `--lite` 跳过。POSIX `--skip-browser-prepare` 和 Windows `/SKIPBROWSERPREPARE` 可跳过准备。单项失败继续处理另一项，并保留核心安装。
 
 FlareSolverr v3.5.2 源码、私有依赖与匹配的 ChromeDriver 准备到用户数据目录 `flaresolverr/`，安装资产不包含这些下载。**离线安装器的安装后准备阶段也可能联网**；非交互／静默安装可自动下载源码和驱动，但缺系统依赖时只报告缺项和安装指引，不等待输入或提权。运行时保留缓存缺失、损坏和 Chrome 更新后的按需修复。Linux headless 需 Xvfb 与 Chrome 的启动依赖，WSL 只读 X11 socket 挂载还需可用的 rootless bubblewrap namespaces。默认抓取／preflight 保持 headless，显式 auth 使用 headed。配置和运行时边界见 [浏览器后端](browser-backends.md#pnas--elsevier-系统-chrome-与按需-flaresolverr)。
 
@@ -37,12 +37,12 @@ core 运行时要求 MCP Python SDK 2.x（`mcp>=2,<3`）。server 使用 v2
 - 如果存在 `.env.example` 且用户配置文件还不存在，按 `platformdirs` 创建配置：
   Linux 常见路径是 `~/.config/paper-fetch/.env`，macOS 是
   `~/Library/Application Support/paper-fetch/.env`
-- 安装 Python 依赖、外部公式后端和图片转换后端；源码在线安装入口不下载 Camoufox 浏览器 binary；每次抓取请求开始时保留运行时自动准备机制
+- 安装 Python 依赖、外部公式后端和图片转换后端；源码在线安装默认准备支持的浏览器，可用 `--skip-browser-prepare` 跳过；运行时首次使用后端时自动准备
 - 安装结束时提示 Elsevier 官方 API key 的申请入口和配置位置；抓取 Elsevier 全文前需要从 <https://dev.elsevier.com/> 申请并设置 `ELSEVIER_API_KEY`
 
 补充说明：
 
-- 这是在线一键安装入口：用户不需要手动准备公式后端；浏览器路径统一由 Camoufox facade 负责。CLI/MCP/library 在每次抓取请求开始时自动准备 managed Camoufox；进入受限网络前可按 [预置说明](browser-backends.md#安装) 准备最新兼容浏览器与 fpgen 模型，再用 `paper-fetch browser-preflight` 验证
+- 这是在线一键安装入口：用户不需要手动准备公式后端；浏览器路径通过统一后端接口执行。CLI/MCP/library 在首次实际使用后端时自动准备组件；进入受限网络前可按 [预置说明](browser-backends.md#安装) 准备最新兼容浏览器与 fpgen 模型，再用 `paper-fetch browser-preflight` 验证
 - 如果只想安装 Python 包和配置骨架，不准备外部公式或图片转换后端，使用 `./install.sh --lite`
 - 如果要装进当前 `python3` 环境而不是 `.venv`，使用 `./install.sh --system`
 - arXiv 不需要本地转换器；official HTML 不可用或质量检测失败时直接进入 PDF fallback
@@ -87,8 +87,7 @@ HTML 提取依赖 trafilatura 暂限 `>=2.0,<2.3`，开发锁定 2.2.0。
 旧 browser 的环境需要显式重新指定兼容版本，不能依赖失败回退继续使用旧包。
 Camoufox 0.5.9 默认跟踪 `official/prerelease`，通过官方发现与兼容判断选择当前
 平台正式版和预发布版中的最新兼容浏览器，沿用上游排序。`prerelease` 表示允许
-预发布，也接受正式版；显式 `official/stable` 仅接受正式版。不使用 Python 包隐式配对。每次 CLI/MCP/API 抓取开始时
-检查，包括 HTTP 和缓存命中；批量调度前只检查一次，子任务及启动复用本次结果。
+预发布，也接受正式版；显式 `official/stable` 仅接受正式版。不使用 Python 包隐式配对。CLI/MCP/API 仅在首次实际使用后端时准备；HTTP 和缓存命中不准备，批次共享成功结果。
 显式渠道、pin、SHA 和 executable 优先，pin 只准备对应版本。准备时在缓存锁内
 补写默认渠道，旧 active 配置自动迁移；静态诊断不写配置。更新失败且本地有效时
 继续使用；没有可用浏览器时继续 HTTP／缓存流程，需要浏览器时报告本次失败。
@@ -157,9 +156,8 @@ xattr -dr com.apple.quarantine \
 Mach-O 结构，不等同于 Developer ID 签名或 Apple notarization。
 
 如果要在之后进入受限网络或离线环境，请在仍联网时预置并验证浏览器。普通运行时
-会在每次抓取请求开始时进入 binary 准备逻辑；与 auth、preflight 和项目准备函数
-共享滚动 24 小时（86400 秒）检查记录，本地有效且未满间隔时直接复用。检查或
-更新失败也计时，跳过不延长间隔，取消不记为完成；缺失、损坏或不兼容时立即
+会在首次实际使用后端时进入 binary 准备逻辑；与 auth、preflight 和项目准备函数
+共享滚动 24 小时（86400 秒）检查记录，本地有效且未满间隔时直接复用。只有成功检查计时；失败或取消允许后续立即重试，跳过不延长间隔；缺失、损坏或不兼容时立即
 准备。渠道、pin/SHA 或 Camoufox Python 包版本变化后重新判断，有效本地 pin
 仍直接复用。记录缺失、损坏或时间戳在未来时重新检查，写入失败只报告 stderr。
 也可以提前显式预置：
@@ -248,7 +246,7 @@ Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的
 - Linux / macOS 安装时会把通过 `PAPER_FETCH_OFFLINE_PYTHON_BIN` / `python3` 选中的解释器路径写入 `runtime/python-bin`，后续 `runtime/paper-fetch-python` 私有 launcher、CLI wrapper 和 MCP 都复用该解释器；`bin/` 不暴露通用 `python` wrapper，避免全局 PATH 前置后遮蔽用户自己的 Python
 - Windows 安装器固定使用包内 CPython 3.13.15 x64 embeddable runtime；版本、python.org URL 与官方 SHA-256 `d1f04d990aee1253d8569e8e5104e30fa9f5fa830899f14843448872d936a2cf` 均来自 `installer/manifest.json`，构建器在解压前校验，目标机不需要预装 Python
 - Linux 构建阶段用临时 wheelhouse 把项目和依赖安装进 `runtime/site-packages`，然后只把安装后的 runtime、`bin/` 启动器、公式工具和 skill 放进自解压 `.sh` payload；目标机安装阶段不运行 pip，不包含源码树、`dist/` 或 `wheelhouse/`
-- Playwright 和 Camoufox Python 依赖随 Linux / macOS `runtime/site-packages` 和 Windows embedded runtime 分发；Camoufox 浏览器 binary 不随包分发，核心安装和静态诊断不下载，可选向导仅在用户明确选择时下载；fetch 在每次请求开始时自动补全或更新 managed runtime，auth 和 preflight 在启动前准备；这些入口与项目准备函数共享滚动 24 小时检查间隔（失败也计时，跳过不刷新，取消不计时），本地无效时立即准备。未固定版本且满间隔时检查所选渠道最新兼容版本，固定时只补全对应版本；更新失败且本地版本有效时提示并继续使用，否则报告准备失败。显式 binary 由用户维护。进入受限网络或离线环境前应在联网阶段按 [浏览器预置说明](browser-backends.md#安装) 准备最新兼容浏览器和 fpgen，并运行 preflight 做启动/provider 验证。当前验证尚未覆盖预置后真正断网的 Camoufox launch，因此不能宣称完整离线浏览器支持
+- Playwright 和 Camoufox Python 依赖随 Linux / macOS `runtime/site-packages` 和 Windows embedded runtime 分发；Camoufox 浏览器 binary 不随包分发，安装器默认准备支持的后端并提供跳过开关，静态诊断不下载；fetch 在首次实际使用后端时自动补全或检查更新 managed runtime，auth 和 preflight 在启动前准备；这些入口与项目准备函数共享滚动 24 小时检查间隔（仅成功检查计时；最近失败或取消允许下次重试），本地无效时立即准备。未固定版本且满间隔时检查所选渠道最新兼容版本，固定时只补全对应版本；更新失败且本地版本有效时提示并继续使用，否则报告准备失败。显式 binary 由用户维护。进入受限网络或离线环境前应在联网阶段按 [浏览器预置说明](browser-backends.md#安装) 准备最新兼容浏览器和 fpgen，并运行 preflight 做启动/provider 验证。当前验证尚未覆盖预置后真正断网的 Camoufox launch，因此不能宣称完整离线浏览器支持
 - Linux `.sh` payload 不包含仓库源码快照和 `tests/` 目录；离线安装目标是运行已打包工具，不在目标机执行项目测试
 - Linux、macOS、Windows 离线包都携带原生 texmath 0.13.3，分别位于 `formula-tools/bin/texmath` 和 `formula-tools/bin/texmath.exe`，并将它作为首选公式后端；`mathml-to-latex>=1.8.0,<2.0.0` 和随 Playwright 分发的 Node 作为二级转换回退。公式工具和离线包同时携带固定为 4.1.3 的 MathJax、TeX 字库、mhchem 与 bbm 字形扩展，预载 `bbm`、`textcomp` 及既有扩展，供源 TeX 与 MathML 转换结果的编译／排版校验使用。LitRoot 提交由 `scripts/sync_mathjax_engine.py /path/to/LitRoot` 生成的引擎副本；`--check`、副本摘要测试和独立检查器阻止内容漂移。`src/paper_fetch/resources/formula` 是 Node manifest、lockfile 和转换脚本的唯一源码位置；checkout runtime 直接引用它，Python 安装器和离线构建将它暂存到 `formula-tools`。lockfile 解析上述固定 MathJax 资源、`mathml-to-latex` 1.8.0 及其实际传递依赖，unit test 会拒绝声明或解析结果漂移。目标机不编译 texmath，也不运行 `npm install`。CI / release 公式构建固定使用 `haskell-actions/setup` v2.12.1 的完整 SHA、GHC 9.14.1 和 Cabal 3.18.1.0。macOS 构建会把非系统 Mach-O dylib 复制到 `formula-tools/lib`，用 `@rpath` / `@loader_path` 重写引用，并对 texmath 与随包 dylib 做 ad-hoc codesign
 - Linux / macOS 会配置安装目录内 `image-tools` 作为图片转换工具查找目录；离线构建不会把构建机 PATH 上的 Ghostscript/libvips 符号链接固化进包内。运行时找到 Ghostscript 时可转 EPS，找到 libvips 时可转 TIFF；缺少对应工具时只影响 AMS `Download Figure` 源图转换，网页 JPG/PNG 候选仍可回退
@@ -524,15 +522,15 @@ scripts/clean-local-artifacts.sh --days 7
 
 该脚本只删除 `git check-ignore` 确认为 ignored 的目标；未被 `.gitignore` 覆盖的路径会跳过。
 
-FlareSolverr 的独立重试入口（使用安装环境的 Python）：
+浏览器准备的独立重试入口（使用安装环境的 Python）：
 
 ```bash
-python -m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-flaresolverr
+python -m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all
 ```
 
-加 `--non-interactive` 只允许源码／驱动下载，不安装系统软件。Debian/Ubuntu 显示共享库、Xvfb、只读 X11 socket 所需 bubblewrap 的缺项和 APT 命令，默认不安装；用户同意后由 sudo 接收密码，APT 完成后重新检测。Chrome 优先采用已有源中的 `google-chrome-stable`，无候选时经确认下载 [Google 官方 x86-64 deb](https://support.google.com/chrome/answer/95346)，再交给 APT 解析依赖。显式 Chrome 路径无效时需修正 `PAPER_FETCH_CHROME_BINARY_PATH`；Windows 只提供官网安装指引，其他 Linux 发行版提供手动安装指引。namespace 能力以实际探测为准。
+加 `--non-interactive` 允许用户级浏览器、指纹模型及驱动准备，不安装系统软件；离线包直接使用内置的 FlareSolverr 源码和依赖。Debian/Ubuntu 显示共享库、Xvfb、只读 X11 socket 所需 bubblewrap 的缺项和 APT 命令，默认不安装；用户同意后由 sudo 接收密码，APT 完成后重新检测。Chrome 优先采用已有源中的 `google-chrome-stable`，无候选时经确认下载 [Google 官方 x86-64 deb](https://support.google.com/chrome/answer/95346)，再交给 APT 解析依赖。显式 Chrome 路径无效时需修正 `PAPER_FETCH_CHROME_BINARY_PATH`；Windows 只提供官网安装指引，其他 Linux 发行版提供手动安装指引。namespace 能力以实际探测为准。
 
-下载准备预算 10 分钟，本地启动检查另有 2 分钟预算，可用 Ctrl+C 取消。检查沿用配置中的 headless/headful，只连接所属 Chrome 的 CDP 并运行 `about:blank` 脚本，使用临时状态目录，不读取出版社登录态或导航出版社主页，结束后清理所属进程。Unix 输出汇总，离线安装保存 `flaresolverr-setup-results.txt`；Windows 显示进度和完成状态并保存同名结果文件及重试命令。重新运行安装器同样可重试。Camoufox、公式和图片工具仍沿用各自原有的可选安装范围。
+下载准备预算 10 分钟，本地启动检查另有 2 分钟预算，可用 Ctrl+C 取消。检查沿用配置中的 headless/headful，只连接所属 Chrome 的 CDP 并运行 `about:blank` 脚本，使用临时状态目录，不读取出版社登录态或导航出版社主页，结束后清理所属进程。Unix 输出汇总，离线安装保存 `browser-setup-results.txt`；Windows 显示进度和完成状态并保存同名结果文件及重试命令。重新运行安装器同样可重试。公式和图片工具保留原有可选安装范围。
 
 ## 4. Provider 接入入口与本地运行时
 
@@ -725,7 +723,7 @@ macOS 的机器合同见 [`macos-adaptation-contract.toml`](macos-adaptation-con
 
 ### 安全不变量
 
-构建与安装必须继续拒绝错误架构、非标准 CPython ABI、未归属 staging、符号链接 payload 和未验证的 purge 路径。正式产物使用原子发布；quarantine 与 payload inventory 校验 fail closed。Camoufox 浏览器不打入离线包，核心安装不下载浏览器；可选向导仅在用户明确选择后预置，失败不回滚核心安装。受管 runtime 在每次抓取开始时自动补全或更新，auth/preflight 在启动前准备，尊重已有渠道和固定版本；更新失败时可复用校验有效的本地版本。离线使用前仍需在联网阶段预先准备，预置不等于已验证完全断网启动。
+构建与安装必须继续拒绝错误架构、非标准 CPython ABI、未归属 staging、符号链接 payload 和未验证的 purge 路径。正式产物使用原子发布；quarantine 与 payload inventory 校验 fail closed。Camoufox 浏览器不打入离线包，安装器默认准备支持的浏览器，提供跳过开关，失败不回滚核心安装。受管 runtime 在首次实际使用浏览器时自动补全或检查更新，auth/preflight 在启动前准备，尊重已有渠道和固定版本；更新失败时可复用校验有效的本地版本。离线使用前仍需在联网阶段预先准备，预置不等于已验证完全断网启动。
 
 ### 证据等级
 
@@ -745,3 +743,12 @@ Codex skill 的 `.agents/skills` 迁移与校验后清理同样适用于 macOS�
 同目录跨进程排他使用，外部 Firefox 占用时先正常关闭外部会话；不删除原生锁。
 认证通过重开同一目录验证，JSON 导出失败独立报告。macOS 持久会话、锁和回放契约
 见 `macos-adaptation-contract.toml`；Linux/WSL 验证不能替代原生 macos-15 gate。
+
+
+### 统一浏览器准备
+
+POSIX 默认准备 Camoufox，并在 Linux x64 准备 FlareSolverr；Windows x64 默认依次准备两者，macOS 只准备 Camoufox。单项失败继续另一项并保留核心安装。非交互安装允许用户级准备；系统依赖仍沿用已有权限与确认规则。可用 `--skip-browser-prepare` 或 Windows `/SKIPBROWSERPREPARE` 跳过。
+
+重跑：`python -m paper_fetch.offline_setup --install-root <path> --prepare-browsers all|camoufox|flaresolverr`。旧 `--prepare-flaresolverr` 转发到单独准备该后端。结果写入 `browser-setup-results.txt`。准备后通过真实后端的临时会话检查 `about:blank` 与本地脚本，Camoufox 同时准备指纹模型，不保存出版社认证状态。
+
+Linux/Windows x64 构建内置 `runtime/browser-components/flaresolverr/` 的固定源码、隔离依赖、许可证和清单；macOS 不包含该目录。frozen snapshot 通过 `PAPER_FETCH_DEPENDENCY_SNAPSHOT` 提供同一份组件，构建不重新解析版本。离线组件缺失或损坏需要重装。浏览器 binary、指纹模型和匹配系统 Chrome 的 ChromeDriver 由准备流程管理。

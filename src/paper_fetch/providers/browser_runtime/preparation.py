@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager, redirect_stdout
+from contextlib import contextmanager, redirect_stdout, suppress
 from contextvars import ContextVar
-from dataclasses import dataclass
+from concurrent.futures import Future
+from dataclasses import dataclass, field, replace
 from importlib import import_module
 from importlib.metadata import version as distribution_version
 from importlib.util import find_spec
@@ -20,7 +21,7 @@ import threading
 import time
 from typing import Any
 
-from filelock import FileLock
+from filelock import FileLock, Timeout as LockTimeout
 
 from ...utils import normalize_text
 from ...config import BROWSER_BINARY_PATH_ENV_VAR, browser_env_value
@@ -33,41 +34,107 @@ UPDATE_CHECK_FILENAME = ".paper-fetch-update-check.json"
 
 
 class FetchBrowserPreparation:
-    """One fetch call's result, shared with its batch children and launches."""
+    """Share in-flight work and successful preparation across request/batch users."""
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._prepared = False
+        self._results: dict[str, Future[Any]] = {}
         self.error: Exception | None = None
 
-    def prepare(self, env: Mapping[str, str], cancel_check: Callable[[], None]) -> None:
+    def run(
+        self,
+        component: str,
+        prepare: Callable[[], Any],
+        cancel_check: Callable[[], None] = lambda: None,
+        *,
+        valid: Callable[[Any], bool] | None = None,
+    ) -> Any:
         cancel_check()
         with self._lock:
-            if self._prepared:
-                return
+            future = self._results.get(component)
+            if (
+                future is not None
+                and future.done()
+                and valid is not None
+                and not valid(future.result())
+            ):
+                self._results.pop(component, None)
+                future = None
+            owner = future is None
+            if future is None:
+                future = Future()
+                self._results[component] = future
+        if owner:
             try:
-                if not browser_env_value(env, BROWSER_BINARY_PATH_ENV_VAR) and all(
-                    find_spec(name) is not None for name in ("camoufox", "playwright")
-                ):
-                    prepare_camoufox_managed_runtime()
-            except RequestCancelledError:
+                token = preparation_cancel_check.set(cancel_check)
+                try:
+                    result = prepare()
+                    cancel_check()
+                finally:
+                    preparation_cancel_check.reset(token)
+            except BaseException as exc:
+                with self._lock:
+                    self._results.pop(component, None)
+                future.set_exception(exc)
                 raise
-            except Exception as exc:
-                self.error = exc
-                print(f"Camoufox browser preparation failed: {exc}", file=sys.stderr)
+            else:
+                if not getattr(result, "preparation_succeeded", True):
+                    with self._lock:
+                        self._results.pop(component, None)
+                future.set_result(result)
+        while not future.done():
             cancel_check()
-            self._prepared = True
+            try:
+                return future.result(timeout=0.05)
+            except TimeoutError:
+                if future.done():
+                    raise
+        cancel_check()
+        return future.result()
+
+    def prepare(self, env: Mapping[str, str], cancel_check: Callable[[], None]) -> None:
+        if not browser_env_value(env, BROWSER_BINARY_PATH_ENV_VAR) and all(
+            find_spec(name) is not None for name in ("camoufox", "playwright")
+        ):
+            self.run(
+                "camoufox",
+                prepare_camoufox_managed_runtime,
+                cancel_check,
+                valid=lambda probe: (
+                    probe.runtime_path is None or probe_camoufox_managed_runtime().valid
+                ),
+            )
 
     def require(self) -> None:
-        if self.error is not None:
-            raise RuntimeError(
-                f"Camoufox browser preparation failed: {self.error}"
-            ) from self.error
+        self.prepare({}, preparation_cancel_check.get())
 
 
 fetch_browser_preparation: ContextVar[FetchBrowserPreparation | None] = ContextVar(
     "fetch_browser_preparation", default=None
 )
+
+
+preparation_cancel_check: ContextVar[Callable[[], None]] = ContextVar(
+    "preparation_cancel_check", default=lambda: None
+)
+
+
+@contextmanager
+def _preparation_lock(path: Path) -> Iterator[None]:
+    lock = FileLock(path)
+    check = preparation_cancel_check.get()
+    while True:
+        check()
+        try:
+            lock.acquire(timeout=0.05)
+            break
+        except LockTimeout:
+            continue
+    try:
+        check()
+        yield
+    finally:
+        lock.release()
 
 
 @dataclass(frozen=True)
@@ -81,6 +148,7 @@ class CamoufoxRuntimeProbe:
     active_spec: str | None = None
     managed_path_safe: bool = False
     message: str | None = None
+    preparation_succeeded: bool = field(default=True, compare=False)
 
 
 def _is_link_or_reparse(path: Path) -> bool:
@@ -263,9 +331,14 @@ def _probe_runtime(
 def _recent_update_check(path: Path, identity: Mapping[str, Any]) -> bool:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(payload, dict) or any(
-            key not in payload or payload[key] != value
-            for key, value in identity.items()
+        if (
+            not isinstance(payload, dict)
+            or payload.get("result") != "success"
+            or payload.get("version") != 2
+            or any(
+                key not in payload or payload[key] != value
+                for key, value in identity.items()
+            )
         ):
             return False
         checked_at = payload.get("checked_at")
@@ -281,11 +354,28 @@ def _recent_update_check(path: Path, identity: Mapping[str, Any]) -> bool:
         return False
 
 
-def _write_update_check(root: Path, path: Path, identity: Mapping[str, Any]) -> None:
+def _write_update_check(
+    root: Path, path: Path, identity: Mapping[str, Any], *, result: str = "success"
+) -> None:
     try:
         if _path_chain_has_link(root, path):
             raise ValueError("Camoufox update-check record path is unsafe.")
-        _atomic_write_json(path, {**identity, "checked_at": time.time()})
+        previous = {}
+        with suppress(OSError, ValueError):
+            loaded = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                previous = loaded
+        success_at = time.time() if result == "success" else previous.get("checked_at")
+        _atomic_write_json(
+            path,
+            {
+                **identity,
+                "version": 2,
+                "result": result,
+                "checked_at": success_at,
+                "attempted_at": time.time(),
+            },
+        )
     except (OSError, ValueError) as exc:
         print(f"Could not save Camoufox update check: {exc}", file=sys.stderr)
 
@@ -293,16 +383,34 @@ def _write_update_check(root: Path, path: Path, identity: Mapping[str, Any]) -> 
 @contextmanager
 def _record_update_check(
     root: Path, path: Path, identity: Mapping[str, Any]
-) -> Iterator[None]:
+) -> Iterator[dict[str, str]]:
+    outcome = {"result": "success"}
     try:
-        yield
-    except RequestCancelledError:
-        raise
-    except Exception:
-        _write_update_check(root, path, identity)
+        yield outcome
+    except BaseException as exc:
+        _write_update_check(
+            root,
+            path,
+            identity,
+            result=(
+                "cancelled"
+                if isinstance(exc, (RequestCancelledError, KeyboardInterrupt))
+                else "failed"
+            ),
+        )
         raise
     else:
-        _write_update_check(root, path, identity)
+        try:
+            preparation_cancel_check.get()()
+        except BaseException:
+            _write_update_check(root, path, identity, result="cancelled")
+            raise
+        _write_update_check(root, path, identity, result=outcome["result"])
+
+
+def prepare_camoufox_fingerprint_model() -> None:
+    """Verify/prepare the model pinned by the installed Camoufox package."""
+    import_module("camoufox.fpgen_model").ensure_fpgen_model()
 
 
 def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
@@ -331,7 +439,7 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                 "Camoufox browser preparation failed: unsafe managed cache path."
             )
     root.mkdir(parents=True, exist_ok=True)
-    with FileLock(lock_path), redirect_stdout(sys.stderr):
+    with _preparation_lock(lock_path), redirect_stdout(sys.stderr):
         if _path_chain_has_link(root, check_path):
             raise RuntimeError(
                 "Camoufox browser preparation failed: unsafe managed cache path."
@@ -369,6 +477,26 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
             config["channel"] = channel
             multiversion.save_config(config)
 
+        identity = {
+            "channel": channel,
+            "pinned": pinned,
+            "pinned_sha": pinned_sha,
+            "python_package_version": distribution_version("camoufox"),
+        }
+        try:
+            preparation_cancel_check.get()()
+            prepare_camoufox_fingerprint_model()
+            preparation_cancel_check.get()()
+        except BaseException as exc:
+            cancelled = isinstance(exc, (RequestCancelledError, KeyboardInterrupt))
+            _write_update_check(
+                root,
+                check_path,
+                identity,
+                result="cancelled" if cancelled else "failed",
+            )
+            raise
+
         # An explicit pin reuses its local build without a query.
         if pinned:
             try:
@@ -395,17 +523,11 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                         flag.touch()
                         return probe
 
-        identity = {
-            "channel": channel,
-            "pinned": pinned,
-            "pinned_sha": pinned_sha,
-            "python_package_version": distribution_version("camoufox"),
-        }
         if not pinned and previous.valid and _recent_update_check(check_path, identity):
             flag.touch()
             return previous
 
-        with _record_update_check(root, check_path, identity):
+        with _record_update_check(root, check_path, identity) as outcome:
             try:
                 print(
                     f"Checking Camoufox runtime: {channel}{'/' + pinned if pinned else ''}",
@@ -437,12 +559,13 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                 raise
             except Exception as exc:
                 if previous.valid and not pinned:
+                    outcome["result"] = "failed"
                     flag.touch()
                     print(
                         f"Camoufox update failed; using local {previous.version}: {exc}",
                         file=sys.stderr,
                     )
-                    return previous
+                    return replace(previous, preparation_succeeded=False)
                 raise RuntimeError(
                     f"Camoufox browser preparation failed: {exc}"
                 ) from exc
@@ -499,12 +622,13 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                 multiversion.save_config(config)
                 restored = probe_camoufox_managed_runtime()
                 if restored.valid and not pinned:
+                    outcome["result"] = "failed"
                     flag.touch()
                     print(
                         f"Camoufox update failed; using local {restored.version}: {exc}",
                         file=sys.stderr,
                     )
-                    return restored
+                    return replace(restored, preparation_succeeded=False)
                 raise RuntimeError(
                     f"Camoufox browser preparation failed: {exc}"
                 ) from exc

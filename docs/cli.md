@@ -489,11 +489,7 @@ CLI 会在开始抓取前创建最终输出目录，包括显式 `--output-dir` 
 | `3` | 无访问权限 |
 | `4` | 被限速 |
 
-CLI 抓取在每次请求开始时检查 managed Camoufox，包括 HTTP 抓取和缓存命中；
-批量任务在调度前统一检查一次，子任务和浏览器启动复用该结果。抓取、`auth`、
-`browser-preflight` 和项目准备函数共享滚动 24 小时（86400 秒）检查记录：
-本地 runtime 有效且未满间隔时直接复用，满间隔后首次调用联网检查。失败也
-计时，跳过不刷新时间戳，取消不记为完成；缺失、损坏或不兼容时立即准备。
+CLI 抓取入口只建立准备作用域，首次实际使用后端时才准备；HTTP 和缓存命中不准备。批次共享组件准备结果，失败结果不永久缓存。安装器、CLI、MCP、API、auth、preflight 共用持久记录：最近一次检查成功且本地有效时，24 小时内不查询远端；失败或取消允许下次重试，不受更早成功时间限制。缺失、损坏或不兼容时立即准备。
 渠道、pin/SHA 或 Camoufox Python 包版本变化后重新判断，有效本地 pin 仍直接
 复用。记录异常时重新检查，写入失败只报告 stderr。browser/full
 固定 `camoufox==0.5.9`，默认渠道 `official/prerelease`，沿用上游排序，从正式版
@@ -501,5 +497,5 @@ CLI 抓取在每次请求开始时检查 managed Camoufox，包括 HTTP 抓取�
 显式 `official/stable` 仅接受正式版。不自动升级 Python 包。显式渠道、pin、SHA 和自定义 executable 优先；
 core 缺少 browser extra 或显式 executable 时跳过托管更新。更新失败可复用有效
 本地版本；无可用浏览器则记录失败并继续 HTTP／缓存流程，实际需要浏览器时报告
-失败，本次不重复准备。进度和错误写 stderr。`auth` 和 `browser-preflight` 在
+失败，后续实际调用允许重试。进度和错误写 stderr。`auth` 和 `browser-preflight` 在
 启动前检查；`doctor`、状态查询、解析和帮助命令保持只读。

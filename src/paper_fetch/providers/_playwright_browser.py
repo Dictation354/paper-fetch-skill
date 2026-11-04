@@ -403,12 +403,6 @@ def _remove_page_diagnostic_listeners(
             remove(event, callback)
 
 
-def _elsevier_main_document_matches(response_url, final_url, html, doi):
-    from ._elsevier_html import main_document_matches
-
-    return main_document_matches(response_url, final_url, html, doi)
-
-
 def _main_document_response_diagnostic(
     response: Any,
     *,
@@ -1664,6 +1658,93 @@ def _record_wiley_http_access_status_review(
     return confirmed
 
 
+def _select_owned_document_response(
+    response,
+    *,
+    owned_document_responses,
+    owned_finished_requests,
+    owned_document_requests,
+    final_url,
+    html,
+    doi,
+    response_hosts,
+    page_policy,
+):
+    """Select the completed main document using the provider's match policy."""
+    if owned_document_responses:
+        current_response = owned_document_responses[-1]
+        current_url = normalize_text(
+            str(_diagnostic_event_attr(current_response, "url") or "")
+        )
+        target_doi = normalize_doi(doi)
+        if (
+            id(_diagnostic_event_attr(current_response, "request"))
+            in owned_finished_requests
+            and id(_diagnostic_event_attr(current_response, "request"))
+            == next(reversed(owned_document_requests))
+            and urllib.parse.urldefrag(current_url)[0]
+            == urllib.parse.urldefrag(final_url)[0]
+            and urllib.parse.urlsplit(current_url).hostname in response_hosts
+            and target_doi
+            and (
+                page_policy.document_matches(current_url, final_url, html, target_doi)
+                if page_policy.document_matches is not None
+                else normalize_doi(extract_doi_from_url(current_url)) == target_doi
+            )
+        ):
+            response = current_response
+    return response
+
+
+def _capture_browser_html(
+    page, *, use_main_context_snapshot, runtime_context, candidate_url
+):
+    snapshot = (
+        _main_context_html_snapshot(page, runtime_context=runtime_context)
+        if use_main_context_snapshot
+        else None
+    )
+    if snapshot is not None:
+        return snapshot
+    final_url = normalize_text(str(getattr(page, "url", "") or "")) or candidate_url
+    return str(page.content() or ""), normalize_text(str(page.title() or "")), final_url
+
+
+def _assemble_browser_html_result(
+    *, browser_context, config, trace, options, **captured
+):
+    """Stage accepted state and assemble the captured result without owning cleanup."""
+    staged_storage_state = None
+    if (
+        config.persist_storage_state
+        and not options.return_image_payload
+        and not options.supplementary_index
+    ):
+        staged_storage_state, storage_state_result = _stage_storage_state(
+            browser_context,
+            config,
+            filter_url=captured["final_url"],
+        )
+        trace["storage_state_save"] = storage_state_result
+    else:
+        trace["storage_state_save"] = {
+            "attempted": False,
+            "staged": False,
+            "saved": False,
+            "path": str(_storage_state_path(config) or "") or None,
+            "reason": (
+                "non_article_payload"
+                if options.return_image_payload
+                else "storage_state_write_disabled"
+            ),
+        }
+    return BrowserFetchedHtml(
+        **captured,
+        diagnostics={"browser_runtime_trace": trace},
+        staged_storage_state=staged_storage_state,
+    )
+
+
 def fetch_html_with_playwright(
     candidate_urls: list[str],
     *,
@@ -1698,11 +1779,13 @@ def fetch_html_with_playwright(
     )
     readiness_budget_seconds = options.readiness_budget_seconds
     reuse_runtime_page = options.reuse_runtime_page
-    pnas_metrics_request = None
-    if normalize_text(publisher).lower() == "pnas":
-        from .pnas import _is_sidebar_metrics_url
+    from ._registry import provider_bundle, BrowserPagePolicy
 
-        pnas_metrics_request = _is_sidebar_metrics_url
+    try:
+        page_policy = provider_bundle(publisher).browser_page_policy
+    except KeyError:
+        page_policy = BrowserPagePolicy()
+    empty_request = page_policy.empty_request
 
     last_failure: PlaywrightBrowserFailure | None = None
     latest_browser_context_seed: Mapping[str, Any] | None = None
@@ -1838,11 +1921,7 @@ def fetch_html_with_playwright(
         owned_document_requests: dict[int, Any] = {}
         owned_document_responses: list[Any] = []
         owned_finished_requests: set[int] = set()
-        response_hosts = {
-            "science": {"science.org", "www.science.org"},
-            "pnas": {"pnas.org", "www.pnas.org"},
-            "elsevier": {"sciencedirect.com", "www.sciencedirect.com"},
-        }.get(normalize_text(publisher).lower(), set())
+        response_hosts = set(page_policy.document_hosts)
         if response_hosts:
 
             def owned_request_started(request: Any) -> None:
@@ -1901,9 +1980,7 @@ def fetch_html_with_playwright(
                             int(trace.get("empty_script_response_count") or 0) + 1
                         )
                     return
-                sidebar_metrics = bool(
-                    pnas_metrics_request and pnas_metrics_request(request_url)
-                )
+                sidebar_metrics = bool(empty_request and empty_request(request_url))
                 if resource_type in active_blocked_resource_types or sidebar_metrics:
                     trace["blocked_request_count"] = (
                         int(trace.get("blocked_request_count") or 0) + 1
@@ -1923,11 +2000,7 @@ def fetch_html_with_playwright(
                 with contextlib.suppress(Exception):
                     route.continue_()
 
-        if (
-            active_blocked_resource_types
-            or empty_script_response_urls
-            or pnas_metrics_request
-        ):
+        if active_blocked_resource_types or empty_script_response_urls or empty_request:
             with contextlib.suppress(Exception):
                 page.route("**/*", route_handler)
 
@@ -2087,8 +2160,7 @@ def fetch_html_with_playwright(
                         diagnostics={"browser_runtime_trace": trace},
                     )
                 if readiness_budget_seconds is not None and (
-                    readiness_deadline is None
-                    or normalize_text(publisher).lower() == "pnas"
+                    readiness_deadline is None or page_policy.readiness_per_candidate
                 ):
                     # Readiness owns its own budget: browser startup and the first
                     # document navigation remain governed by the request deadline.
@@ -2148,50 +2220,27 @@ def fetch_html_with_playwright(
                     candidate_trace=candidate_trace,
                     runtime_context=runtime_context,
                 )
-                snapshot = (
-                    _main_context_html_snapshot(page, runtime_context=runtime_context)
-                    if use_main_context_snapshot
-                    else None
+                html, title, final_url = _capture_browser_html(
+                    page,
+                    use_main_context_snapshot=use_main_context_snapshot,
+                    runtime_context=runtime_context,
+                    candidate_url=normalized_url,
                 )
-                if snapshot is not None:
-                    html, title, final_url = snapshot
-                else:
-                    final_url = (
-                        normalize_text(str(getattr(page, "url", "") or ""))
-                        or normalized_url
-                    )
-                    html = str(page.content() or "")
-                    title = normalize_text(str(page.title() or ""))
                 if not title and normalize_text(publisher).lower() != "ieee":
                     title = (
                         extract_page_title(BeautifulSoup(html, choose_parser())) or ""
                     )
-                if owned_document_responses:
-                    current_response = owned_document_responses[-1]
-                    current_url = normalize_text(
-                        str(_diagnostic_event_attr(current_response, "url") or "")
-                    )
-                    target_doi = normalize_doi(config.doi)
-                    if (
-                        id(_diagnostic_event_attr(current_response, "request"))
-                        in owned_finished_requests
-                        and id(_diagnostic_event_attr(current_response, "request"))
-                        == next(reversed(owned_document_requests))
-                        and urllib.parse.urldefrag(current_url)[0]
-                        == urllib.parse.urldefrag(final_url)[0]
-                        and urllib.parse.urlsplit(current_url).hostname
-                        in response_hosts
-                        and target_doi
-                        and (
-                            _elsevier_main_document_matches(
-                                current_url, final_url, html, target_doi
-                            )
-                            if normalize_text(publisher).lower() == "elsevier"
-                            else normalize_doi(extract_doi_from_url(current_url))
-                            == target_doi
-                        )
-                    ):
-                        response = current_response
+                response = _select_owned_document_response(
+                    response,
+                    owned_document_responses=owned_document_responses,
+                    owned_finished_requests=owned_finished_requests,
+                    owned_document_requests=owned_document_requests,
+                    final_url=final_url,
+                    html=html,
+                    doi=config.doi,
+                    response_hosts=response_hosts,
+                    page_policy=page_policy,
+                )
                 status = _browser_response_status(response, zero_as_none=False)
                 headers = _browser_response_headers(response)
                 candidate_trace["status"] = status
@@ -2480,31 +2529,11 @@ def fetch_html_with_playwright(
                 time.monotonic() - candidate_started, 3
             )
             candidate_trace["result"] = "success"
-            staged_storage_state = None
-            if (
-                config.persist_storage_state
-                and not return_image_payload
-                and not supplementary_index
-            ):
-                staged_storage_state, storage_state_result = _stage_storage_state(
-                    browser_context,
-                    config,
-                    filter_url=final_url,
-                )
-                trace["storage_state_save"] = storage_state_result
-            else:
-                trace["storage_state_save"] = {
-                    "attempted": False,
-                    "staged": False,
-                    "saved": False,
-                    "path": str(_storage_state_path(config) or "") or None,
-                    "reason": (
-                        "non_article_payload"
-                        if return_image_payload
-                        else "storage_state_write_disabled"
-                    ),
-                }
-            return BrowserFetchedHtml(
+            return _assemble_browser_html_result(
+                browser_context=browser_context,
+                config=config,
+                trace=trace,
+                options=options,
                 source_url=normalized_url,
                 final_url=final_url,
                 html=html,
@@ -2515,8 +2544,6 @@ def fetch_html_with_playwright(
                 browser_context_seed=browser_context_seed,
                 screenshot_b64=screenshot_b64,
                 image_payload=image_payload,
-                diagnostics={"browser_runtime_trace": trace},
-                staged_storage_state=staged_storage_state,
             )
     finally:
         if "storage_state_save" not in trace:

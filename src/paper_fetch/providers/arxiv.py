@@ -40,7 +40,7 @@ from ..models import (
     article_from_markdown,
     metadata_only_article,
 )
-from ..provider_catalog import ProviderRouteSpec, ProviderSpec
+from ..provider_contracts import ProviderRouteSpec, ProviderSpec
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import empty_asset_results, normalize_text

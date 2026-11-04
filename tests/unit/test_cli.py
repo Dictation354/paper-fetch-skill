@@ -62,9 +62,8 @@ class CliTests(unittest.TestCase):
                 mock.patch.object(
                     paper_fetch_cli, "_run_batch_item", side_effect=run_item
                 ),
-                mock.patch.object(
-                    paper_fetch_cli,
-                    "build_http_transport_for_context",
+                mock.patch(
+                    "paper_fetch.runtime.build_http_transport_for_context",
                     return_value=object(),
                 ),
             ):

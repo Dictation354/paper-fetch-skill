@@ -50,7 +50,7 @@ Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Fil
 
 [UninstallDelete]
 Type: files; Name: "{app}\install-helper.log"
-Type: files; Name: "{app}\flaresolverr-setup-results.txt"
+Type: files; Name: "{app}\browser-setup-results.txt"
 
 [Code]
 var
@@ -390,28 +390,39 @@ begin
   UpgradePrepared := True;
 end;
 
-procedure PrepareFlareSolverr;
+function SkipBrowserPrepare: Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  for I := 1 to ParamCount do
+    if CompareText(ParamStr(I), '/SKIPBROWSERPREPARE') = 0 then
+      Result := True;
+end;
+
+procedure PrepareBrowsers;
 var
   Params, ResultPath: String;
   Output: AnsiString;
   ResultCode, WindowMode: Integer;
 begin
   if not OptionalCoreReady then exit;
-  ResultPath := ExpandConstant('{app}\flaresolverr-setup-results.txt');
+  if SkipBrowserPrepare then exit;
+  ResultPath := ExpandConstant('{app}\browser-setup-results.txt');
   DeleteFile(ResultPath);
   Params := '-X utf8 -m paper_fetch.offline_setup --install-root "' + ExpandConstant('{app}') +
-    '" --prepare-flaresolverr --non-interactive --result "' + ResultPath + '"';
+    '" --prepare-browsers all --non-interactive --result "' + ResultPath + '"';
   WindowMode := SW_SHOW;
   if WizardSilent then WindowMode := SW_HIDE;
   if not WizardSilent then OptionalProgress.Show;
   try
     if not WizardSilent then
     begin
-      OptionalProgress.SetText('Preparing FlareSolverr and matching ChromeDriver...',
+      OptionalProgress.SetText('Preparing Camoufox and FlareSolverr browsers...',
         'May download. Core installation is complete. Ctrl+C in the console cancels preparation.');
       OptionalProgress.Animate;
     end;
-    FlareSolverrResult := 'FlareSolverr is not ready. Core installation is preserved.';
+    FlareSolverrResult := 'Browser preparation is not ready. Core installation is preserved.';
     if Exec(ExpandConstant('{app}\runtime\python.exe'), Params,
       '', WindowMode, ewWaitUntilTerminated, ResultCode) then
       if LoadStringFromFile(ResultPath, Output) then
@@ -434,7 +445,7 @@ begin
   begin
     RestoreOfflineEnv;
     RunPostInstallHelper;
-    PrepareFlareSolverr;
+    PrepareBrowsers;
   end;
 end;
 
@@ -453,7 +464,7 @@ begin
         FlareSolverrResult := 'FlareSolverr: not ready. Core installation is preserved.';
       WizardForm.FinishedLabel.Caption := WizardForm.FinishedLabel.Caption + #13#10#13#10 +
         FlareSolverrResult + #13#10 +
-        'Results and retry command: ' + ExpandConstant('{app}\flaresolverr-setup-results.txt') + #13#10 +
+        'Results and retry command: ' + ExpandConstant('{app}\browser-setup-results.txt') + #13#10 +
         'Rerun this installer to retry. Missing Chrome: https://www.google.com/chrome/';
     end;
     WizardForm.FinishedLabel.Caption :=

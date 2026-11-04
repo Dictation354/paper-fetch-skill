@@ -19,9 +19,9 @@ def test_runtime_context_builds_clients_once_under_concurrent_first_access(
 ) -> None:
     calls = 0
     calls_lock = threading.Lock()
-    expected = {"provider": object()}
+    expected = {"pnas": object()}
 
-    def fake_build_clients(_transport, _env):
+    def fake_build_clients(_transport, _env, *, provider_names):
         nonlocal calls
         with calls_lock:
             calls += 1
@@ -38,7 +38,7 @@ def test_runtime_context_builds_clients_once_under_concurrent_first_access(
 
     def load_clients() -> None:
         barrier.wait()
-        results.append(context.get_clients())
+        results.append(context.get_clients()["pnas"])
 
     threads = [threading.Thread(target=load_clients) for _ in range(8)]
     for thread in threads:
@@ -48,7 +48,7 @@ def test_runtime_context_builds_clients_once_under_concurrent_first_access(
     context.close()
 
     assert calls == 1
-    assert results == [expected] * 8
+    assert results == [expected["pnas"]] * 8
 
 
 def test_build_clients_isolates_one_factory_failure(monkeypatch) -> None:

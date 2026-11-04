@@ -543,6 +543,25 @@ def generate_evidence(
         None,
     )
 
+    component_root = staging / "runtime/browser-components/flaresolverr"
+    browser_components = []
+    if component_root.is_dir():
+        component_manifest = json.loads(
+            (component_root / "component-manifest.json").read_text()
+        )
+        files = sorted(p for p in component_root.rglob("*") if p.is_file())
+        browser_components.append(
+            {
+                "name": "FlareSolverr",
+                "version": component_manifest["version"],
+                "path": component_root.relative_to(staging).as_posix(),
+                "content_sha256": _tree_digest(staging, files),
+                "source": component_manifest["source"],
+                "packages": component_manifest["packages"],
+                "file_count": len(files),
+            }
+        )
+
     dependency_manifest = {
         "schema_version": 1,
         "source": "actual-staged-target",
@@ -550,6 +569,7 @@ def generate_evidence(
         "offline_target": offline_manifest.get("target"),
         "python_packages": python_packages,
         "node_packages": node_packages,
+        "browser_components": browser_components,
         "native_components": native_components,
         "setup_components": setup_components,
         "browser": {
@@ -589,6 +609,35 @@ def generate_evidence(
         setup_components=setup_components,
         python_packages=python_packages,
     )
+    for component in browser_components:
+        sbom.setdefault("components", []).append(
+            {
+                "type": "application",
+                "bom-ref": "paper-fetch:browser:flaresolverr",
+                "name": component["name"],
+                "version": component["version"],
+                "hashes": [{"alg": "SHA-256", "content": component["content_sha256"]}],
+                "properties": _component_properties(
+                    component["path"], "browser-component"
+                ),
+            }
+        )
+        for package in component["packages"]:
+            if sys.platform not in package["platforms"]:
+                continue
+            sbom["components"].append(
+                {
+                    "type": "library",
+                    "bom-ref": f"paper-fetch:flaresolverr:{package['name']}",
+                    "name": package["name"],
+                    "version": package["version"],
+                    "purl": f"pkg:pypi/{package['name']}@{package['version']}",
+                    "properties": _component_properties(
+                        component["path"] + "/lib", "private-python"
+                    ),
+                }
+            )
+    offline_manifest["browser_components"] = browser_components
     _validate_sbom(sbom)
     sbom_path = output_dir / SBOM_NAME
     _write_json_atomic(sbom_path, sbom)

@@ -385,6 +385,10 @@ class PublisherProfileManager:
         ).hexdigest()
         _atomic_write_json(self.path / METADATA_FILENAME, self.metadata)
 
+    def navigate(self, page: Any, url: str, timeout_ms: int) -> Any:
+        self._assert_owner()
+        return page.goto(url, timeout=timeout_ms)
+
     def close(self) -> None:
         self._assert_owner()
         try:

@@ -499,87 +499,35 @@ class Setup:
             )
 
     def browser(self, *, selected: bool | None = None) -> None:
-        from .providers.browser_runtime.preparation import (
-            probe_camoufox_managed_runtime,
-            prepare_camoufox_managed_runtime,
-        )
-
-        probe = probe_camoufox_managed_runtime()
-        self.report(
-            "Camoufox cache",
-            probe.state,
-            str(probe.runtime_path or "User Camoufox shared cache"),
-        )
+        """Prepare and validate through the real backend with temporary state."""
         if selected is None:
-            selected = confirm(
-                "Prepare and locally test Camoufox? May download to user shared cache; normal user, no elevation. Existing valid version is reused. Skipping only affects this installer; runtime automatic preparation remains enabled."
-            )
+            selected = confirm("Prepare and locally test Camoufox in the user cache?")
         if not selected:
             self.report(
-                "Camoufox download",
-                "skipped",
-                "Runtime automatic preparation remains enabled",
+                "Camoufox", "skipped", "Runtime automatic preparation remains enabled"
             )
-            self.report("Camoufox local launch", "skipped")
-            self.report("Publisher access", "not tested")
             return
-        if hasattr(os, "geteuid") and os.geteuid() == 0:
-            self.report("Camoufox", "skipped", "Run optional setup as your normal user")
-            return
-        if not probe.valid:
-            self.report(
-                "Camoufox download",
-                "preparing",
-                "Existing channel, pin and cache rules",
-            )
-            try:
-                probe = prepare_camoufox_managed_runtime()
-            except Exception:
-                self.report(
-                    "Camoufox download",
-                    "failed",
-                    "Check network/channel/pin, then retry optional setup",
-                )
-                self.report("Camoufox local launch", "skipped")
-                self.report("Publisher access", "not tested")
-                return
-        self.report(
-            "Camoufox download",
-            "ready",
-            f"Reusing {probe.version} at {probe.runtime_path}",
-        )
-        # Playwright launches the prepared absolute executable directly. This
-        # local smoke needs neither fingerprint/addon downloads nor provider state.
-        try:
-            from playwright.sync_api import sync_playwright
+        from .providers.browser_runtime.camoufox_manager import CamoufoxBrowserManager
+        from .config import BROWSER_BINARY_PATH_ENV_VAR, browser_env_value
 
-            with sync_playwright() as playwright:
-                browser = playwright.firefox.launch(
-                    executable_path=str(probe.executable_path),
-                    headless=True,
-                    timeout=60000,
-                )
-                try:
-                    context = browser.new_context()
-                    context.route("**/*", lambda route: route.abort())
-                    page = context.new_page()
-                    page.goto("about:blank", timeout=10000)
-                    if page.evaluate("1 + 1") != 2:
-                        raise RuntimeError("Local page evaluation failed")
-                finally:
-                    browser.close()
+        manager = CamoufoxBrowserManager(
+            binary_path=browser_env_value(self.env, BROWSER_BINARY_PATH_ENV_VAR),
+            headless=True,
+        )
+        try:
+            context = manager.new_context()
+            context.route("**/*", lambda route: route.abort())
+            page = context.new_page()
+            page.goto("about:blank", timeout=10000)
+            if page.evaluate("1 + 1") != 2:
+                raise RuntimeError("Local page evaluation failed")
             self.report(
-                "Camoufox local launch",
+                "Camoufox",
                 "ready",
-                "about:blank only; no provider login/state",
+                "Fingerprint model and real backend; local script verified",
             )
-        except Exception:
-            self.report(
-                "Camoufox local launch",
-                "failed",
-                "Check system libraries/platform/quarantine; retry optional setup",
-            )
-        self.report("Publisher access", "not tested")
+        finally:
+            manager.close()
 
     def terminal(self) -> None:
         print(
@@ -631,6 +579,9 @@ def main(argv=None) -> int:
         action="store_true",
         help="Prepare FlareSolverr automatically; system packages still require consent",
     )
+    parser.add_argument(
+        "--prepare-browsers", choices=("all", "camoufox", "flaresolverr")
+    )
     parser.add_argument("--initialize-request", type=Path)
     parser.add_argument("--request", type=Path)
     parser.add_argument("--result", type=Path)
@@ -640,7 +591,9 @@ def main(argv=None) -> int:
         args.initialize_request.mkdir(exist_ok=False)
         protect(args.initialize_request)
         return 0
-    if not args.prepare_flaresolverr and (
+    if args.prepare_flaresolverr:
+        args.prepare_browsers = "flaresolverr"
+    if not args.prepare_browsers and (
         args.non_interactive
         or (
             not args.request
@@ -667,9 +620,9 @@ def main(argv=None) -> int:
             atomic_write(args.result, message)
         return 0
     try:
-        if args.prepare_flaresolverr:
+        if args.prepare_browsers:
             from .config import resolve_runtime_env
-            from .offline_flaresolverr import prepare
+            from .offline_browsers import prepare
 
             setup.env = resolve_runtime_env(env_file=setup.env_file).values
             interactive = (
@@ -677,7 +630,10 @@ def main(argv=None) -> int:
             )
             with tool_environment(setup.env):
                 setup.step(
-                    "FlareSolverr", lambda: prepare(setup, interactive=interactive)
+                    "Browsers",
+                    lambda: prepare(
+                        setup, selection=args.prepare_browsers, interactive=interactive
+                    ),
                 )
         elif args.cleanup_tools:
             from .offline_windows_tools import cleanup_tools
@@ -716,7 +672,7 @@ def main(argv=None) -> int:
     finally:
         if args.request:
             args.request.unlink(missing_ok=True)
-    if args.prepare_flaresolverr:
+    if args.prepare_browsers:
         installed_python = setup.root / (
             "runtime/python.exe" if os.name == "nt" else "runtime/paper-fetch-python"
         )
@@ -728,13 +684,14 @@ def main(argv=None) -> int:
             str(setup.root),
             "--env-file",
             str(setup.env_file),
-            "--prepare-flaresolverr",
+            "--prepare-browsers",
+            args.prepare_browsers,
         ]
         retry = (
             subprocess.list2cmdline(command) if os.name == "nt" else shlex.join(command)
         )
         summary = (
-            "Core installation preserved. FlareSolverr preparation results:\n"
+            "Core installation preserved. Browser preparation results:\n"
             + "\n".join(setup.results)
             + "\nRetry: "
             + retry

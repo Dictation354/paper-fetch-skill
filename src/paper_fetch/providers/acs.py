@@ -11,7 +11,7 @@ from ..extraction.html.provider_rules import (
     ProviderFrontMatterRules,
     ProviderHtmlRules,
 )
-from ..provider_catalog import (
+from ..provider_contracts import (
     ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
     ProviderRouteSpec,
     ProviderSpec,

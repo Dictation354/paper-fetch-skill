@@ -222,7 +222,7 @@ def test_independent_mode_runs_noninteractively_and_respects_config(
     assert not flare.headless_mode(calls[0][0])
     assert (
         "Retry:" in result.read_text()
-        and "--prepare-flaresolverr" in result.read_text()
+        and "--prepare-browsers flaresolverr" in result.read_text()
     )
     assert "SECRET" not in result.read_text()
     assert str(runtime) in result.read_text()

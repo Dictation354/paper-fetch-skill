@@ -232,6 +232,10 @@ def test_resolve_rejects_target_mismatch_before_running_pip(tmp_path: Path) -> N
 def test_resolve_downloads_full_runtime_extra(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    from scripts import build_browser_components
+
+    monkeypatch.setattr(build_browser_components, "build", lambda *_a, **_kw: None)
+
     commands: list[list[str]] = []
     _project_name, project_version = module._project_metadata(REPO_ROOT)
     project_wheel = f"paper_fetch_skill-{project_version}-py3-none-any.whl"
@@ -239,6 +243,8 @@ def test_resolve_downloads_full_runtime_extra(
     def fake_run(command: list[str], *, cwd: Path | None = None) -> None:
         del cwd
         commands.append(command)
+        if "install" in command:
+            return
         if "wheel" in command and "--no-deps" in command:
             destination = Path(command[command.index("--wheel-dir") + 1])
             destination.mkdir(parents=True, exist_ok=True)

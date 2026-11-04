@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
+import threading
 
 from ..config import build_runtime_env
 from ..failure import FailureDiagnostics
@@ -104,6 +105,33 @@ def build_clients(
                 error=exc,
             )
     return clients
+
+
+class LazyProviderClients(Mapping[str, ProviderClient]):
+    """Request-local, thread-safe client creation with isolated factory failures."""
+
+    def __init__(self, transport: HttpTransport, env: Mapping[str, str]):
+        self._transport = transport
+        self._env = env
+        self._names = tuple(bundle.catalog.name for bundle in PROVIDER_BUNDLES)
+        self._clients: dict[str, ProviderClient] = {}
+        self._lock = threading.RLock()
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._names)
+
+    def __len__(self) -> int:
+        return len(self._names)
+
+    def __getitem__(self, name: str) -> ProviderClient:
+        if name not in self._names:
+            raise KeyError(name)
+        with self._lock:
+            if name not in self._clients:
+                self._clients.update(
+                    build_clients(self._transport, self._env, provider_names=(name,))
+                )
+            return self._clients[name]
 
 
 __all__ = ["FailedProviderClient", "build_clients"]

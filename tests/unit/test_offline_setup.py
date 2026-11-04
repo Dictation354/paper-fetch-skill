@@ -117,7 +117,7 @@ def test_all_skipped_never_installs_or_prepares(setup, monkeypatch):
     install.assert_not_called()
     prepare.assert_not_called()
     assert not setup.env_file.exists()
-    assert "Publisher access: not tested" in setup.summary()
+    assert "Camoufox: skipped" in setup.summary()
 
 
 @pytest.mark.parametrize(
@@ -312,54 +312,34 @@ def test_macos_brew_uses_absolute_path_without_sudo(setup, monkeypatch):
     )
 
 
-def test_browser_reuses_cache_and_opens_only_blank_page(setup, monkeypatch):
-    import playwright.sync_api
+def test_browser_uses_real_backend_interface_and_only_blank_page(setup, monkeypatch):
+    from paper_fetch.providers.browser_runtime import camoufox_manager
 
-    monkeypatch.setattr(wizard.os, "geteuid", lambda: 1000, raising=False)
-    probe = SimpleNamespace(
-        state="ready",
-        runtime_path=Path("/cache"),
-        valid=True,
-        version="pinned",
-        executable_path=Path("/cache/camoufox"),
-    )
-    monkeypatch.setattr(preparation, "probe_camoufox_managed_runtime", lambda: probe)
-    prepare = Mock(side_effect=AssertionError("no update on valid cache"))
-    monkeypatch.setattr(preparation, "prepare_camoufox_managed_runtime", prepare)
-    browser = Mock()
-    page = browser.new_context.return_value.new_page.return_value
+    manager = Mock()
+    page = manager.new_context.return_value.new_page.return_value
     page.evaluate.return_value = 2
-    api = Mock()
-    api.firefox.launch.return_value = browser
-    from contextlib import nullcontext
-
-    monkeypatch.setattr(
-        playwright.sync_api, "sync_playwright", lambda: nullcontext(api)
-    )
+    factory = Mock(return_value=manager)
+    monkeypatch.setattr(camoufox_manager, "CamoufoxBrowserManager", factory)
     setup.browser(selected=True)
-    prepare.assert_not_called()
+    factory.assert_called_once()
     page.goto.assert_called_once_with("about:blank", timeout=10000)
-    browser.new_context.return_value.storage_state.assert_not_called()
-    browser.close.assert_called_once()
-    assert "Camoufox local launch: ready" in setup.summary()
-    assert "Publisher access: not tested" in setup.summary()
+    manager.new_context.return_value.storage_state.assert_not_called()
+    manager.close.assert_called_once()
+    assert "Camoufox: ready" in setup.summary()
 
 
-def test_browser_download_failure_does_not_attempt_launch(setup, monkeypatch):
-    monkeypatch.setattr(wizard.os, "geteuid", lambda: 1000, raising=False)
+def test_browser_download_failure_preserves_core(setup, monkeypatch):
+    from paper_fetch.providers.browser_runtime import camoufox_manager
+
+    manager = Mock()
+    manager.new_context.side_effect = OSError("offline")
     monkeypatch.setattr(
-        preparation,
-        "probe_camoufox_managed_runtime",
-        lambda: SimpleNamespace(state="missing", runtime_path=None, valid=False),
+        camoufox_manager, "CamoufoxBrowserManager", lambda **kw: manager
     )
-    monkeypatch.setattr(
-        preparation,
-        "prepare_camoufox_managed_runtime",
-        Mock(side_effect=OSError("offline")),
-    )
-    setup.browser(selected=True)
-    assert "Camoufox download: failed" in setup.summary()
-    assert "Camoufox local launch: skipped" in setup.summary()
+    setup.step("Camoufox", lambda: setup.browser(selected=True))
+    manager.close.assert_called_once()
+    assert "Camoufox: failed" in setup.summary()
+    assert "core installation is preserved" in setup.summary()
 
 
 @pytest.mark.parametrize(

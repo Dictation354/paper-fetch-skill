@@ -38,6 +38,7 @@ _API_EXPORTS = {
     "fetch_html_with_browser",
     "load_runtime_config",
     "probe_runtime_status",
+    "prepare_runtime",
     "storage_state_path",
     "warm_browser_context",
 }
@@ -69,6 +70,7 @@ __all__ = [
     "normalize_browser_cookie_for_playwright",
     "normalize_browser_cookies_for_playwright",
     "parse_optional_int",
+    "prepare_runtime",
     "probe_runtime_status",
     "storage_state_path",
     "warm_browser_context",

@@ -40,7 +40,17 @@ def test_pnas_uses_completed_document_and_waits_for_each_candidate(
     monkeypatch.setattr(utils, "get_path", lambda file: str(version_file.parent / file))
     # Keep all network interception in this offline context. Sidebar blocking has
     # its own contract; a page route's continue_ would bypass context fixtures.
-    monkeypatch.setattr(pnas, "_is_sidebar_metrics_url", None)
+    from dataclasses import replace
+    from paper_fetch import provider_catalog
+
+    bundles = dict(provider_catalog.PROVIDER_BUNDLE_MAP)
+    bundles["pnas"] = replace(
+        pnas.PROVIDER_BUNDLE,
+        browser_page_policy=replace(
+            pnas.PROVIDER_BUNDLE.browser_page_policy, empty_request=None
+        ),
+    )
+    monkeypatch.setattr(provider_catalog, "PROVIDER_BUNDLE_MAP", bundles)
     doi = "10.1073/example"
     url = f"https://www.pnas.org/doi/full/{doi}"
     alternate = f"https://www.pnas.org/doi/{doi}"

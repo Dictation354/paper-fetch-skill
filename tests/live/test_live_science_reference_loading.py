@@ -140,7 +140,10 @@ def test_science_complete_references_and_body_images(
         record_property("body_image_count", len(images))
         record_property("acceptance", acceptance.to_json())
         assert len(article.references) == 71
-        assert len(images) == 5
+        # The publisher also exposes a graphical abstract alongside figures 1–5.
+        assert {f"science.ady3136-f{i}.jpg" for i in range(1, 6)} <= {
+            Path(asset.path).name for asset in images if asset.path
+        }
         assert all(
             asset.path and Path(asset.path).stat().st_size > 0 for asset in images
         )

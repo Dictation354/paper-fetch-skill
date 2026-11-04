@@ -101,6 +101,21 @@ class RuntimeCommitGuard:
 
 
 @dataclass
+class SharedRuntimeResources:
+    """Connection resources borrowed by child requests."""
+
+    transport: HttpTransport
+
+
+@dataclass
+class BrowserSessions:
+    """Thread-affine sessions owned by one request, never shared with children."""
+
+    lock: threading.RLock = field(default_factory=threading.RLock)
+    managers: dict[tuple[int, bool, str], Any] = field(default_factory=dict)
+
+
+@dataclass
 class RuntimeContext:
     """Holds runtime dependencies shared across service, workflow, and adapters."""
 
@@ -136,14 +151,19 @@ class RuntimeContext:
     _clients_lock: threading.RLock = field(
         default_factory=threading.RLock, init=False, repr=False
     )
-    _browser_context_manager_lock: threading.RLock = field(
-        default_factory=threading.RLock, init=False, repr=False
+    _browser_sessions: BrowserSessions = field(
+        default_factory=BrowserSessions, init=False, repr=False
     )
-    _camoufox_browser_managers: dict[tuple[int, bool, str], Any] = field(
-        default_factory=dict,
-        init=False,
-        repr=False,
-    )
+    _resources: SharedRuntimeResources = field(init=False, repr=False)
+
+    @property
+    def _browser_context_manager_lock(self) -> threading.RLock:
+        return self._browser_sessions.lock
+
+    @property
+    def _camoufox_browser_managers(self) -> dict[tuple[int, bool, str], Any]:
+        return self._browser_sessions.managers
+
     _owns_transport: bool = field(default=False, init=False, repr=False)
     _closed: bool = field(default=False, init=False, repr=False)
     _commit_guard: RuntimeCommitGuard = field(init=False, repr=False)
@@ -152,11 +172,12 @@ class RuntimeContext:
     )
 
     @contextlib.contextmanager
-    def fetch_browser_preparation(self, *, prepare: bool = True) -> Iterator[None]:
+    def fetch_browser_preparation(self, *, prepare: bool = False) -> Iterator[None]:
         """Prepare once per fetch transaction, including nested service calls."""
         from .providers.browser_runtime.preparation import (
             FetchBrowserPreparation,
             fetch_browser_preparation,
+            preparation_cancel_check,
         )
 
         prepared = (
@@ -165,11 +186,13 @@ class RuntimeContext:
             or FetchBrowserPreparation()
         )
         token = fetch_browser_preparation.set(prepared)
+        cancellation_token = preparation_cancel_check.set(self.raise_if_cancelled)
         try:
             if prepare:
                 self.prepare_fetch_browser()
             yield
         finally:
+            preparation_cancel_check.reset(cancellation_token)
             fetch_browser_preparation.reset(token)
 
     def prepare_fetch_browser(self) -> None:
@@ -204,14 +227,16 @@ class RuntimeContext:
                 artifact_mode=self.artifact_mode,
             )
 
+        self._resources = SharedRuntimeResources(self.transport)
+
     def get_clients(self) -> Mapping[str, object]:
         with self._clients_lock:
             if self.clients is None:
-                from .providers.registry import build_clients
+                from .providers.registry import LazyProviderClients
 
                 assert self.transport is not None
                 assert self.env is not None
-                self.clients = build_clients(self.transport, self.env)
+                self.clients = LazyProviderClients(self.transport, self.env)
             return self.clients
 
     def new_request_context(
@@ -255,6 +280,7 @@ class RuntimeContext:
             asset_profile=asset_profile,
             cancel_check=resolved_cancel_check,
         )
+        child._resources = self._resources
         child._inherited_fetch_browser_preparation = (
             fetch_browser_preparation.get() or self._inherited_fetch_browser_preparation
         )
@@ -373,7 +399,6 @@ class RuntimeContext:
         """Borrow the publisher's thread-affine persistent context."""
 
         from .providers.browser_runtime.profile import (
-            PublisherProfileManager,
             profile_path,
         )
 
@@ -400,20 +425,18 @@ class RuntimeContext:
                 # Release the prior publisher before waiting for another directory.
                 # This prevents two requests from holding opposite profile leases.
                 self.close_camoufox_for_current_thread()
-                if config.backend == "flaresolverr":
-                    from .providers.browser_runtime.flaresolverr_manager import (
-                        FlareSolverrManager,
-                    )
+                from .providers.browser_runtime.api import _backend
 
-                    manager = FlareSolverrManager(config, runtime_context=self)
-                else:
-                    manager = PublisherProfileManager(config, runtime_context=self)
+                manager = _backend(config.backend).create_manager(
+                    config, runtime_context=self
+                )
                 self._camoufox_browser_managers[key] = manager
         try:
             return manager.new_context()
         except BaseException:
             with self._browser_context_manager_lock:
                 self._camoufox_browser_managers.pop(key, None)
+            manager.close()
             raise
 
     def note_browser_json_export(self, path: Path) -> None:
@@ -435,15 +458,7 @@ class RuntimeContext:
     def close_browser(self) -> None:
         """Close Camoufox managers owned by this runtime context."""
 
-        with self._browser_context_manager_lock:
-            camoufox_managers = list(self._camoufox_browser_managers.values())
-            self._camoufox_browser_managers.clear()
-        seen: set[int] = set()
-        for camoufox_manager in camoufox_managers:
-            if id(camoufox_manager) in seen:
-                continue
-            seen.add(id(camoufox_manager))
-            camoufox_manager.close()
+        self.close_camoufox_for_current_thread()
 
     def close_camoufox_for_current_thread(self) -> None:
         """Close Camoufox managers while still on their owning worker thread."""
@@ -478,6 +493,13 @@ class RuntimeContext:
     def close(self) -> None:
         if self._closed:
             return
+        # Foreign workers retain their session handles until their finally block.
+        # Cancelling/fencing is thread-safe; Playwright close is owner-thread only.
+        self.close_browser()
+        with self._browser_context_manager_lock:
+            if self._camoufox_browser_managers:
+                self.fence_commits()
+                return
         self._closed = True
         session_values = list(self.session_cache.values())
         self.session_cache.clear()

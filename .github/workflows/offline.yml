@@ -102,6 +102,7 @@ jobs:
             export PIP_NO_INDEX=1
             export PIP_DISABLE_PIP_VERSION_CHECK=1
             export PIP_FIND_LINKS="$snapshot_root/runtime-wheels $snapshot_root/support-wheels"
+            export PAPER_FETCH_DEPENDENCY_SNAPSHOT="$snapshot_root"
           fi
           scripts/build-offline-package.sh --output-dir dist
       - name: Verify offline package
@@ -189,6 +190,7 @@ jobs:
             $env:PIP_NO_INDEX = "1"
             $env:PIP_DISABLE_PIP_VERSION_CHECK = "1"
             $env:PIP_FIND_LINKS = "$(Join-Path $snapshotRoot 'runtime-wheels') $(Join-Path $snapshotRoot 'support-wheels')"
+            $env:PAPER_FETCH_DEPENDENCY_SNAPSHOT = $snapshotRoot
           }
           scripts/build-offline-package-windows.ps1 `
             -OutputDir dist `

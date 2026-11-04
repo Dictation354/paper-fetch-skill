@@ -369,7 +369,7 @@ def probe_has_fulltext(
     assert runtime.transport is not None
     active_env = runtime.env
     active_transport = runtime.transport
-    client_registry = dict(runtime.get_clients())
+    client_registry = runtime.get_clients()
     resolver = resolve_paper_fn or resolve_paper
     resolved = resolve_query_with_session_cache(
         query,

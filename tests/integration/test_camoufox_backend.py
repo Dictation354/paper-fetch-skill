@@ -9,6 +9,7 @@ from paper_fetch.providers.browser_runtime import preparation
 @pytest.fixture
 def managed_camoufox(monkeypatch, tmp_path):
     """Exercise upstream version selection/install against an isolated fake archive."""
+    monkeypatch.setattr(preparation, "prepare_camoufox_fingerprint_model", lambda: None)
     import zipfile
     from camoufox import multiversion, pkgman
 

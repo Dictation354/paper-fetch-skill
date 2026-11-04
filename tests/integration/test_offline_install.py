@@ -89,7 +89,7 @@ def _fake_python_script(
 
     if [[ "${{1:-}}" == "-m" && "${{2:-}}" == "paper_fetch.offline_setup" ]]; then
       printf 'POST_INSTALL_SETUP %s\\n' "$*"
-      if [[ "$*" == *'--prepare-flaresolverr'* ]]; then
+      if [[ "$*" == *'--prepare-browsers all'* ]]; then
         exit "${{PAPER_FETCH_TEST_PREPARATION_EXIT:-0}}"
       fi
       exit 0
@@ -450,7 +450,7 @@ class OfflineInstallTests(unittest.TestCase):
                 },
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("--prepare-flaresolverr", result.stdout)
+            self.assertIn("--prepare-browsers all", result.stdout)
             self.assertIn("--non-interactive", result.stdout)
             self.assertEqual(marker.read_text(), "keep")
             self.assertTrue((install_root / "offline.env").exists())
@@ -467,7 +467,7 @@ class OfflineInstallTests(unittest.TestCase):
                 extra_env={"PAPER_FETCH_TEST_PREPARATION_EXIT": "130"},
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("FlareSolverr is not ready", result.stderr)
+            self.assertIn("Browser preparation is not ready", result.stderr)
             self.assertIn("Offline installation complete", result.stdout)
             self.assertTrue((bundle / "offline.env").exists())
             self.assertTrue((home / ".agents/skills/paper-fetch-skill").is_dir())
@@ -503,7 +503,7 @@ class OfflineInstallTests(unittest.TestCase):
                 f"{fake_bin / 'python3'}\n",
             )
             self.assertIn(
-                "Default browser backend: PNAS FlareSolverr + system Chrome; other publishers Camoufox (headless: true)",
+                "Default browser backend: PNAS/Elsevier FlareSolverr + system Chrome; other browser routes Camoufox (headless: true)",
                 result.stdout,
             )
 
@@ -1050,7 +1050,7 @@ exec /bin/mv "$@"
             self.assertIn(
                 "Default browser backend: Camoufox (headless: false)", result.stdout
             )
-            self.assertNotIn("--prepare-flaresolverr", result.stdout)
+            self.assertIn("--prepare-browsers all", result.stdout)
 
     def test_macos_host_below_manifest_minimum_is_rejected_before_writes(
         self,

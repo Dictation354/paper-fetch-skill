@@ -94,6 +94,21 @@ def test_waits_for_delayed_bibliography(browser_boundary):
     bibliography.scroll_into_view_if_needed.assert_not_called()
 
 
+def test_slow_reference_batches_use_the_remaining_request_budget(browser_boundary):
+    page, clock, _, _, _ = browser_boundary
+    page.snapshot = lambda: {
+        "available": ["R1", "R2", "R3"][: 1 + int(round(clock.now, 3) / 6)],
+        "cited": ["R1", "R2", "R3"],
+    }
+    result = _science_html.prepare_browser_page(page, timeout_ms=30000)
+    assert result["references_before"] == 1
+    assert result["extractable_references_after"] == 3
+    assert result["missing_reference_targets"] == []
+    assert result["preparation_budget_ms"] == 30000
+    assert not result["timed_out"]
+    assert clock.now == pytest.approx(12)
+
+
 def test_click_timeout_recovers_within_the_same_budget(browser_boundary):
     from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
@@ -143,8 +158,8 @@ def test_deadline_reports_actual_remaining_targets(browser_boundary, budget):
         ["R2", "R3"] if not budget else ["R3"]
     )
     assert result["references_after"] == (2 if budget else 1)
-    assert clock.now <= min(budget, 10000) / 1000
-    assert clock.now >= max(0, min(budget, 10000) / 1000 - 0.001)
+    assert result["preparation_budget_ms"] == budget
+    assert clock.now == pytest.approx(budget / 1000, abs=0.001)
 
 
 def test_rechecks_coverage_when_click_exhausts_budget(browser_boundary):

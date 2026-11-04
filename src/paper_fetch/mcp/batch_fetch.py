@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from ..workflow.batch_session import BatchExecutionSession
+
 import asyncio
-import copy
 import threading
 from collections import Counter
 from collections.abc import Mapping, Sequence
-from contextlib import ExitStack, suppress
-from dataclasses import asdict, dataclass, replace
+from contextlib import ExitStack
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
@@ -38,9 +39,7 @@ from ..models import (
 from ..reason_codes import RATE_LIMITED
 from ..runtime import RuntimeContext
 from ..workflow.batch_routing import (
-    deduplicate_batch_items,
     expected_doi_from_query,
-    fanout_batch_items,
     initial_provider_lane,
     provider_lane_limit,
     resolve_batch_item_routing,
@@ -57,7 +56,7 @@ from ..workflow.batch_runner import (
 from ..workflow.types import effective_asset_profile
 from ._deps import MCPDeps, default_mcp_deps
 from .acceptance_payloads import compact_acceptance_payload
-from .batch import _mcp_batch_failure, report_progress, run_blocking_call
+from .batch import _mcp_batch_failure, report_progress
 from .cache_payloads import (
     _MCP_DEFAULT_DOWNLOAD_DIR,
     _resolve_download_dir,
@@ -146,18 +145,18 @@ async def _resolve_batch_item_lanes(
 ) -> list[BatchFetchItem]:
     """Resolve generic inputs before scheduling and retain item-local cache state."""
 
-    semaphore = asyncio.Semaphore(max(1, concurrency))
-
-    async def resolve_one(item: BatchFetchItem) -> BatchFetchItem:
-        async with semaphore:
-            return await asyncio.to_thread(
-                _resolve_batch_item_lane,
-                item,
-                context=contexts[item.index],
-                deps=deps,
-            )
-
-    return list(await asyncio.gather(*(resolve_one(item) for item in items)))
+    resolved = await asyncio.to_thread(
+        BatchExecutionSession.resolve_all,
+        list(items),
+        lambda item: _resolve_batch_item_lane(
+            item, context=contexts[item.index], deps=deps
+        ),
+        max_workers=max(1, concurrency),
+    )
+    return [
+        result.value if result.value is not None else result.item
+        for result in resolved.results
+    ]
 
 
 def _download_argument(request: BatchFetchRequest) -> Path | object:
@@ -678,21 +677,13 @@ async def _execute_batch_fetch(
         ) as runtime_context,
         runtime_context.fetch_browser_preparation(prepare=False),
     ):
-        await run_blocking_call(
-            runtime_context.prepare_fetch_browser,
-            cancel_event=cancelled,
-            cancel_fence=runtime_context.fence_commits,
+        session = BatchExecutionSession(
+            runtime_context, logical_items, asset_profile=request.strategy.asset_profile
         )
-        item_contexts = {
-            item.index: runtime_context.new_request_context(
-                asset_profile=request.strategy.asset_profile,
-            )
-            for item in logical_items
-        }
+        item_contexts = session.contexts
 
         def close_active_contexts() -> None:
-            for item_context in item_contexts.values():
-                item_context.close()
+            session.close()
 
         try:
             items = list(logical_items)
@@ -721,7 +712,7 @@ async def _execute_batch_fetch(
                     deps=deps,
                 )
             logical_items = list(items)
-            items, duplicates_by_owner = deduplicate_batch_items(logical_items)
+            items, duplicates_by_owner = session.group(logical_items)
 
             def run_item(item: BatchFetchItem) -> BatchFetchOutcome:
                 started_at = manifest_deps.clock()
@@ -770,21 +761,8 @@ async def _execute_batch_fetch(
                 event: BatchCompletionEvent[BatchFetchItem, BatchFetchOutcome],
             ) -> None:
                 nonlocal logical_terminal
-                fanout_items = fanout_batch_items(
-                    event.result.item,
-                    duplicates_by_owner,
-                )
-                for position, fanout_item in enumerate(fanout_items):
-                    outcome = event.result.value
-                    if position and outcome is not None:
-                        with suppress(Exception):
-                            outcome = copy.deepcopy(outcome)
-                    fanout_result = replace(
-                        event.result,
-                        item=fanout_item,
-                        lane_key=fanout_item.lane_key,
-                        value=outcome,
-                    )
+                for fanout_result in session.fanout(event.result):
+                    outcome = fanout_result.value
                     record = _record_from_batch_result(
                         request,
                         fanout_result,

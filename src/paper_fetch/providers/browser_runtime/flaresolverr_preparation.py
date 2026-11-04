@@ -152,6 +152,18 @@ def _publish(staged: Path, target: Path, identity: str):
         shutil.rmtree(backup)
 
 
+def bundled_component_root() -> Path | None:
+    """Recognize installed offline layout even when its component is missing."""
+    module = Path(__file__).resolve()
+    for parent in module.parents:
+        if parent.name == "runtime" and module.is_relative_to(parent):
+            if (parent / "site-packages").is_dir() or (
+                parent / "Lib" / "site-packages"
+            ).is_dir():
+                return parent / "browser-components" / "flaresolverr"
+    return None
+
+
 def runtime_location(cache: Path) -> tuple[Path, dict[str, Any], str]:
     raw = MANIFEST_PATH.read_bytes()
     manifest = json.loads(raw)
@@ -159,11 +171,18 @@ def runtime_location(cache: Path) -> tuple[Path, dict[str, Any], str]:
         raw
         + f"{sys.platform}-cp{sys.version_info.major}{sys.version_info.minor}".encode()
     ).hexdigest()
-    return cache / "source" / identity, manifest, identity
+    return bundled_component_root() or cache / "source" / identity, manifest, identity
 
 
 def prepare_source(cache: Path, budget: PreparationBudget) -> Path:
     target, manifest, identity = runtime_location(cache)
+    if bundled_component_root() is not None:
+        if not valid_cache(target, identity):
+            raise BrowserRuntimeFailure(
+                "flaresolverr_installation_error",
+                "Bundled FlareSolverr is missing or damaged; reinstall the offline package.",
+            )
+        return target
     with cache_lock(target.with_suffix(".lock"), budget):
         if valid_cache(target, identity):
             return target
@@ -204,21 +223,29 @@ def prepare_source(cache: Path, budget: PreparationBudget) -> Path:
                     with tarfile.open(archive) as source:
                         for member in source.getmembers():
                             budget.check()
-                            if member.name.startswith(prefix + "/") and member.isfile():
+                            if not member.isfile():
+                                continue
+                            if member.name.startswith(prefix + "/"):
                                 name = "func_timeout/" + member.name[len(prefix) + 1 :]
-                                dest = _destination(libraries, name)
-                                dest.parent.mkdir(parents=True, exist_ok=True)
-                                handle = source.extractfile(member)
-                                if handle is None:
-                                    raise ValueError(
-                                        f"Archive member has no file: {member.name}"
-                                    )
-                                with (
-                                    handle as src,
-                                    dest.open("wb") as dst,
-                                ):
-                                    shutil.copyfileobj(src, dst)
+                            elif (
+                                Path(member.name)
+                                .name.upper()
+                                .startswith(("LICENSE", "COPYING", "NOTICE"))
+                            ):
+                                name = f"licenses/{package['name']}/{Path(member.name).name}"
+                            else:
+                                continue
+                            dest = _destination(libraries, name)
+                            dest.parent.mkdir(parents=True, exist_ok=True)
+                            handle = source.extractfile(member)
+                            if handle is None:
+                                raise ValueError(
+                                    f"Archive member has no file: {member.name}"
+                                )
+                            with handle as src, dest.open("wb") as dst:
+                                shutil.copyfileobj(src, dst)
                 archive.unlink()
+            (stage / "component-manifest.json").write_bytes(MANIFEST_PATH.read_bytes())
             budget.check()
             _publish(stage, target, identity)
             return target
@@ -233,7 +260,12 @@ def prepare_driver(
     target = cache / "drivers" / sys.platform / chrome_version
     executable = "chromedriver.exe" if sys.platform == "win32" else "chromedriver"
     with cache_lock(target.with_suffix(".lock"), budget):
-        if valid_cache(target, chrome_version):
+        from .preparation import _recent_update_check, _write_update_check
+
+        check_path = target.parent / (chrome_version + ".check.json")
+        identity = {"chrome_version": chrome_version, "platform": sys.platform}
+        usable = valid_cache(target, chrome_version)
+        if usable and _recent_update_check(check_path, identity):
             return target / executable, (target / "version").read_text()
         stage = Path(tempfile.mkdtemp(prefix=".driver-", dir=target.parent))
         try:
@@ -246,6 +278,10 @@ def prepare_driver(
                     "chromedriver_unavailable",
                     f"No official ChromeDriver for Chrome build {build}.",
                 )
+            if usable and (target / "version").read_text() == entry["version"]:
+                budget.check()
+                _write_update_check(cache, check_path, identity)
+                return target / executable, entry["version"]
             platform_key = "win64" if sys.platform == "win32" else "linux64"
             asset = next(
                 a
@@ -273,7 +309,65 @@ def prepare_driver(
             )
             budget.check()
             _publish(stage, target, chrome_version)
+            _write_update_check(cache, check_path, identity)
             return target / executable, entry["version"]
+        except BaseException as exc:
+            from ...http import RequestCancelledError
+
+            cancelled = isinstance(exc, (KeyboardInterrupt, RequestCancelledError))
+            _write_update_check(
+                cache,
+                check_path,
+                identity,
+                result="cancelled" if cancelled else "failed",
+            )
+            if usable and isinstance(exc, Exception) and not cancelled:
+                print(
+                    f"ChromeDriver update failed; using compatible local driver: {exc}",
+                    file=sys.stderr,
+                )
+                return target / executable, (target / "version").read_text()
+            raise
         finally:
             if stage.exists():
                 shutil.rmtree(stage)
+
+
+class PreparedFlareSolverr:
+    def __init__(self, runtime: Path, driver: Path, version: str, *, success: bool):
+        self.runtime, self.driver, self.version = runtime, driver, version
+        self.preparation_succeeded = success
+
+
+def prepare_components(
+    cache: Path, chrome_version: str, budget: PreparationBudget
+) -> PreparedFlareSolverr:
+    """Share concurrent work without retaining failed update attempts in a batch."""
+    from .preparation import fetch_browser_preparation, _recent_update_check
+
+    def prepare() -> PreparedFlareSolverr:
+        runtime = prepare_source(cache, budget)
+        driver, version = prepare_driver(cache, chrome_version, budget)
+        check = cache / "drivers" / sys.platform / (chrome_version + ".check.json")
+        return PreparedFlareSolverr(
+            runtime,
+            driver,
+            version,
+            success=_recent_update_check(
+                check, {"chrome_version": chrome_version, "platform": sys.platform}
+            ),
+        )
+
+    scope = fetch_browser_preparation.get()
+    if scope is None:
+        return prepare()
+
+    def valid(result: PreparedFlareSolverr) -> bool:
+        _, _, identity = runtime_location(cache)
+        return valid_cache(result.runtime, identity) and valid_cache(
+            result.driver.parent, chrome_version
+        )
+
+    return scope.run(
+        f"flaresolverr:{cache}:{chrome_version}", prepare, budget.check, valid=valid
+    )

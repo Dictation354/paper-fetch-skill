@@ -618,8 +618,9 @@ def test_batch_rate_limit_streams_one_terminal_record_per_input_and_aborts_lane(
     )
     with (
         mock.patch.object(cli, "run_single_fetch", side_effect=run_single),
-        mock.patch.object(
-            cli, "build_http_transport_for_context", return_value=object()
+        mock.patch(
+            "paper_fetch.runtime.build_http_transport_for_context",
+            return_value=object(),
         ),
     ):
         exit_code = cli.run_batch_fetch(
@@ -675,8 +676,9 @@ def test_batch_rate_limit_keeps_an_unrelated_provider_lane_running(
 
     with (
         mock.patch.object(cli, "run_single_fetch", side_effect=run_single),
-        mock.patch.object(
-            cli, "build_http_transport_for_context", return_value=object()
+        mock.patch(
+            "paper_fetch.runtime.build_http_transport_for_context",
+            return_value=object(),
         ),
     ):
         exit_code = cli.run_batch_fetch(
@@ -726,8 +728,9 @@ def test_batch_generic_exception_is_failed_and_does_not_drop_later_input(
 
     with (
         mock.patch.object(cli, "run_single_fetch", side_effect=run_single),
-        mock.patch.object(
-            cli, "build_http_transport_for_context", return_value=object()
+        mock.patch(
+            "paper_fetch.runtime.build_http_transport_for_context",
+            return_value=object(),
         ),
     ):
         exit_code = cli.run_batch_fetch(
@@ -797,8 +800,9 @@ def test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline(
     with (
         mock.patch.object(cli, "resolve_paper", side_effect=resolve),
         mock.patch.object(cli, "run_single_fetch", side_effect=run_single),
-        mock.patch.object(
-            cli, "build_http_transport_for_context", return_value=object()
+        mock.patch(
+            "paper_fetch.runtime.build_http_transport_for_context",
+            return_value=object(),
         ),
     ):
         exit_code = cli.run_batch_fetch(
@@ -831,8 +835,9 @@ def test_metadata_only_batch_status_ok_remains_zero_exit(tmp_path: Path) -> None
 
     with (
         mock.patch.object(cli, "run_single_fetch", return_value=outcome),
-        mock.patch.object(
-            cli, "build_http_transport_for_context", return_value=object()
+        mock.patch(
+            "paper_fetch.runtime.build_http_transport_for_context",
+            return_value=object(),
         ),
     ):
         exit_code = cli.run_batch_fetch(

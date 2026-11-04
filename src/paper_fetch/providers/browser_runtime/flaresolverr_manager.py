@@ -23,18 +23,11 @@ from .chrome import SystemChrome, discover_chrome
 from .flaresolverr_preparation import (
     PreparationBudget,
     cache_lock,
-    prepare_source,
-    prepare_driver,
+    prepare_components,
 )
 from .paths import _filtered_storage_state_mapping, storage_state_path
 from .types import BrowserRuntimeConfig, BrowserRuntimeFailure
 from ...config import resolve_user_data_dir
-
-PNAS_HOME_URL = "https://www.pnas.org/"
-PROVIDER_HOME_URLS = {
-    "pnas": PNAS_HOME_URL,
-    "elsevier": "https://www.sciencedirect.com/",
-}
 
 
 def linux_launch_prefix(
@@ -99,11 +92,9 @@ class FlareSolverrManager:
         local_check: bool = False,
     ):
         self.config = config
-        self.home_url = (
-            PNAS_HOME_URL
-            if config.provider == "pnas"
-            else PROVIDER_HOME_URLS[config.provider]
-        )
+        from ...provider_catalog import PROVIDER_CATALOG
+
+        self.home_url = PROVIDER_CATALOG[config.provider].browser_home_url
         self.runtime_context = runtime_context
         self.local_check = local_check
         self.budget = PreparationBudget(config.timeout_ms / 1000, runtime_context)
@@ -167,10 +158,15 @@ class FlareSolverrManager:
             if prepared:
                 _, runtime, driver, driver_version = prepared
             else:
-                cache = resolve_user_data_dir(env) / "flaresolverr"
-                runtime = prepare_source(cache, self.budget)
-                driver, driver_version = prepare_driver(
-                    cache, chrome.version, self.budget
+                cache = (
+                    self.config.component_cache_dir
+                    or resolve_user_data_dir(env) / "flaresolverr"
+                )
+                components = prepare_components(cache, chrome.version, self.budget)
+                runtime, driver, driver_version = (
+                    components.runtime,
+                    components.driver,
+                    components.version,
                 )
             self.diagnostics.update(
                 chrome_path=chrome.path,

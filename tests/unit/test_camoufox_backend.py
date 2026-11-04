@@ -45,7 +45,12 @@ def test_camoufox_context_failure_closes_at_backend_boundary(
         "camoufox failed"
     )
     monkeypatch.setattr(
-        browser_runtime_context, "PublisherProfileManager", camoufox_manager
+        __import__(
+            "paper_fetch.providers.browser_runtime.profile",
+            fromlist=["PublisherProfileManager"],
+        ),
+        "PublisherProfileManager",
+        camoufox_manager,
     )
     config = BrowserRuntimeConfig(
         provider="ieee",
@@ -2646,6 +2651,7 @@ def test_science_final_document_response_ownership(
 @pytest.fixture
 def managed_camoufox(monkeypatch, tmp_path):
     """Exercise upstream version selection/install against an isolated fake archive."""
+    monkeypatch.setattr(preparation, "prepare_camoufox_fingerprint_model", lambda: None)
     import zipfile
     from camoufox import multiversion, pkgman
 
@@ -2797,7 +2803,9 @@ def test_managed_camoufox_interval_runs_from_completion_without_sliding(
 
 
 @pytest.mark.parametrize("failure", ["query", "download"])
-def test_managed_camoufox_failed_update_observes_interval(managed_camoufox, failure):
+def test_managed_camoufox_failed_update_allows_immediate_retry(
+    managed_camoufox, failure
+):
     env = managed_camoufox
     env.install_local()
     failed = env.query if failure == "query" else env.download
@@ -2809,13 +2817,14 @@ def test_managed_camoufox_failed_update_observes_interval(managed_camoufox, fail
     failed.side_effect = fail
     result = preparation.prepare_camoufox_managed_runtime()
     completed = env.clock[0]
-    assert json.loads(env.check_path.read_text())["checked_at"] == completed
-    env.clock[0] += 86399
-    assert preparation.prepare_camoufox_managed_runtime() == result
-    failed.assert_called_once()
-    env.clock[0] = completed + 86400
+    assert json.loads(env.check_path.read_text())["result"] == "failed"
+    assert json.loads(env.check_path.read_text())["checked_at"] is None
+    env.clock[0] += 1
     assert preparation.prepare_camoufox_managed_runtime() == result
     assert failed.call_count == 2
+    env.clock[0] = completed + 86400
+    assert preparation.prepare_camoufox_managed_runtime() == result
+    assert failed.call_count == 3
 
 
 @pytest.mark.parametrize(
@@ -3079,7 +3088,7 @@ def test_managed_camoufox_failure_uses_only_valid_local_runtime(
         with pytest.raises(RuntimeError, match="Camoufox browser preparation failed"):
             preparation.prepare_camoufox_managed_runtime()
         assert not preparation.probe_camoufox_managed_runtime().valid
-        assert json.loads(env.check_path.read_text())["checked_at"] == env.clock[0]
+        assert json.loads(env.check_path.read_text())["result"] == "failed"
         # An unsuccessful check cannot delay preparation without a valid browser.
         with pytest.raises(RuntimeError, match="Camoufox browser preparation failed"):
             preparation.prepare_camoufox_managed_runtime()
@@ -3412,7 +3421,7 @@ def test_managed_camoufox_cancellation_does_not_fall_back(managed_camoufox, stag
     with pytest.raises(RequestCancelledError):
         preparation.prepare_camoufox_managed_runtime()
     assert preparation.probe_camoufox_managed_runtime().runtime_path == path
-    assert not env.check_path.exists()
+    assert json.loads(env.check_path.read_text())["result"] == "cancelled"
 
 
 @pytest.mark.parametrize("stage", ["query", "download"])
@@ -3432,4 +3441,6 @@ def test_managed_camoufox_cancelled_update_keeps_previous_check_record(
     ).side_effect = RequestCancelledError("cancelled")
     with pytest.raises(RequestCancelledError):
         preparation.prepare_camoufox_managed_runtime()
-    assert env.check_path.read_bytes() == record
+    payload = json.loads(env.check_path.read_text())
+    assert payload["result"] == "cancelled"
+    assert payload["checked_at"] == json.loads(record)["checked_at"]

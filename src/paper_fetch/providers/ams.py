@@ -24,7 +24,7 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from ..publisher_identity import normalize_doi
-from ..provider_catalog import ProviderRouteSpec, ProviderSpec
+from ..provider_contracts import ProviderRouteSpec, ProviderSpec
 from ..quality.html_signals import AMS_TEXT_MARKER_SIGNAL_SET
 from ..utils import extend_unique, normalize_text
 from . import _ams_authors, _ams_dom, _ams_markdown, browser_workflow

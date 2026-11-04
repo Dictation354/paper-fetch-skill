@@ -686,14 +686,10 @@ This package includes an installed Python runtime under `runtime/site-packages`,
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
 The `bin/` directory exposes paper-fetch commands only; it does not include a generic `python` wrapper.
 It does not redistribute the Camoufox browser binary for browser-backed providers.
-After core smoke checks, the optional terminal wizard can save hidden Elsevier/Wiley credentials,
-install missing system/image tools, and prepare and locally test Camoufox. All installs default
-to No. Use `--non-interactive` (also automatic without a terminal) to skip every optional step.
-Failures/cancellation preserve the core installation; external `--reuse-env-file` stays read-only.
-Skipping Camoufox does not disable CLI/MCP/library automatic preparation before browser launch.
-Before moving fully offline, use the optional wizard or run
-`./runtime/paper-fetch-python -m camoufox fetch` while online, then
-run `./bin/paper-fetch browser-preflight` to verify the runtime and provider path.
+After core smoke checks, browsers are prepared by default, including non-interactive installs.
+Use `--skip-browser-prepare` to skip preparation. System packages retain their existing permission rules.
+The optional wizard configures credentials and image tools. Failures preserve the core installation.
+Before moving fully offline, run `./runtime/paper-fetch-python -m paper_fetch.offline_setup --install-root . --prepare-browsers all`.
 EOF
 
   printf '\n%s\n\n' "$install_line" >> "$staging/README.offline.md"
@@ -701,11 +697,11 @@ EOF
   cat >> "$staging/README.offline.md" <<'EOF'
 On Linux x64, PNAS and Elsevier browser routes use system Chrome and FlareSolverr;
 other browser routes use Camoufox. macOS uses Camoufox and skips Elsevier browser routes.
-After core installation, Linux x64 automatically prepares FlareSolverr source/private
-dependencies and a matching ChromeDriver. This phase may use the network even with
-`--non-interactive`; system packages still require explicit interactive consent.
-Failures or cancellation preserve core installation. See `flaresolverr-setup-results.txt`
-or rerun `./runtime/paper-fetch-python -m paper_fetch.offline_setup --install-root . --prepare-flaresolverr`.
+Linux x64 bundles pinned FlareSolverr source and private Python dependencies under
+`runtime/browser-components/flaresolverr/`; macOS does not bundle FlareSolverr.
+Preparation manages Camoufox binaries/fingerprint models and a ChromeDriver matching system Chrome.
+Only successful online checks establish a 24-hour reuse window; failures/cancellation can retry.
+See `browser-setup-results.txt`, or rerun the shared preparation command above.
 Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
 
 The installer writes `PAPER_FETCH_BROWSER_HEADLESS=true` into `offline.env`. It does not override Camoufox's generated Firefox user agent or fingerprint settings.
@@ -1058,6 +1054,10 @@ main() {
 
   copy_runtime_assets "$staging"
   build_project_runtime "$staging" "$package_name"
+  if [ "$target_platform" = "linux" ]; then
+    PYTHONPATH="$staging/runtime/site-packages" "$PYTHON_BIN" "$REPO_DIR/scripts/build_browser_components.py" \
+      --destination "$staging/runtime/browser-components/flaresolverr" >/dev/null
+  fi
   sign_macos_playwright_node "$staging" "$target_platform"
   bundle_formula_tools "$staging"
   bundle_image_tools "$staging"

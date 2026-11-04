@@ -24,6 +24,7 @@ from paper_fetch.formula.paths import FORMULA_TOOLS_DIR_ENV_VAR
 from paper_fetch.providers.browser_workflow.shared import normalize_browser_url
 from paper_fetch.publisher_identity import normalize_doi
 from paper_fetch.reason_codes import NO_ACCESS
+from paper_fetch.providers.browser_runtime.selection import selected_backend
 from tests._environment import (
     PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
     PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
@@ -46,6 +47,12 @@ def build_isolated_live_env(
 ) -> tuple[SecretSafeEnvironment, tempfile.TemporaryDirectory]:
     tempdir = tempfile.TemporaryDirectory(prefix="paper-fetch-live-xdg-")
     env = SecretSafeEnvironment(build_runtime_env(base_env))
+    from paper_fetch.config import resolve_user_data_dir
+
+    env.setdefault(
+        "PAPER_FETCH_BROWSER_COMPONENT_CACHE",
+        str(resolve_user_data_dir(env) / "flaresolverr"),
+    )
     isolated_root = Path(tempdir.name)
     env["XDG_DATA_HOME"] = str(isolated_root / "data")
     env["XDG_CACHE_HOME"] = str(isolated_root / "cache")
@@ -86,11 +93,23 @@ def build_isolated_live_env(
     return env, tempdir
 
 
-def require_camoufox_or_skip(testcase, env: Mapping[str, str]) -> None:
+def require_browser_or_skip(testcase, env: Mapping[str, str], *, provider: str) -> None:
     if importlib.util.find_spec("playwright.sync_api") is None:
         testcase.skipTest("Playwright Python package is not installed.")
-    if importlib.util.find_spec("camoufox") is None:
+    backend = selected_backend(env, provider=provider)
+    if backend == "camoufox" and importlib.util.find_spec("camoufox") is None:
         testcase.skipTest("Camoufox Python package is not installed.")
+    if backend == "flaresolverr":
+        from paper_fetch.providers.browser_runtime.chrome import discover_chrome
+
+        try:
+            discover_chrome(env)
+        except ValueError as exc:
+            testcase.skipTest(f"FlareSolverr dependency missing: {exc}")
+
+
+def require_camoufox_or_skip(testcase, env: Mapping[str, str]) -> None:
+    require_browser_or_skip(testcase, env, provider="science")
 
 
 def is_machine_readable_no_access(payload: Mapping[str, object]) -> bool:
@@ -124,7 +143,8 @@ def preflight_selected_browser_or_skip(
 ) -> BrowserPreflightResult:
     """Run one provider preflight per shared live profile before its first fetch."""
 
-    require_camoufox_or_skip(testcase, env)
+    require_browser_or_skip(testcase, env, provider=provider)
+    backend = selected_backend(env, provider=provider)
     static = static_browser_capabilities(env, provider=provider)
     runtime_capability = static.get("browser_runtime")
     if not isinstance(runtime_capability, Mapping):
@@ -149,9 +169,9 @@ def preflight_selected_browser_or_skip(
         )
     normalized_doi = normalize_doi(doi or "")
     normalized_target = normalize_browser_url(target_url)
-    cache_key: object = provider
+    cache_key: object = (provider, backend)
     if normalized_doi and normalized_target:
-        cache_key = (provider, normalized_doi, normalized_target)
+        cache_key = (provider, backend, normalized_doi, normalized_target)
     result = cache.get(cache_key)
     if result is None:
         preflight_kwargs = {
@@ -162,7 +182,9 @@ def preflight_selected_browser_or_skip(
             # empty shell; its cold-start test covers the no-state path.
             "save_storage_state": provider != "aip",
             "download_dir": (
-                artifact_root / provider if artifact_root is not None else None
+                artifact_root / f"{provider}-{backend}"
+                if artifact_root is not None
+                else None
             ),
             "artifact_mode": "all" if artifact_root is not None else "none",
         }

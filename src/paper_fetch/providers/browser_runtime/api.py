@@ -9,6 +9,7 @@ from .. import _playwright_browser
 from ..base import ProviderStatusResult
 from .backends.camoufox import DEFAULT_CAMOUFOX_BACKEND
 from .selection import selected_backend
+from .backend import BrowserBackend
 from .types import (
     BrowserFetchedHtml,
     BrowserRuntimeConfig,
@@ -16,11 +17,13 @@ from .types import (
 )
 
 
-def _backend(name: str):
+def _backend(name: str) -> BrowserBackend:
     if name == "flaresolverr":
         from .backends.flaresolverr import DEFAULT_FLARESOLVERR_BACKEND
 
         return DEFAULT_FLARESOLVERR_BACKEND
+    if name != "camoufox":
+        raise ValueError(f"Unknown browser backend: {name}")
     return DEFAULT_CAMOUFOX_BACKEND
 
 
@@ -52,6 +55,13 @@ def load_runtime_config(
 
 def ensure_runtime_ready(config: BrowserRuntimeConfig) -> None:
     _backend(config.backend).ensure_runtime_ready(config)
+
+
+def prepare_runtime(
+    config: BrowserRuntimeConfig, *, runtime_context: Any = None
+) -> Any:
+    """Explicit preparation uses the same component records as automatic launches."""
+    return _backend(config.backend).prepare(config, runtime_context=runtime_context)
 
 
 def probe_runtime_status(

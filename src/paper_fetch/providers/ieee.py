@@ -32,7 +32,7 @@ from ..http import (
 from ..http.headers import header_value
 from ..metadata.types import ProviderMetadata
 from ..models import AssetProfile
-from ..provider_catalog import ProviderSpec
+from ..provider_contracts import ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..quality.html_availability import (
     HtmlQualityAssessor,

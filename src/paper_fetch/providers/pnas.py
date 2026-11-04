@@ -17,15 +17,18 @@ from ..extraction.html.provider_rules import (
     ProviderFrontMatterRules,
     ProviderHtmlRules,
 )
-from ..provider_catalog import ProviderRouteSpec, ProviderSpec
+from ..provider_contracts import ProviderRouteSpec, ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..quality.html_signals import PNAS_SIGNAL_SET
 from . import _pnas_html, browser_workflow
-from ._registry import ProviderBundle
+from ._registry import BrowserPagePolicy, ProviderBundle
 from .browser_runtime import BrowserHtmlReadiness
 
 _PROVIDER_SPEC = ProviderSpec(
     name="pnas",
+    browser_backends=("camoufox", "flaresolverr"),
+    browser_default_x64="flaresolverr",
+    browser_home_url="https://www.pnas.org/",
     display_name="PNAS",
     official=True,
     domains=("www.pnas.org", "pnas.org"),
@@ -168,6 +171,11 @@ class PnasClient(browser_workflow.BrowserWorkflowClient):
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_page_policy=BrowserPagePolicy(
+        empty_request=_is_sidebar_metrics_url,
+        readiness_per_candidate=True,
+        document_hosts=("pnas.org", "www.pnas.org"),
+    ),
     client_factory=PnasClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(

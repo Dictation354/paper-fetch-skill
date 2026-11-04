@@ -4682,6 +4682,13 @@
         "kind": "infrastructure",
         "scope": "安装后独立准备模式的真实 Python CLI、配置加载、非交互输出与核心文件保留。"
       }
+    },
+    "tests/unit/test_browser_preparation_contract.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "browser preparation records, lazy clients and structural codecs",
+        "reason": "隔离 mock 与最小模型验证成功限频、失败重试、组件路径、并发和所有权，不证明真实出版社内容。"
+      }
     }
   }
 }

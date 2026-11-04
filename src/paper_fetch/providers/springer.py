@@ -48,7 +48,7 @@ from ..models import AssetProfile, article_from_markdown, metadata_only_article
 from ..failure import FailureDiagnostics
 from ..page_diagnostics import PageDiagnosticRequest, capture_page_diagnostic
 from ..publisher_identity import normalize_doi
-from ..provider_catalog import PdfSourcePathTemplate, ProviderRouteSpec, ProviderSpec
+from ..provider_contracts import PdfSourcePathTemplate, ProviderRouteSpec, ProviderSpec
 from ..runtime import RuntimeContext
 from ..tracing import (
     TraceContext,

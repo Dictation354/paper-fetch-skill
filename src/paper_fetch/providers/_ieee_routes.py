@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..provider_catalog import ProviderRouteSpec
+from ..provider_contracts import ProviderRouteSpec
 
 
 IEEE_ROUTES = (

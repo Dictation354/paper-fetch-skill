@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from .workflow.batch_session import BatchExecutionSession
+
 import argparse
-import copy
 import contextlib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
@@ -56,7 +57,6 @@ from .providers.base import ProviderFailure
 from .reason_codes import ERROR, NO_ACCESS, RATE_LIMITED
 from .runtime import (
     RuntimeContext,
-    build_http_transport_for_context,
 )
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper, resolve_paper
 from .tracing import merge_trace, trace_from_markers
@@ -75,7 +75,6 @@ from .workflow.batch_runner import (
     run_batch,
 )
 from .workflow.batch_routing import (
-    deduplicate_batch_items,
     expected_doi_from_query,
     fanout_batch_items,
     initial_provider_lane,
@@ -1300,41 +1299,23 @@ def run_batch_fetch(
     records: dict[int, ManifestRecord] = {}
     records_lock = threading.Lock()
     cancel_event = progress.cancel_all
-    shared_transport = build_http_transport_for_context(
-        runtime_env,
-        download_dir=output_dir,
-        cancel_check=cancel_event.is_set,
-        artifact_mode=artifact_mode,
-    )
     duplicates_by_owner: dict[int, tuple[CliBatchItem, ...]] = {}
     with (
         RuntimeContext(
             env=runtime_env,
-            transport=shared_transport,
             download_dir=output_dir,
             artifact_mode=artifact_mode,
             cancel_check=cancel_event.is_set,
         ) as batch_context,
         batch_context.fetch_browser_preparation(prepare=False),
     ):
-        try:
-            batch_context.prepare_fetch_browser()
-        except RequestCancelledError:
-            # Let the batch runner emit the existing terminal record for every
-            # queued input, including cancellation before preparation starts.
-            cancel_event.set()
-        item_contexts = {}
-        for item in items:
-
-            def cancelled(item: CliBatchItem = item) -> bool:
-                return all(
-                    progress.is_cancelled(dependant.index)
-                    for dependant in fanout_batch_items(item, duplicates_by_owner)
-                )
-
-            item_contexts[item.index] = batch_context.new_request_context(
-                asset_profile=args.asset_profile, cancel_check=cancelled
-            )
+        session = BatchExecutionSession(
+            batch_context,
+            items,
+            asset_profile=args.asset_profile,
+            cancelled=progress.is_cancelled,
+        )
+        item_contexts = session.contexts
 
         for item in items:
             item_contexts[item.index].progress_callback = (
@@ -1344,12 +1325,10 @@ def run_batch_fetch(
             )
 
         def close_active_contexts() -> None:
-            for active_context in item_contexts.values():
-                active_context.close()
+            session.close()
 
         def fence_active_contexts() -> None:
-            for active_context in item_contexts.values():
-                active_context.fence_commits()
+            session.fence()
 
         try:
             with _cooperative_batch_cancel(cancel_event, close_active_contexts):
@@ -1372,14 +1351,13 @@ def run_batch_fetch(
                     )
                     records[item.index] = record
 
-                prepared_lanes = run_batch(
+                prepared_lanes = session.resolve_all(
                     items,
                     lambda item: _resolve_cli_batch_item_lane(
                         item,
                         context=item_contexts[item.index],
                     ),
                     max_workers=args.batch_concurrency,
-                    lane_key=lambda item: f"resolve:{item.index}",
                     completion_callback=on_identity_completion,
                     cancel_event=cancel_event,
                     item_cancel_check=(lambda item: progress.is_cancelled(item.index))
@@ -1392,9 +1370,7 @@ def run_batch_fetch(
                     for result in prepared_lanes.results
                     if result.item.index not in records
                 ]
-                scheduled_items, duplicates_by_owner = deduplicate_batch_items(
-                    logical_items
-                )
+                scheduled_items, duplicates_by_owner = session.group(logical_items)
 
                 for owner in scheduled_items:
                     group = fanout_batch_items(owner, duplicates_by_owner)
@@ -1413,21 +1389,8 @@ def run_batch_fetch(
                 def on_completion(
                     event: BatchCompletionEvent[CliBatchItem, CliFetchOutcome],
                 ) -> None:
-                    fanout_items = fanout_batch_items(
-                        event.result.item,
-                        duplicates_by_owner,
-                    )
-                    for position, fanout_item in enumerate(fanout_items):
-                        outcome = event.result.value
-                        if position and outcome is not None:
-                            with contextlib.suppress(Exception):
-                                outcome = copy.deepcopy(outcome)
-                        fanout_result = replace(
-                            event.result,
-                            item=fanout_item,
-                            lane_key=fanout_item.lane_key,
-                            value=outcome,
-                        )
+                    for fanout_result in session.fanout(event.result):
+                        fanout_item = fanout_result.item
 
                         def build(
                             cancelled: bool, selected=fanout_result

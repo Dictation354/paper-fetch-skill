@@ -15,7 +15,7 @@ from ..extraction.html.provider_rules import (
     SCIENCE_POST_CONTENT_BREAK_TOKENS,
     SCIENCE_SITE_RULE_OVERRIDES,
 )
-from ..provider_catalog import (
+from ..provider_contracts import (
     ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
     ProviderRouteSpec,
     ProviderSpec,
@@ -25,7 +25,7 @@ from ..quality.html_signals import (
     SCIENCE_SIGNAL_SET,
 )
 from . import _science_html, browser_workflow
-from ._registry import ProviderBundle
+from ._registry import BrowserPagePolicy, ProviderBundle
 
 _PROVIDER_SPEC = ProviderSpec(
     name="science",
@@ -97,6 +97,9 @@ class ScienceClient(browser_workflow.BrowserWorkflowClient):
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_page_policy=BrowserPagePolicy(
+        document_hosts=("science.org", "www.science.org")
+    ),
     client_factory=ScienceClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(

@@ -537,7 +537,7 @@ if [ "$TARGET_PLATFORM" = "macos" ]; then
   log "Verifying recursive macOS quarantine rejection before user writes"
   xattr -w com.apple.quarantine '0081;00000000;paper-fetch-audit;' "$QUARANTINED_NATIVE"
   QUARANTINE_LOG="$TMP_ROOT/quarantine-install.log"
-  if PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive \
+  if PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive --skip-browser-prepare \
     --install-dir "$INSTALL_ROOT" \
     --preset=headless \
     --skip-smoke \
@@ -562,7 +562,7 @@ fi
 mkdir -p "$FAKE_HOME/.codex/skills/paper-fetch-skill"
 printf '%s\n' legacy > "$FAKE_HOME/.codex/skills/paper-fetch-skill/SKILL.md"
 log "Running initial installer with network/build command guard"
-PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive \
+PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive --skip-browser-prepare \
   --install-dir "$INSTALL_ROOT" \
   --preset=headless \
   --skip-smoke \
@@ -588,7 +588,7 @@ PY
 mkdir -p "$INSTALL_ROOT/src" "$INSTALL_ROOT/tests" "$INSTALL_ROOT/wheelhouse" "$INSTALL_ROOT/dist"
 
 log "Running owned upgrade with network/build command guard"
-PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive \
+PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive --skip-browser-prepare \
   --install-dir "$INSTALL_ROOT" \
   --preset=headless \
   "$INSTALL_USER_CONFIG_FLAG"

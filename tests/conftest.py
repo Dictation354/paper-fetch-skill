@@ -13,7 +13,7 @@ import shutil
 import tempfile
 from typing import Any
 
-from platformdirs import user_data_path
+from platformdirs import user_cache_path, user_data_path
 import pytest
 
 from tests._environment import (
@@ -128,6 +128,14 @@ def pytest_configure(config: pytest.Config) -> None:
 
     layer_policy.install()
     worker = _worker_id(config)
+    if os.environ.get("PAPER_FETCH_RUN_LIVE") == "1":
+        os.environ.setdefault(
+            "PAPER_FETCH_BROWSER_COMPONENT_CACHE",
+            str(
+                Path(user_cache_path("paper-fetch", appauthor=False))
+                / "live-components/flaresolverr"
+            ),
+        )
     _preserve_explicit_formula_tools_dir()
     isolated_root = Path(tempfile.mkdtemp(prefix=f"paper-fetch-tests-{worker}-"))
     config._paper_fetch_isolated_root = isolated_root

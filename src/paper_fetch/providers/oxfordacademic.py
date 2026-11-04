@@ -49,7 +49,7 @@ from ..models import (
     metadata_only_article,
 )
 from ..models.render import rewrite_markdown_asset_links
-from ..provider_catalog import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
+from ..provider_contracts import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
 from ..pdf_limits import pdf_max_bytes
 from ..publisher_identity import normalize_doi
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK

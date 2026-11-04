@@ -13,6 +13,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="${PAPER_FETCH_INSTALL_VENV_DIR:-$REPO_DIR/.venv}"
 USE_SYSTEM=0
 INSTALL_HEAVY=1
+SKIP_BROWSER_PREPARE=0
 COPY_ENV_FILE=1
 UPGRADE_PIP=1
 EDITABLE=0
@@ -31,6 +32,7 @@ Options:
   --venv-dir <path>             Use a custom virtualenv directory.
   --editable                    Install the Python package in editable mode.
   --skip-pip-upgrade            Do not upgrade pip before installing.
+  --skip-browser-prepare        Skip user-level browser preparation.
   --no-node                     Skip the Node mathml-to-latex formula fallback.
   -h, --help                    Show this help.
 EOF
@@ -38,6 +40,9 @@ EOF
 
 while (($#)); do
     case "$1" in
+        --skip-browser-prepare)
+            SKIP_BROWSER_PREPARE=1
+            ;;
         --system)
             USE_SYSTEM=1
             ;;
@@ -114,15 +119,15 @@ if [ "$COPY_ENV_FILE" = "1" ] && [ -n "$DEFAULT_ENV_FILE" ] && [ -f "$REPO_DIR/.
 fi
 
 if [ "$INSTALL_HEAVY" = "1" ]; then
-    if [ "$(uname -s)" = "Linux" ] && [ "$(uname -m)" = "x86_64" ]; then
-        log "Core installation complete; preparing FlareSolverr"
-        FLARESOLVERR_ARGS=(--install-root "$REPO_DIR" --prepare-flaresolverr)
+    if [ "$SKIP_BROWSER_PREPARE" = "0" ]; then
+        log "Core installation complete; preparing supported browsers"
+        BROWSER_PREPARE_ARGS=(--install-root "$REPO_DIR" --prepare-browsers all)
         if [ -n "${PAPER_FETCH_ENV_FILE:-$DEFAULT_ENV_FILE}" ]; then
-            FLARESOLVERR_ARGS+=(--env-file "${PAPER_FETCH_ENV_FILE:-$DEFAULT_ENV_FILE}")
+            BROWSER_PREPARE_ARGS+=(--env-file "${PAPER_FETCH_ENV_FILE:-$DEFAULT_ENV_FILE}")
         fi
         trap ':' INT
-        "$PYTHON_BIN" -m paper_fetch.offline_setup "${FLARESOLVERR_ARGS[@]}" \
-            || warn "FlareSolverr is not ready; core installation is preserved. Rerun this installer to retry."
+        "$PYTHON_BIN" -m paper_fetch.offline_setup "${BROWSER_PREPARE_ARGS[@]}" \
+            || warn "Browser preparation is not ready; core installation is preserved. Rerun this installer to retry."
         trap - INT
     fi
     log "Installing formula conversion backends"
@@ -134,7 +139,7 @@ if [ "$INSTALL_HEAVY" = "1" ]; then
     PYTHON_BIN="$PYTHON_BIN" \
         bash "$REPO_DIR/install-image-tools.sh"
 else
-    warn "Skipped FlareSolverr preparation and external formula and image backends because --lite was set."
+    warn "Skipped browser preparation and external formula and image backends because --lite was set."
 fi
 
 echo

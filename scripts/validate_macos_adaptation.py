@@ -172,15 +172,19 @@ def validate_contract(
         "system_chrome_required",
         "installer_prepares_flaresolverr",
         "runtime_bundle_built_in",
-        "core_install_downloads_runtime",
+        "optional_install_download_requires_consent",
+        "fetch_start_preparation",
     ):
         if browser.get(key) is not False:
             errors.append(f"browser.{key} must be false")
     for key in (
-        "optional_install_download_requires_consent",
+        "core_install_downloads_runtime",
+        "on_demand_preparation",
+        "success_only_update_interval",
+        "installer_prepares_camoufox",
+        "installer_skip_browser_prepare",
         "optional_install_failure_preserves_core",
         "managed_runtime_preparation",
-        "fetch_start_preparation",
         "batch_prepares_once",
         "prerelease_includes_stable",
         "native_bundle_gate",

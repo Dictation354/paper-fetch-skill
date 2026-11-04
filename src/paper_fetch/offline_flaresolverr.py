@@ -195,9 +195,13 @@ def local_check(
             manager.close()
 
 
-def prepare(setup: Setup, *, interactive: bool) -> None:
+def prepare(
+    setup: Setup, *, interactive: bool, system_dependencies: bool = True
+) -> None:
     try:
-        _prepare(setup, interactive=interactive)
+        _prepare(
+            setup, interactive=interactive, system_dependencies=system_dependencies
+        )
     except (KeyboardInterrupt, EOFError):
         setup.report(
             "FlareSolverr", "not ready", "Cancelled; core installation is preserved"
@@ -214,7 +218,9 @@ def prepare(setup: Setup, *, interactive: bool) -> None:
         )
 
 
-def _prepare(setup: Setup, *, interactive: bool) -> None:
+def _prepare(
+    setup: Setup, *, interactive: bool, system_dependencies: bool = True
+) -> None:
     if not supported_platform():
         setup.report(
             "FlareSolverr", "skipped", "Only Windows/Linux x64; macOS uses Camoufox"
@@ -262,7 +268,8 @@ def _prepare(setup: Setup, *, interactive: bool) -> None:
     if sys.platform == "linux":
         headless = headless_mode(setup.env)
         missing = linux_missing(setup, headless)
-        install_linux_dependencies(setup, missing, interactive=interactive)
+        if system_dependencies:
+            install_linux_dependencies(setup, missing, interactive=interactive)
         if missing and linux_missing(setup, headless):
             setup.report(
                 "FlareSolverr", "not ready", "System dependencies remain missing"
@@ -285,7 +292,11 @@ def _prepare(setup: Setup, *, interactive: bool) -> None:
         )
         return
     setup.report("Chrome", "ready", f"{chrome.path} ({chrome.version})")
-    cache = resolve_user_data_dir(setup.env) / "flaresolverr"
+    cache = (
+        Path(setup.env["PAPER_FETCH_BROWSER_COMPONENT_CACHE"]).expanduser()
+        if setup.env.get("PAPER_FETCH_BROWSER_COMPONENT_CACHE")
+        else resolve_user_data_dir(setup.env) / "flaresolverr"
+    )
     setup.report(
         "FlareSolverr cache",
         "preparing",

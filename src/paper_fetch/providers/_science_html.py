@@ -121,7 +121,7 @@ def prepare_browser_page(
     from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
     started = time.monotonic()
-    budget_ms = max(0, min(timeout_ms, 10000))
+    budget_ms = max(0, timeout_ms)
     deadline = started + budget_ms / 1000
     previous_fragment: str | None = None
     previous_available: set[str] = set()

@@ -593,7 +593,7 @@ def fetch_article(
     assert runtime.transport is not None
     assert runtime.artifact_store is not None
     runtime.fetch_trace = []
-    client_registry = dict(runtime.get_clients())
+    client_registry = runtime.get_clients()
     resolver = resolve_paper_fn or resolve_paper
     runtime.raise_if_cancelled()
     runtime.report_progress("stage", stage="identity")

@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from pathlib import Path
 from importlib.util import find_spec
 
-from .camoufox import CamoufoxBackend
+from .playwright import PlaywrightBackend
 from ..chrome import CHROME_ENV, discover_chrome
 from .. import paths
-from ..flaresolverr_preparation import runtime_location, valid_cache
+from ..flaresolverr_preparation import (
+    bundled_component_root,
+    runtime_location,
+    valid_cache,
+)
 from ...base import ProviderFailure, ProviderStatusResult, build_provider_status_check
 from ....config import (
     resolve_user_data_dir,
@@ -19,8 +24,30 @@ from ....config import (
 from ....reason_codes import NOT_CONFIGURED, OK, READY
 
 
-class FlareSolverrBackend(CamoufoxBackend):
+class FlareSolverrBackend(PlaywrightBackend):
     name = "flaresolverr"
+
+    def prepare(self, config, *, runtime_context=None):
+        import os
+        from ..flaresolverr_preparation import PreparationBudget, prepare_components
+
+        env = dict(runtime_context.env if runtime_context is not None else os.environ)
+        if config.chrome_binary_path:
+            env[CHROME_ENV] = config.chrome_binary_path
+        chrome = discover_chrome(env)
+        cache = (
+            config.component_cache_dir or resolve_user_data_dir(env) / "flaresolverr"
+        )
+        return prepare_components(
+            cache,
+            chrome.version,
+            PreparationBudget(config.timeout_ms / 1000, runtime_context),
+        )
+
+    def create_manager(self, config, *, runtime_context=None):
+        from ..flaresolverr_manager import FlareSolverrManager
+
+        return FlareSolverrManager(config, runtime_context=runtime_context)
 
     def load_runtime_config(self, env, *, provider, doi, require_storage_state=False):
         # Camoufox executable/profile settings retain their Firefox-only meaning.
@@ -43,6 +70,11 @@ class FlareSolverrBackend(CamoufoxBackend):
         return replace(
             config,
             backend=self.name,
+            component_cache_dir=Path(
+                env["PAPER_FETCH_BROWSER_COMPONENT_CACHE"]
+            ).expanduser()
+            if env.get("PAPER_FETCH_BROWSER_COMPONENT_CACHE")
+            else None,
             binary_path=None,
             chrome_binary_path=env.get(CHROME_ENV, "").strip() or None,
             profile_dir=None,
@@ -74,9 +106,15 @@ class FlareSolverrBackend(CamoufoxBackend):
             config = self.load_runtime_config(env, provider=provider, doi=doi)
             chrome = discover_chrome(env)
             root, _, identity = runtime_location(
-                resolve_user_data_dir(env) / "flaresolverr"
+                config.component_cache_dir
+                or resolve_user_data_dir(env) / "flaresolverr"
             )
             installed = valid_cache(root, identity)
+            if bundled_component_root() is not None and not installed:
+                raise ProviderFailure(
+                    NOT_CONFIGURED,
+                    "Bundled FlareSolverr is missing or damaged; reinstall the offline package.",
+                )
             available = find_spec("playwright") is not None
             checks.append(
                 build_provider_status_check(

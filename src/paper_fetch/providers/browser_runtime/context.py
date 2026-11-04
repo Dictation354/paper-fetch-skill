@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 import contextlib
 
-from .profile import PublisherProfileManager
 from .types import BrowserRuntimeConfig, BrowserRuntimeSession
 
 if TYPE_CHECKING:
@@ -34,13 +33,9 @@ def open_browser_context(
                 "Runtime context does not support Camoufox browser contexts."
             )
         return None, factory(config)
-    manager: Any
-    if config.backend == "flaresolverr":
-        from .flaresolverr_manager import FlareSolverrManager
+    from .api import _backend
 
-        manager = FlareSolverrManager(config)
-    else:
-        manager = PublisherProfileManager(config)
+    manager = _backend(config.backend).create_manager(config)
     try:
         return manager, manager.new_context()
     except BaseException:

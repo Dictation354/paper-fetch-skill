@@ -24,6 +24,7 @@ class BrowserRuntimeConfig:
     capability_storage_state_path: Path | None = None
     backend: str = "camoufox"
     chrome_binary_path: str | None = None
+    component_cache_dir: Path | None = None
 
 
 @dataclass(frozen=True)

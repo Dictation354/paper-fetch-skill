@@ -14,7 +14,7 @@ from ..extraction.html.provider_rules import (
 )
 from ..mdpi_url import is_mdpi_url, mdpi_landing_url_from_doi
 from ..models import AssetProfile
-from ..provider_catalog import ProviderRouteSpec, ProviderSpec
+from ..provider_contracts import ProviderRouteSpec, ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, normalize_text

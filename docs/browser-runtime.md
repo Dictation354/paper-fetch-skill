@@ -46,7 +46,7 @@ browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。默�
   不注册请求拦截；使用出版社独立的原生持久会话及现有正文 readiness。
 - Elsevier 正文导航不拦截图片、字体或媒体，沿用浏览器正常资源加载；headed 与
   headless 使用同一策略。
-- Science 直接使用正常 HTML attempt；正文稳定后，在整体期限内最多用 10 秒等待
+- Science 直接使用正常 HTML attempt；正文稳定后，使用请求剩余预算等待
   bibliography 中实际目标 ID 对应的可抽取引用文本。每轮一次读取引用与可见展开控件，
   按页面控件点击；空引用、ID 先到或仅链接工具不算完成。预算耗尽如实保留缺项和
   degraded 验收，取消继续传播。在自动主框架导航后，使用当前候选中已完成、URL 与当前页面一致且 DOI
@@ -169,15 +169,10 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
 `PAPER_FETCH_BROWSER_USER_AGENT` 只用于允许覆盖 UA 的 direct publisher request；
 Camoufox 启动不接受固定 UA，以避免生成的 Firefox 指纹内部不一致。
 
-CLI、MCP 和 Python API 每次抓取请求开始时自动准备 managed runtime，包括
-纯 HTTP 和缓存命中；批量任务调度前统一准备一次，子任务及后续浏览器启动复用
-本次结果。抓取、`auth`、preflight 和项目准备函数共享 cache 中的
-`.paper-fetch-update-check.json`：本地 runtime 有效且距上次实际检查结束不足
-86400 秒时直接复用，满 24 小时后的首次调用联网检查。失败也计时，跳过不刷新
-时间戳，取消不记为完成。浏览器缺失、损坏或不兼容时立即准备；渠道、pin/SHA
-或 Camoufox Python 包版本变化后重新判断准备需求。记录缺失、损坏或时间戳在
-未来时重新检查，记录写入失败只报告 stderr，不影响本次准备结果。
-`auth` 和 preflight 仍在启动前进入同一准备逻辑。
+CLI、MCP 和 Python API 入口只建立准备作用域，首次使用后端才准备；纯 HTTP、缓存命中与静态诊断不会触发准备。批次共享组件准备结果，浏览器会话、clients 和认证状态仍按请求隔离。抓取、`auth`、preflight 和安装器共用持久记录及文件锁。
+
+最近一次检查成功且组件本地有效时，86400 秒内不查询远端；失败或取消会记录最近结果，不建立或延长窗口，也不会被更早的成功时间阻止重试。旧 Camoufox 时间记录不作为成功凭据。缺失、损坏、不兼容仍可立即准备。更新失败可以复用兼容本地组件；同一在途操作由并发调用共享，失败结果不永久缓存。
+
 默认渠道为 `official/prerelease`，通过 Camoufox 0.5.9 官方发现和兼容判断选择
 当前平台正式版和预发布版中的最新兼容浏览器，沿用上游排序，不按发布时间另行排序。
 `prerelease` 表示允许预发布，也接受正式版；`stable` 仅接受正式版。
@@ -185,8 +180,7 @@ CLI、MCP 和 Python API 每次抓取请求开始时自动准备 managed runtime
 已有显式渠道、版本 pin、SHA、自定义 executable 优先；本地有效 pin 不联网查询。
 共享 cache 的准备和检查记录读写使用同一进程锁，并在锁内补写默认渠道，旧 active 配置自动迁移。
 有效目标直接复用，损坏目标只修复经路径校验的版本目录，不清空整个 cache。
-更新失败时提示并恢复有效本地版本；没有可用版本时先记录失败，继续 HTTP／缓存
-流程，实际需要浏览器时报告失败，同次请求不重试准备。取消继续传播。
+更新失败时提示并恢复有效本地版本；没有可用版本时向实际使用浏览器的调用报告失败，后续调用允许重试。取消继续传播。
 配置损坏、路径越界或 symlink/reparse 路径会明确报错，不通过删除配置修复。
 仅实际联网时输出检查进度；下载进度和错误写 stderr。core 安装缺少 browser extra 或显式 executable 时
 跳过托管更新，不自动安装 Python 依赖。
@@ -228,4 +222,4 @@ IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：
 
 Elsevier 复用 browser workflow 的期限、取消、上下文和资源释放机制，自行执行 API XML → FlareSolverr HTML → API PDF → FlareSolverr PDF。ScienceDirect 页面准备钩子采集 MathJax 保存的原始 MathML；HTML、图片、补充文件和浏览器 PDF 共用本次上下文。macOS 的 Elsevier 仅执行 API 阶段。
 
-Windows/Linux x64 安装器在核心安装完成后自动准备 FlareSolverr（在线 `--lite` 跳过），macOS 跳过。准备复用 `flaresolverr/` 的源码、私有依赖和匹配驱动；离线安装器此阶段也可能联网。下载预算 10 分钟，本地启动检查预算 2 分钟，只使用临时状态、CDP 和空白页脚本；失败或取消保留核心安装，运行时按需修复继续生效。系统依赖确认与独立重试命令见 [部署说明](deployment.md)。
+安装器默认准备支持的浏览器（在线 `--lite` 跳过）：Linux/Windows x64 依次准备 Camoufox、FlareSolverr，macOS 只准备 Camoufox。FlareSolverr 复用内置或固定版本缓存中的源码和私有依赖，驱动按 Chrome 版本准备；浏览器、模型和驱动准备可能联网。下载预算 10 分钟，本地启动检查预算 2 分钟，只使用临时状态、CDP 和空白页脚本；失败或取消保留核心安装，运行时按需修复继续生效。系统依赖确认与独立重试命令见 [部署说明](deployment.md)。

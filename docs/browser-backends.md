@@ -25,13 +25,10 @@ python -m pip install "paper-fetch-skill[full]"
 
 离线安装包始终按 `full` 构建，但不重新分发浏览器 binary。完全离线环境需提前
 准备 Camoufox runtime，包括相邻配置、addons、字体和 fpgen 指纹模型；只复制可执行文件
-不足以组成可用 runtime。CLI、MCP 和 Python API 在每次抓取请求开始时检查并
-准备 managed runtime，包括纯 HTTP 和缓存命中；批量任务在调度前统一检查一次，
-子任务和后续浏览器启动复用本次结果。`auth` 和 preflight 在启动浏览器前准备，
-与抓取及项目准备函数共享滚动 24 小时（86400 秒）的更新检查记录。
+不足以组成可用 runtime。CLI、MCP 和 Python API 只建立准备作用域，首次使用后端才准备；HTTP、缓存命中与静态诊断不触发准备。批次复用成功结果，失败后允许下一次调用重试。auth、preflight 和安装器共用持久记录。
 运行时不自动安装缺失的 Python 依赖；core 安装缺少 browser extra，或指定
 `PAPER_FETCH_BROWSER_BINARY_PATH` 时，跳过托管更新。
-核心安装不下载浏览器，可选安装向导仅在用户明确选择后预置并验证本地启动，
+安装器默认准备平台支持的后端，并提供跳过开关；准备后验证真实后端本地启动，
 详见 [离线包](deployment.md#离线包)。
 
 browser/full extras 固定 `camoufox==0.5.9`，不自动升级 Python 包。未显式指定
@@ -42,15 +39,7 @@ browser/full extras 固定 `camoufox==0.5.9`，不自动升级 Python 包。未�
 用户已有渠道、版本 pin、SHA 和自定义 executable 保持优先。可用
 `python -m camoufox set official/stable` 跟踪 stable，或用
 `python -m camoufox set official/prerelease/<version>` 固定版本。
-显式 pin 只准备对应版本，有效本地 pin 直接复用；未 pin 时，本地 runtime 有效且
-距上次实际检查结束不足 24 小时则直接复用，满 24 小时后的首次调用再次联网检查。
-检查或更新失败也计时；跳过检查不延长间隔，取消不记为完成。浏览器缺失、损坏
-或不兼容时立即准备。渠道、pin/SHA 或 Camoufox Python 包版本变化后重新判断
-准备需求。记录位于共享 cache 的 `.paper-fetch-update-check.json`，在同一进程锁内
-读取和原子写入；缺失、损坏或时间戳在未来时重新检查，写入失败只向 stderr 报告。
-更新失败且本地版本校验有效时提示并继续使用；没有可用版本
-则记录准备失败并继续 HTTP／缓存流程，实际需要浏览器时报告该失败，同次请求不
-重复更新。进度和错误写 stderr，取消继续传播。
+显式 pin 只准备对应版本，有效本地 pin 直接复用。最近一次检查成功且本地组件有效时，24 小时内不查询远端；“无需更新”也算成功。失败或取消只记录最近结果，不延长成功窗口，也不使用更早的成功时间阻止重试。记录在文件锁内复核并原子写入；旧版时间记录首次使用时重新确认。缺失、损坏或不兼容允许立即准备，更新失败时可复用兼容本地组件。安装器、CLI、MCP、API、auth 和 preflight 共用记录。
 
 联网阶段可先用项目准备逻辑预置最新兼容浏览器和 fpgen 模型：
 
@@ -68,7 +57,7 @@ fpgen 模型不包含在 Python wheel 中；首次生成指纹也可能下载模
 
 ## 选择与配置
 
-`PAPER_FETCH_PNAS_BROWSER_BACKEND=auto|flaresolverr|camoufox` 仅选择 PNAS 后端，默认 `auto` 按平台选择。显式选择不受支持的后端会报告配置错误，不自动切换。
+`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|flaresolverr` 统一选择已声明支持的后端，默认 `auto` 按 provider 和平台选择。现有 PNAS 变量保持兼容。显式选择不受支持的后端会报告配置错误，不自动切换。
 
 通用变量如下：
 
@@ -104,7 +93,7 @@ runtime 明确实现 Camoufox 的 custom-path metadata 布局时才使用该覆�
 目录规范化后使用进程间排他锁，同目录请求排队，不同出版社可并行；等待遵守取消和请求期限。
 切换出版社前关闭上一会话并释放目录锁，不交叉持锁等待。外部占用、目录归属冲突、
 元数据损坏和等待超时明确报错，不删除 Firefox 原生锁，不回退临时会话。
-纯 HTTP 和缓存命中的请求仍按既有准备规则共享上述 24 小时检查间隔。
+纯 HTTP 和缓存命中不触发浏览器准备。
 
 `auth` 使用有窗口模式；人工验证后关闭并重开同一目录，按正式抓取的窗口配置
 （默认无窗口）验证。原生目录是认证状态的主要来源；JSON 导出失败单独报告，不使
@@ -138,7 +127,7 @@ MIME、大小、像素、预算、staging 与原子发布检查。
 
 ## PNAS / Elsevier 系统 Chrome 与按需 FlareSolverr
 
-Windows 安装器和 Linux x64 在线／离线安装器在核心安装后自动准备，支持首次安装、升级和同版本重装；在线 `--lite`、macOS 和其他架构跳过。准备失败、缺依赖、拒绝安装或取消均保留核心安装。离线安装器此阶段可能联网；静默／非交互模式允许下载 FlareSolverr 和驱动，缺系统依赖时只输出指引，不等待输入或提权。
+Windows 安装器和 Linux x64 在线／离线安装器在核心安装后自动准备，支持首次安装、升级和同版本重装；在线 `--lite`、macOS 和其他架构跳过。准备失败、缺依赖、拒绝安装或取消均保留核心安装。离线安装器此阶段可能联网；静默／非交互模式允许用户级组件准备（离线包不下载 FlareSolverr 源码和依赖），缺系统依赖时只输出指引，不等待输入或提权。
 
 检查当前 Python、Playwright、系统 Google Chrome（115+）路径和版本，Linux 另查共享库、headless 的 Xvfb、只读 X11 socket 所需 bubblewrap 及 namespace。Chrome 显式路径优先且无效时要求修正；Windows 依次检查注册表、标准目录、PATH，Linux 检查命令和标准位置。Debian/Ubuntu 显示缺项与 APT 命令，默认不安装，确认后由 sudo 接收密码并重新检测；Chrome 优先使用源中候选，无候选时经确认下载 [Google 官方 deb](https://support.google.com/chrome/answer/95346) 并由 APT 安装。Windows 缺 Chrome 只提供官网指引，其他发行版提供手动安装指引。
 
@@ -150,8 +139,8 @@ Windows 安装器和 Linux x64 在线／离线安装器在核心安装后自动�
 
 薄启动器加载官方源码，绑定 Chrome 与驱动，移除上游忽略证书错误的参数，保留 TLS 校验。服务只监听随机 loopback 端口，私有控制接口带随机凭据，只暴露自己创建的会话 CDP 地址。新会话先访问对应 provider 主页（PNAS 或 ScienceDirect），再访问文章候选。FlareSolverr 导航期间 Playwright 只处理事件与既有资源路由；导航结束后由 Playwright 检查正文并收取资产。正文、图片、PDF、附件共用该上下文；按各 provider 的获取顺序验收，独立补充材料允许只读材料索引。上游的 `Challenge solved!` 和填充状态码不作为全文成功依据。
 
-状态目录按 provider 隔离为 `publisher-browser-profiles/pnas-flaresolverr/` 与 `publisher-browser-profiles/elsevier-flaresolverr/`，只在现有验收提交规则允许时保存过滤后的 cookies/localStorage，不导入 Firefox profile。Camoufox binary/profile 变量保留其原含义。能力缓存与来源诊断记录实际后端、状态摘要以及 Chrome／驱动版本。准备、导航和启动共用请求期限与取消机制；退出时清理所属服务、ChromeDriver、Chrome、CDP 和 Xvfb。安装包只带适配代码、启动器、锁和 manifest，不打包源码、Selenium、Chrome、驱动及用户下载缓存。
+状态目录按 provider 隔离为 `publisher-browser-profiles/pnas-flaresolverr/` 与 `publisher-browser-profiles/elsevier-flaresolverr/`，只在现有验收提交规则允许时保存过滤后的 cookies/localStorage，不导入 Firefox profile。Camoufox binary/profile 变量保留其原含义。能力缓存与来源诊断记录实际后端、状态摘要以及 Chrome／驱动版本。准备、导航和启动共用请求期限与取消机制；退出时清理所属服务、ChromeDriver、Chrome、CDP 和 Xvfb。Linux/Windows x64 离线包内置固定源码、私有 Python 依赖、许可证和组件清单，位于 `runtime/browser-components/flaresolverr/`；macOS 不组装该组件。源码、摘要和依赖在构建阶段进入 frozen snapshot、inventory、checksum 和 SBOM。离线组件损坏或缺失报告安装错误，不联网回补源码。源码/pip 安装继续按锁定版本准备源码与依赖，运行时不升级它们。Chrome、ChromeDriver、Camoufox binary 和指纹模型由准备流程管理。
 
 Elsevier 复用 `flaresolverr/` 中已校验的程序和驱动缓存。ScienceDirect 主文档响应结合最终 URL、PII 与页面 DOI 关联；保留实际 `403 → 200` 响应轨迹，不采用 solver 填充的状态。四阶段顺序及公开 source 见 [provider 说明](providers.md#3-provider-全文主路径)。
 
-安装后准备复用上述校验与缓存锁，下载预算 10 分钟；单独的 2 分钟本地启动检查按配置的 headless/headful 创建临时状态目录，验证 CDP 和 `about:blank` 脚本，不读取出版社登录态、不调用主页导航，完成或取消后关闭所属进程。重试：安装环境 Python 执行 `-m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-flaresolverr`，也可重跑安装器。运行时继续修复缓存缺失、损坏及 Chrome 更新后的驱动匹配。
+安装后准备复用上述校验与缓存锁，下载预算 10 分钟；单独的 2 分钟本地启动检查按配置的 headless/headful 创建临时状态目录，验证 CDP 和 `about:blank` 脚本，不读取出版社登录态、不调用主页导航，完成或取消后关闭所属进程。重试：安装环境 Python 执行 `-m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all`，也可重跑安装器。运行时继续修复缓存缺失、损坏及 Chrome 更新后的驱动匹配。

@@ -48,7 +48,7 @@ def fetch_supplementary(query, *, strategy, context, modes, resolve_paper_fn):
             "Query resolution is ambiguous; choose one DOI.",
             candidates=resolved.candidates,
         )
-    clients = dict(context.get_clients())
+    clients = context.get_clients()
     metadata, selected, metadata_trail = fetch_metadata_for_resolved_query(
         resolved,
         clients=clients,

@@ -19,7 +19,7 @@ from tests.live._runtime_env import (
     build_isolated_live_env,
     is_machine_readable_no_access,
     preflight_selected_browser_or_skip,
-    require_camoufox_or_skip,
+    require_browser_or_skip,
 )
 from tests.provider_benchmark_samples import (
     provider_benchmark_sample,
@@ -207,9 +207,19 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
             needs_browser_runtime=True,
         )
 
-    async def test_pnas_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
+    async def test_pnas_camoufox_live_via_mcp_reports_progress_and_logs(self) -> None:
+        self.env["PAPER_FETCH_PNAS_BROWSER_BACKEND"] = "camoufox"
+        await self._pnas_doi_live_via_mcp_reports_progress_and_logs()
+
+    async def test_pnas_flaresolverr_live_via_mcp_reports_progress_and_logs(
+        self,
+    ) -> None:
+        self.env["PAPER_FETCH_PNAS_BROWSER_BACKEND"] = "flaresolverr"
+        await self._pnas_doi_live_via_mcp_reports_progress_and_logs()
+
+    async def _pnas_doi_live_via_mcp_reports_progress_and_logs(self) -> None:
         self._require_env(*PNAS_SAMPLE.required_env)
-        require_camoufox_or_skip(self, self.env)
+        require_browser_or_skip(self, self.env, provider="pnas")
         progress_updates: list[tuple[float, float | None, str | None]] = []
         log_messages: list[object] = []
 

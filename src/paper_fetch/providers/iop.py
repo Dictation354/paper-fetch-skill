@@ -21,7 +21,7 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from ..models import AssetProfile
-from ..provider_catalog import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
+from ..provider_contracts import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, extend_unique, normalize_text
