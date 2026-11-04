@@ -6,6 +6,19 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.3.1 - 2026-11-04
+
+### 浏览器准备与离线组件
+
+- 在 provider 实际需要浏览器时惰性准备后端。成功的在线准备检查复用 24 小时，失败或取消后允许重试；Camoufox 指纹模型沿用同一托管准备路径。
+- Windows/Linux x64 离线包与冻结依赖快照内置固定的 FlareSolverr 源码、私有依赖、许可证和组件元数据。运行时本地校验内置组件，不再下载替代源码；浏览器与匹配的 ChromeDriver 继续独立准备。
+- 安装完成后准备当前平台支持的全部浏览器后端，共用依赖处理，并通过真实后端执行临时空白页检查。后端选择由 provider 声明，Camoufox 与 FlareSolverr 复用公共 Playwright 页面流程。
+
+### 运行时与批量资源归属
+
+- CLI/MCP 通过共用执行会话管理批量请求归属、DOI 分组、结果分发与取消屏障。子请求状态保持独立，provider client 按需构造，浏览器会话在所属 worker 线程关闭。
+- 将不可变 provider 契约与 catalog 装配分离，将模型结构编解码从 MCP 缓存迁出，保留输出结构、缓存兼容和共享 quality 数据。同步浏览器、安装、架构说明与回归覆盖。
+
 ## 7.3.0 - 2026-11-03
 
 ### 出版社浏览器目录与 FlareSolverr
