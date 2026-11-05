@@ -46,14 +46,16 @@ browser/full extras 固定 `camoufox==0.5.9`，不自动升级 Python 包。未�
 ```bash
 python - <<'PYCODE'
 from paper_fetch.providers.browser_runtime.preparation import prepare_camoufox_managed_runtime
-from camoufox.fpgen_model import ensure_fpgen_model
 assert prepare_camoufox_managed_runtime().valid
-ensure_fpgen_model()
 PYCODE
 ```
 
 fpgen 模型不包含在 Python wheel 中；首次生成指纹也可能下载模型到 fpgen 包目录，
 完全离线前需确认该目录可写并完成准备。
+项目模型准备入口在原下载请求失败时，通过 GitHub 官方 Release API 获取同一固定 tag
+和文件名的资产；压缩包及每个模型文件仍使用 Camoufox 包内固定的 SHA-256 校验，
+校验失败不触发回退。托管与自定义 executable 的模型准备均在启动 Playwright 之前完成，
+下载失败时直接返回错误。
 
 ## 选择与配置
 

@@ -54,6 +54,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["browser"]["html_snapshot_owner_thread"] = False
         contract["browser"]["supplementary_index_without_body"] = False
         for key in (
+            "fingerprint_model_github_api_fallback",
+            "fingerprint_model_before_playwright",
             "publisher_native_persistent_profiles",
             "profile_exclusive_lock_owner_thread",
             "auth_native_profile_replay",
@@ -83,6 +85,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertIn("html_snapshot_owner_thread must be true", diagnostic)
         self.assertIn("supplementary_index_without_body must be true", diagnostic)
         for key in (
+            "fingerprint_model_github_api_fallback",
+            "fingerprint_model_before_playwright",
             "publisher_native_persistent_profiles",
             "profile_exclusive_lock_owner_thread",
             "auth_native_profile_replay",

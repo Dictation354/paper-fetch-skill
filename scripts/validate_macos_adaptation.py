@@ -185,6 +185,8 @@ def validate_contract(
         "installer_skip_browser_prepare",
         "optional_install_failure_preserves_core",
         "managed_runtime_preparation",
+        "fingerprint_model_github_api_fallback",
+        "fingerprint_model_before_playwright",
         "batch_prepares_once",
         "prerelease_includes_stable",
         "native_bundle_gate",

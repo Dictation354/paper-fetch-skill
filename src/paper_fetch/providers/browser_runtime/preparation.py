@@ -9,6 +9,7 @@ from dataclasses import dataclass, field, replace
 from importlib import import_module
 from importlib.metadata import version as distribution_version
 from importlib.util import find_spec
+from io import BytesIO
 from collections.abc import Callable, Iterator, Mapping
 import json
 import math
@@ -20,6 +21,8 @@ import sys
 import threading
 import time
 from typing import Any
+from urllib.parse import quote
+from zipfile import ZipFile
 
 from filelock import FileLock, Timeout as LockTimeout
 
@@ -410,7 +413,62 @@ def _record_update_check(
 
 def prepare_camoufox_fingerprint_model() -> None:
     """Verify/prepare the model pinned by the installed Camoufox package."""
-    import_module("camoufox.fpgen_model").ensure_fpgen_model()
+    from requests.exceptions import RequestException
+
+    model = import_module("camoufox.fpgen_model")
+    try:
+        model.ensure_fpgen_model()
+    except RequestException:
+        preparation_cancel_check.get()()
+        _install_camoufox_model_from_github(model)
+        model.ensure_fpgen_model()
+
+
+def _install_camoufox_model_from_github(model: Any) -> None:
+    """Seed the same pinned model via GitHub's asset API, retaining all hashes."""
+    import requests
+
+    pkgman = import_module("camoufox.pkgman")
+    pin = model.PIN
+    release_path = f"repos/{pin['repo']}/releases"
+    release = pkgman.github_api(f"{release_path}/tags/{quote(pin['tag'], safe='')}")
+    asset = next(
+        (item for item in release.get("assets", []) if item.get("name") == pin["asset"]),
+        None,
+    )
+    if asset is None:
+        raise RuntimeError(f"Pinned fpgen model asset is missing: {pin['tag']}")
+    preparation_cancel_check.get()()
+    headers = {"Accept": "application/octet-stream"}
+    if pkgman.GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {pkgman.GITHUB_TOKEN}"
+    print("Retrying pinned fpgen model download via GitHub API", file=sys.stderr)
+    with requests.get(
+        f"https://api.github.com/{release_path}/assets/{int(asset['id'])}",
+        headers=headers,
+        timeout=60,
+    ) as response:
+        response.raise_for_status()
+        buffer = BytesIO(response.content)
+    model.verify_sha256(buffer, pin["sha256"], "fpgen model")
+    members = {}
+    with ZipFile(buffer) as archive:
+        if sorted(archive.namelist()) != sorted(pin["file_sha256"]):
+            raise model.CorruptedDownload("fpgen model archive members differ from the pin.")
+        for name, digest in pin["file_sha256"].items():
+            content = archive.read(name)
+            model.verify_sha256(BytesIO(content), digest, f"fpgen model member {name}")
+            members[name] = content
+    preparation_cancel_check.get()()
+    # Do not replace upstream's downloader globally: other threads may use it.
+    # Verify every member before writing, with the same lock/atomic writes/mtime
+    # as Camoufox. ensure_fpgen_model then rechecks and stamps the model itself.
+    with model._LOCK:
+        data_dir = model.fpgen_data_dir()
+        data_dir.mkdir(parents=True, exist_ok=True)
+        (data_dir / model.STAMP).unlink(missing_ok=True)
+        for name, content in members.items():
+            model.write_atomic(data_dir / name, content, mtime=model.PINNED_MTIME)
 
 
 def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:

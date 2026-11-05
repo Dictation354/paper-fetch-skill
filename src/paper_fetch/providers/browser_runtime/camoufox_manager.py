@@ -9,11 +9,16 @@ import sys
 import threading
 from typing import Any
 
-from .preparation import fetch_browser_preparation, prepare_camoufox_managed_runtime
+from .preparation import (
+    fetch_browser_preparation,
+    prepare_camoufox_fingerprint_model,
+    prepare_camoufox_managed_runtime,
+)
 
 
 def _launch_executable_path(binary_path: str | None) -> str | None:
     if binary_path:
+        prepare_camoufox_fingerprint_model()
         return binary_path
     prepared = fetch_browser_preparation.get()
     if prepared is None:
@@ -72,16 +77,16 @@ class CamoufoxBrowserManager:
         self._assert_owner_thread()
         if self._browser is not None:
             return self._browser
+        executable_path = _launch_executable_path(self.binary_path)
+        self._firefox_major_version = (
+            _launch_firefox_major_version(executable_path)
+            if executable_path is not None
+            else None
+        )
         sync_api = importlib.import_module("camoufox.sync_api")
         playwright_api = importlib.import_module("playwright.sync_api")
         self._playwright = playwright_api.sync_playwright().start()
         try:
-            executable_path = _launch_executable_path(self.binary_path)
-            self._firefox_major_version = (
-                _launch_firefox_major_version(executable_path)
-                if executable_path is not None
-                else None
-            )
             launch_kwargs: dict[str, Any] = {
                 "headless": self.headless,
             }
@@ -155,16 +160,16 @@ class CamoufoxPersistentContextManager:
         self._owner_thread_id = thread_id
         if self._context is not None:
             return self._context
+        executable_path = _launch_executable_path(self.binary_path)
+        firefox_major_version = (
+            _launch_firefox_major_version(executable_path)
+            if executable_path is not None
+            else None
+        )
         sync_api = importlib.import_module("camoufox.sync_api")
         playwright_api = importlib.import_module("playwright.sync_api")
         self._playwright = playwright_api.sync_playwright().start()
         try:
-            executable_path = _launch_executable_path(self.binary_path)
-            firefox_major_version = (
-                _launch_firefox_major_version(executable_path)
-                if executable_path is not None
-                else None
-            )
             launch_kwargs: dict[str, Any] = {
                 "headless": self.headless,
                 "user_data_dir": self.user_data_dir,

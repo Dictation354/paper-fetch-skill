@@ -37,6 +37,155 @@ from paper_fetch.providers.browser_runtime.types import (
 from paper_fetch.runtime import RuntimeContext
 
 
+@pytest.fixture(autouse=True)
+def mock_custom_fingerprint_preparation(monkeypatch):
+    prepare = mock.Mock()
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.camoufox_manager.prepare_camoufox_fingerprint_model",
+        prepare,
+    )
+    return prepare
+
+
+@pytest.fixture
+def fingerprint_model(monkeypatch, tmp_path):
+    import hashlib
+    from io import BytesIO
+    from zipfile import ZipFile
+    import requests
+    from camoufox import fpgen_model, pkgman
+
+    members = {"values.json.zst": b"model", "values.dat.zst": b"data"}
+    buffer = BytesIO()
+    with ZipFile(buffer, "w") as archive:
+        for name, content in members.items():
+            archive.writestr(name, content)
+    payload = buffer.getvalue()
+    pin = {
+        "repo": "scrapfly/fingerprint-generator",
+        "tag": "model-2/2026",
+        "asset": "model-release.zip",
+        "url": "https://github.com/scrapfly/fingerprint-generator/releases/download/model-2/2026/model-release.zip",
+        "sha256": hashlib.sha256(payload).hexdigest(),
+        "file_sha256": {
+            name: hashlib.sha256(content).hexdigest() for name, content in members.items()
+        },
+        "decompressed_sha256": {},
+    }
+    data_dir = tmp_path / "model"
+    monkeypatch.delenv(fpgen_model.CUSTOM_MODEL_ENV, raising=False)
+    monkeypatch.setattr(fpgen_model, "PIN", pin)
+    monkeypatch.setattr(fpgen_model, "fpgen_data_dir", lambda: data_dir)
+    direct = mock.Mock(side_effect=requests.HTTPError("504 Gateway Time-out"))
+    monkeypatch.setattr(fpgen_model, "webdl", direct)
+    release = mock.Mock(return_value={"assets": [{"name": pin["asset"], "id": 123}]})
+    monkeypatch.setattr(pkgman, "github_api", release)
+    monkeypatch.setattr(pkgman, "GITHUB_TOKEN", "test-token")
+    response = mock.MagicMock(content=payload)
+    response.__enter__.return_value = response
+    download = mock.Mock(return_value=response)
+    monkeypatch.setattr(requests, "get", download)
+    return SimpleNamespace(
+        model=fpgen_model, data_dir=data_dir, pin=pin, payload=payload,
+        members=members, direct=direct, release=release, download=download,
+        response=response,
+    )
+
+
+def test_model_download_falls_back_to_pinned_github_asset(fingerprint_model, capsys):
+    env = fingerprint_model
+    preparation.prepare_camoufox_fingerprint_model()
+    assert env.model.is_pinned()
+    assert (env.data_dir / env.model.STAMP).read_text().strip() == env.pin["sha256"]
+    for name, content in env.members.items():
+        assert (env.data_dir / name).read_bytes() == content
+        assert int((env.data_dir / name).stat().st_mtime) == env.model.PINNED_MTIME
+    env.release.assert_called_once_with(
+        "repos/scrapfly/fingerprint-generator/releases/tags/model-2%2F2026"
+    )
+    env.download.assert_called_once_with(
+        "https://api.github.com/repos/scrapfly/fingerprint-generator/releases/assets/123",
+        headers={"Accept": "application/octet-stream", "Authorization": "Bearer test-token"},
+        timeout=60,
+    )
+    preparation.prepare_camoufox_fingerprint_model()
+    assert env.direct.call_count == env.download.call_count == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "via GitHub API" in captured.err
+
+
+@pytest.mark.parametrize("failure", ["archive_hash", "members", "member_hash"])
+def test_model_api_fallback_keeps_all_hash_checks(fingerprint_model, failure):
+    import hashlib
+    env = fingerprint_model
+    if failure == "archive_hash":
+        env.response.content = b"corrupted download"
+    elif failure == "members":
+        env.pin["file_sha256"]["unexpected.zst"] = "0" * 64
+    else:
+        env.pin["file_sha256"]["values.dat.zst"] = hashlib.sha256(b"other").hexdigest()
+    with pytest.raises(env.model.CorruptedDownload):
+        preparation.prepare_camoufox_fingerprint_model()
+    assert not env.data_dir.exists()
+
+
+@pytest.mark.parametrize("source", ["cache", "direct", "custom"])
+def test_model_does_not_use_api_when_not_needed(fingerprint_model, monkeypatch, source):
+    from io import BytesIO
+    env = fingerprint_model
+    env.direct.side_effect = None
+    env.direct.return_value = BytesIO(env.payload)
+    if source == "cache":
+        env.model.ensure_fpgen_model()
+        env.direct.reset_mock()
+    elif source == "custom":
+        monkeypatch.setenv(env.model.CUSTOM_MODEL_ENV, "https://example.test/model.zip")
+    preparation.prepare_camoufox_fingerprint_model()
+    assert env.direct.call_count == int(source == "direct")
+    env.release.assert_not_called()
+    env.download.assert_not_called()
+
+
+@pytest.mark.parametrize("error", [PermissionError("read-only"), ValueError("invalid model")])
+def test_model_non_network_failure_does_not_trigger_api(fingerprint_model, error):
+    env = fingerprint_model
+    env.direct.side_effect = error
+    expected = env.model.FpgenModelError if isinstance(error, PermissionError) else type(error)
+    with pytest.raises(expected):
+        preparation.prepare_camoufox_fingerprint_model()
+    env.release.assert_not_called()
+    env.download.assert_not_called()
+
+
+def test_original_model_hash_failure_does_not_trigger_api(fingerprint_model):
+    from io import BytesIO
+    env = fingerprint_model
+    env.direct.side_effect = None
+    env.direct.return_value = BytesIO(b"corrupted download")
+    with pytest.raises(env.model.CorruptedDownload):
+        preparation.prepare_camoufox_fingerprint_model()
+    env.release.assert_not_called()
+    env.download.assert_not_called()
+
+
+def test_model_api_download_failure_propagates(fingerprint_model):
+    import requests
+    env = fingerprint_model
+    env.response.raise_for_status.side_effect = requests.HTTPError("API download failed")
+    with pytest.raises(requests.HTTPError, match="API download failed"):
+        preparation.prepare_camoufox_fingerprint_model()
+    assert not env.data_dir.exists()
+
+
+def test_model_api_missing_asset_does_not_download(fingerprint_model):
+    env = fingerprint_model
+    env.release.return_value = {"assets": [{"name": "other.zip", "id": 456}]}
+    with pytest.raises(RuntimeError, match="Pinned fpgen model asset is missing"):
+        preparation.prepare_camoufox_fingerprint_model()
+    env.download.assert_not_called()
+
+
 def test_camoufox_context_failure_closes_at_backend_boundary(
     monkeypatch, tmp_path
 ) -> None:
@@ -493,8 +642,10 @@ def test_camoufox_persistent_explicit_binary_path_is_forwarded(
     assert version_type.from_path.call_count == 2
 
 
-def test_camoufox_manager_stops_playwright_when_runtime_readiness_check_fails(
-    monkeypatch,
+@pytest.mark.parametrize("persistent", [False, True])
+@pytest.mark.parametrize("binary_path", [None, "/custom/camoufox"])
+def test_camoufox_preparation_failure_never_starts_playwright(
+    monkeypatch, persistent, binary_path,
 ) -> None:
     playwright = SimpleNamespace(stop=mock.Mock())
     playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
@@ -509,7 +660,8 @@ def test_camoufox_manager_stops_playwright_when_runtime_readiness_check_fails(
         raise AssertionError(name)
 
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager._launch_executable_path",
+        "paper_fetch.providers.browser_runtime.camoufox_manager."
+        + ("prepare_camoufox_fingerprint_model" if binary_path else "prepare_camoufox_managed_runtime"),
         mock.Mock(side_effect=RuntimeError("runtime not prepared")),
     )
     monkeypatch.setattr(
@@ -517,10 +669,57 @@ def test_camoufox_manager_stops_playwright_when_runtime_readiness_check_fails(
         import_module,
     )
 
+    manager = (
+        CamoufoxPersistentContextManager(user_data_dir="/profile", binary_path=binary_path)
+        if persistent else CamoufoxBrowserManager(binary_path=binary_path)
+    )
     with pytest.raises(RuntimeError, match="runtime not prepared"):
-        CamoufoxBrowserManager().browser()
+        manager.new_context() if persistent else manager.browser()
+    manager.close()
 
-    playwright.stop.assert_called_once_with()
+    playwright_manager.start.assert_not_called()
+    playwright.stop.assert_not_called()
+
+
+@pytest.mark.parametrize("persistent", [False, True])
+@pytest.mark.parametrize("binary_path", [None, "/custom/camoufox"])
+def test_camoufox_prepares_before_playwright_and_reuses_session(
+    monkeypatch, persistent, binary_path,
+):
+    from paper_fetch.providers.browser_runtime import camoufox_manager
+    order = []
+
+    def prepare():
+        order.append("prepare")
+
+    monkeypatch.setattr(camoufox_manager, "prepare_camoufox_managed_runtime", prepare)
+    monkeypatch.setattr(camoufox_manager, "prepare_camoufox_fingerprint_model", prepare)
+    monkeypatch.setattr(camoufox_manager, "_launch_firefox_major_version", lambda _: 152)
+    browser = SimpleNamespace(close=mock.Mock())
+    playwright = SimpleNamespace(stop=mock.Mock())
+
+    def start():
+        order.append("start")
+        return playwright
+
+    def launch(*_args, **_kwargs):
+        order.append("launch")
+        return browser
+
+    modules = {
+        "playwright.sync_api": SimpleNamespace(sync_playwright=lambda: SimpleNamespace(start=start)),
+        "camoufox.sync_api": SimpleNamespace(NewBrowser=launch),
+    }
+    monkeypatch.setattr(camoufox_manager.importlib, "import_module", modules.__getitem__)
+    manager = (
+        CamoufoxPersistentContextManager(user_data_dir="/profile", binary_path=binary_path)
+        if persistent else CamoufoxBrowserManager(binary_path=binary_path)
+    )
+    open_browser = manager.new_context if persistent else manager.browser
+    assert open_browser() is open_browser() is browser
+    assert order == ["prepare", "start", "launch"]
+    manager.close()
+    playwright.stop.assert_called_once()
 
 
 def test_camoufox_first_launch_prepares_official_runtime(monkeypatch) -> None:
@@ -3263,7 +3462,7 @@ def test_browser_entrypoints_prepare_missing_runtime(
     assert preparation.probe_camoufox_managed_runtime().valid is download_available
     assert launch.call_count == int(download_available)
     env.query.assert_called_once()
-    playwright.stop.assert_called_once()
+    assert playwright.stop.call_count == int(download_available)
 
 
 def test_camoufox_missing_python_dependency_still_rejected(monkeypatch, tmp_path):
