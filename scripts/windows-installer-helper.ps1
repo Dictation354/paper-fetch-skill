@@ -668,7 +668,16 @@ assert hasattr(camoufox, "Camoufox")
 assert CamoufoxBrowserManager is not None
 '@
     Invoke-RuntimePythonScript -Script $browserRuntimeCheck
-    Invoke-Checked -FilePath $texmath -Arguments @("--help")
+    Invoke-RuntimePythonScript -Arguments @($texmath) -Script @'
+import subprocess
+import sys
+
+result = subprocess.run([sys.argv[1], "--version"], capture_output=True, text=True, errors="replace")
+if result.returncode:
+    print(f"texmath smoke check failed (exit {result.returncode}):", file=sys.stderr)
+    print(result.stdout + result.stderr, file=sys.stderr)
+    raise SystemExit(result.returncode)
+'@
     Invoke-Checked -FilePath $node -Arguments @("--version")
     if (Test-Path -LiteralPath $gs -PathType Leaf) {
         Invoke-Checked -FilePath $gs -Arguments @("--version")

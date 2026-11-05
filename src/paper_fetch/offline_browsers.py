@@ -13,38 +13,60 @@ if TYPE_CHECKING:
     from .offline_setup import Setup
 
 
+def selected_backends(selection: str) -> tuple[str, ...]:
+    supported = ("Camoufox", "FlareSolverr") if supported_platform() else ("Camoufox",)
+    return tuple(name for name in supported if selection in {"all", name.lower()})
+
+
 def prepare(setup: Setup, *, selection: str, interactive: bool) -> None:
-    backends = (
-        (("camoufox", "flaresolverr") if supported_platform() else ("camoufox",))
-        if selection == "all"
-        else (selection,)
-    )
+    backends = selected_backends(selection)
+    if not backends:
+        setup.report(
+            "FlareSolverr", "skipped", "Only Windows/Linux x64; macOS uses Camoufox"
+        )
+        return
     if sys.platform == "linux":
         libraries = {}
-        if "camoufox" in backends:
+        if "Camoufox" in backends:
             libraries.update(wizard.BROWSER_LIBRARIES)
-        if "flaresolverr" in backends and supported_platform():
+        if "FlareSolverr" in backends:
             libraries.update(flaresolverr.CHROME_LIBRARIES)
         missing = {
             name: packages
             for name, packages in libraries.items()
             if wizard.library_status(name) == "missing"
         }
-        if "flaresolverr" in backends and supported_platform():
+        for name in missing:
+            setup.report(name, "missing")
+        if "FlareSolverr" in backends:
             missing.update(
                 flaresolverr.linux_missing(setup, flaresolverr.headless_mode(setup.env))
             )
         flaresolverr.install_linux_dependencies(setup, missing, interactive=interactive)
+        remaining = {}
+        if "FlareSolverr" in backends:
+            remaining.update(
+                flaresolverr.linux_missing(setup, flaresolverr.headless_mode(setup.env))
+            )
+        for name in missing:
+            state = (
+                wizard.library_status(name)
+                if name in libraries
+                else ("missing" if name in remaining else "ready")
+            )
+            setup.report(name, state)
+            if state != "ready":
+                remaining[name] = missing[name]
+        if missing and not remaining:
+            setup.report(
+                "FlareSolverr dependencies", "ready", "System dependencies rechecked"
+            )
     for backend in backends:
-        if backend == "flaresolverr":
+        if backend == "FlareSolverr":
             setup.step(
                 "FlareSolverr",
-                lambda: (
-                    flaresolverr.prepare(
-                        setup, interactive=interactive, system_dependencies=False
-                    )
-                    if selection == "all"
-                    else flaresolverr.prepare(setup, interactive=interactive)
+                lambda: flaresolverr.prepare(
+                    setup, interactive=interactive, system_dependencies=False
                 ),
             )
         else:

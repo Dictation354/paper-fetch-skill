@@ -183,6 +183,7 @@ def validate_contract(
         "success_only_update_interval",
         "installer_prepares_camoufox",
         "installer_skip_browser_prepare",
+        "installer_preparation_single_pass",
         "optional_install_failure_preserves_core",
         "managed_runtime_preparation",
         "fingerprint_model_github_api_fallback",

@@ -218,7 +218,7 @@ def test_independent_mode_runs_noninteractively_and_respects_config(
         )
         == 0
     )
-    assert calls[0][1] == {"interactive": False}
+    assert calls[0][1] == {"interactive": False, "system_dependencies": False}
     assert not flare.headless_mode(calls[0][0])
     assert (
         "Retry:" in result.read_text()
@@ -301,3 +301,109 @@ def test_linux_detects_shared_libraries_and_headless_socket_dependencies(
     assert missing["libnss3.so"] == ("libnss3",)
     assert ("Xvfb" in missing) == headless
     assert ("bubblewrap (read-only X11 sockets)" in missing) == headless
+
+
+@pytest.mark.parametrize("supported", [False, True])
+@pytest.mark.parametrize("selection", ["all", "camoufox", "flaresolverr"])
+@pytest.mark.parametrize(
+    "outcome", ["ready", "partial", "cancelled", "missing", "exception"]
+)
+def test_browser_overall_status_and_retry_follow_selected_backends(
+    tmp_path, monkeypatch, supported, selection, outcome
+):
+    from paper_fetch import offline_browsers
+
+    monkeypatch.setattr(offline_browsers, "supported_platform", lambda: supported)
+    monkeypatch.setattr(flare, "supported_platform", lambda: supported)
+    monkeypatch.setattr(offline_browsers.sys, "platform", "darwin")
+    result = tmp_path / "result.txt"
+
+    def camoufox(setup, **kwargs):
+        if outcome == "cancelled":
+            raise KeyboardInterrupt
+        if outcome == "exception":
+            raise OSError("secret")
+        if outcome != "missing":
+            setup.report("Camoufox", "ready" if outcome == "ready" else "failed")
+
+    def flaresolverr(setup, **kwargs):
+        if outcome != "missing":
+            setup.report("FlareSolverr", "ready")
+
+    monkeypatch.setattr(wizard.Setup, "browser", camoufox)
+    monkeypatch.setattr(flare, "prepare", flaresolverr)
+    assert (
+        wizard.main(
+            [
+                "--install-root",
+                str(tmp_path),
+                "--prepare-browsers",
+                selection,
+                "--non-interactive",
+                "--result",
+                str(result),
+            ]
+        )
+        == 0
+    )
+    summary = result.read_text()
+    if selection == "flaresolverr" and not supported:
+        expected = "skipped"
+    elif outcome == "ready" or (selection == "flaresolverr" and outcome != "missing"):
+        expected = "ready"
+    else:
+        expected = "not ready"
+    assert summary.splitlines()[0] == f"Browser preparation: {expected}"
+    assert ("Retry:" in summary) == (expected == "not ready")
+    assert "Core installation preserved" in summary
+    assert "secret" not in summary
+    if expected == "not ready":
+        assert f"--prepare-browsers {selection}" in summary
+        assert str(tmp_path / "offline.env") in summary
+    if (
+        selection == "all"
+        and supported
+        and outcome in {"cancelled", "exception", "partial"}
+    ):
+        assert "FlareSolverr: ready" in summary
+
+
+def test_python_check_finishes_with_ready_or_unsupported(setup, monkeypatch):
+    monkeypatch.setattr(flare.platform, "python_implementation", lambda: "PyPy")
+    flare.prepare(setup, interactive=False)
+    assert "Python: unsupported" in setup.summary()
+    assert "Python: checking" not in setup.summary()
+
+
+def test_shared_preparation_rechecks_dependencies_without_second_install(
+    setup, monkeypatch
+):
+    from paper_fetch import offline_browsers
+
+    installed = []
+    monkeypatch.setattr(offline_browsers, "supported_platform", lambda: True)
+    monkeypatch.setattr(
+        wizard,
+        "library_status",
+        lambda name: "ready" if installed or name != "libgtk-3.so.0" else "missing",
+    )
+    monkeypatch.setattr(wizard, "apt_supported", lambda: True)
+    monkeypatch.setattr(wizard, "apt_package", lambda names: names[0])
+    monkeypatch.setattr(wizard, "confirm", lambda _: True)
+    monkeypatch.setattr(setup, "install_packages", lambda *args: installed.append(args))
+    monkeypatch.setattr(
+        setup, "browser", lambda **kw: setup.report("Camoufox", "ready")
+    )
+    prepare = Mock(
+        side_effect=lambda setup, **kw: setup.report("FlareSolverr", "ready")
+    )
+    monkeypatch.setattr(flare, "prepare", prepare)
+    offline_browsers.prepare(setup, selection="all", interactive=True)
+    assert len(installed) == 1
+    assert prepare.call_args.kwargs == {
+        "interactive": True,
+        "system_dependencies": False,
+    }
+    assert "libgtk-3.so.0: ready" in setup.summary()
+    assert "missing" not in setup.summary()
+    assert "installation available" not in setup.summary()

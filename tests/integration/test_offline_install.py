@@ -90,6 +90,16 @@ def _fake_python_script(
     if [[ "${{1:-}}" == "-m" && "${{2:-}}" == "paper_fetch.offline_setup" ]]; then
       printf 'POST_INSTALL_SETUP %s\\n' "$*"
       if [[ "$*" == *'--prepare-browsers all'* ]]; then
+        result_path=""
+        while (( $# )); do
+          if [[ "$1" == '--result' ]]; then result_path="$2"; break; fi
+          shift
+        done
+        state="${{PAPER_FETCH_TEST_PREPARATION_STATE:-ready}}"
+        if [[ "$state" != 'missing' ]]; then
+          printf 'Browser preparation: %s\\n' "$state" > "$result_path"
+          printf 'Camoufox: ready\\nFlareSolverr: ready\\n' >> "$result_path"
+        fi
         exit "${{PAPER_FETCH_TEST_PREPARATION_EXIT:-0}}"
       fi
       exit 0
@@ -2183,3 +2193,139 @@ exec /bin/mv "$@"
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@pytest.mark.parametrize("target", ["linux", "macos"])
+@pytest.mark.parametrize(
+    "mode,expected",
+    [
+        ("ready", "ready"),
+        ("not ready", "not ready"),
+        ("missing", "not ready"),
+        ("cancelled", "not ready"),
+        ("error", "not ready"),
+        ("skip", "skipped"),
+    ],
+)
+def test_installer_browser_results_follow_current_run(tmp_path, target, mode, expected):
+    harness = OfflineInstallTests()
+    host = (
+        {}
+        if target == "linux"
+        else {
+            "target_platform": "macos",
+            "target_arch": "arm64",
+            "uname_kernel": "Darwin",
+            "uname_machine": "arm64",
+        }
+    )
+    bundle, fake_bin, home = harness._create_bundle(tmp_path, **host)
+    install_root = tmp_path / "installed"
+    # An owned prior install may contain results from a different run.
+    initial = harness._run_installer(
+        bundle, fake_bin, home, "--non-interactive", install_dir=install_root
+    )
+    assert initial.returncode == 0, initial.stderr
+    result_path = install_root / "browser-setup-results.txt"
+    result_path.write_text("Browser preparation: ready\nSTALE_RESULT\n")
+    args = ["--non-interactive"]
+    if mode == "skip":
+        args.append("--skip-browser-prepare")
+    result = harness._run_installer(
+        bundle,
+        fake_bin,
+        home,
+        *args,
+        install_dir=install_root,
+        extra_env={
+            "PAPER_FETCH_TEST_PREPARATION_STATE": mode
+            if mode in {"ready", "not ready", "missing"}
+            else "ready",
+            "PAPER_FETCH_TEST_PREPARATION_EXIT": "130"
+            if mode == "cancelled"
+            else "17"
+            if mode == "error"
+            else "0",
+        },
+    )
+    assert result.returncode == 0, result.stderr
+    assert "Offline installation complete" in result.stdout
+    assert f"Browser preparation: {expected}" in result.stdout
+    assert ("Retry:" in result.stdout) == (expected == "not ready")
+    assert "STALE_RESULT" not in result.stdout
+    if mode == "skip":
+        assert "Prepare manually:" in result.stdout
+        assert "Browser preparation results:" not in result.stdout
+        assert not result_path.exists()
+        assert "POST_INSTALL_SETUP" not in result.stdout
+    else:
+        assert (
+            result_path.read_text().splitlines()[0]
+            == f"Browser preparation: {expected}"
+        )
+        assert "STALE_RESULT" not in result_path.read_text()
+        assert result.stdout.count("POST_INSTALL_SETUP") == 1
+        assert "Browser preparation results:" in result.stdout
+    if expected == "not ready":
+        assert "--prepare-browsers all" in result.stdout.split("Retry:", 1)[1]
+
+
+@pytest.mark.parametrize("exit_code", [0, 7])
+def test_texmath_smoke_captures_version_and_only_prints_failures(tmp_path, exit_code):
+    harness = OfflineInstallTests()
+    bundle, fake_bin, home = harness._create_bundle(tmp_path)
+    _write_executable(
+        bundle / "formula-tools/bin/texmath",
+        f"""\
+        #!/usr/bin/env bash
+        [ "$1" = "--version" ] || exit 91
+        echo TEXMATH_STDOUT
+        echo TEXMATH_STDERR >&2
+        exit {exit_code}
+    """,
+    )
+    _write_checksums(bundle)
+    result = harness._run_installer(
+        bundle,
+        fake_bin,
+        home,
+        "--non-interactive",
+        "--skip-browser-prepare",
+        skip_smoke=False,
+    )
+    if exit_code:
+        assert result.returncode != 0
+        assert "texmath smoke check failed" in result.stderr
+        assert "TEXMATH_STDOUT" in result.stderr and "TEXMATH_STDERR" in result.stderr
+    else:
+        assert result.returncode == 0, result.stderr
+        assert "TEXMATH_STDOUT" not in result.stdout + result.stderr
+        assert "TEXMATH_STDERR" not in result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("exit_code", [0, 7])
+def test_windows_texmath_python_smoke_captures_both_streams(tmp_path, exit_code):
+    script = WINDOWS_INSTALLER_HELPER.read_text()
+    smoke = script.split(
+        "Invoke-RuntimePythonScript -Arguments @($texmath) -Script @'\n", 1
+    )[1].split("\n'@", 1)[0]
+    binary = tmp_path / "texmath"
+    _write_executable(
+        binary,
+        f"""\
+        #!/usr/bin/env bash
+        [ "$1" = "--version" ] || exit 91
+        echo TEXMATH_STDOUT
+        echo TEXMATH_STDERR >&2
+        exit {exit_code}
+    """,
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", smoke, str(binary)], capture_output=True, text=True
+    )
+    assert result.returncode == exit_code
+    if exit_code:
+        assert "texmath smoke check failed" in result.stderr
+        assert "TEXMATH_STDOUT" in result.stderr and "TEXMATH_STDERR" in result.stderr
+    else:
+        assert result.stdout == result.stderr == ""

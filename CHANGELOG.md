@@ -6,6 +6,16 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.3.6 - 2026-11-05
+
+### Offline installation flow and logging fixes
+
+- Prepare browsers automatically only once per installation. Limit terminal optional configuration and Windows component options to credentials, Ghostscript and libvips, keeping image tool installs off by default. Preserve the Windows five-line request protocol and explicit browser preparation for older callers.
+- Keep the latest final result per component and display progress states only in real time. Report Python as ready or unsupported, remove resolved missing states from summaries and add a stable overall browser status that succeeds only when every selected supported backend is ready.
+- Align Linux, macOS and Windows completion messages: clear stale results, show completion and result paths on success, preserve core installation and provide an independent retry command on failure or cancellation, and show a manual preparation command when skipped. Clarify that default browser preparation may use the network and that skipping affects installation only, preserving runtime on-demand preparation.
+- Capture texmath `--version` output, remaining silent on success and showing diagnostics on failure. Report image tool readiness once with conversion evidence. Shorten only the known Canvas/WebGL random-readback warning during installation preparation, preserving fingerprint settings and other warnings.
+- Update browser and deployment documentation, the macOS single-pass preparation contract and regression coverage.
+
 ## 7.3.5 - 2026-11-05
 
 ### Camoufox preparation fixes

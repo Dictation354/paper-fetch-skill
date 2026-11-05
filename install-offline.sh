@@ -10,6 +10,7 @@ MERGE_USER_CONFIG=0
 RUN_SMOKE=1
 NON_INTERACTIVE=0
 SKIP_BROWSER_PREPARE=0
+BROWSER_PREPARATION_STATE="skipped"
 UNINSTALL=0
 PURGE=0
 INSTALL_ROOT=""
@@ -145,6 +146,9 @@ Options:
 
 Environment:
   PAPER_FETCH_BROWSER_HEADLESS Set to false for a headful managed browser runtime.
+
+Browser preparation runs by default and may download browser components and fingerprint models.
+Optional Ghostscript/libvips installs default to No.
 EOF
 }
 
@@ -1417,11 +1421,14 @@ check_browser_runtime_package() {
 run_smoke_checks() {
   [ "$RUN_SMOKE" = "1" ] || return 0
 
-  local key env_args=()
+  local key texmath_output env_args=()
 
   log "Running local smoke checks"
   "$INSTALL_ROOT/bin/paper-fetch" --help >/dev/null
-  "$INSTALL_ROOT/formula-tools/bin/texmath" --help >/dev/null
+  if ! texmath_output="$("$INSTALL_ROOT/formula-tools/bin/texmath" --version 2>&1)"; then
+    warn "texmath smoke check failed: $texmath_output"
+    return 1
+  fi
   if [ -x "$INSTALL_ROOT/image-tools/bin/gs" ]; then
     "$INSTALL_ROOT/image-tools/bin/gs" --version >/dev/null
   fi
@@ -1436,16 +1443,49 @@ run_smoke_checks() {
 }
 
 prepare_browsers() {
+  rm -f "$INSTALL_ROOT/browser-setup-results.txt"
   [ "$SKIP_BROWSER_PREPARE" = "0" ] || return 0
   local args=(--install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers all
     --result "$INSTALL_ROOT/browser-setup-results.txt")
   if [ "$NON_INTERACTIVE" = "1" ]; then args+=(--non-interactive); fi
   if [ "$REUSE_ENV_FILE" = "1" ]; then args+=(--reuse-env-file); fi
   log "Core installation complete; preparing supported browsers (may use the network)"
+  BROWSER_PREPARATION_STATE="not ready"
   trap ':' INT
-  "$(mcp_python_bin)" -m paper_fetch.offline_setup "${args[@]}" \
-    || warn "Browser preparation is not ready; core installation is preserved. Rerun this installer to retry."
+  if "$(mcp_python_bin)" -m paper_fetch.offline_setup "${args[@]}"; then
+    if [ -f "$INSTALL_ROOT/browser-setup-results.txt" ] \
+      && grep -qx 'Browser preparation: ready' "$INSTALL_ROOT/browser-setup-results.txt"; then
+      BROWSER_PREPARATION_STATE="ready"
+    fi
+  fi
   trap - INT
+  if [ "$BROWSER_PREPARATION_STATE" != "ready" ]; then
+    warn "Browser preparation is not ready; core installation is preserved."
+    if [ ! -f "$INSTALL_ROOT/browser-setup-results.txt" ] \
+      || ! grep -qx 'Browser preparation: not ready' "$INSTALL_ROOT/browser-setup-results.txt"; then
+      {
+        echo "Browser preparation: not ready"
+        echo "Preparation did not complete; core installation is preserved."
+        printf 'Retry: '
+        printf '%q ' "$(mcp_python_bin)" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers all
+        printf '\n'
+      } > "$INSTALL_ROOT/browser-setup-results.txt"
+    fi
+  fi
+}
+
+browser_preparation_summary() {
+  echo "Browser preparation: $BROWSER_PREPARATION_STATE"
+  if [ "$BROWSER_PREPARATION_STATE" != "skipped" ] && [ -f "$INSTALL_ROOT/browser-setup-results.txt" ]; then
+    echo "Browser preparation results: $INSTALL_ROOT/browser-setup-results.txt"
+  fi
+  case "$BROWSER_PREPARATION_STATE" in
+    "not ready") printf 'Retry: ' ;;
+    "skipped") printf 'Prepare manually: ' ;;
+    *) return 0 ;;
+  esac
+  printf '%q ' "$(mcp_python_bin)" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers all
+  printf '\n'
 }
 
 run_optional_configuration() {
@@ -1633,13 +1673,9 @@ main() {
   else
     echo "Default browser backend: Camoufox (headless: $(browser_headless_value))"
   fi
-  echo "The Camoufox browser binary is not bundled. Optional setup downloads it only with your consent."
-  echo "Skipping optional setup does not disable runtime automatic Camoufox preparation."
-  echo "Before moving fully offline, run '$INSTALL_ROOT/runtime/paper-fetch-python -m camoufox fetch', then 'paper-fetch browser-preflight'."
-  if [ "$HOST_PLATFORM" = "linux" ] && [ "$(uname -m)" = "x86_64" ]; then
-    echo "Browser preparation results: $INSTALL_ROOT/browser-setup-results.txt"
-    echo "Retry: \"$(mcp_python_bin)\" -m paper_fetch.offline_setup --install-root \"$INSTALL_ROOT\" --env-file \"$OFFLINE_ENV_FILE\" --prepare-browsers all"
-  fi
+  browser_preparation_summary
+  echo "Browser preparation runs by default and may download browser components and fingerprint models."
+  echo "--skip-browser-prepare skips installation preparation only; runtime automatic preparation remains enabled."
   echo "Restart Codex, Claude Code, and the Antigravity CLI so they rescan skills and MCP registration."
   echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to $OFFLINE_ENV_FILE before fetching Elsevier papers."
 }

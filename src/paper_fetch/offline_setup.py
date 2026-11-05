@@ -303,6 +303,29 @@ def apt_supported() -> bool:
     return bool(ids & {"debian", "ubuntu"}) and bool(shutil.which("apt-get"))
 
 
+@contextmanager
+def preparation_warnings():
+    """Shorten only the known Canvas warning during installer launch checks."""
+    from camoufox._warnings import LeakWarning, WARNINGS_DATA
+
+    with warnings.catch_warnings():
+        original = warnings.showwarning
+
+        def showwarning(message, category, filename, lineno, file=None, line=None):
+            if issubclass(category, LeakWarning) and str(message).startswith(
+                WARNINGS_DATA["canvas_noise"]
+            ):
+                print(
+                    "Camoufox: Canvas/WebGL readback returns random data (privacy fingerprint protection).",
+                    file=file or sys.stderr,
+                )
+            else:
+                original(message, category, filename, lineno, file=file, line=line)
+
+        warnings.showwarning = showwarning
+        yield
+
+
 class Setup:
     def __init__(self, root: Path, env_file: Path, *, readonly: bool = False):
         self.root, self.env_file, self.readonly = root, env_file, readonly
@@ -315,12 +338,19 @@ class Setup:
             },
         }
         self.env["PAPER_FETCH_IMAGE_TOOLS_DIR"] = str(root / "image-tools")
-        self.results: list[str] = []
+        self.results: dict[str, tuple[str, str]] = {}
 
     def report(self, name: str, state: str, detail: str = "") -> None:
         line = f"{name}: {state}" + (f" — {detail}" if detail else "")
-        self.results.append(line)
+        if state not in {"checking", "preparing", "installing"}:
+            self.results[name] = (state, detail)
         print(line, flush=True)
+
+    def result_lines(self) -> str:
+        return "\n".join(
+            f"{name}: {state}" + (f" — {detail}" if detail else "")
+            for name, (state, detail) in self.results.items()
+        )
 
     def step(self, name: str, action) -> None:
         try:
@@ -355,7 +385,7 @@ class Setup:
             self.report(
                 tool,
                 "ready",
-                f"External env is read-only; set {TOOL_KEYS[tool]}={binary}",
+                f"Conversion verified: {binary}; external env is read-only; set {TOOL_KEYS[tool]}={binary}",
             )
         else:
             update_env(self.env_file, {TOOL_KEYS[tool]: str(binary)})
@@ -364,7 +394,6 @@ class Setup:
 
     def image(self, tool: str, *, selected: bool | None = None) -> None:
         binary, state = detect_image(tool, self.env)
-        self.report(tool, state)
         if binary:
             self.save_tool(tool, binary)
             if sys.platform == "win32":
@@ -372,6 +401,7 @@ class Setup:
 
                 record_reused(self, tool, binary)
             return
+        self.report(tool, state)
         if sys.platform == "win32":
             if not selected:
                 self.report(tool, "skipped")
@@ -421,7 +451,7 @@ class Setup:
         binary, state = detect_image(tool, self.env)
         if binary:
             self.save_tool(tool, binary)
-        else:
+        elif self.results.get(tool, (None, ""))[0] != "failed":
             self.report(
                 tool, state, f"Not ready; retry manually: {shlex.join(command)}"
             )
@@ -515,7 +545,8 @@ class Setup:
             headless=True,
         )
         try:
-            context = manager.new_context()
+            with preparation_warnings():
+                context = manager.new_context()
             context.route("**/*", lambda route: route.abort())
             page = context.new_page()
             page.goto("about:blank", timeout=10000)
@@ -551,16 +582,14 @@ class Setup:
                         self.report(key, "skipped", "Existing value preserved")
 
         self.step("Credentials", credentials)
-        self.step("Browser libraries", self.browser_libraries)
         for tool in TOOL_KEYS:
             self.step(tool, lambda tool=tool: self.image(tool))
-        self.step("Camoufox", self.browser)
 
     def summary(self) -> str:
         return (
             "Core installation preserved. Optional configuration results:\n"
-            + "\n".join(self.results)
-            + "\nRestart running hosts/MCP to reload configuration. Skipping Camoufox does not disable runtime automatic preparation.\n"
+            + self.result_lines()
+            + "\nRestart running hosts/MCP to reload configuration.\n"
         )
 
 
@@ -614,7 +643,13 @@ def main(argv=None) -> int:
     except Exception:
         if args.request:
             args.request.unlink(missing_ok=True)
-        message = "Optional configuration failed to read configuration; core installation is preserved."
+        message = "Optional configuration failed to read configuration; core installation is preserved.\n"
+        if args.prepare_browsers:
+            message = (
+                "Browser preparation: not ready\n"
+                "Failed to read configuration; core installation is preserved.\n"
+                f"Retry: {browser_command(args.install_root.absolute(), args.env_file or args.install_root / 'offline.env', args.prepare_browsers)}\n"
+            )
         print(message)
         if args.result:
             atomic_write(args.result, message)
@@ -662,7 +697,8 @@ def main(argv=None) -> int:
                         tool, selected=selected == "1"
                     ),
                 )
-            setup.step("Camoufox", lambda: setup.browser(selected=lines[2] == "1"))
+            if lines[2] == "1":
+                setup.step("Camoufox", lambda: setup.browser(selected=True))
         else:
             setup.terminal()
     except (KeyboardInterrupt, EOFError):
@@ -673,36 +709,57 @@ def main(argv=None) -> int:
         if args.request:
             args.request.unlink(missing_ok=True)
     if args.prepare_browsers:
-        installed_python = setup.root / (
-            "runtime/python.exe" if os.name == "nt" else "runtime/paper-fetch-python"
-        )
-        command = [
-            str(installed_python) if installed_python.is_file() else sys.executable,
-            "-m",
-            "paper_fetch.offline_setup",
-            "--install-root",
-            str(setup.root),
-            "--env-file",
-            str(setup.env_file),
-            "--prepare-browsers",
-            args.prepare_browsers,
-        ]
-        retry = (
-            subprocess.list2cmdline(command) if os.name == "nt" else shlex.join(command)
-        )
+        from .offline_browsers import selected_backends
+
+        backends = selected_backends(args.prepare_browsers)
+        if any(
+            name in setup.results for name in ("Browsers", "Optional configuration")
+        ):
+            state = "not ready"
+        elif not backends:
+            state = "skipped"
+        elif all(
+            setup.results.get(name, (None, ""))[0] == "ready" for name in backends
+        ):
+            state = "ready"
+        else:
+            state = "not ready"
         summary = (
+            f"Browser preparation: {state}\n"
             "Core installation preserved. Browser preparation results:\n"
-            + "\n".join(setup.results)
-            + "\nRetry: "
-            + retry
-            + "\nOr rerun the installer. Runtime on-demand repair remains enabled.\n"
+            + setup.result_lines()
+            + "\n"
         )
+        if state == "not ready":
+            summary += (
+                "Retry: "
+                + browser_command(setup.root, setup.env_file, args.prepare_browsers)
+                + "\nRuntime on-demand repair remains enabled.\n"
+            )
     else:
         summary = setup.summary()
     print(summary)
     if args.result:
         atomic_write(args.result, summary)
     return 0
+
+
+def browser_command(root: Path, env_file: Path, selection: str) -> str:
+    installed_python = root / (
+        "runtime/python.exe" if os.name == "nt" else "runtime/paper-fetch-python"
+    )
+    command = [
+        str(installed_python) if installed_python.is_file() else sys.executable,
+        "-m",
+        "paper_fetch.offline_setup",
+        "--install-root",
+        str(root),
+        "--env-file",
+        str(env_file),
+        "--prepare-browsers",
+        selection,
+    ]
+    return subprocess.list2cmdline(command) if os.name == "nt" else shlex.join(command)
 
 
 if __name__ == "__main__":

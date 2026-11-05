@@ -117,7 +117,7 @@ def test_all_skipped_never_installs_or_prepares(setup, monkeypatch):
     install.assert_not_called()
     prepare.assert_not_called()
     assert not setup.env_file.exists()
-    assert "Camoufox: skipped" in setup.summary()
+    assert "Camoufox" not in setup.summary()
 
 
 @pytest.mark.parametrize(
@@ -147,8 +147,7 @@ def test_windows_request_choices_are_independent_and_secrets_deleted(
     assert calls == [
         ("ghostscript", selected[1] == "1"),
         ("libvips", selected[2] == "1"),
-        ("browser", selected[0] == "1"),
-    ]
+    ] + ([("browser", True)] if selected[0] == "1" else [])
     assert "secret" not in setup.summary()
     assert dotenv_values(setup.env_file)["ELSEVIER_API_KEY"] == "secret"
 
@@ -560,7 +559,9 @@ def test_inno_silent_guards_and_private_input_order():
     assert "WizardSilent or not OptionalCoreReady" in script
     assert "if UninstallSilent then exit" in script
     assert "CleanupTools.Checked := False" in script
-    for checkbox in ("OptionalBrowser", "OptionalGhostscript", "OptionalVips"):
+    assert "OptionalBrowser" not in script
+    assert "Lines[2] := '0';" in script
+    for checkbox in ("OptionalGhostscript", "OptionalVips"):
         assert f"{checkbox}.Checked := False" in script
     body = script.split("procedure RunOptionalConfiguration;", 1)[1].split(
         "function NextButtonClick", 1
@@ -571,3 +572,84 @@ def test_inno_silent_guards_and_private_input_order():
         "Params :=" in body
         and "Values[0]" not in body.split("Params :=", 1)[1].split(";", 1)[0]
     )
+
+
+def test_terminal_configuration_never_prepares_browsers(setup, monkeypatch):
+    monkeypatch.setattr(wizard.getpass, "getpass", lambda _: "")
+    image = Mock()
+    browser = Mock(
+        side_effect=AssertionError("browser must run only in automatic preparation")
+    )
+    libraries = Mock(
+        side_effect=AssertionError("libraries must run only in automatic preparation")
+    )
+    monkeypatch.setattr(setup, "image", image)
+    monkeypatch.setattr(setup, "browser", browser)
+    monkeypatch.setattr(setup, "browser_libraries", libraries)
+    setup.terminal()
+    assert [call.args[0] for call in image.call_args_list] == list(wizard.TOOL_KEYS)
+    browser.assert_not_called()
+    libraries.assert_not_called()
+    assert "Camoufox" not in setup.summary()
+
+
+def test_summary_keeps_latest_results_without_progress(setup, capsys):
+    setup.report("Python", "checking")
+    setup.report("Python", "ready", "CPython")
+    setup.report("libgtk-3.so.0", "missing")
+    setup.report("libgtk-3.so.0", "installing")
+    setup.report("libgtk-3.so.0", "ready")
+    setup.report("Camoufox", "preparing")
+    progress = capsys.readouterr().out
+    assert "checking" in progress and "missing" in progress and "preparing" in progress
+    summary = setup.summary()
+    assert "Python: ready" in summary and "libgtk-3.so.0: ready" in summary
+    for state in ("missing", "checking", "installing", "preparing"):
+        assert state not in summary
+
+
+@pytest.mark.parametrize("readonly", [False, True])
+def test_detected_image_reports_ready_once_with_conversion_evidence(
+    setup, monkeypatch, capsys, readonly
+):
+    setup.readonly = readonly
+    monkeypatch.setattr(wizard, "detect_image", lambda *_: (Path("/tools/gs"), "ready"))
+    monkeypatch.setattr(windows, "record_reused", Mock())
+    setup.image("ghostscript")
+    output = capsys.readouterr().out
+    assert output.count("ghostscript: ready") == 1
+    assert "Conversion verified:" in output
+    assert setup.summary().count("ghostscript: ready") == 1
+
+
+def test_preparation_shortens_only_known_camoufox_warning(setup, monkeypatch, capsys):
+    import warnings
+    from camoufox._warnings import LeakWarning, WARNINGS_DATA
+    from paper_fetch.providers.browser_runtime import camoufox_manager
+
+    original = warnings.showwarning
+    manager = Mock()
+    manager.new_context.return_value.new_page.return_value.evaluate.return_value = 2
+
+    def new_context():
+        warnings.warn(WARNINGS_DATA["canvas_noise"], LeakWarning, stacklevel=2)
+        warnings.warn("unrelated leak warning", LeakWarning, stacklevel=2)
+        warnings.warn("ordinary warning", UserWarning, stacklevel=2)
+        return manager.new_context.return_value
+
+    manager.new_context.side_effect = new_context
+    monkeypatch.setattr(
+        camoufox_manager, "CamoufoxBrowserManager", lambda **kw: manager
+    )
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        setup.browser(selected=True)
+    stderr = capsys.readouterr().err
+    canvas = [line for line in stderr.splitlines() if "Camoufox: Canvas/WebGL" in line]
+    assert len(canvas) == 1 and "random data" in canvas[0]
+    assert [str(item.message) for item in caught] == [
+        "unrelated leak warning",
+        "ordinary warning",
+    ]
+    assert "canvas_noise=False" not in stderr
+    assert warnings.showwarning is original

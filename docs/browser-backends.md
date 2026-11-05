@@ -138,3 +138,5 @@ Elsevier 复用 `flaresolverr/` 中已校验的程序和驱动缓存。ScienceDi
 
 `--prepare-browsers` 可选 `all`、`camoufox` 或 `flaresolverr`；兼容选项 `--prepare-flaresolverr`
 等价于单独准备 FlareSolverr。离线安装将汇总保存到 `browser-setup-results.txt`。
+
+安装阶段默认自动准备浏览器，可能联网下载浏览器、指纹模型和驱动；后续可选配置不再重复准备。POSIX `--skip-browser-prepare`／Windows `/SKIPBROWSERPREPARE` 只跳过安装阶段，运行时按需准备不变。结果文件首行为 `Browser preparation: ready|not ready|skipped`，只在选中的受支持后端全部就绪时报告 `ready`；失败、取消或缺少完成结果均为 `not ready`，并给出独立重试命令。单独选择当前平台不支持的后端报告 `skipped`。安装准备检查将已知的 Canvas/WebGL 随机回读警告缩为一行 stderr 提示，保留现有指纹设置与其他警告。

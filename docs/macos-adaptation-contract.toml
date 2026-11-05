@@ -54,6 +54,7 @@ on_demand_preparation = true
 success_only_update_interval = true
 installer_prepares_camoufox = true
 installer_skip_browser_prepare = true
+installer_preparation_single_pass = true
 batch_prepares_once = true
 update_check_interval_seconds = 86400
 default_channel = "official/prerelease"

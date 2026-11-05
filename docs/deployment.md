@@ -10,6 +10,8 @@ provider 差异见 [providers.md](providers.md)，浏览器准备见 [browser-ba
 
 安装器在核心安装完成后默认准备当前平台支持的后端：Linux/Windows x64 依次准备 Camoufox、FlareSolverr，macOS 只准备 Camoufox。首次安装、升级和同版本重装复用有效缓存及成功检查记录；在线 `--lite` 跳过。POSIX `--skip-browser-prepare` 和 Windows `/SKIPBROWSERPREPARE` 可跳过准备。单项失败继续处理另一项，并保留核心安装。
 
+每次安装只自动准备一次浏览器；后续可选配置只处理凭据、Ghostscript 和 libvips，图片工具安装默认不选。跳过参数只影响安装阶段，运行时仍按需准备。安装器清除上次浏览器结果；本次汇总以 `Browser preparation: ready|not ready|skipped` 表示总体状态，所有选中的受支持后端就绪才显示完成。失败或取消显示独立重试命令；跳过时显示手动准备入口。
+
 Linux/Windows x64 离线包内置 FlareSolverr v3.5.2 源码和私有依赖；源码/pip 安装按固定版本下载。运行时组件缓存位于用户数据目录 `flaresolverr/`。**离线安装器的浏览器、指纹模型和 ChromeDriver 准备仍可能联网**；非交互／静默安装允许用户级准备，缺系统依赖时只报告缺项和安装指引。运行时保留缓存缺失、损坏和 Chrome 更新后的按需修复。Linux headless 需 Xvfb 与 Chrome 的启动依赖，WSL 只读 X11 socket 挂载还需可用的 rootless bubblewrap namespaces。默认抓取／preflight 保持 headless，显式 auth 使用 headed。配置和运行时边界见 [浏览器后端](browser-backends.md#pnas--elsevier-系统-chrome-与按需-flaresolverr)。
 
 
@@ -175,15 +177,15 @@ Windows 目标机运行安装器即可：
 
 Windows 安装器默认安装到 `%LOCALAPPDATA%\PaperFetchSkill`，不要求管理员权限。安装器会复制运行组件，写入用户 PATH，复制 Codex / Claude Code / Antigravity skill，并执行 best-effort 基础 smoke check。检测到 `codex` CLI 时会用 `codex mcp remove/add` 注册 MCP；没有 Codex CLI 时会备份并更新 `%USERPROFILE%\.codex\config.toml` 中的 `mcp_servers.paper-fetch`。检测到 `claude` CLI 时会用 `claude mcp remove/add -s user` 注册；没有 Claude CLI 时只安装 skill 并跳过 Claude MCP 注册。Antigravity MCP 写入 `%USERPROFILE%\.gemini\antigravity-cli\mcp_config.json`，并保留其它 server。用户级 skill / PATH / MCP 集成或 smoke check 失败时不会回滚已复制的 runtime，详细警告写入 `%LOCALAPPDATA%\PaperFetchSkill\install-helper.log`；可修正本机环境后手动重跑 `%LOCALAPPDATA%\PaperFetchSkill\scripts\windows-installer-helper.ps1 -Action Install`。
 
-核心安装及 smoke 检查成功后，三平台提供可选配置向导。Linux/macOS 使用终端，`--non-interactive`、无可交互终端或 `--skip-smoke` 时跳过；Windows 使用 Inno 密码输入框和默认未选中的组件选项，`/SILENT`、`/VERYSILENT` 不进入可选阶段。下载、安装均默认关闭，各组件独立选择；可选阶段断网、拒绝、取消、sudo/UAC 或功能验证失败不会回滚核心安装。
+核心安装及 smoke 检查成功后，三平台提供可选配置向导。Linux/macOS 使用终端，`--non-interactive`、无可交互终端或 `--skip-smoke` 时跳过；Windows 使用 Inno 密码输入框和默认未选中的组件选项，`/SILENT`、`/VERYSILENT` 不进入可选阶段。可选配置只处理凭据和图片工具，图片工具下载、安装默认关闭，各组件独立选择；可选阶段断网、拒绝、取消、sudo/UAC 或功能验证失败不会回滚核心安装。
 
 - Elsevier API Key 与 Wiley TDM Token 隐藏输入，留空保留旧值，只更新明确填写的 `ELSEVIER_API_KEY` / `WILEY_TDM_CLIENT_TOKEN`。凭据按 dotenv 转义、去重并原子保存，POSIX 文件权限为 `0600`，Windows 使用用户专属 DACL；不会进入命令行、日志或宿主注册参数。`--reuse-env-file` 的外部文件保持只读，向导提供手动配置说明。
-- Linux 实际加载 GTK、X11/XCB、音频等共享库；不能确认时报告“未验证”。Debian/Ubuntu 根据当前 APT sources 的候选解析 `t64` 包名，先显示确切清单和命令，再分别询问浏览器系统库、Ghostscript 和 libvips 安装。仅 APT 子进程使用 sudo（由 sudo 收取密码），不刷新软件源、不全系统升级。缺包时给出建议，包锁/权限失败保留现有结果并重新检测；其它发行版仅检测和提示。
+- Linux 实际加载 GTK、X11/XCB、音频等共享库；不能确认时报告“未验证”。Debian/Ubuntu 根据当前 APT sources 的候选解析 `t64` 包名，先显示确切清单和命令，在自动准备阶段询问浏览器系统依赖安装，在可选阶段分别询问 Ghostscript 和 libvips 安装。仅 APT 子进程使用 sudo（由 sudo 收取密码），不刷新软件源、不全系统升级。缺包时给出建议，包锁/权限失败保留现有结果并重新检测；其它发行版仅检测和提示。
 - macOS 保持 15+ arm64、CPython ABI、quarantine 和原生验证边界。已有 Homebrew 时可分别安装 `ghostscript`、`vips`，使用实际 prefix 下的绝对路径，无 `sudo brew`；无 Homebrew 时仅提供 [官方说明](https://brew.sh/)，不安装 Homebrew/Xcode/CLT，不清除 quarantine。
 - Windows 图片工具固定于 `installer/manifest.json`：已从官方 release 下载并核验 [Ghostscript 10.08.0 x64 EXE](https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/tag/gs10080)、[libvips 8.18.7 x64 all ZIP](https://github.com/libvips/build-win64-mxe/releases/tag/v8.18.7) 的 SHA-256；用户安装时不查询 latest。下载先进入临时目录，摘要通过后才执行或解压；ZIP 拒绝路径逃逸、链接、重复路径及特殊文件，保留完整 DLL 和资源。
 - Ghostscript 使用 [官方安装器](https://github.com/ArtifexSoftware/ghostpdl/blob/master/psi/nsisinst.nsi)，可见运行，使用末尾 `/D=<install-dir>\image-tools\ghostscript\<version>`；官方安装器要求管理员权限并写系统注册表。检测 PATH、配置和官方注册位置，优先复用有效工具；目标版本已注册但失效时仅给出修复提示。用户在官方向导更改目录时，以注册及转换验证确认的位置为准，外部目录不归 paper-fetch 清理。libvips 完整解压到 `image-tools\libvips\<version>`。
 - 图片工具必须完成真实 EPS/TIFF → PNG 转换、PNG 解码与像素检查，才将绝对路径保存到既有 `PAPER_FETCH_GHOSTSCRIPT_BIN` / `PAPER_FETCH_VIPS_BIN`。版本探测成功不等于转换就绪。Windows 用独立 `optional-tools.json` 记录版本、来源、目录、归属、文件摘要及验证状态，与 release payload 清单分开。
-- Camoufox 以普通用户使用既有 channel/pin/cache 准备规则；已有有效版本直接复用，不默认更新。随后只启动本地 `about:blank` 验证，分别报告准备、启动与“站点访问未测试”，不访问出版社、不登录、不保存 provider state。**跳过仅影响本次安装，后续运行时自动准备仍启用**；不代表预置后已验证完全断网的浏览器支持。
+自动浏览器准备以普通用户使用既有 channel/pin/cache 和成功检查记录；随后只启动本地 `about:blank` 验证，不访问出版社、不登录、不保存 provider state。浏览器结果单独保存到 `browser-setup-results.txt`，可选配置不会再次启动浏览器。
 
 Windows 耗时步骤有进度窗口和控制台结果，可用 Ctrl+C 取消当前可选步骤；官方 Ghostscript 向导及 UAC 可直接取消。完成后显示汇总，并写入不含凭据的 `optional-setup-results.txt`。Unix 汇总输出到终端。重启已运行的宿主/MCP 后配置生效。需要重试时可使用安装目录绝对运行时执行 `-m paper_fetch.offline_setup --install-root <install-dir>`（Unix）；Windows 重新运行 EXE 向导。
 

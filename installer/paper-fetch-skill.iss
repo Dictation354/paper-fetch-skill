@@ -7,7 +7,7 @@
 #endif
 
 #ifndef AppVersion
-#define AppVersion "7.3.5"
+#define AppVersion "7.3.6"
 #endif
 
 #ifndef OutputDir
@@ -71,14 +71,13 @@ var
   UpgradePrepared: Boolean;
   OptionalPage: TInputQueryWizardPage;
   OptionalToolsPage: TWizardPage;
-  OptionalBrowser: TNewCheckBox;
   OptionalGhostscript: TNewCheckBox;
   OptionalVips: TNewCheckBox;
   OptionalProgress: TOutputMarqueeProgressWizardPage;
   OptionalRequestDir: String;
   OptionalResult: String;
   OptionalDone: Boolean;
-  FlareSolverrResult: String;
+  BrowserPreparationResult: String;
   CleanupSelected: Boolean;
 
 procedure AddOptionDetails(Page: TWizardPage; Top: Integer; Caption: String);
@@ -96,29 +95,23 @@ end;
 procedure InitializeWizard;
 begin
   OptionalPage := CreateInputQueryPage(wpInstalling,
-    'Optional configuration', 'Core installation is complete. All downloads default to off.',
+    'Optional configuration', 'Core installation is complete. Optional image tool installs default to off.',
     'Blank credentials preserve existing values in {app}\offline.env. Inputs are hidden.' + #13#10 +
-    'Restart running hosts/MCP afterwards. Skipping Camoufox keeps runtime automatic preparation enabled.');
+    'Restart running hosts/MCP afterwards. Browser preparation runs automatically and may download components.');
   OptionalPage.Add('Elsevier API Key (https://dev.elsevier.com/):', True);
   OptionalPage.Add('Wiley TDM Token:', True);
   OptionalToolsPage := CreateCustomPage(OptionalPage.ID, 'Optional tools',
-    'Each component is independent. Existing valid tools are reused. All downloads default to off.');
-  OptionalBrowser := TNewCheckBox.Create(WizardForm);
-  OptionalBrowser.Parent := OptionalToolsPage.Surface;
-  OptionalBrowser.SetBounds(0, 0, OptionalToolsPage.SurfaceWidth, ScaleY(20));
-  OptionalBrowser.Caption := 'Prepare and locally test Camoufox';
-  AddOptionDetails(OptionalToolsPage, 24, 'Network download to user shared cache; no elevation. Skipping keeps runtime automatic preparation enabled.');
+    'Existing valid tools are reused. Optional image tool installs default to off.');
   OptionalGhostscript := TNewCheckBox.Create(WizardForm);
   OptionalGhostscript.Parent := OptionalToolsPage.Surface;
-  OptionalGhostscript.SetBounds(0, ScaleY(84), OptionalToolsPage.SurfaceWidth, ScaleY(20));
+  OptionalGhostscript.SetBounds(0, 0, OptionalToolsPage.SurfaceWidth, ScaleY(20));
   OptionalGhostscript.Caption := 'Install Ghostscript for EPS conversion (UAC/admin required)';
-  AddOptionDetails(OptionalToolsPage, 108, 'Official EXE download to {app}\image-tools\ghostscript\<version>. Visible installer writes system registry.');
+  AddOptionDetails(OptionalToolsPage, 24, 'Official EXE download to {app}\image-tools\ghostscript\<version>. Visible installer writes system registry.');
   OptionalVips := TNewCheckBox.Create(WizardForm);
   OptionalVips.Parent := OptionalToolsPage.Surface;
-  OptionalVips.SetBounds(0, ScaleY(168), OptionalToolsPage.SurfaceWidth, ScaleY(20));
+  OptionalVips.SetBounds(0, ScaleY(84), OptionalToolsPage.SurfaceWidth, ScaleY(20));
   OptionalVips.Caption := 'Install libvips for TIFF conversion';
-  AddOptionDetails(OptionalToolsPage, 192, 'Official ZIP download to {app}\image-tools\libvips\<version>, including DLLs and resources; no elevation.');
-  OptionalBrowser.Checked := False;
+  AddOptionDetails(OptionalToolsPage, 108, 'Official ZIP download to {app}\image-tools\libvips\<version>, including DLLs and resources; no elevation.');
   OptionalGhostscript.Checked := False;
   OptionalVips.Checked := False;
   OptionalProgress := CreateOutputMarqueeProgressPage('Optional configuration',
@@ -171,7 +164,7 @@ begin
     if ResultCode <> 0 then exit;
     Lines[0] := OptionalPage.Values[0];
     Lines[1] := OptionalPage.Values[1];
-    Lines[2] := ChoiceFlag(OptionalBrowser.Checked);
+    Lines[2] := '0';
     Lines[3] := ChoiceFlag(OptionalGhostscript.Checked);
     Lines[4] := ChoiceFlag(OptionalVips.Checked);
     if not SaveStringsToUTF8File(RequestPath, Lines, False) then exit;
@@ -410,6 +403,19 @@ begin
       Result := True;
 end;
 
+function BrowserPreparationCommand: String;
+begin
+  Result := '"' + ExpandConstant('{app}\runtime\python.exe') +
+    '" -X utf8 -m paper_fetch.offline_setup --install-root "' + ExpandConstant('{app}') +
+    '" --env-file "' + ExpandConstant('{app}\offline.env') + '" --prepare-browsers all';
+end;
+
+function BrowserPreparationReady(Text: String): Boolean;
+begin
+  StringChangeEx(Text, #13#10, #10, True);
+  Result := Pos('Browser preparation: ready' + #10, Text + #10) = 1;
+end;
+
 procedure PrepareBrowsers;
 var
   Params, ResultPath: String;
@@ -417,9 +423,10 @@ var
   ResultCode, WindowMode: Integer;
 begin
   if not OptionalCoreReady then exit;
-  if SkipBrowserPrepare then exit;
   ResultPath := ExpandConstant('{app}\browser-setup-results.txt');
   DeleteFile(ResultPath);
+  BrowserPreparationResult := 'Browser preparation: skipped';
+  if SkipBrowserPrepare then exit;
   Params := '-X utf8 -m paper_fetch.offline_setup --install-root "' + ExpandConstant('{app}') +
     '" --prepare-browsers all --non-interactive --result "' + ResultPath + '"';
   WindowMode := SW_SHOW;
@@ -432,13 +439,17 @@ begin
         'May download. Core installation is complete. Ctrl+C in the console cancels preparation.');
       OptionalProgress.Animate;
     end;
-    FlareSolverrResult := 'Browser preparation is not ready. Core installation is preserved.';
+    BrowserPreparationResult := 'Browser preparation: not ready' + #13#10 +
+      'Core installation is preserved.' + #13#10 + 'Retry: ' + BrowserPreparationCommand;
     if Exec(ExpandConstant('{app}\runtime\python.exe'), Params,
       '', WindowMode, ewWaitUntilTerminated, ResultCode) then
-      if LoadStringFromFile(ResultPath, Output) then
-        FlareSolverrResult := UTF8Decode(Output);
-    SaveStringToFile(ResultPath, UTF8Encode(FlareSolverrResult), False);
-    Log(FlareSolverrResult);
+      if ResultCode = 0 then
+        if LoadStringFromFile(ResultPath, Output) then
+          if BrowserPreparationReady(UTF8Decode(Output)) or
+            (Pos('Browser preparation: not ready', UTF8Decode(Output)) = 1) then
+            BrowserPreparationResult := UTF8Decode(Output);
+    SaveStringToFile(ResultPath, UTF8Encode(BrowserPreparationResult), False);
+    Log(BrowserPreparationResult);
   finally
     if not WizardSilent then OptionalProgress.Hide;
   end;
@@ -466,16 +477,21 @@ begin
   if CurPageID = wpFinished then
   begin
     OfflineEnvPath := ExpandConstant('{app}\offline.env');
-    if FlareSolverrResult <> '' then
+    if BrowserPreparationResult <> '' then
     begin
-      if Pos('FlareSolverr: ready', FlareSolverrResult) > 0 then
-        FlareSolverrResult := 'FlareSolverr: ready.'
+      if SkipBrowserPrepare then
+        BrowserPreparationResult := 'Browser preparation: skipped.' + #13#10 +
+          'Prepare manually: ' + BrowserPreparationCommand
+      else if BrowserPreparationReady(BrowserPreparationResult) then
+        BrowserPreparationResult := 'Browser preparation: ready.' + #13#10 +
+          'Results: ' + ExpandConstant('{app}\browser-setup-results.txt')
       else
-        FlareSolverrResult := 'FlareSolverr: not ready. Core installation is preserved.';
+        BrowserPreparationResult := 'Browser preparation: not ready. Core installation is preserved.' + #13#10 +
+          'Results: ' + ExpandConstant('{app}\browser-setup-results.txt') + #13#10 +
+          'Retry: ' + BrowserPreparationCommand;
       WizardForm.FinishedLabel.Caption := WizardForm.FinishedLabel.Caption + #13#10#13#10 +
-        FlareSolverrResult + #13#10 +
-        'Results and retry command: ' + ExpandConstant('{app}\browser-setup-results.txt') + #13#10 +
-        'Rerun this installer to retry. Missing Chrome: https://www.google.com/chrome/';
+        BrowserPreparationResult + #13#10 +
+        '/SKIPBROWSERPREPARE skips installation preparation only; runtime automatic preparation remains enabled.';
     end;
     WizardForm.FinishedLabel.Caption :=
       WizardForm.FinishedLabel.Caption + #13#10#13#10 +
@@ -489,6 +505,6 @@ begin
     if OptionalResult <> '' then
       WizardForm.FinishedLabel.Caption := WizardForm.FinishedLabel.Caption + #13#10#13#10 +
         'Optional configuration results: ' + ExpandConstant('{app}\optional-setup-results.txt') + #13#10 +
-        'Restart running hosts/MCP. Skipping Camoufox keeps runtime automatic preparation enabled.';
+        'Restart running hosts/MCP to reload configuration.';
   end;
 end;

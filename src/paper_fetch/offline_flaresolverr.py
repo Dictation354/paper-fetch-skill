@@ -71,6 +71,8 @@ def linux_missing(setup: Setup, headless: bool) -> dict[str, tuple[str, ...]]:
         state = wizard.library_status(soname)
         if state != "ready":
             setup.report(soname, state)
+        elif soname in setup.results:
+            setup.report(soname, "ready")
         if state == "missing":
             missing[soname] = packages
     if headless and shutil.which("Xvfb") is None:
@@ -81,6 +83,9 @@ def linux_missing(setup: Setup, headless: bool) -> dict[str, tuple[str, ...]]:
             missing["bubblewrap (read-only X11 sockets)"] = ("bubblewrap",)
     for name in missing:
         setup.report(name, "missing")
+    for name in ("Xvfb", "bubblewrap (read-only X11 sockets)"):
+        if name not in missing and name in setup.results:
+            setup.report(name, "ready")
     return missing
 
 
@@ -234,8 +239,14 @@ def _prepare(
     if platform.python_implementation() != "CPython" or not (3, 11) <= sys.version_info[
         :2
     ] <= (3, 14):
+        setup.report("Python", "unsupported", "Requires CPython 3.11–3.14")
         setup.report("FlareSolverr", "not ready", "Requires CPython 3.11–3.14")
         return
+    setup.report(
+        "Python",
+        "ready",
+        f"{platform.python_implementation()} {platform.python_version()} ({sys.executable})",
+    )
     if find_spec("playwright") is None or find_spec("playwright.sync_api") is None:
         setup.report(
             "FlareSolverr",

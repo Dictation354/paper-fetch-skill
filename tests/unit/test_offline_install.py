@@ -143,6 +143,20 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("RunPostInstallHelper;\n    PrepareBrowsers;", script)
         self.assertIn("--prepare-browsers all --non-interactive --result", script)
         self.assertIn("browser-setup-results.txt", script)
+        self.assertIn("Browser preparation: ready", script)
+        self.assertIn("Browser preparation: not ready", script)
+        self.assertIn("Browser preparation: skipped", script)
+        self.assertNotIn("Pos('FlareSolverr: ready'", script)
+        self.assertNotIn("OptionalBrowser", script)
+        self.assertIn("Lines[2] := '0';", script)
+        preparation = script.split("procedure PrepareBrowsers;", 1)[1].split(
+            "function PrepareToInstall", 1
+        )[0]
+        self.assertLess(
+            preparation.index("DeleteFile(ResultPath)"),
+            preparation.index("if SkipBrowserPrepare"),
+        )
+        self.assertIn("if ResultCode = 0 then", preparation)
         self.assertNotIn("CheckSystemChrome", script)
         self.assertNotIn(
             "Paper Fetch Skill post-install helper failed with exit code", script

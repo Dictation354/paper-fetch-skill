@@ -46,6 +46,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["browser"]["managed_runtime_preparation"] = False
         contract["browser"]["fetch_start_preparation"] = True
         contract["browser"]["batch_prepares_once"] = False
+        contract["browser"]["installer_preparation_single_pass"] = False
         contract["browser"]["default_channel"] = "official/stable"
         contract["browser"]["prerelease_includes_stable"] = False
         contract["browser"]["update_check_interval_seconds"] = 0
@@ -75,6 +76,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertIn("managed_runtime_preparation must be true", diagnostic)
         self.assertIn("fetch_start_preparation must be false", diagnostic)
         self.assertIn("batch_prepares_once must be true", diagnostic)
+        self.assertIn("installer_preparation_single_pass must be true", diagnostic)
         self.assertIn("default_channel must be official/prerelease", diagnostic)
         self.assertIn("prerelease_includes_stable must be true", diagnostic)
         self.assertIn("update_check_interval_seconds must be 86400", diagnostic)
