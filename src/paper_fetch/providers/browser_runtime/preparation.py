@@ -433,7 +433,11 @@ def _install_camoufox_model_from_github(model: Any) -> None:
     release_path = f"repos/{pin['repo']}/releases"
     release = pkgman.github_api(f"{release_path}/tags/{quote(pin['tag'], safe='')}")
     asset = next(
-        (item for item in release.get("assets", []) if item.get("name") == pin["asset"]),
+        (
+            item
+            for item in release.get("assets", [])
+            if item.get("name") == pin["asset"]
+        ),
         None,
     )
     if asset is None:
@@ -454,7 +458,9 @@ def _install_camoufox_model_from_github(model: Any) -> None:
     members = {}
     with ZipFile(buffer) as archive:
         if sorted(archive.namelist()) != sorted(pin["file_sha256"]):
-            raise model.CorruptedDownload("fpgen model archive members differ from the pin.")
+            raise model.CorruptedDownload(
+                "fpgen model archive members differ from the pin."
+            )
         for name, digest in pin["file_sha256"].items():
             content = archive.read(name)
             model.verify_sha256(BytesIO(content), digest, f"fpgen model member {name}")

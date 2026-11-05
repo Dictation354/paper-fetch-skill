@@ -6,6 +6,14 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.3.5 - 2026-11-05
+
+### Camoufox 准备修复
+
+- 固定的 fpgen 模型下载请求失败时，回退到 GitHub 官方 Release API，获取同一 tag 和文件名的资产；保留 Camoufox 对压缩包及每个模型文件的 SHA-256 校验，校验失败不触发回退。
+- 普通和持久 context 均在启动 Playwright 前准备指纹模型，覆盖自定义浏览器 executable，避免下载失败后产生已启动 Playwright 连接的退出清理报错。
+- 同步浏览器准备文档、macOS 适配契约和回归覆盖。
+
 ## 7.3.4 - 2026-11-04
 
 ### 文档与技能指引

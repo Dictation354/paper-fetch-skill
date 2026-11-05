@@ -6,6 +6,14 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.3.5 - 2026-11-05
+
+### Camoufox preparation fixes
+
+- Fall back to the official GitHub Release API when the pinned fpgen model download request fails. Resolve the same tag and asset name and retain Camoufox's SHA-256 checks for the archive and every model file; checksum failures do not trigger fallback.
+- Prepare the fingerprint model before starting Playwright for both ordinary and persistent contexts, including custom browser executables, so download failures do not leave a started Playwright connection to clean up.
+- Update browser preparation documentation, the macOS adaptation contract and regression coverage.
+
 ## 7.3.4 - 2026-11-04
 
 ### Documentation and skill guidance

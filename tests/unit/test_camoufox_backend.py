@@ -68,7 +68,8 @@ def fingerprint_model(monkeypatch, tmp_path):
         "url": "https://github.com/scrapfly/fingerprint-generator/releases/download/model-2/2026/model-release.zip",
         "sha256": hashlib.sha256(payload).hexdigest(),
         "file_sha256": {
-            name: hashlib.sha256(content).hexdigest() for name, content in members.items()
+            name: hashlib.sha256(content).hexdigest()
+            for name, content in members.items()
         },
         "decompressed_sha256": {},
     }
@@ -86,8 +87,14 @@ def fingerprint_model(monkeypatch, tmp_path):
     download = mock.Mock(return_value=response)
     monkeypatch.setattr(requests, "get", download)
     return SimpleNamespace(
-        model=fpgen_model, data_dir=data_dir, pin=pin, payload=payload,
-        members=members, direct=direct, release=release, download=download,
+        model=fpgen_model,
+        data_dir=data_dir,
+        pin=pin,
+        payload=payload,
+        members=members,
+        direct=direct,
+        release=release,
+        download=download,
         response=response,
     )
 
@@ -105,7 +112,10 @@ def test_model_download_falls_back_to_pinned_github_asset(fingerprint_model, cap
     )
     env.download.assert_called_once_with(
         "https://api.github.com/repos/scrapfly/fingerprint-generator/releases/assets/123",
-        headers={"Accept": "application/octet-stream", "Authorization": "Bearer test-token"},
+        headers={
+            "Accept": "application/octet-stream",
+            "Authorization": "Bearer test-token",
+        },
         timeout=60,
     )
     preparation.prepare_camoufox_fingerprint_model()
@@ -118,6 +128,7 @@ def test_model_download_falls_back_to_pinned_github_asset(fingerprint_model, cap
 @pytest.mark.parametrize("failure", ["archive_hash", "members", "member_hash"])
 def test_model_api_fallback_keeps_all_hash_checks(fingerprint_model, failure):
     import hashlib
+
     env = fingerprint_model
     if failure == "archive_hash":
         env.response.content = b"corrupted download"
@@ -133,6 +144,7 @@ def test_model_api_fallback_keeps_all_hash_checks(fingerprint_model, failure):
 @pytest.mark.parametrize("source", ["cache", "direct", "custom"])
 def test_model_does_not_use_api_when_not_needed(fingerprint_model, monkeypatch, source):
     from io import BytesIO
+
     env = fingerprint_model
     env.direct.side_effect = None
     env.direct.return_value = BytesIO(env.payload)
@@ -147,11 +159,15 @@ def test_model_does_not_use_api_when_not_needed(fingerprint_model, monkeypatch, 
     env.download.assert_not_called()
 
 
-@pytest.mark.parametrize("error", [PermissionError("read-only"), ValueError("invalid model")])
+@pytest.mark.parametrize(
+    "error", [PermissionError("read-only"), ValueError("invalid model")]
+)
 def test_model_non_network_failure_does_not_trigger_api(fingerprint_model, error):
     env = fingerprint_model
     env.direct.side_effect = error
-    expected = env.model.FpgenModelError if isinstance(error, PermissionError) else type(error)
+    expected = (
+        env.model.FpgenModelError if isinstance(error, PermissionError) else type(error)
+    )
     with pytest.raises(expected):
         preparation.prepare_camoufox_fingerprint_model()
     env.release.assert_not_called()
@@ -160,6 +176,7 @@ def test_model_non_network_failure_does_not_trigger_api(fingerprint_model, error
 
 def test_original_model_hash_failure_does_not_trigger_api(fingerprint_model):
     from io import BytesIO
+
     env = fingerprint_model
     env.direct.side_effect = None
     env.direct.return_value = BytesIO(b"corrupted download")
@@ -171,8 +188,11 @@ def test_original_model_hash_failure_does_not_trigger_api(fingerprint_model):
 
 def test_model_api_download_failure_propagates(fingerprint_model):
     import requests
+
     env = fingerprint_model
-    env.response.raise_for_status.side_effect = requests.HTTPError("API download failed")
+    env.response.raise_for_status.side_effect = requests.HTTPError(
+        "API download failed"
+    )
     with pytest.raises(requests.HTTPError, match="API download failed"):
         preparation.prepare_camoufox_fingerprint_model()
     assert not env.data_dir.exists()
@@ -645,7 +665,9 @@ def test_camoufox_persistent_explicit_binary_path_is_forwarded(
 @pytest.mark.parametrize("persistent", [False, True])
 @pytest.mark.parametrize("binary_path", [None, "/custom/camoufox"])
 def test_camoufox_preparation_failure_never_starts_playwright(
-    monkeypatch, persistent, binary_path,
+    monkeypatch,
+    persistent,
+    binary_path,
 ) -> None:
     playwright = SimpleNamespace(stop=mock.Mock())
     playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
@@ -661,7 +683,11 @@ def test_camoufox_preparation_failure_never_starts_playwright(
 
     monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.camoufox_manager."
-        + ("prepare_camoufox_fingerprint_model" if binary_path else "prepare_camoufox_managed_runtime"),
+        + (
+            "prepare_camoufox_fingerprint_model"
+            if binary_path
+            else "prepare_camoufox_managed_runtime"
+        ),
         mock.Mock(side_effect=RuntimeError("runtime not prepared")),
     )
     monkeypatch.setattr(
@@ -670,8 +696,11 @@ def test_camoufox_preparation_failure_never_starts_playwright(
     )
 
     manager = (
-        CamoufoxPersistentContextManager(user_data_dir="/profile", binary_path=binary_path)
-        if persistent else CamoufoxBrowserManager(binary_path=binary_path)
+        CamoufoxPersistentContextManager(
+            user_data_dir="/profile", binary_path=binary_path
+        )
+        if persistent
+        else CamoufoxBrowserManager(binary_path=binary_path)
     )
     with pytest.raises(RuntimeError, match="runtime not prepared"):
         manager.new_context() if persistent else manager.browser()
@@ -684,9 +713,12 @@ def test_camoufox_preparation_failure_never_starts_playwright(
 @pytest.mark.parametrize("persistent", [False, True])
 @pytest.mark.parametrize("binary_path", [None, "/custom/camoufox"])
 def test_camoufox_prepares_before_playwright_and_reuses_session(
-    monkeypatch, persistent, binary_path,
+    monkeypatch,
+    persistent,
+    binary_path,
 ):
     from paper_fetch.providers.browser_runtime import camoufox_manager
+
     order = []
 
     def prepare():
@@ -694,7 +726,9 @@ def test_camoufox_prepares_before_playwright_and_reuses_session(
 
     monkeypatch.setattr(camoufox_manager, "prepare_camoufox_managed_runtime", prepare)
     monkeypatch.setattr(camoufox_manager, "prepare_camoufox_fingerprint_model", prepare)
-    monkeypatch.setattr(camoufox_manager, "_launch_firefox_major_version", lambda _: 152)
+    monkeypatch.setattr(
+        camoufox_manager, "_launch_firefox_major_version", lambda _: 152
+    )
     browser = SimpleNamespace(close=mock.Mock())
     playwright = SimpleNamespace(stop=mock.Mock())
 
@@ -707,13 +741,20 @@ def test_camoufox_prepares_before_playwright_and_reuses_session(
         return browser
 
     modules = {
-        "playwright.sync_api": SimpleNamespace(sync_playwright=lambda: SimpleNamespace(start=start)),
+        "playwright.sync_api": SimpleNamespace(
+            sync_playwright=lambda: SimpleNamespace(start=start)
+        ),
         "camoufox.sync_api": SimpleNamespace(NewBrowser=launch),
     }
-    monkeypatch.setattr(camoufox_manager.importlib, "import_module", modules.__getitem__)
+    monkeypatch.setattr(
+        camoufox_manager.importlib, "import_module", modules.__getitem__
+    )
     manager = (
-        CamoufoxPersistentContextManager(user_data_dir="/profile", binary_path=binary_path)
-        if persistent else CamoufoxBrowserManager(binary_path=binary_path)
+        CamoufoxPersistentContextManager(
+            user_data_dir="/profile", binary_path=binary_path
+        )
+        if persistent
+        else CamoufoxBrowserManager(binary_path=binary_path)
     )
     open_browser = manager.new_context if persistent else manager.browser
     assert open_browser() is open_browser() is browser
