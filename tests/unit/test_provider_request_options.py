@@ -455,7 +455,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertIs(mocked_fetch.call_args_list[1].kwargs["disable_media"], False)
         self.assertIsNotNone(payload.content)
         assert payload.content is not None
-        self.assertEqual(payload.content.fetcher, "camoufox")
+        self.assertEqual(payload.content.fetcher, "byparr")
         self.assertIn(
             "fulltext:wiley_html_ok",
             [event.marker() for event in payload.trace if event.marker()],
@@ -588,7 +588,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertIs(mocked_fetch.call_args_list[1].kwargs["disable_media"], False)
         self.assertIsNotNone(payload.content)
         assert payload.content is not None
-        self.assertEqual(payload.content.fetcher, "camoufox")
+        self.assertEqual(payload.content.fetcher, "byparr")
         self.assertEqual(payload.content_type, "text/html")
 
     def test_html_asset_download_prefers_direct_full_size_url_before_preview(

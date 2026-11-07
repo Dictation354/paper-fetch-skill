@@ -71,7 +71,7 @@ def test_tandf_batches_controls_and_injection_with_partial_csv_failure(monkeypat
         page.goto("https://www.tandfonline.com/doi/full/example")
         result = _tandf_html.prepare_browser_page(page, timeout_ms=5000)
         assert result["table_controls"] == 3
-        assert result["csv_tables_hydrated"] == 2
+        assert result["csv_tables_hydrated"] == 2, result
         assert result["table_failures"] == 1
         assert page.locator("#t0 table").count() == 1
         assert page.locator("#t1 table").count() == 0

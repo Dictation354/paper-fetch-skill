@@ -711,7 +711,7 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
 
 - HTML 正文外声明根据当前文章容器与 `#body` 的祖先、兄弟关系收集，保留页面顺序，父子节点只选取一次，并排除导航、推荐与阅读助手。双语摘要按外层摘要容器生成 `heading/text/language/order`，子标题保留在对应摘要文本中；最终文章仅组装一次，摘要段落不计为正文。参考文献 DOI 优先来自条目内 DOI 链接，文本回退使用去除工具链接且保留块边界的节点；表格仅按 DOM 类去除辅助提示，保留真实单元格文字。
 - XML 的 `data-availability`、`conflict-of-interest`、`acknowledgment` 从文章 head/body/tail 按来源顺序统一渲染，已遍历子树不重复输出。文章关键词组合并入 metadata；图资产注册表先于摘要渲染建立，图文摘要保持 `section=abstract` 并在摘要内消费，不进入正文图附录或正文图计数。
-- XML 缺失参考文献 DOI 的网络补全只能在全文和身份验收后执行，模型转换保持无网络副作用。优先复用父论文 Crossref 记录，再查询充分书目的条目，最后用现有 Elsevier FlareSolverr 上下文读取同篇网页参考文献；按可靠 reference key 且无书目冲突，或规范化完整题名、首作者、年份与可用卷页一致的唯一匹配填空。原 XML 条目数量、编号、顺序及已有 DOI 不变，补全来源与依据进入 diagnostics/trace。失败或平台不支持保留 XML，使用请求剩余期限，显式取消照常传播。所有结构规则不以具体 DOI、题名、段落或固定节点编号为条件。
+- XML 缺失参考文献 DOI 的网络补全只能在全文和身份验收后执行，模型转换保持无网络副作用。优先复用父论文 Crossref 记录，再查询充分书目的条目，最后用现有 Elsevier Byparr 上下文读取同篇网页参考文献；按可靠 reference key 且无书目冲突，或规范化完整题名、首作者、年份与可用卷页一致的唯一匹配填空。原 XML 条目数量、编号、顺序及已有 DOI 不变，补全来源与依据进入 diagnostics/trace。失败或平台不支持保留 XML，使用请求剩余期限，显式取消照常传播。所有结构规则不以具体 DOI、题名、段落或固定节点编号为条件。
 
 - 官方 PDF 的 HTTP 200 不能覆盖授权限制：响应头 `x-els-status` 明确声明 `limited to first page` 时，PDF route 返回 `no_access`，不把同篇首页预览报告为全文；其它 WARNING 或没有该声明的正常 PDF 仍走原有验收。真实输入与回放见 `tests/golden/test_acquired_publisher_inputs.py`。
 

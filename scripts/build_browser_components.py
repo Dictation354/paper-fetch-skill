@@ -16,8 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 
 def build(destination: Path, *, frozen: Path | None = None) -> None:
-    from paper_fetch.providers.browser_runtime.chrome import supported_platform
-    from paper_fetch.providers.browser_runtime.flaresolverr_preparation import (
+    from paper_fetch.providers.browser_runtime.platforms import supported_platform
+    from paper_fetch.providers.browser_runtime.byparr_preparation import (
         PreparationBudget,
         prepare_source,
         runtime_location,
@@ -31,9 +31,9 @@ def build(destination: Path, *, frozen: Path | None = None) -> None:
         cache = Path(directory)
         _, _, identity = runtime_location(cache)
         if frozen is not None:
-            source = frozen / "browser-components" / "flaresolverr"
+            source = frozen / "browser-components" / "byparr"
             if not valid_cache(source, identity):
-                raise ValueError("Frozen FlareSolverr component is missing or corrupt")
+                raise ValueError("Frozen Byparr component is missing or corrupt")
         else:
             source = prepare_source(cache, PreparationBudget(600))
         if destination.exists():

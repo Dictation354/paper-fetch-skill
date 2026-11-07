@@ -145,7 +145,7 @@ class IeeeClient(ProviderClient):
                         f"is {browser_status.status}."
                     ),
                     details={
-                        "backend": "camoufox",
+                        "backend": "byparr",
                         "fallback_status": browser_status.status,
                         "fallback_available": browser_status.available,
                         "notes": list(browser_status.notes),

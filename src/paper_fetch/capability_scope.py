@@ -190,7 +190,9 @@ class CapabilityScopeBuilder:
 def _provider_storage_state_use(
     env: Mapping[str, str], *, provider: str, backend: str
 ) -> BrowserStateCapabilityUse | None:
-    if backend == "flaresolverr":
+    from .providers.browser_runtime.selection import selected_state_mode
+
+    if selected_state_mode(env, provider=provider) == "json":
         state = (
             browser_paths.default_provider_user_data_dir(
                 env, provider=provider, backend=backend
@@ -212,7 +214,7 @@ def _provider_storage_state_use(
     ) or browser_paths.configured_user_data_dir(env, backend=backend)
     if profile is None:
         profile = browser_paths.default_provider_user_data_dir(
-            env, provider=provider, backend=backend
+            env, provider=provider, backend="camoufox"
         )
     resolved = _resolved_path(profile)
     digest = trusted_profile_digest(
@@ -249,7 +251,7 @@ def capability_scopes_for_query(
         if provider_has_browser_route(spec.name)
     )
     from .providers.browser_runtime.selection import selected_backend
-    from .providers.browser_runtime.chrome import supported_platform
+    from .providers.browser_runtime.platforms import supported_platform
 
     browser_supported = inferred_provider != "elsevier" or supported_platform()
     if inferred_provider in browser_providers and browser_supported:

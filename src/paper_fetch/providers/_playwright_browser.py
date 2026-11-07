@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from .browser_runtime.navigation import (
+    navigate_page,
+    evaluate_get,
+    settle_page_navigation,
+)
+
 from ..quality.access_boundary import propagate_paywall
 
 from ..quality.access_boundary import raise_for_paywall
@@ -140,7 +146,7 @@ _MAIN_DOCUMENT_NAVIGATION_DIAGNOSTIC_SCRIPT = """
 }
 """
 _IMAGE_ARRAY_BUFFER_EXPORT_SCRIPT = """
-async ([targetUrl]) => {
+async ([targetUrl, timeoutMs]) => {
   const bytesToBase64 = (bytes) => {
     const chunkSize = 0x8000;
     let binary = '';
@@ -149,16 +155,21 @@ async ([targetUrl]) => {
     }
     return btoa(binary);
   };
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(targetUrl, {
       credentials: 'include',
       cache: 'no-store',
+      signal: controller.signal,
     });
     const buffer = await response.arrayBuffer();
     return {
       ok: response.ok,
       status: response.status,
       url: response.url || targetUrl,
+      headers: {'cf-mitigated': response.headers.get('cf-mitigated') || ''},
+      bodySnippet: new TextDecoder().decode(buffer.slice(0, 8192)),
       contentType: response.headers.get('content-type') || '',
       bodyB64: bytesToBase64(new Uint8Array(buffer)),
     };
@@ -168,6 +179,8 @@ async ([targetUrl]) => {
       reason: 'browser_array_buffer_failed',
       error: String((error && (error.name || error.message)) || error || ''),
     };
+  } finally {
+    clearTimeout(timer);
   }
 }
 """
@@ -751,9 +764,26 @@ def _capture_image_payload(
                     return payload
 
         try:
-            array_buffer_result = page.evaluate(
+            array_buffer_result = evaluate_get(
+                page,
                 _IMAGE_ARRAY_BUFFER_EXPORT_SCRIPT,
-                [normalized_final_url],
+                [
+                    normalized_final_url,
+                    max(
+                        1,
+                        int(
+                            (
+                                getattr(
+                                    page,
+                                    "_paper_fetch_image_deadline",
+                                    time.monotonic() + 30,
+                                )
+                                - time.monotonic()
+                            )
+                            * 1000
+                        ),
+                    ),
+                ],
             )
         except Exception:
             array_buffer_result = None
@@ -881,10 +911,13 @@ def _navigate_browser_page(
     return_image_payload: bool,
 ) -> Any:
     if not return_image_payload:
-        return page.goto(url, wait_until="commit", timeout=timeout_ms)
+        return navigate_page(
+            page, url, wait_until="commit", timeout=timeout_ms, mode="html"
+        )
 
     with contextlib.suppress(Exception):
         setattr(page, _IMAGE_PAYLOAD_TIMEOUT_ATTR, timeout_ms)
+        page._paper_fetch_image_deadline = time.monotonic() + timeout_ms / 1000
     response = None
     top_level_response = None
     try:
@@ -894,10 +927,12 @@ def _navigate_browser_page(
             ),
             timeout=timeout_ms,
         ) as response_info:
-            response = page.goto(
+            response = navigate_page(
+                page,
                 url,
                 wait_until="domcontentloaded",
                 timeout=timeout_ms,
+                mode="image",
             )
         try:
             top_level_response = response_info.value
@@ -1213,7 +1248,13 @@ def _candidate_deadline_failure(
     *,
     trace: Mapping[str, Any],
 ) -> PlaywrightBrowserFailure:
-    if trace.get("backend") == "flaresolverr" and last_failure is not None:
+    if (
+        trace.get(
+            "state_mode", "json" if trace.get("backend") == "byparr" else "native"
+        )
+        == "json"
+        and last_failure is not None
+    ):
         last_failure.details.setdefault("browser_runtime_trace", dict(trace))
         return last_failure
     timeout_failure = PlaywrightBrowserFailure(
@@ -1333,6 +1374,7 @@ def _seed_browser_html_context(
 def _active_browser_resource_types(
     *,
     backend_name: str,
+    state_mode: str = "native",
     disable_media: bool,
     options: BrowserHtmlFetchOptions,
 ) -> set[str]:
@@ -1345,7 +1387,7 @@ def _active_browser_resource_types(
     }
     if not disable_media:
         return configured
-    if options.blocked_resource_types is None and backend_name != "camoufox":
+    if options.blocked_resource_types is None and state_mode != "native":
         # Preserve the established Playwright fast-attempt policy for profiles
         # (including Science) that did not opt into provider-specific blocking.
         configured.update(BROWSER_HTML_BLOCKED_RESOURCE_TYPES)
@@ -1769,6 +1811,7 @@ def fetch_html_with_playwright(
     backend_name = config.backend
     active_blocked_resource_types = _active_browser_resource_types(
         backend_name=backend_name,
+        state_mode=config.state_mode,
         disable_media=disable_media,
         options=options,
     )
@@ -1802,6 +1845,8 @@ def fetch_html_with_playwright(
     configured_storage_state_path = _storage_state_path(config)
     trace: dict[str, Any] = {
         "backend": backend_name,
+        "engine": "camoufox",
+        "state_mode": config.state_mode,
         "candidate_count": len(candidate_urls),
         "candidates": [],
         "navigation_count": 0,
@@ -1827,7 +1872,7 @@ def fetch_html_with_playwright(
         },
         "storage_state_write_enabled": config.persist_storage_state,
         "json_export_enabled": config.persist_storage_state,
-        "native_profile_write_enabled": config.backend == "camoufox",
+        "native_profile_write_enabled": config.state_mode == "native",
         "readiness_budget_seconds": readiness_budget_seconds,
         "runtime_page_reuse_enabled": bool(reuse_runtime_page),
     }
@@ -1861,7 +1906,7 @@ def fetch_html_with_playwright(
         if runtime_context is not None:
             runtime_context.raise_if_cancelled()
         launch_config = config
-        if config.backend == "flaresolverr":
+        if config.backend == "byparr":
             from dataclasses import replace
 
             launch_config = replace(config, timeout_ms=max(1, remaining_timeout_ms()))
@@ -2042,23 +2087,26 @@ def fetch_html_with_playwright(
                     trace["runtime_page_navigation_count"] = (
                         shared_page_session.mark_navigation()
                     )
-                if config.backend == "flaresolverr" and not return_image_payload:
-                    from .browser_runtime.flaresolverr_manager import navigate_page
-
-                    response = navigate_page(
-                        page, normalized_url, timeout_ms=candidate_timeout_ms
-                    )
-                else:
+                try:
                     response = _navigate_browser_page(
                         page,
                         url=normalized_url,
                         timeout_ms=candidate_timeout_ms,
                         return_image_payload=return_image_payload,
                     )
+                finally:
+                    navigator = getattr(browser_context, "__dict__", {}).get(
+                        "_paper_fetch_navigator"
+                    )
+                    if navigator is not None:
+                        candidate_trace["byparr"] = dict(navigator.diagnostics)
                 candidate_trace["navigation_seconds"] = round(
                     time.monotonic() - request_started, 3
                 )
                 if lightweight_seed_only:
+                    settle_page_navigation(
+                        page, timeout_ms=max(1, remaining_timeout_ms())
+                    )
                     final_url = (
                         normalize_text(str(getattr(page, "url", "") or ""))
                         or normalized_url
@@ -2110,7 +2158,10 @@ def fetch_html_with_playwright(
                         browser_context_seed,
                         {
                             "paper_fetch_html_fetcher": backend_name,
-                            "diagnostics": {"browser_backend": backend_name},
+                            "diagnostics": {
+                                "browser_backend": backend_name,
+                                "browser_engine": "camoufox",
+                            },
                         },
                     )
                     candidate_trace["duration_seconds"] = round(
@@ -2192,6 +2243,7 @@ def fetch_html_with_playwright(
                     and body_readiness is not None
                     and body_readiness.ready
                 )
+                settle_page_navigation(page, timeout_ms=max(1, remaining_timeout_ms()))
                 if not return_image_payload and not supplementary_index:
                     snapshot = (
                         _main_context_html_snapshot(
@@ -2272,7 +2324,10 @@ def fetch_html_with_playwright(
                     browser_context_seed,
                     {
                         "paper_fetch_html_fetcher": backend_name,
-                        "diagnostics": {"browser_backend": backend_name},
+                        "diagnostics": {
+                            "browser_backend": backend_name,
+                            "browser_engine": "camoufox",
+                        },
                     },
                 )
                 if browser_context_seed.get(
@@ -2313,12 +2368,12 @@ def fetch_html_with_playwright(
                 )
                 if isinstance(exc, PlaywrightBrowserFailure):
                     candidate_failure = exc
-                    if backend_name == "flaresolverr":
+                    if backend_name == "byparr":
                         candidate_failure.details.setdefault(
                             "browser_runtime_trace", trace
                         )
                         candidate_failure.details.setdefault(
-                            "stage", "flaresolverr_navigation"
+                            "stage", "byparr_navigation"
                         )
                 else:
                     candidate_failure = PlaywrightBrowserFailure(

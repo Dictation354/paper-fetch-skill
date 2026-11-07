@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ...browser_runtime.navigation import context_get, evaluate_get
+
+from ...browser_runtime.navigation import navigate_page
+
 import base64
 import time
 from typing import Any
@@ -332,12 +336,14 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
                 timeout_ms = budget.timeout_ms(_IMAGE_DOCUMENT_NAVIGATION_TIMEOUT_MS)
                 if timeout_ms <= 0:
                     return None
-                navigation_response = page.goto(
+                navigation_response = navigate_page(
+                    page,
                     image_url,
                     wait_until="commit"
                     if commit_image_navigation
                     else "domcontentloaded",
                     timeout=timeout_ms,
+                    mode="image",
                 )
             except Exception:
                 navigation_response = None
@@ -454,7 +460,8 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
             }
             if referer:
                 request_headers["Referer"] = referer
-            response = self._context.request.get(
+            response = context_get(
+                self._context,
                 image_url,
                 headers=request_headers,
                 timeout=timeout_ms,
@@ -654,7 +661,8 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         if timeout_ms <= 0:
             return None
         try:
-            fetched = page.evaluate(
+            fetched = evaluate_get(
+                page,
                 """
                 async ([imageSrc, timeoutMs]) => {
                   const bytesToBase64 = (bytes) => {
@@ -694,6 +702,7 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
                         status: response.status,
                         url: response.url || imageSrc,
                         contentType,
+                        headers: {'cf-mitigated': response.headers.get('cf-mitigated') || ''},
                         nonImage: true,
                         title: titleFromHtml(bodySnippet) || document.title || '',
                         bodySnippet,

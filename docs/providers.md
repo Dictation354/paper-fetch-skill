@@ -24,7 +24,7 @@ PDF 正文作为一个原样 section 保存；获取、组装、序列化和输�
 | Provider | 元数据 | 全文主路径 | 资产下载 | Markdown 能力 | 备注 |
 | --- | --- | --- | --- | --- | --- |
 | `crossref` | 支持 | 不负责 publisher fulltext | 不支持 | 不适用 | 负责 resolve、routing signal、metadata merge 与 metadata-only fallback |
-| `elsevier` | 官方 API / FlareSolverr | `API XML（DOI → 条件 PII 重试） -> FlareSolverr HTML -> API PDF -> FlareSolverr PDF` | XML 路线支持 `none` / `body` / `all`；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 强 | XML、HTML 分别公开为 `elsevier_xml`、`elsevier_html`；两条 PDF 路线公开为 `elsevier_pdf`；PII fallback 来自 Crossref/landing metadata 中的 LinkingHub 或 ScienceDirect PII URL |
+| `elsevier` | 官方 API / Byparr | `API XML（DOI → 条件 PII 重试） -> Byparr HTML -> API PDF -> Byparr PDF` | XML 路线支持 `none` / `body` / `all`；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 强 | XML、HTML 分别公开为 `elsevier_xml`、`elsevier_html`；两条 PDF 路线公开为 `elsevier_pdf`；PII fallback 来自 Crossref/landing metadata 中的 LinkingHub 或 ScienceDirect PII URL |
 | `springer` | 依赖 Crossref merge | `direct HTML -> direct HTTP PDF` | HTML 路线支持 `none` / `body` / `all`；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 强 | 对外保持单一 `springer` provider，内部按 `nature` / `springerlink` / `bmc` site-family profile 分类；HTML 成功公开 `springer_html`，PDF fallback 成功公开 `springer_pdf`；必要时可返回 provider `abstract_only` |
 | `wiley` | 依赖 Crossref merge | `selected-browser HTML -> browser-seeded publisher PDF/ePDF -> Wiley TDM API PDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 可提取 PDF 图片 | 中 | HTML 默认通过 Camoufox；TDM token 可在 browser runtime 不可用时继续官方 PDF lane |
 | `science` | 依赖 Crossref | `selected-browser HTML -> browser-seeded publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 可提取 PDF 图片 | 中 | 与 Wiley 共用 selected-browser workflow；access gate 不满足时可降级 |
@@ -53,10 +53,10 @@ PDF 正文作为一个原样 section 保存；获取、组装、序列化和输�
 - `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 共用一套 provider-owned 浏览器栈。`paper_fetch.providers.browser_workflow` 包入口只聚合 provider 直接使用的 profile、client、工作流函数和少量测试 seam；具体实现的 canonical owner 是对应子模块。
 - browser workflow 的 bootstrap、PDF/ePDF fallback、article assembly、asset retry helper、client 基类和 browser fetchers 分别由 `browser_workflow/` 下的对应子模块维护；storage-state 默认面向 provider catalog 中的浏览器 provider。
 - publisher 差异通过各 provider 模块 callback 下沉；browser-PDF executor 继续共享 `_pdf_fallback`。内部 helper 应从 `browser_workflow` 对应子模块导入，不属于包入口公开契约。
-- browser-workflow 的 HTML bootstrap 通过 `RuntimeContext` 复用所选 backend manager；同次抓取的同一出版社各阶段复用所选后端的 context；Camoufox 使用原生持久目录，FlareSolverr 使用临时 Chrome profile 与已接受的 JSON 状态。同步对象保持 caller-thread 绑定。
+- browser-workflow 的 HTML bootstrap 通过 `RuntimeContext` 复用所选 backend manager；同次抓取的同一出版社各阶段复用所选后端的 context；统一后端为 Byparr、引擎为 Camoufox；内部状态模式保留原生持久目录或已接受的 JSON 状态绑定。同步对象保持 caller-thread 绑定。
 - Live smoke 与 provider regression 的代表性 DOI 由 `tests/provider_benchmark_samples.py` 和 golden fixture manifest 维护；它们不构成第二套运行时能力 catalog。
 - Science、Wiley、PNAS、IEEE、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、AIP、Taylor & Francis 的浏览器补充文件统一使用 `page_click`，从所在文章页或附件目录的已有链接/按钮串行下载。点击失败报告逐项诊断，不回退 HTTP 直链或 `BrowserContext.request.get()`；AMS 等纯 HTTP 分支及正文图片下载策略保持原行为。IOP 目录 HTML 与 IEEE multimedia JSON 是发现请求，继续使用 `context_request`。
-- PNAS 的 FlareSolverr 后端从已解析的材料索引链接，通过同一 Chrome 的 Playwright context request 收取原始附件；Chrome 的 PNAS 下载控件在 CDP 下可能没有下载事件。该后端不在点击失败后切换独立 HTTP 请求。Camoufox 分支保持 `page_click`。
+- PNAS 的 JSON 状态模式从材料索引链接通过同一 context request 收取原始附件；原生状态模式保留 `page_click`。
 - 点击下载支持下载事件与内联文件响应，只捕获当前控件目标及其重定向链；结束后恢复文章页、关闭本次 popup、移除监听器。Wiley 保留 supporting accordion 的重绘/展开处理，IOP 保留目录页与附件 ID，IEEE 通过 Media/Multimedia/Supplemental Items 标签、文件名或附件 DOI 定位已有附件控件，并限定同源文件路径的跟踪参数差异，Annual Reviews 打开 Supplemental Material 标签，MDPI 优先点击页面可见的既有文件链接，附件仅在 supplementary modal 中时先展开该模态框，并保留实际点击的原始链接以对应资产 URL。成功与失败均记录点击页、原始链接及最终地址，成功记录在资产 `recovery_attempts` 中保留点击关联证据；所有文件仍经共享验收、预算与原子落盘。
 - 专项 live 验收使用 `PAPER_FETCH_RUN_SUPPLEMENT_CLICK=1 PYTHONPATH=src uv run python -m pytest tests/live/test_live_supplement_click.py -q -n 0`，通过 `PAPER_FETCH_LIVE_ARTIFACT_DIR` 指定每轮新的目录；因共享外部浏览器状态而串行运行。可用 `PAPER_FETCH_LIVE_STORAGE_STATE_SOURCE` 指定已有合法会话的 publisher profile 根目录，测试仅复制其 storage state 到隔离 profile。每个 provider 保存文件、字节数、类型、SHA-256、点击证据和失败报告；无附件、缓存、skip 或访问阻断不计为成功。Science 可通过 `PAPER_FETCH_SCIENCE_SUPPLEMENT_REFERENCE` 对照先前取得的 43 页文件。
 
@@ -306,10 +306,10 @@ resolve
 ### 3. provider 全文主路径
 
 - `elsevier`
-  - 固定顺序是 `API XML（DOI → 条件 PII 重试） -> FlareSolverr HTML -> API PDF -> FlareSolverr 浏览器 PDF -> metadata-only`。每阶段通过身份和全文验收即返回。缺 key 跳过 API 阶段；API `NOT_ENTITLED` 仅拒绝该 API 路线，继续后续阶段。网页确认无全文权限时终止。
+  - 固定顺序是 `API XML（DOI → 条件 PII 重试） -> Byparr HTML -> API PDF -> Byparr 浏览器 PDF -> metadata-only`。每阶段通过身份和全文验收即返回。缺 key 跳过 API 阶段；API `NOT_ENTITLED` 仅拒绝该 API 路线，继续后续阶段。网页确认无全文权限时终止。
   - 直接输入 LinkingHub 或 ScienceDirect 的 `/pii/{PII}` URL 时，resolve 阶段会提取 PII 并跳过 publisher landing 抓取；metadata 阶段改用 Elsevier Abstract PII API 补 DOI，再进入官方全文主路径。
   - PII XML/API fallback 只在 DOI XML/API 出现 transient / rate-limit 类失败，且 merged metadata 中能从 LinkingHub 或 ScienceDirect URL 提取 PII 时启用；它仍使用 Elsevier 官方 Article API。HTML 由 Elsevier 自行编排的 browser workflow 获取。
-  - XML/API 成功时公开 `source="elsevier_xml"`；ScienceDirect HTML 成功时公开 `source="elsevier_html"`。浏览器阶段仅使用 Windows/Linux x64 FlareSolverr，不支持的平台跳过，不切换 Camoufox。
+  - XML/API 成功时公开 `source="elsevier_xml"`；ScienceDirect HTML 成功时公开 `source="elsevier_html"`。浏览器阶段在现有 Camoufox／Playwright 平台均使用 Byparr＋Camoufox。
   - XML 通过全文与身份验收后，缺失的参考文献 DOI 按 Crossref 父论文参考文献、Crossref 书目查询、同篇 ScienceDirect 网页参考文献依次补全。父论文优先复用会话记录；reference key 关联必须无书目冲突，无可靠 key 时要求完整题名、首作者、年份一致，并核对可用卷页，只接受唯一匹配。网页需再次核验论文 DOI，并排除推荐文章。只填空缺并更新引用显示文本，不改变条目数量、编号或顺序；来源与匹配证据记录在 `reference_doi_completion` diagnostics 和 trace。使用当前请求剩余期限，补全失败保留 XML，不触发 PDF fallback；显式取消继续传播。模型转换不发起网络请求。
   - HTML 候选优先已知 PII 页面，再尝试 landing URL 与 DOI resolver。专用解析器保留作者、摘要、Highlights、关键词、`#body` 章节、附录、声明、图表、参考文献及补充材料；MathJax 原始 MathML 在页面准备钩子中绑定回对应渲染节点，再交共享转换器。
   - 浏览器 PDF 优先当前论文页面的下载控件，再尝试同 PII `/pdfft`；排除参考文献与推荐论文链接。HTML、图片、附件和 PDF 复用同一请求上下文。页面/CDN 不携带 API key；资产默认为 `none`。
@@ -969,14 +969,14 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 
 #### Browser runtime
 
-后端由 provider catalog 与 `PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND` 共同选择。PNAS 在 Windows/Linux x64 默认 FlareSolverr，其他平台默认 Camoufox，并支持显式选择这两个后端；Elsevier 仅支持 Windows/Linux x64 的 FlareSolverr；其他 browser provider 默认 Camoufox。HTML、PDF fallback、资产、preflight 和 auth 共用所选后端，失败不自动切换。完整支持范围见 [browser-backends.md](browser-backends.md)。
+全部 13 个浏览器 provider 统一使用 Byparr＋Camoufox，`auto|camoufox|byparr` 均进入组合链路；Elsevier 同步开放 macOS。HTML、PDF fallback、资产、preflight 和 auth 共用所选后端，失败不自动切换。完整支持范围见 [browser-backends.md](browser-backends.md)。
 
 #### 通用 `PAPER_FETCH_BROWSER_*` 配置
 
 - `PAPER_FETCH_BROWSER_HEADLESS`：默认 `true`，控制所选 managed 后端是否 headless。
 - `PAPER_FETCH_BROWSER_TIMEOUT_MS`：默认 `120000`，控制浏览器页面导航超时。
-- `PAPER_FETCH_BROWSER_BINARY_PATH`：Camoufox 可执行文件覆盖项；FlareSolverr 使用 `PAPER_FETCH_CHROME_BINARY_PATH`。
-- `PAPER_FETCH_BROWSER_PROFILE_DIR` / `PAPER_FETCH_BROWSER_USER_DATA_DIR`：Camoufox 的 profile/storage-state 目录覆盖项，FlareSolverr 不使用。
+- `PAPER_FETCH_BROWSER_BINARY_PATH`：Camoufox 可执行文件覆盖项；所有浏览器路径共用该 Camoufox executable 配置。
+- `PAPER_FETCH_BROWSER_PROFILE_DIR` / `PAPER_FETCH_BROWSER_USER_DATA_DIR`：原生状态模式的 profile/storage-state 目录覆盖项；原 JSON 状态模式不变。
 - Camoufox 默认目录为 `publisher-browser-profiles/<provider>-camoufox/`。
 - 后端安装、抓取与离线准备说明见 [`browser-backends.md`](browser-backends.md)。
 
@@ -1120,7 +1120,7 @@ MCP 入口为 `provider_status(provider=None, group=None, detail="full")`。无�
 - 图片本地能力分别探测 Ghostscript（EPS）与 libvips（TIFF）的候选可执行文件和 `--version` 超时。`image_conversion_backend_missing`、`image_conversion_backend_timeout`、`image_conversion_backend_error` 表示本地转换后端问题；远端资产请求失败沿用网络/资产 reason，不会伪装成后端缺失；一般转换执行失败使用 `image_conversion_failed`。
 - 该调用不会执行 HTTP 请求、打开浏览器或自动安装依赖。CLI 的同一汇总入口是 `paper-fetch doctor [--provider ...|--group ...] [--detail full|compact] [--json]`。
 
-MCP `browser_preflight(provider=None, detail="full")` 无 provider 时按 browser runtime catalog 顺序逐项执行，与 CLI 默认一致；指定 `test_url` 或 `storage_state_path` 时必须同时指定单一 provider。它会发送 progress，逐项返回 `ready/challenge/auth_required/network_timeout/extraction_error/runtime_error/cancelled`，并在取消时保留已完成项。默认 `save_storage_state=true` 导出 JSON；`false` 禁止 JSON 导出，但 Camoufox 仍可更新原生目录，FlareSolverr 的 Chrome profile 为临时目录。compact 每项只含 `provider/status/reason_code/stage/message/next_action`。该工具的 annotations 明确是 open-world、非只读和非 idempotent；它不自动 auth、不绕过 challenge，也不进入 PDF fallback。
+MCP `browser_preflight(provider=None, detail="full")` 无 provider 时按 browser runtime catalog 顺序逐项执行，与 CLI 默认一致；指定 `test_url` 或 `storage_state_path` 时必须同时指定单一 provider。它会发送 progress，逐项返回 `ready/challenge/auth_required/network_timeout/extraction_error/runtime_error/cancelled`，并在取消时保留已完成项。默认 `save_storage_state=true` 导出 JSON；`false` 禁止 JSON 导出，但 Camoufox 仍可更新原生目录，JSON 状态模式的 Camoufox context 为临时会话。compact 每项只含 `provider/status/reason_code/stage/message/next_action`。该工具的 annotations 明确是 open-world、非只读和非 idempotent；它不自动 auth、不绕过 challenge，也不进入 PDF fallback。
 
 按需选择 `provider_status` / `doctor` 检查本地配置，或 `browser-preflight` / `browser_preflight` 检查真实网页链路；需要登录/验证时使用 `auth`。正常抓取可直接运行。普通运行时在实际启动浏览器前自动准备 managed Camoufox，尊重渠道和固定版本；更新失败但本地版本有效时继续使用。任何静态 `ready` 都不是真实页面可访问、已授权或一定能取得全文的承诺。
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .browser_runtime.navigation import navigate_page
+
 from ..quality.access_boundary import propagate_paywall
 
 import contextlib
@@ -177,7 +179,8 @@ def fetch_ieee_browser_html_payload(
         page.on("response", remember_rest_response)
         navigation_timed_out = False
         try:
-            navigation_response = page.goto(
+            navigation_response = navigate_page(
+                page,
                 document_url,
                 wait_until="domcontentloaded",
                 timeout=_remaining_timeout_ms(
@@ -303,7 +306,7 @@ def fetch_ieee_browser_html_payload(
                 active_browser_context,
                 final_url=browser_final_url,
                 user_agent=browser_page_user_agent(page) or browser_user_agent,
-                backend="camoufox",
+                backend="byparr",
                 fetcher="camoufox_ieee_html",
             ),
         )
@@ -320,7 +323,7 @@ def fetch_ieee_browser_html_payload(
                 browser_context_seed=browser_context_seed,
                 browser_diagnostics={
                     "fetcher": "camoufox_ieee_html",
-                    "backend": "camoufox",
+                    "backend": "byparr",
                     "payload_source": payload_source,
                     "final_url": redact_url_for_diagnostics(browser_final_url),
                     "navigation_status": navigation_status,

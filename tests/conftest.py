@@ -133,7 +133,7 @@ def pytest_configure(config: pytest.Config) -> None:
             "PAPER_FETCH_BROWSER_COMPONENT_CACHE",
             str(
                 Path(user_cache_path("paper-fetch", appauthor=False))
-                / "live-components/flaresolverr"
+                / "live-components/byparr"
             ),
         )
     _preserve_explicit_formula_tools_dir()

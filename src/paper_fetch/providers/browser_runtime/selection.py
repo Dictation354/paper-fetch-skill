@@ -3,40 +3,49 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from .chrome import supported_platform
+import platform
+import sys
 from ..base import ProviderFailure
-from ...reason_codes import NOT_CONFIGURED, NOT_SUPPORTED
+from ...reason_codes import NOT_CONFIGURED
 
 PNAS_BACKEND_ENV = "PAPER_FETCH_PNAS_BROWSER_BACKEND"
 
 
 def selected_backend(env: Mapping[str, str], *, provider: str) -> str:
-    from ...provider_catalog import PROVIDER_CATALOG
-
-    spec = PROVIDER_CATALOG.get(provider.lower())
-    supported = spec.browser_backends if spec else ("camoufox",)
+    if env.get("PAPER_FETCH_CHROME_BINARY_PATH", "").strip():
+        raise ProviderFailure(
+            NOT_CONFIGURED,
+            "PAPER_FETCH_CHROME_BINARY_PATH was removed with FlareSolverr; remove it and use PAPER_FETCH_BROWSER_BINARY_PATH for Camoufox/Byparr. See docs/browser-backends.md#migration.",
+        )
     key = f"PAPER_FETCH_{provider.upper()}_BROWSER_BACKEND"
     value = env.get(key, "auto").strip().lower() or "auto"
-    if value not in {"auto", "camoufox", "flaresolverr"}:
+    if value == "flaresolverr":
         raise ProviderFailure(
-            NOT_CONFIGURED, f"{key} must be auto, camoufox or flaresolverr: {value}"
+            NOT_CONFIGURED,
+            f"{key}=flaresolverr was removed; use auto or byparr. See docs/browser-backends.md#migration.",
         )
-    if value == "auto":
-        value = (
-            (
-                (spec.browser_default_x64 if supported_platform() else None)
-                or spec.browser_default
-            )
-            if spec
-            else "camoufox"
-        )
-    if value not in supported:
+    if value not in {"auto", "camoufox", "byparr"}:
         raise ProviderFailure(
-            NOT_CONFIGURED, f"{provider} does not support browser backend {value}."
+            NOT_CONFIGURED, f"{key} must be auto, camoufox or byparr: {value}"
         )
-    if value == "flaresolverr" and not supported_platform():
-        raise ProviderFailure(
-            NOT_SUPPORTED if env.get(key, "auto") == "auto" else NOT_CONFIGURED,
-            f"{provider} FlareSolverr requires Windows/Linux x64.",
-        )
-    return value
+    return "byparr"
+
+
+def selected_state_mode(env: Mapping[str, str], *, provider: str) -> str:
+    """Keep the pre-unification state owner and directory; never migrate it."""
+    value = (
+        env.get(f"PAPER_FETCH_{provider.upper()}_BROWSER_BACKEND", "auto")
+        .strip()
+        .lower()
+    )
+    legacy_json_platform = sys.platform in {
+        "win32",
+        "linux",
+    } and platform.machine().lower() in {"amd64", "x86_64"}
+    if (
+        provider.lower() in {"pnas", "elsevier"}
+        and legacy_json_platform
+        and value != "camoufox"
+    ):
+        return "json"
+    return "native"

@@ -87,6 +87,24 @@ jobs:
         with:
           name: merged-dependency-manifest
           path: ${{ runner.temp }}/dependency-manifest
+      - name: Verify shared browser runtime on native macOS Python matrix
+        if: runner.os == 'macOS'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PAPER_FETCH_TEST_BYPARR_CACHE: ${{ runner.temp }}/byparr-tests
+          PYTEST_XDIST_AUTO_NUM_WORKERS: "4"
+        run: |
+          PYTHONPATH=src uv run python - <<'PY'
+          from pathlib import Path
+          import os
+          from paper_fetch.providers.browser_runtime.preparation import prepare_camoufox_managed_runtime
+          from paper_fetch.providers.browser_runtime.byparr_preparation import prepare_source, PreparationBudget
+          from camoufox.fpgen_model import ensure_fpgen_model
+          assert prepare_camoufox_managed_runtime().valid
+          ensure_fpgen_model()
+          prepare_source(Path(os.environ["PAPER_FETCH_TEST_BYPARR_CACHE"]), PreparationBudget(600))
+          PY
+          PYTHONPATH=src uv run python -m pytest tests/integration/test_pnas_byparr.py -q
       - name: Build full offline package
         env:
           PYTHON_BIN: .venv/bin/python

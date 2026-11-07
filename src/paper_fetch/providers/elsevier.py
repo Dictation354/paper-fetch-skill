@@ -726,8 +726,8 @@ def _object_request_headers(url: str, headers: Mapping[str, str]) -> dict[str, s
 
 _PROVIDER_SPEC = ProviderSpec(
     name="elsevier",
-    browser_backends=("flaresolverr",),
-    browser_default="flaresolverr",
+    browser_backends=("camoufox", "byparr"),
+    browser_default="byparr",
     browser_home_url="https://www.sciencedirect.com/",
     display_name="Elsevier",
     official=True,

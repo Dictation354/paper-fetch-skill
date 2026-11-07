@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .browser_runtime.navigation import navigate_page
+
 import contextlib
 import hashlib
 import logging
@@ -60,7 +62,7 @@ _LOADED = r"""urls => [...document.images].some(img => {
 class WileyPageAssetFetcher(_BaseBrowserDocumentFetcher):
     """Caller-thread, request-scoped raw capture; one navigation per candidate."""
 
-    browser_backend = "camoufox"
+    browser_backend = "byparr"
 
     def __init__(self, *, assets: list[dict[str, Any]], **kwargs) -> None:
         super().__init__(**kwargs)
@@ -377,8 +379,12 @@ class WileyPageAssetFetcher(_BaseBrowserDocumentFetcher):
             self.navigation_count += 1
             navigation_error = None
             try:
-                self._page.goto(
-                    url, wait_until="commit", timeout=max(1, int(remaining * 1000))
+                navigate_page(
+                    self._page,
+                    url,
+                    wait_until="commit",
+                    timeout=max(1, int(remaining * 1000)),
+                    mode="image",
                 )
             except (RequestCancelledError, AssetBudgetExceeded):
                 raise

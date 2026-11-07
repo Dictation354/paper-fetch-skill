@@ -1,0 +1,643 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-11-07T11:15:09.176184+00:00",
+  "task": "All 13 browser publishers use managed Byparr + Camoufox",
+  "branch": "feat/byparr-replacement",
+  "runtime": {
+    "os": "Linux",
+    "machine": "x86_64",
+    "python": "3.14.10",
+    "playwright": "1.62.0",
+    "byparr": "2.1.0",
+    "camoufox": "0.5.9",
+    "playwright_captcha": "0.1.1"
+  },
+  "scope": {
+    "browser_provider_count": 13,
+    "backend": "byparr",
+    "engine": "camoufox",
+    "configuration_aliases": [
+      "auto",
+      "camoufox",
+      "byparr"
+    ],
+    "state_modes": [
+      "native",
+      "json"
+    ],
+    "state_migration": false,
+    "api_and_direct_http_order_changed": false,
+    "pdf_conversion_changed": false,
+    "github_ci_triggered": false,
+    "pushed": false
+  },
+  "verification": {
+    "unit": {
+      "passed": 3400,
+      "subtests_passed": 389,
+      "command": "PYTEST_XDIST_AUTO_NUM_WORKERS=6 PYTHONPATH=src uv run python -m pytest tests/unit -q"
+    },
+    "integration_full_run": {
+      "passed": 325,
+      "skipped": 7,
+      "subtests_passed": 2170,
+      "command": "PAPER_FETCH_TEST_BYPARR_CACHE=/tmp/paper-fetch-unified-components PYTEST_XDIST_AUTO_NUM_WORKERS=6 PYTHONPATH=src uv run python -m pytest tests/integration -q"
+    },
+    "final_shared_browser_suite": {
+      "passed": 17,
+      "playwright": "1.62.0",
+      "cases_include": [
+        "shared normal and persistent context",
+        "native cookie and localStorage replay",
+        "original image/PDF/file bytes",
+        "popup and iframe automatic verification",
+        "single bounded GET retry",
+        "inflight cancellation and process cleanup",
+        "IEEE iframe PDF",
+        "Wiley image page"
+      ],
+      "command": "PAPER_FETCH_TEST_BYPARR_CACHE=/tmp/paper-fetch-unified-components PYTEST_XDIST_AUTO_NUM_WORKERS=4 PYTHONPATH=src uv run python -m pytest tests/integration/test_pnas_byparr.py -q"
+    },
+    "minimum_playwright": {
+      "version": "1.58.0",
+      "passed": 17,
+      "command": "PAPER_FETCH_TEST_BYPARR_CACHE=/tmp/paper-fetch-unified-components PYTEST_XDIST_AUTO_NUM_WORKERS=4 PYTHONPATH=src /tmp/paper-fetch-unified-pw158/bin/python -m pytest tests/integration/test_pnas_byparr.py -q"
+    },
+    "final_configuration_auth_preparation_units": {
+      "passed": 510
+    },
+    "macos_contract_validator": "passed",
+    "linux_portable_macos_contract": {
+      "passed": 8,
+      "native_macos_evidence": false
+    },
+    "native_gates": {
+      "verify_workflow": "macos-15 / CPython 3.14 shared Byparr + Camoufox suite added",
+      "offline_workflow": "existing native macOS CPython 3.11–3.14 matrix shared suite added",
+      "executed_here": false
+    },
+    "component": {
+      "component_files": 275,
+      "identity": "a86974e5a95a81fe25bab8287c557ecaa07483d50ea7fd284ebc5c116e045014",
+      "manifest_sha256": "a123fe5c3aa3b4946f56627744be29163a52bd91d52d016267a8ad4a296d44fc",
+      "verified_frozen_files_equal": true,
+      "upstream_license": true,
+      "macos_private_packages": true
+    },
+    "wheel": {
+      "path": "/tmp/paper-fetch-unified-wheel/paper_fetch_skill-7.3.6-py3-none-any.whl",
+      "sha256": "ebe6c3f75e4fd4b2a91b639953d6997ef9406f9ded6aced1f4f995bf239d77cf",
+      "required_runtime_files": [
+        "byparr_adapter.py",
+        "byparr_launcher.py",
+        "byparr_manager.py",
+        "navigation.py",
+        "byparr_server.cjs",
+        "byparr-manifest.json",
+        "byparr-requirements.lock",
+        "byparr-adaptation.md"
+      ],
+      "runtime_files_match_workspace": true,
+      "removed_components_absent": true
+    }
+  },
+  "live": [
+    {
+      "provider": "pnas",
+      "doi": "10.1073/pnas.2406303121",
+      "entrypoint": [
+        "/home/dictation/paper-fetch-skill/.venv/bin/python3",
+        "-m",
+        "paper_fetch.cli",
+        "fetch",
+        "--query",
+        "10.1073/pnas.2406303121",
+        "--format",
+        "json",
+        "--save-markdown",
+        "--output-dir",
+        "/home/dictation/paper-fetch-skill/.paper-fetch-runs/byparr-unified-20261107-pnas-verified/pnas/article",
+        "--artifact-mode",
+        "all",
+        "--asset-profile",
+        "none",
+        "--manifest",
+        "/home/dictation/paper-fetch-skill/.paper-fetch-runs/byparr-unified-20261107-pnas-verified/pnas/manifest.json",
+        "--progress",
+        "jsonl"
+      ],
+      "fresh_state": true,
+      "result_cache": false,
+      "serial": true,
+      "serial_reason": "Live publisher/challenge state is external and shared.",
+      "exit_code": 0,
+      "source": "pnas",
+      "acquisition": {
+        "provider": "pnas",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "acceptance": {
+        "schema_version": 2,
+        "minimum_reader_schema_version": 2,
+        "overall": "degraded",
+        "target": "paper",
+        "identity": {
+          "status": "resolved",
+          "doi": "10.1073/pnas.2406303121",
+          "expected_doi": "10.1073/pnas.2406303121",
+          "title": "The kinetics of SARS-CoV-2 infection based on a human challenge study",
+          "candidate_count": 0,
+          "canonical_landing_url": null,
+          "canonical_landing_verified": false,
+          "canonical_landing_unique": false,
+          "codes": []
+        },
+        "fetch": {
+          "status": "ok",
+          "completed": true,
+          "code": null
+        },
+        "content": {
+          "requested": true,
+          "status": "fulltext",
+          "has_fulltext": true,
+          "has_abstract": true,
+          "token_estimate": 15990,
+          "confidence": "medium",
+          "flags": [
+            "formula_fallback_present",
+            "formula_missing_present"
+          ],
+          "tables": {
+            "fallback_count": 0,
+            "layout_degraded_count": 0,
+            "semantic_loss_count": 0
+          },
+          "formulas": {
+            "fallback_count": 4,
+            "missing_count": 2
+          }
+        },
+        "asset": {
+          "requested": false,
+          "profile": "none",
+          "audited": true,
+          "expected": null,
+          "discovered": 0,
+          "attempted": 0,
+          "total": 0,
+          "local": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_archived": 0,
+          "remote_link_count": 0,
+          "remote_only_count": 0,
+          "body_discovered": 0,
+          "body_attempted": 0,
+          "body_local": 0,
+          "body_full_size": 0,
+          "body_preview": 0,
+          "body_failed": 0,
+          "body_not_archived": 0,
+          "body_remote_only_count": 0,
+          "require_local_body_assets": false,
+          "require_full_size_body_assets": false,
+          "has_local_body_assets": false,
+          "all_body_assets_local": true,
+          "all_body_assets_full_size": true,
+          "local_body_assets_satisfied": true,
+          "full_size_body_assets_satisfied": true,
+          "failure_codes": [],
+          "issue_codes": [],
+          "status": "not_requested",
+          "remote_links_preserved": false
+        },
+        "output": {
+          "status": "complete",
+          "requested": [
+            "article",
+            "markdown"
+          ],
+          "available": [
+            "article",
+            "markdown"
+          ],
+          "missing": []
+        },
+        "provenance": {
+          "status": "complete",
+          "source": "pnas",
+          "acquisition": {
+            "provider": "pnas",
+            "route": "browser_html",
+            "representation": "html",
+            "transport": "browser",
+            "fallback_used": false
+          },
+          "trace_event_count": 14,
+          "fallback_codes": [],
+          "warning_codes": [
+            "formula_fallback",
+            "formula_fallback_present",
+            "formula_missing",
+            "formula_missing_present"
+          ],
+          "failure_codes": [],
+          "unstructured_warning_count": 3,
+          "acceptance_policy": "provider_html_body",
+          "acceptance_policy_satisfied": true
+        }
+      },
+      "challenge_detected": true,
+      "solver_called": true,
+      "actual_click": true,
+      "restored_real_200": true,
+      "documents": [
+        {
+          "url": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+          "status": 403,
+          "operation": "v_-WVeiLi16cuRZfUXVvaA",
+          "page": "about:blank",
+          "frame": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+          "frame_id": "frame@049524fbb26a9b9d66210a2e4ffc8432",
+          "sequence": 1
+        },
+        {
+          "url": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+          "status": 302,
+          "operation": "v_-WVeiLi16cuRZfUXVvaA",
+          "page": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121?[redacted]",
+          "frame": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+          "frame_id": "frame@049524fbb26a9b9d66210a2e4ffc8432",
+          "sequence": 2
+        },
+        {
+          "url": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+          "status": 200,
+          "operation": "v_-WVeiLi16cuRZfUXVvaA",
+          "page": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121?[redacted]",
+          "frame": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+          "frame_id": "frame@049524fbb26a9b9d66210a2e4ffc8432",
+          "sequence": 6
+        }
+      ],
+      "events": [
+        {
+          "kind": "navigation_managed",
+          "operation": "v_-WVeiLi16cuRZfUXVvaA",
+          "page_id": "page@a9e4a56254980cf17f6b698116a93b39",
+          "page": "about:blank",
+          "sequence": 1,
+          "mode": "html",
+          "action": "navigate"
+        },
+        {
+          "kind": "challenge_detected",
+          "operation": "v_-WVeiLi16cuRZfUXVvaA",
+          "page_id": "page@a9e4a56254980cf17f6b698116a93b39",
+          "page": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121?[redacted]",
+          "sequence": 2,
+          "frame": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121?[redacted]",
+          "response_sequence": 1,
+          "challenge": "cloudflare_interstitial"
+        },
+        {
+          "kind": "solver_called",
+          "operation": "v_-WVeiLi16cuRZfUXVvaA",
+          "page_id": "page@a9e4a56254980cf17f6b698116a93b39",
+          "page": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121?[redacted]",
+          "sequence": 6,
+          "response_sequence": 1
+        },
+        {
+          "kind": "solver_click",
+          "operation": "v_-WVeiLi16cuRZfUXVvaA",
+          "page_id": "page@a9e4a56254980cf17f6b698116a93b39",
+          "page": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+          "sequence": 106,
+          "response_sequence": 1
+        },
+        {
+          "kind": "challenge_result",
+          "operation": "v_-WVeiLi16cuRZfUXVvaA",
+          "page_id": "page@a9e4a56254980cf17f6b698116a93b39",
+          "page": "https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
+          "sequence": 110,
+          "outcome": "cleared",
+          "response_sequence": 1
+        }
+      ],
+      "artifacts": [
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-pnas-verified/pnas/acceptance.json",
+          "size_bytes": 35124,
+          "sha256": "e80b98a2864d816bf24ae07d9c99de155cbda553ff44f2a08ab3151b2d8f5da8"
+        },
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-pnas-verified/pnas/article/Iyaniwura_et_al_2024_The_kinetics_of_SARS-CoV-2_infection_based_on_a_human_challenge_study.json",
+          "size_bytes": 98207,
+          "sha256": "6a24d8da3c2ceb7b745f0aa7a76524b34bbe7cd5db7b57f60dcefc801d088a44"
+        },
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-pnas-verified/pnas/article/Iyaniwura_et_al_2024_The_kinetics_of_SARS-CoV-2_infection_based_on_a_human_challenge_study.md",
+          "size_bytes": 79415,
+          "sha256": "fa631709a969d019fc5e2f980364de1069b6c804e3d3ae99df1dda4932064331"
+        },
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-pnas-verified/pnas/article/diagnostics/pnas/10.1073_pnas.2406303121/byparr-service.json",
+          "size_bytes": 101135,
+          "sha256": "93f8621442179547f65593a98dee1fea63b2536a3b429b367f518a324b435fff"
+        },
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-pnas-verified/pnas/article/diagnostics/pnas/10.1073_pnas.2406303121/byparr.json",
+          "size_bytes": 83413,
+          "sha256": "fb14ed5690e2bbc7616f19eab7fc43bd09f6f4c7d81c2ce49a3c2468fa75e30a"
+        },
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-pnas-verified/pnas/manifest.json",
+          "size_bytes": 16011,
+          "sha256": "4d6a9d7183f7586050444aafed294fa03641bc7c22e2761fe2600b58c0b9fa71"
+        },
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-pnas-verified/pnas/request.json",
+          "size_bytes": 827,
+          "sha256": "5be601320ed7a9e83110b0e5859b0368dee3a33eb100b92633945eb8aae54909"
+        }
+      ]
+    },
+    {
+      "provider": "elsevier",
+      "doi": "10.1016/j.rse.2025.114648",
+      "entrypoint": [
+        "/home/dictation/paper-fetch-skill/.venv/bin/python3",
+        "-m",
+        "paper_fetch.cli",
+        "fetch",
+        "--query",
+        "10.1016/j.rse.2025.114648",
+        "--format",
+        "json",
+        "--save-markdown",
+        "--output-dir",
+        "/home/dictation/paper-fetch-skill/.paper-fetch-runs/byparr-unified-20261107-accepted/elsevier/article",
+        "--artifact-mode",
+        "all",
+        "--asset-profile",
+        "none",
+        "--manifest",
+        "/home/dictation/paper-fetch-skill/.paper-fetch-runs/byparr-unified-20261107-accepted/elsevier/manifest.json",
+        "--progress",
+        "jsonl"
+      ],
+      "fresh_state": true,
+      "result_cache": false,
+      "serial": true,
+      "serial_reason": "Live publisher/challenge state is external and shared.",
+      "exit_code": 0,
+      "source": "elsevier_html",
+      "acquisition": {
+        "provider": "elsevier",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "acceptance": {
+        "schema_version": 2,
+        "minimum_reader_schema_version": 2,
+        "overall": "degraded",
+        "target": "paper",
+        "identity": {
+          "status": "resolved",
+          "doi": "10.1016/j.rse.2025.114648",
+          "expected_doi": "10.1016/j.rse.2025.114648",
+          "title": "Seasonality of vegetation greenness in Southeast Asia unveiled by geostationary satellite observations",
+          "candidate_count": 0,
+          "canonical_landing_url": null,
+          "canonical_landing_verified": false,
+          "canonical_landing_unique": false,
+          "codes": []
+        },
+        "fetch": {
+          "status": "ok",
+          "completed": true,
+          "code": null
+        },
+        "content": {
+          "requested": true,
+          "status": "fulltext",
+          "has_fulltext": true,
+          "has_abstract": true,
+          "token_estimate": 14740,
+          "confidence": "medium",
+          "flags": [
+            "formula_fallback_present"
+          ],
+          "tables": {
+            "fallback_count": 0,
+            "layout_degraded_count": 0,
+            "semantic_loss_count": 0
+          },
+          "formulas": {
+            "fallback_count": 12,
+            "missing_count": 0
+          }
+        },
+        "asset": {
+          "requested": false,
+          "profile": "none",
+          "audited": true,
+          "expected": null,
+          "discovered": 0,
+          "attempted": 0,
+          "total": 0,
+          "local": 0,
+          "full_size": 0,
+          "preview": 0,
+          "accepted_preview": 0,
+          "fallback_preview": 0,
+          "failed": 0,
+          "placeholder_suspected": 0,
+          "not_archived": 0,
+          "remote_link_count": 0,
+          "remote_only_count": 0,
+          "body_discovered": 0,
+          "body_attempted": 0,
+          "body_local": 0,
+          "body_full_size": 0,
+          "body_preview": 0,
+          "body_failed": 0,
+          "body_not_archived": 0,
+          "body_remote_only_count": 0,
+          "require_local_body_assets": false,
+          "require_full_size_body_assets": false,
+          "has_local_body_assets": false,
+          "all_body_assets_local": true,
+          "all_body_assets_full_size": true,
+          "local_body_assets_satisfied": true,
+          "full_size_body_assets_satisfied": true,
+          "failure_codes": [],
+          "issue_codes": [],
+          "status": "not_requested",
+          "remote_links_preserved": false
+        },
+        "output": {
+          "status": "complete",
+          "requested": [
+            "article",
+            "markdown"
+          ],
+          "available": [
+            "article",
+            "markdown"
+          ],
+          "missing": []
+        },
+        "provenance": {
+          "status": "complete",
+          "source": "elsevier_html",
+          "acquisition": {
+            "provider": "elsevier",
+            "route": "browser_html",
+            "representation": "html",
+            "transport": "browser",
+            "fallback_used": false
+          },
+          "trace_event_count": 16,
+          "fallback_codes": [],
+          "warning_codes": [
+            "formula_fallback",
+            "formula_fallback_present"
+          ],
+          "failure_codes": [],
+          "unstructured_warning_count": 2,
+          "acceptance_policy": "provider_html_body",
+          "acceptance_policy_satisfied": true
+        }
+      },
+      "challenge_detected": true,
+      "solver_called": true,
+      "actual_click": true,
+      "restored_real_200": true,
+      "documents": [
+        {
+          "url": "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+          "status": 403,
+          "operation": "37wBqq8XAAcmb5csNwIDCw",
+          "page": "about:blank",
+          "frame": "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+          "frame_id": "frame@8f5070c2e866bb7a3764611cf48357c4",
+          "sequence": 1
+        },
+        {
+          "url": "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+          "status": 200,
+          "operation": "37wBqq8XAAcmb5csNwIDCw",
+          "page": "https://www.sciencedirect.com/science/article/pii/S0034425725000525?[redacted]",
+          "frame": "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+          "frame_id": "frame@8f5070c2e866bb7a3764611cf48357c4",
+          "sequence": 2
+        }
+      ],
+      "events": [
+        {
+          "kind": "navigation_managed",
+          "operation": "37wBqq8XAAcmb5csNwIDCw",
+          "page_id": "page@e3e16a402762f561fc65d9ac32ce38a9",
+          "page": "about:blank",
+          "sequence": 1,
+          "mode": "html",
+          "action": "navigate"
+        },
+        {
+          "kind": "challenge_detected",
+          "operation": "37wBqq8XAAcmb5csNwIDCw",
+          "page_id": "page@e3e16a402762f561fc65d9ac32ce38a9",
+          "page": "https://www.sciencedirect.com/science/article/pii/S0034425725000525?[redacted]",
+          "sequence": 2,
+          "frame": "https://www.sciencedirect.com/science/article/pii/S0034425725000525?[redacted]",
+          "response_sequence": 1,
+          "challenge": "cloudflare_interstitial"
+        },
+        {
+          "kind": "solver_called",
+          "operation": "37wBqq8XAAcmb5csNwIDCw",
+          "page_id": "page@e3e16a402762f561fc65d9ac32ce38a9",
+          "page": "https://www.sciencedirect.com/science/article/pii/S0034425725000525?[redacted]",
+          "sequence": 6,
+          "response_sequence": 1
+        },
+        {
+          "kind": "solver_click",
+          "operation": "37wBqq8XAAcmb5csNwIDCw",
+          "page_id": "page@e3e16a402762f561fc65d9ac32ce38a9",
+          "page": "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+          "sequence": 64,
+          "response_sequence": 1
+        },
+        {
+          "kind": "challenge_result",
+          "operation": "37wBqq8XAAcmb5csNwIDCw",
+          "page_id": "page@e3e16a402762f561fc65d9ac32ce38a9",
+          "page": "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+          "sequence": 68,
+          "outcome": "cleared",
+          "response_sequence": 1
+        }
+      ],
+      "artifacts": [
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-accepted/elsevier/acceptance.json",
+          "size_bytes": 19238,
+          "sha256": "ba9576808df696f5df4578b67797e200e27c3cb1d82c5a936e8d8b826dea8bb4"
+        },
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-accepted/elsevier/article/Tian_et_al_2025_Seasonality_of_vegetation_greenness_in_Southeast_Asia_unveiled_by_geostationary_satellite_observations.json",
+          "size_bytes": 178117,
+          "sha256": "bfb7029552fb315040576f1bc911eb6082719f6b46bfa8d27970fcae8d70dba5"
+        },
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-accepted/elsevier/article/Tian_et_al_2025_Seasonality_of_vegetation_greenness_in_Southeast_Asia_unveiled_by_geostationary_satellite_observations.md",
+          "size_bytes": 87886,
+          "sha256": "0097b17a0fc65844093fc6fe6761924713d74e30f97bebd1f9b16c2fb16635af"
+        },
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-accepted/elsevier/article/diagnostics/elsevier/10.1016_j.rse.2025.114648/byparr-service.json",
+          "size_bytes": 62399,
+          "sha256": "b7e97529b04a46e04a035054eb9789fbcf42b34e94a308f362b200f69b75b3c0"
+        },
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-accepted/elsevier/article/diagnostics/elsevier/10.1016_j.rse.2025.114648/byparr.json",
+          "size_bytes": 54730,
+          "sha256": "df335e682776b29f000e5bfe30180f90920660204d82ab6d0b6b8def291f4b5b"
+        },
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-accepted/elsevier/manifest.json",
+          "size_bytes": 17152,
+          "sha256": "cc7cd30595b3d4f98ea2d14c4e599977413826146f8114dcbee78706bc14311c"
+        },
+        {
+          "path": ".paper-fetch-runs/byparr-unified-20261107-accepted/elsevier/request.json",
+          "size_bytes": 828,
+          "sha256": "29aad3aa6b5d1fa947109bc9227d38d63fff8bcffe94ad601ea60735442c4e39"
+        }
+      ]
+    }
+  ],
+  "historical_attempts": {
+    "preserved": true,
+    "locations": [
+      ".paper-fetch-runs/byparr-unified-20261107",
+      ".paper-fetch-runs/byparr-unified-20261107-final",
+      ".paper-fetch-runs/byparr-unified-20261107-accepted"
+    ],
+    "note": "Earlier failed or automatically verified runs remain separate; the acceptance above uses each successful fresh CLI run. Ordinary navigation alone is not counted as a click."
+  }
+}

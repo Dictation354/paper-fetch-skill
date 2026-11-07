@@ -221,14 +221,14 @@ def fetch_ieee_landing_attempt(
         diagnostics={
             "stage": "landing",
             **direct_diagnostics,
-            "browser_backend": "camoufox",
+            "browser_backend": "byparr",
             "browser_attempted": True,
             "browser_status": browser_result.response_status,
             "browser_content_type": header_value(
                 browser_result.response_headers, "content-type"
             ),
             "seed_source": "landing_browser",
-            "final_fetcher": "camoufox",
+            "final_fetcher": "byparr",
         },
     )
 

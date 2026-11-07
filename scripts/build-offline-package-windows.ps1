@@ -442,9 +442,9 @@ function Write-OfflineReadme {
 
 This installer includes the embedded Python runtime, installed Python packages, formula tools, and image-tools configuration for optional conversion tools.
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
-It bundles pinned FlareSolverr source/private dependencies under `runtime/browser-components/flaresolverr/`.
-Browser binaries, fingerprint models and ChromeDriver are prepared after core installation, including silent installs.
-Use `/SKIPBROWSERPREPARE` to skip. Missing Chrome produces installation guidance; single-backend failure preserves core installation.
+It bundles pinned Byparr source/private dependencies under `runtime/browser-components/byparr/`.
+Camoufox binaries and fingerprint models are prepared after core installation, including silent installs.
+Use `/SKIPBROWSERPREPARE` to skip. single-backend failure preserves core installation.
 See `browser-setup-results.txt`. Retry with `python -m paper_fetch.offline_setup --install-root <path> --prepare-browsers all`.
 Successful online checks are reused for 24 hours; failed/cancelled checks allow retry.
 Ghostscript uses the official visible x64 installer (UAC/admin and system registry); libvips keeps the complete official x64 ZIP with DLLs/resources. Tools go under versioned `image-tools` directories; existing valid tools are reused and real EPS/TIFF conversion is checked before saving paths. Optional failures preserve the core installation. See `optional-setup-results.txt` after using the wizard.
@@ -684,7 +684,7 @@ Build-ProjectWheelhouse
 $buildPython = New-BuildVenv
 Add-EmbeddedPythonRuntime $staging
 Install-EmbeddedPythonPackages $staging
-Invoke-Native $buildPython (Join-Path $RepoDir "scripts/build_browser_components.py") --destination (Join-Path $staging "runtime/browser-components/flaresolverr")
+Invoke-Native $buildPython (Join-Path $RepoDir "scripts/build_browser_components.py") --destination (Join-Path $staging "runtime/browser-components/byparr")
 Add-FormulaTools -Staging $staging -BuildPython $buildPython
 Add-ImageTools -Staging $staging -BuildPython $buildPython
 Write-CmdWrappers $staging

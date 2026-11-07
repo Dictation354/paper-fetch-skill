@@ -1840,7 +1840,7 @@ def build_parser(
         help="Fetch one paper or a query-file batch.",
         description=(
             "Fetch AI-friendly full text for a paper by DOI, URL, or title. "
-            "Browser-backed providers use the managed browser runtime; PNAS uses system Chrome on Windows/Linux x64."
+            "All browser-backed providers use managed Byparr with Camoufox."
         ),
         parents=[_build_fetch_parent_parser(suppress_defaults=False)],
     )

@@ -402,6 +402,9 @@ class RuntimeContext:
             profile_path,
         )
 
+        from dataclasses import replace
+
+        config = replace(config, backend="byparr")
         path = profile_path(config)
         key = (threading.get_ident(), bool(config.headless), str(path))
         with self._browser_context_manager_lock:
@@ -416,7 +419,6 @@ class RuntimeContext:
             if manager is not None and (
                 manager.config.backend != config.backend
                 or manager.config.binary_path != config.binary_path
-                or manager.config.chrome_binary_path != config.chrome_binary_path
             ):
                 raise RuntimeError(
                     f"Conflicting browser executable for native profile: {path}"

@@ -42,9 +42,7 @@ def config(tmp_path):
 def test_same_directory_threads_queue_and_different_publishers_do_not(
     config, monkeypatch
 ):
-    monkeypatch.setattr(
-        profile, "CamoufoxPersistentContextManager", NativeProfileDouble
-    )
+    monkeypatch.setattr(profile, "ByparrManager", NativeProfileDouble)
     first, _ = open_browser_context(config)
     entered = threading.Event()
     waiting = threading.Event()
@@ -83,9 +81,7 @@ def test_same_directory_threads_queue_and_different_publishers_do_not(
 def test_process_lease_wait_obeys_cancel_deadline_and_releases_on_exception(
     config, monkeypatch
 ):
-    monkeypatch.setattr(
-        profile, "CamoufoxPersistentContextManager", NativeProfileDouble
-    )
+    monkeypatch.setattr(profile, "ByparrManager", NativeProfileDouble)
     path = profile.profile_path(config)
     path.mkdir(parents=True)
     process = subprocess.Popen(
@@ -124,7 +120,7 @@ def test_process_lease_wait_obeys_cancel_deadline_and_releases_on_exception(
         def new_context(self):
             raise RuntimeError("native launch failed")
 
-    monkeypatch.setattr(profile, "CamoufoxPersistentContextManager", BrokenNative)
+    monkeypatch.setattr(profile, "ByparrManager", BrokenNative)
     with pytest.raises(BrowserRuntimeFailure, match="native launch failed") as error:
         open_browser_context(config)
     assert error.value.kind == "browser_profile_load_failed"
@@ -165,7 +161,13 @@ def native_config(config, monkeypatch):
             **kwargs,
         ),
     )
-    return replace(config, binary_path=executable)
+    return replace(
+        config,
+        binary_path=executable,
+        component_cache_dir=Path(os.environ["PAPER_FETCH_TEST_BYPARR_CACHE"])
+        if os.environ.get("PAPER_FETCH_TEST_BYPARR_CACHE")
+        else None,
+    )
 
 
 @pytest.fixture
@@ -352,9 +354,7 @@ def test_native_cookie_localstorage_survive_restart_and_all_entrypoints_borrow(
 def test_external_native_os_lock_is_reported_without_removing_files(
     config, monkeypatch
 ):
-    monkeypatch.setattr(
-        profile, "CamoufoxPersistentContextManager", NativeProfileDouble
-    )
+    monkeypatch.setattr(profile, "ByparrManager", NativeProfileDouble)
     path = profile.profile_path(config)
     path.mkdir(parents=True)
     native_lock = path / ".parentlock"
@@ -402,12 +402,12 @@ def test_auth_reopens_same_native_profile_and_json_failure_is_auxiliary(
         BROWSER_PROFILE_DIR_ENV_VAR,
     )
 
-    original = profile.CamoufoxPersistentContextManager.new_context
+    original = profile.ByparrManager.new_context
     launches = []
 
     def routed_context(self):
         context = original(self)
-        launches.append((self.user_data_dir, self.headless))
+        launches.append((str(self.native_profile), self.config.headless))
         context.route(
             "https://www.pnas.org/**",
             lambda route: route.fulfill(
@@ -417,9 +417,7 @@ def test_auth_reopens_same_native_profile_and_json_failure_is_auxiliary(
         )
         return context
 
-    monkeypatch.setattr(
-        profile.CamoufoxPersistentContextManager, "new_context", routed_context
-    )
+    monkeypatch.setattr(profile.ByparrManager, "new_context", routed_context)
     monkeypatch.setattr(auth, "ensure_runtime_ready", lambda runtime: None)
     monkeypatch.setattr(
         auth,

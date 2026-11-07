@@ -159,8 +159,7 @@ _PREPARE_FETCH_BROWSER = preparation.FetchBrowserPreparation.prepare
 def test_automatic_preparation_entrypoints_share_update_interval(
     managed_camoufox, monkeypatch, tmp_path, first
 ):
-    import camoufox.sync_api as camoufox_sync
-    import playwright.sync_api as playwright_sync
+    from paper_fetch.providers.browser_runtime import byparr_manager
     from paper_fetch import auth, browser_preflight
     from paper_fetch.providers.base import ProviderFailure
     from paper_fetch.providers.browser_runtime.camoufox_manager import (
@@ -172,14 +171,8 @@ def test_automatic_preparation_entrypoints_share_update_interval(
         preparation.FetchBrowserPreparation, "prepare", _PREPARE_FETCH_BROWSER
     )
     monkeypatch.setattr(preparation, "find_spec", lambda _name: object())
-    playwright = SimpleNamespace(stop=mock.Mock())
-    monkeypatch.setattr(
-        playwright_sync,
-        "sync_playwright",
-        lambda: SimpleNamespace(start=lambda: playwright),
-    )
     launch = mock.Mock(side_effect=RuntimeError("launch boundary reached"))
-    monkeypatch.setattr(camoufox_sync, "NewBrowser", launch)
+    monkeypatch.setattr(byparr_manager, "prepare_components", launch)
     runtime_env = {"XDG_DATA_HOME": str(tmp_path / "data")}
 
     def prepare(route):

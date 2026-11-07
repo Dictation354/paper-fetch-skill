@@ -10,7 +10,7 @@ description: "获取、下载或核验指定论文全文或补充材料，或探
 ## 关键约束
 
 - 沿用用户明确的路径、资产范围、执行面和覆盖授权；预设只补全未指定项。状态与暂停条件统一见工作流。
-- Camoufox 使用出版社原生持久目录，FlareSolverr 使用隔离会话和过滤后的 JSON 状态；认证、状态导入与保存、排队语义见[环境说明](references/environment.md#browser-backend-与-storage-state)。
+- 全部浏览器 provider 统一使用 Byparr＋Camoufox，状态模式保留原生持久目录或过滤后 JSON 的既有绑定；认证、状态导入与保存、排队语义见[环境说明](references/environment.md#browser-backend-与-storage-state)。
 - 优先复用身份可证明且满足当前意图的本地文件或同 scope 缓存；临时阅读不为查询缓存而要求目录。
 - 阅读必须取得并读取实际正文，区分全文、摘要、元数据与截断片段；仅探测不自动升级为抓取。
 - 工具按需准备浏览器 runtime；配置和安装问题见[环境说明](references/environment.md)。实际返回 `challenge` / `auth_required` 时进入人工认证，遵守登录、验证码、付费墙和访问控制边界。

@@ -4603,17 +4603,17 @@
         "reason": "验证本地浏览器与目录锁机制，不证明远端出版社全文可用性。"
       }
     },
-    "tests/unit/test_pnas_flaresolverr.py": {
+    "tests/unit/test_pnas_byparr.py": {
       "default": {
         "kind": "mechanism",
-        "scope": "PNAS platform/backend policy, isolated source and driver cache preparation, Chrome discovery and read-only diagnostics boundary mocks.",
+        "scope": "PNAS/Elsevier platform/backend policy, locked source preparation, migration and read-only diagnostics boundary mocks.",
         "reason": "最小片段及边界 mock；不代表 PNAS 实站验收。"
       }
     },
-    "tests/integration/test_pnas_flaresolverr.py": {
+    "tests/integration/test_pnas_byparr.py": {
       "default": {
         "kind": "mechanism",
-        "scope": "Real Chrome/FlareSolverr/CDP lifecycle, serialized local navigation, original local asset bytes, accepted state replay and cancellation.",
+        "scope": "Real shared Camoufox/Byparr lifecycle, serialized local navigation, original local asset bytes, accepted state replay and cancellation.",
         "reason": "真实浏览器与本地服务合约；不代表 PNAS 实站全文验收。"
       }
     },
@@ -4671,13 +4671,13 @@
         "reason": "Minimal fragments and boundary mocks; publisher completeness is covered by golden source replays."
       }
     },
-    "tests/unit/test_offline_flaresolverr.py": {
+    "tests/unit/test_offline_byparr.py": {
       "default": {
         "kind": "infrastructure",
-        "scope": "安装后 FlareSolverr 依赖检测、确认／非交互安装、独立准备与空白页检查边界 mock。"
+        "scope": "安装后 Byparr 依赖检测、确认／非交互安装、独立准备与空白页检查边界 mock。"
       }
     },
-    "tests/integration/test_flaresolverr_setup.py": {
+    "tests/integration/test_byparr_setup.py": {
       "default": {
         "kind": "infrastructure",
         "scope": "安装后独立准备模式的真实 Python CLI、配置加载、非交互输出与核心文件保留。"
@@ -4688,6 +4688,25 @@
         "kind": "mechanism",
         "scope": "browser preparation records, lazy clients and structural codecs",
         "reason": "隔离 mock 与最小模型验证成功限频、失败重试、组件路径、并发和所有权，不证明真实出版社内容。"
+      }
+    },
+    "tests/live/test_live_byparr.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Formal CLI PNAS/Elsevier HTML acquisition with fresh state, no result cache, real document/DOI/source/acceptance evidence; distinguish navigation from challenge/click/recovery.",
+        "primary": [
+          "live_response"
+        ],
+        "auxiliary": [
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_unified_browser_runtime.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "All browser provider aliases preserve state bindings; challenge detection and solver diagnostic contracts.",
+        "reason": "Minimal configuration scenarios and private solver boundary doubles; real process/navigation evidence is integration."
       }
     }
   }

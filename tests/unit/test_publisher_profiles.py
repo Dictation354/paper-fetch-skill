@@ -34,7 +34,7 @@ load_runtime_config = DEFAULT_CAMOUFOX_BACKEND.load_runtime_config
 def config(tmp_path, monkeypatch):
     NativeProfileDouble.instances = []
     monkeypatch.setattr(
-        profile, "CamoufoxPersistentContextManager", NativeProfileDouble
+        profile, "ByparrManager", NativeProfileDouble
     )
     return load_runtime_config(
         {"XDG_DATA_HOME": str(tmp_path)}, provider="pnas", doi="10.1073/pnas.test"
@@ -53,7 +53,7 @@ def test_every_browser_provider_opens_persistent_directory(
     tmp_path, monkeypatch, provider
 ):
     monkeypatch.setattr(
-        profile, "CamoufoxPersistentContextManager", NativeProfileDouble
+        profile, "ByparrManager", NativeProfileDouble
     )
     config = load_runtime_config(
         {"XDG_DATA_HOME": str(tmp_path)}, provider=provider, doi="test"

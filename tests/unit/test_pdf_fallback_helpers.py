@@ -392,7 +392,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
                 return FakeRequestResponse()
 
         request_context = FakeRequestContext()
-        page = types.SimpleNamespace(request=request_context)
+        page = types.SimpleNamespace(context=types.SimpleNamespace(request=request_context))
         with mock.patch.object(
             _pdf_fallback,
             "pdf_fetch_result_from_bytes",
@@ -1719,7 +1719,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
         )
         request_api = mock.Mock()
         request_api.get.return_value = response
-        page = types.SimpleNamespace(request=request_api)
+        page = types.SimpleNamespace(context=types.SimpleNamespace(request=request_api))
 
         with tempfile.TemporaryDirectory() as tmpdir:
             artifact_dir = Path(tmpdir)

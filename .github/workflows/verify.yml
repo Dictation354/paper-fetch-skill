@@ -168,7 +168,16 @@ jobs:
           from camoufox.fpgen_model import ensure_fpgen_model
           assert prepare_camoufox_managed_runtime().valid
           ensure_fpgen_model()
+          from pathlib import Path
+          import os
+          from paper_fetch.providers.browser_runtime.byparr_preparation import prepare_source, PreparationBudget
+          prepare_source(Path(os.environ["RUNNER_TEMP"]) / "byparr-tests", PreparationBudget(600))
           PY
+      - name: Verify shared Camoufox and Byparr contexts on native macOS
+        env:
+          PAPER_FETCH_TEST_BYPARR_CACHE: ${{ runner.temp }}/byparr-tests
+          PYTEST_XDIST_AUTO_NUM_WORKERS: "4"
+        run: PYTHONPATH=src uv run python -m pytest tests/integration/test_pnas_byparr.py -q
       - name: Verify official Camoufox macOS bundle contexts
         env:
           PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST: "1"

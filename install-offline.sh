@@ -1669,7 +1669,7 @@ main() {
   echo "Install directory: $INSTALL_ROOT"
   echo "Open a new shell, or activate the current one with: source $INSTALL_ROOT/activate-offline.sh"
   if [ "$HOST_PLATFORM" = "linux" ]; then
-    echo "Default browser backend: PNAS/Elsevier FlareSolverr + system Chrome; other browser routes Camoufox (headless: $(browser_headless_value))"
+    echo "Default browser backend: Byparr + managed Camoufox for all browser providers (headless: $(browser_headless_value))"
   else
     echo "Default browser backend: Camoufox (headless: $(browser_headless_value))"
   fi

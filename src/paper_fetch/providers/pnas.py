@@ -26,8 +26,8 @@ from .browser_runtime import BrowserHtmlReadiness
 
 _PROVIDER_SPEC = ProviderSpec(
     name="pnas",
-    browser_backends=("camoufox", "flaresolverr"),
-    browser_default_x64="flaresolverr",
+    browser_backends=("camoufox", "byparr"),
+    browser_default_x64="byparr",
     browser_home_url="https://www.pnas.org/",
     display_name="PNAS",
     official=True,
@@ -118,11 +118,11 @@ class PnasClient(browser_workflow.BrowserWorkflowClient):
         asset_profile="all",
         context=None,
     ):
-        from .browser_runtime.selection import selected_backend
+        from .browser_runtime.selection import selected_state_mode
 
         policy = (
             "browser_first"
-            if selected_backend(self.env, provider=self.name) == "flaresolverr"
+            if selected_state_mode(self.env, provider=self.name) == "json"
             else None
         )
         return self._download_browser_backed_related_assets(
@@ -137,14 +137,13 @@ class PnasClient(browser_workflow.BrowserWorkflowClient):
 
     def _browser_asset_file_fetcher(self, context, **request):
         config = request.get("browser_config")
-        if config is None or config.backend != "flaresolverr":
+        if config is None or config.state_mode != "json":
             return super()._browser_asset_file_fetcher(context, **request)
         if not request["attempt_supplementary_assets"]:
             return None
         from .browser_workflow.fetchers.context import BrowserDocumentFetcherOptions
 
-        # Chrome's PNAS download control does not reliably emit a download event
-        # over CDP. Fetch the already discovered file in the same cookie context.
+        # Keep discovered PNAS attachments in the same Byparr cookie context.
         return self.deps._build_shared_browser_file_fetcher(
             browser_context_seed_getter=request["browser_context_seed_getter"],
             seed_urls_getter=request["seed_urls_getter"],

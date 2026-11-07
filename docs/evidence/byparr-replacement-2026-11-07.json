@@ -1,0 +1,277 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-11-07T10:14:38.599307Z",
+  "task": "Byparr replacement live acceptance",
+  "doi": "10.1016/j.rse.2025.114648",
+  "runtime": {
+    "os": "Linux",
+    "architecture": "x86_64",
+    "python": "3.14.10",
+    "byparr": "2.1.0",
+    "byparr_commit": "1e726296a3143cbce0982cf4fd47a9a3224094e9",
+    "camoufox": "0.5.9",
+    "playwright": "1.62.0",
+    "playwright-captcha": "0.1.1"
+  },
+  "request": {
+    "entrypoint": "python -m paper_fetch.cli fetch",
+    "query": "10.1016/j.rse.2025.114648",
+    "elsevier_api": false,
+    "result_cache": false,
+    "fresh_state": true,
+    "headless": true,
+    "asset_profile": "none",
+    "format": "json",
+    "save_markdown": true,
+    "artifact_mode": "all"
+  },
+  "verification": {
+    "exit_code": 0,
+    "challenge_observed": true,
+    "checkbox_clicked": true,
+    "source_elsevier_html": true,
+    "route_browser_html": true,
+    "backend_byparr": true,
+    "content_fulltext": true,
+    "doi_matches": true,
+    "markdown_written": true
+  },
+  "documents": [
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+      "status": 403
+    },
+    {
+      "url": "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+      "status": 200
+    }
+  ],
+  "events": [
+    "Challenge detected, attempting to solve...",
+    "Found checkbox in Cloudflare iframe",
+    "Checkbox clicked successfully",
+    "Solved successfully",
+    "Challenge solved successfully."
+  ],
+  "final_document_response": {
+    "url": "https://www.sciencedirect.com/science/article/pii/S0034425725000525",
+    "host": "www.sciencedirect.com",
+    "path": "/science/article/pii/S0034425725000525",
+    "url_sha256": "0b28978be1c44689fa4ac7e324750f774c4607055b81abd6adb749bd0bdce747",
+    "status": 200,
+    "content_type": "text/html",
+    "content_length_bytes": null,
+    "transfer_encoding_present": false,
+    "chunked_transfer_declared": false,
+    "captured_html_bytes": 2133992,
+    "navigation_timing": {
+      "available": true,
+      "document_ready_state": "complete",
+      "navigation_entry_present": true,
+      "response_start_ms": 704,
+      "response_end_ms": 704,
+      "dom_interactive_ms": 803,
+      "dom_content_loaded_event_end_ms": 951,
+      "load_event_end_ms": 964,
+      "duration_ms": 964,
+      "transfer_size_bytes": 52261,
+      "encoded_body_size_bytes": 51961,
+      "decoded_body_size_bytes": 191872,
+      "navigation_type": "navigate",
+      "next_hop_protocol": "h2",
+      "response_completed": true,
+      "dom_content_loaded_completed": true,
+      "load_event_completed": true
+    },
+    "request_lifecycle": {
+      "response_received_observed": true,
+      "response_received_ms": 716.454,
+      "request_finished_observed": true,
+      "request_finished_ms": 728.117,
+      "request_failed_observed": false,
+      "observed_ms": 7125.653
+    }
+  },
+  "source": "elsevier_html",
+  "acquisition": {
+    "provider": "elsevier",
+    "route": "browser_html",
+    "representation": "html",
+    "transport": "browser",
+    "fallback_used": false
+  },
+  "acceptance": {
+    "schema_version": 2,
+    "minimum_reader_schema_version": 2,
+    "overall": "degraded",
+    "target": "paper",
+    "identity": {
+      "status": "resolved",
+      "doi": "10.1016/j.rse.2025.114648",
+      "expected_doi": "10.1016/j.rse.2025.114648",
+      "title": "Seasonality of vegetation greenness in Southeast Asia unveiled by geostationary satellite observations",
+      "candidate_count": 0,
+      "canonical_landing_url": null,
+      "canonical_landing_verified": false,
+      "canonical_landing_unique": false,
+      "codes": []
+    },
+    "fetch": {
+      "status": "ok",
+      "completed": true,
+      "code": null
+    },
+    "content": {
+      "requested": true,
+      "status": "fulltext",
+      "has_fulltext": true,
+      "has_abstract": true,
+      "token_estimate": 14740,
+      "confidence": "medium",
+      "flags": [
+        "formula_fallback_present"
+      ],
+      "tables": {
+        "fallback_count": 0,
+        "layout_degraded_count": 0,
+        "semantic_loss_count": 0
+      },
+      "formulas": {
+        "fallback_count": 12,
+        "missing_count": 0
+      }
+    },
+    "asset": {
+      "requested": false,
+      "profile": "none",
+      "audited": true,
+      "expected": null,
+      "discovered": 0,
+      "attempted": 0,
+      "total": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "accepted_preview": 0,
+      "fallback_preview": 0,
+      "failed": 0,
+      "placeholder_suspected": 0,
+      "not_archived": 0,
+      "remote_link_count": 0,
+      "remote_only_count": 0,
+      "body_discovered": 0,
+      "body_attempted": 0,
+      "body_local": 0,
+      "body_full_size": 0,
+      "body_preview": 0,
+      "body_failed": 0,
+      "body_not_archived": 0,
+      "body_remote_only_count": 0,
+      "require_local_body_assets": false,
+      "require_full_size_body_assets": false,
+      "has_local_body_assets": false,
+      "all_body_assets_local": true,
+      "all_body_assets_full_size": true,
+      "local_body_assets_satisfied": true,
+      "full_size_body_assets_satisfied": true,
+      "failure_codes": [],
+      "issue_codes": [],
+      "status": "not_requested",
+      "remote_links_preserved": false
+    },
+    "output": {
+      "status": "complete",
+      "requested": [
+        "article",
+        "markdown"
+      ],
+      "available": [
+        "article",
+        "markdown"
+      ],
+      "missing": []
+    },
+    "provenance": {
+      "status": "complete",
+      "source": "elsevier_html",
+      "acquisition": {
+        "provider": "elsevier",
+        "route": "browser_html",
+        "representation": "html",
+        "transport": "browser",
+        "fallback_used": false
+      },
+      "trace_event_count": 16,
+      "fallback_codes": [],
+      "warning_codes": [
+        "formula_fallback",
+        "formula_fallback_present"
+      ],
+      "failure_codes": [],
+      "unstructured_warning_count": 2,
+      "acceptance_policy": "provider_html_body",
+      "acceptance_policy_satisfied": true
+    }
+  },
+  "artifacts": [
+    {
+      "path": ".paper-fetch-runs/byparr-live-20261107-evidence/manifest.json",
+      "size_bytes": 17090,
+      "sha256": "72f2a9b866b6b292fcb639483d9f8ba2e37772abc1585deddcf3d4bc973c132b"
+    },
+    {
+      "path": ".paper-fetch-runs/byparr-live-20261107-evidence/acceptance.json",
+      "size_bytes": 11148,
+      "sha256": "4438b5419dad0d0ecb622536e7851bb4cf599a6940e57a46a8055cf239732bfb"
+    },
+    {
+      "path": ".paper-fetch-runs/byparr-live-20261107-evidence/article/Tian_et_al_2025_Seasonality_of_vegetation_greenness_in_Southeast_Asia_unveiled_by_geostationary_satellite_observations.json",
+      "size_bytes": 178105,
+      "sha256": "86e02a8206ec33e67fab060b9a577e5ad67fdc41a0bdc8540192ec4c59673dff"
+    },
+    {
+      "path": ".paper-fetch-runs/byparr-live-20261107-evidence/article/diagnostics/elsevier/10.1016_j.rse.2025.114648/byparr-service.json",
+      "size_bytes": 7899,
+      "sha256": "85553b3ae5c2fb449d1934b2695e4a2e0f71f6745e7b670b6873fbecd53b50f7"
+    },
+    {
+      "path": ".paper-fetch-runs/byparr-live-20261107-evidence/article/diagnostics/elsevier/10.1016_j.rse.2025.114648/byparr.json",
+      "size_bytes": 32243,
+      "sha256": "a0266223545ac1fb6549cd1b52db0444ae3ec5af6f11c7af08e954e434200a28"
+    },
+    {
+      "path": ".paper-fetch-runs/byparr-live-20261107-evidence/article/Tian_et_al_2025_Seasonality_of_vegetation_greenness_in_Southeast_Asia_unveiled_by_geostationary_satellite_observations.md",
+      "size_bytes": 87886,
+      "sha256": "0097b17a0fc65844093fc6fe6761924713d74e30f97bebd1f9b16c2fb16635af"
+    }
+  ],
+  "run_command": "PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_BROWSER_HEADLESS=true PAPER_FETCH_BROWSER_COMPONENT_CACHE=/tmp/paper-fetch-byparr-live-components PAPER_FETCH_BYPARR_LIVE_OUTPUT=/home/dictation/paper-fetch-skill/.paper-fetch-runs/byparr-live-20261107-evidence PYTHONPATH=src uv run python -m pytest tests/live/test_live_byparr.py -q -n 0 --force-enable-socket",
+  "serial_reason": "Live test depends on shared external publisher/challenge state.",
+  "local_verification": {
+    "unit": {
+      "passed": 3180,
+      "subtests_passed": 389,
+      "command": "PYTEST_XDIST_AUTO_NUM_WORKERS=6 PYTHONPATH=src uv run python -m pytest tests/unit -q"
+    },
+    "integration": {
+      "passed": 321,
+      "skipped": 7,
+      "subtests_passed": 2170,
+      "command": "PYTEST_XDIST_AUTO_NUM_WORKERS=6 PAPER_FETCH_TEST_BYPARR_CACHE=/tmp/paper-fetch-byparr-component PYTHONPATH=src uv run python -m pytest tests/integration -q"
+    },
+    "macos_contract_validator": "passed",
+    "linux_portable_macos_contract": {
+      "passed": 8,
+      "command": "bash scripts/test-macos-contract.sh"
+    },
+    "python_311_models": {
+      "python": "3.11.16",
+      "result": "Upstream request/response Cookie models validate; shared Playwright alias restored."
+    },
+    "wheel_contents": "Byparr launcher, Node server, manifest, lock and adaptation included; FlareSolverr/Chrome discovery removed.",
+    "live": {
+      "passed": 1,
+      "command": "PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_BROWSER_HEADLESS=true PAPER_FETCH_BROWSER_COMPONENT_CACHE=/tmp/paper-fetch-byparr-live-components PAPER_FETCH_BYPARR_LIVE_OUTPUT=/home/dictation/paper-fetch-skill/.paper-fetch-runs/byparr-live-20261107-evidence PYTHONPATH=src uv run python -m pytest tests/live/test_live_byparr.py -q -n 0 --force-enable-socket"
+    }
+  }
+}

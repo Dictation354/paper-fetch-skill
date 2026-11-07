@@ -8,11 +8,11 @@ provider 差异见 [providers.md](providers.md)，浏览器准备见 [browser-ba
 
 ## 1. 安装 Python 包
 
-安装器在核心安装完成后默认准备当前平台支持的后端：Linux/Windows x64 依次准备 Camoufox、FlareSolverr，macOS 只准备 Camoufox。首次安装、升级和同版本重装复用有效缓存及成功检查记录；在线 `--lite` 跳过。POSIX `--skip-browser-prepare` 和 Windows `/SKIPBROWSERPREPARE` 可跳过准备。单项失败继续处理另一项，并保留核心安装。
+安装器在核心安装完成后默认准备当前平台支持的后端：各支持平台统一准备 Camoufox＋Byparr 组合。首次安装、升级和同版本重装复用有效缓存及成功检查记录；在线 `--lite` 跳过。POSIX `--skip-browser-prepare` 和 Windows `/SKIPBROWSERPREPARE` 可跳过准备。准备失败保留核心安装。
 
 每次安装只自动准备一次浏览器；后续可选配置只处理凭据、Ghostscript 和 libvips，图片工具安装默认不选。跳过参数只影响安装阶段，运行时仍按需准备。安装器清除上次浏览器结果；本次汇总以 `Browser preparation: ready|not ready|skipped` 表示总体状态，所有选中的受支持后端就绪才显示完成。失败或取消显示独立重试命令；跳过时显示手动准备入口。
 
-Linux/Windows x64 离线包内置 FlareSolverr v3.5.2 源码和私有依赖；源码/pip 安装按固定版本下载。运行时组件缓存位于用户数据目录 `flaresolverr/`。**离线安装器的浏览器、指纹模型和 ChromeDriver 准备仍可能联网**；非交互／静默安装允许用户级准备，缺系统依赖时只报告缺项和安装指引。运行时保留缓存缺失、损坏和 Chrome 更新后的按需修复。Linux headless 需 Xvfb 与 Chrome 的启动依赖，WSL 只读 X11 socket 挂载还需可用的 rootless bubblewrap namespaces。默认抓取／preflight 保持 headless，显式 auth 使用 headed。配置和运行时边界见 [浏览器后端](browser-backends.md#pnas--elsevier-系统-chrome-与按需-flaresolverr)。
+现有 Linux/Windows/macOS 离线目标内置 Byparr v2.1.0 源码和私有依赖；源码/pip 安装按锁定版本自动下载。Byparr 复用受管 Camoufox 浏览器、指纹模型及 Playwright Node driver，准备浏览器和模型时仍可能联网；非交互模式不安装系统软件。运行时边界与迁移说明见 [浏览器后端](browser-backends.md#统一受管-byparr)。
 
 
 默认 `pip install .` 只安装轻量 core。按需要选择 `.[browser]`（Camoufox/HTML）、
@@ -84,7 +84,7 @@ HTML 提取依赖 trafilatura 暂限 `>=2.0,<2.3`，开发锁定 2.2.0。
 最小 HTML renderer 回归覆盖公式下划线和表格引用方括号；2.3.1 仍不能通过这两项契约。
 
 当前锁定的浏览器组合为 Camoufox 0.5.9 / Playwright 1.62.0。项目允许
-`playwright>=1.47,<1.64`，但解析时仍受 Camoufox 自身的 `<1.63` 约束，不能强制
+`playwright>=1.58,<1.64`，但解析时仍受 Camoufox 自身的 `<1.63` 约束，不能强制
 安装 1.63。当前 Playwright 要求 Camoufox browser beta.30 或更新版本；固定浏览器版本时须满足该兼容范围。
 浏览器渠道、pin、24 小时检查记录及 fpgen 预置统一见
 [浏览器安装与准备](browser-backends.md#安装)。原生 macOS gate 预置浏览器和 fpgen，
@@ -507,9 +507,9 @@ scripts/clean-local-artifacts.sh --days 7
 python -m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all
 ```
 
-加 `--non-interactive` 允许用户级浏览器、指纹模型及驱动准备，不安装系统软件；离线包直接使用内置的 FlareSolverr 源码和依赖。Debian/Ubuntu 显示共享库、Xvfb、只读 X11 socket 所需 bubblewrap 的缺项和 APT 命令，默认不安装；用户同意后由 sudo 接收密码，APT 完成后重新检测。Chrome 优先采用已有源中的 `google-chrome-stable`，无候选时经确认下载 [Google 官方 x86-64 deb](https://support.google.com/chrome/answer/95346)，再交给 APT 解析依赖。显式 Chrome 路径无效时需修正 `PAPER_FETCH_CHROME_BINARY_PATH`；Windows 只提供官网安装指引，其他 Linux 发行版提供手动安装指引。namespace 能力以实际探测为准。
+加 `--non-interactive` 允许用户级浏览器、指纹模型和 Byparr 组件准备，不安装系统软件。离线包直接使用内置的 Byparr 源码和依赖。Debian/Ubuntu 显示缺少的 Camoufox 共享库与 APT 指引，交互模式经确认后安装并重新检测。
 
-下载准备预算 10 分钟，本地启动检查另有 2 分钟预算，可用 Ctrl+C 取消。检查沿用配置中的 headless/headful，只连接所属 Chrome 的 CDP 并运行 `about:blank` 脚本，使用临时状态目录，不读取出版社登录态或导航出版社主页，结束后清理所属进程。Unix 输出汇总，离线安装保存 `browser-setup-results.txt`；Windows 显示进度和完成状态并保存同名结果文件及重试命令。重新运行安装器同样可重试。公式和图片工具保留原有可选安装范围。
+下载准备预算 10 分钟，本地启动检查另限 2 分钟，可用 Ctrl+C 取消；使用临时共享 Camoufox 上下文与 `about:blank` 脚本，不读取出版社状态，结束时清理所属进程。结果与重试命令保存到 `browser-setup-results.txt`；失败保留核心安装。
 
 ## 4. Provider 接入入口与本地运行时
 
@@ -700,7 +700,7 @@ macOS 的机器合同见 [`macos-adaptation-contract.toml`](macos-adaptation-con
 
 ### 安全不变量
 
-构建与安装必须继续拒绝错误架构、非标准 CPython ABI、未归属 staging、符号链接 payload 和未验证的 purge 路径。正式产物使用原子发布；quarantine 与 payload inventory 校验 fail closed。Camoufox 浏览器不打入离线包，安装器默认准备支持的浏览器，提供跳过开关，失败不回滚核心安装。受管 runtime 在首次实际使用浏览器时自动补全或检查更新，auth/preflight 在启动前准备，尊重已有渠道和固定版本；更新失败时可复用校验有效的本地版本。离线使用前仍需在联网阶段预先准备，预置不等于已验证完全断网启动。
+安装器默认准备支持的浏览器（在线 `--lite` 跳过）：各支持平台均准备 Camoufox＋Byparr 组合。Byparr 复用内置或锁定缓存中的源码与私有依赖；浏览器和模型准备可能联网。下载预算 10 分钟，本地空白页检查另限 2 分钟，失败保留核心安装。见 [部署说明](deployment.md)。
 
 ### 证据等级
 
@@ -725,5 +725,5 @@ Codex skill 的 `.agents/skills` 安装与兼容路径清理同样适用于 macO
 ### 统一浏览器准备
 
 安装器准备见[部署步骤](#1-安装-python-包)，组件打包、缓存、重试命令和平台选择见
-[FlareSolverr 后端](browser-backends.md#pnas--elsevier-系统-chrome-与按需-flaresolverr)。
-macOS 仅准备 Camoufox，离线包不组装 FlareSolverr 组件。
+[Byparr 后端](browser-backends.md#统一受管-byparr)。
+macOS 同样准备 Camoufox＋Byparr，现有离线目标组装锁定源码和私有依赖，并记录 inventory／checksum／SBOM。

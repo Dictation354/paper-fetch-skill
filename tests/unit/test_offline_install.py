@@ -146,7 +146,7 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("Browser preparation: ready", script)
         self.assertIn("Browser preparation: not ready", script)
         self.assertIn("Browser preparation: skipped", script)
-        self.assertNotIn("Pos('FlareSolverr: ready'", script)
+        self.assertNotIn("Pos('Byparr: ready'", script)
         self.assertNotIn("OptionalBrowser", script)
         self.assertIn("Lines[2] := '0';", script)
         preparation = script.split("procedure PrepareBrowsers;", 1)[1].split(

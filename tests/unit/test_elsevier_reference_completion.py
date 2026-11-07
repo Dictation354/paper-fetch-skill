@@ -220,7 +220,7 @@ def test_web_fallback_checks_identity_and_excludes_recommended_references(
             artifact_dir=tmp_path,
             headless=True,
             user_agent=None,
-            backend="flaresolverr",
+            backend="byparr",
         ),
         ensure_runtime_ready=lambda config: None,
         fetch_html_with_browser=fetch,

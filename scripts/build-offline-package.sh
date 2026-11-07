@@ -695,11 +695,11 @@ EOF
   printf '\n%s\n\n' "$install_line" >> "$staging/README.offline.md"
 
   cat >> "$staging/README.offline.md" <<'EOF'
-On Linux x64, PNAS and Elsevier browser routes use system Chrome and FlareSolverr;
+On Linux x64, PNAS and Elsevier browser routes use managed Camoufox and Byparr;
 other browser routes use Camoufox. macOS uses Camoufox and skips Elsevier browser routes.
-Linux x64 bundles pinned FlareSolverr source and private Python dependencies under
-`runtime/browser-components/flaresolverr/`; macOS does not bundle FlareSolverr.
-Preparation manages Camoufox binaries/fingerprint models and a ChromeDriver matching system Chrome.
+Linux x64 bundles pinned Byparr source and private Python dependencies under
+`runtime/browser-components/byparr/` on Linux and macOS.
+Preparation manages Camoufox binaries/fingerprint models shared with Byparr.
 Only successful online checks establish a 24-hour reuse window; failures/cancellation can retry.
 See `browser-setup-results.txt`, or rerun the shared preparation command above.
 Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
@@ -1054,9 +1054,9 @@ main() {
 
   copy_runtime_assets "$staging"
   build_project_runtime "$staging" "$package_name"
-  if [ "$target_platform" = "linux" ]; then
+  if [ "$target_platform" = "linux" ] || [ "$target_platform" = "macos" ]; then
     PYTHONPATH="$staging/runtime/site-packages" "$PYTHON_BIN" "$REPO_DIR/scripts/build_browser_components.py" \
-      --destination "$staging/runtime/browser-components/flaresolverr" >/dev/null
+      --destination "$staging/runtime/browser-components/byparr" >/dev/null
   fi
   sign_macos_playwright_node "$staging" "$target_platform"
   bundle_formula_tools "$staging"

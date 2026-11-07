@@ -420,7 +420,7 @@ class _BaseBrowserDocumentFetcher:
             if max_urls is not None and warmed_count >= max_urls:
                 break
             try:
-                from ...browser_runtime.flaresolverr_manager import navigate_page
+                from ...browser_runtime.navigation import navigate_page
 
                 navigate_page(
                     page, seed_url, wait_until="domcontentloaded", timeout_ms=timeout_ms

@@ -543,7 +543,7 @@ def generate_evidence(
         None,
     )
 
-    component_root = staging / "runtime/browser-components/flaresolverr"
+    component_root = staging / "runtime/browser-components/byparr"
     browser_components = []
     if component_root.is_dir():
         component_manifest = json.loads(
@@ -552,8 +552,10 @@ def generate_evidence(
         files = sorted(p for p in component_root.rglob("*") if p.is_file())
         browser_components.append(
             {
-                "name": "FlareSolverr",
+                "name": "Byparr",
                 "version": component_manifest["version"],
+                "license": component_manifest["license"],
+                "commit": component_manifest["commit"],
                 "path": component_root.relative_to(staging).as_posix(),
                 "content_sha256": _tree_digest(staging, files),
                 "source": component_manifest["source"],
@@ -613,7 +615,11 @@ def generate_evidence(
         sbom.setdefault("components", []).append(
             {
                 "type": "application",
-                "bom-ref": "paper-fetch:browser:flaresolverr",
+                "bom-ref": "paper-fetch:browser:byparr",
+                "licenses": [{"license": {"id": component["license"]}}],
+                "externalReferences": [
+                    {"type": "distribution", "url": component["source"]["url"]}
+                ],
                 "name": component["name"],
                 "version": component["version"],
                 "hashes": [{"alg": "SHA-256", "content": component["content_sha256"]}],
@@ -628,7 +634,7 @@ def generate_evidence(
             sbom["components"].append(
                 {
                     "type": "library",
-                    "bom-ref": f"paper-fetch:flaresolverr:{package['name']}",
+                    "bom-ref": f"paper-fetch:byparr:{package['name']}",
                     "name": package["name"],
                     "version": package["version"],
                     "purl": f"pkg:pypi/{package['name']}@{package['version']}",

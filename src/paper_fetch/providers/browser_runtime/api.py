@@ -7,7 +7,6 @@ from collections.abc import Mapping
 
 from .. import _playwright_browser
 from ..base import ProviderStatusResult
-from .backends.camoufox import DEFAULT_CAMOUFOX_BACKEND
 from .selection import selected_backend
 from .backend import BrowserBackend
 from .types import (
@@ -18,13 +17,11 @@ from .types import (
 
 
 def _backend(name: str) -> BrowserBackend:
-    if name == "flaresolverr":
-        from .backends.flaresolverr import DEFAULT_FLARESOLVERR_BACKEND
+    if name in {"byparr", "camoufox"}:
+        from .backends.byparr import DEFAULT_BYPARR_BACKEND
 
-        return DEFAULT_FLARESOLVERR_BACKEND
-    if name != "camoufox":
-        raise ValueError(f"Unknown browser backend: {name}")
-    return DEFAULT_CAMOUFOX_BACKEND
+        return DEFAULT_BYPARR_BACKEND
+    raise ValueError(f"Unknown browser backend: {name}")
 
 
 DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS = (
@@ -94,7 +91,7 @@ def fetch_html_with_browser(
     )
 
 
-fetch_html_with_browser.paper_fetch_html_fetcher_name = "camoufox"  # type: ignore[attr-defined]
+fetch_html_with_browser.paper_fetch_html_fetcher_name = "byparr"  # type: ignore[attr-defined]
 
 
 def warm_browser_context(

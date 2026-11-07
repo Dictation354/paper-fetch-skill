@@ -311,33 +311,24 @@ def test_macos_brew_uses_absolute_path_without_sudo(setup, monkeypatch):
     )
 
 
-def test_browser_uses_real_backend_interface_and_only_blank_page(setup, monkeypatch):
-    from paper_fetch.providers.browser_runtime import camoufox_manager
+def test_browser_uses_combined_runtime_preparation(setup, monkeypatch):
+    from paper_fetch import offline_browsers
 
-    manager = Mock()
-    page = manager.new_context.return_value.new_page.return_value
-    page.evaluate.return_value = 2
-    factory = Mock(return_value=manager)
-    monkeypatch.setattr(camoufox_manager, "CamoufoxBrowserManager", factory)
+    prepare = Mock(side_effect=lambda setup, **kw: setup.report("Byparr", "ready"))
+    monkeypatch.setattr(offline_browsers, "prepare", prepare)
     setup.browser(selected=True)
-    factory.assert_called_once()
-    page.goto.assert_called_once_with("about:blank", timeout=10000)
-    manager.new_context.return_value.storage_state.assert_not_called()
-    manager.close.assert_called_once()
-    assert "Camoufox: ready" in setup.summary()
+    prepare.assert_called_once_with(setup, selection="all", interactive=True)
+    assert "Byparr: ready" in setup.summary()
 
 
 def test_browser_download_failure_preserves_core(setup, monkeypatch):
-    from paper_fetch.providers.browser_runtime import camoufox_manager
+    from paper_fetch import offline_browsers
 
-    manager = Mock()
-    manager.new_context.side_effect = OSError("offline")
     monkeypatch.setattr(
-        camoufox_manager, "CamoufoxBrowserManager", lambda **kw: manager
+        offline_browsers, "prepare", Mock(side_effect=OSError("offline"))
     )
-    setup.step("Camoufox", lambda: setup.browser(selected=True))
-    manager.close.assert_called_once()
-    assert "Camoufox: failed" in setup.summary()
+    setup.step("Byparr", lambda: setup.browser(selected=True))
+    assert "Byparr: failed" in setup.summary()
     assert "core installation is preserved" in setup.summary()
 
 
@@ -625,7 +616,6 @@ def test_detected_image_reports_ready_once_with_conversion_evidence(
 def test_preparation_shortens_only_known_camoufox_warning(setup, monkeypatch, capsys):
     import warnings
     from camoufox._warnings import LeakWarning, WARNINGS_DATA
-    from paper_fetch.providers.browser_runtime import camoufox_manager
 
     original = warnings.showwarning
     manager = Mock()
@@ -638,12 +628,10 @@ def test_preparation_shortens_only_known_camoufox_warning(setup, monkeypatch, ca
         return manager.new_context.return_value
 
     manager.new_context.side_effect = new_context
-    monkeypatch.setattr(
-        camoufox_manager, "CamoufoxBrowserManager", lambda **kw: manager
-    )
     with warnings.catch_warnings(record=True) as caught:
         warnings.simplefilter("always")
-        setup.browser(selected=True)
+        with wizard.preparation_warnings():
+            new_context()
     stderr = capsys.readouterr().err
     canvas = [line for line in stderr.splitlines() if "Camoufox: Canvas/WebGL" in line]
     assert len(canvas) == 1 and "random data" in canvas[0]

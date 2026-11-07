@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ...browser_runtime.navigation import context_get
+
 from typing import Any
 from collections.abc import Callable, Mapping
 
@@ -100,7 +102,8 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
         if referer_url:
             request_headers["Referer"] = referer_url
         try:
-            response = self._context.request.get(
+            response = context_get(
+                self._context,
                 file_url,
                 headers=request_headers,
                 timeout=60000,

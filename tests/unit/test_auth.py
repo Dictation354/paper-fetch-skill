@@ -109,21 +109,20 @@ def _install_fake_browser_manager(monkeypatch) -> type[_FakeAuthBrowserManager]:
     class FakeManager(_FakeAuthBrowserManager):
         def __init__(
             self,
+            config,
             *,
-            binary_path: str | None = None,
-            profile_dir: Path | None = None,
-            user_data_dir: Path | None = None,
-            headless: bool = True,
+            native_profile: Path,
+            runtime_context=None,
         ) -> None:
             super().__init__()
-            self.binary_path = binary_path
-            self.profile_dir = profile_dir
-            self.user_data_dir = user_data_dir
-            self.headless = headless
+            self.binary_path = config.binary_path
+            self.profile_dir = native_profile
+            self.user_data_dir = str(native_profile)
+            self.headless = config.headless
 
     from paper_fetch.providers.browser_runtime import profile
 
-    monkeypatch.setattr(profile, "CamoufoxPersistentContextManager", FakeManager)
+    monkeypatch.setattr(profile, "ByparrManager", FakeManager)
     return FakeManager
 
 

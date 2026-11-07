@@ -110,7 +110,7 @@ def test_capability_scope_binds_final_browser_state_path_and_digest(
     )
     scopes = capability_scopes_for_query(env, "10.1002/unit-test")
     use = BrowserStateCapabilityUse.from_path(
-        provider="wiley", backend="camoufox", storage_state_path=native
+        provider="wiley", backend="byparr", storage_state_path=native
     )
     builder = CapabilityScopeBuilder(env).add_browser_state_use(use)
     assert scopes[0] == builder.build()
@@ -414,7 +414,7 @@ def test_unavailable_native_summary_never_writes_a_private_or_public_sidecar(tmp
 
     def fake_fetch(query, *, modes, strategy, render, context):
         context.record_browser_state_capability_use(
-            provider="wiley", backend="camoufox", storage_state_path=native
+            provider="wiley", backend="byparr", storage_state_path=native
         )
         return sample_envelope(modes=set(modes), doi=query)
 

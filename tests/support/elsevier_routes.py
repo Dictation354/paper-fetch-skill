@@ -72,7 +72,7 @@ def replay_route(
             artifact_dir=output_dir,
             headless=True,
             user_agent=None,
-            backend="flaresolverr",
+            backend="byparr",
         ),
         ensure_runtime_ready=lambda config: None,
         fetch_html_with_browser=lambda *a, **k: BrowserFetchedHtml(

@@ -22,8 +22,8 @@ class BrowserRuntimeConfig:
     storage_state_path: Path | None = None
     persist_storage_state: bool = True
     capability_storage_state_path: Path | None = None
-    backend: str = "camoufox"
-    chrome_binary_path: str | None = None
+    backend: str = "byparr"
+    state_mode: str = "native"
     component_cache_dir: Path | None = None
 
 

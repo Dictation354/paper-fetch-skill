@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .browser_runtime.navigation import navigate_page
+
 from ..quality.access_boundary import propagate_paywall
 
 from ..quality.access_boundary import raise_for_paywall, raise_for_api_entitlement
@@ -301,15 +303,10 @@ def _seed_pdf_browser_page(
     deadline = request.deadline_monotonic
     if deadline is None:
         return None
-    from .browser_runtime.flaresolverr_manager import FlareSolverrManager, navigate_page
+    from .browser_runtime.navigation import navigate_page
     from .browser_runtime.types import BrowserRuntimeFailure
 
-    solver = getattr(getattr(page, "context", None), "_paper_fetch_solver", None)
     seeds = list(seed_urls or [])
-    if isinstance(solver, FlareSolverrManager) and not solver.diagnostics.get(
-        "homepage_visited"
-    ):
-        seeds.insert(0, solver.home_url)
     for seed_url in [normalize_text(url) for url in seeds if normalize_text(url)]:
         if request.runtime is not None:
             request.runtime.raise_if_cancelled()
@@ -323,14 +320,16 @@ def _seed_pdf_browser_page(
                 * 1000
             )
             navigate_page(
-                page, seed_url, wait_until="domcontentloaded", timeout_ms=timeout_ms
+                page,
+                seed_url,
+                wait_until="domcontentloaded",
+                timeout_ms=timeout_ms,
+                mode="file",
             )
         except RequestCancelledError:
             raise
         except BrowserRuntimeFailure as exc:
-            if isinstance(solver, FlareSolverrManager):
-                return PdfFallbackFailure(exc.kind, exc.message, details=exc.details)
-            raise
+            return PdfFallbackFailure(exc.kind, exc.message, details=exc.details)
         except PdfFallbackFailure as exc:
             return exc
         except Exception:
@@ -719,7 +718,11 @@ def _refetch_pdf_with_browser_request(
                 )
                 * 1000
             )
-        response = page.request.get(normalized_final_url, timeout=timeout_ms)
+        from .browser_runtime.navigation import context_get
+
+        response = context_get(
+            page.context, normalized_final_url, timeout=timeout_ms, page=page
+        )
         headers = {
             str(key).lower(): str(value)
             for key, value in (response.headers or {}).items()
@@ -943,7 +946,7 @@ def fetch_pdf_with_browser(
     initial_pages: list[Any] = []
     try:
         launch_config = browser_config
-        if browser_config.backend == "flaresolverr":
+        if browser_config.backend == "byparr":
             launch_config = replace(
                 browser_config,
                 timeout_ms=max(
@@ -974,7 +977,7 @@ def fetch_pdf_with_browser(
             seed_urls=normalized_seed_urls,
             request=active_request,
         )
-        if browser_config.backend == "flaresolverr" and seed_failure is not None:
+        if browser_config.state_mode == "json" and seed_failure is not None:
             raise seed_failure
         last_failure = seed_failure or last_failure
         for attempt_index, url in enumerate(candidate_urls):
@@ -1066,7 +1069,9 @@ def fetch_pdf_with_browser(
                         timeout=download_timeout_ms
                     ) as download_info:
                         try:
-                            initial_response = page.goto(url, **goto_kwargs)
+                            initial_response = navigate_page(
+                                page, url, **goto_kwargs, mode="file"
+                            )
                         except PlaywrightError as exc:
                             if "Download is starting" not in str(exc):
                                 raise
@@ -1081,7 +1086,7 @@ def fetch_pdf_with_browser(
                             )
                             * 1000
                         )
-                        response = page.goto(url, **goto_kwargs)
+                        response = navigate_page(page, url, **goto_kwargs, mode="file")
                     except PdfFallbackFailure as exc:
                         last_failure = exc
                         break

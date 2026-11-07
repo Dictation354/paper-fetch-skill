@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from ...browser_runtime.navigation import navigate_page, managed_action
+
 import contextlib
 import json
 import re
+import tempfile
 from pathlib import Path
 import time
 from typing import Any
@@ -332,7 +335,9 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
         if click_page_url and page.url != click_page_url:
             # A publisher's pending scripts must not prevent use of an already
             # rendered attachment control. Link/body readiness is checked below.
-            page.goto(click_page_url, wait_until="commit", timeout=remaining_ms())
+            navigate_page(
+                page, click_page_url, wait_until="commit", timeout=remaining_ms()
+            )
         click_page_url = str(page.url)
         route["click_page_url"] = redact_url_for_cache(click_page_url)
         urls = list(
@@ -423,16 +428,17 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
         listen(page, "popup", capture_owned_popup)
         armed = True
         phase = "download_timeout"
-        if (
-            provider == "wiley"
-            and link.get_attribute("target", timeout=remaining_ms()) != "_blank"
-        ):
-            # Wiley can hide the accordion during its opening animation.
-            link.evaluate("(node) => node.click()", timeout=remaining_ms())
-        else:
-            # A trusted pointer action gives target=_blank its user activation;
-            # a synthetic DOM click can be silently blocked by Firefox.
-            link.click(no_wait_after=True, timeout=remaining_ms())
+        with managed_action(page, timeout_ms=remaining_ms()):
+            if (
+                provider == "wiley"
+                and link.get_attribute("target", timeout=remaining_ms()) != "_blank"
+            ):
+                # Wiley can hide the accordion during its opening animation.
+                link.evaluate("(node) => node.click()", timeout=remaining_ms())
+            else:
+                # A trusted pointer action gives target=_blank its user activation;
+                # a synthetic DOM click can be silently blocked by Firefox.
+                link.click(no_wait_after=True, timeout=remaining_ms())
         while True:
             remaining_ms()
             if response is None and pending_response is not None:
@@ -454,7 +460,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                 None,
             )
             # A download manager handoff need not finish the page request.
-            # download.path() supplies the complete file; deadline/cancellation
+            # A local path or save_as() supplies the complete file; deadline/cancellation
             # and byte limits are checked before accepting it below.
             if response is not None and (
                 download is not None or response.request in finished
@@ -462,19 +468,36 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                 headers = _browser_response_headers(response)
                 status = _browser_response_status(response)
                 if download is not None:
-                    path = download.path()
-                    remaining_ms()
-                    if path is None:
-                        record_failure(f"{prefix}_download_failed")
-                        return None
-                    maximum = DEFAULT_ASSET_MAX_BYTES_PER_ASSET
-                    budget = getattr(fetcher._runtime_context, "asset_budget", None)
-                    if budget is not None:
-                        maximum = budget.max_bytes_per_asset
-                    if Path(path).stat().st_size > maximum:
-                        record_failure("asset_bytes_per_asset_exceeded")
-                        return None
-                    body = Path(path).read_bytes()
+                    shared_browser = (
+                        getattr(
+                            getattr(fetcher, "_browser_config", None), "backend", None
+                        )
+                        == "byparr"
+                    )
+                    with (
+                        tempfile.TemporaryDirectory(
+                            prefix="paper-fetch-byparr-download-"
+                        )
+                        if shared_browser
+                        else contextlib.nullcontext()
+                    ) as directory:
+                        if shared_browser:
+                            path = Path(directory) / "download"
+                            download.save_as(str(path))
+                        else:
+                            path = download.path()
+                        remaining_ms()
+                        if path is None:
+                            record_failure(f"{prefix}_download_failed")
+                            return None
+                        maximum = DEFAULT_ASSET_MAX_BYTES_PER_ASSET
+                        budget = getattr(fetcher._runtime_context, "asset_budget", None)
+                        if budget is not None:
+                            maximum = budget.max_bytes_per_asset
+                        if Path(path).stat().st_size > maximum:
+                            record_failure("asset_bytes_per_asset_exceeded")
+                            return None
+                        body = Path(path).read_bytes()
                     route["capture_event"] = "download"
                 elif "attachment" in headers.get("content-disposition", "").lower():
                     # Do not treat an unfinished download as an inline response.
@@ -552,4 +575,6 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
         # original request deadline. A cancelled request is never navigated.
         with contextlib.suppress(Exception):
             if article_url and page.url != article_url:
-                page.goto(article_url, wait_until="commit", timeout=remaining_ms())
+                navigate_page(
+                    page, article_url, wait_until="commit", timeout=remaining_ms()
+                )

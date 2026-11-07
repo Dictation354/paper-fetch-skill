@@ -150,7 +150,7 @@ def browser_context_seed_from_session(
         "browser_user_agent": normalize_text(user_agent) or None,
         "browser_final_url": normalize_text(final_url) or None,
         "paper_fetch_html_fetcher": fetcher_name,
-        "diagnostics": {"browser_backend": backend_name},
+        "diagnostics": {"browser_backend": backend_name, "browser_engine": "camoufox"},
     }
 
 

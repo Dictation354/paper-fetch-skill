@@ -70,7 +70,9 @@ def prepare_browser_page(page: Any, *, timeout_ms: int, cancel_check=None):
     del timeout_ms
     if cancel_check is not None:
         cancel_check()
-    return page.evaluate(_MATHJAX_ORIGINALS_SCRIPT)
+    from .browser_runtime.navigation import evaluate_main_world
+
+    return evaluate_main_world(page, _MATHJAX_ORIGINALS_SCRIPT)
 
 
 def main_document_matches(

@@ -15,11 +15,16 @@ def mock_tex_validation(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def mock_system_chrome_probe(monkeypatch):
-    """System Chrome version processes are a unit boundary, like browser launch."""
-    from paper_fetch.providers.browser_runtime.backends import flaresolverr
+def mock_browser_dependencies(monkeypatch):
+    """Packages/runtime are explicit boundaries in ordinary unit scenarios."""
+    from paper_fetch.providers.browser_runtime.backends import camoufox
 
-    def missing(*args, **kwargs):
-        raise ValueError("System Chrome is unavailable in the unit boundary")
-
-    monkeypatch.setattr(flaresolverr, "discover_chrome", missing)
+    monkeypatch.setattr(
+        camoufox,
+        "_dependency_details",
+        lambda: {
+            "packages": {"camoufox": False, "playwright": False},
+            "package_ready": False,
+            "runtime_installed": False,
+        },
+    )

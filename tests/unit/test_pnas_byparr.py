@@ -9,8 +9,8 @@ import zipfile
 import pytest
 
 from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.providers.browser_runtime import chrome, selection
-from paper_fetch.providers.browser_runtime import flaresolverr_preparation as prep
+from paper_fetch.providers.browser_runtime import platforms, selection
+from paper_fetch.providers.browser_runtime import byparr_preparation as prep
 from paper_fetch.providers.browser_runtime.api import load_runtime_config
 from paper_fetch.providers.browser_runtime.types import (
     BrowserRuntimeConfig,
@@ -21,28 +21,28 @@ from paper_fetch.providers.browser_runtime.types import (
 @pytest.mark.parametrize(
     "system,machine,backend",
     [
-        ("linux", "x86_64", "flaresolverr"),
-        ("win32", "AMD64", "flaresolverr"),
-        ("darwin", "arm64", "camoufox"),
-        ("darwin", "x86_64", "camoufox"),
-        ("linux", "aarch64", "camoufox"),
+        ("linux", "x86_64", "byparr"),
+        ("win32", "AMD64", "byparr"),
+        ("darwin", "arm64", "byparr"),
+        ("darwin", "x86_64", "byparr"),
+        ("linux", "aarch64", "byparr"),
     ],
 )
 def test_auto_backend_is_pnas_only(monkeypatch, system, machine, backend):
-    monkeypatch.setattr(chrome.sys, "platform", system)
-    monkeypatch.setattr(chrome.platform, "machine", lambda: machine)
+    monkeypatch.setattr(platforms.sys, "platform", system)
+    monkeypatch.setattr(platforms.platform, "machine", lambda: machine)
     assert selection.selected_backend({}, provider="pnas") == backend
     assert (
         selection.selected_backend(
-            {selection.PNAS_BACKEND_ENV: "flaresolverr"}, provider="wiley"
+            {selection.PNAS_BACKEND_ENV: "byparr"}, provider="wiley"
         )
-        == "camoufox"
+        == "byparr"
     )
     assert (
         selection.selected_backend(
             {selection.PNAS_BACKEND_ENV: "camoufox"}, provider="pnas"
         )
-        == "camoufox"
+        == "byparr"
     )
 
 
@@ -52,64 +52,33 @@ def test_invalid_and_unsupported_backend_are_configuration_errors(monkeypatch):
             selection.selected_backend(
                 {selection.PNAS_BACKEND_ENV: value}, provider="pnas"
             )
-    monkeypatch.setattr(selection, "supported_platform", lambda: False)
-    with pytest.raises(ProviderFailure, match="Windows/Linux x64"):
-        selection.selected_backend(
-            {selection.PNAS_BACKEND_ENV: "flaresolverr"}, provider="pnas"
-        )
 
 
-def test_camoufox_settings_do_not_leak_into_chrome_state(monkeypatch, tmp_path):
-    monkeypatch.setattr(selection, "supported_platform", lambda: True)
+def test_byparr_reuses_executable_but_isolates_native_state(monkeypatch, tmp_path):
+    binary = tmp_path / "camoufox"
+    binary.touch()
+    binary.chmod(0o755)
     config = load_runtime_config(
         {
             "XDG_DATA_HOME": str(tmp_path),
-            "PAPER_FETCH_BROWSER_BINARY_PATH": "/missing/firefox",
+            "PAPER_FETCH_BROWSER_BINARY_PATH": str(binary),
             "PAPER_FETCH_BROWSER_PROFILE_DIR": "/firefox/profile",
-            chrome.CHROME_ENV: "/custom/chrome",
         },
         provider="pnas",
         doi="10.1073/test",
     )
-    assert config.backend == "flaresolverr" and config.headless
-    assert config.chrome_binary_path == "/custom/chrome"
-    assert config.binary_path is None and config.profile_dir is None
-    assert config.user_data_dir.name == "pnas-flaresolverr"
-    assert (
-        BrowserRuntimeConfig("science", "doi", tmp_path, True, None).backend
-        == "camoufox"
-    )
+    assert config.backend == "byparr" and config.headless
+    assert config.binary_path == str(binary) and config.profile_dir is None
+    assert config.user_data_dir.name == "pnas-byparr"
 
 
-def test_explicit_chrome_is_validated_without_falling_back(monkeypatch, tmp_path):
-    executable = tmp_path / "google-chrome"
-    executable.touch()
-    executable.chmod(0o755)
-    monkeypatch.setattr(chrome.sys, "platform", "linux")
-    calls = []
-    monkeypatch.setattr(
-        chrome.subprocess,
-        "run",
-        lambda args, **kw: (
-            calls.append(args)
-            or SimpleNamespace(stdout="Google Chrome 156.0.8078.79\n")
-        ),
-    )
-    result = chrome.discover_chrome({chrome.CHROME_ENV: str(executable)})
-    assert result.path == str(executable) and result.version == "156.0.8078.79"
-    assert calls == [[str(executable), "--version"]]
-    with pytest.raises(ValueError, match="google.com/chrome"):
-        chrome.discover_chrome({chrome.CHROME_ENV: str(tmp_path / "missing")})
-    assert len(calls) == 1
-
-
-def test_linux_chrome_discovery_order(monkeypatch, tmp_path):
-    monkeypatch.setattr(chrome.sys, "platform", "linux")
-    monkeypatch.setattr(chrome.shutil, "which", lambda name, **kw: str(tmp_path / name))
-    assert list(chrome._candidates({}))[:2] == [
-        str(tmp_path / "google-chrome"),
-        str(tmp_path / "google-chrome-stable"),
-    ]
+def test_removed_configuration_reports_migration():
+    for env in [
+        {selection.PNAS_BACKEND_ENV: "flaresolverr"},
+        {"PAPER_FETCH_CHROME_BINARY_PATH": "/chrome"},
+    ]:
+        with pytest.raises(ProviderFailure, match="removed.*(use|remove)"):
+            load_runtime_config(env, provider="pnas", doi="10.1073/test")
 
 
 def _archive(entries):
@@ -175,64 +144,9 @@ def test_download_hash_and_cancel_are_enforced(monkeypatch, tmp_path):
         prep.prepare_source(tmp_path / "cache", prep.PreparationBudget(5, context))
 
 
-def test_driver_is_cached_per_chrome_build_and_updated_on_version_change(
-    monkeypatch, tmp_path
-):
-    monkeypatch.setattr(prep.sys, "platform", "linux")
-    calls = []
-    archive = _archive({"chromedriver-linux64/chromedriver": b"driver"})
-
-    def fetch(url, path, budget, sha256=None):
-        calls.append(url)
-        if url == prep.DRIVER_INDEX:
-            path.write_text(
-                json.dumps(
-                    {
-                        "builds": {
-                            build: {
-                                "version": build + ".99",
-                                "downloads": {
-                                    "chromedriver": [
-                                        {
-                                            "platform": "linux64",
-                                            "url": "https://official/" + build,
-                                        }
-                                    ]
-                                },
-                            }
-                            for build in ("156.0.1", "157.0.2")
-                        }
-                    }
-                )
-            )
-        else:
-            path.write_bytes(archive)
-        return hashlib.sha256(path.read_bytes()).hexdigest()
-
-    monkeypatch.setattr(prep, "download", fetch)
-    first, version = prep.prepare_driver(
-        tmp_path, "156.0.1.1", prep.PreparationBudget(5)
-    )
-    assert version == "156.0.1.99"
-    assert (
-        prep.prepare_driver(tmp_path, "156.0.1.1", prep.PreparationBudget(5))[0]
-        == first
-    )
-    assert len(calls) == 2
-    second, _ = prep.prepare_driver(tmp_path, "157.0.2.1", prep.PreparationBudget(5))
-    assert second != first and first.exists() and second.exists() and len(calls) == 4
-
-
-def test_static_status_does_not_prepare_source_or_driver(monkeypatch, tmp_path):
-    from paper_fetch.providers.browser_runtime.backends import flaresolverr as backend
+def test_static_status_does_not_prepare_source_or_browser(monkeypatch, tmp_path):
     from paper_fetch.browser_preflight import static_browser_capabilities
 
-    monkeypatch.setattr(selection, "supported_platform", lambda: True)
-    monkeypatch.setattr(
-        backend,
-        "discover_chrome",
-        lambda env: chrome.SystemChrome("/chrome", "156.0.1.2"),
-    )
     monkeypatch.setattr(
         prep,
         "download",
@@ -241,9 +155,9 @@ def test_static_status_does_not_prepare_source_or_driver(monkeypatch, tmp_path):
     result = static_browser_capabilities(
         {"XDG_DATA_HOME": str(tmp_path)}, provider="pnas"
     )
-    assert result["selected_backend"] == "flaresolverr"
+    assert result["selected_backend"] == "byparr"
     assert result["browser_runtime"]["details"]["download_required"] is True
-    assert not (tmp_path / "paper-fetch/flaresolverr").exists()
+    assert not (tmp_path / "paper-fetch/byparr").exists()
 
 
 def test_backend_cache_states_are_isolated(monkeypatch, tmp_path):
@@ -252,10 +166,9 @@ def test_backend_cache_states_are_isolated(monkeypatch, tmp_path):
         default_provider_user_data_dir,
     )
 
-    monkeypatch.setattr(selection, "supported_platform", lambda: True)
     env = {"XDG_DATA_HOME": str(tmp_path)}
     path = (
-        default_provider_user_data_dir(env, provider="pnas", backend="flaresolverr")
+        default_provider_user_data_dir(env, provider="pnas", backend="byparr")
         / "storage-state.json"
     )
     path.parent.mkdir(parents=True)
@@ -272,26 +185,14 @@ def test_solver_error_survives_candidate_deadline():
     from paper_fetch.providers._playwright_browser import _candidate_deadline_failure
 
     failure = BrowserRuntimeFailure(
-        "flaresolverr_navigation_failed", "Cloudflare denied the request"
+        "byparr_navigation_failed", "Cloudflare denied the request"
     )
-    assert (
-        _candidate_deadline_failure(failure, trace={"backend": "flaresolverr"})
-        is failure
-    )
+    assert _candidate_deadline_failure(failure, trace={"backend": "byparr"}) is failure
     assert failure.message == "Cloudflare denied the request"
 
 
-def test_linux_missing_xvfb_is_preparation_error(monkeypatch, tmp_path):
-    from paper_fetch.providers.browser_runtime import flaresolverr_manager as manager
-
-    monkeypatch.setattr(manager.sys, "platform", "linux")
-    monkeypatch.setattr(manager.shutil, "which", lambda name: None)
-    with pytest.raises(BrowserRuntimeFailure, match="requires Xvfb"):
-        manager.linux_launch_prefix(True, tmp_path, prep.PreparationBudget(5))
-
-
 @pytest.mark.parametrize(
-    "backend,mode", [("flaresolverr", "context_request"), ("camoufox", "page_click")]
+    "backend,mode", [("byparr", "context_request"), ("camoufox", "page_click")]
 )
 def test_pnas_attachment_mode_uses_its_actual_backend(tmp_path, backend, mode):
     from dataclasses import replace
@@ -304,7 +205,13 @@ def test_pnas_attachment_mode_uses_its_actual_backend(tmp_path, backend, mode):
         _build_shared_browser_file_fetcher=lambda **kwargs: captured.append(kwargs),
     )
     config = BrowserRuntimeConfig(
-        "pnas", "10.1073/test", tmp_path, True, None, backend=backend
+        "pnas",
+        "10.1073/test",
+        tmp_path,
+        True,
+        None,
+        backend="byparr",
+        state_mode="json" if backend == "byparr" else "native",
     )
     client._browser_asset_file_fetcher(
         object(),
@@ -318,3 +225,20 @@ def test_pnas_attachment_mode_uses_its_actual_backend(tmp_path, backend, mode):
     assert captured[0]["browser_options"].file_fetch_mode == mode
     assert captured[0]["browser_options"].runtime_config is config
     assert captured[0]["use_runtime_shared_browser"] is True
+
+
+@pytest.mark.parametrize("version", ["1.57.0", "1.64.0"])
+def test_shared_playwright_version_boundary(monkeypatch, tmp_path, version):
+    from paper_fetch.providers.browser_runtime.backends import byparr
+    import importlib.metadata
+
+    monkeypatch.setattr(
+        byparr,
+        "_dependency_details",
+        lambda: {"packages": {"playwright": True, "camoufox": True}},
+    )
+    monkeypatch.setattr(importlib.metadata, "version", lambda _: version)
+    with pytest.raises(ProviderFailure, match="Playwright >=1.58,<1.64"):
+        byparr.DEFAULT_BYPARR_BACKEND.ensure_runtime_ready(
+            BrowserRuntimeConfig("pnas", "doi", tmp_path, True, None, backend="byparr")
+        )

@@ -289,10 +289,10 @@ def resolve_snapshot(args: argparse.Namespace) -> int:
             )
 
     browser_components = {}
-    if actual_platform in {"linux", "windows"} and actual_arch == "x86_64":
+    if actual_platform in {"linux", "windows", "macos"}:
         from scripts.build_browser_components import inventory
 
-        component = output_dir / "browser-components" / "flaresolverr"
+        component = output_dir / "browser-components" / "byparr"
         with tempfile.TemporaryDirectory(
             prefix="paper-fetch-component-deps-"
         ) as dependency_dir:
@@ -515,7 +515,7 @@ def verify_snapshot(args: argparse.Namespace) -> int:
     )
     from scripts.build_browser_components import inventory
 
-    actual_components = inventory(snapshot_root / "browser-components" / "flaresolverr")
+    actual_components = inventory(snapshot_root / "browser-components" / "byparr")
     if actual_components != target.get("browser_components", {}):
         raise SnapshotError("Frozen browser component inventory differs")
     return 0

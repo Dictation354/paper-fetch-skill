@@ -23,11 +23,11 @@
 
 - `PAPER_FETCH_BROWSER_HEADLESS`、`PAPER_FETCH_BROWSER_TIMEOUT_MS`：Camoufox managed runtime 的 headless 开关与请求超时；默认分别为 `true`、`120000`。
 - `PAPER_FETCH_BROWSER_BINARY_PATH`：已准备好的 Camoufox runtime executable 覆盖项。
-- `PAPER_FETCH_BROWSER_PROFILE_DIR`、`PAPER_FETCH_BROWSER_USER_DATA_DIR`：仅 Camoufox 使用的 provider-scoped profile/storage-state 目录覆盖项。FlareSolverr 忽略这两项及 `PAPER_FETCH_BROWSER_BINARY_PATH`。默认使用 `publisher-browser-profiles/<provider>-camoufox/`。
+- `PAPER_FETCH_BROWSER_PROFILE_DIR`、`PAPER_FETCH_BROWSER_USER_DATA_DIR`：原生状态模式使用的 provider-scoped profile/storage-state 目录覆盖项。组合运行时复用 `PAPER_FETCH_BROWSER_BINARY_PATH`。默认使用 `publisher-browser-profiles/<provider>-camoufox/`。
 - `PAPER_FETCH_BROWSER_USER_AGENT`：publisher direct 路线的可选浏览器 UA；它与 `PAPER_FETCH_SKILL_USER_AGENT` 分离。Camoufox 忽略该值，以保持生成的 Firefox 指纹一致。
 - `PAPER_FETCH_WILEY_STORAGE_STATE_JSON`、`PAPER_FETCH_WILEY_PROFILE_DIR`：Wiley 的 storage/profile 覆盖。Camoufox 使用出版社原生持久目录；用户要求认证或 preflight/fetch 返回认证需求时运行 `paper-fetch auth <provider>`，交互验证由用户完成。
 
-静态 `paper-fetch doctor --provider <name> --detail full --json` / MCP `provider_status` 不启动 Camoufox，也不访问出版社页面。需要 live 证明时再运行 CLI `paper-fetch browser-preflight --provider <name>` 或 MCP `browser_preflight(provider=...)`；两者在实际启动浏览器前自动准备 managed runtime。Camoufox 可更新原生目录，默认另导出过滤后的 JSON 快照；FlareSolverr 从过滤后的 JSON 恢复状态并按配置保存。预检会访问远端页面且可能写状态，不运行 PDF fallback 或自动认证。
+静态 `paper-fetch doctor --provider <name> --detail full --json` / MCP `provider_status` 不启动 Camoufox，也不访问出版社页面。需要 live 证明时再运行 CLI `paper-fetch browser-preflight --provider <name>` 或 MCP `browser_preflight(provider=...)`；两者在实际启动浏览器前自动准备 managed runtime。原生模式可更新持久目录，默认另导出 JSON 快照；原 JSON 模式继续恢复过滤后的状态并按配置保存。预检会访问远端页面且可能写状态，不运行 PDF fallback 或自动认证。
 
 Camoufox 的各浏览器阶段在一次抓取内借用同一持久 context，HTTP 仍可并行。
 其原生目录是认证状态来源，JSON 用于状态快照；默认 JSON 仅初始化尚无原生状态的目录，显式 JSON
@@ -36,11 +36,11 @@ JSON 导出失败单独报告。`save_storage_state=false` 仅禁止导出 JSON�
 同目录进程间排队遵守取消和请求期限；目录归属冲突、外部占用和超时必须如实报告，
 不删除 Firefox 原生锁或静默回退临时会话。
 
-PNAS 在 Windows/Linux x64 默认使用系统 Google Chrome＋FlareSolverr；Elsevier 浏览器阶段固定使用该后端，不支持的平台跳过；macOS、其他架构的 PNAS 和其余出版社使用 Camoufox。`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|flaresolverr` 选择 provider 已声明支持的后端；显式选择不支持的后端会报告配置错误。`PAPER_FETCH_CHROME_BINARY_PATH` 指定系统 Chrome，Camoufox binary/profile 变量不适用于 FlareSolverr。
+全部 13 个浏览器 provider 在现有 Camoufox／Playwright 平台使用 Byparr＋Camoufox，含 macOS 的 Elsevier 浏览器阶段。`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` 均进入组合链路，旧 `camoufox` 是兼容别名。原 Camoufox 配置保留 `<provider>-camoufox/` 原生目录与显式覆盖；Windows/Linux x64 上 PNAS／Elsevier 原有 `auto|byparr` 保留 `<provider>-byparr/` 过滤后 JSON；新开放平台使用原生目录。不自动合并或迁移状态。旧 FlareSolverr 值和命令已移除，见[迁移说明](https://github.com/Dictation354/paper-fetch-skill/blob/main/docs/browser-backends.md#migration)。
 
-Windows/Linux x64 安装器准备 FlareSolverr 与匹配驱动，在线 `--lite` 跳过。离线包内置固定源码和私有依赖，缺失或损坏需修复安装，不联网回补源码；源码/pip 安装按锁定版本下载，ChromeDriver 按实际 Chrome 版本准备。静态诊断与缓存复用不触发下载。FlareSolverr 使用 provider 隔离的过滤后 JSON 状态，不导入 Firefox profile；fetch/preflight 默认 headless，显式 auth 使用窗口。
+支持平台的安装器统一准备 Byparr v2.1.0、playwright-captcha 0.1.1、Camoufox 0.5.9 与指纹缓存。现有 macOS 离线目标也包含锁定源码、私有依赖、许可证与适配记录；组件损坏需重新安装。源码/pip 安装自动下载固定组件。fetch/preflight 默认 headless，auth 使用窗口。
 
-安装准备失败保留核心安装。用安装环境 Python 执行 `-m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all` 可重新准备；也可选 `camoufox` 或 `flaresolverr`；`--prepare-flaresolverr` 等价于 `--prepare-browsers flaresolverr`。缺系统依赖时提供安装指引；下载与本地空白页检查分别限 10 分钟、2 分钟，后者使用临时状态。
+安装准备失败保留核心安装。用安装环境 Python 执行 `-m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all` 可重新准备；也可选 `camoufox` 或 `byparr`；`--prepare-byparr` 等价于 `--prepare-browsers byparr`。缺系统依赖时提供安装指引；下载与本地空白页检查分别限 10 分钟、2 分钟，后者使用临时状态。
 
 ## 运行时准备与授权
 

@@ -1,6 +1,6 @@
 # Browser runtime ownership
 
-PNAS 在 Windows/Linux x64 默认使用 FlareSolverr＋系统 Google Chrome，macOS 和其他架构继续使用 Camoufox；Elsevier 浏览器阶段固定使用 FlareSolverr，不支持的平台跳过；其余出版社保持 Camoufox。browser/full extra 固定
+全部浏览器出版社在现有 Camoufox／Playwright 平台统一使用 Byparr＋Camoufox，Elsevier 同步开放 macOS 浏览器阶段。browser/full extra 固定
 `camoufox==0.5.9`。开发和常规 CI 使用 `uv.lock` 中的具体版本，离线构建使用
 依赖 wheelhouse 中的同一固定版本，并由 `paper_fetch.providers.browser_runtime`
 统一管理。
@@ -14,7 +14,7 @@ browser_runtime facade + BrowserRuntimeConfig
         ↓
 RuntimeContext.new_browser_context_for_runtime_config
         ↓
-PublisherProfileManager / FlareSolverrManager
+PublisherProfileManager / ByparrManager
 ```
 
 provider 只读取显式 `BrowserRuntimeConfig`，不探测 backend、不持有全局 browser，
@@ -111,7 +111,7 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
   RFC path boundary、secure 与 expiry，避免把 publisher cookie 扩到子域或相邻路径。
 - `persistent_profile` diagnostics 区分原生目录加载、同 context 复用和 JSON 导入；
   `storage_state_load.used` 只在本次实际导入 JSON 时为 true，不把存在的快照标为已注入。
-  JSON 导出独立记录于 `storage_state_save`。Camoufox 出版社使用原生持久目录；PNAS / Elsevier FlareSolverr 使用按 provider 隔离的验收后 JSON 状态目录。Camoufox 覆盖
+  JSON 导出独立记录于 `storage_state_save`。原生状态模式保留出版社持久目录；PNAS／Elsevier 原有 Byparr 配置保留按 provider 隔离的验收后 JSON 状态目录。Camoufox 覆盖
   含 AIP、IEEE、PDF 浏览器回退与资产恢复；目录锁、JSON 导入和 auth 回放见
   [浏览器生命周期](browser-backends.md#生命周期)。
 - MCP 私有缓存使用实际目录与从打开的 context 获取的最新摘要；无法取得可信摘要时
@@ -154,10 +154,10 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
 
 ## 配置
 
-后端选择、系统依赖与按需源码准备见 [浏览器后端](browser-backends.md#pnas--elsevier-系统-chrome-与按需-flaresolverr)。可使用：
+后端选择、系统依赖与按需源码准备见 [浏览器后端](browser-backends.md#统一受管-byparr)。可使用：
 
-- `PAPER_FETCH_PNAS_BROWSER_BACKEND`（`auto|flaresolverr|camoufox`）
-- `PAPER_FETCH_CHROME_BINARY_PATH`
+- `PAPER_FETCH_PNAS_BROWSER_BACKEND`（`auto|byparr|camoufox`）
+- `PAPER_FETCH_BROWSER_COMPONENT_CACHE`
 
 - `PAPER_FETCH_BROWSER_HEADLESS`
 - `PAPER_FETCH_BROWSER_BINARY_PATH`
@@ -206,6 +206,6 @@ IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：
 `reason_code=aws_waf_challenge`、`status=challenge`，并在 diagnostics 中保留
 `challenge_provider=aws_waf` 与兼容字段 `legacy_reason_code`。
 
-Elsevier 复用 browser workflow 的期限、取消、上下文和资源释放机制，自行执行 API XML → FlareSolverr HTML → API PDF → FlareSolverr PDF。ScienceDirect 页面准备钩子采集 MathJax 保存的原始 MathML；HTML、图片、补充文件和浏览器 PDF 共用本次上下文。macOS 的 Elsevier 仅执行 API 阶段。
+Elsevier 复用 browser workflow 的期限、取消、上下文和资源释放机制，自行执行 API XML → Byparr HTML → API PDF → Byparr PDF。ScienceDirect 页面准备钩子采集 MathJax 保存的原始 MathML；HTML、图片、补充文件和浏览器 PDF 共用本次上下文。Elsevier 在 macOS 同样执行浏览器阶段，获取顺序不变。
 
-安装器默认准备支持的浏览器（在线 `--lite` 跳过）：Linux/Windows x64 依次准备 Camoufox、FlareSolverr，macOS 只准备 Camoufox。FlareSolverr 复用内置或固定版本缓存中的源码和私有依赖，驱动按 Chrome 版本准备；浏览器、模型和驱动准备可能联网。下载预算 10 分钟，本地启动检查预算 2 分钟，只使用临时状态、CDP 和空白页脚本；失败或取消保留核心安装，运行时按需修复继续生效。系统依赖确认与独立重试命令见 [部署说明](deployment.md)。
+安装器默认准备支持的浏览器（在线 `--lite` 跳过）：各支持平台均准备 Camoufox＋Byparr 组合。Byparr 复用内置或锁定缓存中的源码与私有依赖；浏览器和模型准备可能联网。下载预算 10 分钟，本地空白页检查另限 2 分钟，失败保留核心安装。见 [部署说明](deployment.md)。

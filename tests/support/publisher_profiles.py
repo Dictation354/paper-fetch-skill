@@ -49,7 +49,8 @@ class ProfileContext:
 class NativeProfileDouble:
     instances = []
 
-    def __init__(self, *, user_data_dir, binary_path=None, headless=False):
+    def __init__(self, config, *, native_profile, runtime_context=None):
+        user_data_dir, headless = native_profile, config.headless
         self.path = Path(user_data_dir)
         self.headless = headless
         self.context = ProfileContext()

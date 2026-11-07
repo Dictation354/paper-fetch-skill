@@ -169,26 +169,17 @@ def test_html_confirmed_paywall_is_terminal(monkeypatch):
     pdf.assert_not_called()
 
 
-def test_unsupported_platform_skips_browser_and_uses_api_pdf(monkeypatch):
-    monkeypatch.setattr(selection, "supported_platform", lambda: False)
-    client = elsevier.ElsevierClient(Mock(), {"ELSEVIER_API_KEY": "key"})
-    monkeypatch.setattr(
-        client,
-        "_fetch_official_xml_payload",
-        Mock(side_effect=ProviderFailure("no_result", "no XML")),
-    )
-    monkeypatch.setattr(
-        client, "_fetch_official_pdf_payload", lambda *a, **k: payload("pdf_api")
-    )
-    monkeypatch.setattr(
-        client, "validate_raw_payload_identity", lambda doi, meta, raw: raw
-    )
-    browser = Mock(side_effect=AssertionError("browser must be skipped"))
-    client.deps = replace(client.deps, fetch_html_with_browser=browser)
-    assert client.fetch_raw_fulltext(DOI, META).content.route_name == "pdf_api"
-    browser.assert_not_called()
-    with pytest.raises(ProviderFailure, match="FlareSolverr"):
-        selection.selected_backend({}, provider="elsevier")
+def test_macos_keeps_elsevier_browser_stages(monkeypatch, tmp_path):
+    import platform
+    import sys
+    from paper_fetch.providers.browser_runtime.api import load_runtime_config
+
+    monkeypatch.setattr(sys, "platform", "darwin")
+    monkeypatch.setattr(platform, "machine", lambda: "arm64")
+    config = load_runtime_config({"XDG_DATA_HOME": str(tmp_path)}, provider="elsevier", doi=DOI)
+    assert selection.selected_backend({}, provider="elsevier") == "byparr"
+    assert config.state_mode == "native"
+    assert config.user_data_dir.name == "elsevier-camoufox"
 
 
 def test_first_page_api_pdf_is_rejected_before_conversion(monkeypatch):
@@ -244,7 +235,7 @@ def test_real_html_paywall_signal_stops_before_both_pdf_routes(monkeypatch):
     client.deps = replace(
         client.deps,
         load_runtime_config=lambda *a, **k: SimpleNamespace(
-            timeout_ms=120000, backend="flaresolverr"
+            timeout_ms=120000, backend="byparr"
         ),
         ensure_runtime_ready=lambda config: None,
         fetch_html_with_browser=lambda *a, **k: BrowserFetchedHtml(

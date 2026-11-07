@@ -376,24 +376,24 @@ def authenticate_provider_profile(
                 "Camoufox authentication requires a provider profile directory.",
             )
         profile_dir.mkdir(parents=True, exist_ok=True)
-        if runtime.backend == "flaresolverr":
-            from .providers.browser_runtime.flaresolverr_manager import (
-                FlareSolverrManager,
+        if runtime.state_mode == "json":
+            from .providers.browser_runtime.byparr_manager import (
+                ByparrManager,
             )
 
-            manager = FlareSolverrManager(runtime)
+            manager = ByparrManager(runtime)
         else:
             manager = PublisherProfileManager(runtime)
         context = manager.new_context()
         page = context.new_page()
-        if runtime.backend == "flaresolverr":
-            from .providers.browser_runtime.flaresolverr_manager import navigate_page
+        from .providers.browser_runtime.navigation import navigate_page
 
-            navigate_page(page, active_url, timeout_ms=runtime.timeout_ms)
-        else:
-            page.goto(
-                active_url, wait_until="domcontentloaded", timeout=runtime.timeout_ms
-            )
+        navigate_page(
+            page,
+            active_url,
+            wait_until="domcontentloaded",
+            timeout_ms=runtime.timeout_ms,
+        )
         _wait_for_manual_completion(
             provider_label=provider_label,
             url=active_url,
@@ -407,7 +407,7 @@ def authenticate_provider_profile(
             provider_label=provider_label,
             fallback_url=active_url,
         )
-        if runtime.backend == "flaresolverr":
+        if runtime.state_mode == "json":
             staged_state, stage_result = stage_storage_state(
                 context, runtime, filter_url=final_url
             )
@@ -416,7 +416,7 @@ def authenticate_provider_profile(
             ).get("saved"):
                 raise ProviderFailure(
                     ERROR,
-                    f"Cannot save accepted {provider_label} Chrome authentication state.",
+                    f"Cannot save accepted {provider_label} browser authentication state.",
                 )
     except ProviderFailure:
         raise
@@ -438,24 +438,24 @@ def authenticate_provider_profile(
     manager = None
     page = None
     try:
-        if replay_runtime.backend == "flaresolverr":
-            from .providers.browser_runtime.flaresolverr_manager import (
-                FlareSolverrManager,
+        if replay_runtime.state_mode == "json":
+            from .providers.browser_runtime.byparr_manager import (
+                ByparrManager,
             )
 
-            manager = FlareSolverrManager(replay_runtime)
+            manager = ByparrManager(replay_runtime)
         else:
             manager = PublisherProfileManager(replay_runtime)
         context = manager.new_context()
         page = context.new_page()
-        if runtime.backend == "flaresolverr":
-            from .providers.browser_runtime.flaresolverr_manager import navigate_page
+        from .providers.browser_runtime.navigation import navigate_page
 
-            navigate_page(page, active_url, timeout_ms=runtime.timeout_ms)
-        else:
-            page.goto(
-                active_url, wait_until="domcontentloaded", timeout=runtime.timeout_ms
-            )
+        navigate_page(
+            page,
+            active_url,
+            wait_until="domcontentloaded",
+            timeout_ms=runtime.timeout_ms,
+        )
         final_url, title = _require_accepted_auth_page(
             page,
             provider=provider_key,
@@ -464,7 +464,8 @@ def authenticate_provider_profile(
         )
         digest = manager.refresh()
         manager.metadata["auth"] = {
-            "native_profile_verified": True,
+            "native_profile_verified": runtime.state_mode == "native",
+            "state_replay_verified": True,
             "headless": fetch_headless,
             "state_sha256": digest,
         }

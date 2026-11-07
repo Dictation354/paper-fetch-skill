@@ -37,11 +37,11 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
     def test_browser_boundary_drift_is_rejected(self) -> None:
         contract = validator.load_contract()
         contract["browser"]["runtime_bundle_built_in"] = True
-        contract["browser"]["default_backend"] = "flaresolverr"
-        contract["browser"]["pnas_backend"] = "flaresolverr"
+        contract["browser"]["default_backend"] = "camoufox"
+        contract["browser"]["pnas_backend"] = "camoufox"
         contract["browser"]["elsevier_browser_routes"] = "camoufox"
         contract["browser"]["system_chrome_required"] = True
-        contract["browser"]["installer_prepares_flaresolverr"] = True
+        contract["browser"]["installer_prepares_byparr"] = False
         contract["browser"]["native_bundle_gate"] = False
         contract["browser"]["managed_runtime_preparation"] = False
         contract["browser"]["fetch_start_preparation"] = True
@@ -67,11 +67,11 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         diagnostic = "\n".join(validator.validate_contract(contract))
 
         self.assertIn("runtime_bundle_built_in must be false", diagnostic)
-        self.assertIn("default_backend must be camoufox", diagnostic)
-        self.assertIn("pnas_backend must be camoufox", diagnostic)
-        self.assertIn("elsevier_browser_routes must be unsupported", diagnostic)
+        self.assertIn("default_backend must be byparr", diagnostic)
+        self.assertIn("pnas_backend must be byparr", diagnostic)
+        self.assertIn("elsevier_browser_routes must be supported", diagnostic)
         self.assertIn("system_chrome_required must be false", diagnostic)
-        self.assertIn("installer_prepares_flaresolverr must be false", diagnostic)
+        self.assertIn("installer_prepares_byparr must be true", diagnostic)
         self.assertIn("native_bundle_gate must be true", diagnostic)
         self.assertIn("managed_runtime_preparation must be true", diagnostic)
         self.assertIn("fetch_start_preparation must be false", diagnostic)

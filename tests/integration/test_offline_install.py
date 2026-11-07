@@ -98,7 +98,7 @@ def _fake_python_script(
         state="${{PAPER_FETCH_TEST_PREPARATION_STATE:-ready}}"
         if [[ "$state" != 'missing' ]]; then
           printf 'Browser preparation: %s\\n' "$state" > "$result_path"
-          printf 'Camoufox: ready\\nFlareSolverr: ready\\n' >> "$result_path"
+          printf 'Camoufox: ready\\nByparr: ready\\n' >> "$result_path"
         fi
         exit "${{PAPER_FETCH_TEST_PREPARATION_EXIT:-0}}"
       fi
@@ -274,15 +274,6 @@ class OfflineInstallTests(unittest.TestCase):
         bundle.mkdir()
         shutil.copy2(REPO_ROOT / "install-offline.sh", bundle / "install-offline.sh")
         (bundle / "install-offline.sh").chmod(0o755)
-        chrome_checker = (
-            bundle
-            / "runtime/site-packages/paper_fetch/providers/browser_runtime/chrome.py"
-        )
-        chrome_checker.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(
-            REPO_ROOT / "src/paper_fetch/providers/browser_runtime/chrome.py",
-            chrome_checker,
-        )
         shutil.copytree(REPO_ROOT / "installer", bundle / "installer")
 
         manifest_python_tag = manifest_python_tag or _python_tag(python_version)
@@ -391,10 +382,6 @@ class OfflineInstallTests(unittest.TestCase):
             )
             _write_executable(fake_bin / "xattr", _fake_xattr_script())
 
-        _write_executable(
-            fake_bin / "google-chrome",
-            "#!/usr/bin/env bash\nprintf 'Google Chrome 156.0.8078.79\\n'\n",
-        )
         _write_checksums(bundle)
         home = root / "home"
         home.mkdir()
@@ -437,7 +424,7 @@ class OfflineInstallTests(unittest.TestCase):
             check=False,
         )
 
-    def test_missing_chrome_does_not_stop_upgrade(self) -> None:
+    def test_browser_preparation_failure_does_not_stop_upgrade(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             bundle, fake_bin, home = self._create_bundle(Path(tmpdir))
             install_root = Path(tmpdir) / "existing"
@@ -454,8 +441,8 @@ class OfflineInstallTests(unittest.TestCase):
                 "--non-interactive",
                 install_dir=install_root,
                 extra_env={
-                    "PAPER_FETCH_CHROME_BINARY_PATH": str(
-                        Path(tmpdir) / "missing-chrome"
+                    "PAPER_FETCH_BROWSER_BINARY_PATH": str(
+                        Path(tmpdir) / "missing-camoufox"
                     )
                 },
             )
@@ -513,7 +500,7 @@ class OfflineInstallTests(unittest.TestCase):
                 f"{fake_bin / 'python3'}\n",
             )
             self.assertIn(
-                "Default browser backend: PNAS/Elsevier FlareSolverr + system Chrome; other browser routes Camoufox (headless: true)",
+                "Default browser backend: Byparr + managed Camoufox for all browser providers (headless: true)",
                 result.stdout,
             )
 

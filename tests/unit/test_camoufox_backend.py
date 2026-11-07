@@ -1208,7 +1208,7 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
     )
 
     assert result.response_status == 200
-    assert result.diagnostics["browser_runtime_trace"]["backend"] == "camoufox"
+    assert result.diagnostics["browser_runtime_trace"]["backend"] == "byparr"
     assert context.page.goto_kwargs["wait_until"] == "commit"
 
     image_route = mock.Mock()
@@ -2312,7 +2312,7 @@ def test_camoufox_candidate_transport_failure_preserves_observed_access_boundary
     assert failure.kind == "cloudflare_challenge"
     assert failure.details["subsequent_candidate_failures"] == [
         {
-            "failure_code": "camoufox_request_failed",
+            "failure_code": "byparr_request_failed",
             "message": "Page.goto: Timeout 84000ms exceeded.",
         }
     ]
@@ -2891,6 +2891,10 @@ def test_science_final_document_response_ownership(
 @pytest.fixture
 def managed_camoufox(monkeypatch, tmp_path):
     """Exercise upstream version selection/install against an isolated fake archive."""
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
+        _dependency_details,
+    )
     monkeypatch.setattr(preparation, "prepare_camoufox_fingerprint_model", lambda: None)
     import zipfile
     from camoufox import multiversion, pkgman
@@ -3450,23 +3454,21 @@ def test_explicit_camoufox_binary_skips_management(monkeypatch):
 def test_browser_entrypoints_prepare_missing_runtime(
     managed_camoufox, monkeypatch, tmp_path, route, download_available
 ):
-    import camoufox.sync_api as camoufox_sync
-    import playwright.sync_api as playwright_sync
     from paper_fetch import auth, browser_preflight
+    from paper_fetch.providers.browser_runtime import byparr_manager
+    from paper_fetch.providers.browser_runtime.backends import byparr
 
     env = managed_camoufox
     if not download_available:
         env.query.side_effect = OSError("offline")
-    playwright = SimpleNamespace(stop=mock.Mock())
     monkeypatch.setattr(
-        playwright_sync,
-        "sync_playwright",
-        lambda: SimpleNamespace(start=lambda: playwright),
+        byparr,
+        "_dependency_details",
+        lambda: {"packages": {"camoufox": True, "playwright": True}},
     )
-    # Stop at the actual launch boundary, after preparation, without starting Firefox.
+    # Observe preparation at the manager's component boundary; no process runs.
     launch = mock.Mock(side_effect=RuntimeError("launch boundary reached"))
-    monkeypatch.setattr(camoufox_sync, "NewBrowser", launch)
-    # The real context boundary is safe here: NewBrowser and Playwright startup are mocked.
+    monkeypatch.setattr(byparr_manager, "prepare_components", launch)
     monkeypatch.setattr(
         _playwright_browser,
         "open_browser_context",
@@ -3482,7 +3484,7 @@ def test_browser_entrypoints_prepare_missing_runtime(
         config = CamoufoxBackend().load_runtime_config(
             runtime_env, provider="ieee", doi="10.1109/example"
         )
-        CamoufoxBackend().ensure_runtime_ready(config)
+        byparr.DEFAULT_BYPARR_BACKEND.ensure_runtime_ready(config)
         with pytest.raises(browser_runtime.BrowserRuntimeFailure, match=expected):
             browser_runtime.fetch_html_with_browser(
                 ["https://ieeexplore.ieee.org/document/123"],
@@ -3503,7 +3505,6 @@ def test_browser_entrypoints_prepare_missing_runtime(
     assert preparation.probe_camoufox_managed_runtime().valid is download_available
     assert launch.call_count == int(download_available)
     env.query.assert_called_once()
-    assert playwright.stop.call_count == int(download_available)
 
 
 def test_camoufox_missing_python_dependency_still_rejected(monkeypatch, tmp_path):

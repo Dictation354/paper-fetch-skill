@@ -47,7 +47,7 @@ def default_provider_user_data_dir(
     env: Mapping[str, str], *, provider: str, backend: str
 ) -> Path:
     provider_key = sanitize_filename(normalize_text(provider).lower() or "browser")
-    if normalize_text(backend).lower() in {"camoufox", "flaresolverr"}:
+    if normalize_text(backend).lower() in {"camoufox", "byparr"}:
         provider_key = f"{provider_key}-{backend.lower()}"
     return resolve_user_data_dir(env) / "publisher-browser-profiles" / provider_key
 
@@ -104,7 +104,9 @@ def runtime_with_default_storage_profile(
     return replace(
         runtime,
         user_data_dir=default_provider_user_data_dir(
-            env, provider=provider, backend=runtime.backend
+            env,
+            provider=provider,
+            backend="camoufox" if runtime.state_mode == "native" else "byparr",
         ),
     )
 

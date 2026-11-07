@@ -246,14 +246,14 @@ def catalog_live_report(catalog_live_artifact_root: Path):
         (sample, backend)
         for sample in iter_provider_benchmark_samples()
         for backend in (
-            ("camoufox", "flaresolverr") if sample.provider == "pnas" else ("auto",)
+            ("camoufox", "byparr") if sample.provider == "pnas" else ("auto",)
         )
     ],
     ids=[
         f"{sample.provider}-{backend}"
         for sample in iter_provider_benchmark_samples()
         for backend in (
-            ("camoufox", "flaresolverr") if sample.provider == "pnas" else ("auto",)
+            ("camoufox", "byparr") if sample.provider == "pnas" else ("auto",)
         )
     ],
 )

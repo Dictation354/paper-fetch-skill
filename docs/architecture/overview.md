@@ -107,7 +107,7 @@
 
 现有 MCP `batch_resolve` / `batch_check` / `batch_fetch` 与 CLI batch 都通过这个 runner 调度。前两个 probe/resolve 工具保持既有兼容调度；`batch_fetch` 在提交前只调用 catalog-backed URL/DOI 身份 helper 推断 provider lane，一个 lane 限流后把该 lane 的后续输入终态化为未调度，其他 lane 继续。它的 `results` 按原 1-based input index 返回，`completion_order` 单独投影完成顺序，progress 使用完整终态计数。
 
-`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache`。Browser provider 只依赖 `paper_fetch.providers.browser_runtime` facade；后端按 provider catalog 与配置选择 Camoufox 或 FlareSolverr，storage/profile 路径由 `browser_runtime.paths` 统一解析。浏览器由所属 worker 管理，操作复用当前运行时，并在 worker 终态清理时关闭。公开 `service` helper 可接受 `context=None`，此时自行创建并关闭 context；pipeline/workflow 内部路径要求调用方显式传递 context。CLI/MCP adapter 按各自目录、artifact 和 cancellation 语义构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
+`RuntimeContext` 是 service/workflow 的显式运行时依赖容器，持有 `env`、`transport`、`clients`、`download_dir`、`cancel_check`、`artifact_store`，以及单次 fetch 生命周期内的 `parse_cache`、`session_cache`。Browser provider 只依赖 `paper_fetch.providers.browser_runtime` facade；全部浏览器 provider 使用 Byparr＋Camoufox，兼容配置保留原状态模式，storage/profile 路径由 `browser_runtime.paths` 统一解析。浏览器由所属 worker 管理，操作复用当前运行时，并在 worker 终态清理时关闭。公开 `service` helper 可接受 `context=None`，此时自行创建并关闭 context；pipeline/workflow 内部路径要求调用方显式传递 context。CLI/MCP adapter 按各自目录、artifact 和 cancellation 语义构造 `RuntimeContext`，再交给 `paper_fetch.workflow.pipeline.FetchPipeline`。
 
 #### 统一抓取验收模型
 
@@ -229,7 +229,7 @@ provider 身份与能力配置统一来自 provider entry module 导出的 `PROV
 入口：`src/paper_fetch/runtime.py`、`artifacts.py`、`mcp/fetch_cache.py`
 
 - `RuntimeContext` 显式承载运行时依赖；`parse_cache` 是进程内、单 context 生命周期的解析 memo（key 含 provider、role、source、body sha256、parser 和配置指纹），访问器由 `RLock` 保护，`get_or_set` 对同 key 原子执行一次 supplier，dict/list 读取返回拷贝，XML root 只读复用。
-- Browser runtime 统一使用中立 facade；auth、preflight、HTML fetch、seeded PDF fallback 按 provider 与 backend 复用状态：Camoufox 使用原生持久目录与兼容 JSON，FlareSolverr 使用临时 Chrome profile 与已接受的 JSON。路径与写锁由共享 manager 管理。preflight 的状态契约为 `ready/challenge/auth_required/network_timeout/extraction_error/runtime_error/cancelled`，CLI/MCP 共用 reason-code 分类和 next action。Browser-backed image fetch 共用一个 wall-clock budget；PDF fallback 只用 lightweight browser warm 采集 cookies、user-agent 和 final URL。
+- Browser runtime 统一使用中立 facade；auth、preflight、HTML fetch、seeded PDF fallback 按 provider 与 backend 复用状态：原生模式使用持久目录与兼容 JSON，原 JSON 模式使用临时 Camoufox context 与已接受的 JSON。路径与写锁由共享 manager 管理。preflight 的状态契约为 `ready/challenge/auth_required/network_timeout/extraction_error/runtime_error/cancelled`，CLI/MCP 共用 reason-code 分类和 next action。Browser-backed image fetch 共用一个 wall-clock budget；PDF fallback 只用 lightweight browser warm 采集 cookies、user-agent 和 final URL。
 - `artifact_mode=all` 下，已到达页面但 extraction/availability 失败的 HTML route 会在 `diagnostics/<provider>/<doi-or-url-digest>/<route>-<attempt>/` 保存 `diagnostic.json` 与隐私清洗后的 `page-sanitized.html`。自动流程不保存原始失败 HTML 或截图；query、userinfo、email、表单、脚本及事件属性会被删除/脱敏，2 MiB 上限只在 DOM 节点边界截断。成功或终态失败的 CLI/MCP manifest 都把这些文件作为 `kind=diagnostic` additive artifact 快照保存 size/SHA-256。
 - 每个资产/失败项保留 `asset_timing={queue,candidate_resolution,dns_policy_validation,connect_to_headers_ttfb,body_stream,browser_recovery,retry_wait,conversion,save,total}_ms` 和终态，不保存签名 URL；请求级耗时由 trace event 与外层调用者墙钟观察，不在 runtime 聚合第二份统计。
 - 本地转换工具链使用进程内有界缓存降低重复探测：Ghostscript/libvips 候选路径、`--version` probe 和工具 env overlay 按相关 env/目录/文件指纹失效；公式转换保留 MathML 结果缓存和 `mathml-to-latex` worker 复用；PDF fallback 对无图片导出路径的同一 PDF hash 复用 Markdown 渲染结果，并在成功结果 diagnostics 中记录 hash、字节数、页数、cache status 和耗时。
@@ -403,7 +403,7 @@ fallback 开关。`preferred_providers` 控制允许进入的全文 provider，�
 
 ### 浏览器及请求资源边界
 
-`provider_contracts` 定义不可变类型，`providers._registry` 定义 Bundle 与冲突验证，`provider_catalog` 只负责固定装配和查询。provider 声明支持的后端、平台默认值、启动首页以及页面回调；Camoufox 与 FlareSolverr 通过中立接口复用 Playwright 页面流程。
+`provider_contracts` 定义不可变类型，`providers._registry` 定义 Bundle 与冲突验证，`provider_catalog` 只负责固定装配和查询。provider 声明支持的后端、平台默认值、启动首页以及页面回调；Byparr＋Camoufox 通过统一导航入口复用 Playwright 页面流程。
 
 根 `RuntimeContext` 拥有并关闭 transport，child 借用 transport，独立持有预算、trace、缓存、提交屏障和惰性 clients。同名 client 并发只构造一次，工厂失败仍由占位 client 隔离。`BatchExecutionSession` 集中处理 child 所有权、DOI 分组、结果复制和取消屏障，CLI/MCP 保留各自输出投影及 runner 约定。浏览器在所属 worker 的终态清理中关闭。
 

@@ -117,7 +117,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
                     summary="AMS article body",
                     browser_context_seed={
                         "browser_final_url": AMS_LANDING_URL,
-                        "paper_fetch_html_fetcher": "camoufox",
+                        "paper_fetch_html_fetcher": "byparr",
                     },
                 )
             )
@@ -138,7 +138,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             article = client.to_article_model(self._metadata(), raw_payload)
 
         self.assertEqual(_payload_route(raw_payload), "html")
-        self.assertEqual(raw_payload.content.fetcher, "camoufox")
+        self.assertEqual(raw_payload.content.fetcher, "byparr")
         self.assertEqual(article.source, "ams_html")
         self.assertIn("fulltext:ams_html_ok", article.quality.source_trail)
         mocked_load_runtime.assert_called_once_with(

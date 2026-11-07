@@ -219,7 +219,7 @@ def _web_references(client, doi, metadata, context):
     from bs4 import BeautifulSoup
 
     runtime = client.deps.load_runtime_config(client.env, provider="elsevier", doi=doi)
-    if runtime.backend != "flaresolverr":
+    if runtime.backend != "byparr":
         return []
     client.deps.ensure_runtime_ready(runtime)
     # The provider's normal context manager reuses its request-local profile lease.

@@ -435,7 +435,7 @@ begin
   try
     if not WizardSilent then
     begin
-      OptionalProgress.SetText('Preparing Camoufox and FlareSolverr browsers...',
+      OptionalProgress.SetText('Preparing Camoufox and Byparr browsers...',
         'May download. Core installation is complete. Ctrl+C in the console cancels preparation.');
       OptionalProgress.Animate;
     end;

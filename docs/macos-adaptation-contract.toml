@@ -37,11 +37,11 @@ verify_before_legacy_cleanup = true
 check_is_read_only = true
 
 [browser]
-default_backend = "camoufox"
-pnas_backend = "camoufox"
-elsevier_browser_routes = "unsupported"
+default_backend = "byparr"
+pnas_backend = "byparr"
+elsevier_browser_routes = "supported"
 system_chrome_required = false
-installer_prepares_flaresolverr = false
+installer_prepares_byparr = true
 runtime_bundle_built_in = false
 core_install_downloads_runtime = true
 optional_install_download_requires_consent = false

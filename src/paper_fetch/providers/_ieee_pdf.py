@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .browser_runtime.navigation import navigate_page, managed_action
+
 import time
 from collections.abc import Callable
 from typing import Any
@@ -75,7 +77,7 @@ def navigate_stamp_pdf(
     page.on("download", on_download)
     try:
         try:
-            initial_response = page.goto(url, **goto_kwargs)
+            initial_response = navigate_page(page, url, **goto_kwargs, mode="file")
         except PlaywrightTimeoutError:
             pass
         except PlaywrightError as exc:
@@ -179,10 +181,12 @@ def _click_article_pdf(
     context.on("page", on_page)
     page.on("download", on_download)
     try:
-        page.goto(
+        navigate_page(
+            page,
             f"https://ieeexplore.ieee.org/document/{article_number}",
             wait_until="domcontentloaded",
             timeout=remaining(),
+            mode="file",
         )
         while time.monotonic() < deadline:
             raise_for_paywall(
@@ -204,7 +208,8 @@ def _click_article_pdf(
                     break
             if chosen is not None:
                 try:
-                    chosen.click(timeout=remaining())
+                    with managed_action(page, timeout_ms=remaining()):
+                        chosen.click(timeout=remaining())
                 except PlaywrightError as exc:
                     if "Download is starting" not in str(exc):
                         raise

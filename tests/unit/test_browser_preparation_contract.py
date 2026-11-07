@@ -9,7 +9,7 @@ import pytest
 
 from paper_fetch.http import RequestCancelledError
 from paper_fetch.providers.browser_runtime import preparation as prep
-from paper_fetch.providers.browser_runtime import flaresolverr_preparation as flare
+from paper_fetch.providers.browser_runtime import byparr_preparation as flare
 from paper_fetch.models.codec import envelope_from_payload, model_to_payload
 from paper_fetch.runtime import RuntimeContext
 from tests.support._mcp_support import sample_envelope
@@ -69,7 +69,7 @@ def test_offline_component_missing_never_downloads(tmp_path, monkeypatch):
     monkeypatch.setattr(flare, "download", download)
     with pytest.raises(flare.BrowserRuntimeFailure) as error:
         flare.prepare_source(tmp_path / "cache", flare.PreparationBudget(1))
-    assert error.value.kind == "flaresolverr_installation_error"
+    assert error.value.kind == "byparr_installation_error"
     download.assert_not_called()
 
 
@@ -111,64 +111,27 @@ def test_all_prepares_only_supported_backends(monkeypatch):
     from paper_fetch import offline_browsers
 
     monkeypatch.setattr(offline_browsers.sys, "platform", "darwin")
-    monkeypatch.setattr(offline_browsers, "supported_platform", lambda: False)
     setup = Mock()
     offline_browsers.prepare(setup, selection="all", interactive=False)
-    assert [call.args[0] for call in setup.step.call_args_list] == ["Camoufox"]
+    assert [call.args[0] for call in setup.step.call_args_list] == ["Byparr"]
 
 
-def test_driver_success_window_failure_retry_cancel_and_missing_exception(
-    tmp_path, monkeypatch
-):
-    monkeypatch.setattr(flare.sys, "platform", "linux")
-    now = [100000.0]
-    monkeypatch.setattr(prep.time, "time", lambda: now[0])
-    chrome = "156.0.1.2"
-    driver = "156.0.1.3"
-    target = tmp_path / "drivers/linux" / chrome
-    stage = tmp_path / "stage"
-    stage.mkdir()
-    (stage / "chromedriver").write_bytes(b"driver")
-    (stage / "version").write_text(driver)
-    target.parent.mkdir(parents=True)
-    flare._publish(stage, target, chrome)
-    record = target.parent / (chrome + ".check.json")
-    identity = {"chrome_version": chrome, "platform": "linux"}
-
-    def unchanged(_url, path, _budget):
-        path.write_text(json.dumps({"builds": {"156.0.1": {"version": driver}}}))
-        return "digest"
-
-    download = Mock(side_effect=unchanged)
-    monkeypatch.setattr(flare, "download", download)
-
-    def prepare():
-        return flare.prepare_driver(tmp_path, chrome, flare.PreparationBudget(5))
-
-    assert prepare() == (target / "chromedriver", driver)
-    assert prepare() == (target / "chromedriver", driver)
-    assert download.call_count == 1
-    now[0] += 86401
-    download.side_effect = OSError("offline")
-    assert prepare()[1] == driver
-    assert not prep._recent_update_check(record, identity)
-    download.side_effect = unchanged
-    assert prepare()[1] == driver
-    assert download.call_count == 3
-    assert prep._recent_update_check(record, identity)
-
-    now[0] += 86401
-    download.side_effect = RequestCancelledError("cancelled")
-    with pytest.raises(RequestCancelledError):
-        prepare()
-    assert json.loads(record.read_text())["result"] == "cancelled"
-    download.side_effect = unchanged
-    assert prepare()[1] == driver
-    assert prep._recent_update_check(record, identity)
-
-    # A successful check cannot hide subsequent local component damage.
-    (target / "chromedriver").unlink()
-    download.side_effect = OSError("repair attempted")
-    with pytest.raises(OSError, match="repair attempted"):
-        prepare()
-    assert download.call_count == 6
+def test_byparr_scope_reuses_verified_component_and_retries_damage(tmp_path, monkeypatch):
+    root = tmp_path / "runtime"
+    root.mkdir()
+    ready = [True]
+    action = Mock(return_value=root)
+    monkeypatch.setattr(flare, "prepare_source", action)
+    monkeypatch.setattr(flare, "runtime_location", lambda _: (root, {}, "identity"))
+    monkeypatch.setattr(flare, "valid_cache", lambda *_: ready[0])
+    token = prep.fetch_browser_preparation.set(prep.FetchBrowserPreparation())
+    try:
+        budget = flare.PreparationBudget(5)
+        assert flare.prepare_components(tmp_path, budget) == root
+        assert flare.prepare_components(tmp_path, budget) == root
+        assert action.call_count == 1
+        ready[0] = False
+        assert flare.prepare_components(tmp_path, budget) == root
+        assert action.call_count == 2
+    finally:
+        prep.fetch_browser_preparation.reset(token)

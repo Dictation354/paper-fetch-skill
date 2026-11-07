@@ -531,34 +531,17 @@ class Setup:
     def browser(self, *, selected: bool | None = None) -> None:
         """Prepare and validate through the real backend with temporary state."""
         if selected is None:
-            selected = confirm("Prepare and locally test Camoufox in the user cache?")
+            selected = confirm(
+                "Prepare and locally test Camoufox + Byparr in the user cache?"
+            )
         if not selected:
             self.report(
                 "Camoufox", "skipped", "Runtime automatic preparation remains enabled"
             )
             return
-        from .providers.browser_runtime.camoufox_manager import CamoufoxBrowserManager
-        from .config import BROWSER_BINARY_PATH_ENV_VAR, browser_env_value
+        from .offline_browsers import prepare
 
-        manager = CamoufoxBrowserManager(
-            binary_path=browser_env_value(self.env, BROWSER_BINARY_PATH_ENV_VAR),
-            headless=True,
-        )
-        try:
-            with preparation_warnings():
-                context = manager.new_context()
-            context.route("**/*", lambda route: route.abort())
-            page = context.new_page()
-            page.goto("about:blank", timeout=10000)
-            if page.evaluate("1 + 1") != 2:
-                raise RuntimeError("Local page evaluation failed")
-            self.report(
-                "Camoufox",
-                "ready",
-                "Fingerprint model and real backend; local script verified",
-            )
-        finally:
-            manager.close()
+        prepare(self, selection="all", interactive=True)
 
     def terminal(self) -> None:
         print(
@@ -604,24 +587,41 @@ def main(argv=None) -> int:
     parser.add_argument("--reuse-env-file", action="store_true")
     parser.add_argument("--non-interactive", action="store_true")
     parser.add_argument(
-        "--prepare-flaresolverr",
+        "--prepare-byparr",
         action="store_true",
-        help="Prepare FlareSolverr automatically; system packages still require consent",
+        help="Prepare managed Byparr and Camoufox components",
     )
     parser.add_argument(
-        "--prepare-browsers", choices=("all", "camoufox", "flaresolverr")
+        "--prepare-flaresolverr", action="store_true", help=argparse.SUPPRESS
+    )
+
+    def browser_selection(value):
+        if value == "flaresolverr":
+            raise argparse.ArgumentTypeError(
+                "FlareSolverr was removed; use --prepare-byparr or --prepare-browsers byparr. See docs/browser-backends.md#migration."
+            )
+        return value
+
+    parser.add_argument(
+        "--prepare-browsers",
+        choices=("all", "camoufox", "byparr"),
+        type=browser_selection,
     )
     parser.add_argument("--initialize-request", type=Path)
     parser.add_argument("--request", type=Path)
     parser.add_argument("--result", type=Path)
     parser.add_argument("--cleanup-tools", action="store_true")
     args = parser.parse_args(argv)
+    if args.prepare_flaresolverr:
+        parser.error(
+            "FlareSolverr was removed; use --prepare-byparr or --prepare-browsers byparr. See docs/browser-backends.md#migration."
+        )
     if args.initialize_request:
         args.initialize_request.mkdir(exist_ok=False)
         protect(args.initialize_request)
         return 0
-    if args.prepare_flaresolverr:
-        args.prepare_browsers = "flaresolverr"
+    if args.prepare_byparr:
+        args.prepare_browsers = "byparr"
     if not args.prepare_browsers and (
         args.non_interactive
         or (
@@ -698,7 +698,7 @@ def main(argv=None) -> int:
                     ),
                 )
             if lines[2] == "1":
-                setup.step("Camoufox", lambda: setup.browser(selected=True))
+                setup.step("Byparr", lambda: setup.browser(selected=True))
         else:
             setup.terminal()
     except (KeyboardInterrupt, EOFError):

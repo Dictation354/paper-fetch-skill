@@ -148,8 +148,8 @@ class ProviderSpec:
     env_requirements: tuple[str, ...] = ()
     batch_concurrency: int | None = None
     routes: tuple[ProviderRouteSpec, ...] = ()
-    browser_backends: tuple[str, ...] = ("camoufox",)
-    browser_default: str = "camoufox"
+    browser_backends: tuple[str, ...] = ("camoufox", "byparr")
+    browser_default: str = "byparr"
     browser_default_x64: str | None = None
     browser_home_url: str = "about:blank"
 

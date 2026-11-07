@@ -15,7 +15,7 @@ from typing import Any
 
 from filelock import FileLock, Timeout as FileLockTimeout
 
-from .camoufox_manager import CamoufoxPersistentContextManager
+from .byparr_manager import ByparrManager
 from .paths import (
     _atomic_write_json,
     _filtered_storage_state_mapping,
@@ -151,7 +151,7 @@ class PublisherProfileManager:
         self.runtime_context = runtime_context
         self.owner_thread = threading.get_ident()
         self.lock = FileLock(str(self.path / PROFILE_LOCK_FILENAME), thread_local=False)
-        self.manager: CamoufoxPersistentContextManager | None = None
+        self.manager: ByparrManager | None = None
         self.context: Any = None
         self.metadata: dict[str, Any] = {}
         self.diagnostics: dict[str, Any] = {
@@ -232,10 +232,10 @@ class PublisherProfileManager:
             self.metadata.setdefault("native_initialized", bool(native_exists))
             self.metadata["provider"] = self.config.provider
             _atomic_write_json(self.path / METADATA_FILENAME, self.metadata)
-            self.manager = CamoufoxPersistentContextManager(
-                user_data_dir=str(self.path),
-                binary_path=self.config.binary_path,
-                headless=self.config.headless,
+            self.manager = ByparrManager(
+                self.config,
+                runtime_context=self.runtime_context,
+                native_profile=self.path,
             )
             try:
                 self.context = self.manager.new_context()
@@ -309,10 +309,13 @@ class PublisherProfileManager:
             for origin in payload.get("origins") or []:
                 page = self.context.new_page()
                 try:
-                    page.goto(
+                    from .navigation import navigate_page
+
+                    navigate_page(
+                        page,
                         origin["origin"],
                         wait_until="domcontentloaded",
-                        timeout=self.config.timeout_ms,
+                        timeout_ms=self.config.timeout_ms,
                     )
                     page.evaluate(
                         "items => { for (const item of items) localStorage.setItem(item.name, item.value); }",
@@ -332,6 +335,14 @@ class PublisherProfileManager:
 
     def refresh(self) -> str | None:
         self._assert_owner()
+        if self.manager is not None:
+            self.diagnostics.update(
+                {
+                    key: value
+                    for key, value in getattr(self.manager, "diagnostics", {}).items()
+                    if key != "context_reused"
+                }
+            )
         if self.context is None:
             return None
         try:
@@ -366,7 +377,7 @@ class PublisherProfileManager:
         if self.runtime_context is not None:
             self.runtime_context.record_browser_state_capability_use(
                 provider=self.config.provider,
-                backend="camoufox",
+                backend="byparr",
                 storage_state_path=self.path,
                 content_sha256=digest,
             )
@@ -384,10 +395,6 @@ class PublisherProfileManager:
             canonical.read_bytes()
         ).hexdigest()
         _atomic_write_json(self.path / METADATA_FILENAME, self.metadata)
-
-    def navigate(self, page: Any, url: str, timeout_ms: int) -> Any:
-        self._assert_owner()
-        return page.goto(url, timeout=timeout_ms)
 
     def close(self) -> None:
         self._assert_owner()

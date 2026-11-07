@@ -128,7 +128,7 @@ JSON、manifest v2 与 Markdown YAML front matter 都保留原有 `source`，并
 
 ## 静态诊断、真实预检与人工认证
 
-`doctor` 汇总 provider 配置、Playwright、本地浏览器 runtime 配置及 Ghostscript/libvips 状态；PNAS Chrome 检查只读取路径和版本。它不会启动浏览器、下载浏览器／FlareSolverr runtime、访问出版社页面或安装工具：
+`doctor` 汇总 provider 配置、Playwright、本地浏览器 runtime 配置及 Ghostscript/libvips 状态；Byparr 检查只读取本地组件和依赖状态。它不会启动浏览器、下载浏览器／Byparr runtime、访问出版社页面或安装工具：
 
 ```bash
 paper-fetch doctor
@@ -148,9 +148,9 @@ Python 依赖缺失仍返回 `not_configured`，显式 binary 路径由用户维
 
 ## Browser 登录态
 
-Windows/Linux x64 的 PNAS 默认使用 FlareSolverr＋系统 Google Chrome，其他平台默认 Camoufox；Elsevier 浏览器路线仅支持 Windows/Linux x64 的 FlareSolverr。其他 browser provider 默认使用原生 Firefox/Juggler Camoufox。HTML、PDF fallback、图片/补充文件、preflight 和 auth 都通过同一 browser-runtime facade；失败不会静默切换其它 backend。默认 core 安装不包含浏览器依赖，使用这些命令前需安装 `paper-fetch-skill[browser]` 或 `[full]`。完整配置见 [`browser-backends.md`](browser-backends.md)。
+全部 13 个浏览器 provider 在现有 Camoufox／Playwright 平台统一使用 Byparr＋Camoufox，含 macOS 的 Elsevier。HTML、浏览器 PDF、图片、附件、预检和 auth 共用组合运行时。默认 core 安装不含浏览器依赖，需安装 `paper-fetch-skill[browser]` 或 `[full]`。完整配置见 [`browser-backends.md`](browser-backends.md)。
 
-`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND` 按 catalog 支持范围选择后端：PNAS 支持 `auto|flaresolverr|camoufox`，Elsevier 支持 `auto|flaresolverr`；`PAPER_FETCH_CHROME_BINARY_PATH` 指定系统 Chrome。首次实际进入 FlareSolverr 路线时准备固定版本源码、私有依赖和匹配驱动；失败保持真实错误，不切换后端或自动弹窗。
+`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` 均进入组合链路，`camoufox` 是兼容别名。原生 profile 与原 PNAS／Elsevier JSON 配置保留各自状态目录，不自动迁移。`PAPER_FETCH_BROWSER_BINARY_PATH` 指定 Camoufox；Byparr 源码与私有依赖按锁定清单准备。旧配置迁移见 [Migration](browser-backends.md#migration)。
 
 如果自动过盾失败，可用通用手动 fallback 打开 headed browser：
 
@@ -159,7 +159,7 @@ paper-fetch auth <provider>
 paper-fetch auth wiley --url "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
 ```
 
-`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开用户指定的失败文章页。命令强制 headed 模式，打印所选后端的 profile 和 storage-state 路径，用户在浏览器中完成合法登录或验证后，在终端按 Enter 关闭浏览器，再按正式抓取窗口配置验证保存状态。Camoufox 复用原生目录，FlareSolverr 导入已接受的 JSON 状态。AMS 抓取不强制预先认证；无保存状态时仍会启动浏览器尝试静默验证，只有站点验证未自动完成时才需要 `paper-fetch auth ams`。
+`provider` 来自 browser runtime catalog，例如 `wiley` / `science` / `pnas` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `acs` / `iop` / `aip`。未传 `--url` 时打开内置样例文章；传入 `--url` 时打开用户指定的失败文章页。命令强制 headed 模式，打印所选后端的 profile 和 storage-state 路径，用户在浏览器中完成合法登录或验证后，在终端按 Enter 关闭浏览器，再按正式抓取窗口配置验证保存状态。Camoufox 复用原生目录，Byparr 导入已接受的 JSON 状态。AMS 抓取不强制预先认证；无保存状态时仍会启动浏览器尝试静默验证，只有站点验证未自动完成时才需要 `paper-fetch auth ams`。
 
 如果需要在批量抓取前确认所有 browser-backed provider 的浏览器链路是否能过站点验证，可以先串行运行预检：
 
@@ -168,7 +168,7 @@ paper-fetch browser-preflight
 paper-fetch browser-preflight --provider wiley --provider science --timeout-ms 120000
 ```
 
-预检会按 runtime catalog 中 `capabilities.browser_available=true` 的 provider 顺序使用内置样例 DOI/URL 构造正常 HTML candidates，并复用 provider HTML bootstrap、同一 browser context 重试和 availability 判定。Camoufox 使用 `publisher-browser-profiles/<provider>-camoufox/` 原生持久目录并可导出兼容 JSON；FlareSolverr 使用临时 Chrome profile，只在 `<provider>-flaresolverr/` 保存已接受的 JSON 状态。结果使用唯一 `status/reason_code/stage/message` 契约：`challenge/auth_required` 才建议人工认证，`network_timeout` 建议重试，`extraction_error` 指向页面/selector 诊断，`runtime_error` 先修复本地运行时，`cancelled` 显式重跑。失败时 stdout 还会在可用时输出脱敏 final URL、runtime 输出与 diagnostic artifact。该命令只验证 HTML 路径，不触发 PDF fallback；它会真实访问出版社样例页，不同于 MCP `provider_status()` 的本地能力检查。
+预检会按 runtime catalog 中 `capabilities.browser_available=true` 的 provider 顺序使用内置样例 DOI/URL 构造正常 HTML candidates，并复用 provider HTML bootstrap、同一 browser context 重试和 availability 判定。Camoufox 使用 `publisher-browser-profiles/<provider>-camoufox/` 原生持久目录并可导出兼容 JSON；Byparr 使用临时 Camoufox 上下文，只在 `<provider>-byparr/` 保存已接受的 JSON 状态。结果使用唯一 `status/reason_code/stage/message` 契约：`challenge/auth_required` 才建议人工认证，`network_timeout` 建议重试，`extraction_error` 指向页面/selector 诊断，`runtime_error` 先修复本地运行时，`cancelled` 显式重跑。失败时 stdout 还会在可用时输出脱敏 final URL、runtime 输出与 diagnostic artifact。该命令只验证 HTML 路径，不触发 PDF fallback；它会真实访问出版社样例页，不同于 MCP `provider_status()` 的本地能力检查。
 
 MCP 的 `browser_preflight` 直接调用同一个 preflight 核心。无参数时与 CLI 一样检查全部 browser provider；单 provider 可传 `provider`，并可同时指定 `test_url`、`timeout_ms`、`browser_user_agent`、`storage_state_path`、`save_storage_state` 和 `detail="full|compact"`。它在实际启动前自动准备 managed runtime。`test_url` / `storage_state_path` 要求显式单 provider；默认 `save_storage_state=true` 导出 JSON；`false` 禁止 JSON 导出，Camoufox 仍可更新原生目录；工具也可能准备浏览器组件，因此不是只读操作。返回逐 provider `ready/challenge/auth_required/network_timeout/extraction_error/runtime_error/cancelled`、下一步与进度；compact 每项只保留路由字段。一个 provider 失败不抹掉其它已完成结果，取消保留已完成结果并停止后续调度。该工具始终报告未尝试 PDF fallback 和 auth；需要登录或处理 challenge 时只建议用户显式运行 `paper-fetch auth <provider>`。
 
@@ -179,9 +179,9 @@ MCP 的 `browser_preflight` 直接调用同一个 preflight 核心。无参数�
 - `--url <url>`：覆盖内置样例文章，打开具体失败文章页。
 - `--timeout-ms <ms>`：设置浏览器导航超时。
 - `--browser-user-agent <ua>`：Camoufox 会拒绝该参数，以保持生成的 Firefox 指纹一致。
-- Camoufox 目录可通过 `PAPER_FETCH_BROWSER_PROFILE_DIR` 或 `PAPER_FETCH_BROWSER_USER_DATA_DIR` 覆盖；FlareSolverr 不使用这些 Firefox 目录配置。
+- Camoufox 目录可通过 `PAPER_FETCH_BROWSER_PROFILE_DIR` 或 `PAPER_FETCH_BROWSER_USER_DATA_DIR` 覆盖；原生状态模式继续使用这些目录配置。
 
-Camoufox 以原生持久目录为主要复用状态，JSON 是兼容快照；FlareSolverr 复用已接受的 JSON 状态。这些状态不绕过权限，也不是跨机器通用凭据；站点 session 可能按时间、网络、设备或浏览器指纹失效。未配置持久凭证不会阻止正常抓取；抓取仍会按当前 browser workflow 和 provider PDF / abstract-only / metadata fallback 运行。Camoufox 手动 auth 后再次抓取同一 provider 会复用同一个出版社原生目录；默认旧 JSON 仅初始化空目录，显式 JSON 内容变化可按摘要导入一次。Camoufox 目录排他锁遵守期限和取消；不同出版社不能共用显式目录，冲突或外部占用会明确报错。
+Byparr＋Camoufox 根据既有配置使用原生持久目录（JSON 为兼容快照）或已接受的 JSON 状态。这些状态不绕过权限，也不是跨机器通用凭据；站点 session 可能按时间、网络、设备或浏览器指纹失效。未配置持久凭证不会阻止正常抓取；抓取仍会按当前 browser workflow 和 provider PDF / abstract-only / metadata fallback 运行。Camoufox 手动 auth 后再次抓取同一 provider 会复用同一个出版社原生目录；默认旧 JSON 仅初始化空目录，显式 JSON 内容变化可按摘要导入一次。Camoufox 目录排他锁遵守期限和取消；不同出版社不能共用显式目录，冲突或外部占用会明确报错。
 
 ## 批量抓取
 

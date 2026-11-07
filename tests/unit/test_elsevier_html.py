@@ -3,7 +3,6 @@
 from paper_fetch.providers import _elsevier_html as html
 from paper_fetch.providers.elsevier import ElsevierClient
 from paper_fetch.providers.browser_runtime.api import load_runtime_config
-from paper_fetch.providers.browser_runtime import selection
 from paper_fetch.providers._payloads import build_provider_payload
 from bs4 import BeautifulSoup
 import pytest
@@ -53,15 +52,14 @@ def test_main_response_matches_url_pii_and_doi():
 
 
 def test_backend_and_profile_are_isolated_from_pnas(monkeypatch, tmp_path):
-    monkeypatch.setattr(selection, "supported_platform", lambda: True)
     env = {
         "XDG_DATA_HOME": str(tmp_path),
         "PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox",
     }
     other = load_runtime_config(env, provider="pnas", doi="10.1073/test")
     actual = load_runtime_config(env, provider="elsevier", doi=DOI)
-    assert actual.backend == "flaresolverr"
-    assert actual.user_data_dir.name == "elsevier-flaresolverr"
+    assert actual.backend == "byparr"
+    assert actual.user_data_dir.name == "elsevier-byparr"
     assert actual.user_data_dir != other.user_data_dir
 
 
@@ -101,9 +99,9 @@ def test_article_scope_authors_captions_references_and_asset_profiles():
 
 def test_unsupported_elsevier_keeps_api_cache_capability(monkeypatch):
     from paper_fetch.capability_scope import capability_scopes_for_query
-    from paper_fetch.providers.browser_runtime import chrome
+    from paper_fetch.providers.browser_runtime import platforms
 
-    monkeypatch.setattr(chrome, "supported_platform", lambda: False)
+    monkeypatch.setattr(platforms, "supported_platform", lambda: False)
     scopes = capability_scopes_for_query({"ELSEVIER_API_KEY": "key"}, DOI)
     assert len(scopes) == 2 and scopes[0].startswith("credential:")
     assert scopes[1] == "public"

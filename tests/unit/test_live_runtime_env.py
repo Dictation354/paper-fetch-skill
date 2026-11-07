@@ -43,7 +43,7 @@ def _ready_preflight(provider: str = "wiley") -> BrowserPreflightResult:
 def test_isolated_live_env_reuses_prepared_camoufox_executable(
     tmp_path: Path,
 ) -> None:
-    executable = tmp_path / "camoufox"
+    executable = tmp_path / "byparr"
     executable.touch()
 
     with mock.patch.dict(
@@ -92,7 +92,7 @@ def test_isolated_live_env_derives_unique_provider_storage_paths() -> None:
 def test_isolated_live_env_reuses_only_prepared_camoufox_dependency_cache(
     tmp_path: Path,
 ) -> None:
-    executable = tmp_path / "camoufox-cache" / "camoufox"
+    executable = tmp_path / "camoufox-cache" / "byparr"
     executable.parent.mkdir()
     executable.touch()
     cache_home = tmp_path / "prepared-cache"
@@ -210,7 +210,7 @@ def test_live_preflight_uses_nested_browser_runtime_availability() -> None:
         )
 
     assert actual is result
-    assert cache == {("wiley", "camoufox"): result}
+    assert cache == {("wiley", "byparr"): result}
     preflight.assert_called_once_with(
         "wiley",
         env={},

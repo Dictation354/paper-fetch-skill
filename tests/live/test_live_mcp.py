@@ -211,10 +211,10 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
         self.env["PAPER_FETCH_PNAS_BROWSER_BACKEND"] = "camoufox"
         await self._pnas_doi_live_via_mcp_reports_progress_and_logs()
 
-    async def test_pnas_flaresolverr_live_via_mcp_reports_progress_and_logs(
+    async def test_pnas_byparr_live_via_mcp_reports_progress_and_logs(
         self,
     ) -> None:
-        self.env["PAPER_FETCH_PNAS_BROWSER_BACKEND"] = "flaresolverr"
+        self.env["PAPER_FETCH_PNAS_BROWSER_BACKEND"] = "byparr"
         await self._pnas_doi_live_via_mcp_reports_progress_and_logs()
 
     async def _pnas_doi_live_via_mcp_reports_progress_and_logs(self) -> None:

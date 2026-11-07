@@ -1,7 +1,6 @@
 # Browser backend
 
-Windows/Linux x64 的 PNAS 默认使用 FlareSolverr 与系统 Google Chrome；Elsevier 浏览器阶段固定使用同一后端，不支持的平台跳过。macOS、其他架构的 PNAS 及其余出版社继续使用 Camoufox。所有 provider 都通过
-`paper_fetch.providers.browser_runtime` facade 获取受管 context；生命周期由请求 runtime 管理。
+全部 13 个浏览器出版社统一使用 Byparr＋Camoufox，覆盖正文、图片、附件、浏览器 PDF、预检和认证。支持现有 Camoufox／Playwright 平台，Elsevier 也开放 macOS 浏览器阶段。API、HTTP 直连和 provider 获取顺序不变。
 
 PNAS、Science、Wiley HTML 在正文连续两次指纹一致（观察间隔 750ms）后，
 通过浏览器 owner 线程内的一次同步 `page.evaluate` 捕获含 doctype 的完整 HTML、
@@ -59,14 +58,13 @@ fpgen 模型不包含在 Python wheel 中；首次生成指纹也可能下载模
 
 ## 选择与配置
 
-`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|flaresolverr` 统一选择已声明支持的后端，默认 `auto` 按 provider 和平台选择。现有 PNAS 变量保持兼容。显式选择不受支持的后端会报告配置错误，不自动切换。
+`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` 均选择 Byparr＋Camoufox；`camoufox` 是兼容别名。组件不可用时报告准备错误。
 
 通用变量如下：
 
 | 变量 | 含义 |
 |---|---|
 | `PAPER_FETCH_PNAS_BROWSER_BACKEND` | PNAS 后端，默认 `auto` |
-| `PAPER_FETCH_CHROME_BINARY_PATH` | 系统 Google Chrome 路径覆盖；不改变 Camoufox 配置 |
 | `PAPER_FETCH_BROWSER_HEADLESS` | managed runtime 是否 headless |
 | `PAPER_FETCH_BROWSER_BINARY_PATH` | 仅用于自行维护、且支持 Camoufox custom-executable metadata 语义的 executable 覆盖 |
 | `PAPER_FETCH_BROWSER_PROFILE_DIR` | provider storage-state/profile 目录覆盖 |
@@ -77,7 +75,7 @@ fpgen 模型不包含在 Python wheel 中；首次生成指纹也可能下载模
 Camoufox 原生持久目录位于 platformdirs 用户数据目录下的
 `publisher-browser-profiles/<provider>-camoufox/`，首次未认证访问也会创建。
 覆盖优先级保持为通用 profile、provider 专用 profile、通用 user-data、默认目录；
-显式目录记录所属出版社，不同出版社不能共用。`storage-state.json` 仅为兼容快照。FlareSolverr 使用 provider 隔离的 JSON 状态目录，见下文。
+显式目录记录所属出版社，不同出版社不能共用。`storage-state.json` 仅为兼容快照。Byparr 使用 provider 隔离的 JSON 状态目录，见下文。
 
 macOS 官方 managed app bundle 把 executable 放在 `Contents/MacOS`，把运行属性表
 放在 `Contents/Resources`。不要把官方 cache 内的
@@ -116,27 +114,50 @@ Preflight 只报告本次 live 检查；正式 fetch 独立导航并重新执行
 `response.body()`、page `arrayBuffer()`、canvas 或 download/file bytes 都会先进入统一
 MIME、大小、像素、预算、staging 与原子发布检查。
 
-## PNAS / Elsevier 系统 Chrome 与按需 FlareSolverr
+## 统一受管 Byparr
 
-Windows 安装器和 Linux x64 在线／离线安装器在核心安装后自动准备，支持首次安装、升级和同版本重装；在线 `--lite`、macOS 和其他架构跳过。准备失败、缺依赖、拒绝安装或取消均保留核心安装。离线安装器此阶段可能联网；静默／非交互模式允许用户级组件准备（离线包不下载 FlareSolverr 源码和依赖），缺系统依赖时只输出指引，不等待输入或提权。
+全部浏览器 provider 使用 Byparr v2.1.0（提交 `1e726296a3143cbce0982cf4fd47a9a3224094e9`）、Camoufox 0.5.9 和 playwright-captcha 0.1.1。`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` 均进入组合链路，诊断的后端为 `byparr`、引擎为 `camoufox`。
 
-检查当前 Python、Playwright、系统 Google Chrome（115+）路径和版本，Linux 另查共享库、headless 的 Xvfb、只读 X11 socket 所需 bubblewrap 及 namespace。Chrome 显式路径优先且无效时要求修正；Windows 依次检查注册表、标准目录、PATH，Linux 检查命令和标准位置。Debian/Ubuntu 显示缺项与 APT 命令，默认不安装，确认后由 sudo 接收密码并重新检测；Chrome 优先使用源中候选，无候选时经确认下载 [Google 官方 deb](https://support.google.com/chrome/answer/95346) 并由 APT 安装。Windows 缺 Chrome 只提供官网指引，其他发行版提供手动安装指引。
+源码/pip 安装在首次使用时自动下载锁定源码与私有纯 Python 依赖；离线包内置
+`runtime/browser-components/byparr/`，包含完整上游源码、GPL-3.0 许可证、适配记录、
+组件清单和文件摘要。源码与依赖同时进入 frozen snapshot、inventory、checksum 和 SBOM。
+离线组件缺失或损坏报告安装错误，需重新安装，不联网回补。包内
+`byparr-manifest.json` 和 `byparr-requirements.lock` 记录版本、来源与 SHA-256。
+运行时缓存位于用户数据目录 `byparr/`，通过目录锁、校验、暂存与原子发布复用。
 
-抓取和 preflight 默认 headless，失败不会弹窗。显式 `auth` 保持 headed；Linux headless 使用 Xvfb，Windows 使用上游的隐藏窗口模式，沿用 1920×1080 窗口配置。Linux 还需满足 Chrome 实际共享库依赖。WSL `/tmp/.X11-unix` 只读时，受管进程通过 rootless bubblewrap 的 user/mount/pid namespaces 使用私有可写 socket 目录；不改 WSLg 挂载，不提权或安装系统软件。缺少 Xvfb、bubblewrap 或 namespace 能力时返回准备错误。
+项目复用已有 Camoufox 浏览器与指纹模型准备缓存；`PAPER_FETCH_BROWSER_BINARY_PATH`
+对 Camoufox 和 Byparr 都有效，`PAPER_FETCH_BROWSER_COMPONENT_CACHE` 可覆盖组件缓存。
+主进程与子进程使用同一 Playwright 安装（`>=1.58,<1.64`）及其 Node driver，启动
+仅监听 loopback 的共享 Firefox 服务。Byparr 异步控制端与同步提取端连接同一上下文、
+同一页面，直接访问文章候选 URL。等待期间同步端继续处理事件与资源路由；随后复用
+正文就绪判断、MathJax 原始 MathML 采集、身份检查及图片、PDF、附件流程。
 
-安装后准备或首次进入 PNAS / Elsevier 浏览器路线时下载 FlareSolverr v3.5.2（提交 `93125d6ea6956906c8dfa29e169b2dc67d993dc3`）和隔离依赖。源码及完整依赖清单、SHA-256 见包内 `flaresolverr-manifest.json` 与 `flaresolverr-requirements.lock`。使用当前 CPython 3.11–3.14 的隔离子进程直接解包加载私有 wheel／纯 Python 源码；Windows embedded Python 不需要 pip、venv 或编译器。主环境不安装 Selenium。静态诊断、身份解析、缓存满足的请求及其余出版社不会下载 FlareSolverr。
+每次 URL 导航均由统一入口托管，保留原 `wait_until` 和剩余期限；图片／下载不等待 HTML 正文或统一 networkidle。点击前安装监控，在原页面、弹窗、iframe 关系中解题，不重放点击或另建 context。浏览器 GET 成功路径保留；明确 Cloudflare challenge 才在同一 context 内处理，并在原预算内重试一次 GET。
 
-运行时保存在用户数据目录 `flaresolverr/`；文件锁、校验、暂存解包与原子发布保证失败时保留有效版本。根据实际 Chrome build 从 Google Chrome for Testing 官方渠道准备 ChromeDriver，并按平台与 Chrome 完整版本缓存；Chrome 更新后重新匹配。每个服务复制自己的驱动供上游 patch，避免修改共享缓存或启动时再次下载。
+私有适配层复用锁定 Byparr 的 Cloudflare interstitial ClickSolver，分开导航、检测和解题；普通 403、登录、付费和不支持的 challenge 沿用原分类。同一 context 串行解题，重复观察复用任务。同步端真实 Response／Download 与统一 acceptance 决定成功。结构化事件分别记录 `navigation_managed`、`challenge_detected`、`solver_called`、`solver_click`、`challenge_result`，关联 operation、页面和真实响应序列。初始化不算 solver 调用，自动验证不算点击。
+验证码插件的可写脚本与 registry 使用请求私有副本，共享组件保持只读。
+准备、导航与等待受请求期限和取消约束，退出时清理所属控制进程、Node 与 Camoufox。
 
-薄启动器加载官方源码，绑定 Chrome 与驱动，移除上游忽略证书错误的参数，保留 TLS 校验。服务只监听随机 loopback 端口，私有控制接口带随机凭据，只暴露自己创建的会话 CDP 地址。新会话先访问对应 provider 主页（PNAS 或 ScienceDirect），再访问文章候选。FlareSolverr 导航期间 Playwright 只处理事件与既有资源路由；导航结束后由 Playwright 检查正文并收取资产。正文、图片、PDF、附件共用该上下文；按各 provider 的获取顺序验收，独立补充材料允许只读材料索引。上游的 `Challenge solved!` 和填充状态码不作为全文成功依据。
+状态通过内部 `state_mode` 保持既有绑定：原 Camoufox 配置保留原生持久目录 `publisher-browser-profiles/<provider>-camoufox/`，继续接受 profile/user-data 覆盖，由既有 profile owner 管理排他锁、导入摘要和认证重放。Windows/Linux x64 上 PNAS／Elsevier 原有 `auto|byparr` 配置保留 `<provider>-byparr/` 的过滤后 JSON 状态；显式 `camoufox` 保留原生目录。新开放的 Elsevier 平台使用原生 profile。两种状态不自动合并或迁移。
+抓取与 preflight 默认 headless；显式 auth 使用窗口。
 
-状态目录按 provider 隔离为 `publisher-browser-profiles/pnas-flaresolverr/` 与 `publisher-browser-profiles/elsevier-flaresolverr/`，只在现有验收提交规则允许时保存过滤后的 cookies/localStorage，不导入 Firefox profile。Camoufox binary/profile 变量保留其原含义。能力缓存与来源诊断记录实际后端、状态摘要以及 Chrome／驱动版本。准备、导航和启动共用请求期限与取消机制；退出时清理所属服务、ChromeDriver、Chrome、CDP 和 Xvfb。Linux/Windows x64 离线包内置固定源码、私有 Python 依赖、许可证和组件清单，位于 `runtime/browser-components/flaresolverr/`；macOS 不组装该组件。源码、摘要和依赖在构建阶段进入 frozen snapshot、inventory、checksum 和 SBOM。离线组件损坏或缺失报告安装错误，不联网回补源码。源码/pip 安装继续按锁定版本准备源码与依赖，运行时不升级它们。Chrome、ChromeDriver、Camoufox binary 和指纹模型由准备流程管理。
+安装后默认准备当前平台支持的后端；在线 `--lite`、POSIX `--skip-browser-prepare`
+和 Windows `/SKIPBROWSERPREPARE` 可跳过。非交互准备允许用户级下载；缺 Linux 共享库时
+提供系统安装指引，交互模式须确认后才调用 APT。无需 Chrome、ChromeDriver、Selenium、
+Xvfb 或 bubblewrap。浏览器和指纹模型准备可能联网。
 
-Elsevier 复用 `flaresolverr/` 中已校验的程序和驱动缓存。ScienceDirect 主文档响应结合最终 URL、PII 与页面 DOI 关联；保留实际 `403 → 200` 响应轨迹，不采用 solver 填充的状态。四阶段顺序及公开 source 见 [provider 说明](providers.md#3-provider-全文主路径)。
+独立重试：安装环境 Python 执行
+`-m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all`。
+`--prepare-browsers all|camoufox|byparr` 与 `--prepare-byparr` 均准备整套组合运行时，浏览器／指纹与 Byparr 组件分别复用一次准备。
+下载预算 10 分钟，本地启动检查另限 2 分钟，仅使用临时状态与 `about:blank` 脚本。
+失败或取消保留核心安装，结果与重试命令保存在 `browser-setup-results.txt`。
 
-安装后准备复用上述校验与缓存锁，下载预算 10 分钟；单独的 2 分钟本地启动检查按配置的 headless/headful 创建临时状态目录，验证 CDP 和 `about:blank` 脚本，不读取出版社登录态、不调用主页导航，完成或取消后关闭所属进程。重试：安装环境 Python 执行 `-m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all`，也可重跑安装器。运行时继续修复缓存缺失、损坏及 Chrome 更新后的驱动匹配。
+## Migration
 
-`--prepare-browsers` 可选 `all`、`camoufox` 或 `flaresolverr`；兼容选项 `--prepare-flaresolverr`
-等价于单独准备 FlareSolverr。离线安装将汇总保存到 `browser-setup-results.txt`。
-
-安装阶段默认自动准备浏览器，可能联网下载浏览器、指纹模型和驱动；后续可选配置不再重复准备。POSIX `--skip-browser-prepare`／Windows `/SKIPBROWSERPREPARE` 只跳过安装阶段，运行时按需准备不变。结果文件首行为 `Browser preparation: ready|not ready|skipped`，只在选中的受支持后端全部就绪时报告 `ready`；失败、取消或缺少完成结果均为 `not ready`，并给出独立重试命令。单独选择当前平台不支持的后端报告 `skipped`。安装准备检查将已知的 Canvas/WebGL 随机回读警告缩为一行 stderr 提示，保留现有指纹设置与其他警告。
+FlareSolverr 已移除。将 `PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=flaresolverr`
+改为 `auto` 或 `byparr`；旧值明确报告配置错误。
+删除 `PAPER_FETCH_CHROME_BINARY_PATH`，自定义浏览器改用
+`PAPER_FETCH_BROWSER_BINARY_PATH` 指向 Camoufox。
+`--prepare-flaresolverr` 和 `--prepare-browsers flaresolverr` 明确报错并提示
+`--prepare-byparr` / `--prepare-browsers byparr`。
+已有 FlareSolverr 缓存和状态保留在磁盘，新后端不自动导入；历史采集证据保留原来源名称。

@@ -234,6 +234,7 @@ async ({ entries, perTableTimeoutMs, totalTimeoutMs, concurrency }) => {
         ok: response.ok,
         status: response.status,
         contentType: response.headers.get("content-type") || "",
+        headers: {'cf-mitigated': response.headers.get('cf-mitigated') || ''},
         text: await response.text(),
         caption: caption ? caption.textContent || "" : "",
       };
@@ -1160,6 +1161,9 @@ def _fetch_tandf_csv_table_batch(
     if remaining_ms <= 0:
         result["timed_out"] = True
         return []
+    recovery_deadline = min(
+        deadline or float("inf"), time.monotonic() + remaining_ms / 1000
+    )
     try:
         batch = page.evaluate(
             _TANDF_FETCH_TABLE_CSV_BATCH_SCRIPT,
@@ -1173,14 +1177,45 @@ def _fetch_tandf_csv_table_batch(
     except Exception:
         return []
     if isinstance(batch, list):
-        return batch
-    if not isinstance(batch, Mapping):
+        raw_results = batch
+    elif isinstance(batch, Mapping):
+        if batch.get("timedOut"):
+            result["timed_out"] = True
+        result["table_fetch_concurrency"] = max(0, int(batch.get("concurrency") or 0))
+        raw_results = batch.get("results")
+    else:
         return []
-    if batch.get("timedOut"):
-        result["timed_out"] = True
-    result["table_fetch_concurrency"] = max(0, int(batch.get("concurrency") or 0))
-    raw_results = batch.get("results")
-    return raw_results if isinstance(raw_results, list) else []
+    if not isinstance(raw_results, list):
+        return []
+    from .browser_runtime.navigation import recover_get_result, navigator_for
+
+    if navigator_for(page) is None:
+        return raw_results
+    for index, response in enumerate(raw_results):
+        if not isinstance(response, dict):
+            continue
+        entry = entries[index]
+        if recover_get_result(
+            page, urljoin(page.url, entry["href"]), response, deadline=recovery_deadline
+        ):
+            remaining = int((recovery_deadline - time.monotonic()) * 1000)
+            if remaining <= 0:
+                break
+            retried = page.evaluate(
+                _TANDF_FETCH_TABLE_CSV_BATCH_SCRIPT,
+                {
+                    "entries": [entry],
+                    "perTableTimeoutMs": min(_TANDF_TABLE_FETCH_MS, remaining),
+                    "totalTimeoutMs": remaining,
+                    "concurrency": 1,
+                },
+            )
+            retried = (
+                retried.get("results", []) if isinstance(retried, Mapping) else retried
+            )
+            if isinstance(retried, list) and retried:
+                raw_results[index] = {**retried[0], "index": index}
+    return raw_results
 
 
 def _tandf_csv_rows(response: Mapping[str, Any]) -> list[list[str]]:

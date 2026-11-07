@@ -51,7 +51,7 @@ def build_isolated_live_env(
 
     env.setdefault(
         "PAPER_FETCH_BROWSER_COMPONENT_CACHE",
-        str(resolve_user_data_dir(env) / "flaresolverr"),
+        str(resolve_user_data_dir(env) / "byparr"),
     )
     isolated_root = Path(tempdir.name)
     env["XDG_DATA_HOME"] = str(isolated_root / "data")
@@ -96,16 +96,9 @@ def build_isolated_live_env(
 def require_browser_or_skip(testcase, env: Mapping[str, str], *, provider: str) -> None:
     if importlib.util.find_spec("playwright.sync_api") is None:
         testcase.skipTest("Playwright Python package is not installed.")
-    backend = selected_backend(env, provider=provider)
-    if backend == "camoufox" and importlib.util.find_spec("camoufox") is None:
+    selected_backend(env, provider=provider)
+    if importlib.util.find_spec("camoufox") is None:
         testcase.skipTest("Camoufox Python package is not installed.")
-    if backend == "flaresolverr":
-        from paper_fetch.providers.browser_runtime.chrome import discover_chrome
-
-        try:
-            discover_chrome(env)
-        except ValueError as exc:
-            testcase.skipTest(f"FlareSolverr dependency missing: {exc}")
 
 
 def require_camoufox_or_skip(testcase, env: Mapping[str, str]) -> None:

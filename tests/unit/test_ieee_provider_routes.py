@@ -325,7 +325,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
             }
         )
         client = IeeeClient(transport, {})
-        runtime = mock.Mock(backend="camoufox")
+        runtime = mock.Mock(backend="byparr")
         browser_result = browser_runtime.BrowserFetchedHtml(
             source_url=landing_url,
             final_url=landing_url,
@@ -337,7 +337,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
             browser_context_seed={
                 "browser_cookies": [{"name": "sid", "value": "one"}],
                 "browser_final_url": landing_url,
-                "paper_fetch_html_fetcher": "camoufox",
+                "paper_fetch_html_fetcher": "byparr",
             },
         )
 
@@ -361,7 +361,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
             attempt.browser_context_seed["browser_cookies"][0]["name"], "sid"
         )
         self.assertTrue(attempt.diagnostics["browser_attempted"])
-        self.assertEqual(attempt.diagnostics["browser_backend"], "camoufox")
+        self.assertEqual(attempt.diagnostics["browser_backend"], "byparr")
         mocked_load.assert_called_once()
         mocked_browser.assert_called_once()
         browser_kwargs = mocked_browser.call_args.kwargs
