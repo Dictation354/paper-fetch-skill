@@ -6,6 +6,24 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.4.0 - 2026-11-07
+
+### Unified Byparr and Camoufox browser routes
+
+- Use managed Byparr v2.1.0＋Camoufox for all browser publishers across articles, images, attachments, browser PDFs, preflight, and authentication, including Elsevier browser stages on macOS. Article and asset stages reuse the publisher context, manage their own pages, and release sessions on the owning thread.
+- Handle supported Cloudflare interstitials automatically. Navigation and click monitors follow the original pages, popups, iframes, and redirects; solving is serialized within the same context, and GET recovery permits at most one bounded retry. Preserve actual Response/Download objects, operation events, request deadlines, and cancellation; login, payment, and other challenges retain their access restrictions.
+- Prepare locked source and private dependencies on demand for source installs. Offline packages on supported platforms include complete upstream source, licenses, component manifests, digests, and adaptation notes in frozen snapshots, inventories, checksums, and SBOMs. Reuse Camoufox browser/fingerprint caches and provide unified post-install preparation and independent retries.
+
+### Configuration migration
+
+- Remove the FlareSolverr, system Chrome, and ChromeDriver routes. `PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` selects Byparr＋Camoufox; the old `flaresolverr` value fails explicitly and must become `auto` or `byparr`. Remove `PAPER_FETCH_CHROME_BINARY_PATH`; use `PAPER_FETCH_BROWSER_BINARY_PATH` for custom Camoufox executables. Replace old preparation options with `--prepare-byparr` or `--prepare-browsers byparr`.
+- Preserve existing state ownership: PNAS and Elsevier on Windows/Linux x64 retain filtered JSON with `auto|byparr`; explicit `camoufox` and other supported platforms/providers use native persistent profiles. State mode is independent of the backend name, and authentication directories are never merged or migrated automatically. Existing FlareSolverr state and historical capture provenance remain intact.
+
+### Dependencies and usage guidance
+
+- Refresh compatible Python and formula Node locks, including cachetools 8.0.0, CycloneDX BOM 8.0.1, PyMuPDF/PyMuPDF4LLM/pymupdf-layout 2.1, Pydantic 2.14.3, and Ruff 0.17.4; widen cachetools and CycloneDX BOM compatibility ceilings. Update private browser components to playwright-captcha 0.1.5, FastAPI 0.162.0, and Starlette 1.10.0 with locked dependencies.
+- Consolidate installation, browser, provider, extraction, and test guidance by topic. Correct Elsevier API-key/browser-state, arXiv enrichment, and AIP acquisition descriptions; streamline bilingual history and Skill guidance while retaining rule anchors, five presets, a self-contained Skill, and the PDF conversion-passthrough boundary.
+
 ## 7.3.6 - 2026-11-05
 
 ### Offline installation flow and logging fixes

@@ -45,7 +45,11 @@ class ByparrBackend(CamoufoxBackend):
         )
         runtime_context = kwargs.get("runtime_context")
         store = getattr(runtime_context, "artifact_store", None)
-        if store is not None and store.allows_auxiliary_artifacts:
+        if (
+            runtime_context is not None
+            and store is not None
+            and store.allows_auxiliary_artifacts
+        ):
             from ....logging_utils import redact_log_value
             from ....utils import sanitize_filename
 

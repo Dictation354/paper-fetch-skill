@@ -116,7 +116,9 @@ def test_all_prepares_only_supported_backends(monkeypatch):
     assert [call.args[0] for call in setup.step.call_args_list] == ["Byparr"]
 
 
-def test_byparr_scope_reuses_verified_component_and_retries_damage(tmp_path, monkeypatch):
+def test_byparr_scope_reuses_verified_component_and_retries_damage(
+    tmp_path, monkeypatch
+):
     root = tmp_path / "runtime"
     root.mkdir()
     ready = [True]

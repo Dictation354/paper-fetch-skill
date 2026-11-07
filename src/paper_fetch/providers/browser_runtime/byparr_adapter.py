@@ -351,7 +351,7 @@ class ManagedOperation:
                 # original challenge task is running. Drain all of them once.
                 if self.payload.get("command") == "arm" and not self.tasks:
                     await self.response_received.wait()
-                completed = set()
+                completed: set[asyncio.Task[None]] = set()
                 while pending := set(self.tasks.values()) - completed:
                     await asyncio.gather(*pending)
                     completed.update(pending)
@@ -376,7 +376,11 @@ class ManagedOperation:
             return
         self.closed = True
         self.expiry.cancel()
-        if self.runner is not asyncio.current_task() and not self.runner.done():
+        if (
+            self.runner is not None
+            and self.runner is not asyncio.current_task()
+            and not self.runner.done()
+        ):
             self.runner.cancel()
         for owner, event, handler in self.listeners:
             owner.remove_listener(event, handler)

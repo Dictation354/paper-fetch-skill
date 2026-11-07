@@ -16,24 +16,6 @@ import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
-def load_request_models():
-    """Bridge upstream's Playwright TypedDict for Pydantic on Python 3.11."""
-    from importlib import import_module
-    import playwright.sync_api as sync_api
-
-    original = sync_api.Cookie
-    if sys.version_info < (3, 12):
-        from typing_extensions import TypedDict
-
-        sync_api.Cookie = TypedDict(
-            "Cookie", original.__annotations__, total=original.__total__
-        )
-    try:
-        return import_module("src.models")
-    finally:
-        sync_api.Cookie = original
-
-
 def main():
     settings = json.loads(Path(sys.argv[1]).read_text())
     root = Path(settings["work_dir"])
@@ -128,7 +110,7 @@ def main():
 
 
 async def serve(settings, root, endpoint, node_process):
-    from playwright.async_api import async_playwright
+    from playwright.async_api import BrowserContext, async_playwright
     from byparr_adapter import ManagedOperation
 
     async with async_playwright() as playwright:
@@ -136,8 +118,8 @@ async def serve(settings, root, endpoint, node_process):
         stopped = asyncio.Event()
         browser.on("disconnected", lambda _: stopped.set())
         loop = asyncio.get_running_loop()
-        solver_locks = {}
-        operations = {}
+        solver_locks: dict[BrowserContext, asyncio.Lock] = {}
+        operations: dict[str, ManagedOperation] = {}
 
         def write_evidence(value):
             with (root / "operations.jsonl").open("a") as stream:

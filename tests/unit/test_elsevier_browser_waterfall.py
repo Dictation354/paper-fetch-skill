@@ -176,7 +176,9 @@ def test_macos_keeps_elsevier_browser_stages(monkeypatch, tmp_path):
 
     monkeypatch.setattr(sys, "platform", "darwin")
     monkeypatch.setattr(platform, "machine", lambda: "arm64")
-    config = load_runtime_config({"XDG_DATA_HOME": str(tmp_path)}, provider="elsevier", doi=DOI)
+    config = load_runtime_config(
+        {"XDG_DATA_HOME": str(tmp_path)}, provider="elsevier", doi=DOI
+    )
     assert selection.selected_backend({}, provider="elsevier") == "byparr"
     assert config.state_mode == "native"
     assert config.user_data_dir.name == "elsevier-camoufox"

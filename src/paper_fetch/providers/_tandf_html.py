@@ -1176,6 +1176,7 @@ def _fetch_tandf_csv_table_batch(
         )
     except Exception:
         return []
+    raw_results: object
     if isinstance(batch, list):
         raw_results = batch
     elif isinstance(batch, Mapping):

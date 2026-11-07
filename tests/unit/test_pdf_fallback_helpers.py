@@ -392,7 +392,9 @@ class PdfFallbackHelperTests(unittest.TestCase):
                 return FakeRequestResponse()
 
         request_context = FakeRequestContext()
-        page = types.SimpleNamespace(context=types.SimpleNamespace(request=request_context))
+        page = types.SimpleNamespace(
+            context=types.SimpleNamespace(request=request_context)
+        )
         with mock.patch.object(
             _pdf_fallback,
             "pdf_fetch_result_from_bytes",

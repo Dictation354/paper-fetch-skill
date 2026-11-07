@@ -6,6 +6,24 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.4.0 - 2026-11-07
+
+### 统一 Byparr 与 Camoufox 浏览器路线
+
+- 全部浏览器出版社统一使用受管 Byparr v2.1.0＋Camoufox，覆盖正文、图片、附件、浏览器 PDF、预检和认证；Elsevier 浏览器阶段也支持 macOS。正文与资产阶段复用同一出版社 context，各阶段管理自有页面，运行时在所属线程释放会话。
+- 自动处理受支持的 Cloudflare interstitial，导航和点击监控跟随原页面、弹窗、iframe 与重定向；同 context 串行解题，GET 恢复最多进行一次有界重试。保留真实 Response／Download、操作事件、请求期限与取消，登录、付费及其他挑战沿用访问限制。
+- 源码安装按需准备锁定源码和私有依赖；各支持平台离线包内置完整上游源码、许可证、组件清单、摘要和适配记录，纳入 frozen snapshot、inventory、checksum 与 SBOM。复用 Camoufox 浏览器和指纹模型缓存，安装后提供统一准备及独立重试入口。
+
+### 配置迁移
+
+- 移除 FlareSolverr、系统 Chrome 与 ChromeDriver 路线。`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND` 的 `auto`、`camoufox`、`byparr` 均选择 Byparr＋Camoufox；旧 `flaresolverr` 值明确报错，改用 `auto` 或 `byparr`。删除 `PAPER_FETCH_CHROME_BINARY_PATH`，自定义 Camoufox executable 使用 `PAPER_FETCH_BROWSER_BINARY_PATH`；旧准备选项改为 `--prepare-byparr` 或 `--prepare-browsers byparr`。
+- 保留既有状态归属：Windows/Linux x64 的 PNAS、Elsevier 在 `auto|byparr` 下继续使用过滤后 JSON；显式 `camoufox` 和其他支持的平台/provider 使用原生持久目录。状态模式独立于后端名称，不自动合并或迁移认证目录；旧 FlareSolverr 状态和历史采集来源保留原样。
+
+### 依赖与使用说明
+
+- 更新兼容的 Python 与公式 Node 锁定依赖，包括 cachetools 8.0.0、CycloneDX BOM 8.0.1、PyMuPDF／PyMuPDF4LLM／pymupdf-layout 2.1、Pydantic 2.14.3 和 Ruff 0.17.4；放宽 cachetools 与 CycloneDX BOM 的兼容上限。私有浏览器组件更新到 playwright-captcha 0.1.5、FastAPI 0.162.0、Starlette 1.10.0，并锁定所需依赖。
+- 按主题集中安装、浏览器、provider、提取和测试说明，纠正 Elsevier API key 与浏览器状态、arXiv enrichment 和 AIP 获取描述；精简双语历史日志与技能说明，保留规则锚点、五个预设、自包含 skill 和 PDF 转换输出透传边界。
+
 ## 7.3.6 - 2026-11-05
 
 ### 离线安装流程与日志修复

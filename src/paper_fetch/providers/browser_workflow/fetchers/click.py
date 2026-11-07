@@ -481,7 +481,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                         if shared_browser
                         else contextlib.nullcontext()
                     ) as directory:
-                        if shared_browser:
+                        if directory is not None:
                             path = Path(directory) / "download"
                             download.save_as(str(path))
                         else:
