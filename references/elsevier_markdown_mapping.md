@@ -45,25 +45,13 @@ These section titles are intentionally omitted from body Markdown:
 - `tbl*`: table asset
 - `mmc*`, `si*`, `sup*`, `am`: supplementary material
 
-## Rendering Notes
+## Rendering Semantics
 
-- Appendix figures stay in appendix context even if the body text mentions `Fig. A1`.
-- `Supplementary data` placeholder displays are not treated as formulas.
-- `Additional Figures` / `Additional Tables` only contain still-unused body assets.
-- Assets already rendered inline are marked as consumed by the article model and must not be appended again at the end.
-- Multiple CALS `tgroup` elements are never forced into one rectangular grid. Each successful `exact` / `normalized` group avoids degradation; each group that truly falls back to a readable list contributes one `table_fallback_count` and one `table_layout_degraded_count`. A failed group does not downgrade successful sibling groups.
-- Shared LaTeX normalization removes only outer whitespace and paired math delimiters; formula content, including `\updelta` and `\mspace{Nmu}`, stays unchanged. Source TeX is validated with MathJax; when needed, conversion uses MathML paired with the same formula node.
-- Formula object images are fidelity fallbacks, not OCR input. A downloaded local path wins over the official remote URL; either image increments `formula_fallback_count`, keeps overall quality `degraded`, and does not increment `formula_missing_count`. A visible unavailable placeholder remains mandatory when neither an expression nor a matching object exists.
-- References extracted from XML keep original membership, order and numbering. After identity and full-text acceptance, missing DOIs may be filled from the parent Crossref record, a unique Crossref bibliographic match, or the identity-checked article's web bibliography. A reference key must have no bibliographic conflict; without one, full normalized title, first author, year and available volume/pages must agree. Completion evidence is kept in diagnostics/trace, existing DOIs are retained, and conversion remains free of network effects. Other missing fields remain missing.
-- HTML and XML references are displayed as sequential `1.` through `N.`; author/year source labels remain suffix annotations, and a year alone is never treated as a counter. The extracted HTML raw citation is reused by ArticleModel without adding another label.
-- HTML front-matter `.author-highlights`, `.Highlights` and `.highlights` containers are omitted structurally; body content with those classes, bilingual abstracts, graphical abstracts and XML textual Highlights remain.
-- HTML list items merge direct `.list-label` and `.list-content` into their first block. Explicit labels keep their original style; decorative bullets and empty leading blocks are omitted. Paragraphs, equations, figures/captions and nested lists stay within their owning item, including after shared Markdown image normalization. Continuation indentation follows the rendered marker width.
+User-visible rendering rules are maintained in [the Elsevier chapter](../docs/extraction-rules.md#elsevier):
 
-- HTML `.display` classification follows figure, table, attachment, then formula. Caption MathML stays inside its figure. Equations use source labels only, with `data-no-equation-label` for unlabelled source formulas; image fallbacks retain semantic loss counts.
-- Elsevier opts into the section walker's table-cell callback, preserving explicit breaks (including headers), scripts, links and math through nested sections and lists. The default shared path is unchanged.
-- HTML titles use ordered selector fallback (`h1 .title-text`, `h1.title-text`, `h1`) and omit the separate translated title. `div#p` followed by digits is a paragraph; underline does not split a sentence, and caption source blocks keep their boundaries.
-- Topics links become their source text. Exact `Unlabelled Image` captions are omitted while retaining the image. Attachments keep source file type, size and URL without repeated download instructions.
-- Source IDs become `elsevier-` HTML anchors after section headings and with their owning figures, tables, formulas, notes or inline content. Bibliography keys and explicit `ref-id-` aliases establish navigation; ordinal position never establishes a match. The optional provider finalizer resolves links against retained unique targets after reference/asset selection and token budgeting, ignores code/math/external links, and never runs for PDF conversion.
-- HTML/XML citation formatting and existing DOI completion append a known DOI only when missing, keeping source author/year annotations last. Pure XML conversion performs no network access.
-- Article-level `footnote` and `article-footnote` elements and HTML article notes retain source labels and complete content in `Article notes` before References. Table footnotes stay next to their table.
-- The 15 paired sources are selected by the fixture manifest. `scripts/refresh_elsevier_baselines.py` rebuilds only derived text, final article/acceptance outputs and their output hashes, preserving original captures, assets, acquisition facts and failure evidence.
+- [Formula expressions and locator images](../docs/extraction-rules.md#rule-elsevier-formula-rendering), with the shared [source TeX boundary](../docs/extraction-rules.md#rule-formula-latex-normalization).
+- [Supplementary materials](../docs/extraction-rules.md#rule-elsevier-supplementary-materials) and [appendix context](../docs/extraction-rules.md#rule-elsevier-appendix-context).
+- [Inline figure/table placement](../docs/extraction-rules.md#rule-elsevier-inline-figure-table-placement), [consumed asset deduplication](../docs/extraction-rules.md#rule-elsevier-consumed-figure-table-dedup), and [CALS table groups](../docs/extraction-rules.md#rule-xml-table-groups).
+- [Complex table spans](../docs/extraction-rules.md#rule-elsevier-complex-table-span-degradation), [structured references](../docs/extraction-rules.md#rule-elsevier-xml-references), and [graphical abstracts](../docs/extraction-rules.md#rule-elsevier-graphical-abstract).
+
+HTML-specific extraction, source anchors, article notes and accepted DOI completion are described in [ScienceDirect HTML parsing](../docs/extraction-rules.md#sciencedirect-html-专用解析). Pure XML conversion has no network effects.

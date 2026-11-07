@@ -30,7 +30,7 @@ classifiers = [
 ]
 dependencies = [
   "beautifulsoup4>=4.14,<5",
-  "cachetools>=6,<8",
+  "cachetools>=6,<9",
   "defusedxml>=0.7.1,<0.8",
   "filetype>=1.2,<2",
   "filelock>=3.20,<5",
@@ -72,7 +72,7 @@ full = [
   "trafilatura>=2.0,<2.3",
 ]
 dev = [
-  "cyclonedx-bom>=7,<8",
+  "cyclonedx-bom>=7,<9",
   "jsonschema>=4,<5",
   "markdown-it-py>=3,<5",
   "packaging>=24,<27",

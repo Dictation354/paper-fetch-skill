@@ -2,7 +2,7 @@
 
 > Fetch papers as agent-ready markdown — DOI/URL/title in, structured full text out. CLI · MCP · Skill.
 
-**Paper Fetch Skill** 是已知论文的 AI 阅读层：输入 DOI、URL 或标题，在你已有合法访问权限的范围内，返回结构化元数据、干净 Markdown 全文和可选图表资源，让 Codex、Claude Code 或任意 MCP host 从“只能读摘要”升级到“可以读全文”。
+**Paper Fetch Skill** 是已知论文的 AI 阅读层：输入 DOI、URL 或标题，在你已有合法访问权限的范围内，返回结构化元数据、Markdown 全文和可选图表资源，让 Codex、Claude Code 或任意 MCP host 从“只能读摘要”升级到“可以读全文”。
 
 ```text
 DOI / URL / title
@@ -121,16 +121,7 @@ agent 安装 skill 后，可以识别 Paper Fetch 的适用边界，按用户意
 
 官方安装包安装后，运行 `paper-fetch update` 即可更新到最新正式 Release：Linux/macOS 自动升级，Windows 下载校验后打开安装向导，并预选当前安装目录。同版或当前版本更新时直接退出。
 
-源码安装按能力分层：
-
-```bash
-python -m pip install .             # 轻量 core
-python -m pip install ".[browser]" # Camoufox/HTML
-python -m pip install ".[pdf]"     # PDF fallback
-python -m pip install ".[full]"    # browser + PDF
-```
-
-离线包校验、平台矩阵、升级、卸载、Python ABI、Gatekeeper 和 quarantine 处理见 [`docs/deployment.md`](docs/deployment.md)。
+源码安装可选择 core、`browser`、`pdf` 或 `full` 能力。安装命令、离线包校验、平台矩阵、升级、卸载、Python ABI、Gatekeeper 和 quarantine 处理见 [`docs/deployment.md`](docs/deployment.md)。
 
 ## 单篇、批量与 Agent 接入
 
@@ -164,9 +155,8 @@ paper-fetch fetch \
 
 Paper Fetch 不绕过付费墙或访问授权。可用性取决于 provider、用户凭据、机构访问状态和本机运行环境。
 
-- Elsevier 官方 XML/API 和部分 PDF fallback 需要从 <https://dev.elsevier.com/> 申请 `ELSEVIER_API_KEY`。
-- 部分 provider 需要 Camoufox browser runtime 或用户已有的合法登录状态。
-- 安装器默认准备平台支持的浏览器，提供 `--skip-browser-prepare` / `/SKIPBROWSERPREPARE`。运行时首次使用后端才准备，HTTP 和缓存命中不准备；成功检查后 24 小时内复用，失败或取消允许下次重试。配置与离线交付见 [浏览器安装](docs/browser-backends.md#安装)。
+- Elsevier API 路线使用从 <https://dev.elsevier.com/> 申请的 `ELSEVIER_API_KEY`；ScienceDirect 浏览器路线使用浏览器访问状态，API key 不赋予浏览器访问权限。
+- 浏览器路线使用受管 Byparr＋Camoufox；登录或订阅权限仍由用户提供。安装器默认准备平台支持的浏览器，准备、跳过和独立重试命令见 [部署指南](docs/deployment.md#浏览器安装与准备)。
 - `paper-fetch doctor` 只做本地静态诊断；`paper-fetch browser-preflight` 才会启动浏览器并访问 provider 页面；需要建立或更新登录状态时运行 `paper-fetch auth <provider>`。
 
 ```bash
@@ -181,7 +171,7 @@ paper-fetch auth wiley
 
 - 只负责已知论文的身份解析、全文获取、验收和报告，不替代开放式主题检索、文献推荐或综述生成。
 - 结构化公式转换依赖源站提供 MathML/TeX；只有图片或 PDF 排版信息时，不承诺恢复可靠 LaTeX。
-- 新 provider 以 runtime bundle、provider-local 测试和代表性 golden replay 验证获取契约及 HTML/XML 内容；PDF 转换输出保持原样，质量不属于项目修复或验收目标。见 [`docs/adding-a-provider.md`](docs/adding-a-provider.md) 和 [PDF 转换边界](docs/extraction-rules.md#rule-pdf-conversion-boundary)。
+- PDF 转换输出保持原样，不做格式清洗或内容修复，见 [PDF 转换边界](docs/extraction-rules.md#rule-pdf-conversion-boundary)。
 
 ## 文档
 

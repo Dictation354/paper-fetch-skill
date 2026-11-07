@@ -71,17 +71,4 @@ fallback 仅用于展示，不能进入可信 metadata；缺失题名可由既�
 
 ## 测试台账与实际读取审计
 
-`tests/test-evidence.json` 使用 v2 模块默认分类，仅不同契约的测试写 `overrides`。
-新增普通测试继承模块默认，无需逐函数登记；失效模块、override 或跨模块引用由
-`test_evidence_ledger_integrity` 检查。声明中的 `scope` 和 primary roles 描述断言范围，
-不能靠改标签绕过证据要求。
-
-`template_gap` 声明需要 `template_review={status,scope,evidence_tests,remaining}`：
-`mechanism` 仅证明局部机制，`covered` 关联该范围的离线内容测试，`partial` 列出具体缺口。
-只有 `partial` 可有非空 `remaining`；引用须指向已登记的内容测试，不能用机制或 live
-测试代替。review 不改变测试 kind 或资产来源。
-
-`tests.support.test_evidence` 审计收集、fixture、模块加载、参数化、实际文件读取与共享
-缓存；`evidence_cache` 和跨 worker 的 golden cache 必须传播 read set。审计证明使用了
-哪些来源，不能判断断言含义或证明逐字验证。live 声明 `live_response`，离线文件审计
-不会认证线上响应；收集 live 测试也不代表执行过 live。
+模块分类、`template_review` 与实际读取审计统一见 [测试说明](../README.md#证据台账)。来源声明不能代替原文断言，live 的 `live_response` 也不由离线文件审计认证。

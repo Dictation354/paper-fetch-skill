@@ -39,7 +39,7 @@ acceptance v2 字段 `target="supplementary"`、`content_requested=false`，`con
 - 配置或依赖问题使用 `provider_status` / CLI `doctor` 静态检查；需要真实链路证明时运行 MCP `browser_preflight` / CLI `paper-fetch browser-preflight`。静态 `ready` 不是远端页面健康或访问授权证明。用户要求认证或 fetch/preflight 返回认证需求时，使用 `paper-fetch auth <provider>` 进入人工验证。
 - 未传 `provider` 时，MCP 与 CLI 都检查 runtime catalog 中全部 browser provider 的内置样例。诊断已知目标时显式限定 provider；不默认执行 live 工具。
 - `test_url` 和 `storage_state_path` 只允许与一个显式 `provider` 一起使用。`test_url` 必须是无内嵌凭据的 HTTP(S) URL；`timeout_ms` 范围为 `1..600000`。`save_storage_state=false` 关闭 JSON 导出；原生状态模式仍可更新持久目录，JSON 状态模式不保存新的 JSON。默认 `true` 可创建或原子更新过滤后的 JSON。`browser_user_agent` 保持未设置，当前预检拒绝非空覆盖值。
-- 工具 annotations 为 open-world、非只读、非 destructive、非 idempotent：它会使用选定的 browser backend 打开出版社页面，也可能写 storage-state。它不调用 PDF fallback，且 `auth_attempted=false`；challenge、验证码、付费或登录边界不会被自动绕过。
+- 工具 annotations 为 open-world、非只读、非 destructive、非 idempotent：它会使用选定的 browser backend 打开出版社页面，也可能写 storage-state。它不调用 PDF fallback，且 `auth_attempted=false`；支持的 Cloudflare interstitial 由受管 Byparr 自动处理；登录、付费和其他验证仍遵守既有访问边界。
 - preflight 启动前自动准备 managed runtime；静态诊断仍只读，缺少 Python 依赖返回 `not_configured`。具体机制归[环境参考](environment.md#运行时准备与授权)。
 - 每个 provider 独立返回 `ready`、`challenge`、`auth_required`、`network_timeout`、`extraction_error`、`runtime_error` 或 `cancelled`，并给出唯一 `status/reason_code/stage/message/next_action` 契约。前一个 provider 的 challenge/runtime failure 不会删除其它已完成结果；取消会保留取消前的结果，并停止调度后续 provider。
 - `detail="compact"` 的每项严格只有 `provider/status/reason_code/stage/message/next_action`；`full` 另含 provider label、脱敏目标/最终 URL、title、storage-state 保存诊断和 browser/page diagnostics。顶层始终显式报告 `pdf_fallback_attempted=false`、`auth_attempted=false` 和逐状态汇总。

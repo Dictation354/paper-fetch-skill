@@ -35,11 +35,6 @@ in component-manifest.json and installed privately; no Selenium, Chrome or
 ChromeDriver is used. The upstream Python 3.14 packaging restriction and
 Camoufox 0.4 constraint apply to its standalone distribution; this adapter runs
 its source on the project's CPython 3.11–3.14 matrix with Camoufox 0.5.9.
-On Python 3.11, the request-private importer supplies a typing_extensions
-TypedDict with the exact Playwright Cookie fields while loading upstream models;
-Pydantic requires this backport below Python 3.12. The Playwright module alias
-is immediately restored. No shared installation or upstream file is modified.
-
 The captcha package is copied to a request-private directory before import,
 including its writable addon registry. The verified component is never mutated.
 The parent owns request deadlines, cancellation and process-tree cleanup;

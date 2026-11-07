@@ -43,7 +43,7 @@
 | `cancelled` / `request_cancelled`：用户、宿主或 cooperative cancellation 终止 | 用户明确恢复任务后再开始新的尝试；批量先保留 cancelled/not-scheduled index | 未恢复、任务已过期，或达到 attempt 3 | 已完成/取消/未调度 index、产物、恢复条件、attempt |
 | 未分类 `error`：结构化字段不足，且不匹配上述类别 | 先收集 `reason`、trace、provider status 与实际产物；只有诊断导出具体参数/状态变化时重试 | 无可执行变化、同错重复，或达到 attempt 3 | `status/code/error_category`、`reason`、provider、trace/产物、诊断和 attempt |
 
-`aws_waf_challenge` / `cloudflare_challenge` 是等待 provider readiness 后仍存在的确定性验证页。只有合法 browser profile/storage state、网络授权或人工验证状态发生变化时才可重试；不得把初始 HTTP 202、隐藏 `noscript` 文案或单独 REST 请求当成最终结论，也不得自动绕过 challenge。报告应保留 `status=challenge`、精确 reason code、`challenge_provider`、`legacy_reason_code`、HTTP 状态、readiness trace、页面关闭前采集的脱敏诊断和 attempt。
+`aws_waf_challenge` / `cloudflare_challenge` 是受管后端完成支持的自动处理并等待 provider readiness 后仍存在的确定性验证页。只有合法 browser profile/storage state、网络授权或人工验证状态发生变化时才可重试；不得把初始 HTTP 202、隐藏 `noscript` 文案或单独 REST 请求当成最终结论，也不得自动绕过 challenge。报告应保留 `status=challenge`、精确 reason code、`challenge_provider`、`legacy_reason_code`、HTTP 状态、readiness trace、页面关闭前采集的脱敏诊断和 attempt。
 
 ## 降级结果和质量警告
 

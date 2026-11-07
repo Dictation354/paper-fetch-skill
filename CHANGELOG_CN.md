@@ -14,7 +14,6 @@
 - 按组件保存最新最终结果，进度状态仅实时显示；Python 校验明确报告就绪或不支持，已解决的缺项不再残留。浏览器结果增加稳定总体状态，只有选中的受支持后端全部就绪才报告成功。
 - 统一 Linux、macOS 与 Windows 完成提示：清除旧结果，成功显示完成状态与结果路径，失败或取消保留核心安装并提供独立重试命令，跳过时显示手动准备入口。明确默认浏览器准备可能联网，跳过仅影响安装阶段，运行时按需准备保持不变。
 - texmath smoke 改用捕获输出的 `--version`，成功静默、失败输出诊断；图片工具只报告一次带转换证据的就绪状态。仅在安装准备检查中将已知 Canvas/WebGL 随机回读警告缩为一行，保留指纹配置及其他警告。
-- 同步浏览器与部署说明、macOS 单次准备契约及回归测试。
 
 ## 7.3.5 - 2026-11-05
 
@@ -22,7 +21,6 @@
 
 - 固定的 fpgen 模型下载请求失败时，回退到 GitHub 官方 Release API，获取同一 tag 和文件名的资产；保留 Camoufox 对压缩包及每个模型文件的 SHA-256 校验，校验失败不触发回退。
 - 普通和持久 context 均在启动 Playwright 前准备指纹模型，覆盖自定义浏览器 executable，避免下载失败后产生已启动 Playwright 连接的退出清理报错。
-- 同步浏览器准备文档、macOS 适配契约和回归覆盖。
 
 ## 7.3.4 - 2026-11-04
 
@@ -47,7 +45,6 @@
 ### 运行时与批量资源归属
 
 - CLI/MCP 通过共用执行会话管理批量请求归属、DOI 分组、结果分发与取消屏障。子请求状态保持独立，provider client 按需构造，浏览器会话在所属 worker 线程关闭。
-- 将不可变 provider 契约与 catalog 装配分离，将模型结构编解码从 MCP 缓存迁出，保留输出结构、缓存兼容和共享 quality 数据。同步浏览器、安装、架构说明与回归覆盖。
 
 ## 7.3.0 - 2026-11-03
 
@@ -68,11 +65,11 @@
 ### 浏览器版本选择
 
 - browser/full extras 升级至 `camoufox==0.5.9`。`official/prerelease` 沿用上游排序，从正式版和预发布版中选择最新兼容浏览器；`official/stable` 仍仅接受正式版。本地 pin 复用采用相同渠道规则，保留版本/SHA pin、自定义 executable、更新间隔、进程锁与失败回退。
-- 同步浏览器文档、CLI/MCP、Skill 指引和 macOS 适配契约。原生双 context gate 允许复用预置正式版或预发布版，移除已删除的扩展下载函数钩子，继续要求复用预置 runtime 与 fpgen 模型。
 
 ### 依赖更新
 
 - 刷新 23 个兼容的锁定 Python 依赖，包括 Pydantic 2.14.2、python-dateutil 4.0.0、PyObjC 13.0、pytest 9.2.0、mypy 2.4.1 和 Ruff 0.17.3。保留 Playwright 1.62.0、trafilatura 2.2.0 及现有兼容约束。
+- 原生 dual-context gate 可复用兼容的 stable/prerelease build，删除过时 addon 下载 hook，保留 runtime 与指纹模型复用。
 
 ## 7.2.5 - 2026-10-29
 
@@ -84,7 +81,7 @@
 ### Linux 与 macOS 原地更新
 
 - 替换受管组件前，在目标文件系统暂存完整新版并验证；运行时 marker、安装后必需的 skill 校验及已启用的 smoke 检查均在提交前完成。失败时恢复旧组件并保留原退出码，回滚失败则保留备份并报告位置。
-- 运行时替换保留文献、用户自建文件和环境文件；成功后清理备份及源码/构建残留，再更新配置和宿主集成。同步 macOS 适配契约与部署说明。
+- 运行时替换保留文献、用户自建文件和环境文件；成功后清理备份及源码/构建残留，再更新配置和宿主集成。
 
 ## 7.2.4 - 2026-10-27
 
@@ -117,12 +114,11 @@
 ### 浏览器更新间隔
 
 - Fetch、认证、preflight 和直接准备调用共享滚动 24 小时的托管 Camoufox 更新检查记录。间隔内复用有效本地浏览器；缺失、损坏或不兼容时立即准备。检查失败也计时，跳过不延长间隔，取消不记录为完成；渠道、版本/SHA pin 或 Camoufox Python 包变化后重新判断。
-- 在既有缓存锁内校验更新记录的路径归属和时间戳。记录缺失或无效时重新检查；写入记录失败保留准备结果，并向 stderr 报告诊断。同步浏览器文档、随包 Skill 指引及 macOS 契约。
+- 在既有缓存锁内校验更新记录的路径归属和时间戳。记录缺失或无效时重新检查；写入记录失败保留准备结果，并向 stderr 报告诊断。
 
 ### PDF 依赖兼容性
 
 - PDF extras 升级至 PyMuPDF 2.x 和 PyMuPDF4LLM 2.x，PyMuPDF、PyMuPDF4LLM 及 pymupdf-layout 均锁定为 2.0。保留上游转换输出和既有资产路径处理，不增加项目层格式清洗或内容修复。
-- 刷新存档 PDF 基线与转换透传覆盖。真实 PDF 转换和进程契约归入 integration，整篇回放归入 golden，并阻止 unit 测试通过转换器别名调用真实转换。
 
 ### 维护
 
@@ -135,12 +131,11 @@
 
 - 将 browser/full extras 固定为 `camoufox==0.5.8`，托管浏览器默认跟踪 `official/prerelease`。通过 Camoufox 官方发现机制选择当前平台最新兼容版本，不自动升级 Python 包。保留显式渠道、版本/SHA pin 及自定义 executable，并在既有缓存锁内迁移仅有旧 active 的配置。
 - 每次 CLI、MCP 和 Python API 抓取开始时检查并准备浏览器，包括纯 HTTP 请求和缓存命中。批量调度前统一准备一次，子任务及浏览器启动复用该结果，独立调用重新检查。更新失败时复用有效本地浏览器；没有可用浏览器时保留准备错误并继续 HTTP／缓存流程，实际需要浏览器时报告失败。core 缺少浏览器依赖或使用自定义 executable 时跳过托管更新；静态诊断保持只读，保留取消传播与批量终态记录。
-- 同步浏览器文档、Skill 指引及 macOS 契约。原生 gate 使用项目准备逻辑预置兼容 prerelease 和指纹模型，再复用该版本验证两种 context 模式。
 
 ### Oxford 行内图片
 
 - 按 Oxford 原文位置保留图片、标识、图注和子图，避免在文末重复追加图片资产。每张原图只下载一次，原图失败时使用可用预览，无法获取资产时保留明确诊断与降级验收。
-- 为 `10.1093/nsr/nwae442` 补充存档原文及原图回归覆盖，并增加图片归属、签名资产身份的最小契约测试。
+- 原生 dual-context gate 通过项目 preparer 准备兼容 prerelease 浏览器与指纹模型。
 
 ## 7.2.0 - 2026-10-23
 
@@ -154,15 +149,12 @@
 ### Codex skill 安装
 
 - Codex 用户级 skill 安装到 `~/.agents/skills/paper-fetch-skill`，项目级安装到 `.agents/skills/paper-fetch-skill`；Windows 使用对应用户目录。新的 skill 目标不再由 `CODEX_HOME` 决定，MCP 配置位置保持原契约。
-- 新 bundle 校验成功后才清理同 scope 旧副本。源码安装还兼容原自定义 `CODEX_HOME` skill 路径；卸载处理新旧目录，`--check` 保持只读并检查新目录。同步 Unix/Windows 生命周期验证与 macOS 适配契约。
+- 新 bundle 校验成功后才清理同 scope 旧副本。源码安装还兼容原自定义 `CODEX_HOME` skill 路径；卸载处理新旧目录，`--check` 保持只读并检查新目录。
 - 精简 skill 触发描述和入口说明，更新 UI 元数据及浏览器准备提示；保留自包含 bundle、七份主题参考和自动发现。
 
 ### 维护
 
 - 将锁定的 certifi 更新为 2026.10.19，修复发布依赖审计发现的 PYSEC-2026-4320。
-
-- Provider 专用 DOM/Markdown 行为通过 typed hooks 注册，共享 Science/PNAS 补充材料 scope 拆分与已验证来源对象链接实现。保留既有 provider 路线、访问边界、预设和统一验收。
-- 将可执行审阅契约、样本清单、源哈希及公式回放证据移入已登记的 scenario fixture，保留稳定用例 ID 和正向原文断言，移除对历史审阅报告及固定样本篇数的依赖，并归并重复维护文档。
 
 ## 7.1.1 - 2026-10-15
 
@@ -176,7 +168,7 @@
 ### 维护
 
 - arXiv 可选 Atom 元数据补充限制为一次请求尝试、10 秒 I/O 超时；普通网络失败保留已获取全文，取消与访问限制继续传播。独立元数据查询沿用原策略。
-- 在当前抓取范围内复用 HTML availability 与付费墙分析，增加请求及浏览器阶段耗时诊断，并在对象 repr 中隐藏运行时环境变量值。补充离线浏览器、资产调度、隐私与 live 验收回归覆盖。
+- 在当前抓取范围内复用 HTML availability 与付费墙分析，增加请求及浏览器阶段耗时诊断，并在对象 repr 中隐藏运行时环境变量值。
 
 ## 7.1.0 - 2026-10-11
 
@@ -185,7 +177,6 @@
 - Science、Wiley、PNAS、IEEE、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、AIP 和 Taylor & Francis 的浏览器补充文件改为串行点击文章页或附件目录中已有的控件下载。点击失败保留逐文件诊断，不再回退 HTTP 直链或 browser context request；纯 HTTP 分支和正文图片下载策略沿用现有行为。
 - 下载事件和内联文件响应必须匹配本次控件目标及其重定向链。记录点击页、原始链接和最终地址，复用请求期限、取消、字节与类型验收、下载预算及原子落盘；每次尝试结束后恢复文章页、关闭本次 popup 并移除监听器。
 - 保留各出版社的控件处理：Wiley supporting accordion、IOP 附件目录与 ID、IEEE Media 标签及文件名／附件 DOI 控件、Annual Reviews Supplemental 标签，以及 MDPI 可见链接或 supplementary modal。IEEE 跟踪参数不同的下载地址对应到已发现的同一附件，MDPI 保留模态框中实际点击的原始版本链接。
-- 增加 unit、离线 Camoufox integration、golden 覆盖，以及可显式启用的串行 live 专项验收，记录已验收文件、哈希、点击来源和失败。访问阻断、缺少附件及缓存结果不计为 live 下载成功。
 
 ### 维护
 
@@ -197,12 +188,11 @@
 ### 修复——Science 引用加载
 
 - 使用 DOM 引用覆盖检查和一次原生滚动，等待延迟出现的 Science 参考文献列表及分批加载的引用。展开控件和轮询共用剩余请求预算，最多等待 10 秒；展开动作超时后继续检查，预算耗尽时报告实际缺失的引用目标。
-- 增加延迟加载、列表持续增高的 unit 和离线 Camoufox 回归，以及 `10.1126/science.ady3136` 的 headless、headed live 验收：71 条引用、5 张本地正文图片和完整 acceptance。
 
 ### 维护
 
 - 锁定的 Camoufox 更新至 0.5.8，同步其配对浏览器 `official/156.0.1-beta.36` 的说明。兼容范围内的锁定依赖更新为 cachetools 7.2.1、filelock 4.0.12、platformdirs 4.12.4、iniconfig 2.3.1、jsonpointer 3.2.0、opentelemetry-api 1.45.1、orjson 3.13.0 和 tomli 2.5.0。
-- 保留 trafilatura 2.2.0 和现有 `<2.3` 上限：隔离验证确认 2.3.1 仍会改变行内 LaTeX 公式和表格引用的 Markdown 转义。新增公式下划线和引用方括号的最小 renderer 回归，并同步兼容性说明。
+- 保留 trafilatura 2.2.0 和现有 `<2.3` 上限：隔离验证确认 2.3.1 仍会改变行内 LaTeX 公式和表格引用的 Markdown 转义。
 
 ## 7.0.3 - 2026-10-05
 
@@ -215,7 +205,6 @@
 
 - 准备 texmath 时，`cabal update` 最多尝试三次，失败后分别等待 2、4 秒。连续更新失败仍停止 Cabal 编译，离线构建仍拒绝缺失 texmath；编译本身不重试。外部工具失败时输出受限长度的日志尾部，同时保留完整临时构建日志，便于排查发布失败。
 - 刷新锁定的 Python 依赖，包括 MCP 2.3.0、filelock 4.0.11、Ruff 0.16.10 和 mypy 2.4.0。Camoufox 使用 fpgen 替代 BrowserForge。trafilatura 限定为 `>=2.0,<2.3`（锁定 2.2.0），避免 2.3.0 改变既有公式及表格引用的 Markdown 转义。
-- 在隔离应用目录后初始化测试配置，适配显式渠道浏览器 fixture，隔离 PDF fallback 的 DNS mock，声明已采集源文件的 UTF-8 编码，并补齐新版 mypy 要求的类型标注。批处理完成顺序测试改用明确的事件同步，避免依赖短暂休眠推断线程调度顺序。
 
 ## 7.0.2 - 2026-09-27
 
@@ -233,17 +222,13 @@
 - Taylor & Francis 图片导航改为等待响应提交后验收图片字节，避免反复等待 `DOMContentLoaded` 超时而丢弃原始响应、转入 canvas 输出。
 - Elsevier XML 组装现在保留已下载图、表和补充文件的耗时、尺寸、下载层级、获取器及来源信息。浏览器图片诊断正确记录实际 Camoufox 后端，不再出现字符串 `"None"`。
 
-### 维护
-
-- 整合 provider、浏览器、部署和测试 fixture 文档，记录资产审计的范围与限制。补充 Wiley 浏览器会话和图片原始响应回归覆盖，并在 MCP 缓存单元测试中隔离本机工具探测。
-
 ## 7.0.0 - 2026-09-19
 
 ### 升级行为
 
 - 确认同篇正文付费墙或官方全文 API 的 entitlement 拒绝后立即停止后续候选、重试、PDF 恢复和资产下载。允许降级时保留已收到的摘要及元数据，并返回真实来源和访问诊断；隐藏提示、其他论文提示、普通 403 和单个资产拒绝不据此阻断可读正文。
 - PDF 正文以现有 `pymupdf4llm` 转换结果为边界，停止项目层的格式清洗和内容修复。不要依赖旧版修整后的标题、空白、引用或表格格式；允许的落盘资产路径改写仍保留。
-- 提取修订号由 5 升至 6，6.2.4 及更旧的提取缓存不再作为当前结果命中，升级后的首次请求可能重新获取论文；已有文件不主动删除。迁移步骤见 [7.0 升级说明](docs/migration-v7.md)。
+- 提取修订号由 5 升至 6，6.2.4 及更旧的提取缓存不再作为当前结果命中，升级后的首次请求可能重新获取论文；已有文件不主动删除。迁移步骤见 [7.0 升级说明](https://github.com/Dictation354/paper-fetch-skill/blob/v7.0.0/docs/migration-v7.md)。
 
 ### 正文与资产修复
 
@@ -253,8 +238,6 @@
 ### 维护与兼容性
 
 - CLI/MCP 参数、五个预设和公开结果格式沿用现有契约；本次主版本变化集中在访问终态、PDF 输出与缓存升级行为。
-- 测试明确分为 unit、integration 和 golden；保留自动证据审计及缓存/worker 传播，以来源绑定的固定预期替代复杂测试解析器。重复实体合并而采集事件保留，日期报告退出可执行测试输入。
-- 精简文档导航、重复部署/发布说明及提取规则中的重复维护信息；发布前完整 golden 仍在本地显式执行，原生安装包继续由既有平台门禁验证。
 
 ## 6.2.4 - 2026-09-13
 
@@ -362,13 +345,10 @@
 
 - 文章来源 provenance 现在读取 catalog 中各 route 显式声明的 source：优先按精确 route name 选择，并兼容只携带 route kind 的 PDF recovery payload。ACS、Science、PNAS 的通用 source 与 Wiley 共用的 browser source 保持不变。
 - Browser landing page、provider 与资产 URL 检查统一复用 catalog hostname matcher，同时保留 provider domain、route host、候选构造集合及 MDPI/Frontiers 精确网络边界的不同语义。
-- 删除 AMS/MDPI HTML compatibility facade、Springer 专用引用再导出、15 个无人消费的 browser-workflow 根私有导出、旧 Playwright 命名 PDF alias，以及两个未使用的 fast-browser wrapper。保留的 Springer facade 现在是静态兼容导出，调用时不再改写 canonical extraction 模块。
-- 删除未使用的即时 `browser_runtime.save_storage_state` facade 及其 backend/path 转发链。Browser fetch 与 preflight 仍会先暂存 provider 范围内的状态，并且只在验收通过后原子提交。
 
 ### 变更——schema 与仓库维护
 
 - MCP request schema 现在让 fetch、batch、cache 与 browser-preflight 路径字段复用同一个精确 optional-string 规范化 helper；路径值仍只去除首尾空白。同时删除 article-source rendering 中返回值相同的无效分支。
-- 删除 240 个已跟踪的一次性 live 调查产物。维护者 live 验证改写到被忽略的 `failures/` scope；长期仓外保留只需 JUnit 与 `live-acceptance.json`，IEEE 受保护资产专项再保留 `asset-hashes.json`。
 
 ## 6.1.2 - 2026-09-03
 
@@ -396,7 +376,6 @@
 - 异步内联图片抓取只在复现所请求图片确有需要时把已有 article 字段保留到内部缓存；旧的不完整 sidecar 会安全 miss，公开 structured content 仍隐藏未请求的 article。
 - Provider 资源 hook 对正文的更新现在会一致传播到 article 构建、workflow 落盘、acquisition 和 provider 返回正文。
 - 删除未使用的 KaTeX 运行时依赖及安装检查；打包的 Node workspace 只保留 MathML→LaTeX 转换器及其传递依赖，同时维持 KaTeX 兼容的规范化目标。
-- 使 CLI、MCP、浏览器、cache、provider、部署、macOS 与提取文档重新符合仍然存在的能力和契约。
 
 ### 破坏性变更——命令、MCP、批处理与 manifest 接口
 
@@ -425,7 +404,6 @@
 
 - 用更小的 `docs/adding-a-provider.md` 流程取代 manifest/review/scaffold onboarding tree：定义 runtime bundle，添加 provider-local test，并加入代表性 golden replay 证据。删除 provider governance/drift/canary generator、递归 onboarding 自动化、Markdown review sidecar、live benchmark tooling 与生成式 route 文档。
 - 删除仓库 coverage-focus、complexity-budget gate 与打包的 `paper_fetch_devtools` 质量层。确定性的 unit、integration、provider replay、package、platform 与 live-test 入口继续保留在各自范围内。
-- 将静态 Skill 完整性验证从 runtime package 移至 `scripts/skill_integrity.py`。离线 builder/installer 直接验证 bundle 与已安装的宿主副本；`doctor` 现在只报告 runtime/provider 健康状态，不再接受 `--install-root` 或输出 installation-provenance 状态。
 
 ### 变更——发布与依赖 CI
 
@@ -434,20 +412,20 @@
 - 锁定依赖审计现在导出全部 extras，并让每个 `pip-audit` finding 直接失败，不再保留空的例外框架。
 - Python 3.11 与 3.14 boundary job 现在每个 Python 版本只构建一次 wheel，并分别 smoke 隔离的 core/full 安装。
 - Python distribution verification 现在检查 archive safety、必需 package/Skill payload、metadata、entry point 与完整 wheel `RECORD` 覆盖，不再维护签入仓库的精确源码 inventory。删除仓库根目录的旧 Windows PowerShell bundle installer；受支持的 Windows release artifact 仍是原生 setup executable。
+- 离线构建器/安装器通过 `scripts/skill_integrity.py` 校验随包和已安装 Skill；`doctor` 只报告 runtime/provider 健康状态，移除 `--install-root` 与 installation-provenance 状态。
 
 ## 6.0.4 - 2026-08-29
 
-### 修复——发布质量门禁
+### 修复——发布元数据
 
-- 将 XML tail 空白处理从共用行内渲染器中提取，保持 6.0.3 行为不变，同时使渲染器回到仓库复杂度预算内；并对 JATS 回归测试应用规范格式。
-- 为 6.0.4 重新生成机器可读 provider catalog，使其 tool-version 快照与项目元数据一致，并恢复 provider governance 同步。
+- 将生成的 provider catalog 工具版本与 6.0.4 项目元数据同步，保留 6.0.3 的 XML 空白处理行为。
 
 ## 6.0.3 - 2026-08-29
 
 ### 修复——XML 行内空白渲染
 
 - Elsevier/JATS 共用的行内转换器现在会在组装 Markdown 前折叠出版社 XML 中仅用于源码排版的空白。运算符和强调标记附近的源码折行不再造成错误强调或意外块级解析，同时显式换行元素与既有的分离斜体下标修复保持原有行为。
-- 含嵌入块的 JATS 段落同步应用相同空白规则。回归测试覆盖本次报告的 Elsevier `=`、`<` 案例以及真实 Frontiers、Copernicus XML；PLOS 共用修复后的 JATS 转换路径。
+- 含嵌入块的 JATS 段落同步应用相同空白规则。
 
 ## 6.0.2 - 2026-08-29
 
@@ -461,7 +439,6 @@
 ### 修复——发布流程
 
 - 稳定版发布现在直接使用已验证的远端 tag，不再把对应 commit 重复作为 `target_commitish` 传入；即使不可变 tag 构建期间默认分支继续前进，也不会触发 GitHub 的 workflow 权限拒绝。
-- 应用规范 formatter，同步移除无差异 `--ci` 模式后的抽取规则验证命令，并从受跟踪的发布源码中删除本地问题审计文件。
 
 ## 6.0.0 - 2026-08-28
 
@@ -469,7 +446,6 @@
 
 - Provider route 现在是 capability 唯一事实源。删除 provider 顶层 browser flag、自动 route 合成、源码树发现和动态 registry monkeypatch；内置 provider 由一份显式且保持 lazy import 的模块清单加载。
 - MCP 工具继续返回既有 `CallToolResult.structured_content` 成功/错误 payload，但 `tools/list` 不再发布 `outputSchema`。Browser capability 与 preflight 状态直接从运行时 owner 派生，未知 preflight 状态 fail closed。
-- 删除 `RawFulltextPayload.metadata`、`build_provider_registry`、无消费者 provider wrapper，以及未接线的 direct-HTTP/browser link helper；这些破坏性删除不提供弃用 facade。
 
 ### 变更——仓库工具与发布
 
@@ -477,7 +453,7 @@
 - Stable Release 精确公开九个安装包与 `SHA256SUMS`；Rolling prerelease 额外公开 `dependency-manifest.json`。Wheel、sdist、inventory、SBOM 与逐目标 evidence 仍作为构建期验证输入。
 - 用从项目元数据、workflow、installer manifest 和 release asset owner 派生事实的精简合同，替换历史 macOS ledger。
 
-不兼容 import 与协议变化见 [docs/migration-v6.md](docs/migration-v6.md)。
+不兼容 import 与协议变化见 [docs/migration-v6.md](https://github.com/Dictation354/paper-fetch-skill/blob/v6.0.0/docs/migration-v6.md)。
 
 ## 5.6.1 - 2026-08-27
 
@@ -489,77 +465,30 @@
 
 ## 5.6.0 - 2026-08-27
 
-### 修复——技能完整性、可复现测试与复杂度债务
+### 技能完整性与发布构建
 
-- 基于精确排序的普通文件清单，为静态 skill bundle 生成稳定的聚合 SHA-256/版本，实现内容寻址。源码、staging、离线 manifest 与宿主机已安装副本现在使用同一 verifier 拒绝缺失、多余、已更改、符号链接及特殊条目；规范的 `agents/openai.yaml` 改为随源码分发，不再因重新生成而形成永久漂移。
-- 为 Codex/Claude/Antigravity 共用安装器新增严格只读的 `--check` 模式，并正确查找 Codex 用户/项目作用域。源码与离线 `doctor` 诊断现在会对比仓库/随包 skill 和当前启用的 Codex 副本，公开预期/实际内容版本，并在启用的 skill 缺失或漂移时令整体 readiness 失败。
-- 在仓库指引、生成的 onboarding 与 CI 中，将常规测试命令统一为 `PYTHONPATH=src uv run python -m pytest ...`。当环境中的 MCP 主版本或必需的 trafilatura API 行为不兼容时，Pytest 现在会在 collection 前失败，并给出可直接执行的冻结 `uv` 修复命令；Python boundary controller 安装这套完整测试契约，而全新隔离 venv 仍分别证明 core 与 full wheel。
-- 通过归组既有 request/runtime state 并抽取保持行为不变的 browser、PDF、asset、HTTP stream、cache 与 MCP batch helper，在不放宽 threshold、ignore 或 suppression 的情况下消除全部 24 个复杂度回归。历史超预算清单从 55 个 symbol 单调降至 47 个，其中 Playwright C901 从 44 降至 40。
+- 静态 Skill 以排序后的 regular-file 清单 SHA-256 标识内容；源码、staging、离线 manifest 和 host 安装统一拒绝缺失、额外、变化、symlink 和特殊条目，直接交付规范的 `agents/openai.yaml`。
+- Codex/Claude/Antigravity 安装器新增只读 `--check`；`doctor` 显示预期/实际 Skill 版本，缺失或漂移的活动副本使 readiness 失败。
+- wheel/sdist 由可复用 `package.yml` 构建，验证精确清单和独立安装。Stable release 只执行发布产物构建，与九目标 frozen resolver 并行，不运行或等待远端 unit/普通 CI；完整本地 unit 验证仍是发布操作前提。普通 CI 使用可复用 `verify.yml`，Dependency refresh 运行完整 unit。
+- 将稳定标签解析为不可变 SHA，打包、依赖解析、离线构建、checkout、attestation 和发布统一使用该 SHA，发布前再次拒绝标签漂移。
+- 解析 Linux x86_64、macOS arm64 CPython 3.11–3.14 与 Windows x86_64 CPython 3.13 frozen snapshot；按实际 staging 生成依赖清单、内容摘要和 CycloneDX 1.6 SBOM，证据生成使用锁定项目 venv。
+- 固定并校验 Windows CPython 3.13.13 embeddable archive。稳定发布精确校验 wheel/sdist 及清单、九个安装器、十八个目标证据文件、合并依赖 manifest 与仅含 basename 的 `SHA256SUMS`。
+- 验证最终 Windows EXE 的安装、覆盖升级、用户数据保留和卸载；只允许残留 `offline.env`、`downloads/` 与用户数据样本。Windows tooling overlay 作为整体固定到同一 revision。
+- 更新兼容依赖，包括 MCP 2.1.1、imagesize 2.0.1 和 PyMuPDF4LLM 1.28.2；声明保留滚动兼容范围，lockfile 保留精确解析结果。
 
-### 修复——经验证的构建与发布供应链
+### 网络、缓存与输出行为
 
-- 将 Python wheel/sdist 构建拆到只接受不可变完整 SHA 的 reusable `package.yml`，保留精确 inventory、wheel/sdist 独立安装 smoke、密钥扫描和 artifact 上传。普通 CI 继续运行完整 unit/coverage/quality/integration/golden/平台门禁，Dependency refresh 继续运行完整 unit；Stable release 则只构建发布产物：Python package 与九目标冻结依赖解析并行，随后 offline installer 验证、Windows lifecycle、SBOM、checksum、attestation 和发布全部消费同一 tagged SHA。Release 不运行、也不等待远程 unit/普通 CI；下一版本和不可变新标签创建前，仍以本地完整 unit 命令作为发布操作者门禁。
-- 所有 workflow artifact 扫描现在都会显式选择该扫描步骤注入的凭据。真实 workflow token 的 raw 与 URL 编码检查保持不变，同时排除 `PGPASSWORD` 等无关 hosted-runner 默认值，避免其与 Windows 第三方 wheel 中的普通字节偶然匹配并误阻断发布。
-- 将完整质量矩阵抽取为一套可复用的 verify workflow，供常规 CI 与稳定版发布共同调用。稳定版 tag（包括 annotated tag）会 peel 到不可变 commit；验证、依赖解析、离线构建、发布 checkout、attestation 与 GitHub Release target 全部使用该精确 SHA，并在发布前执行最终 tag 漂移检查。
-- 稳定版发布现在会在同一次 run 中解析并合并全部九个目标的冻结依赖快照：Linux CPython 3.11–3.14、macOS arm64 CPython 3.11–3.14，以及 Windows CPython 3.13；随后以启用冻结依赖的方式调用 offline workflow。
-- 新增从实际 staging tree 派生的逐目标证据：已安装 Python distribution 及内容 digest、Node/Playwright package、Camoufox 交付状态、公式/图片/native 文件与嵌入式 runtime provenance。每个离线产物现在都会携带并上传实际 dependency manifest 和经验证的 CycloneDX 1.6 SBOM；release 不再用 lock export 冒充 staged evidence。
-- 将原生与发布离线 builder 绑定到仓库锁定虚拟环境（POSIX 使用 `.venv/bin/python`，Windows 使用 `.venv/Scripts/python.exe`），确保 CycloneDX 证据生成器始终复用已验证的开发工具链，不再依赖 runner 全局包。
-- 在 installer manifest 与平台合约中，将 Windows CPython 3.13.13 x64 embeddable archive 固定到 python.org 官方 URL 和 SHA-256；解压前会验证，并在 offline manifest 与 SBOM 中记录预期/实际 digest。
-- 为完整 archive 新增精确 wheel/sdist inventory。它会从结构上规范化唯一合法的 distribution root/`dist-info`/`egg-info`，要求 metadata 与 wheel `RECORD` 精确覆盖，并拒绝所有未知的 top-level、`.data`、package、source 或 metadata member。两个产物分别安装到独立 venv，并运行 CLI、import、MCP、resource 与已安装 skill smoke。
-- 稳定版发布现在会验证 checksum 前精确的 31 个 asset（两个 Python distribution、对应 inventory、九个离线 installer、十八个目标 evidence 文件及 merged dependency manifest），拒绝缺失、多余和 basename collision，将它们复制到平坦且排他的 namespace，并生成只含 basename 的 `SHA256SUMS`。资产与 checksum 文件执行 fsync，而 Windows 等不提供 POSIX directory descriptor 的平台只对目录 fsync 做 best-effort；滚动发布复用同一 offline asset-set checker。
-- 正式采用刷新后的兼容依赖图，包括 MCP 2.1.1、imagesize 2.0.1 与 PyMuPDF4LLM 1.28.2。tool payload 测试改为验证实际对外发布的 Draft 2020-12 JSON Schema，不再绑定 SDK 内部生成的 model；cache 授权测试兼容 SDK 包装或直接传播异常，同时继续 fail-closed；合成 PNG fixture 补齐解析器要求的 IHDR 字段，PDF exact golden 快照同步当前结构化提取结果。全部 Python、公式 Node 与 release resolver 依赖声明均使用可滚动的兼容范围，不再精确锁死 package 版本；lockfile 继续保存可复现的实际解析图。
-- 新增原生、串行的最终 Windows EXE lifecycle gate：静默安装、已安装 doctor/provider/formula/browser smoke、原地覆盖升级、用户数据保留、静默卸载，以及精确递归 residue allowlist。只允许残留 `offline.env`、`downloads/` 和 `downloads/user-owned.txt`；任何现有或未来的 managed file 都会令 gate 失败。不可变 Windows tooling overlay 现在会把 builder、evidence/lifecycle script、helper、installer manifest 与 Inno definition 作为同一组按 revision 固定的文件移动。
-
-### 安全——网络、凭据与日志边界
-
-- 恢复按 hostname 复用 urllib3 连接池，同时保留既有 `SafeRemoteUrlPolicy` 基线：每个 redirect hop 都检查 HTTP(S)、80/443、公网 DNS、无 userinfo、无 HTTPS downgrade，并在跨源重定向时剥离标准敏感 header。
-- Provider catalog 的 host 与 sensitive-header 声明不再自动成为网络授权。调用方显式给出的 `allowed_hosts` 仍按 fail-closed 执行；未请求 allowlist 时，Royal Society、IOP 与 AIP 的公网资产 CDN 使用基础 URL 策略。
-- 以标准 cookie jar policy 替换手工 browser-cookie matching，从而保留 host-only/domain、RFC path、secure、expiry、HttpOnly 与 SameSite 作用域。
-- 集中处理 human/structured log 中 URL/query/header/text secret 的脱敏，增加防御性 MCP filtering，并用一个引用计数 router 加 context-local request ownership 取代逐请求 global handler。Live 环境映射现在使用不显示值的 repr；所有 CI artifact/release 上传前都必须通过扫描器，扫描原始及 URL 编码 credential sentinel，且只报告变量名和文件路径。Bridge teardown 前会在锁内使 request target 失效，因此持有 context 副本的 worker 无法向已结束的 MCP session 或重叠请求发出消息；closed loop 会在构造 notification coroutine 前被拒绝。
-
-### 修复——能力作用域缓存的正确性与规模
-
-- 新增统一的 `CapabilityScopeBuilder`，仅纳入实际注入成功 context 的 API credential 与 browser state。Browser-backed scope 绑定 provider、backend、规范 storage-state path 与最终文件 digest；配置的空路径保持 public，而实际使用过的 state 绝不会写成 public。旧版仅基于 environment 的 digest 与既有 private sidecar 保持逐字节兼容。
-- `prefer_cache` 现在会在本地规范化已知 DOI，并在 resolver/provider enrichment 前检查精确 sidecar。Loader、`get_cached`、compact projection、cache-index listing、entry resource 与生成的 MCP resource 只允许 exact-private-to-public fallback。未变化的 DOI-local artifact 保留其独立证明的 scope，不再继承最新 canonical sidecar；缺失/旧版 provenance 与冲突的 sidecar scope 会 fail closed。每次 resource read 都会重新评估当前 API/storage-state capability 与 file/index integrity，因此撤销 capability 也会撤销已公开的 URI，无需重新同步 resource。
-- 将 cache discovery 与 hashing 移出 global index lock，限制 YAML front matter 读取量，持久化 stat/content fingerprint 以复用未变化文件，合并并发 refresh/rescan 更新，并以 incremental upsert 取代写入后的 rescan。对 50 个 DOI 执行批量或顺序刷新时，每个未变化 Markdown 文件最多打开一次。
-
-### 修复——原子提交、取消与批处理身份
-
-- 将 artifact、sidecar、Markdown、cache-index 与 run-summary 的发布统一置于 path-scoped lock、同目录唯一 staging file、flush/fsync、atomic replace 与一个可线性化 runtime commit fence 之后。非 overwrite 写入现在将相同内容视为幂等，并拒绝不同内容；显式 overwrite 允许串行化的原子替换。
-- 在每个同步/异步单篇 fetch 与 output stage 中贯穿同一个 runtime context。异步取消现在会封锁 commit、等待有界且独立的 grace period，并阻止迟到 worker 发布 artifact 或 progress；batch item 使用隔离的 child context，并关闭重复或未调度的 child。
-- Resolve/check output 现在保持与输入同序同长，包含稳定 index、terminal status/error/provider lane，以及真实的 terminal/not-scheduled progress。Title check 使用解析出的 provider lane，已知 DOI check 使用 local lane identity，避免一个 provider cooldown 阻断无关 lane。
-- 为 MCP 与 CLI batch fetch 新增 canonical DOI representative/fan-out execution，并提供跨请求共享的 DOI/request/scope/path singleflight key；waiter 的取消彼此隔离，result/error 也会安全复制。
-- 在 resume manifest 中将不可变 run semantics 与可覆盖 execution policy 分离。Concurrency 及 continue/retry/rate policy 可以安全变更，而有序输入、fetch/render/output semantics 与 tool version 保持固定；旧版内嵌 execution field 会在验证后迁移。
-
-### 修复——有界二进制资产与浏览器会话复用
-
-- 新增线程安全的逐文章 `AssetBudget`，由正文图、补充文件、direct/browser discovery、arXiv source decoding 与 image conversion 共享。默认最多保留 128 个文件、单文件 32 MiB、总计 256 MiB、6400 万像素和 4 个 worker，worker 数还会进一步受 route 限制。
-- 恢复 browser-owned image/file/PDF bytes，包括 `response.body()`、`arrayBuffer()`、`bodyB64`、canvas 与浏览器 download payload，同时继续执行 Content-Length/实际字节、MIME、像素、累计预算、取消、唯一 staging、fsync 与原子发布检查。Direct 401/403 最多进入一次真正的 browser-byte recovery；同 URL、同会话状态不会再次通过 direct HTTP 重放。
-- 按 completion order 持久化或回滚已完成 future，同时让轻量 result 保持输入顺序。触发致命 byte/file/pixel limit 时会移除全部 staging file、协作式停止 queued work 并保留第一条 diagnostic；外部 RuntimeContext cancellation 则继续传播。EPS/TIFF 与 arXiv PDF rendering 使用带输出 byte/pixel 检查的 path-to-path conversion；source archive 会在 name validation/deduplication 前统计遇到的每个 regular member，并以相同 member/aggregate limit 避免无界读取。Archive decoding 现在位于有界 `_arxiv_source_archive` module，且不放宽既有 `_arxiv_assets` complexity gate。
-- 连续 figure 与 supplementary 阶段按 hostname 复用共享连接池和 cookie jar。AMS、Annual Reviews 与 Springer 新增独立 `assets` route，并发上限为 2，且仍受全局上限 4 约束。
-- 为所有下载正文资源的 provider 补齐显式 `assets` route，默认单次 direct 超时 20 秒、route cap 2；可靠 browser recovery 的路线不追加瞬时 direct retry。每篇论文、每个 host 只允许一个首资源 direct probe；browser recovery 成功后，同源剩余资源复用已验证路径，状态不跨论文持久化。ACS/AIP 不再让单个 CDN 连接占用约 120 秒，MDPI 也不再为每张同源图片重复 403 direct 尝试。
-- 新增逐资产阶段计时：queue、candidate resolution、URL/DNS policy validation、connect-to-headers/TTFB、body stream、browser recovery、retry wait、conversion、save 与 total；browser context prepare/release 另列 stage timing。IEEE 自定义恢复在合并逻辑资产时保留相同 timing/route。报告只聚合阶段、终态、download tier 和质量原因，不持久化签名 URL。
-- Wiley 优先 `/doi/{doi}`；主文档 401/403 改为有界复核，只有正文连续稳定、页面 DOI 精确匹配、无 challenge/明确 no-access 且后续 Markdown/全文验收通过时才接受，返回与 trace 保留真实状态，失败会继续下一候选。Science 可复用已验收 preflight HTML 并阻断重资源；PNAS readiness 与 `#bodymatter` 解析器 selector 对齐。IEEE preflight 复用因三轮 live 未达到端到端收益门槛而撤回，逐资源计时保留。图片候选方面，arXiv source archive、Copernicus JATS `graphic` 和 AIP 最大 `srcset` rendition 优先官方原图；T&F 仅有官方 CMS preview 时保持现有质量，并与其它合法预览一样输出 `official_full_size_not_exposed` 或 `official_full_size_access_restricted`，不冒充 full-size。
-- Python、MCP、CLI、batch、cache fingerprint 与 manifest 新增可选严格正文资产验收 `require_local_body_assets` 和 `require_full_size_body_assets`。两项默认关闭，full-size 隐含 local；未满足时只把 asset/overall 降为 degraded，不会把已取得的全文改成 fetch failure。
-- HTTP 200 空文章壳现在提供可行动诊断：ACS 的主文档、失败请求/脚本、console/challenge signal 与页面/storage 指纹均有界且脱敏；route/profile/storage/page 状态完全相同时立即停止，只有 candidate、profile 或 storage state 改变时允许一次重试。Live preflight key 绑定 provider、规范 DOI、target 与 runtime fingerprint，成功和失败都会追加 terminal record。
-- Doctor provenance 拆为 `source_development` 与 `installation` scope。源码运行只审计 checkout bundle 与 active skill，不混入无关 PATH 或旧 offline root；显式 `--install-root` 与安装包运行仍执行严格 installation audit。
-
-### 修复——可执行 route、身份与 MCP 合约
-
-- 新增编译后的统一 `RouteExecutionPolicy`，作为 provider catalog 到 runtime 的边界。它组合 exact/suffix/base、API/CDN/template 与 route host，并驱动 HTTP/browser/PDF timeout、retry、QPS/rate wait、acceptance、asset scope 和 route concurrency。Oxford PDF、PLOS XML/DOI/asset 与 arXiv source archive 现在使用精确的 compiled route；provider-owned request 不再用并行常量覆盖。Catalog default 现在使用 runtime `dns_error` category，其中包括 Copernicus suffix host。
-- 对共享 transport scope 的 worker 强制执行 arXiv Atom 与 source asset 每 3 秒最多启动一次的节流。逐 scope 串行化 start gate 在排队时释放 host concurrency；确定性 fake-clock 覆盖证明，较晚到达的 `Retry-After` 会将 queued start 推迟到 10/13 秒，而不会同时放行，并继续保持 cancellation 可观察。
-- 只有 `asset_profile` 未设置时，才将 compiled route asset scope 作为默认 selector；显式 `none|body|all` 仍然优先。Route acceptance 现在评估相匹配的 identity、HTML、XML、PDF 或 audited/local-asset facet，未知 policy 会 fail closed。
-- 将 provider identity evidence 分为 strong 与 weak。过期或冲突 domain candidate 的 `no_access` 会保留用于诊断，但不再阻断 strong DOI provider；只有强确认的 access boundary 才会终止 waterfall。无 DOI acceptance 现在要求唯一且经过验证的 canonical landing identity，不再以 title 作为依据。
-- 补全已公开的 MCP v2 cache asset facet 与 batch artifact `route`/`failure_code` 字段，并增加 payload-key/schema subset contract。Provider registration 现在会检测 normalized alias、DOI prefix、exact/suffix domain 及 cross-overlap conflict；有意 overlap 必须具有不同 priority 和 reason，且绝不依赖 import order。
-
-### 修复——可执行 provider 证据与回归 gate
-
-- Provider governance 现在使用真实 corpus loader。只有同时具备 canonical raw asset、精确 expected contract 与当前可执行 adapter 的 140 个 fixture 才计为 replay；2 个 synthetic 与 15 个 manifest-only claim 仍保持可见，但不能覆盖 route。两个 synthetic IEEE PDF claim 现在各自需要有 owner 且会过期的 waiver。
-- 扩展 block manifest，新增 negative kind、精确 route/source identity、reason、failure code 与 content kind。签入的全部 17 个 negative raw HTML response 现在都通过当前 provider extractor 与 availability boundary 运行；历史 extracted Markdown 不再作为证据。
-- 在常规 CI 中新增四个确定性 provider-level shard，使全部 140 个精确 fixture 在每次 push/PR 中恰好运行一次。新增机器可读的 focus coverage baseline，聚合 coverage.py 官方 pure branch exit，对 unmatched/unmeasured/branchless area fail closed，报告 covered/total、精确百分比与向下取整百分比，并强制 security boundary 覆盖率至少为 90%。
-- 补齐 PDF fallback 的兼容参数作用域、浏览器导航同源与响应保护，以及 request-context PDF 二次取回边界覆盖，使 64% PDF 风险分支门禁在刷新后的 PyMuPDF4LLM 1.28.2 依赖图上继续可执行，而不是放宽基线。
-- 将集中的 evidence debt 替换为 10 个 route-specific 与 13 个 negative route-specific waiver；每个 waiver 都带 owner、restriction、具体 plan、review date 与独立错开的 expiry。Governance 会拒绝缺失、已过期、期限过长或共用 expiry 的条目。
-- 为四条公开、无凭据的 direct route 新增非阻塞 scheduled canary。Report 会作为 artifact 保存，连续失败次数通过 Actions cache 持久化；同一路线第三次失败时才开始 warning，成功一次即重置计数。
+- 恢复按 hostname 复用的 urllib3 pool，保留公开 HTTP(S) URL 检查、安全重定向、敏感 header 清除和标准 cookie jar scope。catalog host 不隐含网络授权，显式调用方 allowlist 仍强制执行。
+- 人类/MCP 日志及上传 artifact 统一脱敏；通知按请求归属路由，迟到 worker 不能向关闭或重叠 session 写日志。
+- 私有 cache 绑定实际使用的凭据和浏览器状态，包括 provider、backend、canonical state path 与最终摘要。enrichment 前检查本地 DOI sidecar，只允许 private-to-public fallback，resource 读取时重新检查能力；复用未变化文件指纹并增量更新 index。
+- artifact、sidecar、Markdown、index 与 run summary 使用路径锁、唯一 staging、fsync 和原子替换。同内容 non-overwrite 写入幂等，不同内容必须显式 overwrite；取消后阻止后续提交和进度。
+- batch 保留输入顺序、索引、provider lane 与 terminal/not-scheduled 状态；canonical DOI 共享执行且 waiter 取消隔离。resume manifest 固定 fetch/output 语义，允许修改执行策略。
+- 每篇共享资产预算：128 文件、单文件 32 MiB、总计 256 MiB、6400 万像素、最多四个 worker。浏览器字节、archive 遍历、转换和原子写入均有界，致命预算失败停止并清理 staging。
+- 正文资产 route 使用 20 秒 direct attempt 与两个 worker 上限；每篇每 host 一次 direct probe 后可复用验证后的 browser path，保留逐资产计时、original/preview 来源与降级原因。
+- Python、CLI、MCP、cache 与 manifest 新增可选 `require_local_body_assets`、`require_full_size_body_assets`，默认均为 false；full-size 隐含 local，未满足时降低 acceptance 而不丢弃已取得全文。
+- Wiley 401/403 候选只有在正文稳定、DOI 精确匹配、无 challenge/no-access 且通过全文验收时才接受，并保留真实状态；PNAS readiness 对齐正文 parser，ACS 保留有界 empty-shell 诊断。
+- 从 catalog 编译 route timeout、retry、pacing、acceptance 与并发策略；共享 transport scope 内 arXiv Atom/source 请求每三秒一次。强身份依据决定访问边界终止，无 DOI 时必须验证唯一 canonical landing identity。
+- 补齐 MCP v2 cache asset facet 与 batch `route`/`failure_code`。新增 provider replay shard、route 证据 waiver、coverage gate，以及四条公开直连 route 的非阻断定时 canary。
 
 ## 5.5.0 - 2026-08-25
 
@@ -600,7 +529,7 @@
 ### 变更——公式与发布完整性
 
 - 将开发环境与随包公式资源的 KaTeX manifest 和 lockfile 从 0.18.1 同步更新到 0.18.4，纳入设置对象原型污染防护和解析修复。机器合约与 unit test 现在会拒绝两份依赖声明或锁文件之间的漂移。
-- 将固定的 `actions/attest-build-provenance` action 从 v4.1.1 更新到 v4.2.2，并保留既有 subject-path 接口。macOS 合约、validator、测试、审计和部署文档现已同步精确的 action 名称、版本、完整 SHA、使用次数及输入。
+- 固定的 `actions/attest-build-provenance` 从 v4.1.1 升到 v4.2.2，保留 subject-path 接口。
 
 ## 5.3.1 - 2026-08-10
 
@@ -632,8 +561,8 @@
 
 ### 变更——构建与发布完整性
 
-- 将固定的 `haskell-actions/setup` 构建 action 从 v2.11.0 更新到 v2.12.0，并同步 macOS 机器合约、validator、测试和文档。action 随附的 GHCup 0.2.6.2 更新仍保留 GHC 9.10.3、Cabal 3.12.1.0、texmath 0.13.2 和既有产物接口。
 - 新增独立的 `uv lock --check` quality gate；项目版本、依赖声明或 lock metadata 陈旧时，会在其余静态检查前直接令 CI 失败。
+- 固定的 `haskell-actions/setup` 从 v2.11.0 升到 v2.12.0，包含 GHCup 0.2.6.2，保留 GHC 9.10.3、Cabal 3.12.1.0 与 texmath 0.13.2。
 
 ## 5.2.0 - 2026-08-07
 
@@ -681,123 +610,49 @@
 
 ## 5.0.0 - 2026-08-03
 
-### 新增
+### 新增与破坏性变更
 
-- 以 `Dictation354/paper-fetch-skill` v4.1.0
-  (`fc3bd96e8d781667a2e86e90dc6e8e35a8a26fa7`) 为基线重建 macOS
-  适配合约、validator、Windows / WSL contract gate 和分层审计矩阵；旧 v1
-  合约不再照搬。新增的维护文档说明如何在最新 `upstream/main` 上重放独立适配
-  提交，并明确普通 CI 会在 Ubuntu / Windows 执行 portable gate、`/mnt/*` WSL
-  checkout 只能提供 validator-only 证据。
-- 新增 macOS 安装前的最低系统版本、manifest/checksum、标准 GIL CPython
-  ABI/解释器架构、递归 quarantine 和用户写入顺序检查；构建器还会在 staging
-  清理前拒绝路径穿越包名、危险构建根和没有 ownership marker 的非空目录；
-  临时 wheelhouse 保持在 owned staging 且不进入产物，正式 artifact 采用同目录
-  临时文件原子发布。`--user-config` 使用
-  `~/Library/Application Support/paper-fetch/.env`，safe purge 会拒绝 `/`、
-  HOME 及其祖先、尚未安装的 bundle root 或没有匹配 ownership manifest 的
-  目标；普通安装同样只允许不存在、空目录或同时带 schema 3 manifest 与
-  `runtime/python-bin` marker 的目标。合法升级保留 `offline.env` 和用户配置
-  非 managed 内容，卸载清理 managed block；Zsh 启动文件为 symlink 时保留链接。
-  checksum 清单现在必须精确覆盖 bundle 中全部 regular file，payload symlink 与
-  未列出的附加 payload 都会在用户写入前拒绝；`--purge` 也无条件拒绝 symlink
-  形式的入口。
+- 基于 v4.1.0（`fc3bd96e8d781667a2e86e90dc6e8e35a8a26fa7`）重建 macOS 适配，提供机器契约与 Windows/WSL portable gate；`/mnt/*` WSL checkout 只提供静态证据。
 
-### 破坏性变更
+- MCP 成功/失败与 acceptance 升至 schema v2，`FetchEnvelope.trace` 成为唯一完整 trace owner；保留 `article_type`、`preview_accepted` 与稳定资产 issue code。schema-v1 消费者必须升级，旧 v1 fetch-envelope cache 只读迁移仍保留。
 
-- 所有 MCP 成功/失败与 acceptance payload 从 schema v1 升级到 schema v2，并删除
-  重复的 `quality.trace`；`FetchEnvelope.trace` 成为唯一完整 trace owner，
-  metadata/asset 保留 `article_type` 与 `preview_accepted`，资产摘要用稳定 issue code
-  区分 accepted/fallback preview。仍要求 schema v1 的消费者必须先完成升级再采用
-  5.0.0；旧 v1 FetchEnvelope cache 仅保留读取迁移。
-- 删除曾对外公开但未实现的 IOP XML/TDM 占位 route；catalog/status/docs 现在只公开
-  真实可执行的 IOP HTML、PDF、metadata 与 supplementary 能力。
+- 删除曾公开但未实现的 IOP XML/TDM route，只公开可执行的 HTML、PDF、metadata 和 supplementary 能力。
 
-### 变更——macOS 与离线打包
+### macOS 与离线打包
 
-- macOS CPython 3.11–3.14 arm64 离线矩阵固定到 `macos-15`，manifest 声明最低
-  macOS 15.0；四个 tarball 均运行原生安装 verifier，缺少 artifact 会令 job
-  失败。原生 texmath 会携带可迁移的非系统 dylib，使用
-  `@rpath` / `@loader_path` 并进行 ad-hoc codesign，verifier 通过
-  安全 `tarfile.data_filter` 解包、`file -b`、`lipo -archs`、canonical
-  dependency containment、LC_RPATH 和递归闭包检查；随包 Playwright Node
-  仅在闭包通过后实际执行 `--version`。递归 `xattr` 检查发生权限/I/O 错误时
-  也会 fail closed；匹配过程不使用早退管道，并加入大体积 provenance 输出
-  回归，避免 `set -o pipefail` 下的 `SIGPIPE` 漏判。
-- 同步 README、部署和文档索引，区分 Windows、WSL 与原生 Mac 证据；Windows /
-  WSL 绿灯不能替代 Mach-O、`/bin/zsh`、`xattr` 或 Gatekeeper 的原生
-  `macos-15` gate。原生 verifier 实际覆盖嵌套 quarantine、`.zshrc` symlink、
-  owned upgrade 和 user-config；`/var` ↔ `/private/var` cache alias 由原生 CI
-  精确测试。旧上游 `v4.1.0` 标签不可移动或复用，发布本 fork 适配必须提升版本
-  并创建新标签；不可变标签重跑必须先通过源码 checkout 自身的当前 Mac contract，
-  因此不能靠 overlay 把无合约的上游 `v4.1.0` 改造成适配发行版。
-- 普通 CI 的 `macos-15` job 现在显式准备固定的官方 Camoufox
-  `152.0.4-beta.28` app bundle，并串行启动临时与持久 context。原生测试只接受
-  当前用户固定的 managed cache，且在调用 Camoufox 前验证 compatibility flag、
-  active config 与 browser 目录 containment，避免把任意目录交给 package manager
-  清理。
-- browser/full extra 保持 `camoufox>=0.5.4,<0.6` 兼容范围，由 `uv.lock`
-  提供可复现的具体版本。POSIX 构建器从 lockfile 解析该版本，核验下载 wheel
-  METADATA 与 installed distribution，并把实际版本写入 offline manifest。
-  POSIX/Windows tooling ref 都必须是
-  完整 commit SHA，只复制精确 packaging-tool 路径且不复制 Python wheel source；
-  manifest 会分别记录源码 `git_revision` 和可选 `tooling_revision`。
+- 用户集成写入前检查 macOS 15.0、标准 GIL CPython ABI/架构、精确 checksum regular-file 清单及递归 quarantine。拒绝 payload symlink、未列出文件、危险 staging/purge 目标和无 ownership 升级；保留用户配置与 Zsh symlink，原子发布 artifact。
 
-### 修复——macOS 与离线打包
+- macOS arm64 CPython 3.11–3.14 固定在 `macos-15` 构建，验证原生安装、可迁移 texmath Mach-O 闭包、ad-hoc codesign、安全解包、canonical `LC_RPATH`、递归 `xattr` 与随包 Playwright Node 执行；Windows/WSL 结果不能替代原生 Mac 证据。
 
-- 将 provenance 检查使用的 `packaging` 声明为核心运行时依赖，并让 macOS
-  contract validator 通过锁定的项目环境运行，避免干净 core 安装以及原生/离线
-  CI runner 因依赖未声明或环境不可见而失败。
-- 修复并发或续跑 CLI batch 在结果缺少标题和 DOI 时争用
-  `unknown_unknown_article.*` 的问题。主输出文件名现在回退到规范化 query 的
-  16 位 SHA-256 摘要，在不向文件名暴露完整 query URL 的同时继续保持
-  no-overwrite 安全语义。
-- 修复原生 macOS 上已预置的官方 Camoufox app bundle 无法启动的问题：默认
-  managed runtime 继续以 `download_if_missing=False` 保持普通 fetch 不联网下载，
-  但不再把 `Contents/MacOS/camoufox` 误作 custom executable 传回 Camoufox，
-  从而避免错误查找 `Contents/MacOS/properties.json`；临时 fetch/preflight 和
-  持久 auth context 均覆盖该规则，显式 binary override 仍保持透传。
-- 修复 macOS 把 `tempfile` scope 暴露为 `/var/...` 或 `/tmp/...`、而文件
-  canonical path 为 `/private/var/...` 或 `/private/tmp/...` 时 MCP cache index、fetch-envelope 和 resource
-  错误 miss 的问题；等价根路径现在共享同一安全 scope，目录内 symlink 和
-  scope 外文件仍会拒绝。
+- 普通原生 CI 预置官方 Camoufox `152.0.4-beta.28`，验证文件系统 alias 和 managed cache 后串行启动临时/持久 context；release discovery 使用 workflow 只读 GitHub token，避免匿名 API 限流。
 
-### 变更——运行时与 provider 验证
+- 保留 `camoufox>=0.5.4,<0.6`，具体版本由 `uv.lock` 提供并验证 wheel/已安装元数据；不可变标签重建先通过源码 Mac contract。tooling overlay 必须使用完整 commit SHA，仅复制精确打包路径且不复制 wheel source，分别记录 source/tooling revision。
 
-- 删除 GitHub Actions 的 Live publisher/MCP、provider drift 与完整 Golden corpus
-  定时/手动工作流；这些 opt-in 检查只保留文档化的本地 pytest 和脚本入口。
-- publisher live 样本改为声明 source 与 trail 的联合合法 outcome，browser provider 使用复用 storage state 的 lazy preflight，live socket 由 marker 自动放行，不再依赖全局 force-enable。Springer 成功基准替换为 OA 研究论文，历史 Nature 新闻只保留为独立 access-gate 行为样本。
-- publisher catalog live 从全文 smoke 提升为 `asset_profile=body` 硬验收门；JSON/JUnit artifact 会区分“已记录 provider 全部 complete”和“存在 skip/未记录 provider”，IEEE 受保护 GIF 恢复拆为仅授权 runner 显式启用的独立套件。
+- 声明核心依赖 `packaging`，在锁定环境运行 contract validator。官方 macOS app bundle 不再误走 custom-executable 处理，修复已预置 runtime 启动；显式 executable override 仍支持。
 
-### 修复——运行时与 provider
+- `/var`、`/tmp` 与 `/private/...` alias 共享 cache scope，仍拒绝 scope 内 symlink 和 scope 外文件。CLI batch 结果缺标题/DOI 时使用规范 query 的 16 位 SHA-256 文件名回退，避免 `unknown_unknown_article.*` 冲突且不暴露 query URL。
 
-- 当浏览器后续候选发生传输/导航失败，或下一候选 URL、保守重试耗尽共享 deadline
-  时，保留此前已明确识别的 challenge/paywall/access boundary，并让 provider 自有 PDF waterfall 继续输出
-  `no_access`。live 验收只接受显式 `status=no_access` 或 metadata fallback 精确的
-  `route:provider_candidate_*_access_boundary_stop` 作为合法访问边界；解析失败、空壳和
-  正文不足仍是失败。
-- IEEE preflight、浏览器 landing/全文和共享资产 seed 现在最多等待 15 秒，且只接受文章号匹配的 `#article`；持续存在的 AWS WAF HTTP 202 页面精确报告 `aws_waf_challenge` 和兼容诊断，已在窗口内恢复的文章页不再因初始响应被误拒。受保护 large 资产仍保持 direct-first、一次 preview 预热和完整的 full-size 恢复/降级 provenance。
-- 稳定 AIP 及共享 browser workflow 的冷启动 HTML 重试：fast 尝试产生的 provider-scoped 临时 cookies 会传给正常尝试，但未验收状态不会提前持久化；HTTP 200 的 head-only 页面现在报告 `empty_article_shell`，重试会优先下一个已有 provider URL 而不再重复同一空壳 landing。诊断保留两轮尝试、响应状态和 DOM readiness，PDF 继续作为终态兜底。
-- 修复 publisher live 测试误读浏览器静态能力的问题：改读嵌套的 `browser_runtime.available`，隔离各 provider 的 profile/storage state，并在 pytest 隔离期间复用 Camoufox 已准备的可执行文件与依赖 cache；显式启动复用相邻版本元数据，启动进度不再污染 MCP JSON-RPC stdout。
-- 将页面创建前的 browser 失败也保存为隐私安全诊断 JSON，把请求作用域的公式工具配置传入隐式 MathML 转换，修正 body-only 资产及 provenance 验收语义，并在不跨线程使用 Camoufox page 的前提下恢复 Silverchair 签名原图。
-- 普通 publisher/MCP live 套件与 IEEE 受保护覆盖保留为彼此独立、仅限本地显式运行的入口；共享外部状态的测试继续串行，并保留 legacy-compatible JUnit 属性和结构化 acceptance artifact。
-- 修复 IEEE 浏览器 DOM 提取把非可见脚本/模板中的 `captcha` 或访问 token 误判为 block page 的问题；可见 challenge 仍会被拒绝，验证时保持页面自身 REST 子请求正常放行。
-- 为成功的 MCP 单篇抓取响应补齐文档约定的 `status=ok` 与七分面紧凑 acceptance，并与批量抓取复用同一套统一验收及投影逻辑。
-- 将成功展开的 HTML/JATS/CALS 行列跨度改判为正常表格规范化：保留结构化 reason，但不再误发版式降级 warning；非法 span/列定义仍保守降级，并提升 extraction revision 以淘汰带旧质量语义的缓存。
-- 修复 request deadline 初始化、AIP/Science DOM readiness 与 browser preflight 分类：fast-path 本地 cap 不再耗尽后续 fallback，页面/提取失败会保留隐私安全的诊断产物。
-- Springer/Nature HTML 改为复用安全 cookie-aware requester，并对 `cookies_not_supported` 只用全新 session 重试一次；同时保留 Research Briefing article type，合法无署名 briefing 不再误报 `empty_authors`。
-- IEEE small/large 资产按 canonical logical identity 对账；direct 资产恢复并发，共享 page 的 browser recovery 仍串行；资产下载失败、保真降级、占位和 remote-only 使用互不替代的稳定分类。
-- 移除 trace 三层重复拼接和按 warning 数量降级的质量启发式；真实 retry 的同 code 仍按顺序保留，任意数量的操作通知不再自动降低内容质量。
-- 普通 unit 强制零外部 socket attempt，补齐三个 batch resolver fake seam；doctor 诊断 source checkout 未激活 `.venv` 与 MCP 版本不兼容，成功和终态失败 manifest 都保留诊断文件。
-- 新增独立 browser/DOM/HTTP/retry/asset/render 计时及 provider-route-stage nearest-rank 性能摘要：单样本只显示 observed，多样本显示 p50/p95。
+### 运行时与 provider
 
-### 限制
+- 删除 live publisher/MCP、provider drift 与完整 golden 的定时/手动 workflow，保留本地 opt-in 入口。publisher live 验收要求正文资产与声明的 source/trail outcome；IEEE 受保护 GIF 独立为授权套件，共享外部状态时串行运行。
 
-- 离线 runtime 包含 Camoufox / Playwright Python 包，但不包含 Camoufox 浏览器
-  binary，普通 fetch 不会自动下载。进入受限网络或离线环境前需联网用离线
-  runtime 执行 `python -m camoufox fetch`，再运行
-  `paper-fetch browser-preflight` 验证；预置后真正断网的 Camoufox launch
-  仍是开放审计项，因此不宣称完整离线浏览器支持。
+- 后续导航失败、deadline 耗尽及 provider PDF waterfall 保留已确认的 challenge/paywall/access-boundary 原因。Springer/Nature `Client Challenge` shell（含 `_fs-ch-`）不再作为 provisional article，MDPI 等待稳定正文 DOM 后才接受 HTTP 200 页面。
+
+- IEEE 等待文章号匹配的 `#article` 最多 15 秒，持续 AWS WAF HTTP 202 报告 `aws_waf_challenge`，已恢复页面不因初始状态误拒。忽略隐藏 script/template 中的 `captcha` 和访问 token，保留可见 challenge 判断及页面 REST 请求。
+
+- AIP fast HTML 的 provider-scoped 临时 cookies 传给正常重试，未验收状态不提前持久化；`empty_article_shell` 后优先下一个 URL，保留 attempt/readiness 诊断及 PDF 剩余预算，修复 deadline 初始化与 AIP/Science/preflight readiness 分类。
+
+- live gate 读取嵌套 `browser_runtime.available`，隔离 provider 状态并跨测试隔离复用已准备的 Camoufox 依赖。启动进度不污染 MCP stdout，页面创建前及终态失败仍保留隐私安全诊断，隐式 MathML 转换使用请求级公式配置。
+
+- MCP 单篇成功响应补齐 `status=ok` 与七分面紧凑 acceptance。修正 body-only 资产计数，IEEE small/large 按逻辑 identity 对账，不跨线程使用 page 恢复 Silverchair 原图，区分下载、保真、占位和 remote-only 资产结果。
+
+- 安全展开的 HTML/JATS/CALS span 视为正常表格规范化，不再误发版式 warning，非法 grid 仍降级并淘汰旧提取 cache。Springer/Nature 复用 cookie-aware HTTP，`cookies_not_supported` 仅新 session 重试一次，保留 Research Briefing 类型和合法无署名文章。
+
+- 移除 trace 三层重复与按 warning 数量降级的启发式，保留真实 retry code 顺序；诊断源码 `.venv` 未激活和 MCP 版本不兼容。新增 browser/DOM/HTTP/retry/asset/render 分项计时与 nearest-rank 摘要：单样本 observed，多样本 p50/p95。
+
+### 离线浏览器边界
+
+- 该版本离线包包含 Camoufox/Playwright Python 依赖，不含浏览器 binary，普通 fetch 不自动下载；进入受限网络前联网运行 `python -m camoufox fetch` 和 `paper-fetch browser-preflight`。该版本不宣称完全断网的原生 macOS 浏览器支持。
 
 ## 4.1.0 - 2026-07-29
 
@@ -856,7 +711,6 @@
 
 - 在保留 `pymupdf4llm` 1.28.0 的前提下稳定共享 PDF Markdown 结构，用无 provider/DOI 特例的规则修复确定性标题漂移。
 - 对 Royal Society Silverchair 的 `view-large` 与 CDN URL 变体做逻辑图片去重，同时保留首选大图 URL、预览 URL、图号和 caption。
-- 在去除 HTML 重复标题 section 并应用 PDF、Royal Society 修复后，刷新并完成全部 26 份受影响 golden 的 agent 审核。
 
 ## 3.2.1 - 2026-07-25
 
@@ -923,7 +777,6 @@
 ### 新增
 
 - `asset_profile=all` 新增有界的 IOP 补充材料展开流程：先识别同 DOI 的 `/data` 索引，再复用 browser cookie/Referer 提取并下载 `SM` 编号附件。
-- CI 新增聚焦契约门，覆盖 IOP 补充材料抽取、显式资产 Referer 透传、签名 URL 脱敏和 browser challenge 回归。
 
 ### 修复
 
@@ -942,7 +795,7 @@
 
 - 静态 skill 改为薄而自包含的 workflow 入口，拆分 workflow、presets、acceptance、CLI、environment、tool-contract 和 failure-handling reference；source、staging 与安装副本均使用成熟 Markdown parser 验证链接。
 - 离线 manifest schema 升级到 3；Linux、macOS、Windows bundle 都记录完整 skill 文件清单及逐文件 SHA256，安装器会在宿主安装前后拒绝缺失、多余、符号链接或 hash 漂移的 skill 内容。
-- 按向后兼容新增功能准备 SemVer minor `3.1.0`，同步 Python 包 metadata、稳定工具 User-Agent、Windows 安装器默认版本、部署说明和中英文 changelog。
+
 - CI 新增跨 CLI/MCP/cache/manifest 的轻量契约门；package smoke 改在 checkout 外构建并验证版本、全部 console scripts、MCP EOF 与静态安装 provenance，同时保持 live/offline 重任务仅显式触发。
 
 ### 修复
@@ -956,7 +809,6 @@
 - `paper-fetch browser-preflight` / `paper-fetch auth` 的 Wiley 和 Science 内置样例改为结构更轻、已有 fixture 覆盖的 full-text 页面，减少默认 browser preflight 的慢解析耗时。
 - `paper-fetch browser-preflight` / `paper-fetch auth royalsocietypublishing` 新增 Royal Society Publishing 内置样例，默认预检现在会覆盖该 browser-backed provider。
 - 默认 GitHub Actions CI 移除完整 unit/devtools/coverage job；本地 `scripts/dev-preflight.sh` 仍保留完整 unit、devtools 和可选 coverage 检查。
-- 刷新用户与 agent 文档：恢复 README 展示内容和抓取效果截图，同时保留精简快速上手路径；修正 AMS direct HTTP / browser runtime 表述，统一 CLI `--output-dir` 默认文件名说明为论文 stem 命名，并把 onboarding 中已完成 provider 示例替换为占位 provider 示例。
 
 ## 3.0.0 - 2026-07-03
 
@@ -981,24 +833,20 @@
 - provider registry 冷启动路径现在不会在根 `paper_fetch` import 时加载 provider entry module、`trafilatura` 或 `idutils`；provider discovery 改为显式内置入口清单加缓存 AST 检测动态入口，browser workflow 的字符串路线标签改放在 `route_order`，不再塞进 `waterfall_steps`。
 - 共享 Markdown 表格渲染现在统一复用 canonical pipe-table formatter；IR 与 HTML 路径都会消费显式 headers、转义 pipe/单元格换行、补齐 ragged rows，并渲染 fallback message。
 - HTML 派生的公式与 citation 渲染现在会为 inline TeX 保留数学分隔符，formula image URL 启发式会先让位于显式 figure 上下文，并让 section renderer 与 Atypon renderer 共用同一个数字 citation payload helper。
-- 同步 README、CLI/MCP instructions、provider/runtime/deployment/extraction 文档、AMS onboarding manifest / access review / cleaning-chain 证据，以及 provider runtime 优化计划，使其匹配新的 browser-runtime 与 AMS direct-HTTP 归属边界。
-- 扩展 unit 与 integration 覆盖：包含 AMS direct HTTP HTML/PDF fallback、browser-preflight provider candidates 与不触发 PDF 的行为、external-CDP new-context 诊断、browser runtime facade 接线，以及 browser workflow 依赖分组。
 
 ## 2.8.0 - 2026-07-02
 
 ### 新增
 
 - 新增基于 provider path template 的 URL DOI 提取：支持 query parameter 中的 DOI、已知 route/扩展名后缀剥离，以及 AMS 旧式 SICI `view` / `downloadpdf` slug；许多带 DOI 的出版社 URL 现在可直接解析，不必先抓 landing page。
-- 新增 `scripts/dev-preflight.sh --coverage`，并让 CI unit job 生成 coverage baseline 报告（`term-missing` 和 `coverage.xml`），第一阶段只产出信号，不设置覆盖率阈值。
 
 ### 变更
 
 - publisher-facing landing/PDF 请求和 browser workflow 改为通过 `build_publisher_user_agent` 使用浏览器形态 UA；`PAPER_FETCH_USER_AGENT` 继续只作为工具/API UA，不再默认传给 browser context。
 - Royal Society Publishing 从 direct HTTP DOI/PDF 抓取改为共享 CDP browser HTML 加 seeded-browser PDF workflow，同时保持 `royalsocietypublishing_html` / `royalsocietypublishing_pdf` source 和不走 XML route 的契约。
 - 标题查询解析现在会在 Crossref metadata 明确存在正式期刊版本时，优先选择与 preprint 分数接近的正式出版候选。
-- mypy 覆盖面扩展到 136 个项目源码文件，新增覆盖 HTML extraction、browser workflow、Atypon browser workflow、shared JATS/common Markdown helper、CloakBrowser helper、service、artifacts、image conversion 和 resolver 模块。
+
 - 本地和 CI 质量门禁现在会执行 `ruff format --check`、保留 ruff lint、优先使用 repo-local `.venv/bin/python` 或显式 `PYTHON_BIN`、提前提示缺失的开发依赖，并在本地 preflight 中用 `mypy --no-site-packages` 检查项目文件。
-- 对全 Python 代码库应用 `ruff format`，并同步调整 module layout 与 asset contract 守护测试，使其匹配格式化后的源码形态。
 
 ### 修复
 
@@ -1008,6 +856,7 @@
 - 修复 official PDF fallback 的降级行为：真实 PDF 已下载但 Markdown extraction 不可用时，会保留 provider source trail 和本地 PDF artifact，并通过 warning 说明 PDF-only 状态，不再替换为 Crossref/general metadata-only 结果。
 - 修复 publisher landing/probe 请求误把稳定的 `paper-fetch-skill/<version>` 工具 UA 发给浏览器形态出版社路线的问题。
 - 修复 `PdfFallbackStrategy`、browser runtime ownership、provider URL/route 行为和 asset-download contract marker 扫描相关的文档/契约漂移，并同步仓库级 ruff format 后的测试窗口。
+- 新增 `scripts/dev-preflight.sh --coverage` 和 CI `term-missing` / `coverage.xml` 报告，不设覆盖率阈值。
 
 ## 2.7.1 - 2026-07-01
 
@@ -1041,8 +890,6 @@
 ### 修复
 
 - 修复 direct HTTP browser-workflow 资产下载：AMS 未启动 browser runtime 时，资产失败不会再尝试刷新 browser seed；supplementary 下载也会继承和正文 figure 一致的 seeded Referer 行为。
-- 忽略 repo-local `.image-tools/` 产物，避免本机 Ghostscript/libvips 暂存链接被误提交。
-- 同步 README、provider、deployment、architecture、extraction-rule、离线安装器、CI 和单测，覆盖 AMS 源图、图片转换回退和离线 image-tools 行为。
 
 ## 2.6.2 - 2026-06-27
 
@@ -1072,7 +919,6 @@
 
 ### 新增
 
-- 新增 Frontiers (`frontiers`) XML-first provider：支持 `10.3389/` 与 `frontiersin.org` 路由、canonical article 发现、共享 JATS 渲染、figure URL 重写、direct HTTP PDF fallback、`frontiers_xml` / `frontiers_pdf` source、manifest、文档和单测覆盖。
 - 新增 `paper-fetch --version`，并补充 CLI help 中 reference、asset 和 token 渲染选项说明。
 
 ### 变更
@@ -1083,20 +929,19 @@
 ### 修复
 
 - 修复 IOP figure 资产抽取：标准 `_lr` / `_online` CDN 图片链接现在会先升级为 `_hr` 高分辨率候选，再进入预览图回退；因此 `10.1088/1748-9326/ad560b` 等 IOP HTML 抓取在高分辨率图可用时会保存 full-size 正文图片。
+- 新增 Frontiers (`frontiers`) XML-first provider，支持 `10.3389/`、`frontiersin.org`、canonical article discovery、共享 JATS 渲染、figure URL 改写及 direct HTTP PDF fallback，来源为 `frontiers_xml` / `frontiers_pdf`。
 
 ## 2.5.2 - 2026-06-24
 
 ### 修复
 
 - 修复共享 HTML cleanup 误用 `data-title`、`alt`、`title`、`aria-*` 等语义属性触发页面 chrome 噪声过滤的问题。正文图表标题中包含 “related” 等词时不再被误删，例如 Springer/Nature HTML 抽取中 Nature 文章 Fig. 2 缺失的问题。
-- 新增回归测试，确保带语义 `data-title` 文本的 Springer/Nature 正文 figure 资产会被保留，同时 class/id 等结构属性标记的 related/recommended article chrome 仍会被移除。
 
 ## 2.5.1 - 2026-06-23
 
 ### 修复
 
 - 修复 browser PDF fallback 在 async 线程切换后没有保留调用方 runtime browser 配置的问题；现在会继续复用 provider profile 和 user-data 目录等配置，而不是强制创建新的非 runtime browser context。
-- 新增 runtime-browser PDF fallback 路径的回归测试，确保线程切换后仍复用已配置的 runtime context。
 
 ## 2.5.0 - 2026-06-23
 
@@ -1162,32 +1007,21 @@
 
 ### 变更
 
-- 将 ruff 检查规则集从 `E4,E7,E9,F,TID251` 扩展为额外启用 `UP`、`B`、`SIM105`、`RUF022`，并在全代码库应用相应修复：`typing` 抽象基类导入迁移至 `collections.abc`，`datetime.timezone.utc` 改写为 `datetime.UTC`，`try`/`except`/`pass` 替换为 `contextlib.suppress`，为 `run_provider_waterfall` 补充显式异常链（`raise ... from exc`），并在新规则暴露的位置使用显式 `zip(..., strict=...)`。`B008` 在全项目忽略（MCP 的 `default_mcp_deps()` 参数默认值是刻意的依赖注入接缝），`B023` 在 `tests/` 下忽略。
 - 将 mypy `files` 覆盖范围从 model/workflow/mcp/http 契约面扩展至更多基础模块（`metadata`、`markdown`、`extraction/markdown_render`、`tracing`、`reason_codes`、`arxiv_id`、`normalize_journal_name`、`section_vocab`、`logging_utils`、`publisher_identity`、`provider_catalog`、`extraction/citation_anchors`），分析文件数从 45 增至 68，并附带使检查通过所需的类型修复。
-- 不再跟踪 `failures/` 下的临时批处理调试产物与 `figures/` 下三个无引用的原始抓取产物，并将二者加入 `.gitignore` 以防再次提交。
+
 - 将打包的 `mathml-to-latex` 公式后端从 1.5.0 升级到 1.8.0，并在根目录与 `src/paper_fetch/resources/formula/` 的 package 清单与 lockfile 之间同步该版本。
 
 ## 2.2.1 - 2026-06-12
 
 ### 变更
 
-- 磁盘缓存条目遍历不再读取每个 JSON 文件以提取 `stored_at`，改为直接使用 `st_mtime`，消除每次 `_prune_disk_cache` 调用中的 O(n) 文件读取。
-- `_load_disk_cached_entry` 中的磁盘缓存读取不再持有独占 `_disk_cache_lock` 进行文件 I/O，并发缓存读取不再相互阻塞。
-- `_sensitive_cache_header_names` 与 `_cache_key_header_names` 改为通过 `@functools.cache` 在进程级别计算一次，不再在每次 HTTP 请求时重复调用 `provider_sensitive_header_names()`。
-- `prepare_html_extraction_tree` 消除了多余的第二次 BeautifulSoup 解析：现在直接在原树上执行剪枝并序列化一次，不再先将子树序列化为字符串再重新解析。
-- `html_cleanup_rules` 改为通过 `@functools.lru_cache(maxsize=32)` 进行缓存，单次抽取流程中相同 noise profile 的多次调用共享同一个 `HtmlCleanupRules` 实例。
-- `choose_parser` 在模块导入时计算一次 `importlib.util.find_spec("lxml")` 并将结果存为模块级常量，每次调用不再重复执行。
-- `classify_dom_cleanup_node` 改为引用模块级 `_HEADING_TAG_RE` 常量，不再在每次访问 DOM 元素时编译两次 `re.compile(r"^h[1-6]$")`。
-- `_inline_image_contents` 每个资产只调用一次 `path.stat()`，不再先调用 `path.is_file()` 再调用 `path.stat()`。
-- `run_blocking_call` 改为使用 asyncio 默认线程池（`None`），不再为每次调用创建独立的 `ThreadPoolExecutor`；`batch_resolve_tool_async` 与 `batch_check_tool_async` 中的日志桥生命周期改用 `ExitStack` 管理。
-- `mark_envelope_cached_with_current_revision` 改为原地修改并返回 `None`，调用方相应更新。
-- 将 mypy 覆盖范围扩展至 `paper_fetch.mcp` 和 `paper_fetch.http` 包；补充缺失的类型标注和 `cast` 调用以通过严格检查。
-- 将 `mcp` 版本约束从 `>=1.27,<1.28` 放宽至 `>=1.27,<2`。
+- 减少重复 disk-cache 读取、锁竞争、HTML 解析、文件系统探测与线程池创建，保留既有请求和提取行为。
+- MCP 兼容范围从 `>=1.27,<1.28` 放宽到 `>=1.27,<2`。
 
 ### 修复
 
-- `parse_retry_after_seconds` 现在通过 `float()` 解析后截断为 `int`，能正确处理 `"0.5"` 或 `"1.5"` 等分数秒 `Retry-After` 值；此前这类值会落入 HTTP-date 解析器并被静默丢弃。
-- `_mcp_log_level` 对级别高于 `CRITICAL` 的日志记录不再返回 `"debug"` 作为兜底值，改为返回 `"critical"`。
+- 小数 `Retry-After` 先按 `float()` 解析再截为秒数，不再被当作非法日期静默丢弃。
+- 高于 `CRITICAL` 的日志级别映射到 `critical`，不再回退为 `debug`。
 
 ## 2.2.0 - 2026-06-10
 
@@ -1198,7 +1032,6 @@
 ### 变更
 
 - Atypon/Wiley figure caption label 现在只从显式 label、figure DOM id、图片 URL basename，或以 `Figure N` 起始的 caption 推断，并新增读取 `.figure__title` 选择器；caption 正文中间的 `Figure N` 交叉引用不再能覆盖当前图号。
-- 收敛 browser-workflow 资产下载内部实现（行为不变）：image 与 supplementary fetcher 共用同一个泛型的按线程文档 fetcher，image/file fetcher 复用共享的 browser 响应头/状态 helper，两个 attempt-fetcher 构建函数合并为一个（删除未使用参数），并以共享的 `dedupe_normalized` 工具替换四处重复的有序 URL 去重。
 
 ### 修复
 
@@ -1228,52 +1061,61 @@
 ### 变更
 
 - MCP provider 指引改为从运行时 provider catalog 派生，使可用 provider hint、browser-runtime provider 和公开 source 名称与已注册 provider 保持一致。
-- 刷新公开 provider 与抽取规则文档，覆盖当前 provider catalog 中 Annual Reviews、Royal Society Publishing、PLOS、Oxford Academic、ACS、IOP、AIP、MDPI、AMS、Science 和 PNAS 等 route 细节。
+
 - browser-workflow provider 改为通过 provider spec 标记，不再维护单独硬编码的 browser-runtime provider 列表。
-- 更新 Codex skill 安装、离线安装器、部署和 onboarding 文档，使其匹配当前支持的安装入口。
 
 ### 移除
 
 - 从随包脚本中移除 Gemini skill 安装器和旧版 Codex MCP runner 脚本。
 
-### 修复
-
-- 让 CloakBrowser workflow 标签、provider docs drift 检查、离线安装检查和 skill template 测试与 catalog 派生的 provider 事实保持同步。
-
 ## 1.9.0 - 2026-05-27
 
 ### 新增
 
-- 新增 AIP Publishing (`aip`) provider：支持 `10.1063/` 与 `pubs.aip.org` 路由、CloakBrowser article HTML、seeded-browser PDF fallback、`aip_html` / `aip_pdf` source、正文图/表/公式/补充材料抽取与 provider-managed abstract-only 降级。
-- 新增两段式 provider onboarding 人工 gate：通过 `prepare-human-preflight` 和 `finalize-review-artifact` 先审核 waterfall/access，再批量确认最终 Markdown 质量，避免逐 fixture 手工编辑 review YAML。
-- 新增 IOP Publishing (`iop`) provider：支持 `10.1088/` 与 `iopscience.iop.org` 路由、CloakBrowser article HTML、seeded-browser PDF fallback、`iop_html` / `iop_pdf` source，以及 Radware/hCaptcha challenge 拒绝。
-- 新增真实 IOP fixture 覆盖 table、formula 与 PDF fallback purpose，样本为 `10.1088/2058-9565/ac3460` 和 `10.1088/1748-9326/aa9f73`。
-- 新增 ACS (`acs`) provider：支持 `10.1021/`、`www.acs.org` / `pubs.acs.org` 路由、共享 CloakBrowser HTML、seeded publisher PDF/ePDF workflow、table/formula/Supporting Information replay 覆盖，以及 seeded browser-navigation headers 下的公开 `/doi/pdf` fallback 捕获。
-- 新增 Annual Reviews (`annualreviews`) provider：支持 `10.1146/` DOI 路由、CloakBrowser 渲染 HTML 全文、seeded-browser PDF fallback、provider-managed abstract-only 降级、fixture replay、golden corpus 覆盖和 HTML 正文图片资产抽取。
+- 新增 AIP Publishing (`aip`)、IOP Publishing (`iop`) 和 ACS (`acs`) provider，支持 DOI/域名路由、CloakBrowser HTML、seeded-browser PDF fallback、正文资产与 provider-managed metadata/abstract 降级。AIP、IOP 来源分别为 `aip_html` / `aip_pdf`、`iop_html` / `iop_pdf`；IOP 拒绝 Radware/hCaptcha challenge。
+- 新增 `prepare-human-preflight` 和 `finalize-review-artifact` 两段式人工 gate，分别审核 waterfall/access 和批量 Markdown。
 
-### 变更
+### 变更与修复
 
-- 收紧 provider fixture discovery：Crossref 候选搜索现在可按 DOI prefix 过滤，probe 前会剔除 off-provider DOI，challenge/access/empty-shell probe 结果不会再被评为 high-confidence 全文 fixture。
+- fixture discovery 按 DOI prefix 过滤，排除 off-provider、challenge、access-blocked 和 empty-shell 高置信度全文候选。
+- 保留 ACS 正文 figure 图片链接，下载后将 Markdown 链接改写为本地路径。
+
+## 1.8.0 - 2026-05-26
+
+### 新增
+
+- 新增 PLOS (`plos`) provider：支持 `10.1371/` 与 `journals.plos.org`，优先公开 JATS XML，提供 direct HTTP PDF 和 metadata fallback，来源为 `plos_xml` / `plos_pdf`。
+- 新增 Oxford Academic (`oxfordacademic`) provider：支持公开 HTTP HTML 与验证后的 article-PDF fallback，来源为 `oxfordacademic_html` / `oxfordacademic_pdf`。
 
 ### 修复
 
-- 重新审批 IOP replay fixture 覆盖范围：真实 `10.1088/1748-9326/ab7d02` 捕获现在通过正文内的 `stacks.iop.org` media 链接覆盖 supplementary purpose。
-- ACS onboarding 合约现在要求正文 figure 资产内联和下载；browser workflow 清理会保留 figure 内图片链接，下载后可把正文 Markdown 远程 figure URL 改写为本地 asset path。
-- Annual Reviews fast browser fixture 捕获会等待动态全文 DOM 容器填充；机构访问提示 `access provided by` 不再作为 paywall 阻断词，但仍保留为 Markdown 降噪词。
-- browser PDF fixture 下载返回非 PDF payload 时改为 `NON_PDF_FALLBACK_CONTENT`，不再误报为网络暂态，并要求替换失败 PDF 样本后才能续跑 onboarding。
-- Chromium 暴露 PDF viewer shell 而不是底层 PDF 字节时，browser PDF fallback 会通过同一 browser request context 重新获取真实 PDF payload。
-- manifest 驱动的 fixture 捕获在多个 purpose 复用同一 DOI 文章时，会复用已登记 fixture，避免重复 purpose 阻断批量捕获。
-- fixture 捕获页已经包含填充的全文容器时，不再把同页访问 UI 文案误判为 access gate。
-- 对已知 MDPI 数字段 article URL 在通用 landing page 抓取前先推导 DOI；对已知 MDPI DOI suffix 在回退 `doi.org` 前先反推 MDPI article landing URL。
-- 外部公式转换子进程输出包含非法 UTF-8 字节时改为 replacement 解码，避免 Windows reader thread 抛出 `UnicodeDecodeError`。
-- PDF fallback 转 Markdown 时，PyMuPDF 在 Windows 上探测 Tesseract 的子进程输出如果包含非法 UTF-8 字节，也改为 replacement 解码。
+- PLOS 图片下载跟随签名重定向，并将下载后的图片链接改写为本地路径；graphic-only JATS 公式保留为公式图片。
+- 保留 Oxford Academic Silverchair 公式段落，从可见 reference-list 文本渲染引用。
+- 更新 Royal Society Publishing PDF fallback 渲染结果。
+
+## 1.7.0 - 2026-05-24
+
+### 新增
+
+- 新增 Annual Reviews (`annualreviews`) provider：支持 `10.1146/`、CloakBrowser HTML、seeded-browser PDF fallback、abstract-only 降级及正文图片。
+- 新增 Royal Society Publishing direct HTTP HTML provider 与严格 PDF fallback。
+
+### 修复
+
+- 等待 Annual Reviews 动态全文容器，不再把机构 “access provided by” 提示判为付费墙。
+- browser PDF 下载返回非 PDF 时报告 `NON_PDF_FALLBACK_CONTENT`；Chromium 返回 PDF viewer shell 时，通过同一 browser request context 重新取得真实 PDF。
+- fixture 捕获可复用同一 DOI 的多个 purpose；已有填充正文容器时不再误判同页访问 UI 为 access gate。
+- 保留 Royal Society Publishing Silverchair 图注，并清理其 PDF fallback 水印及页面占位噪声。
+- 已知 MDPI 数字段 article URL 可直接推导 DOI，已知 DOI suffix 可反推 landing URL。
+- 将公式 Node workspace 同步到 `katex` 0.17.0。
+- 外部公式转换器和 PyMuPDF Windows Tesseract 探测输出中的非法 UTF-8 使用 replacement 解码，避免 reader thread 抛出 `UnicodeDecodeError`。
 
 ## 1.6 - 2026-05-22
 
 ### 新增
 
 - 新增实验性 macOS 离线 release tarball，覆盖 CPython 3.11、3.12、3.13、3.14，并在 CI 中验证安装、headful 布局和 CloakBrowser smoke。
-- 新增 MDPI CloakBrowser HTML provider，支持 browser PDF fallback、录制 replay fixtures、Markdown 清洗覆盖，以及 `mdpi_html` / `mdpi_pdf` source。
+
 - 新增 AI provider onboarding 的 operator access review 和 Markdown review artifact，并用 schema gate 在 discovery 前和 acceptance 阶段校验。
 - 新增本地 `scripts/dev-preflight.sh` 门禁、低强度 contract 层 `mypy` 检查、公式 Node 包版本同步测试，以及 golden corpus provider adapter，方便后续 provider 接入。
 
@@ -1283,6 +1125,7 @@
 - live review 现在会对照 manifest `route_sources` 校验 provider source，并复用 manifest Markdown contract 做自动 issue 分类。
 - 离线安装器生成和刷新 `offline.env` managed block 时默认启用普通 Chrome browser User-Agent，降低 CloakBrowser 抓取 AGU/Wiley 时停在 Cloudflare challenge 页的概率。
 - MCP status、live review 支持和 golden corpus 代表样本覆盖尽量从 provider 事实源派生，减少新增 provider 时的硬编码同步点。
+- 新增 MDPI CloakBrowser HTML 与 browser PDF fallback，来源为 `mdpi_html` / `mdpi_pdf`。
 
 ## 1.5.6 - 2026-05-18
 
@@ -1340,7 +1183,6 @@
 ### 新增
 
 - 新增基于 CloakBrowser 的浏览器运行时抽象和 provider 状态诊断，替代 FlareSolverr 运行时路径。
-- 为迁移后的浏览器工作流新增浏览器图片 payload 和运行时 smoke 覆盖。
 
 ### 变更
 
@@ -1364,56 +1206,44 @@
 
 ### 变更
 
-- Release 1.4.1：原生 batch CLI 和 provider/MCP 改进。
 - 调整 CLI 输出/artifact 语义，使批量和单条 query 运行都能一致地区分主输出文件、保存的 Markdown 和 provider artifact。
 - 更新 MCP fetch/cache payload 行为，覆盖 inline image budget、cache resource 可见性和 schema 覆盖。
 - 加固 Elsevier Markdown 和 Springer HTML 抽取中关于表格、figure、资产链接重写和 provider 专属清理的处理。
 - 修复离线安装器 smoke check，使 Linux 和 PowerShell 安装都使用当前 MCP provider-status 入口点。
-- 刷新 README、provider、deployment、内置 skill 和 tool-contract 文档，使其匹配新的 CLI 与 MCP/provider 行为。
 
 ## 1.4 - 2026-05-12
 
 ### 新增
 
 - 新增面向 `arxiv.org` 和 DOI prefix `10.48550/` 的 `arxiv` provider；官方 HTML 成功时发布 `arxiv_html`，文本 PDF fallback 发布为 `arxiv_pdf`。
-- 新增 10 个真实 arXiv replay fixture：8 个官方 HTML 成功样本和 2 个官方 HTML 404 -> 真实 PDF fallback 样本，每个样本都包含 arXiv API metadata replay。
 
 ### 变更
 
-- 重构 Phase 1 routing/extraction 内部实现：Copernicus URL identity 现在使用 catalog `domain_suffixes`，早期 metadata probe 由 `ProviderSpec.probe_capability` 驱动，reference-anchor 检测集中到 HTML semantics，Wiley supplementary data attributes 由 Wiley extractor 处理，Science/PNAS figure teaser 过滤现在接收真实 publisher。
 - 集中 provider source ownership，包括 Springer HTML/PDF source ownership、API-like hosts、Wiley TDM URL template、Springer/Nature domain matching、workflow HTML-managed fallback marker，以及 `ProviderSpec` / `SOURCE_PROVIDER_MAP` 中的正文文本阈值。
-- 收紧 Phase 4 generic extraction 边界：Springer/Nature citation cleanup pattern 现在位于 provider 层，provider formula token 需要显式注入 `ProviderHtmlRules` profile，Research Briefing 无作者签名由 quality signal 管理。
-- 完成 Phase 4 duplicate-source cleanup：`FRONT_MATTER_PUBLICATION_KEYWORDS` 现在只有一个 generic source，Science/PNAS publication token 按 provider rule 作用域限定；`SourceKind` 在 import 时校验 catalog sources；Cloudflare cookie filter 共享 FlareSolverr constants；Science 复用共享 AAAS datalayer pattern。
-- 通过 provider rules 和共享 signal pattern 集中 Phase 3 HTML availability override 与 access-gate signal，包括 Science perspective、Elsevier canonical abstract 和 Springer preview-wall body-run 处理。
-- 加固 Phase 6 provider-specific contract：IEEE article-number URL parsing 现在只接受 `/document/{article_number}/` landing path，Springer/Nature Creative Commons cleanup 不再移除 article root，HTML asset helper 在 package 初始化期间避免 import public models package。
-- 完成 Phase 7 cleanup：generic browser HTML failure 现在是 `HtmlExtractionFailure`，FlareSolverr status probe 使用非 DOI sentinel，landing-page redirect resolution 统一为基于 request URL 的语义，并移除旧 FlareSolverr rate-limit env cleanup code。
-- 将 Atypon browser HTML/PDF candidate template 移入 `ProviderSpec`，并移除 `paper_fetch.providers.science_html`、`paper_fetch.providers.pnas_html` 和 `paper_fetch.providers.wiley_html` compatibility facade。
-- 完成 Phase 5 Atypon/Wiley cleanup：Wiley 拥有 abbreviation 和 supplementary filename contract，datalayer signal parsing 使用 schema field map，并将 Atypon browser workflow scope 记录为仅覆盖 Science/PNAS/Wiley catalog entry。
+
 - Golden criteria live review 现在把 `copernicus` 纳入受支持 provider rotation 和 provider-status diagnostics。
-- 记录 Phase 8 CI/test policy 更新：常规 unit/integration job 和完整 golden regression 继续使用 pytest-xdist 默认值，而 live FlareSolverr/MCP 路径记录其必须串行执行。
+
 - 澄清 CLI 输出语义：显式 `--format` 与 `--output-dir` 和 stdout 输出同时使用时，现在也会在 `--output-dir` 下写入同格式文档副本；`--output` 仍然是显式格式化输出文件路径。
 - Golden criteria live review 现在把 `arxiv` 视为受支持 provider，记录 arXiv provider status，在 arXiv API metadata 出现短暂失败时保留 derived-URL fallback，并将 arXiv 资产部分下载诊断分类为 `asset_download_failure`。
 - arXiv metadata enrichment 现在使用小型内部 Atom API client 做 ID lookup，不再依赖 PyPI `arxiv` / `feedparser` dependency chain。
 - arXiv HTML 资产下载现在使用 provider 专属的较低并发上限，并对网络异常失败顺序重试一次，同时将不可重试失败保留在 `quality.asset_failures`。
 - arXiv fulltext routing 现在固定为官方 HTML 优先，并直接使用文本 PDF fallback；废弃的本地 source-conversion fallback code 及相关资产处理不再属于受支持 route。
 - arXiv 官方 HTML Markdown cleanup 现在会合并普通正文硬换行，清理 LaTeXML TeX annotation 内嵌套的 `$...$` delimiter，并把全宽表格标题行从 GFM pipe table header 中提升出来。
-- 完成 Phase 2 callback cleanup：Atypon DOM postprocess 和 scoped asset extraction 现在是 provider-registered callback，provider display name 通过 catalog-backed `provider_display_name()` helper 解析。
-- 完成 Phase 3 catalog field cleanup：Springer/Nature PDF candidate、arXiv metadata probe short-circuit、provider HTML artifact persistence、XML source inference、provider-managed abstract-only handling 和 PDF URL token semantics 现在由 catalog/callback 驱动，不再硬编码 provider name。
-- 完成 Phase 5 Atypon browser workflow rename：旧 Science/PNAS package/profile/postprocess 名称迁移到 `atypon_browser_workflow`，移除 legacy profiles facade，Atypon profile dispatch 现在从 `ATYPON_BROWSER_WORKFLOW_PROVIDER_NAMES` 动态 import provider HTML module，共享 figure-link 和 abstract-redirect helper 移入中立 module，Science citation-italic repair 现在属于 `_science_html.py`。
+
 - Elsevier XML body asset download 现在只对短暂网络失败项顺序重试一次，并在重试成功时移除原资产失败记录。
 - Wiley formula image discovery 现在包含 `data-altimg` fallback span 和 display formula container，因此 image-only formula 可以进入 `kind="formula"` 资产下载路径，而不再要求必须有 `<img>` tag。
+- IEEE 文章号只从 `/document/{article_number}/` landing path 解析；Springer/Nature Creative Commons 清理不再删除 article root。
 
 ## 1.3 - 2026-05-09
 
 ### 新增
 
 - 新增面向 Copernicus Publications DOI prefix `10.5194/` 的 `copernicus` XML-first provider；NLM/JATS XML 成功时发布 `copernicus_xml`，文本 PDF fallback 发布为 `copernicus_pdf`。
-- 新增 8 个 Copernicus XML golden fixture，覆盖 ACP、HESS、GMD、TC、ESSD、NHESS、AMT 和 BG；另有 4 个旧 Copernicus PDF-fallback golden fixture，其 XML 仅有 abstract-level 内容；live smoke sample 覆盖仍位于 `PAPER_FETCH_RUN_LIVE=1` 开关之后。
+
 - 加固旧文章 Copernicus fallback 处理：当 XML 只暴露 abstract-level 内容时，这些 XML 失败现在会直接继续进入文本 PDF fallback；landing page 省略 PDF metadata 时，PDF discovery 会包含 DOI-derived `.pdf` candidate。
 
 ### 重构
 
-- 将 `paper_fetch.http` 从单模块拆分为 package facade 加内部 transport、cache、retry、body 和 error module，同时保留现有 public import path。
 - 将仅开发使用的 `geography_live`、`geography_issue_artifacts` 和 `golden_criteria_live*` module 从 `paper_fetch.*` 移到仅 source-tree 可见的 `paper_fetch_devtools.*`；wheel 不再分发这些 module，现有 repo-local script CLI 保持相同行为。
 
 ### 变更
@@ -1424,14 +1254,9 @@
 - Windows 离线发布产物改为 `paper-fetch-skill-windows-x86_64-setup.exe`，内置 CPython 3.13 x64、Python 依赖、Playwright Chromium、formula tools、FlareSolverr runtime、Codex / Claude Code skill 和 MCP 注册 helper。
 - GitHub Actions 在 `v*` tag push 或显式手动发布时，会等常规验证、完整 Linux 离线包矩阵和 Windows x86_64 setup exe 成功后创建 GitHub Release，并上传 4 个 Linux tarball 加 1 个 Windows 安装器 release asset。
 - 扩展正文图片 payload 识别与落盘格式：除现有 PNG/JPEG/GIF/WebP/AVIF/TIFF 外，支持 SVG 文本、BMP、ICO、APNG、HEIC/HEIF 的 MIME/扩展名映射；正文图片保存前会确认 payload 具备图片 magic 或顶层 SVG 文档特征，避免把 challenge HTML 当图片保存。
-- 将 Science `10.1126/science.adz3492` 加入 golden fixture，保留真实 SVG 正文图资产，防止 Science/PNAS SVG 图片落盘路径回归。
+
 - 为 Wiley / Science / PNAS 正文抓取增加 FlareSolverr HTML 快速首轮：主 HTML 请求使用 `waitInSeconds=0` 和 `disableMedia=true`，遇到 challenge、访问拦截、摘要重定向或正文抽取不足时自动回退到原保守等待策略。
 - 图片恢复、正文/附件资产下载、figure-page HTML 发现继续走允许媒体资源的路径，避免 `disableMedia` 阻断 full-size 图片发现与下载。
-- 收敛 HTML availability/container、section hint、browser-workflow Markdown profile、作者 fallback、Crossref resolve 转发和 HTML heading/table helper 的重复实现；canonical owner 分别为 `quality.html_availability`、`extraction.section_hints` / `extraction.html.semantics`、`ProviderBrowserProfile` / `_html_authors.py`、`metadata.crossref`。
-- 明确 Science / PNAS / Wiley 共享浏览器抽取为 Atypon-only profile，并把 asset scope、Wiley abbreviations、Wiley author noise、supplementary URL/filename 和 AAAS/PNAS/Wiley datalayer 判定收敛到 provider-owned callback/schema。
-- 将 HTML asset canonical owner 移到 `paper_fetch.extraction.html.assets` 包，删除 `paper_fetch.extraction.html._assets` 与 `paper_fetch.providers.html_assets` 兼容门面；下载 hook 现在从 extraction asset 包或 `paper_fetch.extraction.html.assets.download` patch。
-- 将 `paper_fetch.models` 物化为包，并按 schema、markdown、tokens、quality、render、sections、builders 拆分实现；`from paper_fetch.models import ...` 继续兼容。
-- 将 Science/PNAS browser-workflow HTML 实现物化为 `paper_fetch.providers.science_pnas` 包，删除 `paper_fetch.providers._science_pnas_html` 兼容门面，并抽出 provider HTML asset policy engine 与 Playwright document fetcher 基类。
 
 ## 1.0.0 - 2026-04-26
 
@@ -1442,22 +1267,10 @@
 - 调整 Wiley 全文 waterfall 顺序：当本地浏览器运行时就绪时，browser PDF/ePDF fallback 现在先于可选 TDM API PDF lane 执行，使 `wiley_browser` 保持为默认成功 route。
 - 将 `code_availability` 新增为一等 section kind。Elsevier、Springer / Nature、Wiley、Science 和 PNAS 现在共享 data/code/software availability 分类，在最终 Markdown/ArticleModel 输出中保留这些 section，并将其排除在 body sufficiency metric 之外。
 
-### 文档
-
-- 在 FlareSolverr workflow notes 中记录 seeded Playwright image fetch 的短超时行为。
-- 记录统一 data/code availability 保留规则和 quality-metric 排除规则。
-
-### 验证
-
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_provider_request_options.py`
-- `PYTHONPATH=src python3 -m pytest tests/unit/test_science_pnas_provider.py -k 'download_related_assets or image'`
-- Live smoke：Wiley `10.1111/gcb.16414`、Science `10.1126/science.ady3136` 和 PNAS `10.1073/pnas.2406303121` 使用 WSLg FlareSolverr preset 产出带 full-size body image 的全文 Markdown。
-
 ## 2026-04-25
 
 ### 变更
 
-- 将 Wiley / Science / PNAS browser workflow runtime 提升到 [`src/paper_fetch/providers/browser_workflow.py`](src/paper_fetch/providers/browser_workflow.py)。Science、PNAS 和 Wiley 现在声明 `ProviderBrowserProfile` object，用于 URL candidate、Markdown extraction、author fallback、public source、label 和 browser asset behavior；`_science_pnas.py` 保持 compatibility alias。
 - 将 Wiley / Science / PNAS HTML asset downloader 提升为共享 Playwright primary path。Figure、table 和 formula image candidate 现在每次下载尝试复用一个 seeded browser context，而不是先尝试 direct HTTP。
 - 保持 full-size/original candidate 优先于 preview candidate，但现在两个层级都通过同一个共享 browser context 抓取。目标 provider 下载报告 `download_tier="full_size"` 或 `download_tier="preview"`，而不是 `playwright_canvas_fallback`。
 - 收紧 browser-workflow image recovery path：重复的 figure-page / image-candidate URL 会按 attempt 缓存，body-image payload download 现在使用固定受限并发并保持稳定输出顺序，当 `solution.imagePayload` 缺失或无效时 FlareSolverr recovery 不再回退到 screenshot cropping。
@@ -1468,37 +1281,11 @@
 - 收紧 Springer / Nature HTML cleanup，移除更多 article chrome 和 license section，保留 main body 之外的 scientific back matter，抽取 formula image asset，并在 table-page parsing 失败时输出显式 table-body-unavailable placeholder。
 - 调整 golden-criteria live issue 分类，使 formula-only preview fallback 不被视为 asset-download failure；非 formula preview fallback 除非明确接受，否则仍视为 asset issue。
 
-### 文档
-
-- 更新 README、provider、FlareSolverr、extraction-rule、deployment、architecture 和 schema notes，说明共享 Playwright primary asset path、formula image preservation、Markdown asset-link rewrite、reference fallback behavior，以及目标 provider 的 `download_tier` 语义。
-
-### 验证
-
-- `pytest tests/unit/test_science_pnas_provider.py tests/unit/test_provider_waterfalls.py tests/unit/test_provider_request_options.py tests/unit/test_html_shared_helpers.py -q`
-- `pytest tests/unit/test_elsevier_markdown.py tests/unit/test_golden_criteria_live.py tests/unit/test_models_render.py tests/unit/test_science_pnas_markdown.py tests/unit/test_springer_html_regressions.py -q`
-- Live smoke：Wiley `10.1111/gcb.16455` 下载 5/5 full-size body figure，Science `10.1126/science.ady3136` 下载 6/6 full-size body figure，PNAS `10.1073/pnas.2406303121` 下载 4/4 full-size body figure；所有本地文件都有 image magic bytes、dimensions，且 Markdown link 已重写到本地路径。
-
 ## 2026-04-19
 
 ### 变更
 
-- 将共享 HTML full-text diagnostics 移入 [`src/paper_fetch/providers/_html_availability.py`](src/paper_fetch/providers/_html_availability.py)，并切换 `html_generic`、`elsevier`、`springer`、FlareSolverr 和 PDF fallback helper，使其直接 import 共享 availability/access-signal layer，而不是经由 `_science_pnas_html.py`。
-- 在 [`src/paper_fetch/providers/_science_pnas_profiles.py`](src/paper_fetch/providers/_science_pnas_profiles.py) 中新增内部 `PublisherProfile` plumbing，使 browser-workflow candidate builder、noise-profile selection 和 provider-specific postprocess hook 位于 `_science_pnas_html.py` 之外。
-- 移除 `_article_markdown_document.py` compatibility wrapper；direct Elsevier document assembly 现在只位于 [`src/paper_fetch/providers/_article_markdown_elsevier_document.py`](src/paper_fetch/providers/_article_markdown_elsevier_document.py)，而 [`src/paper_fetch/providers/_article_markdown.py`](src/paper_fetch/providers/_article_markdown.py) 仍是有意保留的 aggregate entrypoint。
-- 将过大的 `tests/unit/test_science_pnas_html.py` coverage 拆分为聚焦 candidate、availability、markdown 和 postprocess 的测试文件，同时保留 `tests/unit/test_html_access_signals.py` 中的 `detect_html_block()` coverage。
-- 将 geography report/export/group 脚本及其 supporting module 和测试提升为 tracked repo-local internal tooling，不新增 CLI install surface 或 MCP tool。
-
-### 文档
-
-- 更新 README、provider docs 和 backlog notes，说明 geography report/export/group 是 `PAPER_FETCH_RUN_LIVE=1` 之后的 live-only internal tooling。
-
-### 验证
-
-- `pytest tests/unit/test_science_pnas_candidates.py tests/unit/test_html_availability.py tests/unit/test_science_pnas_markdown.py tests/unit/test_science_pnas_postprocess.py tests/unit/test_html_access_signals.py tests/unit/test_elsevier_markdown.py -q`
-- `pytest tests/unit/test_geography_live.py tests/unit/test_geography_issue_artifacts.py -q`
-- `python3 scripts/run_geography_live_report.py --help`
-- `python3 scripts/export_geography_issue_artifacts.py --help`
-- `python3 scripts/group_geography_issue_artifacts.py --help`
+- 新增仓库本地 geography report/export/group 脚本，不增加安装后的 CLI 命令或 MCP tool。
 
 ## 2026-04-16
 
@@ -1514,11 +1301,6 @@
 - 修改 Science / PNAS local diagnostics，使 MCP 可在不修改 rate-limit tracking file 的情况下检查 FlareSolverr runtime readiness 和本地 rate-limit window。
 - 修改 `batch_resolve()` 和 `batch_check()`，当请求超过 `50` 个 query 时直接拒绝，而不是尝试执行超大 batch run。
 - 修改 MCP initialization，使 server 在支持的 transport 上声明 `capabilities.resources.listChanged=true`。
-
-### 文档
-
-- 更新 README、deployment docs、provider docs 和内置 skill guide，记录 `provider_status()` 与新的 MCP tool-annotation hint。
-- 更新 README、deployment docs 和内置 skill guide，记录 `50` query batch limit 和新的 cache-resource list-change notification。
 
 ## 2026-04-15
 
@@ -1542,44 +1324,22 @@
 - 修改 `token_estimate` 语义，使其作为 `abstract + body` 保持向后兼容；新的 `refs` budget 只存在于 `token_estimate_breakdown`。
 - 修改 MCP cached FetchEnvelope sidecar 加载逻辑，使读取早于新 contract 的旧 cache entry 时回填缺失 token-breakdown 字段。
 
-### 文档
-
-- 更新 README、deployment docs、skill guide 和 probe-semantics note，记录已发布的 `has_fulltext` v1 行为和新的 `batch_check(mode="metadata")` 语义。
-- 更新 static skill installer 和 architecture docs，将 `skills/paper-fetch-skill/` 视为 runtime-agnostic bundle，可包含按需 `references/` 文件。
-- 更新 MCP-facing docs，说明新的 `concurrency` 参数，以及 `batch_*` 的“cross-host concurrent, same-host serial”行为。
-- 更新 MCP-facing docs 和 skill notes，说明 `fetch_paper` 与 `batch_*` 的 cooperative cancellation。
-- 更新 README、deployment docs 和 MCP instruction text，记录显式 isolated download directory 的 scoped cache resource。
-- 更新 README、deployment docs、skill notes 和 MCP instruction text，记录 `strategy.inline_image_budget` 及其默认 `3 / 2 MiB / 8 MiB` inline-image cap。
-- 更新 README、deployment docs 和内置 skill guide，记录两个已发布 MCP prompt 和新的 `token_estimate_breakdown` budgeting hint。
-
 ## 2026-04-14
 
 ### 新增
 
 - 新增公开 `science` 和 `pnas` provider route，包括 direct `provider_hint`、`preferred_providers` 和最终 `source` 支持。
 - 新增 repo-local Science / PNAS provider 实现，位于 [`src/paper_fetch/providers/science.py`](src/paper_fetch/providers/science.py) 和 [`src/paper_fetch/providers/pnas.py`](src/paper_fetch/providers/pnas.py)，由共享 FlareSolverr、HTML cleanup 和 Playwright PDF-fallback helper 支持。
-- 新增 repo-local `vendor/flaresolverr/` workflow asset、[`scripts/`](scripts) 下的薄 wrapper script，以及 [`docs/flaresolverr.md`](docs/flaresolverr.md) 中的专用 operator guide。
-- 新增离线 Science / PNAS fixture，并增加 routing、FlareSolverr error handling、provider fallback 和 public result provenance 的 unit coverage。
-- 在现有 `PAPER_FETCH_RUN_LIVE=1` gate 后新增一个 Science HTML DOI 和一个 PNAS PDF-fallback DOI 的 opt-in live smoke 覆盖。
+- 新增 repo-local `vendor/flaresolverr/` workflow asset、[`scripts/`](scripts) 下的薄 wrapper script，以及 `docs/flaresolverr.md` 中的专用 operator guide。
 
 ### 变更
 
 - 扩展 `SourceKind` 和 service provider registry，使 `science` 与 `pnas` 成为一等 public provenance value，而不是仅 envelope-only alias。
 - 使 Science / PNAS 使用 provider-managed `HTML first -> PDF fallback -> metadata-only fallback` 链，并在选择这些 provider 后显式跳过 generic `html_generic` fallback。
-- 将 Science / PNAS HTML extraction 移到 provider-specific cleanup rule，然后把清理后的 HTML 送回现有 HTML-to-Markdown pipeline 做最终渲染。
+
 - 在 Science / PNAS 全文检索继续前，新增对 `vendor/flaresolverr`、`FLARESOLVERR_ENV_FILE`、本地 FlareSolverr health 和必需 local rate-limit setting 的显式 repo-local runtime check。
 - 在 user data directory 中新增本地 Science / PNAS rate-limit accounting，并让这些 route 上的 `asset_profile=body|all` 以带 warning 的 text-only downgrade 处理，而不是 hard failure。
 - 扩展 `install-formula-tools.sh`，使 repo-local development 可以通过一个入口 bootstrap FlareSolverr source setup、Playwright Chromium 和 headless `Xvfb` prerequisite。
-
-### 文档
-
-- 更新 README、deployment guidance、provider docs、MCP instruction snippet 和 FlareSolverr workflow docs，说明新的 Science / PNAS route、repo-local-only support boundary、必需 environment variable 和 operator-owned ToS risk。
-
-### 验证
-
-- `python3 -m compileall src/paper_fetch`
-- `ruff check src/paper_fetch tests/unit`
-- `PYTHONPATH=src python3 -m unittest -q tests.unit.test_publisher_identity tests.unit.test_resolve_query tests.unit.test_science_pnas_html tests.unit.test_science_pnas_flaresolverr tests.unit.test_science_pnas_provider tests.unit.test_service`
 
 ## 2026-04-13
 
@@ -1587,23 +1347,21 @@
 
 - 新增 MCP cache indexing，提供 `list_cached()` / `get_cached()`，以及默认共享下载目录的 `resource://paper-fetch/cache-index` 和 `resource://paper-fetch/cached/{entry_id}` resource。
 - 新增 `batch_resolve(queries)` 和 `batch_check(queries, mode)` MCP tool，使 citation-list workflow 可以保持串行、复用 transport 且节省 context。
-- 在 [`src/paper_fetch/mcp/_instructions.py`](src/paper_fetch/mcp/_instructions.py) 中新增 canonical MCP/skill-facing instruction helper，用于对齐默认值、环境说明和 error-contract wording。
+
 - 当 `strategy.asset_profile` 为 `body` 或 `all` 时，为少量本地 body figure 新增 inline `ImageContent` 支持。
 - 为 `fetch_paper`、`batch_check` 和 `batch_resolve` 新增结构化 MCP progress update 和 structured log notification。
-- 新增代表性 Elsevier 和 HTML-fallback flow 的 live MCP end-to-end smoke 覆盖。
+
 - 在 [`docs/architecture/probe-semantics.md`](docs/architecture/probe-semantics.md) 中新增 probe-semantics design note，用于定义未来 `has_fulltext(query)` 方向。
 
 ### 变更
 
-- 将 public change history 和 shipped-surface notes 从临时 backlog docs 移入此 changelog。
 - 在 MCP `fetch_paper` surface 暴露 `download_dir`，使 task-local directory 可覆盖 `PAPER_FETCH_DOWNLOAD_DIR` 和 XDG 默认值。
 - 扩展 MCP `resolve_paper`，使其接受 raw `query` 或结构化 `title` 加可选 `authors` / `year`。
 - 更新 static skill，记录真实默认值、影响行为的 environment variable、error contract、cache-first call discipline 和 batch-first bibliography workflow。
 - 澄清 `include_refs=null` 在 `max_tokens="full_text"` 时表现为 `all`，在 numeric token budget 时表现为 `top10`。
-- 将 skill frontmatter 重写为更短的 trigger-style description，并把 call-discipline guidance 前移到 main workflow 之前。
+
 - 将 provider routing 转向 Crossref/domain-first hint，只有必要时才使用 DOI-prefix fallback，并向 `source_trail` 添加 route diagnostic。
-- 围绕共享 utility 统一 text-normalization、DOI extraction、metadata merge helper 和 HTML lookup heuristic，减少重复逻辑。
-- 将大型 renderer 和 HTML module 拆分为由聚焦 helper 支撑的更薄 facade，同时保留 public compatibility entrypoint。
+
 - 优化 CLI exit code、Markdown asset-link handling、render budgeting 和 token-estimation 内部实现，不改变 public fetch contract。
 
 ### 修复
@@ -1615,18 +1373,3 @@
 - 收紧异常处理，使 programming error 不再被静默降级成 partial-download 或 fallback path。
 - 通过强制 `download_dir=None` 防止 `batch_check()` 将 payload 写入磁盘。
 - 即使未请求 `article`、`markdown` 或 `metadata`，导致其返回为 `null`，仍保留 top-level fetch provenance field。
-
-### 文档
-
-- 将 architecture rationale 保留在 [`docs/architecture/overview.md`](docs/architecture/overview.md)，并把已发布变更移到本文件。
-- 更新 deployment、provider、MCP 和 skill-facing documentation，使其匹配已经落地的 MCP surface 和 environment behavior。
-
-### 验证
-
-- `ruff check .`
-- `PYTHONPATH=src python3 -m pytest tests/unit tests/integration -q`
-- `PYTHONPATH=src python3 -m pytest -n 0 tests/live/test_live_mcp.py -q` 在 live env 未启用时会 clean skip；这里需要 `-n 0`，因为 live MCP 共享外部 publisher/API state 和 secrets。
-
-### 后续
-
-- 专用 MCP probe tool `has_fulltext(query)` 尚未发布；本次只落地了 [`docs/architecture/probe-semantics.md`](docs/architecture/probe-semantics.md) 中的语义说明。

@@ -1,19 +1,17 @@
 # 部署指南
 
 安装、配置、MCP 注册和升级见下文。
-provider 差异见 [providers.md](providers.md)，浏览器准备见 [browser-backends.md](browser-backends.md)，
+provider 差异见 [providers.md](providers.md)，浏览器组件与状态见 [browser-backends.md](browser-backends.md)，
 原生 macOS 证据边界见 [适配说明](#macos-适配与证据边界)。已安装 skill 的独立说明位于
 [environment.md](../skills/paper-fetch-skill/references/environment.md) 和
 [cli-workflow.md](../skills/paper-fetch-skill/references/cli-workflow.md)。
 
 ## 1. 安装 Python 包
 
-安装器在核心安装完成后默认准备当前平台支持的后端：各支持平台统一准备 Camoufox＋Byparr 组合。首次安装、升级和同版本重装复用有效缓存及成功检查记录；在线 `--lite` 跳过。POSIX `--skip-browser-prepare` 和 Windows `/SKIPBROWSERPREPARE` 可跳过准备。准备失败保留核心安装。
-
-每次安装只自动准备一次浏览器；后续可选配置只处理凭据、Ghostscript 和 libvips，图片工具安装默认不选。跳过参数只影响安装阶段，运行时仍按需准备。安装器清除上次浏览器结果；本次汇总以 `Browser preparation: ready|not ready|skipped` 表示总体状态，所有选中的受支持后端就绪才显示完成。失败或取消显示独立重试命令；跳过时显示手动准备入口。
-
-现有 Linux/Windows/macOS 离线目标内置 Byparr v2.1.0 源码和私有依赖；源码/pip 安装按锁定版本自动下载。Byparr 复用受管 Camoufox 浏览器、指纹模型及 Playwright Node driver，准备浏览器和模型时仍可能联网；非交互模式不安装系统软件。运行时边界与迁移说明见 [浏览器后端](browser-backends.md#统一受管-byparr)。
-
+安装器在核心安装完成后默认准备 Camoufox＋Byparr，首次安装、升级与重装均复用有效
+缓存和成功检查记录，准备失败保留核心安装。跳过选项、离线预置和重试入口见
+[浏览器安装与准备](#浏览器安装与准备)。后续可选配置只处理凭据、Ghostscript 和
+libvips，图片工具默认不选，不会再次启动浏览器。
 
 默认 `pip install .` 只安装轻量 core。按需要选择 `.[browser]`（Camoufox/HTML）、
 `.[pdf]`（PDF 转换）或 `.[full]`（两者）。开发与普通 CI 使用已提交的锁文件：
@@ -23,8 +21,7 @@ uv sync --frozen --extra dev --extra full
 ```
 
 core 运行时要求 MCP Python SDK 2.x（`mcp>=2,<3`）。server 使用 v2
-`MCPServer`，同时兼容 2025 握手协议客户端和 2026-07-28 现代协议客户端；
-
+`MCPServer`，同时兼容 2025 握手协议客户端和 2026-07-28 现代协议客户端。
 
 如果目标是把本仓库的完整本地运行环境一次性准备好，推荐先使用顶层一键安装脚本：
 
@@ -40,15 +37,78 @@ core 运行时要求 MCP Python SDK 2.x（`mcp>=2,<3`）。server 使用 v2
   Linux 常见路径是 `~/.config/paper-fetch/.env`，macOS 是
   `~/Library/Application Support/paper-fetch/.env`
 - 安装 Python 依赖、外部公式后端和图片转换后端；源码在线安装默认准备支持的浏览器，可用 `--skip-browser-prepare` 跳过；运行时首次使用后端时自动准备
-- 安装结束时提示 Elsevier 官方 API key 的申请入口和配置位置；抓取 Elsevier 全文前需要从 <https://dev.elsevier.com/> 申请并设置 `ELSEVIER_API_KEY`
+- 安装结束时提示 Elsevier 官方 API key 的申请入口和配置位置；使用 Elsevier API 路线时从 <https://dev.elsevier.com/> 申请并设置 `ELSEVIER_API_KEY`
 
 补充说明：
 
-- 这是在线一键安装入口：用户不需要手动准备公式后端；浏览器路径通过统一后端接口执行。CLI/MCP/library 在首次实际使用后端时自动准备组件；进入受限网络前可按 [预置说明](browser-backends.md#安装) 准备最新兼容浏览器与 fpgen 模型，再用 `paper-fetch browser-preflight` 验证
+- 这是在线一键安装入口：用户不需要手动准备公式后端；浏览器路径通过统一后端接口执行。CLI/MCP/library 在首次实际使用后端时自动准备组件；进入受限网络前可按 [预置说明](#浏览器安装与准备) 准备最新兼容浏览器与 fpgen 模型，再用 `paper-fetch browser-preflight` 验证
 - 如果只想安装 Python 包和配置骨架，不准备外部公式或图片转换后端，使用 `./install.sh --lite`
 - 如果要装进当前 `python3` 环境而不是 `.venv`，使用 `./install.sh --system`
 - arXiv 不需要本地转换器；official HTML 不可用或质量检测失败时直接进入 PDF fallback
 - 如果只想跳过公式 Node fallback，可使用 `--no-node`
+
+### 浏览器安装与准备
+
+core 不包含浏览器依赖；pip 安装可选择：
+
+```bash
+python -m pip install "paper-fetch-skill[browser]"
+python -m pip install "paper-fetch-skill[full]"
+```
+
+`full` 同时包含 PDF 能力。运行时不自动安装缺失的 Python 依赖。离线包按 `full`
+构建并内置锁定的 Byparr 源码和私有依赖，但不分发浏览器 binary 或 fpgen 模型。
+组件版本、缓存和后端配置见[浏览器后端](browser-backends.md#统一受管-byparr)。
+
+Camoufox Python 包固定为 0.5.9，浏览器独立跟踪渠道。未显式配置渠道或 pin 时默认
+`official/prerelease`，由官方版本发现机制选择当前平台最新兼容正式版或预发布版；
+`stable` 仅接受正式版。可显式设置：
+
+```bash
+python -m camoufox set official/stable
+python -m camoufox set official/prerelease/<version>
+```
+
+已有渠道、版本 pin、SHA 和自定义 executable 优先；显式 pin 只准备对应版本，
+有效本地 pin 直接复用。准备时在缓存锁内补齐默认渠道，静态探测不写配置。
+最近检查成功且本地组件有效时，24 小时内不查询远端，“无需更新”也算成功。
+失败或取消不延长成功窗口，下一次调用允许重试；缺失、损坏或不兼容允许立即准备，
+更新失败时可复用兼容本地组件。配置损坏、路径越界或 symlink/reparse 路径报错，
+不通过删除配置修复。显式 `PAPER_FETCH_BROWSER_BINARY_PATH` 跳过托管浏览器更新。
+安装器、CLI、MCP、Python API、auth 与 preflight 共用持久准备记录及文件锁。
+
+完全离线前，在联网环境用项目入口准备浏览器及 fpgen 模型：
+
+```bash
+python - <<'PYCODE'
+from paper_fetch.providers.browser_runtime.preparation import prepare_camoufox_managed_runtime
+assert prepare_camoufox_managed_runtime().valid
+PYCODE
+```
+
+完整 runtime 包括相邻配置、addons、字体和 fpgen 模型，只复制 executable 不足以使用。
+fpgen 模型不在 Python wheel 内；准备前确认其包目录可写。原模型下载请求失败时，
+项目从 GitHub 官方 Release API 获取同一固定 tag 和文件名，继续核验压缩包及各模型
+的包内 SHA-256；校验失败不回退。模型准备先于 Playwright 启动，自定义 executable
+也遵守此顺序。准备后可用 `paper-fetch browser-preflight` 检查真实站点访问。
+
+安装器默认准备整套 Camoufox＋Byparr。在线 `--lite`、POSIX
+`--skip-browser-prepare` 或 Windows `/SKIPBROWSERPREPARE` 可跳过安装阶段准备，
+运行时仍按需准备。安装汇总以 `Browser preparation: ready|not ready|skipped` 报告本次结果，
+失败或取消显示重试命令。独立重试使用安装环境的 Python：
+
+```bash
+python -m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all
+```
+
+`--prepare-browsers all|camoufox|byparr` 和 `--prepare-byparr` 均准备整套组合，
+浏览器/指纹与 Byparr 组件分别复用一次准备。`--non-interactive` 允许用户级下载，
+不安装系统软件；Debian/Ubuntu 缺共享库时显示 APT 指引，交互模式经确认后安装。
+无需 Chrome、ChromeDriver、Selenium、Xvfb 或 bubblewrap。
+
+下载准备预算 10 分钟，本地启动检查另限 2 分钟，可用 Ctrl+C 取消。检查仅使用临时
+状态和 `about:blank`，不访问出版社或认证，结束时清理所属进程。失败保留核心安装，
+结果和重试命令写入 `browser-setup-results.txt`。
 
 ### 离线包
 
@@ -75,32 +135,26 @@ paper-fetch-skill-windows-x86_64-setup.exe
 `pyproject.toml` 的大多数依赖保留兼容范围；browser/full extra 使用 `camoufox==0.5.9`，浏览器默认独立跟踪正式版和预发布版中的最新兼容版本，Python 包不自动升级。`uv.lock` 固定普通开发和 CI 实际使用的版本；POSIX 离线构建读取依赖 wheelhouse 中唯一 Camoufox wheel 的 METADATA，验证安装后的 distribution 与该版本一致，并在 `offline-manifest.json` 的 `components.camoufox.python_package_version` 记录实际值。quality job 在其它静态门禁之前通过独立的 `Check lockfile freshness` 步骤执行 `uv lock --check`，项目版本、依赖声明或 lock metadata 的陈旧状态会直接令 CI 失败；后续 `uv sync --frozen` 只消费已验证的锁文件，不会在常规运行中重新选择版本。Dependabot 每周为 pip、npm 和 GitHub Actions 更新创建可跟进的 PR；普通 PR 继续由 `verify.yml` 对锁定依赖执行全 extras 漏洞审计。离线 wheelhouse/hash manifest 继续负责跨平台离线资产，不替代开发锁文件。
 
 PDF 的 `pdf/full` extras 协调使用 `PyMuPDF>=2,<3` 与 `pymupdf4llm>=2,<3`，
-开发锁定这两个包及其传递依赖 `pymupdf-layout` 均为 2.0；仅维护 2.x。
+开发锁定这两个包及其传递依赖 `pymupdf-layout` 均为 2.1；仅维护 2.x。
 转换调用、上游输出透传及资产落盘语义保持不变。
 
 HTML 提取依赖 trafilatura 暂限 `>=2.0,<2.3`，开发锁定 2.2.0。
 2.3.0 和 2.3.1 的 Markdown 转义会改写既有 `$...$` 公式中的下划线及表格引用；
 在线安装与离线构建沿用这一兼容上限，保留现有公式和表格输出契约。
-最小 HTML renderer 回归覆盖公式下划线和表格引用方括号；2.3.1 仍不能通过这两项契约。
 
 当前锁定的浏览器组合为 Camoufox 0.5.9 / Playwright 1.62.0。项目允许
 `playwright>=1.58,<1.64`，但解析时仍受 Camoufox 自身的 `<1.63` 约束，不能强制
 安装 1.63。当前 Playwright 要求 Camoufox browser beta.30 或更新版本；固定浏览器版本时须满足该兼容范围。
 浏览器渠道、pin、24 小时检查记录及 fpgen 预置统一见
-[浏览器安装与准备](browser-backends.md#安装)。原生 macOS gate 预置浏览器和 fpgen，
+[浏览器安装与准备](#浏览器安装与准备)。原生 macOS gate 预置浏览器和 fpgen，
 再验证同一版本的临时与持久 context。
 
 CI 的 setup-uv 固定为 10.3.2 的完整 SHA。缓存使用该版本的 `auto` 事件策略，
 并显式保留 `prune-cache: true`，避免跨主版本升级改变缓存清理行为。
 
-主包版本号同步清单：
-
-- `pyproject.toml` 的 `[project].version` 是 Python 包和离线构建脚本读取的主版本来源。
-- `src/paper_fetch/version.py` 从项目元数据读取版本；`DEFAULT_USER_AGENT` 和 CLI `--version` 由它派生。
-- `skills/paper-fetch-skill/references/environment.md` 不写死版本号，只指向运行时 `paper_fetch.config.DEFAULT_USER_AGENT`。
-- `scripts/sync_version.py --write` 生成 Inno `AppVersion` 默认值；`--check` 验证安装器和中英文 changelog。
-- `tests/integration/test_offline_install.py` 中用于离线安装测试的 runtime fixture 需要与 Linux / macOS 安装脚本的布局保持同步。
-- `CHANGELOG.md` / `CHANGELOG_CN.md` 仍人工维护版本章节；发布前的同步检查会拒绝缺失章节。
+版本以 `pyproject.toml` 的 `[project].version` 为准，CLI 和 User-Agent 从元数据派生。
+`scripts/sync_version.py --write` 同步 Inno `AppVersion`；`--check` 验证安装器及人工维护的
+中英文 changelog 版本章节。发布命令见[发布前检查](#release-checklist)。
 
 Linux 目标机直接运行与 Python ABI 匹配的 `.sh`。默认安装到 `~/.local/share/paper-fetch-skill`：
 
@@ -146,7 +200,7 @@ xattr -dr com.apple.quarantine \
 安装器不会自行移除 quarantine。包内 texmath 使用 ad-hoc codesign；这验证
 Mach-O 结构，不等同于 Developer ID 签名或 Apple notarization。
 
-进入离线环境前，在联网阶段按[浏览器预置说明](browser-backends.md#安装)准备
+进入离线环境前，在联网阶段按[浏览器预置说明](#浏览器安装与准备)准备
 浏览器与 fpgen 模型，并运行 `paper-fetch browser-preflight` 检查实际启动和站点访问。
 离线安装使用激活后的 `python`，或 `<install>/runtime/paper-fetch-python`。
 
@@ -225,9 +279,9 @@ Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的
 - Linux / macOS 安装时会把通过 `PAPER_FETCH_OFFLINE_PYTHON_BIN` / `python3` 选中的解释器路径写入 `runtime/python-bin`，后续 `runtime/paper-fetch-python` 私有 launcher、CLI wrapper 和 MCP 都复用该解释器；`bin/` 不暴露通用 `python` wrapper，避免全局 PATH 前置后遮蔽用户自己的 Python
 - Windows 安装器固定使用包内 CPython 3.13.15 x64 embeddable runtime；版本、python.org URL 与官方 SHA-256 `d1f04d990aee1253d8569e8e5104e30fa9f5fa830899f14843448872d936a2cf` 均来自 `installer/manifest.json`，构建器在解压前校验，目标机不需要预装 Python
 - Linux 构建阶段用临时 wheelhouse 把项目和依赖安装进 `runtime/site-packages`，然后只把安装后的 runtime、`bin/` 启动器、公式工具和 skill 放进自解压 `.sh` payload；目标机安装阶段不运行 pip，不包含源码树、`dist/` 或 `wheelhouse/`
-- Playwright 和 Camoufox Python 依赖随离线 runtime 分发；浏览器 binary 和 fpgen 模型由[准备流程](browser-backends.md#安装)管理。离线使用需提前预置；现有安装验证不覆盖完全断网的浏览器启动。
+- Playwright 和 Camoufox Python 依赖随离线 runtime 分发；浏览器 binary 和 fpgen 模型由[准备流程](#浏览器安装与准备)管理。离线使用需提前预置；现有安装验证不覆盖完全断网的浏览器启动。
 - Linux `.sh` payload 不包含仓库源码快照和 `tests/` 目录；离线安装目标是运行已打包工具，不在目标机执行项目测试
-- Linux、macOS、Windows 离线包都携带原生 texmath 0.13.3，分别位于 `formula-tools/bin/texmath` 和 `formula-tools/bin/texmath.exe`，并将它作为首选公式后端；`mathml-to-latex>=1.8.0,<2.0.0` 和随 Playwright 分发的 Node 作为二级转换回退。公式工具和离线包同时携带固定为 4.1.3 的 MathJax、TeX 字库、mhchem 与 bbm 字形扩展，预载 `bbm`、`textcomp` 及既有扩展，供源 TeX 与 MathML 转换结果的编译／排版校验使用。LitRoot 提交由 `scripts/sync_mathjax_engine.py /path/to/LitRoot` 生成的引擎副本；`--check`、副本摘要测试和独立检查器阻止内容漂移。`src/paper_fetch/resources/formula` 是 Node manifest、lockfile 和转换脚本的唯一源码位置；checkout runtime 直接引用它，Python 安装器和离线构建将它暂存到 `formula-tools`。lockfile 解析上述固定 MathJax 资源、`mathml-to-latex` 1.8.0 及其实际传递依赖，unit test 会拒绝声明或解析结果漂移。目标机不编译 texmath，也不运行 `npm install`。CI / release 公式构建固定使用 `haskell-actions/setup` v2.12.1 的完整 SHA、GHC 9.14.1 和 Cabal 3.18.1.0。macOS 构建会把非系统 Mach-O dylib 复制到 `formula-tools/lib`，用 `@rpath` / `@loader_path` 重写引用，并对 texmath 与随包 dylib 做 ad-hoc codesign
+- Linux、macOS、Windows 离线包都携带原生 texmath 0.13.3，分别位于 `formula-tools/bin/texmath` 和 `formula-tools/bin/texmath.exe`，并将它作为首选公式后端；`mathml-to-latex>=1.8.0,<2.0.0` 和随 Playwright 分发的 Node 作为二级转换回退。公式工具和离线包同时携带固定为 4.1.3 的 MathJax、TeX 字库、mhchem 与 bbm 字形扩展，预载 `bbm`、`textcomp` 及既有扩展，供源 TeX 与 MathML 转换结果的编译／排版校验使用。LitRoot 提交由 `scripts/sync_mathjax_engine.py /path/to/LitRoot` 生成的引擎副本；`--check`、副本摘要测试和独立检查器阻止内容漂移。`src/paper_fetch/resources/formula` 是 Node manifest、lockfile 和转换脚本的唯一源码位置；checkout runtime 直接引用它，Python 安装器和离线构建将它暂存到 `formula-tools`。目标机不编译 texmath，也不运行 `npm install`。CI / release 公式构建固定使用 `haskell-actions/setup` v2.12.1 的完整 SHA、GHC 9.14.1 和 Cabal 3.18.1.0。macOS 构建会把非系统 Mach-O dylib 复制到 `formula-tools/lib`，用 `@rpath` / `@loader_path` 重写引用，并对 texmath 与随包 dylib 做 ad-hoc codesign
 - Linux / macOS 会配置安装目录内 `image-tools` 作为图片转换工具查找目录；离线构建不会把构建机 PATH 上的 Ghostscript/libvips 符号链接固化进包内。运行时找到 Ghostscript 时可转 EPS，找到 libvips 时可转 TIFF；缺少对应工具时只影响 AMS `Download Figure` 源图转换，网页 JPG/PNG 候选仍可回退
 - Linux / macOS 默认写固定安装目录内的 `offline.env`、生成可在 bash/zsh 中 `source` 的 `activate-offline.sh`、复制三份 host skill，并把离线 CLI PATH、工具路径、`PAPER_FETCH_ENV_FILE`、`PYTHONUTF8`、`PYTHONIOENCODING` 等写入当前 shell 启动文件；`offline.env` 的 managed block 写入 `PAPER_FETCH_BROWSER_HEADLESS=true`，不覆盖 Camoufox 生成的 Firefox UA/指纹。只有显式传 `--user-config` 才会把受标记管理的运行时块合并到用户配置；Linux 目标是 `~/.config/paper-fetch/.env`，macOS 目标是 `~/Library/Application Support/paper-fetch/.env`
 - Linux / macOS `--install-dir <path>` 只接受不存在、空目录，或同时带 schema 3 ownership manifest 与 `runtime/python-bin` marker 的既有安装目录；拒绝 HOME/祖先、非空未拥有目录及指向它的 symlink。合法升级会清理 `src/`、`tests/`、`wheelhouse/`、`dist/`、`.github/` 等残留，保留安装目录内 `offline.env`，并保留用户配置中非 managed 内容
@@ -235,7 +289,7 @@ Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的
 - Linux / macOS 写入 shell 启动文件和 Codex fallback config 时会先替换既有受管理 block，重复安装不会重复追加；不修改 `/etc/profile`。macOS 的 `.zshrc` 即使是 symlink 也保持 symlink
 - Windows 首次安装会写安装目录内 `offline.env`；升级安装会保留用户已有内容，只替换 managed runtime block。MCP 注册环境固定指向安装目录内 runtime 路径，并设置 `PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`、`PAPER_FETCH_BROWSER_HEADLESS=true`，不注入 Chrome UA。Linux / macOS 同样把 `MATHML_TO_LATEX_NODE_BIN` 指向包内 Playwright Node
 - Windows 安装、升级或手工修改 `offline.env` 后，需要重启 Codex Desktop / Claude Code / Antigravity；已启动的 MCP 服务不会自动继承新写入的 env。
-- Windows GUI 安装完成页会提示 Elsevier API key 申请入口和包内 `offline.env` 位置，并提供可选的 Notepad 打开项；silent 安装不会弹出该提示。离线环境抓取 Elsevier 全文前，从 <https://dev.elsevier.com/> 申请 key，并在该文件中填写 `ELSEVIER_API_KEY`
+- Windows GUI 安装完成页会提示 Elsevier API key 申请入口和包内 `offline.env` 位置，并提供可选的 Notepad 打开项；silent 安装不会弹出该提示。使用 Elsevier API 路线时从 <https://dev.elsevier.com/> 申请 key，并在该文件中填写 `ELSEVIER_API_KEY`
 - `--preset=headless` / `--preset=headful` 设置 Camoufox 的 headed/headless 行为
 
 构建离线包：
@@ -263,17 +317,7 @@ Windows 构建在 PowerShell 中执行：
 Windows 覆盖凭据输入及实际 DACL、Ghostscript 安装/卸载与 UAC 取消、安装目录变更和注册冲突。
 临时 payload、mock 或 Linux portable 检查不能替代对应平台的正式包验证。
 
-图片工具已准备好时，显式指定绝对路径运行真实转换测试；Windows 使用 PowerShell 设置
-相同环境变量，分别指向 `gswin64c.exe` 和 `vips.exe`：
-
-```bash
-PAPER_FETCH_TEST_GHOSTSCRIPT_BIN=/absolute/path/to/gs \
-PAPER_FETCH_TEST_VIPS_BIN=/absolute/path/to/vips \
-PYTHONPATH=src uv run python -m pytest tests/integration/test_offline_optional_tools.py -q
-```
-
-该测试不下载或安装工具。原生 macOS 浏览器验证沿用
-`PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST=1`，须事先准备缓存。
+图片工具真实转换与原生 Camoufox 的验证入口见[测试说明](../tests/README.md)。
 
 **Release 终验。** 操作顺序见 [发布前检查](#release-checklist)。构建、安装、证据与发布
 必须对应同一不可变 source SHA，平台和验证器限制如下。
@@ -289,9 +333,14 @@ scripts/verify-offline-package.sh dist/paper-fetch-skill-offline-macos-arm64-cp3
 
 上面的验证路径按实际构建出的 `cp311`、`cp312`、`cp313` 或 `cp314` 包名替换。
 
-验证脚本先用 Python `tarfile.data_filter` 安全预检并解包 `.tar.gz`，拒绝 absolute/`..` 路径、多顶层目录、特殊文件与逃逸 link，再执行包内安装器；构建器在 npm smoke 后移除运行时不使用的 `node_modules/.bin` launcher symlink，随后与安装器共同要求 checksum 清单精确覆盖 bundle 中除清单自身外的所有 regular file，并拒绝任何其它 payload symlink。未列出的附加 payload 会在任何用户写入前失败。随后确认 runtime-only 布局，并用 guard 拦截安装阶段的在线/构建命令，使用临时 HOME 和 fake host CLI 验证 skill/MCP、dotenv、命令、公式/图片工具、Camoufox/Playwright Python import、卸载与 purge。原生 macOS 路径固定 `/bin/zsh` 和相对 `.zshrc` symlink，真实覆盖嵌套 quarantine、xattr fail-closed、owned upgrade、用户内容保留与卸载 managed block；purge 无条件拒绝 symlink 入口。执行 native code 前先扫描 quarantine，再用 `file -b`、`lipo -archs`、`otool`、`codesign --verify --strict` 验证精确 arm64、canonical bundle containment、非 symlink regular dependencies、LC_RPATH 与递归闭包，最后启动 Playwright Node `--version`。`/var` 或 `/tmp` 的系统 cache alias 由固定 `macos-15` CI node 验证，不属于 tarball verifier。该 guard 不等于真正断网的 browser launch 测试。
+POSIX verifier 在临时 HOME 中检查解包、精确 checksum/inventory、runtime-only 布局、
+CLI/MCP/skill、配置、公式与图片工具、升级和卸载。macOS 额外验证 quarantine、原生
+arm64 Mach-O 依赖闭包与签名、Playwright Node 启动及 Zsh 集成；Linux/WSL 不替代这些证据。
+这不等同于完全断网的浏览器启动验证。
 
-Windows offline job 构建 runtime-only 安装器后，直接对最终 EXE 串行执行 silent install、installed CLI/version/doctor、`provider_status_payload()`、公式工具和 Camoufox/Playwright runtime smoke、同 EXE 覆盖升级、用户数据保留、silent uninstall 及托管内容清理。覆盖升级必须只生成 `unins000.exe`；最终卸载不能只采信首阶段 exit code，而是在 60 秒内同时等到成功日志标记和全部 `unins*.exe/.dat/.msg` 消失，再检查精确残留树。该步骤依赖真实 Inno/HKCU/安装状态，只在原生 `windows-latest` 运行；本地 Linux/WSL 静态契约不能替代它。
+Windows offline job 对最终 EXE 执行原生安装、CLI/doctor/provider status 与运行时 smoke，
+再验证覆盖升级、用户内容保留、卸载完成与残留树。Inno/HKCU 和实际安装状态必须由
+原生 Windows 提供证据。
 
 只需要复核 Windows 安装器时，可手动触发 `Offline packages` workflow，并在运行记录中只重跑 Windows job。
 
@@ -332,7 +381,7 @@ macOS 可以向
 离线安装时只有显式传 `--user-config` 才会创建或合并该文件，
 `--no-user-config` 是默认值。
 
-Elsevier 官方 XML/API 和 PDF fallback 至少需要从 <https://dev.elsevier.com/> 申请并配置：
+Elsevier 官方 XML/API 与 API PDF 路线需要从 <https://dev.elsevier.com/> 申请并配置：
 
 ```bash
 ELSEVIER_API_KEY="..."
@@ -353,9 +402,10 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 
 ## 3. 可选：安装公式后端
 
-主抓取链路不依赖外部公式后端；只有当你希望公式转换效果更好时，才需要这一步。
+公式后端用于源 TeX 校验和 MathML 转换；缺失时主抓取链路仍可运行。
 
-公式工具同时提供 MathJax 4.1.3 校验与本地字形。源 TeX 通过编译／排版校验时原样保留内部命令、字符、空格和换行；失败时只转换同一公式节点唯一可配对的 MathML 副本，再次校验后才输出。全部失败保留原 TeX 并记录诊断；工具不可用也保留原 TeX。源 TeX 不进入转换产物修正，不通过宏别名或括号删除修复。无源 TeX 沿用现有图片、文字与缺失回退。
+公式工具提供 MathJax 校验与本地字形；源 TeX 保真、转换及失败回退语义见
+[提取规则](extraction-rules.md#rule-formula-latex-normalization)。
 
 ### 独立 Markdown 公式审阅
 
@@ -363,7 +413,6 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 
 ```bash
 node scripts/review_markdown_math.mjs --modules-root /path/to/LitRoot --output report.json paper.md
-PAPER_FETCH_REVIEW_READER_ROOT=/path/to/LitRoot PYTHONPATH=src uv run python -m pytest tests/integration/test_markdown_math_review.py -q
 ```
 
 可传多个 Markdown 文件；省略 `--output` 时向 stdout 输出 JSON。报告顶层 `mathjax` 是引擎版本，`extensions` 列出预载扩展；每篇文档独立维护宏和诊断，保留公式计数、位置、源表达式、相对资产和定界符候选。`warnings` 保留为空数组；解析、编译或排版失败时每条公式只记录一次错误，退出码为 1，无错误时为 0。阅读器只在失败公式处显示源 TeX 和错误提示，其余正文继续渲染。
@@ -390,7 +439,7 @@ paper-fetch-install-formula-tools
 - `./install-formula-tools.sh` 会把工具装到当前仓库的 `./.formula-tools/`
 - 如果只想安装公式工具但跳过 Node fallback，可给仓库脚本加 `--no-node`
 - 运行时可用 `PAPER_FETCH_FORMULA_TOOLS_DIR` 覆盖公式工具查找目录；默认会考虑 repo-local `.formula-tools` 和用户数据目录下的 `formula-tools`
-- `src/paper_fetch/resources/formula/package.json` / `package-lock.json` 是公式 Node 依赖的唯一 manifest 与 lockfile；直接依赖包括 `mathml-to-latex` 和固定 4.1.3 的 MathJax／字体包，unit contract 检查 manifest、lockfile 与版本一致。安装器检查完整 Node 依赖，离线构建执行转换及 bbm/textcomp 排版 smoke test。
+- `src/paper_fetch/resources/formula/package.json` / `package-lock.json` 是公式 Node 依赖的唯一 manifest 与 lockfile；直接依赖包括 `mathml-to-latex` 和固定 4.1.3 的 MathJax／字体包。安装器检查完整 Node 依赖，离线构建执行转换及 bbm/textcomp 排版 smoke test。
 
 ### 可选图片转换后端
 
@@ -432,13 +481,15 @@ paper-fetch doctor --group browser --detail compact
 
 `full` 保留 provider checks 和本地能力；`compact` 只保留路由所需的状态、关键 reason 与建议动作。
 
-offline manifest schema 3 保留 `version`、`git_revision`、`built_at_utc`、`target.platform` / `arch` / `python_tag` 和 `entrypoint`，并包含 skill bundle schema 2：除 `SKILL.md`、全部 `references/`、canonical `agents/openai.yaml` 等完整 regular-file 列表和逐文件 SHA256 外，还记录路径排序、与 mtime/遍历顺序无关的 `content_sha256` / `content_version=sha256:<digest>`。macOS tarball 还写入 `target.minimum_os_version`。POSIX 与 Windows 安装器会在复制前校验 bundle，在复制后再次校验安装根目录及 Codex、Claude Code、Antigravity 三份 skill；缺文件、多文件、符号链接、special file 或 hash 不一致都会阻止完整性验收。
+离线 manifest 记录项目版本、source SHA、目标平台与 ABI，并以 skill bundle schema 2
+记录完整文件列表、逐文件 SHA-256 与内容摘要。安装器在复制前后校验安装根与三个
+宿主 skill，缺失、多余、链接或摘要不符均无法通过完整性验收。
 
 Codex 用户级 skill 安装到 `~/.agents/skills/paper-fetch-skill`，项目级安装到项目 `.agents/skills/paper-fetch-skill`；Windows 用户级对应 `%USERPROFILE%\.agents\skills\paper-fetch-skill`。安装目录遵循 [OpenAI skill 指导](https://learn.chatgpt.com/docs/build-skills)，不由 `CODEX_HOME` 决定；MCP 配置位置沿用现有契约。副本复制并通过内容校验后，安装器会清理同 scope 的兼容路径 `.codex/skills/paper-fetch-skill`；源码安装器还兼容清理 `CODEX_HOME/skills/paper-fetch-skill`。`--uninstall` 同时处理这些目录，user/project scope 不互相清理。离线安装器仅处理其既有用户 scope。
 
 源码安装或升级后可运行 `./scripts/install-codex-skill.sh --check` 检查 Codex user scope，或加 `--project --check` 检查仓库 `.agents/skills/paper-fetch-skill`。该模式严格只读，不安装包、不复制/建目录、不注册或注销 MCP、不写配置/日志；`0` 表示精确同步，`1` 表示缺失或漂移，`2` 表示参数用法冲突。离线安装器会在复制前后及三个宿主目标上 fail closed 验证 Skill，完成后重启 Codex、Claude Code 和 Antigravity 使宿主重新扫描已验证的 skill/MCP。
 
-排查本地配置使用 `doctor` / `provider_status`；检查站点访问使用 CLI 或 MCP `browser_preflight`；需要登录或人工验证时运行 `paper-fetch auth <provider>`。live 步骤会访问网络，preflight 始终可更新出版社原生持久目录；MCP 的 `save_storage_state=false` 仅禁止导出 JSON 快照。两种 preflight 入口共用 HTML 核心，均在实际启动前自动准备 managed runtime，不运行 PDF fallback 或自动 auth。静态 `ready` 只表示本地能力可用；站点访问由实际请求验收。
+排查本地配置使用 `doctor` / `provider_status`；检查站点访问使用 CLI 或 MCP `browser_preflight`；需要登录或人工验证时运行 `paper-fetch auth <provider>`。live 步骤会访问网络，并按[状态模式](browser-backends.md#状态模式)使用出版社状态；原生模式下 preflight 可更新持久目录，MCP 的 `save_storage_state=false` 仅禁止导出 JSON 快照。两种 preflight 入口共用 HTML 核心，均在实际启动前自动准备 managed runtime，不运行 PDF fallback 或自动 auth。静态 `ready` 只表示本地能力可用；站点访问由实际请求验收。
 
 ### CI / GitHub Actions
 
@@ -500,16 +551,6 @@ scripts/clean-local-artifacts.sh --days 7
 ```
 
 该脚本只删除 `git check-ignore` 确认为 ignored 的目标；未被 `.gitignore` 覆盖的路径会跳过。
-
-浏览器准备的独立重试入口（使用安装环境的 Python）：
-
-```bash
-python -m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all
-```
-
-加 `--non-interactive` 允许用户级浏览器、指纹模型和 Byparr 组件准备，不安装系统软件。离线包直接使用内置的 Byparr 源码和依赖。Debian/Ubuntu 显示缺少的 Camoufox 共享库与 APT 指引，交互模式经确认后安装并重新检测。
-
-下载准备预算 10 分钟，本地启动检查另限 2 分钟，可用 Ctrl+C 取消；使用临时共享 Camoufox 上下文与 `about:blank` 脚本，不读取出版社状态，结束时清理所属进程。结果与重试命令保存到 `browser-setup-results.txt`；失败保留核心安装。
 
 ## 4. Provider 接入入口与本地运行时
 
@@ -636,49 +677,11 @@ integration，`--skip-typecheck` 跳过 mypy。发布前使用 `--with-golden`�
 
 独立测试命令、默认并行配置和证据分层统一见 [测试说明](../tests/README.md)，
 CI 平台门禁见 [CI / GitHub Actions](#ci--github-actions)，发布终验见
-[发布前检查](#release-checklist)。下面的 live 命令只在本地显式执行，不能替代离线回归。
+[发布前检查](#release-checklist)。live 检查只在本地显式执行。
 
-未设置 `PAPER_FETCH_RUN_LIVE=1` 时，`tests/live/test_live_publishers.py` 和 `tests/live/test_live_mcp.py` 应稳定 skip。额外验证 live 时，`arxiv` 不需要 browser runtime；包括 `ams` 在内的 browser-backed provider 先按静态报告中的 `browser_runtime.available` 检查本地能力，再启动 Camoufox 做真实页面预检。pytest 隔离 XDG data/runtime、通用 profile 和所有 provider storage-state；Camoufox 的 browser bundle、版本元数据、字体和默认 addon 则复用隔离前由官方包管理器确认的 dependency cache，避免 live/MCP 子进程重复下载 runtime。每家 provider 的原生状态写入隔离的 `<provider>-camoufox/` 持久目录，JSON 仅作为兼容快照，不会进入该共享 dependency cache。
-
-publisher catalog 不是宽松的全文 smoke：每个已执行样本都请求 `asset_profile=body` 并按默认 provider policy 要求 `acceptance.overall=complete`，同时写出 `live-acceptance.json`。无论 preflight/fetch 成功或失败，每个 provider 都先追加 terminal record；JSON 从 runtime catalog 计算总数、已记录/未记录 provider、已记录结果是否全 complete，以及全 catalog 是否全部执行并 complete。每个 provider 还记录外层 wall time、browser readiness、导航数和逐资产 timing。需要离线或 full-size 验收时，另以公开的两个严格布尔约束运行并读取同一 v2 acceptance。challenge/no-access skip 不会被伪装为全量完成；只有机器可读的 preflight `challenge` / `auth_required`、fetch/MCP `status=no_access`，或成功 metadata fallback 中仅由 `ProviderFailure(NO_ACCESS)` 产生的精确 access-boundary marker，才按合法访问边界 skip。解析失败、空壳、正文不足和其它未知错误仍是 hard failure。非 challenge/auth/cancelled 的 preflight 失败必须保留可读取的隐私安全诊断 artifact。Live fixture 的环境 mapping repr 不显示值；JUnit、acceptance、diagnostics 和待上传目录必须先通过 sentinel 扫描。live 测试依赖共享外部状态和 Camoufox 线程边界，必须串行运行；JUnit 使用与 `record_property` 兼容的 legacy family：
-
-```bash
-PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=failures/live-publishers \
-  PYTHONPATH=src uv run python -m pytest \
-  tests/live/test_live_publishers.py tests/live/test_live_mcp.py \
-  -q -n 0 -o junit_family=legacy \
-  --junitxml=failures/live-publishers.xml
-```
-
-普通 publisher/MCP live tests 只保留上述本地入口，不由 GitHub Actions 定时或手动触发。只有在具备相应出版社访问授权和凭据的本机网络环境中才应运行；JUnit 和诊断目录也由本地操作者自行保存。
-
-`failures/` 已被 Git 忽略；live 输出属于一次性、本机和外部状态相关的运维证据，不作为仓库 fixture，也不得用 `git add -f` 提交。确需在仓库外长期归档一次运行时，最小记录为 JUnit 与 `live-acceptance.json`；IEEE 专项再保留 `asset-hashes.json`。原始全文、图片和页面诊断只在排查对应失败所需的期间保留。
-
-需要验证 AIP 冷启动 HTML 稳定性时，额外显式启用五个隔离 profile 的串行测试；每次都必须得到 `aip_html` 与完整 acceptance，不能以 `aip_pdf` 降级通过：
-
-```bash
-PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_RUN_AIP_COLD_STABILITY=1 \
-  PAPER_FETCH_LIVE_ARTIFACT_DIR=failures/aip-cold-start \
-  PYTHONPATH=src uv run python -m pytest \
-  tests/live/test_live_publishers.py::test_aip_cold_start_stability_uses_html_for_five_fresh_profiles \
-  -q -n 0
-```
-
-该测试依赖同一远端 publisher lane 和本机 Camoufox runtime，必须使用 `-n 0`；失败诊断写入显式本地 artifact 目录。它不由 GitHub Actions 启用，不影响普通 push/PR CI。
-
-IEEE 大型 GIF 资产专项与普通 publisher suite 分离，在具备合法 Xplore 访问上下文的本地环境运行：
-
-```bash
-PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_RUN_IEEE_BROWSER_LIVE=1 \
-  PAPER_FETCH_LIVE_ARTIFACT_DIR=failures/live-ieee-protected \
-  PYTHONPATH=src uv run python -m pytest \
-  tests/live/test_live_ieee_protected.py -q -n 0 \
-  -o junit_family=legacy --junitxml=failures/live-ieee-protected.xml
-```
-
-该专项要求统一 `acceptance.overall=complete`、13 个正文资产全部为 `full_size`，目标大型 GIF 有有效 header、可解析且非零的尺寸，并由生成的 Markdown 使用本地路径引用。测试保持 direct-first：本轮 direct 成功时接受 `final_fetcher=direct_http`；只有 direct 失败并进入恢复时，才硬性核对 Camoufox backend 以及 `direct(403) -> browser` trace。每次 `run-*` 目录会保存 `asset-hashes.json`，其中包含目标 SHA-256、全部正文资产 size/hash、fetcher/recovery trace 和 acceptance。该模块同样只保留本地入口；授权操作者按上述最小证据边界在仓库外保存 JUnit、`live-acceptance.json` 和 `asset-hashes.json`。
-
-专项 preflight 若在 15 秒 readiness 窗口后仍停留于 AWS WAF HTTP 202 页面，会保留页面关闭前采集的脱敏诊断并以 `aws_waf_challenge` skip；这代表当前网络/会话仍未取得文章 DOM，不可解释为已成功访问。
+出版社/MCP live、AIP 冷启动、IEEE 受保护资产及原生 Camoufox 验证入口统一见
+[测试说明](../tests/README.md)。live 检查仅在本地显式运行，使用具备相应访问授权的网络和凭据；
+结果保存在被 Git 忽略的 `failures/`，不作为仓库 fixture。
 
 ## 相关文档
 
@@ -700,7 +703,7 @@ macOS 的机器合同见 [`macos-adaptation-contract.toml`](macos-adaptation-con
 
 ### 安全不变量
 
-安装器默认准备支持的浏览器（在线 `--lite` 跳过）：各支持平台均准备 Camoufox＋Byparr 组合。Byparr 复用内置或锁定缓存中的源码与私有依赖；浏览器和模型准备可能联网。下载预算 10 分钟，本地空白页检查另限 2 分钟，失败保留核心安装。见 [部署说明](deployment.md)。
+macOS 使用统一的受管 Camoufox＋Byparr；浏览器和模型可能联网准备，失败保留核心安装，见[浏览器安装与准备](#浏览器安装与准备)。
 
 ### 证据等级
 
@@ -714,16 +717,12 @@ Codex skill 的 `.agents/skills` 安装与兼容路径清理同样适用于 macO
 
 `browser.supplementary_index_without_body` 对应的跨平台行为见[补充材料索引](browser-runtime.md#补充材料索引)。
 
-出版社浏览器状态使用 `publisher-browser-profiles/<provider>-camoufox/` 原生持久目录，
-首次未认证访问也会创建。升级保留目录和现有路径覆盖配置；默认 JSON 快照仅初始化尚无
-原生 profile 的目录，显式 JSON 内容变化按摘要导入一次。备份应在浏览器关闭后执行。
-同目录跨进程排他使用，外部 Firefox 占用时先正常关闭外部会话；不删除原生锁。
-认证通过重开同一目录验证，JSON 导出失败独立报告。macOS 持久会话、锁和回放契约
-见 `macos-adaptation-contract.toml`；Linux/WSL 验证不能替代原生 macos-15 gate。
-
+macOS 出版社状态使用原生持久目录；升级保留状态与现有路径覆盖。备份应在浏览器
+关闭后执行，外部 Firefox 占用时先正常关闭，不删除原生锁。状态导入、认证重放和
+缓存摘要见[浏览器生命周期](browser-backends.md#生命周期)，机器合同仍由
+`macos-adaptation-contract.toml` 维护。
 
 ### 统一浏览器准备
 
-安装器准备见[部署步骤](#1-安装-python-包)，组件打包、缓存、重试命令和平台选择见
-[Byparr 后端](browser-backends.md#统一受管-byparr)。
-macOS 同样准备 Camoufox＋Byparr，现有离线目标组装锁定源码和私有依赖，并记录 inventory／checksum／SBOM。
+macOS 的浏览器预置与重试使用[浏览器安装与准备](#浏览器安装与准备)的统一入口；
+组件随包 inventory、checksum 与 SBOM 的边界见[受管 Byparr](browser-backends.md#统一受管-byparr)。

@@ -24,7 +24,7 @@
 - 只在用户还要求原始 provider 载荷或调试 sidecar 时使用 `artifact_mode=all`。正文任务随附的补充材料范围由 `asset_profile=all` 决定；独立材料任务的范围固定，二者均不由 `artifact_mode=all` 决定。
 - `body|all` 资产共用每篇运行时预算，不拆调用规避；超限按结构化原因说明未归档项。具体预算仅在需要时查[资产参数](tool-contract.md#fetch-notes)。
 - 默认使用 provider-policy 资产验收。用户明确要求离线完整正文资产时，CLI 加 `--require-local-body-assets`、MCP strategy 加 `require_local_body_assets=true`；明确要求原尺寸时改用 `--require-full-size-body-assets` / `require_full_size_body_assets=true`，它会自动隐含 local。两项只适用于 `body|all`，不应加到纯文本预设。
-- MCP 的 `no_download` 控制 provider 载荷、资产和 fetch-envelope sidecar；CLI 使用 `--artifact-mode none`。`save_markdown=true` 仍会写用户要求的 Markdown；PF-005 的 DOI 证明索引也会随显式保存更新。
+- MCP 的 `no_download` 控制 provider 载荷、资产和 fetch-envelope sidecar；CLI 使用 `--artifact-mode none`。`save_markdown=true` 仍会写用户要求的 Markdown；DOI 证明索引也会随显式保存更新。
 - “不保存最终 Markdown”“不建立用户归档”“不写 provider artifact”“允许 cache”和“完全不落盘”是五个独立判断，不要互换。
 
 ## 任务目标

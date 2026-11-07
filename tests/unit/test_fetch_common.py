@@ -168,7 +168,7 @@ class FetchCommonTests(unittest.TestCase):
                 for package in uv_lock["package"]
                 if package["name"].casefold() == name
             ]
-            self.assertEqual(locked, ["2.0"])
+            self.assertEqual(locked, ["2.1"])
 
     def test_only_camoufox_uses_an_exact_dependency_constraint(self) -> None:
         with (REPO_ROOT / "pyproject.toml").open("rb") as handle:

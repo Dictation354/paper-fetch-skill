@@ -20,15 +20,12 @@
 - provider 路由和能力由运行时 `ProviderBundle` / catalog 管理，用户语义集中在
   [providers.md](providers.md)；文档不维护第二套规则注册表。
 - 提取与渲染约束集中在 [extraction-rules.md](extraction-rules.md)，代码 owner 和
-  回归入口由源码与 provider-local 测试管理。PDF 内容只允许现有转换器输出透传。
-- 当前可执行样本、来源选择、拒绝/撤回记录在
-  [fixture manifest](../tests/fixtures/golden_criteria/manifest.json)，预期在各样本 expected，
-  采集事件在 acquisition/provenance；原文回归契约在
-  [review scenarios](../tests/fixtures/golden_criteria/_scenarios/review_contracts/README.md)。[测试说明](../tests/README.md) 定义证据审计。
+  回归入口由源码与 provider-local 测试管理。[PDF 内容](extraction-rules.md#rule-pdf-conversion-boundary)只允许现有转换器输出透传。
+- 测试命令与台账维护集中在 [测试说明](../tests/README.md)；
+  [fixture 约定](../tests/fixtures/README.md)定义来源和资产证据规则，
+  [fixture manifest](../tests/fixtures/golden_criteria/manifest.json)记录当前可执行样本与来源选择。
 - 发布构建、安装验收与平台证据统一见 [发布前检查](deployment.md#release-checklist)。
   协作要求见 [AGENTS.md](../AGENTS.md)。
-- [fixture 约定](../tests/fixtures/README.md) 只维护来源和资产证据规则；测试命令与
-  台账维护留在 [测试说明](../tests/README.md)，不另抄样本篇数或逐函数分类清单。
 - CLI 参数以 `paper-fetch <command> --help` 与 `cli.py` 为准，MCP 入参与返回值以
   `mcp/schemas.py`、tool adapter 和契约测试为准。文档解释行为，示例不替代完整 schema。
 - 安装后的 [skill bundle](../skills/paper-fetch-skill/SKILL.md) 必须自包含，因此其
@@ -52,5 +49,6 @@
 | `max_tokens` | 渲染预算；`full_text` 尽量保留正文，数值启用硬上限 |
 | `download_dir` | 落盘与 cache scope；见 [下载和 Markdown 保存](providers.md#mcp-download-and-markdown-save) |
 
-环境变量、默认值、cache 和资产恢复的完整语义集中在 [providers.md](providers.md)，
-安装命令集中在 [deployment.md](deployment.md)，这里不重复维护。
+获取配置、默认值、cache 和资产恢复语义见 [providers.md](providers.md)；
+浏览器组件、配置与状态映射见 [browser-backends.md](browser-backends.md)，线程与资源归属见
+[browser-runtime.md](browser-runtime.md)；安装与重试命令见 [deployment.md](deployment.md)。

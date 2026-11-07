@@ -22,7 +22,7 @@
   "packages": [
     {
       "name": "playwright-captcha",
-      "version": "0.1.1",
+      "version": "0.1.5",
       "platforms": [
         "win32",
         "linux",
@@ -30,9 +30,9 @@
       ],
       "artifacts": [
         {
-          "filename": "playwright_captcha-0.1.1-py3-none-any.whl",
-          "url": "https://files.pythonhosted.org/packages/ec/4f/af153778ca11f7b273e4d2b40265ff1000dada009128dd661430962246fb/playwright_captcha-0.1.1-py3-none-any.whl",
-          "sha256": "edcca33c2e09fd9f51ca98ef753f949c3f8ecbe38abecb4b8a30c3b79ad79f4c"
+          "filename": "playwright_captcha-0.1.5-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/bd/1a/803f05cc2b6990522a7cede97a6749d84fd29a1b32111bc55f2d2d1f831c/playwright_captcha-0.1.5-py3-none-any.whl",
+          "sha256": "3ce30ca0e76f1a521c8a71e90f3b434b57af7ab7543f0293bdc10a3e21d846a8"
         }
       ]
     },
@@ -70,7 +70,7 @@
     },
     {
       "name": "fastapi",
-      "version": "0.128.8",
+      "version": "0.162.0",
       "platforms": [
         "win32",
         "linux",
@@ -78,15 +78,15 @@
       ],
       "artifacts": [
         {
-          "filename": "fastapi-0.128.8-py3-none-any.whl",
-          "url": "https://files.pythonhosted.org/packages/9f/37/37b07e276f8923c69a5df266bfcb5bac4ba8b55dfe4a126720f8c48681d1/fastapi-0.128.8-py3-none-any.whl",
-          "sha256": "5618f492d0fe973a778f8fec97723f598aa9deee495040a8d51aaf3cf123ecf1"
+          "filename": "fastapi-0.162.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/b4/4f/3f2c25c9b43970b5e9a08beb5e04776247edea684ddc0930f4f02f0bb6cb/fastapi-0.162.0-py3-none-any.whl",
+          "sha256": "3785963de305dd09912426cb81f2d230fce98ab3521cdfe97265c8d14983128c"
         }
       ]
     },
     {
       "name": "starlette",
-      "version": "0.52.1",
+      "version": "1.10.0",
       "platforms": [
         "win32",
         "linux",
@@ -94,15 +94,15 @@
       ],
       "artifacts": [
         {
-          "filename": "starlette-0.52.1-py3-none-any.whl",
-          "url": "https://files.pythonhosted.org/packages/81/0d/13d1d239a25cbfb19e740db83143e95c772a1fe10202dda4b76792b114dd/starlette-0.52.1-py3-none-any.whl",
-          "sha256": "0029d43eb3d273bc4f83a08720b4912ea4b071087a3b48db01b7c839f7954d74"
+          "filename": "starlette-1.10.0-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/88/2e/947cfe02def9371c07cd5bf5b6b61c829e9aecb9904db02a66cfafbc1eec/starlette-1.10.0-py3-none-any.whl",
+          "sha256": "478c0ab3b4ced6e82719849c118fa406f0278a3499c1a898cd15cd31bdc38ce4"
         }
       ]
     },
     {
       "name": "annotated-doc",
-      "version": "0.0.4",
+      "version": "0.0.5",
       "platforms": [
         "win32",
         "linux",
@@ -110,9 +110,9 @@
       ],
       "artifacts": [
         {
-          "filename": "annotated_doc-0.0.4-py3-none-any.whl",
-          "url": "https://files.pythonhosted.org/packages/1e/d3/26bf1008eb3d2daa8ef4cacc7f3bfdc11818d111f7e2d0201bc6e3b49d45/annotated_doc-0.0.4-py3-none-any.whl",
-          "sha256": "571ac1dc6991c450b25a9c2d84a3705e2ae7a53467b5d111c24fa8baabbed320"
+          "filename": "annotated_doc-0.0.5-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/3e/30/e900b21425a860e195f32e37657aa1f7c7f2b1bfb26f03ca209b90933c06/annotated_doc-0.0.5-py3-none-any.whl",
+          "sha256": "117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101"
         }
       ]
     },
@@ -145,6 +145,22 @@
           "filename": "charset_normalizer-3.5.2-py3-none-any.whl",
           "url": "https://files.pythonhosted.org/packages/fc/ad/d07d7862a62ffa6d79d68074d14823243dd235a77c45262acbf6adeb28bf/charset_normalizer-3.5.2-py3-none-any.whl",
           "sha256": "b6b751274acb69d77b3323d6b7dbaa3c7fdfc1eb829b7eb61d262f32e1af9685"
+        }
+      ]
+    },
+    {
+      "name": "opentelemetry-api",
+      "platforms": [
+        "win32",
+        "linux",
+        "darwin"
+      ],
+      "version": "1.45.2",
+      "artifacts": [
+        {
+          "filename": "opentelemetry_api-1.45.2-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/a9/2d/610db864d7513158cebb8f36cc88e67e73bd6c7aa1905ef18d89e1281c81/opentelemetry_api-1.45.2-py3-none-any.whl",
+          "sha256": "2cbd737377e710ee740d261c94e93fa0f08e6d037c18f17513cc0a2d94479a34"
         }
       ]
     }

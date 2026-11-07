@@ -108,7 +108,7 @@ class ByparrManager:
             self.diagnostics.update(
                 byparr_version="2.1.0",
                 camoufox_version="0.5.9",
-                playwright_captcha_version="0.1.1",
+                playwright_captcha_version="0.1.5",
             )
             settings = self.work_dir / "config.json"
             settings.write_text(
