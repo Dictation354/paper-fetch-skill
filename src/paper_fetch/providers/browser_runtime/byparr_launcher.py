@@ -100,6 +100,12 @@ def main():
         endpoint = json.loads((root / "browser.json").read_text())["endpoint"]
         asyncio.run(serve(settings, root, endpoint, node_process))
     finally:
+        if settings.get("user_data_dir") and node_process.poll() is None:
+            # The protocol disconnect can precede Firefox's process exit.
+            # Let launchServer finish its 30-second graceful close so native
+            # localStorage/cookies are flushed before terminating its owner.
+            with contextlib.suppress(subprocess.TimeoutExpired):
+                node_process.wait(timeout=30)
         if node_process.poll() is None:
             node_process.terminate()
         with contextlib.suppress(subprocess.TimeoutExpired):

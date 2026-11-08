@@ -15,6 +15,8 @@ runner = "macos-15"
 requires_admin = false
 
 [evidence.native]
+# Shared-browser gates reuse prepared dependency caches and cap GPU-probing
+# browser launches at two pytest workers; publisher state stays isolated.
 runner = "macos-15"
 python_version = "3.14"
 release_matrix_workflow = ".github/workflows/offline.yml"

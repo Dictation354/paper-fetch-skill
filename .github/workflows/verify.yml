@@ -176,7 +176,8 @@ jobs:
       - name: Verify shared Camoufox and Byparr contexts on native macOS
         env:
           PAPER_FETCH_TEST_BYPARR_CACHE: ${{ runner.temp }}/byparr-tests
-          PYTEST_XDIST_AUTO_NUM_WORKERS: "4"
+          # Each launch also probes the host GPU with an owned browser.
+          PYTEST_XDIST_AUTO_NUM_WORKERS: "2"
         run: PYTHONPATH=src uv run python -m pytest tests/integration/test_pnas_byparr.py -q
       - name: Verify official Camoufox macOS bundle contexts
         env:

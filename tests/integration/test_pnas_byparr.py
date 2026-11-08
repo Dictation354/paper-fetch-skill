@@ -46,11 +46,19 @@ def prepared(monkeypatch):
     if not prep.valid_cache(root, identity):
         pytest.skip("locked Byparr cache is unavailable for this Python")
     monkeypatch.setattr(prep, "prepare_source", lambda cache, budget: root)
-    from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
+    from tests._environment import (
+        PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
+        PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
+    )
 
     executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
-    if not executable:
-        pytest.skip("requires prepared Camoufox executable")
+    cache_home = os.environ.get(PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR)
+    if not executable or not cache_home:
+        pytest.skip("requires prepared Camoufox executable and dependency cache")
+    # The isolated controller already imported Camoufox, but the -I/-S child
+    # resolves its cache again. Reuse the prepared dependency cache there too;
+    # publisher profiles remain under the isolated XDG_DATA_HOME/tmp_path.
+    monkeypatch.setenv("XDG_CACHE_HOME", cache_home)
     monkeypatch.setenv("PAPER_FETCH_BROWSER_BINARY_PATH", executable)
     monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.camoufox_manager._launch_executable_path",
@@ -188,7 +196,6 @@ def _config(tmp_path, provider="pnas"):
         tmp_path / "artifacts",
         True,
         None,
-        timeout_ms=60000,
         user_data_dir=tmp_path / f"{provider}-byparr",
         backend="byparr",
         state_mode="json",
@@ -665,11 +672,22 @@ def test_click_popup_and_iframe_automatic_validation_keep_relationships(
         navigate_page(
             page, base + "/click", timeout_ms=10000, wait_until="domcontentloaded"
         )
+        popup_downloads = []
+        page.on(
+            "popup",
+            lambda popup: popup.on(
+                "download", lambda download: popup_downloads.append(download)
+            ),
+        )
         with page.expect_popup() as popup_info:
             with managed_action(page, timeout_ms=15000):
                 page.locator("a").click(no_wait_after=True)
         popup = popup_info.value
         assert popup.opener() is page
+        deadline = time.monotonic() + 10
+        while not popup_downloads and time.monotonic() < deadline:
+            page.wait_for_timeout(20)
+        assert popup_downloads and popup_downloads[0].url == base + "/recover"
         # The auto challenge ends in a download; the original click is issued once.
         assert calls.count("/auto") == 1
         context.clear_cookies()
@@ -680,14 +698,15 @@ def test_click_popup_and_iframe_automatic_validation_keep_relationships(
                 body=f'<html><iframe src="{base}/auto"></iframe></html>',
             ),
         )
-        navigate_page(
-            page, base + "/wrapper", timeout_ms=15000, wait_until="domcontentloaded"
-        )
+        with page.expect_download(timeout=10000) as iframe_download:
+            navigate_page(
+                page, base + "/wrapper", timeout_ms=15000, wait_until="domcontentloaded"
+            )
+        assert iframe_download.value.url == base + "/recover"
         from paper_fetch.providers.browser_runtime.navigation import (
             settle_page_navigation,
         )
 
-        page.wait_for_timeout(750)
         settle_page_navigation(page, timeout_ms=10000)
         events = [
             event
