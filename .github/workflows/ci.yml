@@ -33,7 +33,7 @@ jobs:
       - name: Verify all shared browser contracts with the prepared cache
         env:
           PAPER_FETCH_TEST_BYPARR_CACHE: ${{ runner.temp }}/byparr-tests
-          PYTEST_XDIST_AUTO_NUM_WORKERS: "4"
+          PYTEST_XDIST_AUTO_NUM_WORKERS: "1"
         run: >-
           PYTHONPATH=src uv run python -m pytest tests/integration/test_pnas_byparr.py
           -q --durations=20 -k 'owned_shared_session_collects_original_asset_bytes_and_cleans_processes or shared_context_modes_preserve_state_and_real_responses'
