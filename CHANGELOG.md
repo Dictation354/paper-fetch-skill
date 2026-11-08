@@ -6,6 +6,12 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.4.1 - 2026-11-08
+
+### macOS release gate fix
+
+- Pass the prepared Camoufox dependency cache to isolated Byparr browser-test subprocesses, preventing native macOS gates from downloading the browser again on each launch and exhausting the request budget. Publisher profiles, cookies, and storage state remain isolated, with existing concurrency, startup, navigation, and cancellation checks retained.
+
 ## 7.4.0 - 2026-11-07
 
 ### Unified Byparr and Camoufox browser routes

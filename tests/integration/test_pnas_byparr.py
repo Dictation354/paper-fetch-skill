@@ -46,26 +46,24 @@ def prepared(monkeypatch):
     if not prep.valid_cache(root, identity):
         pytest.skip("locked Byparr cache is unavailable for this Python")
     monkeypatch.setattr(prep, "prepare_source", lambda cache, budget: root)
-    from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
+    from tests._environment import (
+        PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
+        PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
+    )
 
     executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
-    if not executable:
-        pytest.skip("requires prepared Camoufox executable")
+    cache_home = os.environ.get(PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR)
+    if not executable or not cache_home:
+        pytest.skip("requires prepared Camoufox executable and dependency cache")
+    # The isolated controller already imported Camoufox, but the -I/-S child
+    # resolves its cache again. Reuse the prepared dependency cache there too;
+    # publisher profiles remain under the isolated XDG_DATA_HOME/tmp_path.
+    monkeypatch.setenv("XDG_CACHE_HOME", cache_home)
     monkeypatch.setenv("PAPER_FETCH_BROWSER_BINARY_PATH", executable)
     monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.camoufox_manager._launch_executable_path",
         lambda _: None if os.sys.platform == "darwin" else executable,
     )
-    original_close = managed.ByparrManager.close
-
-    def diagnostic_close(owner):
-        if owner.context is None and owner.work_dir is not None:
-            log = owner.work_dir / "service.log"
-            if log.is_file():
-                print("BYPARR_STARTUP_LOG\n" + log.read_text(errors="replace"), flush=True)
-        return original_close(owner)
-
-    monkeypatch.setattr(managed.ByparrManager, "close", diagnostic_close)
     yield
     assert prep.valid_cache(root, identity), (
         "Byparr must not mutate its shared component"

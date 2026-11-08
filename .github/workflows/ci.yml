@@ -5,12 +5,16 @@ permissions:
   contents: read
 jobs:
   macos-startup-diagnosis:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     runs-on: macos-15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup-python-deps
         with:
-          python-version: "3.14"
+          python-version: ${{ matrix.python-version }}
           full: "true"
       - name: Prepare the same managed runtime as release
         env:
@@ -26,10 +30,10 @@ jobs:
           ensure_fpgen_model()
           prepare_source(Path(os.environ["RUNNER_TEMP"]) / "byparr-tests", PreparationBudget(600))
           PYTHON
-      - name: Reproduce native startup with child stacks
+      - name: Verify all shared browser contracts with the prepared cache
         env:
           PAPER_FETCH_TEST_BYPARR_CACHE: ${{ runner.temp }}/byparr-tests
           PYTEST_XDIST_AUTO_NUM_WORKERS: "4"
         run: >-
           PYTHONPATH=src uv run python -m pytest tests/integration/test_pnas_byparr.py
-          -q --durations=10 -k 'owned_shared_session_collects_original_asset_bytes_and_cleans_processes or shared_context_modes_preserve_state_and_real_responses'
+          -q --durations=20

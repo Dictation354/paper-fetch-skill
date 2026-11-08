@@ -6,6 +6,12 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.4.1 - 2026-11-08
+
+### macOS 发布门禁修复
+
+- Byparr 原生浏览器测试向隔离子进程传递已预置的 Camoufox 依赖缓存，避免 macOS 门禁在每次启动时重新下载浏览器而耗尽请求预算。出版社 profile、cookies 和 storage state 继续隔离，原有并发配置及启动、导航和取消验收保持有效。
+
 ## 7.4.0 - 2026-11-07
 
 ### 统一 Byparr 与 Camoufox 浏览器路线
