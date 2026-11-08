@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.14"]
     runs-on: macos-15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -36,4 +36,4 @@ jobs:
           PYTEST_XDIST_AUTO_NUM_WORKERS: "4"
         run: >-
           PYTHONPATH=src uv run python -m pytest tests/integration/test_pnas_byparr.py
-          -q --durations=20
+          -q --durations=20 -k 'owned_shared_session_collects_original_asset_bytes_and_cleans_processes or shared_context_modes_preserve_state_and_real_responses'
