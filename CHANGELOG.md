@@ -14,7 +14,7 @@ This release includes the unified Byparr＋Camoufox browser routes and configura
 
 - Pass the prepared Camoufox dependency cache to isolated Byparr browser-test subprocesses, preventing native macOS gates from downloading the browser again on each launch and exhausting the request budget. Publisher profiles, cookies, and storage state remain isolated.
 - Use two pytest workers in native macOS gates to bound concurrent browser and GPU-probe launches. Browser tests use the default runtime request budget while retaining navigation, original-response, persistent-state replay, and cancellation checks.
-- Record response-header-confirmed Cloudflare interstitial evidence with its real response sequence before waiting for the body, preserving diagnostics when an automatic redirect or download replaces the document. Ordinary 403 responses do not become challenges.
+- Wait for real download events before clearing cookies and advancing popup/iframe automatic-validation tests, preventing the previous popup from overwriting the next stage's initial cookie state while retaining challenge-evidence and single-click assertions.
 
 ## 7.4.0 - 2026-11-07
 

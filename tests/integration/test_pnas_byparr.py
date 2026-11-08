@@ -672,11 +672,22 @@ def test_click_popup_and_iframe_automatic_validation_keep_relationships(
         navigate_page(
             page, base + "/click", timeout_ms=10000, wait_until="domcontentloaded"
         )
+        popup_downloads = []
+        page.on(
+            "popup",
+            lambda popup: popup.on(
+                "download", lambda download: popup_downloads.append(download)
+            ),
+        )
         with page.expect_popup() as popup_info:
             with managed_action(page, timeout_ms=15000):
                 page.locator("a").click(no_wait_after=True)
         popup = popup_info.value
         assert popup.opener() is page
+        deadline = time.monotonic() + 10
+        while not popup_downloads and time.monotonic() < deadline:
+            page.wait_for_timeout(20)
+        assert popup_downloads and popup_downloads[0].url == base + "/recover"
         # The auto challenge ends in a download; the original click is issued once.
         assert calls.count("/auto") == 1
         context.clear_cookies()
@@ -687,14 +698,15 @@ def test_click_popup_and_iframe_automatic_validation_keep_relationships(
                 body=f'<html><iframe src="{base}/auto"></iframe></html>',
             ),
         )
-        navigate_page(
-            page, base + "/wrapper", timeout_ms=15000, wait_until="domcontentloaded"
-        )
+        with page.expect_download(timeout=10000) as iframe_download:
+            navigate_page(
+                page, base + "/wrapper", timeout_ms=15000, wait_until="domcontentloaded"
+            )
+        assert iframe_download.value.url == base + "/recover"
         from paper_fetch.providers.browser_runtime.navigation import (
             settle_page_navigation,
         )
 
-        page.wait_for_timeout(750)
         settle_page_navigation(page, timeout_ms=10000)
         events = [
             event
