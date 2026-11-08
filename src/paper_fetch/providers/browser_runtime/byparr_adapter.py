@@ -174,8 +174,21 @@ class ManagedOperation:
             self.documents.append(document)
             self.save_evidence()
             headers = response.headers
+            header_challenge = supported_challenge(headers=headers)
+            response_at = self.response_times[response.request._impl_obj._guid]
+            detected_at = time.monotonic()
+            challenge_evidence = {
+                "page": page,
+                "frame": frame.url,
+                "response_sequence": document["sequence"],
+                "challenge": "cloudflare_interstitial",
+            }
+            if header_challenge:
+                # An automatic redirect or download can replace the document
+                # before its body completes. Retain the verified response fact.
+                self.record("challenge_detected", **challenge_evidence)
             mime = headers.get("content-type", "").lower()
-            if "html" not in mime and not supported_challenge(headers=headers):
+            if "html" not in mime and not header_challenge:
                 return
             await response.finished()
             with contextlib.suppress(Exception):
@@ -185,17 +198,11 @@ class ManagedOperation:
                 )
             title, html = await self.snapshot(frame)
             current = supported_challenge(title=title, html=html)
-            if not current and not supported_challenge(headers=headers):
+            if not current and not header_challenge:
                 return
-            response_at = self.response_times[response.request._impl_obj._guid]
-            detected_at = time.monotonic()
-            self.record(
-                "challenge_detected",
-                page=page,
-                frame=frame.url,
-                response_sequence=document["sequence"],
-                challenge="cloudflare_interstitial",
-            )
+            if not header_challenge:
+                detected_at = time.monotonic()
+                self.record("challenge_detected", **challenge_evidence)
             async with self.solver_lock:
                 # A response can already have automatically passed validation,
                 # or another observation of this frame can have solved it.

@@ -32,6 +32,10 @@ shell、fork）、真实 PDF 转换、整篇构建器及 canonical 全文输入�
 可用，转换入口及其别名（含 helpers、`Document.to_*` 和批量转换）在调用时拦截。
 这些失败路径由 integration 中的子 pytest 验证。
 
+原生 macOS 共享 Byparr 门禁通过 `PYTEST_XDIST_AUTO_NUM_WORKERS=2` 限制同时启动的
+浏览器及其 GPU 探测进程。浏览器测试使用运行时默认请求预算，隔离子进程复用预置的
+Camoufox 依赖缓存；出版社 profile、cookies 与 storage-state 仍在隔离目录中。
+
 ## 证据台账
 
 `test-evidence.json` 是内部 v2 台账：每个模块声明默认分类，仅不同契约的测试
