@@ -15,6 +15,7 @@ This release includes the unified Byparr＋Camoufox browser routes and configura
 - Pass the prepared Camoufox dependency cache to isolated Byparr browser-test subprocesses, preventing native macOS gates from downloading the browser again on each launch and exhausting the request budget. Publisher profiles, cookies, and storage state remain isolated.
 - Use two pytest workers in native macOS gates to bound concurrent browser and GPU-probe launches. Browser tests use the default runtime request budget while retaining navigation, original-response, persistent-state replay, and cancellation checks.
 - Wait for real download events before clearing cookies and advancing popup/iframe automatic-validation tests, preventing the previous popup from overwriting the next stage's initial cookie state while retaining challenge-evidence and single-click assertions.
+- Allow the native browser's graceful shutdown to finish after its protocol disconnect, so its owner does not terminate Firefox before profile cookies and localStorage reach disk.
 
 ## 7.4.0 - 2026-11-07
 

@@ -510,7 +510,9 @@ class ByparrManager:
                     ).open(request, timeout=2) as response:
                         response.read()
                 with contextlib.suppress(subprocess.TimeoutExpired):
-                    self.process.wait(timeout=5)
+                    # Native Firefox profiles must finish their graceful close
+                    # before the owned process group can be terminated.
+                    self.process.wait(timeout=35 if self.native_profile else 5)
             if self.process.poll() is None:
                 if os.name != "nt":
                     with contextlib.suppress(ProcessLookupError):

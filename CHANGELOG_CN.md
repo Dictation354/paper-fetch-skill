@@ -15,6 +15,7 @@
 - Byparr 原生浏览器测试向隔离子进程传递已预置的 Camoufox 依赖缓存，避免 macOS 门禁在每次启动时重新下载浏览器而耗尽请求预算。出版社 profile、cookies 和 storage state 继续隔离。
 - 原生 macOS 门禁使用两个 pytest worker，限制浏览器及其 GPU 探测进程的同时启动；浏览器测试采用运行时默认请求预算，保留页面导航、原始响应、状态重开和取消验收。
 - 弹窗与 iframe 自动验证测试等待真实下载事件后再清除 cookie 和开始下一阶段，避免旧弹窗的验证 cookie 覆盖新阶段的初始状态，并保留挑战证据与单次点击断言。
+- 原生浏览器协议断开后等待其正常退出，避免所属进程提前终止 Firefox，导致 profile 中的 cookie 与 localStorage 未完成写盘。
 
 ## 7.4.0 - 2026-11-07
 
