@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import faulthandler
 import contextlib
 import json
 import os
@@ -17,6 +18,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
 def main():
+    faulthandler.dump_traceback_later(20, repeat=True)
     settings = json.loads(Path(sys.argv[1]).read_text())
     root = Path(settings["work_dir"])
     while not (root / "start").exists():
@@ -52,7 +54,9 @@ def main():
             await load_js_script("patches/unlockShadowRoot.js"), get_addon_path()
         )
 
+    print('STARTUP asyncio.run(register_shadow_access())', flush=True)
     asyncio.run(register_shadow_access())
+    print('STARTUP options = launch_options(', flush=True)
     options = launch_options(
         executable_path=settings.get("binary_path"),
         headless=settings["headless"],
@@ -76,6 +80,7 @@ def main():
         )
         if spoofs_window_dimensions(options):
             options["noDefaultViewport"] = True
+    print('STARTUP node, cli = compute_driver_executable()', flush=True)
     node, cli = compute_driver_executable()
     # launch_options uses Python spellings; launchServer consumes JS spellings.
     keys = {
@@ -97,6 +102,7 @@ def main():
             if node_process.poll() is not None:
                 raise RuntimeError("Camoufox shared browser service exited")
             time.sleep(0.02)
+        print('STARTUP endpoint = json.loads((root / "browser.json").read_text())["endpoint"]', flush=True)
         endpoint = json.loads((root / "browser.json").read_text())["endpoint"]
         asyncio.run(serve(settings, root, endpoint, node_process))
     finally:
@@ -114,6 +120,7 @@ async def serve(settings, root, endpoint, node_process):
     from byparr_adapter import ManagedOperation
 
     async with async_playwright() as playwright:
+        print('STARTUP browser = await playwright.firefox.connect(endpoint)', flush=True)
         browser = await playwright.firefox.connect(endpoint)
         stopped = asyncio.Event()
         browser.on("disconnected", lambda _: stopped.set())

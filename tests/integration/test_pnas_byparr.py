@@ -56,6 +56,16 @@ def prepared(monkeypatch):
         "paper_fetch.providers.browser_runtime.camoufox_manager._launch_executable_path",
         lambda _: None if os.sys.platform == "darwin" else executable,
     )
+    original_close = managed.ByparrManager.close
+
+    def diagnostic_close(owner):
+        if owner.context is None and owner.work_dir is not None:
+            log = owner.work_dir / "service.log"
+            if log.is_file():
+                print("BYPARR_STARTUP_LOG\n" + log.read_text(errors="replace"), flush=True)
+        return original_close(owner)
+
+    monkeypatch.setattr(managed.ByparrManager, "close", diagnostic_close)
     yield
     assert prep.valid_cache(root, identity), (
         "Byparr must not mutate its shared component"
