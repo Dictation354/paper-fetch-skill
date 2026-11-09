@@ -15,11 +15,19 @@ from ....config import (
     BROWSER_USER_DATA_DIR_ENV_VAR,
     resolve_user_data_dir,
 )
-from ....reason_codes import NOT_CONFIGURED
+from ....reason_codes import NOT_CONFIGURED, OK, READY
 
 
 def _dependency_details():
-    return camoufox._dependency_details()
+    from importlib.util import find_spec
+    from ..byparr_engine import engine_name
+
+    details = camoufox._dependency_details()
+    if engine_name() == "invisible":
+        details["packages"]["invisible_playwright"] = (
+            find_spec("invisible_playwright") is not None
+        )
+    return details
 
 
 class ByparrBackend(CamoufoxBackend):
@@ -29,9 +37,9 @@ class ByparrBackend(CamoufoxBackend):
         import os
         from ..byparr_preparation import PreparationBudget, prepare_components
 
-        from ..camoufox_manager import _launch_executable_path
+        from ..byparr_engine import prepare_executable
 
-        _launch_executable_path(config.binary_path)
+        prepare_executable(config.binary_path)
         env = runtime_context.env if runtime_context is not None else os.environ
         return prepare_components(
             config.component_cache_dir or resolve_user_data_dir(env) / "byparr",
@@ -139,10 +147,10 @@ class ByparrBackend(CamoufoxBackend):
         from importlib.metadata import version
 
         major, minor = (int(p) for p in version("playwright").split(".")[:2])
-        if (major, minor) < (1, 58) or (major, minor) >= (1, 64):
+        if (major, minor) < (1, 58) or (major, minor) >= (1, 63):
             raise ProviderFailure(
                 NOT_CONFIGURED,
-                "Byparr requires Playwright >=1.58,<1.64 for shared browser connections.",
+                "Byparr requires Playwright >=1.58,<1.63 for shared browser connections.",
             )
 
     def probe_runtime_status(
@@ -157,6 +165,59 @@ class ByparrBackend(CamoufoxBackend):
             config = self.load_runtime_config(env, provider=provider, doi=doi)
         except ProviderFailure:
             return result
+        from ..byparr_engine import engine_name
+
+        if engine_name() == "invisible":
+            from importlib.util import find_spec
+
+            details = next(
+                (
+                    check.details
+                    for check in result.checks
+                    if check.name == "playwright_dependency"
+                ),
+                {},
+            )
+            packages = dict(details.get("packages", {}))
+            packages["invisible_playwright"] = (
+                find_spec("invisible_playwright") is not None
+            )
+            ready = bool(packages) and all(packages.values())
+            installed_engine = False
+            engine_details = {"engine": "invisible", "package_ready": ready}
+            if ready:
+                from invisible_core.download import engine_status, cache_dir_for_seal
+                from invisible_core.seal import active_seal
+
+                installed_engine, detail = engine_status()
+                engine_details.update(
+                    runtime_installed=installed_engine,
+                    runtime_path=str(cache_dir_for_seal()),
+                    runtime_version=active_seal().tag,
+                    runtime_probe_message=detail,
+                )
+            available = ready and (installed_engine or bool(config.binary_path))
+            checks = []
+            for check in result.checks:
+                check.details.update(engine_details)
+                check.details["download_required"] = not available
+                checks.append(
+                    replace(
+                        check,
+                        status=OK if ready else NOT_CONFIGURED,
+                        message=(
+                            "Byparr uses the sealed Invisible engine; preparation is on demand."
+                            if ready
+                            else "Byparr requires the browser extra including invisible-playwright."
+                        ),
+                    )
+                )
+            result = replace(
+                result,
+                checks=checks,
+                available=ready,
+                status=READY if ready else NOT_CONFIGURED,
+            )
         root, _, identity = runtime_location(
             config.component_cache_dir or resolve_user_data_dir(env) / "byparr"
         )
@@ -165,7 +226,7 @@ class ByparrBackend(CamoufoxBackend):
             if check.name == "runtime_env":
                 check.details.update(
                     backend=self.name,
-                    engine="camoufox",
+                    engine=engine_name(),
                     state_mode=config.state_mode,
                     component_installed=installed,
                     download_required=bool(check.details.get("download_required"))

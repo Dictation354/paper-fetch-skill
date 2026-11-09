@@ -21,8 +21,8 @@
 
 ## Browser backend 与 storage-state
 
-- `PAPER_FETCH_BROWSER_HEADLESS`、`PAPER_FETCH_BROWSER_TIMEOUT_MS`：Camoufox managed runtime 的 headless 开关与请求超时；默认分别为 `true`、`120000`。
-- `PAPER_FETCH_BROWSER_BINARY_PATH`：已准备好的 Camoufox runtime executable 覆盖项。
+- `PAPER_FETCH_BROWSER_HEADLESS`、`PAPER_FETCH_BROWSER_TIMEOUT_MS`：Byparr managed runtime 的 headless 开关与请求超时；默认分别为 `true`、`120000`。
+- `PAPER_FETCH_BROWSER_BINARY_PATH`：当前平台受管引擎的 executable 覆盖项，必须匹配 Invisible seal 或 Camoufox metadata。
 - `PAPER_FETCH_BROWSER_PROFILE_DIR`、`PAPER_FETCH_BROWSER_USER_DATA_DIR`：原生状态模式使用的 provider-scoped profile/storage-state 目录覆盖项。组合运行时复用 `PAPER_FETCH_BROWSER_BINARY_PATH`。默认使用 `publisher-browser-profiles/<provider>-camoufox/`。
 - `PAPER_FETCH_BROWSER_USER_AGENT`：publisher direct 路线的可选浏览器 UA；它与 `PAPER_FETCH_SKILL_USER_AGENT` 分离。Camoufox 忽略该值，以保持生成的 Firefox 指纹一致。
 - `PAPER_FETCH_WILEY_STORAGE_STATE_JSON`、`PAPER_FETCH_WILEY_PROFILE_DIR`：Wiley 的 storage/profile 覆盖。Camoufox 使用出版社原生持久目录；用户要求认证或 preflight/fetch 返回认证需求时运行 `paper-fetch auth <provider>`，交互验证由用户完成。
@@ -38,9 +38,9 @@ JSON 导出失败单独报告。`save_storage_state=false` 仅禁止导出 JSON�
 同目录进程间排队遵守取消和请求期限；目录归属冲突、外部占用和超时必须如实报告，
 不删除 Firefox 原生锁或静默回退临时会话。
 
-全部浏览器 provider 在现有 Camoufox／Playwright 平台使用 Byparr＋Camoufox，含 macOS 的 Elsevier 浏览器阶段。`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` 均进入组合链路，旧 `camoufox` 是兼容别名。原 Camoufox 配置保留 `<provider>-camoufox/` 原生目录与显式覆盖；Windows/Linux x64 上 PNAS／Elsevier 原有 `auto|byparr` 保留 `<provider>-byparr/` 过滤后 JSON；新开放平台使用原生目录。不自动合并或迁移状态。旧 FlareSolverr 后端值和命令已移除；现有后端配置改用 `auto`、`camoufox` 或 `byparr`，删除旧 `PAPER_FETCH_CHROME_BINARY_PATH`；如需指定可执行文件，使用 `PAPER_FETCH_BROWSER_BINARY_PATH`。不迁移或合并认证目录。
+全部浏览器 provider 在现有 Camoufox／Playwright 平台使用 Byparr 3.1.1（Windows/Linux x64 使用 Invisible，其余平台保留 Camoufox），含 macOS 的 Elsevier 浏览器阶段。`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` 均进入组合链路，旧 `camoufox` 是兼容别名。原 Camoufox 配置保留 `<provider>-camoufox/` 原生目录与显式覆盖；Windows/Linux x64 上 PNAS／Elsevier 原有 `auto|byparr` 保留 `<provider>-byparr/` 过滤后 JSON；新开放平台使用原生目录。不自动合并或迁移状态。旧 FlareSolverr 后端值和命令已移除；现有后端配置改用 `auto`、`camoufox` 或 `byparr`，删除旧 `PAPER_FETCH_CHROME_BINARY_PATH`；如需指定可执行文件，使用 `PAPER_FETCH_BROWSER_BINARY_PATH`。不迁移或合并认证目录。
 
-支持平台的安装器统一准备版本锁定的 Byparr、playwright-captcha、Camoufox 与指纹缓存。现有 macOS 离线目标也包含锁定源码、私有依赖、许可证与适配记录；组件损坏需重新安装。源码/pip 安装自动下载固定组件。fetch/preflight 默认 headless，auth 使用窗口。
+支持平台的安装器统一准备版本锁定的 Byparr 与平台引擎依赖；Windows/Linux x64 使用 InvisiblePlaywright，其余平台保留 Camoufox 与指纹缓存。现有 macOS 离线目标也包含锁定源码、私有依赖、许可证与适配记录；组件损坏需重新安装。源码/pip 安装自动下载固定组件。fetch/preflight 默认 headless，auth 使用窗口。
 
 安装准备失败保留核心安装。用安装环境 Python 执行 `-m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all` 可重新准备；也可选 `camoufox` 或 `byparr`；`--prepare-byparr` 等价于 `--prepare-browsers byparr`。缺系统依赖时提供安装指引；下载与本地空白页检查分别限 10 分钟、2 分钟，后者使用临时状态。
 

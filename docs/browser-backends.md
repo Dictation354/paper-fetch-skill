@@ -1,6 +1,6 @@
 # Browser backend
 
-全部浏览器出版社统一使用 Byparr＋Camoufox，覆盖正文、图片、附件、浏览器 PDF、预检和认证。支持现有 Camoufox／Playwright 平台，Elsevier 也开放 macOS 浏览器阶段。API、HTTP 直连和 provider 获取顺序不变。
+全部浏览器出版社统一使用 Byparr 3.1.1，覆盖正文、图片、附件、浏览器 PDF、预检和认证。支持现有 Camoufox／Playwright 平台，Elsevier 也开放 macOS 浏览器阶段。API、HTTP 直连和 provider 获取顺序不变。
 
 ## 安装
 
@@ -10,7 +10,7 @@ browser/full extras、离线预置、Camoufox 渠道与版本 pin、准备重试
 
 ## 选择与配置
 
-`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` 均选择 Byparr＋Camoufox；`camoufox` 是兼容别名。组件不可用时报告准备错误。
+`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` 均选择受管 Byparr；`camoufox` 是兼容别名。组件不可用时报告准备错误。
 
 通用变量如下：
 
@@ -51,7 +51,7 @@ runtime 明确实现 Camoufox 的 custom-path metadata 布局时才使用该覆�
 
 ### 状态模式
 
-所有浏览器后端的诊断名称均为 `byparr`，引擎为 `camoufox`；内部 `state_mode` 决定
+所有浏览器后端的诊断名称均为 `byparr`，引擎由平台选择 `invisible` 或 `camoufox`；内部 `state_mode` 决定
 状态归属，不能仅凭后端名称判断目录类型：
 
 | 配置与平台 | 状态模式与目录 |
@@ -72,30 +72,19 @@ PDF 不用清理后的 JSON 替换原生状态，`save_storage_state=false` 仅�
 
 ## 统一受管 Byparr
 
-全部浏览器 provider 使用 Byparr v2.1.0（提交 `1e726296a3143cbce0982cf4fd47a9a3224094e9`）、Camoufox 0.5.9 和 playwright-captcha 0.1.5。`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` 均进入组合链路，诊断的后端为 `byparr`、引擎为 `camoufox`。
+全部浏览器 provider 使用 Byparr v3.1.1（提交 `b041dd2998110fc61789ae65e2506bd5b79edba5`）。Windows/Linux x64 使用 InvisiblePlaywright 0.47.1、与其匹配的 invisible-core 58.56.0 和 seal 校验的 Firefox 引擎；macOS 与 ARM 保留 Camoufox 0.5.9，避免移除现有平台支持。各平台均接入新版 Byparr 的 locator/polling 挑战处理逻辑，替代旧 ClickSolver 和 shadow-root addon。
 
-源码/pip 安装在首次使用时自动下载锁定源码与私有纯 Python 依赖；离线包内置
-`runtime/browser-components/byparr/`，包含完整上游源码、GPL-3.0 许可证、适配记录、
-组件清单和文件摘要。源码与依赖同时进入 frozen snapshot、inventory、checksum 和 SBOM。
-离线组件缺失或损坏报告安装错误，需重新安装，不联网回补。包内
-`byparr-manifest.json` 和 `byparr-requirements.lock` 记录版本、来源与 SHA-256。
-运行时缓存位于用户数据目录 `byparr/`，通过目录锁、校验、暂存与原子发布复用。
+`auto|camoufox|byparr` 仍是同一后端的兼容选项，状态目录和 native/JSON 绑定沿用上表。`PAPER_FETCH_BROWSER_BINARY_PATH` 覆盖当前平台引擎的 executable：Invisible 要求与其 release seal 匹配，Camoufox 要求其自有 metadata 布局，两个引擎的 executable 不能互换。
 
-项目复用已有 Camoufox 浏览器与指纹模型准备缓存；`PAPER_FETCH_BROWSER_BINARY_PATH`
-对 Camoufox 和 Byparr 都有效，`PAPER_FETCH_BROWSER_COMPONENT_CACHE` 可覆盖组件缓存。
-主进程与子进程使用同一 Playwright 安装（`>=1.58,<1.64`）及其 Node driver，启动
-仅监听 loopback 的共享 Firefox 服务。Byparr 异步控制端与同步提取端连接同一上下文、
-同一页面，直接访问文章候选 URL。等待期间同步端继续处理事件与资源路由；随后复用
-正文就绪判断、MathJax 原始 MathML 采集、身份检查及图片、PDF、附件流程。
+组件清单、源码 SHA-256 和纯 Python 私有依赖仍由 `byparr-manifest.json`、`byparr-requirements.lock` 管理。离线包保留完整上游源码、许可证和适配说明；浏览器 binary 继续按需准备。组件缓存由 `PAPER_FETCH_BROWSER_COMPONENT_CACHE` 覆盖。
 
-每次 URL 导航均由统一入口托管，保留原 `wait_until` 和剩余期限；图片／下载不等待 HTML 正文或统一 networkidle。点击前安装监控，在原页面、弹窗、iframe 关系中解题，不重放点击或另建 context。浏览器 GET 成功路径保留；明确 Cloudflare challenge 才在同一 context 内处理，并在原预算内重试一次 GET。
+Invisible 沿用上游的自动 GeoIP 时区和语言选择，可通过 `BROWSER_TIMEZONE`、`BROWSER_LOCALE` 显式设置；安装器的本地空白页检查使用固定设置，不要求外部定位。
 
-私有适配层复用锁定 Byparr 的 Cloudflare interstitial ClickSolver，分开导航、检测和解题；普通 403、登录、付费和不支持的 challenge 沿用原分类。同一 context 串行解题，重复观察复用任务。同步端真实 Response／Download 与统一 acceptance 决定成功。结构化事件分别记录 `navigation_managed`、`challenge_detected`、`solver_called`、`solver_click`、`challenge_result`，关联 operation、页面和真实响应序列。初始化不算 solver 调用，自动验证不算点击。
-验证码插件的可写脚本与 registry 使用请求私有副本，共享组件保持只读。
-准备、导航与等待受请求期限和取消约束，退出时清理所属控制进程、Node 与 Camoufox。
+Invisible 使用自己的 Python protocol transport，同步提取与挑战处理在所属线程复用一个 context，不再经过共享 Node 浏览器服务。macOS/ARM 的 Camoufox 仍使用共享 Playwright（`>=1.58,<1.63`）连接。新版上游异步解题函数在 Invisible 所属线程编译为同步调用，仅转换 async/await、导入和等待绑定；选择器、点击间隔及算法保持一致。独立发行版的 Python 3.14 FastAPI/GeoIP 初始化不进入项目的 CPython 3.11–3.14 适配路径。
 
-抓取与 preflight 默认 headless；显式 auth 使用窗口。准备、重试与安装器跳过选项见
-[部署指南](deployment.md#浏览器安装与准备)。
+Invisible 不实现 HTTP APIRequestContext，项目沿用原有 host HTTP GET 通道并同步 Cookie，受挑战的请求仍在原浏览器 context 中恢复一次。原生 profile 租约、过滤后 JSON 的验收提交、请求期限和取消归属保持原有语义。
+
+结构化事件保留 `navigation_managed`、`challenge_detected`、`solver_called`、`solver_click`、`challenge_result`。只有真实成功响应或下载才记为 `cleared`；页面挑战标记消失但尚无成功响应时记为 `awaiting_response`。实际 Response/Download 和统一 acceptance 决定抓取结果。
 
 ## Migration
 

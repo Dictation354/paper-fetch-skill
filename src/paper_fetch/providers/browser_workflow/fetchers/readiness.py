@@ -103,9 +103,12 @@ _BODY_READY_SCRIPT = """
       continue;
     }
     for (const node of nodes) {
-      const text = normalize(node.innerText || node.textContent || "");
+      const text = normalize(provider === "pnas"
+        ? node.textContent : (node.innerText || node.textContent || ""));
       const textLength = text.length;
-      const paragraphCount = node.querySelectorAll("p").length;
+      const paragraphCount = node.querySelectorAll(
+        provider === "pnas" ? "p, [role='paragraph']" : "p"
+      ).length;
       const headingCount = node.querySelectorAll("h1,h2,h3,h4,h5,h6,[role='heading']").length;
       const ready = textLength >= minChars && (paragraphCount >= 2 || headingCount >= 1);
       const fingerprint = [

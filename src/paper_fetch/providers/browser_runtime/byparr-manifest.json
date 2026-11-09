@@ -1,15 +1,15 @@
 {
-  "version": "2.1.0",
-  "commit": "1e726296a3143cbce0982cf4fd47a9a3224094e9",
+  "version": "3.1.1",
+  "commit": "b041dd2998110fc61789ae65e2506bd5b79edba5",
   "source": {
-    "url": "https://codeload.github.com/ThePhaseless/Byparr/zip/1e726296a3143cbce0982cf4fd47a9a3224094e9",
-    "sha256": "4225b9131c6e095a0e4b474baaded403ffe4dc8b86150fe3a3ea99cbf785add6",
-    "root": "Byparr-1e726296a3143cbce0982cf4fd47a9a3224094e9"
+    "url": "https://codeload.github.com/ThePhaseless/Byparr/zip/b041dd2998110fc61789ae65e2506bd5b79edba5",
+    "sha256": "cadb8db665f2aea538ef6314ba9e5955f6fd774d0119365eccd51d3941e71812",
+    "root": "Byparr-b041dd2998110fc61789ae65e2506bd5b79edba5"
   },
   "license": "GPL-3.0-only",
   "shared_packages": [
     "camoufox==0.5.9",
-    "playwright>=1.58,<1.64",
+    "playwright>=1.58,<1.63",
     "pydantic>=2,<3",
     "httpx",
     "anyio",
@@ -17,7 +17,9 @@
     "idna",
     "urllib3",
     "typing-extensions",
-    "typing-inspection"
+    "typing-inspection",
+    "invisible-playwright==0.47.1",
+    "invisible-core==58.56.0"
   ],
   "packages": [
     {
@@ -165,5 +167,5 @@
       ]
     }
   ],
-  "adapter_revision": 2
+  "adapter_revision": 4
 }

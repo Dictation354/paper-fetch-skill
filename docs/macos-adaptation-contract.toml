@@ -39,6 +39,8 @@ verify_before_legacy_cleanup = true
 check_is_read_only = true
 
 [browser]
+byparr_version = "3.1.1"
+native_engine = "camoufox"
 default_backend = "byparr"
 pnas_backend = "byparr"
 elsevier_browser_routes = "supported"

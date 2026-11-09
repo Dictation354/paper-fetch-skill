@@ -68,7 +68,13 @@ def build_isolated_live_env(
     preserved_executable = os.environ.get(
         PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR, ""
     ).strip()
-    if preserved_executable and not env.get(BROWSER_BINARY_PATH_ENV_VAR, "").strip():
+    from paper_fetch.providers.browser_runtime.byparr_engine import engine_name
+
+    if (
+        engine_name() == "camoufox"
+        and preserved_executable
+        and not env.get(BROWSER_BINARY_PATH_ENV_VAR, "").strip()
+    ):
         env[BROWSER_BINARY_PATH_ENV_VAR] = preserved_executable
     preserved_camoufox_cache_home = os.environ.get(
         PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR, ""
@@ -123,21 +129,11 @@ def is_machine_readable_no_access(payload: Mapping[str, object]) -> bool:
     )
 
 
-def preflight_selected_browser_or_skip(
-    testcase,
-    *,
-    provider: str,
-    env: Mapping[str, str],
-    cache: dict[object, BrowserPreflightResult],
-    artifact_root: Path | None = None,
-    doi: str | None = None,
-    target_url: str | None = None,
-    return_terminal_result: bool = False,
-) -> BrowserPreflightResult:
-    """Run one provider preflight per shared live profile before its first fetch."""
-
+def require_local_browser_or_skip(
+    testcase, env: Mapping[str, str], *, provider: str
+) -> None:
+    """Check configuration and local dependencies without visiting a publisher."""
     require_browser_or_skip(testcase, env, provider=provider)
-    backend = selected_backend(env, provider=provider)
     static = static_browser_capabilities(env, provider=provider)
     runtime_capability = static.get("browser_runtime")
     if not isinstance(runtime_capability, Mapping):
@@ -160,6 +156,23 @@ def preflight_selected_browser_or_skip(
             f"{provider} browser runtime is unavailable ({reason}): "
             f"{runtime_capability.get('message') or note_message or 'missing local dependency'}"
         )
+
+
+def preflight_selected_browser_or_skip(
+    testcase,
+    *,
+    provider: str,
+    env: Mapping[str, str],
+    cache: dict[object, BrowserPreflightResult],
+    artifact_root: Path | None = None,
+    doi: str | None = None,
+    target_url: str | None = None,
+    return_terminal_result: bool = False,
+) -> BrowserPreflightResult:
+    """Run one provider preflight per shared live profile before its first fetch."""
+
+    require_local_browser_or_skip(testcase, env, provider=provider)
+    backend = selected_backend(env, provider=provider)
     normalized_doi = normalize_doi(doi or "")
     normalized_target = normalize_browser_url(target_url)
     cache_key: object = (provider, backend)

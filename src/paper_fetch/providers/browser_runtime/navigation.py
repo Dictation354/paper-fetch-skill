@@ -72,8 +72,14 @@ def _recover(context, url, *, deadline, page=None):
 
 def context_get(context, url, *, timeout=30000, page=None, **kwargs):
     deadline = time.monotonic() + timeout / 1000
-    response = context.request.get(url, timeout=timeout, **kwargs)
     navigator = getattr(context, "__dict__", {}).get("_paper_fetch_navigator")
+    get = (
+        navigator.context_request_get
+        if navigator is not None
+        and getattr(navigator, "_invisible_session", None) is not None
+        else context.request.get
+    )
+    response = get(url, timeout=timeout, **kwargs)
     if navigator is None:
         return response
     headers = response.headers
@@ -86,7 +92,7 @@ def context_get(context, url, *, timeout=30000, page=None, **kwargs):
     ):
         remaining = int((deadline - time.monotonic()) * 1000)
         if remaining > 0:
-            response = context.request.get(url, timeout=remaining, **kwargs)
+            response = get(url, timeout=remaining, **kwargs)
     return response
 
 
@@ -115,6 +121,9 @@ def evaluate_get(page, expression, args):
 
 def evaluate_main_world(page, expression: str):
     """Read page-owned JS state through Camoufox's explicit main-world API."""
+    navigator = navigator_for(page)
     return page.evaluate(
-        "mw:" + expression if navigator_for(page) is not None else expression
+        "mw:" + expression
+        if navigator is not None and navigator.diagnostics.get("engine") == "camoufox"
+        else expression
     )

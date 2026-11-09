@@ -1,6 +1,6 @@
 # Browser runtime ownership
 
-浏览器请求统一使用受管 Byparr＋Camoufox，由 `paper_fetch.providers.browser_runtime`
+浏览器请求统一使用受管 Byparr 3.1.1（Windows/Linux x64 使用 Invisible，其余既有平台使用 Camoufox），由 `paper_fetch.providers.browser_runtime`
 管理线程、context、状态目录与资源释放。组件和状态模式见[浏览器后端](browser-backends.md)，
 安装与预置见[部署指南](deployment.md#浏览器安装与准备)。
 
@@ -25,7 +25,7 @@ provider 只读取显式 `BrowserRuntimeConfig`，不探测 backend、不持有�
 一个 `RuntimeContext` 在 owning thread 内复用同一出版社 context；正文 HTML、PDF、
 figure page discovery、图片、附件、auth 与 preflight 均通过同一 runtime 入口获取会话。
 各阶段只关闭自己创建的页面，batch 结束、取消升级或 runtime 关闭时统一释放 manager、
-所属控制进程、Node 与 Camoufox。Playwright sync 对象不跨线程共享；资产调度通过
+所属浏览器会话及其控制资源。Playwright sync 对象不跨线程共享；资产调度通过
 caller-thread 机制调用浏览器，direct HTTP 仍可并行。
 
 原生模式由 profile owner 管理 `persistent_context=True`、出版社归属与目录锁；JSON
@@ -54,7 +54,13 @@ provider preparation 前的快照，之后重新捕获以保留展开的引用�
 
 ### PNAS 获取边界
 
-PNAS 正文使用浏览器 DOM；侧栏统计请求拦截不构成性能保证。项目尚未接入 PMC
+PNAS 正文使用浏览器 DOM；就绪采样覆盖 `p` 和 `[role="paragraph"]`，从选中正文
+容器的 `textContent` 生成指纹，避免布局变化重置稳定性判断。仍要求两次相同指纹、
+750ms 观察间隔和每候选 8 秒预算；首次同步浏览器调用可能受页面执行阻塞影响。
+正文图片在 JSON 与原生状态模式下均先直连，失败后复用同主机恢复决策；浏览器恢复
+优先通过同会话 `context_get` 携带 cookie 和文章 Referer 收取原始字节，成功即返回，
+失败才进入原有页面请求与图片恢复路径，同一轮不重复 context request。原图候选、
+并发上限和验收保持不变。侧栏统计请求拦截不构成性能保证。项目尚未接入 PMC
 获取路径，不将第三方归档图视为 PNAS 原图验收的等价替代。
 
 ### 主文档诊断

@@ -1,4 +1,4 @@
-"""Private adapter for locked Byparr 2.1.0; never fabricates HTTP success.
+"""Private adapter for locked Byparr 3.1.1; never fabricates HTTP success.
 
 Upstream's Cloudflare interstitial solver is reused without its unconditional
 networkidle wait or second navigation. Each operation retains its original
@@ -12,6 +12,11 @@ import contextlib
 import logging
 import time
 from urllib.parse import urlsplit
+
+try:
+    from .byparr_engine import playwright_api
+except ImportError:  # Request-owned controller imports this file directly.
+    from byparr_engine import playwright_api
 
 
 def supported_challenge(*, title="", html="", headers=None) -> bool:
@@ -30,6 +35,17 @@ def supported_challenge(*, title="", html="", headers=None) -> bool:
         or title.strip().lower() == "just a moment..."
         or marker
     )
+
+
+class SolverFrame:
+    """A publisher iframe keeps its own locators and its page's input device."""
+
+    def __init__(self, frame):
+        self.frame = frame
+        self.mouse = frame.page.mouse
+
+    def __getattr__(self, name):
+        return getattr(self.frame, name)
 
 
 class ManagedOperation:
@@ -126,7 +142,7 @@ class ManagedOperation:
         return False
 
     async def snapshot(self, frame):
-        from playwright.async_api import Error
+        Error = playwright_api(asynchronous=True).Error
 
         while True:
             try:
@@ -214,96 +230,49 @@ class ManagedOperation:
                         response_sequence=document["sequence"],
                     )
                     return
-                from playwright_captcha import ClickSolver, FrameworkType, CaptchaType
-                from src.consts import MAX_ATTEMPTS
+                from byparr_challenge import solve_challenge
+                from byparr_upstream import TimeoutTimer, logger
 
                 operation = self
 
                 class Evidence(logging.Handler):
                     def emit(self, record):
                         message = record.getMessage()
-                        operation.record(
-                            "solver_log", page=page, logger=record.name, message=message
-                        )
-                        if message == "Checkbox clicked successfully":
+                        operation.record("solver_log", page=page, message=message)
+                        if message.startswith(
+                            "Clicked the challenge checkbox (attempt "
+                        ):
                             operation.record(
                                 "solver_click",
                                 page=page,
                                 response_sequence=document["sequence"],
                             )
 
-                logger = logging.getLogger("playwright_captcha")
                 handler = Evidence()
                 logger.setLevel(logging.DEBUG)
                 logger.addHandler(handler)
                 try:
-                    async with ClickSolver(
-                        framework=FrameworkType.CAMOUFOX,
+                    self.record(
+                        "solver_called",
                         page=page,
-                        max_attempts=MAX_ATTEMPTS,
-                        attempt_delay=1,
-                    ) as solver:
-                        self.record(
-                            "solver_called",
-                            page=page,
-                            response_sequence=document["sequence"],
-                        )
-                        solve_task = asyncio.create_task(
-                            solver.solve_captcha(
-                                captcha_container=frame
-                                if frame != page.main_frame
-                                else page,
-                                captcha_type=CaptchaType.CLOUDFLARE_INTERSTITIAL,
-                                wait_checkbox_attempts=1,
-                                wait_checkbox_delay=0.5,
-                            )
-                        )
-
-                        async def wait_for_clearance():
-                            while True:
-                                await asyncio.sleep(0.1)
-                                title, html = await self.snapshot(frame)
-                                real_success = any(
-                                    item["frame_id"] == document["frame_id"]
-                                    and item["sequence"] > document["sequence"]
-                                    and 200 <= item["status"] < 300
-                                    for item in self.documents
-                                )
-                                download_success = any(
-                                    when >= response_at for when, _ in self.downloads
-                                )
-                                if download_success or (
-                                    real_success
-                                    and not supported_challenge(title=title, html=html)
-                                ):
-                                    return
-
-                        clearance_task = asyncio.create_task(wait_for_clearance())
-                        try:
-                            done, _ = await asyncio.wait(
-                                {solve_task, clearance_task},
-                                return_when=asyncio.FIRST_COMPLETED,
-                            )
-                            if solve_task in done:
-                                await solve_task
-                        finally:
-                            for task in (solve_task, clearance_task):
-                                if not task.done():
-                                    task.cancel()
-                            await asyncio.gather(
-                                solve_task, clearance_task, return_exceptions=True
-                            )
-                    title, html = await self.snapshot(frame)
-                    if not supported_challenge(title=title, html=html):
-                        if not hasattr(self.solver_lock, "cleared_frames"):
-                            self.solver_lock.cleared_frames = {}
-                        self.solver_lock.cleared_frames[frame] = time.monotonic()
+                        response_sequence=document["sequence"],
+                    )
+                    await solve_challenge(
+                        page if frame == page.main_frame else SolverFrame(frame),
+                        TimeoutTimer(deadline=self.deadline),
+                    )
+                    # The upstream solver confirms absence twice across navigation;
+                    # only a real document/download proves publisher acceptance.
+                    real_success = any(
+                        item["frame_id"] == document["frame_id"]
+                        and item["sequence"] > document["sequence"]
+                        and 200 <= item["status"] < 300
+                        for item in self.documents
+                    ) or any(when >= response_at for when, _ in self.downloads)
                     self.record(
                         "challenge_result",
                         page=page,
-                        outcome="still_present"
-                        if supported_challenge(title=title, html=html)
-                        else "cleared",
+                        outcome="cleared" if real_success else "awaiting_response",
                         response_sequence=document["sequence"],
                     )
                 except asyncio.CancelledError:
@@ -329,7 +298,7 @@ class ManagedOperation:
                     logger.removeHandler(handler)
 
     async def navigate(self):
-        from playwright.async_api import Error
+        Error = playwright_api(asynchronous=True).Error
 
         try:
             await self.page.goto(

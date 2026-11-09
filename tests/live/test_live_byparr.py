@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 import pytest
 
@@ -57,10 +58,13 @@ def test_byparr_navigation_via_cli(tmp_path, provider, doi):
 
     for key in ("PAPER_FETCH_BROWSER_PROFILE_DIR", "PAPER_FETCH_BROWSER_USER_DATA_DIR"):
         env.pop(key, None)
-    if env.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR):
+    from paper_fetch.providers.browser_runtime.byparr_engine import engine_name
+
+    if env.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR) and engine_name() == "camoufox":
         env["PAPER_FETCH_BROWSER_BINARY_PATH"] = env[
             PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
         ]
+    if env.get(PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR):
         env["XDG_CACHE_HOME"] = env[PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR]
     command = [
         sys.executable,
@@ -77,12 +81,16 @@ def test_byparr_navigation_via_cli(tmp_path, provider, doi):
         "--artifact-mode",
         "all",
         "--asset-profile",
-        "none",
+        "body" if provider == "pnas" else "none",
         "--manifest",
         str(output / "manifest.json"),
         "--progress",
         "jsonl",
     ]
+    if provider == "pnas":
+        command.extend(
+            ["--require-local-body-assets", "--require-full-size-body-assets"]
+        )
     # The single-fetch CLI does not use the MCP result cache. A new subprocess,
     # empty output directory and fresh provider state force actual acquisition.
     (output / "request.json").write_text(
@@ -98,6 +106,7 @@ def test_byparr_navigation_via_cli(tmp_path, provider, doi):
             indent=2,
         )
     )
+    started_at = time.monotonic()
     result = subprocess.run(
         command, env=env, capture_output=True, text=True, timeout=300
     )
@@ -112,8 +121,27 @@ def test_byparr_navigation_via_cli(tmp_path, provider, doi):
     events = [
         event.get("message", "") for node in navigations for event in node["events"]
     ]
+    from tests.support.live_acceptance import (
+        fetch_browser_diagnostics,
+        _asset_performance_summary,
+    )
+    from paper_fetch.models.codec import article_from_payload
+
+    articles = [
+        payload
+        for payload in payloads
+        if isinstance(payload, dict)
+        and payload.get("source") == expected_source
+        and "sections" in payload
+    ]
+    article = article_from_payload(articles[0]) if articles else None
     report = {
         "doi": doi,
+        "preflight": None,
+        "preflight_seconds": 0,
+        "fetch_wall_seconds": round(time.monotonic() - started_at, 3),
+        **fetch_browser_diagnostics(output / "article", provider=provider, doi=doi),
+        "assets": _asset_performance_summary(article) if article else None,
         "exit_code": result.returncode,
         "challenge_observed": any(
             event.get("kind") == "challenge_detected"
@@ -121,7 +149,11 @@ def test_byparr_navigation_via_cli(tmp_path, provider, doi):
             for event in node["events"]
         ),
         "checkbox_clicked": any(
-            "Checkbox clicked successfully" in event for event in events
+            (
+                "Checkbox clicked successfully" in event
+                or "Clicked the challenge checkbox (attempt " in event
+            )
+            for event in events
         ),
         "documents": [doc for node in navigations for doc in node["documents"]],
         "byparr_events": events,
@@ -157,6 +189,13 @@ def test_byparr_navigation_via_cli(tmp_path, provider, doi):
         and report["content_fulltext"]
         and report["markdown_written"]
     ), report
+    if provider == "pnas":
+        assert article is not None
+        assert len(article.assets) == 4
+        assert all(
+            asset.path and asset.download_tier == "full_size"
+            for asset in article.assets
+        )
     assert any(
         doc.get("status") == 200
         and (

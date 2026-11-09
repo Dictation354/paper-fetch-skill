@@ -122,3 +122,101 @@ def test_pnas_uses_completed_document_and_waits_for_each_candidate(
         if scenario == "next_candidate":
             assert trace["candidates"][0]["dom_readiness_result"] == "timeout"
             assert trace["navigation_count"] == 2
+
+
+@pytest.mark.browser
+@pytest.mark.parametrize(
+    "scenario",
+    [
+        "role_paragraph",
+        "delayed",
+        "growing",
+        "unstable",
+        "layout",
+        "challenge",
+        "denied",
+    ],
+)
+def test_pnas_readiness_samples_body_text_without_layout_resets(monkeypatch, scenario):
+    from paper_fetch.providers.browser_workflow.fetchers.readiness import (
+        wait_for_atypon_body_dom_ready,
+    )
+
+    executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
+    if not executable or not Path(executable).is_file():
+        pytest.skip("requires the existing local Camoufox executable")
+    camoufox = pytest.importorskip("camoufox.sync_api")
+    from camoufox import DefaultAddons, utils
+
+    version_file = next(
+        parent / "version.json"
+        for parent in Path(executable).parents
+        if (parent / "version.json").is_file()
+    )
+    monkeypatch.setattr(
+        utils,
+        "installed_verstr",
+        lambda: json.loads(version_file.read_text())["version"],
+    )
+    monkeypatch.setattr(utils, "get_path", lambda file: str(version_file.parent / file))
+    body = (
+        '<main id="bodymatter"><div role="paragraph">'
+        + "Scientific evidence. " * 80
+        + '</div><div role="paragraph">Second paragraph.</div><span id="layout">Layout text</span></main>'
+    )
+    with camoufox.Camoufox(
+        headless=True, executable_path=executable, exclude_addons=list(DefaultAddons)
+    ) as browser:
+        page = browser.new_page()
+        if scenario == "delayed":
+            page.set_content(
+                '<body><script>setTimeout(() => document.body.insertAdjacentHTML("beforeend", '
+                + json.dumps(body)
+                + "), 200)</script></body>"
+            )
+        elif scenario in {"challenge", "denied"}:
+            page.set_content(
+                "<title>Just a moment...</title><body>Checking your browser</body>"
+                if scenario == "challenge"
+                else "<title>Access denied</title><body>View all access options</body>"
+            )
+        else:
+            page.set_content(body)
+        samples = []
+
+        class SamplingPage:
+            def evaluate(self, script, args):
+                if scenario in {"growing", "unstable"} and (
+                    len(samples) < 3 or scenario == "unstable"
+                ):
+                    page.evaluate(
+                        "() => document.querySelector('[role=paragraph]').append(' More results.')"
+                    )
+                if scenario == "layout":
+                    page.evaluate(
+                        "hidden => document.querySelector('#layout').style.display = hidden ? 'none' : 'inline'",
+                        len(samples) % 2 == 0,
+                    )
+                result = page.evaluate(script, args)
+                samples.append(result)
+                return result
+
+            def wait_for_timeout(self, milliseconds):
+                page.wait_for_timeout(milliseconds)
+
+        result = wait_for_atypon_body_dom_ready(
+            SamplingPage(), "pnas", timeout_seconds=4 if scenario == "growing" else 1.7
+        )
+        assert result.ready == (scenario not in {"unstable", "challenge", "denied"})
+        if result.ready:
+            assert result.paragraph_count == 2
+            assert result.heading_count == 0
+            assert samples[-1]["fingerprint"] == samples[-2]["fingerprint"]
+        if scenario in {"role_paragraph", "layout"}:
+            assert len(samples) == 2
+        if scenario == "delayed":
+            assert not samples[0]["ready"]
+        if scenario == "growing":
+            assert len(samples) >= 4
+        if scenario == "unstable":
+            assert samples[-1]["fingerprint"] != samples[-2]["fingerprint"]

@@ -94,6 +94,13 @@ PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=failures/live-publishers \
   -q -n 0 -o junit_family=legacy --junitxml=failures/live-publishers.xml
 ```
 
+publisher catalog 和 MCP 抓取用例只检查本地依赖、配置和凭据，直接执行 fetch；显式
+CLI `browser-preflight` / MCP `browser_preflight` 保留为独立诊断，不作为抓取前置访问。
+报告保留 `preflight=null`、`preflight_seconds=0`；导航和正文 readiness 指标读取本次
+fetch 保存的诊断。资产 queue 与 browser recovery 分别报告，不把排队耗时重复计入恢复，
+各资产时间之和不代表整次抓取墙钟时间。MCP 每个用例使用独立持久目录，兼容别名用例
+不会覆盖彼此的子进程 stderr、结果、页面诊断及下载资产；实际 fetch 失败也保留证据。
+
 publisher catalog 按默认 `body` 资产策略要求统一 acceptance 为 `complete`，记录每个 provider
 终态、墙钟时间、readiness、导航和资产 timing。`live-acceptance.json` 按 runtime catalog
 报告已执行和未执行项。只有结构化 challenge/auth/no-access 边界可 skip；解析失败、空壳和

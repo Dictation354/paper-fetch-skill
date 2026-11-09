@@ -1,43 +1,44 @@
 # Byparr component adaptation
 
-Source: ThePhaseless/Byparr v2.1.0, commit
-`1e726296a3143cbce0982cf4fd47a9a3224094e9` (GPL-3.0-only).
+Source: ThePhaseless/Byparr v3.1.1, commit
+`b041dd2998110fc61789ae65e2506bd5b79edba5` (GPL-3.0-only).
 The verified component retains the complete upstream source and LICENSE. Its
-`.dockerignore` symlink to `.gitignore` is materialized as a regular file with
-the same content for portable offline inventories.
+`.dockerignore` symlink is materialized from the in-archive `.gitignore`.
 
-The private `byparr_adapter.py` separates navigation, supported Cloudflare
-interstitial detection and solving. It reuses the locked upstream ClickSolver,
-MAX_ATTEMPTS and solve arguments, without the unconditional networkidle wait or
-rewriting response statuses in `read_item`. URL readiness/deadlines remain owned
-by the caller. An authenticated loopback service shares the host Playwright
-Node installation (`>=1.58,<1.64`, `_sharedBrowser: true`) between async Byparr and
-synchronous extraction. Native state also uses `_userDataDir` (available since
-Playwright 1.58) under the existing PublisherProfileManager lease. JSON sessions
-retain their old directory/acceptance ownership. No state is auto-migrated.
+The component and private pure-Python dependencies remain SHA-256 locked.
+InvisiblePlaywright 0.47.1 and its required invisible-core 58.56.0 are installed
+with the browser/full extra. The core's release seal verifies its Firefox engine.
+Windows/Linux x64 use Invisible's native Python protocol transport. macOS and
+ARM retain Camoufox 0.5.9 and the host Playwright shared-browser transport; no
+unsupported Invisible binary is downloaded. Host Playwright stays >=1.58,<1.63
+for Camoufox compatibility; it is not Invisible's browser protocol client.
 
-The locked unlockShadowRoot addon script is registered before Firefox starts,
-matching upstream preparation before navigation, including future popups/iframes.
-Solver initialization is not a solve call. A cleared real document/download stops
-solver retries even when a normal page retains a Cloudflare JSD script.
+Both engines use the pinned upstream `src/challenge.py`: locator-based widget
+measurement and bounded polling replace the old ClickSolver/closed-shadow addon.
+No runtime source, dependency or browser cache is modified. The async controller
+binds imports to its deadline/logger/protocol. Invisible executes a compiled sync
+form on the existing owning thread: async/await are removed, sleep pumps that
+thread's browser loop, and the detection function is converted the same way.
+The standalone FastAPI/geo module's Python 3.14-only syntax is not imported on
+CPython 3.11–3.14. The solver algorithm, selectors and cooldowns are unchanged.
 
-Operation monitors are armed before clicks and follow original pages, popups,
-iframes and redirects; they never replay clicks. Context-local solving is
-serialized and repeated request observations reuse a task. Navigation modes do
-not impose HTML body/networkidle waits on image/download responses. Challenged
-GETs are recovered in the same context with at most one bounded retry. Structured
-evidence distinguishes management, detection, solver invocation, actual checkbox
-click logs and outcomes; auto-validation is never recorded as a solver click.
+Invisible owns one browser/context directly. Initial navigation pumps the same
+owner loop so request cancellation can close it without crossing threads. Native
+profiles retain their PublisherProfileManager lease and directories; filtered
+JSON state retains its existing provider/acceptance owner. No state migration is
+performed. Invisible's export-only cookie size/session fields are omitted on
+cookie import. Its unsupported APIRequestContext is supplied by the existing
+host HTTP lane with synchronized cookies; challenged GET recovery still happens
+in the same browser context, with the same one-retry policy.
 
-The host supplies its installed Playwright, Camoufox, Pydantic and their shared
-HTTP dependencies. Pure Python Byparr/captcha dependencies are separately locked
-in component-manifest.json and installed privately; no Selenium, Chrome or
-ChromeDriver is used. The upstream Python 3.14 packaging restriction and
-Camoufox 0.4 constraint apply to its standalone distribution; this adapter runs
-its source on the project's CPython 3.11–3.14 matrix with Camoufox 0.5.9.
-The captcha package is copied to a request-private directory before import,
-including its writable addon registry. The verified component is never mutated.
-The parent owns request deadlines, cancellation and process-tree cleanup;
-filtered JSON storage state is committed only by the existing acceptance owner.
-Actual document responses and
-project acceptance decide success. No external captcha API credentials are used.
+The Camoufox controller identifies pages by their position in its request-owned
+context, without evaluating scripts on a challenge page. It does not install the
+old unlockShadowRoot addon. Only Camoufox uses its `mw:` evaluation prefix.
+
+Existing readiness, request deadlines, asset policy and unified acceptance remain
+authoritative. Operation evidence distinguishes detection, solver invocation,
+actual clicks, automatic verification and real response/download success. A DOM
+transition without a successful response is `awaiting_response`, not `cleared`.
+POSIX uses a request-owned exec shim to map Juggler pipe descriptors after
+CPython closes unrelated descriptors; no existing parent descriptor is replaced.
+Raw HTTP statuses are retained. No external captcha API credentials are used.

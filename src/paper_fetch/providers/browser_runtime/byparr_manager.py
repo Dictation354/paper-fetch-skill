@@ -63,6 +63,7 @@ class ByparrManager:
         }
         self.metadata: dict[str, Any] = {}
         self.owner_thread = threading.get_ident()
+        self._sync_operations = []
         self._directory_lock: Any = None
 
     def _check_owner(self):
@@ -79,14 +80,14 @@ class ByparrManager:
                 self.refresh()
             return self.context
         try:
-            from .camoufox_manager import _launch_executable_path
+            from .byparr_engine import prepare_executable, engine_name, playwright_api
 
             env = (
                 self.runtime_context.env
                 if self.runtime_context is not None
                 else os.environ
             )
-            binary = _launch_executable_path(self.config.binary_path)
+            binary = prepare_executable(self.config.binary_path)
             self.budget.check()
             cache = (
                 self.config.component_cache_dir or resolve_user_data_dir(env) / "byparr"
@@ -105,8 +106,14 @@ class ByparrManager:
             self.work_dir = Path(
                 tempfile.mkdtemp(prefix=f"paper-fetch-{self.config.provider}-byparr-")
             )
+            if engine_name() == "invisible":
+                from .byparr_invisible import start
+
+                return start(self, binary, runtime)
             self.diagnostics.update(
-                byparr_version="2.1.0",
+                byparr_version="3.1.1",
+                engine=engine_name(),
+                invisible_playwright_version="0.47.1",
                 camoufox_version="0.5.9",
                 playwright_captcha_version="0.1.5",
             )
@@ -162,16 +169,16 @@ class ByparrManager:
                     )
                 time.sleep(min(0.05, self.budget.remaining()))
             self.control = json.loads((self.work_dir / "ready.json").read_text())
-            from playwright.sync_api import sync_playwright
-
-            self.playwright = sync_playwright().start()
+            self.playwright = playwright_api().sync_playwright().start()
             self.browser = self.playwright.firefox.connect(
                 self.control["endpoint"], timeout=int(self.budget.remaining() * 1000)
             )
             self.context = (
                 self.browser.contexts[0]
                 if self.native_profile is not None
-                else self.browser.new_context(accept_downloads=True)
+                else self.browser.new_context(
+                    accept_downloads=True, **self.control.get("context_options", {})
+                )
             )
             self.context._paper_fetch_navigator = self
             if not self.local_check and self.native_profile is None:
@@ -179,6 +186,12 @@ class ByparrManager:
                 self.refresh()
             return self.context
         except BaseException as exc:
+            if self.work_dir is not None:
+                import traceback
+
+                (self.work_dir / "service.log").write_text(
+                    getattr(exc, "stack", None) or traceback.format_exc()
+                )
             self.close()
             from ...http import RequestCancelledError
 
@@ -204,7 +217,7 @@ class ByparrManager:
         if not state:
             return
         if state.get("cookies"):
-            self.context.add_cookies(state["cookies"])
+            self.context.add_cookies(self._cookie_parameters(state["cookies"]))
         origins = {
             item["origin"]: item.get("localStorage", [])
             for item in state.get("origins", [])
@@ -215,6 +228,75 @@ class ByparrManager:
             + "; for (const item of origins[location.origin] || []) localStorage.setItem(item.name, item.value);"
         )
         self.diagnostics["state_restored"] = True
+
+    @staticmethod
+    def _cookie_parameters(cookies):
+        # Invisible returns diagnostic size/session fields which are not cookie
+        # input parameters in either browser protocol.
+        allowed = {
+            "name",
+            "value",
+            "url",
+            "domain",
+            "path",
+            "expires",
+            "httpOnly",
+            "secure",
+            "sameSite",
+        }
+        result = []
+        for cookie in cookies:
+            item = {k: v for k, v in cookie.items() if k in allowed}
+            # APIRequestContext exports its unspecified SameSite as None even
+            # for HTTP cookies; omit that invalid explicit override on import.
+            if item.get("sameSite") == "None" and not item.get("secure", False):
+                item.pop("sameSite")
+            result.append(item)
+        return result
+
+    def context_request_get(self, url, **kwargs):
+        """Keep the host HTTP lane without moving browser objects off-owner."""
+        from concurrent.futures import ThreadPoolExecutor
+        from .byparr_invisible import HttpResponse
+
+        self._check_owner()
+        state = self.context.storage_state()
+        state["cookies"] = self._cookie_parameters(state.get("cookies", []))
+        for cookie in state["cookies"]:
+            cookie.setdefault("sameSite", "Lax")
+
+        def request():
+            from playwright.sync_api import sync_playwright
+
+            with sync_playwright() as pw:
+                context = pw.request.new_context(storage_state=state)
+                try:
+                    response = context.get(url, **kwargs)
+                    return (
+                        HttpResponse(
+                            response.status,
+                            response.headers,
+                            response.url,
+                            response.body(),
+                        ),
+                        context.storage_state().get("cookies", []),
+                    )
+                finally:
+                    context.dispose()
+
+        pool = ThreadPoolExecutor(max_workers=1)
+        future = pool.submit(request)
+        try:
+            while not future.done():
+                if self.runtime_context is not None:
+                    self.runtime_context.raise_if_cancelled()
+                time.sleep(0.01)
+            response, cookies = future.result()
+            if cookies:
+                self.context.add_cookies(self._cookie_parameters(cookies))
+            return response
+        finally:
+            pool.shutdown(wait=False, cancel_futures=True)
 
     def _request(self, payload, *, page=None):
         budget = PreparationBudget(payload["timeout_ms"] / 1000, self.runtime_context)
@@ -271,7 +353,10 @@ class ByparrManager:
                 records.append(entry)
         if value.get("status") != "ok":
             if value.get("error") in {"TimeoutError", "Error"}:
-                from playwright.sync_api import Error, TimeoutError
+                from .byparr_engine import playwright_api
+
+                Error = playwright_api().Error
+                TimeoutError = playwright_api().TimeoutError
 
                 error = TimeoutError if value["error"] == "TimeoutError" else Error
                 raise error(value.get("message") or "Publisher navigation timed out")
@@ -285,9 +370,9 @@ class ByparrManager:
         self._check_owner()
         budget = PreparationBudget(timeout_ms / 1000, self.runtime_context)
         identifier = secrets.token_urlsafe(24)
-        page.evaluate("name => { window.name = name; }", identifier)
         return {
             "page": identifier,
+            "page_index": self.context.pages.index(page),
             "operation": secrets.token_urlsafe(16),
             "timeout_ms": max(1, int(budget.remaining() * 1000)),
             "deadline": budget.deadline,
@@ -304,6 +389,27 @@ class ByparrManager:
         wait_until="load",
         **kwargs,
     ):
+        if getattr(self, "_invisible_session", None) is not None:
+            from .byparr_invisible import Operation
+
+            operation = Operation(self, page, timeout_ms, mode)
+            page.__dict__["_paper_fetch_sync_operation"] = operation
+            try:
+                response = operation.navigate(url, wait_until, kwargs)
+                operation.finish()
+                self.diagnostics["navigation_count"] = (
+                    self.diagnostics.get("navigation_count", 0) + 1
+                )
+                return next(
+                    (
+                        r
+                        for r in reversed(operation.responses)
+                        if r.frame == page.main_frame
+                    ),
+                    response,
+                )
+            finally:
+                operation.close()
         payload = self._operation_payload(
             page,
             timeout_ms,
@@ -358,6 +464,8 @@ class ByparrManager:
                 response.read()
 
     def settle(self, page, *, timeout_ms):
+        if getattr(self, "_invisible_session", None) is not None:
+            return
         payload = page.__dict__.get("_paper_fetch_operation")
         if payload is None:
             return
@@ -371,6 +479,18 @@ class ByparrManager:
 
     @contextlib.contextmanager
     def action(self, page, *, timeout_ms, mode="file"):
+        if getattr(self, "_invisible_session", None) is not None:
+            from .byparr_invisible import Operation
+
+            operation = Operation(self, page, timeout_ms, mode, "click")
+            try:
+                yield
+                while not operation.responses and not operation.downloads:
+                    operation.wait(0.02)
+                operation.finish()
+            finally:
+                operation.close()
+            return
         payload = self._operation_payload(
             page, timeout_ms, command="arm", action="click", mode=mode
         )
@@ -490,6 +610,23 @@ class ByparrManager:
 
     def close(self):
         self._check_owner()
+        for name, method in (
+            ("_http_context", "dispose"),
+            ("_http_playwright", "stop"),
+        ):
+            value = getattr(self, name, None)
+            if value is not None:
+                with contextlib.suppress(Exception):
+                    getattr(value, method)()
+                setattr(self, name, None)
+        session = getattr(self, "_invisible_session", None)
+        if session is not None:
+            for operation in self._sync_operations:
+                operation.close()
+            with contextlib.suppress(Exception):
+                session.__exit__(None, None, None)
+            self._invisible_session = None
+
         if self.process is not None:
             # Ask Node to close Firefox through Playwright before terminating the
             # process tree, so native cookies/localStorage reach the profile.

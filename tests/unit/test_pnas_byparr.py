@@ -238,7 +238,7 @@ def test_shared_playwright_version_boundary(monkeypatch, tmp_path, version):
         lambda: {"packages": {"playwright": True, "camoufox": True}},
     )
     monkeypatch.setattr(importlib.metadata, "version", lambda _: version)
-    with pytest.raises(ProviderFailure, match="Playwright >=1.58,<1.64"):
+    with pytest.raises(ProviderFailure, match="Playwright >=1.58,<1.63"):
         byparr.DEFAULT_BYPARR_BACKEND.ensure_runtime_ready(
             BrowserRuntimeConfig("pnas", "doi", tmp_path, True, None, backend="byparr")
         )

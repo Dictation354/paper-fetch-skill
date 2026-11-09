@@ -259,6 +259,13 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
         if not armed:
             return
         if request.redirected_from is None and request.url in targets:
+            if request.is_navigation_request():
+                # opener() can pump the sync loop before a popup's Page event,
+                # delivering its response/download reentrantly. Register the
+                # exact clicked navigation first; acceptance below still needs
+                # the verified page/opener relationship.
+                matched_requests.add(request)
+                request_urls.add(request.url)
             try:
                 request_page = request.frame.page
                 if request_page not in [page, *popups]:

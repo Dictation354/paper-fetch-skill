@@ -143,7 +143,7 @@ HTML 提取依赖 trafilatura 暂限 `>=2.0,<2.3`，开发锁定 2.2.0。
 在线安装与离线构建沿用这一兼容上限，保留现有公式和表格输出契约。
 
 当前锁定的浏览器组合为 Camoufox 0.5.9 / Playwright 1.62.0。项目允许
-`playwright>=1.58,<1.64`，但解析时仍受 Camoufox 自身的 `<1.63` 约束，不能强制
+`playwright>=1.58,<1.63`，但解析时仍受 Camoufox 自身的 `<1.63` 约束，不能强制
 安装 1.63。当前 Playwright 要求 Camoufox browser beta.30 或更新版本；固定浏览器版本时须满足该兼容范围。
 浏览器渠道、pin、24 小时检查记录及 fpgen 预置统一见
 [浏览器安装与准备](#浏览器安装与准备)。原生 macOS gate 预置浏览器和 fpgen，

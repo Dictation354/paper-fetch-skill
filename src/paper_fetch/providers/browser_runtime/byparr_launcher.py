@@ -7,7 +7,6 @@ import contextlib
 import json
 import os
 from pathlib import Path
-import shutil
 import signal
 import subprocess
 import sys
@@ -22,46 +21,28 @@ def main():
     while not (root / "start").exists():
         time.sleep(0.01)
     runtime = Path(settings["runtime"])
-    # The captcha addon writes its script registry relative to __file__.
-    # Copy only that package, leaving the verified component immutable.
-    private = root / "lib"
-    shutil.copytree(runtime / "lib/playwright_captcha", private / "playwright_captcha")
     sys.path[:0] = [
-        str(private),
         str(runtime / "lib"),
         str(runtime / "upstream"),
         *settings["site_paths"],
         str(Path(__file__).parent),
     ]
     sys.dont_write_bytecode = True
-    os.environ["VERSION"] = "2.1.0"
+    os.environ["VERSION"] = "3.1.1"
     os.environ["LOG_LEVEL"] = "DEBUG"
+    from byparr_upstream import load_challenge
+
+    sys.modules["byparr_challenge"] = load_challenge(runtime)
     from camoufox.utils import launch_options, spoofs_window_dimensions
     from playwright._impl._driver import compute_driver_executable
-    from playwright_captcha.utils.camoufox_add_init_script.add_init_script import (
-        get_addon_path,
-        add_init_script,
-    )
 
-    from playwright_captcha.utils.js_script import load_js_script
-
-    async def register_shadow_access():
-        # Upstream prepares this addon script before navigation. Register it
-        # before browser launch so popups/iframes get the same preparation too.
-        await add_init_script(
-            await load_js_script("patches/unlockShadowRoot.js"), get_addon_path()
-        )
-
-    asyncio.run(register_shadow_access())
     options = launch_options(
         executable_path=settings.get("binary_path"),
         headless=settings["headless"],
         main_world_eval=True,
-        addons=[get_addon_path()],
         locale="en-US",
         humanize=True,
         i_know_what_im_doing=True,
-        config={"forceScopeAccess": True},
         disable_coop=True,
         firefox_user_prefs={"pdfjs.disabled": True},
     )
@@ -147,15 +128,13 @@ async def serve(settings, root, endpoint, node_process):
                     await operation.close()
                     return {"status": "ok"}
                 return await operation.finish()
-            page = None
-            for context in browser.contexts:
-                for candidate in context.pages:
-                    try:
-                        if await candidate.evaluate("window.name") == payload["page"]:
-                            page = candidate
-                            break
-                    except Exception:
-                        continue
+            context = browser.contexts[0] if browser.contexts else None
+            index = payload.get("page_index", -1)
+            page = (
+                context.pages[index]
+                if context is not None and 0 <= index < len(context.pages)
+                else None
+            )
             if page is None:
                 raise ValueError("Shared page identifier is unavailable")
             for key, previous in list(operations.items()):

@@ -207,6 +207,8 @@ def validate_contract(
         ("elsevier_browser_routes", "supported"),
         ("default_channel", "official/prerelease"),
         ("python_package_spec", "camoufox==0.5.9"),
+        ("byparr_version", "3.1.1"),
+        ("native_engine", "camoufox"),
         ("update_check_interval_seconds", 86400),
     ):
         if browser.get(key) != expected:

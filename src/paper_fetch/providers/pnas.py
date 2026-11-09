@@ -108,33 +108,6 @@ class PnasClient(browser_workflow.BrowserWorkflowClient):
     name = PNAS_BROWSER_PROFILE.name
     profile = PNAS_BROWSER_PROFILE
 
-    def download_related_assets(
-        self,
-        doi,
-        metadata,
-        raw_payload,
-        output_dir,
-        *,
-        asset_profile="all",
-        context=None,
-    ):
-        from .browser_runtime.selection import selected_state_mode
-
-        policy = (
-            "browser_first"
-            if selected_state_mode(self.env, provider=self.name) == "json"
-            else None
-        )
-        return self._download_browser_backed_related_assets(
-            doi,
-            metadata,
-            raw_payload,
-            output_dir,
-            asset_profile=asset_profile,
-            context=context,
-            body_fetch_policy=policy,
-        )
-
     def _browser_asset_file_fetcher(self, context, **request):
         config = request.get("browser_config")
         if config is None or config.state_mode != "json":

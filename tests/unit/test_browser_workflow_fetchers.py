@@ -942,3 +942,65 @@ def test_image_fetcher_memo_preserves_actual_camoufox_backend(factory):
     memo = browser_workflow._MemoizedImageDocumentFetcher(fetcher)
     assert memo.browser_backend == "camoufox"
     memo.close()
+
+
+@pytest.mark.parametrize(
+    "recovery", ["context", "article", "fetch", "navigation", "failed"]
+)
+def test_pnas_requests_original_bytes_before_page_image_recovery(tmp_path, recovery):
+    from paper_fetch.providers.browser_runtime import BrowserRuntimeConfig
+
+    url = "https://www.pnas.org/cms/asset/full.png"
+    referer = "https://www.pnas.org/doi/full/10.1073/test"
+    body = b"\x89PNG\r\n\x1a\noriginal"
+    payload = {"body": body, "url": url}
+    fetcher = image_fetchers._SharedBrowserImageDocumentFetcher(
+        browser_context_seed_getter=lambda: {"browser_final_url": referer},
+        seed_urls_getter=lambda: [referer],
+        browser_options=fetcher_context.BrowserDocumentFetcherOptions(
+            runtime_config=BrowserRuntimeConfig(
+                "pnas", "10.1073/test", tmp_path, True, None
+            )
+        ),
+    )
+    page = mock.Mock(url=referer)
+    context = mock.Mock()
+    context.request.get.return_value = _BrowserResponse(
+        url,
+        body if recovery == "context" else b"<html>Denied</html>",
+        "image/png" if recovery == "context" else "text/html",
+        status=200 if recovery == "context" else 403,
+    )
+    fetcher._context = context
+    fetcher._page = page
+    with (
+        mock.patch.object(
+            fetcher,
+            "_payload_from_warmed_article_image",
+            return_value=payload if recovery == "article" else None,
+        ) as warmed,
+        mock.patch.object(
+            fetcher,
+            "_payload_from_page_fetch_url",
+            return_value=payload if recovery == "fetch" else None,
+        ) as fetched,
+        mock.patch.object(
+            fetcher, "_wait_for_primary_image", return_value=None
+        ) as poll,
+    ):
+        page.goto.return_value = (
+            _BrowserResponse(url, body, "image/png")
+            if recovery == "navigation"
+            else None
+        )
+        result = fetcher._fetch_with_page(url, require_target_match=True)
+    assert (result is not None) == (recovery != "failed")
+    if result:
+        assert result["body"] == body
+    context.request.get.assert_called_once()
+    assert context.request.get.call_args.kwargs["headers"]["Referer"] == referer
+    assert 0 < context.request.get.call_args.kwargs["timeout"] <= 10000
+    assert warmed.call_count == int(recovery != "context")
+    assert fetched.call_count == int(recovery not in {"context", "article"})
+    assert poll.call_count == int(recovery == "failed")
+    assert page.goto.call_count == int(recovery in {"navigation", "failed"})

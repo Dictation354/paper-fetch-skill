@@ -97,7 +97,7 @@ def prepare(
         )
         local_check(setup.env, runtime)
         setup.report(
-            "Byparr", "ready", "Byparr 2.1.0; Camoufox 0.5.9; shared page verified"
+            "Byparr", "ready", "Byparr 3.1.1; shared page verified"
         )
     except (KeyboardInterrupt, EOFError):
         setup.report("Byparr", "not ready", "Cancelled; core installation is preserved")

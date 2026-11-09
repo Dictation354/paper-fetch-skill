@@ -28,7 +28,10 @@ from tests._environment import (
 )
 from tests.live import _runtime_env
 from tests.support.live_acceptance import catalog_acceptance_report
-from tests.provider_benchmark_samples import iter_provider_benchmark_samples
+from tests.provider_benchmark_samples import (
+    iter_provider_benchmark_samples,
+    provider_benchmark_sample,
+)
 
 
 def _ready_preflight(provider: str = "wiley") -> BrowserPreflightResult:
@@ -42,7 +45,12 @@ def _ready_preflight(provider: str = "wiley") -> BrowserPreflightResult:
 
 def test_isolated_live_env_reuses_prepared_camoufox_executable(
     tmp_path: Path,
+    monkeypatch,
 ) -> None:
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.byparr_engine.engine_name",
+        lambda: "camoufox",
+    )
     executable = tmp_path / "byparr"
     executable.touch()
 
@@ -362,3 +370,162 @@ def test_live_report_redaction_keeps_json_quoting_valid(tmp_path):
     saved = json.loads((tmp_path / "live-acceptance.json").read_text())
     assert "private-test-token" not in json.dumps(saved)
     assert "Quoted" in saved["providers"][0]["reference"]
+
+
+def test_live_local_browser_check_never_visits_publisher(monkeypatch):
+    monkeypatch.setattr(_runtime_env, "require_browser_or_skip", lambda *a, **kw: None)
+    monkeypatch.setattr(
+        _runtime_env,
+        "static_browser_capabilities",
+        lambda *a, **kw: {"browser_runtime": {"available": True}},
+    )
+    monkeypatch.setattr(
+        _runtime_env,
+        "preflight_browser_provider",
+        lambda *a, **kw: pytest.fail("unexpected network preflight"),
+    )
+    _runtime_env.require_local_browser_or_skip(unittest.TestCase(), {}, provider="pnas")
+
+
+def test_live_fetch_diagnostics_come_from_own_saved_artifact(tmp_path):
+    import json
+    from tests.support.live_acceptance import fetch_browser_diagnostics
+
+    path = tmp_path / "diagnostics" / "pnas" / "10.1073_test" / "byparr.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        json.dumps(
+            {
+                "doi": "10.1073/test",
+                "diagnostics": {
+                    "browser_runtime_trace": {
+                        "navigation_count": 1,
+                        "candidates": [
+                            {
+                                "navigation_seconds": 2.5,
+                                "dom_readiness_seconds": 0.75,
+                                "dom_readiness_result": "ready",
+                            }
+                        ],
+                    }
+                },
+            }
+        )
+    )
+    trace = fetch_browser_diagnostics(tmp_path, provider="pnas", doi="10.1073/test")
+    assert trace["browser_navigation_count"] == 1
+    assert trace["navigation_seconds"] == 2.5
+    assert trace["dom_readiness_seconds"] == 0.75
+    assert trace["diagnostics"][0]["path"] == str(path)
+    assert (
+        fetch_browser_diagnostics(tmp_path, provider="pnas", doi="10.1073/other")[
+            "diagnostics"
+        ]
+        == []
+    )
+
+
+@pytest.mark.parametrize("status", ["no_access", "extraction_error"])
+def test_catalog_fetch_never_preflights_and_preserves_actual_failure(
+    monkeypatch, tmp_path, status
+):
+    from tests.live import test_live_publishers as live
+    from paper_fetch.workflow.types import PaperFetchFailure
+    from paper_fetch.failure import FailureDiagnostics
+    import json
+
+    sample = provider_benchmark_sample("pnas")
+    records = []
+    monkeypatch.setattr(live, "require_local_browser_or_skip", lambda *a, **kw: None)
+    monkeypatch.setattr(
+        _runtime_env,
+        "preflight_browser_provider",
+        lambda *a, **kw: pytest.fail("unexpected network preflight"),
+    )
+
+    def fetch(*a, **kw):
+        kw["telemetry"]["fetch_wall_seconds"] = 1.5
+        raise PaperFetchFailure(
+            status=status,
+            reason="actual fetch failure",
+            diagnostics=FailureDiagnostics(
+                stage="fetching", details={"retained": True}
+            ),
+        )
+
+    monkeypatch.setattr(live, "fetch_envelope", fetch)
+    with pytest.raises(
+        pytest.skip.Exception if status == "no_access" else PaperFetchFailure
+    ):
+        live.test_catalog_provider_sample_live_body_acceptance(
+            sample, "byparr", {}, tmp_path, records, lambda *a: None
+        )
+    saved = json.loads((tmp_path / "byparr" / "live-acceptance.json").read_text())[
+        "providers"
+    ][0]
+    assert saved["preflight"] is None
+    assert saved["performance"]["preflight_seconds"] == 0
+    assert saved["performance"]["fetch_wall_seconds"] == 1.5
+    assert saved["terminal"]["reason_code"] == status
+    assert saved["failure_details"] == {"retained": True}
+
+
+@pytest.mark.parametrize("fetch_error", [False, True])
+def test_mcp_fetch_calls_only_fetch_and_preserves_per_case_evidence(
+    monkeypatch, tmp_path, fetch_error
+):
+    import asyncio
+    import json
+    from contextlib import asynccontextmanager
+    from types import SimpleNamespace
+    from tests.live import test_live_mcp as live
+
+    calls = []
+
+    @asynccontextmanager
+    async def client(*args, **kwargs):
+        kwargs["errlog"].write("subprocess diagnostic")
+        yield None, None
+
+    class Session:
+        async def initialize(self):
+            pass
+
+        async def call_tool(self, name, args, **kwargs):
+            calls.append(name)
+            assert name == "fetch_paper"
+            if fetch_error:
+                raise RuntimeError("actual subprocess fetch failure")
+            return SimpleNamespace(
+                structured_content={"status": "no_access"}, is_error=True
+            )
+
+    @asynccontextmanager
+    async def session(*args, **kwargs):
+        yield Session()
+
+    monkeypatch.setenv("PAPER_FETCH_LIVE_ARTIFACT_DIR", str(tmp_path))
+    monkeypatch.setattr(live, "stdio_client", client)
+    monkeypatch.setattr(live, "ClientSession", session)
+    outputs = []
+    for name in ("camoufox", "byparr"):
+        case = live.LiveMcpServerTests(
+            methodName=f"test_pnas_{name}_live_via_mcp_reports_progress_and_logs"
+        )
+        case.env = {}
+        if fetch_error:
+            with pytest.raises(RuntimeError, match="actual subprocess fetch failure"):
+                asyncio.run(case._call_fetch(query="10.1073/test", provider="pnas"))
+        else:
+            asyncio.run(case._call_fetch(query="10.1073/test", provider="pnas"))
+        outputs.append(case.fetch_output_dir)
+        saved = json.loads((case.fetch_output_dir / "fetch-result.json").read_text())
+        assert saved["preflight"] is None
+        assert saved["preflight_seconds"] == 0
+        assert saved["is_error"] is True
+        assert (
+            case.fetch_output_dir / "stderr.log"
+        ).read_text() == "subprocess diagnostic"
+    assert calls == ["fetch_paper", "fetch_paper"]
+    assert outputs[0] != outputs[1]
+    assert all((output / "fetch-result.json").exists() for output in outputs)

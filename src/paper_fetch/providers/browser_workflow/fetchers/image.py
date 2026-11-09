@@ -309,6 +309,15 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         try:
             if page is None:
                 return None
+            context_request_first = bool(
+                self._browser_config is not None
+                and self._browser_config.provider == "pnas"
+            )
+            if context_request_first:
+                request_payload = self._payload_from_context_request(image_url)
+                if request_payload is not None:
+                    return request_payload
+
             warmed_article_payload = self._payload_from_warmed_article_image(
                 page,
                 image_url,
@@ -323,9 +332,10 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
             if fetched_payload is not None:
                 return fetched_payload
 
-            request_payload = self._payload_from_context_request(image_url)
-            if request_payload is not None:
-                return request_payload
+            if not context_request_first:
+                request_payload = self._payload_from_context_request(image_url)
+                if request_payload is not None:
+                    return request_payload
 
             shared_session = self._shared_page_session
             if shared_session is not None and shared_session.preserve_seed_page:
