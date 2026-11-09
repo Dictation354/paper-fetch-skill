@@ -33,7 +33,7 @@
 
 顶层 `status=ok` 只表示调用没有抛出运行时失败；`has_fulltext` 是内容事实；`overall` 才是任务验收结论。三者不能互换。摘要或 metadata 可以是成功返回，但最多是 `limited`，不能报告成全文完成。
 
-单篇响应和批量逐项结果都提供统一 acceptance 摘要；直接读取各分面结论。保留返回的 `source`、`acquisition` 和 provenance 降级，不从 provider 名或 URL 补全缺失来源。
+此表描述完整报告的分面；单篇和批量 MCP 的紧凑 acceptance 将七个分面投影为状态字符串，另含 has_fulltext/has_abstract/token_estimate、acquisition 和 asset_summary。不要把摘要中的 identity/content 等当成嵌套对象；完整报告见 manifest。保留 source、acquisition 及 provenance 降级，不从 provider 名或 URL 补全缺失来源。
 
 ## 资产验收
 
@@ -61,21 +61,6 @@
 4. 返回输出快照时，核对当前文件 size/SHA-256；没有快照时按前述身份、内容和路径核对，用户要求 hash 时再计算。
 5. 请求本地资产时核对所需文件及返回的资产快照；MIME、尺寸或 hash 的额外检查用于具体缺失、损坏问题或用户指定的验收要求。
 
-文件被 `.gitignore` 忽略、`git status` 没有变化或位于仓库外，都不影响上述验收。需要独立复核单个产物时可用标准库计算实际 size/hash，不依赖 `jq`：
-
-```bash
-python3 - ./papers/example.md <<'PY'
-from hashlib import sha256
-import json
-from pathlib import Path
-import sys
-
-path = Path(sys.argv[1])
-payload = path.read_bytes()
-print(json.dumps({"path": str(path.resolve()), "size": len(payload), "sha256": sha256(payload).hexdigest()}, sort_keys=True))
-PY
-```
-
 ## 批量验收
 
 - 本节适用于真实批量抓取；`batch_check` 使用[探测核对与报告](#探测核对与报告)，不要求其提供下述 manifest 字段。
@@ -92,6 +77,6 @@ PY
 - 失败或需用户动作：说明具体原因、受影响目标及必要动作；按需展开结构化 code、执行面、attempt、acquisition、hash 或诊断路径。用户要求审计时提供完整技术证据。
 - 批量抓取：保留原始 index/query 到规范身份的映射及逐项状态，汇总 complete/degraded/limited/failed/action-required、限流、取消和未调度项；其余技术字段保留在已有机器结果中，按核对或诊断需要展示。
 
-展示精简不改变工具、manifest 或 cache 的完整结果，也不省略必要的身份、文件和降级验收。需重试时只按 [`failure-handling.md`](failure-handling.md) 的上限和状态变化条件执行。
+需重试时按[失败处理](failure-handling.md)的上限和状态变化条件执行。
 
 获取验收后，宿主继续完成用户原本要求的总结、比较、翻译或提取；不要以获取报告结束阅读任务。证据不足时说明限制并完成有依据的部分，不把摘要或片段冒充全文。paper-fetch 本身仍只负责身份解析、全文获取、验收与报告。

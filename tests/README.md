@@ -25,12 +25,10 @@ PYTHONPATH=src uv run python -m pytest tests/golden -q
 临时结果不会写回 corpus，不跨会话复用。cache/retry/隔离和变更输入的测试直接
 调用原构建器，保持独立运行。
 
-全层保留默认网络和用户目录隔离。unit 收集及执行禁止真实进程（包含 Python、
-shell、fork）、真实 PDF 转换、整篇构建器及 canonical 全文输入读取；
-`browser`、`live`、`allow_subprocess` 标记不能绕过。已有 `_scenarios` 的最小片段
-可供 unit 读取。已安装 PDF 模块在 unit 边界启用前完成导入；核心 PDF API、转换 mock 和 fake module
-可用，转换入口及其别名（含 helpers、`Document.to_*` 和批量转换）在调用时拦截。
-这些失败路径由 integration 中的子 pytest 验证。
+全层保留默认网络和用户目录隔离。unit 收集及执行禁止真实进程、真实 PDF 转换、
+整篇构建器及 canonical 全文输入读取；标记不能绕过边界。unit 可读取已登记的真实片段和
+`_scenarios` 最小场景，并使用转换 mock。具体拦截入口见
+[layer_policy.py](support/layer_policy.py)。
 
 原生 macOS 共享 Byparr 门禁通过 `PYTEST_XDIST_AUTO_NUM_WORKERS=2` 限制同时启动的
 浏览器及其 GPU 探测进程。浏览器测试使用运行时默认请求预算，隔离子进程复用预置的
@@ -48,7 +46,7 @@ Camoufox 依赖缓存；出版社 profile、cookies 与 storage-state 仍在隔�
 `mechanism` 证明局部机制，`covered` 关联该范围的离线内容测试，`partial` 列出具体缺口。
 仅 `partial` 可有非空 `remaining`；引用必须指向已登记的内容测试，不能由机制或 live 代替。
 review 不改变测试 kind 或资产来源。`evidence_cache` 与跨 worker golden cache 必须传播
-read set；审计证明读取来源，不替代数值、归属、顺序和位置断言。
+read set。
 
 来源分类、逐资产证据、签名 URL 回放、拒绝与撤回记录统一见
 [Fixture conventions](fixtures/README.md)。测试运行结果保存在仓库外或已忽略的
@@ -96,10 +94,9 @@ PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=failures/live-publishers \
 
 publisher catalog 和 MCP 抓取用例只检查本地依赖、配置和凭据，直接执行 fetch；显式
 CLI `browser-preflight` / MCP `browser_preflight` 保留为独立诊断，不作为抓取前置访问。
-报告保留 `preflight=null`、`preflight_seconds=0`；导航和正文 readiness 指标读取本次
-fetch 保存的诊断。资产 queue 与 browser recovery 分别报告，不把排队耗时重复计入恢复，
-各资产时间之和不代表整次抓取墙钟时间。MCP 每个用例使用独立持久目录，兼容别名用例
-不会覆盖彼此的子进程 stderr、结果、页面诊断及下载资产；实际 fetch 失败也保留证据。
+报告保留 `preflight=null`、`preflight_seconds=0`；导航、readiness 与资产 timing 来自本次
+fetch 的诊断，各资产时间之和不代表整次抓取墙钟时间。MCP 每个用例使用独立持久目录，
+失败也保留结果与诊断。
 
 publisher catalog 按默认 `body` 资产策略要求统一 acceptance 为 `complete`，记录每个 provider
 终态、墙钟时间、readiness、导航和资产 timing。`live-acceptance.json` 按 runtime catalog
@@ -130,8 +127,9 @@ direct 成功接受 `direct_http`；仅在进入 browser recovery 时核对 Camo
 `asset-hashes.json` 保存目标和正文资产的 hash、size、fetcher、recovery 与 acceptance。
 持续 AWS WAF 页面在 readiness 结束后以 `aws_waf_challenge` skip，不能视为成功访问。
 
-补充材料点击专项使用新目录，可由 `PAPER_FETCH_LIVE_STORAGE_STATE_SOURCE` 指定合法已有
-publisher profile；测试只复制状态到隔离目录。无附件、缓存、skip 和访问阻断不算下载成功：
+补充材料点击专项使用新目录。`PAPER_FETCH_LIVE_STORAGE_STATE_SOURCE` 可指定已有合法状态的根目录，
+测试从其中的 `<provider>-camoufox/storage-state.json` 复制 JSON 到隔离目录。
+无附件、缓存、skip 和访问阻断不算下载成功：
 
 ```bash
 PAPER_FETCH_RUN_SUPPLEMENT_CLICK=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=failures/supplement-click \

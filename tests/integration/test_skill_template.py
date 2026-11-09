@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import json
+import re
 import shutil
 import stat
 import shlex
@@ -150,10 +151,20 @@ class StaticSkillTests(unittest.TestCase):
             "browser_preflight",
         ):
             self.assertIn(tool_name, text)
+        documented_defaults = {}
+        for line in text.splitlines():
+            cells = [
+                cell.strip().strip("`") for cell in line.strip().strip("|").split("|")
+            ]
+            if len(cells) == 2 and cells[0] in dict(DEFAULT_FETCH_VALUES):
+                documented_defaults[cells[0]] = json.loads(cells[1])
         for key, value in DEFAULT_FETCH_VALUES:
-            self.assertIn(f"`{key}={value}`", text)
+            self.assertIn(key, documented_defaults)
+            self.assertEqual(
+                documented_defaults[key], json.loads(value.split(" (", 1)[0])
+            )
         for status, _description in ERROR_CONTRACT:
-            self.assertIn(f"`{status}`", text)
+            self.assertRegex(text, rf"\b{re.escape(status)}\b")
 
 
 class InstallerSmokeTests(unittest.TestCase):

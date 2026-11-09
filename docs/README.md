@@ -15,7 +15,7 @@
 | 检查探测与验收 | [probe 语义](architecture/probe-semantics.md) → [测试分层与证据](../tests/README.md) |
 | 修改 macOS/Unix 安装或浏览器边界 | [适配说明](deployment.md#macos-适配与证据边界) → [机器契约](macos-adaptation-contract.toml) |
 
-## 事实来源与维护
+## 文档职责与事实来源
 
 - provider 路由和能力由运行时 `ProviderBundle` / catalog 管理，用户语义集中在
   [providers.md](providers.md)；文档不维护第二套规则注册表。
@@ -26,29 +26,10 @@
   [fixture manifest](../tests/fixtures/golden_criteria/manifest.json)记录当前可执行样本与来源选择。
 - 发布构建、安装验收与平台证据统一见 [发布前检查](deployment.md#release-checklist)。
   协作要求见 [AGENTS.md](../AGENTS.md)。
-- CLI 参数以 `paper-fetch <command> --help` 与 `cli.py` 为准，MCP 入参与返回值以
-  `mcp/schemas.py`、tool adapter 和契约测试为准。文档解释行为，示例不替代完整 schema。
+- CLI 参数以 `paper-fetch <command> --help` 与 [cli.py](../src/paper_fetch/cli.py) 为准，
+  MCP 入参与返回值以 [schemas.py](../src/paper_fetch/mcp/schemas.py)、tool adapter 和契约测试为准。
 - 安装后的 [skill bundle](../skills/paper-fetch-skill/SKILL.md) 必须自包含，因此其
   预设、环境与验收摘要保留必要重复；不能改成依赖未随包安装的 `docs/` 链接。
-- 功能、参数与契约在对应主题文档中维护；版本变更集中在中英文更新日志。
-
-## 术语表
-
-| 术语 | 含义与详细契约 |
-| --- | --- |
-| `provider_hint` | resolve 的最佳提示，不承诺该 provider 一定成功 |
-| `preferred_providers` | 全文 provider allow-list；Crossref 元数据与路由查询另按契约处理 |
-| `source` / `source_trail` | 公开来源 / 实际执行轨迹；见 [输出字段](providers.md#public-output-fields) |
-| `modes` | 返回 article、markdown、metadata，与获取策略分离 |
-| `strategy` | 抓取与降级选项；五个预设见 [CLI](cli.md) |
-| `asset_profile` | `none` / `body` / `all` 的资产范围，`none` 不代表删除远程链接 |
-| `render_state` | 资产在正文内联、附录追加或抑制的状态 |
-| `download_tier` | 实际下载层级；preview 能否接受由来源诊断与 acceptance 决定 |
-| `semantic_losses` | 语义损失和布局降级计数，二者不能混为一谈 |
-| `asset_failures` | 独立资产失败及恢复诊断，不直接证明正文受限 |
-| `max_tokens` | 渲染预算；`full_text` 尽量保留正文，数值启用硬上限 |
-| `download_dir` | 落盘与 cache scope；见 [下载和 Markdown 保存](providers.md#mcp-download-and-markdown-save) |
-
-获取配置、默认值、cache 和资产恢复语义见 [providers.md](providers.md)；
-浏览器组件、配置与状态映射见 [browser-backends.md](browser-backends.md)，线程与资源归属见
-[browser-runtime.md](browser-runtime.md)；安装与重试命令见 [deployment.md](deployment.md)。
+- 字段含义、默认值、cache 与资产语义在 [providers.md](providers.md) 维护，
+  来源与质量字段见其[公开输出字段](providers.md#public-output-fields)。
+- 当前契约放在主题文档，版本沿革放在中英文更新日志；fixture 中的论文 Markdown 和采集记录是测试证据，不能按工作说明清理。

@@ -170,7 +170,7 @@ class FetchCommonTests(unittest.TestCase):
             ]
             self.assertEqual(locked, ["2.1"])
 
-    def test_only_camoufox_uses_an_exact_dependency_constraint(self) -> None:
+    def test_browser_engine_packages_use_exact_dependency_constraints(self) -> None:
         with (REPO_ROOT / "pyproject.toml").open("rb") as handle:
             pyproject = tomllib.load(handle)
 
@@ -182,12 +182,16 @@ class FetchCommonTests(unittest.TestCase):
             for dependency in extra
         )
 
+        pinned_versions = {"camoufox": "0.5.9", "invisible-playwright": "0.47.1"}
         for dependency in dependencies:
             requirement = Requirement(dependency)
             operators = {specifier.operator for specifier in requirement.specifier}
             self.assertTrue(requirement.specifier, dependency)
-            if requirement.name.casefold() == "camoufox":
-                self.assertEqual(str(requirement.specifier), "==0.5.9")
+            if requirement.name.casefold() in pinned_versions:
+                self.assertEqual(
+                    str(requirement.specifier),
+                    f"=={pinned_versions[requirement.name.casefold()]}",
+                )
             else:
                 self.assertTrue(operators.isdisjoint({"==", "==="}), dependency)
 

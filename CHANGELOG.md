@@ -6,6 +6,19 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.4.2 - 2026-11-09
+
+### Browser and PNAS fetching
+
+- Upgrade managed Byparr to 3.1.1. Windows/Linux x64 use InvisiblePlaywright 0.47.1 with matching invisible-core 58.56.0; macOS and ARM retain Camoufox. Preserve native-profile/JSON state ownership, request deadlines, cancellation, and offline component verification.
+- Try direct downloads first for PNAS body images, then request original image bytes from the existing browser context before page-image recovery. Read paragraph roles and text within the existing body-readiness budget. Retain matching popup navigations before page association so reentrant response or download events are not missed.
+
+### Documentation and Skill
+
+- Correct platform engine selection, backend compatibility values, and executable constraints against the code. Use the unified preparation entrypoint for the current platform engine and Byparr before offline use.
+- Correct single-paper MCP Markdown overwrite defaults, supplementary-index naming, and compact acceptance fields in the Skill. Consolidate workflows, diagnostics, and rules while preserving the five presets, a self-contained Skill, and unchanged PDF converter output.
+- Remove duplicated rules and procedural commentary from user, developer, test, and deployment documentation, keeping contracts and implementation indexes in their topic documents.
+
 ## 7.4.1 - 2026-11-08
 
 This release includes the unified Byparr＋Camoufox browser routes and configuration migration recorded under 7.4.0, whose stable publication did not complete.

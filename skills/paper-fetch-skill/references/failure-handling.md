@@ -1,58 +1,44 @@
 # Failure Handling
 
-出现失败、限流、需解释的降级或准备重试时，读取总尝试次数及对应决策表行；批量任务再读分诊和并发。本文件集中定义代理级重试与限流规则。
-
-## 目录
-
-- [分层与总尝试次数](#分层与总尝试次数)
-- [批量分诊和并发](#批量分诊和并发)
-- [失败决策表](#失败决策表)
-- [降级结果和质量警告](#降级结果和质量警告)
-- [最终报告](#最终报告)
+失败、限流、需解释的降级或准备重试时读本文件。结构化状态与退出码见[错误契约](tool-contract.md#error-contract)，需要用户决定的事项见[工作流](workflow.md#blocking-白名单)。
 
 ## 分层与总尝试次数
 
-- 对同一规范目标和同一任务意图，代理层最多执行 **初次尝试 + 2 次有意义的重试**，即最多 3 次工具调用尝试。消歧、修正参数或改变认证/运行时状态后的再次调用都计入该上限。
-- `paper-fetch` 的底层 HTTP transport 会独立处理允许的 Retry-After、5xx 和网络瞬态重试。一次工具调用内部发生的 transport retry 不增加代理层 `attempt`；工具返回失败后，代理也不得把底层已经耗尽的重试当成理由额外突破 3 次上限。
-- “有意义”要求在下一次调用前记录可观察变化：规范 query、工具参数、认证/授权、provider/browser 状态、网络状态或 Retry-After/cooldown 至少一项发生变化。只改措辞、立即原样重跑或重复相同失败路线不算。
-- `fetch_paper` 默认 `prefer_cache=false`。初次调用已经是 `false` 时，再传相同值不是“绕过缓存”；只有从实际使用的 `prefer_cache=true` 改为 `false`，且 trace/cache 证据表明缓存结果与当前请求不符时，才能准确报告为改变缓存策略。
-- 每次尝试保留 `attempt=1..3`、触发失败、调用参数、相对上次的变化、结果和终止/继续决定。不要修改底层 HTTP retry 算法，也不要自动执行认证。
+- 同一规范目标、同一意图最多 **初次尝试 + 2 次有意义重试**；消歧、修正参数或改变认证/runtime 状态后的调用也计入。
+- 底层 HTTP transport 独立处理 Retry-After、5xx 和网络瞬态重试，不增加 agent attempt，也不构成突破上限的理由。
+- 重试前须有可观察变化：query、参数、认证/授权、provider/browser 状态、网络状态或 cooldown。立即原样重跑、只改措辞不算。记录 attempt、变化和结果即可；不修改底层 retry 算法或自动认证。
+- 只有原调用实际用了 prefer_cache=true，且 cache/trace 显示请求不符，再改为 false 才能称为绕过缓存；重复 prefer_cache=false 没有改变缓存策略。
 
 ## 批量分诊和并发
 
-- 保留[分块规则](presets.md#批量分块与证据等级)中的原始 index 与逐项终态，普通单项失败继续其它目标。`batch_fetch` 的停止调度选项见 [Batch Fetch Contract](tool-contract.md#batch-fetch-contract)。仅探测按[探测核对](acceptance.md#探测核对与报告)结束。
-- 收到 `rate_limited` 后立即停止向相同 provider lane 提交新项，保留未调度项和 `retry_after_seconds`/cooldown；不相关 lane 继续。冷却后重试仍受上述单项最多 3 次约束。
+保留[分块规则](presets.md#批量分块与证据等级)的原 index 和逐项终态。普通单项失败继续其它目标；batch_fetch 停止调度选项见[工具契约](tool-contract.md#batch-fetch-contract)。收到 rate_limited 时停止同 provider lane 新提交，保留未调度项和 retry_after_seconds/cooldown，不相关 lane 继续；冷却后仍受单项 3 次上限约束。
 
-## Error Contract
+## 失败决策表
 
-状态与退出码字段见[工具错误契约](tool-contract.md#error-contract)；本文件只定义失败后的动作、重试条件与上限。需要用户决定时，统一按[BLOCKING 白名单](workflow.md#blocking-白名单)处理。
+优先读 status/code/error_category/http_status/retry_after_seconds，再用 reason/source_trail/warnings 补充；不以字符串分类覆盖已有结构化字段。以下均在达到 attempt 3、相同失败重复或没有可执行变化时停止。
 
-### 失败决策表
+| 类别 | 可重试的变化或处理 | 额外停止条件 |
+| --- | --- | --- |
+| ambiguous / 身份不足 | 用户或可靠上下文唯一化候选后改用规范 DOI/落地页。 | 仍有歧义，不猜测。 |
+| validation_error / 参数错误 | 按当前 schema 修正被点名的字段、类型、范围或互斥组合。 | 修正后仍同错或无法确定合法参数。 |
+| 确定性 no_result / not_supported / 解析或 schema 错误 / response_too_large / 下载安全拒绝 / empty_article_shell | 仅在身份、支持的 route/mode、响应范围、输入或合法 profile/state 发生变化时重试；不修补 challenge HTML 冒充 JSON，不放宽安全边界或响应上限。 | 相同页面/状态指纹或确定性证据重复；empty_article_shell.retry_decision=stop_same_state 立即停止。 |
+| no_access / not_configured / 401/403 | 补齐 missing_env，或用户完成人工认证/授权后确认状态变化；runtime 问题按[环境](environment.md#运行时准备与授权)处理。 | 授权未变、访问边界不允许或用户不授权。 |
+| rate_limited / 429 | 尊重 Retry-After；缺时长时使用工具记录的 cooldown/policy，并如实说明。 | 冷却未结束、不适合等待或冷却后仍限流。 |
+| network_error / timeout / TLS/DNS/连接错误 / 5xx | transport 已结束后等待/backoff，观察网络变化或采用契约允许的 route/环境变化。 | 无状态变化，不立即原样重跑。 |
+| browser context/page/runtime 瞬态错误 | 读取 backend/code/stage/runtime_state/version/diagnostic_path，静态检查并修复实际配置或 runtime；provider_status 不是 live 健康证明。 | challenge/auth_required/runtime_error 尚未解决。 |
+| cancelled / request_cancelled | 保留已完成、取消和未调度项；用户明确恢复后再开始。 | 用户未恢复或任务已过期。 |
+| 未分类 error | 用 reason、trace、目标 provider status 和实际产物诊断，得到具体参数/状态变化后再试。 | 没有可执行变化。 |
 
-优先读取结构化 `status`、`code`、`error_category`、`http_status` 和 `retry_after_seconds`，再用 `reason`、`source_trail` 与 `warnings` 补充判断；字段存在时不得另写字符串分类器。
-
-| 类别与触发条件 | 重试前必须发生的参数/状态变化 | 终止条件 | 用户报告字段 |
-|---|---|---|---|
-| `ambiguous`：结构化结果含多个 `candidates`，或身份不能唯一确定 | 用户或可靠上下文选择候选；把 query 改为选定的规范 DOI/落地页 | 未选择、仍多候选，或达到 attempt 3；不得自动猜测 | 原 index/query、`status`、候选 DOI/标题、选择结果、attempt |
-| `validation_error` / 参数错误：Pydantic、tool schema、argparse 或范围/组合校验失败 | 修正被点名的字段、类型、范围或互斥组合；参数不变时不调用 | 无法从契约确定正确值、修正后同错，或达到 attempt 3 | `code`、字段路径、`reason`、旧值→新值、attempt |
-| 确定性 `no_result` / `not_supported` / `invalid_json` / `response_schema_mismatch` / `response_too_large` / `unsupported_url_scheme` / `unsafe_redirect` / `empty_article_shell` / 解析错误：合法响应在同一输入和路线下稳定缺少标识、正文、API schema 或受支持格式，或请求违反下载安全边界 | 只有规范 identity、所需 mode、合法 provider route、响应版本、明确缩小的响应范围、候选 URL、browser profile/storage-state 或输入内容确实变化时才重试；browser fast path 可把同一调用内尚未持久化的 provider-scoped seed 传给正常重试，不得把 HTML challenge 当 JSON 修补，也不得放宽响应上限、scheme 或重定向安全校验来重试 | 没有新的输入/路线/profile/storage-state，相同页面 SHA/状态指纹或解析/schema/安全边界证据重复，或达到 attempt 3；`empty_article_shell.retry_decision=stop_same_state` 立即终止 | `code/error_category`、规范 identity、provider/route、`http_status`、脱敏页面 SHA/状态指纹与 `retry_decision`、`source_trail`、确定性证据、attempt |
-| `no_access` / `not_configured` / HTTP 401/403：缺少凭证、授权、entitlement 或合法访问上下文 | `missing_env` 已补齐，或用户完成手动认证/授权且状态可观察地改变；不得自动 auth | 认证状态未变、合法访问边界不允许继续、用户不授权，或达到 attempt 3 | `status/code`、provider、`http_status`、`missing_env`、所需用户动作、attempt |
-| `rate_limited` / HTTP 429 / 出现 `retry_after_seconds`：provider 或资源 lane 限流 | 停止同 provider 新提交并尊重 Retry-After；无该字段时使用工具记录的 cooldown/policy，明确报告服务端未给时长 | 冷却尚未结束、任务不适合等待、冷却后仍限流，或达到 attempt 3 | provider/lane、`http_status`、`retry_after_seconds` 或 cooldown、未调度 index、attempt |
-| `network_error` / `timeout` / `tls_error` / `dns_error` / `connection_reset` / `connection_closed`，或已返回的 HTTP 5xx | 确认底层 transport 已结束；等待/backoff 后观察网络状态变化，或在契约允许时改变 provider route/环境；不得立即原样重跑 | 网络/路由状态无变化、相同瞬态重复，或达到 attempt 3 | `error_category`、`http_status`、provider/route、等待或环境变化、attempt |
-| browser transient：trace/preflight 出现 `browser_context_create_failed`、`browser_page_create_failed` 或 `camoufox_request_failed`，且不含确定性 challenge/auth 证据 | 先读取 `backend/code/stage/runtime_state/version/diagnostic_path` 并检查静态配置；`provider_status()` 不是 live 健康证明。runtime 缺失或异常时按 [`environment.md`](environment.md#运行时准备与授权) 的已有授权规则处理。只有 browser profile、认证状态、运行时健康、请求参数或环境发生变化才重试 | 无状态变化、preflight 为 challenge/auth_required/runtime_error 且未解决、相同失败重复，或达到 attempt 3 | provider、backend、精确 browser code/stage、runtime 状态/版本、diagnostic artifact、preflight/trace、变化项、`source_trail`、attempt |
-| `cancelled` / `request_cancelled`：用户、宿主或 cooperative cancellation 终止 | 用户明确恢复任务后再开始新的尝试；批量先保留 cancelled/not-scheduled index | 未恢复、任务已过期，或达到 attempt 3 | 已完成/取消/未调度 index、产物、恢复条件、attempt |
-| 未分类 `error`：结构化字段不足，且不匹配上述类别 | 先收集 `reason`、trace、provider status 与实际产物；只有诊断导出具体参数/状态变化时重试 | 无可执行变化、同错重复，或达到 attempt 3 | `status/code/error_category`、`reason`、provider、trace/产物、诊断和 attempt |
-
-`aws_waf_challenge` / `cloudflare_challenge` 是受管后端完成支持的自动处理并等待 provider readiness 后仍存在的确定性验证页。只有合法 browser profile/storage state、网络授权或人工验证状态发生变化时才可重试；不得把初始 HTTP 202、隐藏 `noscript` 文案或单独 REST 请求当成最终结论，也不得自动绕过 challenge。报告应保留 `status=challenge`、精确 reason code、`challenge_provider`、`legacy_reason_code`、HTTP 状态、readiness trace、页面关闭前采集的脱敏诊断和 attempt。
+aws_waf_challenge / cloudflare_challenge 表示受管后端支持的自动处理和 provider readiness 等待后仍存在验证页。只有合法 profile/state、网络授权或人工验证状态变化才可重试；不以初始 HTTP 202、隐藏 noscript 文案或单独 REST 请求替代最终结论。保留精确 reason code、challenge_provider、legacy_reason_code、HTTP 状态和脱敏 readiness/页面诊断。
 
 ## 降级结果和质量警告
 
-- `abstract_only` / `metadata_only` 是降级成功，不是已验证全文。告诉用户证据边界；若摘要或元数据足以完成意图则停止，只有用户确需全文且能改变 provider/访问/策略时才按上表计入重试。
-- Browser HTML 失败后 PDF/ePDF fallback 成功仍是降级成功：顶层可为 `status=ok`，但必须保留 HTML failure trace/code，且 `acceptance.overall=degraded`；不得只报告 PDF 成功或把 browser 原因抹掉。
-- `artifact_mode=all` 且 HTML 页面已到达但 extraction/availability 失败时，优先读取返回的 `diagnostic_path` 和 manifest 中 `kind=diagnostic` 的 `diagnostic.json` / `page-sanitized.html`。自动诊断是脱敏页面结构，不含原始失败 HTML、截图、Cookie/Authorization 或 URL query token。
-- 资产或 table/formula 降级直接消费[资产验收](acceptance.md#资产验收)及结构化 acceptance，不自动重抓全文。需要定位具体资产字段、恢复记录或 semantic loss 时才读[工具参数与字段](tool-contract.md#fetch-notes)，计数矛盾才读[内部一致性诊断](tool-contract.md#内部一致性诊断)。
-- 本地没有 PDF/Markdown 只表示 cache/local miss，不证明论文不可读；按工作流继续 probe/fetch，不得仅据此报告 `unreadable`，也不得把未请求资产报告成下载失败。
+- abstract_only / metadata_only 最多是 limited；若足以完成当前任务就交付，不自动增加获取范围。用户仍需全文且有可改变路线/访问条件时才重试。
+- Browser HTML 失败后 PDF/ePDF 成功仍保留 HTML failure trace/code 和 acceptance 的降级；不只报告 PDF 成功。
+- artifact_mode=all 的 extraction/availability 失败可返回 diagnostic_path 及 diagnostic.json/page-sanitized.html。按需读取脱敏诊断；不收集原始失败 HTML、截图或 secret。
+- 资产、表格或公式降级消费[统一验收](acceptance.md#资产验收)，不自动重抓全文；仅具体字段异常时查[工具字段](tool-contract.md#fetch-notes)或[内部诊断](tool-contract.md#内部一致性诊断)。
+- 本地/cache miss 不证明远端不可读；继续适用的 probe/fetch，未请求资产不报缺失。
 
 ## 最终报告
 
-按 [`acceptance.md`](acceptance.md#最终报告) 展示受影响目标、原因、降级和必要动作；决策表中的技术字段供失败核对、诊断或审计时展开，不要求每次阅读任务全部列出。保留每次有意义变化、尝试次数和 Retry-After/cooldown 证据；批量保留已完成、失败、限流、取消和未调度的原 index，不用完成顺序替代输入顺序。
+按[统一报告](acceptance.md#最终报告)说明受影响目标、具体原因和必要动作；技术字段、attempt 与状态变化、cooldown 证据按诊断或审计需要展开。批量保留所有终态的原 index，不以完成顺序替代输入顺序。

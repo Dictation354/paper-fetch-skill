@@ -1,6 +1,6 @@
 # Browser backend
 
-全部浏览器出版社统一使用 Byparr 3.1.1，覆盖正文、图片、附件、浏览器 PDF、预检和认证。支持现有 Camoufox／Playwright 平台，Elsevier 也开放 macOS 浏览器阶段。API、HTTP 直连和 provider 获取顺序不变。
+全部浏览器 provider 使用受管 Byparr，覆盖正文、图片、附件、浏览器 PDF、预检和认证。Windows/Linux x64 使用 Invisible，macOS 与 ARM 使用 Camoufox；Elsevier 浏览器阶段也支持 macOS。
 
 ## 安装
 
@@ -10,26 +10,28 @@ browser/full extras、离线预置、Camoufox 渠道与版本 pin、准备重试
 
 ## 选择与配置
 
-`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` 均选择受管 Byparr；`camoufox` 是兼容别名。组件不可用时报告准备错误。
+`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` 均选择受管 Byparr，引擎由平台决定；`camoufox` 兼容值只可能改变[状态模式](#状态模式)，不会强制切换引擎。组件不可用时报告准备错误。
 
 通用变量如下：
 
 | 变量 | 含义 |
 |---|---|
-| `PAPER_FETCH_PNAS_BROWSER_BACKEND` | PNAS 后端，默认 `auto` |
+| `PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND` | provider 后端兼容选项，默认 `auto` |
 | `PAPER_FETCH_BROWSER_COMPONENT_CACHE` | Byparr 组件缓存目录覆盖 |
 | `PAPER_FETCH_BROWSER_HEADLESS` | managed runtime 是否 headless |
-| `PAPER_FETCH_BROWSER_BINARY_PATH` | 仅用于自行维护、且支持 Camoufox custom-executable metadata 语义的 executable 覆盖 |
-| `PAPER_FETCH_BROWSER_PROFILE_DIR` | provider storage-state/profile 目录覆盖 |
+| `PAPER_FETCH_BROWSER_BINARY_PATH` | 自行维护的当前平台引擎 executable；Invisible 需匹配 release seal，Camoufox 需支持 custom-path metadata 布局 |
+| `PAPER_FETCH_BROWSER_PROFILE_DIR` | 原生状态模式的 provider profile 目录覆盖 |
 | `PAPER_FETCH_BROWSER_USER_DATA_DIR` | profile 目录的后备覆盖 |
 | `PAPER_FETCH_BROWSER_TIMEOUT_MS` | browser navigation timeout |
 | `PAPER_FETCH_BROWSER_USER_AGENT` | publisher direct HTTP 的可选 UA；Camoufox 本身忽略它以保持生成指纹一致 |
 
-Camoufox 原生持久目录位于 platformdirs 用户数据目录下的
+原生持久目录沿用兼容名称，位于 platformdirs 用户数据目录下的
 `publisher-browser-profiles/<provider>-camoufox/`，首次未认证访问也会创建。
 覆盖优先级为通用 profile、provider 专用 profile、通用 user-data、默认目录；
 显式目录记录所属出版社，不同出版社不能共用。原生与 JSON 状态模式独立于后端名称，
-目录选择见[状态模式](#状态模式)。
+目录选择见[状态模式](#状态模式)。Wiley 另支持 `PAPER_FETCH_WILEY_PROFILE_DIR`；
+显式 JSON 路径分别使用 `PAPER_FETCH_WILEY_STORAGE_STATE_JSON` 与
+`PAPER_FETCH_AMS_STORAGE_STATE_JSON`。
 
 macOS 官方 managed app bundle 把 executable 放在 `Contents/MacOS`，把运行属性表
 放在 `Contents/Resources`。不要把官方 cache 内的
@@ -72,26 +74,28 @@ PDF 不用清理后的 JSON 替换原生状态，`save_storage_state=false` 仅�
 
 ## 统一受管 Byparr
 
-全部浏览器 provider 使用 Byparr v3.1.1（提交 `b041dd2998110fc61789ae65e2506bd5b79edba5`）。Windows/Linux x64 使用 InvisiblePlaywright 0.47.1、与其匹配的 invisible-core 58.56.0 和 seal 校验的 Firefox 引擎；macOS 与 ARM 保留 Camoufox 0.5.9，避免移除现有平台支持。各平台均接入新版 Byparr 的 locator/polling 挑战处理逻辑，替代旧 ClickSolver 和 shadow-root addon。
+当前锁定 Byparr 3.1.1、InvisiblePlaywright 0.47.1／invisible-core 58.56.0 与
+Camoufox 0.5.9；Camoufox 使用共享 Playwright `>=1.58,<1.63`，Invisible 使用自己的
+Python protocol transport。版本与源码校验由
+[`byparr-manifest.json`](../src/paper_fetch/providers/browser_runtime/byparr-manifest.json)、
+`byparr-requirements.lock` 及 browser/full extras 管理；适配细节见
+[组件说明](../src/paper_fetch/providers/browser_runtime/byparr-adaptation.md)。
+两个引擎的 executable 不能互换。
 
-`auto|camoufox|byparr` 仍是同一后端的兼容选项，状态目录和 native/JSON 绑定沿用上表。`PAPER_FETCH_BROWSER_BINARY_PATH` 覆盖当前平台引擎的 executable：Invisible 要求与其 release seal 匹配，Camoufox 要求其自有 metadata 布局，两个引擎的 executable 不能互换。
+Invisible 默认自动选择 GeoIP 时区和语言，可通过 `BROWSER_TIMEZONE`、`BROWSER_LOCALE`
+覆盖；安装器的本地空白页检查使用固定设置，不要求外部定位。
 
-组件清单、源码 SHA-256 和纯 Python 私有依赖仍由 `byparr-manifest.json`、`byparr-requirements.lock` 管理。离线包保留完整上游源码、许可证和适配说明；浏览器 binary 继续按需准备。组件缓存由 `PAPER_FETCH_BROWSER_COMPONENT_CACHE` 覆盖。
-
-Invisible 沿用上游的自动 GeoIP 时区和语言选择，可通过 `BROWSER_TIMEZONE`、`BROWSER_LOCALE` 显式设置；安装器的本地空白页检查使用固定设置，不要求外部定位。
-
-Invisible 使用自己的 Python protocol transport，同步提取与挑战处理在所属线程复用一个 context，不再经过共享 Node 浏览器服务。macOS/ARM 的 Camoufox 仍使用共享 Playwright（`>=1.58,<1.63`）连接。新版上游异步解题函数在 Invisible 所属线程编译为同步调用，仅转换 async/await、导入和等待绑定；选择器、点击间隔及算法保持一致。独立发行版的 Python 3.14 FastAPI/GeoIP 初始化不进入项目的 CPython 3.11–3.14 适配路径。
-
-Invisible 不实现 HTTP APIRequestContext，项目沿用原有 host HTTP GET 通道并同步 Cookie，受挑战的请求仍在原浏览器 context 中恢复一次。原生 profile 租约、过滤后 JSON 的验收提交、请求期限和取消归属保持原有语义。
-
-结构化事件保留 `navigation_managed`、`challenge_detected`、`solver_called`、`solver_click`、`challenge_result`。只有真实成功响应或下载才记为 `cleared`；页面挑战标记消失但尚无成功响应时记为 `awaiting_response`。实际 Response/Download 和统一 acceptance 决定抓取结果。
+结构化事件保留 `navigation_managed`、`challenge_detected`、`solver_called`、
+`solver_click`、`challenge_result`。只有真实成功响应或下载才记为 `cleared`；
+挑战标记消失但尚无成功响应时记为 `awaiting_response`。实际响应、下载和统一
+acceptance 决定抓取结果。
 
 ## Migration
 
 FlareSolverr 已移除。将 `PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=flaresolverr`
 改为 `auto` 或 `byparr`；旧值明确报告配置错误。
 删除 `PAPER_FETCH_CHROME_BINARY_PATH`，自定义浏览器改用
-`PAPER_FETCH_BROWSER_BINARY_PATH` 指向 Camoufox。
+`PAPER_FETCH_BROWSER_BINARY_PATH` 指向当前平台支持的引擎，要求见[选择与配置](#选择与配置)。
 `--prepare-flaresolverr` 和 `--prepare-browsers flaresolverr` 明确报错并提示
 `--prepare-byparr` / `--prepare-browsers byparr`。
 已有 FlareSolverr 缓存和状态保留在磁盘，新后端不自动导入；历史采集证据保留原来源名称。

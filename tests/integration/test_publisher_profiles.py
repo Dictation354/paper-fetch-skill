@@ -135,6 +135,9 @@ def native_config(config, monkeypatch):
             "managed macOS bundle persistence is exercised by the existing native bundle gate"
         )
     from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
+    from paper_fetch.providers.browser_runtime import byparr_engine
+
+    monkeypatch.setattr(byparr_engine, "engine_name", lambda: "camoufox")
 
     executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
     if not executable or not Path(executable).is_file():

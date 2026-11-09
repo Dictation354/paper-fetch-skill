@@ -96,9 +96,7 @@ def prepare(
             "Shared Camoufox/about:blank only; budget 2 minutes",
         )
         local_check(setup.env, runtime)
-        setup.report(
-            "Byparr", "ready", "Byparr 3.1.1; shared page verified"
-        )
+        setup.report("Byparr", "ready", "Byparr 3.1.1; shared page verified")
     except (KeyboardInterrupt, EOFError):
         setup.report("Byparr", "not ready", "Cancelled; core installation is preserved")
     except BrowserRuntimeFailure as exc:

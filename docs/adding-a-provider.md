@@ -1,12 +1,12 @@
-# 添加 Provider：开发流程与契约
+# 添加 Provider
 
 新增 provider 以运行时 `ProviderBundle`、provider-local 行为测试和 golden fixture manifest 为事实源。用户可见能力与限制统一维护在 [`providers.md`](providers.md)。
 
-## 1. 确认访问与路由
+## 访问与路由
 
-确认 DOI/域名身份、公开或当前用户有权限的全文入口，以及需要的 fallback。登录和 CAPTCHA 由用户在认证入口处理；route 使用已核实的入口。
+确认 DOI/域名身份、公开或当前用户有权限的全文入口，以及需要的 fallback。需要人工登录或验证时使用现有认证入口；route 使用已核实的入口。
 
-## 2. 实现 provider owner
+## Provider 实现
 
 在 `src/paper_fetch/providers/` 添加模块和 client，并导出不可变的 `PROVIDER_BUNDLE`。bundle 的 `client_factory` 直接引用 client 类或同模块的 typed callable，不写 `module:attribute` 字符串；需要先用 catalog 构造 browser profile 时，可先声明模块私有 `ProviderSpec`，再在 client 类之后组装 bundle。把模块加入 `paper_fetch.providers._BUILTIN_PROVIDER_ENTRY_MODULES`；固定 eager loader 会一次构造 bundle tuple、provider map 与 source map。route、source、身份和默认资产策略以该 bundle 为唯一运行时事实源。复用现有 HTTP/browser/PDF/JATS/HTML/asset/acceptance owner，不复制全局 waterfall 或错误分类。
 
@@ -24,7 +24,7 @@ Provider 必须返回现有 typed payload，并让统一 acceptance 决定最终
 
 HTML 后处理通过 `ProviderHtmlRules.dom_hooks` / `markdown_hooks` 注册 typed callable；未配置的 hook 为 `None`，不使用字符串 stage dispatch 或反射注册表。补充材料由 provider 显式切出 scope，再复用共享资产解析器；Science/PNAS 使用已有 `asset_scopes.extract_body_and_supplementary_html`。来源对象链接统一由 `extraction.html.object_links` 在原 DOM 清理前核验 ID 和别名，不伪造 Markdown 本地锚点。调用阶段及 owner 见 [提取架构](architecture/overview.md)。
 
-## 3. 添加行为测试
+## 行为测试
 
 最小片段与边界 mock 放在 `tests/unit/test_<provider>_provider.py`，真实进程和浏览器契约放在 `tests/integration/`，整篇内容回放放在 `tests/golden/`。至少覆盖：
 
@@ -36,17 +36,14 @@ HTML 后处理通过 `ProviderHtmlRules.dom_hooks` / `markdown_hooks` 注册 typ
 PDF 测试仅覆盖获取、身份/完整性、来源、落盘与转换输出透传，不新增排版或内容修复
 验收目标；见 [PDF 转换边界](extraction-rules.md#rule-pdf-conversion-boundary)。
 
-## 4. 添加代表性 golden replay
+## 来源回放
 
 将脱敏后的真实响应放入 `tests/fixtures/golden_criteria/<fixture-id>/`，并只在 `tests/fixtures/golden_criteria/manifest.json` 登记 fixture 身份、用途、输入和预期结果。默认不覆盖现有 fixture；检查响应中没有 token、cookie、签名 URL 或本地路径。
 
-## 5. 验证并记录用户可见变化
+## 验证与文档
 
-```bash
-PYTHONPATH=src uv run python -m pytest tests/unit/test_<provider>_provider.py -q
-PYTHONPATH=src uv run python -m pytest tests/unit/test_provider_bundle_registration.py tests/unit/test_provider_catalog.py -q
-PYTHONPATH=src uv run python -m pytest tests/golden -q
-```
+运行受影响 provider、bundle/catalog 及对应 golden 回放测试。测试分层与命令统一见
+[测试说明](../tests/README.md)；发布时的完整验证见[发布前检查](deployment.md#release-checklist)。
 
 能力、配置或限制发生用户可见变化时更新 [`providers.md`](providers.md)。
 

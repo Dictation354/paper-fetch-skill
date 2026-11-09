@@ -9,23 +9,18 @@ description: "获取、下载或核验指定论文全文或补充材料，或探
 
 ## 关键约束
 
-- 沿用用户明确的路径、资产范围、执行面和覆盖授权；预设只补全未指定项。状态与暂停条件统一见工作流。
-- 全部浏览器 provider 统一使用 Byparr 3.1.1，状态模式保留原生持久目录或过滤后 JSON 的既有绑定；认证、状态导入与保存、排队语义见[环境说明](references/environment.md#browser-backend-与-storage-state)。
+- 沿用用户明确的路径、资产范围、执行面和覆盖授权；预设只补全未指定项。需用户决定的情形见[工作流](references/workflow.md#blocking-白名单)。
 - 优先复用身份可证明且满足当前意图的本地文件或同 scope 缓存；临时阅读不为查询缓存而要求目录。
 - 阅读必须取得并读取实际正文，区分全文、摘要、元数据与截断片段；仅探测不自动升级为抓取。
-- 工具按需准备浏览器 runtime；配置和安装问题见[环境说明](references/environment.md)。实际返回 `challenge` / `auth_required` 时进入人工认证，遵守登录、验证码、付费墙和访问控制边界。
+- 工具按需准备浏览器 runtime；配置、状态和安装问题见[环境说明](references/environment.md)。实际返回 `challenge` / `auth_required` 时进入人工认证，遵守登录、验证码、付费墙和访问控制边界。
 - 消费统一 acceptance，并核对任务要求的响应、资产和实际文件。保留来源及影响任务的降级。
 - PDF 正文以现有转换器输出为边界，不清洗或修复内容。
-
-## 独立补充材料
-
-用户只要补充材料时，使用 `target="supplementary"`；随正文获取材料则使用 `target="paper", asset_profile="all"`。独立材料任务按[任务目标](references/presets.md#任务目标)选择参数，按[补充材料验收](references/acceptance.md#补充材料验收)核对，不要求正文。精确返回与落盘语义见[工具契约](references/tool-contract.md#独立补充材料任务)。
 
 ## 按需参考
 
 先读[工作流](references/workflow.md)，再按任务读取章节，不默认加载整份 reference：
 
-- 选择参数：先按[任务目标](references/presets.md#任务目标)区分正文和独立材料任务，再读[共同规则](references/presets.md#共同规则)及适用预设：[临时阅读](references/presets.md#1-临时阅读)、[可缓存阅读](references/presets.md#2-可缓存阅读)、[单篇归档](references/presets.md#3-单篇本地归档)、[仅探测](references/presets.md#4-批量可读性分诊)或[批量归档](references/presets.md#5-批量本地归档)。自定义输出组合时再查该文件的 CLI/MCP 落盘矩阵。
+- 选择参数：只要材料用 `target="supplementary"`；随正文取材料用 `target="paper", strategy.asset_profile="all"`。先读[任务目标](references/presets.md#任务目标)和[共同规则](references/presets.md#共同规则)，再选适用预设：[临时阅读](references/presets.md#1-临时阅读)、[可缓存阅读](references/presets.md#2-可缓存阅读)、[单篇归档](references/presets.md#3-单篇本地归档)、[仅探测](references/presets.md#4-批量可读性分诊)或[批量归档](references/presets.md#5-批量本地归档)。自定义输出组合时再查该文件的 CLI/MCP 落盘矩阵。
 - 验收：仅探测直接读[探测核对与报告](references/acceptance.md#探测核对与报告)；独立材料任务直接读[补充材料验收](references/acceptance.md#补充材料验收)；正文抓取或复用读[七个分面](references/acceptance.md#七个分面)和[响应验收](references/acceptance.md#响应验收)。均按[最终报告](references/acceptance.md#最终报告)交付；资产、文件、批量章节只在适用时读。
 - 精确参数或返回字段：按需查[工具契约](references/tool-contract.md)的对应章节；内部一致性诊断仅在异常或用户要求时读。
 - 凭证、runtime 或工具链实际影响任务时，读[环境参考](references/environment.md)的对应章节；普通抓取无需预读更新机制。

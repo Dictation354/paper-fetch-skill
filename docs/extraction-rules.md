@@ -22,11 +22,11 @@
 
 以下共享规则按内容类型和资产路线适用于各 provider；后文仅补充出版社差异和例外。PDF 始终遵守上方转换边界。
 
-- 这里的 `Generic` 指跨 provider 共享的提取 / 渲染规则。
-- 它只表示 shared extraction logic，不表示可被路由命中的独立 provider 或 public source。
+`Generic` 表示共享提取逻辑，不是独立 provider 或 public source。
+
 - Front matter 的 publication watermark 只匹配短 masthead 标签：必须是短文本、无句子标点、token 数受限，并且呈标题式或全大写；`science` / `pnas` / `ams` / `bams` / `acs` / `iopscience` 等 provider 词面只作为 provider-scoped keyword 参与判断，长正文句子里出现这些词不能被当作 front matter。
 - 反爬 / 访问阻断文本中的通用 token 统一维护在 `COMMON_ACCESS_BLOCK_TOKENS`，provider 规则只追加自身增量，避免把通用 challenge 语义复制到单个 provider。
-- HTML/XML 按源节点顺序保留段落中的公式、图表与列表；多段列表及其公式、嵌套项目保留 Markdown 缩进。源文本的星号不能成为意外的强调或列表标记，相邻行内公式之间须分隔定界符。
+- HTML/XML 按源节点顺序保留段落中的公式、图表与列表；相邻行内公式之间须分隔定界符。列表、字面字符和行内格式统一见 [科学格式与补充内容保留](#rule-source-inline-and-supplementary-fidelity)。
 - MathML 的空底数保留显式空组，可见花括号保留为可见定界符；组合公式保留各行的原始标签。源缩进空白不转换为由波浪符组成的运算符名，显式间距继续按源单位处理。
 - LaTeXML 方程表按源行列组装对齐公式并保留编号；算法保留可排版数学和源层级，列表保留显式标签、续段与嵌套。HTML/XML 文末的致谢、基金、贡献及利益声明按源顺序保留，图形摘要独立于摘要文字呈现。
 - 已转换的公式节点作为不透明内容保留，不因外围来源容器仍带公式类名而再次转成缺失占位。MathML 的普通可访问性描述不当作 TeX；显式 TeX 节点、注解及含 TeX 命令的 alttext 沿既有验证链路使用。行内数学及反斜杠分隔符不跨段落吞并正文标题。
@@ -631,7 +631,7 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
 
 - 官方 PDF 的 HTTP 200 不能覆盖授权限制：响应头 `x-els-status` 明确声明 `limited to first page` 时，PDF route 返回 `no_access`，不把同篇首页预览报告为全文；其它 WARNING 或没有该声明的正常 PDF 仍走原有验收。真实输入与回放见 `tests/golden/test_acquired_publisher_inputs.py`。
 
-- Elsevier XML 元素级映射总表另见 [`../references/elsevier_markdown_mapping.md`](../references/elsevier_markdown_mapping.md)；下面只保留当前主干必须维持的用户可见 Markdown 行为约束。
+- Elsevier XML 实现与规则索引另见 [`../references/elsevier_markdown_mapping.md`](../references/elsevier_markdown_mapping.md)；下面只保留当前主干必须维持的用户可见 Markdown 行为约束。
 - 不适用 / 部分适用说明：
   - [HTML fulltext / abstract-only 判定必须和用户可见访问状态一致](#rule-html-availability-contract) 不适用于 Elsevier XML 主路径；PDF fallback 的正文 Markdown 仍走共享 PDF 转换。
   - [出版社站点 UI 噪声不能泄漏进最终 markdown](#rule-filter-publisher-ui-noise) 和 [HTML 公式图片 fallback 必须保留并进入资产链路](#rule-preserve-formula-image-fallbacks) 不适用于 Elsevier XML 主路径。
@@ -1050,7 +1050,7 @@ Springer、Wiley 及共享浏览器 PDF 回退在 HTML/PDF 双失败时保留底
 
 JATS 已知公式容器内的 `inline-graphic` 与 `graphic` 均可作为图片回退，保留 MathML／TeX 优先级；容器外普通行内图片不因此升级为公式。PLOS XML 入口复用既有 DOI 图片路由，将同篇 inline-graphic 的 `info:doi` 身份解析为官方地址并进入原有资产链路；无有效图片仍报告缺失，不将图片地址保留称作 TeX 恢复或像素已下载。 PLOS 组装按同篇 info:doi 对象身份精确匹配资产，不能因官方 `/article/file` 端点相同而合并不同 query 的图片。已下载对象原位使用各自本地文件，未下载对象保留各自官方 HTTP 地址及来源并进入完整资产分母；规范源身份可保留在 Article 资产来源字段，临时组装表示不得泄漏到正文，重复渲染应稳定。
 
-Taylor & Francis 的引用链接同时可能含当前页面 `doi` 与被引条目的 `refDoi` / `doiOfLink`；引用 DOI 仅从后两者或该条目的 getFTR `data-target` 补齐，不误用页面身份。复用共享编号引用文本抽取；真实 LST 样本的全部可见引用和首中尾 DOI 由 `test_reviewed_remaining_provider_content.py` 核对。
+Taylor & Francis 的引用链接同时可能含当前页面 `doi` 与被引条目的 `refDoi` / `doiOfLink`；引用 DOI 仅从后两者或该条目的 getFTR `data-target` 补齐，不误用页面身份。复用共享编号引用文本抽取；回归见 `tests/golden/test_reviewed_remaining_provider_content.py`。
 
 Taylor & Francis 的相邻 `.NLM_disp-formula-image`／`.NLM_disp-formula` 属于同一公式，只保留一个表示：优先真实 MathML／TeX；只有 MathJax CHTML 展示树时，不把字形顺序当作源公式，改用该对 `data-formula-source` 的官方图片地址。地址按同篇 `source_url` 解析，并进入既有 formula 资产链路；配对不跨正文，同一 URL 在不同公式的合法复用不去重。`//:0` 不是可用图片，无可用内容时保留缺失提示和 missing 计数。官方地址可输出不等于图片已下载或像素可读。
 
@@ -1061,7 +1061,7 @@ Taylor & Francis 的相邻 `.NLM_disp-formula-image`／`.NLM_disp-formula` 属�
 - Science 按致谢区明确、可见的同级粗体声明标签切分数据、代码及材料可用性内容；标签可以位于混合段落中，内容截止于下一个同级声明标签。保留原文标题、链接、引用和行内格式；混合数据／代码声明归 `data_availability`，纯代码归 `code_availability`。普通致谢、基金、贡献和利益声明保留原有标题、正文及源顺序；可用性声明不增加正文充分性。
 - Science 保留声明中的书目 fragment 仅按原 DOM `.citations[id]` 核验后转换为同篇来源页对象地址，无有效 HTTP(S) 来源基址时保留无跳转文字；不依赖最终 `include_refs` 筛选，也不把普通同名 ID 当成书目。真实 `science.abp8622` R43 与 `science.adp0212` R49 见 `tests/golden/test_retained_object_links.py`。
 - AIP HTML 的 `.fig-modal` 是正文图的弹窗副本，在该 provider 的 DOM 清理阶段移除；保留 `.fig-section` 中完整图注和正文讨论。来源见 `10.1063/5.0188905`；不扩大为全局相似段落去重。
-- arXiv 源码图发现支持 `figure` / `figure*` 与已由原始 TeX 验证的 `extdatafigure` 环境，后者使用 `extdatacaption`；保留原始图路径、caption 和 label。`2606.00587v2` 的五张普通图与两张扩展数据图以已有源码成员和真实 PNG 回归；不声称通用自定义 LaTeX 环境展开或新的源码下载链已经验收。
+- arXiv 源码图发现支持 `figure` / `figure*` 与已由原始 TeX 验证的 `extdatafigure` 环境，后者使用 `extdatacaption`；保留原始图路径、caption 和 label。不扩展为通用自定义 LaTeX 环境展开；来源样本为 `2606.00587v2`。
 
 - Springer/Nature 的 `.c-article-section__figure-description` 若含公式图片，在 provider DOM 阶段将该下方图注放到对应 figure 紧后，保留正文顺序并剔除原有下载控件，避免通用 figure 渲染把公式重复提取成下一张正文图。Springer 的未知、未编号图片不得按出现次序配给下一张编号图；其他 provider 的既有策略不变。`nature13376` 的四张原图及四张 extended-data table 图片由同篇真实响应回归，表格图片不作 OCR 或单元格恢复。
 - Nature 的 expandable box 保留可展开内容；仅含图片的 `.c-article-box__content` 将原始标题作为该图片的粗体说明保留在原位置，避免生成仅有图片而被省略的正文节。真实 `s41467-022-32108-3` 验证两段 Box 原文，`s42003-021-02908-2` 验证图片型 Box 的标题与同篇 PNG。隐藏界面文字的过滤不变。
@@ -1085,7 +1085,7 @@ Taylor & Francis 的相邻 `.NLM_disp-formula-image`／`.NLM_disp-formula` 属�
 ### 来源对象与访问边界回归约束
 
 - HTML 表格中的相同值仍属于各自单元格，不能按文本去重或移到首列；表格内图片不拆为独立 Markdown 段落。
-- Springer 的 Reporting summary 保留在正文原位置，不作为摘要前置；只有官方入口的 Extended Data Table 保留题注和表页链接，不据此声称取得表格内容。Extended Data 统一属于现有 `supplementary` 语义，完整输出按原编号及内部顺序保留图、表、说明与入口，包括主文容器外的节点；受 `include_supplementary`、`asset_profile` 和既有预算控制，不增加正文充分性。关闭补充内容也排除所属图表资产；已在该章节呈现的同一资产不追加图注。已取得同篇官方表页及真实表图时，沿用既有资产链路保留图片和来源，不将图片内容转写为表格。只有入口时不据此声称取得表格内容。
+- Springer 的 Reporting summary 保留在正文原位置，不作为摘要前置；只有官方入口的 Extended Data Table 保留题注和表页链接，不据此声称取得表格内容。Extended Data 统一属于现有 `supplementary` 语义，完整输出按原编号及内部顺序保留图、表、说明与入口，包括主文容器外的节点；受 `include_supplementary`、`asset_profile` 和既有预算控制，不增加正文充分性。关闭补充内容也排除所属图表资产；已在该章节呈现的同一资产不追加图注。已取得同篇官方表页及真实表图时，沿用既有资产链路保留图片和来源，不将图片内容转写为表格。
 - Wiley 参考文献的显示编号不进入引用正文；Royal Society 优先使用 HTML 完整书目；PLOS XML 作者姓名与相邻作者之间保留边界。
 - Copernicus 的空图表 xref 按明确 rid 对应的 label 恢复文字，保留已有文字；章节标题经现有公式渲染器保留 MathML。PDF 身份比较仅去除该 provider 元数据题名中的 HTML 标记，不改变 PDF 转换结果或降低身份阈值。
 - Oxford Academic 的 Abstract 标题和下载幻灯片控件不构成摘要内容；ACS 图像式表格计入正文资产发现和严格本地验收。ACS 表图使用所属表格标签区分身份；同为通用 `Graphic` alt 的不同表图不能在下载结果合并时互相覆盖。

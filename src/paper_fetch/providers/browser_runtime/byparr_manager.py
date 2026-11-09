@@ -63,7 +63,7 @@ class ByparrManager:
         }
         self.metadata: dict[str, Any] = {}
         self.owner_thread = threading.get_ident()
-        self._sync_operations = []
+        self._sync_operations: list[Any] = []
         self._directory_lock: Any = None
 
     def _check_owner(self):

@@ -16,7 +16,9 @@ from urllib.parse import urlsplit
 try:
     from .byparr_engine import playwright_api
 except ImportError:  # Request-owned controller imports this file directly.
-    from byparr_engine import playwright_api
+    import byparr_engine
+
+    playwright_api = byparr_engine.playwright_api
 
 
 def supported_challenge(*, title="", html="", headers=None) -> bool:

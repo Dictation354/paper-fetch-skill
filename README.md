@@ -156,7 +156,7 @@ paper-fetch fetch \
 Paper Fetch 不绕过付费墙或访问授权。可用性取决于 provider、用户凭据、机构访问状态和本机运行环境。
 
 - Elsevier API 路线使用从 <https://dev.elsevier.com/> 申请的 `ELSEVIER_API_KEY`；ScienceDirect 浏览器路线使用浏览器访问状态，API key 不赋予浏览器访问权限。
-- 浏览器路线使用受管 Byparr＋Camoufox；登录或订阅权限仍由用户提供。安装器默认准备平台支持的浏览器，准备、跳过和独立重试命令见 [部署指南](docs/deployment.md#浏览器安装与准备)。
+- 浏览器路线使用受管 Byparr（Windows/Linux x64 为 Invisible，macOS/ARM 为 Camoufox）；登录或订阅权限仍由用户提供。安装器默认准备平台支持的浏览器，准备、跳过和独立重试命令见 [部署指南](docs/deployment.md#浏览器安装与准备)。
 - `paper-fetch doctor` 只做本地静态诊断；`paper-fetch browser-preflight` 才会启动浏览器并访问 provider 页面；需要建立或更新登录状态时运行 `paper-fetch auth <provider>`。
 
 ```bash

@@ -34,8 +34,9 @@ caller-thread 机制调用浏览器，direct HTTP 仍可并行。
 请求期限。切换出版社前关闭上一会话并释放锁，不交叉持锁等待。外部占用、归属冲突、
 元数据损坏和等待超时明确报错，不删除 Firefox 原生锁或回退临时会话。
 
-显式 executable 启动读取相邻 Camoufox `version.json`，使隔离子进程复用已准备的
-runtime。启动进度与错误写 stderr；MCP stdio 的 stdout 仅承载 JSON-RPC。
+显式 executable 必须匹配当前平台引擎：Invisible 校验 release seal，Camoufox 读取
+相邻 `version.json`；配置边界见[浏览器后端](browser-backends.md#选择与配置)。
+启动进度与错误写 stderr；MCP stdio 的 stdout 仅承载 JSON-RPC。
 
 ## HTML 策略与资源阻断
 
@@ -50,7 +51,7 @@ provider preparation 前的快照，之后重新捕获以保留展开的引用�
 
 ### 补充材料索引
 
-独立 `target=supplementary` 任务的浏览器索引模式复用同一 Camoufox runtime 和页面附件点击下载，不要求正文就绪，允许摘要页及正文付费页上的公开材料索引；附件自身仍遵守访问限制。材料范围与逐项诊断见 [CLI 说明](cli.md#独立补充材料任务)。macOS 合同中的 `browser.supplementary_index_without_body` 同步记录此边界。
+独立 `target=supplementary` 任务的浏览器索引模式复用同一受管浏览器 runtime 和页面附件下载路径，不要求正文就绪，允许摘要页及正文付费页上的公开材料索引；附件自身仍遵守访问限制。材料范围与逐项诊断见 [CLI 说明](cli.md#独立补充材料任务)。macOS 合同中的 `browser.supplementary_index_without_body` 同步记录此边界。
 
 ### PNAS 获取边界
 
@@ -81,7 +82,7 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
 
 ## 网络与登录态边界
 
-- Camoufox/Playwright 的主文导航、重定向、子资源和 service worker 使用浏览器原生
+- 浏览器的主文导航、重定向、子资源和 service worker 使用引擎原生
   网络行为；项目不安装 context-wide URL/DNS 安全 interceptor，也不把带 cookie、
   storage state 的 context 额外限制为单一 origin。
 - Provider 的 image/font/media 屏蔽是 page scope 的性能优化，只按 catalog/runtime

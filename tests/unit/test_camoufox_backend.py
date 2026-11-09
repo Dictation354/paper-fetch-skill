@@ -3455,10 +3455,11 @@ def test_browser_entrypoints_prepare_missing_runtime(
     managed_camoufox, monkeypatch, tmp_path, route, download_available
 ):
     from paper_fetch import auth, browser_preflight
-    from paper_fetch.providers.browser_runtime import byparr_manager
+    from paper_fetch.providers.browser_runtime import byparr_engine, byparr_manager
     from paper_fetch.providers.browser_runtime.backends import byparr
 
     env = managed_camoufox
+    monkeypatch.setattr(byparr_engine, "engine_name", lambda: "camoufox")
     if not download_available:
         env.query.side_effect = OSError("offline")
     monkeypatch.setattr(

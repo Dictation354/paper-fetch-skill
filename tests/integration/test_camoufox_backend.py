@@ -159,7 +159,7 @@ _PREPARE_FETCH_BROWSER = preparation.FetchBrowserPreparation.prepare
 def test_automatic_preparation_entrypoints_share_update_interval(
     managed_camoufox, monkeypatch, tmp_path, first
 ):
-    from paper_fetch.providers.browser_runtime import byparr_manager
+    from paper_fetch.providers.browser_runtime import byparr_engine, byparr_manager
     from paper_fetch import auth, browser_preflight
     from paper_fetch.providers.base import ProviderFailure
     from paper_fetch.providers.browser_runtime.camoufox_manager import (
@@ -167,6 +167,7 @@ def test_automatic_preparation_entrypoints_share_update_interval(
     )
 
     env = managed_camoufox
+    monkeypatch.setattr(byparr_engine, "engine_name", lambda: "camoufox")
     monkeypatch.setattr(
         preparation.FetchBrowserPreparation, "prepare", _PREPARE_FETCH_BROWSER
     )

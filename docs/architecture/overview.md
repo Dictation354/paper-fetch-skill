@@ -23,8 +23,7 @@
 
 - 暴露 MCP tools 与静态 provider-catalog resource，校验工具参数
 - 把 service 结果序列化成 JSON-safe payload
-- 通过 `FetchCache` 管理 fetch-envelope sidecar，并由 `list_cached` / `get_cached` 查询
-- 在 MCP adapter 内管理 fetch-envelope cache、Markdown 注册和 cancellation commit guard；`FetchPipeline` 只复用 service 调用
+- 通过 `FetchCache` 管理 fetch-envelope sidecar，供 `list_cached` / `get_cached` 查询，并管理 Markdown 注册和 cancellation commit guard；`FetchPipeline` 只复用 service 调用
 - 管理 progress、structured log、cancellation
 
 实现边界：
@@ -78,7 +77,7 @@
 - stop predicate 或 cancel event 只阻止新的增量提交；已在途 worker 依靠 `RuntimeContext.cancel_check` 协作退出。取消超过宽限期且仍有 pending worker 时，runner 只调用一次显式 escalation callback 关闭共享 browser manager，随后仍等待 worker 收敛。worker 已观察到的异常和取消、以及因 stop/cancel/lane cooldown 未调度的输入，都会生成结构化终态，避免批次尾部静默丢失。
 - 每个终态（包括 `not_scheduled`）依次触发一次 completion callback 和一次 progress callback；两者都可同步或异步。callback 是观察者：异常写入 `BatchRunResult.callback_failures`，不覆盖 item 终态，也不隐式改变停止策略；需要把 callback 失败升级为 run 失败的 adapter 必须显式检查该字段。callback 内设置 cancel event 会在下一次增量提交前生效。
 
-现有 MCP `batch_resolve` / `batch_check` / `batch_fetch` 与 CLI batch 都通过这个 runner 调度。前两个 probe/resolve 工具保持既有兼容调度；`batch_fetch` 在提交前只调用 catalog-backed URL/DOI 身份 helper 推断 provider lane，一个 lane 限流后把该 lane 的后续输入终态化为未调度，其他 lane 继续。它的 `results` 按原 1-based input index 返回，`completion_order` 单独投影完成顺序，progress 使用完整终态计数。
+MCP `batch_resolve` / `batch_check` 保持既有兼容调度；`batch_fetch` 在提交前只调用 catalog-backed URL/DOI 身份 helper 推断 provider lane，一个 lane 限流后把该 lane 的后续输入终态化为未调度，其他 lane 继续。它的 `results` 按原 1-based input index 返回，`completion_order` 单独投影完成顺序，progress 使用完整终态计数。
 
 `RuntimeContext` 显式提供 env、transport、clients、下载目录、取消与 artifact store，以及当前抓取的 parse/session cache。公共 service 入口未收到 context 时自行创建并关闭；内部 workflow 要求显式传入。所有权见 [Runtime / Artifact / Cache 边界](#8-runtime--artifact--cache-边界)。
 
@@ -202,7 +201,7 @@ provider 身份与能力配置统一来自 provider entry module 导出的 `PROV
 `RuntimeContext` 是单次抓取的运行时 owner。根 context 拥有并关闭 transport，batch child 借用线程安全 transport 与不可变 env，独立持有 clients、session、CookieJar、预算、trace、timing、diagnostics、缓存和提交屏障。同名 client 并发只构造一次，工厂失败由占位 client 隔离。`BatchExecutionSession` 管理 child 所有权、规范 DOI 分组、representative 结果复制及取消屏障；去重仅限当前批次，每个输入仍有终态。
 
 - `parse_cache` 按内容摘要、parser 与配置缓存派生结构；同 key supplier 原子执行一次，可变结果返回副本。`session_cache` 复用 resolution、metadata 与 landing probe 结果；缓存只存在于当前 context，不共享可变 DOM。
-- browser provider 经 `browser_runtime` facade 使用受管 Byparr＋Camoufox。同出版社各阶段复用 context，每阶段管理自己的 page；浏览器对象绑定所属线程，在 worker 终态清理中先关闭 manager，外层再幂等关闭 session cache 和 transport。成功、失败与协作取消共用关闭路径，详见 [浏览器 runtime](../browser-runtime.md)。
+- browser provider 经 `browser_runtime` facade 使用受管 Byparr；Windows/Linux x64 选择 Invisible，macOS/ARM 选择 Camoufox。同出版社各阶段复用 context，每阶段管理自己的 page；浏览器对象绑定所属线程，在 worker 终态清理中先关闭 manager，外层再幂等关闭 session cache 和 transport。成功、失败与协作取消共用关闭路径，详见 [浏览器 runtime](../browser-runtime.md)。
 - 异步取消先设置 cooperative event 与 commit fence，再等待有界 grace；重复取消不会跳过等待。未调度、重复输入及已运行 child 都会幂等关闭。
 - `RuntimeContext.asset_budget` 是同篇所有二进制资产的共享边界；默认单文件 32 MiB、累计 256 MiB、64,000,000 像素，worker 还受 route cap 限制。流式读取、转换输出及临时 staging 共用 reservation；失败回滚，发布成功才 commit。具体资产候选与调度见 [provider 指南](../providers.md#资产调度与资源边界)。
 - `ArtifactStore` / `DownloadPolicy` 管理 provider payload、Markdown、资产、诊断和 cache JSON。所有 writer 使用目标 path lock、同目录唯一 staging、flush/fsync 与原子 replace；取消 fence 与最终 replace 在同一临界区线性化。`overwrite=false` 时相同字节幂等，不同字节冲突；显式 overwrite 允许原子替换。
@@ -226,7 +225,7 @@ Route QPS 使用同一个 transport cooldown lock 与 scope 做跨 worker 原子
 
 Fulltext provider identity evidence 保留 domain、publisher、DOI 的一致与冲突事实。DOI prefix 或两个独立信号一致才属于 strong；只有 strong provider 的 `NO_ACCESS` 能终止 provider waterfall，weak access boundary 会保留 diagnostics 后继续严格 identity-checked candidate。Acceptance 不用 title 证明 DOI-less identity；只有 DOI，或同时声明 URL、verified、unique 的 canonical landing fact，才会得到 `identity=resolved`。
 
-Camoufox/Playwright 的 navigation、redirect、子资源与 service worker 使用浏览器原生行为；项目不安装 BrowserContext-wide URL/DNS interceptor，也不把带 cookie 或 storage state 的 context 绑定到单一 origin。Provider image/font/media 优化只在 page scope 按资源类型生效。Browser 资产恢复可以直接返回 browser-owned image/file/PDF bytes，再进入统一预算与 staging。
+两种平台引擎的 navigation、redirect、子资源与 service worker 使用浏览器原生行为；项目不安装 BrowserContext-wide URL/DNS interceptor，也不把带 cookie 或 storage state 的 context 绑定到单一 origin。Provider image/font/media 优化只在 page scope 按资源类型生效。Browser 资产恢复可以直接返回 browser-owned image/file/PDF bytes，再进入统一预算与 staging。
 
 日志出口与 MCP bridge 使用同一递归 scanner，过滤 URL query/fragment、header map、query map 和文本中的标准/provider secret。MCP 只安装一个 ref-counted process-global router handler，当前 request target 存在 `ContextVar`，并显式传播到项目创建的 worker context。Target 自身用锁线性化 emit 与失效：bridge 退出会先将自己的 target 标记 inactive，再恢复 ContextVar、递减 handler 引用；因此保留 copied context 的迟到 worker 既不能写入已结束 session，也不能串到仍活跃的其它请求。Handler 在构造 notification coroutine 前同时拒绝 inactive target 与停止/关闭的 loop，重叠请求不会互收日志或乱序恢复 logger level。
 
@@ -271,18 +270,21 @@ merge。事实源是 `paper_fetch.metadata.types.PRIMARY_SECONDARY_METADATA_MERG
 `providers.browser_workflow`，publisher 差异由 profile callback 与 provider adapter 承载。
 
 路由顺序、配置和公开来源统一见 [Provider 能力矩阵](../providers.md#provider-能力矩阵)
-与 [全文主路径](../providers.md#3-provider-全文主路径)。确认同篇正文付费墙时停止后续候选、重试、PDF 和资产请求；只有已取得的摘要/元数据可用于降级。Elsevier API `NOT_ENTITLED` 仅终止该 API 路线，网页确认无权限才终止全文 waterfall。
+与 [全文主路径](../providers.md#3-provider-全文主路径)。只有强 provider 身份证据支持的同篇正文付费墙才停止后续候选、重试、PDF 和资产请求；只有已取得的摘要/元数据可用于降级。Elsevier API `NOT_ENTITLED` 仅终止该 API 路线，网页确认无权限才终止全文 waterfall。
 
 ### 5. abstract-only / metadata-only fallback
 
 official provider 不可用时，只返回其自管的摘要结果或进入统一 metadata fallback，
-不尝试通用 HTML 正文抓取。未命中 official provider 时仍可解析 DOI / Crossref metadata。
+不尝试通用 HTML 正文抓取；`preferred_providers` 控制允许进入的全文 provider。
+未命中 official provider 时仍可解析 DOI / Crossref metadata。
 `allow_metadata_only_fallback=true` 允许降级，否则抛 `PaperFetchFailure`；
 PDF 已取得但无法转成 Markdown 时保留 PDF 来源和允许保存的 artifact。
 
 metadata fallback 的 `has_fulltext=false`，`source_trail` 包含
 `fallback:metadata_only`，public `source` 为 `metadata_only`；若 metadata 含摘要，
-`content_kind` 可为 `abstract_only`。逐 provider 例外见
+`content_kind` 可为 `abstract_only`。Crossref 仅作路由 signal 时不表示结果来自 Crossref；
+作为元数据来源时 `ArticleModel.source` 可为 `crossref_meta`，降级 envelope 仍使用 `metadata_only`。
+逐 provider 例外见
 [回退语义](../providers.md#4-abstract-only--metadata-only-fallback)。
 
 ### 6. render / envelope / cache / MCP 暴露
@@ -303,7 +305,7 @@ metadata fallback 的 `has_fulltext=false`，`source_trail` 包含
 
 固定返回形状的公开抓取结果。始终承载 `doi`、兼容 `source`、可空的结构化 `acquisition`、`has_fulltext`、`warnings`、`source_trail`、`token_estimate`、`token_estimate_breakdown`；这些顶层质量字段保持公开 Python API 和 wire shape，但直接投影 canonical `quality`，不另存可变副本。按 `modes` 决定是否附带 `article` / `markdown` / `metadata`。无法从 provider 原点确认 acquisition 时保持 `null`，不做启发式补全。
 
-MCP tool 返回的是在业务 payload 顶层追加 `schema_version=2` 的 JSON-safe 形状；FetchEnvelope sidecar 内的业务 payload 也保持该 v2 形状，其缓存 wrapper 版本独立保持 `version=5`，v5 sidecar reader 接受兼容的重复质量字段，并解码到单个 `Quality` 实例。失败时 `status` 是兼容客户端可读的粗粒度状态，细粒度失败原因放在 `code` / `error_category`，HTTP 与限流细节放在 `http_status` / `retry_after_seconds`。
+MCP tool 与 sidecar 业务 payload 使用 `schema_version=2` 的 JSON-safe 形状；sidecar wrapper 版本与匹配规则见 [Runtime / Artifact / Cache 边界](#8-runtime--artifact--cache-边界)。reader 接受兼容的重复质量字段，并解码到单个 `Quality` 实例。失败时 `status` 是兼容客户端可读的粗粒度状态，细粒度失败原因放在 `code` / `error_category`，HTTP 与限流细节放在 `http_status` / `retry_after_seconds`。
 
 ### `ArticleModel`
 
@@ -328,22 +330,6 @@ CLI 与 MCP live 入口都以 `paper_fetch.browser_preflight.run_browser_provide
 ### `has_fulltext`
 
 区分两个层面：`fetch_paper().has_fulltext` 是完整抓取瀑布后的最终 verdict；MCP 的 `batch_check(queries=[query])` 是只用更弱信号的廉价 probe，`mode` 默认且仅允许 `"metadata"`。真实批量抓取使用 `batch_fetch` 并读取 acceptance。两者不要求逐案完全一致（见 [`probe-semantics.md`](probe-semantics.md)）。
-
-## 关键例外与调用方容易误解的点
-
-### official provider 不走通用 HTML fallback
-
-所有 catalog 中的 official provider 都自行管理正文 waterfall；不存在 public HTML
-fallback 开关。`preferred_providers` 控制允许进入的全文 provider，实际过程读取
-`source_trail`，完整边界见 [provider 回退语义](../providers.md#4-abstract-only--metadata-only-fallback)。
-
-### `crossref` 既可能是 source，也可能只是 signal
-
-作为 signal 时用来路由，不代表结果来自 Crossref；作为底层来源时 `ArticleModel.source` 可表现成 `crossref_meta`；fulltext 失败走 metadata fallback 时 `FetchEnvelope.source` 映射为 `metadata_only`。
-
-### `warnings` 与 `source_trail` 都是契约的一部分
-
-`warnings` 告诉调用方发生了什么降级或限制，`source_trail` 告诉维护者每一步怎么走。只看正文而忽略它们会误读结果质量。
 
 ## 输出与可观测性
 
