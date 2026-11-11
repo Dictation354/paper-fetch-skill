@@ -57,6 +57,7 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
     from camoufox.fingerprints import Screen
 
     install_dir, expected_runtime_path = _prepared_managed_install()
+    monkeypatch.setenv("XDG_CACHE_HOME", str(install_dir.parent))
     # Global pytest policy isolates XDG_CACHE_HOME. Point only this opt-in
     # native process at the fixed managed cache. The ownership/config checks
     # above happen before Camoufox can clean an incompatible install directory.
@@ -146,6 +147,7 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
         headless=True,
         user_agent=None,
         persist_storage_state=False,
+        component_cache_dir=Path(os.environ["PAPER_FETCH_BROWSER_COMPONENT_CACHE"]),
     )
     for attempt in range(2):
         persistent_manager = PublisherProfileManager(config)
