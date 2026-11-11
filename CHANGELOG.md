@@ -19,6 +19,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 - Upgrade InvisiblePlaywright to 0.49.1 and invisible-core to 61.62.0; refresh Byparr private wheels to FastAPI 0.162.4 and annotated-doc 0.0.6 with verified hashes. Update Python locks for filelock 4.2.10, jsonpointer 3.11, markdown-it-py 4.3.0, regex 2026.11.9 and soupsieve 4.1, retaining interpreter-specific branches and Python 3.11–3.14 support. Keep Playwright 1.62.0, trafilatura 2.2.0 and pyee 13.0.1.
 - Update formula dependencies to minimatch 11.0.7, balanced-match 5.0.0 and commander 15.1.0, with the latter two overrides limited to their upstream consumers. Require Node.js 22.12.0 or later for formula workspaces; check all installed dependency versions against the lockfile and reinstall stale transitive dependencies with `npm ci`. An outdated Node runtime reports an optional-backend warning while preserving the core installation.
 
+- Wait for newly created shared Camoufox pages to reach the Byparr controller within the existing operation deadline, preventing cross-process page-registration races during article and asset navigation.
+
 ## 7.4.2 - 2026-11-09
 
 ### Browser and PNAS fetching

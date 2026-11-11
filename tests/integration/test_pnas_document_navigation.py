@@ -169,11 +169,7 @@ def test_pnas_readiness_samples_body_text_without_layout_resets(monkeypatch, sce
     ) as browser:
         page = browser.new_page()
         if scenario == "delayed":
-            page.set_content(
-                '<body><script>setTimeout(() => document.body.insertAdjacentHTML("beforeend", '
-                + json.dumps(body)
-                + "), 200)</script></body>"
-            )
+            page.set_content("<body></body>")
         elif scenario in {"challenge", "denied"}:
             page.set_content(
                 "<title>Just a moment...</title><body>Checking your browser</body>"
@@ -199,6 +195,11 @@ def test_pnas_readiness_samples_body_text_without_layout_resets(monkeypatch, sce
                     )
                 result = page.evaluate(script, args)
                 samples.append(result)
+                if scenario == "delayed" and len(samples) == 1:
+                    page.evaluate(
+                        "body => setTimeout(() => document.body.insertAdjacentHTML('beforeend', body), 200)",
+                        body,
+                    )
                 return result
 
             def wait_for_timeout(self, milliseconds):

@@ -1,5 +1,6 @@
 """PNAS backend policy, isolated preparation and static probe boundary contracts."""
 
+import asyncio
 import hashlib
 import io
 import json
@@ -11,11 +12,53 @@ import pytest
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.providers.browser_runtime import platforms, selection
 from paper_fetch.providers.browser_runtime import byparr_preparation as prep
+from paper_fetch.providers.browser_runtime import byparr_launcher
 from paper_fetch.providers.browser_runtime.api import load_runtime_config
 from paper_fetch.providers.browser_runtime.types import (
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
 )
+
+
+def test_shared_page_waits_for_controller_page_event(monkeypatch):
+    page = object()
+    context = SimpleNamespace(pages=[object()])
+    browser = SimpleNamespace(contexts=[context])
+    waits = []
+
+    async def receive_page_event(delay):
+        waits.append(delay)
+        context.pages.append(page)
+
+    monkeypatch.setattr(byparr_launcher.asyncio, "sleep", receive_page_event)
+    assert (
+        asyncio.run(
+            byparr_launcher._shared_page(browser, {"page_index": 1, "timeout_ms": 1000})
+        )
+        is page
+    )
+    assert waits == [0.01]
+
+
+@pytest.mark.parametrize("deadline", [10.003, 20])
+def test_shared_page_wait_preserves_remaining_operation_budget(monkeypatch, deadline):
+    clock = [10.0]
+    waits = []
+
+    async def receive_no_page_event(delay):
+        waits.append(delay)
+        clock[0] += delay
+
+    monkeypatch.setattr(byparr_launcher.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(byparr_launcher.asyncio, "sleep", receive_no_page_event)
+    with pytest.raises(TimeoutError, match="Shared page identifier"):
+        asyncio.run(
+            byparr_launcher._shared_page(
+                SimpleNamespace(contexts=[]),
+                {"page_index": 0, "timeout_ms": 5, "deadline": deadline},
+            )
+        )
+    assert sum(waits) == pytest.approx(min(deadline - 10, 0.005))
 
 
 @pytest.mark.parametrize(

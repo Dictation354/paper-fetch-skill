@@ -19,6 +19,8 @@
 - InvisiblePlaywright 升级至 0.49.1、invisible-core 升级至 61.62.0；Byparr 私有 wheel 更新为 FastAPI 0.162.4、annotated-doc 0.0.6，并同步校验摘要。Python 锁文件更新 filelock 4.2.10、jsonpointer 3.11、markdown-it-py 4.3.0、regex 2026.11.9 和 soupsieve 4.1，保留解释器版本分支及 Python 3.11–3.14 支持。Playwright 1.62.0、trafilatura 2.2.0 和 pyee 13.0.1 保持不变。
 - 公式依赖更新为 minimatch 11.0.7、balanced-match 5.0.0、commander 15.1.0，后两项 overrides 仅作用于对应上游包。公式 workspace 要求 Node.js ≥22.12.0，按锁文件核对所有已安装依赖版本，并通过 `npm ci` 更新旧的传递依赖；Node 版本过低时给出可选后端提示，保留核心安装。
 
+- 在既有操作期限内等待新建的共享 Camoufox 页面注册到 Byparr 控制进程，修复文章与资产导航中跨进程页面事件的竞态。
+
 ## 7.4.2 - 2026-11-09
 
 ### 浏览器与 PNAS 获取

@@ -96,6 +96,26 @@ def main():
             node_process.wait(timeout=2)
 
 
+async def _shared_page(browser, payload):
+    index = payload.get("page_index", -1)
+    if index < 0:
+        raise ValueError("Shared page identifier is unavailable")
+    deadline = min(
+        payload.get("deadline", float("inf")),
+        time.monotonic() + payload["timeout_ms"] / 1000,
+    )
+    while True:
+        context = browser.contexts[0] if browser.contexts else None
+        if context is not None and index < len(context.pages):
+            return context.pages[index]
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError("Shared page identifier is unavailable")
+        # The parent's new_page() can finish before this independent Playwright
+        # connection receives its page event. Share the operation's deadline.
+        await asyncio.sleep(min(0.01, remaining))
+
+
 async def serve(settings, root, endpoint, node_process):
     from playwright.async_api import BrowserContext, async_playwright
     from byparr_adapter import ManagedOperation
@@ -128,15 +148,7 @@ async def serve(settings, root, endpoint, node_process):
                     await operation.close()
                     return {"status": "ok"}
                 return await operation.finish()
-            context = browser.contexts[0] if browser.contexts else None
-            index = payload.get("page_index", -1)
-            page = (
-                context.pages[index]
-                if context is not None and 0 <= index < len(context.pages)
-                else None
-            )
-            if page is None:
-                raise ValueError("Shared page identifier is unavailable")
+            page = await _shared_page(browser, payload)
             for key, previous in list(operations.items()):
                 if previous.closed:
                     operations.pop(key, None)
