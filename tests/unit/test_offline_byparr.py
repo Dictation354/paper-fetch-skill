@@ -63,6 +63,7 @@ def test_removed_options_report_migration(tmp_path, capsys, args):
 
 
 def test_independent_mode_preserves_env_and_reports_retry(tmp_path, monkeypatch):
+    monkeypatch.setattr(wizard, "library_status", lambda _: "ready")
     env_file = tmp_path / "external.env"
     env_file.write_text("PAPER_FETCH_BROWSER_HEADLESS=false\nELSEVIER_API_KEY=SECRET\n")
     result = tmp_path / "result.txt"
