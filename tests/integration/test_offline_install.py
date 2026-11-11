@@ -291,7 +291,7 @@ class OfflineInstallTests(unittest.TestCase):
             bundle / "runtime" / "site-packages" / "camoufox" / "__init__.py", "\n"
         )
         _write_executable(
-            bundle / "runtime" / "site-packages" / "playwright" / "driver" / "node",
+            bundle / "runtime" / "node" / "bin" / "node",
             "#!/usr/bin/env bash\nexit 0\n",
         )
         _write_executable(
@@ -489,7 +489,7 @@ class OfflineInstallTests(unittest.TestCase):
                 f'PAPER_FETCH_IMAGE_TOOLS_DIR="{bundle / "image-tools"}"', offline_env
             )
             self.assertIn(
-                f'MATHML_TO_LATEX_NODE_BIN="{bundle / "runtime" / "site-packages" / "playwright" / "driver" / "node"}"',
+                f'MATHML_TO_LATEX_NODE_BIN="{bundle / "runtime" / "node" / "bin" / "node"}"',
                 offline_env,
             )
             self.assertIn('PYTHONUTF8="1"', offline_env)
@@ -647,6 +647,7 @@ class OfflineInstallTests(unittest.TestCase):
 
                     # BEGIN paper-fetch offline managed
                     PAPER_FETCH_DOWNLOAD_DIR="/old/downloads"
+                    MATHML_TO_LATEX_NODE_BIN="/old/runtime/site-packages/playwright/driver/node"
                     # END paper-fetch offline managed
                     """
                 ).lstrip(),
@@ -700,6 +701,13 @@ class OfflineInstallTests(unittest.TestCase):
             self.assertIn('ELSEVIER_API_KEY="secret"', offline_env)
             self.assertIn('USER_NOTE="keep"', offline_env)
             self.assertNotIn("/old/downloads", offline_env)
+            self.assertNotIn(
+                "/old/runtime/site-packages/playwright/driver/node", offline_env
+            )
+            for key in ("MATHML_TO_LATEX_NODE_BIN", "PLAYWRIGHT_NODEJS_PATH"):
+                self.assertIn(
+                    f'{key}="{install_root / "runtime/node/bin/node"}"', offline_env
+                )
             self.assertIn(
                 f'PAPER_FETCH_DOWNLOAD_DIR="{install_root / "downloads"}"', offline_env
             )
@@ -1225,9 +1233,7 @@ exec /bin/mv "$@"
                 uname_kernel="Darwin",
                 uname_machine="arm64",
             )
-            quarantined_node = (
-                bundle / "runtime" / "site-packages" / "playwright" / "driver" / "node"
-            )
+            quarantined_node = bundle / "runtime" / "node" / "bin" / "node"
             quarantined_node.write_text("tampered\n", encoding="utf-8")
             install_root = root / "installed"
 
@@ -1426,8 +1432,11 @@ exec /bin/mv "$@"
             )
             self.assertIn(f"PAPER_FETCH_ENV_FILE={bundle / 'offline.env'}", codex_add)
             self.assertIn(
-                f"MATHML_TO_LATEX_NODE_BIN={bundle / 'runtime' / 'site-packages' / 'playwright' / 'driver' / 'node'}",
+                f"MATHML_TO_LATEX_NODE_BIN={bundle / 'runtime' / 'node' / 'bin' / 'node'}",
                 codex_add,
+            )
+            self.assertIn(
+                f"PLAYWRIGHT_NODEJS_PATH={bundle / 'runtime/node/bin/node'}", codex_add
             )
             self.assertIn(
                 f"PAPER_FETCH_IMAGE_TOOLS_DIR={bundle / 'image-tools'}", codex_add
@@ -1519,14 +1528,11 @@ exec /bin/mv "$@"
             )
             self.assertEqual(
                 entry["env"]["MATHML_TO_LATEX_NODE_BIN"],
-                str(
-                    bundle
-                    / "runtime"
-                    / "site-packages"
-                    / "playwright"
-                    / "driver"
-                    / "node"
-                ),
+                str(bundle / "runtime" / "node" / "bin" / "node"),
+            )
+            self.assertEqual(
+                entry["env"]["PLAYWRIGHT_NODEJS_PATH"],
+                entry["env"]["MATHML_TO_LATEX_NODE_BIN"],
             )
 
     def test_reuse_env_file_keeps_file_untouched_and_activate_script_sets_runtime_dirs(
@@ -1580,14 +1586,7 @@ exec /bin/mv "$@"
                     str(reused_env),
                     str(bundle / "downloads"),
                     str(bundle / "image-tools"),
-                    str(
-                        bundle
-                        / "runtime"
-                        / "site-packages"
-                        / "playwright"
-                        / "driver"
-                        / "node"
-                    ),
+                    str(bundle / "runtime" / "node" / "bin" / "node"),
                     "1",
                     "utf-8",
                     sentinel,
@@ -1623,14 +1622,7 @@ exec /bin/mv "$@"
                         str(reused_env),
                         str(bundle / "downloads"),
                         str(bundle / "image-tools"),
-                        str(
-                            bundle
-                            / "runtime"
-                            / "site-packages"
-                            / "playwright"
-                            / "driver"
-                            / "node"
-                        ),
+                        str(bundle / "runtime" / "node" / "bin" / "node"),
                         "1",
                         "utf-8",
                         sentinel,
@@ -1682,14 +1674,7 @@ exec /bin/mv "$@"
                 [
                     "hello world",
                     sentinel,
-                    str(
-                        bundle
-                        / "runtime"
-                        / "site-packages"
-                        / "playwright"
-                        / "driver"
-                        / "node"
-                    ),
+                    str(bundle / "runtime" / "node" / "bin" / "node"),
                     "1",
                     "utf-8",
                 ],
@@ -2316,3 +2301,175 @@ def test_windows_texmath_python_smoke_captures_both_streams(tmp_path, exit_code)
         assert "TEXMATH_STDOUT" in result.stderr and "TEXMATH_STDERR" in result.stderr
     else:
         assert result.stdout == result.stderr == ""
+
+
+@pytest.mark.parametrize("option", ["--python", "--python="])
+@pytest.mark.parametrize("target", ["linux", "macos"])
+def test_python_option_overrides_environment_and_binds_real_launchers(
+    tmp_path, option, target
+):
+    from tests.support._installer_support import write_posix_command_wrappers
+
+    harness = OfflineInstallTests()
+    host = (
+        {}
+        if target == "linux"
+        else {
+            "target_platform": "macos",
+            "target_arch": "arm64",
+            "uname_kernel": "Darwin",
+            "uname_machine": "arm64",
+        }
+    )
+    bundle, fake_bin, home = harness._create_bundle(tmp_path, **host)
+    chosen = fake_bin / "selected python"
+    calls = tmp_path / "python-calls"
+    _write_executable(
+        chosen,
+        f"""#!/usr/bin/env bash
+printf '%s\\n' "$*" >> {shlex.quote(str(calls))}
+exec {shlex.quote(str(fake_bin / "python3"))} "$@"
+""",
+    )
+    write_posix_command_wrappers(bundle)
+    _write_checksums(bundle)
+    # Exercise relative paths with spaces, and a conflicting inherited override.
+    relative = os.path.relpath(chosen, bundle)
+    args = [option, relative] if option == "--python" else [option + relative]
+    result = harness._run_installer(
+        bundle,
+        fake_bin,
+        home,
+        *args,
+        "--non-interactive",
+        "--skip-browser-prepare",
+        skip_smoke=False,
+        extra_env={"PAPER_FETCH_OFFLINE_PYTHON_BIN": "/missing/python"},
+    )
+    assert result.returncode == 0, result.stderr
+    bound = (bundle / "runtime/python-bin").read_text().strip()
+    assert Path(bound).is_absolute()
+    assert Path(bound).resolve() == chosen.resolve()
+    assert f"Python interpreter: {bound}" in result.stdout
+    assert "-m paper_fetch.cli --help" in calls.read_text()
+    before = calls.read_text()
+    env = {**os.environ, "PATH": f"{fake_bin}:/usr/bin:/bin"}
+    env.pop("PAPER_FETCH_OFFLINE_PYTHON_BIN", None)
+    result = subprocess.run(
+        [str(bundle / "bin/paper-fetch-mcp")], env=env, capture_output=True
+    )
+    assert result.returncode == 0, result.stderr
+    assert "-m paper_fetch.mcp.server" in calls.read_text()[len(before) :]
+
+
+def test_linux_default_ignores_path_python(tmp_path):
+    harness = OfflineInstallTests()
+    system_python = Path("/usr/bin/python3")
+    if not system_python.is_file() or platform.system() != "Linux":
+        pytest.skip("Linux system Python required")
+    version = subprocess.check_output(
+        [
+            str(system_python),
+            "-I",
+            "-c",
+            'import sys; print(".".join(map(str, sys.version_info[:3])))',
+        ],
+        text=True,
+    ).strip()
+    if not (3, 11) <= tuple(map(int, version.split(".")[:2])) <= (3, 14):
+        pytest.skip("System Python outside offline support range")
+    bundle, fake_bin, home = harness._create_bundle(tmp_path, python_version=version)
+    _write_executable(fake_bin / "python3", "#!/usr/bin/env bash\nexit 91\n")
+    result = harness._run_installer(
+        bundle,
+        fake_bin,
+        home,
+        "--non-interactive",
+        "--skip-browser-prepare",
+        extra_env={"PAPER_FETCH_OFFLINE_PYTHON_BIN": ""},
+    )
+    assert result.returncode == 0, result.stderr
+    assert (bundle / "runtime/python-bin").read_text() == "/usr/bin/python3\n"
+
+
+def test_macos_default_uses_path_python(tmp_path):
+    harness = OfflineInstallTests()
+    bundle, fake_bin, home = harness._create_bundle(
+        tmp_path,
+        target_platform="macos",
+        target_arch="arm64",
+        uname_kernel="Darwin",
+        uname_machine="arm64",
+    )
+    result = harness._run_installer(
+        bundle,
+        fake_bin,
+        home,
+        "--non-interactive",
+        "--skip-browser-prepare",
+        extra_env={"PAPER_FETCH_OFFLINE_PYTHON_BIN": ""},
+    )
+    assert result.returncode == 0, result.stderr
+    assert (bundle / "runtime/python-bin").read_text() == f"{fake_bin / 'python3'}\n"
+
+
+@pytest.mark.parametrize(
+    "args, message",
+    [
+        (["--python"], "--python requires an interpreter"),
+        (["--python="], "--python requires an interpreter"),
+        (["--python", "--non-interactive"], "--python requires an interpreter"),
+        (["--python", "/missing/python"], "Python executable not found"),
+    ],
+)
+def test_invalid_python_option_does_not_install(tmp_path, args, message):
+    harness = OfflineInstallTests()
+    bundle, fake_bin, home = harness._create_bundle(tmp_path)
+    destination = tmp_path / "installed"
+    result = harness._run_installer(
+        bundle, fake_bin, home, *args, install_dir=destination
+    )
+    assert result.returncode != 0
+    assert message in result.stderr
+    assert not destination.exists()
+
+
+def test_explicit_python_command_mismatch_does_not_install(tmp_path):
+    harness = OfflineInstallTests()
+    bundle, fake_bin, home = harness._create_bundle(
+        tmp_path, manifest_python_tag="cp314"
+    )
+    destination = tmp_path / "installed"
+    result = harness._run_installer(
+        bundle,
+        fake_bin,
+        home,
+        "--python",
+        "python3",
+        install_dir=destination,
+    )
+    assert result.returncode != 0
+    assert "bundle requires CPython cp314" in result.stderr
+    assert "--python" in result.stderr
+    assert str(fake_bin / "python3") in result.stderr
+    assert not destination.exists()
+
+
+def test_non_executable_python_does_not_install(tmp_path):
+    harness = OfflineInstallTests()
+    bundle, fake_bin, home = harness._create_bundle(tmp_path)
+    interpreter = tmp_path / "not executable"
+    interpreter.write_text("not a Python executable\n")
+    destination = tmp_path / "installed"
+    result = harness._run_installer(
+        bundle,
+        fake_bin,
+        home,
+        "--python",
+        str(interpreter),
+        install_dir=destination,
+    )
+    assert result.returncode != 0
+    assert str(interpreter) in result.stderr
+    assert "--python" in result.stderr
+    assert not destination.exists()

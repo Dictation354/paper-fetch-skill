@@ -7,6 +7,23 @@ from scripts import validate_macos_adaptation as validator
 
 
 class MacosAdaptationValidatorTests(unittest.TestCase):
+    def test_node_runtime_contract_drift_is_rejected(self) -> None:
+        contract = validator.load_contract()
+        for key, value in contract["node_runtime"].items():
+            contract["node_runtime"][key] = False if value is True else "other"
+        diagnostics = "\n".join(validator.validate_contract(contract))
+        for key in contract["node_runtime"]:
+            self.assertIn(f"node_runtime.{key} must be", diagnostics)
+
+    def test_interpreter_selection_contract_drift_is_rejected(self) -> None:
+        contract = validator.load_contract()
+        keys = ("python_default", "python_override_option", "python_override_env")
+        for key in keys:
+            contract["support"]["offline"][key] = "other"
+        diagnostics = "\n".join(validator.validate_contract(contract))
+        for key in keys:
+            self.assertIn(f"support.offline.{key} must be", diagnostics)
+
     def test_update_entry_preserves_installer_boundaries(self) -> None:
         contract = validator.load_contract()
         for key, value in contract["update"].items():

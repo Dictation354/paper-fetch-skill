@@ -10,5 +10,16 @@
     "@mathjax/mathjax-tex-font": "4.1.3",
     "@mathjax/mathjax-mhchem-font-extension": "4.1.3",
     "@mathjax/mathjax-bbm-font-extension": "4.1.3"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "overrides": {
+    "brace-expansion": {
+      "balanced-match": "5.0.0"
+    },
+    "speech-rule-engine": {
+      "commander": "15.1.0"
+    }
   }
 }

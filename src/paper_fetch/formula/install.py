@@ -25,6 +25,7 @@ from .paths import (
 TEXMATH_VERSION = "0.13.3"
 _TEXMATH_VERSION_PATTERN = re.compile(r"(?m)^Version ([0-9]+(?:\.[0-9]+)+)\s*$")
 _CABAL_UPDATE_ATTEMPTS = 3
+MINIMUM_NODE_VERSION = (22, 12, 0)
 
 
 def log(message: str) -> None:
@@ -237,6 +238,24 @@ def ensure_mathml_to_latex(target_dir: Path, *, install_node: bool) -> bool:
         warn("npm not found; mathml-to-latex fallback is unavailable.")
         return False
 
+    try:
+        probe = subprocess.run(
+            [node, "--version"], capture_output=True, text=True, check=False
+        )
+        version = tuple(
+            int(part) for part in probe.stdout.strip().removeprefix("v").split(".")
+        )
+        if probe.returncode != 0 or version < MINIMUM_NODE_VERSION:
+            warn(
+                "Formula Node dependencies require Node.js >=22.12.0; upgrade Node.js and retry."
+            )
+            return False
+    except (OSError, ValueError):
+        warn(
+            "Could not determine Node.js version; formula Node dependencies require >=22.12.0."
+        )
+        return False
+
     workspace = stage_bundled_node_workspace(target_dir)
     if node_dependencies_ready(workspace):
         log(f"Using existing formula Node dependencies in {workspace}")
@@ -244,7 +263,7 @@ def ensure_mathml_to_latex(target_dir: Path, *, install_node: bool) -> bool:
 
     log(f"Installing Node dependencies for mathml-to-latex fallback in {workspace}")
     if _run_with_log(
-        "mathml-to-latex-", [npm, "install", "--omit=dev", "--silent"], cwd=workspace
+        "mathml-to-latex-", [npm, "ci", "--omit=dev", "--silent"], cwd=workspace
     ):
         log("Formula backend ready: mathml-to-latex")
         return True
@@ -252,16 +271,18 @@ def ensure_mathml_to_latex(target_dir: Path, *, install_node: bool) -> bool:
 
 
 def node_dependencies_ready(workspace: Path) -> bool:
-    dependencies = json.loads((workspace / "package.json").read_text(encoding="utf-8"))[
-        "dependencies"
-    ]
-    for name, specifier in dependencies.items():
-        manifest = workspace / "node_modules" / name / "package.json"
+    packages = json.loads(
+        (workspace / "package-lock.json").read_text(encoding="utf-8")
+    )["packages"]
+    for path, locked in packages.items():
+        if not path or locked.get("dev"):
+            continue
+        manifest = workspace / path / "package.json"
         try:
             installed = json.loads(manifest.read_text(encoding="utf-8"))["version"]
         except (OSError, ValueError, KeyError):
             return False
-        if name.startswith("@mathjax/") and installed != specifier:
+        if installed != locked["version"]:
             return False
     return True
 

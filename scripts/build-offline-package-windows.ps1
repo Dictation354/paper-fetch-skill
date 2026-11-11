@@ -83,9 +83,9 @@ function Invoke-Native {
 }
 
 function Get-PythonTag {
-    $tag = & $PythonBin -c "import sys; sys.exit(1) if sys.implementation.name != 'cpython' else None; print(f'cp{sys.version_info.major}{sys.version_info.minor}')"
+    $tag = & $PythonBin -c "import sys, struct, sysconfig; sys.exit(1) if sys.implementation.name != 'cpython' or struct.calcsize('P') != 8 or getattr(sys, 'abiflags', '') or sysconfig.get_config_var('Py_GIL_DISABLED') else None; print(f'cp{sys.version_info.major}{sys.version_info.minor}')"
     if ($LASTEXITCODE -ne 0) {
-        throw "Windows setup build requires CPython 3.13 x64."
+        throw "Windows setup build requires CPython 3.14 x64."
     }
     return $tag.Trim()
 }
@@ -122,8 +122,8 @@ function Assert-Target {
         throw "Windows setup build currently targets x86_64 only; detected $arch."
     }
     $pythonTag = Get-PythonTag
-    if ($pythonTag -ne "cp313") {
-        throw "Windows setup build uses the CPython 3.13 embeddable runtime; build with CPython 3.13, detected $pythonTag."
+    if ($pythonTag -ne "cp314") {
+        throw "Windows setup build uses the CPython 3.14 embeddable runtime; build with CPython 3.14, detected $pythonTag."
     }
     return $pythonTag
 }
@@ -235,7 +235,7 @@ function Add-EmbeddedPythonRuntime {
     New-Item -ItemType Directory -Force -Path $runtime | Out-Null
     Expand-Archive -LiteralPath $archive -DestinationPath $runtime -Force
 
-    $pth = Join-Path $runtime "python313._pth"
+    $pth = Join-Path $runtime "python314._pth"
     if (-not (Test-Path -LiteralPath $pth -PathType Leaf)) {
         throw "Missing embeddable runtime _pth file: $pth"
     }
@@ -329,8 +329,14 @@ from paper_fetch.formula.install import stage_bundled_node_workspace
 stage_bundled_node_workspace(Path(sys.argv[1]))
 '@
     Invoke-Native $BuildPython -c $stageNodeWorkspace $target
-    Invoke-Native npm ci --omit=dev --silent --prefix $target
-    $node = (Get-Command node -ErrorAction Stop).Source
+    $previousPath = $env:PATH
+    try {
+        $env:PATH = "$(Join-Path $Staging 'runtime/node');$previousPath"
+        Invoke-Native npm ci --omit=dev --silent --prefix $target
+    } finally {
+        $env:PATH = $previousPath
+    }
+    $node = Join-Path $Staging "runtime/node/node.exe"
     $nodeLatex = ('<math><mi>x</mi></math>' | & $node (Join-Path $target "mathml_to_latex_cli.mjs") | Out-String).Trim()
     if ($LASTEXITCODE -ne 0 -or -not $nodeLatex.Contains("x")) {
         throw "Bundled mathml-to-latex fallback failed its smoke test."
@@ -365,6 +371,8 @@ function Write-CmdWrappers {
 setlocal
 set "PAPER_FETCH_ROOT=%~dp0.."
 if not defined PAPER_FETCH_ENV_FILE set "PAPER_FETCH_ENV_FILE=%PAPER_FETCH_ROOT%\offline.env"
+if not defined MATHML_TO_LATEX_NODE_BIN set "MATHML_TO_LATEX_NODE_BIN=%PAPER_FETCH_ROOT%\runtime\node\node.exe"
+if not defined PLAYWRIGHT_NODEJS_PATH set "PLAYWRIGHT_NODEJS_PATH=%PAPER_FETCH_ROOT%\runtime\node\node.exe"
 set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
 "%PAPER_FETCH_ROOT%\runtime\python.exe" -X utf8 -m paper_fetch.cli %*
@@ -377,6 +385,8 @@ exit /b %ERRORLEVEL%
 setlocal
 set "PAPER_FETCH_ROOT=%~dp0.."
 if not defined PAPER_FETCH_ENV_FILE set "PAPER_FETCH_ENV_FILE=%PAPER_FETCH_ROOT%\offline.env"
+if not defined MATHML_TO_LATEX_NODE_BIN set "MATHML_TO_LATEX_NODE_BIN=%PAPER_FETCH_ROOT%\runtime\node\node.exe"
+if not defined PLAYWRIGHT_NODEJS_PATH set "PLAYWRIGHT_NODEJS_PATH=%PAPER_FETCH_ROOT%\runtime\node\node.exe"
 set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
 "%PAPER_FETCH_ROOT%\runtime\python.exe" -X utf8 -m paper_fetch.mcp.server %*
@@ -414,7 +424,8 @@ function Write-DefaultOfflineEnv {
             "PAPER_FETCH_DOWNLOAD_DIR" { return (ConvertTo-StagingEnvPath "$Staging/downloads") }
             "PAPER_FETCH_FORMULA_TOOLS_DIR" { return (ConvertTo-StagingEnvPath "$Staging/formula-tools") }
             "PAPER_FETCH_IMAGE_TOOLS_DIR" { return (ConvertTo-StagingEnvPath "$Staging/image-tools") }
-            "MATHML_TO_LATEX_NODE_BIN" { return (ConvertTo-StagingEnvPath "$Staging/runtime/Lib/site-packages/playwright/driver/node.exe") }
+            "MATHML_TO_LATEX_NODE_BIN" { return (ConvertTo-StagingEnvPath "$Staging/runtime/node/node.exe") }
+            "PLAYWRIGHT_NODEJS_PATH" { return (ConvertTo-StagingEnvPath "$Staging/runtime/node/node.exe") }
             "PAPER_FETCH_BROWSER_HEADLESS" { return "true" }
             "PYTHONUTF8" { return "1" }
             "PYTHONIOENCODING" { return "utf-8" }
@@ -449,7 +460,7 @@ See `browser-setup-results.txt`. Retry with `python -m paper_fetch.offline_setup
 Successful online checks are reused for 24 hours; failed/cancelled checks allow retry.
 Ghostscript uses the official visible x64 installer (UAC/admin and system registry); libvips keeps the complete official x64 ZIP with DLLs/resources. Tools go under versioned `image-tools` directories; existing valid tools are reused and real EPS/TIFF conversion is checked before saving paths. Optional failures preserve the core installation. See `optional-setup-results.txt` after using the wizard.
 Upgrades preserve credentials and optional tools. Uninstall keeps optional tools by default; interactive cleanup removes only recorded owned tools via the official Ghostscript uninstaller or individually recorded libvips files, preserving user additions. Shared Camoufox caches remain.
-Formula conversion uses the bundled Playwright driver Node via `MATHML_TO_LATEX_NODE_BIN`; do not rely on a bare `node` from PATH in Codex Desktop sessions.
+Official Node.js and its license are bundled under `runtime/node/`; the version and official archive hashes are pinned in `installer/manifest.json`. Formula tools, Playwright and Byparr use `runtime/node/node.exe` through `MATHML_TO_LATEX_NODE_BIN` and `PLAYWRIGHT_NODEJS_PATH`. Explicit environment overrides are preserved.
 
 Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
 '@
@@ -530,6 +541,7 @@ function Write-ManifestAndChecksums {
             installer_manifest = "installer/manifest.json"
             command_wrappers = "bin"
             formula_tools = "formula-tools"
+            node_runtime = (Get-Content -LiteralPath (Join-Path $Staging "runtime/node/node-runtime.json") -Raw | ConvertFrom-Json)
             image_tools = "image-tools"
             camoufox = [ordered]@{
                 python_package = "runtime/Lib/site-packages"
@@ -685,6 +697,7 @@ $buildPython = New-BuildVenv
 Add-EmbeddedPythonRuntime $staging
 Install-EmbeddedPythonPackages $staging
 Invoke-Native $buildPython (Join-Path $RepoDir "scripts/build_browser_components.py") --destination (Join-Path $staging "runtime/browser-components/byparr")
+Invoke-Native $PythonBin (Join-Path $RepoDir "scripts/build_node_runtime.py") --staging $staging --target windows_node_x86_64 --manifest $InstallerManifestPath --cache-dir (Join-Path $BuildDir "node-archives")
 Add-FormulaTools -Staging $staging -BuildPython $buildPython
 Add-ImageTools -Staging $staging -BuildPython $buildPython
 Write-CmdWrappers $staging

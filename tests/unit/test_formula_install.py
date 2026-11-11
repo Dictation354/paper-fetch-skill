@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import json
 import stat
 import tempfile
 import unittest
@@ -232,6 +233,11 @@ class FormulaInstallTests(unittest.TestCase):
                     "which",
                     side_effect=lambda name: f"/usr/bin/{name}",
                 ),
+                mock.patch.object(
+                    formula_install.subprocess,
+                    "run",
+                    return_value=mock.Mock(returncode=0, stdout="v26.13.0"),
+                ),
                 mock.patch.object(formula_install, "_run_with_log") as run,
             ):
                 self.assertTrue(
@@ -242,6 +248,51 @@ class FormulaInstallTests(unittest.TestCase):
                 )
 
             run.assert_called_once()
+
+    def test_workspace_rejects_stale_transitive_dependency(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            workspace = Path(tmpdir)
+            packages = {
+                "": {},
+                "node_modules/direct": {"version": "1.0.0"},
+                "node_modules/direct/node_modules/transitive": {"version": "5.0.0"},
+            }
+            (workspace / "package-lock.json").write_text(
+                json.dumps({"packages": packages})
+            )
+            for path, locked in packages.items():
+                if not path:
+                    continue
+                manifest = workspace / path / "package.json"
+                manifest.parent.mkdir(parents=True, exist_ok=True)
+                manifest.write_text(json.dumps(locked))
+            self.assertTrue(formula_install.node_dependencies_ready(workspace))
+            manifest.write_text(json.dumps({"version": "4.0.4"}))
+            self.assertFalse(formula_install.node_dependencies_ready(workspace))
+
+    def test_old_node_preserves_optional_backend_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with (
+                mock.patch.object(
+                    formula_install.shutil,
+                    "which",
+                    side_effect=lambda name: f"/tools/{name}",
+                ),
+                mock.patch.object(
+                    formula_install.subprocess,
+                    "run",
+                    return_value=mock.Mock(returncode=0, stdout="v22.11.0"),
+                ),
+                mock.patch.object(formula_install, "_run_with_log") as install,
+                mock.patch.object(formula_install, "warn") as warn,
+            ):
+                self.assertFalse(
+                    formula_install.ensure_mathml_to_latex(
+                        Path(tmpdir), install_node=True
+                    )
+                )
+                install.assert_not_called()
+                self.assertIn(">=22.12.0", warn.call_args.args[0])
 
     def test_working_texmath_does_not_skip_node_validation_install(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

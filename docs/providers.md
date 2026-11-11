@@ -756,6 +756,8 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 
 #### `MATHML_TO_LATEX_NODE_BIN`
 
+离线安装默认使用独立 Node.js 26.13.0（POSIX：`runtime/node/bin/node`；Windows：`runtime/node/node.exe`），与 `PLAYWRIGHT_NODEJS_PATH` 共用运行时；可显式覆盖。在线公式依赖安装要求 Node ≥22.12.0。
+
 - 指定 Node 可执行文件；默认是 `node`。
 - Windows 离线安装器会将它写为包内 `runtime/Lib/site-packages/playwright/driver/node.exe`，避免 Codex Desktop 的 WindowsApps/MSIX 内部 `node.exe` 被外部子进程调用时触发 `[WinError 5]`。
 

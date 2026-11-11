@@ -74,7 +74,7 @@ PDF 不用清理后的 JSON 替换原生状态，`save_storage_state=false` 仅�
 
 ## 统一受管 Byparr
 
-当前锁定 Byparr 3.1.1、InvisiblePlaywright 0.47.1／invisible-core 58.56.0 与
+当前锁定 Byparr 3.1.1、InvisiblePlaywright 0.49.1／invisible-core 61.62.0 与
 Camoufox 0.5.9；Camoufox 使用共享 Playwright `>=1.58,<1.63`，Invisible 使用自己的
 Python protocol transport。版本与源码校验由
 [`byparr-manifest.json`](../src/paper_fetch/providers/browser_runtime/byparr-manifest.json)、

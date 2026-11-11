@@ -6,6 +6,19 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.5.0 - 2026-11-11
+
+### 离线运行时与安装
+
+- Linux x64、macOS arm64 和 Windows x64 独立打包官方 Node.js 26.13.0。公式工具、Playwright 与 Byparr 通过 `MATHML_TO_LATEX_NODE_BIN` 和 `PLAYWRIGHT_NODEJS_PATH` 共用包内运行时，保留显式环境覆盖及 Playwright 包内原始文件。安装器 manifest 统一锁定归档 URL 和官方 SHA-256，离线依赖证据与 SBOM 记录许可证、来源和实际可执行文件摘要。
+- Windows 内置运行时升级为官方 CPython 3.14.10 x64，原生构建、依赖快照和证据目标改为 `windows-x86_64-cp314`，公开安装器文件名保持不变。原生门禁覆盖全新安装、从固定的 7.4.2 cp313 安装器升级、用户配置与下载文件保留以及宿主集成。
+- Linux 离线安装默认使用 `/usr/bin/python3`，macOS 继续使用 PATH 中的 `python3`。新增 `--python <interpreter>`／`--python=<interpreter>`，优先级高于 `PAPER_FETCH_OFFLINE_PYTHON_BIN`；CLI 与 MCP 复用记录的解释器绝对路径，缺失或不兼容时在安装前明确提示。
+
+### 依赖与公式工具
+
+- InvisiblePlaywright 升级至 0.49.1、invisible-core 升级至 61.62.0；Byparr 私有 wheel 更新为 FastAPI 0.162.4、annotated-doc 0.0.6，并同步校验摘要。Python 锁文件更新 filelock 4.2.10、jsonpointer 3.11、markdown-it-py 4.3.0、regex 2026.11.9 和 soupsieve 4.1，保留解释器版本分支及 Python 3.11–3.14 支持。Playwright 1.62.0、trafilatura 2.2.0 和 pyee 13.0.1 保持不变。
+- 公式依赖更新为 minimatch 11.0.7、balanced-match 5.0.0、commander 15.1.0，后两项 overrides 仅作用于对应上游包。公式 workspace 要求 Node.js ≥22.12.0，按锁文件核对所有已安装依赖版本，并通过 `npm ci` 更新旧的传递依赖；Node 版本过低时给出可选后端提示，保留核心安装。
+
 ## 7.4.2 - 2026-11-09
 
 ### 浏览器与 PNAS 获取

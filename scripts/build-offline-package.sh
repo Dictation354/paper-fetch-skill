@@ -438,14 +438,25 @@ sign_macos_playwright_node() {
     || die "Bundled Playwright Node runtime failed code-signature verification."
 }
 
+sign_macos_node_runtime() {
+  local staging="$1"
+  local target_platform="$2"
+  local node="$staging/runtime/node/bin/node"
+  [ "$target_platform" = "macos" ] || return 0
+  verify_macos_arm64_binary "$node" "Bundled Node runtime"
+  codesign --force --sign - --timestamp=none "$node"
+  codesign --verify --strict "$node" \
+    || die "Bundled Node runtime failed code-signature verification."
+}
+
 bundle_formula_tools() {
   local staging="$1"
   local formula_tools="$staging/formula-tools"
   local node_bin npm_bin texmath_bin texmath_version version_output latex_output
   log "Bundling formula tools"
-  node_bin="$(command -v node || true)"
+  node_bin="$staging/runtime/node/bin/node"
   npm_bin="$(command -v npm || true)"
-  [ -n "$node_bin" ] || die "Bundling formula tools requires Node.js."
+  [ -x "$node_bin" ] || die "Bundled Node.js is missing."
   [ -n "$npm_bin" ] || die "Bundling formula tools requires npm."
 
   PYTHONPATH="$staging/runtime/site-packages${PYTHONPATH:+:$PYTHONPATH}" \
@@ -496,7 +507,7 @@ from paper_fetch.formula.install import stage_bundled_node_workspace
 
 stage_bundled_node_workspace(Path(sys.argv[1]))
 PY
-  "$npm_bin" ci --omit=dev --silent --prefix "$formula_tools"
+  PATH="$(dirname "$node_bin"):$PATH" "$npm_bin" ci --omit=dev --silent --prefix "$formula_tools"
   # Runtime code imports the packages directly; npm's .bin launchers are unused
   # symlinks and are excluded so the offline payload remains regular-files-only.
   rm -rf "$formula_tools/node_modules/.bin"
@@ -616,8 +627,13 @@ if [ -n "${PAPER_FETCH_OFFLINE_PYTHON_BIN:-}" ]; then
 elif [ -f "$INSTALL_ROOT/runtime/python-bin" ]; then
   IFS= read -r PYTHON_BIN < "$INSTALL_ROOT/runtime/python-bin"
 else
-  PYTHON_BIN="python3"
+  case "$(uname -s)" in
+    Linux) PYTHON_BIN="/usr/bin/python3" ;;
+    *) PYTHON_BIN="python3" ;;
+  esac
 fi
+export MATHML_TO_LATEX_NODE_BIN="${MATHML_TO_LATEX_NODE_BIN:-$INSTALL_ROOT/runtime/node/bin/node}"
+export PLAYWRIGHT_NODEJS_PATH="${PLAYWRIGHT_NODEJS_PATH:-$INSTALL_ROOT/runtime/node/bin/node}"
 export PYTHONPATH="$INSTALL_ROOT/runtime/site-packages${PYTHONPATH:+:$PYTHONPATH}"
 export PYTHONUTF8="${PYTHONUTF8:-1}"
 export PYTHONIOENCODING="${PYTHONIOENCODING:-utf-8}"
@@ -685,6 +701,11 @@ write_offline_readme() {
 This package includes an installed Python runtime under `runtime/site-packages`, a private Python launcher at `runtime/paper-fetch-python`, command wrappers under `bin/`, formula tools, and image-tools configuration for optional conversion tools.
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
 The `bin/` directory exposes paper-fetch commands only; it does not include a generic `python` wrapper.
+The package includes official Node.js under `runtime/node/`, with its license and source archive hashes; the version is pinned in `installer/manifest.json`.
+`MATHML_TO_LATEX_NODE_BIN` and `PLAYWRIGHT_NODEJS_PATH` default to `runtime/node/bin/node` for formula tools, Playwright and Byparr. Explicit environment overrides are preserved.
+The package includes Python dependencies, not a Python interpreter. Linux installation defaults to `/usr/bin/python3`; macOS defaults to `python3` on PATH.
+Pass `--python /path/to/python` (or `--python=/path/to/python`) to select an interpreter matching the package ABI. Command names are also accepted.
+Selection priority is `--python`, then `PAPER_FETCH_OFFLINE_PYTHON_BIN`, then the platform default. The selected absolute path is recorded in `runtime/python-bin` and reused by CLI and MCP.
 It does not redistribute the Camoufox browser binary for browser-backed providers.
 After core smoke checks, browsers are prepared by default, including non-interactive installs.
 Use `--skip-browser-prepare` to skip preparation. System packages retain their existing permission rules.
@@ -849,6 +870,7 @@ payload = {
         "installed_package_count": len(installed_packages),
         "installer_manifest": "installer/manifest.json",
         "formula_tools": "formula-tools",
+        "node_runtime": json.loads((staging / "runtime/node/node-runtime.json").read_text(encoding="utf-8")),
         "image_tools": "image-tools",
         "camoufox": {
             "python_package": "runtime/site-packages",
@@ -1058,7 +1080,11 @@ main() {
     PYTHONPATH="$staging/runtime/site-packages" "$PYTHON_BIN" "$REPO_DIR/scripts/build_browser_components.py" \
       --destination "$staging/runtime/browser-components/byparr" >/dev/null
   fi
+  "$PYTHON_BIN" "$REPO_DIR/scripts/build_node_runtime.py" \
+    --staging "$staging" --target "${target_platform}_node_${target_arch}" \
+    --manifest "$INSTALLER_MANIFEST_FILE" --cache-dir "$BUILD_DIR/node-archives"
   sign_macos_playwright_node "$staging" "$target_platform"
+  sign_macos_node_runtime "$staging" "$target_platform"
   bundle_formula_tools "$staging"
   bundle_image_tools "$staging"
   write_cmd_wrappers "$staging"

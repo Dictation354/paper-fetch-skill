@@ -23,6 +23,7 @@ $McpEnvKeys = @(
     "PAPER_FETCH_FORMULA_TOOLS_DIR",
     "PAPER_FETCH_IMAGE_TOOLS_DIR",
     "MATHML_TO_LATEX_NODE_BIN",
+    "PLAYWRIGHT_NODEJS_PATH",
     "PAPER_FETCH_BROWSER_HEADLESS"
 )
 $OfflineEnvKeys = @($McpEnvKeys | Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" })
@@ -172,7 +173,7 @@ function Get-RuntimePython {
 }
 
 function Get-MathmlToLatexNode {
-    return Join-Path $InstallRoot "runtime/Lib/site-packages/playwright/driver/node.exe"
+    return Join-Path $InstallRoot "runtime/node/node.exe"
 }
 
 function ConvertTo-FullPath {
@@ -212,6 +213,7 @@ function Get-McpEnv {
         PAPER_FETCH_FORMULA_TOOLS_DIR = (ConvertTo-FullPath $formulaTools)
         PAPER_FETCH_IMAGE_TOOLS_DIR = (ConvertTo-FullPath $imageTools)
         MATHML_TO_LATEX_NODE_BIN = (ConvertTo-FullPath (Get-MathmlToLatexNode))
+        PLAYWRIGHT_NODEJS_PATH = (ConvertTo-FullPath (Get-MathmlToLatexNode))
         PAPER_FETCH_BROWSER_HEADLESS = "true"
     }
     $ordered = [ordered]@{}

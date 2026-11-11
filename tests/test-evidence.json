@@ -4708,6 +4708,13 @@
         "scope": "All browser provider aliases preserve state bindings; challenge detection and solver diagnostic contracts.",
         "reason": "Minimal configuration scenarios and private solver boundary doubles; real process/navigation evidence is integration."
       }
+    },
+    "tests/integration/test_node_runtime.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Node archive staging, hash verification, Playwright driver lifecycle and formula Node package interfaces.",
+        "reason": "Generated archive fixtures and real subprocess contracts verify installation and runtime interfaces without paper content."
+      }
     }
   }
 }

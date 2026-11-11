@@ -79,6 +79,13 @@ def validate_contract(
         )
 
     offline = contract.get("support", {}).get("offline", {})
+    for key, expected in {
+        "python_default": "python3 on PATH",
+        "python_override_option": "--python",
+        "python_override_env": "PAPER_FETCH_OFFLINE_PYTHON_BIN",
+    }.items():
+        if offline.get(key) != expected:
+            errors.append(f"support.offline.{key} must be {expected!r}")
     matrix = _macos_release_matrix(repo_root=repo_root)
     matrix_versions = [item.get("python-version", "") for item in matrix]
     matrix_runners = sorted({item.get("os", "") for item in matrix})
@@ -115,6 +122,30 @@ def validate_contract(
     installer = json.loads(
         (repo_root / "installer" / "manifest.json").read_text(encoding="utf-8")
     )
+    node = contract.get("node_runtime", {})
+    for key, expected in {
+        "installer_manifest_key": "macos_node_arm64",
+        "executable": "runtime/node/bin/node",
+        "license": "runtime/node/LICENSE",
+        "architecture_check": True,
+        "ad_hoc_signature": True,
+        "environment": ["MATHML_TO_LATEX_NODE_BIN", "PLAYWRIGHT_NODEJS_PATH"],
+    }.items():
+        if node.get(key) != expected:
+            errors.append(f"node_runtime.{key} must be {expected!r}")
+    node_pin = installer.get("embedded_runtimes", {}).get(
+        node.get("installer_manifest_key"), {}
+    )
+    if (
+        node_pin.get("architecture") != "arm64"
+        or node_pin.get("executable") != "bin/node"
+    ):
+        errors.append("node_runtime must reference the official macOS arm64 Node pin")
+    if any(
+        key not in installer.get("mcp", {}).get("env_keys", [])
+        for key in node.get("environment", [])
+    ):
+        errors.append("node_runtime.environment must be in installer MCP environment")
     prefix = installer.get("packages", {}).get("macos_offline_name_prefix")
     if not isinstance(prefix, str) or any(
         not name.startswith(f"{prefix}-") for name in owner_installers

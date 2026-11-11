@@ -13,6 +13,17 @@ python_implementation = "CPython"
 python_versions = ["3.11", "3.12", "3.13", "3.14"]
 runner = "macos-15"
 requires_admin = false
+python_default = "python3 on PATH"
+python_override_option = "--python"
+python_override_env = "PAPER_FETCH_OFFLINE_PYTHON_BIN"
+
+[node_runtime]
+installer_manifest_key = "macos_node_arm64"
+executable = "runtime/node/bin/node"
+license = "runtime/node/LICENSE"
+architecture_check = true
+ad_hoc_signature = true
+environment = ["MATHML_TO_LATEX_NODE_BIN", "PLAYWRIGHT_NODEJS_PATH"]
 
 [evidence.native]
 # Shared-browser gates reuse prepared dependency caches and cap GPU-probing

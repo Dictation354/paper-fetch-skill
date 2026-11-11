@@ -73,7 +73,7 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertNotIn("probe-launch", script)
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
         self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", script)
-        self.assertIn("playwright/driver/node.exe", script)
+        self.assertIn("runtime/node/node.exe", script)
         self.assertIn('PAPER_FETCH_BROWSER_HEADLESS = "true"', script)
         self.assertIn("PAPER_FETCH_BROWSER_HEADLESS", script)
         self.assertIn('@("--version")', script)
@@ -185,8 +185,8 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", script)
         self.assertIn("--offline-bundle", script)
         self.assertIn("--repo-root", script)
-        self.assertIn("runtime/Lib/site-packages/playwright/driver/node.exe", script)
-        self.assertIn("do not rely on a bare `node` from PATH", script)
+        self.assertIn("runtime/node/node.exe", script)
+        self.assertIn("PLAYWRIGHT_NODEJS_PATH", script)
 
     def test_linux_offline_build_uses_image_tools_offline_bundle_mode(self) -> None:
         script = LINUX_OFFLINE_BUILD.read_text(encoding="utf-8")

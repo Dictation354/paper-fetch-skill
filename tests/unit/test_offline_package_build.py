@@ -289,7 +289,7 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("MACHO_VISITED_FILE", script)
         self.assertIn("verify_macos_macho_dependencies", script)
         self.assertIn('"$node" --version', script)
-        self.assertIn("Playwright Node runtime failed to launch", script)
+        self.assertIn("Node runtime failed to launch", script)
         self.assertLess(
             script.index("check_macos_bundle_quarantine"),
             script.index("verify_macos_native_bundle\n"),
@@ -404,14 +404,14 @@ class OfflinePackageBuildTests(unittest.TestCase):
         )
         runtime = manifest["embedded_runtimes"]["windows_cpython_x86_64"]
 
-        self.assertEqual(runtime["version"], "3.13.15")
+        self.assertEqual(runtime["version"], "3.14.10")
         self.assertEqual(
             runtime["url"],
-            "https://www.python.org/ftp/python/3.13.15/python-3.13.15-embed-amd64.zip",
+            "https://www.python.org/ftp/python/3.14.10/python-3.14.10-embed-amd64.zip",
         )
         self.assertEqual(
             runtime["sha256"],
-            "d1f04d990aee1253d8569e8e5104e30fa9f5fa830899f14843448872d936a2cf",
+            "90905e64a840557d8c1bc4f5b74db3d7ee85e3ffb217611cac1c7813acea4159",
         )
         self.assertNotIn("[string]$EmbeddedPythonVersion", script)
         digest_check = script.index("CPython embeddable archive SHA-256 mismatch")

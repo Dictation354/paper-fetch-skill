@@ -18,8 +18,8 @@
     "urllib3",
     "typing-extensions",
     "typing-inspection",
-    "invisible-playwright==0.47.1",
-    "invisible-core==58.56.0"
+    "invisible-playwright==0.49.1",
+    "invisible-core==61.62.0"
   ],
   "packages": [
     {
@@ -72,7 +72,7 @@
     },
     {
       "name": "fastapi",
-      "version": "0.162.0",
+      "version": "0.162.4",
       "platforms": [
         "win32",
         "linux",
@@ -80,9 +80,9 @@
       ],
       "artifacts": [
         {
-          "filename": "fastapi-0.162.0-py3-none-any.whl",
-          "url": "https://files.pythonhosted.org/packages/b4/4f/3f2c25c9b43970b5e9a08beb5e04776247edea684ddc0930f4f02f0bb6cb/fastapi-0.162.0-py3-none-any.whl",
-          "sha256": "3785963de305dd09912426cb81f2d230fce98ab3521cdfe97265c8d14983128c"
+          "filename": "fastapi-0.162.4-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/3f/6b/0537ac682ac728dbe91f75c16683a985d11812f9930f21a35b756d6df629/fastapi-0.162.4-py3-none-any.whl",
+          "sha256": "f093bc306d3958278d30ffd14f3834ca3d9b144fbb898ab5c9b652cf6e75f869"
         }
       ]
     },
@@ -104,7 +104,7 @@
     },
     {
       "name": "annotated-doc",
-      "version": "0.0.5",
+      "version": "0.0.6",
       "platforms": [
         "win32",
         "linux",
@@ -112,9 +112,9 @@
       ],
       "artifacts": [
         {
-          "filename": "annotated_doc-0.0.5-py3-none-any.whl",
-          "url": "https://files.pythonhosted.org/packages/3e/30/e900b21425a860e195f32e37657aa1f7c7f2b1bfb26f03ca209b90933c06/annotated_doc-0.0.5-py3-none-any.whl",
-          "sha256": "117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101"
+          "filename": "annotated_doc-0.0.6-py3-none-any.whl",
+          "url": "https://files.pythonhosted.org/packages/cd/f5/3dd85d583e55be76cd02b1fc9bbec771b12d63124b01661d9535ccf8721f/annotated_doc-0.0.6-py3-none-any.whl",
+          "sha256": "361ca0950cc7082f53fa69e9328409f40a62c61e57e0a47e1825a08078a58a53"
         }
       ]
     },

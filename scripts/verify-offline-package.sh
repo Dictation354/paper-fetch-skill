@@ -414,14 +414,14 @@ verify_macos_node_runtime() {
   local version_output
   verify_macos_macho_dependencies \
     "$node" \
-    "Bundled Playwright Node" \
+    "Bundled Node" \
     "$BUNDLE_SOURCE_ROOT" \
     "$(dirname "$node")"
 
   version_output="$("$node" --version 2>&1)" \
-    || die "Bundled Playwright Node runtime failed to launch."
+    || die "Bundled Node runtime failed to launch."
   printf '%s\n' "$version_output" | grep -Eq '^v[0-9]+\.' \
-    || die "Bundled Playwright Node returned an unexpected version: $version_output"
+    || die "Bundled Node returned an unexpected version: $version_output"
 }
 
 verify_macos_native_bundle() {
@@ -434,11 +434,11 @@ verify_macos_native_bundle() {
   done
 
   texmath="$BUNDLE_SOURCE_ROOT/formula-tools/bin/texmath"
-  playwright_node="$BUNDLE_SOURCE_ROOT/runtime/site-packages/playwright/driver/node"
+  playwright_node="$BUNDLE_SOURCE_ROOT/runtime/node/bin/node"
   [ -x "$texmath" ] || die "macOS bundle is missing executable texmath."
-  [ -x "$playwright_node" ] || die "macOS bundle is missing executable Playwright Node."
+  [ -x "$playwright_node" ] || die "macOS bundle is missing executable Node."
 
-  log "Verifying native arm64 formula and Playwright binaries"
+  log "Verifying native arm64 formula and Node binaries"
   : > "$MACHO_VISITED_FILE"
   verify_macos_macho_dependencies \
     "$texmath" \
@@ -453,6 +453,7 @@ verify_macos_native_bundle() {
       "$BUNDLE_SOURCE_ROOT/formula-tools/bin"
   done < <(find "$BUNDLE_SOURCE_ROOT/formula-tools/lib" -type f -print0 2>/dev/null)
   verify_macos_node_runtime "$playwright_node"
+  verify_macos_node_runtime "$BUNDLE_SOURCE_ROOT/runtime/site-packages/playwright/driver/node"
 }
 
 check_macos_bundle_quarantine() {
@@ -665,7 +666,8 @@ expected = {
     "PAPER_FETCH_DOWNLOAD_DIR": str(install_root / "downloads"),
     "PAPER_FETCH_FORMULA_TOOLS_DIR": str(install_root / "formula-tools"),
     "PAPER_FETCH_IMAGE_TOOLS_DIR": str(install_root / "image-tools"),
-    "MATHML_TO_LATEX_NODE_BIN": str(install_root / "runtime" / "site-packages" / "playwright" / "driver" / "node"),
+    "MATHML_TO_LATEX_NODE_BIN": str(install_root / "runtime" / "node" / "bin" / "node"),
+    "PLAYWRIGHT_NODEJS_PATH": str(install_root / "runtime" / "node" / "bin" / "node"),
     "PAPER_FETCH_BROWSER_HEADLESS": "true",
 }
 for key, value in expected.items():
@@ -689,7 +691,7 @@ if [ "$TARGET_PLATFORM" = "macos" ]; then
       "$INSTALL_ROOT/offline.env" \
       "$INSTALL_ROOT/downloads" \
       "$INSTALL_ROOT/formula-tools" \
-      "$INSTALL_ROOT/runtime/site-packages/playwright/driver/node"
+      "$INSTALL_ROOT/runtime/node/bin/node"
   ) || die "Native Zsh activation did not preserve install-local runtime paths."
 fi
 
@@ -698,7 +700,7 @@ source "$INSTALL_ROOT/activate-offline.sh"
 [ ! -e "$ACTIVATE_SENTINEL" ] || die "activate-offline.sh executed shell code from offline.env."
 [ "${PYTHONUTF8:-}" = "1" ] || die "activate-offline.sh did not set PYTHONUTF8."
 [ "${PYTHONIOENCODING:-}" = "utf-8" ] || die "activate-offline.sh did not set PYTHONIOENCODING."
-[ "${MATHML_TO_LATEX_NODE_BIN:-}" = "$INSTALL_ROOT/runtime/site-packages/playwright/driver/node" ] || die "activate-offline.sh did not set bundled Node."
+[ "${MATHML_TO_LATEX_NODE_BIN:-}" = "$INSTALL_ROOT/runtime/node/bin/node" ] || die "activate-offline.sh did not set bundled Node."
 
 log "Verifying command entrypoints"
 paper-fetch --help >/dev/null

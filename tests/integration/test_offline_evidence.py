@@ -51,6 +51,22 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     (playwright_driver / "node.exe").write_bytes(b"fake playwright node")
     (staging / "runtime" / "python.exe").write_bytes(b"fake embedded python")
 
+    node_root = staging / "runtime/node"
+    node_root.mkdir()
+    (node_root / "node.exe").write_bytes(b"independent node")
+    (node_root / "LICENSE").write_bytes(b"Node.js license")
+    node_runtime = {
+        "implementation": "Node.js",
+        "version": "26.13.0",
+        "architecture": "x86_64",
+        "archive": "node-v26.13.0-win-x64.zip",
+        "url": "https://nodejs.org/dist/v26.13.0/node-v26.13.0-win-x64.zip",
+        "expected_sha256": "e" * 64,
+        "actual_sha256": "e" * 64,
+        "runtime_executable": "runtime/node/node.exe",
+        "license_path": "runtime/node/LICENSE",
+        "license": "MIT",
+    }
     expected = "a" * 64
     offline_manifest = staging / "offline-manifest.json"
     offline_manifest.write_text(
@@ -60,17 +76,18 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
                 "target": {
                     "platform": "windows",
                     "arch": "x86_64",
-                    "python_tag": "cp313",
+                    "python_tag": "cp314",
                     "embedded_runtime": {
                         "implementation": "CPython",
-                        "version": "3.13.13",
+                        "version": "3.14.10",
                         "architecture": "x86_64",
-                        "archive": "python-3.13.13-embed-amd64.zip",
-                        "url": "https://www.python.org/ftp/python/3.13.13/python-3.13.13-embed-amd64.zip",
+                        "archive": "python-3.14.10-embed-amd64.zip",
+                        "url": "https://www.python.org/ftp/python/3.14.10/python-3.14.10-embed-amd64.zip",
                         "expected_sha256": expected,
                         "actual_sha256": expected,
                     },
                 },
+                "components": {"node_runtime": node_runtime},
                 "setup_components": {
                     "windows_uninsis_i386": {
                         "name": "UninsIS.dll",
@@ -109,13 +126,13 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
         site_packages=site_packages,
         offline_manifest_path=offline_manifest,
         output_dir=staging,
-        target="windows-x86_64-cp313",
+        target="windows-x86_64-cp314",
         cyclonedx_python=sys.executable,
     )
 
     dependency = json.loads(dependency_path.read_text(encoding="utf-8"))
     assert dependency["source"] == "actual-staged-target"
-    assert dependency["target"] == "windows-x86_64-cp313"
+    assert dependency["target"] == "windows-x86_64-cp314"
     assert {
         (item["name"], item["version"]) for item in dependency["python_packages"]
     } == {
@@ -134,6 +151,14 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
         "camoufox_python_package": {"name": "camoufox", "version": "0.5.7"},
         "browser_binary": "not_bundled",
     }
+    assert dependency["node_runtime"]["version"] == "26.13.0"
+    assert dependency["node_runtime"]["actual_sha256"] == "e" * 64
+    assert dependency["node_runtime"]["runtime_executable_sha256"] == _sha256(
+        staging / "runtime/node/node.exe"
+    )
+    assert dependency["node_runtime"]["license_sha256"] == _sha256(
+        staging / "runtime/node/LICENSE"
+    )
     assert dependency["embedded_runtime"]["actual_sha256"] == "a" * 64
     assert dependency["embedded_runtime"]["runtime_executable_sha256"] == _sha256(
         staging / "runtime" / "python.exe"
@@ -172,6 +197,19 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
         "CPython embedded runtime",
         "UninsIS.dll",
     } <= component_names
+    node_component = next(
+        component
+        for component in sbom["components"]
+        if component["name"] == "Node.js runtime"
+    )
+    assert node_component["version"] == "26.13.0"
+    assert node_component["hashes"] == [
+        {"alg": "SHA-256", "content": _sha256(staging / "runtime/node/node.exe")}
+    ]
+    assert (
+        node_component["externalReferences"][0]["url"]
+        == dependency["node_runtime"]["url"]
+    )
     runtime_component = next(
         component
         for component in sbom["components"]
@@ -180,11 +218,11 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
     runtime_properties = {
         item["name"]: item["value"] for item in runtime_component["properties"]
     }
-    assert runtime_component["version"] == "3.13.13"
+    assert runtime_component["version"] == "3.14.10"
     assert runtime_component["externalReferences"] == [
         {
             "type": "distribution",
-            "url": "https://www.python.org/ftp/python/3.13.13/python-3.13.13-embed-amd64.zip",
+            "url": "https://www.python.org/ftp/python/3.14.10/python-3.14.10-embed-amd64.zip",
         }
     ]
     assert runtime_properties["paper-fetch:expected-archive-sha256"] == "a" * 64
@@ -231,7 +269,7 @@ def test_python_inventory_hashes_distribution_data_outside_site_packages(
         site_packages=site_packages,
         offline_manifest_path=offline_manifest,
         output_dir=staging,
-        target="windows-x86_64-cp313",
+        target="windows-x86_64-cp314",
         cyclonedx_python=sys.executable,
     )
     first = json.loads(dependency_path.read_text(encoding="utf-8"))
@@ -245,7 +283,7 @@ def test_python_inventory_hashes_distribution_data_outside_site_packages(
         site_packages=site_packages,
         offline_manifest_path=offline_manifest,
         output_dir=staging,
-        target="windows-x86_64-cp313",
+        target="windows-x86_64-cp314",
         cyclonedx_python=sys.executable,
     )
     second = json.loads(dependency_path.read_text(encoding="utf-8"))

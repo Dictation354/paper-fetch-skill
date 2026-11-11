@@ -18,6 +18,7 @@ import hashlib
 from importlib.metadata import Distribution, distributions
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -307,6 +308,30 @@ def _setup_component_inventory(
     return inventory
 
 
+def _node_runtime_inventory(
+    staging: Path, offline_manifest: dict[str, Any]
+) -> dict[str, Any] | None:
+    runtime = offline_manifest.get("components", {}).get("node_runtime")
+    if runtime is None:
+        return None
+    expected = str(runtime.get("expected_sha256") or "")
+    if not re.fullmatch(r"[0-9a-f]{64}", expected) or expected != runtime.get(
+        "actual_sha256"
+    ):
+        raise ValueError("Node runtime expected and actual SHA-256 must match")
+    executable = staging / runtime["runtime_executable"]
+    license_path = staging / runtime["license_path"]
+    for path in (executable, license_path):
+        path.resolve().relative_to(staging.resolve())
+        if path.is_symlink() or not path.is_file():
+            raise ValueError(f"Node runtime is missing a regular file: {path}")
+    return {
+        **runtime,
+        "runtime_executable_sha256": _sha256(executable),
+        "license_sha256": _sha256(license_path),
+    }
+
+
 def _component_properties(path: str, category: str) -> list[dict[str, str]]:
     return [
         {"name": "paper-fetch:staged-path", "value": path},
@@ -320,6 +345,7 @@ def _augment_sbom(
     node: list[dict[str, Any]],
     native: list[dict[str, Any]],
     embedded_runtime: dict[str, Any] | None,
+    node_runtime: dict[str, Any] | None,
     setup_components: list[dict[str, Any]],
     python_packages: list[dict[str, Any]],
 ) -> None:
@@ -372,6 +398,41 @@ def _augment_sbom(
                 "properties": _component_properties(
                     component["path"], component["category"]
                 ),
+            }
+        )
+    if node_runtime is not None:
+        version = node_runtime["version"]
+        components.append(
+            {
+                "type": "platform",
+                "bom-ref": f"pkg:generic/node@{version}?arch={node_runtime['architecture']}",
+                "name": "Node.js runtime",
+                "version": version,
+                "hashes": [
+                    {
+                        "alg": "SHA-256",
+                        "content": node_runtime["runtime_executable_sha256"],
+                    }
+                ],
+                "licenses": [{"expression": node_runtime["license"]}],
+                "externalReferences": [
+                    {"type": "distribution", "url": node_runtime["url"]}
+                ],
+                "properties": _component_properties(
+                    node_runtime["runtime_executable"], "node-runtime"
+                )
+                + [
+                    {
+                        "name": f"paper-fetch:{key.replace('_', '-')}",
+                        "value": node_runtime[key],
+                    }
+                    for key in (
+                        "archive",
+                        "expected_sha256",
+                        "actual_sha256",
+                        "license_sha256",
+                    )
+                ],
             }
         )
     if embedded_runtime is not None:
@@ -533,6 +594,7 @@ def generate_evidence(
     node_packages = _node_inventory(staging)
     native_components = _native_inventory(staging)
     embedded_runtime = _embedded_runtime_inventory(staging, offline_manifest)
+    node_runtime = _node_runtime_inventory(staging, offline_manifest)
     setup_components = _setup_component_inventory(offline_manifest)
     camoufox = next(
         (
@@ -571,6 +633,7 @@ def generate_evidence(
         "offline_target": offline_manifest.get("target"),
         "python_packages": python_packages,
         "node_packages": node_packages,
+        "node_runtime": node_runtime,
         "browser_components": browser_components,
         "native_components": native_components,
         "setup_components": setup_components,
@@ -608,6 +671,7 @@ def generate_evidence(
         node=node_packages,
         native=native_components,
         embedded_runtime=embedded_runtime,
+        node_runtime=node_runtime,
         setup_components=setup_components,
         python_packages=python_packages,
     )

@@ -182,7 +182,7 @@ class FetchCommonTests(unittest.TestCase):
             for dependency in extra
         )
 
-        pinned_versions = {"camoufox": "0.5.9", "invisible-playwright": "0.47.1"}
+        pinned_versions = {"camoufox": "0.5.9", "invisible-playwright": "0.49.1"}
         for dependency in dependencies:
             requirement = Requirement(dependency)
             operators = {specifier.operator for specifier in requirement.specifier}

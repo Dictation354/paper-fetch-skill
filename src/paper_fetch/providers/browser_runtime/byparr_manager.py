@@ -113,7 +113,7 @@ class ByparrManager:
             self.diagnostics.update(
                 byparr_version="3.1.1",
                 engine=engine_name(),
-                invisible_playwright_version="0.47.1",
+                invisible_playwright_version="0.49.1",
                 camoufox_version="0.5.9",
                 playwright_captcha_version="0.1.5",
             )

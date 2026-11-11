@@ -127,7 +127,7 @@ def installer_asset_name(installation: Installation) -> str:
     ):
         raise ValueError("当前平台、架构或 CPython ABI 与安装包不匹配")
     packages = installation.packages
-    if system == "windows" and arch == "x86_64" and tag == "cp313":
+    if system == "windows" and arch == "x86_64" and tag in {"cp313", "cp314"}:
         return packages["windows_setup_base_name"] + ".exe"
     if tag not in {"cp311", "cp312", "cp313", "cp314"} or not str(
         sysconfig.get_config_var("SOABI") or ""

@@ -14,6 +14,7 @@
       "PAPER_FETCH_FORMULA_TOOLS_DIR",
       "PAPER_FETCH_IMAGE_TOOLS_DIR",
       "MATHML_TO_LATEX_NODE_BIN",
+      "PLAYWRIGHT_NODEJS_PATH",
       "PAPER_FETCH_BROWSER_HEADLESS"
     ]
   },
@@ -38,11 +39,44 @@
   "embedded_runtimes": {
     "windows_cpython_x86_64": {
       "implementation": "CPython",
-      "version": "3.13.15",
+      "version": "3.14.10",
       "architecture": "x86_64",
-      "archive": "python-3.13.15-embed-amd64.zip",
-      "url": "https://www.python.org/ftp/python/3.13.15/python-3.13.15-embed-amd64.zip",
-      "sha256": "d1f04d990aee1253d8569e8e5104e30fa9f5fa830899f14843448872d936a2cf"
+      "archive": "python-3.14.10-embed-amd64.zip",
+      "url": "https://www.python.org/ftp/python/3.14.10/python-3.14.10-embed-amd64.zip",
+      "sha256": "90905e64a840557d8c1bc4f5b74db3d7ee85e3ffb217611cac1c7813acea4159"
+    },
+    "linux_node_x86_64": {
+      "implementation": "Node.js",
+      "version": "26.13.0",
+      "architecture": "x86_64",
+      "archive": "node-v26.13.0-linux-x64.tar.xz",
+      "url": "https://nodejs.org/dist/v26.13.0/node-v26.13.0-linux-x64.tar.xz",
+      "sha256": "d28a96af6c38596f6d9d97c0ee531c13d238d757742387d1928de822d959e997",
+      "archive_root": "node-v26.13.0-linux-x64",
+      "executable": "bin/node",
+      "license": "MIT"
+    },
+    "macos_node_arm64": {
+      "implementation": "Node.js",
+      "version": "26.13.0",
+      "architecture": "arm64",
+      "archive": "node-v26.13.0-darwin-arm64.tar.gz",
+      "url": "https://nodejs.org/dist/v26.13.0/node-v26.13.0-darwin-arm64.tar.gz",
+      "sha256": "d38bd5e5a2ddce6bbb5ce45e46e208337da4d51fffe611e567fd32073d6439f6",
+      "archive_root": "node-v26.13.0-darwin-arm64",
+      "executable": "bin/node",
+      "license": "MIT"
+    },
+    "windows_node_x86_64": {
+      "implementation": "Node.js",
+      "version": "26.13.0",
+      "architecture": "x86_64",
+      "archive": "node-v26.13.0-win-x64.zip",
+      "url": "https://nodejs.org/dist/v26.13.0/node-v26.13.0-win-x64.zip",
+      "sha256": "dcc60d59a0746999f99064a01c020445d54d84228c691cdbf25b49ac3b59150a",
+      "archive_root": "node-v26.13.0-win-x64",
+      "executable": "node.exe",
+      "license": "MIT"
     }
   },
   "setup_components": {

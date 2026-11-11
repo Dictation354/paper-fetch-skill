@@ -6,7 +6,7 @@ The verified component retains the complete upstream source and LICENSE. Its
 `.dockerignore` symlink is materialized from the in-archive `.gitignore`.
 
 The component and private pure-Python dependencies remain SHA-256 locked.
-InvisiblePlaywright 0.47.1 and its required invisible-core 58.56.0 are installed
+InvisiblePlaywright 0.49.1 and its required invisible-core 61.62.0 are installed
 with the browser/full extra. The core's release seal verifies its Firefox engine.
 Windows/Linux x64 use Invisible's native Python protocol transport. macOS and
 ARM retain Camoufox 0.5.9 and the host Playwright shared-browser transport; no

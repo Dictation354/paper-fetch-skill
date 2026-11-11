@@ -64,6 +64,12 @@ jobs:
         with:
           python-version: "3.11"
           full: "true"
+      - name: Stage independent Node 26 for runtime contracts
+        run: |
+          python scripts/build_node_runtime.py --staging "$RUNNER_TEMP/node-runtime" --target linux_node_x86_64 --cache-dir "$RUNNER_TEMP/node-archives"
+          echo "$RUNNER_TEMP/node-runtime/runtime/node/bin" >> "$GITHUB_PATH"
+          echo "MATHML_TO_LATEX_NODE_BIN=$RUNNER_TEMP/node-runtime/runtime/node/bin/node" >> "$GITHUB_ENV"
+          echo "PLAYWRIGHT_NODEJS_PATH=$RUNNER_TEMP/node-runtime/runtime/node/bin/node" >> "$GITHUB_ENV"
       - name: Set up pinned Haskell toolchain
         id: formula-haskell
         uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
@@ -155,8 +161,19 @@ jobs:
         with:
           python-version: "3.14"
           full: "true"
+      - name: Stage independent Node 26 for runtime contracts
+        run: |
+          python scripts/build_node_runtime.py --staging "$RUNNER_TEMP/node-runtime" --target macos_node_arm64 --cache-dir "$RUNNER_TEMP/node-archives"
+          test "$(lipo -archs "$RUNNER_TEMP/node-runtime/runtime/node/bin/node")" = "arm64"
+          codesign --force --sign - --timestamp=none "$RUNNER_TEMP/node-runtime/runtime/node/bin/node"
+          codesign --verify --strict "$RUNNER_TEMP/node-runtime/runtime/node/bin/node"
+          echo "$RUNNER_TEMP/node-runtime/runtime/node/bin" >> "$GITHUB_PATH"
+          echo "MATHML_TO_LATEX_NODE_BIN=$RUNNER_TEMP/node-runtime/runtime/node/bin/node" >> "$GITHUB_ENV"
+          echo "PLAYWRIGHT_NODEJS_PATH=$RUNNER_TEMP/node-runtime/runtime/node/bin/node" >> "$GITHUB_ENV"
       - name: Validate macOS adaptation contract
         run: uv run python scripts/validate_macos_adaptation.py
+      - name: Verify independent Node archive and driver contracts on native macOS
+        run: PYTHONPATH=src uv run python -m pytest tests/integration/test_node_runtime.py -q
       - name: Require native Apple Silicon runner
         run: test "$(uname -m)" = "arm64"
       - name: Prepare latest compatible Camoufox runtime (including prereleases) and fingerprint model

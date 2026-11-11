@@ -157,3 +157,5 @@ IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：
 15 秒，直到 `#article` 包含目标文章号。持续的 AWS WAF 页使用
 `reason_code=aws_waf_challenge`、`status=challenge`，diagnostics 保留
 `challenge_provider=aws_waf` 与兼容字段 `legacy_reason_code`。
+
+离线包独立打包官方 Node.js 26.13.0，`PLAYWRIGHT_NODEJS_PATH` 默认指向 POSIX 的 `runtime/node/bin/node` 或 Windows 的 `runtime/node/node.exe`，供 Playwright 1.62.0 与 Byparr 使用；`MATHML_TO_LATEX_NODE_BIN` 使用同一路径。显式环境覆盖继续生效，Playwright 包内原始文件保留。浏览器依赖为 InvisiblePlaywright 0.49.1 / invisible-core 61.62.0，pyee 保持 13.0.1。

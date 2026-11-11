@@ -269,8 +269,9 @@ Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的
 - Linux / macOS 必须使用标准 GIL CPython，版本、`SOABI` 和架构均须与包名及 `offline-manifest.json` 目标完全匹配；例如 macOS `cp313` arm64 包只能用原生 arm64 CPython `3.13.x` 运行，Rosetta x86_64 Python、free-threaded/debug ABI 会在写入前拒绝
 - Linux / macOS 安装器会校验 `offline-manifest.json` 的 `target.platform` 和 `target.arch`；macOS 离线包只支持 arm64
 - macOS manifest 额外声明 `target.minimum_os_version = "15.0"`；安装器通过系统版本检查确认目标机满足最低版本，并在 shell、skill、MCP 和用户配置写入前完成所有平台、ABI、checksum 与整个 bundle 的递归 quarantine 预检
-- Linux / macOS 安装时会把通过 `PAPER_FETCH_OFFLINE_PYTHON_BIN` / `python3` 选中的解释器路径写入 `runtime/python-bin`，后续 `runtime/paper-fetch-python` 私有 launcher、CLI wrapper 和 MCP 都复用该解释器；`bin/` 不暴露通用 `python` wrapper，避免全局 PATH 前置后遮蔽用户自己的 Python
-- Windows 安装器固定使用包内 CPython 3.13.15 x64 embeddable runtime；版本、python.org URL 与官方 SHA-256 `d1f04d990aee1253d8569e8e5104e30fa9f5fa830899f14843448872d936a2cf` 均来自 `installer/manifest.json`，构建器在解压前校验，目标机不需要预装 Python
+- Linux 离线安装默认使用 `/usr/bin/python3`，不受 PATH 中 Miniforge、Conda 或 virtualenv 的优先级影响；macOS 默认仍使用 PATH 中的 `python3`。可通过 `--python /path/to/python3.14` 或 `--python=/path/to/python3.14` 自选解释器，也接受命令名和相对路径。安装时选择顺序为 `--python` → `PAPER_FETCH_OFFLINE_PYTHON_BIN` → 平台默认值；例如 `bash paper-fetch-skill-offline-linux-x86_64-cp314.sh --python /usr/bin/python3.14`。所选解释器必须匹配包的 ABI，缺失或不匹配时安装停止，可用 `--python` 指定兼容解释器
+- Linux / macOS 安装时把选中解释器的绝对路径写入 `runtime/python-bin`，并在安装结果中显示；后续 `runtime/paper-fetch-python` 私有 launcher、CLI wrapper 和 MCP 都复用该解释器。运行时仍允许 `PAPER_FETCH_OFFLINE_PYTHON_BIN` 显式覆盖绑定；`paper-fetch update` 沿用当前解释器。离线包包含 Python 依赖，不包含独立解释器；`bin/` 不暴露通用 `python` wrapper
+- Windows 安装器固定使用包内 CPython 3.14.10 x64 embeddable runtime；版本、python.org URL 与官方 SHA-256 `90905e64a840557d8c1bc4f5b74db3d7ee85e3ffb217611cac1c7813acea4159` 均来自 `installer/manifest.json`，构建器在解压前校验，目标机不需要预装 Python
 - Linux 构建阶段用临时 wheelhouse 把项目和依赖安装进 `runtime/site-packages`，然后只把安装后的 runtime、`bin/` 启动器、公式工具和 skill 放进自解压 `.sh` payload；目标机安装阶段不运行 pip，不包含源码树、`dist/` 或 `wheelhouse/`
 - browser/full 的 Python 依赖随离线 runtime 分发；当前平台浏览器 binary 和所需模型由[准备流程](#浏览器安装与准备)管理。离线使用需提前预置；现有安装验证不覆盖完全断网的浏览器启动。
 - Linux `.sh` payload 不包含仓库源码快照和 `tests/` 目录；离线安装目标是运行已打包工具，不在目标机执行项目测试
@@ -280,7 +281,7 @@ Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的
 - Linux / macOS `--install-dir <path>` 只接受不存在、空目录，或同时带 schema 3 ownership manifest 与 `runtime/python-bin` marker 的既有安装目录；拒绝 HOME/祖先、非空未拥有目录及指向它的 symlink。合法升级会清理 `src/`、`tests/`、`wheelhouse/`、`dist/`、`.github/` 等残留，保留安装目录内 `offline.env`，并保留用户配置中非 managed 内容
 - Linux / macOS `--reuse-env-file <path>` 会把 `PAPER_FETCH_ENV_FILE` 指向现有文件且不修改该文件；其它 runtime 路径仍由新安装目录写入 shell / activate / MCP 环境，activate 时只做安全 dotenv 解析
 - Linux / macOS 写入 shell 启动文件和 Codex fallback config 时会先替换既有受管理 block，重复安装不会重复追加；不修改 `/etc/profile`。macOS 的 `.zshrc` 即使是 symlink 也保持 symlink
-- Windows 首次安装会写安装目录内 `offline.env`；升级安装会保留用户已有内容，只替换 managed runtime block。MCP 注册环境固定指向安装目录内 runtime 路径，并设置 `PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`、`PAPER_FETCH_BROWSER_HEADLESS=true`，不注入 Chrome UA。Linux / macOS 同样把 `MATHML_TO_LATEX_NODE_BIN` 指向包内 Playwright Node
+- Windows 首次安装会写安装目录内 `offline.env`；升级安装会保留用户已有内容，只替换 managed runtime block。MCP 注册环境固定指向安装目录内 runtime 路径，并设置 `PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`、`PAPER_FETCH_BROWSER_HEADLESS=true`，不注入 Chrome UA。全部平台将 `MATHML_TO_LATEX_NODE_BIN` 和 `PLAYWRIGHT_NODEJS_PATH` 默认指向独立打包的官方 Node 26.13.0（POSIX：`runtime/node/bin/node`；Windows：`runtime/node/node.exe`），公式工具、Playwright 与 Byparr 共用该运行时，并保留显式环境覆盖。Node 版本、下载 URL 和官方 SHA-256 由 `installer/manifest.json` 管理，许可证随包分发，离线 manifest、dependency evidence 和 SBOM 记录来源、归档摘要与实际可执行文件摘要
 - Windows 安装、升级或手工修改 `offline.env` 后，需要重启 Codex Desktop / Claude Code / Antigravity；已启动的 MCP 服务不会自动继承新写入的 env。
 - Windows GUI 安装完成页会提示 Elsevier API key 申请入口和包内 `offline.env` 位置，并提供可选的 Notepad 打开项；silent 安装不会弹出该提示。使用 Elsevier API 路线时从 <https://dev.elsevier.com/> 申请 key，并在该文件中填写 `ELSEVIER_API_KEY`
 - `--preset=headless` / `--preset=headful` 设置当前平台引擎的 headed/headless 行为
@@ -299,7 +300,9 @@ Windows 构建在 PowerShell 中执行：
 
 **包命名与路径安全。** Linux / macOS 构建脚本会从当前平台、架构和 Python 推导包名；例如 Linux x86_64 上 `PYTHON_BIN=python3.13 scripts/build-offline-package.sh` 会默认生成 `paper-fetch-skill-offline-linux-x86_64-cp313.sh`，原生 Darwin arm64 上会生成 `paper-fetch-skill-offline-macos-arm64-cp313.tar.gz`。显式和 manifest 派生的包名都只能是安全单路径组件。构建根会 canonicalize 并拒绝 `/`、HOME、仓库及其祖先；非空 staging 只有携带匹配仓库、canonical 路径和包名的 `.paper-fetch-offline-staging-owner` 才可清理。临时 wheelhouse/project wheel 位于 owned staging，marker 与临时目录均不进入产物；output dir 不得位于 staging，正式 artifact 先写同目录临时文件再原子 rename，失败不会覆盖已有正式文件。
 
-**平台构建范围。** 构建解释器必须是标准 GIL CPython，架构须与宿主目标一致。macOS 构建只接受 Darwin arm64，并把最低 deployment target 固定为 15.0；Linux / WSL 交叉构建不能充当发布证据。Windows 构建必须在 CPython 3.13 x64 上运行，并按 manifest 下载和校验官方 CPython 3.13.15 embeddable x64 runtime。
+公式 workspace 要求 Node ≥22.12.0；在线安装遇到旧版本会提示升级，并保留核心安装。已有 workspace 按 `package-lock.json` 核对全部依赖版本，传递依赖变更时重新执行 `npm ci`。
+
+**平台构建范围。** 构建解释器必须是标准 GIL CPython，架构须与宿主目标一致。macOS 构建只接受 Darwin arm64，并把最低 deployment target 固定为 15.0；Linux / WSL 交叉构建不能充当发布证据。Windows 构建必须在 CPython 3.14 x64 上运行，并按 manifest 下载和校验官方 CPython 3.14.10 embeddable x64 runtime。
 
 **Payload 所有权。** Linux 产物是 shell stub 与压缩 payload 组成的单文件 `.sh` 安装器，macOS 产物是 `.tar.gz` bundle；两者都把项目和依赖安装进 `runtime/site-packages`，预编译 bytecode，并写入私有 launcher 与 paper-fetch 命令启动器。`bin/` 不包含通用 `python` wrapper，payload 不携带源码树或 wheelhouse。离线构建只从 repo-local 可重定位 runtime 暂存 Ghostscript/libvips；macOS 还会实体化 texmath、收集非系统动态库、重写 Mach-O install name 并执行 ad-hoc codesign。Windows 把 Python 包安装进 `runtime/Lib/site-packages`，Inno Setup 安装器只包含 embedded runtime、命令启动器、静态 skill、formula tools、image-tools、installer manifest、Windows helper 和离线元数据；安装后不携带顶层 `src/`、`tests/`、`.github/`、`wheelhouse/`、`dist/` 或 `pyproject.toml`。
 
@@ -328,12 +331,14 @@ scripts/verify-offline-package.sh dist/paper-fetch-skill-offline-macos-arm64-cp3
 
 POSIX verifier 在临时 HOME 中检查解包、精确 checksum/inventory、runtime-only 布局、
 CLI/MCP/skill、配置、公式与图片工具、升级和卸载。macOS 额外验证 quarantine、原生
-arm64 Mach-O 依赖闭包与签名、Playwright Node 启动及 Zsh 集成；Linux/WSL 不替代这些证据。
+arm64 Mach-O 依赖闭包与签名、独立 Node 和原包 Playwright Node 启动及 Zsh 集成；Linux/WSL 不替代这些证据。
 这不等同于完全断网的浏览器启动验证。
 
 Windows offline job 对最终 EXE 执行原生安装、CLI/doctor/provider status 与运行时 smoke，
 再验证覆盖升级、用户内容保留、卸载完成与残留树。Inno/HKCU 和实际安装状态必须由
 原生 Windows 提供证据。
+
+Windows 原生 lifecycle gate 验证 cp314 全新安装后，校验并安装 v7.4.2 的 cp313 基线安装器，再升级至 cp314，核对用户配置、downloads、可选工具、Codex/Antigravity MCP 的独立 Node 路径和非受管内容保留，并继续验证 cp314 覆盖升级与卸载。基线 URL 和 SHA-256 固定在 `.github/workflows/offline.yml`；本地可通过 `scripts/verify-windows-installer-lifecycle.ps1 -PreviousSetupPath <已校验的旧安装器>` 复用同一验证。
 
 只需要复核 Windows 安装器时，可手动触发 `Offline packages` workflow，并在运行记录中只重跑 Windows job。
 
@@ -490,7 +495,7 @@ Codex 用户级 skill 安装到 `~/.agents/skills/paper-fetch-skill`，项目级
 | --- | --- |
 | `ci.yml` → `verify.yml` | 锁文件新鲜度、全 extras 漏洞审计、Ruff/mypy/版本、完整 unit/integration、Python 3.11/3.14 的 core/full 安装、原生 macOS 15 / CPython 3.14 gate |
 | `package.yml` | 同一不可变 SHA 的 wheel/sdist exact archive 检查，以及各自在独立环境中的 CLI/MCP/import/resource/skill smoke |
-| `offline.yml` | Linux x86_64 和 macOS arm64 的 CPython 3.11–3.14、Windows x86_64 CPython 3.13；原生 build/install/upgrade/uninstall 验证 |
+| `offline.yml` | Linux x86_64 和 macOS arm64 的 CPython 3.11–3.14、Windows x86_64 CPython 3.14；原生 build/install/upgrade/uninstall 验证 |
 | `release.yml` | 与项目版本一致的 `v*` tag 或明确手动发布；冻结九目标依赖、构建并核验 staging manifest/SBOM/evidence，再发布九个安装包和九条记录的 `SHA256SUMS` |
 
 Release 不运行或等待普通 CI。wheel、sdist、merged dependency manifest、SBOM 和

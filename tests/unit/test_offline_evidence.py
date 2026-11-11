@@ -60,13 +60,13 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
                 "target": {
                     "platform": "windows",
                     "arch": "x86_64",
-                    "python_tag": "cp313",
+                    "python_tag": "cp314",
                     "embedded_runtime": {
                         "implementation": "CPython",
-                        "version": "3.13.13",
+                        "version": "3.14.10",
                         "architecture": "x86_64",
-                        "archive": "python-3.13.13-embed-amd64.zip",
-                        "url": "https://www.python.org/ftp/python/3.13.13/python-3.13.13-embed-amd64.zip",
+                        "archive": "python-3.14.10-embed-amd64.zip",
+                        "url": "https://www.python.org/ftp/python/3.14.10/python-3.14.10-embed-amd64.zip",
                         "expected_sha256": expected,
                         "actual_sha256": expected,
                     },
@@ -111,7 +111,7 @@ def test_embedded_runtime_digest_mismatch_fails_closed(tmp_path: Path) -> None:
             site_packages=site_packages,
             offline_manifest_path=offline_manifest,
             output_dir=staging,
-            target="windows-x86_64-cp313",
+            target="windows-x86_64-cp314",
             cyclonedx_python=sys.executable,
         )
     assert not (staging / "dependency-manifest.json").exists()
@@ -133,7 +133,7 @@ def test_setup_component_digest_mismatch_fails_closed(tmp_path: Path) -> None:
             site_packages=site_packages,
             offline_manifest_path=offline_manifest,
             output_dir=staging,
-            target="windows-x86_64-cp313",
+            target="windows-x86_64-cp314",
             cyclonedx_python=sys.executable,
         )
 
@@ -155,7 +155,7 @@ def test_evidence_rejects_symlinked_python_distribution_file(tmp_path: Path) -> 
             site_packages=site_packages,
             offline_manifest_path=offline_manifest,
             output_dir=staging,
-            target="windows-x86_64-cp313",
+            target="windows-x86_64-cp314",
             cyclonedx_python=sys.executable,
         )
 
@@ -175,6 +175,6 @@ def test_evidence_rejects_symlinked_native_payload(tmp_path: Path) -> None:
             site_packages=site_packages,
             offline_manifest_path=offline_manifest,
             output_dir=staging,
-            target="windows-x86_64-cp313",
+            target="windows-x86_64-cp314",
             cyclonedx_python=sys.executable,
         )

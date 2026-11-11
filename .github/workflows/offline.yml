@@ -127,6 +127,7 @@ jobs:
       - name: Verify offline package
         env:
           PAPER_FETCH_OFFLINE_SKIP_FETCH_SMOKE: "1"
+          PAPER_FETCH_OFFLINE_PYTHON_BIN: ${{ github.workspace }}/.venv/bin/python
         run: |
           shopt -s nullglob
           if [ "${{ runner.os }}" = "macOS" ]; then
@@ -167,7 +168,7 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-python-deps
         with:
-          python-version: "3.13"
+          python-version: "3.14"
           full: "true"
       - name: Validate immutable source macOS adaptation contract
         run: uv run python scripts/validate_macos_adaptation.py
@@ -186,7 +187,7 @@ jobs:
         if: ${{ inputs.frozen_dependencies }}
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: dependency-snapshot-windows-x86_64-cp313
+          name: dependency-snapshot-windows-x86_64-cp314
           path: ${{ runner.temp }}/dependency-snapshot
       - name: Download merged dependency manifest
         if: ${{ inputs.frozen_dependencies }}
@@ -201,7 +202,7 @@ jobs:
             $snapshotRoot = Join-Path $env:RUNNER_TEMP "dependency-snapshot"
             python scripts/resolve_offline_dependencies.py verify `
               --manifest (Join-Path $env:RUNNER_TEMP "dependency-manifest/dependency-manifest.json") `
-              --target "windows-x86_64-cp313" `
+              --target "windows-x86_64-cp314" `
               --snapshot-root $snapshotRoot
             if ($LASTEXITCODE -ne 0) {
               throw "Frozen Windows dependency snapshot verification failed."
@@ -214,6 +215,15 @@ jobs:
           scripts/build-offline-package-windows.ps1 `
             -OutputDir dist `
             -PythonBin .venv/Scripts/python.exe
+      - name: Download pinned cp313 upgrade baseline
+        shell: pwsh
+        run: |
+          $baseline = Join-Path $env:RUNNER_TEMP "paper-fetch-cp313-setup.exe"
+          Invoke-WebRequest -Uri "https://github.com/Dictation354/paper-fetch-skill/releases/download/v7.4.2/paper-fetch-skill-windows-x86_64-setup.exe" -OutFile $baseline
+          $actual = (Get-FileHash -LiteralPath $baseline -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne "b6beb914be1b5b3303ce5f89fcc20d4b4aaf5795a4beee3524c714c83dcb740a") {
+            throw "Legacy cp313 installer SHA-256 mismatch."
+          }
       - name: Verify final EXE install, overwrite upgrade, and uninstall serially
         shell: pwsh
         run: |
@@ -223,10 +233,11 @@ jobs:
           $version = python -c "import pathlib,tomllib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version'])"
           & scripts/verify-windows-installer-lifecycle.ps1 `
             -SetupPath $setup.FullName `
-            -ExpectedVersion $version.Trim()
+            -ExpectedVersion $version.Trim() `
+            -PreviousSetupPath (Join-Path $env:RUNNER_TEMP "paper-fetch-cp313-setup.exe")
           foreach ($evidence in @(
-            "dist/paper-fetch-evidence-windows-x86_64-cp313.dependency-manifest.json",
-            "dist/paper-fetch-evidence-windows-x86_64-cp313.sbom.cdx.json"
+            "dist/paper-fetch-evidence-windows-x86_64-cp314.dependency-manifest.json",
+            "dist/paper-fetch-evidence-windows-x86_64-cp314.sbom.cdx.json"
           )) {
             if (-not (Test-Path -LiteralPath $evidence -PathType Leaf)) {
               throw "Windows offline build is missing staged evidence: $evidence"
@@ -244,6 +255,6 @@ jobs:
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ steps.secret_scan_offline_windows.outcome == 'success' }}
         with:
-          name: offline-Windows-3.13
+          name: offline-Windows-3.14
           path: dist/*
           if-no-files-found: error

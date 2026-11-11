@@ -6,6 +6,19 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.5.0 - 2026-11-11
+
+### Offline runtimes and installation
+
+- Bundle official Node.js 26.13.0 independently on Linux x64, macOS arm64 and Windows x64. Formula tools, Playwright and Byparr use the bundled runtime through `MATHML_TO_LATEX_NODE_BIN` and `PLAYWRIGHT_NODEJS_PATH`, preserving explicit environment overrides and the original Playwright package. Pin archive URLs and official SHA-256 in the installer manifest; include licenses, provenance and staged executable digests in offline dependency evidence and SBOMs.
+- Upgrade the Windows embedded runtime to official CPython 3.14.10 x64. Move native builds, dependency snapshots and evidence to `windows-x86_64-cp314` while retaining the public installer filename. Validate fresh installation, upgrades from the pinned 7.4.2 cp313 installer, user configuration/download preservation and host integration.
+- Default Linux offline installation to `/usr/bin/python3`, and retain PATH-based `python3` on macOS. Add `--python <interpreter>` / `--python=<interpreter>` with priority over `PAPER_FETCH_OFFLINE_PYTHON_BIN`; record the selected absolute interpreter path for CLI and MCP, and report missing or incompatible interpreters before installation.
+
+### Dependencies and formula tools
+
+- Upgrade InvisiblePlaywright to 0.49.1 and invisible-core to 61.62.0; refresh Byparr private wheels to FastAPI 0.162.4 and annotated-doc 0.0.6 with verified hashes. Update Python locks for filelock 4.2.10, jsonpointer 3.11, markdown-it-py 4.3.0, regex 2026.11.9 and soupsieve 4.1, retaining interpreter-specific branches and Python 3.11–3.14 support. Keep Playwright 1.62.0, trafilatura 2.2.0 and pyee 13.0.1.
+- Update formula dependencies to minimatch 11.0.7, balanced-match 5.0.0 and commander 15.1.0, with the latter two overrides limited to their upstream consumers. Require Node.js 22.12.0 or later for formula workspaces; check all installed dependency versions against the lockfile and reinstall stale transitive dependencies with `npm ci`. An outdated Node runtime reports an optional-backend warning while preserving the core installation.
+
 ## 7.4.2 - 2026-11-09
 
 ### Browser and PNAS fetching

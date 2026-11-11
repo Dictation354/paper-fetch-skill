@@ -2,7 +2,8 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$SetupPath,
     [Parameter(Mandatory = $true)]
-    [string]$ExpectedVersion
+    [string]$ExpectedVersion,
+    [string]$PreviousSetupPath
 )
 
 Set-StrictMode -Version Latest
@@ -44,6 +45,33 @@ function Invoke-InstalledSmoke {
             throw "Installed smoke is missing $path"
         }
     }
+
+    $runtimeCheck = @'
+import json, os, subprocess, sys, tomllib
+from pathlib import Path
+root = Path(sys.argv[1])
+pin = json.loads((root / "installer/manifest.json").read_text())["embedded_runtimes"]["windows_cpython_x86_64"]
+assert sys.version.split()[0] == pin["version"]
+assert (root / "runtime/python314._pth").is_file()
+assert not (root / "runtime/python313._pth").exists()
+assert not (root / "runtime/python313.dll").exists()
+node = root / "runtime/node/node.exe"
+node_pin = json.loads((root / "installer/manifest.json").read_text())["embedded_runtimes"]["windows_node_x86_64"]
+assert subprocess.check_output([str(node), "--version"], text=True).strip() == "v" + node_pin["version"]
+config = tomllib.loads((Path(os.environ["USERPROFILE"]) / ".codex/config.toml").read_text())
+assert config["user_lifecycle_sentinel"] == "preserve"
+entries = [config["mcp_servers"]["paper-fetch"]]
+antigravity = json.loads((Path(os.environ["ANTIGRAVITY_HOME"]) / "mcp_config.json").read_text())
+entries.append(antigravity["mcpServers"]["paper-fetch"])
+for entry in entries:
+    for key in ("MATHML_TO_LATEX_NODE_BIN", "PLAYWRIGHT_NODEJS_PATH"):
+        assert Path(entry["env"][key]) == node, entry
+os.environ["PLAYWRIGHT_NODEJS_PATH"] = str(node)
+from playwright.sync_api import sync_playwright
+with sync_playwright() as driver:
+    assert driver.chromium.name == "chromium"
+'@
+    Invoke-NativeChecked -FilePath $runtime -Arguments @("-X", "utf8", "-c", $runtimeCheck, $InstallRoot)
 
     $codexSkill = Join-Path $env:USERPROFILE ".agents/skills/paper-fetch-skill"
     Invoke-NativeChecked -FilePath $runtime -Arguments @(
@@ -198,9 +226,24 @@ try {
     $legacyCodexSkill = Join-Path $fakeProfile ".codex/skills/paper-fetch-skill"
     New-Item -ItemType Directory -Force -Path $legacyCodexSkill | Out-Null
     Set-Content -LiteralPath (Join-Path $legacyCodexSkill "SKILL.md") -Value "legacy"
-    Write-Host "==> Silent install of final EXE"
+    $codexConfig = Join-Path $fakeProfile ".codex/config.toml"
+    Set-Content -LiteralPath $codexConfig -Encoding UTF8 -Value 'user_lifecycle_sentinel = "preserve"'
+    Write-Host "==> Silent fresh install of final cp314 EXE"
     Invoke-NativeChecked -FilePath $SetupPath -Arguments $installArguments
     Invoke-InstalledSmoke -InstallRoot $installRoot
+    if ($PreviousSetupPath) {
+        $freshUninstallLog = Join-Path $testRoot "fresh-uninstall.log"
+        Invoke-NativeChecked -FilePath (Join-Path $installRoot "unins000.exe") -Arguments @(
+            "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/LOG=$freshUninstallLog"
+        )
+        Wait-ForUninstallCompletion -InstallRoot $installRoot -LogPath $freshUninstallLog
+        Remove-Item -LiteralPath $installRoot -Recurse -Force
+        Write-Host "==> Install verified legacy cp313 EXE before upgrading to cp314"
+        Invoke-NativeChecked -FilePath $PreviousSetupPath -Arguments $installArguments
+        Invoke-NativeChecked -FilePath (Join-Path $installRoot "runtime/python.exe") -Arguments @(
+            "-c", "import sys; assert sys.version_info[:2] == (3, 13)"
+        )
+    }
 
     $offlineEnv = Join-Path $installRoot "offline.env"
     Add-Content -LiteralPath $offlineEnv -Encoding UTF8 -Value 'USER_LIFECYCLE_SENTINEL="preserve"'
@@ -227,16 +270,18 @@ try {
     New-Item -ItemType Directory -Force -Path $legacyCodexSkill | Out-Null
     Set-Content -LiteralPath (Join-Path $legacyCodexSkill "SKILL.md") -Value "legacy coexistence"
     Set-Content -LiteralPath (Join-Path $fakeProfile ".agents/skills/paper-fetch-skill/stale.md") -Value "stale"
-    Write-Host "==> In-place overwrite upgrade with the same verified EXE"
+    Write-Host "==> Upgrade to final cp314 EXE and verify retained user and host integration state"
     Invoke-NativeChecked -FilePath $SetupPath -Arguments $installArguments
     Invoke-InstalledSmoke -InstallRoot $installRoot
     if (-not (Select-String -LiteralPath $offlineEnv -SimpleMatch "USER_LIFECYCLE_SENTINEL" -Quiet)) {
         throw "Overwrite upgrade did not preserve offline.env user content."
     }
-    if (-not (Test-Path -LiteralPath $userPayload -PathType Leaf)) {
+    if (-not (Test-Path -LiteralPath $userPayload -PathType Leaf) -or
+        (Get-Content -LiteralPath $userPayload -Raw).Trim() -ne "preserve") {
         throw "Overwrite upgrade did not preserve install-root user content."
     }
-    if (-not (Test-Path -LiteralPath $externalUserPayload -PathType Leaf)) {
+    if (-not (Test-Path -LiteralPath $externalUserPayload -PathType Leaf) -or
+        (Get-Content -LiteralPath $externalUserPayload -Raw).Trim() -ne "preserve") {
         throw "Overwrite upgrade did not preserve external user content."
     }
 
@@ -247,6 +292,10 @@ try {
     if (Test-Path -LiteralPath (Join-Path $installRoot "optional-setup-results.txt")) {
         throw "Silent upgrade must not run optional configuration."
     }
+
+    Write-Host "==> In-place overwrite upgrade of cp314 installation"
+    Invoke-NativeChecked -FilePath $SetupPath -Arguments $installArguments
+    Invoke-InstalledSmoke -InstallRoot $installRoot
 
     $uninstallers = @(Get-ChildItem -LiteralPath $installRoot -Filter "unins*.exe" -File)
     if ($uninstallers.Count -ne 1 -or $uninstallers[0].Name -ne "unins000.exe") {
@@ -281,7 +330,8 @@ try {
             throw "Silent uninstall left managed skill content: $managedSkill"
         }
     }
-    if (-not (Test-Path -LiteralPath $externalUserPayload -PathType Leaf)) {
+    if (-not (Test-Path -LiteralPath $externalUserPayload -PathType Leaf) -or
+        (Get-Content -LiteralPath $externalUserPayload -Raw).Trim() -ne "preserve") {
         throw "Silent uninstall removed external user content."
     }
 } finally {

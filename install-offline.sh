@@ -4,7 +4,7 @@
 set -euo pipefail
 
 BUNDLE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PYTHON_BIN="${PAPER_FETCH_OFFLINE_PYTHON_BIN:-python3}"
+PYTHON_BIN="${PAPER_FETCH_OFFLINE_PYTHON_BIN:-}"
 PRESET="headless"
 MERGE_USER_CONFIG=0
 RUN_SMOKE=1
@@ -35,6 +35,7 @@ MCP_ENV_KEYS=(
   PAPER_FETCH_FORMULA_TOOLS_DIR
   PAPER_FETCH_IMAGE_TOOLS_DIR
   MATHML_TO_LATEX_NODE_BIN
+  PLAYWRIGHT_NODEJS_PATH
   PAPER_FETCH_BROWSER_HEADLESS
 )
 OFFLINE_ENV_KEYS=()
@@ -130,6 +131,8 @@ Usage:
 
 Options:
   --install-dir <path>    Install runtime files here. Default: ~/.local/share/paper-fetch-skill.
+  --python <interpreter>  Select a Python executable path or command name.
+                         Default on Linux: /usr/bin/python3; macOS: python3 on PATH.
   --preset=headless|headful
                             Select managed browser headless/headful runtime env. Default: headless.
   --user-config           Also merge the offline runtime block into the platform user config.
@@ -145,6 +148,7 @@ Options:
   -h, --help              Show this help.
 
 Environment:
+  PAPER_FETCH_OFFLINE_PYTHON_BIN Select Python unless --python is supplied.
   PAPER_FETCH_BROWSER_HEADLESS Set to false for a headful managed browser runtime.
 
 Browser preparation runs by default and may download browser components and fingerprint models.
@@ -206,6 +210,16 @@ normalize_path() {
 
 while (($#)); do
   case "$1" in
+    --python=*)
+      PYTHON_BIN="${1#*=}"
+      [ -n "$PYTHON_BIN" ] || die "--python requires an interpreter"
+      ;;
+    --python)
+      shift
+      [ "$#" -gt 0 ] && [ -n "$1" ] && [[ "$1" != --* ]] \
+        || die "--python requires an interpreter"
+      PYTHON_BIN="$1"
+      ;;
     --install-dir=*)
       INSTALL_ROOT="$(normalize_path "${1#*=}")"
       ;;
@@ -490,11 +504,12 @@ PY
 }
 
 check_python() {
-  command -v "$PYTHON_BIN" >/dev/null 2>&1 || die "python3 was not found on PATH."
+  command -v "$PYTHON_BIN" >/dev/null 2>&1 || die "Python not found: $PYTHON_BIN. Use --python <interpreter>."
   require_file "$BUNDLE_ROOT/offline-manifest.json"
 
   local probe version implementation tag interpreter_arch soabi abi_flags gil_disabled
   local manifest_tag expected_soabi_prefix
+  log "Checking Python interpreter: $PYTHON_BIN (use --python <interpreter> to change)"
   probe="$("$PYTHON_BIN" -I -c '
 # PAPER_FETCH_INTERPRETER_PROBE
 import platform
@@ -520,20 +535,20 @@ print("|".join((version, implementation, tag, machine, soabi, abi_flags, gil_dis
   [ -n "$manifest_tag" ] || die "offline-manifest.json is missing target.python_tag."
 
   [ "$implementation" = "cpython" ] \
-    || die "Offline bundles require standard GIL CPython; detected $implementation $version."
+    || die "Offline bundles require standard GIL CPython; detected $implementation $version at $PYTHON_BIN. Use --python <matching-interpreter>."
   case "$tag" in
     cp311|cp312|cp313|cp314) ;;
-    *) die "Offline bundles require standard GIL CPython 3.11, 3.12, 3.13, or 3.14; detected $version ($tag)." ;;
+    *) die "Offline bundles require standard GIL CPython 3.11, 3.12, 3.13, or 3.14; detected $version ($tag) at $PYTHON_BIN. Use --python <matching-interpreter>." ;;
   esac
-  [ "$tag" = "$manifest_tag" ] || die "bundle requires CPython $manifest_tag; detected Python $version ($tag)."
+  [ "$tag" = "$manifest_tag" ] || die "bundle requires CPython $manifest_tag; detected Python $version ($tag) at $PYTHON_BIN. Use --python <matching-interpreter>."
   [ "$interpreter_arch" = "$HOST_ARCH" ] \
-    || die "bundle requires Python interpreter architecture $HOST_ARCH; detected $interpreter_arch Python $version."
+    || die "bundle requires Python interpreter architecture $HOST_ARCH; detected $interpreter_arch Python $version at $PYTHON_BIN. Use --python <matching-interpreter>."
   [ "$abi_flags" = "-" ] && [ "$gil_disabled" = "0" ] \
-    || die "Offline bundles require standard GIL CPython without debug or free-threaded ABI flags; detected SOABI ${soabi:-<empty>}."
+    || die "Offline bundles require standard GIL CPython without debug or free-threaded ABI flags; detected SOABI ${soabi:-<empty>} at $PYTHON_BIN. Use --python <matching-interpreter>."
   expected_soabi_prefix="cpython-${tag#cp}-"
   case "$soabi" in
     "$expected_soabi_prefix"*) ;;
-    *) die "Offline bundles require standard SOABI ${expected_soabi_prefix}*; detected ${soabi:-<empty>}." ;;
+    *) die "Offline bundles require standard SOABI ${expected_soabi_prefix}*; detected ${soabi:-<empty>} at $PYTHON_BIN. Use --python <matching-interpreter>." ;;
   esac
 }
 
@@ -725,7 +740,7 @@ mcp_python_bin() {
 }
 
 mathml_node_bin() {
-  local bundled_node="$INSTALL_ROOT/runtime/site-packages/playwright/driver/node"
+  local bundled_node="$INSTALL_ROOT/runtime/node/bin/node"
   if [ -x "$bundled_node" ]; then
     printf '%s\n' "$bundled_node"
   else
@@ -750,7 +765,7 @@ installer_env_value() {
     PAPER_FETCH_DOWNLOAD_DIR) printf '%s\n' "$INSTALL_ROOT/downloads" ;;
     PAPER_FETCH_FORMULA_TOOLS_DIR) printf '%s\n' "$INSTALL_ROOT/formula-tools" ;;
     PAPER_FETCH_IMAGE_TOOLS_DIR) printf '%s\n' "$INSTALL_ROOT/image-tools" ;;
-    MATHML_TO_LATEX_NODE_BIN) mathml_node_bin ;;
+    MATHML_TO_LATEX_NODE_BIN|PLAYWRIGHT_NODEJS_PATH) mathml_node_bin ;;
     PAPER_FETCH_BROWSER_HEADLESS) browser_headless_value ;;
     *) die "Unknown installer env key: $key" ;;
   esac
@@ -1339,7 +1354,7 @@ paper_fetch_export_default() {
       export PAPER_FETCH_ENV_FILE="\$value"
       return 0
       ;;
-    PAPER_FETCH_DOWNLOAD_DIR|PAPER_FETCH_FORMULA_TOOLS_DIR|PAPER_FETCH_IMAGE_TOOLS_DIR|MATHML_TO_LATEX_NODE_BIN)
+    PAPER_FETCH_DOWNLOAD_DIR|PAPER_FETCH_FORMULA_TOOLS_DIR|PAPER_FETCH_IMAGE_TOOLS_DIR|MATHML_TO_LATEX_NODE_BIN|PLAYWRIGHT_NODEJS_PATH)
       if [ "\$PAPER_FETCH_REUSE_ENV_FILE" = "1" ]; then
         export "\$key=\$value"
         return 0
@@ -1360,6 +1375,9 @@ paper_fetch_export_default() {
     MATHML_TO_LATEX_NODE_BIN)
       [ -n "\${MATHML_TO_LATEX_NODE_BIN:-}" ] || export MATHML_TO_LATEX_NODE_BIN="\$value"
       ;;
+    PLAYWRIGHT_NODEJS_PATH)
+      [ -n "\${PLAYWRIGHT_NODEJS_PATH:-}" ] || export PLAYWRIGHT_NODEJS_PATH="\$value"
+      ;;
     PAPER_FETCH_BROWSER_HEADLESS)
       [ -n "\${PAPER_FETCH_BROWSER_HEADLESS:-}" ] || export PAPER_FETCH_BROWSER_HEADLESS="\$value"
       ;;
@@ -1379,9 +1397,9 @@ paper_fetch_default_value() {
     PAPER_FETCH_DOWNLOAD_DIR) printf '%s\\n' "\$INSTALL_ROOT/downloads" ;;
     PAPER_FETCH_FORMULA_TOOLS_DIR) printf '%s\\n' "\$INSTALL_ROOT/formula-tools" ;;
     PAPER_FETCH_IMAGE_TOOLS_DIR) printf '%s\\n' "\$INSTALL_ROOT/image-tools" ;;
-    MATHML_TO_LATEX_NODE_BIN)
-      if [ -x "\$INSTALL_ROOT/runtime/site-packages/playwright/driver/node" ]; then
-        printf '%s\\n' "\$INSTALL_ROOT/runtime/site-packages/playwright/driver/node"
+    MATHML_TO_LATEX_NODE_BIN|PLAYWRIGHT_NODEJS_PATH)
+      if [ -x "\$INSTALL_ROOT/runtime/node/bin/node" ]; then
+        printf '%s\\n' "\$INSTALL_ROOT/runtime/node/bin/node"
       else
         command -v node 2>/dev/null || printf 'node\\n'
       fi
@@ -1598,8 +1616,29 @@ install_runtime_payload() (
   fi
 )
 
+select_python() {
+  if [ -z "$PYTHON_BIN" ]; then
+    case "$(uname -s)" in
+      Linux) PYTHON_BIN="/usr/bin/python3" ;;
+      *) PYTHON_BIN="python3" ;;
+    esac
+  fi
+  case "$PYTHON_BIN" in
+    */*) PYTHON_BIN="$(normalize_path "$PYTHON_BIN")" ;;
+  esac
+  local resolved_python
+  if ! resolved_python="$(command -v "$PYTHON_BIN")" || [ ! -f "$resolved_python" ] || [ ! -x "$resolved_python" ]; then
+    [ "$UNINSTALL" = "1" ] && return 0
+    die "Python executable not found or not executable: $PYTHON_BIN. Use --python <interpreter>."
+  fi
+  PYTHON_BIN="$(normalize_path "$resolved_python")"
+  # The launcher also reads this variable: keep CLI precedence in child processes.
+  export PAPER_FETCH_OFFLINE_PYTHON_BIN="$PYTHON_BIN"
+}
+
 main() {
   local config_env_file
+  select_python
   load_installer_manifest
 
   if [ "$UNINSTALL" = "1" ]; then
@@ -1667,6 +1706,7 @@ main() {
   echo "Offline installation complete."
   echo "Shell startup file updated: $SHELL_STARTUP_TARGET"
   echo "Install directory: $INSTALL_ROOT"
+  echo "Python interpreter: $PYTHON_BIN"
   echo "Open a new shell, or activate the current one with: source $INSTALL_ROOT/activate-offline.sh"
   if [ "$HOST_PLATFORM" = "linux" ]; then
     echo "Default browser backend: Byparr + managed Camoufox for all browser providers (headless: $(browser_headless_value))"

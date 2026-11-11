@@ -59,8 +59,8 @@ TARGET_ARTIFACTS = (
         "paper-fetch-skill-offline-macos-arm64-cp314.tar.gz",
     ),
     (
-        "windows-x86_64-cp313",
-        "offline-Windows-3.13",
+        "windows-x86_64-cp314",
+        "offline-Windows-3.14",
         "paper-fetch-skill-windows-x86_64-setup.exe",
     ),
 )

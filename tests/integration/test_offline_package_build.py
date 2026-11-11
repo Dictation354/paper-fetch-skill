@@ -2,6 +2,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import platform
 import shlex
 import shutil
 import subprocess
@@ -11,6 +12,8 @@ import tempfile
 import textwrap
 import unittest
 from pathlib import Path
+
+import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -915,3 +918,45 @@ exit 73
 
 if __name__ == "__main__":
     unittest.main()
+
+
+@pytest.mark.parametrize(
+    "mode", ["linux-default", "macos-default", "bound", "override"]
+)
+def test_generated_python_launcher_selection(tmp_path, mode):
+    from tests.support._installer_support import (
+        write_executable,
+        write_posix_command_wrappers,
+    )
+
+    write_posix_command_wrappers(tmp_path)
+    fake_bin = tmp_path / "fake-bin"
+    kernel = "Darwin" if mode == "macos-default" else "Linux"
+    write_executable(fake_bin / "uname", f"#!/bin/sh\nprintf '%s\\n' {kernel}\n")
+    for name in ("python3", "bound", "override"):
+        write_executable(fake_bin / name, f"#!/bin/sh\nprintf '%s\\n' {name}\n")
+    env = {**os.environ, "PATH": f"{fake_bin}:/usr/bin:/bin"}
+    env.pop("PAPER_FETCH_OFFLINE_PYTHON_BIN", None)
+    if mode in {"bound", "override"}:
+        (tmp_path / "runtime/python-bin").write_text(str(fake_bin / "bound") + "\n")
+    if mode == "override":
+        env["PAPER_FETCH_OFFLINE_PYTHON_BIN"] = str(fake_bin / "override")
+    if mode == "linux-default" and (
+        platform.system() != "Linux" or not Path("/usr/bin/python3").exists()
+    ):
+        pytest.skip("Linux system Python required")
+    result = subprocess.run(
+        [
+            str(tmp_path / "runtime/paper-fetch-python"),
+            "-c",
+            "import sys; print(sys.executable)",
+        ],
+        env=env,
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode == 0, result.stderr
+    expected = {"linux-default": "/usr/bin/python3", "macos-default": "python3"}.get(
+        mode, mode
+    )
+    assert result.stdout.strip() == expected

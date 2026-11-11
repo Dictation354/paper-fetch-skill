@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paper-fetch-skill"
-version = "7.4.2"
+version = "7.5.0"
 description = "AI-friendly paper fetch tooling"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -57,7 +57,7 @@ browser = [
   "camoufox==0.5.9",
   "lxml>=6,<7",
   "playwright>=1.58,<1.63",
-  "invisible-playwright==0.47.1",
+  "invisible-playwright==0.49.1",
   "trafilatura>=2.0,<2.3",
 ]
 pdf = [
@@ -68,7 +68,7 @@ full = [
   "camoufox==0.5.9",
   "lxml>=6,<7",
   "playwright>=1.58,<1.63",
-  "invisible-playwright==0.47.1",
+  "invisible-playwright==0.49.1",
   "PyMuPDF>=2,<3",
   "pymupdf4llm>=2,<3",
   "trafilatura>=2.0,<2.3",

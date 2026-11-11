@@ -109,8 +109,8 @@ jobs:
             python-version: "3.14"
             target: macos-arm64-cp314
           - os: windows-latest
-            python-version: "3.13"
-            target: windows-x86_64-cp313
+            python-version: "3.14"
+            target: windows-x86_64-cp314
     runs-on: ${{ matrix.os }}
     steps:
       - name: Enable long source paths on Windows
@@ -188,7 +188,7 @@ jobs:
               macos-arm64-cp312 \
               macos-arm64-cp313 \
               macos-arm64-cp314 \
-              windows-x86_64-cp313 \
+              windows-x86_64-cp314 \
             --output dependency-manifest.json
       - name: Scan merged dependency manifest for secret values
         id: secret_scan_dependency_manifest

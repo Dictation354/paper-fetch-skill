@@ -70,13 +70,16 @@ def test_version_equality_and_invalid():
             )
             for minor in range(11, 15)
         ],
-        (
-            "windows",
-            "Windows",
-            "AMD64",
-            "cp313",
-            "paper-fetch-skill-windows-x86_64-setup.exe",
-        ),
+        *[
+            (
+                "windows",
+                "Windows",
+                "AMD64",
+                tag,
+                "paper-fetch-skill-windows-x86_64-setup.exe",
+            )
+            for tag in ("cp313", "cp314")
+        ],
     ],
 )
 def test_release_targets(tmp_path, monkeypatch, system, host, arch, tag, expected):
