@@ -199,6 +199,7 @@ jobs:
       - name: Verify official Camoufox macOS bundle contexts
         env:
           PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST: "1"
+          PAPER_FETCH_BROWSER_COMPONENT_CACHE: ${{ runner.temp }}/byparr-tests
         run: >-
           PYTHONPATH=src uv run python -m pytest
           tests/integration/test_camoufox_native_macos.py -q -n 0

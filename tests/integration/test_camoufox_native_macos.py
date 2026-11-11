@@ -46,7 +46,7 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
 ) -> None:
     if os.environ.get(NATIVE_CAMOUFOX_TEST_ENV) != "1":
         pytest.skip(
-            f"set {NATIVE_CAMOUFOX_TEST_ENV}=1 after preparing managed Camoufox and fpgen"
+            f"set {NATIVE_CAMOUFOX_TEST_ENV}=1 after preparing managed Camoufox, fpgen and Byparr"
         )
     if platform.system() != "Darwin" or platform.machine() != "arm64":
         pytest.skip("native Camoufox bundle evidence requires Darwin arm64")
@@ -189,16 +189,21 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
     # The offline wizard reuses the prepared runtime and fingerprint model,
     # then verifies only about:blank without downloads or provider state.
     from paper_fetch.offline_setup import Setup
-    from paper_fetch.providers.browser_runtime import preparation
+    from paper_fetch.providers.browser_runtime import byparr_preparation, preparation
 
     monkeypatch.setattr(
         preparation,
         "prepare_camoufox_managed_runtime",
         lambda: pytest.fail("optional wizard must reuse the valid native bundle"),
     )
+    monkeypatch.setattr(
+        byparr_preparation,
+        "download",
+        lambda *_args, **_kwargs: pytest.fail(
+            "native bundle test must reuse the prepared Byparr component"
+        ),
+    )
     setup = Setup(tmp_path, tmp_path / "offline.env")
     setup.browser(selected=True)
-    assert "Camoufox: ready" in setup.summary()
-    assert (
-        "Fingerprint model and real backend; local script verified" in setup.summary()
-    )
+    assert "Byparr: ready" in setup.summary()
+    assert "shared page verified" in setup.summary()
