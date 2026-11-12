@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from ..quality.access_boundary import propagate_paywall, raise_for_paywall
 
 from dataclasses import dataclass, replace
@@ -48,7 +50,6 @@ from ..models import AssetProfile, article_from_markdown, metadata_only_article
 from ..failure import FailureDiagnostics
 from ..page_diagnostics import PageDiagnosticRequest, capture_page_diagnostic
 from ..publisher_identity import normalize_doi
-from ..provider_contracts import PdfSourcePathTemplate, ProviderRouteSpec, ProviderSpec
 from ..runtime import RuntimeContext
 from ..tracing import (
     TraceContext,
@@ -141,6 +142,9 @@ from .base import (
 )
 
 from bs4 import BeautifulSoup, Tag
+
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["springer"]
 
 MARKDOWN_TEXT_KEY = "markdown_text"
 SPRINGER_FETCH_RESULT_WARNINGS_KEY = "springer_fetch_result_warnings"
@@ -862,6 +866,9 @@ class SpringerClient(ProviderClient):
             content_type=_springer_response_content_type(response),
         )
         soup = BeautifulSoup(table_html, choose_parser())
+        from ..extraction.html.object_links import prepare_retained_object_links
+
+        prepare_retained_object_links(soup, response_url)
         table = soup.select_one(".c-article-table-container table, table")
         if isinstance(table, Tag):
             container = table.find_parent("figure")
@@ -2052,63 +2059,11 @@ class SpringerClient(ProviderClient):
 
 PROVIDER_BUNDLE = ProviderBundle(
     client_factory=SpringerClient,
-    catalog=ProviderSpec(
-        name="springer",
-        display_name="Springer",
-        official=True,
-        domains=(
-            "springer.com",
-            "springernature.com",
-            "nature.com",
-            "biomedcentral.com",
-        ),
-        doi_prefixes=("10.1038/", "10.1007/", "10.1186/"),
-        publisher_aliases=(
-            "springer",
-            "springer nature",
-            "springer science and business media llc",
-        ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=True,
-        status_order=2,
-        base_domains=("link.springer.com",),
-        pdf_path_templates=("/content/pdf/{doi_quoted}.pdf",),
-        pdf_source_path_templates=(
-            PdfSourcePathTemplate(
-                domain="nature.com",
-                path_prefix="/articles/",
-                path_template="{source_path}.pdf",
-            ),
-        ),
-        persist_provider_html=True,
-        xml_root_tags=("article",),
-        xml_file_tokens=("springer", "nature", "10.1038", "10.1007", "10.1186"),
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(
-                name="direct_html",
-                kind="html",
-                concurrency=2,
-            ),
-            ProviderRouteSpec(
-                name="direct_pdf",
-                kind="pdf",
-                requires_pdf_conversion=True,
-                concurrency=2,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                concurrency=2,
-                asset_scope="body",
-            ),
-        ),
-    ),
+    catalog=_PROVIDER_DEFINITION.catalog,
     html_rules=ProviderHtmlRules(
-        name="springer_nature",
-        aliases=("springer", "nature"),
-        noise_profile="springer_nature",
+        name=_PROVIDER_DEFINITION.rules_name,
+        aliases=_PROVIDER_DEFINITION.rules_aliases,
+        noise_profile=_PROVIDER_DEFINITION.noise_profile,
         cleanup=ProviderCleanupRules(
             markdown_promo_tokens=SPRINGER_NATURE_MARKDOWN_PROMO_TOKENS,
             chrome_section_headings=SPRINGER_NATURE_CHROME_SECTION_HEADINGS,
@@ -2131,5 +2086,5 @@ PROVIDER_BUNDLE = ProviderBundle(
             overrides=SPRINGER_AVAILABILITY_OVERRIDES,
         ),
     ),
-    sources=("springer_html", "springer_pdf"),
+    sources=_PROVIDER_DEFINITION.sources,
 )

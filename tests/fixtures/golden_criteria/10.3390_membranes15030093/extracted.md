@@ -6,7 +6,7 @@ source: "mdpi_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 13057
+token_estimate: 13067
 ---
 
 # Simulation of Carbon Dioxide Absorption in a Hollow Fiber Membrane Contactor Under Non-Isothermal Conditions
@@ -185,7 +185,7 @@ According to the research results obtained by Lee et al. \[[34](https://www.mdpi
 
 **Table 2.** Absorbent properties.
 | Parameter | Value | Unit | References |
-| ------------------------------------------- | --------------------------------------------- | ------------------- | --------------------------------- |
+| ------------------------------------------- | --------------------------------------------- | ------------------- | ----------------------------------------------------------------------- |
 | *D<sub>CO2-shell</sub>* | 1.8 × 10<sup>−5</sup> | m<sup>2</sup>/s | \[[35](https://www.mdpi.com/2077-0375/15/3/93#B35-membranes-15-00093)\] |
 | *D<sub>CO2-MEA</sub>* | 1.51 × 10<sup>−9</sup> | m<sup>2</sup>/s | \[[36](https://www.mdpi.com/2077-0375/15/3/93#B36-membranes-15-00093)\] |
 | *D<sub>CO2-PG</sub>* | 1.8 × 10<sup>−9</sup> | m<sup>2</sup>/s | \[[37](https://www.mdpi.com/2077-0375/15/3/93#B37-membranes-15-00093)\] |

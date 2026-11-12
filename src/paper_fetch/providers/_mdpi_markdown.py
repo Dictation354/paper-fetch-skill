@@ -145,6 +145,7 @@ def extract_markdown(
     article_html, title, abstract_text, container_text_length = _article_container_html(
         html_text,
         metadata,
+        source_url,
     )
     article_soup = BeautifulSoup(article_html, choose_parser())
     article = article_soup.find("article")

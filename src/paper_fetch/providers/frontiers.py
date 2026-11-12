@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from ..quality.access_boundary import propagate_paywall
 
 from dataclasses import asdict, dataclass, replace
@@ -41,9 +43,6 @@ from ..models import (
     metadata_only_article,
 )
 from ..provider_catalog import (
-    BodyTextThresholds,
-    ProviderRouteSpec,
-    ProviderSpec,
     provider_body_text_thresholds,
 )
 from ..publisher_identity import normalize_doi
@@ -73,6 +72,9 @@ from .base import (
     map_request_failure,
     summarize_capability_status,
 )
+
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["frontiers"]
 
 FRONTIERS_HOST = "https://www.frontiersin.org"
 FRONTIERS_CANONICAL_ARTICLE_PATTERN = re.compile(
@@ -443,6 +445,60 @@ def _normalize_frontiers_extracted_assets(
                 replacements[original_value] = supplementary_anchor
         normalized_assets.append(asset)
     return normalized_assets, replacements
+
+
+def _retain_frontiers_supplementary_section(article) -> None:
+    """Keep filename identities under the author's original supplementary heading."""
+    from ..models import Section
+
+    attachments = [a for a in article.assets if a.kind == "supplementary"]
+    if not attachments:
+        return
+    sections = [s for s in article.sections if s.kind == "supplementary"]
+    # The JATS app-group adds its own listing. Rebuild that listing from the
+    # normalized/downloaded assets while retaining the author's source prose.
+    generated_labels = {"supplementary material"}
+    generated_labels.update(
+        value.casefold()
+        for asset in attachments
+        for value in (asset.heading, asset.source_href)
+        if value
+    )
+    for section in sections:
+        kept = []
+        for line in section.text.splitlines():
+            link = re.match(r"^- \[([^\]]+)\]\(", line)
+            if link is None or link[1].casefold() not in generated_labels:
+                kept.append(line)
+        section.text = "\n".join(kept).strip()
+    retained = next((s for s in sections if s.text), None)
+    if retained is None:
+        retained = (
+            sections[0]
+            if sections
+            else Section(
+                heading="Supplementary material", level=2, kind="supplementary", text=""
+            )
+        )
+        if not sections:
+            article.sections.append(retained)
+    entries = []
+    seen = set()
+    for asset in attachments:
+        identity = asset.anchor_key or asset.source_href or asset.original_url
+        if identity in seen:
+            continue
+        seen.add(identity)
+        name = asset.source_href or asset.heading
+        target = asset.path or asset.url or asset.original_url or asset.source_url
+        entry = f"- [{name}]({target})" if target else f"- {name}"
+        if asset.caption and asset.caption not in {name, asset.heading}:
+            entry += ": " + asset.caption
+        entries.append(entry)
+    retained.text = "\n\n".join(filter(None, [retained.text, "\n".join(entries)]))
+    article.sections = [
+        s for s in article.sections if s not in sections or s is retained or s.text
+    ]
 
 
 def _frontiers_figure_candidates(
@@ -1226,6 +1282,8 @@ class FrontiersClient(ProviderClient):
         for asset in article.assets:
             if asset.kind == "supplementary" and not asset.path:
                 asset.url = asset.original_url or asset.source_url
+        if source == "frontiers_xml":
+            _retain_frontiers_supplementary_section(article)
         return article
 
     def describe_artifacts(
@@ -1265,53 +1323,9 @@ __all__ = ["FrontiersClient"]
 
 PROVIDER_BUNDLE = ProviderBundle(
     client_factory=FrontiersClient,
-    catalog=ProviderSpec(
-        name="frontiers",
-        display_name="Frontiers",
-        official=True,
-        domains=("www.frontiersin.org", "frontiersin.org"),
-        doi_prefixes=("10.3389/",),
-        publisher_aliases=(
-            "frontiers",
-            "frontiers media",
-            "frontiers media s.a.",
-            "frontiers media sa",
-        ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=False,
-        status_order=18,
-        base_domains=("www.frontiersin.org",),
-        landing_path_templates=("/articles/{doi}/full",),
-        xml_path_templates=("/journals/{journal_slug}/articles/{doi}/xml",),
-        pdf_path_templates=(
-            "/journals/{journal_slug}/articles/{doi}/pdf",
-            "/articles/{doi}/pdf",
-        ),
-        emits_html_managed_marker=False,
-        html_capable=False,
-        xml_root_tags=("article",),
-        xml_file_tokens=("10.3389", "frontiers"),
-        body_text_thresholds=BodyTextThresholds(min_chars=1200),
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(name="xml", kind="xml"),
-            ProviderRouteSpec(
-                name="direct_pdf",
-                kind="pdf",
-                requires_pdf_conversion=True,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                timeout_seconds=20,
-                concurrency=2,
-                transient_retries=2,
-            ),
-        ),
-    ),
+    catalog=_PROVIDER_DEFINITION.catalog,
     html_rules=ProviderHtmlRules(
-        name="frontiers",
+        name=_PROVIDER_DEFINITION.rules_name,
         front_matter=ProviderFrontMatterRules(
             exact_texts=(),
             contains_tokens=(),
@@ -1319,5 +1333,5 @@ PROVIDER_BUNDLE = ProviderBundle(
         ),
         availability=AvailabilityPolicy(name="frontiers"),
     ),
-    sources=("frontiers_xml", "frontiers_pdf"),
+    sources=_PROVIDER_DEFINITION.sources,
 )

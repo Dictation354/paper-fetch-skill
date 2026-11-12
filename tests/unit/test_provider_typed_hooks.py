@@ -79,11 +79,12 @@ def test_provider_specific_hooks_have_neutral_defaults() -> None:
     assert DomHooks().before_inline_formula_normalization is None
     assert DomHooks().render_table is None
     assert MarkdownHooks().keep_leading_auxiliary_block is None
-    for provider in ("pnas", "ams", "acs", "aip", "wiley"):
+    for provider in ("pnas", "ams", "aip", "wiley"):
         rules = provider_html_rules(provider)
         assert rules.dom_hooks.before_inline_formula_normalization is None
         assert rules.dom_hooks.render_table is None
         assert rules.markdown_hooks.keep_leading_auxiliary_block is None
+    assert provider_html_rules("acs").dom_hooks.render_table is not None
     assert provider_html_rules("science").dom_hooks.render_table is not None
     assert (
         provider_html_rules("iop").dom_hooks.before_inline_formula_normalization

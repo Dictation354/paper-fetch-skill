@@ -551,7 +551,12 @@ def extract_markdown(
             anchor["href"] = urljoin(source_url, href)
     from ..extraction.html.object_links import prepare_retained_object_links
 
-    prepare_retained_object_links(soup, source_url)
+    aliases = {}
+    for note in soup.select(".footnote[content-id]"):
+        anchor = note.find_previous_sibling()
+        if anchor is not None and anchor.get("id"):
+            aliases[str(note["content-id"])] = str(anchor["id"])
+    prepare_retained_object_links(soup, source_url, aliases=aliases)
     for encoded in soup.select("[data-cfemail]"):
         try:
             data = bytes.fromhex(str(encoded["data-cfemail"]))

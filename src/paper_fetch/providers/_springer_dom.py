@@ -458,6 +458,10 @@ def extract_html_extraction_sidecars(
             "abstract_sections": [],
             "section_hints": [],
         }
+    for anchor in active_root.select("a[href]"):
+        href = str(anchor["href"])
+        if href.startswith(("/", "./", "../")):
+            anchor["href"] = urllib.parse.urljoin(source_url, href)
     if is_nature_url(source_url):
         article_root = select_springer_nature_article_root(active_root) or active_root
         body_root = (

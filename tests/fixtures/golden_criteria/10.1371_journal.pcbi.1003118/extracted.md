@@ -8,7 +8,7 @@ source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 10448
+token_estimate: 10414
 ---
 
 # Software for Computing and Annotating Genomic Ranges
@@ -135,25 +135,10 @@ There are functions for performing common queries that return the exons, coding 
 
 ```
 > library(“TxDb.Hsapiens.UCSC.hg19.knownGene”)
-```
-
-```
 > library(“org.Hs.eg.db”)
-```
-
-```
 > kras_gene <- org.Hs.egSYMBOL2EG$KRAS
-```
-
-```
 > kras_exons <- exons(TxDb.Hsapiens.UCSC.hg19.knownGene,
-```
-
-```
 + vals  =  list(gene_id  =  kras_gene),
-```
-
-```
 + columns  =  c(“tx_id”, “exon_id”))
 ```
 
@@ -161,9 +146,6 @@ To retrieve the exons corresponding to a particular transcript, such as transcri
 
 ```
 > exonsByTx <- exonsBy(TxDb.Hsapiens.UCSC.hg19.knownGene)
-```
-
-```
 > krasA <- exonsByTx[[“48666”]]
 ```
 
@@ -197,13 +179,7 @@ For this example, mouse genomic DNA was cross-linked with DNA-binding proteins, 
 
 ```
 > library(“chipseq”)
-```
-
-```
 > data(“cstest”)
-```
-
-```
 > ctcfReads <- cstest$ctcf
 ```
 
@@ -233,9 +209,6 @@ The `coverage` function calculates the coverage for a set of ranges. We calculat
 
 ```
 > ctcfCoverage <- coverage(ctcfFragments)
-```
-
-```
 > ctcfCoverage10 <- ctcfCoverage$chr10
 ```
 
@@ -245,13 +218,7 @@ Vectors along the genome tend to have many repeated values. For the sake of comp
 
 ```
 > maxPos <- which.max(ctcfCoverage10)
-```
-
-```
 > roi <- resize(IRanges(maxPos, width = 1), 5000, “center”)
-```
-
-```
 > roiCoverage <- ctcfCoverage$chr10[roi]
 ```
 
@@ -271,9 +238,6 @@ The resulting coverage slices are ranges and and we rely on our data structures 
 
 ```
 > ctcfMaxs <- viewMaxs(ctcfPeaks)
-```
-
-```
 > ctcfSums <- viewSums(ctcfPeaks)
 ```
 
@@ -299,17 +263,8 @@ In the next step, we obtain the transcript annotations for yeast. Bioconductor p
 
 ```
 > library(“TxDb.Scerevisiae.UCSC.sacCer2.sgdGene”)
-```
-
-```
 > tx <- exonsBy(TxDb.Scerevisiae.UCSC.sacCer2.sgdGene)
-```
-
-```
 > tx <- renameSeqlevels(keepSeqlevels(tx, “chrXIII”),
-```
-
-```
 + c(chrXIII  =  “Scchr13”))
 ```
 

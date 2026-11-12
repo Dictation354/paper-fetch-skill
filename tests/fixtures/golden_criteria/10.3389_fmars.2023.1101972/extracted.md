@@ -216,9 +216,7 @@ The authors declare that the research was conducted in the absence of any commer
 
 The Supplementary Material for this article can be found online at: [https://www.frontiersin.org/articles/10.3389/fmars.2023.1101972/full#supplementary-material](https://www.frontiersin.org/articles/10.3389/fmars.2023.1101972/full#supplementary-material)
 
-## Supplementary Materials
-
-- [Supplementary material (Table_1.docx)](https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/full#supplementary-material)
+- [Table_1.docx](https://public-pages-files-2025.frontiersin.org/articles/1101972/file/Table_1.DOCX/1101972_supplementary-materials_tables_1_docx/1)
 
 ## References (74 total, showing 74)
 

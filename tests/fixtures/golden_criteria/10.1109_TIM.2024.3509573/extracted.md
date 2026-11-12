@@ -135,7 +135,7 @@ The proposed framework is built using the PyTorch library<sup>40</sup> and evalu
 
 The top part of Table I summarizes related work in the same domain. The middle section compares various base metrics. Finally, the bottom part introduces diverse versions of our proposed AMA and FICAMA. Notably, ProtoNet uses ST-GCN as its backbone and employs the Euclidean distance for its metric function, with training conducted using cross-entropy loss. DTW, Bi-MHM, Bi-TCMHM, cosine, Jaccard, Chebyshev, and Manhattan are obtained by replacing the Euclidean distance metric in ProtoNet with the corresponding metric functions. Margin, Ne, and Mcp use different methods to measure the reliability of metric functions and calculate weights in the AMA, which then replaces the Euclidean distance metric in ProtoNet. Average combines the results of two metric functions by setting weights1 and weights2 to a fixed value of 0.5. The Euclidean distance and cosine are commonly used methods for calculating the distance between video-level representations in metric space, while Jaccard, Chebyshev, and Manhattan are classic methods for calculating the distance between points in space. We compare the performance of these basic metric methods on the skeleton-based FSAR task. ProtoNet using the Euclidean distance performs the best, while other basic metric methods generally perform poorly. Jaccard, Chebyshev, and Manhattan are applied for the first time in the FSAR task. Results from RGB video-based FSAR studies<sup>19, 20, 21</sup> show that cosine performs no worse than or even better than the Euclidean distance, but, in Table I, cosine has low accuracy. This discrepancy may be due to the fact that the dimensionality of the video-level representation of the skeleton modality is much larger than that of the RGB video modality, leading to differences in results. Considering that many complex metric functions are designed based on the cosine distance, we demonstrate the performance differences of constructing complex metric functions based on different basic metric methods in the ablation study.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t1-3509573-large.gif)
+![Table I](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t1-3509573-large.gif)
 
 **TABLE I** FSAR Results on Benchmark Datasets Under Five-Way One-Shot and Five-Way Five-Shot Settings
 
@@ -149,7 +149,7 @@ It should be emphasized that a special situation occurred on the Kinetics datase
 
 ProtoNet is chosen as the baseline, and the Euclidean distance is used as the metric function in all cases except when using AMA. As shown in Table II, the results indicate that each component is necessary and can improve the performance of the baseline. When the proposed components act independently, AMA brings the largest improvement, demonstrating the potential of the design of dynamically aggregating multiple metric functions. GRS provides a larger improvement in the five-shot setting because, with more support samples, each sample has fine-grained and unique information, and the resulting class prototype can better generalize to unknown query samples. In the one-shot setting, there is only one support sample per class, and less discriminative information can be captured. When the components are used in combination, the combination of GRS and SFM achieves high accuracy because SFM can make the information of the samples more evenly and harmoniously distributed among joints and frames, and the introduced temporal information also contributes to high-precision classification. Using all three components together achieves the best results, demonstrating the complementarity between different modules. GRS brings more fine-grained and unique information, SFM makes the information distribution more uniform and orderly, and AMA selects the optimal metric function weights according to the current task.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t2-3509573-large.gif)
+![Table II](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t2-3509573-large.gif)
 
 **TABLE II** Ablation Experiments on NTU-T Under the Five-Way Setting
 
@@ -175,7 +175,7 @@ The GRS module enhances the self-information of support set sample features. Fig
 
 Fig. 4 shows the different variant structures of SFM, and we integrate these variants into ProtoNet to analyze the optimal architecture. As shown in Table III, both the SFM1 and SFM2 models perform spatial fusion only on the joint tokens in the sample, with the difference being the number of MLP layers. SFM1 has only one layer of MLP, which only fuses information between different joints, while SFM2 has two layers of MLP, performing fusion on both joints and embedding dimensions. Embedding dimension fusion can coordinate and unify the differences between different joints, resulting in better performance.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t3-3509573-large.gif)
+![Table III](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t3-3509573-large.gif)
 
 **TABLE III** Impact of Different Variant Structures of SFM on the Performance of the Baseline Model on the NTU-T Dataset
 
@@ -193,13 +193,13 @@ In SFM3, relative positional encoding (such as rotary position embedding) outper
 
 In this section, we use AMA in ProtoNet and aggregate more metric functions to further illustrate the effect and computational cost of AMA, with the number of metric functions ranging from 1 to 5. As shown in Table IV, using multiple metric functions does not lead to a significant increase in training time and occupied memory, with the exception of adding the DTW metric function. DTW is a parameterized method that requires training, so the training time increases from 48 to 133 s, and the required memory also increases from 3546 to 9214 MB. However, most metric functions are nonparameterized and do not require training. Even if multiple metric functions are used, the required computation and memory are small, which gives AMA greater practicality and applicability. As the number of metric functions increases, the accuracy of the model also changes, but the margin, which measures the reliability of metric functions using the difference between the minimum distance and the second minimum distance, always achieves good results, demonstrating its superiority. The results of using a single metric function are shown in Table I. More metric functions do not necessarily lead to better results because using multiple metric functions with similar properties, such as Euclidean distance represented by Eucl and Manhattan distance represented by Manhattan used simultaneously in the third row of margin, may increase the weight of common errors in this type of metric function, resulting in lower accuracy. Furthermore, AMA has a certain level of robustness when facing lower accuracy metric functions. In the fifth row, adding cosine with an accuracy of 70.82% results in a decrease of 0.16% compared to the fourth row, but it should be noted that the accuracy is only 59.65% when using cosine alone, and AMA does not cause a significant decrease in accuracy. This demonstrates that even if there are lower accuracy metric functions in AMA, good results can still be obtained. For example, the accuracy in the fifth row is still 0.61% higher than using Eucl alone at 70.21%.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t4-3509573-large.gif)
+![Table IV](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t4-3509573-large.gif)
 
 **TABLE IV** Quantitative Metrics of Performance, Training Time, and Occupied Memory When Fusing Multiple Metric Functions Based on Different Reliability Indicators in AMA With All Tasks Trained on NTU-T Under the Five-Way One-Shot Setting
 
 We also analyzed the impact of different combinations of metric functions in AMA on the final accuracy. Specifically, we selected two high-accuracy metric functions and two low-accuracy metric functions and tested different pairwise combinations in AMA to examine the robustness and accuracy changes of AMA when the accuracy differences between metric functions in AMA are large. The results are shown in Table V. In most cases, the results using margin are better. The results in the first row show that when using high-accuracy metric functions, the dynamic aggregation mechanism of AMA makes the final results more accurate. AMA demonstrates effectiveness even with low-accuracy metric functions. As shown in the second row, it extracts reliable information from poor metrics, achieving 66.72% accuracy in the one-shot setting. This significantly outperforms individual low-accuracy metrics (59.65% and 46.57%). For combinations of high-accuracy and low-accuracy metric functions, AMA can also allow high-accuracy metric functions to benefit from low-accuracy metric functions, as shown in the fifth row. When using only AMA, the results are 3.42% and 0.71% higher than ProtoNet, indicating that AMA has great flexibility and does not require all metric functions to have high accuracy, which expands the usage scenarios of AMA.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t5-3509573-large.gif)
+![Table V](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t5-3509573-large.gif)
 
 **TABLE V** Classification Accuracy When Using Metric Functions With Different Accuracies in AMA With All Tasks Trained on NTU-T Under the Five-Way Setting
 
@@ -213,7 +213,7 @@ $$
 $$
 where $|\cdot |$ is the cosine distance. We replace $|\cdot |$ with different basic metric functions to analyze the impact of basic metric functions on the performance of advanced metric functions, providing guidance and experimental evidence for subsequent work on designing metric functions. The results are shown in Table VI.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t6-3509573-large.gif)
+![Table VI](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t6-3509573-large.gif)
 
 **TABLE VI** Impact of Different Basic Metric Functions on the Accuracy of Complex Metric Function Bi-MHM
 
@@ -231,13 +231,13 @@ The Kinetics dataset comprises samples of 300 frames, each containing two 18-joi
 
 We created two refined datasets: Kinetics\_clean, which excludes invalid frames and samples, and Kinetics\_2d, which further removes joint confidence scores. Table VII delineates the differences among these datasets.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t7-3509573-large.gif)
+![Table VII](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t7-3509573-large.gif)
 
 **TABLE VII** Comparison of Kinetics Dataset Variants
 
 Experimental results (see Table VIII) show performance improvements on Kinetics\_clean compared to the original dataset, confirming the presence of noise in the Kinetics dataset in<sup>13</sup>. Notably, performance on Kinetics\_2d did not significantly decrease, and in some cases improved, compared to Kinetics\_clean. This suggests that models in few-shot scenarios fail to effectively utilize confidence scores.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t8-3509573-large.gif)
+![Table VIII](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/19/10764799/10772041/gu.t8-3509573-large.gif)
 
 **TABLE VIII** Performance Comparison Across Kinetics Dataset Variants
 

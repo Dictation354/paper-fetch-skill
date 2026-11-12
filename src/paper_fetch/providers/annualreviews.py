@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from typing import Any
 from collections.abc import Mapping
 from urllib.parse import quote, urlparse
@@ -15,9 +17,6 @@ from ..extraction.html.provider_rules import (
 )
 from ..models import AssetProfile
 from ..provider_catalog import (
-    BodyTextThresholds,
-    ProviderRouteSpec,
-    ProviderSpec,
     host_matches_domain,
 )
 from ..publisher_identity import normalize_doi
@@ -25,61 +24,15 @@ from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, extend_unique, normalize_text
 from . import _annualreviews_html, browser_workflow
 from ._pdf_candidates import build_direct_pdf_candidates
-from ._registry import ProviderBundle
+from ._registry import BrowserAssetPolicy, ProviderBundle
 from .base import RawFulltextPayload
 
-_PROVIDER_SPEC = ProviderSpec(
-    name="annualreviews",
-    display_name="Annual Reviews",
-    official=True,
-    domains=("annualreviews.org", "www.annualreviews.org"),
-    doi_prefixes=("10.1146/",),
-    publisher_aliases=(
-        "annual reviews",
-        "annual reviews inc",
-        "annual reviews inc.",
-    ),
-    asset_default="body",
-    probe_capability="routing_signal",
-    provider_managed_abstract_only=True,
-    status_order=12,
-    base_domains=("www.annualreviews.org",),
-    html_path_templates=(
-        "/content/journals/{doi}",
-        "/doi/{doi}",
-    ),
-    pdf_path_templates=("/doi/pdf/{doi}",),
-    crossref_pdf_position=0,
-    body_text_thresholds=BodyTextThresholds(min_chars=1200),
-    routes=(
-        ProviderRouteSpec(name="metadata", kind="metadata"),
-        ProviderRouteSpec(
-            name="browser_html",
-            kind="html",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="browser_pdf",
-            kind="pdf",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            requires_pdf_conversion=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="assets",
-            kind="assets",
-            concurrency=2,
-            asset_scope="body",
-        ),
-    ),
-)
+
+from ._annualreviews_supplement_click import reveal_supplement
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["annualreviews"]
+
+_PROVIDER_SPEC = _PROVIDER_DEFINITION.catalog
 
 ANNUALREVIEWS_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "annualreviews",
@@ -242,11 +195,17 @@ __all__ = ["AnnualreviewsClient"]
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_asset_policy=BrowserAssetPolicy(
+        supplement_reveal=reveal_supplement,
+        click_supplements=True,
+        figure_page_ready_selector="img.content-image[src], img.content-image[data-src]",
+        figure_page_requires_caller_thread=True,
+    ),
     client_factory=AnnualreviewsClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
-        name="annualreviews",
-        noise_profile=_annualreviews_html.ANNUALREVIEWS_NOISE_PROFILE,
+        name=_PROVIDER_DEFINITION.rules_name,
+        noise_profile=_PROVIDER_DEFINITION.noise_profile,
         cleanup=ProviderCleanupRules(
             markdown_promo_tokens=_annualreviews_html.ANNUALREVIEWS_MARKDOWN_PROMO_TOKENS,
             extraction_cleanup_selectors=_annualreviews_html.ANNUALREVIEWS_EXTRACTION_CLEANUP_SELECTORS,
@@ -266,5 +225,5 @@ PROVIDER_BUNDLE = ProviderBundle(
             site_rule_overrides=_annualreviews_html.ANNUALREVIEWS_SITE_RULE_OVERRIDES,
         ),
     ),
-    sources=("annualreviews_html", "annualreviews_pdf"),
+    sources=_PROVIDER_DEFINITION.sources,
 )

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from typing import Any
 from collections.abc import Mapping
 from urllib.parse import urlparse
@@ -18,20 +20,19 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from ..provider_catalog import (
-    ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-    BodyTextThresholds,
-    ProviderRouteSpec,
-    ProviderSpec,
     host_matches_domain,
 )
 from ..publisher_identity import normalize_doi
 from ..utils import extend_unique, normalize_text
 from . import _aip_html, browser_workflow
-from ._registry import ProviderBundle
+from ._registry import BrowserAssetPolicy, ProviderBundle
 
 
 # SITE_UI_COPY_REGRESSION_MARKER: AIP article navigation/action labels owned by provider cleanup policy.
 # STRUCTURAL_UI_COPY_HOOK: provider cleanup removes these only from AIP article chrome.
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["aip"]
+
 AIP_MARKDOWN_PROMO_TOKENS = (
     "close modal",
     "download citation",
@@ -98,59 +99,7 @@ AIP_SUPPLEMENTARY_TEXT_TOKENS = (
     "supporting information",
 )
 
-_PROVIDER_SPEC = ProviderSpec(
-    name="aip",
-    display_name="AIP Publishing",
-    official=True,
-    domains=("pubs.aip.org",),
-    doi_prefixes=("10.1063/",),
-    publisher_aliases=(
-        "aip publishing",
-        "aip publishing llc",
-        "american institute of physics",
-        "aip",
-    ),
-    asset_default="body",
-    probe_capability="routing_signal",
-    provider_managed_abstract_only=True,
-    status_order=17,
-    base_domains=("pubs.aip.org",),
-    html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
-    pdf_path_templates=ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-    crossref_pdf_position=0,
-    body_text_thresholds=BodyTextThresholds(min_chars=1200),
-    routes=(
-        ProviderRouteSpec(name="metadata", kind="metadata"),
-        ProviderRouteSpec(
-            name="browser_html",
-            kind="html",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="browser_pdf",
-            kind="pdf",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            requires_pdf_conversion=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="assets",
-            kind="assets",
-            browser_optional=True,
-            requires_playwright=True,
-            timeout_seconds=20,
-            concurrency=2,
-            transient_retries=0,
-        ),
-    ),
-)
+_PROVIDER_SPEC = _PROVIDER_DEFINITION.catalog
 
 AIP_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "aip",
@@ -188,10 +137,11 @@ __all__ = ["AipClient"]
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_asset_policy=BrowserAssetPolicy(click_supplements=True),
     client_factory=AipClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
-        name="aip",
+        name=_PROVIDER_DEFINITION.rules_name,
         cleanup=ProviderCleanupRules(
             markdown_promo_tokens=AIP_MARKDOWN_PROMO_TOKENS,
             extraction_cleanup_selectors=tuple(
@@ -220,5 +170,5 @@ PROVIDER_BUNDLE = ProviderBundle(
             classify_heading=_aip_html.aip_classify_heading,
         ),
     ),
-    sources=("aip_html", "aip_pdf"),
+    sources=_PROVIDER_DEFINITION.sources,
 )

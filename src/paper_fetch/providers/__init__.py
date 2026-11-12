@@ -38,39 +38,16 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     "xml_local_name": (".elsevier", "xml_local_name"),
 }
 
-_BUILTIN_PROVIDER_ENTRY_MODULES = (
-    ".acs",
-    ".aip",
-    ".ams",
-    ".annualreviews",
-    ".arxiv",
-    ".copernicus",
-    ".crossref",
-    ".elsevier",
-    ".frontiers",
-    ".ieee",
-    ".iop",
-    ".mdpi",
-    ".oxfordacademic",
-    ".plos",
-    ".pnas",
-    ".royalsocietypublishing",
-    ".science",
-    ".springer",
-    ".tandf",
-    ".wiley",
-)
-
 
 def load_builtin_provider_bundles() -> tuple[ProviderBundle, ...]:
-    """Import the fixed built-in modules and return their exported bundles."""
+    """Explicitly load and validate all built-in runtime implementations."""
+    from ._definitions import BUILTIN_PROVIDER_DEFINITIONS
+    from ._registry import provider_bundle, validate_provider_bundles
 
     bundles = tuple(
-        import_module(module_name, __name__).PROVIDER_BUNDLE
-        for module_name in _BUILTIN_PROVIDER_ENTRY_MODULES
+        provider_bundle(definition.catalog.name)
+        for definition in BUILTIN_PROVIDER_DEFINITIONS
     )
-    from ._registry import validate_provider_bundles
-
     validate_provider_bundles(bundles)
     return bundles
 

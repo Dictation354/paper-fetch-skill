@@ -34,7 +34,9 @@ def resolve_retained_object_links(
     )
 
 
-def prepare_retained_object_links(root, source_url: str) -> None:
+def prepare_retained_object_links(
+    root, source_url: str, *, aliases: Mapping[str, str] | None = None
+) -> None:
     """Resolve HTML cross references using source IDs and explicit popup aliases.
 
     Run before publisher cleanup removes dialogs, bibliography or formula owners.
@@ -74,6 +76,7 @@ def prepare_retained_object_links(root, source_url: str) -> None:
         owner = viewer.find_parent(attrs={"id": True})
         if owner is not None:
             targets.setdefault(str(viewer["data-target"]).lstrip("#"), str(owner["id"]))
+    targets.update(aliases or {})
     folded = {key.casefold(): value for key, value in targets.items()}
     for anchor in root.find_all("a"):
         href = str(anchor.get("href") or "")
@@ -103,3 +106,7 @@ def prepare_retained_object_links(root, source_url: str) -> None:
                 if source_url
                 else "#" + quote(target)
             )
+        elif href.lower().startswith("javascript:"):
+            anchor.attrs.pop("href", None)
+        elif href.startswith(("/", "./", "../")):
+            anchor["href"] = urljoin(source_url, href)

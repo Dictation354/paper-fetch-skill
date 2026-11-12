@@ -247,47 +247,18 @@ def _with_browser_runtime_trace_history(
     return replace(html_result, diagnostics=diagnostics)
 
 
-def _remaining_wiley_review_candidates(
-    provider: str,
-    html_candidates: Sequence[str],
-    html_result: BrowserFetchedHtml,
+def _remaining_review_candidates(
+    provider: str, html_candidates: Sequence[str], html_result: BrowserFetchedHtml
 ) -> list[str]:
-    if normalize_text(
-        provider
-    ).lower() != "wiley" or html_result.response_status not in {401, 403}:
-        return []
-    trace = _browser_runtime_trace(html_result.diagnostics)
-    candidates = trace.get("candidates")
-    if not isinstance(candidates, list):
-        return []
-    confirmed_review = False
-    for candidate in reversed(candidates):
-        if not isinstance(candidate, Mapping):
-            continue
-        review = candidate.get(_HTTP_ACCESS_STATUS_REVIEW_KEY)
-        if not isinstance(review, Mapping):
-            continue
-        if (
-            review.get("candidate_confirmed") is True
-            and review.get("fulltext_acceptance") == "rejected"
-        ):
-            confirmed_review = True
-            break
-    if not confirmed_review:
-        return []
+    from .._registry import provider_bundle
 
-    failed_source = normalize_browser_url(html_result.source_url)
-    if not failed_source:
-        return []
-    normalized_candidates = [
-        normalize_browser_url(candidate) or normalize_text(candidate)
-        for candidate in html_candidates
-    ]
     try:
-        failed_index = normalized_candidates.index(failed_source)
-    except ValueError:
+        callback = provider_bundle(
+            provider
+        ).browser_page_policy.remaining_review_candidates
+    except KeyError:
         return []
-    return list(html_candidates[failed_index + 1 :])
+    return callback(html_candidates, html_result) if callback is not None else []
 
 
 def _browser_page_state(
@@ -738,7 +709,7 @@ def _fetch_browser_html_payload(
             page_details["diagnostic_path"] = page_diagnostic["diagnostic_path"]
         exc.details = page_details
         exc.html_result = html_result
-        remaining_candidates = _remaining_wiley_review_candidates(
+        remaining_candidates = _remaining_review_candidates(
             client.name,
             html_candidates,
             html_result,
@@ -860,13 +831,13 @@ def _retry_candidates_after_fast_failure(
     retry_incomplete = client.require_profile().retry_incomplete_html_candidates
     html_result = getattr(fast_failure, "html_result", None)
     if isinstance(html_result, BrowserFetchedHtml):
-        remaining_wiley_candidates = _remaining_wiley_review_candidates(
+        remaining_review_candidates = _remaining_review_candidates(
             client.name,
             candidates,
             html_result,
         )
-        if remaining_wiley_candidates:
-            return remaining_wiley_candidates
+        if remaining_review_candidates:
+            return remaining_review_candidates
     if (
         not isinstance(fast_failure, HtmlExtractionFailure)
         or (

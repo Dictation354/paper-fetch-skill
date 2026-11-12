@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 import contextlib
 from typing import Any
 from collections.abc import Mapping, Sequence
@@ -21,12 +23,11 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from ..models import AssetProfile
-from ..provider_contracts import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, extend_unique, normalize_text
 from . import _iop_html, browser_workflow
-from ._registry import ProviderBundle
+from ._registry import BrowserAssetPolicy, ProviderBundle
 from .base import (
     ProviderFailure,
     RawFulltextPayload,
@@ -35,69 +36,11 @@ from .browser_runtime import BrowserRuntimeFailure
 from .browser_workflow.shared import normalize_browser_url
 from .browser_workflow.fetchers import BrowserDocumentFetcherOptions
 
-_PROVIDER_SPEC = ProviderSpec(
-    name="iop",
-    display_name="IOP Publishing",
-    official=True,
-    domains=("iopscience.iop.org",),
-    doi_prefixes=("10.1088/",),
-    publisher_aliases=(
-        "iop publishing",
-        "institute of physics publishing",
-        "iopscience",
-    ),
-    asset_default="body",
-    probe_capability="routing_signal",
-    provider_managed_abstract_only=True,
-    status_order=16,
-    base_domains=("iopscience.iop.org",),
-    html_path_templates=("/article/{doi}",),
-    pdf_path_templates=("/article/{doi}/pdf",),
-    crossref_pdf_position=0,
-    body_text_thresholds=BodyTextThresholds(min_chars=1200),
-    routes=(
-        ProviderRouteSpec(
-            name="metadata",
-            kind="metadata",
-            source="crossref_metadata",
-            concurrency=2,
-        ),
-        ProviderRouteSpec(
-            name="browser_html",
-            kind="html",
-            source="iop_html",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            timeout_seconds=120,
-            concurrency=1,
-            acceptance_policy="provider_html_body",
-        ),
-        ProviderRouteSpec(
-            name="browser_pdf",
-            kind="pdf",
-            source="iop_pdf",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            requires_pdf_conversion=True,
-            timeout_seconds=120,
-            concurrency=1,
-            acceptance_policy="validated_pdf",
-        ),
-        ProviderRouteSpec(
-            name="assets",
-            kind="assets",
-            browser_optional=True,
-            requires_playwright=True,
-            timeout_seconds=20,
-            concurrency=2,
-            transient_retries=0,
-        ),
-    ),
-)
+from ._iop_asset_scheduler import _download_iop_body_assets
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["iop"]
+
+_PROVIDER_SPEC = _PROVIDER_DEFINITION.catalog
 
 IOP_BROWSER_PROFILE = browser_workflow.make_browser_profile(
     "iop",
@@ -542,11 +485,14 @@ __all__ = ["IopClient"]
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_asset_policy=BrowserAssetPolicy(
+        click_supplements=True, body_scheduler=_download_iop_body_assets
+    ),
     client_factory=IopClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
-        name="iop",
-        noise_profile=_iop_html.IOP_NOISE_PROFILE,
+        name=_PROVIDER_DEFINITION.rules_name,
+        noise_profile=_PROVIDER_DEFINITION.noise_profile,
         cleanup=ProviderCleanupRules(
             markdown_promo_tokens=_iop_html.IOP_MARKDOWN_PROMO_TOKENS,
             extraction_cleanup_selectors=_iop_html.IOP_EXTRACTION_CLEANUP_SELECTORS,
@@ -582,5 +528,5 @@ PROVIDER_BUNDLE = ProviderBundle(
             asset_figure_extraction=_iop_html.iop_asset_figure_extraction,
         ),
     ),
-    sources=("iop_html", "iop_pdf"),
+    sources=_PROVIDER_DEFINITION.sources,
 )

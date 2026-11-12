@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from typing import Any
 from collections.abc import Mapping
 from urllib.parse import urlparse
@@ -18,70 +20,17 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from ..provider_catalog import (
-    ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-    BodyTextThresholds,
-    ProviderRouteSpec,
-    ProviderSpec,
     host_matches_domain,
 )
 from ..publisher_identity import normalize_doi
 from ..utils import extend_unique, normalize_text
 from . import _tandf_html, browser_workflow
-from ._registry import ProviderBundle
+from ._registry import BrowserAssetPolicy, ProviderBundle
 
-_PROVIDER_SPEC = ProviderSpec(
-    name="tandf",
-    display_name="Taylor & Francis Online",
-    official=True,
-    domains=("tandfonline.com", "www.tandfonline.com"),
-    domain_suffixes=("tandfonline.com",),
-    doi_prefixes=("10.1080/",),
-    publisher_aliases=(
-        "taylor & francis",
-        "taylor & francis group",
-        "informa uk limited",
-    ),
-    asset_default="body",
-    probe_capability="routing_signal",
-    provider_managed_abstract_only=True,
-    status_order=19,
-    base_domains=("www.tandfonline.com",),
-    html_path_templates=("/doi/full/{doi}", "/doi/abs/{doi}", "/doi/{doi}"),
-    pdf_path_templates=ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-    crossref_pdf_position=0,
-    body_text_thresholds=BodyTextThresholds(min_chars=1200),
-    routes=(
-        ProviderRouteSpec(name="metadata", kind="metadata"),
-        ProviderRouteSpec(
-            name="browser_html",
-            kind="html",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="browser_pdf",
-            kind="pdf",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            requires_pdf_conversion=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="assets",
-            kind="assets",
-            browser_optional=True,
-            requires_playwright=True,
-            timeout_seconds=20,
-            concurrency=2,
-            transient_retries=0,
-        ),
-    ),
-)
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["tandf"]
+
+_PROVIDER_SPEC = _PROVIDER_DEFINITION.catalog
 
 TANDF_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "tandf",
@@ -137,10 +86,13 @@ __all__ = ["TandfClient"]
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_asset_policy=BrowserAssetPolicy(
+        click_supplements=True, commit_image_navigation=True
+    ),
     client_factory=TandfClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
-        name="tandf",
+        name=_PROVIDER_DEFINITION.rules_name,
         cleanup=ProviderCleanupRules(
             markdown_promo_tokens=_tandf_html.TANDF_MARKDOWN_PROMO_TOKENS,
             extraction_cleanup_selectors=tuple(
@@ -177,5 +129,5 @@ PROVIDER_BUNDLE = ProviderBundle(
             classify_heading=_tandf_html.tandf_classify_heading,
         ),
     ),
-    sources=("tandf_html", "tandf_pdf"),
+    sources=_PROVIDER_DEFINITION.sources,
 )

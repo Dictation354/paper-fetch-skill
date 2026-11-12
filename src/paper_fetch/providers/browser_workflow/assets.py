@@ -22,6 +22,7 @@ from .._asset_retry import (
 )
 from .._atypon_browser_workflow_profiles import publisher_profile
 from . import html_extraction as _html_extraction
+from .._registry import browser_asset_policy
 
 
 def _cached_browser_workflow_assets(*args, **kwargs):
@@ -307,11 +308,8 @@ def _merge_download_attempt_results(
     *,
     provider: str = "",
 ) -> dict[str, list[dict[str, Any]]]:
-    policy = BROWSER_WORKFLOW_ASSET_RETRY_POLICY
-    if provider == "ieee":
-        from .._ieee_asset_identity import IEEE_ASSET_RETRY_POLICY
-
-        policy = IEEE_ASSET_RETRY_POLICY
+    capabilities = browser_asset_policy(provider)
+    policy = capabilities.retry_policy or BROWSER_WORKFLOW_ASSET_RETRY_POLICY
     merged_downloads = merge_asset_retry_results(
         list(initial.get("assets") or []),
         list(retry.get("assets") or []),
@@ -332,7 +330,7 @@ def _merge_download_attempt_results(
     unresolved_failures = []
     for failure in failure_candidates:
         failure_tokens = _download_failure_match_tokens(failure)
-        if provider == "ieee":
+        if capabilities.exact_retry_identity:
             if any(
                 policy.key_fn(asset) == policy.key_fn(failure)
                 for asset in merged_downloads

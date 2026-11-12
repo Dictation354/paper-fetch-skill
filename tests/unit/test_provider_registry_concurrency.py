@@ -72,8 +72,12 @@ def test_build_clients_isolates_one_factory_failure(monkeypatch) -> None:
     )
 
     monkeypatch.setattr(
-        "paper_fetch.providers.registry.PROVIDER_BUNDLES",
-        bundles,
+        "paper_fetch.providers.registry.PROVIDER_CATALOG",
+        {bundle.catalog.name: bundle.catalog for bundle in bundles},
+    )
+    monkeypatch.setattr(
+        "paper_fetch.providers.registry.provider_bundle",
+        lambda name: next(bundle for bundle in bundles if bundle.catalog.name == name),
     )
 
     clients = build_clients(transport=mock.Mock(), env={})

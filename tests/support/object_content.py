@@ -225,13 +225,38 @@ def assert_source_tables(
                             text,
                         )
                     if len(cells) > 1 and not all(c is cells[0] for c in cells):
+                        column_expected = list(expected)
+                        if provider == "acs" and row.find_parent("thead"):
+                            lifted = {}
+                            for col, cell in enumerate(cells):
+                                if (
+                                    cell is not None
+                                    and int(cell.get("colspan") or 1) > 1
+                                    and "=" in cell_text(cell)
+                                ):
+                                    lifted[id(cell)] = expected[col]
+                                    column_expected[col] = ""
+                            # Model spanners are standalone group prefixes,
+                            # while the following short header row still checks
+                            # every source column. Data row checks stay exact.
+                            prefix = markdown[start : owned[0].start]
+                            prefix_lines = [
+                                comparable_cell(line) for line in prefix.splitlines()
+                            ]
+                            for text in lifted.values():
+                                assert prefix_lines.count(text) == 1, (
+                                    table_index,
+                                    "group model",
+                                    text,
+                                )
                         assert any(
-                            len(actual) >= len(expected)
+                            len(actual) >= len(column_expected)
                             and all(
-                                text in actual[col] for col, text in enumerate(expected)
+                                text in actual[col]
+                                for col, text in enumerate(column_expected)
                             )
                             for actual in rows
-                        ), (table_index, "header columns", expected)
+                        ), (table_index, "header columns", column_expected)
                 elif len(cells) == 1:
                     assert expected[0] in comparable_markdown, (
                         table_index,

@@ -8,7 +8,7 @@ source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 15033
+token_estimate: 15110
 ---
 
 # Northern Hemisphere drought risk in a warming climate
@@ -157,20 +157,20 @@ The maximum surface temperature (Tmax), minimum surface temperature (Tmin), mean
 
 **Table 1.** Description of the used climate model ensemble for the historical run and three future scenarios.
 
-| Number of used realizations | Historical | SSP1-2.6 | SSP2-4.5 | SSP5-8.5 | References                                             |
-| --------------------------- | ---------- | -------- | -------- | -------- | ------------------------------------------------------ |
-| ACCESS-CM2 | 2 | 1 | 1 | 1 | <sup>[57](/articles/s41612-021-00218-2#ref-CR57)</sup> |
-| ACCESS-ESM1-5 | 3 | 3 | 3 | 3 | <sup>[58](/articles/s41612-021-00218-2#ref-CR58)</sup> |
-| AWI-CM-1-1-MR | 2 | 1 | 1 | 1 | <sup>[59](/articles/s41612-021-00218-2#ref-CR59)</sup> |
-| EC-Earth3 | 3 | 1 | 1 | 1 | <sup>[60](/articles/s41612-021-00218-2#ref-CR60)</sup> |
-| EC-Earth3-Veg | 2 | 3 | 3 | 3 | <sup>[61](/articles/s41612-021-00218-2#ref-CR61)</sup> |
-| INM-CM4-8 | 1 | 1 | 1 | 1 | <sup>[62](/articles/s41612-021-00218-2#ref-CR62)</sup> |
-| INM-CM5-0 | 10 | 1 | 1 | 1 | <sup>[63](/articles/s41612-021-00218-2#ref-CR63)</sup> |
-| IPSL-CM6A-LR | 32 | 6 | 6 | 6 | <sup>[64](/articles/s41612-021-00218-2#ref-CR64)</sup> |
-| MIROC6 | 10 | 3 | 3 | 3 | <sup>[65](/articles/s41612-021-00218-2#ref-CR65)</sup> |
-| MPI-ESM1-2-HR | 7 | 2 | 2 | 2 | <sup>[66](/articles/s41612-021-00218-2#ref-CR66)</sup> |
-| MPI-ESM1-2-LR | 10 | 10 | 10 | 10 | <sup>[67](/articles/s41612-021-00218-2#ref-CR67)</sup> |
-| MRI-ESM2-0 | 5 | 1 | 1 | 1 | <sup>[68](/articles/s41612-021-00218-2#ref-CR68)</sup> |
+| Number of used realizations | Historical | SSP1-2.6 | SSP2-4.5 | SSP5-8.5 | References                                                                   |
+| --------------------------- | ---------- | -------- | -------- | -------- | ---------------------------------------------------------------------------- |
+| ACCESS-CM2 | 2 | 1 | 1 | 1 | <sup>[57](https://www.nature.com/articles/s41612-021-00218-2#ref-CR57)</sup> |
+| ACCESS-ESM1-5 | 3 | 3 | 3 | 3 | <sup>[58](https://www.nature.com/articles/s41612-021-00218-2#ref-CR58)</sup> |
+| AWI-CM-1-1-MR | 2 | 1 | 1 | 1 | <sup>[59](https://www.nature.com/articles/s41612-021-00218-2#ref-CR59)</sup> |
+| EC-Earth3 | 3 | 1 | 1 | 1 | <sup>[60](https://www.nature.com/articles/s41612-021-00218-2#ref-CR60)</sup> |
+| EC-Earth3-Veg | 2 | 3 | 3 | 3 | <sup>[61](https://www.nature.com/articles/s41612-021-00218-2#ref-CR61)</sup> |
+| INM-CM4-8 | 1 | 1 | 1 | 1 | <sup>[62](https://www.nature.com/articles/s41612-021-00218-2#ref-CR62)</sup> |
+| INM-CM5-0 | 10 | 1 | 1 | 1 | <sup>[63](https://www.nature.com/articles/s41612-021-00218-2#ref-CR63)</sup> |
+| IPSL-CM6A-LR | 32 | 6 | 6 | 6 | <sup>[64](https://www.nature.com/articles/s41612-021-00218-2#ref-CR64)</sup> |
+| MIROC6 | 10 | 3 | 3 | 3 | <sup>[65](https://www.nature.com/articles/s41612-021-00218-2#ref-CR65)</sup> |
+| MPI-ESM1-2-HR | 7 | 2 | 2 | 2 | <sup>[66](https://www.nature.com/articles/s41612-021-00218-2#ref-CR66)</sup> |
+| MPI-ESM1-2-LR | 10 | 10 | 10 | 10 | <sup>[67](https://www.nature.com/articles/s41612-021-00218-2#ref-CR67)</sup> |
+| MRI-ESM2-0 | 5 | 1 | 1 | 1 | <sup>[68](https://www.nature.com/articles/s41612-021-00218-2#ref-CR68)</sup> |
 
 ### Computation of the SPEI drought index
 

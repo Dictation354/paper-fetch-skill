@@ -11,7 +11,9 @@ provider/browser workflow
         ↓
 browser_runtime facade + BrowserRuntimeConfig
         ↓
-RuntimeContext.new_browser_context_for_runtime_config
+RuntimeContext.new_browser_context_for_runtime_config（兼容委托）
+        ↓
+BrowserSessions（请求独立、线程归属）
         ↓
 PublisherProfileManager / ByparrManager
 ```
@@ -27,6 +29,10 @@ figure page discovery、图片、附件、auth 与 preflight 均通过同一 run
 各阶段只关闭自己创建的页面，batch 结束、取消升级或 runtime 关闭时统一释放 manager、
 所属浏览器会话及其控制资源。Playwright sync 对象不跨线程共享；资产调度通过
 caller-thread 机制调用浏览器，direct HTTP 仍可并行。
+
+`BrowserSessions` 负责 manager 创建/复用、profile 冲突、出版社切换、诊断与关闭；`RuntimeContext` 保留取消、提交屏障、transport 和请求缓存。batch child 各自拥有会话 owner，只共享 transport。关闭先释放所属线程的缓存页面与 manager，再清理请求缓存，最后关闭自有 transport；其他线程的会话及关闭中的 manager 仍保留句柄，外层关闭只 fence 提交，等待 worker 收敛。
+
+bundle 的 `BrowserAssetPolicy` 显式声明附件点击和 figure page 能力、调度与 preview hooks；`BrowserPagePolicy` 承担页面复核。共享执行代码按能力调用 provider adapter，保持既有候选顺序、并发和重试。单个 HTML 候选执行与文档诊断收集分别封装，页面准备回调统一接收取消入口。
 
 原生模式由 profile owner 管理 `persistent_context=True`、出版社归属与目录锁；JSON
 模式由原有状态 owner 管理过滤后快照，选择规则见[状态模式](browser-backends.md#状态模式)。

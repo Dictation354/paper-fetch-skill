@@ -79,7 +79,7 @@ The FBI UCR database, which has carefully selected and well-balanced victim reco
 
 We have limited ourselves to modelling the algorithm with only the necessary data, understanding that users must be eager to give their data with us while also protecting their privacy. This includes the user's age, gender, and desired travel time, as these details are typically included in crime reports. Three distinct datasets are employed, each including statistical information about crimes grouped according to age, gender, and date. A careful examination of the data indicates that the aforementioned characteristics have a major impact on an individual's likelihood of becoming a victim of a specific crime.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg.t1-p6-garg-large.gif)
+![Table I](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg.t1-p6-garg-large.gif)
 
 **TABLE I.** Comparison of the Current and Planned Work.
 
@@ -133,7 +133,7 @@ $$
 
 Accordingly, the algorithm's first phase comprises evaluating the risks related to the traveller, who is linked to a certain profile. It then generates a risk index, which serves as an input for subsequent procedures.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg.t2-p6-garg-large.gif)
+![Table II](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10932329/10932331/10932570/garg.t2-p6-garg-large.gif)
 
 **TABLE II.** Crime Score.
 

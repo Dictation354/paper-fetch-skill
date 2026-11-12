@@ -8,7 +8,7 @@ source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 17066
+token_estimate: 17050
 ---
 
 # Emo: Pretraining Mixture of Experts for Emergent Modularity
@@ -17,12 +17,12 @@ token_estimate: 17066
 
 Large language models are typically deployed as monolithic systems, requiring the full model even when applications need only a narrow subset of capabilities, e.g., code, math, or domain-specific knowledge. Mixture-of-Experts (MoEs) seemingly offer a potential alternative by activating only a subset of experts per input, but in practice, restricting inference to a subset of experts for a given domain leads to severe performance degradation. This limits their practicality in memory-constrained settings, especially as models grow larger and sparser. We introduce Emo, an MoE designed for modularity—the independent use and composition of expert subsets—without requiring human-defined priors. Our key idea is to encourage tokens from similar domains to rely on similar experts. Since tokens within a document often share a domain, Emo restricts them to select experts from a shared pool, while allowing different documents to use different pools. This simple constraint enables coherent expert groupings to emerge during pretraining using document boundaries alone. We pretrain a 1B-active, 14B-total Emo on 1T tokens. As a full model, it matches standard MoE performance. Crucially, it enables selective expert use: retaining only 25% (12.5%) of experts incurs just a 1% (3%) absolute drop, whereas standard MoEs break under the same setting. We further find that expert subsets in Emo specialize at semantic levels (e.g., domains such as math or code), in contrast to the low-level syntactic specialization observed in standard MoEs. Altogether, our results demonstrate a path toward modular, memory-efficient deployment of large, sparse models and open new opportunities for composable architectures.
 
-|                                                                   |                   |                                                                              |
-| ----------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------- |
-| ![Figure](https://arxiv.org/html/2605.06663v1/x1.png)             | **Model**         | [hf.co/allenai/EMO](https://huggingface.co/allenai/EMO)                      |
-| ![Figure](https://arxiv.org/html/2605.06663v1/x2.png)             | **Code**          | [github.com/allenai/EMO](https://github.com/allenai/EMO)                     |
-| ![Figure](https://arxiv.org/html/2605.06663v1/figures/blog.png)   | **Blog**          | [allenai.org/blog/emo](https://allenai.org/blog/emo)                         |
-| ![Figure](https://arxiv.org/html/2605.06663v1/figures/search.png) | **Visualization** | [https://emovisualization.netlify.app](https://emovisualization.netlify.app) |
+|     |                   |                                                                              |
+| --- | ----------------- | ---------------------------------------------------------------------------- |
+|     | **Model**         | [hf.co/allenai/EMO](https://huggingface.co/allenai/EMO)                      |
+|     | **Code**          | [github.com/allenai/EMO](https://github.com/allenai/EMO)                     |
+|     | **Blog**          | [allenai.org/blog/emo](https://allenai.org/blog/emo)                         |
+|     | **Visualization** | [https://emovisualization.netlify.app](https://emovisualization.netlify.app) |
 
 ## 1 Introduction
 

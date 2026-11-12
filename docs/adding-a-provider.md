@@ -1,6 +1,6 @@
 # 添加 Provider
 
-新增 provider 以运行时 `ProviderBundle`、provider-local 行为测试和 golden fixture manifest 为事实源。用户可见能力与限制统一维护在 [`providers.md`](providers.md)。
+新增 provider 以静态 `ProviderDefinition`、运行时 `ProviderBundle`、provider-local 行为测试和 golden fixture manifest 为事实源。用户可见能力与限制统一维护在 [`providers.md`](providers.md)。
 
 ## 访问与路由
 
@@ -8,13 +8,13 @@
 
 ## Provider 实现
 
-在 `src/paper_fetch/providers/` 添加模块和 client，并导出不可变的 `PROVIDER_BUNDLE`。bundle 的 `client_factory` 直接引用 client 类或同模块的 typed callable，不写 `module:attribute` 字符串；需要先用 catalog 构造 browser profile 时，可先声明模块私有 `ProviderSpec`，再在 client 类之后组装 bundle。把模块加入 `paper_fetch.providers._BUILTIN_PROVIDER_ENTRY_MODULES`；固定 eager loader 会一次构造 bundle tuple、provider map 与 source map。route、source、身份和默认资产策略以该 bundle 为唯一运行时事实源。复用现有 HTTP/browser/PDF/JATS/HTML/asset/acceptance owner，不复制全局 waterfall 或错误分类。
+先在 `providers._definitions.BUILTIN_PROVIDER_DEFINITIONS` 固定清单中添加不可变 `ProviderDefinition`，声明 `ProviderSpec`、sources、规则名/别名、noise profile 和 `module:PROVIDER_BUNDLE` 实现引用；静态定义不能导入 client、浏览器或提取实现。再添加 provider 模块与 client，从该定义读取 catalog/source/规则身份，并导出不可变 `PROVIDER_BUNDLE`，避免重复维护配置。bundle 的 `client_factory` 直接引用原 client 类或 typed callable，具体 HTML hooks、render policy 与浏览器行为留在实现中。复用现有 HTTP/browser/PDF/JATS/HTML/asset/acceptance owner。
 
 ### Provider contract
 
 Provider 必须返回现有 typed payload，并让统一 acceptance 决定最终结果。route/source trace 必须来自真实 acquisition；失败应使用现有 `ProviderFailure` 和 reason code。不要在 provider 内复制全局 retry、cache、browser、asset、acceptance 或 Markdown 渲染状态机。
 
-内置模块由固定清单 eager import；bundle 的 callable 只供 runtime registry 构造 client，并由 registry 按 provider 隔离构造失败。`ProviderSpec` 只保存可描述的 catalog 事实，运行 callable 不进入 MCP provider catalog 或其它公开序列化 payload。
+catalog 只加载固定清单的静态定义并检查冲突。runtime bundle 在 provider 首次使用时加载和缓存，registry 隔离选中实现的导入或 client 构造失败；`provider_bundle()`、模块的 `PROVIDER_BUNDLE` 和原 client 导入入口继续可用。`ProviderSpec` 只保存可描述的 catalog 事实，运行 callable 不进入 MCP provider catalog 或其它公开序列化 payload。
 
 访问受限、challenge、正文不足、非 PDF wrapper 和身份不匹配必须 fail closed。敏感 header、cookie、token、带签名 URL 和本地凭据路径不得写入 fixture、artifact 或诊断文本。
 
@@ -23,6 +23,10 @@ Provider 必须返回现有 typed payload，并让统一 acceptance 决定最终
 `ProviderRenderPolicy.rewrite_asset_links` 默认为 `None`，沿用通用资产链接匹配。需要精确对象身份的 provider 可提供 `(markdown_text, assets, doi) -> str` 函数，在现有 builder 内直接改写；PLOS 以论文 DOI 和对象 ID 绑定本地路径或官方远程 URL。该 callable 不进入公开序列化结果。
 
 HTML 后处理通过 `ProviderHtmlRules.dom_hooks` / `markdown_hooks` 注册 typed callable；未配置的 hook 为 `None`，不使用字符串 stage dispatch 或反射注册表。补充材料由 provider 显式切出 scope，再复用共享资产解析器；Science/PNAS 使用已有 `asset_scopes.extract_body_and_supplementary_html`。来源对象链接统一由 `extraction.html.object_links` 在原 DOM 清理前核验 ID 和别名，不伪造 Markdown 本地锚点。调用阶段及 owner 见 [提取架构](architecture/overview.md)。
+
+浏览器资产差异在 bundle 的 typed `BrowserAssetPolicy` 中声明，包括附件点击、figure page readiness/线程约束、provider 调度、retry identity 和 preview 标注；页面状态复核由 `BrowserPagePolicy` 回调承担。共享流程只消费能力与回调，不增加出版社名称分支。页面准备回调统一接受 `page`、`timeout_ms` 与可选 `cancel_check`。IOP 调度、Wiley 状态复核和 preview 标注、IEEE 多媒体控制查找均由各自 provider owner 实现。
+
+`ProviderClient.fetch_result()` 委托唯一组装函数，扩展现有 hooks 即可。仅实现 raw protocol 的兼容 provider 使用 `RawProviderAdapter`，不在 workflow 复制组装逻辑。下载中间状态使用 `AssetFetchResponse` / `AssetBinaryPayload`，只有公开资产和诊断扩展保持字典。
 
 ## 行为测试
 

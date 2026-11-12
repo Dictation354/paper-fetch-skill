@@ -797,6 +797,8 @@ def elsevier_figure_registry(
             continue
         label = child_text(figure, "label") or "Figure"
         caption = render_inline_text(first_child(figure, "caption"))
+        if re.match(r"^Figura\s+\d", label, re.I) and not caption.startswith(label):
+            caption = f"**{label}.** {caption}"
         figure_id = normalize_text(figure.get("id"))
         locator = ""
         for node in list(figure):

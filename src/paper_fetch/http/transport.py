@@ -20,6 +20,9 @@ from collections.abc import Callable, Mapping
 from cachetools import TTLCache
 import urllib3
 
+from ..timeouts import (
+    DEFAULT_FULLTEXT_TIMEOUT_SECONDS as DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
+)
 from ..logging_utils import emit_structured_log
 from ..reason_codes import (
     ASSET_BYTES_PER_ASSET_EXCEEDED,
@@ -59,7 +62,6 @@ request_cancel_check: ContextVar[Callable[[], bool] | None] = ContextVar(
 )
 
 DEFAULT_TIMEOUT_SECONDS = 20
-DEFAULT_FULLTEXT_TIMEOUT_SECONDS = 90
 DEFAULT_POOL_NUM_POOLS = 16
 DEFAULT_POOL_MAXSIZE = 4
 DEFAULT_PER_HOST_CONCURRENCY = 4

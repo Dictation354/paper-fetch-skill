@@ -6,7 +6,7 @@ source: "mdpi_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 35442
+token_estimate: 35516
 ---
 
 # A Review of Data-Driven Approaches and Techniques for Fault Detection and Diagnosis in HVAC Systems
@@ -52,7 +52,7 @@ First, we define the systematic literature review (SLR) methodology used in our 
 
 ### 2.1. Database Search
 
-Data were collected in July 2022 via the Web of Science (WoS) platform, a widely used and authoritative database of research publications and citations. Since FDD is a specific niche in the HVAC industry, our search query consisted of two main components. The main keyword was obviously ‘HVAC’, but we decided to additionally include ‘Air handling units’ at this level. By including this most commonly used HVAC subsystem in the literature search, we wanted to obtain a result set that covers all methods commonly used in this field. The second part of the query consisted of different forms of FDD, such as ‘FDD methods’, ‘fault detection’, and ‘fault diagnosis’. After defining the mentioned keywords and key phrases, they are combined into a formal query represented by the logical expression ([1](#FD1-sensors-23-00001)), where the abbreviations and symbols indicate the following:
+Data were collected in July 2022 via the Web of Science (WoS) platform, a widely used and authoritative database of research publications and citations. Since FDD is a specific niche in the HVAC industry, our search query consisted of two main components. The main keyword was obviously ‘HVAC’, but we decided to additionally include ‘Air handling units’ at this level. By including this most commonly used HVAC subsystem in the literature search, we wanted to obtain a result set that covers all methods commonly used in this field. The second part of the query consisted of different forms of FDD, such as ‘FDD methods’, ‘fault detection’, and ‘fault diagnosis’. After defining the mentioned keywords and key phrases, they are combined into a formal query represented by the logical expression ([1](https://www.mdpi.com/1424-8220/23/1/1#FD1-sensors-23-00001)), where the abbreviations and symbols indicate the following:
 
 - *Q*—Search query
 - *H*—‘HVAC’
@@ -143,7 +143,7 @@ As shown in [Table 1](https://www.mdpi.com/1424-8220/23/1/1#sensors-23-00001-t00
 
 **Table 1.** Brief summary of related work addressing the physics-based approach in HVAC FDD. For clarity, all acronyms are provided in the Abbreviations list.
 | Target (sub)System | Software | Year | Ref. |
-| ----------------------- | ------------------------------ | ---- | ------------------------------- |
+| ----------------------- | ------------------------------ | ---- | -------------------------------------------------------------------- |
 | Heat pumps and chillers | EnergyPlus | 2022 | \[[30](https://www.mdpi.com/1424-8220/23/1/1#B30-sensors-23-00001)\] |
 | AHU | TRNSYS | 2020 | \[[25](https://www.mdpi.com/1424-8220/23/1/1#B25-sensors-23-00001)\] |
 | AHU | SIMBAD | 2020 | \[[29](https://www.mdpi.com/1424-8220/23/1/1#B29-sensors-23-00001)\] |
@@ -160,7 +160,7 @@ If-then rules are the best and most commonly used representation for implementin
 
 **Table 2.** Brief summary of related work addressing the knowledge discovery approach in HVAC FDD. For clarity, all acronyms are provided in the Abbreviations list.
 | Target (sub)System | Technique | Year | Ref. |
-| ------------------ | ---------- | ---- | ------------------------------- |
+| ------------------ | ---------- | ---- | -------------------------------------------------------------------- |
 | AC systems | rule based | 2021 | \[[35](https://www.mdpi.com/1424-8220/23/1/1#B35-sensors-23-00001)\] |
 | AHU | rule based | 2021 | \[[33](https://www.mdpi.com/1424-8220/23/1/1#B33-sensors-23-00001)\] |
 | AHU | rule based | 2021 | \[[32](https://www.mdpi.com/1424-8220/23/1/1#B32-sensors-23-00001)\] |
@@ -178,7 +178,7 @@ An overview of related work addressing the data-driven approach in HVAC FDD is p
 
 **Table 3.** Brief summary of related work addressing the data-driven approach in HVAC FDD. For clarity, all acronyms are provided in the Abbreviations list.
 | Target (sub)System | Technique | Year | Ref. |
-| ----------------------- | ----------------------------- | ---- | ------------------------------- |
+| ----------------------- | ----------------------------- | ---- | -------------------------------------------------------------------- |
 | Central water system | Autoencoder, LSTM | 2021 | \[[42](https://www.mdpi.com/1424-8220/23/1/1#B42-sensors-23-00001)\] |
 | AHU | self-MLP | 2021 | \[[43](https://www.mdpi.com/1424-8220/23/1/1#B43-sensors-23-00001)\] |
 | Heat pumps and chillers | KPCA | 2021 | \[[44](https://www.mdpi.com/1424-8220/23/1/1#B44-sensors-23-00001)\] |
@@ -238,7 +238,7 @@ Supervised learning only works with labeled datasets, which means that both the 
 
 **Table 4.** Supervised learning used in the research from the selected literature. If the record contains a certain value for Software, then it is actually a representative of a hybrid approach in which some of the data-driven techniques are implemented. For clarity, all acronyms are provided in the Abbreviations list.
 | Target (sub)System | Algorithm | Synthetic Data | Sample | Software | Year | Ref. |
-| ----------------------- | ----------------------------- | -------------- | ------ | ------------ | ---- | ------------------------------- |
+| ----------------------- | ----------------------------- | -------------- | ------ | ------------ | ---- | -------------------------------------------------------------------- |
 | HVAC in transport | BRT | Y | | MATLAB | 2021 | \[[80](https://www.mdpi.com/1424-8220/23/1/1#B80-sensors-23-00001)\] |
 | HVAC in transport | GPR, SVM, RF | Y | | MATLAB | 2021 | \[[81](https://www.mdpi.com/1424-8220/23/1/1#B81-sensors-23-00001)\] |
 | AHU | HRF–SVM | ASHRAE 1312-RP | 1 m | | 2021 | \[[59](https://www.mdpi.com/1424-8220/23/1/1#B59-sensors-23-00001)\] |
@@ -287,7 +287,7 @@ Selected literature filtered by unsupervised learning type is shown in [Table 5]
 
 **Table 5.** Unsupervised learning used in the research from the selected literature. For clarity, all acronyms are provided in the Abbreviations list.
 | Target (sub)System | Algorithm | Synthetic Data | Sample | Software | Year | Ref. |
-| ----------------------- | --------------------------- | -------------- | ------ | -------- | ---- | --------------------------------- |
+| ----------------------- | --------------------------- | -------------- | ------ | -------- | ---- | ---------------------------------------------------------------------- |
 | Central water system | Autoencoder, LSTM | | | | 2021 | \[[42](https://www.mdpi.com/1424-8220/23/1/1#B42-sensors-23-00001)\] |
 | AHU | Clustering | | | | 2021 | \[[45](https://www.mdpi.com/1424-8220/23/1/1#B45-sensors-23-00001)\] |
 | AHU | unfold-PCA | | 15 m | | 2021 | \[[48](https://www.mdpi.com/1424-8220/23/1/1#B48-sensors-23-00001)\] |
@@ -317,7 +317,7 @@ Selected literature, grouped by type of semi-unsupervised learning, is listed in
 
 **Table 6.** Semi-supervised learning used in the research from the selected literature. For clarity, all acronyms are provided in the Abbreviations list.
 | Target Sub(System) | Algorithm | Synthetic Data | Sample | Software | Year | Ref. |
-| ----------------------- | ---------------------- | -------------- | ------ | ------------ | ---- | --------------------------------- |
+| ----------------------- | ---------------------- | -------------- | ------ | ------------ | ---- | ---------------------------------------------------------------------- |
 | AHU | LSTM-SVDD | Y | | OpenModelica | 2022 | \[[103](https://www.mdpi.com/1424-8220/23/1/1#B103-sensors-23-00001)\] |
 | AHU | self-MLP | | | | 2021 | \[[43](https://www.mdpi.com/1424-8220/23/1/1#B43-sensors-23-00001)\] |
 | Heat pumps and chillers | KPCA | ASHRAE 1043-RP | | | 2021 | \[[44](https://www.mdpi.com/1424-8220/23/1/1#B44-sensors-23-00001)\] |
@@ -342,7 +342,7 @@ The use of virtual/soft sensors \[[80](https://www.mdpi.com/1424-8220/23/1/1#B80
 
 **Table 7.** Brief summary of related work addressing the hybrid approach in HVAC FDD. For clarity, all acronyms are provided in the Abbreviations list.
 | Target (sub)System | Technique | Software | Year | Ref. |
-| ----------------------- | --------------------------- | ------------ | ---- | --------------------------------- |
+| ----------------------- | --------------------------- | ------------ | ---- | ---------------------------------------------------------------------- |
 | AHU | LSTM-SVDD | OpenModelica | 2022 | \[[103](https://www.mdpi.com/1424-8220/23/1/1#B103-sensors-23-00001)\] |
 | HVAC in transport | BRT | MATLAB | 2021 | \[[80](https://www.mdpi.com/1424-8220/23/1/1#B80-sensors-23-00001)\] |
 | HVAC in transport | GPR, SVM, RF | MATLAB | 2021 | \[[81](https://www.mdpi.com/1424-8220/23/1/1#B81-sensors-23-00001)\] |

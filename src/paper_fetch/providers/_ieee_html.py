@@ -142,6 +142,7 @@ def _annotate_ieee_inline_media_blocks(article: Tag, source_url: str) -> None:
         asset = _ieee_asset_from_figure_full_block(block, source_url)
         if asset is None:
             continue
+        block["data-paper-fetch-object-kind"] = asset.get("kind") or "figure"
         # Xplore uses div.figcaption (with a nested JATS fig), while the
         # shared figure renderer consumes semantic HTML figcaption nodes.
         # Normalize this provider DOM before removing the preview image.

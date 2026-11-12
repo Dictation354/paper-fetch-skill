@@ -129,6 +129,10 @@ def test_ddpm_algorithms_keep_their_source_sections_and_order():
         < markdown.index("When applied to")
     )
     assert extracted.diagnostics["extraction"]["semantic_block_appended_count"] == 0
+    from markdown_it import MarkdownIt
+
+    rendered = BeautifulSoup(MarkdownIt().render(markdown), "lxml")
+    assert not any("$" in code.get_text() for code in rendered.select("pre code"))
 
 
 @pytest.mark.parametrize(

@@ -8,11 +8,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from collections.abc import Mapping
 
-from ..quality.access_boundary import (
-    check_payload_paywall,
-    confirmed_paywall,
-)
-from ..asset_budget import use_asset_budget
 from ..artifacts import ArtifactStore
 from ..extraction.html import decode_html, render_html_markdown
 from ..failure import FailureDiagnostics
@@ -23,9 +18,7 @@ from ..publisher_identity import normalize_doi, validate_extracted_identity
 from ..runtime import RuntimeContext
 from ..tracing import (
     TraceEvent,
-    download_marker,
     merge_trace,
-    trace_from_markers,
 )
 from ..utils import (
     empty_asset_results,
@@ -48,6 +41,7 @@ from ..reason_codes import (
 
 if TYPE_CHECKING:
     from ._waterfall import WaterfallStep
+    from ._result import ResultAssemblyPolicy
 
 
 class ProviderFailure(Exception):
@@ -656,143 +650,25 @@ class ProviderClient:
         artifact_store: ArtifactStore | None = None,
         context: RuntimeContext | None = None,
     ) -> ProviderFetchResult:
-        owns_context = context is None
-        context = self._runtime_context(context, output_dir=output_dir)
-        active_artifact_store = artifact_store or ArtifactStore.from_download_dir(
-            output_dir
+        from ._result import assemble_provider_result
+
+        return assemble_provider_result(
+            self,
+            doi,
+            metadata,
+            output_dir,
+            asset_profile=asset_profile,
+            artifact_store=artifact_store,
+            context=context,
         )
-        asset_output_dir = active_artifact_store.asset_download_dir
-        previous_asset_profile = context.asset_profile
-        context.asset_profile = asset_profile
-        try:
-            prepared = self.prepare_fetch_result_payload(
-                doi, metadata, asset_profile=asset_profile, context=context
-            )
-            checked_input = check_payload_paywall(
-                prepared.raw_payload, {**metadata, "doi": doi}, context=context
-            )
-            prepared = self.maybe_recover_fetch_result_payload(
-                doi,
-                metadata,
-                prepared,
-                asset_profile=asset_profile,
-                context=context,
-            )
-            prepared.raw_payload = self.ensure_html_markdown(
-                prepared.raw_payload, metadata, context=context
-            )
-            prepared.raw_payload = self.validate_raw_payload_identity(
-                doi, metadata, prepared.raw_payload
-            )
-            raw_payload = prepared.raw_payload
-            checked_input = check_payload_paywall(
-                raw_payload,
-                {**metadata, "doi": doi},
-                context=context,
-                checked_input=checked_input,
-            )
-            # Assembly can expose an access restriction absent from the initial payload.
-            if prepared.provisional_article is None:
-                prepared.provisional_article = self.to_article_model(
-                    metadata, raw_payload, context=context
-                )
-            checked_input = check_payload_paywall(
-                raw_payload,
-                {**metadata, "doi": doi},
-                context=context,
-                checked_input=checked_input,
-            )
-            assembled_content = raw_payload.content
-            artifact_policy = self.describe_artifacts(raw_payload)
-            downloaded_assets: list[Mapping[str, Any]] = []
-            asset_failures: list[Mapping[str, Any]] = []
-            warnings = list(
-                prepared.result_warnings
-                if prepared.result_warnings is not None
-                else raw_payload.warnings
-            )
-            trace = list(
-                prepared.result_trace
-                if prepared.result_trace is not None
-                else raw_payload.trace
-            )
-            if (
-                asset_output_dir is not None
-                and asset_profile != "none"
-                and artifact_policy.allow_related_assets
-                and self.should_download_related_assets_for_result(
-                    raw_payload,
-                    provisional_article=prepared.provisional_article,
-                )
-            ):
-                try:
-                    with use_asset_budget(context.asset_budget):
-                        asset_results = self.download_related_assets(
-                            doi,
-                            metadata,
-                            raw_payload,
-                            asset_output_dir,
-                            asset_profile=asset_profile,
-                            context=context,
-                        )
-                    downloaded_assets = list(asset_results.get("assets") or [])
-                    asset_failures = list(asset_results.get("asset_failures") or [])
-                except ProviderFailure as exc:
-                    warnings.append(self.asset_download_failure_warning(exc))
-                    trace.extend(
-                        trace_from_markers(
-                            [download_marker(f"{self.name}_assets_failed")]
-                        )
-                    )
-                except (RequestFailure, OSError) as exc:
-                    warnings.append(self.asset_download_failure_warning(exc))
-                    trace.extend(
-                        trace_from_markers(
-                            [download_marker(f"{self.name}_assets_failed")]
-                        )
-                    )
-            if (
-                prepared.provisional_article is not None
-                and raw_payload.content is assembled_content
-                and not downloaded_assets
-                and not asset_failures
-            ):
-                article = prepared.provisional_article
-            else:
-                article = self.to_article_model(
-                    metadata,
-                    raw_payload,
-                    downloaded_assets=downloaded_assets,
-                    asset_failures=asset_failures,
-                    context=context,
-                )
-            article = self.finalize_fetch_result_article(
-                article,
-                raw_payload=raw_payload,
-                provisional_article=prepared.provisional_article,
-                finalize_warnings=prepared.finalize_warnings,
-            )
-            artifacts = self.describe_artifacts(
-                raw_payload,
-                downloaded_assets=downloaded_assets,
-                asset_failures=asset_failures,
-            )
-            return ProviderFetchResult(
-                provider=raw_payload.provider or self.name,
-                article=article,
-                content=raw_payload.content,
-                warnings=warnings,
-                trace=list(trace or trace_from_markers(article.quality.source_trail)),
-                artifacts=artifacts,
-            )
-        except ProviderFailure as exc:
-            if not confirmed_paywall(exc):
-                raise
-            return restricted_provider_result(self.name, {**metadata, "doi": doi}, exc)
-        finally:
-            context.asset_profile = previous_asset_profile
-            if owns_context:
-                context.close()
+
+    def result_assembly_policy(self) -> ResultAssemblyPolicy:
+        from ._result import ResultAssemblyPolicy
+
+        return ResultAssemblyPolicy()
+
+    def result_provider_name(self, raw_payload: RawFulltextPayload) -> str:
+        return raw_payload.provider or self.name
 
     def _runtime_context(
         self, context: RuntimeContext | None, *, output_dir: Path | None = None

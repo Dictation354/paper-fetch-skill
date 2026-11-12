@@ -47,5 +47,6 @@
     "binary_tests": [
       "tests/integration/test_fixture_provenance.py"
     ]
-  }
+  },
+  "pdf_body_sha256": "fc59717fcf331e509db71c7236faab47421a12e3b918b326872310e3d463430c"
 }

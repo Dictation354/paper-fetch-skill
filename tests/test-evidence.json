@@ -4715,6 +4715,54 @@
         "scope": "Node archive staging, hash verification, Playwright driver lifecycle and formula Node package interfaces.",
         "reason": "Generated archive fixtures and real subprocess contracts verify installation and runtime interfaces without paper content."
       }
+    },
+    "tests/unit/test_audit_extraction_links_and_structure.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "November extraction audit: explicit aliases, source links, typed images, quotes, code runs, grouped headers and attachment identity",
+        "reason": "最小 HTML/XML 和模型片段验证内部契约。"
+      }
+    },
+    "tests/golden/test_november_extraction_audit.py": {
+      "default": {
+        "kind": "content",
+        "scope": "November audit persisted current outputs and historical HTML replay; PDF title metadata only",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
+      }
+    },
+    "tests/unit/test_provider_definitions.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "静态 provider 定义冲突与选中实现导入失败的局部隔离。",
+        "reason": "最小契约场景、独立 Python 进程或真实线程配合边界 mock；不使用论文内容作为完整性证据。"
+      }
+    },
+    "tests/unit/test_result_assembly_contracts.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "统一组装对主接口与 raw-only 接口的调用、异常、trace、PDF 资产与请求状态恢复契约。",
+        "reason": "最小契约场景、独立 Python 进程或真实线程配合边界 mock；不使用论文内容作为完整性证据。"
+      }
+    },
+    "tests/integration/test_provider_import_isolation.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "独立进程内静态 catalog、规则别名按需加载和并发首次导入契约。",
+        "reason": "最小契约场景、独立 Python 进程或真实线程配合边界 mock；不使用论文内容作为完整性证据。"
+      }
+    },
+    "tests/integration/test_browser_session_ownership.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "真实线程下浏览器会话复用、出版社切换、child 隔离及取消后的关闭顺序；浏览器创建使用边界 mock。",
+        "reason": "最小契约场景、独立 Python 进程或真实线程配合边界 mock；不使用论文内容作为完整性证据。"
+      }
     }
   }
 }

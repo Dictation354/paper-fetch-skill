@@ -8,7 +8,7 @@ source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 7264
+token_estimate: 7265
 ---
 
 # Intracellular thermometry uncovers spontaneous thermogenesis and associated thermal signaling
@@ -73,7 +73,8 @@ In 2014, Baffou et al., assuming the cell as a liquid with a single composition,
 
 Considering that intracellular temperature is an extremely influential physical parameter for thermodynamics, thermochemistry, and heat transfer in a cell, it seems impossible to explain intracellular temperature variation by only one scientific field. Here, we refer to the statement by the physicist Schrödinger in his lecture in 1943 in Dublin<sup>[60](https://www.nature.com/articles/s42003-021-02908-2#ref-CR60)</sup>:
 
-“What I wish to make clear …is… we must be prepared to find it \[living matter\] working in a manner that cannot be reduced to the ordinary laws of physics.”
+> “What I wish to make clear …is… we must be prepared to find it \[living matter\] working in a manner that cannot be reduced to the ordinary laws of physics.”
+>
 
 In the future, the careful pursuit of energy income and expenses in the thermal, chemical, and mechanical forms will lead to a deeper understanding of the scientific significance of intracellular temperature. Moreover, the construction of theories based on completely new concepts that can encompass the abovementioned related fields is also a challenging and promising direction for intracellular thermometry.
 

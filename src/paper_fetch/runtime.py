@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from .asset_budget import AssetBudget
+from .providers.browser_runtime.sessions import BrowserSessions as BrowserSessions
 from .artifacts import DEFAULT_ARTIFACT_MODE, ArtifactMode, ArtifactStore
 from .config import (
     HTTP_PER_HOST_CONCURRENCY_ENV_VAR,
@@ -105,14 +106,6 @@ class SharedRuntimeResources:
     """Connection resources borrowed by child requests."""
 
     transport: HttpTransport
-
-
-@dataclass
-class BrowserSessions:
-    """Thread-affine sessions owned by one request, never shared with children."""
-
-    lock: threading.RLock = field(default_factory=threading.RLock)
-    managers: dict[tuple[int, bool, str], Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -392,105 +385,26 @@ class RuntimeContext:
         return max(minimum_ms, min(maximum_ms, int(remaining * 1000)))
 
     def new_browser_context_for_runtime_config(
-        self,
-        config: Any,
-        **context_kwargs: Any,
+        self, config: Any, **context_kwargs: Any
     ) -> Any:
-        """Borrow the publisher's thread-affine persistent context."""
-
-        from .providers.browser_runtime.profile import (
-            profile_path,
+        return self._browser_sessions.new_browser_context_for_runtime_config(
+            config, runtime_context=self, **context_kwargs
         )
 
-        from dataclasses import replace
-
-        config = replace(config, backend="byparr")
-        path = profile_path(config)
-        key = (threading.get_ident(), bool(config.headless), str(path))
-        with self._browser_context_manager_lock:
-            manager = self._camoufox_browser_managers.get(key)
-            if manager is not None and manager.config.provider != config.provider:
-                from .providers.browser_runtime.types import BrowserRuntimeFailure
-
-                raise BrowserRuntimeFailure(
-                    "browser_profile_provider_conflict",
-                    f"Publisher profile {path} belongs to {manager.config.provider}; cannot use it for {config.provider}.",
-                )
-            if manager is not None and (
-                manager.config.backend != config.backend
-                or manager.config.binary_path != config.binary_path
-            ):
-                raise RuntimeError(
-                    f"Conflicting browser executable for native profile: {path}"
-                )
-            if manager is None:
-                # Release the prior publisher before waiting for another directory.
-                # This prevents two requests from holding opposite profile leases.
-                self.close_camoufox_for_current_thread()
-                from .providers.browser_runtime.api import _backend
-
-                manager = _backend(config.backend).create_manager(
-                    config, runtime_context=self
-                )
-                self._camoufox_browser_managers[key] = manager
-        try:
-            return manager.new_context()
-        except BaseException:
-            with self._browser_context_manager_lock:
-                self._camoufox_browser_managers.pop(key, None)
-            manager.close()
-            raise
-
     def note_browser_json_export(self, path: Path) -> None:
-        for key, manager in list(self._camoufox_browser_managers.items()):
-            if key[0] == threading.get_ident():
-                manager.note_json_export(path)
+        self._browser_sessions.note_browser_json_export(path)
 
     def refresh_browser_profiles(self) -> None:
-        for key, manager in list(self._camoufox_browser_managers.items()):
-            if key[0] == threading.get_ident():
-                manager.refresh()
+        self._browser_sessions.refresh_browser_profiles()
 
     def browser_profile_diagnostics(self, context: Any) -> dict[str, Any]:
-        for manager in self._camoufox_browser_managers.values():
-            if manager.context is context:
-                return dict(manager.diagnostics)
-        return {}
+        return self._browser_sessions.browser_profile_diagnostics(context)
 
     def close_browser(self) -> None:
-        """Close Camoufox managers owned by this runtime context."""
-
-        self.close_camoufox_for_current_thread()
+        self._browser_sessions.close_browser(self)
 
     def close_camoufox_for_current_thread(self) -> None:
-        """Close Camoufox managers while still on their owning worker thread."""
-
-        owner_thread_id = threading.get_ident()
-        with self._browser_context_manager_lock:
-            owned_items = [
-                (key, manager)
-                for key, manager in self._camoufox_browser_managers.items()
-                if key[0] == owner_thread_id
-            ]
-            for key, _manager in owned_items:
-                self._camoufox_browser_managers.pop(key, None)
-        seen: set[int] = set()
-        for _key, manager in owned_items:
-            if id(manager) in seen:
-                continue
-            seen.add(id(manager))
-            # Cached figure/seed pages must not survive a publisher switch.
-            for cache_key, value in list(self.session_cache.items()):
-                if (
-                    manager.context is not None
-                    and getattr(value, "context", None) is manager.context
-                ):
-                    close = getattr(value, "close", None)
-                    if callable(close):
-                        with contextlib.suppress(Exception):
-                            close()
-                    self.session_cache.pop(cache_key, None)
-            manager.close()
+        self._browser_sessions.close_camoufox_for_current_thread(self)
 
     def close(self) -> None:
         if self._closed:
@@ -503,8 +417,11 @@ class RuntimeContext:
                 self.fence_commits()
                 return
         self._closed = True
-        session_values = list(self.session_cache.values())
-        self.session_cache.clear()
+        with self._parse_cache_lock:
+            self.parse_cache.clear()
+        with self._session_cache_lock:
+            session_values = list(self.session_cache.values())
+            self.session_cache.clear()
         seen: set[int] = set()
         for value in session_values:
             close = getattr(value, "close", None)

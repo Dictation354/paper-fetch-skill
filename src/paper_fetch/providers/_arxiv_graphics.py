@@ -46,6 +46,17 @@ def _standalone_svg(node: Tag) -> bytes:
 def prepare_arxiv_graphics(article: Tag, source_url: str) -> None:
     """Expose the actual graph at its original DOM position before table capture."""
     factory = BeautifulSoup("", ARXIV_HTML_PARSER)
+    # LaTeXML marks resource-row badges as square graphics. Their sibling
+    # links carry the author's information; these frontmatter icons have no
+    # scientific figure owner and must not become block images in table cells.
+    for icon in list(article.select("img.ltx_img_square, object.ltx_img_square")):
+        row = icon.find_parent("tr")
+        if (
+            icon.find_parent(["figure", "section", "math"]) is None
+            and row is not None
+            and row.select_one("a[href]") is not None
+        ):
+            icon.decompose()
     for node in list(article.select("object[data], svg.ltx_picture")):
         # Frontmatter icons and inline mathematical glyphs are not figure assets.
         if node.find_parent(["figure", "section"]) is None:

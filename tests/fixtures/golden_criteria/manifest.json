@@ -24843,7 +24843,7 @@
     "10.1063_1.39658": {
       "doi": "10.1063/1.39658",
       "publisher": "aip",
-      "title": "297_1.tif",
+      "title": "High throughput x-ray astronomy",
       "source_url": "https://pubs.aip.org/aip/acp/article/211/1/297-313/745585",
       "origin_kind": "real_replay",
       "usage_kind": "content",
@@ -26260,7 +26260,8 @@
         "original.pdf": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/acquisition/subscription-2026-09-15/downloaded.pdf",
         "landing.html": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/acquisition/subscription-2026-09-15/response-002.bin",
         "expected.json": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/extracted.md",
+        "acquisition/current-19-2026-09-18/001-browser_rendered_dom.html": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/acquisition/current-19-2026-09-18/001-browser_rendered_dom.html"
       },
       "asset_origins": {
         "acquisition/official-reacquisition-2026-09-19/outputs/6db4406fac51-Wang_et_al_2026_Decoupling_the_Cation-Induced_Vibrational_Responses_at_the_Graphdiyne_Water_Interface_via_In_Situ_Surface-Enhanced_Raman_Spectroscopy.json": "unverified",

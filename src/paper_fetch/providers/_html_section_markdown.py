@@ -290,6 +290,18 @@ def render_container_markdown(
                     [f"{'#' * max(2, min(heading_level, 6))} {heading_text}", ""]
                 )
             continue
+        if child.name == "blockquote":
+            quoted: list[str] = []
+            render_container_markdown(
+                child,
+                quoted,
+                level=level,
+                preserve_heading_levels=preserve_heading_levels,
+                render_table_cell=render_table_cell,
+            )
+            lines.extend(["> " + line if line else ">" for line in quoted])
+            lines.append("")
+            continue
         if (
             child.name in {"p", "blockquote"}
             and child.find(["ul", "ol", "table", "div", "p", "figure", "section"])

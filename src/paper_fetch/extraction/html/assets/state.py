@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from concurrent.futures import as_completed, CancelledError, ThreadPoolExecutor
 from contextvars import copy_context
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
+from pathlib import Path
 import threading
 import time
 from typing import Any, TypeVar
 import urllib.parse
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
 
 from ....asset_budget import AssetBudget, AssetBudgetExceeded, AssetReservation
 from ....config import DEFAULT_ASSET_DOWNLOAD_CONCURRENCY
@@ -131,15 +132,13 @@ def _timed_resolution(
 ) -> AssetDownloadResolution | None:
     if resolved is None:
         return None
-    if isinstance(resolved.response, Mapping):
-        return replace(
-            resolved,
-            response=_timed_mapping(
-                resolved.response,
-                queued_at=queued_at,
-                queue_seconds=queue_seconds,
-            ),
+    if resolved.response is not None:
+        response = resolved.response.copy()
+        response.timing["queue"] = max(0.0, response.timing.get("queue", 0.0)) + max(
+            0.0, queue_seconds
         )
+        response.started_at = queued_at
+        return replace(resolved, response=response)
     if resolved.failure is not None:
         return replace(
             resolved,
@@ -184,6 +183,100 @@ def _finalize_asset_timing(
 
 
 @dataclass(frozen=True)
+class AssetBinaryPayload:
+    """Binary ownership: either complete bytes or a staged file plus a prefix."""
+
+    body: bytes = b""
+    staging_path: Path | None = None
+    downloaded_bytes: int = 0
+    reservation: AssetReservation | None = None
+
+    def rollback(self) -> None:
+        if self.reservation is not None:
+            self.reservation.rollback()
+
+
+@dataclass
+class AssetFetchResponse(MutableMapping[str, Any]):
+    """Typed resources with a mapping view for existing response inspectors.
+
+    Only HTTP fields and diagnostic extensions appear in the mapping view.
+    Reservations and converted source ownership always travel as typed fields.
+    """
+
+    payload: AssetBinaryPayload = field(default_factory=AssetBinaryPayload)
+    original_payload: AssetBinaryPayload | None = None
+    original_content_type: str = ""
+    source_format: str = ""
+    conversion_tool: str = ""
+    timing: dict[str, float] = field(default_factory=dict)
+    started_at: float | None = None
+    diagnostics: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_mapping(cls, response: Mapping[str, Any]) -> AssetFetchResponse:
+        if isinstance(response, cls):
+            return response
+        fields = dict(response)
+        raw_body = fields.pop("body", b"")
+        body = bytes(raw_body) if isinstance(raw_body, bytes | bytearray) else b""
+        staging = fields.pop("staging_path", None)
+        size = int(fields.pop("downloaded_bytes", 0) or len(body))
+        timing = fields.pop(_ASSET_TIMING_INTERNAL_KEY, None)
+        started = fields.pop(_ASSET_STARTED_INTERNAL_KEY, None)
+        return cls(
+            payload=AssetBinaryPayload(
+                body=body,
+                staging_path=Path(staging) if staging else None,
+                downloaded_bytes=size,
+            ),
+            timing=dict(timing) if isinstance(timing, Mapping) else {},
+            started_at=started,
+            diagnostics=fields,
+        )
+
+    def copy(self) -> AssetFetchResponse:
+        return replace(
+            self, timing=dict(self.timing), diagnostics=dict(self.diagnostics)
+        )
+
+    def __getitem__(self, key: str) -> Any:
+        if key == "body":
+            return self.payload.body
+        if key == "downloaded_bytes":
+            return self.payload.downloaded_bytes
+        if key == "staging_path":
+            return str(self.payload.staging_path) if self.payload.staging_path else None
+        return self.diagnostics[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        if key == "body":
+            self.payload = replace(self.payload, body=bytes(value))
+        elif key == "downloaded_bytes":
+            self.payload = replace(self.payload, downloaded_bytes=int(value))
+        elif key == "staging_path":
+            self.payload = replace(
+                self.payload, staging_path=Path(value) if value else None
+            )
+        else:
+            self.diagnostics[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.diagnostics[key]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(("body", "downloaded_bytes", "staging_path", *self.diagnostics))
+
+    def __len__(self) -> int:
+        return 3 + len(self.diagnostics)
+
+    def rollback(self) -> None:
+        self.payload.rollback()
+        if self.original_payload is not None:
+            self.original_payload.rollback()
+
+
+@dataclass(frozen=True)
 class AssetDownloadCandidate:
     url: str
 
@@ -196,17 +289,28 @@ class AssetDownloadFailure:
 @dataclass(frozen=True)
 class AssetDownloadAttempt:
     candidate: AssetDownloadCandidate
-    response: Mapping[str, Any] | None = None
+    response: AssetFetchResponse | None = None
     source_url: str = ""
     failure: AssetDownloadFailure | None = None
     download_tier_override: str = ""
     reservation: AssetReservation | None = None
 
+    def __post_init__(self) -> None:
+        if self.response is not None:
+            response = AssetFetchResponse.from_mapping(self.response)
+            if self.reservation is not None and response.payload.reservation is None:
+                response = response.copy()
+                response.payload = replace(
+                    response.payload, reservation=self.reservation
+                )
+            object.__setattr__(self, "response", response)
+            object.__setattr__(self, "reservation", response.payload.reservation)
+
 
 @dataclass(frozen=True)
 class AssetDownloadResolution:
     asset: dict[str, Any]
-    response: Mapping[str, Any] | None = None
+    response: AssetFetchResponse | None = None
     source_url: str = ""
     failure: AssetDownloadFailure | None = None
     preview_url: str = ""
@@ -214,6 +318,23 @@ class AssetDownloadResolution:
     download_tier_override: str = ""
     provenance: tuple[str, ...] = ()
     reservation: AssetReservation | None = None
+
+    def __post_init__(self) -> None:
+        if self.response is not None:
+            response = AssetFetchResponse.from_mapping(self.response)
+            if self.reservation is not None and response.payload.reservation is None:
+                response = response.copy()
+                response.payload = replace(
+                    response.payload, reservation=self.reservation
+                )
+            object.__setattr__(self, "response", response)
+            object.__setattr__(self, "reservation", response.payload.reservation)
+
+    def rollback(self) -> None:
+        if self.response is not None:
+            self.response.rollback()
+        elif self.reservation is not None:
+            self.reservation.rollback()
 
 
 def asset_download_worker_count(total: int, configured_concurrency: int | None) -> int:
@@ -247,11 +368,6 @@ def resolution_from_attempt(
             full_size_url=full_size_url,
             provenance=tuple(dict.fromkeys(provenance)),
         )
-    response_reservation = (
-        attempt.response.get("_paper_fetch_asset_reservation")
-        if isinstance(attempt.response, Mapping)
-        else None
-    )
     return AssetDownloadResolution(
         asset=dict(asset),
         response=attempt.response,
@@ -261,13 +377,7 @@ def resolution_from_attempt(
         full_size_url=full_size_url,
         download_tier_override=attempt.download_tier_override,
         provenance=tuple(dict.fromkeys(provenance)),
-        reservation=(
-            attempt.reservation
-            if attempt.reservation is not None
-            else response_reservation
-            if isinstance(response_reservation, AssetReservation)
-            else None
-        ),
+        reservation=attempt.reservation,
     )
 
 
@@ -306,12 +416,10 @@ class _AssetCollectionState:
         if resolved is None:
             return
         if self.asset_budget.internally_cancelled:
-            if resolved.reservation is not None:
-                resolved.reservation.rollback()
+            resolved.rollback()
             return
         if resolved.response is None:
-            if resolved.reservation is not None:
-                resolved.reservation.rollback()
+            resolved.rollback()
             if resolved.failure is not None:
                 self.outcomes[index] = (
                     "failure",
@@ -325,27 +433,25 @@ class _AssetCollectionState:
         try:
             saved = self.saver(resolved)
         except AssetBudgetExceeded as exc:
-            if resolved.reservation is not None:
-                resolved.reservation.rollback()
+            resolved.rollback()
             if exc.fatal and self.asset_budget.internally_cancelled:
                 return
             raise
         except BaseException:
-            if resolved.reservation is not None:
-                resolved.reservation.rollback()
+            resolved.rollback()
             raise
         if isinstance(saved, AssetDownloadFailure):
-            if resolved.reservation is not None:
-                resolved.reservation.rollback()
+            resolved.rollback()
             if self.asset_budget.internally_cancelled and saved.diagnostic.get(
                 "reason"
             ) in {ASSET_CANCELLED, "empty_response_body"}:
                 return
             timed_failure = dict(saved.diagnostic)
-            if isinstance(resolved.response, Mapping):
-                for key in (_ASSET_TIMING_INTERNAL_KEY, _ASSET_STARTED_INTERNAL_KEY):
-                    if key in resolved.response:
-                        timed_failure[key] = resolved.response[key]
+            if resolved.response is not None:
+                timed_failure[_ASSET_TIMING_INTERNAL_KEY] = resolved.response.timing
+                timed_failure[_ASSET_STARTED_INTERNAL_KEY] = (
+                    resolved.response.started_at
+                )
             self.outcomes[index] = (
                 "failure",
                 _finalize_asset_timing(
@@ -356,10 +462,9 @@ class _AssetCollectionState:
             )
         elif saved is not None:
             timed_asset = dict(saved)
-            if isinstance(resolved.response, Mapping):
-                for key in (_ASSET_TIMING_INTERNAL_KEY, _ASSET_STARTED_INTERNAL_KEY):
-                    if key in resolved.response:
-                        timed_asset[key] = resolved.response[key]
+            if resolved.response is not None:
+                timed_asset[_ASSET_TIMING_INTERNAL_KEY] = resolved.response.timing
+                timed_asset[_ASSET_STARTED_INTERNAL_KEY] = resolved.response.started_at
             self.outcomes[index] = (
                 "asset",
                 _finalize_asset_timing(
@@ -368,8 +473,8 @@ class _AssetCollectionState:
                     save_seconds=time.monotonic() - save_started_at,
                 ),
             )
-        elif resolved.reservation is not None:
-            resolved.reservation.rollback()
+        else:
+            resolved.rollback()
 
 
 def _resolve_asset_collection_serially(
@@ -527,10 +632,12 @@ def resolve_and_collect_downloads_as_completed(
 
 
 __all__ = [
+    "AssetBinaryPayload",
     "AssetDownloadAttempt",
     "AssetDownloadCandidate",
     "AssetDownloadFailure",
     "AssetDownloadResolution",
+    "AssetFetchResponse",
     "AssetHostRecoveryCircuit",
     "AssetHostRouteDecision",
     "asset_download_worker_count",

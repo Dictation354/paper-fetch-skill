@@ -11,11 +11,11 @@ _IMAGE_LABEL_NUMBER_PATTERN = (
     r"([A-Za-z]?\d+[A-Za-z]?(?:\.\d+[A-Za-z]?)*|[A-Za-z]\.\d+[A-Za-z]?)"
 )
 _FIGURE_LABEL_PATTERN = re.compile(
-    rf"\bfig(?:ure)?\s*\.?\s*{_IMAGE_LABEL_NUMBER_PATTERN}",
+    rf"\bfig(?:ure|ura)?\s*\.?\s*{_IMAGE_LABEL_NUMBER_PATTERN}",
     flags=re.IGNORECASE,
 )
 _TABLE_LABEL_PATTERN = re.compile(
-    rf"\btable\s*\.?\s*{_IMAGE_LABEL_NUMBER_PATTERN}",
+    rf"\btable\s*\.?\s*{_IMAGE_LABEL_NUMBER_PATTERN[:-1]}|[IVXLCDM]+)(?=\W|$)",
     flags=re.IGNORECASE,
 )
 _LISTING_LABEL_PATTERN = re.compile(
@@ -52,7 +52,12 @@ def short_image_alt(
     if normalized_kind == "figure":
         number = _first_label_number("figure", heading=heading, fallback=fallback)
         if number:
-            return f"Figure {number}"
+            prefix = (
+                "Figura"
+                if re.search(r"\bFigura\s", heading or fallback or "", re.I)
+                else "Figure"
+            )
+            return f"{prefix} {number}"
         listing_number = _first_label_number(
             "listing", heading=heading, fallback=fallback
         )

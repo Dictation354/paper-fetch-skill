@@ -525,13 +525,17 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
     downloaded_assets = _captured_body_assets(fixture, extracted_assets)
     if fixture.provider == "tandf":
         downloaded_assets = [asset for asset in downloaded_assets if asset.get("path")]
-    if fixture.provider == "aip":
-        downloaded_assets = _downloaded_aip_body_assets(
-            fixture,
-            client,
-            html_text,
-            fixture.source_url,
-        )
+    if fixture.provider in {"acs", "aip"}:
+        with RuntimeContext(env={}) as context:
+            plan = plan_browser_asset_download(
+                article_id=fixture.doi,
+                output_dir=fixture.raw_path.parent,
+                html_text=html_text,
+                source_url=fixture.source_url,
+                profile={"client": client, "context": context, "asset_profile": "body"},
+                deps=client.deps,
+            )
+        downloaded_assets = _captured_body_assets(fixture, plan.body_assets)
     raw_payload = RawFulltextPayload(
         provider=fixture.provider,
         content=ProviderContent(
@@ -552,64 +556,6 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
     return client.to_article_model(
         metadata, raw_payload, downloaded_assets=downloaded_assets
     )
-
-
-def _downloaded_aip_body_assets(
-    fixture: GoldenCorpusFixture,
-    client: Any,
-    html_text: str,
-    source_url: str,
-) -> list[dict[str, Any]]:
-    downloaded: list[dict[str, Any]] = []
-    assets_dir = golden_criteria_asset(fixture.doi, "body_assets")
-    if not assets_dir.is_dir():
-        return downloaded
-    local_asset_paths = sorted(assets_dir.glob("m_*.jpeg"))
-    if not local_asset_paths:
-        return downloaded
-    plan = plan_browser_asset_download(
-        article_id=fixture.doi,
-        output_dir=assets_dir,
-        html_text=html_text,
-        source_url=source_url,
-        profile={
-            "client": client,
-            "context": RuntimeContext(env={}),
-            "asset_profile": "body",
-        },
-        deps=client.deps,
-    )
-    figure_index = 0
-    for item in plan.body_assets:
-        if str(item.get("kind") or "").lower() != "figure":
-            continue
-        if str(item.get("section") or "body").lower() not in {"", "body"}:
-            continue
-        asset_url = str(
-            item.get("full_size_url")
-            or item.get("url")
-            or item.get("preview_url")
-            or ""
-        )
-        if not asset_url:
-            continue
-        figure_index += 1
-        if figure_index > len(local_asset_paths):
-            break
-        asset_path = local_asset_paths[figure_index - 1]
-        downloaded_asset = dict(item)
-        downloaded_asset.update(
-            {
-                "path": golden_criteria_repo_path(asset_path),
-                "download_url": asset_url,
-                "source_url": asset_url,
-                "content_type": "image/jpeg",
-                "download_tier": "full_size",
-                "downloaded_bytes": asset_path.stat().st_size,
-            }
-        )
-        downloaded.append(downloaded_asset)
-    return downloaded
 
 
 def _captured_body_assets(
@@ -1103,6 +1049,17 @@ def _build_frontiers_article(fixture: GoldenCorpusFixture):
             )
         )
         replacements.update(promoted)
+    from tests.support._paper_fetch_support import FixtureHtmlTransport
+    from tests.support.acquired_publisher_inputs import _record, _response
+
+    transport = FixtureHtmlTransport({})
+    api_capture = fixture.raw_path.parent / "acquisition/supplemental-data.json"
+    if api_capture.exists():
+        record, data = _record(fixture.doi, "acquisition/supplemental-data.json")
+        transport.responses[record["requested_url"]] = _response(record, data)
+        normalized_assets = frontiers_provider.FrontiersClient(
+            transport, {}
+        )._resolve_supplementary_urls(normalized_assets, fixture.doi)
     raw_payload = RawFulltextPayload(
         provider="frontiers",
         content=ProviderContent(

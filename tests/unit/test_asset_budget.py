@@ -1572,3 +1572,54 @@ def test_streamed_tiff_conversion_publishes_source_and_png_with_one_budget(
     assert budget.snapshot()["retained_bytes"] == len(converted_payload) + len(
         transport.source_payload
     )
+
+
+def test_typed_conversion_resources_share_ownership_and_rollback_on_save_error(tmp_path):
+    from paper_fetch.extraction.html.assets.state import (
+        AssetBinaryPayload, AssetFetchResponse, AssetDownloadAttempt,
+        AssetDownloadCandidate, resolution_from_attempt,
+    )
+
+    budget = AssetBudget(max_files=2, max_bytes_total=20)
+    original = tmp_path / "source.part"
+    converted = tmp_path / "converted.part"
+    original.write_bytes(b"source")
+    converted.write_bytes(b"png")
+    source_reservation = budget.reserve()
+    source_reservation.register_staging(original)
+    source_reservation.consume(6)
+    converted_reservation = budget.reserve()
+    converted_reservation.register_staging(converted)
+    converted_reservation.consume(3)
+    response = AssetFetchResponse(
+        payload=AssetBinaryPayload(staging_path=converted, downloaded_bytes=3, reservation=converted_reservation),
+        original_payload=AssetBinaryPayload(staging_path=original, downloaded_bytes=6, reservation=source_reservation),
+    )
+    attempt = AssetDownloadAttempt(candidate=AssetDownloadCandidate("https://example.test/a"), response=response)
+    resolution = resolution_from_attempt(asset={"kind": "figure"}, attempt=attempt)
+    assert resolution.response.payload is attempt.response.payload
+    assert resolution.reservation is attempt.reservation is converted_reservation
+
+    def save(_resolved):
+        raise OSError("publish failed")
+
+    with pytest.raises(OSError, match="publish failed"):
+        resolve_and_collect_downloads_as_completed([{}], resolver=lambda _: resolution, saver=save, asset_download_concurrency=1, asset_budget=budget)
+    assert not original.exists() and not converted.exists()
+    assert budget.snapshot()["reserved_bytes"] == 0
+
+
+def test_memory_conversion_keeps_source_and_counts_output_bytes(monkeypatch, tmp_path):
+    from paper_fetch.extraction.html.assets.state import AssetFetchResponse
+    from paper_fetch.image_tools import SourceImageConversion
+
+    source = b"%!PS-Adobe-3.0 EPSF-3.0\nsource"
+    response = AssetFetchResponse.from_mapping({"body": source, "headers": {"content-type": "application/postscript"}})
+    monkeypatch.setattr(asset_download_module, "convert_source_image_response_to_png", lambda *args, **kwargs: SourceImageConversion(body=_SMALL_PNG, content_type="image/png", source_format="eps", tool="mock-converter"))
+    converted, _ = asset_download_module._converted_figure_response(response, source_url="https://example.test/figure.eps")
+    assert converted.original_payload is response.payload
+    assert converted.payload.downloaded_bytes == len(_SMALL_PNG)
+    saved = asset_download_module.save_asset_resolution(FIGURE_KIND, AssetDownloadResolution(asset={"kind": "figure"}, response=converted, source_url="https://example.test/figure.eps"), asset_dir=tmp_path, used_names_by_dir={})
+    assert saved["downloaded_bytes"] == len(_SMALL_PNG)
+    assert Path(saved["path"]).read_bytes() == _SMALL_PNG
+    assert Path(saved["original_source_path"]).read_bytes() == source

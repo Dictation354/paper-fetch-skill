@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from ..quality.access_boundary import propagate_paywall, raise_for_paywall
 
 from pathlib import Path
@@ -32,7 +34,6 @@ from ..http import (
 from ..http.headers import header_value
 from ..metadata.types import ProviderMetadata
 from ..models import AssetProfile
-from ..provider_contracts import ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..quality.html_availability import (
     HtmlQualityAssessor,
@@ -57,7 +58,7 @@ from . import _ieee_html as ieee_html
 from . import _ieee_landing as ieee_landing
 from . import _ieee_metadata as ieee_metadata
 from . import _ieee_recovery_policy as ieee_recovery_policy
-from ._ieee_routes import IEEE_ROUTES, landing_route_name
+from ._ieee_routes import landing_route_name
 from . import _ieee_supplementary as ieee_supplementary
 from . import _ieee_url as ieee_url
 from . import browser_runtime
@@ -78,7 +79,7 @@ from ._payloads import (
     build_provider_payload,
     provider_failure_diagnostics as _provider_failure_diagnostics,
 )
-from ._registry import ProviderBundle
+from ._registry import BrowserAssetPolicy, ProviderBundle
 from ._waterfall import (
     DEFAULT_WATERFALL_CONTINUE_CODES,
     ProviderWaterfallState,
@@ -96,6 +97,13 @@ from .base import (
     map_request_failure,
     summarize_capability_status,
 )
+
+from ._ieee_asset_recovery import annotate_ieee_preview
+from ._ieee_asset_identity import IEEE_ASSET_RETRY_POLICY
+
+from ._ieee_supplement_click import find_ieee_missing_link
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["ieee"]
 
 __all__ = ["IeeeClient"]
 
@@ -825,26 +833,20 @@ class IeeeClient(ProviderClient):
 
 
 PROVIDER_BUNDLE = ProviderBundle(
-    client_factory=IeeeClient,
-    catalog=ProviderSpec(
-        name="ieee",
-        display_name="IEEE",
-        official=True,
-        domains=("ieeexplore.ieee.org",),
-        doi_prefixes=("10.1109/",),
-        publisher_aliases=(
-            "ieee",
-            "institute of electrical and electronics engineers",
-        ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=True,
-        status_order=6,
-        routes=IEEE_ROUTES,
+    browser_asset_policy=BrowserAssetPolicy(
+        supplement_missing_link=find_ieee_missing_link,
+        supplement_ignore_tracking_query=True,
+        click_supplements=True,
+        browser_first_preview=True,
+        annotate_preview=annotate_ieee_preview,
+        retry_policy=IEEE_ASSET_RETRY_POLICY,
+        exact_retry_identity=True,
     ),
+    client_factory=IeeeClient,
+    catalog=_PROVIDER_DEFINITION.catalog,
     html_rules=ProviderHtmlRules(
-        name="ieee",
-        noise_profile="ieee",
+        name=_PROVIDER_DEFINITION.rules_name,
+        noise_profile=_PROVIDER_DEFINITION.noise_profile,
         cleanup=ProviderCleanupRules(
             markdown_promo_tokens=IEEE_MARKDOWN_PROMO_TOKENS,
             extraction_cleanup_selectors=IEEE_EXTRACTION_CLEANUP_SELECTORS,
@@ -859,5 +861,5 @@ PROVIDER_BUNDLE = ProviderBundle(
             overrides=IEEE_AVAILABILITY_OVERRIDES,
         ),
     ),
-    sources=("ieee_html", "ieee_pdf"),
+    sources=_PROVIDER_DEFINITION.sources,
 )

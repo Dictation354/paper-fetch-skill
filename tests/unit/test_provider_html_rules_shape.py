@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import pytest
 
-from paper_fetch.extraction.html import provider_rules as provider_rules_module
+from dataclasses import replace
+from paper_fetch.providers._definitions import PROVIDER_DEFINITIONS, validate_provider_definitions
 from paper_fetch.extraction.html.provider_rules import (
     GENERIC_HTML_RULES,
-    ProviderHtmlRules,
     _reset_provider_html_rules_cache,
     cleanup_policy_for_profile,
     provider_html_rules,
@@ -50,18 +50,8 @@ def test_require_provider_html_rules_resolves_aliases_and_rejects_unknown() -> N
         require_provider_html_rules("missing-provider")
 
 
-def test_provider_html_rules_rejects_alias_conflicts(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    first = ProviderHtmlRules(name="first", aliases=("shared",))
-    second = ProviderHtmlRules(name="second", aliases=("shared",))
-
-    monkeypatch.setattr(
-        provider_rules_module,
-        "_build_provider_html_rules",
-        lambda: {"first": first, "second": second},
-    )
-    _reset_provider_html_rules_cache()
-
-    with pytest.raises(ValueError, match="provider lookup key conflict.*shared"):
-        provider_html_rules("first")
+def test_provider_html_rules_rejects_alias_conflicts() -> None:
+    first = replace(PROVIDER_DEFINITIONS["wiley"], rules_aliases=("shared",))
+    second = replace(PROVIDER_DEFINITIONS["science"], rules_aliases=("shared",))
+    with pytest.raises(ValueError, match="alias/profile conflict.*shared"):
+        validate_provider_definitions((first, second))

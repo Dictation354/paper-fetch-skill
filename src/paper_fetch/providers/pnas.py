@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from urllib.parse import urlsplit
 
 from ..extraction.html.availability_policy import AvailabilityPolicy
@@ -17,69 +19,16 @@ from ..extraction.html.provider_rules import (
     ProviderFrontMatterRules,
     ProviderHtmlRules,
 )
-from ..provider_contracts import ProviderRouteSpec, ProviderSpec
 from ..publisher_identity import normalize_doi
 from ..quality.html_signals import PNAS_SIGNAL_SET
 from . import _pnas_html, browser_workflow
-from ._registry import BrowserPagePolicy, ProviderBundle
+from ._registry import BrowserAssetPolicy, BrowserPagePolicy, ProviderBundle
 from .browser_runtime import BrowserHtmlReadiness
 
-_PROVIDER_SPEC = ProviderSpec(
-    name="pnas",
-    browser_backends=("camoufox", "byparr"),
-    browser_default_x64="byparr",
-    browser_home_url="https://www.pnas.org/",
-    display_name="PNAS",
-    official=True,
-    domains=("www.pnas.org", "pnas.org"),
-    doi_prefixes=("10.1073/",),
-    publisher_aliases=(
-        "proceedings of the national academy of sciences",
-        "proceedings of the national academy of sciences of the united states of america",
-    ),
-    asset_default="body",
-    probe_capability="routing_signal",
-    provider_managed_abstract_only=True,
-    status_order=5,
-    base_domains=("www.pnas.org", "pnas.org"),
-    html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
-    pdf_path_templates=(
-        "/doi/epdf/{doi}",
-        "/doi/pdf/{doi}?download=true",
-        "/doi/pdf/{doi}",
-    ),
-    routes=(
-        ProviderRouteSpec(name="metadata", kind="metadata"),
-        ProviderRouteSpec(
-            name="browser_html",
-            kind="html",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="browser_pdf",
-            kind="pdf",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            requires_pdf_conversion=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="assets",
-            kind="assets",
-            browser_optional=True,
-            requires_playwright=True,
-            timeout_seconds=20,
-            concurrency=2,
-            transient_retries=0,
-        ),
-    ),
-)
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["pnas"]
+
+_PROVIDER_SPEC = _PROVIDER_DEFINITION.catalog
 
 
 def _is_sidebar_metrics_url(url: str) -> bool:
@@ -143,6 +92,9 @@ class PnasClient(browser_workflow.BrowserWorkflowClient):
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_asset_policy=BrowserAssetPolicy(
+        click_supplements=True, target_match_kinds=("*",), context_request_first=True
+    ),
     browser_page_policy=BrowserPagePolicy(
         empty_request=_is_sidebar_metrics_url,
         readiness_per_candidate=True,
@@ -151,8 +103,8 @@ PROVIDER_BUNDLE = ProviderBundle(
     client_factory=PnasClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
-        name="pnas",
-        noise_profile="pnas",
+        name=_PROVIDER_DEFINITION.rules_name,
+        noise_profile=_PROVIDER_DEFINITION.noise_profile,
         cleanup=ProviderCleanupRules(
             markdown_promo_tokens=PNAS_MARKDOWN_PROMO_TOKENS,
             extraction_drop_keywords=("signup-alert-ad", "tab-nav"),
@@ -178,5 +130,5 @@ PROVIDER_BUNDLE = ProviderBundle(
             suppress_missing_abstract=_pnas_html.pnas_suppress_missing_abstract,
         ),
     ),
-    sources=("pnas",),
+    sources=_PROVIDER_DEFINITION.sources,
 )

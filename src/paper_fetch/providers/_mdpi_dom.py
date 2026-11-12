@@ -332,8 +332,12 @@ def _retained_mdpi_statement(node: Tag) -> bool:
 def _article_container_html(
     html_text: str,
     metadata: Mapping[str, Any] | None,
+    source_url: str = "",
 ) -> tuple[str, str | None, str | None, int]:
     soup = BeautifulSoup(html_text, choose_parser())
+    from ..extraction.html.object_links import prepare_retained_object_links
+
+    prepare_retained_object_links(soup, source_url)
     title = _extract_title(soup, metadata)
     source_container = _select_article_container(soup)
     if source_container is None:

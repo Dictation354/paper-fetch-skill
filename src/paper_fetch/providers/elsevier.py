@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from ..quality.access_boundary import propagate_paywall
 from ..failure import FailureDiagnostics
 
@@ -19,7 +21,6 @@ from collections.abc import Mapping, Sequence
 from ..config import build_user_agent, resolve_asset_download_concurrency
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..http import (
-    DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     HttpRequestPolicy,
     HttpTransport,
     PDF_MIME_TYPE,
@@ -37,7 +38,6 @@ from ..models import (
     article_from_structure,
     metadata_only_article,
 )
-from ..provider_contracts import ProviderRouteSpec, ProviderSpec
 from ..pdf_limits import pdf_max_bytes
 from ..publisher_identity import extract_doi, normalize_doi
 from ..runtime import RuntimeContext
@@ -78,7 +78,12 @@ from ._pdf_common import (
 )
 from ._payloads import build_provider_payload
 from ._elsevier_navigation import finalize_markdown as _finalize_elsevier_markdown
-from ._registry import BrowserPagePolicy, ProviderBundle, ProviderRenderPolicy
+from ._registry import (
+    BrowserAssetPolicy,
+    BrowserPagePolicy,
+    ProviderBundle,
+    ProviderRenderPolicy,
+)
 from . import browser_workflow, _elsevier_html
 from .browser_runtime import BrowserHtmlReadiness, BrowserRuntimeFailure
 from ._pdf_fallback import PdfFallbackFailure
@@ -126,6 +131,9 @@ from .base import (
     map_request_failure,
     summarize_capability_status,
 )
+
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["elsevier"]
 
 _ELSEVIER_RETRYABLE_BODY_ASSET_TYPES = frozenset({"image", "table_asset"})
 _ELSEVIER_RETRYABLE_ASSET_ERROR_CATEGORIES = DEFAULT_RETRYABLE_ASSET_ERROR_CATEGORIES
@@ -724,76 +732,7 @@ def _object_request_headers(url: str, headers: Mapping[str, str]) -> dict[str, s
     }
 
 
-_PROVIDER_SPEC = ProviderSpec(
-    name="elsevier",
-    browser_backends=("camoufox", "byparr"),
-    browser_default="byparr",
-    browser_home_url="https://www.sciencedirect.com/",
-    display_name="Elsevier",
-    official=True,
-    domains=("sciencedirect.com", "elsevier.com"),
-    base_domains=("www.sciencedirect.com",),
-    doi_prefixes=("10.1016/",),
-    publisher_aliases=(
-        "elsevier",
-        "elsevier bv",
-        "elsevier ltd",
-        "elsevier masson sas",
-    ),
-    asset_default="none",
-    probe_capability="metadata_api",
-    provider_managed_abstract_only=False,
-    status_order=1,
-    api_hosts=("scopus.com", "www.scopus.com"),
-    sensitive_headers=("x-els-apikey",),
-    xml_root_tags=("full-text-retrieval-response",),
-    xml_file_tokens=("elsevier", "10.1016"),
-    routes=(
-        ProviderRouteSpec(name="metadata_api", kind="metadata"),
-        ProviderRouteSpec(
-            name="xml_api",
-            source="elsevier_xml",
-            kind="xml",
-            timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-        ),
-        ProviderRouteSpec(
-            name="browser_html",
-            kind="html",
-            source="elsevier_html",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="pdf_api",
-            source="elsevier_pdf",
-            kind="pdf",
-            requires_pdf_conversion=True,
-            timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-        ),
-        ProviderRouteSpec(
-            name="browser_pdf",
-            kind="pdf",
-            source="elsevier_pdf",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            requires_pdf_conversion=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(name="object_assets", kind="assets", transport="api"),
-        ProviderRouteSpec(
-            name="assets",
-            kind="assets",
-            browser_optional=True,
-            requires_playwright=True,
-            concurrency=1,
-        ),
-    ),
-)
+_PROVIDER_SPEC = _PROVIDER_DEFINITION.catalog
 
 
 ELSEVIER_BROWSER_PROFILE = browser_workflow.make_browser_profile(
@@ -1746,6 +1685,9 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_asset_policy=BrowserAssetPolicy(
+        click_supplements=True, target_match_kinds=("*",)
+    ),
     browser_page_policy=BrowserPagePolicy(
         document_hosts=("sciencedirect.com", "www.sciencedirect.com"),
         document_matches=_elsevier_html.main_document_matches,
@@ -1754,7 +1696,7 @@ PROVIDER_BUNDLE = ProviderBundle(
     client_factory=ElsevierClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
-        name="elsevier",
+        name=_PROVIDER_DEFINITION.rules_name,
         availability=AvailabilityPolicy(
             name="elsevier",
             overrides=ELSEVIER_AVAILABILITY_OVERRIDES,
@@ -1764,5 +1706,5 @@ PROVIDER_BUNDLE = ProviderBundle(
             paywall_paragraph_selector="p, .para, div[id^='para'], div[id^='spara']",
         ),
     ),
-    sources=("elsevier_xml", "elsevier_html", "elsevier_pdf"),
+    sources=_PROVIDER_DEFINITION.sources,
 )

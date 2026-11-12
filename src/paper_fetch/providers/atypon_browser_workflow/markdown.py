@@ -62,7 +62,21 @@ def extract_browser_workflow_markdown(
     soup = BeautifulSoup(html_text, choose_parser())
     from ...extraction.html.object_links import prepare_retained_object_links
 
-    prepare_retained_object_links(soup, source_url)
+    aliases = {}
+    if publisher == "science":
+        for anchor in soup.select("a[data-xml-rid][href]"):
+            identity = str(anchor["data-xml-rid"])
+            if soup.find(id=identity) is not None:
+                aliases[str(anchor["href"]).lstrip("#")] = identity
+    elif publisher in {"wiley", "iop"}:
+        # Dynamic bibliographies may be absent from the saved DOM. Their
+        # explicit source href remains the publisher's target identity.
+        aliases = {
+            str(a["href"])[1:]: str(a["href"])[1:]
+            for a in soup.select('a[href^="#"]')
+            if str(a["href"]) != "#"
+        }
+    prepare_retained_object_links(soup, source_url, aliases=aliases)
     title = extract_page_title(soup)
     title = _preferred_title_from_metadata(title, metadata)
     title = " ".join((title or "").split())

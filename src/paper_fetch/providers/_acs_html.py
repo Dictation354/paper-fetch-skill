@@ -114,8 +114,8 @@ def acs_before_block_normalization(container: Any) -> None:
             if isinstance(text, NavigableString):
                 text.replace_with(re.sub(r"\s+", " ", str(text)))
     # Silverchair can split one labelled table into several visible tables,
-    # each accompanied by a hidden accessibility copy. Keep every distinct
-    # visible part available to the existing single-table block renderer.
+    # each accompanied by a hidden accessibility copy. The provider table hook
+    # keeps distinct visible segments together under their source wrapper.
     for wrapper in list(container.select(".table-wrap")):
         from ._html_section_markdown import render_retained_text_from_html
 
@@ -128,24 +128,70 @@ def acs_before_block_normalization(container: Any) -> None:
             paragraph["data-paper-fetch-markdown"] = "1"
             note_blocks.append(paragraph)
             note.decompose()
-        tables = [
-            table
-            for table in wrapper.find_all("table")
-            if not any(
-                parent.get("aria-hidden") == "true"
-                for parent in [table, *table.parents]
-            )
-        ]
         anchor = wrapper
-        for table in tables[1:]:
-            continuation = BeautifulSoup("", choose_parser()).new_tag("div")
-            continuation["class"] = ["table-wrap"]
-            continuation.append(table.extract())
-            anchor.insert_after(continuation)
-            anchor = continuation
         for note in note_blocks:
             anchor.insert_after(note)
             anchor = note
+
+
+def render_acs_table(node: Tag, *, label: str, caption: str) -> str | None:
+    """Group visible source segments and lift coefficient-group expressions once."""
+    from ..extraction.html.tables import (
+        table_rows,
+        table_header_row_count,
+        _table_rows_to_ir,
+        render_table_inline_text,
+    )
+    from ..extraction.table_grid import normalize_table
+    from ..extraction.markdown_render.tables import render_grouped_table_block
+
+    tables = [
+        t
+        for t in ([node] if node.name == "table" else node.find_all("table"))
+        if not any(p.get("aria-hidden") == "true" for p in [t, *t.parents])
+    ]
+    if not tables or (len(tables) == 1 and not tables[0].select("thead [colspan]")):
+        return None
+    groups = []
+    for original in tables:
+        table = copy.deepcopy(original)
+        prefixes = []
+        for cell in table.select("thead [colspan]"):
+            if int(cell.get("colspan") or 1) <= 1:
+                continue
+            expression = render_table_inline_text(cell)
+            if not expression:
+                continue
+            # The header's source span still assigns its short child columns;
+            # lift only its repeated text, preserving every column and row.
+            prefixes.append(expression)
+            cell.clear()
+        rows = table_rows(table)
+        headers = table_header_row_count(table, rows)
+        normalized = normalize_table(
+            _table_rows_to_ir(rows),
+            header_row_indices=tuple(range(headers)),
+            lift_leading_full_width_groups=False,
+        )
+        groups.append(
+            {
+                "headers": list(normalized.headers),
+                "rows": [list(row) for row in normalized.rows],
+                "_table_prefix_rows": prefixes,
+                "table_render_kind": "structured"
+                if normalized.is_rectangular
+                else "structured_list",
+            }
+        )
+    return "\n".join(
+        render_grouped_table_block(
+            {
+                "heading": f"**{label}**" if label else "",
+                "caption": caption,
+                "_table_groups": groups,
+            }
+        )
+    ).rstrip()
 
 
 def acs_body_container(container: Any) -> None:

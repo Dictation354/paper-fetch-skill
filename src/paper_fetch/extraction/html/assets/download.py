@@ -75,6 +75,8 @@ from .figures import FigurePageFetcher, figure_download_candidates
 from .identity import html_asset_is_supplementary
 from .requester import cookie_header_for_url as _cookie_header_for_url
 from .state import (
+    AssetBinaryPayload,
+    AssetFetchResponse,
     AssetDownloadAttempt as _AssetDownloadAttempt,
     AssetDownloadCandidate as _AssetDownloadCandidate,
     AssetDownloadFailure as _AssetDownloadFailure,
@@ -92,15 +94,14 @@ AssetFetchPolicy = Literal["browser_first", "direct_then_browser", "browser_only
 
 
 def _with_asset_timing(
-    response: Mapping[str, Any],
+    response: AssetFetchResponse,
     phase: str,
     seconds: float,
-) -> dict[str, Any]:
-    timed = dict(response)
-    raw_timings = response.get("_paper_fetch_asset_timing_seconds")
-    timings = dict(raw_timings) if isinstance(raw_timings, Mapping) else {}
-    timings[phase] = max(0.0, float(timings.get(phase, 0.0))) + max(0.0, float(seconds))
-    timed["_paper_fetch_asset_timing_seconds"] = timings
+) -> AssetFetchResponse:
+    timed = response.copy()
+    timed.timing[phase] = max(0.0, float(timed.timing.get(phase, 0.0))) + max(
+        0.0, float(seconds)
+    )
     return timed
 
 
@@ -235,7 +236,7 @@ def _requires_caller_thread(fetcher: Any) -> bool:
     return bool(getattr(fetcher, "requires_caller_thread", False))
 
 
-def _response_content_length(response: Mapping[str, Any]) -> int | None:
+def _response_content_length(response: AssetFetchResponse) -> int | None:
     raw_value = header_value(response.get("headers"), "content-length")
     try:
         parsed = int(raw_value)
@@ -246,10 +247,10 @@ def _response_content_length(response: Mapping[str, Any]) -> int | None:
 
 def _stage_browser_response(
     kind: AssetDownloadKind,
-    response: Mapping[str, Any],
+    response: AssetFetchResponse,
     *,
     request_context: _AssetRequestContext,
-) -> dict[str, Any]:
+) -> AssetFetchResponse:
     """Apply the normal asset budget and atomic staging path to browser bytes."""
 
     from ....artifacts import ArtifactStore
@@ -277,18 +278,14 @@ def _stage_browser_response(
         reservation.rollback()
         raise
 
-    staged = dict(response)
-    staged.update(
-        {
-            "body": body[:8192],
-            "body_preview": body[:8192],
-            "staging_path": str(staging_path),
-            "downloaded_bytes": len(body),
-            "_paper_fetch_streamed": True,
-            "_paper_fetch_asset_reservation": reservation,
-            "_paper_fetch_byte_owner": "browser",
-        }
+    staged = response.copy()
+    staged.payload = AssetBinaryPayload(
+        body=body[:8192],
+        staging_path=staging_path,
+        downloaded_bytes=len(body),
+        reservation=reservation,
     )
+    staged["body_preview"] = body[:8192]
     if dimensions is not None:
         staged["dimensions"] = {
             "width": dimensions[0],
@@ -305,7 +302,7 @@ def _fetch_document_fallback(
     *,
     transport: HttpTransport | None = None,
     request_context: _AssetRequestContext | None = None,
-) -> dict[str, Any] | None:
+) -> AssetFetchResponse | None:
     del transport
     if fetcher is None:
         return None
@@ -313,7 +310,10 @@ def _fetch_document_fallback(
         return None
     try:
         browser_started_at = time.monotonic()
-        response = fetcher(candidate_url, asset)
+        raw_response = fetcher(candidate_url, asset)
+        response = (
+            AssetFetchResponse.from_mapping(raw_response) if raw_response else None
+        )
     except (RequestCancelledError, AssetBudgetExceeded):
         if (
             request_context is not None
@@ -331,7 +331,7 @@ def _fetch_document_fallback(
     content_type = header_value(response.get("headers"), "content-type")
     if not kind.accepts_response(content_type, bytes(body)):
         return None
-    recovered = dict(response)
+    recovered = response.copy()
     recovered = _with_asset_timing(
         recovered,
         "browser_recovery",
@@ -351,10 +351,10 @@ def _fetch_document_fallback(
 
 
 def _with_browser_recovery_diagnostics(
-    response: Mapping[str, Any],
+    response: AssetFetchResponse,
     direct_attempt: _AssetDownloadAttempt | None,
-) -> dict[str, Any]:
-    recovered = dict(response)
+) -> AssetFetchResponse:
+    recovered = response.copy()
     direct_diagnostic = (
         direct_attempt.failure.diagnostic
         if direct_attempt is not None and direct_attempt.failure is not None
@@ -409,34 +409,33 @@ def _should_use_document_fetcher_for_candidate(
 
 
 def _converted_figure_response_impl(
-    response: Mapping[str, Any],
+    response: AssetFetchResponse,
     *,
     source_url: str,
     asset_budget: AssetBudget | None = None,
-) -> tuple[dict[str, Any], str]:
-    if response.get("_paper_fetch_streamed"):
-        staging_value = response.get("staging_path")
-        source_path = Path(staging_value) if isinstance(staging_value, str) else None
-        source_reservation = response.get("_paper_fetch_asset_reservation")
+) -> tuple[AssetFetchResponse, str]:
+    if response.payload.staging_path is not None:
+        source_path = response.payload.staging_path
+        source_reservation = response.payload.reservation
         if (
             source_path is None
             or not source_path.is_file()
             or not isinstance(source_reservation, AssetReservation)
             or asset_budget is None
         ):
-            return dict(response), ""
+            return response.copy(), ""
         try:
             with source_path.open("rb") as source_stream:
                 source_prefix = source_stream.read(8192)
         except OSError:
-            return dict(response), ""
+            return response.copy(), ""
         source_format = source_image_format_from_payload(
             source_prefix,
             content_type=header_value(response.get("headers"), "content-type"),
             source_url=source_url,
         )
         if source_format not in {"eps", "tiff"}:
-            return dict(response), ""
+            return response.copy(), ""
         converted_path = _unique_asset_staging_path(source_path.parent)
         converted_reservation = asset_budget.reserve()
         converted_reservation.register_staging(converted_path)
@@ -450,7 +449,7 @@ def _converted_figure_response_impl(
             )
             if path_conversion is None:
                 converted_reservation.rollback()
-                return dict(response), ""
+                return response.copy(), ""
             converted_reservation.declare_content_length(path_conversion.output_bytes)
             converted_reservation.consume(path_conversion.output_bytes)
             dimensions = image_dimensions_from_path(converted_path)
@@ -475,29 +474,23 @@ def _converted_figure_response_impl(
         except BaseException:
             converted_reservation.rollback()
             raise
-        converted = dict(response)
+        converted = response.copy()
         converted_headers = dict(response.get("headers") or {})
         converted_headers["content-type"] = path_conversion.content_type
-        converted.update(
-            {
-                "headers": converted_headers,
-                "body": preview,
-                "body_preview": preview,
-                "staging_path": str(converted_path),
-                "downloaded_bytes": path_conversion.output_bytes,
-                "_paper_fetch_asset_reservation": converted_reservation,
-                "_paper_fetch_original_staging_path": str(source_path),
-                "_paper_fetch_original_reservation": source_reservation,
-                "_paper_fetch_original_downloaded_bytes": int(
-                    response.get("downloaded_bytes") or source_path.stat().st_size
-                ),
-                "_paper_fetch_original_content_type": header_value(
-                    response.get("headers"), "content-type"
-                ),
-                "_paper_fetch_original_source_format": path_conversion.source_format,
-                "_paper_fetch_conversion_tool": path_conversion.tool,
-            }
+        converted["headers"] = converted_headers
+        converted.payload = AssetBinaryPayload(
+            body=preview,
+            staging_path=converted_path,
+            downloaded_bytes=path_conversion.output_bytes,
+            reservation=converted_reservation,
         )
+        converted.original_payload = response.payload
+        converted.original_content_type = header_value(
+            response.get("headers"), "content-type"
+        )
+        converted.source_format = path_conversion.source_format
+        converted.conversion_tool = path_conversion.tool
+        converted["body_preview"] = preview
         if dimensions is not None:
             converted["dimensions"] = {
                 "width": dimensions[0],
@@ -510,33 +503,36 @@ def _converted_figure_response_impl(
         source_url=source_url,
     )
     if source_format not in {"eps", "tiff"}:
-        return dict(response), ""
+        return response.copy(), ""
     memory_conversion = convert_source_image_response_to_png(
         response, source_url=source_url
     )
     if memory_conversion is None:
-        return dict(response), ""
-    converted = dict(response)
+        return response.copy(), ""
+    converted = response.copy()
     converted_headers = dict(response.get("headers") or {})
     converted_headers["content-type"] = memory_conversion.content_type
     converted["headers"] = converted_headers
-    converted["body"] = memory_conversion.body
-    converted["_paper_fetch_original_body"] = response.get("body", b"")
-    converted["_paper_fetch_original_content_type"] = header_value(
-        response.get("headers"),
-        "content-type",
+    converted.payload = replace(
+        response.payload,
+        body=memory_conversion.body,
+        downloaded_bytes=len(memory_conversion.body),
     )
-    converted["_paper_fetch_original_source_format"] = memory_conversion.source_format
-    converted["_paper_fetch_conversion_tool"] = memory_conversion.tool
+    converted.original_payload = response.payload
+    converted.original_content_type = header_value(
+        response.get("headers"), "content-type"
+    )
+    converted.source_format = memory_conversion.source_format
+    converted.conversion_tool = memory_conversion.tool
     return converted, memory_conversion.source_format
 
 
 def _converted_figure_response(
-    response: Mapping[str, Any],
+    response: AssetFetchResponse,
     *,
     source_url: str,
     asset_budget: AssetBudget | None = None,
-) -> tuple[dict[str, Any], str]:
+) -> tuple[AssetFetchResponse, str]:
     conversion_started_at = time.monotonic()
     converted, source_format = _converted_figure_response_impl(
         response,
@@ -554,7 +550,7 @@ def _converted_figure_response(
 
 
 def _attach_browser_recovery_diagnostics(
-    download: dict[str, Any], response: Mapping[str, Any]
+    download: dict[str, Any], response: AssetFetchResponse
 ) -> None:
     browser_backend = normalize_text(
         str(response.get("_paper_fetch_browser_backend") or "")
@@ -591,7 +587,7 @@ def _attach_browser_recovery_diagnostics(
 
 
 def _attach_asset_route_diagnostics(
-    download: dict[str, Any], response: Mapping[str, Any]
+    download: dict[str, Any], response: AssetFetchResponse
 ) -> None:
     diagnostics = response.get("_paper_fetch_asset_route_diagnostics")
     if isinstance(diagnostics, Mapping) and diagnostics:
@@ -602,7 +598,7 @@ def _conversion_failure_attempt(
     kind: AssetDownloadKind,
     asset: Mapping[str, Any],
     candidate: _AssetDownloadCandidate,
-    response: Mapping[str, Any],
+    response: AssetFetchResponse,
     exc: ImageConversionFailure,
 ) -> _AssetDownloadAttempt:
     _rollback_response_reservation(response)
@@ -659,16 +655,9 @@ def _transport_supports_streaming(transport: object) -> bool:
     )
 
 
-def _rollback_response_reservation(response: Mapping[str, Any] | None) -> None:
-    if not isinstance(response, Mapping):
-        return
-    for key in (
-        "_paper_fetch_asset_reservation",
-        "_paper_fetch_original_reservation",
-    ):
-        reservation = response.get(key)
-        if isinstance(reservation, AssetReservation):
-            reservation.rollback()
+def _rollback_response_reservation(response: AssetFetchResponse | None) -> None:
+    if response is not None:
+        response.rollback()
 
 
 def _stream_asset_candidate(
@@ -678,7 +667,7 @@ def _stream_asset_candidate(
     *,
     request_headers: Mapping[str, str],
     request_context: _AssetRequestContext,
-) -> dict[str, Any]:
+) -> AssetFetchResponse:
     last_failure: RequestFailure | None = None
     retry_wait_seconds = 0.0
     request_policy = HttpRequestPolicy(
@@ -731,9 +720,9 @@ def _stream_asset_candidate(
             )
             if dimensions is not None:
                 reservation.validate_pixels(*dimensions)
-            streamed = dict(response)
+            streamed = AssetFetchResponse.from_mapping(response)
             transport_timings = response.get("_paper_fetch_timing_seconds")
-            streamed["_paper_fetch_asset_timing_seconds"] = (
+            streamed.timing = (
                 dict(transport_timings)
                 if isinstance(transport_timings, Mapping)
                 else {}
@@ -745,9 +734,11 @@ def _stream_asset_candidate(
             )
             # Only a fixed-size prefix is retained for signature/challenge
             # diagnostics. The binary remains solely in the staging file.
-            streamed["body"] = bytes(response.get("body_preview") or b"")
-            streamed["_paper_fetch_streamed"] = True
-            streamed["_paper_fetch_asset_reservation"] = reservation
+            streamed.payload = replace(
+                streamed.payload,
+                body=bytes(response.get("body_preview") or b""),
+                reservation=reservation,
+            )
             if dimensions is not None:
                 streamed["dimensions"] = {
                     "width": dimensions[0],
@@ -799,7 +790,7 @@ def _request_asset_candidate(
     candidate_url: str,
     *,
     request_context: _AssetRequestContext,
-) -> dict[str, Any]:
+) -> AssetFetchResponse:
     request_headers = kind.request_headers(
         request_context.headers,
         request_context.user_agent,
@@ -838,11 +829,13 @@ def _request_asset_candidate(
             request_context.route_name,
             base=request_policy,
         )
-    return transport.request(
-        "GET",
-        candidate_url,
-        headers=request_headers,
-        request_policy=request_policy,
+    return AssetFetchResponse.from_mapping(
+        transport.request(
+            "GET",
+            candidate_url,
+            headers=request_headers,
+            request_policy=request_policy,
+        )
     )
 
 
@@ -876,7 +869,7 @@ def _blocked_response_attempt(
     kind: AssetDownloadKind,
     asset: Mapping[str, Any],
     candidate: _AssetDownloadCandidate,
-    response: Mapping[str, Any],
+    response: AssetFetchResponse,
     source_url: str,
     reason: str,
 ) -> _AssetDownloadAttempt:
@@ -954,7 +947,7 @@ class _CandidateRecoveryResult:
     resolution: _AssetDownloadResolution | None = None
     conversion_degraded: bool = False
     budget_error: AssetBudgetExceeded | None = None
-    budget_response: Mapping[str, Any] | None = None
+    budget_response: AssetFetchResponse | None = None
     budget_candidate: _AssetDownloadCandidate | None = None
 
 
@@ -1010,7 +1003,7 @@ def _budget_failure_resolution(
     *,
     preview_url: str,
     full_size_url: str,
-    response: Mapping[str, Any] | None = None,
+    response: AssetFetchResponse | None = None,
 ) -> _AssetDownloadResolution:
     _rollback_response_reservation(response)
     attempt = _AssetDownloadAttempt(
@@ -1235,7 +1228,7 @@ def _browser_preview_upgrade(
     asset: Mapping[str, Any],
     *,
     candidate_url: str,
-    response: Mapping[str, Any],
+    response: AssetFetchResponse,
     transport: HttpTransport,
     request_context: _AssetRequestContext,
     document_fetcher: ImageDocumentFetcher | FileDocumentFetcher,
@@ -1556,10 +1549,8 @@ def _resolve_asset_download_impl(
 
         try:
             if fetch_policy == "direct_then_browser":
-                response = {
-                    **dict(response),
-                    "_paper_fetch_final_fetcher": "direct_http",
-                }
+                response = response.copy()
+                response["_paper_fetch_final_fetcher"] = "direct_http"
             response, _ = (
                 _converted_figure_response(
                     response,
@@ -1567,7 +1558,7 @@ def _resolve_asset_download_impl(
                     asset_budget=active_budget,
                 )
                 if kind.name == "figure"
-                else (dict(response), "")
+                else (response.copy(), "")
             )
         except ImageConversionFailure as exc:
             conversion_degraded = True
@@ -1637,23 +1628,22 @@ def _resolution_with_diagnostics(
     candidate_resolution_seconds: float,
     route_diagnostics: Mapping[str, Any] | None = None,
 ) -> _AssetDownloadResolution:
-    def updated_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
+    if resolved.response is not None:
         timed = _with_asset_timing(
-            payload,
-            "candidate_resolution",
-            candidate_resolution_seconds,
+            resolved.response, "candidate_resolution", candidate_resolution_seconds
         )
         if route_diagnostics:
             timed["_paper_fetch_asset_route_diagnostics"] = dict(route_diagnostics)
-        return timed
-
-    if isinstance(resolved.response, Mapping):
-        return replace(resolved, response=updated_payload(resolved.response))
+        return replace(resolved, response=timed)
     if resolved.failure is not None:
-        diagnostic = updated_payload(resolved.failure.diagnostic)
+        diagnostic = dict(resolved.failure.diagnostic)
+        timings = dict(diagnostic.get("_paper_fetch_asset_timing_seconds") or {})
+        timings["candidate_resolution"] = max(
+            0.0, float(timings.get("candidate_resolution", 0.0))
+        ) + max(0.0, candidate_resolution_seconds)
+        diagnostic["_paper_fetch_asset_timing_seconds"] = timings
         if route_diagnostics:
             diagnostic["asset_route"] = dict(route_diagnostics)
-            diagnostic.pop("_paper_fetch_asset_route_diagnostics", None)
         return replace(resolved, failure=_AssetDownloadFailure(diagnostic))
     return resolved
 
@@ -1766,7 +1756,7 @@ def resolve_asset_download(
             ),
         }
         if browser_succeeded and isinstance(resolved.response, Mapping):
-            response = dict(resolved.response)
+            response = resolved.response.copy()
             response.setdefault(
                 "_paper_fetch_final_fetcher",
                 normalize_text(str(response.get("_paper_fetch_browser_backend") or ""))
@@ -1790,20 +1780,15 @@ def save_asset_resolution(
     artifact_store: Any | None = None,
 ) -> dict[str, Any] | _AssetDownloadFailure:
     asset = resolved.asset
-    response = resolved.response or {}
+    response = resolved.response or AssetFetchResponse()
     source_url = normalize_text(resolved.source_url)
     final_url = _response_final_url(response, source_url)
     body = response.get("body", b"")
-    staging_value = response.get("staging_path")
-    staging_path = Path(staging_value) if isinstance(staging_value, str) else None
-    original_staging_value = response.get("_paper_fetch_original_staging_path")
-    original_staging_path = (
-        Path(original_staging_value)
-        if isinstance(original_staging_value, str)
-        else None
-    )
-    original_reservation = response.get("_paper_fetch_original_reservation")
-    streamed = bool(response.get("_paper_fetch_streamed"))
+    staging_path = response.payload.staging_path
+    original_payload = response.original_payload
+    original_staging_path = original_payload.staging_path if original_payload else None
+    original_reservation = original_payload.reservation if original_payload else None
+    streamed = staging_path is not None
     try:
         streamed_size = staging_path.stat().st_size if staging_path is not None else 0
     except OSError:
@@ -1878,9 +1863,7 @@ def save_asset_resolution(
             original_output_path = build_asset_output_path(
                 target_asset_dir,
                 source_url,
-                normalize_text(
-                    str(response.get("_paper_fetch_original_content_type") or "")
-                ),
+                normalize_text(response.original_content_type),
                 final_url,
                 used_names_by_dir.setdefault(target_asset_dir, set()),
             )
@@ -1922,16 +1905,10 @@ def save_asset_resolution(
             raise
     else:
         saved_path = save_payload(output_path, bytes(body)) or ""
-    original_body = response.get("_paper_fetch_original_body")
-    original_content_type = normalize_text(
-        str(response.get("_paper_fetch_original_content_type") or "")
-    )
-    original_source_format = normalize_text(
-        str(response.get("_paper_fetch_original_source_format") or "")
-    )
-    conversion_tool = normalize_text(
-        str(response.get("_paper_fetch_conversion_tool") or "")
-    )
+    original_body = original_payload.body if original_payload else None
+    original_content_type = normalize_text(response.original_content_type)
+    original_source_format = normalize_text(response.source_format)
+    conversion_tool = normalize_text(response.conversion_tool)
     if isinstance(original_body, (bytes, bytearray)) and original_body:
         original_output_path = build_asset_output_path(
             target_asset_dir,
@@ -2062,7 +2039,7 @@ def _asset_marks_preview_accepted(asset: Mapping[str, Any]) -> bool:
     return normalize_text(str(value or "")).lower() in {"1", "true", "yes", "accepted"}
 
 
-def _response_final_url(response: Mapping[str, Any], source_url: str) -> str:
+def _response_final_url(response: AssetFetchResponse, source_url: str) -> str:
     response_url = normalize_text(str(response.get("url") or ""))
     return urllib.parse.urljoin(source_url, response_url or source_url)
 

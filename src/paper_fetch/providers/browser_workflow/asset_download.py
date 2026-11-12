@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
+from concurrent.futures import ThreadPoolExecutor
 from contextvars import copy_context
 from dataclasses import dataclass, replace
 from functools import partial
 from pathlib import Path
 import threading
-import time
 from typing import Any
 from collections.abc import Callable, Mapping
 
@@ -21,7 +20,6 @@ from ...extraction.html.assets import (
 )
 from ...extraction.html.assets.download import (
     browser_asset_recovery_allowed,
-    asset_work_key,
 )
 from ...extraction.html.assets.state import AssetHostRecoveryCircuit
 from ...asset_budget import AssetBudget, current_asset_budget
@@ -42,33 +40,7 @@ from .assets import (
     _merge_download_attempt_results,
 )
 from .shared import BrowserWorkflowDeps
-
-_CLICK_SUPPLEMENT_PROVIDERS = frozenset(
-    {
-        "science",
-        "wiley",
-        "pnas",
-        "elsevier",
-        "ieee",
-        "ams",
-        "mdpi",
-        "royalsocietypublishing",
-        "annualreviews",
-        "acs",
-        "iop",
-        "aip",
-        "tandf",
-    }
-)
-
-_FIGURE_PAGE_BROWSER_WAIT_SECONDS = 2
-_SILVERCHAIR_FIGURE_PAGE_BROWSER_WAIT_SECONDS = 2
-_SILVERCHAIR_FIGURE_PAGE_READY_SELECTOR = (
-    "img.content-image[src], img.content-image[data-src]"
-)
-_SILVERCHAIR_FIGURE_PAGE_PROVIDERS = frozenset(
-    {"annualreviews", "royalsocietypublishing"}
-)
+from .._registry import browser_asset_policy
 
 
 @dataclass(frozen=True)
@@ -190,7 +162,7 @@ def retry_failed_browser_assets(
         previous.failures,
         retry_scope="supplementary",
     )
-    if recovery.provider == "wiley":
+    if not browser_asset_policy(recovery.provider).retry_supplementary:
         failed_supplementary_assets = []
     if plan.fetch_policy == "browser_only":
         failed_body_assets = []
@@ -440,83 +412,6 @@ def _matching_failure(
     )
 
 
-def _annotate_split_preview_fallback(
-    result: Mapping[str, Any],
-    *,
-    direct_failures: list[dict[str, Any]],
-    browser_failures: list[dict[str, Any]],
-    provider: str = "",
-) -> dict[str, list[dict[str, Any]]]:
-    assets = [dict(asset) for asset in list(result.get("assets") or [])]
-    failures = [dict(failure) for failure in list(result.get("asset_failures") or [])]
-
-    for outcome, recovered in [
-        *((asset, True) for asset in assets),
-        *((failure, False) for failure in failures),
-    ]:
-        if provider == "wiley" and outcome.get("kind") != "figure":
-            continue
-        direct_failure = _matching_failure(outcome, direct_failures)
-        browser_failure = _matching_failure(outcome, browser_failures)
-        browser_backend = normalize_text(
-            str(
-                outcome.get("browser_backend")
-                or (browser_failure or {}).get("browser_backend")
-                or ""
-            )
-        )
-        attempts: list[dict[str, Any]] = (
-            list(outcome.get("recovery_attempts") or []) if provider == "wiley" else []
-        )
-        if direct_failure is not None and provider != "wiley":
-            attempts.append(_attempt_from_failure("direct", direct_failure))
-        if browser_failure is not None:
-            attempts.append(
-                _attempt_from_failure(
-                    "full_size" if provider == "wiley" else "browser",
-                    browser_failure,
-                    browser_backend=browser_backend,
-                )
-            )
-        if recovered:
-            if provider == "wiley":
-                outcome["download_tier"] = "preview"
-                outcome["preview_accepted"] = False
-            final_fetcher = normalize_text(
-                str(
-                    outcome.get("final_fetcher")
-                    or browser_backend
-                    or "selected_browser"
-                )
-            )
-            attempts.append(
-                {
-                    key: value
-                    for key, value in {
-                        "stage": "preview_fallback",
-                        "provider": provider or None,
-                        "browser_backend": browser_backend or None,
-                        "content_type": outcome.get("content_type"),
-                        "reason": "recovered",
-                        "final_fetcher": final_fetcher,
-                    }.items()
-                    if value not in (None, "")
-                }
-            )
-        else:
-            attempts.append(
-                _attempt_from_failure(
-                    "preview_fallback",
-                    outcome,
-                    browser_backend=browser_backend,
-                )
-            )
-        if attempts:
-            outcome["recovery_attempts"] = attempts
-
-    return {"assets": assets, "asset_failures": failures}
-
-
 def _asset_profile_from_plan_profile(profile: Any) -> AssetProfile:
     value: Any
     if isinstance(profile, Mapping):
@@ -575,12 +470,8 @@ def _build_attempt_figure_page_fetcher(
     def fetch(figure_page_url: str) -> tuple[str, str] | None:
         if recovery.runtime is None:
             return None
-        provider = normalize_text(recovery.provider).lower()
-        wait_for_selector = (
-            _SILVERCHAIR_FIGURE_PAGE_READY_SELECTOR
-            if provider in _SILVERCHAIR_FIGURE_PAGE_PROVIDERS
-            else None
-        )
+        policy = browser_asset_policy(recovery.provider)
+        wait_for_selector = policy.figure_page_ready_selector
         try:
             html_result = deps.fetch_html_with_browser(
                 [figure_page_url],
@@ -590,11 +481,7 @@ def _build_attempt_figure_page_fetcher(
                     wait_for_article_body=False,
                     selector=wait_for_selector,
                 ),
-                wait_seconds=(
-                    _SILVERCHAIR_FIGURE_PAGE_BROWSER_WAIT_SECONDS
-                    if wait_for_selector
-                    else _FIGURE_PAGE_BROWSER_WAIT_SECONDS
-                ),
+                wait_seconds=policy.figure_page_wait_seconds,
                 runtime_context=recovery.runtime_context,
                 options=BrowserHtmlFetchOptions(
                     reuse_runtime_page=bool(wait_for_selector)
@@ -627,6 +514,7 @@ def _run_browser_asset_download_attempt(
     download_settings: Mapping[str, Any],
     deps: BrowserWorkflowDeps,
 ) -> BrowserAssetDownloadResult:
+    policy = browser_asset_policy(recovery.provider)
     merge_results = partial(_merge_download_attempt_results, provider=recovery.provider)
     _raise_if_cancelled(recovery.runtime_context)
     attempt_seed = merge_browser_context_seeds(
@@ -686,9 +574,7 @@ def _run_browser_asset_download_attempt(
         fetcher_factory=file_fetcher_factory,
     )
     figure_page_browser_requires_caller_thread = bool(
-        recovery.runtime is not None
-        and normalize_text(recovery.provider).lower()
-        in _SILVERCHAIR_FIGURE_PAGE_PROVIDERS
+        recovery.runtime is not None and policy.figure_page_requires_caller_thread
     )
     body_asset_download_concurrency = attempt_settings.get("asset_download_concurrency")
     try:
@@ -720,7 +606,6 @@ def _run_browser_asset_download_attempt(
                     allow_figure_page=plan.figure_page_discovery,
                     allow_preview=plan.preview_fallback,
                 )
-            is_ieee_recovery = normalize_text(recovery.provider).lower() == "ieee"
             host_recovery_circuit = AssetHostRecoveryCircuit()
             common_kwargs = {
                 "article_id": plan.article_id,
@@ -740,18 +625,21 @@ def _run_browser_asset_download_attempt(
                 runtime_context=recovery.runtime_context,
                 host_recovery_circuit=host_recovery_circuit,
             )
-            if recovery.provider == "iop" and common_options.asset_budget is None:
+            if (
+                policy.body_scheduler is not None
+                and common_options.asset_budget is None
+            ):
                 common_options = replace(
                     common_options,
                     asset_budget=current_asset_budget()
                     or AssetBudget(
                         route_concurrency_cap=compile_route_execution_policy_for_kind(
-                            "iop", "assets"
+                            recovery.provider, "assets"
                         ).asset_concurrency_cap
                     ),
                 )
             if plan.fetch_policy != "direct_then_browser" or (
-                not serial_browser_assets and recovery.provider != "iop"
+                not serial_browser_assets and policy.body_scheduler is None
             ):
                 result = deps.download_assets(
                     FIGURE_KIND,
@@ -766,17 +654,20 @@ def _run_browser_asset_download_attempt(
                     ),
                     **common_kwargs,
                 )
-                if recovery.provider == "wiley" and plan.fetch_policy == "browser_only":
+                if (
+                    policy.annotate_browser_only_previews
+                    and plan.fetch_policy == "browser_only"
+                ):
                     for asset in result.get("assets", []):
                         if (
                             asset.get("kind") == "figure"
                             and asset.get("download_tier") == "preview"
                         ):
-                            annotated = _annotate_split_preview_fallback(
+                            assert policy.annotate_preview is not None
+                            annotated = policy.annotate_preview(
                                 {"assets": [asset]},
                                 direct_failures=[],
                                 browser_failures=[],
-                                provider="wiley",
                             )
                             asset.update(annotated["assets"][0])
                 return result
@@ -784,9 +675,9 @@ def _run_browser_asset_download_attempt(
             full_candidate_builder = _tier_candidate_builder(
                 base_candidate_builder, preview=False
             )
-            if recovery.provider == "iop":
+            if policy.body_scheduler is not None:
                 merged_result, eligible_failures, browser_failures = (
-                    _download_iop_body_assets(
+                    policy.body_scheduler(
                         body_assets,
                         deps=deps,
                         transport=attempt_settings.get("transport"),
@@ -960,7 +851,7 @@ def _run_browser_asset_download_attempt(
                     asset_download_concurrency=1,
                     fetch_policy=(
                         "browser_first"
-                        if is_ieee_recovery
+                        if policy.browser_first_preview
                         and image_document_fetcher is not None
                         and browser_failures
                         else "direct_then_browser"
@@ -968,16 +859,15 @@ def _run_browser_asset_download_attempt(
                 ),
                 **common_kwargs,
             )
-            if is_ieee_recovery or recovery.provider == "wiley":
-                preview_result = _annotate_split_preview_fallback(
+            if policy.annotate_preview is not None:
+                preview_result = policy.annotate_preview(
                     preview_result,
                     direct_failures=eligible_failures,
                     browser_failures=(
                         list(merged_result.get("asset_failures") or [])
-                        if recovery.provider == "wiley"
+                        if policy.preview_uses_merged_failures
                         else browser_failures
                     ),
-                    provider="wiley" if recovery.provider == "wiley" else "",
                 )
             return merge_results(merged_result, preview_result)
 
@@ -1002,10 +892,7 @@ def _run_browser_asset_download_attempt(
                 provider_name=recovery.provider,
                 runtime_context=recovery.runtime_context,
             )
-            if (
-                recovery.runtime is not None
-                and recovery.provider in _CLICK_SUPPLEMENT_PROVIDERS
-            ):
+            if recovery.runtime is not None and policy.click_supplements:
                 if file_document_fetcher is None:
                     return {
                         "assets": [],
@@ -1087,7 +974,7 @@ def _run_browser_asset_download_attempt(
 
         serial_browser_assets = bool(
             attempt_settings.get("serial_browser_assets")
-            or recovery.provider == "iop"
+            or policy.body_scheduler is not None
             or _requires_caller_thread(image_document_fetcher)
             or _requires_caller_thread(file_document_fetcher)
             or figure_page_browser_requires_caller_thread
@@ -1133,215 +1020,6 @@ def _run_browser_asset_download_attempt(
             close_fetcher = getattr(fetcher, "close", None)
             if callable(close_fetcher):
                 close_fetcher()
-
-
-def _download_iop_body_assets(
-    assets: list[dict[str, Any]],
-    *,
-    deps: BrowserWorkflowDeps,
-    transport: Any,
-    common_kwargs: Mapping[str, Any],
-    options: AssetDownloadOptions,
-    image_document_fetcher: Any,
-    configured_concurrency: int | None,
-    merge_results: Callable[..., Any],
-) -> tuple[Mapping[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
-    """Run bounded HTTP work; consume and recover on the browser's caller thread."""
-    route = compile_route_execution_policy_for_kind("iop", "assets")
-    budget = (
-        options.asset_budget
-        or current_asset_budget()
-        or AssetBudget(route_concurrency_cap=route.asset_concurrency_cap)
-    )
-    options = replace(options, asset_budget=budget, asset_download_concurrency=1)
-    budget.admit_work([asset_work_key(FIGURE_KIND, asset) for asset in assets])
-    workers = min(
-        2,
-        budget.effective_concurrency(
-            configured_concurrency, route_concurrency_cap=route.asset_concurrency_cap
-        ),
-    )
-    queued_at = time.monotonic()
-    results: dict[int, Mapping[str, Any]] = {}
-    direct_failures: list[dict[str, Any]] = []
-    browser_failures: list[dict[str, Any]] = []
-    browser_hosts: set[str] = set()
-    pending = list(enumerate(assets))
-    futures: dict[Any, int] = {}
-    executor = ThreadPoolExecutor(max_workers=workers)
-
-    def host(asset: Mapping[str, Any]) -> str:
-        return AssetHostRecoveryCircuit.host_for_url(
-            str(
-                asset.get("original_url")
-                or asset.get("full_size_url")
-                or asset.get("url")
-                or ""
-            )
-        )
-
-    def download(index: int, *, browser: bool) -> Mapping[str, Any]:
-        _raise_if_cancelled(options.runtime_context)
-        budget.raise_if_cancelled()
-        started = time.monotonic()
-        result = deps.download_assets(
-            FIGURE_KIND,
-            transport,
-            assets=[assets[index]],
-            options=replace(
-                options,
-                # HTTP workers must never call a page/figure browser fetcher or
-                # wait on the serial first-probe circuit.
-                figure_page_fetcher=options.figure_page_fetcher if browser else None,
-                image_document_fetcher=image_document_fetcher if browser else None,
-                host_recovery_circuit=options.host_recovery_circuit
-                if browser
-                else None,
-                fetch_policy="browser_first" if browser else "direct_then_browser",
-            ),
-            **common_kwargs,
-        )
-        for outcome in [*result.get("assets", []), *result.get("asset_failures", [])]:
-            timing = outcome.get("asset_timing")
-            if isinstance(timing, Mapping):
-                outcome["asset_timing"] = {
-                    **timing,
-                    "queue_ms": round(
-                        float(timing.get("queue_ms", 0)) + (started - queued_at) * 1000,
-                        3,
-                    ),
-                    "total_ms": round((time.monotonic() - queued_at) * 1000, 3),
-                }
-        return result
-
-    def recover(index: int, direct: Mapping[str, Any]) -> Mapping[str, Any]:
-        eligible = [
-            dict(f)
-            for f in direct.get("asset_failures", [])
-            if _asset_failure_allows_browser_recovery(f)
-        ]
-        if not eligible or image_document_fetcher is None:
-            return direct
-        direct_failures.extend(eligible)
-        browser_result = download(index, browser=True)
-        browser_failures.extend(
-            dict(f) for f in browser_result.get("asset_failures", [])
-        )
-        browser_result = _annotate_split_browser_recovery(browser_result, eligible)
-        for failure in browser_result.get("asset_failures", []):
-            direct_failure = _matching_failure(failure, eligible)
-            if direct_failure is not None:
-                failure["recovery_attempts"] = [
-                    _attempt_from_failure("direct", direct_failure),
-                    _attempt_from_failure("browser", failure),
-                ]
-        for outcome in [
-            *browser_result.get("assets", []),
-            *browser_result.get("asset_failures", []),
-        ]:
-            direct_failure = _matching_failure(outcome, eligible)
-            if direct_failure is None:
-                continue
-            original_timing = direct_failure.get("asset_timing") or {}
-            timing = outcome.get("asset_timing") or {}
-            if timing:
-                outcome["asset_timing"] = {
-                    **timing,
-                    **{
-                        key: round(float(timing.get(key, 0)) + float(value), 3)
-                        for key, value in original_timing.items()
-                        if key.endswith("_ms") and key not in {"total_ms", "queue_ms"}
-                    },
-                    "queue_ms": original_timing.get("queue_ms", 0),
-                }
-        if browser_result.get("assets"):
-            for asset in browser_result["assets"]:
-                verified_url = str(
-                    asset.get("source_url")
-                    or asset.get("original_url")
-                    or assets[index].get("original_url")
-                    or assets[index].get("url")
-                    or ""
-                )
-                verified_host = AssetHostRecoveryCircuit.host_for_url(verified_url)
-                browser_hosts.add(verified_host)
-                if options.host_recovery_circuit is not None:
-                    decision = options.host_recovery_circuit.begin(verified_url)
-                    options.host_recovery_circuit.observe(
-                        decision, browser_recovery_succeeded=True
-                    )
-        return merge_results(direct, browser_result)
-
-    try:
-        while pending or futures:
-            _raise_if_cancelled(options.runtime_context)
-            if budget.internally_cancelled:
-                # Reuse the downloader's budget-terminal diagnostics for queued
-                # assets without submitting additional HTTP work.
-                for index, _asset in pending:
-                    results[index] = deps.download_assets(
-                        FIGURE_KIND,
-                        transport,
-                        assets=[assets[index]],
-                        options=replace(
-                            options,
-                            figure_page_fetcher=None,
-                            image_document_fetcher=None,
-                            host_recovery_circuit=None,
-                        ),
-                        **common_kwargs,
-                    )
-                pending.clear()
-            else:
-                budget.raise_if_cancelled()
-            # Do not replenish the pool until completed failures have been
-            # consumed. Recovery pauses submissions; in-flight HTTP can finish.
-            completed = [future for future in futures if future.done()]
-            if not completed:
-                while pending and len(futures) < workers:
-                    index, asset = pending.pop(0)
-                    if host(asset) in browser_hosts:
-                        results[index] = download(index, browser=True)
-                    else:
-                        future = executor.submit(
-                            copy_context().run, download, index, browser=False
-                        )
-                        futures[future] = index
-                if futures:
-                    done, _ = wait(futures, timeout=0.1, return_when=FIRST_COMPLETED)
-                    completed = list(done)
-            for future in completed:
-                index = futures.pop(future)
-                direct = future.result()
-                results[index] = direct
-                if not budget.internally_cancelled:
-                    results[index] = recover(index, direct)
-        merged = empty_asset_results()
-        for index in range(len(assets)):
-            merged = merge_results(merged, results.get(index, empty_asset_results()))
-        return merged, direct_failures, browser_failures
-    except BaseException:
-        budget.cancel("asset_cancelled", diagnostic={"boundary": "iop_asset_worker"})
-        for future in futures:
-            future.cancel()
-        raise
-    finally:
-        executor.shutdown(wait=True, cancel_futures=True)
-        if budget.cancelled:
-            budget.rollback_active()
-            completed_results = [*results.values()]
-            for future in futures:
-                if (
-                    future.done()
-                    and not future.cancelled()
-                    and future.exception() is None
-                ):
-                    completed_results.append(future.result())
-            for result in completed_results:
-                for asset in result.get("assets", []):
-                    path = asset.get("path")
-                    if path:
-                        Path(path).unlink(missing_ok=True)
 
 
 def _raise_if_cancelled(runtime_context: Any | None) -> None:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from ..quality.access_boundary import propagate_paywall
 
 from ..quality.access_boundary import raise_for_paywall
@@ -34,7 +36,6 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from ..http import (
-    DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     HttpRequestPolicy,
     HttpTransport,
     PDF_MIME_TYPE,
@@ -49,7 +50,6 @@ from ..models import (
     metadata_only_article,
 )
 from ..models.render import rewrite_markdown_asset_links
-from ..provider_contracts import BodyTextThresholds, ProviderRouteSpec, ProviderSpec
 from ..pdf_limits import pdf_max_bytes
 from ..publisher_identity import normalize_doi
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
@@ -89,6 +89,9 @@ from .base import (
     map_request_failure,
     summarize_capability_status,
 )
+
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["oxfordacademic"]
 
 
 @dataclass(frozen=True)
@@ -821,52 +824,10 @@ __all__ = ["OxfordAcademicClient"]
 
 PROVIDER_BUNDLE = ProviderBundle(
     client_factory=OxfordAcademicClient,
-    catalog=ProviderSpec(
-        name="oxfordacademic",
-        display_name="Oxford Academic",
-        official=True,
-        domains=("academic.oup.com",),
-        doi_prefixes=("10.1093/",),
-        publisher_aliases=(
-            "oxford academic",
-            "oxford university press",
-            "oxford university press (oup)",
-            "oup",
-        ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=False,
-        status_order=14,
-        base_domains=("academic.oup.com",),
-        pdf_path_templates=(
-            "/doi/pdf/{doi}",
-            "/doi/epdf/{doi}",
-        ),
-        body_text_thresholds=BodyTextThresholds(min_chars=1200),
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(
-                name="direct_html",
-                kind="html",
-                timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-            ),
-            ProviderRouteSpec(
-                name="direct_pdf",
-                kind="pdf",
-                requires_pdf_conversion=True,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                timeout_seconds=20,
-                concurrency=2,
-                transient_retries=2,
-            ),
-        ),
-    ),
+    catalog=_PROVIDER_DEFINITION.catalog,
     html_rules=ProviderHtmlRules(
-        name="oxfordacademic",
-        noise_profile=oxford_html.OXFORDACADEMIC_NOISE_PROFILE,
+        name=_PROVIDER_DEFINITION.rules_name,
+        noise_profile=_PROVIDER_DEFINITION.noise_profile,
         cleanup=ProviderCleanupRules(
             markdown_promo_tokens=oxford_html.OXFORDACADEMIC_MARKDOWN_PROMO_TOKENS,
             extraction_cleanup_selectors=oxford_html.OXFORDACADEMIC_EXTRACTION_CLEANUP_SELECTORS,
@@ -884,5 +845,5 @@ PROVIDER_BUNDLE = ProviderBundle(
             site_rule_overrides=oxford_html.OXFORDACADEMIC_SITE_RULE_OVERRIDES,
         ),
     ),
-    sources=("oxfordacademic_html", "oxfordacademic_pdf"),
+    sources=_PROVIDER_DEFINITION.sources,
 )

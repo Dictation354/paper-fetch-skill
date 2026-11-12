@@ -45,7 +45,7 @@ The aim of this study is twofold. First to develop a novel inverse dynamics mode
 
 **Figure 1.** The lower limb retroreflective motion capture markers used in the two gait databases of typically developing children. Red markers show anatomical landmark markers, green markers show segment cluster markers. Skeleton figures edited from another source ([https://pixabay.com/vectors/skeleton-human-skeletal-anatomy-41548/](https://pixabay.com/vectors/skeleton-human-skeletal-anatomy-41548/), [https://pixabay.com/vectors/skeleton-human-skeletal-anatomy-41550/](https://pixabay.com/vectors/skeleton-human-skeletal-anatomy-41550/) (a) the marker set used in the Salford data collection. (b) The marker set used in the Lencioni data collection<sup>27</sup>.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar.t1-3434477-large.gif)
+![Table I](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar.t1-3434477-large.gif)
 
 **TABLE I** Participant Demographics Showing Median Value and the Range for Both Paediatric Non-Disabled Gait Datasets
 
@@ -123,7 +123,7 @@ The knee torque required by the SPCM for the KD model to emulate non-disabled ga
 
 The torque required from the prosthetic knee joint differed across participants at different stages of physical growth. The linear regression models showed no outliers across the population. Maximum flexion and extension torque showed strong correlation with one or more parameters of growth at all speeds except maximum extension torque at slow speed. (Table II). The sign of correlation reflects the direction and not the magnitude. Scatter plots of the strongest correlation at free speed for maximum extension and flexion torques are shown in Fig. 6. with the linear regression line of best fit and the 95% confidence bounds. These plots show the range of torque required to cover an expected paediatric population. The equation of the line of best fit for each is shown in Table III along with the RMSE and the R<sup>2</sup> value of the fit.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar.t2-3434477-large.gif)
+![Table II](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar.t2-3434477-large.gif)
 
 **TABLE II** Spearman's Rank Correlation Analysis of the Maximum Torques Required From a Paediatric Knee-Disarticulation Prosthetic Knee Swing Phase Control Mechanism With Three Parameters of Growth (Age, Height, and Intact Body Mass). The Results Are Split by Walking Speed. The Strongest Correlations Are Shown in Bold
 
@@ -131,7 +131,7 @@ The torque required from the prosthetic knee joint differed across participants 
 
 **Figure 6.** Scatter plots showing the linear regression line of best fit for the strongest correlations between growth parameters and the maximum torque required from a paediatric knee disarticulation prosthetic knee joint. The results are shown for free speed. Both graphs show the data points (blue), line of best fit (bold red) and the 95% confidence bounds (dashed red) for each fit. (a) The strongest correlation for the maximum extension torque at free speed is with intact body mass. The linear regression fit is shown. (b) The strongest correlation for the maximum flexion torque at free speed is with intact height. The linear regression fit is shown.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar.t3-3434477-large.gif)
+![Table III](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/10/10762826/10612240/edgar.t3-3434477-large.gif)
 
 **TABLE III** The Equation of the Linear Line of Best Fit Is Given for Each Comparison Between the Three Growth Parameters (Age, Height, and Intact Body Mass) With Maximum Extension and Flexion Torque From a Paediatric Knee-Disarticulation Prosthetic Knee. The Results Are Split by Walking Speed. The RMSE for the Fit Is Provided Alongside the R2 Value. The Fits With the Smallest Errors Are Shown in Bold
 

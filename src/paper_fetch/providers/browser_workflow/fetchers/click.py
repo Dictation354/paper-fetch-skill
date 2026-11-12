@@ -6,108 +6,24 @@ from ...browser_runtime.navigation import navigate_page, managed_action
 
 import contextlib
 import json
-import re
 import tempfile
 from pathlib import Path
 import time
 from typing import Any
 from collections.abc import Mapping
-from urllib.parse import urljoin, urlsplit, urlunsplit
+from urllib.parse import urljoin, urlsplit
 
 from ....asset_budget import DEFAULT_ASSET_MAX_BYTES_PER_ASSET, AssetBudgetExceeded
 from ....extraction.html.assets import supplementary_response_block_reason
 from ....http import RequestCancelledError
 from ....http.cache import redact_url_for_cache
 from .context import _browser_response_headers, _browser_response_status
-from .readiness import wait_for_atypon_body_dom_ready
+from ..._registry import BrowserAssetPolicy, browser_asset_policy
 
 _CLICK_TIMEOUT_SECONDS = 60.0
 
 
-def _wiley_link(page, urls, remaining_ms, set_phase):
-    readiness = wait_for_atypon_body_dom_ready(
-        page, "wiley", timeout_seconds=remaining_ms() / 1000.0
-    )
-    if not readiness.ready:
-        raise ValueError("article_not_ready")
-    set_phase("panel_not_ready")
-    supporting = page.locator("section.article-section__supporting").first
-    supporting.wait_for(state="attached", timeout=remaining_ms())
-    selectors: list[str] = []
-    for url in urls:
-        parsed = urlsplit(url)
-        relative = urlunsplit(("", "", parsed.path, parsed.query, parsed.fragment))
-        selectors.extend(f"a[href={json.dumps(value)}]" for value in (url, relative))
-    link = supporting.locator(", ".join(selectors)).first
-    set_phase("link_missing")
-    link.wait_for(state="attached", timeout=remaining_ms())
-    panel = link.locator(
-        "xpath=ancestor::div[contains(concat(' ', normalize-space(@class), ' '), ' accordion ')][1]"
-    )
-    set_phase("panel_not_ready")
-    for attempt in range(3):
-        if link.is_visible():
-            break
-        control = panel.locator("a.accordion__control").first
-        if (
-            control.get_attribute("aria-expanded", timeout=min(5000, remaining_ms()))
-            != "true"
-        ):
-            control.click(timeout=min(5000, remaining_ms()))
-        try:
-            link.wait_for(state="visible", timeout=min(5000, remaining_ms()))
-            break
-        except Exception:
-            if attempt == 2:
-                raise
-    return link
-
-
-def _ieee_filename_control(page, asset):
-    filename = str(asset.get("filename_hint") or "")
-    if not filename:
-        return None
-    scope = page.locator(
-        "#multimedia, #media, xpl-document-multimedia, xpl-document-media, "
-        "xpl-document-media-list, .multimedia, .media-list, "
-        "[id*='supplement']"
-    )
-    controls = scope.locator(
-        "button:not([data-url]), a:not([href]), a[href='#'], a[href^='javascript:']"
-    ).filter(has_text=filename)
-    visible = [
-        controls.nth(index)
-        for index in range(controls.count())
-        if controls.nth(index).is_visible()
-    ]
-    if len(visible) == 1:
-        return visible[0]
-    # IEEE's desktop media list can attach its action to the filename label.
-    # Restrict this to the known attachment name in the media component; the
-    # resulting request must still match that attachment's JSON file URL.
-    labels = scope.get_by_text(filename)
-    visible = [
-        labels.nth(index)
-        for index in range(labels.count())
-        if labels.nth(index).is_visible()
-    ]
-    if len(visible) == 1:
-        return visible[0]
-    media_doi = str(asset.get("doi") or "")
-    if not media_doi:
-        return None
-    # Translated PDFs may show only their multimedia DOI and a PDF icon.
-    # Bind the existing icon to the exact DOI provided by multimedia discovery.
-    items = scope.locator(".media-item").filter(
-        has=page.get_by_text(re.compile(r"^" + re.escape(media_doi) + r"$", re.I))
-    )
-    icons = items.locator("a[class*='stats-Multimedia_']:visible")
-    return icons.first if icons.count() == 1 else None
-
-
-def _page_link(page, urls, asset, provider, remaining_ms):
-    if provider == "ieee" and not asset.get("filename_hint"):
-        asset = {**asset, "filename_hint": urlsplit(urls[0]).path.rsplit("/", 1)[-1]}
+def _page_link(page, urls, asset, policy: BrowserAssetPolicy, remaining_ms):
     # Compare resolved hrefs, retaining the original DOM node. Never create an
     # anchor or assign a generated download URL to a publisher control.
     selector = "a[href], button[data-url], a[data-url]"
@@ -138,7 +54,7 @@ def _page_link(page, urls, asset, provider, remaining_ms):
     def find_link():
         try:
             return nodes.evaluate_all(
-                match, {"urls": urls, "preferVisible": provider == "mdpi"}
+                match, {"urls": urls, "preferVisible": policy.supplement_prefer_visible}
             )
         except Exception as exc:
             # MDPI can replace its document while its article scripts start.
@@ -153,23 +69,12 @@ def _page_link(page, urls, asset, provider, remaining_ms):
     # Article links can be populated after DOMContentLoaded (notably MDPI).
     # Wait for the original URL within this request's existing deadline.
     while found is None:
-        if provider == "ieee":
-            control = _ieee_filename_control(page, asset)
+        if policy.supplement_missing_link is not None:
+            control, tab_opened = policy.supplement_missing_link(
+                page, urls, asset, remaining_ms, tab_opened
+            )
             if control is not None:
                 return control, True
-            if not tab_opened:
-                tab_name = re.compile(
-                    r"^(Media|Multimedia|Supplemental Items|Supplemental Material|Supplementary Material)$",
-                    re.I,
-                )
-                tabs = page.get_by_role("tab", name=tab_name)
-                if not tabs.count():
-                    tabs = page.get_by_text(tab_name)
-                for index in range(tabs.count()):
-                    if tabs.nth(index).is_visible():
-                        tabs.nth(index).click(timeout=remaining_ms())
-                        tab_opened = True
-                        break
         page.wait_for_timeout(min(100, remaining_ms()))
         found = find_link()
     # Re-resolve by the original href after a publisher redraws its DOM.
@@ -181,7 +86,8 @@ def _page_link(page, urls, asset, provider, remaining_ms):
 def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any]):
     page, context = fetcher._page, fetcher._context
     provider = getattr(fetcher._browser_config, "provider", "")
-    prefix = "wiley_supplement" if provider == "wiley" else "supplement_click"
+    policy = browser_asset_policy(provider)
+    prefix = policy.supplement_failure_prefix
     article_url = str(fetcher._current_seed().get("browser_final_url") or "")
     if not article_url:
         article_url = next(iter(fetcher._seed_urls()), "")
@@ -214,7 +120,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
     def matches_target(url):
         if url in targets:
             return True
-        if provider != "ieee":
+        if not policy.supplement_ignore_tracking_query:
             return False
         # IEEE's existing media controls append tracking query parameters.
         # Match the full origin and file path, never a basename or MIME alone.
@@ -360,14 +266,12 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                 if value
             )
         )
-        if provider == "wiley":
-            link = _wiley_link(page, urls, remaining_ms, set_phase)
+        if policy.supplement_link is not None:
+            link = policy.supplement_link(page, urls, remaining_ms, set_phase)
             filename_control = False
         else:
             phase = "link_missing"
-            link, filename_control = _page_link(
-                page, urls, asset, provider, remaining_ms
-            )
+            link, filename_control = _page_link(page, urls, asset, policy, remaining_ms)
         click_page_url = str(page.url)
         route["click_page_url"] = redact_url_for_cache(click_page_url)
         raw_href = link.get_attribute(
@@ -382,39 +286,26 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
         if not raw_href:
             raise ValueError("Supplementary control has no target URL.")
         target = urljoin(click_page_url, raw_href)
-        targets.update(urls if provider == "ieee" and filename_control else [target])
+        targets.update(
+            urls
+            if policy.supplement_ignore_tracking_query and filename_control
+            else [target]
+        )
         if target not in urls and not (
-            provider == "ieee" and filename_control and matches_target(target)
+            policy.supplement_ignore_tracking_query
+            and filename_control
+            and matches_target(target)
         ):
             raise ValueError("Supplementary control target changed.")
         visible_link = link
-        if provider != "wiley" and not filename_control:
+        if policy.supplement_link is None and not filename_control:
             value = json.dumps(raw_href)
             visible_link = page.locator(
                 f"a[href={value}]:visible, a[data-url={value}]:visible, "
                 f"button[data-url={value}]:visible"
             ).first
-        if provider == "mdpi" and not link.is_visible():
-            modal = link.locator("xpath=ancestor::*[@id='supplementaryModal']")
-            if modal.count():
-                controls = page.locator("[data-reveal-id='supplementaryModal']")
-                for index in range(controls.count()):
-                    if controls.nth(index).is_visible():
-                        controls.nth(index).click(timeout=remaining_ms())
-                        break
-                visible_link.wait_for(state="visible", timeout=remaining_ms())
-        if provider == "annualreviews" and not link.is_visible():
-            tab = page.locator("a[href='#supplementary_data']:visible").first
-            if not tab.count():
-                hidden_tab = page.locator("a[href='#supplementary_data']").first
-                menu = hidden_tab.locator(
-                    "xpath=ancestor::li[contains(concat(' ', normalize-space(@class), ' '), ' dropdown ')][1]"
-                )
-                menu.locator("[data-toggle='dropdown']").first.click(
-                    timeout=remaining_ms()
-                )
-            tab.click(timeout=remaining_ms())
-            visible_link.wait_for(state="visible", timeout=remaining_ms())
+        if policy.supplement_reveal is not None:
+            policy.supplement_reveal(page, link, visible_link, remaining_ms)
         link = visible_link
         # Aliases are only used to verify the existing control's identity.
         # Capture exclusively its actual clicked URL and ensuing redirects.
@@ -436,12 +327,8 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
         armed = True
         phase = "download_timeout"
         with managed_action(page, timeout_ms=remaining_ms()):
-            if (
-                provider == "wiley"
-                and link.get_attribute("target", timeout=remaining_ms()) != "_blank"
-            ):
-                # Wiley can hide the accordion during its opening animation.
-                link.evaluate("(node) => node.click()", timeout=remaining_ms())
+            if policy.supplement_activate is not None:
+                policy.supplement_activate(page, link, remaining_ms)
             else:
                 # A trusted pointer action gives target=_blank its user activation;
                 # a synthetic DOM click can be silently blocked by Firefox.

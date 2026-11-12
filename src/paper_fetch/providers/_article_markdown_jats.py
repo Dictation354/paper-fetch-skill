@@ -369,6 +369,29 @@ def _append_embedded_block(
     return False
 
 
+def _pure_code_paragraph(paragraph: ET.Element) -> str | None:
+    children = list(paragraph)
+    if xml_local_name(paragraph.tag) != "p" or not children:
+        return None
+    if (paragraph.text or "").strip() or not all(
+        xml_local_name(child.tag) in {"monospace", "break"}
+        and not (child.tail or "").strip()
+        for child in children
+    ):
+        return None
+    return "".join(
+        "\n" if xml_local_name(child.tag) == "break" else "".join(child.itertext())
+        for child in children
+    )
+
+
+def _code_block(code: str) -> list[str]:
+    fence = "`" * max(
+        3, max((len(m[0]) + 1 for m in re.finditer(r"`+", code)), default=0)
+    )
+    return [fence, code, fence, ""]
+
+
 def _render_paragraph_block(
     paragraph: ET.Element,
     *,
@@ -377,24 +400,9 @@ def _render_paragraph_block(
     table_entries: list[dict[str, Any]],
     formula_renders: list[FormulaRenderResult],
 ) -> list[str]:
-    children = list(paragraph)
-    if (
-        children
-        and not (paragraph.text or "").strip()
-        and all(
-            xml_local_name(child.tag) in {"monospace", "break"}
-            and not (child.tail or "").strip()
-            for child in children
-        )
-    ):
-        code = "".join(
-            "\n" if xml_local_name(child.tag) == "break" else "".join(child.itertext())
-            for child in children
-        )
-        fence = "`" * max(
-            3, max((len(m[0]) + 1 for m in re.finditer(r"`+", code)), default=0)
-        )
-        return [fence, code, fence, ""]
+    code = _pure_code_paragraph(paragraph)
+    if code is not None:
+        return _code_block(code)
     embedded_blocks = {
         id(child)
         for child in iter_children(paragraph)
@@ -449,7 +457,15 @@ def _render_blocks(
         return []
 
     lines: list[str] = []
+    code_parts: list[str] = []
     for child in iter_children(parent):
+        code = _pure_code_paragraph(child)
+        if code is not None:
+            code_parts.append(code)
+            continue
+        if code_parts:
+            lines.extend(_code_block("\n".join(code_parts)))
+            code_parts.clear()
         local_name = xml_local_name(child.tag)
         if local_name in {"title", "label"}:
             continue
@@ -547,6 +563,8 @@ def _render_blocks(
                 formula_renders=formula_renders,
             )
         )
+    if code_parts:
+        lines.extend(_code_block("\n".join(code_parts)))
     return lines
 
 

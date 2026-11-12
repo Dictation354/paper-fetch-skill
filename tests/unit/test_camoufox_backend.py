@@ -2157,7 +2157,7 @@ def test_camoufox_provider_page_preparation_runs_before_html_capture(
     page_state = {"html": "<html><body><main>Before preparation</main></body></html>"}
     context.page.content = lambda: page_state["html"]
 
-    def prepare_browser_page(page, *, timeout_ms):
+    def prepare_browser_page(page, *, timeout_ms, cancel_check):
         assert page is context.page
         assert timeout_ms > 0
         page_state["html"] = (

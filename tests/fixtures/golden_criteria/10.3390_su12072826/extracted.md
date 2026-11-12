@@ -6,7 +6,7 @@ source: "mdpi_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 15689
+token_estimate: 15709
 ---
 
 # Effectiveness Evaluation of Financing Platform Operation of Buildings Energy Saving Transformation Using ANP-Fuzzy in China: An Empirical Study
@@ -115,7 +115,7 @@ In order to ensure that the evaluation results can effectively reflect the objec
 
 **Table 2.** Evaluation index system structure.
 | Target Layer | First Grade Index | Second Grade Index | Third Grade Index |
-| ------------------------------------------------------------------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| ------------------------------------------------------------------------------ | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | Effectiveness of financing platform for buildings energy saving transformation | Effectiveness of operating mechanism implementation | Systematization of operating objectives \[[49](https://www.mdpi.com/2071-1050/12/7/2826#B49-sustainability-12-02826)\] | Target consistency \[[46](https://www.mdpi.com/2071-1050/12/7/2826#B46-sustainability-12-02826)\] |
 | Effectiveness of financing platform for buildings energy saving transformation | Effectiveness of operating mechanism implementation | Systematization of operating objectives \[[49](https://www.mdpi.com/2071-1050/12/7/2826#B49-sustainability-12-02826)\] | Efficiency of platform organization and management |
 | Effectiveness of financing platform for buildings energy saving transformation | Effectiveness of operating mechanism implementation | Systematization of operating objectives \[[49](https://www.mdpi.com/2071-1050/12/7/2826#B49-sustainability-12-02826)\] | Degree of information sharing among departments \[[10](https://www.mdpi.com/2071-1050/12/7/2826#B10-sustainability-12-02826)\] |

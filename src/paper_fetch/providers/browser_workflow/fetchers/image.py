@@ -23,6 +23,7 @@ from ....extraction.html.signals import (
 from ....reason_codes import CLOUDFLARE_CHALLENGE
 from ....runtime import RuntimeContext
 from ....utils import normalize_text
+from ..._registry import browser_asset_policy
 from ...browser_runtime.types import BrowserFetchedHtml
 from .context import (
     BrowserDocumentFetcherOptions,
@@ -186,6 +187,9 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
     def __call__(
         self, image_url: str, _asset: Mapping[str, Any]
     ) -> dict[str, Any] | None:
+        policy = browser_asset_policy(
+            self._browser_config.provider if self._browser_config is not None else ""
+        )
         normalized_url = normalize_text(image_url)
         if not normalized_url:
             return None
@@ -212,18 +216,13 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
                 result = self._fetch_with_page(
                     normalized_url,
                     allow_small_formula=bool(
-                        self._browser_config is not None
-                        and self._browser_config.provider == "wiley"
-                        and _asset.get("kind") == "formula"
+                        policy.small_formula_images and _asset.get("kind") == "formula"
                     ),
                     require_target_match=bool(
-                        self._browser_config is not None
+                        policy.target_match_kinds
                         and (
-                            self._browser_config.provider in {"pnas", "elsevier"}
-                            or (
-                                self._browser_config.provider == "wiley"
-                                and _asset.get("kind") == "figure"
-                            )
+                            "*" in policy.target_match_kinds
+                            or _asset.get("kind", "") in policy.target_match_kinds
                         )
                     ),
                 )
@@ -289,18 +288,14 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         allow_small_formula: bool = False,
         require_target_match: bool = False,
     ) -> dict[str, Any] | None:
-        wait_for_image_before_body = allow_small_formula or bool(
-            require_target_match
-            and self._browser_config is not None
-            and self._browser_config.provider == "wiley"
+        policy = browser_asset_policy(
+            self._browser_config.provider if self._browser_config is not None else ""
         )
-        # Firefox image documents on T&F do not reliably emit DOMContentLoaded.
-        # Keep the response at commit instead of spending ten seconds per image
-        # and then losing its original bytes to the canvas fallback. Response
-        # body validation and the existing image readiness fallback still apply.
-        commit_image_navigation = wait_for_image_before_body or bool(
-            self._browser_config is not None
-            and self._browser_config.provider == "tandf"
+        wait_for_image_before_body = allow_small_formula or (
+            require_target_match and policy.wait_for_target_image
+        )
+        commit_image_navigation = (
+            wait_for_image_before_body or policy.commit_image_navigation
         )
         budget = self._active_budget()
         previous_budget: _ImageFetchBudget | None = self._active_image_fetch_budget
@@ -309,10 +304,7 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         try:
             if page is None:
                 return None
-            context_request_first = bool(
-                self._browser_config is not None
-                and self._browser_config.provider == "pnas"
-            )
+            context_request_first = policy.context_request_first
             if context_request_first:
                 request_payload = self._payload_from_context_request(image_url)
                 if request_payload is not None:

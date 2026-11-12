@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 import re
 import urllib.parse
 from collections.abc import Mapping
@@ -24,58 +26,15 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from ..publisher_identity import normalize_doi
-from ..provider_contracts import ProviderRouteSpec, ProviderSpec
 from ..quality.html_signals import AMS_TEXT_MARKER_SIGNAL_SET
 from ..utils import extend_unique, normalize_text
 from . import _ams_authors, _ams_dom, _ams_markdown, browser_workflow
-from ._registry import ProviderBundle
+from ._registry import BrowserAssetPolicy, ProviderBundle
 
-_PROVIDER_SPEC = ProviderSpec(
-    name="ams",
-    display_name="AMS",
-    official=True,
-    domains=("journals.ametsoc.org", "ametsoc.org"),
-    doi_prefixes=("10.1175/",),
-    publisher_aliases=(
-        "american meteorological society",
-        "ams",
-        "american meteorological society (ams)",
-    ),
-    asset_default="body",
-    probe_capability="routing_signal",
-    provider_managed_abstract_only=True,
-    status_order=9,
-    base_domains=("journals.ametsoc.org",),
-    crossref_pdf_position=0,
-    routes=(
-        ProviderRouteSpec(name="metadata", kind="metadata"),
-        ProviderRouteSpec(
-            name="browser_html",
-            kind="html",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="browser_pdf",
-            kind="pdf",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            requires_pdf_conversion=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="assets",
-            kind="assets",
-            concurrency=2,
-            asset_scope="body",
-        ),
-    ),
-)
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["ams"]
+
+_PROVIDER_SPEC = _PROVIDER_DEFINITION.catalog
 
 AMS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "ams",
@@ -168,10 +127,11 @@ class AmsClient(browser_workflow.BrowserWorkflowClient):
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_asset_policy=BrowserAssetPolicy(click_supplements=True),
     client_factory=AmsClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
-        name="ams",
+        name=_PROVIDER_DEFINITION.rules_name,
         cleanup=ProviderCleanupRules(
             markdown_promo_tokens=AMS_MARKDOWN_PROMO_TOKENS,
             dom_postprocess_cleanup_selectors=AMS_DOM_POSTPROCESS_CLEANUP_SELECTORS,
@@ -208,5 +168,5 @@ PROVIDER_BUNDLE = ProviderBundle(
             keep_unknown_abstract_block=_ams_markdown.ams_keep_unknown_abstract_block,
         ),
     ),
-    sources=("ams_html", "ams_pdf"),
+    sources=_PROVIDER_DEFINITION.sources,
 )

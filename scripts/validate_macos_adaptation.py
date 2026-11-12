@@ -223,6 +223,7 @@ def validate_contract(
         "prerelease_includes_stable",
         "native_bundle_gate",
         "cooperative_cancel_owner_thread_cleanup",
+        "request_local_browser_session_owner",
         "html_snapshot_owner_thread",
         "supplementary_index_without_body",
         "publisher_native_persistent_profiles",

@@ -857,7 +857,10 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
             metadata={"doi": "10.1111/test-author-year-regression"},
         )
 
-        self.assertIn("Zhu et al. ([2016](#gcb-test-bib-0059))", markdown)
+        self.assertIn(
+            "Zhu et al. ([2016](https://onlinelibrary.wiley.com/doi/full/10.1111/test-author-year-regression#gcb-test-bib-0059))",
+            markdown,
+        )
         self.assertNotIn("<sup>2016</sup>", markdown)
 
 

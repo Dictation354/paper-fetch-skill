@@ -13,7 +13,6 @@ from ..failure import FailureDiagnostics
 from ..providers.base import restricted_provider_result
 from ..quality.access_boundary import (
     CONFIRMED_PAYWALL,
-    check_payload_paywall,
     confirmed_paywall,
 )
 from ..logging_utils import emit_structured_log
@@ -25,8 +24,8 @@ from ..provider_catalog import (
     provider_managed_abstract_only_names,
 )
 from ..publisher_identity import validate_extracted_identity
-from ..providers.base import ProviderArtifacts, ProviderFailure, ProviderFetchResult
-from ..providers.protocols import AssetProvider, FulltextProvider, RawFulltextProvider
+from ..providers.base import ProviderFailure, ProviderFetchResult
+from ..providers.protocols import FulltextProvider, RawFulltextProvider
 from ..reason_codes import (
     ABSTRACT_ONLY,
     ERROR,
@@ -132,88 +131,24 @@ def _provider_fetch_result(
     asset_profile: AssetProfile,
     context: RuntimeContext,
 ) -> ProviderFetchResult:
-    download_dir = artifact_store.asset_download_dir
-    previous_asset_profile = context.asset_profile
-    context.asset_profile = asset_profile
-    try:
-        if isinstance(provider_client, FulltextProvider):
-            return provider_client.fetch_result(
-                doi,
-                metadata,
-                download_dir,
-                asset_profile=asset_profile,
-                artifact_store=artifact_store,
-                context=context,
-            )
+    if isinstance(provider_client, FulltextProvider):
+        adapter = provider_client
+    elif isinstance(provider_client, RawFulltextProvider):
+        from ..providers.raw_adapter import RawProviderAdapter
 
-        if not isinstance(provider_client, RawFulltextProvider):
-            raise ProviderFailure(
-                NOT_SUPPORTED, "Provider does not implement raw full-text retrieval."
-            )
-
-        raw_payload = provider_client.fetch_raw_fulltext(doi, metadata, context=context)
-        checked_input = check_payload_paywall(
-            raw_payload, {**metadata, "doi": doi}, context=context
+        adapter = RawProviderAdapter(provider_client)
+    else:
+        raise ProviderFailure(
+            NOT_SUPPORTED, "Provider does not implement raw full-text retrieval."
         )
-        article = provider_client.to_article_model(
-            metadata,
-            raw_payload,
-            downloaded_assets=[],
-            asset_failures=[],
-            context=context,
-        )
-        check_payload_paywall(
-            raw_payload,
-            {**metadata, "doi": doi},
-            context=context,
-            checked_input=checked_input,
-        )
-        downloaded_assets: list[Mapping[str, Any]] = []
-        asset_failures: list[Mapping[str, Any]] = []
-        if (
-            download_dir is not None
-            and asset_profile != "none"
-            and isinstance(provider_client, AssetProvider)
-        ):
-            asset_results = provider_client.download_related_assets(
-                doi,
-                metadata,
-                raw_payload,
-                download_dir,
-                asset_profile=asset_profile,
-                context=context,
-            )
-            downloaded_assets = list(asset_results.get("assets") or [])
-            asset_failures = list(asset_results.get("asset_failures") or [])
-            article = provider_client.to_article_model(
-                metadata,
-                raw_payload,
-                downloaded_assets=downloaded_assets,
-                asset_failures=asset_failures,
-                context=context,
-            )
-        content = getattr(raw_payload, "content", None)
-        route = safe_text(getattr(content, "route_kind", "")).lower()
-        extracted_assets = (
-            list(getattr(content, "extracted_assets", []) or [])
-            if route == PDF_FALLBACK
-            else []
-        )
-        return ProviderFetchResult(
-            provider=safe_text(getattr(provider_client, "name", ""))
-            or safe_text(raw_payload.provider)
-            or "provider",
-            article=article,
-            content=content,
-            warnings=list(getattr(raw_payload, "warnings", []) or []),
-            trace=list(getattr(raw_payload, "trace", []) or []),
-            artifacts=ProviderArtifacts(
-                assets=[dict(item) for item in [*extracted_assets, *downloaded_assets]],
-                asset_failures=[dict(item) for item in asset_failures],
-            ),
-        )
-    finally:
-        context.asset_profile = previous_asset_profile
+    return adapter.fetch_result(
+        doi,
+        metadata,
+        artifact_store.asset_download_dir,
+        asset_profile=asset_profile,
+        artifact_store=artifact_store,
+        context=context,
+    )
 
 
 @dataclass

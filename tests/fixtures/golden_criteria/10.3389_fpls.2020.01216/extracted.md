@@ -291,9 +291,12 @@ We thank Kouki Hikosaka for his constructive comments and stimulating discussion
 
 The Supplementary Material for this article can be found online at: [https://www.frontiersin.org/articles/10.3389/fpls.2020.01216/full#supplementary-material](https://www.frontiersin.org/articles/10.3389/fpls.2020.01216/full#supplementary-material)
 
-## Supplementary Materials
-
-- [Supplementary material (Table_1.docx)](https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/full#supplementary-material)
+- [Table_1.docx](https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/full#supplementary-material)
+- [Table_2.docx](https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/full#supplementary-material)
+- [Table_3.docx](https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/full#supplementary-material)
+- [Table_4.docx](https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/full#supplementary-material)
+- [Table_5.docx](https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/full#supplementary-material)
+- [Table_6.docx](https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2020.01216/full#supplementary-material)
 
 ## References (56 total, showing 56)
 

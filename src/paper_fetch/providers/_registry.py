@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Iterator, Mapping
-from dataclasses import dataclass
-from dataclasses import replace
+from dataclasses import dataclass, replace
+from threading import RLock
 from typing import TYPE_CHECKING, Any, Protocol
 
 from ..normalize_journal_name import normalize_journal_name
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from ..extraction.html.provider_rules import ProviderHtmlRules
     from ..http import HttpTransport
     from .base import ProviderClient
+    from ._asset_retry import AssetRetryPolicy
 
 
 class ProviderClientFactory(Protocol):
@@ -57,8 +58,72 @@ class ProviderRenderPolicy:
 class BrowserPagePolicy:
     empty_request: Callable[[str], bool] | None = None
     readiness_per_candidate: bool = False
+    review_http_status: Callable[..., dict[str, Any] | None] | None = None
+    remaining_review_candidates: Callable[..., list[str]] | None = None
     document_hosts: tuple[str, ...] = ()
     document_matches: Callable[[str, str, str, str], bool] | None = None
+
+
+class BodyAssetScheduler(Protocol):
+    def __call__(
+        self,
+        assets: list[dict[str, Any]],
+        *,
+        deps: Any,
+        transport: Any,
+        common_kwargs: Mapping[str, Any],
+        options: Any,
+        image_document_fetcher: Any,
+        configured_concurrency: int | None,
+        merge_results: Callable[..., Any],
+    ) -> tuple[Mapping[str, Any], list[dict[str, Any]], list[dict[str, Any]]]: ...
+
+
+class PreviewAssetAnnotator(Protocol):
+    def __call__(
+        self,
+        result: Mapping[str, Any],
+        *,
+        direct_failures: list[dict[str, Any]],
+        browser_failures: list[dict[str, Any]],
+    ) -> dict[str, list[dict[str, Any]]]: ...
+
+
+@dataclass(frozen=True)
+class BrowserAssetPolicy:
+    """Provider-declared capabilities consumed by shared browser execution."""
+
+    click_supplements: bool = False
+    supplement_failure_prefix: str = "supplement_click"
+    supplement_link: Callable[..., Any] | None = None
+    supplement_missing_link: Callable[..., tuple[Any | None, bool]] | None = None
+    supplement_reveal: Callable[..., None] | None = None
+    supplement_activate: Callable[..., None] | None = None
+    supplement_ignore_tracking_query: bool = False
+    supplement_prefer_visible: bool = False
+    figure_page_ready_selector: str | None = None
+    figure_page_wait_seconds: float = 2
+    figure_page_requires_caller_thread: bool = False
+    retry_supplementary: bool = True
+    body_scheduler: BodyAssetScheduler | None = None
+    annotate_preview: PreviewAssetAnnotator | None = None
+    annotate_browser_only_previews: bool = False
+    preview_uses_merged_failures: bool = False
+    browser_first_preview: bool = False
+    retry_policy: AssetRetryPolicy | None = None
+    exact_retry_identity: bool = False
+    small_formula_images: bool = False
+    target_match_kinds: tuple[str, ...] = ()
+    wait_for_target_image: bool = False
+    commit_image_navigation: bool = False
+    context_request_first: bool = False
+
+
+def browser_asset_policy(provider: str) -> BrowserAssetPolicy:
+    try:
+        return provider_bundle(provider).browser_asset_policy
+    except KeyError:
+        return BrowserAssetPolicy()
 
 
 @dataclass(frozen=True)
@@ -71,6 +136,7 @@ class ProviderBundle:
     sources: tuple[str, ...] = ()
     render_policy: ProviderRenderPolicy | None = None
     browser_page_policy: BrowserPagePolicy = BrowserPagePolicy()
+    browser_asset_policy: BrowserAssetPolicy = BrowserAssetPolicy()
 
     def __post_init__(self) -> None:
         if not self.catalog.name:
@@ -288,11 +354,45 @@ def iter_provider_bundles() -> Iterator[ProviderBundle]:
     return iter(PROVIDER_BUNDLES)
 
 
+_BUNDLE_CACHE: dict[str, ProviderBundle] = {}
+
+
+# Serializes concurrent first imports, including the validation/cache publication.
+_BUNDLE_LOCK = RLock()
+
+
 def provider_bundle(name: str) -> ProviderBundle:
-    from ..provider_catalog import PROVIDER_BUNDLE_MAP
+    from importlib import import_module
+    from ._definitions import PROVIDER_DEFINITIONS
 
     normalized = str(name or "").strip().lower()
     try:
-        return PROVIDER_BUNDLE_MAP[normalized]
+        definition = PROVIDER_DEFINITIONS[normalized]
     except KeyError as exc:
         raise KeyError(f"Unknown provider bundle: {name!r}") from exc
+    with _BUNDLE_LOCK:
+        if normalized not in _BUNDLE_CACHE:
+            module_name, attribute = definition.implementation.split(":")
+            bundle = getattr(import_module(module_name), attribute)
+            if (
+                bundle.catalog != definition.catalog
+                or bundle.sources != definition.sources
+            ):
+                raise ValueError(
+                    f"Provider implementation disagrees with definition: {normalized}"
+                )
+            rules = bundle.html_rules
+            if (rules is None) != (not definition.rules_name) or (
+                rules is not None
+                and (rules.name, rules.aliases, rules.noise_profile)
+                != (
+                    definition.rules_name,
+                    definition.rules_aliases,
+                    definition.noise_profile,
+                )
+            ):
+                raise ValueError(
+                    f"Provider HTML rules disagree with definition: {normalized}"
+                )
+            _BUNDLE_CACHE[normalized] = bundle
+        return _BUNDLE_CACHE[normalized]

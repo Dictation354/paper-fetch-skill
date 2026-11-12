@@ -24,6 +24,8 @@ from ._ieee_metadata import IeeeLandingAttempt, _landing_metadata_has_multimedia
 from ._ieee_url import IEEE_BASE_URL, IEEE_MULTIMEDIA_URL_TEMPLATE
 from .browser_runtime.types import BrowserRuntimeConfig
 from .browser_workflow.asset_download import (
+    _matching_failure,
+    _attempt_from_failure,
     BrowserAssetDownloadPlan,
     BrowserAssetRecoveryContext,
     download_browser_backed_related_assets,
@@ -534,3 +536,71 @@ def download_ieee_assets_with_browser(
 
 
 __all__ = ["download_ieee_assets_with_browser"]
+
+
+def annotate_ieee_preview(
+    result: Mapping[str, Any],
+    *,
+    direct_failures: list[dict[str, Any]],
+    browser_failures: list[dict[str, Any]],
+) -> dict[str, list[dict[str, Any]]]:
+    assets = [dict(asset) for asset in list(result.get("assets") or [])]
+    failures = [dict(failure) for failure in list(result.get("asset_failures") or [])]
+
+    for outcome, recovered in [
+        *((asset, True) for asset in assets),
+        *((failure, False) for failure in failures),
+    ]:
+        direct_failure = _matching_failure(outcome, direct_failures)
+        browser_failure = _matching_failure(outcome, browser_failures)
+        browser_backend = normalize_text(
+            str(
+                outcome.get("browser_backend")
+                or (browser_failure or {}).get("browser_backend")
+                or ""
+            )
+        )
+        attempts: list[dict[str, Any]] = []
+        if direct_failure is not None:
+            attempts.append(_attempt_from_failure("direct", direct_failure))
+        if browser_failure is not None:
+            attempts.append(
+                _attempt_from_failure(
+                    "browser",
+                    browser_failure,
+                    browser_backend=browser_backend,
+                )
+            )
+        if recovered:
+            final_fetcher = normalize_text(
+                str(
+                    outcome.get("final_fetcher")
+                    or browser_backend
+                    or "selected_browser"
+                )
+            )
+            attempts.append(
+                {
+                    key: value
+                    for key, value in {
+                        "stage": "preview_fallback",
+                        "browser_backend": browser_backend or None,
+                        "content_type": outcome.get("content_type"),
+                        "reason": "recovered",
+                        "final_fetcher": final_fetcher,
+                    }.items()
+                    if value not in (None, "")
+                }
+            )
+        else:
+            attempts.append(
+                _attempt_from_failure(
+                    "preview_fallback",
+                    outcome,
+                    browser_backend=browser_backend,
+                )
+            )
+        if attempts:
+            outcome["recovery_attempts"] = attempts
+
+    return {"assets": assets, "asset_failures": failures}

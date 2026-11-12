@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from ..quality.access_boundary import propagate_paywall
 
 from dataclasses import asdict, dataclass
@@ -42,9 +44,6 @@ from ..models import (
     metadata_only_article,
 )
 from ..provider_catalog import (
-    BodyTextThresholds,
-    ProviderRouteSpec,
-    ProviderSpec,
     provider_domains,
     provider_landing_path_templates,
     provider_pdf_path_templates,
@@ -99,6 +98,9 @@ from .base import (
 )
 
 from bs4 import BeautifulSoup, Tag
+
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["copernicus"]
 
 MIN_BODY_CHARS = 500
 COPERNICUS_XML_DOI_PATTERN = re.compile(
@@ -927,46 +929,6 @@ __all__ = ["CopernicusClient", "ProviderContent", "RawFulltextPayload"]
 
 PROVIDER_BUNDLE = ProviderBundle(
     client_factory=CopernicusClient,
-    catalog=ProviderSpec(
-        name="copernicus",
-        display_name="Copernicus",
-        official=True,
-        domains=(),
-        doi_prefixes=("10.5194/",),
-        publisher_aliases=(
-            "copernicus",
-            "copernicus publications",
-            "copernicus gmbh",
-        ),
-        asset_default="body",
-        probe_capability="routing_signal",
-        provider_managed_abstract_only=False,
-        status_order=8,
-        domain_suffixes=("copernicus.org",),
-        xml_path_templates=("/articles/{volume}/{page}/{year}/{suffix}.xml",),
-        landing_path_templates=("/articles/{volume}/{page}/{year}/",),
-        pdf_path_templates=("/articles/{volume}/{page}/{year}/{suffix}.pdf",),
-        emits_html_managed_marker=False,
-        html_capable=False,
-        xml_root_tags=("article",),
-        xml_file_tokens=("copernicus", "10.5194"),
-        body_text_thresholds=BodyTextThresholds(min_chars=500),
-        routes=(
-            ProviderRouteSpec(name="metadata", kind="metadata"),
-            ProviderRouteSpec(name="xml", kind="xml"),
-            ProviderRouteSpec(
-                name="direct_pdf",
-                kind="pdf",
-                requires_pdf_conversion=True,
-            ),
-            ProviderRouteSpec(
-                name="assets",
-                kind="assets",
-                timeout_seconds=20,
-                concurrency=2,
-                transient_retries=2,
-            ),
-        ),
-    ),
-    sources=("copernicus_xml", "copernicus_pdf"),
+    catalog=_PROVIDER_DEFINITION.catalog,
+    sources=_PROVIDER_DEFINITION.sources,
 )

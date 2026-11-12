@@ -192,8 +192,14 @@ def test_real_jats_supplements_retain_source_identity_without_claiming_download(
         assert asset.section == "supplementary"
         assert asset.path is None and asset.downloaded_bytes is None
         if doi.startswith("10.3389/"):
-            assert asset.original_url.endswith("#supplementary-material")
-            assert "frontiersin.org" in asset.original_url
+            import json
+
+            official = json.loads(
+                golden_criteria_asset(
+                    doi, "acquisition/supplemental-data.json"
+                ).read_text()
+            )
+            assert asset.original_url == official[0]["downloadUrl"]
         else:
             assert href in asset.original_url
 

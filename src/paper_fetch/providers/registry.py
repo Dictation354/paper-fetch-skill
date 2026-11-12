@@ -9,7 +9,8 @@ import threading
 from ..config import build_runtime_env
 from ..failure import FailureDiagnostics
 from ..http import HttpTransport
-from ..provider_catalog import PROVIDER_BUNDLES
+from ..provider_catalog import PROVIDER_CATALOG
+from ._registry import provider_bundle
 from ..reason_codes import ERROR
 from .base import (
     ProviderClient,
@@ -77,7 +78,6 @@ def build_clients(
 ) -> dict[str, ProviderClient]:
     active_transport = transport if transport is not None else HttpTransport()
     active_env = env if env is not None else build_runtime_env()
-    bundles = PROVIDER_BUNDLES
     selected = (
         None
         if provider_names is None
@@ -87,17 +87,18 @@ def build_clients(
             if str(name or "").strip()
         }
     )
-    known = {bundle.catalog.name for bundle in bundles}
+    known = set(PROVIDER_CATALOG)
     unknown = sorted((selected or set()) - known)
     if unknown:
         raise ValueError(f"Unknown provider client(s): {', '.join(unknown)}")
     clients: dict[str, ProviderClient] = {}
-    for bundle in bundles:
-        spec = bundle.catalog
+    for spec in PROVIDER_CATALOG.values():
         if selected is not None and spec.name not in selected:
             continue
         try:
-            clients[spec.name] = bundle.client_factory(active_transport, active_env)
+            clients[spec.name] = provider_bundle(spec.name).client_factory(
+                active_transport, active_env
+            )
         except Exception as exc:  # noqa: BLE001 - isolate one provider factory.
             clients[spec.name] = FailedProviderClient(
                 name=spec.name,
@@ -113,7 +114,7 @@ class LazyProviderClients(Mapping[str, ProviderClient]):
     def __init__(self, transport: HttpTransport, env: Mapping[str, str]):
         self._transport = transport
         self._env = env
-        self._names = tuple(bundle.catalog.name for bundle in PROVIDER_BUNDLES)
+        self._names = tuple(PROVIDER_CATALOG)
         self._clients: dict[str, ProviderClient] = {}
         self._lock = threading.RLock()
 

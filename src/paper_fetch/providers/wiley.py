@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from ..quality.access_boundary import propagate_paywall
 
 import urllib.parse
@@ -32,9 +34,6 @@ from ..http import (
 )
 from ..extraction.html.landing import REDIRECT_STATUS_CODES
 from ..provider_catalog import (
-    ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-    ProviderRouteSpec,
-    ProviderSpec,
     provider_api_url_template,
 )
 from ..pdf_limits import pdf_max_bytes
@@ -59,7 +58,7 @@ from ._waterfall import (
     ProviderWaterfallState,
     run_provider_waterfall,
 )
-from ._registry import ProviderBundle
+from ._registry import BrowserAssetPolicy, BrowserPagePolicy, ProviderBundle
 from ..reason_codes import NO_RESULT, NOT_CONFIGURED, OK, PDF_FALLBACK
 from .base import (
     ProviderContent,
@@ -70,78 +69,17 @@ from .base import (
     summarize_capability_status,
 )
 
-_PROVIDER_SPEC = ProviderSpec(
-    name="wiley",
-    display_name="Wiley",
-    official=True,
-    domains=("onlinelibrary.wiley.com", "wiley.com", "www.wiley.com"),
-    doi_prefixes=("10.1002/", "10.1111/"),
-    publisher_aliases=(
-        "wiley",
-        "wiley blackwell",
-        "john wiley and sons",
-        "john wiley sons",
-    ),
-    asset_default="body",
-    probe_capability="routing_signal",
-    provider_managed_abstract_only=True,
-    status_order=3,
-    base_domains=("onlinelibrary.wiley.com",),
-    html_path_templates=("/doi/{doi}", "/doi/full/{doi}"),
-    pdf_path_templates=(
-        *ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-        "/doi/pdfdirect/{doi}",
-        "/wol1/doi/{doi}/fullpdf",
-    ),
-    crossref_pdf_position=1,
-    api_url_templates=(
-        (
-            "tdm_pdf",
-            "https://api.wiley.com/onlinelibrary/tdm/v1/articles/{doi}",
-        ),
-    ),
-    sensitive_headers=("wiley-tdm-client-token",),
-    env_requirements=(),
-    batch_concurrency=1,
-    routes=(
-        ProviderRouteSpec(name="metadata", kind="metadata"),
-        ProviderRouteSpec(
-            name="browser_html",
-            kind="html",
-            browser_optional=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            concurrency=1,
-            timeout_seconds=120,
-        ),
-        ProviderRouteSpec(
-            name="tdm_pdf",
-            kind="pdf",
-            transport="api",
-            requires_pdf_conversion=True,
-        ),
-        ProviderRouteSpec(
-            name="browser_pdf",
-            kind="pdf",
-            browser_optional=True,
-            browser_preflight=True,
-            requires_playwright=True,
-            requires_pdf_conversion=True,
-            concurrency=1,
-            timeout_seconds=120,
-        ),
-        ProviderRouteSpec(
-            name="assets",
-            kind="assets",
-            browser_optional=True,
-            requires_playwright=True,
-            timeout_seconds=20,
-            concurrency=2,
-            transient_retries=0,
-        ),
-    ),
+from ._wiley_asset_policy import annotate_wiley_preview
+from ._wiley_http_review import (
+    _wiley_http_access_status_review,
+    _remaining_wiley_review_candidates,
 )
+
+from ._wiley_asset_policy import _wiley_link, activate_wiley_supplement
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["wiley"]
+
+_PROVIDER_SPEC = _PROVIDER_DEFINITION.catalog
 
 WILEY_TDM_CLIENT_TOKEN_ENV_VAR = "WILEY_TDM_CLIENT_TOKEN"
 WILEY_TDM_API_TEMPLATE_NAME = "tdm_pdf"
@@ -641,10 +579,27 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_page_policy=BrowserPagePolicy(
+        review_http_status=_wiley_http_access_status_review,
+        remaining_review_candidates=_remaining_wiley_review_candidates,
+    ),
+    browser_asset_policy=BrowserAssetPolicy(
+        supplement_failure_prefix="wiley_supplement",
+        supplement_link=_wiley_link,
+        supplement_activate=activate_wiley_supplement,
+        click_supplements=True,
+        retry_supplementary=False,
+        annotate_preview=annotate_wiley_preview,
+        annotate_browser_only_previews=True,
+        preview_uses_merged_failures=True,
+        small_formula_images=True,
+        target_match_kinds=("figure",),
+        wait_for_target_image=True,
+    ),
     client_factory=WileyClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
-        name="wiley",
+        name=_PROVIDER_DEFINITION.rules_name,
         cleanup=ProviderCleanupRules(
             extraction_drop_keywords=("citation-tools", "publicationhistory"),
         ),
@@ -668,5 +623,5 @@ PROVIDER_BUNDLE = ProviderBundle(
             asset_body_container=_wiley_html.wiley_asset_body_container,
         ),
     ),
-    sources=("wiley_browser",),
+    sources=_PROVIDER_DEFINITION.sources,
 )

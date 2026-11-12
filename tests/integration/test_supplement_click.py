@@ -19,9 +19,8 @@ from paper_fetch.extraction.html.assets import (
     download_assets,
 )
 from paper_fetch.http import RequestCancelledError
-from paper_fetch.providers.browser_workflow.asset_download import (
-    _CLICK_SUPPLEMENT_PROVIDERS,
-)
+from paper_fetch.provider_catalog import provider_names
+from paper_fetch.providers._registry import browser_asset_policy
 from paper_fetch.providers.browser_workflow.fetchers import (
     BrowserDocumentFetcherOptions,
 )
@@ -133,7 +132,14 @@ def article_html(links):
     )
 
 
-@pytest.mark.parametrize("provider", sorted(_CLICK_SUPPLEMENT_PROVIDERS))
+@pytest.mark.parametrize(
+    "provider",
+    sorted(
+        name
+        for name in provider_names()
+        if browser_asset_policy(name).click_supplements
+    ),
+)
 def test_each_provider_downloads_existing_link_serially(
     click_browser, provider, tmp_path
 ):

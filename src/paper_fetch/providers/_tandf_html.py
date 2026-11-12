@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from copy import deepcopy
 import csv
 from functools import partial
@@ -1409,9 +1409,12 @@ def prepare_browser_page(
     page: Any,
     *,
     timeout_ms: int | None = None,
+    cancel_check: Callable[[], None] | None = None,
 ) -> dict[str, Any]:
     """Hydrate bounded T&F CSV or already-loaded same-page table payloads."""
 
+    if cancel_check is not None:
+        cancel_check()
     result: dict[str, Any] = {
         "attempted": True,
         "table_controls": 0,

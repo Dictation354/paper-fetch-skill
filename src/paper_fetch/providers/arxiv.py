@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from ..quality.access_boundary import propagate_paywall
 
 from dataclasses import replace
@@ -40,7 +42,6 @@ from ..models import (
     article_from_markdown,
     metadata_only_article,
 )
-from ..provider_contracts import ProviderRouteSpec, ProviderSpec
 from ..runtime import RuntimeContext
 from ..tracing import download_marker, fulltext_marker, trace_from_markers
 from ..utils import empty_asset_results, normalize_text
@@ -99,6 +100,9 @@ from .base import (
     map_request_failure,
     summarize_capability_status,
 )
+
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["arxiv"]
 
 
 class ArxivClient(ProviderClient):
@@ -796,44 +800,10 @@ __all__ = [
 PROVIDER_BUNDLE = ProviderBundle(
     client_factory=ArxivClient,
     metadata_probe_short_circuit=arxiv_metadata_probe_short_circuit,
-    catalog=ProviderSpec(
-        name="arxiv",
-        display_name="arXiv",
-        official=True,
-        domains=("arxiv.org",),
-        doi_prefixes=("10.48550/",),
-        publisher_aliases=("arxiv",),
-        asset_default="body",
-        probe_capability="metadata_api",
-        provider_managed_abstract_only=False,
-        status_order=7,
-        persist_provider_html=True,
-        routes=(
-            ProviderRouteSpec(
-                name="atom_metadata",
-                kind="metadata",
-                transport="api",
-                timeout_seconds=60,
-                qps=1,
-            ),
-            ProviderRouteSpec(name="official_html", kind="html"),
-            ProviderRouteSpec(
-                name="direct_pdf",
-                kind="pdf",
-                requires_pdf_conversion=True,
-            ),
-            ProviderRouteSpec(
-                name="source_assets",
-                kind="assets",
-                hosts=("arxiv.org",),
-                qps=1,
-                asset_scope="all",
-            ),
-        ),
-    ),
+    catalog=_PROVIDER_DEFINITION.catalog,
     html_rules=ProviderHtmlRules(
-        name="arxiv",
+        name=_PROVIDER_DEFINITION.rules_name,
         availability=AvailabilityPolicy(name="arxiv"),
     ),
-    sources=("arxiv_html", "arxiv_pdf"),
+    sources=_PROVIDER_DEFINITION.sources,
 )

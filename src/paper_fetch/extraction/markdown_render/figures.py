@@ -326,8 +326,10 @@ def iter_inline_html_figure_images(node: Any) -> list[tuple[str, str]]:
     return images
 
 
-def append_inline_html_figure_image(lines: list[str], src: str, alt: str) -> None:
-    lines.extend([render_markdown_image("figure", alt or "Figure", src), ""])
+def append_inline_html_figure_image(
+    lines: list[str], src: str, alt: str, *, kind: str = "figure"
+) -> None:
+    lines.extend([render_markdown_image(kind, alt or "Figure", src), ""])
 
 
 def render_html_figure_markdown(
@@ -344,6 +346,7 @@ def render_html_figure_markdown(
 
         render_container_markdown(node, lines, level=3)
         return
+    kind = str(node.get("data-paper-fetch-object-kind") or "figure")
     inline_images = iter_inline_html_figure_images(node)
     figure_items: list[tuple[str, str]] = []
     for text in iter_html_figure_text_candidates(
@@ -370,7 +373,7 @@ def render_html_figure_markdown(
         figure_items.append((fallback_label, ""))
     if not figure_items:
         for src, alt in inline_images:
-            append_inline_html_figure_image(lines, src, alt)
+            append_inline_html_figure_image(lines, src, alt, kind=kind)
         return
 
     if (
@@ -381,7 +384,7 @@ def render_html_figure_markdown(
         for index, (label, caption) in enumerate(figure_items):
             src, alt = inline_images[index]
             active_label = label or (fallback_label if index == 0 else "")
-            append_inline_html_figure_image(lines, src, active_label or alt)
+            append_inline_html_figure_image(lines, src, active_label or alt, kind=kind)
             line = f"**{active_label}** {caption}".strip() if active_label else caption
             if line:
                 lines.extend([line, ""])
@@ -390,7 +393,7 @@ def render_html_figure_markdown(
     for index, (src, alt) in enumerate(inline_images):
         figure_item_label = figure_items[index][0] if index < len(figure_items) else ""
         append_inline_html_figure_image(
-            lines, src, figure_item_label or fallback_label or alt
+            lines, src, figure_item_label or fallback_label or alt, kind=kind
         )
 
     for index, (label, caption) in enumerate(figure_items):

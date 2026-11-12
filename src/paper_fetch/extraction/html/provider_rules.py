@@ -6,7 +6,6 @@ import copy
 import warnings
 from collections.abc import Iterator, Mapping as MappingABC, Set as SetABC
 from dataclasses import dataclass, field, replace
-from types import MappingProxyType
 from typing import Any, Protocol
 from collections.abc import Callable, Mapping, Sequence
 
@@ -515,7 +514,7 @@ def provider_html_rules(name: str | None) -> ProviderHtmlRules:
     normalized = normalize_provider_key(name)
     if not normalized or normalized == DEFAULT_NOISE_PROFILE:
         return GENERIC_HTML_RULES
-    rules = _provider_lookup().get(normalized)
+    rules = _rules_for_key(normalized)
     if rules is None:
         warnings.warn(
             f"Unknown provider HTML rules provider {name!r}; falling back to generic.",
@@ -531,7 +530,10 @@ def require_provider_html_rules(name: str | None) -> ProviderHtmlRules:
     if normalized == DEFAULT_NOISE_PROFILE:
         return GENERIC_HTML_RULES
     try:
-        return _provider_lookup()[normalized]
+        rules = _rules_for_key(normalized)
+        if rules is None:
+            raise KeyError(normalized)
+        return rules
     except KeyError as exc:
         raise KeyError(f"Unknown provider HTML rules provider: {name!r}") from exc
 
@@ -540,9 +542,9 @@ def cleanup_policy_for_profile(noise_profile: str | None) -> CleanupPolicy:
     normalized = normalize_provider_key(noise_profile)
     if not normalized or normalized == DEFAULT_NOISE_PROFILE:
         return _cleanup_policy_from_rules(GENERIC_HTML_RULES)
-    rules = _noise_profile_lookup().get(normalized)
+    rules = _rules_for_key(normalized, noise=True)
     if rules is None:
-        rules = _provider_lookup().get(normalized, GENERIC_HTML_RULES)
+        rules = _rules_for_key(normalized) or GENERIC_HTML_RULES
     return _cleanup_policy_from_rules(rules)
 
 
@@ -574,138 +576,45 @@ def provider_supplementary_text_tokens(noise_profile: str | None) -> tuple[str, 
     return asset_rules_for_provider(noise_profile).supplementary_text_tokens
 
 
-_PROVIDER_HTML_RULES_CACHE: Mapping[str, ProviderHtmlRules] | None = None
-
-
-def _build_provider_html_rules() -> Mapping[str, ProviderHtmlRules]:
-    from ...provider_catalog import PROVIDER_BUNDLES
-
-    return MappingProxyType(
-        {
-            bundle.html_rules.name: bundle.html_rules
-            for bundle in PROVIDER_BUNDLES
-            if bundle.html_rules is not None
-        }
-    )
-
-
-def _provider_html_rules_map() -> Mapping[str, ProviderHtmlRules]:
-    global _PROVIDER_HTML_RULES_CACHE
-    rules = _PROVIDER_HTML_RULES_CACHE
-    if rules is None:
-        rules = _build_provider_html_rules()
-        _PROVIDER_HTML_RULES_CACHE = rules
-    return rules
-
-
 class _ProviderHtmlRulesMapping(MappingABC[str, ProviderHtmlRules]):
     def __getitem__(self, key: str) -> ProviderHtmlRules:
-        return _provider_html_rules_map()[key]
+        if key not in self:
+            raise KeyError(key)
+        rules = _rules_for_key(key)
+        assert rules is not None
+        return rules
 
     def __iter__(self) -> Iterator[str]:
-        return iter(_provider_html_rules_map())
+        from ...providers._definitions import BUILTIN_PROVIDER_DEFINITIONS
+
+        return iter(
+            definition.rules_name
+            for definition in BUILTIN_PROVIDER_DEFINITIONS
+            if definition.rules_name
+        )
 
     def __len__(self) -> int:
-        return len(_provider_html_rules_map())
+        return sum(1 for _ in self)
+
+    def __contains__(self, key: object) -> bool:
+        return any(name == key for name in self)
 
 
 PROVIDER_HTML_RULES: Mapping[str, ProviderHtmlRules] = _ProviderHtmlRulesMapping()
 
 
-def _add_lookup_key(
-    lookup: dict[str, ProviderHtmlRules],
-    key: str | None,
-    rules: ProviderHtmlRules,
-    *,
-    lookup_name: str,
-) -> None:
-    normalized = normalize_provider_key(key)
-    if not normalized:
-        return
-    existing = lookup.get(normalized)
-    if existing is None:
-        lookup[normalized] = rules
-        return
-    if existing is rules:
-        return
-    raise ValueError(
-        f"provider HTML rules {lookup_name} key conflict for `{normalized}`: "
-        f"`{existing.name}` and `{rules.name}`"
-    )
+def _rules_for_key(key: str, *, noise: bool = False) -> ProviderHtmlRules | None:
+    from ...providers._definitions import RULE_PROVIDER_INDEX, NOISE_PROVIDER_INDEX
+    from ...providers._registry import provider_bundle
 
-
-def _build_provider_lookup() -> dict[str, ProviderHtmlRules]:
-    lookup: dict[str, ProviderHtmlRules] = {}
-    _add_lookup_key(
-        lookup,
-        DEFAULT_NOISE_PROFILE,
-        GENERIC_HTML_RULES,
-        lookup_name="provider lookup",
-    )
-    for rules in PROVIDER_HTML_RULES.values():
-        for key in (rules.name, *rules.aliases):
-            _add_lookup_key(
-                lookup,
-                key,
-                rules,
-                lookup_name="provider lookup",
-            )
-    return lookup
-
-
-def _build_noise_profile_lookup() -> dict[str, ProviderHtmlRules]:
-    lookup: dict[str, ProviderHtmlRules] = {}
-    _add_lookup_key(
-        lookup,
-        DEFAULT_NOISE_PROFILE,
-        GENERIC_HTML_RULES,
-        lookup_name="noise profile lookup",
-    )
-    for rules in PROVIDER_HTML_RULES.values():
-        if normalize_provider_key(rules.noise_profile) == DEFAULT_NOISE_PROFILE:
-            continue
-        _add_lookup_key(
-            lookup,
-            rules.noise_profile,
-            rules,
-            lookup_name="noise profile lookup",
-        )
-    return lookup
-
-
-_PROVIDER_LOOKUP_CACHE: Mapping[str, ProviderHtmlRules] | None = None
-_NOISE_PROFILE_LOOKUP_CACHE: Mapping[str, ProviderHtmlRules] | None = None
-
-
-def _provider_lookup() -> Mapping[str, ProviderHtmlRules]:
-    global _PROVIDER_LOOKUP_CACHE
-    lookup = _PROVIDER_LOOKUP_CACHE
-    if lookup is None:
-        lookup = MappingProxyType(_build_provider_lookup())
-        _PROVIDER_LOOKUP_CACHE = lookup
-    return lookup
-
-
-def _noise_profile_lookup() -> Mapping[str, ProviderHtmlRules]:
-    global _NOISE_PROFILE_LOOKUP_CACHE
-    lookup = _NOISE_PROFILE_LOOKUP_CACHE
-    if lookup is None:
-        lookup = MappingProxyType(_build_noise_profile_lookup())
-        _NOISE_PROFILE_LOOKUP_CACHE = lookup
-    return lookup
+    provider = (NOISE_PROVIDER_INDEX if noise else RULE_PROVIDER_INDEX).get(key)
+    return provider_bundle(provider).html_rules if provider else None
 
 
 def _registered_noise_profiles() -> frozenset[str]:
-    return frozenset(
-        {
-            DEFAULT_NOISE_PROFILE,
-            *(
-                normalize_provider_key(rules.noise_profile)
-                for rules in PROVIDER_HTML_RULES.values()
-                if normalize_provider_key(rules.noise_profile)
-            ),
-        }
-    )
+    from ...providers._definitions import NOISE_PROVIDER_INDEX
+
+    return frozenset({DEFAULT_NOISE_PROFILE, *NOISE_PROVIDER_INDEX})
 
 
 class _RegisteredNoiseProfiles(SetABC[str]):
@@ -726,13 +635,7 @@ REGISTERED_NOISE_PROFILES: SetABC[str] = _RegisteredNoiseProfiles()
 
 
 def _reset_provider_html_rules_cache() -> None:
-    global \
-        _PROVIDER_HTML_RULES_CACHE, \
-        _PROVIDER_LOOKUP_CACHE, \
-        _NOISE_PROFILE_LOOKUP_CACHE
-    _PROVIDER_HTML_RULES_CACHE = None
-    _PROVIDER_LOOKUP_CACHE = None
-    _NOISE_PROFILE_LOOKUP_CACHE = None
+    """Compatibility hook; rules now share the immutable runtime bundle cache."""
 
 
 def _cleanup_policy_from_rules(rules: ProviderHtmlRules) -> CleanupPolicy:

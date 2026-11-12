@@ -1,5 +1,5 @@
 ---
-title: "297_1.tif"
+title: "High throughput x-ray astronomy"
 authors: "Gorenstein, Paul"
 journal: "AIP Conference Proceedings"
 doi: "10.1063/1.39658"
@@ -11,7 +11,7 @@ has_abstract: false
 token_estimate: 7503
 ---
 
-# 297_1.tif
+# High throughput x-ray astronomy
 
 RESEARCH ARTICLE | AUGUST 10 1990
 

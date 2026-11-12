@@ -905,7 +905,7 @@ def test_click_failure_keeps_original_target_and_never_requests_directly():
 
 def test_wiley_panel_re_resolves_control_after_redraw():
     from types import SimpleNamespace
-    from paper_fetch.providers.browser_workflow.fetchers import click
+    from paper_fetch.providers import _wiley_asset_policy as wiley_asset_policy
 
     page = mock.Mock()
     link = page.locator.return_value.first.locator.return_value.first
@@ -914,12 +914,12 @@ def test_wiley_panel_re_resolves_control_after_redraw():
     control = link.locator.return_value.locator.return_value.first
     control.get_attribute.return_value = "false"
     with mock.patch.object(
-        click,
+        wiley_asset_policy,
         "wait_for_atypon_body_dom_ready",
         return_value=SimpleNamespace(ready=True),
     ):
         assert (
-            click._wiley_link(
+            wiley_asset_policy._wiley_link(
                 page, ["https://example.test/si.zip"], lambda: 2000, lambda _: None
             )
             is link

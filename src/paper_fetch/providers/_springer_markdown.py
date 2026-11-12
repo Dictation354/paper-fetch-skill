@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 from ..extraction.html.parsing import choose_parser
@@ -99,6 +100,10 @@ def extract_html_payload(
     )
     extracted_authors = extract_authors(html_text)
     reference_soup = BeautifulSoup(html_text, choose_parser())
+    for anchor in reference_soup.select("a[href]"):
+        href = str(anchor["href"])
+        if href.startswith(("/", "./", "../")):
+            anchor["href"] = urljoin(source_url, href)
     extracted_references = extract_numbered_references_from_soup(reference_soup)
     if not extracted_references:
         # Springer Classic uses an unnumbered author-date bibliography. Preserve

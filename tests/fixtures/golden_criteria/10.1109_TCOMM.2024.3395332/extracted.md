@@ -330,7 +330,7 @@ Output: Best Decoding strategy, ${\mathcal {D}}^{i}_{*}$
 
 Consider the ICP and the chosen index code of length $N=3$ in Example 1, for which the chosen 8-PSK configuration is given in Fig. 1. For comparing the performances of different receivers, the signal-to-noise-ratios with which the side information is received at the different receivers are assumed to be the same, i.e., $\Gamma _{si}^{1} = \Gamma _{si}^{2}=\cdots = \Gamma _{si}^{5} = \Gamma _{si}$. Similarly, we also assume that the signal-to-noise ratios at which the index-coded messages are received are also the same across the different receivers, i.e., $\Gamma _{ic}^{1} = \Gamma _{ic}^{2}=\cdots = \Gamma _{ic}^{5} = \Gamma _{ic}$. The threshold values in decibels (dB) of $\Gamma _{ic}$ calculated using the expression in Lemma 1 are given in Table I for two values of $\Gamma _{si}$. Now, consider the performances of various decoding strategies at different receivers.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/26/10721242/10511075/rajan.t1-3395332-large.gif)
+![Table I](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/26/10721242/10511075/rajan.t1-3395332-large.gif)
 
 **TABLE I** Threshold Values of $\Gamma _{ic}$ for Different Decoding Strategies at the Receivers in Example 1
 
@@ -493,7 +493,7 @@ For a given ICP and chosen index code, at receiver $R_{i}$, consider that side i
 
 For an 8-PSK constellation, there exists $\frac {7!}{2}$ distinct mappings of signal points. We have already listed the different decoding strategies for all receivers. Here, we consider five different mappings as shown in Fig. 12. We can calculate $|P({\mathcal {D}}_{j}^{i})|$ using [(1)](https://ieeexplore.ieee.org/rest/document/10511075/?logAccess=true#deqn1) for each mapping. In Table II, the values of $|P({\mathcal {D}}_{j}^{i})|$ for the five mappings considered are listed. For a given mapping, the entries in red color in Table II correspond to the decoding strategies that will result in the optimal probability of error performance at a receiver. Suppose $R_{3}$ has to meet some minimum bit error rate value. $R_{3}$ decodes $\hat {x}_{3}$ by using $\mathcal {D}_{1}^{3}$, so we will choose such a mapping for which the value of $|P(\mathcal {D}_{1}^{3})|$ is the least. The criterion to choose such a mapping is to keep all the signal points that have the same value of $\hat {y}^{3}_{1} \oplus \hat {y}^{3}_{2}$ adjacent to each other, in turn, $|P(\mathcal {D}_{1}^{3})|=2$. There will be several mappings where the above-mentioned criteria will be met. Out of the five mappings that we have considered, from Table II, we can see that the probability of error is the least for $R_{3}$ when the mappings $\mathcal {M}_{1}$ and $\mathcal {M}_{4}$ are used.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/26/10721242/10511075/rajan.t2-3395332-large.gif)
+![Table II](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/26/10721242/10511075/rajan.t2-3395332-large.gif)
 
 **TABLE II** $|P({\mathcal {D}}_{j}^{i})|$ Values for Different $M$ -PSK Mappings for the Receivers in Example 1
 

@@ -81,7 +81,7 @@ To develop the required task dimension, students practiced sequencing and debugg
 
 Across all three assessed dimensions, students in the experimental group showed sustained improvement. Statistical analysis, based on a repeated-measures mixed model, revealed not only significant effects over time but also clear differences between students who participated in the strategy and those who did not. These gains were consistently strong and educationally meaningful, with partial eta-squared values exceeding.81 across all dimensions, indicating a robust impact of the intervention. As shown in Table I, the most pronounced improvements emerged in the computational concepts dimension.
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett.t1-3668995-large.gif)
+![Table I](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett.t1-3668995-large.gif)
 
 **TABLE I** Pre/Post-Test Outcomes by Dimension and Group
 

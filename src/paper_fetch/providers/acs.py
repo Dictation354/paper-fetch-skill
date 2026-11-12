@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import (
     ATYPON_FRONT_MATTER_CONTAINS_TOKENS,
@@ -11,17 +13,15 @@ from ..extraction.html.provider_rules import (
     ProviderFrontMatterRules,
     ProviderHtmlRules,
 )
-from ..provider_contracts import (
-    ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-    ProviderRouteSpec,
-    ProviderSpec,
-)
 from . import _acs_html, browser_workflow
-from ._registry import ProviderBundle
+from ._registry import BrowserAssetPolicy, ProviderBundle
 
 
 # SITE_UI_COPY_REGRESSION_MARKER: ACS Publications site UI copy owned by the
 # provider cleanup policy; rerun extraction-rules validation when this list changes.
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["acs"]
+
 ACS_MARKDOWN_PROMO_TOKENS = (
     "download citation",
     "download hi-res image",
@@ -62,59 +62,7 @@ ACS_SITE_RULE_OVERRIDES = {
     "drop_text": {"Download Citation", "Get e-Alerts"},
 }
 
-_PROVIDER_SPEC = ProviderSpec(
-    name="acs",
-    display_name="ACS",
-    official=True,
-    domains=("www.acs.org", "pubs.acs.org", "acs.org"),
-    doi_prefixes=("10.1021/",),
-    publisher_aliases=(
-        "american chemical society",
-        "american chemical society (acs)",
-        "acs publications",
-    ),
-    asset_default="body",
-    probe_capability="routing_signal",
-    provider_managed_abstract_only=True,
-    status_order=15,
-    base_domains=("pubs.acs.org",),
-    html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
-    pdf_path_templates=(
-        *ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-        "/doi/pdf/{doi}?download=true",
-    ),
-    routes=(
-        ProviderRouteSpec(name="metadata", kind="metadata"),
-        ProviderRouteSpec(
-            name="browser_html",
-            kind="html",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="browser_pdf",
-            kind="pdf",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            requires_pdf_conversion=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="assets",
-            kind="assets",
-            browser_optional=True,
-            requires_playwright=True,
-            timeout_seconds=20,
-            concurrency=2,
-            transient_retries=0,
-        ),
-    ),
-)
+_PROVIDER_SPEC = _PROVIDER_DEFINITION.catalog
 
 ACS_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "acs",
@@ -133,10 +81,11 @@ class AcsClient(browser_workflow.BrowserWorkflowClient):
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_asset_policy=BrowserAssetPolicy(click_supplements=True),
     client_factory=AcsClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
-        name="acs",
+        name=_PROVIDER_DEFINITION.rules_name,
         cleanup=ProviderCleanupRules(
             markdown_promo_tokens=ACS_MARKDOWN_PROMO_TOKENS,
             post_content_break_tokens=ACS_POST_CONTENT_BREAK_TOKENS,
@@ -152,8 +101,9 @@ PROVIDER_BUNDLE = ProviderBundle(
         ),
         dom_hooks=DomHooks(
             before_block_normalization=_acs_html.acs_before_block_normalization,
+            render_table=_acs_html.render_acs_table,
             body_container=_acs_html.acs_body_container,
         ),
     ),
-    sources=("acs",),
+    sources=_PROVIDER_DEFINITION.sources,
 )

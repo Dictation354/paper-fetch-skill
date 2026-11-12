@@ -671,6 +671,24 @@
       },
       "official_cli_record": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
+    },
+    {
+      "doi": "10.1021/jacs.6c10062",
+      "provider": "acs",
+      "requested_url": "https://pubs.acs.org/jacsat/article/doi/10.1021/jacs.6c10062/5429482/Decoupling-the-Cation-Induced-Vibrational",
+      "final_url": "https://pubs.acs.org/jacsat/article/doi/10.1021/jacs.6c10062/5429482/Decoupling-the-Cation-Induced-Vibrational",
+      "status_code": 200,
+      "response_headers": {
+        "date": "Fri, 18 Sep 2026 03:35:05 GMT",
+        "content-type": "text/html; charset=utf-8"
+      },
+      "captured_at_utc": "2026-09-18T03:35:13.384819+00:00",
+      "body_file": "acquisition/current-19-2026-09-18/001-browser_rendered_dom.html",
+      "size": 1259717,
+      "sha256": "01dfc018566bcaf89c0a84f608cb28ce3311851da1ce04933a128f8b396454eb",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "existing paper-fetch provider; observation only",
+      "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
     }
   ]
 }

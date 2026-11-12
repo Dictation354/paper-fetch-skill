@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ._definitions import PROVIDER_DEFINITIONS
+
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import (
     ATYPON_FRONT_MATTER_CONTAINS_TOKENS,
@@ -15,70 +17,17 @@ from ..extraction.html.provider_rules import (
     SCIENCE_POST_CONTENT_BREAK_TOKENS,
     SCIENCE_SITE_RULE_OVERRIDES,
 )
-from ..provider_contracts import (
-    ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-    ProviderRouteSpec,
-    ProviderSpec,
-)
 from ..quality.html_signals import (
     SCIENCE_AVAILABILITY_OVERRIDES,
     SCIENCE_SIGNAL_SET,
 )
 from . import _science_html, browser_workflow
-from ._registry import BrowserPagePolicy, ProviderBundle
+from ._registry import BrowserAssetPolicy, BrowserPagePolicy, ProviderBundle
 
-_PROVIDER_SPEC = ProviderSpec(
-    name="science",
-    display_name="Science",
-    official=True,
-    domains=("www.science.org", "science.org"),
-    doi_prefixes=("10.1126/",),
-    publisher_aliases=(
-        "american association for the advancement of science",
-        "aaas",
-    ),
-    asset_default="body",
-    probe_capability="routing_signal",
-    provider_managed_abstract_only=True,
-    status_order=4,
-    base_domains=("www.science.org", "science.org"),
-    html_path_templates=("/doi/full/{doi}", "/doi/{doi}"),
-    pdf_path_templates=(
-        *ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
-        "/doi/pdf/{doi}?download=true",
-    ),
-    routes=(
-        ProviderRouteSpec(name="metadata", kind="metadata"),
-        ProviderRouteSpec(
-            name="browser_html",
-            kind="html",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="browser_pdf",
-            kind="pdf",
-            browser_required=True,
-            browser_preflight=True,
-            auth_supported=True,
-            requires_playwright=True,
-            requires_pdf_conversion=True,
-            concurrency=1,
-        ),
-        ProviderRouteSpec(
-            name="assets",
-            kind="assets",
-            browser_optional=True,
-            requires_playwright=True,
-            timeout_seconds=20,
-            concurrency=2,
-            transient_retries=0,
-        ),
-    ),
-)
+
+_PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["science"]
+
+_PROVIDER_SPEC = _PROVIDER_DEFINITION.catalog
 
 SCIENCE_BROWSER_PROFILE = browser_workflow.make_atypon_browser_profile(
     "science",
@@ -97,14 +46,15 @@ class ScienceClient(browser_workflow.BrowserWorkflowClient):
 
 
 PROVIDER_BUNDLE = ProviderBundle(
+    browser_asset_policy=BrowserAssetPolicy(click_supplements=True),
     browser_page_policy=BrowserPagePolicy(
         document_hosts=("science.org", "www.science.org")
     ),
     client_factory=ScienceClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(
-        name="science",
-        aliases=("aaas",),
+        name=_PROVIDER_DEFINITION.rules_name,
+        aliases=_PROVIDER_DEFINITION.rules_aliases,
         cleanup=ProviderCleanupRules(
             post_content_break_tokens=SCIENCE_POST_CONTENT_BREAK_TOKENS,
         ),
@@ -137,5 +87,5 @@ PROVIDER_BUNDLE = ProviderBundle(
             keep_leading_auxiliary_block=_science_html.science_keep_leading_auxiliary_block,
         ),
     ),
-    sources=("science",),
+    sources=_PROVIDER_DEFINITION.sources,
 )

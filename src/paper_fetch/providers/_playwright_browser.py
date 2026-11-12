@@ -37,9 +37,8 @@ from ..http import (
 )
 from ..page_diagnostics import PageDiagnosticRequest, capture_page_diagnostic
 from ..provider_catalog import compile_route_execution_policy_for_kind
-from ..publisher_identity import extract_doi, extract_doi_from_url, normalize_doi
+from ..publisher_identity import extract_doi_from_url, normalize_doi
 from ..quality.html_availability import (
-    HtmlQualityAssessor,
     choose_parser,
     extract_page_title,
 )
@@ -110,10 +109,6 @@ _IMAGE_PAYLOAD_RESPONSE_ATTR = "_paper_fetch_top_level_response"
 _IMAGE_PAYLOAD_TIMEOUT_ATTR = "_paper_fetch_image_payload_timeout_ms"
 _IMAGE_PAYLOAD_FAILURE_ATTR = "_paper_fetch_image_payload_failure"
 _HTTP_ACCESS_STATUS_REVIEW_KEY = "http_access_status_review"
-_WILEY_REVIEWABLE_HTTP_STATUSES = frozenset({401, 403})
-_WILEY_DOI_META_NAMES = frozenset(
-    {"citation_doi", "dc.identifier", "dc.identifier.doi", "prism.doi"}
-)
 _MAIN_CONTEXT_SNAPSHOT_PROVIDERS = frozenset({"pnas", "science", "wiley", "elsevier"})
 _MAIN_CONTEXT_HTML_SNAPSHOT_SCRIPT = """
 () => ({
@@ -1167,10 +1162,13 @@ def _prepare_provider_browser_page(
         return
     preparation_started = time.monotonic()
     try:
-        kwargs: dict[str, Any] = {}
-        if publisher == "science" and runtime_context is not None:
-            kwargs["cancel_check"] = runtime_context.raise_if_cancelled
-        preparation = prepare_browser_page(page, timeout_ms=timeout_ms, **kwargs)
+        preparation = prepare_browser_page(
+            page,
+            timeout_ms=timeout_ms,
+            cancel_check=runtime_context.raise_if_cancelled
+            if runtime_context is not None
+            else None,
+        )
         if isinstance(preparation, Mapping):
             candidate_trace["provider_page_preparation"] = dict(preparation)
     except RequestCancelledError:
@@ -1540,129 +1538,7 @@ def _record_browser_challenge_signal(
     )
 
 
-def _wiley_document_doi_evidence(html_text: str) -> list[tuple[str, str]]:
-    """Return normalized DOI evidence from Wiley-owned identity nodes."""
-
-    try:
-        soup = BeautifulSoup(html_text, choose_parser())
-    except Exception:
-        return []
-
-    evidence: list[tuple[str, str]] = []
-
-    def add(source: str, value: Any, *, from_url: bool = False) -> None:
-        raw_value = normalize_text(str(value or ""))
-        if not raw_value:
-            return
-        doi = extract_doi_from_url(raw_value) if from_url else extract_doi(raw_value)
-        normalized = normalize_doi(doi or "")
-        item = (source, normalized)
-        if normalized and item not in evidence:
-            evidence.append(item)
-
-    for node in soup.find_all("meta"):
-        attrs = getattr(node, "attrs", None) or {}
-        name = normalize_text(
-            str(attrs.get("name") or attrs.get("property") or "")
-        ).lower()
-        if name in _WILEY_DOI_META_NAMES:
-            add("citation_meta", attrs.get("content"))
-
-    for node in soup.select("link[rel~='canonical']"):
-        attrs = getattr(node, "attrs", None) or {}
-        add("canonical", attrs.get("href"), from_url=True)
-
-    for node in soup.select(".epub-doi"):
-        add("epub_doi", node.get_text(" ", strip=True))
-        attrs = getattr(node, "attrs", None) or {}
-        add("epub_doi", attrs.get("href"), from_url=True)
-        for link in node.select("a[href]"):
-            add(
-                "epub_doi",
-                (getattr(link, "attrs", None) or {}).get("href"),
-                from_url=True,
-            )
-    return evidence
-
-
-def _wiley_http_access_status_review(
-    *,
-    publisher: str,
-    return_image_payload: bool,
-    status: int | None,
-    requested_doi: str,
-    requested_url: str,
-    final_url: str,
-    html_text: str,
-    title: str,
-    body_ready: bool,
-    runtime_context: RuntimeContext | None = None,
-) -> dict[str, Any] | None:
-    if (
-        normalize_text(publisher).lower() != "wiley"
-        or status not in _WILEY_REVIEWABLE_HTTP_STATUSES
-        or return_image_payload
-    ):
-        return None
-
-    expected_doi = normalize_doi(requested_doi)
-    doi_evidence = _wiley_document_doi_evidence(html_text)
-    matching_sources = [
-        source for source, observed_doi in doi_evidence if observed_doi == expected_doi
-    ]
-    evidence_sources = list(dict.fromkeys(source for source, _doi in doi_evidence))
-
-    preliminary = HtmlQualityAssessor("wiley").assess(
-        "",
-        {"doi": expected_doi},
-        html_text=html_text,
-        structure_html_text=html_text,
-        title=title or None,
-        response_status=None,
-        requested_url=requested_url,
-        final_url=final_url,
-        context=runtime_context,
-    )
-    blocking_signals = list(
-        dict.fromkeys(
-            [
-                *preliminary.hard_negative_signals,
-                *preliminary.blocking_fallback_signals,
-            ]
-        )
-    )
-    doi_match = bool(expected_doi and matching_sources)
-    candidate_confirmed = bool(body_ready and doi_match and not blocking_signals)
-    if not body_ready:
-        reason = "body_not_ready"
-    elif not expected_doi:
-        reason = "requested_doi_missing"
-    elif not doi_evidence:
-        reason = "doi_evidence_missing"
-    elif not doi_match:
-        reason = "doi_mismatch"
-    elif blocking_signals:
-        reason = "blocking_signal"
-    else:
-        reason = "pending_fulltext_acceptance"
-
-    return {
-        "status": status,
-        "body_ready": bool(body_ready),
-        "doi_evidence_present": bool(doi_evidence),
-        "doi_evidence_sources": evidence_sources,
-        "doi_match": doi_match,
-        "doi_match_sources": list(dict.fromkeys(matching_sources)),
-        "blocking_signals": blocking_signals,
-        "candidate_confirmed": candidate_confirmed,
-        "status_override_applied": False,
-        "fulltext_acceptance": "pending" if candidate_confirmed else "not_attempted",
-        "accepted": False,
-        "reason": reason,
-    }
-
-
-def _reject_wiley_http_access_status_review(
+def _reject_http_access_status_review(
     review: dict[str, Any] | None,
     *,
     blocking_reason: str,
@@ -1685,7 +1561,7 @@ def _reject_wiley_http_access_status_review(
     )
 
 
-def _record_wiley_http_access_status_review(
+def _record_http_access_status_review(
     candidate_trace: dict[str, Any],
     review: dict[str, Any] | None,
     *,
@@ -1784,6 +1660,32 @@ def _assemble_browser_html_result(
         **captured,
         diagnostics={"browser_runtime_trace": trace},
         staged_storage_state=staged_storage_state,
+    )
+
+
+def _record_candidate_document_diagnostics(
+    candidate_trace: dict[str, Any],
+    *,
+    response: Any,
+    page: Any,
+    final_url: str,
+    status: int | None,
+    headers: Mapping[str, Any],
+    document_requests: dict[int, tuple[dict[str, Any], float]],
+    html: str,
+) -> None:
+    candidate_trace["status"] = status
+    final = diagnostic_url_payload(final_url)
+    candidate_trace["final_url"] = final.get("url")
+    candidate_trace["final_url_sha256"] = final.get("url_sha256")
+    candidate_trace["main_document_response"] = _main_document_response_diagnostic(
+        response,
+        page=page,
+        fallback_url=final_url,
+        status=status,
+        headers=headers,
+        document_requests=document_requests,
+        captured_html_bytes=len(html.encode("utf-8")),
     )
 
 
@@ -2049,20 +1951,14 @@ def fetch_html_with_playwright(
             with contextlib.suppress(Exception):
                 page.route("**/*", route_handler)
 
-        for url in candidate_urls:
-            if runtime_context is not None:
-                runtime_context.raise_if_cancelled()
-            candidate_timeout_ms = remaining_timeout_ms()
-            if candidate_timeout_ms <= 0:
-                trace["deadline_exhausted"] = True
-                last_failure = _candidate_deadline_failure(
-                    last_failure,
-                    trace=trace,
-                )
-                break
-            normalized_url = normalize_text(url)
-            if not normalized_url:
-                continue
+        def execute_candidate(
+            normalized_url: str, candidate_timeout_ms: int
+        ) -> BrowserFetchedHtml | None:
+            nonlocal \
+                last_failure, \
+                latest_browser_context_seed, \
+                readiness_deadline, \
+                browser_context_seed
             candidate_trace: dict[str, Any] = {
                 **diagnostic_url_payload(normalized_url),
                 "started_at": round(time.time(), 3),
@@ -2124,16 +2020,15 @@ def fetch_html_with_playwright(
                         html = str(page.content() or "")
                     except Exception:
                         html = ""
-                    candidate_trace["main_document_response"] = (
-                        _main_document_response_diagnostic(
-                            response,
-                            page=page,
-                            fallback_url=final_url,
-                            status=status,
-                            headers=headers,
-                            document_requests=document_request_diagnostics,
-                            captured_html_bytes=len(html.encode("utf-8")),
-                        )
+                    _record_candidate_document_diagnostics(
+                        candidate_trace,
+                        response=response,
+                        page=page,
+                        final_url=final_url,
+                        status=status,
+                        headers=headers,
+                        document_requests=document_request_diagnostics,
+                        html=html,
                     )
                     try:
                         title = normalize_text(str(page.title() or ""))
@@ -2186,7 +2081,7 @@ def fetch_html_with_playwright(
                             ),
                             trace=trace,
                         )
-                        continue
+                        return None
                     if browser_context_seed.get(
                         "browser_cookies"
                     ) or browser_context_seed.get("browser_user_agent"):
@@ -2295,24 +2190,16 @@ def fetch_html_with_playwright(
                 )
                 status = _browser_response_status(response, zero_as_none=False)
                 headers = _browser_response_headers(response)
-                candidate_trace["status"] = status
-                candidate_trace["main_document_response"] = (
-                    _main_document_response_diagnostic(
-                        response,
-                        page=page,
-                        fallback_url=final_url,
-                        status=status,
-                        headers=headers,
-                        document_requests=document_request_diagnostics,
-                        captured_html_bytes=len(html.encode("utf-8")),
-                    )
+                _record_candidate_document_diagnostics(
+                    candidate_trace,
+                    response=response,
+                    page=page,
+                    final_url=final_url,
+                    status=status,
+                    headers=headers,
+                    document_requests=document_request_diagnostics,
+                    html=html,
                 )
-                candidate_trace["final_url"] = diagnostic_url_payload(final_url).get(
-                    "url"
-                )
-                candidate_trace["final_url_sha256"] = diagnostic_url_payload(
-                    final_url
-                ).get("url_sha256")
                 summary = _browser_html_summary(publisher, html)
                 browser_context_seed = _context_seed(
                     browser_context,
@@ -2387,7 +2274,7 @@ def fetch_html_with_playwright(
                     candidate_failure,
                     trace=trace,
                 )
-                continue
+                return None
 
             if not supplementary_index and looks_like_abstract_redirect(
                 normalized_url, final_url
@@ -2406,7 +2293,7 @@ def fetch_html_with_playwright(
                     ),
                     trace=trace,
                 )
-                continue
+                return None
 
             if not return_image_payload and not supplementary_index:
                 raise_for_paywall(
@@ -2427,27 +2314,30 @@ def fetch_html_with_playwright(
                 readiness.wait_for_article_body
                 and candidate_trace.get("dom_readiness_ready")
             )
-            stable_wiley_body_ready = bool(
+            stable_body_ready = bool(
                 substantive_body_ready
                 and candidate_trace.get("dom_readiness_fingerprint_present")
             )
-            http_access_status_review = _wiley_http_access_status_review(
-                publisher=publisher,
-                return_image_payload=return_image_payload,
-                status=status,
-                requested_doi=config.doi,
-                requested_url=normalized_url,
-                final_url=final_url,
-                html_text=html,
-                title=title or "",
-                body_ready=stable_wiley_body_ready,
-                runtime_context=runtime_context,
+            http_access_status_review = (
+                page_policy.review_http_status(
+                    return_image_payload=return_image_payload,
+                    status=status,
+                    requested_doi=config.doi,
+                    requested_url=normalized_url,
+                    final_url=final_url,
+                    html_text=html,
+                    title=title or "",
+                    body_ready=stable_body_ready,
+                    runtime_context=runtime_context,
+                )
+                if page_policy.review_http_status is not None
+                else None
             )
-            wiley_candidate_confirmed = _record_wiley_http_access_status_review(
+            candidate_confirmed = _record_http_access_status_review(
                 candidate_trace,
                 http_access_status_review,
             )
-            status_for_block_detection = None if wiley_candidate_confirmed else status
+            status_for_block_detection = None if candidate_confirmed else status
             detected = detect_html_block(
                 title or "",
                 summary,
@@ -2461,7 +2351,7 @@ def fetch_html_with_playwright(
                 reason = candidate_trace["dom_readiness_blocking_reason"]
                 detected = HtmlExtractionFailure(reason, html_failure_message(reason))
             if detected is not None and not return_image_payload:
-                _reject_wiley_http_access_status_review(
+                _reject_http_access_status_review(
                     http_access_status_review,
                     blocking_reason=detected.reason,
                 )
@@ -2506,8 +2396,8 @@ def fetch_html_with_playwright(
                     ),
                     trace=trace,
                 )
-                continue
-            _record_wiley_http_access_status_review(
+                return None
+            _record_http_access_status_review(
                 candidate_trace,
                 http_access_status_review,
                 apply_override=True,
@@ -2557,7 +2447,7 @@ def fetch_html_with_playwright(
                     ),
                     trace=trace,
                 )
-                continue
+                return None
             if not normalize_text(html) and image_payload is None:
                 candidate_trace["duration_seconds"] = round(
                     time.monotonic() - candidate_started, 3
@@ -2573,7 +2463,7 @@ def fetch_html_with_playwright(
                     ),
                     trace=trace,
                 )
-                continue
+                return None
 
             screenshot_b64 = _capture_page_screenshot(
                 page,
@@ -2600,6 +2490,24 @@ def fetch_html_with_playwright(
                 screenshot_b64=screenshot_b64,
                 image_payload=image_payload,
             )
+
+        for url in candidate_urls:
+            if runtime_context is not None:
+                runtime_context.raise_if_cancelled()
+            candidate_timeout_ms = remaining_timeout_ms()
+            if candidate_timeout_ms <= 0:
+                trace["deadline_exhausted"] = True
+                last_failure = _candidate_deadline_failure(
+                    last_failure,
+                    trace=trace,
+                )
+                break
+            normalized_url = normalize_text(url)
+            if not normalized_url:
+                continue
+            result = execute_candidate(normalized_url, candidate_timeout_ms)
+            if result is not None:
+                return result
     finally:
         if "storage_state_save" not in trace:
             trace["storage_state_save"] = {

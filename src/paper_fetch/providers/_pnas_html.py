@@ -94,13 +94,6 @@ def pnas_before_block_normalization(container: Any) -> None:
             and first.get("role") == "paragraph"
         ):
             root.insert(0, BeautifulSoup("<h2>Main Text</h2>", "html.parser").h2)
-    from ._html_section_markdown import render_retained_text_from_html
-
-    for quote in container.select("blockquote"):
-        text = render_retained_text_from_html(quote)
-        quote.name = "p"
-        quote.clear()
-        quote.append("\n".join("> " + line for line in text.splitlines()))
     for anchor in container.select('a[href^="#eqn"]'):
         # Bold equation numbers are cross-references, not bibliography markers.
         # Prevent the legacy parenthetical citation formatter consuming them.

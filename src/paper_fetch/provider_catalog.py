@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import urllib.parse
 import xml.etree.ElementTree as ET
+from collections.abc import Iterator, Sequence
 from collections.abc import Mapping as MappingABC
 from types import MappingProxyType
-from typing import Any
+from typing import Any, overload
 
 from .acquisition import AcquisitionProvenance
-from .providers import load_builtin_provider_bundles
+from .providers._definitions import BUILTIN_PROVIDER_DEFINITIONS
+from .providers._registry import ProviderBundle, provider_bundle
 
 from .provider_contracts import (
     AssetDefault as AssetDefault,
@@ -672,22 +674,52 @@ def provider_supports_metadata_api_probe(provider_name: str | None) -> bool:
     return provider_probe_capability(provider_name) == "metadata_api"
 
 
-PROVIDER_BUNDLES = tuple(
-    sorted(
-        load_builtin_provider_bundles(),
-        key=lambda bundle: bundle.catalog.status_order,
-    )
-)
-PROVIDER_BUNDLE_MAP = MappingProxyType(
-    {bundle.catalog.name: bundle for bundle in PROVIDER_BUNDLES}
-)
 PROVIDER_CATALOG: MappingABC[str, ProviderSpec] = MappingProxyType(
-    {name: bundle.catalog for name, bundle in PROVIDER_BUNDLE_MAP.items()}
+    {
+        definition.catalog.name: definition.catalog
+        for definition in BUILTIN_PROVIDER_DEFINITIONS
+    }
 )
 SOURCE_PROVIDER_MAP: MappingABC[str, str] = MappingProxyType(
     {
-        source: bundle.catalog.name
-        for bundle in PROVIDER_BUNDLES
-        for source in bundle.sources
+        source: definition.catalog.name
+        for definition in BUILTIN_PROVIDER_DEFINITIONS
+        for source in definition.sources
     }
 )
+
+
+class _ProviderBundleMap(MappingABC[str, ProviderBundle]):
+    def __getitem__(self, name: str) -> ProviderBundle:
+        if name not in PROVIDER_CATALOG:
+            raise KeyError(name)
+        return provider_bundle(name)
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(PROVIDER_CATALOG)
+
+    def __len__(self) -> int:
+        return len(PROVIDER_CATALOG)
+
+
+class _ProviderBundles(Sequence[ProviderBundle]):
+    def __len__(self) -> int:
+        return len(PROVIDER_CATALOG)
+
+    @overload
+    def __getitem__(self, index: int) -> ProviderBundle: ...
+
+    @overload
+    def __getitem__(self, index: slice) -> tuple[ProviderBundle, ...]: ...
+
+    def __getitem__(
+        self, index: int | slice
+    ) -> ProviderBundle | tuple[ProviderBundle, ...]:
+        names = tuple(PROVIDER_CATALOG)
+        if isinstance(index, slice):
+            return tuple(provider_bundle(name) for name in names[index])
+        return provider_bundle(names[index])
+
+
+PROVIDER_BUNDLE_MAP = _ProviderBundleMap()
+PROVIDER_BUNDLES = _ProviderBundles()

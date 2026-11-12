@@ -196,7 +196,7 @@ arXiv 旧版单个 `ltx_personname` 内可以包含多个逗号分隔姓名及�
 - 边界说明：
   - 这条规则不删除 caption，也不改变 `Asset.heading` / `Asset.caption` 数据；它只约束最终 Markdown 图片引用行。
   - 第三方原始 Markdown 只有在项目注入图片或重写图片链接时才会被短 alt 规范化。
-  - `Figure 2.2`、`Figure A.1` 这类结构短标签必须保留；它们不是长 caption。
+  - `Figure 2.2`、`Figure A.1`、Elsevier 原文 `Figura 1` 和 IEEE `Table I/II` 这类结构短标签必须保留；对象类型由内部渲染接口传递，完整图注独立呈现。
   - 本地化时优先保留当前正文出现位置的图号；同一图片文件可在不同位置对应不同图号。仅当当前 alt 缺少编号时，才使用资产 heading 补足。DDPM 原文的 Figure 13/14 与 Figure 1/6 复用文件，但图号不能被覆盖。
   - `Listing 1` 这类代码清单标签也是结构短标签；publisher 把 listing 作为 figure image 发布时不能降级成 `Figure` 或 `Image`。
 
@@ -228,6 +228,10 @@ arXiv 旧版单个 `ltx_personname` 内可以包含多个逗号分隔姓名及�
 ### Markdown inline citation normalize 不能破坏非引用语义和图片块边界
 
 - HTML-derived Markdown 保留源文献链接和原有括号、前缀及分隔；使用源 ID、别名与显式弹窗映射解析书目、图表、公式、章节及脚注目标。对象 ID 未在输出中保留时，使用已核实的来源对象地址；缺少目标的空 `#` 控件只保留文字。没有目标关系的数字引用 sentinel 继续渲染为 `<sup>...</sup>`，不把普通数字、年份范围、科学指数或图片 opener `![...]` 当作引用。
+- 目标身份须在 DOM 清理或公式替换前解析。Oxford 表脚注将 `content-id` 映射到相邻的源脚注锚点；Science 使用显式 `data-xml-rid` 解析真实书目 ID。Wiley/IOP 动态书目即使不在静态 DOM 中，也保留源文给出的 fragment 并补全同篇来源 URL；Nature 摘要与正文的根相对链接均补全来源 URL。无可解析目标的脚本控件仅保留文字和上下标。
+- PNAS 的源 `blockquote` 保持块引用结构；源文已有的 pullquote 内容保留。JATS 同一容器内连续的纯 `monospace` 代码段合用一个围栏，保留原字符、提示符、缩进与换行，在说明段、列表或章节边界结束。
+- ACS 同一源 wrapper 的可见表格分段复用分组表格表示，共用表号、题注和表注；跨系数列的模型表达式每组呈现一次，后续列使用原短列名，并保持所有数据与列归属。
+- Frontiers 附件以已有 `anchor_key`、`source_href` 保留身份；共同的章节入口不构成文件去重依据。已有 supplemental-data 查询仅在文件名唯一匹配时使用直链，下载后使用本地路径；无文件入口时分别保留文件名与共同来源入口，列表并入原补充章节。
 - 边界说明：
   - 这条规则不尝试修复 publisher 源 HTML 里语义已经损坏的 citation range；它只约束共享 Markdown normalize 层不能制造新的坏标点或破坏图片块。
   - 括号引用识别的 160 字符上限用于避免跨长段误吞普通括号内容。
