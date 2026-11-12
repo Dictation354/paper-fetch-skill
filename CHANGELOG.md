@@ -6,6 +6,18 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.5.1 - 2026-11-12
+
+### Provider runtime and asset downloads
+
+- Separate static provider definitions from lazy runtime loading, and give browser sessions, provider asset policies, and result assembly explicit owners. Preserve raw-provider adaptation, unified acceptance, and asset reservation commit/rollback behavior.
+- Schedule IOP HTTP asset downloads within the existing budget while keeping browser recovery on the caller thread. Improve IEEE asset and supplementary-download recovery and supplementary click handling for Annual Reviews and MDPI.
+
+### HTML content extraction
+
+- Preserve ACS split-table segments and grouped headers, JATS code paragraphs, nested blockquotes, publisher figure/table labels, and object links. Reuse MDPI's visible-table target mapping before DOM normalization and after rendering. Correct publisher-specific extraction and arXiv frontmatter icon handling without changing PDF converter output.
+- Advance the extraction revision to 12 so cached output uses the updated extraction rules. Refresh the affected golden baselines and regression coverage while retaining acquisition provenance; align provider architecture, extraction, and browser runtime documentation with the implementation.
+
 ## 7.5.0 - 2026-11-11
 
 ### Offline runtimes and installation

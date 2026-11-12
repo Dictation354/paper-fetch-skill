@@ -93,6 +93,10 @@ def assert_source_links(source, rendered, fixture):
                 "data-target",
             ]
         ]
+        if fixture.provider == "science" and a.get("data-xml-rid"):
+            # Science's citation target names the actual bibliography entry;
+            # the collateral href can instead point at a duplicated widget.
+            candidates.insert(0, str(a["data-xml-rid"]))
         if href.startswith("#"):
             candidates.append(unquote(href[1:]))
         target = next(

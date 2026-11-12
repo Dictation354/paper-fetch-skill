@@ -92,8 +92,8 @@ QualityConfidence = Literal["high", "medium", "low"]
 
 
 TRUNCATION_WARNING = "Output truncated to satisfy token budget."
-# 7.0 changes HTML/XML extraction and confirmed access-stop semantics across providers.
-EXTRACTION_REVISION = 11
+# 7.5.1 preserves additional HTML/XML content and publisher table structure.
+EXTRACTION_REVISION = 12
 
 
 @dataclass

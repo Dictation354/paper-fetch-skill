@@ -17,9 +17,10 @@ from paper_fetch.providers._ieee_supplementary import (
     _supplementary_assets_from_ieee_multimedia_payload,
 )
 from paper_fetch.providers.browser_workflow.asset_download import (
-    _CLICK_SUPPLEMENT_PROVIDERS,
     plan_browser_asset_download,
 )
+from paper_fetch.providers._definitions import PROVIDER_DEFINITIONS
+from paper_fetch.providers._registry import browser_asset_policy
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset
 from tests.provider_benchmark_samples import provider_benchmark_sample
@@ -27,7 +28,13 @@ from tests.support.acquired_article_assets import CLIENTS
 
 
 @pytest.mark.parametrize(
-    "provider", sorted(_CLICK_SUPPLEMENT_PROVIDERS - {"ieee", "iop"})
+    "provider",
+    sorted(
+        provider
+        for provider in PROVIDER_DEFINITIONS
+        if provider not in {"ieee", "iop"}
+        and browser_asset_policy(provider).click_supplements
+    ),
 )
 def test_real_article_supplement_href_and_body_scope(provider, tmp_path):
     sample = provider_benchmark_sample(provider)

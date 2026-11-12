@@ -4,7 +4,10 @@ from __future__ import annotations
 import pytest
 
 from dataclasses import replace
-from paper_fetch.providers._definitions import PROVIDER_DEFINITIONS, validate_provider_definitions
+from paper_fetch.providers._definitions import (
+    PROVIDER_DEFINITIONS,
+    validate_provider_definitions,
+)
 from paper_fetch.extraction.html.provider_rules import (
     GENERIC_HTML_RULES,
     _reset_provider_html_rules_cache,

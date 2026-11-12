@@ -29,6 +29,7 @@ from ._mdpi_dom import (
     MDPI_NOISE_PROFILE,
     _article_container_html,
     _mdpi_image_url,
+    _mdpi_retained_link_targets,
 )
 from ._mdpi_references import (
     _remove_reference_ui_tokens,
@@ -100,20 +101,9 @@ def _abstract_section_payload(abstract_text: str | None) -> list[dict[str, str]]
 
 def _resolve_mdpi_retained_links(markdown: str, html_text: str, source_url: str) -> str:
     soup = BeautifulSoup(html_text, choose_parser())
-    targets = {
-        str(node["id"]): str(node["id"])
-        for node in soup.select("#html-references_list li[id]")
-    }
-    for wrapper in soup.select(".html-table-wrap[id]"):
-        target = str(wrapper["id"])
-        targets[target] = target
-        for link in wrapper.select('a[href^="#"]'):
-            popup_id = str(link["href"])[1:]
-            popup = soup.find(id=popup_id)
-            if isinstance(popup, Tag) and "html-table_show" in popup.get("class", []):
-                # Link to the visible owner, not a hidden lightbox body.
-                targets[popup_id] = target
-    return resolve_retained_object_links(markdown, source_url, targets)
+    return resolve_retained_object_links(
+        markdown, source_url, _mdpi_retained_link_targets(soup)
+    )
 
 
 def _normalize_mdpi_markdown(markdown_text: str) -> str:

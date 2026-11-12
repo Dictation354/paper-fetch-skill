@@ -56,6 +56,31 @@ def test_mdpi_table_note_targets_visible_owner_and_no_source_becomes_text():
     )
 
 
+@pytest.mark.parametrize("source_url", ["https://www.mdpi.com/example", ""])
+def test_mdpi_dom_resolves_multiple_popup_links_to_their_visible_owners(source_url):
+    from bs4 import BeautifulSoup
+
+    from paper_fetch.providers._mdpi_dom import _article_container_html
+
+    tables = (("table-alpha", "popup-one"), ("appendix-beta", "dialog-two"))
+    fragments = []
+    for owner, popup in tables:
+        fragments.append(
+            f'<p>See <a href="#{popup}">{owner}</a>.</p>'
+            f'<div class="html-table-wrap" id="{owner}">'
+            f'<a href="#{popup}"></a></div>'
+            f'<div id="{popup}" class="html-table_show">'
+            "<table><tr><td>Definition</td></tr></table></div>"
+        )
+    html = '<div class="html-article-content">' + "".join(fragments) + "</div>"
+    article_html, *_ = _article_container_html(html, {}, source_url)
+    article = BeautifulSoup(article_html, "html.parser")
+    for owner, _ in tables:
+        callout = article.find("a", string=owner)
+        assert callout is not None
+        assert callout["href"] == f"{source_url}#{owner}"
+
+
 def test_unrelated_ids_and_external_links_are_not_rewritten():
     html = '<div id="R2">Not a bibliography entry</div>'
     markdown = "[2](#R2) [other](https://elsewhere.example/#R2) ![2](#R2)"

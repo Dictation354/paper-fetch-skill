@@ -531,9 +531,11 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
         ]
         self.assertTrue(callouts)
         for callout in callouts:
+            reference_id = callout["data-xml-rid"]
+            self.assertIsNotNone(source.find(id=reference_id))
             target = urljoin(
                 "https://www.science.org/doi/full/10.1126/science.aeg3511",
-                callout["href"],
+                "#" + reference_id,
             )
             self.assertTrue(
                 any(
